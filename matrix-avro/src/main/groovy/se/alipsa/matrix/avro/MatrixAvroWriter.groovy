@@ -325,7 +325,13 @@ class MatrixAvroWriter {
    * @return an Avro record schema suitable for writing the Matrix
    */
   static Schema buildSchema(Matrix matrix, boolean inferPrecisionAndScale) {
-    return buildSchemaInternal(matrix, inferPrecisionAndScale, resolveSchemaName(matrix, null), "se.alipsa.matrix.avro")
+    return buildSchemaInternal(
+        matrix,
+        inferPrecisionAndScale,
+        resolveSchemaName(matrix, null),
+        AvroWriteOptions.DEFAULT_NAMESPACE,
+        [:]
+    )
   }
 
   /**
@@ -336,7 +342,13 @@ class MatrixAvroWriter {
    * @return an Avro record schema suitable for writing the Matrix
    */
   static Schema buildSchema(Matrix matrix, AvroWriteOptions options) {
-    return buildSchemaInternal(matrix, options.inferPrecisionAndScale, resolveSchemaName(matrix, options.schemaName), options.namespace)
+    return buildSchemaInternal(
+        matrix,
+        options.inferPrecisionAndScale,
+        resolveSchemaName(matrix, options.schemaName),
+        options.namespace,
+        options.columnSchemas
+    )
   }
 
   private static String resolveSchemaName(Matrix matrix, String configuredSchemaName) {
@@ -354,14 +366,18 @@ class MatrixAvroWriter {
    * Internal schema building with configurable name and namespace.
    */
   private static Schema buildSchemaInternal(Matrix matrix, boolean inferPrecisionAndScale,
-                                            String schemaName, String namespace) {
+                                            String schemaName, String namespace,
+                                            Map<String, AvroSchemaDecl> columnSchemas) {
+    Map<String, AvroSchemaDecl> declaredSchemas = columnSchemas ?: [:]
+    validateDeclaredColumnSchemas(matrix, declaredSchemas)
     SchemaCacheKey cacheKey = new SchemaCacheKey(
         schemaName,
         namespace,
         inferPrecisionAndScale,
         matrix.rowCount(),
         matrix.columnNames(),
-        matrix.types()
+        matrix.types(),
+        schemaSignature(declaredSchemas)
     )
     Schema cached = getCachedSchema(matrix, cacheKey)
     if (cached != null) {
@@ -374,45 +390,47 @@ class MatrixAvroWriter {
     Map<String, ColumnProfile> profiles = analyzeColumns(matrix, inferPrecisionAndScale)
 
     for (String col : matrix.columnNames()) {
-      validateAvroFieldName(col, col)
-      ColumnProfile profile = profiles.get(col)
-      Class<?> clazz = profile.effectiveType
+      AvroSchemaUtil.validateAvroFieldName(col, col)
       Schema fieldSchema
-
-      if (clazz == List) {
-        Class<?> elemClass = profile.listElemClass ?: String
-        Schema elemSchema = toFieldSchema(elemClass, null)
-        // allow null elements in arrays
-        Schema nullableElem = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), elemSchema))
-        fieldSchema = Schema.createArray(nullableElem)
-      } else if (clazz == Map) {
-        if (profile.recordLike) {
-          // RECORD: fixed fields from the first non-null row
-          Map first = profile.recordSample
-          def rec = Schema.createRecord(col + "_record", null, "se.alipsa.matrix.avro", false)
-          List<Schema.Field> flds = new ArrayList<>()
-          for (def k : first.keySet()) {
-            String fieldName = k.toString()
-            validateAvroFieldName(fieldName, "${col}.${fieldName}")
-            def v = first.get(k)
-            Class<?> vClazz = (v == null) ? String : v.getClass()
-            Schema valueSchema = toFieldSchema(vClazz, null)
-            // nullable union for each field
-            Schema nullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
-            flds.add(new Schema.Field(fieldName, nullable, null as String, (Object) null))
-          }
-          rec.setFields(flds)
-          fieldSchema = rec
-        } else {
-          Class<?> valClass = profile.mapValueClass ?: String
-          Schema valueSchema = toFieldSchema(valClass, null)
-          Schema nullableValue = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
-          fieldSchema = Schema.createMap(nullableValue)
-        }
+      AvroSchemaDecl declaredSchema = declaredSchemas.get(col)
+      if (declaredSchema != null) {
+        fieldSchema = declaredSchema.toAvroSchema(col, namespace)
       } else {
-        fieldSchema = toFieldSchema(clazz, profile.decimalMeta(inferPrecisionAndScale))
+        ColumnProfile profile = profiles.get(col)
+        Class<?> clazz = profile.effectiveType
+
+        if (clazz == List) {
+          Class<?> elemClass = profile.listElemClass ?: String
+          Schema elemSchema = toFieldSchema(elemClass, null)
+          Schema nullableElem = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), elemSchema))
+          fieldSchema = Schema.createArray(nullableElem)
+        } else if (clazz == Map) {
+          if (profile.recordLike) {
+            Map first = profile.recordSample
+            def rec = Schema.createRecord(col + "_record", null, namespace, false)
+            List<Schema.Field> flds = new ArrayList<>()
+            for (def k : first.keySet()) {
+              String fieldName = k.toString()
+              AvroSchemaUtil.validateAvroFieldName(fieldName, "${col}.${fieldName}")
+              def v = first.get(k)
+              Class<?> vClazz = (v == null) ? String : v.getClass()
+              Schema valueSchema = toFieldSchema(vClazz, null)
+              Schema nullable = AvroSchemaUtil.nullableSchema(valueSchema)
+              flds.add(new Schema.Field(fieldName, nullable, null as String, (Object) null))
+            }
+            rec.setFields(flds)
+            fieldSchema = rec
+          } else {
+            Class<?> valClass = profile.mapValueClass ?: String
+            Schema valueSchema = toFieldSchema(valClass, null)
+            Schema nullableValue = AvroSchemaUtil.nullableSchema(valueSchema)
+            fieldSchema = Schema.createMap(nullableValue)
+          }
+        } else {
+          fieldSchema = toFieldSchema(clazz, profile.decimalMeta(inferPrecisionAndScale))
+        }
       }
-      Schema nullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), fieldSchema))
+      Schema nullable = AvroSchemaUtil.nullableSchema(fieldSchema)
       fields.add(new Schema.Field(col, nullable, null as String, (Object) null))
     }
 
@@ -960,6 +978,23 @@ class MatrixAvroWriter {
     return clazz == BigInteger ? Long : clazz
   }
 
+  private static void validateDeclaredColumnSchemas(Matrix matrix, Map<String, AvroSchemaDecl> declaredSchemas) {
+    Set<String> matrixColumns = matrix.columnNames() as Set<String>
+    declaredSchemas.keySet().each { String columnName ->
+      if (!matrixColumns.contains(columnName)) {
+        throw new IllegalArgumentException("columnSchemas['$columnName'] does not match any Matrix column")
+      }
+    }
+  }
+
+  private static Map<String, Map<String, ?>> schemaSignature(Map<String, AvroSchemaDecl> declaredSchemas) {
+    Map<String, Map<String, ?>> signature = [:]
+    declaredSchemas.each { String columnName, AvroSchemaDecl declaration ->
+      signature[columnName] = declaration.toMap()
+    }
+    signature.asImmutable()
+  }
+
   private static final class SchemaCacheKey {
     private final String schemaName
     private final String namespace
@@ -967,15 +1002,18 @@ class MatrixAvroWriter {
     private final int rowCount
     private final List<String> columnNames
     private final List<Class<?>> columnTypes
+    private final Map<String, Map<String, ?>> columnSchemas
 
     private SchemaCacheKey(String schemaName, String namespace, boolean inferPrecisionAndScale,
-                           int rowCount, List<String> columnNames, List<Class<?>> columnTypes) {
+                           int rowCount, List<String> columnNames, List<Class<?>> columnTypes,
+                           Map<String, Map<String, ?>> columnSchemas) {
       this.schemaName = schemaName
       this.namespace = namespace
       this.inferPrecisionAndScale = inferPrecisionAndScale
       this.rowCount = rowCount
       this.columnNames = Collections.unmodifiableList(new ArrayList<>(columnNames))
       this.columnTypes = Collections.unmodifiableList(new ArrayList<>(columnTypes))
+      this.columnSchemas = columnSchemas
     }
 
     @Override
@@ -988,7 +1026,8 @@ class MatrixAvroWriter {
           schemaName == that.schemaName &&
           namespace == that.namespace &&
           columnNames == that.columnNames &&
-          columnTypes == that.columnTypes
+          columnTypes == that.columnTypes &&
+          columnSchemas == that.columnSchemas
     }
 
     @Override
@@ -999,6 +1038,7 @@ class MatrixAvroWriter {
       result = 31 * result + rowCount
       result = 31 * result + columnNames.hashCode()
       result = 31 * result + columnTypes.hashCode()
+      result = 31 * result + columnSchemas.hashCode()
       return result
     }
   }
@@ -1109,28 +1149,6 @@ class MatrixAvroWriter {
       case Schema.Type.FIXED: return v instanceof GenericFixed
       default: return false
     }
-  }
-
-  /**
-   * Validates that a field name conforms to Avro's naming rules.
-   */
-  private static void validateAvroFieldName(String fieldName, String columnName) {
-    if (!isValidAvroName(fieldName)) {
-      throw new AvroSchemaException(
-          "Invalid Avro field name",
-          columnName,
-          "Avro field name (A-Za-z_ followed by A-Za-z0-9_)",
-          fieldName
-      )
-    }
-  }
-
-  /**
-   * Avro names must start with [A-Za-z_] and subsequently contain [A-Za-z0-9_].
-   */
-  private static boolean isValidAvroName(String name) {
-    if (name == null || name.isEmpty()) return false
-    return name ==~ /[A-Za-z_][A-Za-z0-9_]*/
   }
 
   /**

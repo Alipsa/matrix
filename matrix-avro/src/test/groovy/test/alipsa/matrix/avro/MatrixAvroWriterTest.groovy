@@ -7,6 +7,7 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
@@ -456,6 +457,116 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void testExplicitDecimalColumnSchemaOverridesInferenceDefaults() {
+    Matrix m = Matrix.builder("ExplicitDecimal")
+        .columns(amount: [new BigDecimal("12.340"), new BigDecimal("56.780")])
+        .types(BigDecimal)
+        .build()
+
+    File tmp = Files.createTempFile("avro-explicit-decimal-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, new AvroWriteOptions()
+          .inferPrecisionAndScale(false)
+          .columnSchema('amount', AvroSchemaDecl.decimal(12, 3)))
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        Schema amountSchema = nonNullFieldSchema(reader.schema, 'amount')
+        assertEquals(Schema.Type.BYTES, amountSchema.type)
+        assertEquals('decimal', amountSchema.logicalType.name)
+        LogicalTypes.Decimal decimal = amountSchema.logicalType as LogicalTypes.Decimal
+        assertEquals(12, decimal.precision)
+        assertEquals(3, decimal.scale)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testColumnSchemaCanForceMapEncoding() {
+    Matrix m = Matrix.builder("ForceMap")
+        .columns(props: [[x: 1, y: 2], [x: 3, y: 4]])
+        .types(Map)
+        .build()
+
+    File tmp = Files.createTempFile("avro-force-map-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, new AvroWriteOptions()
+          .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer))))
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        Schema propsSchema = nonNullFieldSchema(reader.schema, 'props')
+        assertEquals(Schema.Type.MAP, propsSchema.type)
+        Schema valueSchema = propsSchema.valueType.types.find { Schema it -> it.type != Schema.Type.NULL }
+        assertEquals(Schema.Type.INT, valueSchema.type)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testColumnSchemaCanForceRecordEncoding() {
+    Matrix m = Matrix.builder("ForceRecord")
+        .columns(props: [[x: 1], [y: 2], null])
+        .types(Map)
+        .build()
+
+    File tmp = Files.createTempFile("avro-force-record-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, new AvroWriteOptions()
+          .columnSchema('props', AvroSchemaDecl.record('PropsRecord', [
+              x: AvroSchemaDecl.type(Integer),
+              y: AvroSchemaDecl.type(Integer)
+          ])))
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        Schema propsSchema = nonNullFieldSchema(reader.schema, 'props')
+        assertEquals(Schema.Type.RECORD, propsSchema.type)
+        assertEquals('PropsRecord', propsSchema.name)
+        assertEquals(['x', 'y'], propsSchema.fields*.name())
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testColumnSchemaCanForceArrayElementType() {
+    Matrix m = Matrix.builder("ForceArray")
+        .columns(tags: [[1, 2], [3L, null]])
+        .types(List)
+        .build()
+
+    File tmp = Files.createTempFile("avro-force-array-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, new AvroWriteOptions()
+          .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long))))
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        Schema tagsSchema = nonNullFieldSchema(reader.schema, 'tags')
+        assertEquals(Schema.Type.ARRAY, tagsSchema.type)
+        Schema elementSchema = tagsSchema.elementType.types.find { Schema it -> it.type != Schema.Type.NULL }
+        assertEquals(Schema.Type.LONG, elementSchema.type)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
   void testWriteOptionsRoundTripToMap() {
     AvroWriteOptions options = new AvroWriteOptions()
         .inferPrecisionAndScale(true)
@@ -463,6 +574,7 @@ class MatrixAvroWriterTest {
         .compression(AvroWriteOptions.Compression.DEFLATE)
         .compressionLevel(9)
         .syncInterval(64000)
+        .columnSchema('amount', AvroSchemaDecl.decimal(10, 2))
 
     Map<String, ?> roundTrip = options.toMap()
 
@@ -472,6 +584,7 @@ class MatrixAvroWriterTest {
     assertEquals(9, roundTrip.compressionLevel)
     assertEquals(64000, roundTrip.syncInterval)
     assertFalse(roundTrip.containsKey("schemaName"))
+    assertEquals('decimal', (((roundTrip.columnSchemas as Map).amount) as Map).kind)
   }
 
   @Test
@@ -486,6 +599,25 @@ class MatrixAvroWriterTest {
         MatrixAvroWriter.write(m, tmp, (AvroWriteOptions) null)
       }
       assertEquals("Options cannot be null", ex.message)
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testUnknownColumnSchemaFailsFast() {
+    Matrix m = Matrix.builder("UnknownColumn")
+        .columns(id: [1, 2])
+        .types(Integer)
+        .build()
+
+    File tmp = Files.createTempFile("avro-unknown-column-schema-", ".avro").toFile()
+    try {
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+        MatrixAvroWriter.write(m, tmp, new AvroWriteOptions()
+            .columnSchema('missing', AvroSchemaDecl.type(Integer)))
+      }
+      assertEquals("columnSchemas['missing'] does not match any Matrix column", ex.message)
     } finally {
       tmp.delete()
     }

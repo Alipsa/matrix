@@ -80,5 +80,55 @@ MatrixAvroWriter.write(orders, new File('orders-compressed.avro'), new AvroWrite
 )
 ```
 
+## Force a fixed decimal schema for one column
+
+```groovy
+import se.alipsa.matrix.avro.AvroSchemaDecl
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+MatrixAvroWriter.write(orders, new File('orders-decimal.avro'), new AvroWriteOptions()
+    .columnSchema('total', AvroSchemaDecl.decimal(12, 2))
+)
+```
+
+## Force map encoding instead of record-like inference
+
+```groovy
+import se.alipsa.matrix.avro.AvroSchemaDecl
+import se.alipsa.matrix.avro.AvroWriteOptions
+
+Matrix nested = Matrix.builder('Nested')
+    .columns(props: [[x: 1, y: 2], [x: 3, y: 4]])
+    .types(Map)
+    .build()
+
+nested.write([
+    columnSchemas: [
+        props: [kind: 'map', valueType: 'INT']
+    ]
+], new File('nested-map.avro'))
+```
+
+## Force record encoding for a map column with varying keys
+
+```groovy
+import se.alipsa.matrix.avro.AvroSchemaDecl
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+Matrix people = Matrix.builder('People')
+    .columns(person: [[name: 'Alice'], [age: 41]])
+    .types(Map)
+    .build()
+
+MatrixAvroWriter.write(people, new File('people-record.avro'), new AvroWriteOptions()
+    .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
+        name: AvroSchemaDecl.type(String),
+        age : AvroSchemaDecl.type(Integer)
+    ]))
+)
+```
+
 ---
 [Back to index](cookbook.md)

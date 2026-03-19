@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.avro.AvroFormatProvider
 import se.alipsa.matrix.avro.AvroReadOptions
+import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.core.Matrix
 
@@ -26,6 +27,7 @@ class AvroFormatProviderTest {
     assertTrue(AvroReadOptions.describe().contains('readerSchema'))
     assertFalse(AvroReadOptions.describe().contains('lenientTypeConversion'))
     assertTrue(AvroWriteOptions.describe().contains('compression'))
+    assertTrue(AvroWriteOptions.describe().contains('columnSchemas'))
   }
 
   @Test
@@ -192,7 +194,19 @@ class AvroFormatProviderTest {
         namespace             : 'se.alipsa.matrix.spi',
         compression           : 'deflate',
         compressionLevel      : 9,
-        syncInterval          : 64000
+        syncInterval          : 64000,
+        columnSchemas         : [
+            amount: [kind: 'decimal', precision: 12, scale: 3],
+            props : [kind: 'map', valueType: 'INT'],
+            tags  : [kind: 'array', elementType: 'STRING'],
+            person: [
+                kind  : 'record',
+                fields: [
+                    name: 'STRING',
+                    age : 'INT'
+                ]
+            ]
+        ]
     ])
 
     Map<String, ?> roundTrip = options.toMap()
@@ -203,5 +217,67 @@ class AvroFormatProviderTest {
     assertEquals(9, roundTrip.compressionLevel)
     assertEquals(64000, roundTrip.syncInterval)
     assertFalse(roundTrip.containsKey('schemaName'))
+    assertEquals('decimal', ((roundTrip.columnSchemas as Map).amount as Map).kind)
+    assertEquals(12, (((roundTrip.columnSchemas as Map).amount as Map).precision))
+    assertEquals('map', ((roundTrip.columnSchemas as Map).props as Map).kind)
+    assertEquals('INT', (((roundTrip.columnSchemas as Map).props as Map).valueType as Map).scalarType)
+    assertEquals('array', ((roundTrip.columnSchemas as Map).tags as Map).kind)
+    assertEquals('STRING', ((((roundTrip.columnSchemas as Map).tags as Map).elementType) as Map).scalarType)
+  }
+
+  @Test
+  void testTypedAndSpiColumnSchemasProduceSameSchema() {
+    Matrix source = Matrix.builder('typedWrite')
+        .columns(
+            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')],
+            props: [[x: 1, y: 2], [y: 3, z: 4]],
+            tags: [[1L, 2L], [3L, null]]
+        )
+        .types([BigDecimal, Map, List])
+        .build()
+
+    File directFile = tempDir.resolve('typed-column-schemas.avro').toFile()
+    File spiFile = tempDir.resolve('spi-column-schemas.avro').toFile()
+
+    AvroWriteOptions typed = new AvroWriteOptions()
+        .columnSchema('amount', AvroSchemaDecl.decimal(12, 2))
+        .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+        .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
+
+    se.alipsa.matrix.avro.MatrixAvroWriter.write(source, directFile, typed)
+    source.write([
+        columnSchemas: [
+            amount: [kind: 'decimal', precision: 12, scale: 2],
+            props : [kind: 'map', valueType: 'INT'],
+            tags  : [kind: 'array', elementType: 'LONG']
+        ]
+    ], spiFile)
+
+    def directReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+        directFile,
+        new org.apache.avro.generic.GenericDatumReader<>()
+    )
+    def spiReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+        spiFile,
+        new org.apache.avro.generic.GenericDatumReader<>()
+    )
+    try {
+      assertEquals(directReader.schema.toString(true), spiReader.schema.toString(true))
+    } finally {
+      directReader.close()
+      spiReader.close()
+    }
+  }
+
+  @Test
+  void testInvalidColumnSchemaDeclarationFailsFast() {
+    IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException) {
+      AvroWriteOptions.fromMap([
+          columnSchemas: [
+              amount: [kind: 'decimal', precision: 8]
+          ]
+      ])
+    }
+    assertTrue(ex.message.contains('decimal.scale'))
   }
 }

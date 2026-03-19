@@ -144,6 +144,7 @@ Supported write options:
 - `compression(...)` selects the Avro codec
 - `compressionLevel(...)` applies only to `DEFLATE`, `XZ`, and `ZSTANDARD`; in fluent usage set `compression(...)` first
 - `syncInterval(...)` sets the Avro sync marker interval in bytes
+- `columnSchema(...)` / `columnSchemas(...)` override per-column schema inference with typed declarations for decimals, arrays, maps, and records
 
 Default write behavior:
 
@@ -152,6 +153,53 @@ Default write behavior:
 - `compression` defaults to `NULL`, `compressionLevel` defaults to `-1`, and `syncInterval` defaults to `0` for Avro's built-in default
 - `AvroWriteOptions.toMap()` only includes `schemaName` when explicitly set; otherwise the effective name is resolved at write time
 - invalid `compressionLevel` or `syncInterval` values fail fast when options are built or parsed from SPI maps
+- explicit `columnSchemas` take precedence over heuristic nested-type sampling on the named columns
+
+### Explicit per-column schema control
+
+Use `columnSchema(...)` when you need fixed decimal metadata or when a `List` / `Map` column should not rely on sampling heuristics:
+
+```groovy
+import se.alipsa.matrix.avro.AvroSchemaDecl
+import se.alipsa.matrix.avro.AvroWriteOptions
+
+def options = new AvroWriteOptions()
+    .columnSchema('amount', AvroSchemaDecl.decimal(12, 2))
+    .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
+    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
+        name: AvroSchemaDecl.type(String),
+        age : AvroSchemaDecl.type(Integer)
+    ]))
+```
+
+The same configuration can be supplied through the Matrix SPI:
+
+```groovy
+matrix.write([
+  columnSchemas: [
+    amount: [kind: 'decimal', precision: 12, scale: 2],
+    tags  : [kind: 'array', elementType: 'LONG'],
+    props : [kind: 'map', valueType: 'INT'],
+    person: [
+      kind  : 'record',
+      recordName: 'PersonRecord',
+      fields: [
+        name: 'STRING',
+        age : 'INT'
+      ]
+    ]
+  ]
+], new File('out/explicit-schema.avro'))
+```
+
+Supported declaration kinds:
+
+- `decimal`: fixed `precision` and `scale`
+- `array`: explicit `elementType`
+- `map`: explicit `valueType`
+- `record`: explicit nested `fields`, with optional `recordName`
+- `scalar`: direct scalar override such as `INT`, `LONG`, `STRING`, `DATE`, or `UUID`
 
 ## Type mapping
 
@@ -207,6 +255,7 @@ Default write behavior:
 - Element/value types for arrays/maps are inferred from the **first non-null** sample in the column.
 - Record-like detection for maps is heuristic: if the **key set is identical** for all non-null rows, it’s encoded as a record; otherwise a map.
 - Mixed numeric columns are promoted: integers → `int`/`long` depending on range; presence of a floating value promotes to `double`. Heterogeneous arrays currently infer from first non-null element.
+- Use `columnSchemas` when you need to override any of those heuristics explicitly.
 
 ## Examples & tests
 

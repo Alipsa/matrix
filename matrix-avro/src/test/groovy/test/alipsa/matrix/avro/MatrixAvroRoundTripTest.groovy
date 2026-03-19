@@ -5,9 +5,11 @@ import org.apache.avro.file.DataFileReader
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.*
+import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
+import se.alipsa.matrix.avro.AvroWriteOptions
 
 import java.nio.file.Files
 import java.time.*
@@ -229,6 +231,58 @@ class MatrixAvroRoundTripTest {
     assertNull(p2["name"])
     assertNull(p2["age"])
     assertNull(p2["birthday"])
+
+    tmp.delete()
+  }
+
+  @Test
+  void roundTripWithExplicitSchemaOverrides() {
+    File tmp = Files.createTempFile("matrix-avro-rt-explicit-schema-", ".avro").toFile()
+
+    Matrix src = Matrix.builder("ExplicitSchema")
+        .columns(
+            amount: [new BigDecimal('12.340'), new BigDecimal('56.780')],
+            tags: [[1, 2], [3L, null]],
+            props: [[x: 1], [y: 2]],
+            person: [[name: 'Alice'], [age: 41]]
+        )
+        .types(BigDecimal, List, Map, Map)
+        .build()
+
+    AvroWriteOptions options = new AvroWriteOptions()
+        .inferPrecisionAndScale(false)
+        .columnSchema('amount', AvroSchemaDecl.decimal(12, 3))
+        .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
+        .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+        .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
+            name: AvroSchemaDecl.type(String),
+            age : AvroSchemaDecl.type(Integer)
+        ]))
+
+    MatrixAvroWriter.write(src, tmp, options)
+    Matrix back = MatrixAvroReader.read(tmp)
+
+    assertEquals(new BigDecimal('12.340'), back[0, 'amount'])
+    assertEquals(new BigDecimal('56.780'), back[1, 'amount'])
+    assertTrue(back['amount'][0] instanceof BigDecimal)
+
+    assertEquals([1L, 2L], back[0, 'tags'])
+    assertEquals([3L, null], back[1, 'tags'])
+
+    assertEquals([x: 1], back[0, 'props'])
+    assertEquals([y: 2], back[1, 'props'])
+
+    assertEquals([name: 'Alice', age: null], back[0, 'person'])
+    assertEquals([name: null, age: 41], back[1, 'person'])
+
+    def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+    try {
+      Schema personSchema = reader.schema.getField('person').schema().types.find { Schema it -> it.type != Schema.Type.NULL }
+      assertEquals(Schema.Type.RECORD, personSchema.type)
+      assertEquals('PersonRecord', personSchema.name)
+    } finally {
+      reader.close()
+    }
 
     tmp.delete()
   }
