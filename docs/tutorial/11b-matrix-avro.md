@@ -89,4 +89,50 @@ Useful write options:
 - `inferPrecisionAndScale(...)` to store `BigDecimal` columns as Avro decimals
 - `namespace(...)` to control the Avro schema namespace
 - `schemaName(...)` to override the default record name
+- `columnSchema(...)` / `columnSchemas(...)` to override decimal, array, map, and record inference per column
 - `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` for container-file tuning
+
+## Override schema inference for specific columns
+
+```groovy
+import se.alipsa.matrix.avro.AvroSchemaDecl
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+Matrix nested = Matrix.builder("Nested")
+    .columns(
+        amount: [new BigDecimal("12.340"), new BigDecimal("56.780")],
+        tags: [[1, 2], [3L, null]],
+        props: [[x: 1], [y: 2]],
+        person: [[name: "Alice"], [age: 41]]
+    )
+    .types(BigDecimal, List, Map, Map)
+    .build()
+
+MatrixAvroWriter.write(nested, new File("nested.avro"), new AvroWriteOptions()
+    .columnSchema('amount', AvroSchemaDecl.decimal(12, 3))
+    .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
+    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
+        name: AvroSchemaDecl.type(String),
+        age : AvroSchemaDecl.type(Integer)
+    ]))
+)
+```
+
+The equivalent Matrix SPI map is:
+
+```groovy
+nested.write([
+    columnSchemas: [
+        amount: [kind: 'decimal', precision: 12, scale: 3],
+        tags  : [kind: 'array', elementType: 'LONG'],
+        props : [kind: 'map', valueType: 'INT'],
+        person: [
+            kind      : 'record',
+            recordName: 'PersonRecord',
+            fields    : [name: 'STRING', age: 'INT']
+        ]
+    ]
+], new File("nested-spi.avro"))
+```

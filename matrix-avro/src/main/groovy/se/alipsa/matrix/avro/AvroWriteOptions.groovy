@@ -67,6 +67,7 @@ class AvroWriteOptions {
   private Compression compression = Compression.NULL
   private int compressionLevel = DEFAULT_COMPRESSION_LEVEL
   private int syncInterval = DEFAULT_SYNC_INTERVAL
+  private Map<String, AvroSchemaDecl> columnSchemas = [:]
 
   /**
    * Creates a new AvroWriteOptions with default settings.
@@ -166,6 +167,34 @@ class AvroWriteOptions {
     return this
   }
 
+  /**
+   * Sets explicit per-column Avro schema declarations.
+   *
+   * <p>These declarations override the writer's default heuristics for the named columns.
+   * Use this for fixed decimal precision/scale or for forcing array, map, or record schemas.
+   *
+   * @param columnSchemas map of column names to schema declarations
+   * @return this options instance for method chaining
+   */
+  AvroWriteOptions columnSchemas(Map<String, AvroSchemaDecl> columnSchemas) {
+    this.columnSchemas = copyColumnSchemas(columnSchemas)
+    return this
+  }
+
+  /**
+   * Sets an explicit Avro schema declaration for a single column.
+   *
+   * @param columnName the Matrix column name
+   * @param declaration the schema declaration to apply
+   * @return this options instance for method chaining
+   */
+  AvroWriteOptions columnSchema(String columnName, AvroSchemaDecl declaration) {
+    Map<String, AvroSchemaDecl> updated = new LinkedHashMap<>(this.columnSchemas)
+    updated[requireColumnName(columnName)] = requireDeclaration(columnName, declaration)
+    this.columnSchemas = updated
+    return this
+  }
+
   // Getters
 
   /**
@@ -211,6 +240,13 @@ class AvroWriteOptions {
   }
 
   /**
+   * @return explicit per-column schema declarations
+   */
+  Map<String, AvroSchemaDecl> getColumnSchemas() {
+    columnSchemas.asImmutable()
+  }
+
+  /**
    * Creates the Avro CodecFactory based on the configured compression settings.
    *
    * @return the CodecFactory for the configured compression
@@ -251,6 +287,9 @@ class AvroWriteOptions {
     ]
     if (schemaName != null) {
       options.schemaName = schemaName
+    }
+    if (!columnSchemas.isEmpty()) {
+      options.columnSchemas = AvroSchemaDecl.columnSchemasToMap(columnSchemas)
     }
     options
   }
@@ -303,6 +342,12 @@ class AvroWriteOptions {
       Object value = normalized.syncinterval
       if (value != null) {
         syncInterval = (value as Number).intValue()
+      }
+    }
+    if (normalized.containsKey('columnschemas')) {
+      Object value = normalized.columnschemas
+      if (value != null) {
+        result.columnSchemas(AvroSchemaDecl.columnSchemasValue(value, 'columnSchemas'))
       }
     }
     if (compression != null) {
@@ -376,7 +421,35 @@ class AvroWriteOptions {
         new OptionDescriptor('schemaName', String, 'matrix.matrixName or MatrixSchema', 'Record name override for the generated Avro schema'),
         new OptionDescriptor('compression', Compression, 'NULL', 'Compression codec to use when writing'),
         new OptionDescriptor('compressionLevel', Integer, '-1', 'Codec-specific compression level'),
-        new OptionDescriptor('syncInterval', Integer, '0', 'Sync marker interval in bytes')
+        new OptionDescriptor('syncInterval', Integer, '0', 'Sync marker interval in bytes'),
+        new OptionDescriptor('columnSchemas', Map, null, 'Map of column names to explicit Avro schema declarations for decimal, array, map, or record overrides')
     ]
+  }
+
+  private static Map<String, AvroSchemaDecl> copyColumnSchemas(Map<String, AvroSchemaDecl> value) {
+    if (value == null) {
+      return [:]
+    }
+    Map<String, AvroSchemaDecl> result = [:]
+    value.each { String key, AvroSchemaDecl declaration ->
+      String columnName = requireColumnName(key)
+      result[columnName] = requireDeclaration(columnName, declaration)
+    }
+    result
+  }
+
+  private static String requireColumnName(String value) {
+    String trimmed = value?.trim()
+    if (trimmed == null || trimmed.isEmpty()) {
+      throw new IllegalArgumentException('columnSchemas must not contain blank column names')
+    }
+    trimmed
+  }
+
+  private static AvroSchemaDecl requireDeclaration(String columnName, AvroSchemaDecl declaration) {
+    if (declaration == null) {
+      throw new IllegalArgumentException("columnSchemas['$columnName'] must not be null")
+    }
+    declaration
   }
 }
