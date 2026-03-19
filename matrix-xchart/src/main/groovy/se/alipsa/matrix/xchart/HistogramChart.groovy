@@ -7,6 +7,7 @@ import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
 import org.knowm.xchart.Histogram
 import org.knowm.xchart.style.CategoryStyler
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat

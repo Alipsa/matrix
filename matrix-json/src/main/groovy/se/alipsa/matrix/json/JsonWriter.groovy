@@ -1,7 +1,8 @@
 package se.alipsa.matrix.json
 
-import se.alipsa.matrix.core.Matrix
 import groovy.json.*
+
+import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
 import java.time.format.DateTimeFormatter

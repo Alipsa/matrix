@@ -2,6 +2,7 @@ package test.alipsa.matrix.gsheets
 
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gsheets.GsExporter
 
@@ -9,9 +10,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-import static se.alipsa.matrix.gsheets.GsUtil.*
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
+import static se.alipsa.matrix.gsheets.GsUtil.*
 
 class GsUtilTest {
 

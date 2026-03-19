@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 /*
-import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
 
 //def file = 'kc_house_data.csv' as File
 def file = getClass().classLoader.getResource('kc_house_data.csv').file

@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 import smile.clustering.KMeans
+
+import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 
 import static KMeansTestData.RANDOM_SEED
 import static KMeansTestData.gaussianClusters

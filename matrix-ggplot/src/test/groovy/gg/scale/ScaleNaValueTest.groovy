@@ -1,6 +1,7 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.scale.ScaleAlphaBinned
 import se.alipsa.matrix.gg.scale.ScaleAlphaContinuous
 import se.alipsa.matrix.gg.scale.ScaleAlphaDiscrete

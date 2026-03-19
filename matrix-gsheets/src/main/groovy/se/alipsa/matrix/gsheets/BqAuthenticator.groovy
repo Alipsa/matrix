@@ -4,13 +4,15 @@ package se.alipsa.matrix.gsheets
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
  * and delegates to the 'gcloud' SDK for an interactive login if needed.
  */
+import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.oauth2.Oauth2
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.oauth2.GoogleCredentials
-import groovy.json.JsonSlurper
-import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.util.Logger
 
 import java.security.GeneralSecurityException

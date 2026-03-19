@@ -1,9 +1,11 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.datasets.Dataset
+
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.sql.MatrixResultSet
-import java.sql.SQLException
+
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Types
 
 import static org.junit.jupiter.api.Assertions.*

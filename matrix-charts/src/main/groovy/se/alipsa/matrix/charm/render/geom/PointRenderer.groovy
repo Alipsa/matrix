@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.geom
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.LayerSpec

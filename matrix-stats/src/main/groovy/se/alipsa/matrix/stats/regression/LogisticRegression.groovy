@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.analysis.MultivariateFunction
 import org.apache.commons.math3.optim.InitialGuess
 import org.apache.commons.math3.optim.MaxEval
@@ -9,6 +10,7 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer
+
 import se.alipsa.matrix.core.Matrix
 
 import java.math.RoundingMode

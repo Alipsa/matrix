@@ -1,6 +1,7 @@
 package charm.render.stat
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType

@@ -1,6 +1,7 @@
 package contingency
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.stats.contingency.Boschloo
 
 import static org.junit.jupiter.api.Assertions.*

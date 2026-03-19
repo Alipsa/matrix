@@ -12,6 +12,11 @@ function release() {
    ./release.sh
    popd
 }
+./gradlew spotlessApply
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Error: Git working tree is not clean. Commit or stash changes before publishing."
+  exit 1
+fi
 release matrix-core
 release matrix-datasets
 release matrix-stats

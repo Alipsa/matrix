@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 

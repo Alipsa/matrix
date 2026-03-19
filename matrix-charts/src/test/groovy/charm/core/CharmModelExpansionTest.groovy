@@ -1,17 +1,17 @@
 package charm.core
 
 import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.charm.CharmGeomType
-import se.alipsa.matrix.charm.LinetypeName
-import se.alipsa.matrix.charm.ShapeName
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.ColumnExpr
 import se.alipsa.matrix.charm.ColumnRef
@@ -19,9 +19,20 @@ import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.charm.Layer
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.LinetypeName
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.ShapeName
 import se.alipsa.matrix.charm.StatSpec
+import se.alipsa.matrix.charm.geom.Bin2dBuilder
+import se.alipsa.matrix.charm.geom.CountBuilder
+import se.alipsa.matrix.charm.geom.DensityBuilder
+import se.alipsa.matrix.charm.geom.LineBuilder
+import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.RasterBuilder
+import se.alipsa.matrix.charm.geom.TextBuilder
+import se.alipsa.matrix.charm.geom.ViolinBuilder
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
@@ -31,16 +42,6 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
-
-import se.alipsa.matrix.charm.CharmValidationException
-import se.alipsa.matrix.charm.geom.Bin2dBuilder
-import se.alipsa.matrix.charm.geom.CountBuilder
-import se.alipsa.matrix.charm.geom.DensityBuilder
-import se.alipsa.matrix.charm.geom.LineBuilder
-import se.alipsa.matrix.charm.geom.PointBuilder
-import se.alipsa.matrix.charm.geom.RasterBuilder
-import se.alipsa.matrix.charm.geom.TextBuilder
-import se.alipsa.matrix.charm.geom.ViolinBuilder
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull

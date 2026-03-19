@@ -1,13 +1,12 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
-import javax.xml.stream.XMLStreamWriter
-import javax.xml.stream.XMLOutputFactory
 import java.io.StringWriter
 import java.time.Duration
 import java.time.LocalDate
@@ -17,6 +16,9 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Collections
+
+import javax.xml.stream.XMLOutputFactory
+import javax.xml.stream.XMLStreamWriter
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn

@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType

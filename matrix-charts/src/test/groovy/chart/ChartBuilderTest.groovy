@@ -1,9 +1,10 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.pict.*
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.pict.*
 
 import java.awt.Color
 import java.awt.Font

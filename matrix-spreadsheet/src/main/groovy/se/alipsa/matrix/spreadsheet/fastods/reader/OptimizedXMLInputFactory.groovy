@@ -1,7 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
-import com.fasterxml.aalto.stax.InputFactoryImpl
 import groovy.transform.CompileStatic
+
+import com.fasterxml.aalto.stax.InputFactoryImpl
 
 import javax.xml.stream.XMLInputFactory
 

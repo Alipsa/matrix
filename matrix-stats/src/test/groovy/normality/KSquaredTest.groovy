@@ -1,6 +1,7 @@
 package normality
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.normality.KSquared
 

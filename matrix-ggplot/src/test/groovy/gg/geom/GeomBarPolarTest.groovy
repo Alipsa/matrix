@@ -1,14 +1,14 @@
 package gg.geom
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 import static se.alipsa.groovy.svg.io.SvgWriter.toXml
-
-import testutil.Slow
+import static se.alipsa.matrix.gg.GgPlot.*
 
 @Slow
 class GeomBarPolarTest {

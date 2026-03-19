@@ -1,4 +1,6 @@
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.function.Executable
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.FormatRegistry
@@ -10,7 +12,6 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
-import org.junit.jupiter.api.function.Executable
 
 import static org.junit.jupiter.api.Assertions.*
 

@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 
 import static org.junit.jupiter.api.Assertions.*

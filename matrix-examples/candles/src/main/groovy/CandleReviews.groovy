@@ -19,11 +19,12 @@
 
 
 import tech.tablesaw.io.xlsx.XlsxReader
+import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.components.Figure
 import tech.tablesaw.plotly.components.Layout
 import tech.tablesaw.plotly.traces.BarTrace
-import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.traces.ScatterTrace
+
 import java.time.LocalDateTime
 import java.util.function.Function
 

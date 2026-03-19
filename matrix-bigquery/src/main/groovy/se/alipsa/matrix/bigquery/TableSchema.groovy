@@ -1,8 +1,9 @@
 package se.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.Table
-import groovy.transform.CompileStatic
 
 @CompileStatic
 class TableSchema {

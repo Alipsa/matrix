@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
@@ -204,7 +205,7 @@ class LinearRegression {
     .build()
     """
 Equation: ${toString()}
-Residuals: (not yet implemented)   
+Residuals: (not yet implemented)
 
 Coefficients
 ${coefficients.content()}

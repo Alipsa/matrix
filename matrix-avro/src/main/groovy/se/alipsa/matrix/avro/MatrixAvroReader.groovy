@@ -1,6 +1,7 @@
 package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
+
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 import org.apache.avro.file.DataFileStream
@@ -8,14 +9,15 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.util.Utf8
+
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
-import java.nio.ByteBuffer
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
+import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.*
 

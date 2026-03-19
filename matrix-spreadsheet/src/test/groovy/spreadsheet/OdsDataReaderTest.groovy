@@ -1,12 +1,13 @@
 package spreadsheet
 
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.spreadsheet.fastods.Sheet
-import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader;
 
-import java.time.Duration;
+import se.alipsa.matrix.spreadsheet.fastods.Sheet
+import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
+
+import java.time.Duration
 import java.time.Instant
 
 class OdsDataReaderTest {

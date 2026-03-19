@@ -1,7 +1,8 @@
 import org.junit.jupiter.api.Test
+import smile.data.DataFrame
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.SmileUtil
-import smile.data.DataFrame
 
 import static org.junit.jupiter.api.Assertions.*
 

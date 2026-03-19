@@ -1,6 +1,7 @@
 package charm.render.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale

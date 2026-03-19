@@ -1,6 +1,7 @@
 package se.alipsa.matrix.core.spi
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.util.Logger
 
 /**

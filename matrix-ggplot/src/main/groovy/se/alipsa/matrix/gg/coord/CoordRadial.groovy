@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import java.util.Locale
 
 import static se.alipsa.matrix.ext.NumberExtension.PI

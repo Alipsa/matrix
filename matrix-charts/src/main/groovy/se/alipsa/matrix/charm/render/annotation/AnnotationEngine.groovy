@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.annotation
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.SvgElement
@@ -22,9 +23,9 @@ import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 
 /**

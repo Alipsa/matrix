@@ -1,6 +1,7 @@
 package se.alipsa.matrix.arff
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 
 import java.io.FileOutputStream

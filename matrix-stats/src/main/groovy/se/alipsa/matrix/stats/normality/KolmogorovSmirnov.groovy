@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.RealDistribution
 import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest as ApacheKSTest

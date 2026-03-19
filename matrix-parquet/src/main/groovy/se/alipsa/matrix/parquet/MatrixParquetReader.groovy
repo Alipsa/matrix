@@ -1,6 +1,7 @@
 package se.alipsa.matrix.parquet
 
 import groovy.transform.CompileStatic
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
@@ -12,16 +13,17 @@ import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.PrimitiveType
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
+
 import se.alipsa.matrix.core.Matrix
 
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.sql.Time
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.util.concurrent.ConcurrentHashMap
 
 /**

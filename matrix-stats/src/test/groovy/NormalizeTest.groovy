@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize

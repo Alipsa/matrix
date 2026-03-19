@@ -1,10 +1,11 @@
 package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToImage
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.chartexport.ChartToJfx
+import se.alipsa.matrix.chartexport.ChartToPng
 
 import java.nio.file.Files
 

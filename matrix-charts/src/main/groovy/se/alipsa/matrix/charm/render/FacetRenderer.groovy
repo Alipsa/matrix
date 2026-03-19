@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.ColumnExpr
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.facet.Labeller

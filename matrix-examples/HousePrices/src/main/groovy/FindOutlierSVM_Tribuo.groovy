@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 /*
-import org.tribuo.MutableDataset
-import org.tribuo.anomaly.AnomalyFactory
-import org.tribuo.anomaly.evaluation.AnomalyEvaluator
-import org.tribuo.anomaly.libsvm.LibSVMAnomalyTrainer
-import org.tribuo.anomaly.libsvm.SVMAnomalyType
-import org.tribuo.common.libsvm.SVMParameters
-import org.tribuo.data.columnar.RowProcessor
-import org.tribuo.data.columnar.processors.field.DoubleFieldProcessor
-import org.tribuo.data.columnar.processors.response.FieldResponseProcessor
-import org.tribuo.data.csv.CSVDataSource
-
-import static com.oracle.labs.mlrg.olcut.provenance.ProvenanceUtil.formattedProvenanceString
-import static org.tribuo.anomaly.Event.EventType.ANOMALOUS
-import static org.tribuo.anomaly.libsvm.SVMAnomalyType.SVMMode.ONE_CLASS
-import static org.tribuo.common.libsvm.KernelType.RBF
 
 def uri = getClass().classLoader.getResource('kc_house_data.csv').toURI()
 def fieldProcessors = ['bedrooms', 'bathrooms', 'grade'].collectEntries { [(it): new DoubleFieldProcessor(it)] }

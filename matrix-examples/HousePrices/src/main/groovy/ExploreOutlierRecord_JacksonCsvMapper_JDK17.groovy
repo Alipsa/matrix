@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 /*
-import com.fasterxml.jackson.annotation.JsonIncludeProperties
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import com.fasterxml.jackson.dataformat.csv.CsvMapper
-import com.fasterxml.jackson.dataformat.csv.CsvSchema
-
-import static com.fasterxml.jackson.dataformat.csv.CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE
 
 @JsonPropertyOrder(['bedrooms', 'bathrooms', 'sqft_lot'])
 @JsonIncludeProperties(['bedrooms', 'bathrooms', 'sqft_lot'])
@@ -48,4 +42,3 @@ records.findAll{ it.bedrooms > 10 }.each{ println it }
 HouseRecord[bedrooms=11, bathrooms=3, sqft_lot=4960]
 HouseRecord[bedrooms=33, bathrooms=1.75, sqft_lot=6000]
 */
-

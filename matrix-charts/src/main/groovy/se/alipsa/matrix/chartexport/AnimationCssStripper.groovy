@@ -1,6 +1,7 @@
 package se.alipsa.matrix.chartexport
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgReader
 

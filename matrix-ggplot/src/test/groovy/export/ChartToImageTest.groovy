@@ -1,8 +1,12 @@
 package export
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
@@ -11,12 +15,8 @@ import se.alipsa.matrix.gg.export.GgExport
 
 import java.awt.image.BufferedImage
 
-import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.charm.geom.PointBuilder
-import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
-
-import testutil.Slow
+import static se.alipsa.matrix.gg.GgPlot.*
 
 @Slow
 class ChartToImageTest {

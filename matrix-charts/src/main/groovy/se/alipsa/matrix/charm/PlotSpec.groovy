@@ -3,9 +3,12 @@ package se.alipsa.matrix.charm
 import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+
 import org.apache.commons.text.similarity.LevenshteinDistance
+
 import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.core.Matrix
+
 import java.util.Locale
 
 /**

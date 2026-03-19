@@ -1,8 +1,10 @@
 package test.alipsa.matrix.bigquery
 
-import com.google.cloud.bigquery.StandardSQLTypeName
 import groovy.transform.CompileStatic
+
+import com.google.cloud.bigquery.StandardSQLTypeName
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.bigquery.TypeMapper
 
 import java.sql.Time

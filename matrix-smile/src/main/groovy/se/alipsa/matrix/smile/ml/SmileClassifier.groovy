@@ -1,14 +1,16 @@
 package se.alipsa.matrix.smile.ml
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.smile.DataframeConverter
+
 import smile.classification.*
 import smile.data.DataFrame
 import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.DataframeConverter
 
 /**
  * Wrapper for Smile classification algorithms providing a Matrix-friendly API.

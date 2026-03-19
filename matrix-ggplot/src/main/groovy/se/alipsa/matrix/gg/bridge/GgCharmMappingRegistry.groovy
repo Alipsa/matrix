@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.bridge
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType

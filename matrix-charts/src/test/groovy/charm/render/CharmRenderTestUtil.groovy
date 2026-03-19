@@ -1,7 +1,9 @@
 package charm.render
 
 import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Assertions
+
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path

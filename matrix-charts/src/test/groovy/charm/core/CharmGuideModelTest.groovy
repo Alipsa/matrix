@@ -1,6 +1,7 @@
 package charm.core
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec

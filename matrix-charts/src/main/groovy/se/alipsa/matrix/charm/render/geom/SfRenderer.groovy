@@ -1,10 +1,12 @@
 package se.alipsa.matrix.charm.render.geom
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
+
 import java.util.Locale
 
 /**

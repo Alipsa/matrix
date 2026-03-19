@@ -1,8 +1,7 @@
-import static org.junit.jupiter.api.Assertions.*
-
-import static se.alipsa.matrix.core.util.ClassUtils.*
-
 import org.junit.jupiter.api.Test
+
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.util.ClassUtils.*
 
 class ClassUtilsTest {
 

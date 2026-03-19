@@ -1,15 +1,16 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.tablesaw.TableUtil
-import se.alipsa.matrix.tablesaw.Normalizer
-import se.alipsa.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.BigDecimalAggregateFunctions
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.Normalizer
+import se.alipsa.matrix.tablesaw.TableUtil
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static se.alipsa.matrix.core.ListConverter.toLocalDates

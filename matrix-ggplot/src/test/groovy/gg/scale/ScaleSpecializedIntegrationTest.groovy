@@ -1,6 +1,8 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
@@ -8,8 +10,6 @@ import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
-
-import testutil.Slow
 
 /**
  * Slow integration smoke tests for specialized step/fermenter color scales.

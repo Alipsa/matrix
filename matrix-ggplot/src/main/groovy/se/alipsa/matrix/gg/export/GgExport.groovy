@@ -1,7 +1,9 @@
 package se.alipsa.matrix.gg.export
 
 import groovy.transform.CompileStatic
+
 import org.girod.javafx.svgimage.SVGImage
+
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToJpeg

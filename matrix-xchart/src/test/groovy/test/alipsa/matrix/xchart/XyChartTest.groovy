@@ -5,6 +5,7 @@ import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.style.AxesChartStyler
 import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.markers.SeriesMarkers
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.LineChart

@@ -1,9 +1,7 @@
 package se.alipsa.matrix.smile
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.ListConverter
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.util.Logger
+
 import smile.data.DataFrame
 import smile.data.type.BooleanType
 import smile.data.type.ByteType
@@ -20,6 +18,10 @@ import smile.data.type.ShortType
 import smile.data.type.StringType
 import smile.data.type.TimeType
 import smile.data.vector.ValueVector
+
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Timestamp
 import java.time.Instant

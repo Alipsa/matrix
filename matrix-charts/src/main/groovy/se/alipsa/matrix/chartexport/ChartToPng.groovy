@@ -3,16 +3,18 @@ package se.alipsa.matrix.chartexport
 import com.github.weisj.jsvg.SVGDocument
 import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
-import se.alipsa.matrix.pict.Chart
 import se.alipsa.matrix.pict.CharmBridge
+import se.alipsa.matrix.pict.Chart
 
-import javax.imageio.ImageIO
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
+
+import javax.imageio.ImageIO
 
 /**
  * Exports charts as PNG images.

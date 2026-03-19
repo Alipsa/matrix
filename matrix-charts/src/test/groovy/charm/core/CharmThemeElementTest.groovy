@@ -1,6 +1,7 @@
 package charm.core
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.theme.CharmThemes

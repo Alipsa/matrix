@@ -2,6 +2,7 @@ package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.DuplicateHeaderMode
 

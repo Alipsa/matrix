@@ -3,6 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.util.ClassUtils
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.Logger

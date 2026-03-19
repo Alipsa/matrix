@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementRect
 import se.alipsa.matrix.charm.theme.ElementText

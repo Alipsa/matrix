@@ -1,6 +1,7 @@
 package se.alipsa.matrix.xchart.abstractions
 
 import groovy.transform.CompileStatic
+
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.VectorGraphicsEncoder
@@ -8,13 +9,15 @@ import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.internal.chartpart.Chart
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
+
 import se.alipsa.matrix.core.Matrix
+
+import java.awt.Color
+import java.lang.reflect.InvocationTargetException
 
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
-import java.awt.Color
-import java.lang.reflect.InvocationTargetException
 
 /**
  * Base class for all Matrix chart implementations.

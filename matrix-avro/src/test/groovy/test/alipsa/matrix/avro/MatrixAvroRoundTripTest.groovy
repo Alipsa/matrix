@@ -5,11 +5,12 @@ import org.apache.avro.file.DataFileReader
 import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.*
+
 import se.alipsa.matrix.avro.AvroSchemaDecl
-import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
-import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
 import java.time.*

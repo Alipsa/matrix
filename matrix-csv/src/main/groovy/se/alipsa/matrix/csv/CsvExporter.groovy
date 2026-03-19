@@ -1,8 +1,10 @@
 package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+
 import se.alipsa.matrix.core.Matrix
 
 /**

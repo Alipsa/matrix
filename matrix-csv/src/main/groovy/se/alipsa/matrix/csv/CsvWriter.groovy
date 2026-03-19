@@ -1,9 +1,11 @@
 package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.io.output.CloseShieldWriter
+
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset

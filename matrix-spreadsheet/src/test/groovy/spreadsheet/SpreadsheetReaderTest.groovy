@@ -1,8 +1,10 @@
 package spreadsheet
 
-import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
+
+import static org.junit.jupiter.api.Assertions.*
 
 class SpreadsheetReaderTest {
 

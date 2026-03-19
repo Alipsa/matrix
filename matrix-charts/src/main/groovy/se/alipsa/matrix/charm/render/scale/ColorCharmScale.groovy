@@ -1,9 +1,10 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.Scale
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charm.util.ColorUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Trained color scale for mapping data values to colors.

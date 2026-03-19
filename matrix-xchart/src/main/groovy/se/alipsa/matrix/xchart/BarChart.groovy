@@ -1,7 +1,9 @@
 package se.alipsa.matrix.xchart
 
 import groovy.transform.CompileStatic
+
 import org.knowm.xchart.CategorySeries
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
 

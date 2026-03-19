@@ -6,6 +6,7 @@ import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import org.knowm.xchart.HeatMapSeries
 import org.knowm.xchart.style.HeatMapStyler
+
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Correlation

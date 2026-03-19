@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.util.LogLevel
 import se.alipsa.matrix.core.util.Logger
 

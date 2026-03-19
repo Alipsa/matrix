@@ -1,6 +1,7 @@
 package se.alipsa.matrix.avro.benchmarks
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix

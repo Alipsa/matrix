@@ -2,22 +2,23 @@ package se.alipsa.matrix.gg.stat
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
+import se.alipsa.matrix.charm.render.scale.ScaleUtils
+import se.alipsa.matrix.charm.sf.SfGeometry
+import se.alipsa.matrix.charm.sf.SfGeometryUtils
+import se.alipsa.matrix.charm.sf.SfPoint
+import se.alipsa.matrix.charm.sf.WktReader
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.Point
-import se.alipsa.matrix.charm.render.scale.ScaleUtils
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.kde.KernelDensity
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 import se.alipsa.matrix.stats.regression.QuantileRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
-import se.alipsa.matrix.charm.sf.SfGeometry
-import se.alipsa.matrix.charm.sf.SfGeometryUtils
-import se.alipsa.matrix.charm.sf.SfPoint
-import se.alipsa.matrix.charm.sf.WktReader
 
 import java.math.RoundingMode
 import java.util.regex.Matcher

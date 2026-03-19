@@ -2,11 +2,11 @@ package export
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import testutil.Slow
+
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.geom.PointBuilder
-import se.alipsa.matrix.pict.Chart
-import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -14,15 +14,16 @@ import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.pict.Chart
+import se.alipsa.matrix.pict.ScatterChart
 
-import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import static org.junit.jupiter.api.Assertions.*
+import javax.imageio.ImageIO
 
-import testutil.Slow
+import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for CharmChart export functionality that remains in matrix-charts.

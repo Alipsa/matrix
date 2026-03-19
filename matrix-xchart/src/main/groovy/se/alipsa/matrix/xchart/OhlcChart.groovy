@@ -6,6 +6,7 @@ import org.knowm.xchart.OHLCChart
 import org.knowm.xchart.OHLCChartBuilder
 import org.knowm.xchart.OHLCSeries
 import org.knowm.xchart.style.OHLCStyler
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 

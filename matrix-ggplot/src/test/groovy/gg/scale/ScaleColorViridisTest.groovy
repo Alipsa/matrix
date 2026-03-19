@@ -1,6 +1,7 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
 
 import static org.junit.jupiter.api.Assertions.*
@@ -130,7 +131,7 @@ class ScaleColorViridisTest {
     assertNotNull(colorA)
     assertNotNull(colorB)
     assertNotNull(colorC)
-    
+
     assertNotEquals(colorA, colorB)
     assertNotEquals(colorB, colorC)
     assertNotEquals(colorA, colorC)
@@ -153,22 +154,22 @@ class ScaleColorViridisTest {
     assertNotNull(colorA)
     assertNotNull(colorB)
     assertNotNull(colorC)
-    
+
     // Magma should produce different colors than viridis
     ScaleColorViridis viridisScale = new ScaleColorViridis(option: 'viridis')
     viridisScale.train(['A', 'B', 'C'])
-    
+
     assertNotEquals(colorA, viridisScale.transform('A'))
   }
 
   @Test
   void testAllPaletteOptions() {
     List<String> palettes = ['viridis', 'magma', 'inferno', 'plasma', 'cividis', 'rocket', 'mako', 'turbo']
-    
+
     for (String palette : palettes) {
       ScaleColorViridis scale = new ScaleColorViridis(option: palette)
       scale.train(['A', 'B'])
-      
+
       String color = scale.transform('A') as String
       assertNotNull(color, "Palette ${palette} should produce colors")
       assertTrue(color.startsWith('#'), "Palette ${palette} should produce hex colors")
@@ -188,7 +189,7 @@ class ScaleColorViridisTest {
       'G': 'mako',
       'H': 'turbo'
     ]
-    
+
     codes.each { code, expected ->
       ScaleColorViridis scale = new ScaleColorViridis(option: code)
       assertEquals(expected, scale.option, "Code ${code} should map to ${expected}")
@@ -224,7 +225,7 @@ class ScaleColorViridisTest {
     // Use only middle portion of palette (0.3 to 0.7)
     ScaleColorViridis scale = new ScaleColorViridis(begin: 0.3, end: 0.7)
     scale.train(['A', 'B', 'C'])
-    
+
     String colorA = scale.transform('A') as String
     String colorB = scale.transform('B') as String
     String colorC = scale.transform('C') as String
@@ -239,7 +240,7 @@ class ScaleColorViridisTest {
     // Colors should be different from full range
     ScaleColorViridis fullScale = new ScaleColorViridis()
     fullScale.train(['A', 'B', 'C'])
-    
+
     assertNotEquals(colorA, fullScale.transform('A'))
   }
 
@@ -247,7 +248,7 @@ class ScaleColorViridisTest {
   void testBeginEndWithSingleValue() {
     ScaleColorViridis scale = new ScaleColorViridis(begin: 0.5, end: 0.5)
     scale.train(['A', 'B', 'C'])
-    
+
     // All values should get the same color (middle of palette)
     String colorA = scale.transform('A') as String
     String colorB = scale.transform('B') as String
@@ -327,7 +328,7 @@ class ScaleColorViridisTest {
     ['viridis', 'magma', 'inferno', 'plasma', 'cividis', 'rocket', 'mako', 'turbo'].each { option ->
       ScaleColorViridis scale = new ScaleColorViridis(option: option, begin: 0.1, end: 0.9)
       scale.train(['A', 'B'])
-      
+
       List<String> colors = scale.getColors()
       assertEquals(2, colors.size())
       assertNotNull(colors[0])
@@ -339,11 +340,11 @@ class ScaleColorViridisTest {
   void testTransformWithValidation() {
     ScaleColorViridis scale = new ScaleColorViridis(begin: 0.3, end: 0.7)
     scale.train(['Low', 'Mid', 'High'])
-    
+
     String lowColor = scale.transform('Low') as String
     String midColor = scale.transform('Mid') as String
     String highColor = scale.transform('High') as String
-    
+
     assertNotNull(lowColor)
     assertNotNull(midColor)
     assertNotNull(highColor)
@@ -473,11 +474,11 @@ class ScaleColorViridisTest {
   void testReset() {
     ScaleColorViridis scale = new ScaleColorViridis()
     scale.train(['A', 'B', 'C'])
-    
+
     assertFalse(scale.getColors().isEmpty())
-    
+
     scale.reset()
-    
+
     assertTrue(scale.getColors().isEmpty())
   }
 
@@ -489,7 +490,7 @@ class ScaleColorViridisTest {
     String color = scale.transform('A') as String
     assertNotNull(color)
     assertTrue(color.startsWith('#'))
-    
+
     // Single level should get a color from middle of range
     assertEquals(1, scale.getColors().size())
   }
@@ -503,13 +504,13 @@ class ScaleColorViridisTest {
     // Should generate 20 distinct colors
     List<String> colors = scale.getColors()
     assertEquals(20, colors.size())
-    
+
     // Verify all are valid hex colors
     colors.each { color ->
       assertTrue(color.startsWith('#'))
       assertEquals(7, color.length()) // #RRGGBB format
     }
-    
+
     // Verify they're all different (viridis has enough color space for 20 values)
     assertEquals(20, colors.toSet().size())
   }
@@ -586,7 +587,7 @@ class ScaleColorViridisTest {
     // Should only have unique levels
     List<String> colors = scale.getColors()
     assertEquals(3, colors.size())
-    
+
     // Same value should always get same color
     assertEquals(scale.transform('A'), scale.transform('A'))
     assertEquals(scale.transform('B'), scale.transform('B'))
@@ -605,7 +606,7 @@ class ScaleColorViridisTest {
     assertTrue(color1.startsWith('#'))
     // Second color should be yellow-ish (viridis ends in yellow)
     assertTrue(color2.startsWith('#'))
-    
+
     // They should be very different
     assertNotEquals(color1, color2)
   }

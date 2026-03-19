@@ -1,15 +1,17 @@
 package se.alipsa.matrix.smile.ml
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.smile.DataframeConverter
+
 import smile.data.DataFrame
 import smile.data.formula.Formula
+import smile.regression.ElasticNet
+import smile.regression.LASSO
 import smile.regression.LinearModel
 import smile.regression.OLS
 import smile.regression.RidgeRegression
-import smile.regression.LASSO
-import smile.regression.ElasticNet
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.DataframeConverter
 
 /**
  * Wrapper for Smile regression algorithms providing a Matrix-friendly API.

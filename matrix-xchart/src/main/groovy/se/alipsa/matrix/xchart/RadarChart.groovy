@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import org.knowm.xchart.RadarChartBuilder
 import org.knowm.xchart.RadarSeries
 import org.knowm.xchart.style.RadarStyler
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart

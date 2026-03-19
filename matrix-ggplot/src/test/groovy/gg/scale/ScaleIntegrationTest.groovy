@@ -1,8 +1,11 @@
 package gg.scale
 
-import gg.BaseTest
 import groovy.xml.XmlSlurper
+
+import gg.BaseTest
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
@@ -10,8 +13,6 @@ import se.alipsa.matrix.datasets.Dataset
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
-
-import testutil.Slow
 
 /**
  * Integration tests for scale system with GgPlot rendering.

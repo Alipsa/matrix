@@ -1,11 +1,12 @@
 package se.alipsa.matrix.tablesaw
 
 
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 
 import java.math.RoundingMode
 import java.time.Instant

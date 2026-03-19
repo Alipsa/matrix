@@ -1,6 +1,7 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 

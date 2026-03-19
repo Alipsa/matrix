@@ -1,6 +1,8 @@
 package gg.geom
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
@@ -9,7 +11,6 @@ import se.alipsa.matrix.gg.layer.StatType
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
-import testutil.Slow
 
 class GeomFreqpolyTest {
 

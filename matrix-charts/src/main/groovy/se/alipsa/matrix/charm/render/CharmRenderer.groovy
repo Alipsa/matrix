@@ -1,9 +1,9 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
@@ -12,18 +12,19 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
-import se.alipsa.matrix.charm.render.coord.CoordEngine
-import se.alipsa.matrix.charm.render.position.PositionEngine
-import se.alipsa.matrix.charm.theme.ElementText
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.util.Logger
-import se.alipsa.matrix.charm.render.geom.GeomEngine
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.render.annotation.AnnotationEngine
+import se.alipsa.matrix.charm.render.coord.CoordEngine
+import se.alipsa.matrix.charm.render.geom.GeomEngine
+import se.alipsa.matrix.charm.render.position.PositionEngine
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.charm.render.stat.StatEngine
+import se.alipsa.matrix.charm.theme.ElementText
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Charm SVG renderer.

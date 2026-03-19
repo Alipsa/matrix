@@ -2,9 +2,9 @@ package se.alipsa.matrix.charm.sf
 
 import groovy.transform.CompileStatic
 
+import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import java.util.Locale
 
 /**
  * Minimal WKT reader for Simple Features geometries.

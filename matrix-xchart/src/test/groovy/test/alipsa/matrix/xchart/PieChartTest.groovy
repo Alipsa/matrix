@@ -1,6 +1,7 @@
 package test.alipsa.matrix.xchart
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.PieChart
 
@@ -37,7 +38,7 @@ class PieChartTest {
     File file = new File("build/testPieChart.png")
     def pc = PieChart.create(matrix)
         .addSeries(matrix.metal, matrix.ratio)
-    
+
     pc.exportPng(file)
     assertTrue(file.exists())
   }

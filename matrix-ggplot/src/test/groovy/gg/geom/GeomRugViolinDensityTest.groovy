@@ -1,16 +1,17 @@
 package gg.geom
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.geom.GeomDensity
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomViolin
-import se.alipsa.matrix.gg.geom.GeomDensity
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
-import testutil.Slow
 
 class GeomRugViolinDensityTest {
 

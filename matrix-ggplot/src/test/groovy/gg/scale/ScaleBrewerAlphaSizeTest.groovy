@@ -1,18 +1,19 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.gg.scale.ScaleAlphaContinuous
+
 import se.alipsa.matrix.gg.scale.ScaleAlphaBinned
+import se.alipsa.matrix.gg.scale.ScaleAlphaContinuous
 import se.alipsa.matrix.gg.scale.ScaleAlphaDiscrete
 import se.alipsa.matrix.gg.scale.ScaleColorBrewer
 import se.alipsa.matrix.gg.scale.ScaleColorDistiller
 import se.alipsa.matrix.gg.scale.ScaleColorGradientN
 import se.alipsa.matrix.gg.scale.ScaleColorGrey
+import se.alipsa.matrix.gg.scale.ScaleRadius
 import se.alipsa.matrix.gg.scale.ScaleSizeArea
 import se.alipsa.matrix.gg.scale.ScaleSizeBinned
 import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 import se.alipsa.matrix.gg.scale.ScaleSizeDiscrete
-import se.alipsa.matrix.gg.scale.ScaleRadius
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 

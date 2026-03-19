@@ -1,8 +1,10 @@
 package se.alipsa.matrix.smile.ml
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
+
 import smile.feature.extraction.PCA
+
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Wrapper for Smile dimensionality reduction algorithms providing a Matrix-friendly API.

@@ -1,14 +1,15 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.smile.stats.SmileStats
-import smile.stat.distribution.GaussianDistribution
-import smile.stat.distribution.PoissonDistribution
 import smile.stat.distribution.BinomialDistribution
 import smile.stat.distribution.ExponentialDistribution
-import smile.stat.hypothesis.TTest
+import smile.stat.distribution.GaussianDistribution
+import smile.stat.distribution.PoissonDistribution
+import smile.stat.hypothesis.CorTest
 import smile.stat.hypothesis.FTest
 import smile.stat.hypothesis.KSTest
-import smile.stat.hypothesis.CorTest
+import smile.stat.hypothesis.TTest
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.stats.SmileStats
 
 import static org.junit.jupiter.api.Assertions.*
 

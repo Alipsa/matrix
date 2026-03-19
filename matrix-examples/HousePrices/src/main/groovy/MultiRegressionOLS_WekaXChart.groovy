@@ -15,16 +15,6 @@
  */
 
 /*
-import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.XYChartBuilder
-import weka.classifiers.functions.LinearRegression
-import weka.core.converters.CSVLoader
-import weka.filters.Filter
-import weka.filters.unsupervised.attribute.Remove
-
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Line
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Scatter
-import static org.knowm.xchart.style.markers.SeriesMarkers.NONE
 
 def file = getClass().classLoader.getResource('kc_house_data.csv').file as File
 

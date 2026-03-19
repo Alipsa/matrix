@@ -1,7 +1,7 @@
 package se.alipsa.matrix.smile.stats
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
+
 import smile.stat.distribution.BernoulliDistribution
 import smile.stat.distribution.BetaDistribution
 import smile.stat.distribution.BinomialDistribution
@@ -20,6 +20,8 @@ import smile.stat.hypothesis.CorTest
 import smile.stat.hypothesis.FTest
 import smile.stat.hypothesis.KSTest
 import smile.stat.hypothesis.TTest
+
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Statistical utilities leveraging Smile's statistics library.

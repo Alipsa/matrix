@@ -1,6 +1,7 @@
 package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
+
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
@@ -10,6 +11,7 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
+
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException

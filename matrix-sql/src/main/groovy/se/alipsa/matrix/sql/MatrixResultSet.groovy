@@ -1,7 +1,9 @@
 package se.alipsa.matrix.sql
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.io.input.ReaderInputStream
+
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix

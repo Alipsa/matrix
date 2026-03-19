@@ -1,24 +1,22 @@
 package test.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
 import com.google.cloud.bigquery.StandardSQLTypeName
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.bigquery.TypeMapper
 import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
-
-import static org.junit.jupiter.api.Assertions.*
-
-import groovy.transform.CompileStatic
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import se.alipsa.matrix.bigquery.Bq
-import se.alipsa.matrix.core.ListConverter
-import se.alipsa.matrix.core.Matrix
-
 import java.sql.Time
 import java.time.Instant
 import java.time.LocalDate
@@ -26,6 +24,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+
+import static org.junit.jupiter.api.Assertions.*
 
 @Tag("external")
 @CompileStatic

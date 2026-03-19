@@ -1,6 +1,7 @@
 package gg
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity

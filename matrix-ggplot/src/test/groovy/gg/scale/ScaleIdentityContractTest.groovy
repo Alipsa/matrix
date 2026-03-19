@@ -3,6 +3,7 @@ package gg.scale
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+
 import se.alipsa.matrix.gg.scale.ScaleAlphaIdentity
 import se.alipsa.matrix.gg.scale.ScaleColorIdentity
 import se.alipsa.matrix.gg.scale.ScaleFillIdentity

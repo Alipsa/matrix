@@ -1,13 +1,14 @@
 package se.alipsa.matrix.json
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
 
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+
+import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets

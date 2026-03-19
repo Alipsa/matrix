@@ -1,11 +1,12 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderBuilder
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Immutable compiled Charm chart.

@@ -1,6 +1,8 @@
 package chart
 
 import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.BubbleChart
@@ -11,10 +13,9 @@ import se.alipsa.matrix.pict.DataType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.LineChart
-import se.alipsa.matrix.pict.Style
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.ScatterChart
-import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.pict.Style
 
 import java.time.Instant
 import java.time.LocalDate

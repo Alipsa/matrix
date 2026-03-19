@@ -1,10 +1,12 @@
 package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.optim.MaxIter
 import org.apache.commons.math3.optim.PointValuePair
 import org.apache.commons.math3.optim.linear.*
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
+
 import se.alipsa.matrix.core.Matrix
 
 import java.math.RoundingMode

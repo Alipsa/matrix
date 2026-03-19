@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.stat
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.gg.layer.StatType

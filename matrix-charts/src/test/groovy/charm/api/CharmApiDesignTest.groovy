@@ -2,11 +2,13 @@ package charm.api
 
 import groovy.lang.GroovyShell
 import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.LinetypeName
@@ -17,8 +19,8 @@ import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.charm.geom.Geoms
 import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.charm.geom.SmoothBuilder
-import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
 import static org.junit.jupiter.api.Assertions.assertEquals

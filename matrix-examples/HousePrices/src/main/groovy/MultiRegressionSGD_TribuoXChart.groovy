@@ -15,26 +15,6 @@
  */
 
 /*
-import groovy.transform.CompileStatic
-import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.XYChartBuilder
-import org.tribuo.Dataset
-import org.tribuo.Example
-import org.tribuo.MutableDataset
-import org.tribuo.data.columnar.FieldProcessor
-import org.tribuo.data.columnar.RowProcessor
-import org.tribuo.data.columnar.processors.field.DoubleFieldProcessor
-import org.tribuo.data.columnar.processors.response.FieldResponseProcessor
-import org.tribuo.data.csv.CSVDataSource
-import org.tribuo.math.optimisers.AdaGrad
-import org.tribuo.regression.RegressionFactory
-import org.tribuo.regression.Regressor
-import org.tribuo.regression.sgd.linear.LinearSGDTrainer
-import org.tribuo.regression.sgd.objectives.SquaredLoss
-
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Line
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Scatter
-import static org.knowm.xchart.style.markers.SeriesMarkers.NONE
 
 // This example uses Groovy 3 'var' which is fine for JDK8+,
 // but if you need to run on Groovy 2.x, change back to 'def'.

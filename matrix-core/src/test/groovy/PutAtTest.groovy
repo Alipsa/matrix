@@ -1,5 +1,7 @@
 import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate

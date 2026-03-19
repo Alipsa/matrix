@@ -9,15 +9,16 @@
  * 5. Visualizing data                                        *
  *************************************************************/
 
+import org.apache.commons.csv.CSVFormat
+
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.stats.*
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.xchart.*
-import java.time.LocalDate
-import java.text.NumberFormat
-import org.apache.commons.csv.CSVFormat
 
+import java.text.NumberFormat
+import java.time.LocalDate
 import java.time.YearMonth
 
 import static se.alipsa.matrix.core.ListConverter.toDates
@@ -377,4 +378,3 @@ println "   - Scatter plot for units sold vs revenue"
 println "   - Line chart for monthly sales trend"
 println "   - Pie chart for product distribution"
 println "\nAll results and visualizations have been saved to the $analysisResults.absolutePath directory."
-

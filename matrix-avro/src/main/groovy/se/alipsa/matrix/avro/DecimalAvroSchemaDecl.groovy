@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.transform.ToString
+
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 

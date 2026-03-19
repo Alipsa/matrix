@@ -3,6 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 @CompileStatic
