@@ -10,7 +10,8 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.0-SNAPSHOT'
+version = '0.2.0'
+description = 'Matrix Avro import/export with schema evolution and logical type support'
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
@@ -146,16 +147,16 @@ publishing {
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
-        name = 'Matrix Json'
+        name = 'Matrix Avro support'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-avro"
+        url = 'https://github.com/Alipsa/matrix/tree/main/matrix-avro'
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-avro/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/refs/heads/main/LICENSE'
           }
         }
         developers {
@@ -165,7 +166,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-avro/tree/master'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-avro'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }

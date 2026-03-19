@@ -93,19 +93,16 @@ subprojects {
         if (mainSrcDir.exists()) {
           def arrowSwitchFiles = [] as Set<String>
           mainSrcDir.eachFileRecurse { File f ->
-            if (f.name.endsWith('.groovy') && f.text =~ arrowSwitchPattern) {
-              arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
+            if (f.name.endsWith('.groovy')) {
+              if (f.text =~ arrowSwitchPattern) {
+                arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
+              }
             }
           }
-          source = fileTree('src/main/groovy') {
-            include '**/*.groovy'
-            arrowSwitchFiles.each { path -> exclude path }
-          }
+          excludes = arrowSwitchFiles
         }
         else {
-          source = fileTree('src/main/groovy') {
-            include '**/*.groovy'
-          }
+          excludes = [] as Set<String>
         }
       }
 
