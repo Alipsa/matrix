@@ -1,6 +1,7 @@
 package se.alipsa.matrix.parquet
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor

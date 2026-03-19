@@ -1,6 +1,8 @@
 package chart
 
 import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.ChartType
@@ -9,7 +11,6 @@ import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
-import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
 

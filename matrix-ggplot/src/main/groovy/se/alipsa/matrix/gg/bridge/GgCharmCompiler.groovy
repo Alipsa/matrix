@@ -2,17 +2,18 @@ package se.alipsa.matrix.gg.bridge
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.AnnotationSpec
-import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.ColumnRef
 import se.alipsa.matrix.charm.Coord
 import se.alipsa.matrix.charm.CssAttributesSpec
+import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.Facet
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.GeomSpec
@@ -21,8 +22,11 @@ import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.Labels
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.LogticksAnnotationSpec
 import se.alipsa.matrix.charm.MapAnnotationSpec
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.RasterAnnotationSpec
 import se.alipsa.matrix.charm.RectAnnotationSpec
@@ -32,13 +36,10 @@ import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.charm.Theme
-import se.alipsa.matrix.charm.LegendDirection
-import se.alipsa.matrix.charm.LegendPosition
-import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.Guide
@@ -70,6 +71,7 @@ import se.alipsa.matrix.gg.scale.ScaleYDate
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.scale.ScaleYTime
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
+
 import java.util.Locale
 
 /**

@@ -15,19 +15,6 @@
  */
 
 /*
-import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.XYChartBuilder
-import org.tribuo.MutableDataset
-import org.tribuo.data.columnar.RowProcessor
-import org.tribuo.data.columnar.processors.field.DoubleFieldProcessor
-import org.tribuo.data.columnar.processors.response.FieldResponseProcessor
-import org.tribuo.data.csv.CSVDataSource
-import org.tribuo.regression.RegressionFactory
-import org.tribuo.regression.rtree.CARTRegressionTrainer
-
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Line
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Scatter
-import static org.knowm.xchart.style.markers.SeriesMarkers.NONE
 
 def cols = ['bedrooms','bathrooms','sqft_living','sqft_lot','floors','waterfront','view','condition','grade',
             'sqft_above','sqft_basement','yr_built','yr_renovated','zipcode','lat','long','sqft_living15','sqft_lot15']

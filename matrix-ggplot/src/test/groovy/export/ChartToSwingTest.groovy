@@ -1,9 +1,13 @@
 package export
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
@@ -11,12 +15,8 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.export.GgExport
 
-import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.charm.geom.PointBuilder
-import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
-
-import testutil.Slow
+import static se.alipsa.matrix.gg.GgPlot.*
 
 @Slow
 class ChartToSwingTest {
@@ -27,13 +27,13 @@ class ChartToSwingTest {
     String svgContent = """<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="40" fill="blue" />
     </svg>"""
-    
+
     // Export to SvgPanel
     SvgPanel panel = ChartToSwing.export(svgContent)
-    
+
     // Verify panel is not null
     assertNotNull(panel, "SvgPanel should not be null")
-    
+
     // Verify panel has preferred size set
     assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
     assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")
@@ -46,13 +46,13 @@ class ChartToSwingTest {
     Svg svg = SvgReader.parse("""<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
       <rect x="10" y="10" width="180" height="130" fill="red" />
     </svg>""")
-    
+
     // Export to SvgPanel
     SvgPanel panel = ChartToSwing.export(svg)
-    
+
     // Verify panel is not null
     assertNotNull(panel, "SvgPanel should not be null")
-    
+
     // Verify panel has preferred size set
     assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
     assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")

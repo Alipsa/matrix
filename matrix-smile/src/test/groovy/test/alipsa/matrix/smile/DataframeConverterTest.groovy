@@ -1,11 +1,12 @@
 package test.alipsa.matrix.smile
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.smile.DataframeConverter
 import smile.data.DataFrame
 import smile.data.type.*
 import smile.data.vector.ValueVector
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.DataframeConverter
 
 import java.sql.Timestamp
 import java.time.*

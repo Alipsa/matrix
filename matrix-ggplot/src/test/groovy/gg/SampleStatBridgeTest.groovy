@@ -1,6 +1,7 @@
 package gg
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.bridge.GgCharmCompilation

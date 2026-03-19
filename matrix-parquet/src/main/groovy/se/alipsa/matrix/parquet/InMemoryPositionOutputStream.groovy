@@ -1,6 +1,7 @@
 package se.alipsa.matrix.parquet
 
 import groovy.transform.CompileStatic
+
 import org.apache.parquet.io.PositionOutputStream
 
 /**

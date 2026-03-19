@@ -16,9 +16,6 @@
 /*
 //@Grab('org.apache.commons:commons-math3:3.6.1')
 //@Grab('org.apache.commons:commons-csv:1.13.0')
-import org.apache.commons.math3.distribution.NormalDistribution
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
 
 //def file = 'kc_house_data.csv' as File
 def file = getClass().classLoader.getResource('kc_house_data.csv').file

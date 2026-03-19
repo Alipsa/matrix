@@ -1,11 +1,13 @@
 package test.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
-import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
 

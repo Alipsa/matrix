@@ -2,8 +2,8 @@ package se.alipsa.matrix.sql.config
 
 import se.alipsa.matrix.core.util.Logger
 
-import javax.security.auth.login.Configuration;
-import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry
+import javax.security.auth.login.Configuration
 class JaasConfigLoader {
 
   private static final Logger log = Logger.getLogger(JaasConfigLoader)

@@ -1,6 +1,13 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
 import groovy.transform.CompileStatic
+
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import org.w3c.dom.NodeList
+import org.xml.sax.InputSource
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -9,12 +16,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.ZipUtil
 
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.transform.OutputKeys
-import javax.xml.transform.Transformer
-import javax.xml.transform.TransformerFactory
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.stream.StreamResult
+import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -24,17 +26,18 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
-import org.xml.sax.InputSource
+import java.util.Collections
+import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-import java.io.StringReader
-import java.util.regex.Pattern
-import java.util.Collections
+
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.OutputKeys
+import javax.xml.transform.Transformer
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 
 @CompileStatic
 class FExcelAppender {

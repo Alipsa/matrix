@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import groovy.transform.PackageScope
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
@@ -7,7 +9,7 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.sheets.v4.Sheets
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
-import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.util.Logger
 
 import java.time.LocalDate

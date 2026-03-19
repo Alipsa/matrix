@@ -1,6 +1,7 @@
 package test.alipsa.matrix.avro
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 

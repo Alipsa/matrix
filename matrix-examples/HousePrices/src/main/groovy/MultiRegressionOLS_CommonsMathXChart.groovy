@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 /*
-import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
-import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.XYChartBuilder
-
-import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Line
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.Scatter
-import static org.knowm.xchart.style.markers.SeriesMarkers.NONE
 
 def file = getClass().classLoader.getResource('kc_house_data.csv').file
 def csv  = CSV.withFirstRecordAsHeader().parse(new FileReader(file))

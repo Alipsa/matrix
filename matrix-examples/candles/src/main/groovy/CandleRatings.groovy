@@ -22,7 +22,9 @@ import tech.tablesaw.plotly.components.*
 import tech.tablesaw.plotly.traces.ScatterTrace
 import tech.tablesaw.plotly.traces.Trace
 import tech.tablesaw.selection.Selection
+
 import se.alipsa.gi.swing.*
+
 import java.time.*
 import java.util.function.Function
 

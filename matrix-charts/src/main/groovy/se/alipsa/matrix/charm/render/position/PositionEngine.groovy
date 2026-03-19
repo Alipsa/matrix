@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.position
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData

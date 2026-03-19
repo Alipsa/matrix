@@ -1,6 +1,7 @@
 package se.alipsa.matrix.sql
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil

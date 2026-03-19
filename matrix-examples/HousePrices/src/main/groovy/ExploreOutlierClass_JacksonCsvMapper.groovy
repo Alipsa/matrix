@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 /*
-import com.fasterxml.jackson.annotation.JsonIncludeProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import com.fasterxml.jackson.dataformat.csv.CsvMapper
-import com.fasterxml.jackson.dataformat.csv.CsvSchema
-import groovy.transform.ToString
-
-import static com.fasterxml.jackson.dataformat.csv.CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE
 
 @JsonPropertyOrder(['bedrooms', 'bathrooms', 'sqft_lot'])
 @JsonIncludeProperties(['bedrooms', 'bathrooms', 'sqft_lot'])

@@ -4,12 +4,13 @@ import com.github.weisj.jsvg.SVGDocument
 import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
 
-import javax.swing.JPanel
 import java.awt.Dimension
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.nio.charset.StandardCharsets
+
+import javax.swing.JPanel
 
 class SvgPanel extends JPanel {
 

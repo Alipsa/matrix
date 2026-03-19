@@ -1,8 +1,10 @@
 package se.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
 import com.google.cloud.bigquery.FieldValue
 import com.google.cloud.bigquery.StandardSQLTypeName
-import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.ValueConverter
 
 import java.nio.ByteBuffer

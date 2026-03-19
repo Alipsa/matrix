@@ -1,18 +1,14 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
-import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.ZipUtil
 
-import javax.xml.stream.XMLInputFactory
-import javax.xml.stream.XMLOutputFactory
-import javax.xml.stream.XMLStreamConstants
-import javax.xml.stream.XMLStreamReader
-import javax.xml.stream.XMLStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -21,6 +17,12 @@ import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
+
+import javax.xml.stream.XMLInputFactory
+import javax.xml.stream.XMLOutputFactory
+import javax.xml.stream.XMLStreamConstants
+import javax.xml.stream.XMLStreamReader
+import javax.xml.stream.XMLStreamWriter
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn

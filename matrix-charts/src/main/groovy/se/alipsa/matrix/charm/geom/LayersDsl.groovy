@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.geom
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.LinetypeName
 import se.alipsa.matrix.charm.ShapeName
 

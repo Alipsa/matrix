@@ -1,20 +1,21 @@
 package gg
 
-import se.alipsa.groovy.svg.Svg
+import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Circle
-import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path
+import se.alipsa.groovy.svg.Rect
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.aes.Factor
 
 import static org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
-import se.alipsa.matrix.datasets.Dataset
 import static se.alipsa.matrix.gg.GgPlot.*
-import testutil.Slow
 
 @Slow
 class GgPlotFullTest {

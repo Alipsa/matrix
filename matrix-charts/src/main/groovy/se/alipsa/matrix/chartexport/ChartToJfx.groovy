@@ -2,10 +2,11 @@ package se.alipsa.matrix.chartexport
 
 import org.girod.javafx.svgimage.SVGImage
 import org.girod.javafx.svgimage.SVGLoader
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
-import se.alipsa.matrix.pict.Chart
 import se.alipsa.matrix.pict.CharmBridge
+import se.alipsa.matrix.pict.Chart
 
 /**
  * Exports charts as JavaFX {@link SVGImage} nodes.

@@ -1,6 +1,7 @@
 package test.alipsa.matrix.xchart
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.BubbleChart
 

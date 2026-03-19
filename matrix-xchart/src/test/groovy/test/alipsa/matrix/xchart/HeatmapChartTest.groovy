@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize

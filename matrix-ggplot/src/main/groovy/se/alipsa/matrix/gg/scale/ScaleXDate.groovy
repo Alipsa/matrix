@@ -2,10 +2,10 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.Temporal

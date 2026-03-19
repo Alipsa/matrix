@@ -1,8 +1,9 @@
 package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.gg.layer.StatType
+
 import se.alipsa.matrix.charm.util.ColorUtil
+import se.alipsa.matrix.gg.layer.StatType
 
 /**
  * Contour geometry for drawing contour lines from 2D density/height data.

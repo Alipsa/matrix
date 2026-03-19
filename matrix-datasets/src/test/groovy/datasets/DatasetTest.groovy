@@ -1,13 +1,13 @@
 package datasets
 
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.core.*
 import se.alipsa.matrix.datasets.Dataset
 
 import java.math.RoundingMode
 
 import static org.junit.jupiter.api.Assertions.*
-
-import org.junit.jupiter.api.Test
-import se.alipsa.matrix.core.*
 
 class DatasetTest {
 

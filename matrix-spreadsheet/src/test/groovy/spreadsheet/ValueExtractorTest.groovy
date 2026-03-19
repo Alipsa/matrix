@@ -1,6 +1,7 @@
 package spreadsheet
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
 import static org.junit.jupiter.api.Assertions.*

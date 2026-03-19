@@ -1,10 +1,11 @@
 package se.alipsa.matrix.tablesaw
 
 
-import se.alipsa.matrix.stats.Normalize
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn
+
+import se.alipsa.matrix.stats.Normalize
 
 /**
  * This class provides various ways to normalize a Tablesaw column.

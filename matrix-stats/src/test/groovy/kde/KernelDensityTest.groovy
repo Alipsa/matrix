@@ -1,6 +1,7 @@
 package kde
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.kde.BandwidthSelector
 import se.alipsa.matrix.stats.kde.Kernel

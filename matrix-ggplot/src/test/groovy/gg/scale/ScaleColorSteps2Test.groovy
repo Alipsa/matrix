@@ -1,6 +1,7 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.scale.ScaleColorSteps2
 
 import static org.junit.jupiter.api.Assertions.*

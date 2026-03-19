@@ -1,5 +1,7 @@
 package se.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonGenerator
@@ -9,11 +11,12 @@ import com.google.cloud.bigquery.*
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption
 import com.google.cloud.bigquery.BigQuery.DatasetListOption
 import com.google.cloud.bigquery.BigQuery.TableListOption
+import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
 import com.google.cloud.resourcemanager.v3.Project
 import com.google.cloud.resourcemanager.v3.ProjectsClient
 import com.google.cloud.resourcemanager.v3.ProjectsSettings
-import groovy.transform.CompileStatic
 import me.tongfei.progressbar.ProgressBar
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
@@ -26,8 +29,8 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Collections
+
 import static se.alipsa.matrix.bigquery.TypeMapper.*
-import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
 
 /**
  * BigQuery client wrapper providing Matrix-oriented operations for Google BigQuery.

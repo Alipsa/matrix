@@ -2,10 +2,11 @@ package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.tablesaw.Normalizer
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn
+
+import se.alipsa.matrix.tablesaw.Normalizer
 
 class NormalizeTest {
 

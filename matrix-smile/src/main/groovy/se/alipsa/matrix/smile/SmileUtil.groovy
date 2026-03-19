@@ -1,10 +1,12 @@
 package se.alipsa.matrix.smile
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Stat
+
 import smile.data.DataFrame
 import smile.data.vector.ValueVector
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 

@@ -1,12 +1,14 @@
 package chart
 
-import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.Plot
+
 import java.time.YearMonth
+
+import static org.junit.jupiter.api.Assertions.*
 
 class LineChartTest {
 

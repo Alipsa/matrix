@@ -2,7 +2,9 @@ package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
 import org.apache.avro.Schema
+
 import se.alipsa.matrix.core.spi.OptionMaps
 
 import java.time.Instant

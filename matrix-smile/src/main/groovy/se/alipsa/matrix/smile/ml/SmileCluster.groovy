@@ -1,8 +1,10 @@
 package se.alipsa.matrix.smile.ml
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
+
 import smile.clustering.*
+
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Wrapper for Smile clustering algorithms providing a Matrix-friendly API.

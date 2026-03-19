@@ -1,9 +1,11 @@
-import se.alipsa.matrix.core.Converter
+import org.junit.jupiter.api.*
+
 import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.Converter
 import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
-import se.alipsa.matrix.core.Matrix
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -11,11 +13,8 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.temporal.TemporalAccessor
 
-import static se.alipsa.matrix.core.ListConverter.*
 import static org.junit.jupiter.api.Assertions.*
-
-import org.junit.jupiter.api.*
-
+import static se.alipsa.matrix.core.ListConverter.*
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 import static se.alipsa.matrix.core.ValueConverter.asYearMonth
 

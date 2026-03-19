@@ -1,6 +1,7 @@
 package test.alipsa.matrix.avro
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException

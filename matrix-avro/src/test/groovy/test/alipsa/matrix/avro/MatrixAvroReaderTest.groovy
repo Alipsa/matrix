@@ -9,16 +9,16 @@ import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.*
 
+import se.alipsa.matrix.avro.AvroReadOptions
+import se.alipsa.matrix.avro.MatrixAvroReader
+import se.alipsa.matrix.avro.exceptions.AvroValidationException
+import se.alipsa.matrix.core.Matrix
+
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
-
-import se.alipsa.matrix.avro.MatrixAvroReader
-import se.alipsa.matrix.avro.AvroReadOptions
-import se.alipsa.matrix.avro.exceptions.AvroValidationException
-import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
 

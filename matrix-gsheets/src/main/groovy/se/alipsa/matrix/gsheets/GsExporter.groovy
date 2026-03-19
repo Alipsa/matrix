@@ -1,7 +1,9 @@
 package se.alipsa.matrix.gsheets
 
-import com.google.auth.oauth2.GoogleCredentials
 import groovy.transform.CompileStatic
+
+import com.google.auth.oauth2.GoogleCredentials
+
 import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate

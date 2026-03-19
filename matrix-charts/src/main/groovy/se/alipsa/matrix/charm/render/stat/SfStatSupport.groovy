@@ -1,10 +1,11 @@
 package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
+
+import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.sf.SfGeometry
 import se.alipsa.matrix.charm.sf.WktReader
-import se.alipsa.matrix.charm.render.LayerData
 
 /**
  * Shared helpers for SF-related stats.

@@ -15,11 +15,6 @@
  */
 /*
 // joinery has some neat capabilities but has a restrictive GPL3 license
-import joinery.DataFrame
-import org.apache.commons.math3.random.EmpiricalDistribution
-import org.knowm.xchart.CategoryChartBuilder
-import org.knowm.xchart.Histogram
-import org.knowm.xchart.SwingWrapper
 
 def binCount = 50
 def is = getClass().classLoader.getResourceAsStream('kc_house_data.csv')

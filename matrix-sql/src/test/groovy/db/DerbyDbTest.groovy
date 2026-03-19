@@ -1,6 +1,7 @@
 package db
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.sql.MatrixSqlFactory
 
 class DerbyDbTest {

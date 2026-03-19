@@ -5,6 +5,7 @@ import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.theme.GGPlot2Theme
 import org.knowm.xchart.style.theme.MatlabTheme
 import org.knowm.xchart.style.theme.XChartTheme
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.BarChart

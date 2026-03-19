@@ -1,7 +1,9 @@
 package test.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.*
+
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
@@ -71,10 +73,10 @@ class BqTest {
       log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
-        CAST(id as STRING)) as url, view_count 
-        FROM `bigquery-public-data.stackoverflow.posts_questions` 
-        WHERE tags like '%google-bigquery%' 
+    Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/',
+        CAST(id as STRING)) as url, view_count
+        FROM `bigquery-public-data.stackoverflow.posts_questions`
+        WHERE tags like '%google-bigquery%'
         ORDER BY view_count DESC
         LIMIT 10
         """.stripIndent())

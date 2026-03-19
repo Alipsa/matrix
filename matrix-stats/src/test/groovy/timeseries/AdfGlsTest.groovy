@@ -1,6 +1,7 @@
 package timeseries
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.stats.timeseries.AdfGls
 
 import static org.junit.jupiter.api.Assertions.*

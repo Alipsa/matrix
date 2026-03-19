@@ -1,9 +1,11 @@
 package se.alipsa.matrix.xchart
 
 import groovy.transform.CompileStatic
+
 import org.knowm.xchart.BubbleChartBuilder
 import org.knowm.xchart.BubbleSeries
 import org.knowm.xchart.style.BubbleStyler
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart

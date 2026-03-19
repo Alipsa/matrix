@@ -1,6 +1,7 @@
 package charm.render
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.charm.Chart

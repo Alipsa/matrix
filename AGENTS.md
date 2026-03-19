@@ -11,10 +11,12 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 - `./gradlew test -PrunSlowTests=true`: include slow integration tests.
 - `RUN_EXTERNAL_TESTS=true ./gradlew test`: enable external tests (BigQuery, GSheets).
 - `./gradlew publishToMavenLocal`: publish artifacts locally.
+- `./gradlew spotlessApply`: auto-format all source files.
+- `./gradlew spotlessCheck`: verify formatting without modifying files (runs as part of `build`).
 - `./gradlew dependencyUpdates`: report newer dependency versions.
 
 ## Coding Style & Naming Conventions
-Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. There is no enforced formatter, so match the surrounding file conventions.
+Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format). Follow the existing 2-space indentation and import style in each file.
 
 ### Avoid `Object` Parameters — Use Typed Overloads
 **CRITICAL:** Never use `Object` as a method parameter or field type when specific types are known. `Object` parameters are not type-safe and provide no IDE assistance. Instead, use method overloads with concrete types:

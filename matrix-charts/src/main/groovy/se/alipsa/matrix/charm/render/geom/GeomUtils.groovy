@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.geom
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.FacetType
@@ -12,10 +13,10 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
+import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.ValueConverter
-import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
  * Shared helpers for Charm geom renderers.

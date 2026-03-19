@@ -1,10 +1,10 @@
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.pict.*
 
 import java.time.LocalDate
-
-import se.alipsa.matrix.pict.*
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*

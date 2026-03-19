@@ -1,6 +1,7 @@
 package charm.render.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg

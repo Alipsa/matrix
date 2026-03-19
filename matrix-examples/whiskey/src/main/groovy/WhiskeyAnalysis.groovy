@@ -10,12 +10,13 @@
 @Grab('se.alipsa.matrix:matrix-xchart:0.2.1')
 @groovy.lang.GrabConfig(systemClassLoader=true)
 
+import smile.clustering.KMeans
+import smile.feature.extraction.PCA
+
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.*
-import smile.clustering.KMeans
-import smile.feature.extraction.PCA
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
     .dropColumns('RowID')

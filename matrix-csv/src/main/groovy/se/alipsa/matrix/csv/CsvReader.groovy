@@ -1,11 +1,13 @@
 package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
 import org.apache.commons.io.input.CloseShieldInputStream
 import org.apache.commons.io.input.CloseShieldReader
+
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset

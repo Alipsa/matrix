@@ -1,12 +1,13 @@
 package se.alipsa.matrix.gg
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.*
 import se.alipsa.matrix.gg.layer.Layer
-import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.layer.StatType
 
 /**
  * Annotation layer for adding fixed elements (text, shapes, lines) to plots.

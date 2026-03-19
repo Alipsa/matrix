@@ -15,17 +15,6 @@
  */
 
 /*
-import smile.data.DataFrame
-import smile.data.formula.Formula
-import smile.io.Read
-import smile.plot.swing.LinePlot
-import smile.plot.swing.ScatterPlot
-import smile.regression.OLS
-
-import static java.awt.Color.BLUE
-import static java.awt.Color.RED
-import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
-import static smile.plot.swing.Line.Style.DASH
 
 def file = new File(getClass().classLoader.getResource('kc_house_data.csv').file)
 def table = Read.csv(file.toPath(), CSV.withFirstRecordAsHeader())

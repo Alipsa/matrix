@@ -2,6 +2,8 @@ package gg
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
@@ -11,8 +13,6 @@ import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
-
-import testutil.Slow
 
 /**
  * Tests for ggsave methods.

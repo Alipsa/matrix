@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.layer
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.Geom

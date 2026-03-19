@@ -1,9 +1,11 @@
 package se.alipsa.matrix.smile
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.core.Matrix
+
 import smile.data.DataFrame
 import smile.data.vector.ValueVector
+
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Groovy extension class that adds convenience methods to Matrix and Smile DataFrame.

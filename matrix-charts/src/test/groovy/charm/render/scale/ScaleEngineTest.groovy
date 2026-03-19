@@ -1,6 +1,7 @@
 package charm.render.scale
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.PlotSpec
@@ -14,6 +15,7 @@ import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.core.Matrix
+
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

@@ -1,6 +1,7 @@
 package gg.geom
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.geom.GeomJitter
 import se.alipsa.matrix.gg.layer.PositionType
 

@@ -2,12 +2,13 @@ package gg.scale
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import testutil.Slow
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleXBinned
 import se.alipsa.matrix.gg.scale.ScaleYBinned
-import testutil.Slow
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*

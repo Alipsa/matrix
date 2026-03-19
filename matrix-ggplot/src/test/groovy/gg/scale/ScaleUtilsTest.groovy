@@ -2,8 +2,8 @@ package gg.scale
 
 import gg.BaseTest
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.gg.scale.ScaleUtils
 
+import se.alipsa.matrix.gg.scale.ScaleUtils
 
 import static org.junit.jupiter.api.Assertions.assertNull
 

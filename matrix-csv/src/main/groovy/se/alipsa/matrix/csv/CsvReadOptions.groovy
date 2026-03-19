@@ -1,6 +1,7 @@
 package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.spi.OptionDescriptor
 
 import java.nio.charset.Charset

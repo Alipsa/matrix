@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.util.ColorUtil
 
 /**

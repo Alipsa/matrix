@@ -15,12 +15,6 @@ package houseprice
  * limitations under the License.
  */
 /*
-import tech.tablesaw.plotly.api.*
-import org.knowm.xchart.CategoryChartBuilder
-import org.knowm.xchart.Histogram
-import org.knowm.xchart.internal.chartpart.Chart
-import org.knowm.xchart.XChartPanel
-import javax.swing.JPanel
 
 binCount = 50
 table = Table.read().csv(new File(io.scriptDir(), "../data/kc_house_data.csv"))

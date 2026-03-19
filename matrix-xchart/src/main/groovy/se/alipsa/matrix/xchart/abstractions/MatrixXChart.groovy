@@ -1,7 +1,6 @@
 package se.alipsa.matrix.xchart.abstractions
-import org.knowm.xchart.internal.chartpart.Chart
-
 import org.knowm.xchart.XChartPanel
+import org.knowm.xchart.internal.chartpart.Chart
 
 /**
  * Base interface for all Matrix chart types.

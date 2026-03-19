@@ -2,10 +2,11 @@ package gg.scale
 
 import gg.BaseTest
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.scale.ScaleContinuous
+import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 import se.alipsa.matrix.gg.scale.ScaleXLog10
 import se.alipsa.matrix.gg.scale.ScaleXSqrt
-import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 
 import static org.junit.jupiter.api.Assertions.*
 

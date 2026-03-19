@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.containers.BigQueryEmulatorContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions

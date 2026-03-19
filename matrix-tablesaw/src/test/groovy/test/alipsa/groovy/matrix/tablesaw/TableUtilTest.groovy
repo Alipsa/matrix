@@ -2,13 +2,14 @@ package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.tablesaw.TableUtil
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.api.Table
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.TableUtil
 
 import java.util.UUID
 

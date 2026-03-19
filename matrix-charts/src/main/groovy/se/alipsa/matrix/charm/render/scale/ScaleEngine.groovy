@@ -1,13 +1,14 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderConfig
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Orchestrates scale training for all aesthetic channels.

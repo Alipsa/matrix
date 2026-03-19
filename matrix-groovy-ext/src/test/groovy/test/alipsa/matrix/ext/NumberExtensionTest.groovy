@@ -1,6 +1,7 @@
 package test.alipsa.matrix.ext
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.ext.NumberExtension
 
 import java.math.MathContext

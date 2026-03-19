@@ -1,6 +1,7 @@
 package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.regression.LinearRegression
 

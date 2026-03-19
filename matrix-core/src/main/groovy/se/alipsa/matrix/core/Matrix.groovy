@@ -3,16 +3,17 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
+
 import se.alipsa.matrix.core.spi.FormatRegistry
 import se.alipsa.matrix.core.spi.MatrixFormatProvider
 import se.alipsa.matrix.core.util.ClipboardUtil
-import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.ComparisonHelper
+import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.CsvHelper
 import se.alipsa.matrix.core.util.MatrixPrinter
-import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
+import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
 
 import java.nio.file.Path

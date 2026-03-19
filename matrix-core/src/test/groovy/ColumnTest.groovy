@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Stat
 

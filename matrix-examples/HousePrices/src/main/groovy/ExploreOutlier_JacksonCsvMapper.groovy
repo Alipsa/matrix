@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 /*
-import com.fasterxml.jackson.dataformat.csv.CsvMapper
-import com.fasterxml.jackson.dataformat.csv.CsvSchema
-
-import static com.fasterxml.jackson.dataformat.csv.CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE
 
 def data = getClass().classLoader.getResource('kc_house_data.csv').file as File
 

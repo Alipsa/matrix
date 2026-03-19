@@ -1,10 +1,11 @@
 package test.alipsa.matrix.arff
 
 import org.junit.jupiter.api.*
+
 import se.alipsa.matrix.arff.ArffReadOptions
-import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 

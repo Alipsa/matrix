@@ -1,9 +1,10 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmRenderException
+import se.alipsa.matrix.charm.Chart
 
 /**
  * Fluent builder for rendering a {@link Chart} with custom configuration.

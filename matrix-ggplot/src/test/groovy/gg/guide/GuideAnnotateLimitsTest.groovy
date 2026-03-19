@@ -2,6 +2,7 @@ package gg.guide
 
 import gg.BaseTest
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix

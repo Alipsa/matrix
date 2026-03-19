@@ -1,10 +1,12 @@
 package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.core.ValueConverter
+
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**

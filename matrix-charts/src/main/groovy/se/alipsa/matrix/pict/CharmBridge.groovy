@@ -1,12 +1,13 @@
 package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
-import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
-import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.geom.AreaBuilder
 import se.alipsa.matrix.charm.geom.BarBuilder
 import se.alipsa.matrix.charm.geom.BoxplotBuilder

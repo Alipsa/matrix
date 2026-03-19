@@ -2,6 +2,7 @@ package se.alipsa.matrix.datasets
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.core.util.Logger
@@ -326,10 +327,10 @@ class Dataset {
   static String descAirquality() {
     '''
         Daily air quality measurements in New York, May to September 1973.
-        
-        Original source: Chambers, J. M., Cleveland, W. S., Kleiner, B. and Tukey, P. A. (1983) 
+
+        Original source: Chambers, J. M., Cleveland, W. S., Kleiner, B. and Tukey, P. A. (1983)
         Graphical Methods for Data Analysis. Belmont, CA: Wadsworth.
-        
+
         Variables:
         Ozone: Mean ozone in parts per billion from 1300 to 1500 hours at Roosevelt Island
         Solar.R: Solar radiation in Langleys in the frequency band 4000--7700 Angstroms from 0800 to 1200 hours at Central Park
@@ -342,17 +343,17 @@ class Dataset {
     '''
         The data give the speed of cars and the distances taken to stop. Note that the data were recorded in the 1920s.
         Original source: Ezekiel, M. (1930) Methods of Correlation Analysis. Wiley.
-        
+
         Variables:
-        speed: the speed in miles per hour 
+        speed: the speed in miles per hour
         dist: the stopping distance in feet
         '''.stripIndent()
   }
 
   static String descMtcars() {
     return '''
-        The mtcars (Motor Trend Car Road Tests) dataset was extracted from the 1974 Motor Trend US magazine, 
-        and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles 
+        The mtcars (Motor Trend Car Road Tests) dataset was extracted from the 1974 Motor Trend US magazine,
+        and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles
         (1973–1974 models)
 
         Variables:
@@ -373,10 +374,10 @@ class Dataset {
 
   static String descIris() {
     return '''
-        The iris dataset gives the measurements in centimeters of the variables sepal length, sepal width, 
-        petal length and petal width, respectively, for 50 flowers from each of 3 species of iris. 
+        The iris dataset gives the measurements in centimeters of the variables sepal length, sepal width,
+        petal length and petal width, respectively, for 50 flowers from each of 3 species of iris.
         The species are Iris setosa, versicolor, and virginica.
-        
+
         Variables:
         Id: an integer corresponding to a unique observation,
         Sepal Length: length of the sepal in cm,
@@ -389,10 +390,10 @@ class Dataset {
 
   static String descPlantGrowth() {
     return '''
-        The plant growth dataset contains results obtained from an experiment to compare yields 
-        (as measured by dried weight of plants) 
+        The plant growth dataset contains results obtained from an experiment to compare yields
+        (as measured by dried weight of plants)
         obtained under a control and two different treatment conditions.
-        
+
         Variables:
         "": an integer corresponding to a unique observation,
         weight: the dried weight,
@@ -402,11 +403,11 @@ class Dataset {
 
   static String descToothGrowth() {
     return '''
-        The ToothGrowth data set contains the result from an experiment studying the effect of 
-        vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of 
-        vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, 
+        The ToothGrowth data set contains the result from an experiment studying the effect of
+        vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of
+        vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods,
         orange juice or ascorbic acid (a form of vitamin C and coded as VC).
-        
+
         Variables:
         '': an integer corresponding to a unique observation,
         len: Tooth length
@@ -417,9 +418,9 @@ class Dataset {
 
   static String descUsArrests() {
     return '''
-        The US arrests data set contains statistics in arrests per 100,000 residents for assault, murder, and rape 
+        The US arrests data set contains statistics in arrests per 100,000 residents for assault, murder, and rape
         in each of the 50 US states in 1973.
-        
+
         Variables:
         State: The US state
         Murder: Murder arrests (per 100,000)
@@ -431,11 +432,11 @@ class Dataset {
 
   static String descMpg() {
     return '''
-        The mpg (miles per gallon) dataset includes information about the fuel economy of popular car models in 1999 and 2008, 
+        The mpg (miles per gallon) dataset includes information about the fuel economy of popular car models in 1999 and 2008,
         collected by the US Environmental Protection Agency, http://fueleconomy.gov.
-        
+
         The mpg dataset contains 234 observations of 11 variables:
-        
+
         Variables:
         manufacturer: manufacturer name
         model: model name, there are 38 models, selected because they had a new edition every year between 1999 and 2008.
@@ -470,31 +471,31 @@ class Dataset {
   static String descMapData() {
     return '''
         Map dataset names:
-        county: This database produces a map of the counties of the United States mainland generated from 
+        county: This database produces a map of the counties of the United States mainland generated from
         the US Department of the Census data
-        
-        france: This france database comes from the NUTS III (Tertiary Administrative Units of the European Community) 
-        database of the United Nations Environment Programme (UNEP) GRID-Geneva data sets (extracted 1989). 
-        
-        italy: This italy database comes from the NUTS III (Tertiary Administrative Units of the European Community) 
+
+        france: This france database comes from the NUTS III (Tertiary Administrative Units of the European Community)
         database of the United Nations Environment Programme (UNEP) GRID-Geneva data sets (extracted 1989).
-        
+
+        italy: This italy database comes from the NUTS III (Tertiary Administrative Units of the European Community)
+        database of the United Nations Environment Programme (UNEP) GRID-Geneva data sets (extracted 1989).
+
         nz:  The nz database is a New Zealand Basic Map and includes the 3 main Islands and 19 smaller coastal islands.
-        
+
         state: map of the states of the United States mainland generated from US Department of the Census data
-        
+
         usa:  map of the United States mainland generated from US Department of the Census data
-        
-        world: Low resolution World Map. This world map (from 2013) is imported from the public domain 
+
+        world: Low resolution World Map. This world map (from 2013) is imported from the public domain
         Natural Earth project (the 1:50m resolution version)
-        
-        world2: Pacific Centric Low resolution World Map. This is an alternative version of the world database 
+
+        world2: Pacific Centric Low resolution World Map. This is an alternative version of the world database
         based on latitudes [0, 360), which then has the Pacific Ocean in the centre of the map.
-        
+
         Variables:
         long: BigDecimal, the longitude
         lat: BigDecimal, the latitude
-        group: Integer, a numeric equivalent to the region 
+        group: Integer, a numeric equivalent to the region
         order: Integer, a sequence number
         region: String, a part of the map area
         subregion: String, a part of the region

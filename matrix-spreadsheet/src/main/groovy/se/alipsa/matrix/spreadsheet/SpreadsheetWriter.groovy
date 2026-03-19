@@ -1,6 +1,7 @@
 package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelAppender
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter

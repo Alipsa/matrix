@@ -1,13 +1,13 @@
 package lra
 
-import se.alipsa.matrix.xchart.ScatterChart
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Accuracy
 import se.alipsa.matrix.stats.Correlation
-import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.Sampler
+import se.alipsa.matrix.stats.regression.LinearRegression
+import se.alipsa.matrix.xchart.ScatterChart
 
 
 Matrix cars = Dataset.cars()

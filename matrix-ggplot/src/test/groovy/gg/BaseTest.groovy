@@ -1,6 +1,6 @@
 package gg
-import static org.junit.jupiter.api.Assertions.fail
 import static org.junit.jupiter.api.Assertions.assertEquals as assertEqualsJUnit
+import static org.junit.jupiter.api.Assertions.fail
 
 class BaseTest {
 

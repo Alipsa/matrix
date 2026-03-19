@@ -1,6 +1,7 @@
 package se.alipsa.matrix.xchart.abstractions
 
 import groovy.transform.CompileStatic
+
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
@@ -8,6 +9,7 @@ import org.knowm.xchart.internal.chartpart.Chart
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.CategoryStyler
 import org.knowm.xchart.style.Styler
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme

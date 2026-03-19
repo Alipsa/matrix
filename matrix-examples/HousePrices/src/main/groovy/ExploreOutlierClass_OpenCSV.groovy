@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 /*
-import com.opencsv.bean.*
-import groovy.transform.ToString
 
 @ToString(includeNames = true)
 class House {

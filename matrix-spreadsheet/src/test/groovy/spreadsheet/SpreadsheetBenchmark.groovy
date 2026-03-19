@@ -1,15 +1,16 @@
 package spreadsheet
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 
+import java.math.RoundingMode
 import java.time.Duration
 import java.time.Instant
-import java.math.RoundingMode
 
 /**
  * Simple read/write benchmark runner for matrix-spreadsheet.

@@ -1,12 +1,14 @@
 package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.GeomSpec
-import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.layer.StatType
+
 import java.util.Locale
 
 /**

@@ -1,8 +1,10 @@
 package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.fitting.PolynomialCurveFitter
 import org.apache.commons.math3.fitting.WeightedObservedPoints
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 

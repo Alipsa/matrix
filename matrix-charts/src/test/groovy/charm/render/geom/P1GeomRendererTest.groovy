@@ -1,19 +1,19 @@
 package charm.render.geom
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
+
 import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
-
-import testutil.Slow
 
 @Slow
 class P1GeomRendererTest {

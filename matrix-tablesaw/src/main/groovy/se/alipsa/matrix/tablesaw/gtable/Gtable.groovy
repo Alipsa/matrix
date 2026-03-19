@@ -1,13 +1,14 @@
 package se.alipsa.matrix.tablesaw.gtable
 
 
-import se.alipsa.matrix.tablesaw.TableUtil
-import se.alipsa.matrix.core.Grid
-import se.alipsa.matrix.core.Matrix
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
 import tech.tablesaw.table.Relation
+
+import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.TableUtil
 
 import java.time.Instant
 import java.time.LocalDate

@@ -2,10 +2,11 @@ package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression

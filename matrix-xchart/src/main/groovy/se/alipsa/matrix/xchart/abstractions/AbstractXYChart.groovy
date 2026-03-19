@@ -1,10 +1,12 @@
 package se.alipsa.matrix.xchart.abstractions
 
 import groovy.transform.CompileStatic
+
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
 import org.knowm.xchart.style.XYStyler
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme

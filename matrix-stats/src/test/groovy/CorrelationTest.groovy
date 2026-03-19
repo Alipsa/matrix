@@ -1,10 +1,10 @@
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation
 import org.junit.jupiter.api.Test
-import static se.alipsa.matrix.stats.Correlation.*
 
 import java.math.RoundingMode
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.stats.Correlation.*
 
 class CorrelationTest {
 

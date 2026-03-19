@@ -1,14 +1,16 @@
 package gg
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.Rect
+
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path
+import se.alipsa.groovy.svg.Rect
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.Dataset
+
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 

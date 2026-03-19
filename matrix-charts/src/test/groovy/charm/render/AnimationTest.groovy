@@ -1,6 +1,7 @@
 package charm.render
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.chartexport.ChartToJpeg

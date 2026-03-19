@@ -1,12 +1,13 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
-import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.GuidesSpec
+import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.theme.ElementLine
@@ -14,6 +15,7 @@ import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
+
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**

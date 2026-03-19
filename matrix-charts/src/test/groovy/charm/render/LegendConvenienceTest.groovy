@@ -1,6 +1,7 @@
 package charm.render
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType

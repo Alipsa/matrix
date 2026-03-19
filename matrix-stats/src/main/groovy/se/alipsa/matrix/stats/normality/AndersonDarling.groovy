@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.distribution.NormalDistribution
 
 /**

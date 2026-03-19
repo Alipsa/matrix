@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.core.ValueConverter
 

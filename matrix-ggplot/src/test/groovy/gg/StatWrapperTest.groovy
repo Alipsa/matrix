@@ -1,6 +1,7 @@
 package gg
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.gg.stat.StatsBin
 import se.alipsa.matrix.gg.stat.StatsDensity
 import se.alipsa.matrix.gg.stat.StatsEcdf

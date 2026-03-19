@@ -1,7 +1,8 @@
 package gg.scale
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.scale.ScaleXDate

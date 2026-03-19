@@ -1,9 +1,11 @@
 package se.alipsa.matrix.gg
 
 import groovy.transform.CompileStatic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.facet.Facet
@@ -15,9 +17,8 @@ import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
-import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
-import se.alipsa.matrix.gg.bridge.GgCharmCompiler
+import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.NewScaleMarker
 import se.alipsa.matrix.gg.scale.Scale

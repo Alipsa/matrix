@@ -1,12 +1,16 @@
 package chart
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.BoxChart
@@ -14,14 +18,11 @@ import se.alipsa.matrix.pict.BubbleChart
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
+import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
-import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
-import se.alipsa.matrix.charm.LegendDirection
-import se.alipsa.matrix.charm.LegendPosition
-import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
 import java.awt.Font

@@ -1,8 +1,10 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+
 import org.dom4j.Attribute
 import org.dom4j.Element
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid

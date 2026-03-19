@@ -1,6 +1,7 @@
 package charm.core
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmMappingException
 import se.alipsa.matrix.charm.CharmPositionType
@@ -8,18 +9,18 @@ import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CustomScaleTransform
+import se.alipsa.matrix.charm.GeomSpec
+import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
-import se.alipsa.matrix.charm.GeomSpec
-import se.alipsa.matrix.charm.LayerSpec
-import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.geom.PointBuilder
-import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
