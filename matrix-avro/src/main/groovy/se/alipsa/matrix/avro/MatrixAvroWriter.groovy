@@ -329,7 +329,7 @@ class MatrixAvroWriter {
         matrix,
         inferPrecisionAndScale,
         resolveSchemaName(matrix, null),
-        "se.alipsa.matrix.avro",
+        AvroWriteOptions.DEFAULT_NAMESPACE,
         [:]
     )
   }
@@ -390,11 +390,11 @@ class MatrixAvroWriter {
     Map<String, ColumnProfile> profiles = analyzeColumns(matrix, inferPrecisionAndScale)
 
     for (String col : matrix.columnNames()) {
-      validateAvroFieldName(col, col)
+      AvroSchemaUtil.validateAvroFieldName(col, col)
       Schema fieldSchema
       AvroSchemaDecl declaredSchema = declaredSchemas.get(col)
       if (declaredSchema != null) {
-        fieldSchema = toDeclaredSchema(declaredSchema, col, namespace)
+        fieldSchema = declaredSchema.toAvroSchema(col, namespace)
       } else {
         ColumnProfile profile = profiles.get(col)
         Class<?> clazz = profile.effectiveType
@@ -411,11 +411,11 @@ class MatrixAvroWriter {
             List<Schema.Field> flds = new ArrayList<>()
             for (def k : first.keySet()) {
               String fieldName = k.toString()
-              validateAvroFieldName(fieldName, "${col}.${fieldName}")
+              AvroSchemaUtil.validateAvroFieldName(fieldName, "${col}.${fieldName}")
               def v = first.get(k)
               Class<?> vClazz = (v == null) ? String : v.getClass()
               Schema valueSchema = toFieldSchema(vClazz, null)
-              Schema nullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
+              Schema nullable = AvroSchemaUtil.nullableSchema(valueSchema)
               flds.add(new Schema.Field(fieldName, nullable, null as String, (Object) null))
             }
             rec.setFields(flds)
@@ -423,14 +423,14 @@ class MatrixAvroWriter {
           } else {
             Class<?> valClass = profile.mapValueClass ?: String
             Schema valueSchema = toFieldSchema(valClass, null)
-            Schema nullableValue = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
+            Schema nullableValue = AvroSchemaUtil.nullableSchema(valueSchema)
             fieldSchema = Schema.createMap(nullableValue)
           }
         } else {
           fieldSchema = toFieldSchema(clazz, profile.decimalMeta(inferPrecisionAndScale))
         }
       }
-      Schema nullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), fieldSchema))
+      Schema nullable = AvroSchemaUtil.nullableSchema(fieldSchema)
       fields.add(new Schema.Field(col, nullable, null as String, (Object) null))
     }
 
@@ -511,92 +511,6 @@ class MatrixAvroWriter {
 
     // Fallback
     return Schema.create(Schema.Type.STRING)
-  }
-
-  private static Schema toDeclaredSchema(AvroSchemaDecl declaration, String defaultName, String namespace) {
-    if (declaration instanceof ScalarAvroSchemaDecl) {
-      return scalarSchema(((ScalarAvroSchemaDecl) declaration).scalarType)
-    }
-    if (declaration instanceof DecimalAvroSchemaDecl) {
-      DecimalAvroSchemaDecl decimalDecl = (DecimalAvroSchemaDecl) declaration
-      Schema schema = Schema.create(Schema.Type.BYTES)
-      LogicalTypes.decimal(decimalDecl.precision, decimalDecl.scale).addToSchema(schema)
-      return schema
-    }
-    if (declaration instanceof ArrayAvroSchemaDecl) {
-      Schema elementSchema = toDeclaredSchema(((ArrayAvroSchemaDecl) declaration).elementType, "${defaultName}_item", namespace)
-      Schema nullableElement = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), elementSchema))
-      return Schema.createArray(nullableElement)
-    }
-    if (declaration instanceof MapAvroSchemaDecl) {
-      Schema valueSchema = toDeclaredSchema(((MapAvroSchemaDecl) declaration).valueType, "${defaultName}_value", namespace)
-      Schema nullableValue = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
-      return Schema.createMap(nullableValue)
-    }
-    if (declaration instanceof RecordAvroSchemaDecl) {
-      RecordAvroSchemaDecl recordDecl = (RecordAvroSchemaDecl) declaration
-      String recordName = recordDecl.recordName ?: "${defaultName}_record"
-      validateAvroFieldName(recordName, defaultName)
-      Schema recordSchema = Schema.createRecord(recordName, null, namespace, false)
-      List<Schema.Field> recordFields = new ArrayList<>()
-      recordDecl.fields.each { String fieldName, AvroSchemaDecl fieldDecl ->
-        validateAvroFieldName(fieldName, "${defaultName}.${fieldName}")
-        Schema valueSchema = toDeclaredSchema(fieldDecl, "${defaultName}_${fieldName}", namespace)
-        Schema nullableValue = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
-        recordFields.add(new Schema.Field(fieldName, nullableValue, null as String, (Object) null))
-      }
-      recordSchema.setFields(recordFields)
-      return recordSchema
-    }
-    throw new IllegalArgumentException("Unsupported Avro schema declaration ${declaration?.class?.name}")
-  }
-
-  private static Schema scalarSchema(AvroScalarTypeDecl scalarType) {
-    switch (scalarType) {
-      case AvroScalarTypeDecl.STRING -> Schema.create(Schema.Type.STRING)
-      case AvroScalarTypeDecl.BOOLEAN -> Schema.create(Schema.Type.BOOLEAN)
-      case AvroScalarTypeDecl.INT -> Schema.create(Schema.Type.INT)
-      case AvroScalarTypeDecl.LONG -> Schema.create(Schema.Type.LONG)
-      case AvroScalarTypeDecl.FLOAT -> Schema.create(Schema.Type.FLOAT)
-      case AvroScalarTypeDecl.DOUBLE -> Schema.create(Schema.Type.DOUBLE)
-      case AvroScalarTypeDecl.BYTES -> Schema.create(Schema.Type.BYTES)
-      case AvroScalarTypeDecl.DATE -> createDateSchema()
-      case AvroScalarTypeDecl.TIME_MILLIS -> createTimeMillisSchema()
-      case AvroScalarTypeDecl.TIMESTAMP_MILLIS -> createTimestampMillisSchema()
-      case AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS -> createLocalTimestampMicrosSchema()
-      case AvroScalarTypeDecl.UUID -> createUuidSchema()
-      default -> throw new IllegalArgumentException("Unsupported Avro scalar type declaration $scalarType")
-    }
-  }
-
-  private static Schema createDateSchema() {
-    Schema dateSchema = Schema.create(Schema.Type.INT)
-    LogicalTypes.date().addToSchema(dateSchema)
-    dateSchema
-  }
-
-  private static Schema createTimeMillisSchema() {
-    Schema timeSchema = Schema.create(Schema.Type.INT)
-    LogicalTypes.timeMillis().addToSchema(timeSchema)
-    timeSchema
-  }
-
-  private static Schema createTimestampMillisSchema() {
-    Schema timestampSchema = Schema.create(Schema.Type.LONG)
-    LogicalTypes.timestampMillis().addToSchema(timestampSchema)
-    timestampSchema
-  }
-
-  private static Schema createLocalTimestampMicrosSchema() {
-    Schema localTimestampSchema = Schema.create(Schema.Type.LONG)
-    LogicalTypes.localTimestampMicros().addToSchema(localTimestampSchema)
-    localTimestampSchema
-  }
-
-  private static Schema createUuidSchema() {
-    Schema uuidSchema = Schema.create(Schema.Type.STRING)
-    LogicalTypes.uuid().addToSchema(uuidSchema)
-    uuidSchema
   }
 
   // ----------------------------------------------------------------------
@@ -1235,28 +1149,6 @@ class MatrixAvroWriter {
       case Schema.Type.FIXED: return v instanceof GenericFixed
       default: return false
     }
-  }
-
-  /**
-   * Validates that a field name conforms to Avro's naming rules.
-   */
-  private static void validateAvroFieldName(String fieldName, String columnName) {
-    if (!isValidAvroName(fieldName)) {
-      throw new AvroSchemaException(
-          "Invalid Avro field name",
-          columnName,
-          "Avro field name (A-Za-z_ followed by A-Za-z0-9_)",
-          fieldName
-      )
-    }
-  }
-
-  /**
-   * Avro names must start with [A-Za-z_] and subsequently contain [A-Za-z0-9_].
-   */
-  private static boolean isValidAvroName(String name) {
-    if (name == null || name.isEmpty()) return false
-    return name ==~ /[A-Za-z_][A-Za-z0-9_]*/
   }
 
   /**

@@ -85,19 +85,27 @@ subprojects {
     def arrowSwitchPattern = /(?m)^\s*(?:case\s+.*|default)\s*->\s*\{?\s*$/
 
     codenarcMain {
+      def mainSrcDir = file('src/main/groovy')
+
       // Auto-exclude files with arrow switch syntax (CodeNarc 3.7 can't parse them)
       // TODO: Remove this filter when upgrading to CodeNarc 4.0+
-      def mainSrcDir = file('src/main/groovy')
-      if (mainSrcDir.exists()) {
-        def arrowSwitchFiles = [] as Set<String>
-        mainSrcDir.eachFileRecurse { File f ->
-          if (f.name.endsWith('.groovy') && f.text =~ arrowSwitchPattern) {
-            arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
+      doFirst {
+        if (mainSrcDir.exists()) {
+          def arrowSwitchFiles = [] as Set<String>
+          mainSrcDir.eachFileRecurse { File f ->
+            if (f.name.endsWith('.groovy') && f.text =~ arrowSwitchPattern) {
+              arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
+            }
+          }
+          source = fileTree('src/main/groovy') {
+            include '**/*.groovy'
+            arrowSwitchFiles.each { path -> exclude path }
           }
         }
-        source = fileTree('src/main/groovy') {
-          include '**/*.groovy'
-          arrowSwitchFiles.each { path -> exclude path }
+        else {
+          source = fileTree('src/main/groovy') {
+            include '**/*.groovy'
+          }
         }
       }
 

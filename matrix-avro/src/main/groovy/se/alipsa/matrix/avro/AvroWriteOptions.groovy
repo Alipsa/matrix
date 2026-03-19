@@ -38,6 +38,7 @@ import se.alipsa.matrix.core.spi.OptionMaps
 @CompileStatic
 class AvroWriteOptions {
 
+  static final String DEFAULT_NAMESPACE = 'se.alipsa.matrix.avro'
   static final int DEFAULT_COMPRESSION_LEVEL = -1
   static final int DEFAULT_SYNC_INTERVAL = 0
   static final int MIN_SYNC_INTERVAL = 32
@@ -62,7 +63,7 @@ class AvroWriteOptions {
   }
 
   private boolean inferPrecisionAndScale = false
-  private String namespace = "se.alipsa.matrix.avro"
+  private String namespace = DEFAULT_NAMESPACE
   private String schemaName = null
   private Compression compression = Compression.NULL
   private int compressionLevel = DEFAULT_COMPRESSION_LEVEL
@@ -417,7 +418,7 @@ class AvroWriteOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('inferPrecisionAndScale', Boolean, 'false', 'Infer decimal precision and scale for BigDecimal columns'),
-        new OptionDescriptor('namespace', String, 'se.alipsa.matrix.avro', 'Namespace for the generated Avro schema'),
+        new OptionDescriptor('namespace', String, DEFAULT_NAMESPACE, 'Namespace for the generated Avro schema'),
         new OptionDescriptor('schemaName', String, 'matrix.matrixName or MatrixSchema', 'Record name override for the generated Avro schema'),
         new OptionDescriptor('compression', Compression, 'NULL', 'Compression codec to use when writing'),
         new OptionDescriptor('compressionLevel', Integer, '-1', 'Codec-specific compression level'),
