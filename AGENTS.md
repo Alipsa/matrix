@@ -881,12 +881,30 @@ switch (shape?.toLowerCase()) {
 - More concise and readable
 - Compiler enforces exhaustiveness
 
+**Exception — `return` inside `@CompileStatic` switch arms:**
+Groovy 5.0.x treats arrow switch as an *expression*, which does not support `return` to exit the enclosing method. 
+When a case arm needs to `return` from the method (common in type-dispatch methods like `toAvroValue` or `isCompatible`), 
+keep the old colon-style switch. Do **not** attempt to convert these to arrow syntax — the compiler either rejects it or generates invalid bytecode.
+
+```groovy
+// Old-style is correct here — return exits the method, not the switch
+switch (schema.getType()) {
+  case Schema.Type.STRING: return v.toString()
+  case Schema.Type.INT:
+    if (v instanceof Number) return ((Number) v).intValue()
+    break
+  case Schema.Type.ARRAY:
+    // ... loop and return ...
+    return out
+}
+```
+
 **When refactoring existing code:**
 When you encounter old-style switch statements during code modifications:
-1. **Always modernize them** to use arrow syntax
+1. **Modernize them** to use arrow syntax unless case arms must use `return` to exit the method (see exception above)
 2. Combine multiple cases using comma separation (`case 'a', 'b' ->`)
 3. Remove all `break` statements
-4. Ensure each case block is wrapped in `{ }` for multi-statement blocks
+4. Ensure each case block is wrapped in `{ }` for multi-statement blocks (but don't use them for single statements)
 
 This applies to any switch statement you touch, even if the primary task is something else. Keeping the codebase modern and consistent is a continuous improvement goal.
 
