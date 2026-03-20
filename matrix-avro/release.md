@@ -20,7 +20,6 @@
 - corrected Maven publication metadata for the Avro module
   - POM name, description, license URL, and SCM URLs now point at the Avro module on the `main` branch
   - the release script now uses the module-local Gradle wrapper and the final `0.2.0` module version
-- test command used for the release work: `./gradlew :matrix-avro:test`
 
 ## v0.1.0 2026-01-30
 initial release

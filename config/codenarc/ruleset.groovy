@@ -55,6 +55,7 @@ ruleset {
 
     // Size/Complexity rules
     ruleset('rulesets/size.xml') {
+        exclude 'CrapMetric' // Requires a Cobertura XML report; this build uses JaCoCo instead
         'CyclomaticComplexity' {
             maxMethodComplexity = 20
         }

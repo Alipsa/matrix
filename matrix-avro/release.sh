@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e pipefail
 
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21

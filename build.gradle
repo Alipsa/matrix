@@ -82,28 +82,34 @@ subprojects {
     }
 
     // Regex matching Groovy 5 arrow switch expressions:
-    //   case 'foo' ->      case SomeEnum.VALUE ->      default ->
-    def arrowSwitchPattern = /(?m)^\s*(?:case\s+.*|default)\s*->\s*\{?\s*$/
+    //   case 'foo' -> value
+    //   case SomeEnum.VALUE ->
+    //   default -> throw ...
+    def arrowSwitchPattern = /(?m)^\s*(?:case\b.+?|default)\s*->(?:\s|$)/
+
+    def collectArrowSwitchFiles = { File srcDir ->
+      if (!srcDir.exists()) {
+        return [] as Set<String>
+      }
+      def arrowSwitchFiles = [] as Set<String>
+      srcDir.eachFileRecurse { File f ->
+        if (f.name.endsWith('.groovy') && (f.text =~ arrowSwitchPattern)) {
+          arrowSwitchFiles << srcDir.toPath().relativize(f.toPath()).toString()
+        }
+      }
+      arrowSwitchFiles
+    }
 
     codenarcMain {
       def mainSrcDir = file('src/main/groovy')
+      def projectPath = project.path
 
       // Auto-exclude files with arrow switch syntax (CodeNarc 3.7 can't parse them)
       // TODO: Remove this filter when upgrading to CodeNarc 4.0+
       doFirst {
-        if (mainSrcDir.exists()) {
-          def arrowSwitchFiles = [] as Set<String>
-          mainSrcDir.eachFileRecurse { File f ->
-            if (f.name.endsWith('.groovy')) {
-              if (f.text =~ arrowSwitchPattern) {
-                arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
-              }
-            }
-          }
-          excludes = arrowSwitchFiles
-        }
-        else {
-          excludes = [] as Set<String>
+        excludes = collectArrowSwitchFiles(mainSrcDir)
+        if (excludes) {
+          logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
         }
       }
 
@@ -133,7 +139,15 @@ subprojects {
     }
 
     codenarcTest {
+      def testSrcDir = file('src/test/groovy')
+      def projectPath = project.path
       source = 'src/test/groovy'
+      doFirst {
+        excludes = collectArrowSwitchFiles(testSrcDir)
+        if (excludes) {
+          logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy test file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
+        }
+      }
     }
 
     apply plugin: 'com.diffplug.spotless'
