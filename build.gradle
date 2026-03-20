@@ -233,3 +233,40 @@ tasks.register('dependencyUpdates') {
   }
   finalizedBy tasks.named('dependencyUpdatesSummary')
 }
+
+tasks.register('latestMavenVersions') {
+  description = 'Lists the latest Maven Central version for each published module'
+  group = 'Help'
+  // Resolve all data at configuration time to satisfy configuration cache
+  def modules = []
+  subprojects.findAll { it.plugins.hasPlugin('maven-publish') }.each {
+    modules << [name: it.name, group: it.group.toString(), artifact: it.name]
+  }
+  def bomFile = file('matrix-bom/bom.xml')
+  if (bomFile.exists()) {
+    def bom = new groovy.xml.XmlSlurper().parse(bomFile)
+    modules << [name: 'matrix-bom', group: bom.groupId.text(), artifact: bom.artifactId.text()]
+  }
+  modules.sort { it.name }
+
+  doLast {
+    def repoBase = 'https://repo1.maven.org/maven2'
+    modules.each { mod ->
+      try {
+        def groupPath = mod.group.replace('.', '/')
+        def metadataUrl = URI.create("${repoBase}/${groupPath}/${mod.artifact}/maven-metadata.xml").toURL()
+        def metadata = new groovy.xml.XmlSlurper().parseText(metadataUrl.text)
+        def latest = metadata.versioning.release.text() ?: metadata.versioning.latest.text()
+        if (latest) {
+          println "${mod.name}: ${mod.group}:${mod.artifact}:${latest}"
+        } else {
+          println "${mod.name}: no release version found"
+        }
+      } catch (FileNotFoundException e) {
+        println "${mod.name}: not found on Maven Central"
+      } catch (Exception e) {
+        println "${mod.name}: error querying Maven Central (${e.message})"
+      }
+    }
+  }
+}
