@@ -1388,30 +1388,17 @@ class Bq {
   }
 
   /**
-   * Removes Unicode control characters from a string.
+   * Converts an input value to a string for JSON insertion without mutating its content.
    *
-   * <p>BigQuery's JSON API cannot handle certain Unicode control characters (category C),
-   * which include:</p>
-   * <ul>
-   *   <li>Control characters (U+0000-U+001F, U+007F-U+009F)</li>
-   *   <li>Format characters (e.g., zero-width joiners)</li>
-   *   <li>Private use characters</li>
-   *   <li>Surrogates and non-characters</li>
-   * </ul>
+   * <p>Both write paths ultimately serialize through JSON. Jackson already escapes valid JSON
+   * control characters such as tabs, newlines, carriage returns, and NUL, so stripping broad
+   * Unicode categories here caused avoidable data corruption. This method is kept as the shared
+   * coercion point for string-like values and intentionally preserves the original text.</p>
    *
-   * <p>These characters commonly appear in data imported from external sources
-   * (web scraping, legacy systems, binary data incorrectly interpreted as text)
-   * and cause JSON serialization errors during BigQuery insertion.</p>
-   *
-   * <p>This method uses the regex pattern {@code \p{C}} which matches all Unicode
-   * characters in the "Other" general category (Cc, Cf, Cs, Co, Cn).</p>
-   *
-   * @param input the object to sanitize (toString() is called)
-   * @return sanitized string with control characters removed, or null if input is null
+   * @param input the object to convert (toString() is called)
+   * @return the original string content, or null if input is null
    */
   static String sanitizeString(Object input) {
-    if (input == null) return null
-    String str = input.toString()
-    return str.replaceAll("\\p{C}", "")
+    input?.toString()
   }
 }

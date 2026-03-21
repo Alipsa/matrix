@@ -30,47 +30,6 @@ import static org.junit.jupiter.api.Assertions.*
 @CompileStatic
 class BqUnitTest {
 
-  // Tests for sanitizeString(Object)
-
-  @Test
-  void testSanitizeStringNull() {
-    assertNull(Bq.sanitizeString(null))
-  }
-
-  @Test
-  void testSanitizeStringNormalString() {
-    assertEquals("Hello World", Bq.sanitizeString("Hello World"))
-    assertEquals("Test 123", Bq.sanitizeString("Test 123"))
-    assertEquals("", Bq.sanitizeString(""))
-  }
-
-  @Test
-  void testSanitizeStringRemovesControlCharacters() {
-    // Test various Unicode control characters
-    String withControls = "Hello\u0000World"  // NULL character
-    assertEquals("HelloWorld", Bq.sanitizeString(withControls))
-
-    String withTab = "Hello\tWorld"  // TAB is actually allowed in JSON, but let's test
-    String result = Bq.sanitizeString(withTab)
-    // Control characters in Unicode category C should be removed
-    assertNotNull(result)
-  }
-
-  @Test
-  void testSanitizeStringPreservesNewlines() {
-    // Newlines might be preserved or removed depending on implementation
-    String withNewline = "Hello\nWorld"
-    String result = Bq.sanitizeString(withNewline)
-    assertNotNull(result)
-  }
-
-  @Test
-  void testSanitizeStringNonString() {
-    assertEquals("123", Bq.sanitizeString(123))
-    assertEquals("true", Bq.sanitizeString(true))
-    assertEquals("45.67", Bq.sanitizeString(45.67))
-  }
-
   // Tests for needsConversion(Object)
 
   @Test

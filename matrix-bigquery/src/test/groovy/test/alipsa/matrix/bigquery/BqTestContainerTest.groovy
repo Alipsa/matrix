@@ -16,7 +16,6 @@ import se.alipsa.matrix.datasets.Dataset
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
-import static org.junit.jupiter.api.Assertions.fail
 
 @Testcontainers
 @Tag("flaky")  // BigQuery emulator testcontainer has threading issues - see issue #XXX
@@ -140,6 +139,62 @@ class BqTestContainerTest {
         [3L, 'Charlie'],
         [4L, 'Delta']
     ])
+  }
+
+  @Test
+  void testInsertAllPreservesTabsAndNewlines() {
+    String fullUrl = container.getEmulatorHttpEndpoint()
+    assertNotNull(fullUrl)
+
+    URI emulatorUri = new URI(fullUrl)
+    String hostAndPort = emulatorUri.getAuthority()
+    String projectId = container.getProjectId()
+
+    System.setProperty("bigquery.host", hostAndPort)
+    System.setProperty("bigquery.enable_write_api", "false")
+    System.setProperty("google.cloud.project.id", projectId)
+
+    try {
+      BigQueryOptions options = BigQueryOptions
+          .newBuilder()
+          .setProjectId(projectId)
+          .setHost(fullUrl)
+          .setLocation(fullUrl)
+          .setCredentials(NoCredentials.getInstance())
+          .build()
+
+      Bq bq = new Bq(options)
+      String dsName = "InsertAllStringRoundTrip"
+      Matrix textData = Matrix.builder()
+          .columnNames(['id', 'notes'])
+          .rows([
+              [1, "Hello\tWorld\nAgain"],
+              [2, "Line1\r\nLine2\tTabbed"]
+          ])
+          .types([Integer, String])
+          .matrixName('string_round_trip')
+          .build()
+
+      bq.createDataset(dsName)
+      Thread.sleep(2000)
+
+      assertTrue(bq.saveToBigQuery(textData, dsName), "Failed to save string round-trip matrix")
+
+      Matrix retrieved = bq.query("select * from `${projectId}.${dsName}.${textData.matrixName}` order by id")
+          .withMatrixName(textData.matrixName)
+
+      assertEquals(textData.rowCount(), retrieved.rowCount())
+      assertEquals(textData[0, 'notes'], retrieved[0, 'notes'])
+      assertEquals(textData[1, 'notes'], retrieved[1, 'notes'])
+
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new RuntimeException("Test interrupted during string round-trip", e)
+    } finally {
+      System.clearProperty("bigquery.host")
+      System.clearProperty("bigquery.enable_write_api")
+      System.clearProperty("google.cloud.project.id")
+    }
   }
 
   private static void assertSaveBehavior(boolean disableWriteApi, boolean append, List<List<Object>> expectedRows) {
