@@ -133,6 +133,13 @@ class Bq {
     this.useAsyncQueries = useAsyncQueries
   }
 
+  @PackageScope
+  Bq(BigQuery bigQuery, String projectId, boolean useAsyncQueries = false) {
+    this.bigQuery = bigQuery
+    this.projectId = projectId
+    this.useAsyncQueries = useAsyncQueries
+  }
+
   /**
    * Creates a Bq instance with explicit credentials.
    *
@@ -515,6 +522,7 @@ class Bq {
    *
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
+   * @param append if true, preserves existing rows; if false, overwrites existing table data
    * @return load statistics from the insert operation
    * @throws BqException if both insert methods fail
    */
@@ -523,7 +531,7 @@ class Bq {
     String enableWriteApi = System.getProperty("bigquery.enable_write_api", "true")
     if ("false".equalsIgnoreCase(enableWriteApi)) {
       log.debug("Write channel API disabled via system property, using InsertAll")
-      return insertViaInsertAll(matrix, tableId, null)
+      return insertViaInsertAll(matrix, tableId, append, null)
     }
 
     try {
@@ -531,7 +539,7 @@ class Bq {
     } catch (Exception e) {
       if (isConnectionError(e)) {
         log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
-        return insertViaInsertAll(matrix, tableId, e)
+        return insertViaInsertAll(matrix, tableId, append, e)
       }
       throw e
     }
@@ -569,10 +577,12 @@ class Bq {
    *
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
+   * @param append if true, appends to the table; if false, truncates before writing
    * @return load statistics from the insert operation
    * @throws BqException if the insert fails
    */
-  private JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
+  @PackageScope
+  JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
     int rowIdx = 0
     Object lastValue = null
     final BigDecimal tickPercent = 0.05
@@ -721,12 +731,15 @@ class Bq {
    *
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
+   * @param append if true, appends to the table; if false, recreates the table before inserting
    * @param originalException the original exception that triggered the fallback (null if called directly)
    * @return load statistics (placeholder, as InsertAll doesn't provide detailed stats)
    * @throws BqException if the insert fails
    */
-  private JobStatistics.LoadStatistics insertViaInsertAll(Matrix matrix, TableId tableId, Exception originalException) throws BqException {
+  private JobStatistics.LoadStatistics insertViaInsertAll(Matrix matrix, TableId tableId, boolean append, Exception originalException) throws BqException {
     try {
+      prepareInsertAllTargetTable(tableId, append)
+
       List<String> columnNames = matrix.columnNames()
       List<RowToInsert> rows = matrix.rows().collect { Row row ->
         RowToInsert.of(convertRowForInsertAll(row, columnNames))
@@ -753,6 +766,62 @@ class Bq {
       }
       throw new BqException("InsertAll failed: ${fallbackException.message}", fallbackException)
     }
+  }
+
+  @PackageScope
+  void prepareInsertAllTargetTable(TableId tableId, boolean append) throws BqException {
+    if (append) {
+      return
+    }
+
+    Table existingTable = bigQuery.getTable(tableId)
+    if (existingTable == null || !existingTable.exists()) {
+      throw new BqException("Cannot overwrite ${tableId} via InsertAll because the table does not exist")
+    }
+
+    log.info("Recreating ${tableId.dataset}.${tableId.table} before InsertAll overwrite to preserve append=false semantics")
+    TableInfo replacementTable = createInsertAllReplacementTableInfo(existingTable)
+    boolean deleted = bigQuery.delete(tableId)
+    if (!deleted) {
+      throw new BqException("Failed to recreate ${tableId} for InsertAll overwrite because the existing table could not be deleted")
+    }
+    bigQuery.create(replacementTable)
+    waitForTable(tableId, waitForTableTimeoutMs)
+  }
+
+  @PackageScope
+  static TableInfo createInsertAllReplacementTableInfo(TableInfo existingTable) {
+    TableInfo.Builder builder = TableInfo.newBuilder(existingTable.tableId, existingTable.definition)
+
+    if (existingTable.friendlyName != null) {
+      builder.setFriendlyName(existingTable.friendlyName)
+    }
+    if (existingTable.description != null) {
+      builder.setDescription(existingTable.description)
+    }
+    if (existingTable.expirationTime != null) {
+      builder.setExpirationTime(existingTable.expirationTime)
+    }
+    if (existingTable.labels != null) {
+      builder.setLabels(existingTable.labels)
+    }
+    if (existingTable.resourceTags != null) {
+      builder.setResourceTags(existingTable.resourceTags)
+    }
+    if (existingTable.encryptionConfiguration != null) {
+      builder.setEncryptionConfiguration(existingTable.encryptionConfiguration)
+    }
+    if (existingTable.requirePartitionFilter != null) {
+      builder.setRequirePartitionFilter(existingTable.requirePartitionFilter)
+    }
+    if (existingTable.defaultCollation != null) {
+      builder.setDefaultCollation(existingTable.defaultCollation)
+    }
+    if (existingTable.tableConstraints != null) {
+      builder.setTableConstraints(existingTable.tableConstraints)
+    }
+
+    builder.build()
   }
 
   /**

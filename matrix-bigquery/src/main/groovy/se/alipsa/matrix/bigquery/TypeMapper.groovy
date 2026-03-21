@@ -7,10 +7,10 @@ import com.google.cloud.bigquery.StandardSQLTypeName
 
 import se.alipsa.matrix.core.ValueConverter
 
+import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.sql.Time
 import java.sql.Timestamp
-import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
