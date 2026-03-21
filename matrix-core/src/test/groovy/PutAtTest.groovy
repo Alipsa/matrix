@@ -6,8 +6,8 @@ import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
 
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static org.junit.jupiter.api.Assertions.assertThrows
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class PutAtTest {
 
