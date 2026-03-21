@@ -2444,7 +2444,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   void putAt(List where, Object value) {
     def row = where[0]
     def col = where[1]
-    if (!row instanceof Number) {
+    if (!(row instanceof Number)) {
       throw new IllegalArgumentException("Unexpected row index type: ${row.class}, dont know what to do with that")
     }
     if (col instanceof String) {

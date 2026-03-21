@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
 
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class PutAtTest {
@@ -159,5 +160,16 @@ class PutAtTest {
 
     assert 5 == empData.rowCount()
     assert 4 == empData.columnCount()
+  }
+
+  @Test
+  void testMatrixPutAtRejectsNonNumericRowIndex() {
+    Matrix matrix = Matrix.builder()
+        .data(a: [1, 2], b: ['x', 'y'])
+        .build()
+
+    assertThrows(IllegalArgumentException) {
+      matrix.putAt(['row', 0], 99)
+    }
   }
 }

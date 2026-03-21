@@ -117,7 +117,7 @@ class MatrixBuilder {
    */
   MatrixBuilder columns(List<List> columns) {
     clearPendingIndexColumns()
-    if (columns.size() > 0 && !columns[0] instanceof List) {
+    if (columns.size() > 0 && !(columns[0] instanceof List)) {
       throw new IllegalArgumentException("The List of columns does not contain lists but ${columns[0].class}")
     }
     this.columns = columns
