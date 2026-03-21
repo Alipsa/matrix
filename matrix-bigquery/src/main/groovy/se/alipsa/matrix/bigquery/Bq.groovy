@@ -392,7 +392,7 @@ class Bq {
       TableSchema defs = createTable(matrix, safeDatasetName)
       waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
-    TableId tableId = TableId.of(projectId, safeDatasetName, tableName)
+    TableId tableId = tableId(safeDatasetName, tableName)
     insert(matrix, tableId, append)
     return true
   }
@@ -476,7 +476,7 @@ class Bq {
   TableSchema createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
     try {
       String tableName = matrix.matrixName
-      TableId tableId = TableId.of(projectId, datasetName, tableName)
+      TableId tableId = tableId(projectId, datasetName, tableName)
       TableDefinition tableDefinition = StandardTableDefinition.of(schema)
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
       Table table = bigQuery.create(tableInfo)
@@ -1027,8 +1027,7 @@ class Bq {
    */
   List<String> getTableNames(String datasetName) throws BqException {
     try {
-      DatasetId datasetId = DatasetId.of(projectId, datasetName)
-      Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
+      Page<Table> tables = bigQuery.listTables(datasetId(datasetName), TableListOption.pageSize(100))
       return tables.iterateAll().collect {
         it.tableId.table
       }
@@ -1049,6 +1048,21 @@ class Bq {
    */
   Matrix getTableInfo(String datasetName, String tableName) throws BqException {
     query(createTableInfoQueryConfiguration(datasetName, tableName))
+  }
+
+  @PackageScope
+  DatasetId datasetId(String datasetName) {
+    DatasetId.of(projectId, datasetName)
+  }
+
+  @PackageScope
+  TableId tableId(String datasetName, String tableName) {
+    TableId.of(projectId, datasetName, tableName)
+  }
+
+  @PackageScope
+  static TableId tableId(String projectId, String datasetName, String tableName) {
+    TableId.of(projectId, datasetName, tableName)
   }
 
   @PackageScope
@@ -1119,7 +1133,7 @@ class Bq {
    */
   Dataset getDataset(String datasetName) throws BqException {
     try {
-      bigQuery.getDataset(datasetName)
+      bigQuery.getDataset(datasetId(datasetName))
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
@@ -1152,12 +1166,13 @@ class Bq {
    */
   Dataset createDataset(String datasetName, String description = null) throws BqException {
     try {
-      Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
+      DatasetId datasetId = datasetId(datasetName)
+      Dataset dataset = bigQuery.getDataset(datasetId)
       if (dataset != null) {
         log.debug("Dataset $datasetName already exists")
         return dataset
       }
-      DatasetInfo.Builder builder = DatasetInfo.newBuilder(datasetName)
+      DatasetInfo.Builder builder = DatasetInfo.newBuilder(datasetId)
       if (description != null) {
         builder.setDescription(description)
       }
@@ -1219,8 +1234,7 @@ class Bq {
    */
   boolean dropDataset(String datasetName) throws BqException {
     try {
-      DatasetId datasetId = DatasetId.of(projectId, datasetName)
-      boolean success = bigQuery.delete(datasetId, DatasetDeleteOption.deleteContents())
+      boolean success = bigQuery.delete(datasetId(datasetName), DatasetDeleteOption.deleteContents())
       if (success) {
         log.info("Dataset $datasetName deleted successfully")
       } else {
@@ -1259,7 +1273,7 @@ class Bq {
    */
   boolean dropTable(String datasetName, String tableName) throws BqException {
     try {
-      boolean success = bigQuery.delete(TableId.of(datasetName, tableName))
+      boolean success = bigQuery.delete(tableId(datasetName, tableName))
       if (success) {
         log.info("Table $datasetName.$tableName deleted successfully")
       } else {
@@ -1280,7 +1294,7 @@ class Bq {
    */
   boolean datasetExist(String datasetName) throws BqException {
     try {
-      Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
+      Dataset dataset = bigQuery.getDataset(datasetId(datasetName))
       return dataset != null
     } catch (BigQueryException e) {
       throw new BqException(e)
@@ -1297,7 +1311,7 @@ class Bq {
    */
   boolean tableExist(String datasetName, String tableName) throws BqException {
     try {
-      Table table = bigQuery.getTable(TableId.of(datasetName, tableName))
+      Table table = bigQuery.getTable(tableId(datasetName, tableName))
       return table != null && table.exists()
     } catch (BigQueryException e) {
       throw new BqException(e)
