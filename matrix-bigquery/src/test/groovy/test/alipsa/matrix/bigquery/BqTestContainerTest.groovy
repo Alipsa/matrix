@@ -9,6 +9,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 import se.alipsa.matrix.bigquery.Bq
+import se.alipsa.matrix.bigquery.BqException
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
@@ -85,7 +86,7 @@ class BqTestContainerTest {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt()
-      throw new RuntimeException("Test interrupted during sleep", e)
+      throw new BqException("Test interrupted during sleep", e)
     } finally {
       // Always clean up the system properties after the test.
       System.clearProperty("bigquery.host")
@@ -190,7 +191,7 @@ class BqTestContainerTest {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt()
-      throw new RuntimeException("Test interrupted during string round-trip", e)
+      throw new BqException("Test interrupted during string round-trip", e)
     } finally {
       System.clearProperty("bigquery.host")
       System.clearProperty("bigquery.enable_write_api")
@@ -256,7 +257,7 @@ class BqTestContainerTest {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt()
-      throw new RuntimeException("Test interrupted during sleep", e)
+      throw new BqException("Test interrupted during sleep", e)
     } finally {
       System.clearProperty("bigquery.host")
       System.clearProperty("bigquery.enable_write_api")
