@@ -1082,6 +1082,9 @@ class Bq {
     if (!name) {
       throw new IllegalArgumentException('Table name cannot be null or blank')
     }
+    // The table name is bound as a query parameter, not interpolated as an identifier,
+    // so blank/null validation is sufficient here for safety. Identifier validation is
+    // only required for datasetName because INFORMATION_SCHEMA requires inline identifiers.
     name
   }
 

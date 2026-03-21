@@ -13,6 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * Unit tests for `getTableInfo` query construction and identifier validation.
+ *
+ * <p>This test intentionally lives in `se.alipsa.matrix.bigquery` rather than the
+ * usual `test.alipsa.matrix.bigquery` package so it can access the `@PackageScope`
+ * helpers added for query configuration verification.</p>
  */
 @CompileStatic
 class GetTableInfoQueryConfigurationTest {
