@@ -10,6 +10,7 @@ import java.time.LocalDate
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
@@ -93,6 +94,15 @@ class MatrixBuilderTest {
     assertEquals(2, m5[1, 'id'])
     assertEquals('Rick', m5[0, 1])
     m5.content()
+  }
+
+  @Test
+  void testColumnsRejectsNonListEntries() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Matrix.builder().columns([1, 2, 3] as List<List>)
+    }
+
+    assertTrue(ex.message.contains('does not contain lists'))
   }
 
   @Test

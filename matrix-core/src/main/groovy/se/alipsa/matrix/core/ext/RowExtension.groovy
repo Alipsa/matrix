@@ -39,10 +39,10 @@ class RowExtension {
         return self.getAt(indices[0] as String, indices[1] as Class, indices[2])
       }
     }
-    if (!indices.any { ! it instanceof Number}) {
+    if (!indices.any { !(it instanceof Number) }) {
       return self.subList(indices)
     }
-    if (!indices.any { ! it instanceof String}) {
+    if (!indices.any { !(it instanceof String) }) {
       return self.subList(indices as String[])
     }
     throw new IllegalArgumentException("Dont know what to do with ${indices.size()} parameters ($indices) to getAt()")
