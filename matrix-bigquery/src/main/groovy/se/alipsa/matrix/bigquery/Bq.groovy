@@ -1,6 +1,7 @@
 package se.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
@@ -303,6 +304,10 @@ class Bq {
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
         .setUseLegacySql(useLegacySql)
         .build()
+    runQuery(queryConfig)
+  }
+
+  private Job runQuery(QueryJobConfiguration queryConfig) throws BqException {
     JobId jobId = JobId.newBuilder().setProject(projectId).build()
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
     // Wait for the query to complete.
@@ -332,19 +337,22 @@ class Bq {
    * @throws BqException if the query fails
    */
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+        .setUseLegacySql(useLegacySql)
+        .build()
+    query(queryConfig)
+  }
+
+  private Matrix query(QueryJobConfiguration queryConfig) throws BqException {
     try {
       TableResult result
 
       if (useAsyncQueries) {
         // Async job-based approach: no size limit, recommended for production
-        Job queryJob = runQuery(qry, useLegacySql)
+        Job queryJob = runQuery(queryConfig)
         result = queryJob.getQueryResults()
       } else {
         // Synchronous approach: 10 GB response size limit, emulator compatible
-        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-            .setUseLegacySql(useLegacySql)
-            .build()
-
         result = bigQuery.query(queryConfig)
       }
 
@@ -378,14 +386,14 @@ class Bq {
    * @see #insert
    * @see #setWaitForTableTimeoutMs
    */
-  boolean saveToBigQuery(Matrix matrix, String datasetName) throws BqException {
+  boolean saveToBigQuery(Matrix matrix, String datasetName, boolean append = false) throws BqException {
     String tableName = matrix.matrixName
     if (!tableExist(datasetName, tableName)) {
       TableSchema defs = createTable(matrix, datasetName)
       waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
     TableId tableId = TableId.of(projectId, datasetName, tableName)
-    insert(matrix, tableId)
+    insert(matrix, tableId, append)
     return true
   }
 
@@ -510,7 +518,7 @@ class Bq {
    * @return load statistics from the insert operation
    * @throws BqException if both insert methods fail
    */
-  JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId) throws BqException {
+  JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId, boolean append) throws BqException {
     // Check if write API is disabled (e.g., for emulator compatibility)
     String enableWriteApi = System.getProperty("bigquery.enable_write_api", "true")
     if ("false".equalsIgnoreCase(enableWriteApi)) {
@@ -519,7 +527,7 @@ class Bq {
     }
 
     try {
-      return insertViaWriteChannel(matrix, tableId)
+      return insertViaWriteChannel(matrix, tableId, append)
     } catch (Exception e) {
       if (isConnectionError(e)) {
         log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
@@ -564,14 +572,16 @@ class Bq {
    * @return load statistics from the insert operation
    * @throws BqException if the insert fails
    */
-  private JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId) throws BqException {
+  private JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
     int rowIdx = 0
     Object lastValue = null
     final BigDecimal tickPercent = 0.05
 
+    JobInfo.WriteDisposition writeDisposition = append ? JobInfo.WriteDisposition.WRITE_APPEND : JobInfo.WriteDisposition.WRITE_TRUNCATE
+
     WriteChannelConfiguration wcfg = WriteChannelConfiguration.newBuilder(tableId)
         .setFormatOptions(FormatOptions.json())
-        .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE)
+        .setWriteDisposition(writeDisposition)
         .build()
 
     JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
@@ -921,10 +931,10 @@ class Bq {
    * @throws BqException if the insert fails
    * @see #insert(Matrix, TableId)
    */
-  JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet, String projectId) throws BqException {
+  JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet, String projectId, boolean append = false) throws BqException {
     String tableName = matrix.matrixName
     TableId tableId = TableId.of(projectId, dataSet, tableName)
-    insert(matrix, tableId)
+    insert(matrix, tableId, append)
   }
 
   /**
@@ -1034,9 +1044,45 @@ class Bq {
    * @throws BqException if the query fails
    */
   Matrix getTableInfo(String datasetName, String tableName) throws BqException {
-    query("""select * from ${datasetName}.INFORMATION_SCHEMA.COLUMNS
-      WHERE table_name = '$tableName';
-      """)
+    query(createTableInfoQueryConfiguration(datasetName, tableName))
+  }
+
+  @PackageScope
+  static QueryJobConfiguration createTableInfoQueryConfiguration(String datasetName, String tableName) {
+    String safeDatasetName = validateDatasetIdentifier(datasetName)
+    String safeTableName = validateTableName(tableName)
+    QueryJobConfiguration.newBuilder("""
+      select *
+      from `${safeDatasetName}.INFORMATION_SCHEMA.COLUMNS`
+      where table_name = @tableName
+      """.stripIndent())
+        .addNamedParameter('tableName', QueryParameterValue.string(safeTableName))
+        .setUseLegacySql(false)
+        .build()
+  }
+
+  @PackageScope
+  static String validateDatasetIdentifier(String datasetName) {
+    String identifier = datasetName?.trim()
+    if (!identifier) {
+      throw new IllegalArgumentException('Dataset name cannot be null or blank')
+    }
+    if (identifier.length() > 1024) {
+      throw new IllegalArgumentException("Dataset name '$datasetName' exceeds BigQuery's 1024 character limit")
+    }
+    if (!(identifier ==~ /[A-Za-z0-9_]+/)) {
+      throw new IllegalArgumentException("Dataset name '$datasetName' contains invalid characters. Only letters, digits, and underscores are allowed")
+    }
+    identifier
+  }
+
+  @PackageScope
+  static String validateTableName(String tableName) {
+    String name = tableName?.trim()
+    if (!name) {
+      throw new IllegalArgumentException('Table name cannot be null or blank')
+    }
+    name
   }
 
   /**
