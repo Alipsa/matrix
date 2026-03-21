@@ -893,6 +893,10 @@ class Bq {
       LocalDateTime date = (LocalDateTime) orgVal
       return date.format(bqDateTimeFormatter)
     }
+    if (orgVal instanceof Instant) {
+      Instant instant = (Instant) orgVal
+      return instant.toString()
+    }
     if (orgVal instanceof Timestamp) {
       Timestamp ts = (Timestamp) orgVal
       return ts.toInstant().toString()
