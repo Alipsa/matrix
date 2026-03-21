@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 class GetTableInfoQueryConfigurationTest {
 
   @Test
-  void createTableInfoQueryConfigurationUsesNamedParameterForTableName() {
+  void tableInfoQueryConfigurationUsesNamedParameterForTableName() {
     QueryJobConfiguration queryConfig = Bq.createTableInfoQueryConfiguration('analytics_data', "orders'2024")
 
     assertTrue(queryConfig.query.contains('`analytics_data.INFORMATION_SCHEMA.COLUMNS`'))

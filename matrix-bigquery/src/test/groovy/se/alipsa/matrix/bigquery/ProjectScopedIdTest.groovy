@@ -19,7 +19,7 @@ class ProjectScopedIdTest {
 
   @Test
   void datasetIdUsesInstanceProjectId() {
-    Bq bq = createBq('matrix-project')
+    Bq bq = bqForProject('matrix-project')
 
     DatasetId datasetId = bq.datasetId('analytics')
 
@@ -29,7 +29,7 @@ class ProjectScopedIdTest {
 
   @Test
   void tableIdUsesInstanceProjectId() {
-    Bq bq = createBq('matrix-project')
+    Bq bq = bqForProject('matrix-project')
 
     TableId tableId = bq.tableId('analytics', 'events')
 
@@ -47,7 +47,7 @@ class ProjectScopedIdTest {
     assertEquals('events', tableId.table)
   }
 
-  private static Bq createBq(String projectId) {
+  private static Bq bqForProject(String projectId) {
     BigQueryOptions options = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .setCredentials(NoCredentials.getInstance())

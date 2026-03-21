@@ -41,8 +41,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void writeChannelReceivesAppendFalseWhenEnabled() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    RecordingBq bq = new RecordingBq(createFakeBigQuery(state), 'matrix-project')
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    RecordingInsertClient bq = new RecordingInsertClient(fakeBigQueryFor(state), 'matrix-project')
 
     bq.insert(sampleMatrix(), state.tableId, false)
 
@@ -54,8 +54,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void writeChannelReceivesAppendTrueWhenEnabled() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    RecordingBq bq = new RecordingBq(createFakeBigQuery(state), 'matrix-project')
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    RecordingInsertClient bq = new RecordingInsertClient(fakeBigQueryFor(state), 'matrix-project')
 
     bq.insert(sampleMatrix(), state.tableId, true)
 
@@ -67,8 +67,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void disabledWriteApiRecreatesTableForOverwrite() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    Bq bq = new Bq(createFakeBigQuery(state), 'matrix-project')
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
 
     withWriteApiDisabled {
       bq.insert(sampleMatrix(), state.tableId, false)
@@ -83,8 +83,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void disabledWriteApiLeavesTableUntouchedForAppend() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    Bq bq = new Bq(createFakeBigQuery(state), 'matrix-project')
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
 
     withWriteApiDisabled {
       bq.insert(sampleMatrix(), state.tableId, true)
@@ -99,8 +99,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void fallbackToInsertAllPreservesOverwriteSemantics() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    RecordingBq bq = new RecordingBq(createFakeBigQuery(state), 'matrix-project', true)
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    RecordingInsertClient bq = new RecordingInsertClient(fakeBigQueryFor(state), 'matrix-project', true)
 
     bq.insert(sampleMatrix(), state.tableId, false)
 
@@ -113,8 +113,8 @@ class InsertAppendSemanticsTest {
 
   @Test
   void fallbackToInsertAllPreservesAppendSemantics() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('events'))
-    RecordingBq bq = new RecordingBq(createFakeBigQuery(state), 'matrix-project', true)
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    RecordingInsertClient bq = new RecordingInsertClient(fakeBigQueryFor(state), 'matrix-project', true)
 
     bq.insert(sampleMatrix(), state.tableId, true)
 
@@ -126,7 +126,7 @@ class InsertAppendSemanticsTest {
   }
 
   @Test
-  void createInsertAllReplacementTableInfoPreservesWritableMetadata() {
+  void insertAllReplacementTableInfoPreservesWritableMetadata() {
     TableId tableId = tableId('events')
     TableInfo existingTable = TableInfo.newBuilder(tableId, sampleDefinition())
         .setFriendlyName('Events')
@@ -147,9 +147,9 @@ class InsertAppendSemanticsTest {
 
   @Test
   void overwriteFailsFastWhenInsertAllTargetTableIsMissing() {
-    FakeBigQueryState state = new FakeBigQueryState(tableId('missing'))
+    InsertAllTestState state = new InsertAllTestState(tableId('missing'))
     state.initializeTable = false
-    Bq bq = new Bq(createFakeBigQuery(state), 'matrix-project')
+    Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
 
     BqException ex = withWriteApiDisabled {
       assertThrows(BqException) {
@@ -200,11 +200,12 @@ class InsertAppendSemanticsTest {
     }
   }
 
-  private static class RecordingBq extends Bq {
+  @SuppressWarnings('ClassName')
+  private static class RecordingInsertClient extends Bq {
     boolean throwConnectionError
     Boolean lastAppendValue
 
-    RecordingBq(BigQuery bigQuery, String projectId, boolean throwConnectionError = false) {
+    RecordingInsertClient(BigQuery bigQuery, String projectId, boolean throwConnectionError = false) {
       super(bigQuery, projectId)
       this.throwConnectionError = throwConnectionError
     }
@@ -219,7 +220,8 @@ class InsertAppendSemanticsTest {
     }
   }
 
-  private static final class FakeBigQueryState {
+  @SuppressWarnings('ClassName')
+  private static final class InsertAllTestState {
     final TableId tableId
     boolean initializeTable = true
     Table currentTable
@@ -229,13 +231,13 @@ class InsertAppendSemanticsTest {
     InsertAllRequest lastInsertRequest
     final List<String> events = []
 
-    FakeBigQueryState(TableId tableId) {
+    InsertAllTestState(TableId tableId) {
       this.tableId = tableId
     }
   }
 
   @CompileDynamic
-  private static BigQuery createFakeBigQuery(FakeBigQueryState state) {
+  private static BigQuery fakeBigQueryFor(InsertAllTestState state) {
     BigQueryOptions options = BigQueryOptions.newBuilder()
         .setProjectId('matrix-project')
         .setCredentials(NoCredentials.getInstance())
@@ -257,7 +259,7 @@ class InsertAppendSemanticsTest {
           assertTrue(info instanceof TableInfo)
           state.events << 'create'
           state.createCalls++
-          state.currentTable = createTable(fakeBigQuery, (TableInfo) info)
+          state.currentTable = tableFrom(fakeBigQuery, (TableInfo) info)
           state.currentTable
         },
         insertAll: { InsertAllRequest request ->
@@ -268,13 +270,13 @@ class InsertAppendSemanticsTest {
         }
     ] as BigQuery
     if (state.initializeTable && state.currentTable == null && state.tableId != null) {
-      state.currentTable = createTable(fakeBigQuery, TableInfo.newBuilder(state.tableId, sampleDefinition()).build())
+      state.currentTable = tableFrom(fakeBigQuery, TableInfo.newBuilder(state.tableId, sampleDefinition()).build())
     }
     fakeBigQuery
   }
 
   @CompileDynamic
-  private static Table createTable(BigQuery bigQuery, TableInfo tableInfo) {
+  private static Table tableFrom(BigQuery bigQuery, TableInfo tableInfo) {
     Method toPb = TableInfo.getDeclaredMethod('toPb')
     toPb.setAccessible(true)
     Object tablePb = toPb.invoke(tableInfo)
