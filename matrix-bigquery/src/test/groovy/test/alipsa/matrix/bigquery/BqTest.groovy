@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.*
 @CompileStatic
 class BqTest {
 
+  @SuppressWarnings('FieldName')
   private static final Logger log = Logger.getLogger(BqTest)
   private static Bq bq
   private static String projectId

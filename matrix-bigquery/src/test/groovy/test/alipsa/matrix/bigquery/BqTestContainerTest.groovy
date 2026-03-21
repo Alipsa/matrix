@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 class BqTestContainerTest {
 
   // https://github.com/goccy/bigquery-emulator/pkgs/container/bigquery-emulator
+  @SuppressWarnings('FieldName')
   @Container
   private static final BigQueryEmulatorContainer container = new BigQueryEmulatorContainer(
       "ghcr.io/goccy/bigquery-emulator:0.6.6"
