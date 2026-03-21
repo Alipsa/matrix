@@ -8,7 +8,7 @@ To use it, add the following to your gradle build script
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.5.1'
+implementation 'se.alipsa.matrix:matrix-bigquery:0.6.0'
 ```
 To export and import data:
 ```groovy
@@ -17,15 +17,29 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.bigquery.*
 
 Matrix data = Dataset.cars()
+String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
 // This assumes you have set the environment variable
 // GOOGLE_CLOUD_PROJECT. An alternative would be to pass
 // the Big Query projectId to the constructor
 Bq bq = new Bq()
 // Export
-bq.saveToBigQuery(data, 'mydataset.cars')
+bq.saveToBigQuery(data, 'mydataset')
 // Import
-Matrix d2 = bq.query("select * from 'mydataset.cars'")
+Matrix d2 = bq.query("select * from `${projectId}.mydataset.${data.matrixName}`")
+    .withMatrixName(data.matrixName)
 assert data == d2
+```
+
+`saveToBigQuery(matrix, datasetName)` uses `matrix.matrixName` as the BigQuery table name.
+The optional third parameter, `append`, defaults to `false`, which means the existing table data
+is replaced. Pass `true` to append instead:
+
+```groovy
+// Overwrite existing rows in mydataset.cars (default behavior)
+bq.saveToBigQuery(data, 'mydataset')
+
+// Append to the existing table instead
+bq.saveToBigQuery(data, 'mydataset', true)
 ```
 
 ## Query Execution Modes
@@ -47,7 +61,7 @@ Bq bq = new Bq(true)  // Enable async queries
 ```
 
 The async mode is superior for production use as it has no response size limitations. The sync mode (default) is maintained for compatibility with BigQuery emulators used in testing.
-See the [BqTest](src/test/groovy/se/alipsa/matrix/bigquery/BqTest.groovy) for more usage examples.
+See the [BqTest](src/test/groovy/test/alipsa/matrix/bigquery/BqTest.groovy) for more usage examples.
 
 # 3:rd party libraries used
 
