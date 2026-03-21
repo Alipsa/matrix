@@ -55,7 +55,7 @@ fi
 #popd
 
 echo "Building and locally publishing matrix"
-./gradlew build publishToMavenLocal
+./gradlew spotlessApply build publishToMavenLocal
 
 #echo "Verify bom and install matrix-all"
 #pushd matrix-bom
