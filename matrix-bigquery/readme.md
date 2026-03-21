@@ -42,6 +42,15 @@ bq.saveToBigQuery(data, 'mydataset')
 bq.saveToBigQuery(data, 'mydataset', true)
 ```
 
+When the write channel API is used, Matrix BigQuery shows a progress bar only if an interactive
+terminal is available. You can override that behavior with the `bigquery.enable_progress_bar`
+system property:
+
+```groovy
+System.setProperty('bigquery.enable_progress_bar', 'false') // Always disable
+System.setProperty('bigquery.enable_progress_bar', 'true')  // Force enable
+```
+
 ## Query Execution Modes
 
 Matrix BigQuery supports two query execution modes:
