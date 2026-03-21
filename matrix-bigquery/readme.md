@@ -102,3 +102,11 @@ License: BSD-3-Clause
 ## com.google.cloud:google-cloud-resourcemanager
 Used for Google project and other resource operations
 License: Apache 2.0
+
+## com.google.cloud:google-cloud-bigquerystorage
+Used for efficient data insertion and retrieval with BigQuery Storage API
+License: Apache 2.0
+
+## me.tongfei:progressbar
+Used for showing progress bars during data insertion
+License: MIT License
