@@ -1992,10 +1992,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   <T> T getAt(Integer row, Integer column) {
     Class<T> type = type(column) as Class<T>
+    def value = get(row, column)
     if (type != null) {
-      return get(row, column).asType(type)
+      return value == null ? null : value.asType(type)
     }
-    return get(row, column) as T
+    return value as T
   }
 
   /**
@@ -2109,7 +2110,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a value of the type specified
    */
   <T> T getAt(int row, int column, Class<T> type, T valIfNull) {
-    getAt(row, column, type) ?: valIfNull
+    T value = getAt(row, column, type)
+    value != null ? value : valIfNull
   }
 
   /**
@@ -2121,7 +2123,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return
    */
   <T> T getAt(int row, String columnName, Class<T> type, T valIfNull) {
-    getAt(row, columnName, type) ?: valIfNull
+    T value = getAt(row, columnName, type)
+    value != null ? value : valIfNull
   }
 
   /**
