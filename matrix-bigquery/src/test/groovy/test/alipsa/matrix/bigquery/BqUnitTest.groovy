@@ -203,6 +203,13 @@ class BqUnitTest {
   }
 
   @Test
+  void testConvertObjectValueInstant() {
+    Instant instant = Instant.parse('2024-01-15T13:45:30.123Z')
+    String result = Bq.convertObjectValue(instant) as String
+    assertEquals('2024-01-15T13:45:30.123Z', result)
+  }
+
+  @Test
   void testConvertObjectValueZonedDateTime() {
     ZonedDateTime zdt = ZonedDateTime.parse("2024-01-15T13:45:30Z")
     String result = Bq.convertObjectValue(zdt) as String
