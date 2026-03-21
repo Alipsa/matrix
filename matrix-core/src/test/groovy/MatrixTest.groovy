@@ -1515,6 +1515,48 @@ class MatrixTest {
   }
 
   @Test
+  void testGetAtTypedDefaultsPreserveFalsyValues() {
+    Matrix table = Matrix.builder()
+        .columns(
+            count: [0, null],
+            active: [false, null],
+            note: ['', null]
+        )
+        .types(Integer, Boolean, String)
+        .build()
+
+    assertEquals(0, table.getAt(0, 0, Integer, 99))
+    assertEquals(false, table.getAt(0, 1, Boolean, true))
+    assertEquals('', table.getAt(0, 2, String, 'fallback'))
+
+    assertEquals(99, table.getAt(1, 0, Integer, 99))
+    assertEquals(true, table.getAt(1, 1, Boolean, true))
+    assertEquals('fallback', table.getAt(1, 2, String, 'fallback'))
+
+    assertEquals(0, table.getAt(0, 'count', Integer, 99))
+    assertEquals(false, table.getAt(0, 'active', Boolean, true))
+    assertEquals('', table.getAt(0, 'note', String, 'fallback'))
+
+    assertEquals(99, table.getAt(1, 'count', Integer, 99))
+    assertEquals(true, table.getAt(1, 'active', Boolean, true))
+    assertEquals('fallback', table.getAt(1, 'note', String, 'fallback'))
+  }
+
+  @Test
+  void testGetAtReturnsNullForTypedNullCells() {
+    Matrix table = Matrix.builder()
+        .columns(
+            count: [1, null],
+            note: ['x', null]
+        )
+        .types(Integer, String)
+        .build()
+
+    assertNull(table.getAt(1, 0))
+    assertNull(table.getAt(1, 'note'))
+  }
+
+  @Test
   void testColumnArithmetics() {
     Matrix m = Matrix.builder().columns(
         [id     : [1, 2, 3, 4],
