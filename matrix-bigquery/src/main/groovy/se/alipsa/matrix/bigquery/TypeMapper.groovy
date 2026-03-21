@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.ValueConverter
 import java.nio.ByteBuffer
 import java.sql.Time
 import java.sql.Timestamp
+import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -273,19 +274,24 @@ class TypeMapper {
    * <h3>Conversion Process</h3>
    * <ol>
    *   <li>Convert value to BigDecimal (handles both numeric and string representations)</li>
-   *   <li>Multiply by 1000 to convert from seconds to milliseconds</li>
-   *   <li>Create Instant from epoch milliseconds</li>
+   *   <li>Extract whole seconds using floor semantics</li>
+   *   <li>Convert the fractional part to nanoseconds</li>
+   *   <li>Create Instant from epoch seconds and nanosecond adjustment</li>
    * </ol>
    *
-   * <p><b>Note:</b> Precision is limited to milliseconds. Sub-millisecond precision
-   * from BigQuery is truncated.</p>
+   * <p><b>Note:</b> BigQuery TIMESTAMP values use microsecond precision, which is preserved
+   * when converting to Java Instant.</p>
    *
    * @param value the BigQuery timestamp value (seconds since epoch as decimal)
    * @return Instant representing the timestamp, or null if value is null
    */
   static Instant convertToInstant(Object value) {
     if (value == null) return null
-    long epochMillis = (ValueConverter.asBigDecimal(value) * 1000).longValue()
-    Instant.ofEpochMilli(epochMillis)
+    BigDecimal timestampSeconds = ValueConverter.asBigDecimal(value)
+    BigDecimal wholeSeconds = timestampSeconds.setScale(0, RoundingMode.FLOOR)
+    BigDecimal fractionalSeconds = timestampSeconds - wholeSeconds
+    long epochSeconds = wholeSeconds.longValueExact()
+    long nanos = (fractionalSeconds * 1_000_000_000).longValue()
+    Instant.ofEpochSecond(epochSeconds, nanos)
   }
 }
