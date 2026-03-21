@@ -1,6 +1,10 @@
 # Matrix-bigquery Release History
 
 ## v0.6.0, 2026-03-21
+- `com.google.auth:google-auth-library-bom` [1.42.1 -> 1.43.0]
+- `com.google.cloud:google-cloud-bigquery` [2.58.0 -> 2.62.0]
+- `com.google.cloud:google-cloud-bigquerystorage` [3.20.0 -> 3.24.0]
+- `com.google.cloud:google-cloud-resourcemanager` [1.84.0 -> 1.90.0]
 - parameterize `getTableInfo(...)` and validate dataset identifiers before building the `INFORMATION_SCHEMA` query
 - replace the shared `SimpleDateFormat` with thread-safe `DateTimeFormatter` usage for legacy `Date` handling
 - add explicit `Instant` handling in `convertObjectValue(...)`

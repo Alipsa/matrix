@@ -141,7 +141,7 @@ publishing {
       pom {
         name = 'Matrix BigQuery'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-bigquery"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-bigquery"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
