@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.6.0, In progress
+## v0.6.0, 2026-03-21
 - parameterize `getTableInfo(...)` and validate dataset identifiers before building the `INFORMATION_SCHEMA` query
 - replace the shared `SimpleDateFormat` with thread-safe `DateTimeFormatter` usage for legacy `Date` handling
 - add explicit `Instant` handling in `convertObjectValue(...)`
