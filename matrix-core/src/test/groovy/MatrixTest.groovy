@@ -1143,6 +1143,42 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsHashCodeContractIgnoresMatrixName() {
+    Matrix left = Matrix.builder()
+        .matrixName('left')
+        .data(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+    Matrix right = Matrix.builder()
+        .matrixName('right')
+        .data(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    assertEquals(left, right)
+    assertEquals(left.hashCode(), right.hashCode())
+  }
+
+  @Test
+  void testDiffForceRowComparingWithDifferentRowCounts() {
+    Matrix left = Matrix.builder()
+        .matrixName('left')
+        .data(id: [1, 2, 3], name: ['Rick', 'Dan', 'Lisa'])
+        .types(Integer, String)
+        .build()
+    Matrix right = Matrix.builder()
+        .matrixName('left')
+        .data(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    String diff = left.diff(right, true)
+
+    assertTrue(diff.contains('Number of rows differ: this: 3; that: 2'))
+    assertFalse(diff.contains('Row 2 differs'))
+  }
+
+  @Test
   void removeRows() {
     def report = [
         "YearMonth"       : toYearMonths(['2023-01', '2023-02', '2023-03', '2023-04']),
@@ -1158,6 +1194,22 @@ class MatrixTest {
     assertEquals(2, table.rowCount())
     assertIterableEquals([asYearMonth('2023-02'), 380.263, 282.133, 225], table.row(0))
     assertIterableEquals([asYearMonth('2023-04'), 12.23, 2.654, 1.871], table.row(1))
+  }
+
+  @Test
+  void testRemoveRowsDoesNotMutateCallerList() {
+    Matrix table = Matrix.builder()
+        .data(id: [1, 2, 3, 4], name: ['a', 'b', 'c', 'd'])
+        .types(Integer, String)
+        .build()
+    List<Integer> indexes = [2, 0]
+
+    table.removeRows(indexes)
+
+    assertEquals([2, 0], indexes)
+    assertEquals(2, table.rowCount())
+    assertIterableEquals([2, 'b'], table.row(0))
+    assertIterableEquals([4, 'd'], table.row(1))
   }
 
   @Test

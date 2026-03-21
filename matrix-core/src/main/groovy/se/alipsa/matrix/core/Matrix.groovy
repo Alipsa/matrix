@@ -1612,7 +1612,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     if (sb.length() == 0 || forceRowComparing) {
       def thisRow, thatRow
-      for (int i = 0; i < rowCount(); i++) {
+      int rowsToCompare = Math.min(rowCount(), other.rowCount())
+      for (int i = 0; i < rowsToCompare; i++) {
         thisRow = row(i)
         thatRow = other.row(i)
         boolean valueDiff = false
@@ -2206,9 +2207,8 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   int hashCode() {
-    int result
-    result = (mColumns != null ? mColumns.size() : 0)
-    result = 31 * result + (mName != null ? mName.hashCode() : 0)
+    int result = mColumns != null ? mColumns.hashCode() : 0
+    result = 31 * result + types().hashCode()
     return result
   }
 
@@ -2826,9 +2826,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix removeRows(List<Integer> indexes) {
-    indexes.sort()
+    List<Integer> sortedIndexes = indexes.toSorted()
     mColumns.each { col ->
-      indexes.eachWithIndex { Number idx, int count ->
+      sortedIndexes.eachWithIndex { Number idx, int count ->
         col.remove((int) idx - count)
       }
     }
