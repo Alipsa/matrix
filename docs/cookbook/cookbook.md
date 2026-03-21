@@ -9,3 +9,5 @@
 7. [Matrix GGPlot](matrix-ggplot.md)
 8. [Matrix Avro](matrix-avro.md)
    Decimal-safe writes, schema evolution, explicit nested schema control, and SPI recipes
+9. [Matrix BigQuery](matrix-bigquery.md)
+   Querying, dataset/table setup, overwrite vs append, and emulator-oriented recipes

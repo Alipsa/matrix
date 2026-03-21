@@ -2,14 +2,15 @@
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-bigquery/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-bigquery)
 # Matrix Big Query
 
-This module makes it simple to query data from Google Big Query and get the result back as a Matrix and also to export a Matrix to Big Query.
+This module makes it simple to query data from Google BigQuery and get the result back as a Matrix, and to export a Matrix to BigQuery.
 
-To use it, add the following to your gradle build script
+To use it, add the following to your Gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.6.0'
 implementation 'se.alipsa.matrix:matrix-bigquery:0.6.0'
 ```
+
 To export and import data:
 ```groovy
 import se.alipsa.matrix.core.Matrix
@@ -25,7 +26,7 @@ Bq bq = new Bq()
 // Export
 bq.saveToBigQuery(data, 'mydataset')
 // Import
-Matrix d2 = bq.query("select * from `${projectId}.mydataset.${data.matrixName}`")
+Matrix d2 = bq.query("select * from `${projectId}.mydataset.${data.matrixName}` order by speed")
     .withMatrixName(data.matrixName)
 assert data == d2
 ```
@@ -51,6 +52,16 @@ System.setProperty('bigquery.enable_progress_bar', 'false') // Always disable
 System.setProperty('bigquery.enable_progress_bar', 'true')  // Force enable
 ```
 
+## Working with explicit configuration
+
+```groovy
+import com.google.auth.oauth2.GoogleCredentials
+import se.alipsa.matrix.bigquery.Bq
+
+GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream('service-account.json'))
+Bq bq = new Bq(credentials, 'my-project-id', true)
+```
+
 ## Query Execution Modes
 
 Matrix BigQuery supports two query execution modes:
@@ -72,16 +83,30 @@ Bq bq = new Bq(true)  // Enable async queries
 The async mode is superior for production use as it has no response size limitations. The sync mode (default) is maintained for compatibility with BigQuery emulators used in testing.
 See the [BqTest](src/test/groovy/test/alipsa/matrix/bigquery/BqTest.groovy) for more usage examples.
 
+## More documentation
+
+- [Release notes](release.md)
+- [Tutorial](../docs/tutorial/12-matrix-bigquery.md)
+- [Cookbook recipes](../docs/cookbook/matrix-bigquery.md)
+
 # 3:rd party libraries used
 
 ## com.google.cloud:google-cloud-bigquery
-Used to access Google Big Query
+Used to access Google BigQuery
 License: Apache 2.0
 
 ## com.google.auth:google-auth-library-oauth2-http
-Used for authentication against Google Big Query
+Used for authentication against Google BigQuery
 License: BSD-3-Clause
 
 ## com.google.cloud:google-cloud-resourcemanager
 Used for Google project and other resource operations
 License: Apache 2.0
+
+## com.google.cloud:google-cloud-bigquerystorage
+Used for efficient data insertion and retrieval with BigQuery Storage API
+License: Apache 2.0
+
+## me.tongfei:progressbar
+Used for showing progress bars during data insertion
+License: MIT License
