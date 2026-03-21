@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*
 @CompileStatic
 class BqDataTypesTest {
 
+  @SuppressWarnings('FieldName')
   private static final Logger log = Logger.getLogger(BqDataTypesTest)
   static String datasetName = 'BqDataTypesTest'
   @BeforeAll
