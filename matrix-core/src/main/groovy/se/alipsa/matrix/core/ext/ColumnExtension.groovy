@@ -22,8 +22,9 @@ class ColumnExtension {
     }
   }
 
-  static def leftShift(Column self, Collection list) {
+  static Column leftShift(Column self, Collection list) {
     self.addAll(list)
+    self
   }
 
   static Object getAt(Column self, Collection indices) {

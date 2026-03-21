@@ -7,6 +7,7 @@ import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
@@ -64,5 +65,36 @@ class RowTest {
     }
 
     assertEquals("Dont know what to do with 2 parameters ([0, b]) to getAt()", ex.message)
+  }
+
+  @Test
+  void testGetAtReturnsNullForNullCells() {
+    Matrix table = Matrix.builder()
+        .columns(id: [1, null], name: ['Rick', null])
+        .types(Integer, String)
+        .build()
+
+    Row row = table.row(1)
+
+    assertNull(row.getAt(0))
+    assertNull(row.getAt(0 as Number))
+    assertNull(row.getAt('name'))
+  }
+
+  @Test
+  void testPutAtRejectsMissingColumnName() {
+    Matrix table = Matrix.builder()
+        .columns(id: [1], name: ['Rick'])
+        .types(Integer, String)
+        .build()
+
+    Row row = table.row(0)
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      row.putAt('salary', 99)
+    }
+
+    assertEquals('Failed to find a column with the name salary', ex.message)
+    assertEquals([1, 'Rick'], row)
   }
 }

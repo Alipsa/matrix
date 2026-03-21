@@ -101,7 +101,7 @@ class Column extends ArrayList {
       } else if (it instanceof Character) {
         result.add(it + (val as Character))
       } else if (it instanceof String) {
-        result.add(it + (val as Character))
+        result.add(it + (val as String))
       } else {
         result.add(it + val)
       }
@@ -134,7 +134,7 @@ class Column extends ArrayList {
       } else if (it instanceof Character) {
         result.add(it - (val as Character))
       } else if (it instanceof String) {
-        result.add(it - (val as Character))
+        result.add(it - (val as String))
       } else {
         result.add(it - val)
       }

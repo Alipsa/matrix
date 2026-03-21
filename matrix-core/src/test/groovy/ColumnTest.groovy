@@ -25,6 +25,9 @@ class ColumnTest {
     assert c2 + [1, 2] == [2, null, null, null]
     // larger
     assert c2 + [1, 2, 3, 4, 5, 6] == [2, null, 6, 8]
+
+    Column s1 = new Column(['1', '2', '3'])
+    assert s1 + ['px', 'em', 'rem'] == ['1px', '2em', '3rem']
   }
 
   @Test
@@ -59,6 +62,9 @@ class ColumnTest {
     assert c2 - [2, 1] == [-1, null, null, null]
     // larger
     assert c2 - [1, 2, 3, 4, 5, 6] == [0, null, 0, 0]
+
+    Column s1 = new Column(['100px', '2rem', 'fit-content'])
+    assert s1 - ['px', 'rem', 'fit-'] == ['100', '2', 'content']
   }
 
   @Test
@@ -167,6 +173,16 @@ class ColumnTest {
     assert [1,2,3,4,5] == c1
     c1 << [6,7]
     assert [1,2,3,4,5,6,7] == c1
+  }
+
+  @Test
+  void testLeftShiftCollectionChaining() {
+    Column column = [] as Column
+
+    Column result = column << [1, 2] << [3, 4]
+
+    assert result.is(column)
+    assert [1, 2, 3, 4] == column
   }
 
   @Test

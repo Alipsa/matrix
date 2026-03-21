@@ -351,7 +351,11 @@ class Row implements GroovyObject, List<Object> {
      * @return
      */
     Object putAt(String columnName, Object value) {
-        return set(columnNames.indexOf(columnName), value)
+        int idx = columnNames.indexOf(columnName)
+        if (idx == -1) {
+            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        }
+        return set(idx, value)
     }
 
     /**
@@ -362,7 +366,8 @@ class Row implements GroovyObject, List<Object> {
      */
     <T> T getAt(int index) {
         Class<T> type = types[index] as Class<T>
-        return get(index).asType(type)
+        def value = get(index)
+        return value == null ? null : value.asType(type)
     }
 
     /**
@@ -373,7 +378,8 @@ class Row implements GroovyObject, List<Object> {
      */
     <T> T getAt(Number index) {
         Class<T> type = types[index.intValue()] as Class<T>
-        return get(index.intValue()).asType(type)
+        def value = get(index.intValue())
+        return value == null ? null : value.asType(type)
     }
 
     /**
@@ -400,7 +406,8 @@ class Row implements GroovyObject, List<Object> {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
         Class<T> type = types[idx] as Class<T>
-        return get(idx).asType(type)
+        def value = get(idx)
+        return value == null ? null : value.asType(type)
     }
 
     /**
