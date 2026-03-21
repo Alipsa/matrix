@@ -949,6 +949,15 @@ class MatrixTest {
 
     assert table.subset(0..1).toMarkdown() == table.toMarkdown(2)
     assert table.subset(2..3).toMarkdown() == table.toMarkdown(2, false)
+    assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |\n| --- | ---: | ---: | ---: |\n', table.toMarkdown(0))
+    assertEquals(table.toMarkdown(0), table.toMarkdown(-1))
+    assertEquals(table.toMarkdown(), table.toMarkdown(10))
+
+    Matrix indented = Matrix.builder()
+        .data(note: ['  keep leading'])
+        .types(String)
+        .build()
+    assertTrue(indented.toMarkdown().contains('|   keep leading |'))
   }
 
   @Test
@@ -1027,6 +1036,11 @@ class MatrixTest {
     assertTrue(html.contains(' class="table"'), 'table should have the class attribute set')
     assertTrue(html.contains("<th class='salary Number' style='text-align: right'>salary</th>"), 'table header for salary should be right aligned but was ' + html)
     assertTrue(html.contains("<td class='salary Number' style='text-align: right'>623.3</td>"), 'table row for salary should be right aligned but was ' + html)
+    assertEquals(1, html.split('<tbody>', -1).length - 1)
+    assertEquals(1, html.split('</tbody>', -1).length - 1)
+    assertEquals(1, empData.toHtml([:], 0).split('<tr>', -1).length - 1)
+    assertEquals(empData.toHtml([:], 0), empData.toHtml([:], -1))
+    assertEquals(empData.toHtml(), empData.toHtml([:], 10))
 
   }
 

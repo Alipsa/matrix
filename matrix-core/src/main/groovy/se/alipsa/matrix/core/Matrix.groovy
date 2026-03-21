@@ -3546,13 +3546,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return HTML table string
    */
   String toHtml(Map<String, String> attr = [:], Integer numRows, boolean fromHead = true, boolean autoAlign = true) {
-    List<?> r
-    if (fromHead) {
-      r = rows(0..numRows - 1)
-    } else {
-      r = rows(rowCount() - numRows..rowCount() - 1)
-    }
-    toHtml(attr, r, autoAlign)
+    toHtml(attr, rowsForRender(numRows, fromHead), autoAlign)
   }
 
   /**
@@ -3676,7 +3670,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       sb.append(rowBuilder).append('    </tr>\n')
     }
-    sb.append('  <tbody>\n</table>\n')
+    sb.append('  </tbody>\n</table>\n')
     sb.toString()
   }
 
@@ -3714,13 +3708,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the markdown formatted table
    */
   String toMarkdown(Map<String, String> attr, int numRows, boolean fromHead = true) {
-    List<?> r
-    if (fromHead) {
-      r = rows(0..numRows - 1)
-    } else {
-      r = rows(rowCount() - numRows..rowCount() - 1)
-    }
-    return toMarkdown(attr, calculateAlignment(), r)
+    return toMarkdown(attr, calculateAlignment(), rowsForRender(numRows, fromHead))
   }
 
 
@@ -3754,12 +3742,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     StringBuilder rowBuilder = new StringBuilder()
     for (row in rows) {
       rowBuilder.setLength(0)
-
+      List<String> values = []
       for (val in row) {
-        rowBuilder.append(ValueConverter.asString(val)).append(' | ')
+        values << ValueConverter.asString(val)
       }
+      rowBuilder.append(String.join(' | ', values))
       sb.append('| ')
-          .append(rowBuilder.toString().trim()).append('\n')
+          .append(rowBuilder.toString()).append(' |\n')
     }
     if (attr.size() > 0) {
       sb.append("{")
@@ -3781,6 +3770,20 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     alignment
+  }
+
+  private List<Row> rowsForRender(Integer numRows, boolean fromHead) {
+    if (numRows == null) {
+      return rows()
+    }
+    int rowsToRender = Math.max(0, Math.min(numRows, rowCount()))
+    if (rowsToRender == 0) {
+      return Collections.emptyList()
+    }
+    List<Integer> rowIndices = fromHead
+        ? (0..<rowsToRender).toList()
+        : ((rowCount() - rowsToRender)..<rowCount()).toList()
+    rows(rowIndices)
   }
 
   /**
