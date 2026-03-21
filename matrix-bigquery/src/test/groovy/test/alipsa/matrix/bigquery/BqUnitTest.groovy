@@ -17,6 +17,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -213,8 +214,7 @@ class BqUnitTest {
 
   @Test
   void testConvertObjectValueDate() {
-    // Use the SimpleDateFormat from Bq
-    Date date = Bq.bqSimpledateFormat.parse("2024-01-15")
+    Date date = Date.from(LocalDate.of(2024, 1, 15).atStartOfDay(ZoneId.systemDefault()).toInstant())
     String result = Bq.convertObjectValue(date) as String
     assertEquals("2024-01-15", result)
   }
