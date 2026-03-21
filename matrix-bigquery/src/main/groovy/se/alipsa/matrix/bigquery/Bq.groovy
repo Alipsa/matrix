@@ -782,12 +782,25 @@ class Bq {
       return createPlaceholderLoadStatistics(tableId)
 
     } catch (Exception fallbackException) {
-      log.error("InsertAll failed: ${fallbackException.message}")
+      if (isExpectedInsertAllPreconditionFailure(fallbackException)) {
+        log.debug("InsertAll failed: ${fallbackException.message}")
+      } else {
+        log.error("InsertAll failed: ${fallbackException.message}")
+      }
       if (originalException != null) {
         throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
       }
       throw new BqException("InsertAll failed: ${fallbackException.message}", fallbackException)
     }
+  }
+
+  @PackageScope
+  static boolean isExpectedInsertAllPreconditionFailure(Exception exception) {
+    if (!(exception instanceof BqException)) {
+      return false
+    }
+    String message = exception.message
+    message?.startsWith('Cannot overwrite ') || message?.startsWith('Failed to recreate ')
   }
 
   @PackageScope

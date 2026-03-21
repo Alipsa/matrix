@@ -163,6 +163,22 @@ class InsertAppendSemanticsTest {
     assertEquals(0, state.createCalls)
   }
 
+  @Test
+  void classifyExpectedInsertAllPreconditionFailures() {
+    assertTrue(Bq.isExpectedInsertAllPreconditionFailure(
+        new BqException('Cannot overwrite table via InsertAll because the table does not exist')
+    ))
+    assertTrue(Bq.isExpectedInsertAllPreconditionFailure(
+        new BqException('Failed to recreate table for InsertAll overwrite because the existing table could not be deleted')
+    ))
+    assertFalse(Bq.isExpectedInsertAllPreconditionFailure(
+        new BqException('InsertAll failed with errors:\nrow 1: invalid value')
+    ))
+    assertFalse(Bq.isExpectedInsertAllPreconditionFailure(
+        new RuntimeException('Connection refused')
+    ))
+  }
+
   private static Matrix sampleMatrix() {
     Matrix.builder()
         .columnNames(['id', 'name'])
