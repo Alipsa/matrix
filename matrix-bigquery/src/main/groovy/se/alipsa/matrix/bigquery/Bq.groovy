@@ -386,12 +386,13 @@ class Bq {
    * @see #setWaitForTableTimeoutMs
    */
   boolean saveToBigQuery(Matrix matrix, String datasetName, boolean append = false) throws BqException {
-    String tableName = matrix.matrixName
-    if (!tableExist(datasetName, tableName)) {
-      TableSchema defs = createTable(matrix, datasetName)
+    String tableName = validateMatrixName(matrix?.matrixName)
+    String safeDatasetName = validateSaveDatasetName(datasetName)
+    if (!tableExist(safeDatasetName, tableName)) {
+      TableSchema defs = createTable(matrix, safeDatasetName)
       waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
-    TableId tableId = TableId.of(projectId, datasetName, tableName)
+    TableId tableId = TableId.of(projectId, safeDatasetName, tableName)
     insert(matrix, tableId, append)
     return true
   }
@@ -1048,6 +1049,24 @@ class Bq {
    */
   Matrix getTableInfo(String datasetName, String tableName) throws BqException {
     query(createTableInfoQueryConfiguration(datasetName, tableName))
+  }
+
+  @PackageScope
+  static String validateMatrixName(String matrixName) {
+    String name = matrixName?.trim()
+    if (!name) {
+      throw new IllegalArgumentException('Matrix matrixName cannot be null or blank when saving to BigQuery')
+    }
+    name
+  }
+
+  @PackageScope
+  static String validateSaveDatasetName(String datasetName) {
+    String name = datasetName?.trim()
+    if (!name) {
+      throw new IllegalArgumentException('Dataset name cannot be null or blank when saving to BigQuery')
+    }
+    name
   }
 
   @PackageScope
