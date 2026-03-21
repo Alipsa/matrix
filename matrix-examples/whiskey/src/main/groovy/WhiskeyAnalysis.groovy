@@ -90,7 +90,7 @@ CorrelationHeatmapChart.create(m)
   .addSeries('Heat Series', features)
   .display()
 
-corr = [size<..0, 0..<size].combinations().collect { int i, int j ->
+corr = [(size - 1)..0, 0..<size].combinations().collect { int i, int j ->
   Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>) * 100 as int
 }
 

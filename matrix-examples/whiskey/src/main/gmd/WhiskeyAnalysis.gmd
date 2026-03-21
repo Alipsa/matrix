@@ -115,7 +115,7 @@ import se.alipsa.matrix.core.*
 import se.alipsa.matrix.stats.*
 import se.alipsa.matrix.xchart.*
 
-def corr = [size<..0, 0..<size].combinations().collect { i, j ->
+def corr = [(size - 1)..0, 0..<size].combinations().collect { i, j ->
   Correlation.cor(data*.getAt(j), data*.getAt(i)) * 100 as int
 }
 
