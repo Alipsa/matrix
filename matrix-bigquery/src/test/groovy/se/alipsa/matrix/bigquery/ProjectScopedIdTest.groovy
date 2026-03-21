@@ -38,6 +38,15 @@ class ProjectScopedIdTest {
     assertEquals('events', tableId.table)
   }
 
+  @Test
+  void tableIdOverloadUsesExplicitProjectId() {
+    TableId tableId = Bq.tableId('other-project', 'analytics', 'events')
+
+    assertEquals('other-project', tableId.project)
+    assertEquals('analytics', tableId.dataset)
+    assertEquals('events', tableId.table)
+  }
+
   private static Bq createBq(String projectId) {
     BigQueryOptions options = BigQueryOptions.newBuilder()
         .setProjectId(projectId)

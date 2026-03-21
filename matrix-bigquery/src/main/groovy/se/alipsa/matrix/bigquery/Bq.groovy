@@ -392,7 +392,7 @@ class Bq {
       TableSchema defs = createTable(matrix, safeDatasetName)
       waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
-    TableId tableId = TableId.of(projectId, safeDatasetName, tableName)
+    TableId tableId = tableId(safeDatasetName, tableName)
     insert(matrix, tableId, append)
     return true
   }
@@ -476,7 +476,7 @@ class Bq {
   TableSchema createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
     try {
       String tableName = matrix.matrixName
-      TableId tableId = TableId.of(projectId, datasetName, tableName)
+      TableId tableId = tableId(projectId, datasetName, tableName)
       TableDefinition tableDefinition = StandardTableDefinition.of(schema)
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
       Table table = bigQuery.create(tableInfo)
@@ -1057,6 +1057,11 @@ class Bq {
 
   @PackageScope
   TableId tableId(String datasetName, String tableName) {
+    TableId.of(projectId, datasetName, tableName)
+  }
+
+  @PackageScope
+  static TableId tableId(String projectId, String datasetName, String tableName) {
     TableId.of(projectId, datasetName, tableName)
   }
 
