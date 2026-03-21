@@ -25,7 +25,6 @@ import se.alipsa.matrix.core.util.Logger
 import java.nio.channels.Channels
 import java.sql.Time
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -98,11 +97,11 @@ class Bq {
 
   private static final Logger log = Logger.getLogger(Bq)
 
-  /** Date formatter for BigQuery DATE type (yyyy-MM-dd). Not thread-safe - use only within single-threaded context. */
-  static final SimpleDateFormat bqSimpledateFormat = new SimpleDateFormat("yyyy-MM-dd")
-
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
   static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+  /** Date formatter for legacy java.util.Date values using the JVM default timezone. Thread-safe. */
+  static final DateTimeFormatter bqLegacyDateFormatter = bqDateFormatter.withZone(ZoneId.systemDefault())
 
   /** DateTime formatter for BigQuery DATETIME type with microsecond precision. Thread-safe. */
   static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
@@ -914,7 +913,7 @@ class Bq {
     }
     if (orgVal instanceof Date) {
       Date date = (Date) orgVal
-      return bqSimpledateFormat.format(date)
+      return bqLegacyDateFormatter.format(date.toInstant())
     }
     String.valueOf(orgVal)
   }
