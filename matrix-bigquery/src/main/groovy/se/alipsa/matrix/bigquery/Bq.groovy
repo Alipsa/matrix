@@ -64,6 +64,9 @@ import static se.alipsa.matrix.bigquery.TypeMapper.*
  * <ul>
  *   <li><b>waitForTableTimeoutMs</b>: Timeout for waiting for table availability after creation.
  *       Default: 60 seconds. Configure via {@link #setWaitForTableTimeoutMs}.</li>
+ *   <li><b>bigquery.enable_progress_bar</b>: Controls write progress display. When unset,
+ *       progress bars are shown only when an interactive terminal is available. Set to
+ *       {@code false} to always disable them or {@code true} to force them on.</li>
  * </ul>
  *
  * <h2>Thread Safety</h2>
@@ -96,6 +99,7 @@ import static se.alipsa.matrix.bigquery.TypeMapper.*
 class Bq {
 
   private static final Logger log = Logger.getLogger(Bq)
+  static final String ENABLE_PROGRESS_BAR_PROPERTY = 'bigquery.enable_progress_bar'
 
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
   static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -604,20 +608,22 @@ class Bq {
       List<String> columnNames = matrix.columnNames()
       int rowCount = matrix.rowCount()
       int stepSize = Math.max(1, (int) (rowCount * tickPercent))
-      ProgressBar pb = new ProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
+      ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
 
       try {
         for (Row row : matrix.rows()) {
           rowIdx++
           lastValue = writeRowAsJson(json, row, columnNames)
 
-          if (rowIdx % stepSize == 0) {
+          if (pb != null && rowIdx % stepSize == 0) {
             pb.stepBy(stepSize)
           }
         }
-        pb.stepTo(rowIdx)
+        if (pb != null) {
+          pb.stepTo(rowIdx)
+        }
       } finally {
-        pb.close()
+        pb?.close()
         json.flush()
         json.close()
       }
@@ -627,6 +633,22 @@ class Bq {
     } catch (Exception e) {
       throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
     }
+  }
+
+  @PackageScope
+  static boolean progressBarEnabled(boolean hasInteractiveTerminal = System.console() != null) {
+    String configured = System.getProperty(ENABLE_PROGRESS_BAR_PROPERTY)?.trim()
+    if (!configured) {
+      return hasInteractiveTerminal
+    }
+    configured.toBoolean()
+  }
+
+  private static ProgressBar createProgressBar(String taskName, int rowCount) {
+    if (!progressBarEnabled()) {
+      return null
+    }
+    new ProgressBar(taskName, rowCount)
   }
 
   /**
