@@ -207,6 +207,8 @@ class TypeMapperTest {
 
     assertNotNull(instant)
     assertEquals(1609459200123L, instant.toEpochMilli())
+    assertEquals(123456000, instant.nano)
+    assertEquals(Instant.parse('2021-01-01T00:00:00.123456Z'), instant)
   }
 
   @Test
@@ -217,6 +219,7 @@ class TypeMapperTest {
 
     assertNotNull(instant)
     assertEquals(1609459200500L, instant.toEpochMilli())
+    assertEquals(500000000, instant.nano)
   }
 
   @Test
@@ -227,6 +230,15 @@ class TypeMapperTest {
 
     assertNotNull(instant)
     assertEquals(1609459200000L, instant.toEpochMilli())
+    assertEquals(0, instant.nano)
+  }
+
+  @Test
+  void testConvertToInstantPreservesNegativeFractionalSeconds() {
+    Instant instant = TypeMapper.convertToInstant("-0.123456")
+
+    assertNotNull(instant)
+    assertEquals(Instant.ofEpochSecond(-1, 876544000), instant)
   }
 
   // Roundtrip tests
