@@ -42,12 +42,12 @@ class Logger {
     boolean slf4jDetected = false
     try {
       // First check if SLF4J API is available
-      Class.forName('org.slf4j.LoggerFactory')
-      Class.forName('org.slf4j.Logger')
+      loadClass('org.slf4j.LoggerFactory')
+      loadClass('org.slf4j.Logger')
 
       // Then check if there's an actual implementation (not just NOP logger)
       // Get a test logger and check if it's a NOP logger
-      def loggerFactoryClass = Class.forName('org.slf4j.LoggerFactory')
+      def loggerFactoryClass = loadClass('org.slf4j.LoggerFactory')
       def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
       def testLogger = getLoggerMethod.invoke(null, 'se.alipsa.matrix.core.util.Logger.test')
 
@@ -276,13 +276,21 @@ class Logger {
 
   private static Object createSlf4jLogger(String className) {
     try {
-      Class<?> loggerFactoryClass = Class.forName('org.slf4j.LoggerFactory')
+      Class<?> loggerFactoryClass = loadClass('org.slf4j.LoggerFactory')
       def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
       return getLoggerMethod.invoke(null, className)
     } catch (Exception e) {
       // Should not happen since we already checked SLF4J availability
-      throw new RuntimeException("Failed to create SLF4J logger", e)
+      throw new IllegalStateException("Failed to create SLF4J logger", e)
     }
+  }
+
+  private static Class<?> loadClass(String name) throws ClassNotFoundException {
+    contextClassLoader().loadClass(name)
+  }
+
+  private static ClassLoader contextClassLoader() {
+    Thread.currentThread().contextClassLoader ?: Logger.class.classLoader
   }
 }
 

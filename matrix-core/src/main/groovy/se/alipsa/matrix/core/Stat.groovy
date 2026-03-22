@@ -78,6 +78,8 @@ class Stat {
         sum
     }
 
+    // Summary methods return null for null input to preserve the existing API contract.
+    @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
     static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
         if (objects == null) {
             log.error("The list of objects for addNumericSummary is null")
@@ -874,9 +876,15 @@ class Stat {
 
     static Matrix frequency(List<?> column) {
         Map<String, AtomicInteger> freq = [:]
-        column.forEach(v -> {
-            freq.computeIfAbsent(String.valueOf(v), k -> new AtomicInteger(0)).incrementAndGet()
-        })
+        column.each { v ->
+            String key = String.valueOf(v)
+            AtomicInteger count = freq[key]
+            if (count == null) {
+                count = new AtomicInteger(0)
+                freq[key] = count
+            }
+            count.incrementAndGet()
+        }
         int size = column.size()
         List<List<?>> matrix = []
         def percent
