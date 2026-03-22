@@ -31,10 +31,8 @@ class ComparisonHelper {
    * @return true if at least one value is non-null, otherwise false
    */
   static boolean containsValues(Iterable row) {
-    def strVal
     for (def element in row) {
-      strVal = String.valueOf(element)
-      if (element != null && strVal != 'null' && !strVal.isBlank()) return true
+      if (element != null && (!(element instanceof CharSequence) || !element.toString().isBlank())) return true
     }
     false
   }

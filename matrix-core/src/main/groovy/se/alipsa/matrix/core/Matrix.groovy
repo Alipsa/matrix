@@ -334,6 +334,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the column inserted
    */
   Matrix addColumn(String name, Class type = Object, Integer index, List column) {
+    if (columnNames().contains(name)) {
+      throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
+    }
+    if (rowCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix row count (${rowCount()})")
+    }
     mColumns.add(index, new Column(name, column, type))
     return this
   }
@@ -609,7 +615,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       col.add(val)
     }
-    col.type = updatedClass
+    col.type = updatedClass ?: type(columnNumber) ?: Object
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
     invalidateIndex()
@@ -654,7 +660,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         col.add(it)
       }
     }
-    col.type = updatedClass
+    col.type = updatedClass ?: type(columnNumber) ?: Object
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
     invalidateIndex()
@@ -684,6 +690,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
     List<List> updatedRows = []
     Class updatedClass = null
+    Class originalType = type(columnNumber) ?: Object
     def orgVal
     rows().each { it ->
       def row = it as List
@@ -707,8 +714,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
 
-    List<Class> dataTypes = updatedClass != type(columnNumber)
-        ? createTypeListWithNewValue(columnNumber, updatedClass, true)
+    Class targetType = updatedClass ?: originalType
+    List<Class> dataTypes = targetType != originalType
+        ? createTypeListWithNewValue(columnNumber, targetType, true)
         : types()
     List<Column> cols = new ArrayList<>()
     Grid.transpose(updatedRows).eachWithIndex { it, idx ->
@@ -3134,7 +3142,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       if (values.isEmpty()) {
         addColumn(propertyName, Object, values)
       } else {
-        addColumn(propertyName, values[0].class, values)
+        addColumn(propertyName, values[0]?.class ?: Object, values)
       }
     }
   }
@@ -3242,12 +3250,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     List<Integer> r = column(columnName).findIndexValues(condition) as List<Integer>
-    builder()
+    Matrix result = builder()
         .rows(this.rows(r) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**

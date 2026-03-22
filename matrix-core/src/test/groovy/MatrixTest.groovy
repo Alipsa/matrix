@@ -424,6 +424,18 @@ class MatrixTest {
       v.setScale(1, RoundingMode.HALF_UP)
     }
     assertIterableEquals([5.2, 5.6, 4.2, 3.9], table.bloodsugar, table.content())
+
+    def nullable = Matrix.builder()
+        .data(
+            id: [1, 2, 3],
+            value: ['a', 'b', 'c']
+        )
+        .types(Integer, String)
+        .build()
+
+    nullable.apply('value') { null }
+    assertIterableEquals([null, null, null], nullable.value)
+    assertEquals(String, nullable.type('value'))
   }
 
   @Test
@@ -504,6 +516,15 @@ class MatrixTest {
     assertEquals(LocalDate, bar.type(2), "start column type")
     assertEquals(String, bar.firstname.type, "firstname column type")
     assertEquals(Integer, bar.type(0), "place column type")
+
+    def nullified = table.clone().apply('place', {
+      def date = it[2] as LocalDate
+      date.isAfter(LocalDate.of(2022, 1, 1))
+    }, {
+      null
+    })
+    assertIterableEquals([1, null, null], nullified.place)
+    assertEquals(Integer, nullified.type('place'))
 
     def r = table.rows { row ->
       row['place'] == 2
@@ -616,6 +637,21 @@ class MatrixTest {
         .build()
     table5 & t5
     assertIterableEquals([5, 5, 1, 2, 22], table5.rv)
+
+    def duplicateName = assertThrows(IllegalArgumentException) {
+      empData.clone().addColumn('emp_id', Integer, 0, [10, 20, 30, 40, 50])
+    }
+    assertEquals('Column names must be unique, emp_id already exists at index 0', duplicateName.message)
+
+    def mismatchedRowCount = assertThrows(IllegalArgumentException) {
+      empData.clone().addColumn('bonus', Integer, 1, [1, 2, 3])
+    }
+    assertEquals('Column size (3) does not match matrix row count (5)', mismatchedRowCount.message)
+
+    def upsertWithNullFirstValue = empData.clone()
+    upsertWithNullFirstValue.optional_note = [null, 'late', 'ok', null, 'remote']
+    assertEquals(Object, upsertWithNullFirstValue.type('optional_note'))
+    assertIterableEquals([null, 'late', 'ok', null, 'remote'], upsertWithNullFirstValue.optional_note)
   }
 
   @Test
@@ -2582,6 +2618,21 @@ class MatrixTest {
   }
 
   @Test
+  void testSubsetByColumnNamePreservesIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    Matrix subset = m.subset('country', { it == 'USA' })
+
+    assertTrue(subset.hasIndex())
+    assertEquals(['country'], subset.indexedColumns())
+    assertEquals([0, 1], subset.lookupIndices('USA'))
+  }
+
+  @Test
   void testCreateIndexDefensivelyCopiesVarargsArray() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK', 'USA'],
@@ -2595,6 +2646,27 @@ class MatrixTest {
 
     assertEquals(['country'], m.indexedColumns())
     assertEquals([0, 2], m.lookupIndices('USA'))
+  }
+
+  @Test
+  void testDropBlankRowsAndColumnsPreserveLiteralNullStringValues() {
+    Matrix rows = Matrix.builder().data(
+        label: ['null', '   ', null],
+        amount: [null, null, null]
+    ).types(String, Integer).build()
+
+    Matrix rowsResult = rows.clone().removeEmptyRows()
+    assertEquals(1, rowsResult.rowCount())
+    assertEquals('null', rowsResult[0, 'label'])
+
+    Matrix columns = Matrix.builder().data(
+        keep: ['null', null],
+        blank: [' ', null]
+    ).types(String, String).build()
+
+    Matrix columnsResult = columns.clone().dropEmptyColumns()
+    assertEquals(['keep'], columnsResult.columnNames())
+    assertIterableEquals(['null', null], columnsResult.keep)
   }
 
   @Test
