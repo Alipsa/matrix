@@ -10,6 +10,7 @@ import java.time.LocalDate
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
@@ -393,6 +394,34 @@ class MatrixBuilderTest {
     assertEquals('foo', matrix7[0,0, String])
     assertEquals(1, matrix7.rowCount())
     assertEquals(1, matrix7.columnCount())
+
+    def m8 = GQ {
+      from m in matrix
+      where m.id > 10
+      select m
+    }
+    Matrix matrix8 = Matrix.builder().ginqResult(m8).build()
+    assertEquals(0, matrix8.rowCount())
+    assertEquals(0, matrix8.columnCount())
+
+    Matrix matrixWithNulls = Matrix.builder()
+        .data([
+            id: [1, 2],
+            optional: [null, 'present']
+        ])
+        .types(int, String)
+        .build()
+
+    def m9 = GQ {
+      from m in matrixWithNulls
+      where m.id == 1
+      select m.id, m.optional
+    }
+    Matrix matrix9 = Matrix.builder().ginqResult(m9).build()
+    assertEquals(1, matrix9.rowCount())
+    assertEquals(2, matrix9.columnCount())
+    assertNull(matrix9[0, 1])
+    assertIterableEquals([Integer, Object], matrix9.types())
   }
 
   @Test
@@ -407,6 +436,17 @@ class MatrixBuilderTest {
     assertEquals(5, matrix.rowCount())
     assertEquals(2, matrix.columnCount())
     assertIterableEquals([String, Number], matrix.types())
+  }
+
+  @Test
+  void testTypesListVarargsConvertsPrimitiveTypesToWrappers() {
+    Matrix matrix = Matrix.builder()
+        .columnNames('id', 'name')
+        // Pass multiple List<Class> arguments so Groovy dispatches to the varargs overload.
+        .types([int, String] as List<Class>, [Long, BigDecimal] as List<Class>)
+        .build()
+
+    assertIterableEquals([Integer, String], matrix.types())
   }
 
   @Test

@@ -252,6 +252,9 @@ class MatrixBuilder {
       ginqResult.each {
         r << it
       }
+      if (r.isEmpty()) {
+        return this
+      }
       Object row = r.first()
       if (row instanceof Row) {
         // This happens when the whole object is returned in ginq (as a result of querying a Matrix)
@@ -269,7 +272,7 @@ class MatrixBuilder {
           colNames.each {
             vals << namedRecord[it]
             if (!isTypesCollected) {
-              t << namedRecord[it].class
+              t << (namedRecord[it]?.class ?: Object)
             }
           }
           isTypesCollected = true
@@ -282,13 +285,13 @@ class MatrixBuilder {
         // assuming it is some list of data equivalent to a row, not sure if this ever happens
         def ct = []
         r.first().each {
-          ct << it.class
+          ct << (it?.class ?: Object)
         }
         types(ct)
         rows(r)
       } else {
         // This happens when a single variable is selected
-        types([r.first().class])
+        types([r.first()?.class ?: Object])
         columns([r])
       }
     } else {
@@ -816,7 +819,7 @@ class MatrixBuilder {
   @SafeVarargs
   final MatrixBuilder types(List<Class>... types) {
     if (types.length > 0) {
-      this.dataTypes = types[0]
+      this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types[0])
     }
     this
   }
