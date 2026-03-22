@@ -2368,8 +2368,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columnNames the columns to sort by
    * @return this table (mutated), sorted in ascending order by the columns specified
    */
+  @SuppressWarnings('ImplementationAsType')
   Matrix orderBy(List<String> columnNames) {
-    Map<String, Boolean> columnsAndDirection = [:]
+    LinkedHashMap<String, Boolean> columnsAndDirection = [:]
     for (colName in columnNames) {
       columnsAndDirection[colName] = ASC
     }
@@ -2409,7 +2410,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columnsAndDirection ordered map of column name to ascending flag
    * @return a matrix sorted according to the supplied columns
    */
-  Matrix orderBy(Map<String, Boolean> columnsAndDirection) {
+  @SuppressWarnings('ImplementationAsType')
+  Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
     def colNames = columnsAndDirection.keySet() as List<String>
     def headers = columnNames()
     for (String columnName in colNames) {
@@ -2417,7 +2419,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
       }
     }
-    Map<Integer, Boolean> sortCriteria = [:]
+    LinkedHashMap<Integer, Boolean> sortCriteria = [:]
     columnsAndDirection.each {
       sortCriteria[columnIndex(it.key)] = it.value
     }
@@ -2631,13 +2633,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param range
    * @param List
    */
-  @CompileDynamic
+  @SuppressWarnings('ExplicitCallToPutAtMethod')
   void putAt(IntRange range, List<List> columns) {
     if (range.size() != columns.size()) {
       throw new IllegalArgumentException("Size of range (${range.size()}) must be equal to the number of columns (${columns.size()})")
     }
     range.eachWithIndex { int it, int idx ->
-      this[columnName(it)] = columns[idx]
+      putAt(it, columns[idx])
     }
   }
 
