@@ -255,7 +255,8 @@ class Logger {
     }
 
     // Format the message
-    String message = (args != null && args.length > 0) ? String.format(format, args) : format
+    String fallbackFormat = format.replace('%n', System.lineSeparator())
+    String message = (args != null && args.length > 0) ? String.format(fallbackFormat, args) : fallbackFormat
 
     // Build the log line
     String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)

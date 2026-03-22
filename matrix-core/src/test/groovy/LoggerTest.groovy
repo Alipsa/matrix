@@ -259,6 +259,21 @@ class LoggerTest {
   }
 
   @Test
+  void testFallbackPlatformNewlinePlaceholderPreservesLineBreakWithoutArgs() {
+    Logger log = Logger.getLogger("FallbackNewlineTest")
+    def logWithFallback = Logger.getDeclaredMethod('logWithFallback', LogLevel, String, Object[], Throwable)
+    logWithFallback.accessible = true
+
+    def output = captureOutput {
+      logWithFallback.invoke(log, LogLevel.INFO, "First line%nSecond line", null as Object[], null)
+    }
+
+    String allOutput = output.out + output.err
+    assertTrue(allOutput.contains("First line${System.lineSeparator()}Second line"),
+        "Fallback output should contain a platform newline inside the log message")
+  }
+
+  @Test
   void testExceptionLogging() {
     Logger log = Logger.getLogger("ExceptionTest")
 
