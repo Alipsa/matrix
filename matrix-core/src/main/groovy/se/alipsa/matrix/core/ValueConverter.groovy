@@ -157,6 +157,16 @@ class ValueConverter {
     }
   }
 
+  /**
+   * Convert an object to a Boolean using strict numeric flag semantics.
+   *
+   * Boolean values are returned unchanged. Numeric values return {@code true} only when the value
+   * is numerically equal to {@code 1}; all other numeric values return {@code false}. Strings are
+   * delegated to {@link #asBoolean(String)}.
+   *
+   * @param obj the value to convert
+   * @return {@code null} for {@code null} or empty input, otherwise the converted Boolean value
+   */
   static Boolean asBoolean(Object obj) {
     if (obj == null || '' == obj) return null
     if (obj instanceof Boolean) return obj as Boolean
