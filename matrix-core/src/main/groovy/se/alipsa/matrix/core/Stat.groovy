@@ -678,10 +678,7 @@ class Stat {
     static <T extends Comparable> List<T> min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def minVal
-        List<T> minVals = []
-        colNums.each {
-            minVals << null
-        }
+        List<T> minVals = [null] * colNums.size()
         def idx
         for (row in matrix) {
             idx = 0
@@ -730,10 +727,7 @@ class Stat {
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
-        List<T> maxVals = []
-        colNums.each {
-            maxVals << null
-        }
+        List<T> maxVals = [null] * colNums.size()
         def idx
         for (row in matrix) {
             idx = 0
