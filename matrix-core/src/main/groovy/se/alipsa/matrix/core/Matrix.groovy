@@ -1780,7 +1780,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnIndices
    * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
+   * @deprecated use drop(int...) instead
    */
   @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(List<Integer> columnIndices) {
