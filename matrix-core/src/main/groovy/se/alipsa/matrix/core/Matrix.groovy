@@ -3151,11 +3151,15 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Splits this matrix into chunks of approximately chunkSize rows.
    * The last chunk may contain fewer rows.
    *
-   * @param chunkSize the approximate number of rows per chunk
+   * @param chunkSize the maximum number of rows per chunk
    * @return a list of Matrix objects
+   * @throws IllegalArgumentException if chunkSize is less than 1
    */
   List<Matrix> split(int chunkSize) {
-    def rowChunks = this.collate( rowCount().intdiv( chunkSize ) )
+    if (chunkSize <= 0) {
+      throw new IllegalArgumentException("chunkSize must be greater than 0")
+    }
+    def rowChunks = this.collate(chunkSize)
     List<Matrix> chunks = []
     rowChunks.eachWithIndex { it, idx ->
       chunks << builder(matrixName + "_" + idx).rowList(it).build()
