@@ -43,7 +43,7 @@ class GroupedMatrix {
     }
     this.source = source
     this.groupColumns = Collections.unmodifiableList(new ArrayList<>(groupColumns))
-    Map<List<?>, Matrix> normalizedGroups = new LinkedHashMap<>()
+    Map<List<?>, Matrix> normalizedGroups = [:]
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
       if (entry.key == null) {
         throw new IllegalArgumentException("group keys must not be null")
@@ -204,7 +204,7 @@ class GroupedMatrix {
     colNames.addAll(aggKeys)
 
     // Build types: group column types from source, agg types inferred as common supertype
-    List<Class> types = new ArrayList<>()
+    List<Class> types = []
     for (String gc : groupColumns) {
       types.add(source.type(gc))
     }
@@ -280,7 +280,7 @@ class GroupedMatrix {
    * @return a map from underscore-joined string key to sub-matrix
    */
   Map<String, Matrix> toStringKeyMap() {
-    Map<String, Matrix> result = new LinkedHashMap<>()
+    Map<String, Matrix> result = [:]
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
       String key = entry.key.collect { String.valueOf(it) }.join('_')
       result[key] = entry.value
@@ -292,12 +292,18 @@ class GroupedMatrix {
    * Find the nearest common superclass of two types.
    */
   private static Class commonSuperType(Class a, Class b) {
-    if (a.isAssignableFrom(b)) return a
-    if (b.isAssignableFrom(a)) return b
+    if (a.isAssignableFrom(b)) {
+      return a
+    }
+    if (b.isAssignableFrom(a)) {
+      return b
+    }
     // Walk up a's hierarchy until we find a common ancestor
     Class current = a
     while (current != null) {
-      if (current.isAssignableFrom(b)) return current
+      if (current.isAssignableFrom(b)) {
+        return current
+      }
       current = current.superclass
     }
     Object

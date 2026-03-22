@@ -32,7 +32,9 @@ class ComparisonHelper {
    */
   static boolean containsValues(Iterable row) {
     for (def element in row) {
-      if (element != null && (!(element instanceof CharSequence) || !element.toString().isBlank())) return true
+      if (element != null && (!(element instanceof CharSequence) || !element.toString().isBlank())) {
+        return true
+      }
     }
     false
   }

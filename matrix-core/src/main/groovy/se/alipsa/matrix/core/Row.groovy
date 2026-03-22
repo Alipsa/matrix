@@ -41,7 +41,7 @@ class Row implements GroovyObject, List<Object> {
     @Override
     Object getProperty(String propertyName) {
         if (propertyName in columnNames) {
-            getAt(propertyName)
+            this[propertyName]
         } else {
           GroovyObject.super.getProperty(propertyName)
         }
@@ -56,7 +56,7 @@ class Row implements GroovyObject, List<Object> {
     @Override
     void setProperty(String propertyName, Object newValue) {
         if (propertyName in columnNames) {
-            putAt(propertyName, newValue)
+            this[propertyName] = newValue
         } else {
           GroovyObject.super.setProperty(propertyName, newValue)
         }
@@ -211,7 +211,7 @@ class Row implements GroovyObject, List<Object> {
     Object set(int index, Object element) {
         def result = content.set(index, element)
         if (parent != null) {
-            parent.putAt([rowNumber, index] as List<Number>, element)
+            parent[[rowNumber, index]] = element
         }
         return result
     }
@@ -313,7 +313,7 @@ class Row implements GroovyObject, List<Object> {
     List<Object> subList(String... colNames) {
         def vals = []
         colNames.each {
-            vals << getAt(it)
+            vals << this[it]
         }
         vals
     }

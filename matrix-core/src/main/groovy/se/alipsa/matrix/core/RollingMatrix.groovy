@@ -142,7 +142,7 @@ class RollingMatrix {
       }
       Class resultType = decimalResult ? BigDecimal : source.type(index)
       Column rolledColumn = new Column(columnName, resultType)
-      List<Number> values = new ArrayList<Number>()
+      List<Number> values = []
       for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
         values.clear()
         IntRange windowRange = windowRangesByRowIndex[rowIndex]

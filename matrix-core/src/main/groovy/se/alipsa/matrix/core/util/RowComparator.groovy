@@ -13,6 +13,7 @@ import static se.alipsa.matrix.core.Matrix.*
 @CompileStatic
 class RowComparator<T> implements Comparator<List<T>> {
 
+  @SuppressWarnings('ImplementationAsType')
   LinkedHashMap<Integer, Boolean> columnIdx = [:]
 
   RowComparator(Integer... columnIdx) {
@@ -24,6 +25,7 @@ class RowComparator<T> implements Comparator<List<T>> {
     }
   }
 
+  @SuppressWarnings('ImplementationAsType')
   RowComparator(LinkedHashMap<Integer, Boolean> criteria) {
     columnIdx = criteria
   }

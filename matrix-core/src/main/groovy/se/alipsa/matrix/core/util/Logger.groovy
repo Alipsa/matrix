@@ -29,7 +29,7 @@ class Logger {
 
   // Static fields
   private static final boolean SLF4J_AVAILABLE
-  private static final ConcurrentHashMap<String, Logger> LOGGER_CACHE = new ConcurrentHashMap<>()
+  private static final Map<String, Logger> LOGGER_CACHE = new ConcurrentHashMap<>()
   private static volatile LogLevel CURRENT_LEVEL = LogLevel.INFO
   private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 

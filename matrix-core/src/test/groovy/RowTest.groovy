@@ -76,9 +76,9 @@ class RowTest {
 
     Row row = table.row(1)
 
-    assertNull(row.getAt(0))
-    assertNull(row.getAt(0 as Number))
-    assertNull(row.getAt('name'))
+    assertNull(row[0])
+    assertNull(row[0 as Number])
+    assertNull(row['name'])
   }
 
   @Test
@@ -91,7 +91,7 @@ class RowTest {
     Row row = table.row(0)
 
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
-      row.putAt('salary', 99)
+      row['salary'] = 99
     }
 
     assertEquals('Failed to find a column with the name salary', ex.message)

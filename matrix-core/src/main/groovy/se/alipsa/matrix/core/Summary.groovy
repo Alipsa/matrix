@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Summary {
 
-  private LinkedHashMap<String, Map<String, ?>> data = new LinkedHashMap<>()
+  private Map<String, Map<String, ?>> data = [:]
 
   def putAt(String column, Map value) {
     data[column] = value
@@ -30,14 +30,14 @@ class Summary {
       sb.append(it.key).append("\n")
       sb.append( "-"*it.key.length()).append("\n")
       it.value.each {
-        sb.append(("$it.key:\t$it.value")).append("\n")
+        sb.append("$it.key:\t$it.value\n")
       }
       sb.append("\n")
     }
     return sb.toString()
   }
 
-  LinkedHashMap<String, Map<String, ?>> getData() {
+  Map<String, Map<String, ?>> getData() {
     return data
   }
 }

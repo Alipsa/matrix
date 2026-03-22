@@ -100,7 +100,7 @@ class MatrixBuilderTest {
   @Test
   void testColumnsRejectsNonListEntries() {
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
-      Matrix.builder().columns([1, 2, 3] as List<List>)
+      Matrix.builder().columns([1, 2, 3])
     }
 
     assertTrue(ex.message.contains('does not contain lists'))
@@ -443,7 +443,7 @@ class MatrixBuilderTest {
     Matrix matrix = Matrix.builder()
         .columnNames('id', 'name')
         // Pass multiple List<Class> arguments so Groovy dispatches to the varargs overload.
-        .types([int, String] as List<Class>, [Long, BigDecimal] as List<Class>)
+        .types([int, String], [Long, BigDecimal])
         .build()
 
     assertIterableEquals([Integer, String], matrix.types())

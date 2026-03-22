@@ -81,7 +81,7 @@ class MatrixTest {
         .columnNames((1..5).collect { "Y" + it })
         .build()
     m.addRow([1, 2, 3, 4, 5])
-    m = m.plus([10, 20, 30, 40, 50])
+    m = m + [10, 20, 30, 40, 50]
     m.addRow(0, m.columnNames())
     assertIterableEquals(['Y1', 'Y2', 'Y3', 'Y4', 'Y5'], m.columnNames())
     assertIterableEquals(['Y1', 'Y2', 'Y3', 'Y4', 'Y5'], m.row(0))
@@ -220,7 +220,9 @@ class MatrixTest {
 
     def table3 = table.clone().convert('place', Integer, { Object it ->
       String val = String.valueOf(it).trim()
-      if (val == 'null' || val == ',' || val.isBlank()) return null
+      if (val == 'null' || val == ',' || val.isBlank()) {
+        return null
+      }
       return Integer.valueOf(val)
     })
     assertEquals(Integer, table3.type('place'))
@@ -1624,7 +1626,7 @@ class MatrixTest {
 
 
     Row row = table.row(1)
-    assertEquals(LocalDate, row.getAt('start').class)
+    assertEquals(LocalDate, row['start'].class)
     assertEquals(LocalDate, row[1].class)
     assertEquals(LocalDate, row['start'].class)
     assertEquals(LocalDate, row.start.class)
