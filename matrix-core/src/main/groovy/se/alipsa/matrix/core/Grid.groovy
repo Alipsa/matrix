@@ -28,7 +28,7 @@ class Grid<T> implements Iterable<List<T>> {
     if (isValid(data)) {
       this.data = data
     } else if (data instanceof List) {
-      this.data = [data] as List<List<T>>
+      this.data = [data]
     } else {
       throw new IllegalArgumentException("data is invalid")
     }
@@ -46,7 +46,7 @@ class Grid<T> implements Iterable<List<T>> {
     if (isValid(data, elementType)) {
       this.data = data
     } else if (data instanceof List && isValid([data], elementType)) {
-      this.data = [data] as List<List<T>>
+      this.data = [data]
     } else {
       throw new IllegalArgumentException("data is invalid for element type ${safeElementType(elementType).simpleName}")
     }
@@ -234,12 +234,16 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   static <N> List<List<N>> convert(List<List<?>> rowList, Integer colNum, Class<N> type, NumberFormat format = null) {
-    if (colNum == null) return null
+    if (colNum == null) {
+      return null
+    }
     def m = clone(rowList)
     def value
     for (int r = 0; r < m.size(); r++) {
       value = m[r][colNum]
-      if (value == null) continue
+      if (value == null) {
+        continue
+      }
       m[r].set(colNum, ValueConverter.convert(value, type, null, format))
     }
     m as List<List<N>>
@@ -256,7 +260,9 @@ class Grid<T> implements Iterable<List<T>> {
     for (int r = 0; r < m.size(); r++) {
       for (int c in colNums) {
         value = m[r][c]
-        if (value == null) continue
+        if (value == null) {
+          continue
+        }
         if (format == null) {
           m[r].set(c, ValueConverter.convert(value, type))
         } else {
@@ -276,7 +282,9 @@ class Grid<T> implements Iterable<List<T>> {
     def value
     for (int r = 0; r < m.size(); r++) {
       value = m[r][colNum]
-      if (value == null) continue
+      if (value == null) {
+        continue
+      }
       m[r].set(colNum, converter.call(value))
     }
     m as List<List<?>>
@@ -295,7 +303,9 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   static List<List<?>> transpose(List<List<?>> rowList) {
-    if (rowList == null) return null
+    if (rowList == null) {
+      return null
+    }
     rowList.transpose()
   }
 

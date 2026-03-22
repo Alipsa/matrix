@@ -22,7 +22,7 @@ class PutAtTest {
     list.set(2, null)
     assert list[2] == null
 
-    list.putAt(0, null)
+    list[0] = null
     assert list[0] == null
 
   }
@@ -49,7 +49,7 @@ class PutAtTest {
     map.put('c', null)
     assert map['c'] == null
 
-    map.putAt('a', null)
+    map['a'] = null
     assert map['a'] == null
 
     map.b = null
@@ -169,7 +169,7 @@ class PutAtTest {
         .build()
 
     assertThrows(IllegalArgumentException) {
-      matrix.putAt(['row', 0], 99)
+      matrix[['row', 0]] = 99
     }
   }
 }

@@ -93,7 +93,7 @@ class Stat {
             'Mean': mean(numbers),
             '3rd Q': quarts[1],
             'Max': max(numbers)
-        ] as Map<String, Object>
+        ]
         result
     }
 
@@ -105,7 +105,7 @@ class Stat {
             'Type': type.getSimpleName(),
             'Number of unique values': freq.rowCount(),
             'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)".toString()
-        ] as Map<String, Object>
+        ]
     }
 
     static Number sum(List<?> list) {
@@ -320,7 +320,7 @@ class Stat {
             cachedColumns[i] = table.column(colIndices[i])
         }
         // Build groups by compound key (keys are immutable to protect map integrity)
-        Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
+        Map<List<?>, List<Integer>> keyToRows = [:]
         List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
         for (int r = 0; r < nRows; r++) {
             for (int i = 0; i < nLevels; i++) {
@@ -329,7 +329,7 @@ class Stat {
             CompoundKeyUtil.getOrCreateRowBucket(keyToRows, probe).add(r)
         }
         // Build sub-matrices
-        Map<List<?>, Matrix> groups = new LinkedHashMap<>()
+        Map<List<?>, Matrix> groups = [:]
         List<String> cachedColumnNames = table.columnNames()
         List<Class> cachedTypes = table.types()
         for (Map.Entry<List<?>, List<Integer>> entry : keyToRows.entrySet()) {
@@ -526,12 +526,13 @@ class Stat {
     }
 
     static List<BigDecimal> medians(List<List<?>> matrix, List<Integer> colNums) {
-        Map<String, List<Number>> valueList = new LinkedHashMap<String, List<Number>>().withDefault { key -> new ArrayList<Number>() }
+        Map<String, List<Number>> valueList = [:]
         for (List<?> row in matrix) {
             for (Integer colNum in colNums) {
                 Object value = row[colNum]
                 if (value != null && value instanceof Number) {
-                    valueList[String.valueOf(colNum)].add((Number) value)
+                    Number numberValue = value as Number
+                    valueList.computeIfAbsent(String.valueOf(colNum), k -> []).add(numberValue)
                 }
             }
         }
@@ -828,8 +829,12 @@ class Stat {
         if (values == null || values.isEmpty()) {
             return null
         }
-        List<Number> nullFreeNumbers = new ArrayList<>()
-        values.each { if (it != null && it instanceof Number) nullFreeNumbers.add(it) }
+        List<Number> nullFreeNumbers = []
+        values.each {
+            if (it != null && it instanceof Number) {
+                nullFreeNumbers.add(it)
+            }
+        }
         BigDecimal m = mean(nullFreeNumbers, 16)
         List<BigDecimal> squaredDeviations = []
         nullFreeNumbers.each {
@@ -868,7 +873,7 @@ class Stat {
     }
 
     static Matrix frequency(List<?> column) {
-        Map<String, AtomicInteger> freq = new HashMap<>()
+        Map<String, AtomicInteger> freq = [:]
         column.forEach(v -> {
             freq.computeIfAbsent(String.valueOf(v), k -> new AtomicInteger(0)).incrementAndGet()
         })
@@ -921,7 +926,7 @@ class Stat {
      */
     static Matrix frequency(Matrix table, String groupName, String columnName, boolean includeColumnNameCategory = true) {
         def groups = table.split(groupName)
-        def tbl = new LinkedHashMap<String, List<?>>()
+        Map<String, List<?>> tbl = [:]
         groups.each {
             def freqTbl = frequency(it.value, columnName)
             if (includeColumnNameCategory) {

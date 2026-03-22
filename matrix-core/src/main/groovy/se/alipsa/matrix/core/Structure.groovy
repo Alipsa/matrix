@@ -9,7 +9,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Structure {
 
-    LinkedHashMap<String, List<String>> data = [:]
+    Map<String, List<String>> data = [:]
 
     def putAt(String key, List<String> value) {
         data[key] = value
@@ -19,7 +19,7 @@ class Structure {
         data[key]
     }
 
-    LinkedHashMap<String, List<String>> getData() {
+    Map<String, List<String>> getData() {
         return data
     }
 

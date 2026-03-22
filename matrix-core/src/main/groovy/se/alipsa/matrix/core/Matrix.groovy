@@ -720,7 +720,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     List<Class> dataTypes = targetType != originalType
         ? createTypeListWithNewValue(columnNumber, targetType, true)
         : types()
-    List<Column> cols = new ArrayList<>()
+    List<Column> cols = []
     Grid.transpose(updatedRows).eachWithIndex { it, idx ->
       cols << new Column(columnName(idx), it as List, dataTypes[idx])
     }
@@ -1388,7 +1388,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matching columns in the order supplied
    */
   List<Column> columns(List<String> columnNames) {
-    def cols = new ArrayList<Column>()
+    List<Column> cols = []
     for (String colName in columnNames) {
       cols.add(column(colName))
     }
@@ -1402,7 +1402,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matching columns in the order supplied
    */
   List<Column> columns(Integer[] indices) {
-    List<Column> cols = new ArrayList<>()
+    List<Column> cols = []
     for (int index in indices) {
       cols.add(column(index))
     }
@@ -1866,8 +1866,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
                  Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
-    if (this.is(o)) return true
-    if (!(o instanceof Matrix)) return false
+    if (this.is(o)) {
+      return true
+    }
+    if (!(o instanceof Matrix)) {
+      return false
+    }
 
     Matrix matrix = (Matrix) o
     if (!ignoreMatrixName && mName != matrix.mName) {
@@ -2152,37 +2156,57 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     if (args.size() == 1) {
       def arg = args[0]
-      if (arg instanceof String) return getAt(arg as String)
-      if (arg instanceof IntRange) return getAt(arg as IntRange)
-      if (arg instanceof Integer) return getAt(arg as Integer)
+      if (arg instanceof String) {
+        return this[arg as String]
+      }
+      if (arg instanceof IntRange) {
+        return this[arg as IntRange]
+      }
+      if (arg instanceof Integer) {
+        return this[arg as Integer]
+      }
     }
     if (args.size() == 2) {
       def arg0 = args[0]
       def arg1 = args[1]
-      if (arg0 instanceof Integer && arg1 instanceof Integer) return getAt(arg0 as Integer, arg1 as Integer)
-      if (arg0 instanceof Integer && arg1 instanceof String) return getAt(arg0 as Integer, arg1 as String)
-      if (arg0 instanceof Integer && arg1 instanceof IntRange) return getAt(arg0 as Integer, arg1 as IntRange)
-      if (arg0 instanceof IntRange && arg1 instanceof Integer) return getAt(arg0 as IntRange, arg1 as Integer)
-      if (arg0 instanceof String && arg1 instanceof Class) return getAt(arg0 as String, arg1 as Class)
+      if (arg0 instanceof Integer && arg1 instanceof Integer) {
+        return getAt(arg0 as Integer, arg1 as Integer)
+      }
+      if (arg0 instanceof Integer && arg1 instanceof String) {
+        return getAt(arg0 as Integer, arg1 as String)
+      }
+      if (arg0 instanceof Integer && arg1 instanceof IntRange) {
+        return getAt(arg0 as Integer, arg1 as IntRange)
+      }
+      if (arg0 instanceof IntRange && arg1 instanceof Integer) {
+        return getAt(arg0 as IntRange, arg1 as Integer)
+      }
+      if (arg0 instanceof String && arg1 instanceof Class) {
+        return getAt(arg0 as String, arg1 as Class)
+      }
     }
     if (args.size() == 3) {
       def arg0 = args[0]
       def arg1 = args[1]
       def arg2 = args[2]
-      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class)
+      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class) {
         return getAt(arg0 as Integer, arg1 as Integer, arg2 as Class)
-      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class)
+      }
+      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class) {
         return getAt(arg0 as Integer, arg1 as String, arg2 as Class)
+      }
     }
     if (args.size() == 4) {
       def arg0 = args[0]
       def arg1 = args[1]
       def arg2 = args[2]
       def arg3 = args[3]
-      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class)
+      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class) {
         return getAt(arg0 as Integer, arg1 as Integer, arg2 as Class, arg3)
-      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class)
+      }
+      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class) {
         return getAt(arg0 as Integer, arg1 as String, arg2 as Class, arg3)
+      }
     }
     throw new IllegalArgumentException("Unable to understand arguments supplied: $args")
   }
@@ -2345,7 +2369,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this table (mutated), sorted in ascending order by the columns specified
    */
   Matrix orderBy(List<String> columnNames) {
-    LinkedHashMap<String, Boolean> columnsAndDirection = [:]
+    Map<String, Boolean> columnsAndDirection = [:]
     for (colName in columnNames) {
       columnsAndDirection[colName] = ASC
     }
@@ -2385,7 +2409,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columnsAndDirection ordered map of column name to ascending flag
    * @return a matrix sorted according to the supplied columns
    */
-  Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
+  Matrix orderBy(Map<String, Boolean> columnsAndDirection) {
     def colNames = columnsAndDirection.keySet() as List<String>
     def headers = columnNames()
     for (String columnName in colNames) {
@@ -2393,7 +2417,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
       }
     }
-    LinkedHashMap<Integer, Boolean> sortCriteria = [:]
+    Map<Integer, Boolean> sortCriteria = [:]
     columnsAndDirection.each {
       sortCriteria[columnIndex(it.key)] = it.value
     }
@@ -2607,12 +2631,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param range
    * @param List
    */
+  @CompileDynamic
   void putAt(IntRange range, List<List> columns) {
     if (range.size() != columns.size()) {
       throw new IllegalArgumentException("Size of range (${range.size()}) must be equal to the number of columns (${columns.size()})")
     }
     range.eachWithIndex { int it, int idx ->
-      putAt(it, columns[idx])
+      this[columnName(it)] = columns[idx]
     }
   }
 
@@ -3037,7 +3062,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a List of row indexes matching the criteria supplied
    */
   List<Integer> rowIndices(Closure criteria) {
-    def r = [] as List<Integer>
+    List<Integer> r = []
     rows().eachWithIndex { row, idx ->
       if (criteria(row)) {
         r.add(idx)
@@ -3178,7 +3203,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Map<?, Matrix> split(String columnName) {
     List col = column(columnName)
-    Map<Object, List<Integer>> groups = new HashMap<>()
+    Map<Object, List<Integer>> groups = [:]
     for (int i = 0; i < col.size(); i++) {
       groups.computeIfAbsent(col[i], k -> []).add(i)
     }
@@ -4107,7 +4132,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         throw new IllegalStateException("Indexed column '${indexedColumnNames[i]}' no longer exists in the matrix")
       }
     }
-    Map<List<?>, List<Integer>> map = new LinkedHashMap<>()
+    Map<List<?>, List<Integer>> map = [:]
     List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
     for (int r = 0; r < nRows; r++) {
       for (int i = 0; i < nLevels; i++) {

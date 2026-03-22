@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class MapList<M,L> {
 
-  Map<M, List<L>> data = new LinkedHashMap<>()
+  Map<M, List<L>> data = [:]
 
   void add(M key, L value) {
     getOrCreate(key).add(value)
@@ -67,7 +67,7 @@ class MapList<M,L> {
   }
 
   private List<L> getOrCreate(M key) {
-    data.computeIfAbsent(key, k -> new ArrayList<L>())
+    data.computeIfAbsent(key, k -> [])
   }
 
   @Override
