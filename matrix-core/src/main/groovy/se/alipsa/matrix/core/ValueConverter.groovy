@@ -36,8 +36,8 @@ class ValueConverter {
   private static final char C_E = 'E'
   private static final char C_e = 'e'
 
-  static Map<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
-  static Map<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
+  static ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
+  static ConcurrentHashMap<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
 
   static <E> E convert(Object o, Class<E> type,
                        String dateTimePattern = null,
@@ -544,8 +544,7 @@ class ValueConverter {
       ThreadLocal<SimpleDateFormat> newThreadLocal = ThreadLocal.withInitial({
         new SimpleDateFormat(pattern, locale)
       } as java.util.function.Supplier<SimpleDateFormat>)
-      ThreadLocal<SimpleDateFormat> existing = ((ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>) simpleDateCache)
-          .putIfAbsent(key, newThreadLocal)
+      ThreadLocal<SimpleDateFormat> existing = simpleDateCache.putIfAbsent(key, newThreadLocal)
       threadLocal = existing == null ? newThreadLocal : existing
     }
     return threadLocal.get()
@@ -557,8 +556,7 @@ class ValueConverter {
     DateTimeFormatter formatter = dateTimeFormatterCache.get(key)
     if (formatter == null) {
       DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern(pattern).withLocale(locale)
-      DateTimeFormatter existing = ((ConcurrentHashMap<String, DateTimeFormatter>) dateTimeFormatterCache)
-          .putIfAbsent(key, newFormatter)
+      DateTimeFormatter existing = dateTimeFormatterCache.putIfAbsent(key, newFormatter)
       formatter = existing == null ? newFormatter : existing
     }
     return formatter
