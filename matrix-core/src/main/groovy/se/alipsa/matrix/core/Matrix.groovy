@@ -3168,6 +3168,33 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * split is used to create a map of matrices for each unique value in the column.
+   * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
+   *
+   * @param columnName
+   * @return a map of matrices for each unique value in the column where the key is the value
+   */
+  Map<?, Matrix> split(String columnName) {
+    List col = column(columnName)
+    Map<Object, List<Integer>> groups = new HashMap<>()
+    for (int i = 0; i < col.size(); i++) {
+      groups.computeIfAbsent(col[i], k -> []).add(i)
+    }
+    Map<Object, Matrix> tables = [:]
+    for (entry in groups) {
+      tables.put(entry.key,
+          builder()
+              .matrixName(String.valueOf(entry.key))
+              .columnNames(columnNames())
+              .rows(rows(entry.value) as List<List>)
+              .types(types())
+              .build()
+      )
+    }
+    return tables
+  }
+
+  /**
    * Splits this matrix into a specified number of chunks.
    * Rows will be distributed as evenly as possible among the chunks.
    *
@@ -3205,33 +3232,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
 
     return chunks
-  }
-
-  /**
-   * split is used to create a map of matrices for each unique value in the column.
-   * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
-   *
-   * @param columnName
-   * @return a map of matrices for each unique value in the column where the key is the value
-   */
-  Map<?, Matrix> split(String columnName) {
-    List col = column(columnName)
-    Map<Object, List<Integer>> groups = new HashMap<>()
-    for (int i = 0; i < col.size(); i++) {
-      groups.computeIfAbsent(col[i], k -> []).add(i)
-    }
-    Map<Object, Matrix> tables = [:]
-    for (entry in groups) {
-      tables.put(entry.key,
-          builder()
-              .matrixName(String.valueOf(entry.key))
-              .columnNames(columnNames())
-              .rows(rows(entry.value) as List<List>)
-              .types(types())
-              .build()
-      )
-    }
-    return tables
   }
 
   /**
