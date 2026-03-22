@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.Temporal
 import java.time.temporal.TemporalAccessor
+import java.util.concurrent.ConcurrentHashMap
 
 @CompileStatic
 class ValueConverter {
@@ -35,8 +36,8 @@ class ValueConverter {
   private static final char C_E = 'E'
   private static final char C_e = 'e'
 
-  static Map<String, SimpleDateFormat> simpleDateCache = [:]
-  static Map<String, DateTimeFormatter> dateTimeFormatterCache = [:]
+  static Map<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
+  static Map<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
 
   static <E> E convert(Object o, Class<E> type,
                        String dateTimePattern = null,
@@ -236,7 +237,7 @@ class ValueConverter {
     }
     if (date instanceof Number) {
       // Number of days since 1970-01-01
-      LocalDate.ofEpochDay(date.longValue())
+      return LocalDate.ofEpochDay(date.longValue())
     }
     if ("$date".isBlank()) {
       return valueIfNull
@@ -537,21 +538,30 @@ class ValueConverter {
 
   private static SimpleDateFormat simpleDateFormatCache(String pattern, Locale locale = Locale.default) {
     if (pattern == null) return null
-    String localeString = locale.toString()
-    if (!simpleDateCache.containsKey(pattern + localeString)) {
-      simpleDateCache.put(pattern + localeString, new SimpleDateFormat(pattern, locale))
+    String key = pattern + locale.toString()
+    ThreadLocal<SimpleDateFormat> threadLocal = simpleDateCache.get(key)
+    if (threadLocal == null) {
+      ThreadLocal<SimpleDateFormat> newThreadLocal = ThreadLocal.withInitial({
+        new SimpleDateFormat(pattern, locale)
+      } as java.util.function.Supplier<SimpleDateFormat>)
+      ThreadLocal<SimpleDateFormat> existing = ((ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>) simpleDateCache)
+          .putIfAbsent(key, newThreadLocal)
+      threadLocal = existing == null ? newThreadLocal : existing
     }
-    return simpleDateCache.get(pattern + localeString)
+    return threadLocal.get()
   }
 
   static DateTimeFormatter dateTimeFormatter(String pattern, Locale locale = Locale.default) {
     if (pattern == null) return null
-    String localeString = locale.toString()
-    String key = pattern + localeString
-    if (!dateTimeFormatterCache.containsKey(key)) {
-      dateTimeFormatterCache.put(key, DateTimeFormatter.ofPattern(pattern).withLocale(locale))
+    String key = pattern + locale.toString()
+    DateTimeFormatter formatter = dateTimeFormatterCache.get(key)
+    if (formatter == null) {
+      DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern(pattern).withLocale(locale)
+      DateTimeFormatter existing = ((ConcurrentHashMap<String, DateTimeFormatter>) dateTimeFormatterCache)
+          .putIfAbsent(key, newFormatter)
+      formatter = existing == null ? newFormatter : existing
     }
-    return dateTimeFormatterCache.get(key)
+    return formatter
   }
 
   static Time asSqlTIme(Object o, Time valueIfNull = null) {

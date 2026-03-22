@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -70,6 +71,11 @@ class ListConverterTest {
       calendar.setTime(dt[i])
       assertEquals(yearMonths[i], YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1))
     }
+
+    assertIterableEquals(
+        [new SimpleDateFormat('yyyy-MM-dd').parse('2023-01-01'), null, new SimpleDateFormat('yyyy-MM-dd').parse('2023-12-31')],
+        ListConverter.toDates(['2023-01-01', null, '2023-12-31'], null, 'yyyy-MM-dd')
+    )
   }
 
   @Test
@@ -90,6 +96,12 @@ class ListConverterTest {
         LocalDate.parse('2023-12-31')
     ]
     assertIterableEquals(expected, ListConverter.toLocalDates(dates))
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern('yyyy/MM/dd')
+    assertIterableEquals(
+        [LocalDate.parse('2023-01-01'), null, LocalDate.parse('2023-12-31')],
+        ListConverter.toLocalDates(formatter, ['2023/01/01', null, '2023/12/31'] as String[])
+    )
   }
 
   @Test
