@@ -43,6 +43,22 @@ class GridTest {
     }
 
     @Test
+    void testGridCreationWithDimensionsInitializesNullCells() {
+        Grid<String> grid = new Grid<String>(3, 4)
+
+        assertEquals(3, grid.getRowList().size())
+        assertEquals(4, grid.getRowList()[0].size())
+        assertNull(grid[0, 0])
+        assertNull(grid[2, 3])
+
+        grid[0, 0] = 'top-left'
+        grid[2, 3] = 'bottom-right'
+
+        assertEquals('top-left', grid[0, 0])
+        assertEquals('bottom-right', grid[2, 3])
+    }
+
+    @Test
     void testReplaceRow() {
         Grid grid = []
         grid << [1,2,3]
@@ -52,6 +68,16 @@ class GridTest {
         assertIterableEquals([0.1, 0.2, 0.3], grid[0])
         grid.replaceRow(1, [5,6,7])
         assertIterableEquals([5,6,7], grid[1])
+    }
+
+    @Test
+    void testDimensionsForEmptyGrid() {
+        Grid grid = new Grid()
+
+        def dimensions = grid.dimensions()
+
+        assertEquals(0, dimensions.observations)
+        assertEquals(0, dimensions.variables)
     }
 
     @Test

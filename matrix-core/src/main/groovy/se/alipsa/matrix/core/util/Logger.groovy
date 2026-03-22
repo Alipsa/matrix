@@ -199,14 +199,14 @@ class Logger {
   private void logWithSlf4j(LogLevel level, String format, Object[] args, Throwable t) {
     // Convert String.format style (%s, %d, etc.) to SLF4J style ({})
     String slf4jFormat = format
-        .replaceAll('%s', '{}')
-        .replaceAll('%d', '{}')
-        .replaceAll('%f', '{}')
-        .replaceAll('%b', '{}')
-        .replaceAll('%c', '{}')
-        .replaceAll('%n', '{}')
-        .replaceAll('%x', '{}')
-        .replaceAll('%o', '{}')
+        .replace('%n', System.lineSeparator())
+        .replace('%s', '{}')
+        .replace('%d', '{}')
+        .replace('%f', '{}')
+        .replace('%b', '{}')
+        .replace('%c', '{}')
+        .replace('%x', '{}')
+        .replace('%o', '{}')
 
     switch (level) {
       case LogLevel.DEBUG:
