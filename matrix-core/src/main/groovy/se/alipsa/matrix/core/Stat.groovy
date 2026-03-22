@@ -6,7 +6,6 @@ import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
-import java.util.concurrent.atomic.AtomicInteger
 
 import static ValueConverter.asBigDecimal
 
@@ -875,21 +874,16 @@ class Stat {
     }
 
     static Matrix frequency(List<?> column) {
-        Map<String, AtomicInteger> freq = [:]
+        Map<String, Integer> freq = [:]
         column.each { v ->
             String key = String.valueOf(v)
-            AtomicInteger count = freq[key]
-            if (count == null) {
-                count = new AtomicInteger(0)
-                freq[key] = count
-            }
-            count.incrementAndGet()
+            freq[key] = (freq[key] ?: 0) + 1
         }
         int size = column.size()
         List<List<?>> matrix = []
         def percent
-        for (Map.Entry<String, AtomicInteger> entry : freq.entrySet()) {
-            int numOccurrence = entry.getValue().intValue()
+        for (Map.Entry<String, Integer> entry : freq.entrySet()) {
+            int numOccurrence = entry.getValue()
             percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }

@@ -42,12 +42,12 @@ class Logger {
     boolean slf4jDetected = false
     try {
       // First check if SLF4J API is available
-      loadClass('org.slf4j.LoggerFactory')
-      loadClass('org.slf4j.Logger')
+      loadAndInitializeClass('org.slf4j.LoggerFactory')
+      loadAndInitializeClass('org.slf4j.Logger')
 
       // Then check if there's an actual implementation (not just NOP logger)
       // Get a test logger and check if it's a NOP logger
-      def loggerFactoryClass = loadClass('org.slf4j.LoggerFactory')
+      def loggerFactoryClass = loadAndInitializeClass('org.slf4j.LoggerFactory')
       def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
       def testLogger = getLoggerMethod.invoke(null, 'se.alipsa.matrix.core.util.Logger.test')
 
@@ -276,7 +276,7 @@ class Logger {
 
   private static Object createSlf4jLogger(String className) {
     try {
-      Class<?> loggerFactoryClass = loadClass('org.slf4j.LoggerFactory')
+      Class<?> loggerFactoryClass = loadAndInitializeClass('org.slf4j.LoggerFactory')
       def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
       return getLoggerMethod.invoke(null, className)
     } catch (Exception e) {
@@ -285,8 +285,11 @@ class Logger {
     }
   }
 
-  private static Class<?> loadClass(String name) throws ClassNotFoundException {
-    contextClassLoader().loadClass(name)
+  // SLF4J provider discovery happens in LoggerFactory's static initialization, so preserve
+  // the eager initialization semantics of the previous Class.forName(...) usage.
+  @SuppressWarnings('ClassForName')
+  private static Class<?> loadAndInitializeClass(String name) throws ClassNotFoundException {
+    Class.forName(name, true, contextClassLoader())
   }
 
   private static ClassLoader contextClassLoader() {
