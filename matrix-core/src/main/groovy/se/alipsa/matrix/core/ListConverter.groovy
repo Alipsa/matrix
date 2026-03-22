@@ -62,8 +62,7 @@ class ListConverter {
     def dat = new ArrayList<java.util.Date>(dates.size())
     dates.eachWithIndex { String d, int i ->
       try {
-        def date = format.parse(d)
-        dat.add(d == null ? valueIfNull : date)
+        dat.add(d == null ? valueIfNull : format.parse(d))
       } catch (Exception e) {
         throw new ConversionException("Failed to convert $d to java.util.Date in index $i", e)
       }
@@ -116,7 +115,7 @@ class ListConverter {
     def dat = new ArrayList<LocalDate>(dates.length)
     dates.eachWithIndex { String d, int i ->
       try {
-        dat.add(LocalDate.parse(d, formatter))
+        dat.add(d == null ? null : LocalDate.parse(d, formatter))
       } catch (Exception e) {
         throw new ConversionException("Failed to convert $d to LocalDate in index $i", e)
       }
@@ -154,7 +153,7 @@ class ListConverter {
       try {
         dat.add(d == null ? null : LocalDateTime.parse(d, formatter))
       } catch (Exception e) {
-        throw new ConversionException("Failed to convert $d to LocalDate in index $i", e)
+        throw new ConversionException("Failed to convert $d to LocalDateTime in index $i", e)
       }
     }
     return dat

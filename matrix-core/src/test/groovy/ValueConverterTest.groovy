@@ -178,6 +178,11 @@ class ValueConverterTest {
   }
 
   @Test
+  void testAsLocalDateWithEpochDayNumber() {
+    assertEquals(LocalDate.of(1970, 1, 2), ValueConverter.asLocalDate(1))
+  }
+
+  @Test
   void testAsNumber() {
     assert 123 == ValueConverter.asNumber("123")
     assert 123.45 == ValueConverter.asNumber("123.45")
