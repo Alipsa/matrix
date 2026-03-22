@@ -7,6 +7,12 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class RollingWindowOptions {
+  private static final String WINDOW_OPTION = 'window'
+  private static final String MIN_PERIODS_OPTION = 'minPeriods'
+  private static final String CENTER_OPTION = 'center'
+  private static final String BY_OPTION = 'by'
+  private static final Set<String> COLUMN_OPTION_KEYS = [WINDOW_OPTION, MIN_PERIODS_OPTION, CENTER_OPTION] as Set<String>
+  private static final Set<String> MATRIX_OPTION_KEYS = [WINDOW_OPTION, MIN_PERIODS_OPTION, CENTER_OPTION, BY_OPTION] as Set<String>
 
   final int window
   final int minPeriods
@@ -65,23 +71,21 @@ class RollingWindowOptions {
     options.each { Object key, Object value ->
       normalizedOptions[String.valueOf(key)] = value
     }
-    Set<String> allowedKeys = allowBy
-        ? ['window', 'minPeriods', 'center', 'by'] as Set<String>
-        : ['window', 'minPeriods', 'center'] as Set<String>
+    Set<String> allowedKeys = allowBy ? MATRIX_OPTION_KEYS : COLUMN_OPTION_KEYS
     Set<String> optionKeys = normalizedOptions.keySet()
     Set<String> unknownKeys = optionKeys.findAll { String key -> !(key in allowedKeys) } as Set<String>
     if (!unknownKeys.isEmpty()) {
       throw new IllegalArgumentException("Unknown rolling option(s): ${unknownKeys.sort().join(', ')}")
     }
-    if (!optionKeys.contains('window')) {
-      throw new IllegalArgumentException('rolling options must include window')
+    if (!optionKeys.contains(WINDOW_OPTION)) {
+      throw new IllegalArgumentException("rolling options must include ${WINDOW_OPTION}")
     }
-    int window = intValue(normalizedOptions['window'], 'window')
-    int minPeriods = normalizedOptions.containsKey('minPeriods')
-        ? intValue(normalizedOptions['minPeriods'], 'minPeriods')
+    int window = intValue(normalizedOptions[WINDOW_OPTION], WINDOW_OPTION)
+    int minPeriods = normalizedOptions.containsKey(MIN_PERIODS_OPTION)
+        ? intValue(normalizedOptions[MIN_PERIODS_OPTION], MIN_PERIODS_OPTION)
         : window
-    boolean center = normalizedOptions.containsKey('center') && booleanValue(normalizedOptions['center'], 'center')
-    Object byValue = normalizedOptions['by']
+    boolean center = normalizedOptions.containsKey(CENTER_OPTION) && booleanValue(normalizedOptions[CENTER_OPTION], CENTER_OPTION)
+    Object byValue = normalizedOptions[BY_OPTION]
     String by = byValue == null ? null : String.valueOf(byValue)
     new RollingWindowOptions(window, minPeriods, center, by)
   }

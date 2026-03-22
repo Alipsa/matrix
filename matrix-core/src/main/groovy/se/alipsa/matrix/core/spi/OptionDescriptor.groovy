@@ -20,6 +20,16 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class OptionDescriptor {
+  private static final String OPTION_HEADER = 'Option'
+  private static final String TYPE_HEADER = 'Type'
+  private static final String DEFAULT_HEADER = 'Default'
+  private static final String REQUIRED_HEADER = 'Required'
+  private static final String DESCRIPTION_HEADER = 'Description'
+  private static final String YES_VALUE = 'yes'
+  private static final String NO_VALUE = 'no'
+  private static final String NO_OPTIONS_AVAILABLE = 'No options available.'
+  private static final String NEWLINE = '\n'
+  private static final String RULE_CHAR = '-'
 
   /** The option key name, e.g. {@code 'delimiter'} */
   String name
@@ -61,15 +71,15 @@ class OptionDescriptor {
    */
   static String describe(List<OptionDescriptor> descriptors) {
     if (descriptors == null || descriptors.isEmpty()) {
-      return 'No options available.'
+      return NO_OPTIONS_AVAILABLE
     }
 
     // Calculate column widths
-    int nameWidth = 'Option'.length()
-    int typeWidth = 'Type'.length()
-    int defaultWidth = 'Default'.length()
-    int requiredWidth = 'Required'.length()
-    int descWidth = 'Description'.length()
+    int nameWidth = OPTION_HEADER.length()
+    int typeWidth = TYPE_HEADER.length()
+    int defaultWidth = DEFAULT_HEADER.length()
+    int requiredWidth = REQUIRED_HEADER.length()
+    int descWidth = DESCRIPTION_HEADER.length()
 
     for (OptionDescriptor d : descriptors) {
       nameWidth = Math.max(nameWidth, (d.name ?: '').length())
@@ -79,20 +89,20 @@ class OptionDescriptor {
     }
 
     String fmt = "| %-${nameWidth}s | %-${typeWidth}s | %-${defaultWidth}s | %-${requiredWidth}s | %-${descWidth}s |"
-    String sep = "+-${'-' * nameWidth}-+-${'-' * typeWidth}-+-${'-' * defaultWidth}-+-${'-' * requiredWidth}-+-${'-' * descWidth}-+"
+    String sep = "+-${RULE_CHAR * nameWidth}-+-${RULE_CHAR * typeWidth}-+-${RULE_CHAR * defaultWidth}-+-${RULE_CHAR * requiredWidth}-+-${RULE_CHAR * descWidth}-+"
 
     StringBuilder sb = new StringBuilder()
-    sb.append(sep).append('\n')
-    sb.append(String.format(fmt, 'Option', 'Type', 'Default', 'Required', 'Description')).append('\n')
-    sb.append(sep).append('\n')
+    sb.append(sep).append(NEWLINE)
+    sb.append(String.format(fmt, OPTION_HEADER, TYPE_HEADER, DEFAULT_HEADER, REQUIRED_HEADER, DESCRIPTION_HEADER)).append(NEWLINE)
+    sb.append(sep).append(NEWLINE)
     for (OptionDescriptor d : descriptors) {
       sb.append(String.format(fmt,
           d.name ?: '',
           d.type?.simpleName ?: '',
           formatDefaultValue(d.defaultValue),
-          d.required ? 'yes' : 'no',
+          d.required ? YES_VALUE : NO_VALUE,
           d.description ?: ''
-      )).append('\n')
+      )).append(NEWLINE)
     }
     sb.append(sep)
     sb.toString()

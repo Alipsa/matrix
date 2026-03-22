@@ -14,6 +14,10 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
  */
 @CompileStatic
 class Row implements GroovyObject, List<Object> {
+    private static final String UNSUPPORTED_MUTATION_MESSAGE = 'Adding and deleting values from a row is not supported.'
+    private static final String UNKNOWN_COLUMN_MESSAGE_PREFIX = 'Failed to find a column with the name '
+    private static final int COLUMN_NOT_FOUND = -1
+
     private int rowNumber
     private List<Object> content
     private Matrix parent
@@ -122,7 +126,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean add(Object o) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -134,7 +138,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean remove(Object o) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     @Override
@@ -151,7 +155,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean addAll(Collection c) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -165,7 +169,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean addAll(int index, Collection c) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -177,7 +181,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean removeAll(Collection c) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -189,7 +193,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     boolean retainAll(Collection c) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -198,7 +202,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     void clear() {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     @Override
@@ -231,7 +235,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     void add(int index, Object element) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     /**
@@ -243,7 +247,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     Object remove(int index) {
-        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
+        throw new UnsupportedOperationException(UNSUPPORTED_MUTATION_MESSAGE)
     }
 
     @Override
@@ -358,8 +362,8 @@ class Row implements GroovyObject, List<Object> {
      */
     Object putAt(String columnName, Object value) {
         int idx = columnNames.indexOf(columnName)
-        if (idx == -1) {
-            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        if (idx == COLUMN_NOT_FOUND) {
+            throw new IllegalArgumentException(UNKNOWN_COLUMN_MESSAGE_PREFIX + columnName)
         }
         return set(idx, value)
     }
@@ -408,8 +412,8 @@ class Row implements GroovyObject, List<Object> {
      */
     <T> T getAt(String columnName) {
         int idx = columnNames.indexOf(columnName)
-        if (idx == -1) {
-            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        if (idx == COLUMN_NOT_FOUND) {
+            throw new IllegalArgumentException(UNKNOWN_COLUMN_MESSAGE_PREFIX + columnName)
         }
         Class<T> type = types[idx] as Class<T>
         def value = get(idx)
@@ -426,8 +430,8 @@ class Row implements GroovyObject, List<Object> {
      */
     <T> T getAt(String columnName, Class<T> type, T valueIfNull = null) {
         int idx = columnNames.indexOf(columnName)
-        if (idx == -1) {
-            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        if (idx == COLUMN_NOT_FOUND) {
+            throw new IllegalArgumentException(UNKNOWN_COLUMN_MESSAGE_PREFIX + columnName)
         }
         ValueConverter.convert(get(idx), type, null, null, valueIfNull)
     }

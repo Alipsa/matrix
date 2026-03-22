@@ -30,6 +30,7 @@ class Summary {
   }
 
   @Override
+  @SuppressWarnings('DuplicateStringLiteral')
   String toString() {
     def sb = new StringBuilder()
     data.each { it ->

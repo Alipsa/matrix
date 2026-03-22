@@ -24,6 +24,7 @@ class Structure {
     }
 
     @Override
+    @SuppressWarnings('DuplicateStringLiteral')
     String toString() {
         StringBuilder sb = new StringBuilder()
         int rowCount = 0

@@ -21,6 +21,11 @@ class Stat {
 
     private static final Logger log = Logger.getLogger(Stat)
     private static final List<String> primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
+    private static final BigDecimal DECIMAL_ZERO = 0.0g
+    private static final String SUMMARY_TYPE = 'Type'
+    private static final String LEGACY_GROUP_KEY_SEPARATOR = '_'
+    private static final int PERCENT_SCALE = 2
+    private static final int PERCENT_BASE = 100
     static final String FREQUENCY_VALUE = "Value"
     static final String FREQUENCY_FREQUENCY = "Frequency"
     static final String FREQUENCY_PERCENT = "Percent"
@@ -87,7 +92,7 @@ class Stat {
         List<Number> numbers = objects as List<Number>
         def quarts = quartiles(numbers)
         Map<String, Object> result = [
-            'Type': type.getSimpleName(),
+            SUMMARY_TYPE: type.getSimpleName(),
             'Min': min(numbers),
             '1st Q': quarts[0],
             'Median': median(numbers),
@@ -98,12 +103,13 @@ class Stat {
         result
     }
 
+    @SuppressWarnings('DuplicateNumberLiteral')
     static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
         def freq = frequency(objects)
         def mostFrequent = freq.subset(FREQUENCY_FREQUENCY, {it == max(freq[FREQUENCY_FREQUENCY])})
 
         return [
-            'Type': type.getSimpleName(),
+            SUMMARY_TYPE: type.getSimpleName(),
             'Number of unique values': freq.rowCount(),
             'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)".toString()
         ]
@@ -120,7 +126,7 @@ class Stat {
     }
 
     static <T> T sum(List<?> list, Class<T> type) {
-        BigDecimal s = 0.0g
+        BigDecimal s = DECIMAL_ZERO
         for (value in list) {
             if (value instanceof Number) {
                 s += (value as BigDecimal)
@@ -335,7 +341,7 @@ class Stat {
         List<Class> cachedTypes = table.types()
         for (Map.Entry<List<?>, List<Integer>> entry : keyToRows.entrySet()) {
             groups[entry.key] = Matrix.builder()
-                .matrixName(entry.key.collect { String.valueOf(it) }.join('_'))
+                .matrixName(entry.key.collect { String.valueOf(it) }.join(LEGACY_GROUP_KEY_SEPARATOR))
                 .columnNames(cachedColumnNames)
                 .rows(table.rows(entry.value) as List<List>)
                 .types(cachedTypes)
@@ -404,7 +410,7 @@ class Stat {
     }
 
     static List<BigDecimal> means(List<List<?>> matrix, List<Integer> colNums) {
-        List<BigDecimal> sums = [0.0g] * colNums.size()
+        List<BigDecimal> sums = [DECIMAL_ZERO] * colNums.size()
         List<Integer> ncols = [0] * colNums.size()
         def value
         def idx
@@ -431,8 +437,8 @@ class Stat {
         List<BigDecimal> results = []
         colNames.each { colName ->
             List<?> columnData = table.column(colName)
-            def sum = 0.0g
-            def count = 0.0g
+            BigDecimal sum = DECIMAL_ZERO
+            BigDecimal count = DECIMAL_ZERO
             columnData.each { value ->
                 if (value != null && value instanceof Number) {
                     sum += value
@@ -604,6 +610,7 @@ class Stat {
         medians
     }
 
+    @SuppressWarnings('DuplicateNumberLiteral')
     static BigDecimal median(List<?> valueList) {
         if (valueList == null || valueList.size() == 0) {
             return null
@@ -630,6 +637,7 @@ class Stat {
      * @param values a list of numbers to use
      * @return a list of the 1:st and 3:rd quartile
      */
+    @SuppressWarnings('DuplicateNumberLiteral')
     static  List<Number> quartiles(List<?> values) {
         if (values == null || values.size() == 0) {
             throw new IllegalArgumentException("The list of values are either null or does not contain any data.")
@@ -814,7 +822,7 @@ class Stat {
         if (values == null || values.length <= 1) {
             return null
         }
-        BigDecimal sum = 0.0
+        BigDecimal sum = BigDecimal.ZERO
         for (BigDecimal v : values) {
             BigDecimal diff = v - mean
             sum += diff * diff
@@ -884,7 +892,7 @@ class Stat {
         def percent
         for (Map.Entry<String, Integer> entry : freq.entrySet()) {
             int numOccurrence = entry.getValue()
-            percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
+            percent = (numOccurrence * PERCENT_BASE / size).setScale(PERCENT_SCALE, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }
         Matrix.builder()
@@ -936,7 +944,7 @@ class Stat {
             }
             tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
-        def nam = (table.getMatrixName() == null || table.getMatrixName().isBlank()) ? groupName : table.getMatrixName() + '_' + groupName
+        def nam = (table.getMatrixName() == null || table.getMatrixName().isBlank()) ? groupName : table.getMatrixName() + LEGACY_GROUP_KEY_SEPARATOR + groupName
         return Matrix.builder().data(tbl).matrixName(nam).build()
     }
 

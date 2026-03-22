@@ -12,6 +12,8 @@ import se.alipsa.matrix.core.Column
  */
 @CompileStatic
 class ShiftHelper {
+  private static final String SHIFT_OPERATION = 'shift'
+  private static final String DIFF_OPERATION = 'diff'
 
   /**
    * Shift column values by the given number of positions.
@@ -25,8 +27,8 @@ class ShiftHelper {
    * @return a new column with shifted values
    */
   static Column shift(Column source, int periods) {
-    requireNonNull(source, 'shift')
-    validatePeriods(periods, 'shift')
+    requireNonNull(source, SHIFT_OPERATION)
+    validatePeriods(periods, SHIFT_OPERATION)
     int size = source.size()
     Class resultType = source.type != null ? source.type : Object
     Column result = new Column(source.name, resultType)
@@ -109,8 +111,8 @@ class ShiftHelper {
    * @throws IllegalArgumentException if the column is not numeric
    */
   static Column diff(Column source, int periods) {
-    CumulativeHelper.requireNumeric(source, 'diff')
-    validatePeriods(periods, 'diff')
+    CumulativeHelper.requireNumeric(source, DIFF_OPERATION)
+    validatePeriods(periods, DIFF_OPERATION)
     int size = source.size()
     Column result = new Column(source.name, BigDecimal)
     for (int i = 0; i < size; i++) {
@@ -123,8 +125,8 @@ class ShiftHelper {
         if (current == null || reference == null) {
           result.add(null)
         } else {
-          BigDecimal currentVal = CumulativeHelper.numericValue(current, source, 'diff')
-          BigDecimal referenceVal = CumulativeHelper.numericValue(reference, source, 'diff')
+          BigDecimal currentVal = CumulativeHelper.numericValue(current, source, DIFF_OPERATION)
+          BigDecimal referenceVal = CumulativeHelper.numericValue(reference, source, DIFF_OPERATION)
           result.add(currentVal - referenceVal)
         }
       }

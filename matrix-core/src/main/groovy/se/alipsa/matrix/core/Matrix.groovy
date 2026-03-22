@@ -45,6 +45,28 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
  */
 @CompileStatic
 class Matrix implements Iterable<Row>, Cloneable {
+  private static final String ANONYMOUS_COLUMN_PREFIX = 'c'
+  private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
+  private static final String PATH_CANNOT_BE_NULL = 'path cannot be null'
+  private static final String ROW_CANNOT_BE_NULL = 'Row cannot be null'
+  private static final int COLUMN_NOT_FOUND = -1
+  private static final String COMMA = ','
+  private static final String COMMA_SPACE = ', '
+  private static final String MATRIX_NAME_SEPARATOR = '_'
+  private static final String CSV_QUOTE_STRING_OPTION = 'quoteString'
+  private static final String CSV_DELIMITER_OPTION = 'delimiter'
+  private static final String CSV_ROW_DELIMITER_OPTION = 'rowDelimiter'
+  private static final String CSV_ROW_DELIMITER_LEGACY_OPTION = 'rowdelimiter'
+  private static final String CSV_LINE_COMMENT_OPTION = 'lineComment'
+  private static final String CSV_LINE_COMMENT_LEGACY_OPTION = 'linecomment'
+  private static final String CSV_INCLUDE_HEADER_OPTION = 'includeHeader'
+  private static final String CSV_INCLUDE_TYPES_OPTION = 'includeTypes'
+  private static final String CONTENT_INCLUDE_TITLE_OPTION = 'includeTitle'
+  private static final String CONTENT_LINE_ENDING_OPTION = 'lineEnding'
+  private static final String DEFAULT_CSV_DELIMITER = COMMA
+  private static final String DEFAULT_ROW_DELIMITER = '\n'
+  private static final String DEFAULT_LINE_COMMENT = '#'
+
   private static final Logger log = Logger.getLogger(Matrix)
 
   private List<Column> mColumns
@@ -86,11 +108,11 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   static List<String> anonymousHeader(List row) {
-    (1..row.size()).collect { 'c' + it }
+    (1..row.size()).collect { ANONYMOUS_COLUMN_PREFIX + it }
   }
 
   static List<String> anonymousHeader(int ncols) {
-    (1..ncols).collect { 'c' + it }
+    (1..ncols).collect { ANONYMOUS_COLUMN_PREFIX + it }
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -116,7 +138,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   static Matrix read(Map options = [:], File file) {
     if (file == null) {
-      throw new IllegalArgumentException('file cannot be null')
+      throw new IllegalArgumentException(FILE_CANNOT_BE_NULL)
     }
     String ext = extensionFor(file.name, "file '${file.path}'")
     MatrixFormatProvider provider = resolveProvider(ext)
@@ -133,7 +155,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   static Matrix read(Map options = [:], Path path) {
     if (path == null) {
-      throw new IllegalArgumentException('path cannot be null')
+      throw new IllegalArgumentException(PATH_CANNOT_BE_NULL)
     }
     String ext = extensionFor(pathName(path), "path '$path'")
     MatrixFormatProvider provider = resolveProvider(ext)
@@ -171,7 +193,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   void write(Map options = [:], File file) {
     if (file == null) {
-      throw new IllegalArgumentException('file cannot be null')
+      throw new IllegalArgumentException(FILE_CANNOT_BE_NULL)
     }
     String ext = extensionFor(file.name, "file '${file.path}'")
     MatrixFormatProvider provider = resolveProvider(ext)
@@ -187,7 +209,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   void write(Map options = [:], Path path) {
     if (path == null) {
-      throw new IllegalArgumentException('path cannot be null')
+      throw new IllegalArgumentException(PATH_CANNOT_BE_NULL)
     }
     String ext = extensionFor(pathName(path), "path '$path'")
     MatrixFormatProvider provider = resolveProvider(ext)
@@ -226,7 +248,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       Set<String> available = FormatRegistry.instance.supportedExtensions()
       String suggestion = available.isEmpty()
           ? 'No format modules found on the classpath. Add a dependency like matrix-csv, matrix-json, etc.'
-          : "Available extensions: ${available.join(', ')}"
+          : "Available extensions: ${available.join(COMMA_SPACE)}"
       throw new IllegalArgumentException(
           "No format provider found for extension '${ext}'. ${suggestion}")
     }
@@ -420,7 +442,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix addRow(List row) {
     if (row == null) {
-      throw new IllegalArgumentException("Row cannot be null")
+      throw new IllegalArgumentException(ROW_CANNOT_BE_NULL)
     }
     if (row.size() != columnCount()) {
       throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
@@ -441,7 +463,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix addRow(int position, List row) {
     if (row == null) {
-      throw new IllegalArgumentException("Row cannot be null")
+      throw new IllegalArgumentException(ROW_CANNOT_BE_NULL)
     }
     if (row.size() != columnCount()) {
       throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
@@ -461,7 +483,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix addRows(List<List> rows) {
     if (rows == null) {
-      throw new IllegalArgumentException("Row cannot be null")
+      throw new IllegalArgumentException(ROW_CANNOT_BE_NULL)
     }
     rows.each {
       addRow(it)
@@ -1305,7 +1327,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         return i
       }
     }
-    return -1
+    return COLUMN_NOT_FOUND
   }
 
   /**
@@ -1326,7 +1348,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       i++
     }
-    return -1
+    return COLUMN_NOT_FOUND
   }
 
   List<Integer> columnIndices(List<String> columnNames) {
@@ -1532,10 +1554,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the formatted text table
    */
   String content(Map params) {
-    boolean includeTitle = params.getOrDefault('includeTitle', true)
-    boolean includeHeader = params.getOrDefault('includeHeader', true)
-    String delimiter = params.getOrDefault('delimiter', '\t')
-    String lineEnding = params.getOrDefault('lineEnding', '\n')
+    boolean includeTitle = params.getOrDefault(CONTENT_INCLUDE_TITLE_OPTION, true)
+    boolean includeHeader = params.getOrDefault(CSV_INCLUDE_HEADER_OPTION, true)
+    String delimiter = params.getOrDefault(CSV_DELIMITER_OPTION, '\t')
+    String lineEnding = params.getOrDefault(CONTENT_LINE_ENDING_OPTION, DEFAULT_ROW_DELIMITER)
     int maxColumnLength = (int) params.getOrDefault('maxColumnLength', 50)
     return content(includeHeader, includeTitle, delimiter, lineEnding, maxColumnLength)
   }
@@ -1603,13 +1625,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param allowedDiff the numeric tolerance when comparing numeric values
    * @return a diff string describing any differences, or an empty string if equal
    */
+  @SuppressWarnings(['DuplicateStringLiteral', 'DuplicateNumberLiteral'])
   String diff(Matrix other, boolean forceRowComparing = false, double allowedDiff = 0.0001) {
     StringBuilder sb = new StringBuilder()
     if (this.matrixName != other.matrixName) {
       sb.append("Names differ: \n\tthis: ${matrixName} \n\tthat: ${other.matrixName}\n")
     }
     if (this.columnNames() != other.columnNames()) {
-      sb.append("Column Names differ: \n\tthis: ${columnNames().join(', ')} \n\tthat: ${other.columnNames().join(', ')}\n")
+      sb.append("Column Names differ: \n\tthis: ${columnNames().join(COMMA_SPACE)} \n\tthat: ${other.columnNames().join(COMMA_SPACE)}\n")
     }
     if (this.columnCount() != other.columnCount()) {
       sb.append("Number of columns differ: this: ${this.columnCount()}; that: ${other.columnCount()}\n")
@@ -1618,7 +1641,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       sb.append("Number of rows differ: this: ${this.rowCount()}; that: ${other.rowCount()}\n")
     }
     if (this.types() != other.types()) {
-      sb.append("Column types differ: \n\tthis: ${typeNames().join(', ')} \n\tthat: ${other.typeNames().join(', ')}")
+      sb.append("Column types differ: \n\tthis: ${typeNames().join(COMMA_SPACE)} \n\tthat: ${other.typeNames().join(COMMA_SPACE)}")
     }
     if (sb.length() == 0 || forceRowComparing) {
       def thisRow, thatRow
@@ -1639,7 +1662,7 @@ class Matrix implements Iterable<Row>, Cloneable {
           }
         }
         if (valueDiff) {
-          sb.append("Row ${i} differs: \n\tthis: ${thisRow.join(', ')} \n\tthat: ${thatRow.join(', ')}\n")
+          sb.append("Row ${i} differs: \n\tthis: ${thisRow.join(COMMA_SPACE)} \n\tthat: ${thatRow.join(COMMA_SPACE)}\n")
         }
       }
     }
@@ -1748,9 +1771,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       return this
     }
     List<Integer> idxs = columnIndices(columnNames as List<String>)
-    if (idxs.contains(-1)) {
+    if (idxs.contains(COLUMN_NOT_FOUND)) {
       def colNames = this.columnNames()
-      throw new IllegalArgumentException("Variables ${String.join(',', columnNames)} does not match actual column names: ${String.join(',', colNames)}")
+      throw new IllegalArgumentException("Variables ${String.join(COMMA, columnNames)} does not match actual column names: ${String.join(COMMA, colNames)}")
     }
     drop(idxs)
   }
@@ -2150,6 +2173,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param args matching any of the individual getAt methods
    * @return
    */
+  @SuppressWarnings('DuplicateNumberLiteral')
   def getAt(List args) {
     if (args == null || args.size() == 0) {
       throw new IllegalArgumentException("No arguments supplied")
@@ -2552,6 +2576,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * type the class of the column data
    * @param column a list of the column values
    */
+  @SuppressWarnings('DuplicateNumberLiteral')
   void putAt(List where, List column) {
     if (where.size() < 2) {
       throw new IllegalArgumentException("Insufficient number of arguments, specify at least columnName, type and the list of values")
@@ -3191,7 +3216,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     def rowChunks = this.collate(chunkSize)
     List<Matrix> chunks = []
     rowChunks.eachWithIndex { it, idx ->
-      chunks << builder(matrixName + "_" + idx).rowList(it).build()
+      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + idx).rowList(it).build()
     }
     chunks
   }
@@ -3255,7 +3280,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       int endRow = startRow + chunkSize
 
       def rowsForChunk = rows().subList(startRow, endRow)
-      chunks << builder(matrixName + "_" + i).rowList(rowsForChunk).build()
+      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + i).rowList(rowsForChunk).build()
 
       startRow = endRow
     }
@@ -3475,22 +3500,22 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matrix as a CSV string
    */
   String toCsvString(Map options) {
-    String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
-    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ','
-    String rowDelimiter = options.containsKey('rowDelimiter')
+    String quoteString = options.containsKey(CSV_QUOTE_STRING_OPTION) ? options.quoteString as String : '"'
+    String delimiter = options.containsKey(CSV_DELIMITER_OPTION) ? options.delimiter as String : DEFAULT_CSV_DELIMITER
+    String rowDelimiter = options.containsKey(CSV_ROW_DELIMITER_OPTION)
       ? options.rowDelimiter as String
-      : (options.rowdelimiter as String ?: '\n')
-    String lineComment = options.containsKey('lineComment')
+      : (options[CSV_ROW_DELIMITER_LEGACY_OPTION] as String ?: DEFAULT_ROW_DELIMITER)
+    String lineComment = options.containsKey(CSV_LINE_COMMENT_OPTION)
       ? options.lineComment as String
-      : (options.linecomment as String ?: '#')
-    boolean includeHeader = options.containsKey('includeHeader') ? options.includeHeader as boolean : true
-    boolean includeTypes = options.containsKey('includeTypes') ? options.includeTypes as boolean : false
-    boolean customQuoteString = options.containsKey('quoteString')
+      : (options[CSV_LINE_COMMENT_LEGACY_OPTION] as String ?: DEFAULT_LINE_COMMENT)
+    boolean includeHeader = options.containsKey(CSV_INCLUDE_HEADER_OPTION) ? options.includeHeader as boolean : true
+    boolean includeTypes = options.containsKey(CSV_INCLUDE_TYPES_OPTION) ? options.includeTypes as boolean : false
+    boolean customQuoteString = options.containsKey(CSV_QUOTE_STRING_OPTION)
 
     StringBuilder sb = new StringBuilder()
     if (includeTypes || matrixName || !metaData.isEmpty() || !indexedColumnNames.isEmpty()) {
       if (lineComment == null || lineComment.isEmpty()) {
-        lineComment = '#'
+        lineComment = DEFAULT_LINE_COMMENT
       }
       if (matrixName) {
         sb.append(lineComment)
@@ -3511,13 +3536,13 @@ class Matrix implements Iterable<Row>, Cloneable {
       if (!indexedColumnNames.isEmpty()) {
         sb.append(lineComment)
           .append('index: ')
-          .append(indexedColumnNames.join(','))
+          .append(indexedColumnNames.join(COMMA))
           .append(rowDelimiter)
       }
       if (includeTypes) {
         sb.append(lineComment)
           .append('types: ')
-          .append(types().collect { CsvHelper.typeLabel(it) }.join(','))
+          .append(types().collect { CsvHelper.typeLabel(it) }.join(COMMA))
           .append(rowDelimiter)
       }
     }
@@ -3554,10 +3579,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    *   - includeTypes (boolean) include a types comment header, default true
    */
   void toClipboard(Map options = [:]) {
-    if (!options.containsKey('includeTypes')) {
+    if (!options.containsKey(CSV_INCLUDE_TYPES_OPTION)) {
       options.includeTypes = true
     }
-    if (!options.containsKey('includeHeader')) {
+    if (!options.containsKey(CSV_INCLUDE_HEADER_OPTION)) {
       options.includeHeader = true
     }
     ClipboardUtil.writeText(toCsvString(options))
@@ -3657,6 +3682,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param autoAlign if true all numbers will be right aligned. If the align key is set in the map this setting has no effect
    * @return a xhtml representation of the table
    */
+  @SuppressWarnings('DuplicateStringLiteral')
   String toHtml(Map<String, String> attr = [:], List<?> rows, boolean autoAlign=true) {
     Map alignment = [:]
     StringBuilder sb = new StringBuilder()
@@ -3664,7 +3690,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (attr.size() > 0) {
       attr.each {k,v ->
         if (k == 'align') {
-          v.split(',').each { s ->
+          v.split(COMMA).each { s ->
             String a = s as String
             def key = a.substring(0, a.indexOf(':')).trim()
             def value = a.substring(a.indexOf(':')+1).trim()
@@ -3774,6 +3800,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param rows the rows to render (Row or List instances)
    * @return the markdown formatted table
    */
+  @SuppressWarnings('DuplicateStringLiteral')
   String toMarkdown(Map<String, String> attr = [:], List<String> alignment, List<?> rows) {
     if (alignment.size() != columnCount()) {
       throw new IllegalArgumentException("number of alignment markers (${alignment.size()}) differs from number of columns (${columnCount()})")
@@ -3887,7 +3914,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix transpose(boolean includeHeaderAsRow = false) {
     def numCols = includeHeaderAsRow ? rowCount() + 1 : rowCount()
 
-    return transpose((1..numCols).collect { 'c' + it }, includeHeaderAsRow)
+    return transpose((1..numCols).collect { ANONYMOUS_COLUMN_PREFIX + it }, includeHeaderAsRow)
   }
 
   /**

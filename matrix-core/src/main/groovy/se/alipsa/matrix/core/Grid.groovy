@@ -344,6 +344,7 @@ class Grid<T> implements Iterable<List<T>> {
    * @param rowList the row list to validate
    * @return true if the row list forms a valid grid structure, false otherwise
    */
+  @SuppressWarnings('DuplicateNumberLiteral')
   static boolean isValid(Object rowList) {
     if (rowList == null) {
       return false
