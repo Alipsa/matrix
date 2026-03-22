@@ -40,6 +40,8 @@ class StatTest {
     ])
 
     assertIterableEquals([6.07, 2.33, 3.05], means(bar, 2))
+    assertNull(mean([null, null]))
+    assertEquals(0.0g, mean([-1, 1], 1))
   }
 
   @Test
@@ -123,6 +125,18 @@ class StatTest {
     def table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
     def m2 = max(table, ["v1", "v2"], true)
     assertIterableEquals(m, m2)
+  }
+
+  @Test
+  void testMinMaxOnGridWithMultipleColumns() {
+    Grid<Integer> grid = new Grid<>([
+        [7, 4, 9],
+        [2, 8, 3],
+        [5, 1, 6]
+    ])
+
+    assertIterableEquals([2, 3], min(grid.rowList, [0, 2]))
+    assertIterableEquals([7, 8], max(grid.rowList, [0, 1]))
   }
 
   @Test
@@ -478,6 +492,22 @@ class StatTest {
   }
 
   @Test
+  void testStrWithSingleRowMatrix() {
+    Matrix singleRowMatrix = Matrix.builder()
+        .matrixName('SingleRow')
+        .data([
+            name: ['Ada'],
+            score: [42]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def structure = str(singleRowMatrix)
+    assertEquals(['String', 'Ada'], structure['name'])
+    assertEquals(['Integer', '42'], structure['score'])
+  }
+
+  @Test
   void testStatMethodsWithNullInput() {
     // Test mean with null/empty list
     assertNull(mean(null as List))
@@ -511,6 +541,9 @@ class StatTest {
     def resultNoBias = sd([5.0], false)
     assertNotNull(resultNoBias)
     assertEquals(0.0, resultNoBias, 0.0001)
+
+    def arrayVariance = variance([5.0g] as BigDecimal[], 5.0g)
+    assertNull(arrayVariance)
   }
 
   @Test
@@ -540,5 +573,12 @@ class StatTest {
     assertNull(medianResults[2], "Median of mixed null/string column should be null")
     assertNotNull(medianResults[3], "Median of numeric column should not be null")
     assertEquals(new BigDecimal(2), medianResults[3])
+
+    def rowList = [
+        [1, null, 10],
+        [3, null, 14],
+        [5, null, null]
+    ]
+    assertIterableEquals([3.0g, null, 12.0g], means(rowList, [0, 1, 2]))
   }
 }

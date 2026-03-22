@@ -37,7 +37,7 @@ class Stat {
             }
             def vals = [type?.getSimpleName()]
             def endRowIndex = Math.min(3, table.lastRowIndex())
-            if (endRowIndex > 0) {
+            if (endRowIndex >= 0) {
                 def samples = ListConverter.convert(table[colName][0..endRowIndex], String.class)
                 vals.addAll(samples)
             }
@@ -403,8 +403,8 @@ class Stat {
     }
 
     static List<BigDecimal> means(List<List<?>> matrix, List<Integer> colNums) {
-        def sums = [0.0g] * colNums.size()
-        def ncols = [0.0g] * colNums.size()
+        List<BigDecimal> sums = [0.0g] * colNums.size()
+        List<Integer> ncols = [0] * colNums.size()
         def value
         def idx
         for (row in matrix) {
@@ -412,15 +412,15 @@ class Stat {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value != null && value instanceof Number) {
-                    sums[idx] = sums[idx] + value
+                    sums[idx] = sums[idx] + (value as BigDecimal)
                     ncols[idx] = ncols[idx] + 1
                 }
                 idx++
             }
         }
-        def means = new ArrayList<BigDecimal>(colNums.size())
+        List<BigDecimal> means = []
         for (int i = 0; i < colNums.size(); i++) {
-            means[i] = sums[i] / ncols[i]
+            means << (ncols[i] == 0 ? null : sums[i] / ncols[i])
         }
         return means
     }
@@ -503,6 +503,9 @@ class Stat {
                 sum += (value as BigDecimal).setScale(scale, RoundingMode.HALF_UP)
                 nVals++
             }
+        }
+        if (nVals == 0) {
+            return null
         }
         if (sum == 0) {
             return BigDecimal.ZERO.setScale(scale, RoundingMode.HALF_UP)
@@ -675,7 +678,7 @@ class Stat {
     static <T extends Comparable> List<T> min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def minVal
-        List<T> minVals = new ArrayList<T>(colNums.size())
+        List<T> minVals = [null] * colNums.size()
         def idx
         for (row in matrix) {
             idx = 0
@@ -724,7 +727,7 @@ class Stat {
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
-        def maxVals = new ArrayList<T>(colNums.size())
+        List<T> maxVals = [null] * colNums.size()
         def idx
         for (row in matrix) {
             idx = 0
@@ -806,6 +809,9 @@ class Stat {
     }
 
     static BigDecimal variance(BigDecimal[] values, BigDecimal mean) {
+        if (values == null || values.length <= 1) {
+            return null
+        }
         BigDecimal sum = 0.0
         for (BigDecimal v : values) {
             BigDecimal diff = v - mean
