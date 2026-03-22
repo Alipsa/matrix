@@ -64,7 +64,7 @@ class ListConverter {
   }
 
   static List<java.util.Date> toDates(List<String> dates, java.util.Date valueIfNull, String formatPattern) {
-    def format = new SimpleDateFormat(formatPattern)
+    def format = new SimpleDateFormat(formatPattern, Locale.getDefault())
     def dat = new ArrayList<java.util.Date>(dates.size())
     dates.eachWithIndex { String d, int i ->
       try {
@@ -89,7 +89,7 @@ class ListConverter {
   }
 
   static List<Date> toSqlDates(List<String> dates, Date valueIfNull, String formatPattern) {
-    def format = new SimpleDateFormat(formatPattern)
+    def format = new SimpleDateFormat(formatPattern, Locale.getDefault())
     def dat = new ArrayList<Date>(dates.size())
     dates.eachWithIndex { String d, int i ->
       try {

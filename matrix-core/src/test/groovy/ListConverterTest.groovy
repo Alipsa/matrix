@@ -52,8 +52,8 @@ class ListConverterTest {
   void testToDates() {
     def dates = ['2023-01-01', '2023-12-31']
     def expected = [
-        new SimpleDateFormat('yyyy-MM-dd').parse('2023-01-01'),
-        new SimpleDateFormat('yyyy-MM-dd').parse('2023-12-31')
+        new SimpleDateFormat('yyyy-MM-dd', Locale.getDefault()).parse('2023-01-01'),
+        new SimpleDateFormat('yyyy-MM-dd', Locale.getDefault()).parse('2023-12-31')
     ]
     assertIterableEquals(expected, ListConverter.toDates(dates))
 
@@ -73,7 +73,7 @@ class ListConverterTest {
     }
 
     assertIterableEquals(
-        [new SimpleDateFormat('yyyy-MM-dd').parse('2023-01-01'), null, new SimpleDateFormat('yyyy-MM-dd').parse('2023-12-31')],
+        [new SimpleDateFormat('yyyy-MM-dd', Locale.getDefault()).parse('2023-01-01'), null, new SimpleDateFormat('yyyy-MM-dd', Locale.getDefault()).parse('2023-12-31')],
         ListConverter.toDates(['2023-01-01', null, '2023-12-31'], null, 'yyyy-MM-dd')
     )
   }

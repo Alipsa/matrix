@@ -58,7 +58,7 @@ class ValueConverterTest {
     def ld = LocalDate.of(2024, 10, 11)
     assertEquals(
         ld.toString(),
-        new SimpleDateFormat("yyyy-MM-dd").format(ValueConverter.asDate(ld))
+        new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(ValueConverter.asDate(ld))
     )
     def ldt = LocalDateTime.now()
     assertEquals(

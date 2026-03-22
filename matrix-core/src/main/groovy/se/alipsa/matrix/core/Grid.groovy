@@ -233,6 +233,8 @@ class Grid<T> implements Iterable<List<T>> {
     new Grid(convert(grid.data, [colNum], type, format))
   }
 
+  // Null in means "no single target column was supplied", so preserve the legacy null result.
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   static <N> List<List<N>> convert(List<List<?>> rowList, Integer colNum, Class<N> type, NumberFormat format = null) {
     if (colNum == null) {
       return null
@@ -302,6 +304,8 @@ class Grid<T> implements Iterable<List<T>> {
     new Grid(transpose(grid.data))
   }
 
+  // Preserve the historical null-in/null-out transpose contract.
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   static List<List<?>> transpose(List<List<?>> rowList) {
     if (rowList == null) {
       return null

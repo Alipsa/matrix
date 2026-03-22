@@ -6,7 +6,6 @@ import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
-import java.util.concurrent.atomic.AtomicInteger
 
 import static ValueConverter.asBigDecimal
 
@@ -78,6 +77,8 @@ class Stat {
         sum
     }
 
+    // Summary methods return null for null input to preserve the existing API contract.
+    @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
     static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
         if (objects == null) {
             log.error("The list of objects for addNumericSummary is null")
@@ -873,15 +874,16 @@ class Stat {
     }
 
     static Matrix frequency(List<?> column) {
-        Map<String, AtomicInteger> freq = [:]
-        column.forEach(v -> {
-            freq.computeIfAbsent(String.valueOf(v), k -> new AtomicInteger(0)).incrementAndGet()
-        })
+        Map<String, Integer> freq = [:]
+        column.each { v ->
+            String key = String.valueOf(v)
+            freq[key] = (freq[key] ?: 0) + 1
+        }
         int size = column.size()
         List<List<?>> matrix = []
         def percent
-        for (Map.Entry<String, AtomicInteger> entry : freq.entrySet()) {
-            int numOccurrence = entry.getValue().intValue()
+        for (Map.Entry<String, Integer> entry : freq.entrySet()) {
+            int numOccurrence = entry.getValue()
             percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }
