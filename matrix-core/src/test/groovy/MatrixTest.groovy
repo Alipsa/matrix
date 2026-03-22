@@ -163,6 +163,26 @@ class MatrixTest {
   }
 
   @Test
+  void testTransposeWithHeaderColumnUsesSameShapeForTypedAndUntypedOverloads() {
+    Matrix table = Matrix.builder()
+        .data([
+            label: ['r1', 'r2', 'r3'],
+            q1   : [10, 20, 30],
+            q2   : [11, 21, 31],
+            q3   : [12, 22, 32]
+        ])
+        .types(String, Integer, Integer, Integer)
+        .build()
+
+    Matrix untyped = table.transpose('label', true)
+    Matrix typed = table.transpose('label', [String, Integer, Integer, Integer], true)
+
+    assert untyped.columnNames() == typed.columnNames()
+    assert untyped.rows() == typed.rows()
+    assertIterableEquals([String, Integer, Integer, Integer], typed.types())
+  }
+
+  @Test
   void testStr() {
     def empData = Matrix.builder().data(
         emp_id: 1..5,
@@ -1758,6 +1778,24 @@ class MatrixTest {
     assertEquals(m.subset(20..23).withMatrixName("${m.matrixName}_5"), chunks[5])
     assertEquals(m.subset(24..27).withMatrixName("${m.matrixName}_6"), chunks[6])
     assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_7"), chunks[7])
+  }
+
+  @Test
+  void testOrderByUsesExplicitNullOrderingForMixedNumbers() {
+    Matrix table = Matrix.builder()
+        .columnNames('value')
+        .rows([
+            [2],
+            [null],
+            [1.5G],
+            [1L],
+            [-1]
+        ])
+        .types(Number)
+        .build()
+
+    assertEquals([null, -1, 1L, 1.5G, 2], table.orderBy('value').column('value'))
+    assertEquals([2, 1.5G, 1L, -1, null], table.orderBy(['value': Matrix.DESC]).column('value'))
   }
 
   @Test

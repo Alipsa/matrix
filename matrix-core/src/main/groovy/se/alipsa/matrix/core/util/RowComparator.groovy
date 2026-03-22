@@ -4,6 +4,12 @@ import groovy.transform.CompileStatic
 
 import static se.alipsa.matrix.core.Matrix.*
 
+/**
+ * Comparator for Matrix rows based on one or more column indices.
+ *
+ * Null values sort before non-null values in ascending order and after non-null values
+ * in descending order.
+ */
 @CompileStatic
 class RowComparator<T> implements Comparator<List<T>> {
 
@@ -24,35 +30,31 @@ class RowComparator<T> implements Comparator<List<T>> {
 
   @Override
   int compare(List<T> r1, List<T> r2) {
-    int result = 0
     for (idx in columnIdx) {
-      def v1 = r1[idx.key]
-      def v2 = r2[idx.key]
-
-      if (v1 instanceof Comparable) {
-        if (idx.value == ASC) {
-          result = v1 as Comparable <=> v2 as Comparable
-        } else {
-          result = v2 as Comparable <=> v1 as Comparable
-        }
-      } else if (v1 instanceof Number){
-        if (idx.value == ASC) {
-          result = ((Number)v1) <=> ((Number)v2)
-        } else {
-          result = ((Number)v2) <=> ((Number)v1)
-        }
-      } else {
-        if (idx.value == ASC) {
-          result = String.valueOf(v1) <=> String.valueOf(v2)
-        } else {
-          result = String.valueOf(v2) <=> String.valueOf(v1)
-        }
-      }
+      int result = idx.value == ASC
+          ? compareValues(r1[idx.key], r2[idx.key])
+          : compareValues(r2[idx.key], r1[idx.key])
       if (result != 0) {
         return result
       }
     }
-    return result
+    return 0
+  }
+
+  private static int compareValues(Object v1, Object v2) {
+    if (v1 == v2) {
+      return 0
+    }
+    if (v1 == null) {
+      return -1
+    }
+    if (v2 == null) {
+      return 1
+    }
+    if (v1 instanceof Comparable) {
+      return (v1 as Comparable) <=> (v2 as Comparable)
+    }
+    return String.valueOf(v1) <=> String.valueOf(v2)
   }
 
 }

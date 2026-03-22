@@ -23,12 +23,17 @@ class ValueConverterTest {
   @Test
   void testAsBoolean() {
     assertEquals(true, ValueConverter.asBoolean(1))
+    assertEquals(true, ValueConverter.asBoolean(1L))
     assertEquals(true, ValueConverter.asBoolean(1.0))
+    assertEquals(true, ValueConverter.asBoolean(BigDecimal.ONE))
     assertEquals(true, ValueConverter.asBoolean('YES'))
     assertEquals(true, ValueConverter.asBoolean('on'))
     assertEquals(true, ValueConverter.asBoolean('True'))
 
     assertEquals(false, ValueConverter.asBoolean(0))
+    assertEquals(false, ValueConverter.asBoolean(0.0))
+    assertEquals(false, ValueConverter.asBoolean(2))
+    assertEquals(false, ValueConverter.asBoolean(-1))
     assertEquals(false, ValueConverter.asBoolean(-1.0))
     assertEquals(false, ValueConverter.asBoolean('NO'))
     assertEquals(false, ValueConverter.asBoolean('off'))

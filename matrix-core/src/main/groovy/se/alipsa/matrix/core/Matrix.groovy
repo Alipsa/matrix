@@ -3831,21 +3831,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix transpose(String columnNameAsHeader, List<Class> dataTypes, boolean includeHeaderAsRow = false) {
     List<String> header
-    List<List> r = new ArrayList<>(rowCount() + 1)
     if (includeHeaderAsRow) {
       header = ['']
       header.addAll(ListConverter.toStrings(column(columnNameAsHeader)))
-      r.add(columnNames())
     } else {
       header = ListConverter.toStrings(column(columnNameAsHeader))
     }
-    r.addAll(rows())
-    builder()
-        .matrixName(mName)
-        .columnNames(header)
-        .columns(r)
-        .types(dataTypes)
-        .build()
+    return transpose(header, dataTypes, includeHeaderAsRow)
   }
 
   /**
