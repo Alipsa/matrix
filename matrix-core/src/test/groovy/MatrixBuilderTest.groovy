@@ -442,7 +442,8 @@ class MatrixBuilderTest {
   void testTypesListVarargsConvertsPrimitiveTypesToWrappers() {
     Matrix matrix = Matrix.builder()
         .columnNames('id', 'name')
-        .types([int, String] as List<Class>)
+        // Pass multiple List<Class> arguments so Groovy dispatches to the varargs overload.
+        .types([int, String] as List<Class>, [Long, BigDecimal] as List<Class>)
         .build()
 
     assertIterableEquals([Integer, String], matrix.types())
