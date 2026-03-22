@@ -142,7 +142,7 @@ class Stat {
             if (Number.isAssignableFrom(type)) {
                 sums.add(sum(column, type as Class<Object>) as Number)
             } else {
-                println("${matrix.matrixName}: $columnName is not a Numeric column but of type ${type.simpleName}")
+                log.info("${matrix.matrixName}: $columnName is not a Numeric column but of type ${type.simpleName}")
                 sums.add(null)
             }
         }

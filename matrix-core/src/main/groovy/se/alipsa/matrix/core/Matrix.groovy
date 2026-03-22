@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.ComparisonHelper
 import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.CsvHelper
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
@@ -44,6 +45,7 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
  */
 @CompileStatic
 class Matrix implements Iterable<Row>, Cloneable {
+  private static final Logger log = Logger.getLogger(Matrix)
 
   private List<Column> mColumns
   private String mName
@@ -1345,7 +1347,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     try {
       return mColumns.get(columnIndex(columnName))
     } catch (IndexOutOfBoundsException e) {
-      println ("Attempting to find index for '$columnName' but got ${columnIndex(columnName)}")
+      log.error("Attempting to find index for '$columnName' but got ${columnIndex(columnName)}", e)
       throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this matrix (${this.mName}): " + e.getMessage())
     }
   }
@@ -1652,7 +1654,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames
    * @return this modified matrix
-   * @deprecated use dropColumns(String...) instead. Will be removed in 3.6.0
+   * @deprecated use dropExcept(String...) instead
    */
   @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumnsExcept(String... columnNames) {
@@ -1691,7 +1693,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnIndices
    * @return
-   * @deprecated use dropColumns(int...) instead. Will be removed in 3.6.0
+   * @deprecated use dropExcept(int...) instead
    */
   @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumnsExcept(int ... columnIndices) {
@@ -1726,7 +1728,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames
    * @return
-   * @deprecated use drop(String...) instead. Will be removed in 3.6.0
+   * @deprecated use drop(String...) instead
    */
   @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(String... columnNames) {
@@ -1742,7 +1744,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix drop(String... columnNames) {
     if (columnNames.length == 0) {
-      println "no variables to drop specified, nothing to do"
+      log.info('No variables to drop specified, nothing to do')
       return this
     }
     List<Integer> idxs = columnIndices(columnNames as List<String>)
@@ -1778,9 +1780,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnIndices
    * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
+   * @deprecated use drop(int...) instead
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(List<Integer> columnIndices) {
     drop(columnIndices)
   }
@@ -3387,7 +3389,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Convert this matrix to a CSV formatted string.
    *
-   * Defaults: quoteString = '\"', delimiter = ', ', rowDelimiter = '\\n', includeHeader = true
+   * Defaults: quoteString = '\"', delimiter = ',', rowDelimiter = '\\n', includeHeader = true
    *
    * @return the matrix as a CSV string
    */
