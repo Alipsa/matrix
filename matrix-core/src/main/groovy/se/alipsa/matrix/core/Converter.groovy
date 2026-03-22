@@ -2,6 +2,12 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 
+/**
+ * Describes a typed column conversion for builder-style matrix construction.
+ *
+ * <p>A converter binds a target column name, the destination type, and the
+ * closure used to transform incoming values.</p>
+ */
 @CompileStatic
 class Converter {
   String columnName

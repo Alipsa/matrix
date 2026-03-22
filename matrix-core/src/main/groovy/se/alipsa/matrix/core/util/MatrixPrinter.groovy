@@ -4,6 +4,12 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
+/**
+ * Pretty-print helpers for rendering matrices as aligned text tables.
+ *
+ * <p>The output is intended for human inspection in logs, tests, consoles, and
+ * REPL sessions rather than for stable machine-readable serialization.</p>
+ */
 @CompileStatic
 class MatrixPrinter {
 

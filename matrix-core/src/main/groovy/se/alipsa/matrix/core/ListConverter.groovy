@@ -12,6 +12,12 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
+/**
+ * Collection-oriented conversion helpers built on top of {@link ValueConverter}.
+ *
+ * <p>These methods convert lists and arrays to common matrix-friendly types while
+ * preserving element order and reporting the failing index on conversion errors.</p>
+ */
 @CompileStatic
 class ListConverter {
 

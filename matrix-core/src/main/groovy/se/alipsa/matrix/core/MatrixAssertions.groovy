@@ -1,5 +1,11 @@
 package se.alipsa.matrix.core
 
+/**
+ * Assertion helpers for comparing matrices in tests and examples.
+ *
+ * <p>These wrappers delegate to {@link Matrix#equals(Object, boolean, boolean, boolean, Double, boolean, String)}
+ * with repository-standard defaults for structure and numeric tolerance checks.</p>
+ */
 class MatrixAssertions {
 
   static void assertEquals(Matrix expected, Matrix actual, String message = '') {

@@ -2,6 +2,12 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 
+/**
+ * A small multi-map that stores a list of values for each key.
+ *
+ * <p>It supports Groovy subscript syntax for both appending values and reading
+ * individual elements from the list associated with a key.</p>
+ */
 @CompileStatic
 class MapList<M,L> {
 

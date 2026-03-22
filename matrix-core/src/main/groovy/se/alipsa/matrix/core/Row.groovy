@@ -6,6 +6,12 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
+/**
+ * A live row view backed by a parent {@link Matrix}.
+ *
+ * <p>Reads and in-place updates are reflected in the owning matrix, while
+ * structural list operations such as adding or removing elements are rejected.</p>
+ */
 @CompileStatic
 class Row implements GroovyObject, List<Object> {
     private int rowNumber
