@@ -1747,15 +1747,32 @@ class MatrixTest {
   @Test
   void testChunkSplit() {
     Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
-    // PlantGrowth.csv has 30 rows, split(4) uses collate(30/4) = collate(7)
-    // This creates chunks of 7 rows: 5 chunks total [7, 7, 7, 7, 2]
+    // PlantGrowth.csv has 30 rows, split(4) creates chunks of at most 4 rows.
     List<Matrix> chunks = m.split(4)
-    assertEquals(5, chunks.size())
-    assertEquals(m.subset(0..6).withMatrixName("${m.matrixName}_0"), chunks[0])
-    assertEquals(m.subset(7..13).withMatrixName("${m.matrixName}_1"), chunks[1])
-    assertEquals(m.subset(14..20).withMatrixName("${m.matrixName}_2"), chunks[2])
-    assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
-    assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
+    assertEquals(8, chunks.size())
+    assertEquals(m.subset(0..3).withMatrixName("${m.matrixName}_0"), chunks[0])
+    assertEquals(m.subset(4..7).withMatrixName("${m.matrixName}_1"), chunks[1])
+    assertEquals(m.subset(8..11).withMatrixName("${m.matrixName}_2"), chunks[2])
+    assertEquals(m.subset(12..15).withMatrixName("${m.matrixName}_3"), chunks[3])
+    assertEquals(m.subset(16..19).withMatrixName("${m.matrixName}_4"), chunks[4])
+    assertEquals(m.subset(20..23).withMatrixName("${m.matrixName}_5"), chunks[5])
+    assertEquals(m.subset(24..27).withMatrixName("${m.matrixName}_6"), chunks[6])
+    assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_7"), chunks[7])
+  }
+
+  @Test
+  void testChunkSplitRejectsInvalidChunkSize() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+
+    def zeroError = assertThrows(IllegalArgumentException) {
+      m.split(0)
+    }
+    assertEquals('chunkSize must be greater than 0', zeroError.message)
+
+    def negativeError = assertThrows(IllegalArgumentException) {
+      m.split(-1)
+    }
+    assertEquals('chunkSize must be greater than 0', negativeError.message)
   }
 
   @Test

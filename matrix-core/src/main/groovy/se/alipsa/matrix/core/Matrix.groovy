@@ -3151,16 +3151,47 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Splits this matrix into chunks of approximately chunkSize rows.
    * The last chunk may contain fewer rows.
    *
-   * @param chunkSize the approximate number of rows per chunk
+   * @param chunkSize the maximum number of rows per chunk
    * @return a list of Matrix objects
+   * @throws IllegalArgumentException if chunkSize is less than 1
    */
   List<Matrix> split(int chunkSize) {
-    def rowChunks = this.collate( rowCount().intdiv( chunkSize ) )
+    if (chunkSize <= 0) {
+      throw new IllegalArgumentException("chunkSize must be greater than 0")
+    }
+    def rowChunks = this.collate(chunkSize)
     List<Matrix> chunks = []
     rowChunks.eachWithIndex { it, idx ->
       chunks << builder(matrixName + "_" + idx).rowList(it).build()
     }
     chunks
+  }
+
+  /**
+   * split is used to create a map of matrices for each unique value in the column.
+   * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
+   *
+   * @param columnName
+   * @return a map of matrices for each unique value in the column where the key is the value
+   */
+  Map<?, Matrix> split(String columnName) {
+    List col = column(columnName)
+    Map<Object, List<Integer>> groups = new HashMap<>()
+    for (int i = 0; i < col.size(); i++) {
+      groups.computeIfAbsent(col[i], k -> []).add(i)
+    }
+    Map<Object, Matrix> tables = [:]
+    for (entry in groups) {
+      tables.put(entry.key,
+          builder()
+              .matrixName(String.valueOf(entry.key))
+              .columnNames(columnNames())
+              .rows(rows(entry.value) as List<List>)
+              .types(types())
+              .build()
+      )
+    }
+    return tables
   }
 
   /**
@@ -3201,33 +3232,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
 
     return chunks
-  }
-
-  /**
-   * split is used to create a map of matrices for each unique value in the column.
-   * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
-   *
-   * @param columnName
-   * @return a map of matrices for each unique value in the column where the key is the value
-   */
-  Map<?, Matrix> split(String columnName) {
-    List col = column(columnName)
-    Map<Object, List<Integer>> groups = new HashMap<>()
-    for (int i = 0; i < col.size(); i++) {
-      groups.computeIfAbsent(col[i], k -> []).add(i)
-    }
-    Map<Object, Matrix> tables = [:]
-    for (entry in groups) {
-      tables.put(entry.key,
-          builder()
-              .matrixName(String.valueOf(entry.key))
-              .columnNames(columnNames())
-              .rows(rows(entry.value) as List<List>)
-              .types(types())
-              .build()
-      )
-    }
-    return tables
   }
 
   /**
