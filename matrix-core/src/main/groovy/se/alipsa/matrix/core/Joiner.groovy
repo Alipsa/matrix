@@ -1,5 +1,11 @@
 package se.alipsa.matrix.core
 
+/**
+ * Join operations for combining matrices on one or more key columns.
+ *
+ * <p>The current implementation provides hash-based merge helpers for inner and
+ * left joins while preserving the column order expected by existing callers.</p>
+ */
 class Joiner {
 
     /**
