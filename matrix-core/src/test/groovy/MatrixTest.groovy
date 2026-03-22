@@ -398,6 +398,22 @@ class MatrixTest {
   }
 
   @Test
+  void testTailPadsHeaderLikeHead() {
+    def table = Matrix.builder()
+        .data([
+            'place'    : [1, 20, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start'    : ['2021-12-01', '2022-07-10', '2023-05-27']
+        ])
+        .types([int, String, String])
+        .build()
+
+    def tail = table.tail(2, true)
+
+    assertTrue(tail.startsWith('place\tfirstname\tstart     \n'), tail)
+  }
+
+  @Test
   void testSelectRows() {
     def data = [
         'place'    : [1, 2, 3],

@@ -177,9 +177,10 @@ class ValueConverterTest {
 
   @Test
   void testAsSqlTime() {
+    assertEquals(Time.valueOf("12:34:56"), ValueConverter.asSqlTime("12:34:56"))
+    assertEquals(Time.valueOf("00:00:00"), ValueConverter.asSqlTime("00:00:00"))
+    assertNull(ValueConverter.asSqlTime(null))
     assertEquals(Time.valueOf("12:34:56"), ValueConverter.asSqlTIme("12:34:56"))
-    assertEquals(Time.valueOf("00:00:00"), ValueConverter.asSqlTIme("00:00:00"))
-    assertNull(ValueConverter.asSqlTIme(null))
   }
 
   @Test

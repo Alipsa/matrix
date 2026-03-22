@@ -40,11 +40,12 @@ class MatrixPrinter {
   static String tail(Matrix m, int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, m.rowCount())
-    def headers = m.columnNames()
+    List<String> colNames = m.columnNames()
+    List<Integer> columnLengths = colNames.collect { colName -> m.maxContentLength(colName, includeHeader, maxColumnLength) }
     if (includeHeader) {
-      sb.append(String.join(delimiter, headers)).append(lineEnding)
+      List<String> headerRow = padRow(m, colNames, columnLengths)
+      sb.append(String.join(delimiter, headerRow)).append(lineEnding)
     }
-    List<Integer> columnLengths = headers.collect { colName -> m.maxContentLength(colName, includeHeader, maxColumnLength) }
     for (int i = m.rowCount() - nRows; i < m.rowCount(); i++) {
       List<String> stringRow = padRow(m, m.row(i), columnLengths)
       sb.append(String.join(delimiter, stringRow)).append(lineEnding)
