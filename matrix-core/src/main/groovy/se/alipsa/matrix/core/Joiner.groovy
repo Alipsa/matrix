@@ -15,6 +15,12 @@ class Joiner {
     static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false) {
         def xColIndex = x.columnIndex(by.x)
         def yColIndex = y.columnIndex(by.y)
+        if (xColIndex < 0) {
+            throw new IllegalArgumentException("Join column '${by.x}' does not exist in matrix '${x.matrixName}'")
+        }
+        if (yColIndex < 0) {
+            throw new IllegalArgumentException("Join column '${by.y}' does not exist in matrix '${y.matrixName}'")
+        }
         def nYcol = y.columnCount()
 
         // Build a hash map from y indexed by the join column for O(1) lookup

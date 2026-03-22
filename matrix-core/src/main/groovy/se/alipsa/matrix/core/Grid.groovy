@@ -58,15 +58,15 @@ class Grid<T> implements Iterable<List<T>> {
 
   Grid(int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
-    for (row in 1..nrow) {
-      data << new ArrayList<T>(ncol)
+    nrow.times {
+      data << ([null] * ncol) as List<T>
     }
   }
 
 
   Grid(T value, int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
-    for (row in 1..nrow) {
+    nrow.times {
       data << ([value] * ncol) as List<T>
     }
   }
@@ -96,9 +96,8 @@ class Grid<T> implements Iterable<List<T>> {
    *
    * @param position the row index to insert the row at
    * @param row the row data
-   * @return the mutated Grid
    */
-  boolean add(int position, List<T> row) {
+  void add(int position, List<T> row) {
     data.add(position, row)
   }
 
@@ -175,7 +174,7 @@ class Grid<T> implements Iterable<List<T>> {
    * variables (columns) in the Grid with the keys 'observations' and 'variables'
    */
   Map<String, Integer> dimensions() {
-    ['observations': data.size(), 'variables': data.collect() { it.size() }.max()]
+    ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.collect { it.size() }.max()]
   }
 
   String toString() {

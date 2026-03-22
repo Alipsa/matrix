@@ -77,4 +77,28 @@ class JoinerTest {
             lastName  : ["Carpenter", "Bowman", "Carson"]
         ]).build(), g)
   }
+
+  @Test
+  void testMergeRejectsMissingJoinColumn() {
+    def employees = Matrix.builder()
+        .matrixName('employees')
+        .data([
+            id  : 1..2,
+            name: ['Rick', 'Dan']
+        ])
+        .build()
+    def names = Matrix.builder()
+        .matrixName('names')
+        .data([
+            employeeId: 1..2,
+            lastName  : ['Smith', 'Carpenter']
+        ])
+        .build()
+
+    def error = assertThrows(IllegalArgumentException) {
+      Joiner.merge(employees, names, [x: 'missing', y: 'employeeId'])
+    }
+
+    assertEquals("Join column 'missing' does not exist in matrix 'employees'", error.message)
+  }
 }

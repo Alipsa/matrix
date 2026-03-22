@@ -246,6 +246,19 @@ class LoggerTest {
   }
 
   @Test
+  void testPlatformNewlinePlaceholderPreservesLineBreak() {
+    Logger log = Logger.getLogger("NewlineTest")
+
+    def output = captureOutput {
+      log.info("First line%nSecond line")
+    }
+
+    String allOutput = output.out + output.err
+    assertTrue(allOutput.contains("First line${System.lineSeparator()}Second line"),
+        "Output should contain a platform newline inside the log message")
+  }
+
+  @Test
   void testExceptionLogging() {
     Logger log = Logger.getLogger("ExceptionTest")
 
