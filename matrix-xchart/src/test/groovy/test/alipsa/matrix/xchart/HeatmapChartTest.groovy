@@ -1,5 +1,7 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.HeatMapChart
@@ -10,8 +12,6 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 import se.alipsa.matrix.xchart.HeatmapChart
 import se.alipsa.matrix.xchart.MatrixTheme
-
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class HeatmapChartTest {
 

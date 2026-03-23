@@ -1,5 +1,9 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQueryOptions
 import org.junit.jupiter.api.Tag
@@ -13,10 +17,6 @@ import se.alipsa.matrix.bigquery.BqException
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 @Testcontainers
 @Tag("flaky")  // BigQuery emulator testcontainer has threading issues - see issue #XXX

@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import testutil.Slow
@@ -9,9 +12,6 @@ import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleXBinned
 import se.alipsa.matrix.gg.scale.ScaleYBinned
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Parameterised test suite for ScaleXBinned and ScaleYBinned.

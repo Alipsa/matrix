@@ -9,6 +9,9 @@
  * 5. Visualizing data                                        *
  *************************************************************/
 
+import static se.alipsa.matrix.core.ListConverter.toDates
+import static se.alipsa.matrix.core.ValueConverter.*
+
 import org.apache.commons.csv.CSVFormat
 
 import se.alipsa.matrix.core.*
@@ -20,9 +23,6 @@ import se.alipsa.matrix.xchart.*
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.YearMonth
-
-import static se.alipsa.matrix.core.ListConverter.toDates
-import static se.alipsa.matrix.core.ValueConverter.*
 
 // Create a directory to store our results
 File analysisResults = new File("analysis_results")

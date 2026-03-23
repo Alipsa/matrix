@@ -1,5 +1,8 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.RadarChart
@@ -8,9 +11,6 @@ import org.knowm.xchart.style.Styler
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Normalize
-
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class RadarChartTest {
 

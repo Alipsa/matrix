@@ -1,13 +1,13 @@
 package se.alipsa.matrix.core.util
 
+import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.ValueConverter
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
 
 /**
  * Internal helper for CSV formatting operations.

@@ -1,5 +1,10 @@
 package charm.render.geom
 
+import static charm.render.CharmRenderTestUtil.loadSimpleCsvResource
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -9,11 +14,6 @@ import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
-
-import static charm.render.CharmRenderTestUtil.loadSimpleCsvResource
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.charm.Charts.plot
 
 @Slow
 class P0GeomRendererTest {

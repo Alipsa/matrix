@@ -1,8 +1,8 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.Ellipse
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit tests for the Ellipse class, covering mathematical correctness,

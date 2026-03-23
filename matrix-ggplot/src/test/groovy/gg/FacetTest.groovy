@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.facet.FormulaParser
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class FacetTest {
 

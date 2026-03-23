@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.*
+
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
@@ -5,9 +8,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.*
 
 class PngTest {
 

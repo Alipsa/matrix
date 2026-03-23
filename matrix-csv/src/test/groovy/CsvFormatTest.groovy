@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -9,8 +11,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CsvFormatTest {
 

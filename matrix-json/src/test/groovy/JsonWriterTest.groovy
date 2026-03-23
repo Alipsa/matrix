@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -6,8 +8,6 @@ import se.alipsa.matrix.json.JsonReader
 import se.alipsa.matrix.json.JsonWriter
 
 import java.nio.file.Path
-
-import static org.junit.jupiter.api.Assertions.*
 
 class JsonWriterTest {
 

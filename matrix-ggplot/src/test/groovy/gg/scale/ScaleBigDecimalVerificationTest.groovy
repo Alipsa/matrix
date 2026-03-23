@@ -1,5 +1,7 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import gg.BaseTest
 import org.junit.jupiter.api.Test
 
@@ -7,8 +9,6 @@ import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 import se.alipsa.matrix.gg.scale.ScaleXLog10
 import se.alipsa.matrix.gg.scale.ScaleXSqrt
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Manual verification tests for BigDecimal-based scale implementations.

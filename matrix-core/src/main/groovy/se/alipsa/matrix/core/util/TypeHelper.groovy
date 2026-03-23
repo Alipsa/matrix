@@ -1,8 +1,8 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import static se.alipsa.matrix.core.util.ClassUtils.convertPrimitivesToWrapper
+
+import groovy.transform.CompileStatic
 
 /**
  * Internal helper for type management operations.

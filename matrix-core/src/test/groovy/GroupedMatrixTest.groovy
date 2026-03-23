@@ -1,10 +1,10 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.GroupedMatrix
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
-
-import static org.junit.jupiter.api.Assertions.*
 
 class GroupedMatrixTest {
 

@@ -1,11 +1,11 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gsheets.GsImporter
 import se.alipsa.matrix.gsheets.GsUtil
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit tests for GsImporter utility methods.

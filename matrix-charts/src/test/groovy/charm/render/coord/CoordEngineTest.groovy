@@ -1,12 +1,12 @@
 package charm.render.coord
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.coord.CoordEngine
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CoordEngineTest {
 

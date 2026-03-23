@@ -1,13 +1,13 @@
 package se.alipsa.matrix.core
 
+import static ValueConverter.asBigDecimal
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
-
-import static ValueConverter.asBigDecimal
 
 /**
  * Basic functions for simple statistical calculations such as sum, mean, median, variance, standard deviation etc.

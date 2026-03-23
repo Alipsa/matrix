@@ -1,12 +1,5 @@
 package gg
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.aes.ColumnRef
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertThrows
@@ -15,6 +8,13 @@ import static se.alipsa.matrix.gg.GgPlot.aes
 import static se.alipsa.matrix.gg.GgPlot.cols
 import static se.alipsa.matrix.gg.GgPlot.geom_point
 import static se.alipsa.matrix.gg.GgPlot.ggplot
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.aes.ColumnRef
 
 class ColumnRefTest {
 

@@ -1,12 +1,12 @@
 package gg.coord
 
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for map coordinate systems: coord_map, coord_quickmap, coord_sf.

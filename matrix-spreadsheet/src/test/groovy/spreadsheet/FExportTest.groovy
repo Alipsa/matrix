@@ -1,5 +1,8 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.core.ListConverter.*
+
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
@@ -11,9 +14,6 @@ import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static se.alipsa.matrix.core.ListConverter.*
 
 class FExportTest {
 

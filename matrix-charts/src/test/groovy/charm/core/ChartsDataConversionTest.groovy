@@ -1,14 +1,14 @@
 package charm.core
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.PlotSpec
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.charm.Charts.chart
 import static se.alipsa.matrix.charm.Charts.plot
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.PlotSpec
 
 class ChartsDataConversionTest {
 

@@ -1,14 +1,14 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.facet.Labeller
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for facet labeller functions.

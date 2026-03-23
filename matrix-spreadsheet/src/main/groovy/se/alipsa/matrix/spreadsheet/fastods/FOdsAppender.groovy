@@ -1,5 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
@@ -23,9 +26,6 @@ import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.XMLStreamWriter
-
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
 
 @CompileStatic
 class FOdsAppender {

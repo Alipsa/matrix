@@ -1,5 +1,9 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import groovy.transform.CompileStatic
 
 import com.fasterxml.jackson.core.JsonFactory
@@ -10,10 +14,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.bigquery.Bq
 
 import java.io.StringWriter
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 @CompileStatic
 class SanitizeStringTest {

@@ -1,5 +1,8 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.*
+
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
@@ -20,9 +23,6 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.*
 
 class SpreadsheetWriterTest {
 

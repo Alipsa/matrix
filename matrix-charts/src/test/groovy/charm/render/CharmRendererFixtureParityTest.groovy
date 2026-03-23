@@ -1,11 +1,5 @@
 package charm.render
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.GgChart
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
@@ -16,6 +10,12 @@ import static se.alipsa.matrix.gg.GgPlot.geom_line
 import static se.alipsa.matrix.gg.GgPlot.geom_point
 import static se.alipsa.matrix.gg.GgPlot.ggplot
 import static se.alipsa.matrix.gg.GgPlot.labs
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.GgChart
 
 class CharmRendererFixtureParityTest {
 

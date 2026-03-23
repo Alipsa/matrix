@@ -1,5 +1,7 @@
 package charm.render.stat
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.CharmGeomType
@@ -12,8 +14,6 @@ import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.StatEngine
 import se.alipsa.matrix.charm.render.stat.StatUtils
-
-import static org.junit.jupiter.api.Assertions.*
 
 class P1StatTest {
 

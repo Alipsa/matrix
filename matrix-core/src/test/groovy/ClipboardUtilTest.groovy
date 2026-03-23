@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core.util
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import java.awt.GraphicsEnvironment
@@ -8,8 +10,6 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ClipboardUtilTest {
 

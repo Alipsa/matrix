@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -12,9 +15,6 @@ import se.alipsa.matrix.gg.scale.ScaleShapeIdentity
 import se.alipsa.matrix.gg.scale.ScaleSizeIdentity
 
 import java.util.stream.Stream
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Shared contract tests for all six Scale*Identity types.

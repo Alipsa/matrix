@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.scale.NewScaleMarker
 
 import java.util.Locale
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for gg compatibility of per-layer scale overrides via new_scale_color/new_scale_fill.

@@ -1,5 +1,7 @@
 package test.alipsa.matrix.smile
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import smile.data.DataFrame
 import smile.data.type.*
@@ -10,8 +12,6 @@ import se.alipsa.matrix.smile.DataframeConverter
 
 import java.sql.Timestamp
 import java.time.*
-
-import static org.junit.jupiter.api.Assertions.*
 
 class DataframeConverterTest {
 

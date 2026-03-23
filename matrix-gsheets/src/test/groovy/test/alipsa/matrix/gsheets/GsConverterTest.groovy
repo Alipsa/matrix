@@ -1,5 +1,8 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gsheets.GsConverter.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.*
@@ -8,9 +11,6 @@ import se.alipsa.matrix.gsheets.GsConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gsheets.GsConverter.*
 
 class GsConverterTest {
   @Test

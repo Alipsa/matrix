@@ -1,5 +1,7 @@
 package test.alipsa.matrix.arff
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.*
 
 import se.alipsa.matrix.arff.ArffReadOptions
@@ -12,8 +14,6 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.file.Files
 import java.nio.file.Path
 import java.text.SimpleDateFormat
-
-import static org.junit.jupiter.api.Assertions.*
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation)
 class MatrixArffTest {

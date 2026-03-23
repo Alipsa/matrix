@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -8,9 +11,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleShape
 import se.alipsa.matrix.gg.scale.ScaleShapeBinned
 import se.alipsa.matrix.gg.scale.ScaleShapeManual
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for shape scales.

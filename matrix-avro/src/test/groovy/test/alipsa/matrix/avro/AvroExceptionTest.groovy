@@ -1,12 +1,12 @@
 package test.alipsa.matrix.avro
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class AvroExceptionTest {
 

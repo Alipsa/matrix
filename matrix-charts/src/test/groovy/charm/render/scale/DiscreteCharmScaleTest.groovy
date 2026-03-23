@@ -1,11 +1,11 @@
 package charm.render.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
-
-import static org.junit.jupiter.api.Assertions.*
 
 class DiscreteCharmScaleTest {
 

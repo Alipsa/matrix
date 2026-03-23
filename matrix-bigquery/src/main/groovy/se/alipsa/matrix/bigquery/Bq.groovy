@@ -1,5 +1,7 @@
 package se.alipsa.matrix.bigquery
 
+import static se.alipsa.matrix.bigquery.TypeMapper.*
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
@@ -29,8 +31,6 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Collections
-
-import static se.alipsa.matrix.bigquery.TypeMapper.*
 
 /**
  * BigQuery client wrapper providing Matrix-oriented operations for Google BigQuery.

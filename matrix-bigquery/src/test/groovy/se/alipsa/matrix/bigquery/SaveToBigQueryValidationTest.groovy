@@ -1,11 +1,11 @@
 package se.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
 
 /**
  * These tests live in `se.alipsa.matrix.bigquery` so they can access the

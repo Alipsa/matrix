@@ -1,9 +1,9 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.Accuracy
-
-import static org.junit.jupiter.api.Assertions.*
 
 class AccuracyTest {
 

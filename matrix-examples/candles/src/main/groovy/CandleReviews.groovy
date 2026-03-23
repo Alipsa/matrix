@@ -18,6 +18,15 @@
  */
 
 
+import static java.lang.Math.sqrt
+import static java.time.Month.JANUARY
+import static tech.tablesaw.aggregate.AggregateFunctions.count
+import static tech.tablesaw.aggregate.AggregateFunctions.countTrue
+import static tech.tablesaw.api.BooleanColumn.create as bCol
+import static tech.tablesaw.api.DoubleColumn.create as dCol
+import static tech.tablesaw.api.StringColumn.create as sCol
+import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
+
 import tech.tablesaw.io.xlsx.XlsxReader
 import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.components.Figure
@@ -27,15 +36,6 @@ import tech.tablesaw.plotly.traces.ScatterTrace
 
 import java.time.LocalDateTime
 import java.util.function.Function
-
-import static java.lang.Math.sqrt
-import static java.time.Month.JANUARY
-import static tech.tablesaw.aggregate.AggregateFunctions.count
-import static tech.tablesaw.aggregate.AggregateFunctions.countTrue
-import static tech.tablesaw.api.BooleanColumn.create as bCol
-import static tech.tablesaw.api.DoubleColumn.create as dCol
-import static tech.tablesaw.api.StringColumn.create as sCol
-import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
 
 var url = getClass().getResource('/data/Scented_all.xlsx')
 table = new XlsxReader().read(builder(url).build())

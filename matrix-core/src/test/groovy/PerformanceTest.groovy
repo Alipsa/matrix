@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
@@ -6,8 +8,6 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
 import java.util.concurrent.TimeUnit
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Performance sanity checks for rolling, cumulative, and diff operations.

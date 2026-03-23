@@ -1,13 +1,13 @@
+import static KMeansTestData.RANDOM_SEED
+import static KMeansTestData.gaussianClusters
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
-
-import static KMeansTestData.RANDOM_SEED
-import static KMeansTestData.gaussianClusters
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * Tests the KMeans clustering algorithm using a synthetic dataset.

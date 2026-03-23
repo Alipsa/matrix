@@ -1,5 +1,9 @@
 package gg.geom
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -8,10 +12,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.geom.GeomQq
 import se.alipsa.matrix.gg.geom.GeomQqLine
 import se.alipsa.matrix.gg.layer.StatType
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GeomQqTest {
 

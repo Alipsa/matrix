@@ -1,12 +1,12 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ValueConverter.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.MapList
 
 import java.time.LocalDate
 import java.time.YearMonth
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ValueConverter.*
 
 class MapListTest {
 

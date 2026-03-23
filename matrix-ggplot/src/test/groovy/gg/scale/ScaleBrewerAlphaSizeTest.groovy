@@ -1,5 +1,7 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleAlphaBinned
@@ -14,8 +16,6 @@ import se.alipsa.matrix.gg.scale.ScaleSizeArea
 import se.alipsa.matrix.gg.scale.ScaleSizeBinned
 import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 import se.alipsa.matrix.gg.scale.ScaleSizeDiscrete
-
-import static org.junit.jupiter.api.Assertions.assertEquals
 
 class ScaleBrewerAlphaSizeTest {
 

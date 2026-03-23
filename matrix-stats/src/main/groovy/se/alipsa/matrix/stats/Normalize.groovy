@@ -1,12 +1,12 @@
 package se.alipsa.matrix.stats
 
+import static se.alipsa.matrix.core.ValueConverter.convert
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
-
-import static se.alipsa.matrix.core.ValueConverter.convert
 
 /**
  * Implements various ways of normalizing (scaling) data e.g.

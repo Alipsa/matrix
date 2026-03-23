@@ -1,11 +1,11 @@
 package normality
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.normality.KSquared
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for D'Agostino's K² test.

@@ -1,5 +1,9 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
@@ -14,10 +18,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 @CompileStatic
 class ConvertObjectValueTest {

@@ -1,13 +1,13 @@
-import org.junit.jupiter.api.Test
-import smile.clustering.KMeans
-
-import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
-
 import static KMeansTestData.RANDOM_SEED
 import static KMeansTestData.gaussianClusters
 import static java.lang.Math.pow
 import static java.lang.Math.sqrt
 import static org.junit.jupiter.api.Assertions.assertEquals
+
+import org.junit.jupiter.api.Test
+import smile.clustering.KMeans
+
+import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 
 class KMeansComparisonTest {
 

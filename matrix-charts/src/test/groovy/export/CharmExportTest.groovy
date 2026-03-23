@@ -1,5 +1,7 @@
 package export
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
@@ -22,8 +24,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import javax.imageio.ImageIO
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for CharmChart export functionality that remains in matrix-charts.

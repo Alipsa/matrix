@@ -1,5 +1,7 @@
 package chart
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -11,8 +13,6 @@ import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Compatibility tests verifying that {@link Plot} methods produce valid

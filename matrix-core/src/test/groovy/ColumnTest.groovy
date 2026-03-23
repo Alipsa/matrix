@@ -1,10 +1,10 @@
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Stat
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
 
 class ColumnTest {
 

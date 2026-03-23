@@ -1,5 +1,7 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.theme.GGPlot2Theme
@@ -13,8 +15,6 @@ import se.alipsa.matrix.xchart.LineChart
 import se.alipsa.matrix.xchart.MatrixTheme
 import se.alipsa.matrix.xchart.PieChart
 import se.alipsa.matrix.xchart.ScatterChart
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Comprehensive edge case tests for matrix-xchart.

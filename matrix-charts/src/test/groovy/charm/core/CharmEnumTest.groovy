@@ -1,15 +1,15 @@
 package charm.core
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertSame
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.LinetypeName
 import se.alipsa.matrix.charm.ShapeName
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertSame
 
 class CharmEnumTest {
 

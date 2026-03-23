@@ -1,10 +1,10 @@
 package timeseries
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.timeseries.Adf
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Augmented Dickey-Fuller test.

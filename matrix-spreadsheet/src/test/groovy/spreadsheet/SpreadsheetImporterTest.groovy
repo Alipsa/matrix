@@ -1,5 +1,12 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
+import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -13,13 +20,6 @@ import java.io.InputStream
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
-import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
 class SpreadsheetImporterTest {
 

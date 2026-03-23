@@ -1,9 +1,9 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.ml.SmileDimensionality
-
-import static org.junit.jupiter.api.Assertions.*
 
 class SmileDimensionalityTest {
 

@@ -1,5 +1,7 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.*
+
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.*
@@ -17,8 +19,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * The GCloud testcontainer project is not yet mature enough to rely on so

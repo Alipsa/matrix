@@ -1,5 +1,7 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.*
+
 import groovy.transform.CompileStatic
 
 import com.google.cloud.bigquery.StandardSQLTypeName
@@ -24,8 +26,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-
-import static org.junit.jupiter.api.Assertions.*
 
 @Tag("external")
 @CompileStatic

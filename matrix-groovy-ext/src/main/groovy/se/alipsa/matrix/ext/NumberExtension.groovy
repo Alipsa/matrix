@@ -80,9 +80,9 @@ class NumberExtension {
   static final BigDecimal E32 = 2.718281828459045235360287471352
 
   /** Natural logarithm of 2 to 32 significant digits */
-  private static final BigDecimal LN2 = new BigDecimal('0.69314718055994530941723212145818')
+  private static final BigDecimal LN2 = 0.69314718055994530941723212145818
   /** Natural logarithm of 10 to 32 significant digits */
-  private static final BigDecimal LN10 = new BigDecimal('2.30258509299404568401799145468436')
+  private static final BigDecimal LN10 = 2.30258509299404568401799145468436
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -245,7 +245,7 @@ class NumberExtension {
       throw new IllegalArgumentException("Logarithm base must be positive: ${base}")
     }
     if (baseValue == BigDecimal.ONE) {
-      throw new IllegalArgumentException("Logarithm base cannot be 1: log base 1 is undefined")
+      throw new IllegalArgumentException('Logarithm base cannot be 1: log base 1 is undefined')
     }
 
     lnSeries(self).divide(lnSeries(baseValue), MathContext.DECIMAL64)
@@ -560,7 +560,7 @@ class NumberExtension {
     BigDecimal term = reducedAngle
     BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
-    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
 
     while (true) {
       // term = term * (-x^2) / ((2n)(2n+1))
@@ -618,7 +618,7 @@ class NumberExtension {
     BigDecimal term = BigDecimal.ONE
     BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
-    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
 
     while (true) {
       // term = term * (-x^2) / ((2n-1)(2n))
@@ -733,12 +733,11 @@ class NumberExtension {
     BigDecimal cosVal = cos(self)
 
     if (cosVal == 0) {
-      throw new ArithmeticException("Tangent undefined (cos is 0)")
+      throw new ArithmeticException('Tangent undefined (cos is 0)')
     }
 
     return sinVal / cosVal
   }
-
 
   /**
    * Returns the arctangent (inverse tangent) of this Number as a BigDecimal.
@@ -796,7 +795,7 @@ class NumberExtension {
     int iteration = 1
 
     // Threshold: stop when changes are smaller than the precision we care about
-    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
 
     while (true) {
       // Calculate next numerator term: term * -x^2
@@ -924,4 +923,5 @@ class NumberExtension {
     }
     return result
   }
+
 }

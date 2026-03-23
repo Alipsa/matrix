@@ -1,10 +1,10 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Sampler
-
-import static org.junit.jupiter.api.Assertions.*
 
 class SamplerTest {
 

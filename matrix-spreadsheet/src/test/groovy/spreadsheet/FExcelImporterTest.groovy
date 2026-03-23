@@ -1,5 +1,9 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
+import static se.alipsa.matrix.core.ValueConverter.asDouble
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -7,10 +11,6 @@ import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
-import static se.alipsa.matrix.core.ValueConverter.asDouble
 
 class FExcelImporterTest {
 

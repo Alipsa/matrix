@@ -1,10 +1,10 @@
 package se.alipsa.matrix.gg.coord
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileStatic
 
 import java.util.Locale
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Map projection coordinate system for lon/lat data.

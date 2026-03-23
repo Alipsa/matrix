@@ -1,5 +1,9 @@
 package charm.render.scale
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Scale
@@ -10,10 +14,6 @@ import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ScaleBreakLabelRuntimeTest {
 

@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.ListConverter
@@ -8,8 +10,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ListConverterTest {
 

@@ -1,12 +1,12 @@
 package gg
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.gg.aes.AfterScale
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.gg.aes.AfterScale
 
 class GgPlotHelpersTest {
 

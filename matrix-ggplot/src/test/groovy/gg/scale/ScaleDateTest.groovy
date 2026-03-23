@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.scale.ScaleXDatetime
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class ScaleDateTest {
 

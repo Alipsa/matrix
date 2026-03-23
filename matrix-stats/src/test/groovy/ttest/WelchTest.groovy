@@ -1,12 +1,12 @@
 package ttest
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.datasets.*
 import se.alipsa.matrix.stats.ttest.TtestResult
 import se.alipsa.matrix.stats.ttest.Welch
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for Welch's t-test implementation.

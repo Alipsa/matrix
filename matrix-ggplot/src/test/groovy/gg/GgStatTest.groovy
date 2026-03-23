@@ -1,12 +1,12 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.stat.GgStat
-
-import static org.junit.jupiter.api.Assertions.*
 
 class GgStatTest {
 

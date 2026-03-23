@@ -1,5 +1,10 @@
 package gg.geom
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -7,11 +12,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.sf.SfType
 import se.alipsa.matrix.charm.sf.WktReader
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for simple feature (sf) rendering and WKT parsing.

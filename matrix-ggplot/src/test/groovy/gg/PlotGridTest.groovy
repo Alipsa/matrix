@@ -1,14 +1,14 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.dom4j.Element
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Integration tests for the {@code plot_grid} API in GgPlot, verifying

@@ -1,5 +1,9 @@
 package charm.render
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.charm.Charts.plot
+import static se.alipsa.matrix.charm.Charts.plotGrid
+
 import org.dom4j.Attribute
 import org.dom4j.Element
 import org.junit.jupiter.api.Test
@@ -9,10 +13,6 @@ import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.charm.Charts.plot
-import static se.alipsa.matrix.charm.Charts.plotGrid
 
 class PlotGridTest {
 

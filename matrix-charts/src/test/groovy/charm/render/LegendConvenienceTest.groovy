@@ -1,5 +1,9 @@
 package charm.render
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Chart
@@ -9,10 +13,6 @@ import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.datasets.Dataset
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static se.alipsa.matrix.charm.Charts.plot
 
 class LegendConvenienceTest {
 

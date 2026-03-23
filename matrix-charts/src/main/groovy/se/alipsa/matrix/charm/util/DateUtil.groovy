@@ -1,11 +1,11 @@
 package se.alipsa.matrix.charm.util
 
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR
+
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.format.TextStyle
-
-import static java.time.temporal.ChronoField.MONTH_OF_YEAR
 
 class DateUtil {
 

@@ -1,5 +1,8 @@
 package gg.geom
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -9,9 +12,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.geom.GeomDensity
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomViolin
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GeomRugViolinDensityTest {
 

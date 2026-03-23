@@ -155,7 +155,7 @@ subprojects {
     spotless {
       groovy {
         excludeJava()
-        importOrder('groovy', '', 'se.alipsa', 'java', 'javax', '\\#')
+        importOrder('\\#', 'groovy', '', 'se.alipsa', 'java', 'javax')
         trimTrailingWhitespace()
         endWithNewline()
       }

@@ -1,12 +1,12 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.CorrelationHeatmapChart
-
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class CorrelationHeatmapChartTest {
 

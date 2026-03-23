@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 
@@ -6,8 +8,6 @@ import se.alipsa.matrix.csv.CsvOption
 import se.alipsa.matrix.csv.CsvReader
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CsvReaderTest {
 

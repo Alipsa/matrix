@@ -1,5 +1,8 @@
 package charm.render.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -15,9 +18,6 @@ import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.core.Matrix
 
 import java.util.Locale
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.charm.Charts.plot
 
 /**
  * Tests for per-layer scale overrides in Charm.

@@ -1,3 +1,8 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.*
+import static se.alipsa.matrix.core.Stat.*
+import static se.alipsa.matrix.core.ValueConverter.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Grid
@@ -8,11 +13,6 @@ import se.alipsa.matrix.core.Summary
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.YearMonth
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.*
-import static se.alipsa.matrix.core.Stat.*
-import static se.alipsa.matrix.core.ValueConverter.*
 
 class StatTest {
 

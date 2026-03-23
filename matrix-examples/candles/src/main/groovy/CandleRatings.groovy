@@ -16,6 +16,11 @@
  * Original code is here: https://github.com/paulk-asert/groovy-data-science/blob/master/subprojects/Candles/src/main/groovy/CandleRatings.groovy
  * Slightly modified to behave nicely in Gade
  */
+import static java.time.Month.JANUARY
+import static tech.tablesaw.aggregate.AggregateFunctions.mean
+import static tech.tablesaw.api.QuerySupport.and
+import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
+
 import tech.tablesaw.api.*
 import tech.tablesaw.io.xlsx.XlsxReader
 import tech.tablesaw.plotly.components.*
@@ -27,11 +32,6 @@ import se.alipsa.gi.swing.*
 
 import java.time.*
 import java.util.function.Function
-
-import static java.time.Month.JANUARY
-import static tech.tablesaw.aggregate.AggregateFunctions.mean
-import static tech.tablesaw.api.QuerySupport.and
-import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
 
 // Based on https://github.com/paulk-asert/groovy-data-science/blob/master/subprojects/Candles/src/main/groovy/CandleRatings.groovy
 

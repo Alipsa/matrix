@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -8,8 +10,6 @@ import se.alipsa.matrix.csv.CsvWriteOptions
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CsvFormatProviderTest {
 

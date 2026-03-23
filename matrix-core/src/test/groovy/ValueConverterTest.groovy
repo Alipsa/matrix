@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.ValueConverter
@@ -7,8 +9,6 @@ import java.sql.Timestamp
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.*
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ValueConverterTest {
 

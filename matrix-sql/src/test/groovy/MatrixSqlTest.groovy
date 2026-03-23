@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import groovy.sql.Sql
 
 import it.AbstractDbTest
@@ -15,8 +17,6 @@ import se.alipsa.matrix.sql.MatrixSqlFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
 
 class MatrixSqlTest {
 

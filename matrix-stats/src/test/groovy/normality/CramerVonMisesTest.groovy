@@ -1,10 +1,10 @@
 package normality
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.normality.CramerVonMises
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Cramér-von Mises normality test.

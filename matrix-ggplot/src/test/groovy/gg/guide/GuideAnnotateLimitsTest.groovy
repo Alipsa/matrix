@@ -1,5 +1,8 @@
 package gg.guide
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import gg.BaseTest
 import org.junit.jupiter.api.Test
 
@@ -11,9 +14,6 @@ import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GuideAnnotateLimitsTest {
 

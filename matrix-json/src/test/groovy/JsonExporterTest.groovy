@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -8,9 +11,6 @@ import se.alipsa.matrix.json.JsonImporter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class JsonExporterTest {
 

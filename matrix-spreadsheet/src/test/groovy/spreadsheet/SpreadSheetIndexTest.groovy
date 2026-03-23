@@ -1,5 +1,7 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -9,8 +11,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 
 import java.nio.file.Paths
-
-import static org.junit.jupiter.api.Assertions.*
 
 class SpreadSheetIndexTest {
 

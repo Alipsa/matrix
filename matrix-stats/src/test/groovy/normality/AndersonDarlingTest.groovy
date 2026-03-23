@@ -1,10 +1,10 @@
 package normality
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.normality.AndersonDarling
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Anderson-Darling normality test.

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+
 import groovy.transform.CompileStatic
 
 import com.google.cloud.NoCredentials
@@ -7,8 +9,6 @@ import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.DatasetId
 import com.google.cloud.bigquery.TableId
 import org.junit.jupiter.api.Test
-
-import static org.junit.jupiter.api.Assertions.assertEquals
 
 /**
  * These tests live in `se.alipsa.matrix.bigquery` so they can access the

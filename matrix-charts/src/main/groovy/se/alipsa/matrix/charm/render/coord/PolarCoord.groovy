@@ -1,13 +1,13 @@
 package se.alipsa.matrix.charm.render.coord
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.core.ValueConverter
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Polar coordinate transform at data level.

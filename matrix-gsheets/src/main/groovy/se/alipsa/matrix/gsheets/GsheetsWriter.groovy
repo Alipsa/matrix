@@ -1,5 +1,8 @@
 package se.alipsa.matrix.gsheets
 
+import static se.alipsa.matrix.gsheets.BqAuthenticator.authenticate
+import static se.alipsa.matrix.gsheets.BqAuthenticator.getSCOPES
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
@@ -21,9 +24,6 @@ import se.alipsa.matrix.core.Row
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static se.alipsa.matrix.gsheets.BqAuthenticator.authenticate
-import static se.alipsa.matrix.gsheets.BqAuthenticator.getSCOPES
 
 /**
  * Writes Matrix data to Google Sheets spreadsheets.

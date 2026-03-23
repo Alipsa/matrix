@@ -14,9 +14,9 @@ package houseprice
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import se.alipsa.matrix.core.*
-
 import static se.alipsa.matrix.core.Stat.*
+
+import se.alipsa.matrix.core.*
 
 def file = this.getClass().getResource("/data/kc_house_data.csv")
 assert file != null

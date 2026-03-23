@@ -1,9 +1,9 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Joiner
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.*
 
 class JoinerTest {
 

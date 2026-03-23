@@ -1,10 +1,10 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleFillIdentity
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Type-specific edge-case tests for ScaleFillIdentity.

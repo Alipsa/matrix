@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -12,9 +15,6 @@ import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class AesDslTest {
 

@@ -1,5 +1,8 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.*
+
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.style.AxesChartStyler
@@ -12,9 +15,6 @@ import se.alipsa.matrix.xchart.LineChart
 import se.alipsa.matrix.xchart.ScatterChart
 
 import java.awt.Color
-
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.*
 
 class XyChartTest {
 

@@ -1,14 +1,14 @@
 package charm.render.geom
 
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.charm.Charts.plot
 
 class TooltipTest {
 

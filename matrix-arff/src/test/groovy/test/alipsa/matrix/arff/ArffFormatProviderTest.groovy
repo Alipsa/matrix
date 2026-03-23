@@ -1,5 +1,9 @@
 package test.alipsa.matrix.arff
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -12,10 +16,6 @@ import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ArffFormatProviderTest {
 

@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -9,9 +12,6 @@ import se.alipsa.matrix.gg.geom.GeomAbline
 import se.alipsa.matrix.gg.geom.GeomHline
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomVline
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class ReferenceLineTest {
 

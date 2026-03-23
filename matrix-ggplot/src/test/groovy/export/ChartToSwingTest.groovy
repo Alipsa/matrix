@@ -1,5 +1,8 @@
 package export
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -14,9 +17,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.export.GgExport
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 @Slow
 class ChartToSwingTest {

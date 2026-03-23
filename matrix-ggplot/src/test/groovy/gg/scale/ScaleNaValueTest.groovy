@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleAlphaBinned
@@ -9,9 +12,6 @@ import se.alipsa.matrix.gg.scale.ScaleSizeBinned
 import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
 import se.alipsa.matrix.gg.scale.ScaleSizeDiscrete
 import se.alipsa.matrix.gg.scale.ScaleUtils
-
-import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ScaleNaValueTest {
 

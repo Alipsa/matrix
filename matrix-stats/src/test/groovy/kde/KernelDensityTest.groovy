@@ -1,13 +1,13 @@
 package kde
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.kde.BandwidthSelector
 import se.alipsa.matrix.stats.kde.Kernel
 import se.alipsa.matrix.stats.kde.KernelDensity
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for Kernel Density Estimation.

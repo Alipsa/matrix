@@ -1,13 +1,13 @@
 package charm.render.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ContinuousCharmScaleTest {
 

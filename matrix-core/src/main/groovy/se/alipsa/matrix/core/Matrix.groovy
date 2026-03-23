@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import static se.alipsa.matrix.core.util.ClassUtils.*
+
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
@@ -21,8 +23,6 @@ import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-import static se.alipsa.matrix.core.util.ClassUtils.*
 
 /**
  * A Matrix is a 2 dimensional data structure.

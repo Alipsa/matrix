@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -6,9 +9,6 @@ import se.alipsa.matrix.json.JsonReader
 
 import java.nio.file.Path
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class JsonReaderTest {
 

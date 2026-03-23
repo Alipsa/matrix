@@ -1,5 +1,7 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -10,8 +12,6 @@ import se.alipsa.matrix.gsheets.GsUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit tests for GsExporter utility methods.

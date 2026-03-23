@@ -1,11 +1,11 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.assertNull
+
 import gg.BaseTest
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleUtils
-
-import static org.junit.jupiter.api.Assertions.assertNull
 
 class ScaleUtilsTest extends BaseTest {
 

@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.stat.StatsBin
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.stat.StatsQqLine
 import se.alipsa.matrix.gg.stat.StatsSample
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsYDensity
-
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class StatWrapperTest {
 

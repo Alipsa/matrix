@@ -1,11 +1,11 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Factor
-
-import static org.junit.jupiter.api.Assertions.*
 
 class FactorTest {
 

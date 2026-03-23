@@ -1,5 +1,8 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.core.ValueConverter.*
+
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
@@ -14,9 +17,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static se.alipsa.matrix.core.ValueConverter.*
 
 @Tag("slow")
 class LargeFileImportTest {

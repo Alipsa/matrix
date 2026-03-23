@@ -1,12 +1,12 @@
 package se.alipsa.matrix.stats.distribution
 
+import static java.math.BigDecimal.*
+import static se.alipsa.matrix.ext.NumberExtension.*
+
 import groovy.transform.CompileStatic
 
 import java.math.MathContext
 import java.math.RoundingMode
-
-import static java.math.BigDecimal.*
-import static se.alipsa.matrix.ext.NumberExtension.*
 /**
  * Special mathematical functions used in statistical distributions.
  * Implementation based on algorithms from Numerical Recipes and NIST.

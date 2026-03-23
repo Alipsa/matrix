@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.G
@@ -15,8 +17,6 @@ import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Renders cartesian axes, tick labels, and axis guide variants.

@@ -1,5 +1,11 @@
 package charm.api
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.chart
+import static se.alipsa.matrix.charm.Charts.plot
+
 import groovy.lang.GroovyShell
 import groovy.transform.CompileStatic
 
@@ -22,12 +28,6 @@ import se.alipsa.matrix.charm.geom.SmoothBuilder
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.charm.Charts.chart
-import static se.alipsa.matrix.charm.Charts.plot
 
 class CharmApiDesignTest {
 

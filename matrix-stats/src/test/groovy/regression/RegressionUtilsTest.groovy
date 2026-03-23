@@ -1,10 +1,10 @@
 package regression
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.regression.RegressionUtils
-
-import static org.junit.jupiter.api.Assertions.*
 
 class RegressionUtilsTest {
 

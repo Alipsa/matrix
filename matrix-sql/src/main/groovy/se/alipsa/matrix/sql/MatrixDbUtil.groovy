@@ -1,5 +1,9 @@
 package se.alipsa.matrix.sql
 
+import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_PRECISION
+import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
+import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.datautil.DataBaseProvider
@@ -14,10 +18,6 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.stream.IntStream
-
-import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_PRECISION
-import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
-import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 
 /**
  * Utility class for creating tables and inserting data from Matrix objects into a database.

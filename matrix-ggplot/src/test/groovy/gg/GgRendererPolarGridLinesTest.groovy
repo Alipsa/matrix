@@ -1,5 +1,9 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.groovy.svg.io.SvgWriter.toXml
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import groovy.xml.XmlSlurper
 
 import org.junit.jupiter.api.Test
@@ -7,10 +11,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.coord.CoordPolar
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.svg.io.SvgWriter.toXml
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GgRendererPolarGridLinesTest {
 

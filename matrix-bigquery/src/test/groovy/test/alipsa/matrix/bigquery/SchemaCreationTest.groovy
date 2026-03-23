@@ -1,5 +1,8 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+
 import groovy.transform.CompileStatic
 
 import com.google.cloud.bigquery.Field
@@ -15,9 +18,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
 
 @CompileStatic
 class SchemaCreationTest {

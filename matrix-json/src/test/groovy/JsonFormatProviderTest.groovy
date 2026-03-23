@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -8,9 +11,6 @@ import se.alipsa.matrix.json.JsonWriteOptions
 
 import java.nio.file.Path
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class JsonFormatProviderTest {
 

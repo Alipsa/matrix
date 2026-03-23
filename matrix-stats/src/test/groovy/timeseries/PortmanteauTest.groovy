@@ -1,10 +1,10 @@
 package timeseries
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.timeseries.Portmanteau
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Ljung-Box portmanteau test.

@@ -1,5 +1,8 @@
 package charm.render
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -8,9 +11,6 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.charm.Charts.plot
 
 class CharmLabelTest {
 

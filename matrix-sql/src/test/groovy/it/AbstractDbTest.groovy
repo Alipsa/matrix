@@ -1,5 +1,7 @@
 package it
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+
 import groovy.grape.Grape
 
 import org.junit.jupiter.api.Test
@@ -18,8 +20,6 @@ import java.sql.Connection
 import java.sql.Time
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-import static org.junit.jupiter.api.Assertions.assertEquals
 
 abstract class AbstractDbTest {
 

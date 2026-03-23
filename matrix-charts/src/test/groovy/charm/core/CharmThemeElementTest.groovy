@@ -1,5 +1,7 @@
 package charm.core
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.LegendPosition
@@ -9,8 +11,6 @@ import se.alipsa.matrix.charm.theme.ElementBlank
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementRect
 import se.alipsa.matrix.charm.theme.ElementText
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CharmThemeElementTest {
 

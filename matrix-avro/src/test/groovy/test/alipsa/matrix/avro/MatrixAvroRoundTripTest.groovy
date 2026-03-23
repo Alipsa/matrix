@@ -1,5 +1,7 @@
 package test.alipsa.matrix.avro
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.avro.Schema
 import org.apache.avro.file.DataFileReader
 import org.apache.avro.generic.GenericDatumReader
@@ -14,8 +16,6 @@ import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
 import java.time.*
-
-import static org.junit.jupiter.api.Assertions.*
 
 class MatrixAvroRoundTripTest {
 

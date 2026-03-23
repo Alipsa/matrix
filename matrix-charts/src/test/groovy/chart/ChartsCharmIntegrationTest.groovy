@@ -1,5 +1,7 @@
 package chart
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -26,8 +28,6 @@ import se.alipsa.matrix.pict.Style
 
 import java.awt.Color
 import java.awt.Font
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Integration tests verifying that each legacy chart type converts

@@ -1,10 +1,10 @@
 package contingency
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.contingency.CochranMantelHaenszel
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Cochran-Mantel-Haenszel test.

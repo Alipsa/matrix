@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
@@ -10,9 +13,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 
 import java.nio.file.Path
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Tests for ggsave methods.

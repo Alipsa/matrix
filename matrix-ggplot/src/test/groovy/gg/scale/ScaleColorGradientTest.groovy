@@ -1,11 +1,11 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import gg.BaseTest
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ScaleColorGradientTest {
 

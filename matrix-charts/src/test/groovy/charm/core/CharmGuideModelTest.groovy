@@ -1,12 +1,12 @@
 package charm.core
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CharmGuideModelTest {
 

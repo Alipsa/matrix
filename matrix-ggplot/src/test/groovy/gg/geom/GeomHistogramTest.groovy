@@ -1,5 +1,8 @@
 package gg.geom
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.stat.GgStat
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GeomHistogramTest {
 

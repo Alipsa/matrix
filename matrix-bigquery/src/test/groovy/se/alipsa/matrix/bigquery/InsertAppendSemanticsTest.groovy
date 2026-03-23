@@ -1,5 +1,12 @@
 package se.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertSame
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
@@ -24,13 +31,6 @@ import se.alipsa.matrix.core.Matrix
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.net.ConnectException
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertSame
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * These tests live in `se.alipsa.matrix.bigquery` so they can exercise package-scope

@@ -1,10 +1,10 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.spreadsheet.ValueExtractor
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ValueExtractorTest {
 

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render.coord
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CoordSpec
@@ -9,8 +11,6 @@ import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 
 import java.util.Locale
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Map projection coordinate transform for lon/lat data.

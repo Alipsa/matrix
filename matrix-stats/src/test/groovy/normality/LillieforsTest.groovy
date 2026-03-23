@@ -1,10 +1,10 @@
 package normality
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.normality.Lilliefors
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for the Lilliefors normality test.

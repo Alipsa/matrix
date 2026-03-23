@@ -1,11 +1,11 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMETYPE
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
-
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMETYPE
 
 @CompileStatic
 abstract class OdsDataReader {

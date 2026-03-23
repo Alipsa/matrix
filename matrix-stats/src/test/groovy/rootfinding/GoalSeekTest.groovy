@@ -1,12 +1,12 @@
 package rootfinding
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.jfinancials.Financials.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.solver.GoalSeek
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.jfinancials.Financials.*
 
 /**
  * The expected values are taken from doing the same thing in OpenOffice calc.

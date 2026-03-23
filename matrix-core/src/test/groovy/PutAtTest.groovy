@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
@@ -5,9 +8,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class PutAtTest {
 

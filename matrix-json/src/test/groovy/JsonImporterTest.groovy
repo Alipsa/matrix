@@ -1,3 +1,6 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -11,9 +14,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.json.JsonImporter
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class JsonImporterTest {
 

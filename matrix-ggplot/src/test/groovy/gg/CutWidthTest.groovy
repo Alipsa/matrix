@@ -1,11 +1,11 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.CutWidth
-
-import static org.junit.jupiter.api.Assertions.assertEquals
 
 /**
  * Tests for CutWidth bin boundary handling.

@@ -1,5 +1,10 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static se.alipsa.matrix.core.ListConverter.toLocalDateTimes
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -9,11 +14,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static se.alipsa.matrix.core.ListConverter.toLocalDateTimes
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class SpreadsheetTest {
 

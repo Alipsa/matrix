@@ -1,5 +1,10 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+import static org.mockito.ArgumentMatchers.anyString
+import static org.mockito.Mockito.*
+import static se.alipsa.matrix.gsheets.GsUtil.*
+
 import com.google.api.services.drive.Drive
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Sheet
@@ -7,11 +12,6 @@ import com.google.api.services.sheets.v4.model.SheetProperties
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-
-import static org.junit.jupiter.api.Assertions.*
-import static org.mockito.ArgumentMatchers.anyString
-import static org.mockito.Mockito.*
-import static se.alipsa.matrix.gsheets.GsUtil.*
 
 /**
  * Mocked tests for GsUtil that don't require actual Google Sheets API access.

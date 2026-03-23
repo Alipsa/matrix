@@ -1,5 +1,9 @@
 package test.alipsa.matrix.avro
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -10,10 +14,6 @@ import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertFalse
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class AvroFormatProviderTest {
 

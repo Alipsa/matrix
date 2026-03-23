@@ -1,5 +1,8 @@
 package test.alipsa.groovy.matrix.tablesaw
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static tech.tablesaw.api.ColumnType.*
+
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import tech.tablesaw.api.BigDecimalColumn
@@ -12,9 +15,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.tablesaw.TableUtil
 
 import java.util.UUID
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static tech.tablesaw.api.ColumnType.*
 
 class TableUtilTest {
 

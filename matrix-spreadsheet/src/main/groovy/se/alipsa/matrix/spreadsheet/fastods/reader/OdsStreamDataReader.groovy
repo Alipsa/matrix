@@ -1,5 +1,10 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
+import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
+import static se.alipsa.matrix.core.ValueConverter.asInteger
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
+import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFactory.INSTANCE
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.util.Logger
@@ -11,11 +16,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 import javax.xml.stream.XMLStreamReader
-
-import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
-import static se.alipsa.matrix.core.ValueConverter.asInteger
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
-import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFactory.INSTANCE
 
 /**
  * Minimal stream reader that discards styles and only reads the content

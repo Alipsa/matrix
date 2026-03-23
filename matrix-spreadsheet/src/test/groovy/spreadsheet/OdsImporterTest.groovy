@@ -1,5 +1,9 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -9,10 +13,6 @@ import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 
 import java.math.RoundingMode
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class OdsImporterTest {
 

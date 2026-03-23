@@ -1,13 +1,13 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.Grid.*
+import static se.alipsa.matrix.core.Stat.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 
 import java.text.DecimalFormat
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.Grid.*
-import static se.alipsa.matrix.core.Stat.*
 
 class GridTest {
 

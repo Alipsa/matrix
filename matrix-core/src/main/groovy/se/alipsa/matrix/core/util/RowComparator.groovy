@@ -1,8 +1,8 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import static se.alipsa.matrix.core.Matrix.*
+
+import groovy.transform.CompileStatic
 
 /**
  * Comparator for Matrix rows based on one or more column indices.

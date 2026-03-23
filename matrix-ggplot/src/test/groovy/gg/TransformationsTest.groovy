@@ -1,11 +1,11 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.coord.Trans
 import se.alipsa.matrix.gg.coord.Transformations
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit tests for coordinate transformation functions (Trans interface implementations).

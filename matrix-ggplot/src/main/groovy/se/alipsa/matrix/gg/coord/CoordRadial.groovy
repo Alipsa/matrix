@@ -1,11 +1,11 @@
 package se.alipsa.matrix.gg.coord
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 import java.util.Locale
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Radial coordinate system for circular plots with support for partial arcs and inner radius.

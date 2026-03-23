@@ -1,5 +1,7 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
@@ -13,8 +15,6 @@ import se.alipsa.matrix.xchart.OhlcChart
 
 import java.awt.Color
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class OhlcChartTest {
 

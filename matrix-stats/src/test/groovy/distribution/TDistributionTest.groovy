@@ -1,10 +1,10 @@
 package distribution
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.distribution.TDistribution
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for TDistribution class.

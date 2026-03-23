@@ -1,5 +1,7 @@
 package chart
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -8,8 +10,6 @@ import se.alipsa.matrix.pict.*
 
 import java.awt.Color
 import java.awt.Font
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ChartBuilderTest {
 

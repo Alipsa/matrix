@@ -1,13 +1,13 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.xchart.HistogramChart
 
 import java.math.RoundingMode
-
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class HistogramChartTest {
 

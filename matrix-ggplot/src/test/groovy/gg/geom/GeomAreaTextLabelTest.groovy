@@ -1,5 +1,8 @@
 package gg.geom
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -9,9 +12,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomLabel
 import se.alipsa.matrix.gg.geom.GeomText
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GeomAreaTextLabelTest {
 

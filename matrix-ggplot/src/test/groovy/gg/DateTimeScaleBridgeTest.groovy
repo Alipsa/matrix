@@ -1,5 +1,10 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Scale
@@ -10,11 +15,6 @@ import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class DateTimeScaleBridgeTest {
 

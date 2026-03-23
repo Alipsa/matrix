@@ -1,11 +1,11 @@
 package se.alipsa.matrix.gg.coord
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 import java.util.Locale
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Polar coordinate system for creating pie charts, rose diagrams, and other circular plots.

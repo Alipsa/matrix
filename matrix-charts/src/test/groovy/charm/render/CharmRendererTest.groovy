@@ -1,5 +1,11 @@
 package charm.render
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -11,12 +17,6 @@ import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.charm.Charts.plot
 
 class CharmRendererTest {
 

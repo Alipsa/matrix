@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 import smile.stat.distribution.BinomialDistribution
 import smile.stat.distribution.ExponentialDistribution
@@ -10,8 +12,6 @@ import smile.stat.hypothesis.TTest
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.stats.SmileStats
-
-import static org.junit.jupiter.api.Assertions.*
 
 class SmileStatsTest {
 

@@ -1,16 +1,16 @@
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Row
-
-import java.time.LocalDate
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
+
+import java.time.LocalDate
 
 class RowTest {
 

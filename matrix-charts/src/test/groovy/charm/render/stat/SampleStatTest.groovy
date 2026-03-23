@@ -1,5 +1,10 @@
 package charm.render.stat
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotSame
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.CharmGeomType
@@ -13,11 +18,6 @@ import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.SampleStat
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotSame
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class SampleStatTest {
 

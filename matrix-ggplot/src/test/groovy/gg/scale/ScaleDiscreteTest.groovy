@@ -1,12 +1,12 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ScaleDiscreteTest {
 

@@ -1,5 +1,8 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
@@ -9,9 +12,6 @@ import se.alipsa.matrix.gsheets.GsheetsReader
 import se.alipsa.matrix.gsheets.GsheetsWriter
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 @Tag("external")
 class GsTest {

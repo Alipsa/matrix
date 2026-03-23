@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -15,9 +18,6 @@ import se.alipsa.matrix.gg.geom.GeomCol
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomLine
 import se.alipsa.matrix.gg.geom.GeomPoint
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class QplotTest {
 

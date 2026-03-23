@@ -1,5 +1,7 @@
 package test.alipsa.matrix.xchart
 
+import static org.junit.jupiter.api.Assertions.assertTrue
+
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.markers.SeriesMarkers
@@ -7,8 +9,6 @@ import org.knowm.xchart.style.markers.SeriesMarkers
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.BarChart
 import se.alipsa.matrix.xchart.StickChart
-
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 class CategoryChartTest {
 

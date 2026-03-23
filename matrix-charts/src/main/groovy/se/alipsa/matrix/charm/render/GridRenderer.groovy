@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.G
@@ -7,8 +9,6 @@ import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.theme.ElementLine
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Renders major grid lines.

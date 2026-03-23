@@ -1,12 +1,12 @@
 package charm.render
 
-import groovy.transform.CompileStatic
-
-import org.junit.jupiter.api.Test
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
+
+import groovy.transform.CompileStatic
+
+import org.junit.jupiter.api.Test
 
 /**
  * Validates Phase 1 fixture corpus coverage for P0 migration features.

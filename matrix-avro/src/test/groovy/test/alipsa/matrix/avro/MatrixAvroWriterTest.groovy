@@ -1,5 +1,7 @@
 package test.alipsa.matrix.avro
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 import org.apache.avro.file.DataFileReader
@@ -18,8 +20,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.*
 
 class MatrixAvroWriterTest {
 

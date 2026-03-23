@@ -1,3 +1,11 @@
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.core.ListConverter.toBigDecimals
+import static se.alipsa.matrix.core.ListConverter.toDoubles
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -11,14 +19,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.core.ListConverter.toBigDecimals
-import static se.alipsa.matrix.core.ListConverter.toDoubles
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class MatrixParquetTest {
 

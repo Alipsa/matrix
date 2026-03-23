@@ -1,12 +1,12 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+
 import com.google.auth.oauth2.GoogleCredentials
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gsheets.GsheetsWriter
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for GsheetsWriter class.

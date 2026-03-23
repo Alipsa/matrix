@@ -1,11 +1,5 @@
 package gg
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.gg.aes.Aes
-import se.alipsa.matrix.gg.aes.Factor
-import se.alipsa.matrix.gg.aes.Identity
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertInstanceOf
 import static org.junit.jupiter.api.Assertions.assertNotNull
@@ -15,6 +9,12 @@ import static se.alipsa.matrix.gg.GgPlot.after_scale
 import static se.alipsa.matrix.gg.GgPlot.after_stat
 import static se.alipsa.matrix.gg.GgPlot.cut_width
 import static se.alipsa.matrix.gg.GgPlot.factor
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.Factor
+import se.alipsa.matrix.gg.aes.Identity
 
 class AesTypedSetterTest {
 

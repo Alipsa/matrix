@@ -1,5 +1,11 @@
 package charm.core
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.CharmGeomType
@@ -21,12 +27,6 @@ import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.charm.Charts.plot
 
 class CharmCoreModelTest {
 

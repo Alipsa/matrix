@@ -1,12 +1,5 @@
 package gg
 
-import org.junit.jupiter.api.Test
-
-import se.alipsa.matrix.charm.CharmStatType
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.bridge.GgCharmCompilation
-import se.alipsa.matrix.gg.bridge.GgCharmCompiler
-
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.aes
@@ -14,6 +7,13 @@ import static se.alipsa.matrix.gg.GgPlot.geom_point
 import static se.alipsa.matrix.gg.GgPlot.geom_point_sampled
 import static se.alipsa.matrix.gg.GgPlot.ggplot
 import static se.alipsa.matrix.gg.GgPlot.stat_sample
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.bridge.GgCharmCompilation
+import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 
 class SampleStatBridgeTest {
 

@@ -1,3 +1,8 @@
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.*
+import static se.alipsa.matrix.core.ValueConverter.asLocalDate
+import static se.alipsa.matrix.core.ValueConverter.asYearMonth
+
 import org.junit.jupiter.api.*
 
 import se.alipsa.matrix.core.Column
@@ -12,11 +17,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.temporal.TemporalAccessor
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.core.ListConverter.*
-import static se.alipsa.matrix.core.ValueConverter.asLocalDate
-import static se.alipsa.matrix.core.ValueConverter.asYearMonth
 
 
 class MatrixTest {

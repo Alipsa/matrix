@@ -1,5 +1,7 @@
 package test.alipsa.matrix.avro
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
@@ -19,8 +21,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation)
 class MatrixAvroReaderTest {

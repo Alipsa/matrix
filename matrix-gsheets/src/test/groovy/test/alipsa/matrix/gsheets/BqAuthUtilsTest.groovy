@@ -1,11 +1,11 @@
 package test.alipsa.matrix.gsheets
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gsheets.BqAuthenticator.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gsheets.BqAuthUtils
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 
 /**
  * Unit tests for BqAuthUtils focusing on utility methods that don't require

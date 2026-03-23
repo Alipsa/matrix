@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import static se.alipsa.matrix.gsheets.BqAuthenticator.*
+
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.CompileDynamic
@@ -18,8 +20,6 @@ import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 
 import se.alipsa.matrix.core.util.Logger
-
-import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 
 @CompileStatic
 class BqAuthUtils {

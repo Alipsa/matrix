@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -7,8 +9,6 @@ import se.alipsa.matrix.csv.CsvReader
 import se.alipsa.matrix.csv.CsvWriter
 
 import java.nio.file.Path
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CsvWriterTest {
 

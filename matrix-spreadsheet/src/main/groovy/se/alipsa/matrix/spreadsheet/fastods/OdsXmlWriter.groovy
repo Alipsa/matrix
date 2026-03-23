@@ -1,5 +1,9 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.textUrn
+
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Column
@@ -19,10 +23,6 @@ import java.util.Collections
 
 import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamWriter
-
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.textUrn
 
 @CompileStatic
 class OdsXmlWriter {

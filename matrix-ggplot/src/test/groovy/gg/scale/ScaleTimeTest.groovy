@@ -1,5 +1,8 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -10,9 +13,6 @@ import se.alipsa.matrix.gg.scale.ScaleYTime
 
 import java.time.Duration
 import java.time.LocalTime
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * Test suite for time-of-day scales (ScaleXTime and ScaleYTime).

@@ -1,13 +1,13 @@
 package gg.scale
 
+import static org.junit.jupiter.api.Assertions.*
+
 import gg.BaseTest
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
-
-import static org.junit.jupiter.api.Assertions.*
 
 class ScaleContinuousTest {
 

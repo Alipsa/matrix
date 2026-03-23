@@ -1,10 +1,10 @@
+import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.csv.CsvExporter
 import se.alipsa.matrix.datasets.Dataset
-
-import static org.junit.jupiter.api.Assertions.*
 
 class CsvExporterTest {
 

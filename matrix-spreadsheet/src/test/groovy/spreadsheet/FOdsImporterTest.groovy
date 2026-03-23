@@ -1,5 +1,7 @@
 package spreadsheet
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -8,8 +10,6 @@ import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 
 import java.math.RoundingMode
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.*
 
 class FOdsImporterTest {
 

@@ -1,5 +1,8 @@
 package gg
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Circle
@@ -14,9 +17,6 @@ import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.coord.CoordPolar
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gg.GgPlot.*
 
 class GgPlotTest {
 

@@ -1,3 +1,11 @@
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.core.ValueConverter.asLocalDate
+
 import groovy.sql.Sql
 
 import org.junit.jupiter.api.Test
@@ -6,14 +14,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
 
 import java.time.LocalDate
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static org.junit.jupiter.api.Assertions.assertNotEquals
-import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertThrows
-import static org.junit.jupiter.api.Assertions.assertTrue
-import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
 /**
  * Note the calls to content() is a decent way to check the integrity of the matrix and is there to ensure

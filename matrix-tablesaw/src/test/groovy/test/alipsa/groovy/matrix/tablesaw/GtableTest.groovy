@@ -1,5 +1,9 @@
 package test.alipsa.groovy.matrix.tablesaw
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
+import static tech.tablesaw.api.ColumnType.*
+
 import org.junit.jupiter.api.Test
 import tech.tablesaw.api.BigDecimalAggregateFunctions
 import tech.tablesaw.api.BigDecimalColumn
@@ -11,10 +15,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
 import se.alipsa.matrix.tablesaw.gtable.Gtable
-
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
-import static tech.tablesaw.api.ColumnType.*
 
 class GtableTest {
 

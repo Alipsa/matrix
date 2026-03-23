@@ -1,5 +1,8 @@
 package charm.render
 
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.charm.Charts.plot
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
@@ -10,9 +13,6 @@ import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
-
-import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.charm.Charts.plot
 
 class CharmLegendRendererTest {
 

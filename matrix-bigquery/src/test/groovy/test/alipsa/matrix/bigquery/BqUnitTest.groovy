@@ -1,5 +1,7 @@
 package test.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.*
+
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
@@ -13,8 +15,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
-
-import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit tests for Bq utility methods that don't require BigQuery connections.

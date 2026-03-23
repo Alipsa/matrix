@@ -1,12 +1,12 @@
 package datasets
 
+import static org.junit.jupiter.api.Assertions.*
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.datasets.Rdatasets
-
-import static org.junit.jupiter.api.Assertions.*
 
 class RdatasetsTest {
 

@@ -1,10 +1,10 @@
-import org.junit.jupiter.api.Test
-
-import java.text.DecimalFormat
-
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.Grid.*
 import static se.alipsa.matrix.core.Stat.sum
+
+import org.junit.jupiter.api.Test
+
+import java.text.DecimalFormat
 
 class ListOfListsTest {
 
