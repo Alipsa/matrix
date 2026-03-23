@@ -43,6 +43,46 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testNumberOverloads() {
+    Integer intValue = 3
+    Double doubleValue = 3.7
+    Long longValue = 5L
+
+    assertEquals(3G, intValue.floor())
+    assertEquals(3G, doubleValue.floor())
+    assertEquals(5G, longValue.floor())
+
+    assertEquals(3G, intValue.ceil())
+    assertEquals(4G, doubleValue.ceil())
+    assertEquals(5G, longValue.ceil())
+
+    Integer zeroInt = 0
+    Double piOverTwo = Math.PI / 2
+    Long zeroLong = 0L
+    assertEquals(0.0, zeroInt.sin().doubleValue(), 1e-10)
+    assertEquals(1.0, piOverTwo.sin().doubleValue(), 1e-10)
+    assertEquals(0.0, zeroLong.sin().doubleValue(), 1e-10)
+
+    assertEquals(1.0, zeroInt.cos().doubleValue(), 1e-10)
+    assertEquals(0.0, piOverTwo.cos().doubleValue(), 1e-10)
+    assertEquals(1.0, zeroLong.cos().doubleValue(), 1e-10)
+
+    Integer oneRadian = 1
+    Double quarterTurnRadians = Math.PI / 4
+    Long oneLongRadian = 1L
+    assertEquals(Math.toDegrees(1.0), oneRadian.toDegrees().doubleValue(), 1e-10)
+    assertEquals(45.0, quarterTurnRadians.toDegrees().doubleValue(), 1e-10)
+    assertEquals(Math.toDegrees(1.0), oneLongRadian.toDegrees().doubleValue(), 1e-10)
+
+    Integer rightAngleDegrees = 90
+    Double fortyFiveDegrees = 45.0
+    Long halfTurnDegrees = 180L
+    assertEquals(Math.PI / 2, rightAngleDegrees.toRadians().doubleValue(), 1e-10)
+    assertEquals(Math.PI / 4, fortyFiveDegrees.toRadians().doubleValue(), 1e-10)
+    assertEquals(Math.PI, halfTurnDegrees.toRadians().doubleValue(), 1e-10)
+  }
+
+  @Test
   void testLog() {
     // Test log(e) = 1
     BigDecimal e = Math.E as BigDecimal

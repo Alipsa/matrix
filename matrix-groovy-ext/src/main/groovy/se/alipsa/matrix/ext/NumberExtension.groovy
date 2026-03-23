@@ -16,10 +16,12 @@ import java.math.RoundingMode
  * <h3>Available Operations</h3>
  * <ul>
  *   <li><b>Rounding:</b> floor(), ceil() - Round to integer values as BigDecimal</li>
- *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log10() - Base-10 logarithm</li>
+ *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log(base) - Custom-base logarithm, log10() - Base-10 logarithm</li>
  *   <li><b>Exponential:</b> exp() - Natural exponential function (e^x)</li>
  *   <li><b>Square Root:</b> sqrt() - Square root with default DECIMAL64 precision</li>
- *   <li><b>Trigonometry:</b> sin(), cos() - Sine and cosine for angles in radians</li>
+ *   <li><b>Trigonometry:</b> sin(), cos(), tan() - Trigonometric functions for angles in radians</li>
+ *   <li><b>Inverse Trigonometry:</b> asin(), atan(), atan2() - Inverse trig functions returning radians</li>
+ *   <li><b>Angle Conversion:</b> toDegrees(), toRadians() - Convert between radians and degrees</li>
  *   <li><b>Precision:</b> ulp() - Unit in the last place for epsilon calculations</li>
  *   <li><b>Comparison:</b> min(), max() - Chainable min/max operations supporting mixed types</li>
  * </ul>
@@ -90,6 +92,17 @@ class NumberExtension {
   }
 
   /**
+   * Returns the largest integer value less than or equal to this Number.
+   *
+   * @param self the Number value
+   * @return a BigDecimal representing the floor of this value
+   * @see #floor(BigDecimal)
+   */
+  static BigDecimal floor(Number self) {
+    floor(self as BigDecimal)
+  }
+
+  /**
    * Returns the smallest integer value greater than or equal to this BigDecimal.
    *
    * @param self the BigDecimal value
@@ -97,6 +110,17 @@ class NumberExtension {
    */
   static BigDecimal ceil(BigDecimal self) {
     return self.setScale(0, RoundingMode.CEILING)
+  }
+
+  /**
+   * Returns the smallest integer value greater than or equal to this Number.
+   *
+   * @param self the Number value
+   * @return a BigDecimal representing the ceiling of this value
+   * @see #ceil(BigDecimal)
+   */
+  static BigDecimal ceil(Number self) {
+    ceil(self as BigDecimal)
   }
 
   /**
@@ -283,6 +307,7 @@ class NumberExtension {
    *
    * @param self the exponent value (any Number type)
    * @return e raised to the power of this value, as a BigDecimal
+   * @throws ArithmeticException if the rounded exponent is outside the supported int range
    */
   static BigDecimal exp(BigDecimal self) {
     if (self == 0) return BigDecimal.ONE
@@ -477,6 +502,16 @@ class NumberExtension {
     return self.sqrt(MathContext.DECIMAL64)
   }
 
+  /**
+   * Returns the square root of this Number using DECIMAL64 precision.
+   * <p>
+   * This overload allows Integer, Long, Double, and other Number receivers to use the
+   * same extension syntax as BigDecimal values.
+   *
+   * @param self the Number value to take the square root of
+   * @return the square root as a BigDecimal with DECIMAL64 precision
+   * @see #sqrt(BigDecimal)
+   */
   static BigDecimal sqrt(Number self) {
     return sqrt(self as BigDecimal)
   }
@@ -529,6 +564,17 @@ class NumberExtension {
   }
 
   /**
+   * Returns the sine of this Number value (in radians).
+   *
+   * @param self the angle in radians
+   * @return the sine of the angle as a BigDecimal
+   * @see #sin(BigDecimal)
+   */
+  static BigDecimal sin(Number self) {
+    sin(self as BigDecimal)
+  }
+
+  /**
    * Returns the cosine of this BigDecimal value (in radians).
    * <p>
    * This method uses higher-precision range reduction followed by a Taylor series expansion
@@ -573,9 +619,29 @@ class NumberExtension {
     return result
   }
 
+  /**
+   * Returns the cosine of this Number value (in radians).
+   *
+   * @param self the angle in radians
+   * @return the cosine of the angle as a BigDecimal
+   * @see #cos(BigDecimal)
+   */
+  static BigDecimal cos(Number self) {
+    cos(self as BigDecimal)
+  }
+
 
   /**
    * Converts this BigDecimal value from radians to degrees.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal radians = PI
+   * radians.toDegrees()  // → 180.0
+   *
+   * BigDecimal quarterTurn = PI / 4
+   * quarterTurn.toDegrees()  // → 45.0
+   * }</pre>
    *
    * @param self the angle in radians
    * @return the angle in degrees as a BigDecimal
@@ -585,7 +651,27 @@ class NumberExtension {
   }
 
   /**
+   * Converts this Number value from radians to degrees.
+   *
+   * @param self the angle in radians
+   * @return the angle in degrees as a BigDecimal
+   * @see #toDegrees(BigDecimal)
+   */
+  static BigDecimal toDegrees(Number self) {
+    toDegrees(self as BigDecimal)
+  }
+
+  /**
    * Converts this BigDecimal value from degrees to radians.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal degrees = 180.0
+   * degrees.toRadians()  // → PI
+   *
+   * BigDecimal angle = 45.0
+   * angle.toRadians()  // → PI / 4
+   * }</pre>
    *
    * @param self the angle in degrees
    * @return the angle in radians as a BigDecimal
@@ -594,10 +680,38 @@ class NumberExtension {
     return self * PI / 180.0
   }
 
+  /**
+   * Converts this Number value from degrees to radians.
+   *
+   * @param self the angle in degrees
+   * @return the angle in radians as a BigDecimal
+   * @see #toRadians(BigDecimal)
+   */
+  static BigDecimal toRadians(Number self) {
+    toRadians(self as BigDecimal)
+  }
+
+  /**
+   * Returns the tangent of this Number value (in radians).
+   *
+   * @param self the angle in radians
+   * @return the tangent of the angle as a BigDecimal
+   * @see #tan(BigDecimal)
+   */
   static BigDecimal tan(Number self) {
     tan(self as BigDecimal)
   }
 
+  /**
+   * Returns the tangent of this BigDecimal value (in radians).
+   * <p>
+   * Tangent is computed as {@code sin(x) / cos(x)} using the corresponding BigDecimal
+   * implementations. An exception is thrown when cosine is zero.
+   *
+   * @param self the angle in radians
+   * @return the tangent of the angle as a BigDecimal
+   * @throws ArithmeticException if the tangent is undefined because cosine is zero
+   */
   static BigDecimal tan(BigDecimal self) {
     BigDecimal sinVal = sin(self)
     BigDecimal cosVal = cos(self)
@@ -631,7 +745,6 @@ class NumberExtension {
    * This avoids converting to double and maintains high precision.
    *
    * @param self the BigDecimal value
-   * @param mc the MathContext to use for precision and rounding
    * @return the arctangent of the value
    */
   static BigDecimal atan(BigDecimal self) {
