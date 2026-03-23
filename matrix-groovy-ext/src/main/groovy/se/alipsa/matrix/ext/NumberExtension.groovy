@@ -67,9 +67,11 @@ class NumberExtension {
 
   /** π to 30 digits is 3.141592653589793238462643383279, 16 is precise enough for most scientific calculations */
   static final BigDecimal PI = 3.1415926535897932
+  /** Higher-precision π constant used for internal range reduction in transcendental functions. */
   static final BigDecimal PI32 = 3.141592653589793238462643383279
   /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
   static final BigDecimal E = 2.7182818284590452
+  /** Higher-precision e constant used for internal computation where extra precision matters. */
   static final BigDecimal E32 = 2.718281828459045235360287471352
 
   /** Natural logarithm of 2 to 32 significant digits */
@@ -144,29 +146,39 @@ class NumberExtension {
    * where y = (x-1)/(x+1).
    */
   private static BigDecimal lnSeries(BigDecimal value) {
+    MathContext mc = MathContext.DECIMAL128
+    BigDecimal two = 2
     // Argument reduction: scale to [1, 10) using BigDecimal magnitude, then to [0.5, 2.0] with powers of 2
     int tenPower = value.precision() - value.scale() - 1
     BigDecimal x = tenPower != 0 ? value.scaleByPowerOfTen(-tenPower) : value
     int twoPower = 0
-    while (x > 2) { x = x / 2; twoPower++ }
-    while (x < 0.5) { x = x * 2; twoPower-- }
+    while (x > two) {
+      x = x.divide(two, mc)
+      twoPower++
+    }
+    while (x < 0.5) {
+      x = x.multiply(two, mc)
+      twoPower--
+    }
 
-    BigDecimal y = (x - 1).divide(x + 1, MathContext.DECIMAL128)
-    BigDecimal ySquared = y.multiply(y, MathContext.DECIMAL128)
+    BigDecimal y = (x - 1).divide(x + 1, mc)
+    BigDecimal ySquared = y.multiply(y, mc)
     BigDecimal term = y
     BigDecimal result = y
     int iteration = 1
-    BigDecimal threshold = new BigDecimal("1e-${MathContext.DECIMAL128.precision}")
+    BigDecimal threshold = new BigDecimal("1e-${mc.precision}")
 
     while (true) {
-      term = term.multiply(ySquared, MathContext.DECIMAL128)
-      BigDecimal step = term.divide(new BigDecimal(2 * iteration + 1), MathContext.DECIMAL128)
+      term = term.multiply(ySquared, mc)
+      BigDecimal step = term.divide(new BigDecimal(2 * iteration + 1), mc)
       if (step.abs() < threshold) break
       result = result.add(step)
       iteration++
     }
 
-    (result * 2) + (tenPower * LN10) + (twoPower * LN2)
+    result.multiply(two, mc)
+        .add(LN10.multiply(BigDecimal.valueOf(tenPower), mc), mc)
+        .add(LN2.multiply(BigDecimal.valueOf(twoPower), mc), mc)
   }
 
   /**
@@ -277,7 +289,17 @@ class NumberExtension {
 
     // Argument reduction: e^x = e^k * e^r where k = round(x), r = x - k, |r| <= 0.5
     // e^k uses BigDecimal.pow(int) for full precision; e^r uses Taylor series (fast convergence)
-    int k = self.setScale(0, RoundingMode.HALF_EVEN).intValueExact()
+    long roundedExponent
+    try {
+      roundedExponent = self.setScale(0, RoundingMode.HALF_EVEN).longValueExact()
+    } catch (ArithmeticException ignored) {
+      throw new ArithmeticException("Exponent too large for exp(): $self")
+    }
+    if (roundedExponent > Integer.MAX_VALUE || roundedExponent < Integer.MIN_VALUE) {
+      throw new ArithmeticException("Exponent too large for exp(): $self")
+    }
+
+    int k = roundedExponent as int
     BigDecimal r = self - k
 
     // Taylor series: e^r = 1 + r + r²/2! + r³/3! + ...
@@ -462,8 +484,8 @@ class NumberExtension {
   /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
-   * This method wraps {@link Math#sin(double)} and returns the result as a BigDecimal
-   * for consistent type handling in Groovy numeric operations.
+   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -509,8 +531,8 @@ class NumberExtension {
   /**
    * Returns the cosine of this BigDecimal value (in radians).
    * <p>
-   * This method wraps {@link Math#cos(double)} and returns the result as a BigDecimal
-   * for consistent type handling in Groovy numeric operations.
+   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -752,7 +774,7 @@ class NumberExtension {
     BigDecimal result = atan(z)
 
     // 4. Adjust for Quadrants
-    if (x  < 0) {
+    if (x < 0) {
       if (y >= 0) {
         result = result + PI
       } else {

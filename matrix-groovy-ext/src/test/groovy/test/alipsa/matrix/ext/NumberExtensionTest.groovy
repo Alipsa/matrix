@@ -520,13 +520,22 @@ class NumberExtensionTest {
 
   @Test
   void testSinCosWithLargeAngles() {
-    BigDecimal hugeAngle = 10000000000.0
-    assertEquals(Math.sin(hugeAngle as double), hugeAngle.sin().doubleValue(), 1e-10)
-    assertEquals(Math.cos(hugeAngle as double), hugeAngle.cos().doubleValue(), 1e-10)
+    BigDecimal hugeAngle = (NumberExtension.PI32 * 2 * 1_000_000_000) + NumberExtension.PI / 6
+    assertEquals(0.5, hugeAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.sqrt(3) / 2, hugeAngle.cos().doubleValue(), 1e-10)
 
-    BigDecimal shiftedAngle = NumberExtension.PI32 * 1_000_000 + NumberExtension.PI / 6
-    assertEquals(0.5, shiftedAngle.sin().doubleValue(), 1e-10)
-    assertEquals(Math.sqrt(3) / 2, shiftedAngle.cos().doubleValue(), 1e-10)
+    BigDecimal negativeHugeAngle = (NumberExtension.PI32 * 2 * 1_000_000_000) - NumberExtension.PI / 6
+    assertEquals(-0.5, negativeHugeAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.sqrt(3) / 2, negativeHugeAngle.cos().doubleValue(), 1e-10)
+  }
+
+  @Test
+  void testExpRejectsExponentOutsidePowRange() {
+    ArithmeticException e = assertThrows(ArithmeticException) {
+      new BigDecimal('3E+10').exp()
+    }
+
+    assertEquals('Exponent too large for exp(): 3E+10', e.message)
   }
 
   @Test
