@@ -569,7 +569,7 @@ class NumberExtensionTest {
 
     // Verify Number types work with extension syntax
     BigDecimal e = Math.E as BigDecimal
-    assert e.log() == 1.0
+    assertEquals(1.0, e.log().doubleValue(), 1e-15)
     assert 100.log10() == 2G
     assert 42.ulp() > 0
     assert 5.min(10.0G) == 5G

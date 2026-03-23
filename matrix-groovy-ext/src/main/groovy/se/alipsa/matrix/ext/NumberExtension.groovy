@@ -70,6 +70,11 @@ class NumberExtension {
   /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
   static final BigDecimal E = 2.7182818284590452
 
+  /** Natural logarithm of 2 to 32 significant digits */
+  private static final BigDecimal LN2 = new BigDecimal('0.69314718055994530941723212145818')
+  /** Natural logarithm of 10 to 32 significant digits */
+  private static final BigDecimal LN10 = new BigDecimal('2.30258509299404568401799145468436')
+
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
    *
@@ -108,16 +113,58 @@ class NumberExtension {
    * x.log().exp()  // → 5.0
    * }</pre>
    *
-   * @param self the Number value (must be positive)
+   * @param self the BigDecimal value (must be positive)
    * @return a BigDecimal representing the natural logarithm of this value
    * @throws IllegalArgumentException if self is not positive (value <= 0)
    */
-  static BigDecimal log(Number self) {
-    double value = self.doubleValue()
-    if (value <= 0) {
+  static BigDecimal log(BigDecimal self) {
+    if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
-    return Math.log(value) as BigDecimal
+    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    lnSeries(self).round(MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the natural logarithm (ln) of this number as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @return a BigDecimal representing the natural logarithm of this value
+   * @see #log(BigDecimal)
+   */
+  static BigDecimal log(Number self) {
+    log(self as BigDecimal)
+  }
+
+  /**
+   * Internal natural logarithm computation with DECIMAL128 precision.
+   * Uses argument reduction and the series ln(x) = 2(y + y³/3 + y⁵/5 + ...)
+   * where y = (x-1)/(x+1).
+   */
+  private static BigDecimal lnSeries(BigDecimal value) {
+    // Argument reduction: scale to [1, 10) using BigDecimal magnitude, then to [0.5, 2.0] with powers of 2
+    int tenPower = value.precision() - value.scale() - 1
+    BigDecimal x = tenPower != 0 ? value.scaleByPowerOfTen(-tenPower) : value
+    int twoPower = 0
+    while (x > 2) { x = x / 2; twoPower++ }
+    while (x < 0.5) { x = x * 2; twoPower-- }
+
+    BigDecimal y = (x - 1).divide(x + 1, MathContext.DECIMAL128)
+    BigDecimal ySquared = y.multiply(y, MathContext.DECIMAL128)
+    BigDecimal term = y
+    BigDecimal result = y
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-${MathContext.DECIMAL128.precision}")
+
+    while (true) {
+      term = term.multiply(ySquared, MathContext.DECIMAL128)
+      BigDecimal step = term.divide(new BigDecimal(2 * iteration + 1), MathContext.DECIMAL128)
+      if (step.abs() < threshold) break
+      result = result.add(step)
+      iteration++
+    }
+
+    (result * 2) + (tenPower * LN10) + (twoPower * LN2)
   }
 
   /**
@@ -138,38 +185,63 @@ class NumberExtension {
    * value3.log(3)  // → 3.0 (log base 3 of 27)
    * }</pre>
    *
-   * @param self the Number value (must be positive)
+   * @param self the BigDecimal value (must be positive)
    * @param base the logarithm base (must be positive and not equal to 1)
    * @return a BigDecimal representing the logarithm of this value to the specified base
    * @throws IllegalArgumentException if self <= 0, base <= 0, or base == 1
    */
-  static BigDecimal log(Number self, Number base) {
-    double value = self.doubleValue()
-    double baseValue = base.doubleValue()
-
-    if (value <= 0) {
+  static BigDecimal log(BigDecimal self, Number base) {
+    if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
+    BigDecimal baseValue = base as BigDecimal
+
     if (baseValue <= 0) {
       throw new IllegalArgumentException("Logarithm base must be positive: ${base}")
     }
-    if (baseValue == 1.0) {
+    if (baseValue == BigDecimal.ONE) {
       throw new IllegalArgumentException("Logarithm base cannot be 1: log base 1 is undefined")
     }
 
-    double valueLog = Math.log(value)
-    double baseLog = Math.log(baseValue)
-    return (valueLog / baseLog) as BigDecimal
+    lnSeries(self).divide(lnSeries(baseValue), MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the logarithm of this number to the specified base as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @param base the logarithm base (must be positive and not equal to 1)
+   * @return a BigDecimal representing the logarithm of this value to the specified base
+   * @see #log(BigDecimal, Number)
+   */
+  static BigDecimal log(Number self, Number base) {
+    log(self as BigDecimal, base)
   }
 
   /**
    * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
    *
-   * @param self the Number value
-   * @return  a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @param self the BigDecimal value (must be positive)
+   * @return a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @throws IllegalArgumentException if self is not positive (value <= 0)
+   */
+  static BigDecimal log10(BigDecimal self) {
+    if (self <= 0) {
+      throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
+    }
+    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    lnSeries(self).divide(LN10, MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @return a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @see #log10(BigDecimal)
    */
   static BigDecimal log10(Number self) {
-    return Math.log10(self.doubleValue()) as BigDecimal
+    log10(self as BigDecimal)
   }
 
   /**
@@ -204,24 +276,24 @@ class NumberExtension {
 
   /**
    * Returns the size of an ulp (unit in the last place) of this BigDecimal value.
-   * An ulp is the positive distance between this floating-point value and the next larger magnitude value.
+   * For BigDecimal, the ulp is 10<sup>-scale</sup>, i.e. the positional value of the least significant digit.
    *
    * @param self the BigDecimal value
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(BigDecimal self) {
-    return Math.ulp(self.doubleValue()) as BigDecimal
+    return BigDecimal.ONE.scaleByPowerOfTen(-self.scale())
   }
 
   /**
    * Returns the size of an ulp (unit in the last place) of this Number value.
-   * An ulp is the positive distance between this floating-point value and the next larger magnitude value.
+   * For BigDecimal, the ulp is 10<sup>-scale</sup>. Other Number types are first converted to BigDecimal.
    *
    * @param self the Number value
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(Number self) {
-    return Math.ulp(self.doubleValue()) as BigDecimal
+    ulp(self as BigDecimal)
   }
 
   /**
