@@ -16,6 +16,7 @@ import java.io.IOException
  */
 @CompileStatic
 final class ClipboardUtil {
+  private static final String HEADLESS_CLIPBOARD_MESSAGE = 'Clipboard is not available in a headless environment'
 
   /**
    * Read text from the system clipboard.
@@ -26,7 +27,7 @@ final class ClipboardUtil {
     try {
       return readText(Toolkit.defaultToolkit.systemClipboard)
     } catch (HeadlessException e) {
-      throw new IllegalStateException('Clipboard is not available in a headless environment', e)
+      throw new IllegalStateException(HEADLESS_CLIPBOARD_MESSAGE, e)
     }
   }
 
@@ -49,7 +50,7 @@ final class ClipboardUtil {
     try {
       writeText(Toolkit.defaultToolkit.systemClipboard, text)
     } catch (HeadlessException e) {
-      throw new IllegalStateException('Clipboard is not available in a headless environment', e)
+      throw new IllegalStateException(HEADLESS_CLIPBOARD_MESSAGE, e)
     }
   }
 

@@ -14,6 +14,10 @@ import se.alipsa.matrix.core.ValueConverter
  */
 @CompileStatic
 class CumulativeHelper {
+  private static final String CUMSUM_OPERATION = 'cumsum'
+  private static final String CUMPROD_OPERATION = 'cumprod'
+  private static final String CUMMIN_OPERATION = 'cummin'
+  private static final String CUMMAX_OPERATION = 'cummax'
 
   /**
    * Compute the cumulative sum of a numeric column.
@@ -23,7 +27,7 @@ class CumulativeHelper {
    * @throws IllegalArgumentException if the column is not numeric
    */
   static Column cumsum(Column source) {
-    requireNumeric(source, 'cumsum')
+    requireNumeric(source, CUMSUM_OPERATION)
     Column result = new Column(source.name, BigDecimal)
     BigDecimal accumulator = null
     for (int i = 0; i < source.size(); i++) {
@@ -31,7 +35,7 @@ class CumulativeHelper {
       if (element == null) {
         result.add(null)
       } else {
-        BigDecimal value = numericValue(element, source, 'cumsum')
+        BigDecimal value = numericValue(element, source, CUMSUM_OPERATION)
         accumulator = accumulator == null ? value : accumulator + value
         result.add(accumulator)
       }
@@ -47,7 +51,7 @@ class CumulativeHelper {
    * @throws IllegalArgumentException if the column is not numeric
    */
   static Column cumprod(Column source) {
-    requireNumeric(source, 'cumprod')
+    requireNumeric(source, CUMPROD_OPERATION)
     Column result = new Column(source.name, BigDecimal)
     BigDecimal accumulator = null
     for (int i = 0; i < source.size(); i++) {
@@ -55,7 +59,7 @@ class CumulativeHelper {
       if (element == null) {
         result.add(null)
       } else {
-        BigDecimal value = numericValue(element, source, 'cumprod')
+        BigDecimal value = numericValue(element, source, CUMPROD_OPERATION)
         accumulator = accumulator == null ? value : accumulator * value
         result.add(accumulator)
       }
@@ -74,7 +78,7 @@ class CumulativeHelper {
    *                                  {@link ClassCastException} that is wrapped)
    */
   static Column cummin(Column source) {
-    requireComparable(source, 'cummin')
+    requireComparable(source, CUMMIN_OPERATION)
     Class resultType = source.type != null ? source.type : Object
     Column result = new Column(source.name, resultType)
     Comparable accumulator = null
@@ -86,7 +90,7 @@ class CumulativeHelper {
         Comparable value = element as Comparable
         if (accumulator == null) {
           accumulator = value
-        } else if (compareValues(value, accumulator, 'cummin', source) < 0) {
+        } else if (compareValues(value, accumulator, CUMMIN_OPERATION, source) < 0) {
           accumulator = value
         }
         result.add(accumulator)
@@ -106,7 +110,7 @@ class CumulativeHelper {
    *                                  {@link ClassCastException} that is wrapped)
    */
   static Column cummax(Column source) {
-    requireComparable(source, 'cummax')
+    requireComparable(source, CUMMAX_OPERATION)
     Class resultType = source.type != null ? source.type : Object
     Column result = new Column(source.name, resultType)
     Comparable accumulator = null
@@ -118,7 +122,7 @@ class CumulativeHelper {
         Comparable value = element as Comparable
         if (accumulator == null) {
           accumulator = value
-        } else if (compareValues(value, accumulator, 'cummax', source) > 0) {
+        } else if (compareValues(value, accumulator, CUMMAX_OPERATION, source) > 0) {
           accumulator = value
         }
         result.add(accumulator)

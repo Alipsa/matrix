@@ -15,6 +15,7 @@ class RowExtension {
     return self.subList(colNames)
   }
 
+  @SuppressWarnings('DuplicateNumberLiteral')
   static Object getAt(Row self, Collection indices) {
     if (indices instanceof IntRange) {
       return self[indices]

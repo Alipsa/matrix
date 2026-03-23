@@ -26,6 +26,11 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @CompileStatic
 class Logger {
+  private static final String SLF4J_FACTORY_CLASS = 'org.slf4j.LoggerFactory'
+  private static final String SLF4J_LOGGER_CLASS = 'org.slf4j.Logger'
+  private static final String SLF4J_PLACEHOLDER = '{}'
+  private static final String PLATFORM_NEWLINE_FORMAT = '%n'
+  private static final String GET_LOGGER_METHOD = 'getLogger'
 
   // Static fields
   private static final boolean SLF4J_AVAILABLE
@@ -42,13 +47,13 @@ class Logger {
     boolean slf4jDetected = false
     try {
       // First check if SLF4J API is available
-      loadAndInitializeClass('org.slf4j.LoggerFactory')
-      loadAndInitializeClass('org.slf4j.Logger')
+      loadAndInitializeClass(SLF4J_FACTORY_CLASS)
+      loadAndInitializeClass(SLF4J_LOGGER_CLASS)
 
       // Then check if there's an actual implementation (not just NOP logger)
       // Get a test logger and check if it's a NOP logger
-      def loggerFactoryClass = loadAndInitializeClass('org.slf4j.LoggerFactory')
-      def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
+      def loggerFactoryClass = loadAndInitializeClass(SLF4J_FACTORY_CLASS)
+      def getLoggerMethod = loggerFactoryClass.getMethod(GET_LOGGER_METHOD, String)
       def testLogger = getLoggerMethod.invoke(null, 'se.alipsa.matrix.core.util.Logger.test')
 
       // If the logger's class name contains "NOP", there's no implementation
@@ -199,14 +204,14 @@ class Logger {
   private void logWithSlf4j(LogLevel level, String format, Object[] args, Throwable t) {
     // Convert String.format style (%s, %d, etc.) to SLF4J style ({})
     String slf4jFormat = format
-        .replace('%n', System.lineSeparator())
-        .replace('%s', '{}')
-        .replace('%d', '{}')
-        .replace('%f', '{}')
-        .replace('%b', '{}')
-        .replace('%c', '{}')
-        .replace('%x', '{}')
-        .replace('%o', '{}')
+        .replace(PLATFORM_NEWLINE_FORMAT, System.lineSeparator())
+        .replace('%s', SLF4J_PLACEHOLDER)
+        .replace('%d', SLF4J_PLACEHOLDER)
+        .replace('%f', SLF4J_PLACEHOLDER)
+        .replace('%b', SLF4J_PLACEHOLDER)
+        .replace('%c', SLF4J_PLACEHOLDER)
+        .replace('%x', SLF4J_PLACEHOLDER)
+        .replace('%o', SLF4J_PLACEHOLDER)
 
     switch (level) {
       case LogLevel.DEBUG:
@@ -255,7 +260,7 @@ class Logger {
     }
 
     // Format the message
-    String fallbackFormat = format.replace('%n', System.lineSeparator())
+    String fallbackFormat = format.replace(PLATFORM_NEWLINE_FORMAT, System.lineSeparator())
     String message = (args != null && args.length > 0) ? String.format(fallbackFormat, args) : fallbackFormat
 
     // Build the log line
@@ -276,8 +281,8 @@ class Logger {
 
   private static Object createSlf4jLogger(String className) {
     try {
-      Class<?> loggerFactoryClass = loadAndInitializeClass('org.slf4j.LoggerFactory')
-      def getLoggerMethod = loggerFactoryClass.getMethod('getLogger', String)
+      Class<?> loggerFactoryClass = loadAndInitializeClass(SLF4J_FACTORY_CLASS)
+      def getLoggerMethod = loggerFactoryClass.getMethod(GET_LOGGER_METHOD, String)
       return getLoggerMethod.invoke(null, className)
     } catch (Exception e) {
       // Should not happen since we already checked SLF4J availability

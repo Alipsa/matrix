@@ -27,7 +27,13 @@ import se.alipsa.matrix.core.util.Logger
  * @see MatrixFormatProvider
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class FormatRegistry {
+  private static final String INDENT = '  '
+  private static final String EXTENSION_SEPARATOR = ', '
+  private static final String HEADER_LINE_CHAR = '='
+  private static final int HEADER_LINE_WIDTH = 60
+  private static final String NO_OPTIONS_AVAILABLE = 'No options available.'
 
   private static final Logger log = Logger.getLogger(FormatRegistry)
 
@@ -94,26 +100,26 @@ class FormatRegistry {
 
     StringBuilder sb = new StringBuilder()
     sb.append('Registered Format Providers:\n')
-    sb.append('=' * 60).append('\n')
+    sb.append(HEADER_LINE_CHAR * HEADER_LINE_WIDTH).append('\n')
 
     providerExtensions.each { MatrixFormatProvider p, Set<String> exts ->
       sb.append("\n${p.formatName()}\n")
-      sb.append("  Extensions: ${exts.join(', ')}\n")
-      sb.append("  Read: ${p.canRead() ? 'yes' : 'no'}")
-      sb.append("  Write: ${p.canWrite() ? 'yes' : 'no'}\n")
+      sb.append("${INDENT}Extensions: ${exts.join(EXTENSION_SEPARATOR)}\n")
+      sb.append("${INDENT}Read: ${p.canRead() ? 'yes' : 'no'}")
+      sb.append("${INDENT}Write: ${p.canWrite() ? 'yes' : 'no'}\n")
 
       if (p.canRead()) {
         List<OptionDescriptor> readOpts = p.readOptionDescriptors()
         if (readOpts) {
-          sb.append("\n  Read Options:\n")
-          sb.append(indent(OptionDescriptor.describe(readOpts), '  ')).append('\n')
+          sb.append("\n${INDENT}Read Options:\n")
+          sb.append(indent(OptionDescriptor.describe(readOpts), INDENT)).append('\n')
         }
       }
       if (p.canWrite()) {
         List<OptionDescriptor> writeOpts = p.writeOptionDescriptors()
         if (writeOpts) {
-          sb.append("\n  Write Options:\n")
-          sb.append(indent(OptionDescriptor.describe(writeOpts), '  ')).append('\n')
+          sb.append("\n${INDENT}Write Options:\n")
+          sb.append(indent(OptionDescriptor.describe(writeOpts), INDENT)).append('\n')
         }
       }
     }
@@ -137,8 +143,8 @@ class FormatRegistry {
     }
     List<OptionDescriptor> descriptors = provider.readOptionDescriptors()
     "${provider.formatName()} (*.${fileExtension?.toLowerCase()}) Read Options\n" +
-        ('=' * 60) + '\n' +
-        (descriptors ? OptionDescriptor.describe(descriptors) : 'No options available.')
+        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + '\n' +
+        (descriptors ? OptionDescriptor.describe(descriptors) : NO_OPTIONS_AVAILABLE)
   }
 
   /**
@@ -158,8 +164,8 @@ class FormatRegistry {
     }
     List<OptionDescriptor> descriptors = provider.writeOptionDescriptors()
     "${provider.formatName()} (*.${fileExtension?.toLowerCase()}) Write Options\n" +
-        ('=' * 60) + '\n' +
-        (descriptors ? OptionDescriptor.describe(descriptors) : 'No options available.')
+        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + '\n' +
+        (descriptors ? OptionDescriptor.describe(descriptors) : NO_OPTIONS_AVAILABLE)
   }
 
   /**
@@ -205,7 +211,7 @@ class FormatRegistry {
   private String noProviderMessage(String fileExtension) {
     String ext = fileExtension?.toLowerCase()
     Map<String, MatrixFormatProvider> snapshot = providers
-    "No provider found for extension '${ext}'. Available: ${snapshot.keySet().join(', ')}"
+    "No provider found for extension '${ext}'. Available: ${snapshot.keySet().join(EXTENSION_SEPARATOR)}"
   }
 
   private void ensureLoaded() {
@@ -234,7 +240,7 @@ class FormatRegistry {
           loadedProviders[lowerExt] = provider
         }
       }
-      log.debug("Registered format provider: ${provider.formatName()} [${provider.supportedExtensions().join(', ')}]")
+      log.debug("Registered format provider: ${provider.formatName()} [${provider.supportedExtensions().join(EXTENSION_SEPARATOR)}]")
     }
     Collections.unmodifiableMap(loadedProviders)
   }

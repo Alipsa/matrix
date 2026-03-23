@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter
  */
 @CompileStatic
 class ListConverter {
+  private static final String ISO_LOCAL_DATE_FORMAT = 'yyyy-MM-dd'
 
   static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, Locale numberFormat, T valueIfNull = null,
                              String dateTimeFormat = null) {
@@ -60,7 +61,7 @@ class ListConverter {
   }
 
   static List<java.util.Date> toDates(List<String> dates, Date valueIfNull) {
-    toDates(dates, valueIfNull, 'yyyy-MM-dd')
+    toDates(dates, valueIfNull, ISO_LOCAL_DATE_FORMAT)
   }
 
   static List<java.util.Date> toDates(List<String> dates, java.util.Date valueIfNull, String formatPattern) {
@@ -85,7 +86,7 @@ class ListConverter {
   }
 
   static List<Date> toSqlDates(List<String> dates, Date valueIfNull) {
-    toSqlDates(dates, valueIfNull, 'yyyy-MM-dd')
+    toSqlDates(dates, valueIfNull, ISO_LOCAL_DATE_FORMAT)
   }
 
   static List<Date> toSqlDates(List<String> dates, Date valueIfNull, String formatPattern) {
