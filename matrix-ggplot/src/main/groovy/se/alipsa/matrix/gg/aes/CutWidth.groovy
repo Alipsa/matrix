@@ -160,11 +160,9 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
       // Find which bin this value belongs to using ggplot2's cut_width breaks.
       BigDecimal binIndex = ((d - minX) / w).floor()
       if (closedRight) {
-        BigDecimal boundaryPoint = minX + binIndex * w
-        BigDecimal diff = d - boundaryPoint
-        BigDecimal epsilon = [boundaryPoint.ulp(), d.ulp()].max() * 10.0d
-        boolean onBoundary = diff.abs() <= epsilon
-        boolean atMinBoundary = (d - minX).abs() <= epsilon
+        BigDecimal distanceFromMin = d - minX
+        boolean onBoundary = distanceFromMin.remainder(w) == 0
+        boolean atMinBoundary = distanceFromMin == 0
         // For closed-right bins, values exactly on a boundary belong to the previous bin,
         // except for the minimum boundary which stays in the first bin.
         if (onBoundary && !atMinBoundary) {

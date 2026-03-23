@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.core.util.RollingNumericAccumulator
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
@@ -40,9 +41,7 @@ class RollingColumn {
    * @return a new column containing the rolling means
    */
   Column mean() {
-    aggregateNumeric('mean') { List<Number> values ->
-      Stat.mean(values)
-    }
+    aggregateNumericWithSlidingWindow('mean', true)
   }
 
   /**
@@ -54,9 +53,7 @@ class RollingColumn {
    * @return a new column containing the rolling sums
    */
   Column sum() {
-    aggregateNumeric('sum') { List<Number> values ->
-      Stat.sum(values)
-    }
+    aggregateNumericWithSlidingWindow('sum', false)
   }
 
   /**
@@ -132,6 +129,18 @@ class RollingColumn {
     for (int rowIndex = 0; rowIndex < source.size(); rowIndex++) {
       List<Number> numbers = RollingWindowHelper.nonNullNumbers(slice(rowIndex))
       result.add(numbers.size() < options.minPeriods ? null : function.call(numbers))
+    }
+    result
+  }
+
+  private Column aggregateNumericWithSlidingWindow(String operationName, boolean mean) {
+    requireNumeric(operationName)
+    Column result = new Column(source.name, BigDecimal)
+    RollingNumericAccumulator accumulator = new RollingNumericAccumulator(source)
+    for (int rowIndex = 0; rowIndex < source.size(); rowIndex++) {
+      IntRange range = RollingWindowHelper.windowRange(source.size(), rowIndex, options)
+      accumulator.moveTo(range)
+      result.add(mean ? accumulator.meanOrNull(options.minPeriods) : accumulator.sumOrNull(options.minPeriods))
     }
     result
   }

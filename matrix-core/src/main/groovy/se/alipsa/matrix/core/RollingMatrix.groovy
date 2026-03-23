@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.core.util.RollingNumericAccumulator
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
@@ -55,9 +56,7 @@ class RollingMatrix {
    * @return a new matrix containing rolling means for numeric columns
    */
   Matrix mean() {
-    aggregateNumericColumns { List<Number> values ->
-      Stat.mean(values)
-    }
+    aggregateNumericColumnsWithSlidingWindow(true)
   }
 
   /**
@@ -66,9 +65,7 @@ class RollingMatrix {
    * @return a new matrix containing rolling sums for numeric columns
    */
   Matrix sum() {
-    aggregateNumericColumns { List<Number> values ->
-      Stat.sum(values)
-    }
+    aggregateNumericColumnsWithSlidingWindow(false)
   }
 
   /**
@@ -155,6 +152,32 @@ class RollingMatrix {
         rolledColumn.add(values.size() < options.minPeriods ? null : function.call(values))
       }
       result.replace(columnName, resultType, rolledColumn)
+    }
+    result
+  }
+
+  private Matrix aggregateNumericColumnsWithSlidingWindow(boolean mean) {
+    Matrix result = source.clone()
+    source.columnNames().eachWithIndex { String columnName, int index ->
+      Column sourceColumn = source.column(index)
+      if (!shouldAggregateColumn(sourceColumn)) {
+        return
+      }
+      List<Object> orderedValues = new ArrayList<>(orderedRowIndices.size())
+      orderedRowIndices.each { Integer rowIndex ->
+        orderedValues.add(sourceColumn[rowIndex])
+      }
+      RollingNumericAccumulator accumulator = new RollingNumericAccumulator(orderedValues)
+      List<BigDecimal> rolledValues = new ArrayList<>(Collections.nCopies(source.rowCount(), null))
+      for (int orderedPosition = 0; orderedPosition < orderedRowIndices.size(); orderedPosition++) {
+        IntRange windowRange = RollingWindowHelper.windowRange(orderedRowIndices.size(), orderedPosition, options)
+        accumulator.moveTo(windowRange)
+        int rowIndex = orderedRowIndices[orderedPosition]
+        rolledValues[rowIndex] = mean
+            ? accumulator.meanOrNull(options.minPeriods)
+            : accumulator.sumOrNull(options.minPeriods)
+      }
+      result.replace(columnName, BigDecimal, rolledValues)
     }
     result
   }
