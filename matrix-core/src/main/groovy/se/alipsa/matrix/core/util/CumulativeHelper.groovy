@@ -152,6 +152,7 @@ class CumulativeHelper {
     }
   }
 
+  @SuppressWarnings('ExplicitCallToCompareToMethod')
   private static int compareValues(Comparable left, Comparable right, String operationName, Column source) {
     if (left instanceof Number && right instanceof Number) {
       BigDecimal leftValue = numericValue(left, source, operationName)

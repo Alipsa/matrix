@@ -1364,12 +1364,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matching Column
    */
   Column column(String columnName) {
-    try {
-      return mColumns.get(columnIndex(columnName))
-    } catch (IndexOutOfBoundsException e) {
-      log.error("Attempting to find index for '$columnName' but got ${columnIndex(columnName)}", e)
-      throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this matrix (${this.mName}): " + e.getMessage())
+    int index = columnIndex(columnName)
+    if (index == Row.COLUMN_NOT_FOUND) {
+      throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this matrix (${this.mName})")
     }
+    mColumns.get(index)
   }
 
   /**
@@ -1885,6 +1884,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param message message prefix used when throwException is true
    * @return true if the matrices are considered equal, otherwise false
    */
+  @SuppressWarnings('EqualsOverloaded')
   boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
                  Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
     if (this.is(o)) {
