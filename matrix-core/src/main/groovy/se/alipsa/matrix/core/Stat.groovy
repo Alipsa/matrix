@@ -22,7 +22,7 @@ class Stat {
     private static final Logger log = Logger.getLogger(Stat)
     private static final List<String> PRIMITIVES = ['double', 'float', 'int', 'long', 'short', 'byte']
     private static final BigDecimal DECIMAL_ZERO = 0.0g
-    @SuppressWarnings('UnusedPrivateField')
+    @SuppressWarnings('UnusedPrivateField') // CodeNarc false positive: used as a map key
     private static final String SUMMARY_TYPE = 'Type'
     private static final String LEGACY_GROUP_KEY_SEPARATOR = '_'
     private static final int PERCENT_SCALE = 2

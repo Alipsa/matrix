@@ -152,23 +152,15 @@ class CumulativeHelper {
     }
   }
 
+  @SuppressWarnings('ExplicitCallToCompareToMethod')
   private static int compareValues(Comparable left, Comparable right, String operationName, Column source) {
     if (left instanceof Number && right instanceof Number) {
       BigDecimal leftValue = numericValue(left, source, operationName)
       BigDecimal rightValue = numericValue(right, source, operationName)
       return leftValue <=> rightValue
     }
-    Class leftClass = left.class
-    Class rightClass = right.class
-    boolean classesCompatible = leftClass.isAssignableFrom(rightClass) || rightClass.isAssignableFrom(leftClass)
-    if (!classesCompatible) {
-      throw new IllegalArgumentException(
-          "${operationName} requires mutually comparable values within column '${source.name}'",
-          new ClassCastException("Cannot compare ${leftClass.simpleName} to ${rightClass.simpleName}")
-      )
-    }
     try {
-      left <=> right
+      left.compareTo(right)
     } catch (ClassCastException e) {
       throw new IllegalArgumentException(
           "${operationName} requires mutually comparable values within column '${source.name}'",
