@@ -67,8 +67,17 @@ class NumberExtension {
 
   /** π to 30 digits is 3.141592653589793238462643383279, 16 is precise enough for most scientific calculations */
   static final BigDecimal PI = 3.1415926535897932
+  /** Higher-precision π constant used for internal range reduction in transcendental functions. */
+  static final BigDecimal PI32 = 3.141592653589793238462643383279
   /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
   static final BigDecimal E = 2.7182818284590452
+  /** Higher-precision e constant used for internal computation where extra precision matters. */
+  static final BigDecimal E32 = 2.718281828459045235360287471352
+
+  /** Natural logarithm of 2 to 32 significant digits */
+  private static final BigDecimal LN2 = new BigDecimal('0.69314718055994530941723212145818')
+  /** Natural logarithm of 10 to 32 significant digits */
+  private static final BigDecimal LN10 = new BigDecimal('2.30258509299404568401799145468436')
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -108,16 +117,68 @@ class NumberExtension {
    * x.log().exp()  // → 5.0
    * }</pre>
    *
-   * @param self the Number value (must be positive)
+   * @param self the BigDecimal value (must be positive)
    * @return a BigDecimal representing the natural logarithm of this value
    * @throws IllegalArgumentException if self is not positive (value <= 0)
    */
-  static BigDecimal log(Number self) {
-    double value = self.doubleValue()
-    if (value <= 0) {
+  static BigDecimal log(BigDecimal self) {
+    if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
-    return Math.log(value) as BigDecimal
+    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    lnSeries(self).round(MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the natural logarithm (ln) of this number as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @return a BigDecimal representing the natural logarithm of this value
+   * @see #log(BigDecimal)
+   */
+  static BigDecimal log(Number self) {
+    log(self as BigDecimal)
+  }
+
+  /**
+   * Internal natural logarithm computation with DECIMAL128 precision.
+   * Uses argument reduction and the series ln(x) = 2(y + y³/3 + y⁵/5 + ...)
+   * where y = (x-1)/(x+1).
+   */
+  private static BigDecimal lnSeries(BigDecimal value) {
+    MathContext mc = MathContext.DECIMAL128
+    BigDecimal two = 2
+    // Argument reduction: scale to [1, 10) using BigDecimal magnitude, then to [0.5, 2.0] with powers of 2
+    int tenPower = value.precision() - value.scale() - 1
+    BigDecimal x = tenPower != 0 ? value.scaleByPowerOfTen(-tenPower) : value
+    int twoPower = 0
+    while (x > two) {
+      x = x.divide(two, mc)
+      twoPower++
+    }
+    while (x < 0.5) {
+      x = x.multiply(two, mc)
+      twoPower--
+    }
+
+    BigDecimal y = (x - 1).divide(x + 1, mc)
+    BigDecimal ySquared = y.multiply(y, mc)
+    BigDecimal term = y
+    BigDecimal result = y
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-${mc.precision}")
+
+    while (true) {
+      term = term.multiply(ySquared, mc)
+      BigDecimal step = term.divide(new BigDecimal(2 * iteration + 1), mc)
+      if (step.abs() < threshold) break
+      result = result.add(step)
+      iteration++
+    }
+
+    result.multiply(two, mc)
+        .add(LN10.multiply(BigDecimal.valueOf(tenPower), mc), mc)
+        .add(LN2.multiply(BigDecimal.valueOf(twoPower), mc), mc)
   }
 
   /**
@@ -138,50 +199,76 @@ class NumberExtension {
    * value3.log(3)  // → 3.0 (log base 3 of 27)
    * }</pre>
    *
-   * @param self the Number value (must be positive)
+   * @param self the BigDecimal value (must be positive)
    * @param base the logarithm base (must be positive and not equal to 1)
    * @return a BigDecimal representing the logarithm of this value to the specified base
    * @throws IllegalArgumentException if self <= 0, base <= 0, or base == 1
    */
-  static BigDecimal log(Number self, Number base) {
-    double value = self.doubleValue()
-    double baseValue = base.doubleValue()
-
-    if (value <= 0) {
+  static BigDecimal log(BigDecimal self, Number base) {
+    if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
+    BigDecimal baseValue = base as BigDecimal
+
     if (baseValue <= 0) {
       throw new IllegalArgumentException("Logarithm base must be positive: ${base}")
     }
-    if (baseValue == 1.0) {
+    if (baseValue == BigDecimal.ONE) {
       throw new IllegalArgumentException("Logarithm base cannot be 1: log base 1 is undefined")
     }
 
-    double valueLog = Math.log(value)
-    double baseLog = Math.log(baseValue)
-    return (valueLog / baseLog) as BigDecimal
+    lnSeries(self).divide(lnSeries(baseValue), MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the logarithm of this number to the specified base as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @param base the logarithm base (must be positive and not equal to 1)
+   * @return a BigDecimal representing the logarithm of this value to the specified base
+   * @see #log(BigDecimal, Number)
+   */
+  static BigDecimal log(Number self, Number base) {
+    log(self as BigDecimal, base)
   }
 
   /**
    * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
    *
-   * @param self the Number value
-   * @return  a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @param self the BigDecimal value (must be positive)
+   * @return a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @throws IllegalArgumentException if self is not positive (value <= 0)
+   */
+  static BigDecimal log10(BigDecimal self) {
+    if (self <= 0) {
+      throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
+    }
+    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    lnSeries(self).divide(LN10, MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
+   *
+   * @param self the Number value (must be positive)
+   * @return a BigDecimal representing the base-10 logarithm (log10) of this value
+   * @see #log10(BigDecimal)
    */
   static BigDecimal log10(Number self) {
-    return Math.log10(self.doubleValue()) as BigDecimal
+    log10(self as BigDecimal)
   }
 
   /**
    * Returns Euler's number e raised to the power of this value.
    * <p>
    * This method provides the natural exponential function (exp), which is the inverse
-   * of the natural logarithm. It uses the power operator with Math.E as the base.
+   * of the natural logarithm. Uses argument reduction and Taylor series for pure BigDecimal
+   * precision: e<sup>x</sup> = e<sup>k</sup> &middot; e<sup>r</sup> where k = round(x) and r = x - k.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
    * BigDecimal x = 1.0G
-   * x.exp()  // → 2.718281828... (Math.E)
+   * x.exp()  // → 2.718281828... (e)
    *
    * BigDecimal x2 = 0G
    * x2.exp()  // → 1.0
@@ -197,31 +284,77 @@ class NumberExtension {
    * @param self the exponent value (any Number type)
    * @return e raised to the power of this value, as a BigDecimal
    */
+  static BigDecimal exp(BigDecimal self) {
+    if (self == 0) return BigDecimal.ONE
+
+    // Argument reduction: e^x = e^k * e^r where k = round(x), r = x - k, |r| <= 0.5
+    // e^k uses BigDecimal.pow(int) for full precision; e^r uses Taylor series (fast convergence)
+    long roundedExponent
+    try {
+      roundedExponent = self.setScale(0, RoundingMode.HALF_EVEN).longValueExact()
+    } catch (ArithmeticException ignored) {
+      throw new ArithmeticException("Exponent too large for exp(): $self")
+    }
+    if (roundedExponent > Integer.MAX_VALUE || roundedExponent < Integer.MIN_VALUE) {
+      throw new ArithmeticException("Exponent too large for exp(): $self")
+    }
+
+    int k = roundedExponent as int
+    BigDecimal r = self - k
+
+    // Taylor series: e^r = 1 + r + r²/2! + r³/3! + ...
+    BigDecimal term = BigDecimal.ONE
+    BigDecimal result = BigDecimal.ONE
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-${MathContext.DECIMAL128.precision}")
+
+    while (true) {
+      term = term.multiply(r, MathContext.DECIMAL128)
+          .divide(new BigDecimal(iteration), MathContext.DECIMAL128)
+      if (term.abs() < threshold) break
+      result = result.add(term)
+      iteration++
+    }
+
+    // Combine: e^k * e^r
+    BigDecimal eToK = k >= 0
+        ? E.pow(k, MathContext.DECIMAL128)
+        : BigDecimal.ONE.divide(E.pow(-k, MathContext.DECIMAL128), MathContext.DECIMAL128)
+
+    (eToK * result).round(MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns Euler's number e raised to the power of this value.
+   *
+   * @param self the exponent value (any Number type)
+   * @return e raised to the power of this value, as a BigDecimal
+   * @see #exp(BigDecimal)
+   */
   static BigDecimal exp(Number self) {
-    BigDecimal val = self as BigDecimal
-    return E ** val
+    exp(self as BigDecimal)
   }
 
   /**
    * Returns the size of an ulp (unit in the last place) of this BigDecimal value.
-   * An ulp is the positive distance between this floating-point value and the next larger magnitude value.
+   * For BigDecimal, the ulp is 10<sup>-scale</sup>, i.e. the positional value of the least significant digit.
    *
    * @param self the BigDecimal value
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(BigDecimal self) {
-    return Math.ulp(self.doubleValue()) as BigDecimal
+    return BigDecimal.ONE.scaleByPowerOfTen(-self.scale())
   }
 
   /**
    * Returns the size of an ulp (unit in the last place) of this Number value.
-   * An ulp is the positive distance between this floating-point value and the next larger magnitude value.
+   * For BigDecimal, the ulp is 10<sup>-scale</sup>. Other Number types are first converted to BigDecimal.
    *
    * @param self the Number value
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(Number self) {
-    return Math.ulp(self.doubleValue()) as BigDecimal
+    ulp(self as BigDecimal)
   }
 
   /**
@@ -351,8 +484,8 @@ class NumberExtension {
   /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
-   * This method wraps {@link Math#sin(double)} and returns the result as a BigDecimal
-   * for consistent type handling in Groovy numeric operations.
+   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -367,17 +500,17 @@ class NumberExtension {
    * @return the sine of the angle as a BigDecimal
    */
   static BigDecimal sin(BigDecimal self) {
-    //return Math.sin(self.doubleValue()) as BigDecimal
     // Normalize x to range [-2PI, 2PI] to keep series fast
     // (Optional but recommended for large angles)
-    BigDecimal twoPi = PI * 2
-    if (self > twoPi || self < -twoPi) {
-      self = self % twoPi
+    BigDecimal reducedAngle = self
+    BigDecimal twoPi = PI32 * 2
+    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
+      reducedAngle = reducedAngle % twoPi
     }
 
-    BigDecimal result = self
-    BigDecimal term = self
-    BigDecimal xSquared = self ** 2
+    BigDecimal result = reducedAngle
+    BigDecimal term = reducedAngle
+    BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
     BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
 
@@ -398,8 +531,8 @@ class NumberExtension {
   /**
    * Returns the cosine of this BigDecimal value (in radians).
    * <p>
-   * This method wraps {@link Math#cos(double)} and returns the result as a BigDecimal
-   * for consistent type handling in Groovy numeric operations.
+   * This method uses higher-precision range reduction followed by a Taylor series expansion
+   * to retain accuracy for large angles while returning a BigDecimal result.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -414,14 +547,15 @@ class NumberExtension {
    * @return the cosine of the angle as a BigDecimal
    */
   static BigDecimal cos(BigDecimal self) {
-    BigDecimal twoPi = PI * 2
-    if (self > twoPi || self < -twoPi) {
-      self = self % twoPi
+    BigDecimal reducedAngle = self
+    BigDecimal twoPi = PI32 * 2
+    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
+      reducedAngle = reducedAngle % twoPi
     }
 
     BigDecimal result = BigDecimal.ONE
     BigDecimal term = BigDecimal.ONE
-    BigDecimal xSquared = self ** 2
+    BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
     BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
 
@@ -630,7 +764,7 @@ class NumberExtension {
     if (x == 0) {
       if (y > 0) return PI / 2
       if (y < 0) return (PI / 2).negate()
-      throw new ArithmeticException("atan2 undefined for x=0, y=0");
+      return BigDecimal.ZERO
     }
 
     // 2. Calculate the ratio z = y/x
@@ -640,7 +774,7 @@ class NumberExtension {
     BigDecimal result = atan(z)
 
     // 4. Adjust for Quadrants
-    if (x  < 0) {
+    if (x < 0) {
       if (y >= 0) {
         result = result + PI
       } else {

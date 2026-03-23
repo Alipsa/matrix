@@ -519,6 +519,26 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testSinCosWithLargeAngles() {
+    BigDecimal hugeAngle = (NumberExtension.PI32 * 2 * 1_000_000_000) + NumberExtension.PI / 6
+    assertEquals(0.5, hugeAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.sqrt(3) / 2, hugeAngle.cos().doubleValue(), 1e-10)
+
+    BigDecimal negativeHugeAngle = (NumberExtension.PI32 * 2 * 1_000_000_000) - NumberExtension.PI / 6
+    assertEquals(-0.5, negativeHugeAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.sqrt(3) / 2, negativeHugeAngle.cos().doubleValue(), 1e-10)
+  }
+
+  @Test
+  void testExpRejectsExponentOutsidePowRange() {
+    ArithmeticException e = assertThrows(ArithmeticException) {
+      new BigDecimal('3E+10').exp()
+    }
+
+    assertEquals('Exponent too large for exp(): 3E+10', e.message)
+  }
+
+  @Test
   void testSinCosWithExtensionSyntax() {
     // Verify sin/cos work with extension syntax
     BigDecimal zero = 0.0G
@@ -569,7 +589,7 @@ class NumberExtensionTest {
 
     // Verify Number types work with extension syntax
     BigDecimal e = Math.E as BigDecimal
-    assert e.log() == 1.0
+    assertEquals(1.0, e.log().doubleValue(), 1e-15)
     assert 100.log10() == 2G
     assert 42.ulp() > 0
     assert 5.min(10.0G) == 5G
@@ -621,9 +641,15 @@ class NumberExtensionTest {
 
     assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
     assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
+    assertEquals(0.0, NumberExtension.atan2(0.0, 0.0).doubleValue(), 1e-10)
 
     // Test with extension syntax
     assert (1.0).atan2(1.0).doubleValue() == Math.atan2(1.0, 1.0)
+  }
+
+  @Test
+  void testAtan2ZeroZeroBigDecimal() {
+    assertEquals(0.0, (0G).atan2(0G).doubleValue(), 1e-10)
   }
 
   @Test
