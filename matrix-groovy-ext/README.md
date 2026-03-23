@@ -13,13 +13,13 @@ For Maven:
 <dependency>
    <groupId>se.alipsa.matrix</groupId>
    <artifactId>matrix-groovy-ext</artifactId>
-   <version>0.1.0</version>
+   <version>0.1.1</version>
 </dependency>
 ```
 For Gradle:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-groovy-ext:0.1.0')
+implementation('se.alipsa.matrix:matrix-groovy-ext:0.1.1')
 ```
 
 ## Usage Examples
@@ -175,7 +175,7 @@ boolean equal = (a - b).abs() < epsilon    // Safe floating-point comparison
 | Circle area    | `PI * r ** 2`                      | `Math.PI * r ** 2`                                       |
 | Sine of 45°    | `45.0.toRadians().sin()`           | `Math.sin(Math.toRadians(45.0 as double)) as BigDecimal` |
 | Clamp to [0,1] | `value.max(0).min(1)`              | `Math.max(0, Math.min(1, value)) as BigDecimal`          |
-| Distance       | `(dx**2 + dy**2).sqrt()`           | `Math.sqrt((dx**2 + dy**2) as doble) as BigDecimal`      |
+| Distance       | `(dx**2 + dy**2).sqrt()`           | `Math.sqrt((dx**2 + dy**2) as double) as BigDecimal`     |
 | Log base 2     | `value.log(2)`                     | `(Math.log(value) / Math.log(2)) as BigDecimal`          |
 | Polar angle    | `y.atan2(x)`                       | `Math.atan2(y as double, x as double) as BigDecimal`     |
 | Square root    | `value.sqrt()`                     | `Math.sqrt(value) as BigDecimal`                         |
