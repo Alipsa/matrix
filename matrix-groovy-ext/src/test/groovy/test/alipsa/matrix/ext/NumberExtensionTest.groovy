@@ -519,6 +519,17 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testSinCosWithLargeAngles() {
+    BigDecimal hugeAngle = 10000000000.0
+    assertEquals(Math.sin(hugeAngle as double), hugeAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.cos(hugeAngle as double), hugeAngle.cos().doubleValue(), 1e-10)
+
+    BigDecimal shiftedAngle = NumberExtension.PI32 * 1_000_000 + NumberExtension.PI / 6
+    assertEquals(0.5, shiftedAngle.sin().doubleValue(), 1e-10)
+    assertEquals(Math.sqrt(3) / 2, shiftedAngle.cos().doubleValue(), 1e-10)
+  }
+
+  @Test
   void testSinCosWithExtensionSyntax() {
     // Verify sin/cos work with extension syntax
     BigDecimal zero = 0.0G
@@ -621,9 +632,15 @@ class NumberExtensionTest {
 
     assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
     assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
+    assertEquals(0.0, NumberExtension.atan2(0.0, 0.0).doubleValue(), 1e-10)
 
     // Test with extension syntax
     assert (1.0).atan2(1.0).doubleValue() == Math.atan2(1.0, 1.0)
+  }
+
+  @Test
+  void testAtan2ZeroZeroBigDecimal() {
+    assertEquals(0.0, (0G).atan2(0G).doubleValue(), 1e-10)
   }
 
   @Test

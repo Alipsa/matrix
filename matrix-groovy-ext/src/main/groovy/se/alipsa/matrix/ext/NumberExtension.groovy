@@ -67,8 +67,10 @@ class NumberExtension {
 
   /** π to 30 digits is 3.141592653589793238462643383279, 16 is precise enough for most scientific calculations */
   static final BigDecimal PI = 3.1415926535897932
+  static final BigDecimal PI32 = 3.141592653589793238462643383279
   /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
   static final BigDecimal E = 2.7182818284590452
+  static final BigDecimal E32 = 2.718281828459045235360287471352
 
   /** Natural logarithm of 2 to 32 significant digits */
   private static final BigDecimal LN2 = new BigDecimal('0.69314718055994530941723212145818')
@@ -248,12 +250,13 @@ class NumberExtension {
    * Returns Euler's number e raised to the power of this value.
    * <p>
    * This method provides the natural exponential function (exp), which is the inverse
-   * of the natural logarithm. It uses the power operator with Math.E as the base.
+   * of the natural logarithm. Uses argument reduction and Taylor series for pure BigDecimal
+   * precision: e<sup>x</sup> = e<sup>k</sup> &middot; e<sup>r</sup> where k = round(x) and r = x - k.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
    * BigDecimal x = 1.0G
-   * x.exp()  // → 2.718281828... (Math.E)
+   * x.exp()  // → 2.718281828... (e)
    *
    * BigDecimal x2 = 0G
    * x2.exp()  // → 1.0
@@ -269,9 +272,45 @@ class NumberExtension {
    * @param self the exponent value (any Number type)
    * @return e raised to the power of this value, as a BigDecimal
    */
+  static BigDecimal exp(BigDecimal self) {
+    if (self == 0) return BigDecimal.ONE
+
+    // Argument reduction: e^x = e^k * e^r where k = round(x), r = x - k, |r| <= 0.5
+    // e^k uses BigDecimal.pow(int) for full precision; e^r uses Taylor series (fast convergence)
+    int k = self.setScale(0, RoundingMode.HALF_EVEN).intValueExact()
+    BigDecimal r = self - k
+
+    // Taylor series: e^r = 1 + r + r²/2! + r³/3! + ...
+    BigDecimal term = BigDecimal.ONE
+    BigDecimal result = BigDecimal.ONE
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-${MathContext.DECIMAL128.precision}")
+
+    while (true) {
+      term = term.multiply(r, MathContext.DECIMAL128)
+          .divide(new BigDecimal(iteration), MathContext.DECIMAL128)
+      if (term.abs() < threshold) break
+      result = result.add(term)
+      iteration++
+    }
+
+    // Combine: e^k * e^r
+    BigDecimal eToK = k >= 0
+        ? E.pow(k, MathContext.DECIMAL128)
+        : BigDecimal.ONE.divide(E.pow(-k, MathContext.DECIMAL128), MathContext.DECIMAL128)
+
+    (eToK * result).round(MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns Euler's number e raised to the power of this value.
+   *
+   * @param self the exponent value (any Number type)
+   * @return e raised to the power of this value, as a BigDecimal
+   * @see #exp(BigDecimal)
+   */
   static BigDecimal exp(Number self) {
-    BigDecimal val = self as BigDecimal
-    return E ** val
+    exp(self as BigDecimal)
   }
 
   /**
@@ -439,17 +478,17 @@ class NumberExtension {
    * @return the sine of the angle as a BigDecimal
    */
   static BigDecimal sin(BigDecimal self) {
-    //return Math.sin(self.doubleValue()) as BigDecimal
     // Normalize x to range [-2PI, 2PI] to keep series fast
     // (Optional but recommended for large angles)
-    BigDecimal twoPi = PI * 2
-    if (self > twoPi || self < -twoPi) {
-      self = self % twoPi
+    BigDecimal reducedAngle = self
+    BigDecimal twoPi = PI32 * 2
+    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
+      reducedAngle = reducedAngle % twoPi
     }
 
-    BigDecimal result = self
-    BigDecimal term = self
-    BigDecimal xSquared = self ** 2
+    BigDecimal result = reducedAngle
+    BigDecimal term = reducedAngle
+    BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
     BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
 
@@ -486,14 +525,15 @@ class NumberExtension {
    * @return the cosine of the angle as a BigDecimal
    */
   static BigDecimal cos(BigDecimal self) {
-    BigDecimal twoPi = PI * 2
-    if (self > twoPi || self < -twoPi) {
-      self = self % twoPi
+    BigDecimal reducedAngle = self
+    BigDecimal twoPi = PI32 * 2
+    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
+      reducedAngle = reducedAngle % twoPi
     }
 
     BigDecimal result = BigDecimal.ONE
     BigDecimal term = BigDecimal.ONE
-    BigDecimal xSquared = self ** 2
+    BigDecimal xSquared = reducedAngle ** 2
     int iteration = 1
     BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
 
@@ -702,7 +742,7 @@ class NumberExtension {
     if (x == 0) {
       if (y > 0) return PI / 2
       if (y < 0) return (PI / 2).negate()
-      throw new ArithmeticException("atan2 undefined for x=0, y=0");
+      return BigDecimal.ZERO
     }
 
     // 2. Calculate the ratio z = y/x
