@@ -64,6 +64,9 @@ import java.math.RoundingMode
  *
  * @since 1.0
  */
+// Repeated small numeric literals are part of the published formulas here; extracting them
+// into artificial constants would hurt readability more than it would help.
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 @CompileStatic
 class NumberExtension {
 
@@ -149,7 +152,9 @@ class NumberExtension {
     if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
-    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    if (self == BigDecimal.ONE) {
+      return BigDecimal.ZERO
+    }
     lnSeries(self).round(MathContext.DECIMAL64)
   }
 
@@ -195,7 +200,9 @@ class NumberExtension {
     while (true) {
       term = term.multiply(ySquared, mc)
       BigDecimal step = term.divide(new BigDecimal(2 * iteration + 1), mc)
-      if (step.abs() < threshold) break
+      if (step.abs() < threshold) {
+        break
+      }
       result = result.add(step)
       iteration++
     }
@@ -267,7 +274,9 @@ class NumberExtension {
     if (self <= 0) {
       throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
     }
-    if (self == BigDecimal.ONE) return BigDecimal.ZERO
+    if (self == BigDecimal.ONE) {
+      return BigDecimal.ZERO
+    }
     lnSeries(self).divide(LN10, MathContext.DECIMAL64)
   }
 
@@ -310,7 +319,9 @@ class NumberExtension {
    * @throws ArithmeticException if the rounded exponent is outside the supported int range
    */
   static BigDecimal exp(BigDecimal self) {
-    if (self == 0) return BigDecimal.ONE
+    if (self == 0) {
+      return BigDecimal.ONE
+    }
 
     // Argument reduction: e^x = e^k * e^r where k = round(x), r = x - k, |r| <= 0.5
     // e^k uses BigDecimal.pow(int) for full precision; e^r uses Taylor series (fast convergence)
@@ -336,7 +347,9 @@ class NumberExtension {
     while (true) {
       term = term.multiply(r, MathContext.DECIMAL128)
           .divide(new BigDecimal(iteration), MathContext.DECIMAL128)
-      if (term.abs() < threshold) break
+      if (term.abs() < threshold) {
+        break
+      }
       result = result.add(term)
       iteration++
     }
@@ -555,7 +568,9 @@ class NumberExtension {
       BigDecimal divisor = (2 * iteration) * (2 * iteration + 1)
       term = term / divisor
 
-      if (term.abs() < threshold) break
+      if (term.abs() < threshold) {
+        break
+      }
 
       result = result + term
       iteration++
@@ -611,7 +626,9 @@ class NumberExtension {
       BigDecimal divisor = (2 * iteration - 1) * (2 * iteration)
       term = term / divisor
 
-      if (term.abs() < threshold) break
+      if (term.abs() < threshold) {
+        break
+      }
 
       result = result + term
       iteration++
@@ -629,7 +646,6 @@ class NumberExtension {
   static BigDecimal cos(Number self) {
     cos(self as BigDecimal)
   }
-
 
   /**
    * Converts this BigDecimal value from radians to degrees.
@@ -748,7 +764,9 @@ class NumberExtension {
    * @return the arctangent of the value
    */
   static BigDecimal atan(BigDecimal self) {
-    if (self == 0) return BigDecimal.ZERO
+    if (self == 0) {
+      return BigDecimal.ZERO
+    }
 
     // Handle negative input: atan(-x) = -atan(x)
     if (self < 0) {
@@ -832,9 +850,15 @@ class NumberExtension {
     if (self < -1 || self > 1) {
       throw new ArithmeticException("asin undefined for value outside [-1, 1]: ${self}")
     }
-    if (self == 0) return BigDecimal.ZERO
-    if (self == 1) return PI / 2
-    if (self == -1) return (PI / 2).negate()
+    if (self == 0) {
+      return BigDecimal.ZERO
+    }
+    if (self == 1) {
+      return PI / 2
+    }
+    if (self == -1) {
+      return (PI / 2).negate()
+    }
     // asin(x) = atan(x / sqrt(1 - x²))
     BigDecimal xSquared = self ** 2
     BigDecimal denominator = sqrt(1 - xSquared)
@@ -875,8 +899,12 @@ class NumberExtension {
   static BigDecimal atan2(BigDecimal y, BigDecimal x) {
     // 1. Handle special cases (x=0, y=0) to avoid division by zero
     if (x == 0) {
-      if (y > 0) return PI / 2
-      if (y < 0) return (PI / 2).negate()
+      if (y > 0) {
+        return PI / 2
+      }
+      if (y < 0) {
+        return (PI / 2).negate()
+      }
       return BigDecimal.ZERO
     }
 
