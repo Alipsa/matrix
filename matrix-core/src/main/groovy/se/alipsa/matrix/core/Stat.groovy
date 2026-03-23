@@ -20,8 +20,9 @@ import static ValueConverter.asBigDecimal
 class Stat {
 
     private static final Logger log = Logger.getLogger(Stat)
-    private static final List<String> primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
+    private static final List<String> PRIMITIVES = ['double', 'float', 'int', 'long', 'short', 'byte']
     private static final BigDecimal DECIMAL_ZERO = 0.0g
+    @SuppressWarnings('UnusedPrivateField')
     private static final String SUMMARY_TYPE = 'Type'
     private static final String LEGACY_GROUP_KEY_SEPARATOR = '_'
     private static final int PERCENT_SCALE = 2
@@ -55,7 +56,7 @@ class Stat {
         for (colName in table.columnNames()) {
             def column = table.column(colName)
             def type = table.type(colName)
-            if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
+            if (Number.isAssignableFrom(type) || PRIMITIVES.contains(type.getTypeName())) {
                 def summary = addNumericSummary(column, type)
                 if (summary != null) {
                     map[colName] = summary
@@ -71,7 +72,7 @@ class Stat {
         def sum = new Summary()
         def colName = column.name
         def type = column.type
-        if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
+        if (Number.isAssignableFrom(type) || PRIMITIVES.contains(type.getTypeName())) {
             def summary = addNumericSummary(column, type)
             if (summary != null) {
                 sum[colName] = summary

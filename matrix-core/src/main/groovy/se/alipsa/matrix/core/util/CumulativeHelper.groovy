@@ -158,8 +158,17 @@ class CumulativeHelper {
       BigDecimal rightValue = numericValue(right, source, operationName)
       return leftValue <=> rightValue
     }
+    Class leftClass = left.class
+    Class rightClass = right.class
+    boolean classesCompatible = leftClass.isAssignableFrom(rightClass) || rightClass.isAssignableFrom(leftClass)
+    if (!classesCompatible) {
+      throw new IllegalArgumentException(
+          "${operationName} requires mutually comparable values within column '${source.name}'",
+          new ClassCastException("Cannot compare ${leftClass.simpleName} to ${rightClass.simpleName}")
+      )
+    }
     try {
-      left.compareTo(right)
+      left <=> right
     } catch (ClassCastException e) {
       throw new IllegalArgumentException(
           "${operationName} requires mutually comparable values within column '${source.name}'",
