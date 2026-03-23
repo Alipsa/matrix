@@ -16,7 +16,8 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
 class Row implements GroovyObject, List<Object> {
     private static final String UNSUPPORTED_MUTATION_MESSAGE = 'Adding and deleting values from a row is not supported.'
     private static final String UNKNOWN_COLUMN_MESSAGE_PREFIX = 'Failed to find a column with the name '
-    private static final int COLUMN_NOT_FOUND = -1
+    @PackageScope
+    static final int COLUMN_NOT_FOUND = -1
 
     private int rowNumber
     private List<Object> content

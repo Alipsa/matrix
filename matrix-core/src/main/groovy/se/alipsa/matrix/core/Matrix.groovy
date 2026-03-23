@@ -49,21 +49,19 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
   private static final String PATH_CANNOT_BE_NULL = 'path cannot be null'
   private static final String ROW_CANNOT_BE_NULL = 'Row cannot be null'
-  private static final int COLUMN_NOT_FOUND = -1
   private static final String COMMA = ','
   private static final String COMMA_SPACE = ', '
   private static final String MATRIX_NAME_SEPARATOR = '_'
   private static final String CSV_QUOTE_STRING_OPTION = 'quoteString'
-  private static final String CSV_DELIMITER_OPTION = 'delimiter'
+  private static final String DELIMITER_OPTION = 'delimiter'
   private static final String CSV_ROW_DELIMITER_OPTION = 'rowDelimiter'
   private static final String CSV_ROW_DELIMITER_LEGACY_OPTION = 'rowdelimiter'
   private static final String CSV_LINE_COMMENT_OPTION = 'lineComment'
   private static final String CSV_LINE_COMMENT_LEGACY_OPTION = 'linecomment'
-  private static final String CSV_INCLUDE_HEADER_OPTION = 'includeHeader'
+  private static final String INCLUDE_HEADER_OPTION = 'includeHeader'
   private static final String CSV_INCLUDE_TYPES_OPTION = 'includeTypes'
   private static final String CONTENT_INCLUDE_TITLE_OPTION = 'includeTitle'
   private static final String CONTENT_LINE_ENDING_OPTION = 'lineEnding'
-  private static final String DEFAULT_CSV_DELIMITER = COMMA
   private static final String DEFAULT_ROW_DELIMITER = '\n'
   private static final String DEFAULT_LINE_COMMENT = '#'
 
@@ -1327,7 +1325,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         return i
       }
     }
-    return COLUMN_NOT_FOUND
+    return Row.COLUMN_NOT_FOUND
   }
 
   /**
@@ -1348,7 +1346,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       i++
     }
-    return COLUMN_NOT_FOUND
+    return Row.COLUMN_NOT_FOUND
   }
 
   List<Integer> columnIndices(List<String> columnNames) {
@@ -1555,8 +1553,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   String content(Map params) {
     boolean includeTitle = params.getOrDefault(CONTENT_INCLUDE_TITLE_OPTION, true)
-    boolean includeHeader = params.getOrDefault(CSV_INCLUDE_HEADER_OPTION, true)
-    String delimiter = params.getOrDefault(CSV_DELIMITER_OPTION, '\t')
+    boolean includeHeader = params.getOrDefault(INCLUDE_HEADER_OPTION, true)
+    String delimiter = params.getOrDefault(DELIMITER_OPTION, '\t')
     String lineEnding = params.getOrDefault(CONTENT_LINE_ENDING_OPTION, DEFAULT_ROW_DELIMITER)
     int maxColumnLength = (int) params.getOrDefault('maxColumnLength', 50)
     return content(includeHeader, includeTitle, delimiter, lineEnding, maxColumnLength)
@@ -1771,7 +1769,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       return this
     }
     List<Integer> idxs = columnIndices(columnNames as List<String>)
-    if (idxs.contains(COLUMN_NOT_FOUND)) {
+    if (idxs.contains(Row.COLUMN_NOT_FOUND)) {
       def colNames = this.columnNames()
       throw new IllegalArgumentException("Variables ${String.join(COMMA, columnNames)} does not match actual column names: ${String.join(COMMA, colNames)}")
     }
@@ -3501,14 +3499,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   String toCsvString(Map options) {
     String quoteString = options.containsKey(CSV_QUOTE_STRING_OPTION) ? options.quoteString as String : '"'
-    String delimiter = options.containsKey(CSV_DELIMITER_OPTION) ? options.delimiter as String : DEFAULT_CSV_DELIMITER
+    String delimiter = options.containsKey(DELIMITER_OPTION) ? options.delimiter as String : COMMA
     String rowDelimiter = options.containsKey(CSV_ROW_DELIMITER_OPTION)
       ? options.rowDelimiter as String
       : (options[CSV_ROW_DELIMITER_LEGACY_OPTION] as String ?: DEFAULT_ROW_DELIMITER)
     String lineComment = options.containsKey(CSV_LINE_COMMENT_OPTION)
       ? options.lineComment as String
       : (options[CSV_LINE_COMMENT_LEGACY_OPTION] as String ?: DEFAULT_LINE_COMMENT)
-    boolean includeHeader = options.containsKey(CSV_INCLUDE_HEADER_OPTION) ? options.includeHeader as boolean : true
+    boolean includeHeader = options.containsKey(INCLUDE_HEADER_OPTION) ? options.includeHeader as boolean : true
     boolean includeTypes = options.containsKey(CSV_INCLUDE_TYPES_OPTION) ? options.includeTypes as boolean : false
     boolean customQuoteString = options.containsKey(CSV_QUOTE_STRING_OPTION)
 
@@ -3582,7 +3580,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (!options.containsKey(CSV_INCLUDE_TYPES_OPTION)) {
       options.includeTypes = true
     }
-    if (!options.containsKey(CSV_INCLUDE_HEADER_OPTION)) {
+    if (!options.containsKey(INCLUDE_HEADER_OPTION)) {
       options.includeHeader = true
     }
     ClipboardUtil.writeText(toCsvString(options))

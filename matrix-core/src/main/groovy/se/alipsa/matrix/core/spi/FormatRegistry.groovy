@@ -27,8 +27,8 @@ import se.alipsa.matrix.core.util.Logger
  * @see MatrixFormatProvider
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class FormatRegistry {
-  private static final String NEWLINE = '\n'
   private static final String INDENT = '  '
   private static final String EXTENSION_SEPARATOR = ', '
   private static final String HEADER_LINE_CHAR = '='
@@ -99,27 +99,27 @@ class FormatRegistry {
     }
 
     StringBuilder sb = new StringBuilder()
-    sb.append("Registered Format Providers:${NEWLINE}")
-    sb.append(HEADER_LINE_CHAR * HEADER_LINE_WIDTH).append(NEWLINE)
+    sb.append('Registered Format Providers:\n')
+    sb.append(HEADER_LINE_CHAR * HEADER_LINE_WIDTH).append('\n')
 
     providerExtensions.each { MatrixFormatProvider p, Set<String> exts ->
-      sb.append("${NEWLINE}${p.formatName()}${NEWLINE}")
-      sb.append("${INDENT}Extensions: ${exts.join(EXTENSION_SEPARATOR)}${NEWLINE}")
+      sb.append("\n${p.formatName()}\n")
+      sb.append("${INDENT}Extensions: ${exts.join(EXTENSION_SEPARATOR)}\n")
       sb.append("${INDENT}Read: ${p.canRead() ? 'yes' : 'no'}")
-      sb.append("${INDENT}Write: ${p.canWrite() ? 'yes' : 'no'}${NEWLINE}")
+      sb.append("${INDENT}Write: ${p.canWrite() ? 'yes' : 'no'}\n")
 
       if (p.canRead()) {
         List<OptionDescriptor> readOpts = p.readOptionDescriptors()
         if (readOpts) {
-          sb.append("${NEWLINE}${INDENT}Read Options:${NEWLINE}")
-          sb.append(indent(OptionDescriptor.describe(readOpts), INDENT)).append(NEWLINE)
+          sb.append("\n${INDENT}Read Options:\n")
+          sb.append(indent(OptionDescriptor.describe(readOpts), INDENT)).append('\n')
         }
       }
       if (p.canWrite()) {
         List<OptionDescriptor> writeOpts = p.writeOptionDescriptors()
         if (writeOpts) {
-          sb.append("${NEWLINE}${INDENT}Write Options:${NEWLINE}")
-          sb.append(indent(OptionDescriptor.describe(writeOpts), INDENT)).append(NEWLINE)
+          sb.append("\n${INDENT}Write Options:\n")
+          sb.append(indent(OptionDescriptor.describe(writeOpts), INDENT)).append('\n')
         }
       }
     }
@@ -143,7 +143,7 @@ class FormatRegistry {
     }
     List<OptionDescriptor> descriptors = provider.readOptionDescriptors()
     "${provider.formatName()} (*.${fileExtension?.toLowerCase()}) Read Options\n" +
-        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + NEWLINE +
+        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + '\n' +
         (descriptors ? OptionDescriptor.describe(descriptors) : NO_OPTIONS_AVAILABLE)
   }
 
@@ -164,7 +164,7 @@ class FormatRegistry {
     }
     List<OptionDescriptor> descriptors = provider.writeOptionDescriptors()
     "${provider.formatName()} (*.${fileExtension?.toLowerCase()}) Write Options\n" +
-        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + NEWLINE +
+        (HEADER_LINE_CHAR * HEADER_LINE_WIDTH) + '\n' +
         (descriptors ? OptionDescriptor.describe(descriptors) : NO_OPTIONS_AVAILABLE)
   }
 
@@ -246,6 +246,6 @@ class FormatRegistry {
   }
 
   private static String indent(String text, String prefix) {
-    text.readLines().collect { prefix + it }.join(NEWLINE)
+    text.readLines().collect { prefix + it }.join('\n')
   }
 }

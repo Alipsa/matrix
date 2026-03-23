@@ -19,6 +19,7 @@ import groovy.transform.CompileStatic
  * @see MatrixFormatProvider
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class OptionDescriptor {
   private static final String OPTION_HEADER = 'Option'
   private static final String TYPE_HEADER = 'Type'
@@ -28,8 +29,6 @@ class OptionDescriptor {
   private static final String YES_VALUE = 'yes'
   private static final String NO_VALUE = 'no'
   private static final String NO_OPTIONS_AVAILABLE = 'No options available.'
-  private static final String NEWLINE = '\n'
-  private static final String RULE_CHAR = '-'
 
   /** The option key name, e.g. {@code 'delimiter'} */
   String name
@@ -89,12 +88,12 @@ class OptionDescriptor {
     }
 
     String fmt = "| %-${nameWidth}s | %-${typeWidth}s | %-${defaultWidth}s | %-${requiredWidth}s | %-${descWidth}s |"
-    String sep = "+-${RULE_CHAR * nameWidth}-+-${RULE_CHAR * typeWidth}-+-${RULE_CHAR * defaultWidth}-+-${RULE_CHAR * requiredWidth}-+-${RULE_CHAR * descWidth}-+"
+    String sep = "+-${'-' * nameWidth}-+-${'-' * typeWidth}-+-${'-' * defaultWidth}-+-${'-' * requiredWidth}-+-${'-' * descWidth}-+"
 
     StringBuilder sb = new StringBuilder()
-    sb.append(sep).append(NEWLINE)
-    sb.append(String.format(fmt, OPTION_HEADER, TYPE_HEADER, DEFAULT_HEADER, REQUIRED_HEADER, DESCRIPTION_HEADER)).append(NEWLINE)
-    sb.append(sep).append(NEWLINE)
+    sb.append(sep).append('\n')
+    sb.append(String.format(fmt, OPTION_HEADER, TYPE_HEADER, DEFAULT_HEADER, REQUIRED_HEADER, DESCRIPTION_HEADER)).append('\n')
+    sb.append(sep).append('\n')
     for (OptionDescriptor d : descriptors) {
       sb.append(String.format(fmt,
           d.name ?: '',
@@ -102,7 +101,7 @@ class OptionDescriptor {
           formatDefaultValue(d.defaultValue),
           d.required ? YES_VALUE : NO_VALUE,
           d.description ?: ''
-      )).append(NEWLINE)
+      )).append('\n')
     }
     sb.append(sep)
     sb.toString()
