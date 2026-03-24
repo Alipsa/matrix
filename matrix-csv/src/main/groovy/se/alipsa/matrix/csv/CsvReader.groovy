@@ -60,6 +60,7 @@ class CsvReader {
 
   private static final String PATH_SEPARATOR = '/'
   private static final String EXTENSION_SEPARATOR = '.'
+  private static final String DEFAULT_MATRIX_NAME = 'matrix'
 
   // ──────────────────────────────────────────────────────────────
   // Map-based API (uses CsvOption enum as keys)
@@ -75,12 +76,7 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, URL url) throws IOException {
-    Map r = parseMap(format)
-    String name = r.tableName ? r.tableName as String : tableName(url)
-    try (CSVParser parser = CSVParser.parse(url, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(name, parser, r.firstRowAsHeader as boolean),
-          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
-    }
+    read(url, CsvReadOptions.fromMap(format))
   }
 
   /**
@@ -94,7 +90,7 @@ class CsvReader {
    */
   static Matrix read(Map format, String url) throws IOException {
     try {
-      read(format, new URI(url).toURL())
+      read(new URI(url).toURL(), CsvReadOptions.fromMap(format))
     } catch (URISyntaxException e) {
       throw new IOException("Invalid URL: ${url}", e)
     }
@@ -110,11 +106,7 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, InputStream is) throws IOException {
-    Map r = parseMap(format)
-    try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
-          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
-    }
+    read(is, CsvReadOptions.fromMap(format))
   }
 
   /**
@@ -128,11 +120,7 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, Reader reader) throws IOException {
-    Map r = parseMap(format)
-    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
-          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
-    }
+    read(reader, CsvReadOptions.fromMap(format))
   }
 
   /**
@@ -145,12 +133,7 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, File file) throws IOException {
-    Map r = parseMap(format)
-    String name = r.tableName ? r.tableName as String : tableName(file)
-    try (CSVParser parser = CSVParser.parse(file, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(name, parser, r.firstRowAsHeader as boolean),
-          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
-    }
+    read(file, CsvReadOptions.fromMap(format))
   }
 
   /**
@@ -163,33 +146,7 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, Path path) throws IOException {
-    read(format, path.toFile())
-  }
-
-  private static Map parseMap(Map format) {
-    format = convertKeysToOptions(format)
-    Map r = [:]
-    def charsetValue = format.getOrDefault(CsvOption.Charset, StandardCharsets.UTF_8)
-    if (charsetValue instanceof Charset) {
-      r.charset = CsvOptionUtil.resolveCharset(charsetValue as Charset)
-    } else if (charsetValue instanceof CharSequence) {
-      r.charset = CsvOptionUtil.resolveCharset(charsetValue as CharSequence)
-    } else {
-      throw new IllegalArgumentException("Charset must be a java.nio.charset.Charset or CharSequence but was ${charsetValue?.class} = $charsetValue")
-    }
-    r.tableName = format.getOrDefault(CsvOption.TableName, '')
-    r.apacheFormat = createFormatBuilder(format).build()
-    boolean firstRowAsHeader
-    if (format.containsKey(CsvOption.Header)) {
-      firstRowAsHeader = false
-    } else {
-      firstRowAsHeader = format.getOrDefault(CsvOption.FirstRowAsHeader, true)
-    }
-    r.firstRowAsHeader = firstRowAsHeader
-    r.types = format.get(CsvOption.Types) as List<Class>
-    r.dateTimeFormat = format.get(CsvOption.DateTimeFormat) as String
-    r.numberFormat = format.get(CsvOption.NumberFormat) as NumberFormat
-    r
+    read(path, CsvReadOptions.fromMap(format))
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -212,6 +169,97 @@ class CsvReader {
    */
   static ReadBuilder read() {
     new ReadBuilder()
+  }
+
+  /**
+   * Reads CSV data from a File using typed read options.
+   *
+   * <p>If {@code options.tableName} is set it wins. Otherwise the Matrix name is derived
+   * from the file basename. For {@code .tsv} and {@code .tab} files, tab-delimited parsing
+   * is auto-selected when the delimiter was not explicitly configured.</p>
+   *
+   * @param file the file to read
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if reading fails
+   */
+  static Matrix read(File file, CsvReadOptions options) throws IOException {
+    buildReadBuilder(options, file.name, false).from(file)
+  }
+
+  /**
+   * Reads CSV data from a Path using typed read options.
+   *
+   * @param path the path to read
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if reading fails
+   */
+  static Matrix read(Path path, CsvReadOptions options) throws IOException {
+    read(path.toFile(), options)
+  }
+
+  /**
+   * Reads CSV data from a URL using typed read options.
+   *
+   * <p>If {@code options.tableName} is set it wins. Otherwise the Matrix name is derived
+   * from the URL basename. For {@code .tsv} and {@code .tab} URLs, tab-delimited parsing
+   * is auto-selected when the delimiter was not explicitly configured.</p>
+   *
+   * @param url the URL to read
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if reading fails
+   */
+  static Matrix read(URL url, CsvReadOptions options) throws IOException {
+    buildReadBuilder(options, url.path, false).from(url)
+  }
+
+  /**
+   * Reads CSV data from an InputStream using typed read options.
+   *
+   * <p>The charset option applies to this byte-based source. If no explicit
+   * table name is configured, the resulting Matrix uses the fallback name {@code matrix}.</p>
+   *
+   * @param is the input stream to read
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if reading fails
+   */
+  static Matrix read(InputStream is, CsvReadOptions options) throws IOException {
+    buildReadBuilder(options, null, true).from(is)
+  }
+
+  /**
+   * Reads CSV data from a Reader using typed read options.
+   *
+   * <p>The charset option is ignored for Reader-based input because the Reader already
+   * supplies decoded characters. If no explicit table name is configured, the resulting
+   * Matrix uses the fallback name {@code matrix}.</p>
+   *
+   * @param reader the Reader to read
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if reading fails
+   */
+  static Matrix read(Reader reader, CsvReadOptions options) throws IOException {
+    buildReadBuilder(options, null, true).from(reader)
+  }
+
+  /**
+   * Reads CSV data from an in-memory String using typed read options.
+   *
+   * <p>The charset option is ignored for String content because the content is already
+   * decoded. If no explicit table name is configured, the resulting Matrix uses the
+   * fallback name {@code matrix}.</p>
+   *
+   * @param csvContent the CSV content to parse
+   * @param options typed CSV read options
+   * @return the parsed Matrix
+   * @throws IOException if parsing fails
+   */
+  static Matrix readString(String csvContent, CsvReadOptions options) throws IOException {
+    buildReadBuilder(options, null, true).fromString(csvContent)
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -391,7 +439,7 @@ class CsvReader {
     // Handle empty CSV file
     if (rows.isEmpty()) {
       return Matrix.builder()
-          .matrixName(matrixName ?: 'matrix')
+          .matrixName(matrixName ?: DEFAULT_MATRIX_NAME)
           .build()
     }
 
@@ -455,246 +503,47 @@ class CsvReader {
     name
   }
 
-  /**
-   * Builds a {@link CSVFormat.Builder} from Map-based format options.
-   * Used internally by the Map-based API to support Header and DuplicateHeaderMode options
-   * that interact with the CSVParser.
-   */
-  private static CSVFormat.Builder createFormatBuilder(Map format) {
-    CSVFormat.Builder f = CSVFormat.Builder.create()
+  private static ReadBuilder buildReadBuilder(CsvReadOptions options, String sourceName, boolean useFallbackMatrixName) {
+    CsvReadOptions readOptions = options ?: new CsvReadOptions()
+    ReadBuilder builder = read()
+        .delimiter(resolveReadDelimiter(readOptions, sourceName))
+        .quoteCharacter(readOptions.quote)
+        .escapeCharacter(readOptions.escape)
+        .commentMarker(readOptions.commentMarker)
+        .trim(readOptions.trim)
+        .ignoreEmptyLines(readOptions.ignoreEmptyLines)
+        .ignoreSurroundingSpaces(readOptions.ignoreSurroundingSpaces)
+        .nullString(readOptions.nullString)
+        .recordSeparator(readOptions.recordSeparator)
+        .firstRowAsHeader(readOptions.firstRowAsHeader)
+        .charset(readOptions.charset)
+        .duplicateHeaderMode(readOptions.duplicateHeaderMode)
 
-    // Boolean format options
-    setTrim(f, format)
-    setIgnoreEmptyLines(f, format)
-    setIgnoreSurroundingSpaces(f, format)
-
-    // Character format options
-    setDelimiter(f, format)
-    setQuote(f, format)
-    setCommentMarker(f, format)
-    setEscape(f, format)
-
-    // String format options
-    setNullString(f, format)
-    setRecordSeparator(f, format)
-
-    // Header format option (special handling)
-    if (format.containsKey(CsvOption.Header)) {
-      def val = format.get(CsvOption.Header)
-      if (val instanceof String[]) {
-        f.setHeader(val as String[])
-        format.put(CsvOption.FirstRowAsHeader, false)
-        f.setSkipHeaderRecord(false)
-      } else if (val instanceof List) {
-        f.setHeader(val as String[])
-        format.put(CsvOption.FirstRowAsHeader, false)
-        f.setSkipHeaderRecord(false)
-      } else if (val instanceof String) {
-        f.setHeader([val] as String[])
-        format.put(CsvOption.FirstRowAsHeader, false)
-        f.setSkipHeaderRecord(false)
-      } else {
-        throw new IllegalArgumentException("The value for Header must be a List or array of Strings but was $val")
-      }
-    } else {
-      f.setHeader()
-      f.setSkipHeaderRecord(true)
+    if (readOptions.header != null) {
+      builder.header(readOptions.header)
     }
-
-    // DuplicateHeaderMode (accepts String name or DuplicateHeaderMode enum value)
-    if (format.containsKey(CsvOption.DuplicateHeaderMode)) {
-      def val = format.get(CsvOption.DuplicateHeaderMode)
-      if (val instanceof String) {
-        f.setDuplicateHeaderMode(DuplicateHeaderMode.valueOf(val))
-      } else if (val instanceof DuplicateHeaderMode) {
-        f.setDuplicateHeaderMode(val as DuplicateHeaderMode)
-      } else {
-        throw new IllegalArgumentException("The value for DuplicateHeaderMode must be a String or DuplicateHeaderMode enum (e.g. 'ALLOW_ALL', 'ALLOW_EMPTY', 'DISALLOW') but was $val")
-      }
-    } else {
-      f.setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
+    if (readOptions.tableName != null) {
+      builder.matrixName(readOptions.tableName)
+    } else if (useFallbackMatrixName) {
+      builder.matrixName(DEFAULT_MATRIX_NAME)
     }
-
-    // FirstRowAsHeader (special boolean with header interaction)
-    if (format.containsKey(CsvOption.FirstRowAsHeader)) {
-      def val = format.get(CsvOption.FirstRowAsHeader)
-      if (val instanceof Boolean) {
-        if (!format.containsKey(CsvOption.Header)) {
-          if (val) {
-            f.setHeader()
-            f.setSkipHeaderRecord(true)
-          } else {
-            f.setHeader((String) null)
-            f.setSkipHeaderRecord(false)
-          }
-        }
-      } else {
-        throw new IllegalArgumentException("The value for FirstRowAsHeader must be a Boolean but was ${val.class} = $val")
-      }
-    } else {
-      f.setHeader()
-      f.setSkipHeaderRecord(true)
+    if (readOptions.types != null) {
+      builder.types(readOptions.types)
     }
-
-    f
+    if (readOptions.dateTimeFormat != null) {
+      builder.dateTimeFormat(readOptions.dateTimeFormat)
+    }
+    if (readOptions.numberFormat != null) {
+      builder.numberFormat(readOptions.numberFormat)
+    }
+    builder
   }
 
-  // Boolean format options
-  private static void setTrim(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.Trim)) {
-      def val = format.get(CsvOption.Trim)
-      if (!(val instanceof Boolean)) {
-        throw new IllegalArgumentException("The value for Trim must be a Boolean but was $val")
-      }
-      builder.setTrim(val as Boolean)
-    } else {
-      builder.setTrim(true)
+  private static char resolveReadDelimiter(CsvReadOptions options, String sourceName) {
+    if (!options.delimiterConfigured && CsvOptionUtil.isTsvFileName(sourceName)) {
+      return '\t' as char
     }
-  }
-
-  private static void setIgnoreEmptyLines(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.IgnoreEmptyLines)) {
-      def val = format.get(CsvOption.IgnoreEmptyLines)
-      if (!(val instanceof Boolean)) {
-        throw new IllegalArgumentException("The value for IgnoreEmptyLines must be a Boolean but was $val")
-      }
-      builder.setIgnoreEmptyLines(val as Boolean)
-    } else {
-      builder.setIgnoreEmptyLines(true)
-    }
-  }
-
-  private static void setIgnoreSurroundingSpaces(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.IgnoreSurroundingSpaces)) {
-      def val = format.get(CsvOption.IgnoreSurroundingSpaces)
-      if (!(val instanceof Boolean)) {
-        throw new IllegalArgumentException("The value for IgnoreSurroundingSpaces must be a Boolean but was $val")
-      }
-      builder.setIgnoreSurroundingSpaces(val as Boolean)
-    } else {
-      builder.setIgnoreSurroundingSpaces(true)
-    }
-  }
-
-  // Character format options
-  private static void setDelimiter(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.Delimiter)) {
-      def val = format.get(CsvOption.Delimiter)
-      if (val instanceof String || val instanceof Character) {
-        builder.setDelimiter(String.valueOf(val))
-      } else {
-        throw new IllegalArgumentException("The value for Delimiter must be a String or Character but was $val")
-      }
-    } else {
-      builder.setDelimiter(',')
-    }
-  }
-
-  private static void setQuote(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.Quote)) {
-      def val = format.get(CsvOption.Quote)
-      if (val instanceof String) {
-        builder.setQuote(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        builder.setQuote(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for Quote must be a String or Character but was $val")
-      }
-    } else {
-      builder.setQuote('"' as Character)
-    }
-  }
-
-  private static void setCommentMarker(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.CommentMarker)) {
-      def val = format.get(CsvOption.CommentMarker)
-      if (val instanceof String) {
-        builder.setCommentMarker(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        builder.setCommentMarker(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for CommentMarker must be a String or Character but was $val")
-      }
-    } else {
-      builder.setCommentMarker(null)
-    }
-  }
-
-  private static void setEscape(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.Escape)) {
-      def val = format.get(CsvOption.Escape)
-      if (val instanceof String) {
-        builder.setEscape(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        builder.setEscape(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for Escape must be a String or Character but was $val")
-      }
-    } else {
-      builder.setEscape(null)
-    }
-  }
-
-  // String format options
-  private static void setNullString(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.NullString)) {
-      def val = format.get(CsvOption.NullString)
-      if (!(val instanceof String)) {
-        throw new IllegalArgumentException("The value for NullString must be a String but was $val")
-      }
-      builder.setNullString(val as String)
-    } else {
-      builder.setNullString(null)
-    }
-  }
-
-  private static void setRecordSeparator(CSVFormat.Builder builder, Map format) {
-    if (format.containsKey(CsvOption.RecordSeparator)) {
-      def val = format.get(CsvOption.RecordSeparator)
-      if (!(val instanceof String)) {
-        throw new IllegalArgumentException("The value for RecordSeparator must be a String but was $val")
-      }
-      builder.setRecordSeparator(val as String)
-    } else {
-      builder.setRecordSeparator('\n')
-    }
-  }
-
-  /**
-   * Converts map keys to {@link CsvOption} enum values.
-   * Accepts String keys (for Groovy named arguments), {@link CsvOption} keys,
-   * and deprecated {@link CsvImporter.Format} keys (converted by name).
-   */
-  private static Map convertKeysToOptions(Map map) {
-    Map m = [:]
-    map.each { k, v ->
-      if (k instanceof CsvOption) {
-        m.put(k, v)
-      } else if (k instanceof CsvImporter.Format) {
-        // Backward compatibility: convert deprecated CsvImporter.Format to CsvOption by name
-        m.put(CsvOption.valueOf(k.name()), v)
-      } else {
-        String key = String.valueOf(k)
-        CsvOption option = CsvOption.values().find { it.name().equalsIgnoreCase(key) }
-        if (option == null) {
-          throw new IllegalArgumentException("Unknown CsvOption: '${key}'")
-        }
-        m.put(option, v)
-      }
-    }
-    m
-  }
-
-  /**
-   * Applies type conversion to a Matrix if types are specified.
-   * Used by the Map-based API methods.
-   */
-  private static Matrix convertIfNeeded(Matrix matrix, List<Class> types, String dtf, NumberFormat nf) {
-    if (types != null) {
-      matrix.convert(types, dtf, nf)
-    } else {
-      matrix
-    }
+    options.delimiter as char
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -732,6 +581,7 @@ class CsvReader {
     private List<Class> types = null
     private String dateTimeFormat = null
     private NumberFormat numberFormat = null
+    private DuplicateHeaderMode duplicateHeaderMode = DuplicateHeaderMode.ALLOW_EMPTY
 
     // ── Format configuration methods ──────────────────────────
 
@@ -820,6 +670,17 @@ class CsvReader {
 
     /** Sets the name for the resulting Matrix (default: empty string). */
     ReadBuilder matrixName(String name) { matrixName = name; this }
+
+    /** Sets how duplicate header names are handled when header parsing is enabled. */
+    ReadBuilder duplicateHeaderMode(DuplicateHeaderMode mode) {
+      duplicateHeaderMode = mode == null ? DuplicateHeaderMode.ALLOW_EMPTY : mode
+      this
+    }
+
+    /** Sets the duplicate header mode from its enum name. */
+    ReadBuilder duplicateHeaderMode(String mode) {
+      duplicateHeaderMode(DuplicateHeaderMode.valueOf(mode))
+    }
 
     // ── Type conversion methods ─────────────────────────────
 
@@ -1029,14 +890,16 @@ class CsvReader {
           .nullString(nullString)
           .recordSeparator(recordSeparator)
           .build()
-      CSVFormat csvFormat = format.toCSVFormat()
+      CSVFormat.Builder builder = CSVFormat.Builder.create(format.toCSVFormat())
+          .setDuplicateHeaderMode(duplicateHeaderMode)
       if (header != null) {
-        csvFormat = CSVFormat.Builder.create(csvFormat)
-            .setHeader(header as String[])
-            .setSkipHeaderRecord(false)
-            .build()
+        builder.setHeader(header as String[])
+        builder.setSkipHeaderRecord(false)
+      } else if (firstRowAsHeader) {
+        builder.setHeader()
+        builder.setSkipHeaderRecord(true)
       }
-      csvFormat
+      builder.build()
     }
   }
 }

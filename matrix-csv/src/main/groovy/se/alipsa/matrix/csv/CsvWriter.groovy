@@ -64,6 +64,58 @@ class CsvWriter {
     new WriteBuilder(matrix)
   }
 
+  /**
+   * Writes a Matrix to a File using typed CSV write options.
+   *
+   * <p>For {@code .tsv} and {@code .tab} targets, tab-delimited output is auto-selected
+   * when the delimiter was not explicitly configured in the options.</p>
+   *
+   * @param matrix the matrix to write
+   * @param out the destination file
+   * @param options typed CSV write options
+   */
+  static void write(Matrix matrix, File out, CsvWriteOptions options) {
+    CsvWriteOptions writeOptions = options ?: new CsvWriteOptions()
+    buildWriteBuilder(matrix, writeOptions, out.name).to(out, writeOptions.charset)
+  }
+
+  /**
+   * Writes a Matrix to a Path using typed CSV write options.
+   *
+   * @param matrix the matrix to write
+   * @param path the destination path
+   * @param options typed CSV write options
+   */
+  static void write(Matrix matrix, Path path, CsvWriteOptions options) {
+    write(matrix, path.toFile(), options)
+  }
+
+  /**
+   * Writes a Matrix to a Writer using typed CSV write options.
+   *
+   * <p>The charset option is ignored because the Writer already controls character encoding.</p>
+   *
+   * @param matrix the matrix to write
+   * @param writer the destination writer
+   * @param options typed CSV write options
+   */
+  static void write(Matrix matrix, Writer writer, CsvWriteOptions options) {
+    buildWriteBuilder(matrix, options ?: new CsvWriteOptions(), null).to(writer)
+  }
+
+  /**
+   * Writes a Matrix to an in-memory String using typed CSV write options.
+   *
+   * <p>The charset option is ignored because the result is already a Java String.</p>
+   *
+   * @param matrix the matrix to write
+   * @param options typed CSV write options
+   * @return the CSV string
+   */
+  static String writeString(Matrix matrix, CsvWriteOptions options) {
+    buildWriteBuilder(matrix, options ?: new CsvWriteOptions(), null).asString()
+  }
+
   // ──────────────────────────────────────────────────────────────
   // CSVFormat-based API (deprecated — use fluent API)
   // ──────────────────────────────────────────────────────────────
@@ -289,6 +341,23 @@ class CsvWriter {
       return target
     }
     out
+  }
+
+  private static WriteBuilder buildWriteBuilder(Matrix matrix, CsvWriteOptions options, String targetName) {
+    CsvWriteOptions writeOptions = options ?: new CsvWriteOptions()
+    WriteBuilder builder = write(matrix)
+        .delimiter(resolveWriteDelimiter(writeOptions, targetName))
+        .quoteCharacter(writeOptions.quote)
+        .withHeader(writeOptions.withHeader)
+        .recordSeparator(writeOptions.recordSeparator)
+    builder
+  }
+
+  private static char resolveWriteDelimiter(CsvWriteOptions options, String targetName) {
+    if (!options.delimiterConfigured && CsvOptionUtil.isTsvFileName(targetName)) {
+      return '\t' as char
+    }
+    options.delimiter as char
   }
 
   // ──────────────────────────────────────────────────────────────
