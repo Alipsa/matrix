@@ -306,106 +306,106 @@ class CsvWriter {
    */
   @CompileStatic
   static class WriteBuilder {
-    private final Matrix _matrix
-    private char _delimiter = ',' as char
-    private Character _quoteCharacter = '"' as Character
-    private Character _escapeCharacter = null
-    private Character _commentMarker = null
+    private final Matrix matrix
+    private char delimiter = ',' as char
+    private Character quoteCharacter = '"' as Character
+    private Character escapeCharacter = null
+    private Character commentMarker = null
     // These three options are primarily relevant for parsing/reading CSV.
     // They are forwarded to the underlying Apache Commons CSVFormat for
     // API symmetry with CsvReader and CsvFormat, but callers should not
     // rely on them to transform Matrix cell contents during write.
-    private boolean _trim = true
-    private boolean _ignoreEmptyLines = true
-    private boolean _ignoreSurroundingSpaces = true
-    private String _nullString = null
-    private String _recordSeparator = '\n'
-    private boolean _withHeader = true
+    private boolean trimValue = true
+    private boolean ignoreEmptyLines = true
+    private boolean ignoreSurroundingSpaces = true
+    private String nullString = null
+    private String recordSeparator = '\n'
+    private boolean withHeaderValue = true
 
     private WriteBuilder(Matrix matrix) {
-      _matrix = matrix
+      this.matrix = matrix
     }
 
     // ── Format configuration methods ──────────────────────────
 
     /** Sets the field delimiter character. */
-    WriteBuilder delimiter(char c) { _delimiter = c; this }
+    WriteBuilder delimiter(char c) { delimiter = c; this }
 
     /** Sets the field delimiter as a single-character string. */
     WriteBuilder delimiter(String s) {
       if (s == null || s.length() != 1) {
         throw new IllegalArgumentException("Delimiter must be a single character string, got: ${s}")
       }
-      _delimiter = s.charAt(0)
+      delimiter = s.charAt(0)
       this
     }
 
     /** Sets the quote character for enclosing fields. */
-    WriteBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
+    WriteBuilder quoteCharacter(Character c) { quoteCharacter = c; this }
 
     /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
     WriteBuilder quoteCharacter(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Quote character must be a single character string, got: ${s}")
       }
-      _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets the escape character. */
-    WriteBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
+    WriteBuilder escapeCharacter(Character c) { escapeCharacter = c; this }
 
     /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
     WriteBuilder escapeCharacter(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Escape character must be a single character string, got: ${s}")
       }
-      _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets the comment marker character. */
-    WriteBuilder commentMarker(Character c) { _commentMarker = c; this }
+    WriteBuilder commentMarker(Character c) { commentMarker = c; this }
 
     /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
     WriteBuilder commentMarker(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Comment marker must be a single character string, got: ${s}")
       }
-      _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets whether to trim whitespace. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder trim(boolean b) { _trim = b; this }
+    WriteBuilder trim(boolean b) { trimValue = b; this }
 
     /** Sets whether to ignore empty lines. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder ignoreEmptyLines(boolean b) { _ignoreEmptyLines = b; this }
+    WriteBuilder ignoreEmptyLines(boolean b) { ignoreEmptyLines = b; this }
 
     /** Sets whether to ignore spaces around quoted values. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder ignoreSurroundingSpaces(boolean b) { _ignoreSurroundingSpaces = b; this }
+    WriteBuilder ignoreSurroundingSpaces(boolean b) { ignoreSurroundingSpaces = b; this }
 
     /** Sets the string to interpret as null. */
-    WriteBuilder nullString(String s) { _nullString = s; this }
+    WriteBuilder nullString(String s) { nullString = s; this }
 
     /** Sets the record separator string. */
-    WriteBuilder recordSeparator(String s) { _recordSeparator = s; this }
+    WriteBuilder recordSeparator(String s) { recordSeparator = s; this }
 
     // ── Writer-specific methods ───────────────────────────────
 
     /** Sets whether to include column names in the first row (default: true). */
-    WriteBuilder withHeader(boolean b) { _withHeader = b; this }
+    WriteBuilder withHeader(boolean b) { withHeaderValue = b; this }
 
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Excel-compatible CSV format with CRLF record separators. */
-    WriteBuilder excel() { _recordSeparator = '\r\n'; this }
+    WriteBuilder excel() { recordSeparator = '\r\n'; this }
 
     /** Configures tab-delimited format (TSV). */
-    WriteBuilder tsv() { _delimiter = '\t' as char; this }
+    WriteBuilder tsv() { delimiter = '\t' as char; this }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    WriteBuilder rfc4180() { _recordSeparator = '\r\n'; this }
+    WriteBuilder rfc4180() { recordSeparator = '\r\n'; this }
 
     // ── Terminal operations ───────────────────────────────────
 
@@ -415,8 +415,8 @@ class CsvWriter {
      * @param out the file to write to (or a directory)
      */
     void to(File out) {
-      validateMatrix(_matrix)
-      out = ensureFileOutput(_matrix, out)
+      validateMatrix(matrix)
+      out = ensureFileOutput(matrix, out)
       try (PrintWriter pw = new PrintWriter(out)) {
         to(pw)
       }
@@ -438,8 +438,8 @@ class CsvWriter {
      * @param charset the character encoding to use
      */
     void to(File out, Charset charset) {
-      validateMatrix(_matrix)
-      out = ensureFileOutput(_matrix, out)
+      validateMatrix(matrix)
+      out = ensureFileOutput(matrix, out)
       out.withWriter(charset.name()) { Writer writer ->
         to(writer)
       }
@@ -471,18 +471,18 @@ class CsvWriter {
      * @param printWriter the PrintWriter to write to
      */
     void to(PrintWriter printWriter) {
-      validateMatrix(_matrix)
+      validateMatrix(matrix)
       CsvFormat format = buildFormat()
       CSVFormat apacheFormat = format.toCSVFormat()
       try (CSVPrinter printer = new CSVPrinter(CloseShieldWriter.wrap(printWriter), apacheFormat)) {
-        if (_withHeader) {
-          if (_matrix.columnNames() != null) {
-            printer.printRecord(_matrix.columnNames())
+        if (withHeaderValue) {
+          if (matrix.columnNames() != null) {
+            printer.printRecord(matrix.columnNames())
           } else {
-            printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
+            printer.printRecord((1..matrix.columnCount()).collect { 'c' + it })
           }
         }
-        printer.printRecords(_matrix.rows())
+        printer.printRecords(matrix.rows())
       }
     }
 
@@ -508,15 +508,15 @@ class CsvWriter {
 
     private CsvFormat buildFormat() {
       CsvFormat.builder()
-          .delimiter(_delimiter)
-          .quoteCharacter(_quoteCharacter)
-          .escapeCharacter(_escapeCharacter)
-          .commentMarker(_commentMarker)
-          .trim(_trim)
-          .ignoreEmptyLines(_ignoreEmptyLines)
-          .ignoreSurroundingSpaces(_ignoreSurroundingSpaces)
-          .nullString(_nullString)
-          .recordSeparator(_recordSeparator)
+          .delimiter(delimiter)
+          .quoteCharacter(quoteCharacter)
+          .escapeCharacter(escapeCharacter)
+          .commentMarker(commentMarker)
+          .trim(trimValue)
+          .ignoreEmptyLines(ignoreEmptyLines)
+          .ignoreSurroundingSpaces(ignoreSurroundingSpaces)
+          .nullString(nullString)
+          .recordSeparator(recordSeparator)
           .build()
     }
   }
