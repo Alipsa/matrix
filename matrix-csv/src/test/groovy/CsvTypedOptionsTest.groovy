@@ -78,6 +78,24 @@ class CsvTypedOptionsTest {
   }
 
   @Test
+  void readOptionsRejectUnknownKeys() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvReadOptions.fromMap([unknownOption: true])
+    }
+
+    assertTrue(exception.message.contains("Unknown CsvReadOptions option: 'unknownoption'"))
+  }
+
+  @Test
+  void writeOptionsRejectUnknownKeys() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvWriteOptions.fromMap([unknownOption: true])
+    }
+
+    assertTrue(exception.message.contains("Unknown CsvWriteOptions option: 'unknownoption'"))
+  }
+
+  @Test
   void typedReadOverloadsHandleAllSourcesAndSourceSpecificSemantics() {
     byte[] latin1Bytes = 'id,name\n1,Åsa\n'.getBytes('ISO-8859-1')
     File file = tempDir.resolve('people.csv').toFile()
