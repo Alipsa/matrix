@@ -29,6 +29,9 @@ import java.text.NumberFormat
 @CompileStatic
 class CsvReadOptions {
 
+  private static final String BOOLEAN_TRUE = 'true'
+  private static final String DEFAULT_DUPLICATE_HEADER_MODE = 'ALLOW_EMPTY'
+
   Character delimiter = ',' as Character
   Character quote = '"' as Character
   Character escape = null
@@ -44,7 +47,7 @@ class CsvReadOptions {
   boolean ignoreEmptyLines = true
   boolean ignoreSurroundingSpaces = true
   String nullString = null
-  String duplicateHeaderMode = 'ALLOW_EMPTY'
+  String duplicateHeaderMode = DEFAULT_DUPLICATE_HEADER_MODE
   String recordSeparator = '\n'
 
   /** Sets the field delimiter character. */
@@ -119,19 +122,35 @@ class CsvReadOptions {
     Map<String, ?> m = [:]
     m.delimiter = delimiter
     m.quote = quote
-    if (escape != null) m.escape = escape
-    if (commentMarker != null) m.commentMarker = commentMarker
-    if (header != null) m.header = header
+    if (escape != null) {
+      m.escape = escape
+    }
+    if (commentMarker != null) {
+      m.commentMarker = commentMarker
+    }
+    if (header != null) {
+      m.header = header
+    }
     m.firstRowAsHeader = firstRowAsHeader
     m.charset = charset
-    if (tableName != null) m.tableName = tableName
-    if (types != null) m.types = types
-    if (dateTimeFormat != null) m.dateTimeFormat = dateTimeFormat
-    if (numberFormat != null) m.numberFormat = numberFormat
+    if (tableName != null) {
+      m.tableName = tableName
+    }
+    if (types != null) {
+      m.types = types
+    }
+    if (dateTimeFormat != null) {
+      m.dateTimeFormat = dateTimeFormat
+    }
+    if (numberFormat != null) {
+      m.numberFormat = numberFormat
+    }
     m.trim = trim
     m.ignoreEmptyLines = ignoreEmptyLines
     m.ignoreSurroundingSpaces = ignoreSurroundingSpaces
-    if (nullString != null) m.nullString = nullString
+    if (nullString != null) {
+      m.nullString = nullString
+    }
     m.duplicateHeaderMode = duplicateHeaderMode
     m.recordSeparator = recordSeparator
     m
@@ -149,17 +168,17 @@ class CsvReadOptions {
         new OptionDescriptor('escape', Character, null, 'The escape character'),
         new OptionDescriptor('commentMarker', Character, null, 'The character that marks comment lines'),
         new OptionDescriptor('header', List, null, 'Explicit list of column names'),
-        new OptionDescriptor('firstRowAsHeader', Boolean, 'true', 'Whether the first row contains column names'),
+        new OptionDescriptor('firstRowAsHeader', Boolean, BOOLEAN_TRUE, 'Whether the first row contains column names'),
         new OptionDescriptor('charset', Charset, 'UTF-8', 'The character encoding'),
         new OptionDescriptor('tableName', String, null, 'The name for the resulting Matrix'),
         new OptionDescriptor('types', List, null, 'List of column types for automatic conversion'),
         new OptionDescriptor('dateTimeFormat', String, null, 'Date/time format pattern for type conversion'),
         new OptionDescriptor('numberFormat', NumberFormat, null, 'NumberFormat for locale-aware number parsing'),
-        new OptionDescriptor('trim', Boolean, 'true', 'Whether to trim whitespace from values'),
-        new OptionDescriptor('ignoreEmptyLines', Boolean, 'true', 'Whether to skip blank lines'),
-        new OptionDescriptor('ignoreSurroundingSpaces', Boolean, 'true', 'Whether to ignore spaces around quoted values'),
+        new OptionDescriptor('trim', Boolean, BOOLEAN_TRUE, 'Whether to trim whitespace from values'),
+        new OptionDescriptor('ignoreEmptyLines', Boolean, BOOLEAN_TRUE, 'Whether to skip blank lines'),
+        new OptionDescriptor('ignoreSurroundingSpaces', Boolean, BOOLEAN_TRUE, 'Whether to ignore spaces around quoted values'),
         new OptionDescriptor('nullString', String, null, 'String to interpret as null'),
-        new OptionDescriptor('duplicateHeaderMode', String, 'ALLOW_EMPTY', 'How to handle duplicate header fields'),
+        new OptionDescriptor('duplicateHeaderMode', String, DEFAULT_DUPLICATE_HEADER_MODE, 'How to handle duplicate header fields'),
         new OptionDescriptor('recordSeparator', String, '\\n', 'The record separator string'),
     ]
   }

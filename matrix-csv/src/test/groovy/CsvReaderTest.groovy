@@ -110,7 +110,7 @@ class CsvReaderTest {
   @Test
   void readUrlFromString() {
     URL url = getClass().getResource("/basic.csv")
-    String urlString = url.toString()
+    String urlString = url.toExternalForm()
 
     Matrix matrix = CsvReader.readUrl(urlString, CSVFormat.Builder.create().setTrim(true).build())
 

@@ -38,6 +38,9 @@ import java.nio.file.Path
 @CompileStatic
 class CsvWriter {
 
+  private static final String SAFE_NAME_REPLACEMENT = '_'
+  private static final String DEFAULT_MATRIX_FILE_NAME = 'matrix'
+
   // ──────────────────────────────────────────────────────────────
   // Fluent builder API (recommended)
   // ──────────────────────────────────────────────────────────────
@@ -268,13 +271,13 @@ class CsvWriter {
     if (out.isDirectory()) {
       String baseName = matrix.matrixName?.trim()
       if (!baseName) {
-        baseName = 'matrix'
+        baseName = DEFAULT_MATRIX_FILE_NAME
       }
       String safeName = baseName
-          .replaceAll('[/\\\\]', '_')
-          .replaceAll('\\.{2,}', '_')
-      if (!safeName || safeName.matches('_+')) {
-        safeName = 'matrix'
+          .replaceAll('[/\\\\]', SAFE_NAME_REPLACEMENT)
+          .replaceAll('\\.{2,}', SAFE_NAME_REPLACEMENT)
+      if (!safeName || safeName.matches("${SAFE_NAME_REPLACEMENT}+")) {
+        safeName = DEFAULT_MATRIX_FILE_NAME
       }
       String fileName = safeName + '.csv'
       File target = new File(out, fileName)
@@ -399,13 +402,13 @@ class CsvWriter {
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Excel-compatible CSV format with CRLF record separators. */
-    WriteBuilder excel() { recordSeparator = '\r\n'; this }
+    WriteBuilder excel() { recordSeparator = CsvFormat.CRLF; this }
 
     /** Configures tab-delimited format (TSV). */
     WriteBuilder tsv() { delimiter = '\t' as char; this }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    WriteBuilder rfc4180() { recordSeparator = '\r\n'; this }
+    WriteBuilder rfc4180() { recordSeparator = CsvFormat.CRLF; this }
 
     // ── Terminal operations ───────────────────────────────────
 

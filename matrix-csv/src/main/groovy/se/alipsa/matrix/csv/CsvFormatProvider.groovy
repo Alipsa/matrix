@@ -29,9 +29,16 @@ import java.util.Locale
 class CsvFormatProvider extends AbstractFormatProvider {
 
   private static final Logger log = Logger.getLogger(CsvFormatProvider)
+  private static final String TSV_EXTENSION = 'tsv'
+  private static final String TAB_EXTENSION = 'tab'
+  private static final String OPTION_DELIMITER = 'delimiter'
+  private static final String OPTION_QUOTE = 'quote'
+  private static final String OPTION_WITH_HEADER = 'withheader'
+  private static final String OPTION_RECORD_SEPARATOR = 'recordseparator'
+  private static final String OPTION_CHARSET = 'charset'
 
-  private static final Set<String> EXTENSIONS = ['csv', 'tsv', 'tab'] as Set<String>
-  private static final Set<String> TSV_EXTENSIONS = ['tsv', 'tab'] as Set<String>
+  private static final Set<String> EXTENSIONS = ['csv', TSV_EXTENSION, TAB_EXTENSION] as Set<String>
+  private static final Set<String> TSV_EXTENSIONS = [TSV_EXTENSION, TAB_EXTENSION] as Set<String>
 
   @Override
   Set<String> supportedExtensions() {
@@ -116,10 +123,10 @@ class CsvFormatProvider extends AbstractFormatProvider {
 
     // Apply TSV default for .tsv/.tab extensions
     String ext = extractExtension(file.name)
-    boolean delimiterSet = normalizedOptions.containsKey('delimiter')
+    boolean delimiterSet = normalizedOptions.containsKey(OPTION_DELIMITER)
 
     if (delimiterSet) {
-      def delimiterValue = normalizedOptions.get('delimiter')
+      def delimiterValue = normalizedOptions.get(OPTION_DELIMITER)
       if (delimiterValue instanceof Character) {
         builder.delimiter(delimiterValue as Character)
       } else {
@@ -131,8 +138,8 @@ class CsvFormatProvider extends AbstractFormatProvider {
       builder.delimiter('\t' as char)
     }
 
-    if (normalizedOptions.containsKey('quote')) {
-      def quoteValue = normalizedOptions.get('quote')
+    if (normalizedOptions.containsKey(OPTION_QUOTE)) {
+      def quoteValue = normalizedOptions.get(OPTION_QUOTE)
       if (quoteValue instanceof Character) {
         builder.quoteCharacter(quoteValue as Character)
       } else {
@@ -140,17 +147,17 @@ class CsvFormatProvider extends AbstractFormatProvider {
       }
     }
 
-    if (normalizedOptions.containsKey('withheader')) {
-      builder.withHeader(normalizedOptions.get('withheader') as boolean)
+    if (normalizedOptions.containsKey(OPTION_WITH_HEADER)) {
+      builder.withHeader(normalizedOptions.get(OPTION_WITH_HEADER) as boolean)
     }
 
-    if (normalizedOptions.containsKey('recordseparator')) {
-      builder.recordSeparator(normalizedOptions.get('recordseparator') as String)
+    if (normalizedOptions.containsKey(OPTION_RECORD_SEPARATOR)) {
+      builder.recordSeparator(normalizedOptions.get(OPTION_RECORD_SEPARATOR) as String)
     }
 
     Charset charset = StandardCharsets.UTF_8
-    if (normalizedOptions.containsKey('charset')) {
-      def charsetValue = normalizedOptions.get('charset')
+    if (normalizedOptions.containsKey(OPTION_CHARSET)) {
+      def charsetValue = normalizedOptions.get(OPTION_CHARSET)
       if (charsetValue instanceof Charset) {
         charset = CsvOptionUtil.resolveCharset(charsetValue as Charset)
       } else if (charsetValue instanceof CharSequence) {
@@ -184,7 +191,7 @@ class CsvFormatProvider extends AbstractFormatProvider {
     Map<String, Object> result = copyOptions(options)
     String ext = extractExtension(fileName)
     if (TSV_EXTENSIONS.contains(ext) && !hasDelimiterKey(result)) {
-      result.put('Delimiter', '\t')
+      result.put(CsvOption.Delimiter.name(), '\t')
     }
     result
   }
@@ -211,7 +218,7 @@ class CsvFormatProvider extends AbstractFormatProvider {
    * @return true if a delimiter key is present
    */
   private static boolean hasDelimiterKey(Map<String, ?> options) {
-    options.keySet().any { String key -> key.equalsIgnoreCase('delimiter') }
+    options.keySet().any { String key -> key.equalsIgnoreCase(OPTION_DELIMITER) }
   }
 
   private static Map<String, Object> normalizeOptions(Map<String, ?> options) {

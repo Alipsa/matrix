@@ -30,6 +30,7 @@ package se.alipsa.matrix.csv
  * @see CsvReader
  * @see CsvFormat
  */
+@SuppressWarnings('FieldName')
 enum CsvOption {
   /** Trim values inside the quote. Default: {@code true}. */
   Trim,

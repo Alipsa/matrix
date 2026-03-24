@@ -26,6 +26,8 @@ import java.nio.charset.StandardCharsets
 @CompileStatic
 class CsvWriteOptions {
 
+  private static final String BOOLEAN_TRUE = 'true'
+
   Character delimiter = ',' as Character
   Character quote = '"' as Character
   boolean withHeader = true
@@ -71,7 +73,7 @@ class CsvWriteOptions {
         withHeader     : withHeader,
         charset        : charset,
         recordSeparator: recordSeparator,
-    ] as Map<String, ?>
+    ]
   }
 
   /**
@@ -83,7 +85,7 @@ class CsvWriteOptions {
     [
         new OptionDescriptor('delimiter', Character, ',', 'The character used to separate values'),
         new OptionDescriptor('quote', Character, '"', 'The character used to enclose fields'),
-        new OptionDescriptor('withHeader', Boolean, 'true', 'Whether to include column names in the first row'),
+        new OptionDescriptor('withHeader', Boolean, BOOLEAN_TRUE, 'Whether to include column names in the first row'),
         new OptionDescriptor('charset', Charset, 'UTF-8', 'The character encoding'),
         new OptionDescriptor('recordSeparator', String, '\\n', 'The record separator string'),
     ]
