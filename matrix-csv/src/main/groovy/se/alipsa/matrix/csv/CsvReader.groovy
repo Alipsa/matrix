@@ -712,92 +712,92 @@ class CsvReader {
    */
   @CompileStatic
   static class ReadBuilder {
-    private char _delimiter = ',' as char
-    private Character _quoteCharacter = '"' as Character
-    private Character _escapeCharacter = null
-    private Character _commentMarker = null
-    private boolean _trim = true
-    private boolean _ignoreEmptyLines = true
-    private boolean _ignoreSurroundingSpaces = true
-    private String _nullString = null
-    private String _recordSeparator = '\n'
-    private boolean _firstRowAsHeader = true
-    private List<String> _header = null
-    private Charset _charset = StandardCharsets.UTF_8
-    private String _matrixName = ''
-    private List<Class> _types = null
-    private String _dateTimeFormat = null
-    private NumberFormat _numberFormat = null
+    private char delimiter = ',' as char
+    private Character quoteCharacter = '"' as Character
+    private Character escapeCharacter = null
+    private Character commentMarker = null
+    private boolean trimValue = true
+    private boolean ignoreEmptyLines = true
+    private boolean ignoreSurroundingSpaces = true
+    private String nullString = null
+    private String recordSeparator = '\n'
+    private boolean firstRowAsHeader = true
+    private List<String> header = null
+    private Charset charset = StandardCharsets.UTF_8
+    private String matrixName = ''
+    private List<Class> types = null
+    private String dateTimeFormat = null
+    private NumberFormat numberFormat = null
 
     // ── Format configuration methods ──────────────────────────
 
     /** Sets the field delimiter character. */
-    ReadBuilder delimiter(char c) { _delimiter = c; this }
+    ReadBuilder delimiter(char c) { delimiter = c; this }
 
     /** Sets the field delimiter as a single-character string. */
     ReadBuilder delimiter(String s) {
       if (s == null || s.length() != 1) {
         throw new IllegalArgumentException("Delimiter must be a single character string, got: ${s}")
       }
-      _delimiter = s.charAt(0)
+      delimiter = s.charAt(0)
       this
     }
 
     /** Sets the quote character for enclosing fields. */
-    ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
+    ReadBuilder quoteCharacter(Character c) { quoteCharacter = c; this }
 
     /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
     ReadBuilder quoteCharacter(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Quote character must be a single character string, got: ${s}")
       }
-      _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets the escape character. */
-    ReadBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
+    ReadBuilder escapeCharacter(Character c) { escapeCharacter = c; this }
 
     /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
     ReadBuilder escapeCharacter(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Escape character must be a single character string, got: ${s}")
       }
-      _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets the comment marker character. */
-    ReadBuilder commentMarker(Character c) { _commentMarker = c; this }
+    ReadBuilder commentMarker(Character c) { commentMarker = c; this }
 
     /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
     ReadBuilder commentMarker(String s) {
       if (s != null && s.length() > 1) {
         throw new IllegalArgumentException("Comment marker must be a single character string, got: ${s}")
       }
-      _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
       this
     }
 
     /** Sets whether to trim whitespace from values. */
-    ReadBuilder trim(boolean b) { _trim = b; this }
+    ReadBuilder trim(boolean b) { trimValue = b; this }
 
     /** Sets whether to ignore empty lines. */
-    ReadBuilder ignoreEmptyLines(boolean b) { _ignoreEmptyLines = b; this }
+    ReadBuilder ignoreEmptyLines(boolean b) { ignoreEmptyLines = b; this }
 
     /** Sets whether to ignore spaces around quoted values. */
-    ReadBuilder ignoreSurroundingSpaces(boolean b) { _ignoreSurroundingSpaces = b; this }
+    ReadBuilder ignoreSurroundingSpaces(boolean b) { ignoreSurroundingSpaces = b; this }
 
     /** Sets the string to interpret as null when reading. */
-    ReadBuilder nullString(String s) { _nullString = s; this }
+    ReadBuilder nullString(String s) { nullString = s; this }
 
     /** Sets the record separator string. */
-    ReadBuilder recordSeparator(String s) { _recordSeparator = s; this }
+    ReadBuilder recordSeparator(String s) { recordSeparator = s; this }
 
     // ── Reader-specific methods ───────────────────────────────
 
     /** Sets whether the first row contains column names (default: true). */
-    ReadBuilder firstRowAsHeader(boolean b) { _firstRowAsHeader = b; this }
+    ReadBuilder firstRowAsHeader(boolean b) { firstRowAsHeader = b; this }
 
     /**
      * Sets an explicit header; also sets firstRowAsHeader to false.
@@ -806,16 +806,16 @@ class CsvReader {
      * @return this builder
      */
     ReadBuilder header(List<String> names) {
-      _header = names
-      _firstRowAsHeader = false
+      header = names
+      firstRowAsHeader = false
       this
     }
 
     /** Sets the character encoding (default: UTF-8). */
-    ReadBuilder charset(Charset cs) { _charset = cs; this }
+    ReadBuilder charset(Charset cs) { charset = cs; this }
 
     /** Sets the name for the resulting Matrix (default: empty string). */
-    ReadBuilder matrixName(String name) { _matrixName = name; this }
+    ReadBuilder matrixName(String name) { matrixName = name; this }
 
     // ── Type conversion methods ─────────────────────────────
 
@@ -831,7 +831,7 @@ class CsvReader {
      * @param types list of Class objects, one per column
      * @return this builder
      */
-    ReadBuilder types(List<Class> types) { _types = types; this }
+    ReadBuilder types(List<Class> types) { this.types = types; this }
 
     /**
      * Sets column types by position for automatic conversion after reading (varargs).
@@ -845,7 +845,7 @@ class CsvReader {
      * @param types Class objects, one per column
      * @return this builder
      */
-    ReadBuilder types(Class... types) { _types = types.toList(); this }
+    ReadBuilder types(Class... types) { this.types = types.toList(); this }
 
     /**
      * Sets both header and types from a map of column name to type.
@@ -862,9 +862,9 @@ class CsvReader {
      * @return this builder
      */
     ReadBuilder columns(Map<String, Class> columnMap) {
-      _header = columnMap.keySet().toList()
-      _types = columnMap.values().toList()
-      _firstRowAsHeader = false
+      header = columnMap.keySet().toList()
+      types = columnMap.values().toList()
+      firstRowAsHeader = false
       this
     }
 
@@ -874,7 +874,7 @@ class CsvReader {
      * @param pattern date/time format pattern
      * @return this builder
      */
-    ReadBuilder dateTimeFormat(String pattern) { _dateTimeFormat = pattern; this }
+    ReadBuilder dateTimeFormat(String pattern) { dateTimeFormat = pattern; this }
 
     /**
      * Sets the NumberFormat for locale-aware number parsing during type conversion.
@@ -882,18 +882,18 @@ class CsvReader {
      * @param nf the NumberFormat instance
      * @return this builder
      */
-    ReadBuilder numberFormat(NumberFormat nf) { _numberFormat = nf; this }
+    ReadBuilder numberFormat(NumberFormat nf) { numberFormat = nf; this }
 
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Excel-compatible CSV format with CRLF record separators. */
-    ReadBuilder excel() { _recordSeparator = '\r\n'; this }
+    ReadBuilder excel() { recordSeparator = '\r\n'; this }
 
     /** Configures tab-delimited format (TSV). */
-    ReadBuilder tsv() { _delimiter = '\t' as char; this }
+    ReadBuilder tsv() { delimiter = '\t' as char; this }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    ReadBuilder rfc4180() { _recordSeparator = '\r\n'; this }
+    ReadBuilder rfc4180() { recordSeparator = '\r\n'; this }
 
     // ── Terminal operations ───────────────────────────────────
 
@@ -906,9 +906,9 @@ class CsvReader {
      */
     Matrix from(File file) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      String name = _matrixName ? _matrixName : tableName(file)
-      try (CSVParser parser = CSVParser.parse(file, _charset, apacheFormat)) {
-        convertIfNeeded(parse(name, parser, _firstRowAsHeader))
+      String name = matrixName ? matrixName : tableName(file)
+      try (CSVParser parser = CSVParser.parse(file, charset, apacheFormat)) {
+        convertIfNeeded(parse(name, parser, firstRowAsHeader))
       }
     }
 
@@ -932,9 +932,9 @@ class CsvReader {
      */
     Matrix from(URL url) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      String name = _matrixName ? _matrixName : tableName(url)
-      try (CSVParser parser = CSVParser.parse(url, _charset, apacheFormat)) {
-        convertIfNeeded(parse(name, parser, _firstRowAsHeader))
+      String name = matrixName ? matrixName : tableName(url)
+      try (CSVParser parser = CSVParser.parse(url, charset, apacheFormat)) {
+        convertIfNeeded(parse(name, parser, firstRowAsHeader))
       }
     }
 
@@ -947,8 +947,8 @@ class CsvReader {
      */
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), _charset, apacheFormat)) {
-        convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+      try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), charset, apacheFormat)) {
+        convertIfNeeded(parse(matrixName, parser, firstRowAsHeader))
       }
     }
 
@@ -962,7 +962,7 @@ class CsvReader {
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), apacheFormat)) {
-        convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+        convertIfNeeded(parse(matrixName, parser, firstRowAsHeader))
       }
     }
 
@@ -1006,8 +1006,8 @@ class CsvReader {
     }
 
     private Matrix convertIfNeeded(Matrix matrix) {
-      if (_types != null) {
-        matrix.convert(_types, _dateTimeFormat, _numberFormat)
+      if (types != null) {
+        matrix.convert(types, dateTimeFormat, numberFormat)
       } else {
         matrix
       }
@@ -1015,20 +1015,20 @@ class CsvReader {
 
     private CSVFormat buildCSVFormat() {
       CsvFormat format = CsvFormat.builder()
-          .delimiter(_delimiter)
-          .quoteCharacter(_quoteCharacter)
-          .escapeCharacter(_escapeCharacter)
-          .commentMarker(_commentMarker)
-          .trim(_trim)
-          .ignoreEmptyLines(_ignoreEmptyLines)
-          .ignoreSurroundingSpaces(_ignoreSurroundingSpaces)
-          .nullString(_nullString)
-          .recordSeparator(_recordSeparator)
+          .delimiter(delimiter)
+          .quoteCharacter(quoteCharacter)
+          .escapeCharacter(escapeCharacter)
+          .commentMarker(commentMarker)
+          .trim(trimValue)
+          .ignoreEmptyLines(ignoreEmptyLines)
+          .ignoreSurroundingSpaces(ignoreSurroundingSpaces)
+          .nullString(nullString)
+          .recordSeparator(recordSeparator)
           .build()
       CSVFormat csvFormat = format.toCSVFormat()
-      if (_header != null) {
+      if (header != null) {
         csvFormat = CSVFormat.Builder.create(csvFormat)
-            .setHeader(_header as String[])
+            .setHeader(header as String[])
             .setSkipHeaderRecord(false)
             .build()
       }
