@@ -58,6 +58,9 @@ import java.text.NumberFormat
 @CompileStatic
 class CsvReader {
 
+  private static final String PATH_SEPARATOR = '/'
+  private static final String EXTENSION_SEPARATOR = '.'
+
   // ──────────────────────────────────────────────────────────────
   // Map-based API (uses CsvOption enum as keys)
   // ──────────────────────────────────────────────────────────────
@@ -242,14 +245,15 @@ class CsvReader {
    * @param reader Reader to read the CSV data from
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
+   * @param charset character encoding to use (default: UTF-8); deprecated because it has no effect for Reader-based input
    * @param matrixName name for the resulting Matrix (default: empty string)
    * @return Matrix containing the imported data
    * @throws IOException if reading from the Reader fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@code CsvReader.read().from(reader)} instead
-   */
+  * @throws IllegalArgumentException if columns are mismatched between rows
+  * @deprecated Use {@code CsvReader.read().from(reader)} instead. The {@code charset} parameter has no effect when reading from a Reader because the Reader already handles character decoding.
+  */
   @Deprecated
+  @SuppressWarnings('UnusedMethodParameter')
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
     try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), format)) {
       parse(matrixName, parser, firstRowAsHeader)
@@ -427,11 +431,11 @@ class CsvReader {
   @groovy.transform.PackageScope
   static String tableName(URL url) {
     def name = url.getFile() == null ? url.getPath() : url.getFile()
-    if (name.contains('/')) {
-      name = name.substring(name.lastIndexOf('/') + 1, name.length())
+    if (name.contains(PATH_SEPARATOR)) {
+      name = name.substring(name.lastIndexOf(PATH_SEPARATOR) + 1, name.length())
     }
-    if (name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name.contains(EXTENSION_SEPARATOR)) {
+      name = name.substring(0, name.lastIndexOf(EXTENSION_SEPARATOR))
     }
     name
   }
@@ -445,8 +449,8 @@ class CsvReader {
   @groovy.transform.PackageScope
   static String tableName(File file) {
     def name = file.getName()
-    if (name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name.contains(EXTENSION_SEPARATOR)) {
+      name = name.substring(0, name.lastIndexOf(EXTENSION_SEPARATOR))
     }
     name
   }
@@ -887,13 +891,13 @@ class CsvReader {
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Excel-compatible CSV format with CRLF record separators. */
-    ReadBuilder excel() { recordSeparator = '\r\n'; this }
+    ReadBuilder excel() { recordSeparator = CsvFormat.CRLF; this }
 
     /** Configures tab-delimited format (TSV). */
     ReadBuilder tsv() { delimiter = '\t' as char; this }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    ReadBuilder rfc4180() { recordSeparator = '\r\n'; this }
+    ReadBuilder rfc4180() { recordSeparator = CsvFormat.CRLF; this }
 
     // ── Terminal operations ───────────────────────────────────
 

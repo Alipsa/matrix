@@ -272,7 +272,7 @@ Alice,30'''
         .rows([['1', '2']])
         .build()
 
-    String filePath = tempDir.resolve('output_strpath.csv').toString()
+    String filePath = tempDir.resolve('output_strpath.csv').toFile().path
     CsvWriter.write(matrix).toFile(filePath)
 
     assertTrue(new File(filePath).exists(), "Output file should exist")
@@ -335,7 +335,7 @@ Alice,30'''
     StringWriter writer = new StringWriter()
     CsvWriter.write(matrix).to(writer)
 
-    String csvContent = writer.toString()
+    String csvContent = writer.buffer
     assertTrue(csvContent.contains('col1,col2'), "Should contain header")
     assertTrue(csvContent.contains('a,b'), "Should contain first row")
     assertTrue(csvContent.contains('c,d'), "Should contain second row")

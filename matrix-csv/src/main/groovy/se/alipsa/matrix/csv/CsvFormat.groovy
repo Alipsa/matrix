@@ -20,17 +20,20 @@ import org.apache.commons.csv.DuplicateHeaderMode
 @PackageScope
 class CsvFormat {
 
+  @PackageScope
+  static final String CRLF = '\r\n'
+
   /** Default CSV format: comma-delimited, double-quote quoted, trimmed, ignoring empty lines. */
   static final CsvFormat DEFAULT = builder().build()
 
   /** Excel-compatible CSV format with CRLF record separators. */
-  static final CsvFormat EXCEL = builder().recordSeparator('\r\n').build()
+  static final CsvFormat EXCEL = builder().recordSeparator(CRLF).build()
 
   /** Tab-delimited format (TSV). */
   static final CsvFormat TDF = builder().delimiter('\t' as char).build()
 
   /** RFC 4180 compliant CSV format with CRLF record separators. */
-  static final CsvFormat RFC4180 = builder().recordSeparator('\r\n').build()
+  static final CsvFormat RFC4180 = builder().recordSeparator(CRLF).build()
 
   /** The field delimiter character. Default: {@code ','} */
   final char delimiter

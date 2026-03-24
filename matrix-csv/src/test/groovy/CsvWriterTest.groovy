@@ -61,7 +61,7 @@ class CsvWriterTest {
         .rows([['1', '2']])
         .build()
 
-    String filePath = tempDir.resolve('output3.csv').toString()
+    String filePath = tempDir.resolve('output3.csv').toFile().path
     CsvWriter.write(matrix, filePath)
 
     assertTrue(new File(filePath).exists(), "Output file should exist")
@@ -183,7 +183,7 @@ class CsvWriterTest {
     StringWriter writer = new StringWriter()
     CsvWriter.write(matrix, writer)
 
-    String csvContent = writer.toString()
+    String csvContent = writer.buffer
     assertTrue(csvContent.contains('col1,col2'), "Should contain header")
     assertTrue(csvContent.contains('a,b'), "Should contain first row")
     assertTrue(csvContent.contains('c,d'), "Should contain second row")
