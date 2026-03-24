@@ -7,10 +7,6 @@ import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.util.Logger
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-import java.util.Locale
-
 /**
  * SPI format provider for CSV, TSV, and TAB-delimited files.
  *
@@ -31,14 +27,8 @@ class CsvFormatProvider extends AbstractFormatProvider {
   private static final Logger log = Logger.getLogger(CsvFormatProvider)
   private static final String TSV_EXTENSION = 'tsv'
   private static final String TAB_EXTENSION = 'tab'
-  private static final String OPTION_DELIMITER = 'delimiter'
-  private static final String OPTION_QUOTE = 'quote'
-  private static final String OPTION_WITH_HEADER = 'withheader'
-  private static final String OPTION_RECORD_SEPARATOR = 'recordseparator'
-  private static final String OPTION_CHARSET = 'charset'
 
   private static final Set<String> EXTENSIONS = ['csv', TSV_EXTENSION, TAB_EXTENSION] as Set<String>
-  private static final Set<String> TSV_EXTENSIONS = [TSV_EXTENSION, TAB_EXTENSION] as Set<String>
 
   @Override
   Set<String> supportedExtensions() {
@@ -72,9 +62,8 @@ class CsvFormatProvider extends AbstractFormatProvider {
    */
   @Override
   Matrix read(File file, Map<String, ?> options) {
-    Map<String, ?> readOptions = applyTsvDefaults(file.name, options)
     log.debug("Reading CSV from file: ${file.absolutePath}")
-    CsvReader.read(readOptions as Map, file)
+    CsvReader.read(file, CsvReadOptions.fromMap(options))
   }
 
   /**
@@ -86,9 +75,8 @@ class CsvFormatProvider extends AbstractFormatProvider {
    */
   @Override
   Matrix read(URL url, Map<String, ?> options) {
-    Map<String, ?> readOptions = applyTsvDefaults(url.path, options)
     log.debug("Reading CSV from URL: ${url}")
-    CsvReader.read(readOptions as Map, url)
+    CsvReader.read(url, CsvReadOptions.fromMap(options))
   }
 
   /**
@@ -100,9 +88,8 @@ class CsvFormatProvider extends AbstractFormatProvider {
    */
   @Override
   Matrix read(InputStream is, Map<String, ?> options) {
-    Map<String, ?> readOptions = copyOptions(options)
-    log.debug("Reading CSV from InputStream")
-    CsvReader.read(readOptions as Map, is)
+    log.debug('Reading CSV from InputStream')
+    CsvReader.read(is, CsvReadOptions.fromMap(options))
   }
 
   /**
@@ -118,55 +105,7 @@ class CsvFormatProvider extends AbstractFormatProvider {
   @Override
   void write(Matrix matrix, File file, Map<String, ?> options) {
     log.debug("Writing CSV to file: ${file.absolutePath}")
-    CsvWriter.WriteBuilder builder = CsvWriter.write(matrix)
-    Map<String, Object> normalizedOptions = normalizeOptions(options)
-
-    // Apply TSV default for .tsv/.tab extensions
-    String ext = extractExtension(file.name)
-    boolean delimiterSet = normalizedOptions.containsKey(OPTION_DELIMITER)
-
-    if (delimiterSet) {
-      def delimiterValue = normalizedOptions.get(OPTION_DELIMITER)
-      if (delimiterValue instanceof Character) {
-        builder.delimiter(delimiterValue as Character)
-      } else {
-        builder.delimiter(delimiterValue as String)
-      }
-    }
-
-    if (!delimiterSet && TSV_EXTENSIONS.contains(ext)) {
-      builder.delimiter('\t' as char)
-    }
-
-    if (normalizedOptions.containsKey(OPTION_QUOTE)) {
-      def quoteValue = normalizedOptions.get(OPTION_QUOTE)
-      if (quoteValue instanceof Character) {
-        builder.quoteCharacter(quoteValue as Character)
-      } else {
-        builder.quoteCharacter(quoteValue as String)
-      }
-    }
-
-    if (normalizedOptions.containsKey(OPTION_WITH_HEADER)) {
-      builder.withHeader(normalizedOptions.get(OPTION_WITH_HEADER) as boolean)
-    }
-
-    if (normalizedOptions.containsKey(OPTION_RECORD_SEPARATOR)) {
-      builder.recordSeparator(normalizedOptions.get(OPTION_RECORD_SEPARATOR) as String)
-    }
-
-    Charset charset = StandardCharsets.UTF_8
-    if (normalizedOptions.containsKey(OPTION_CHARSET)) {
-      def charsetValue = normalizedOptions.get(OPTION_CHARSET)
-      if (charsetValue instanceof Charset) {
-        charset = CsvOptionUtil.resolveCharset(charsetValue as Charset)
-      } else if (charsetValue instanceof CharSequence) {
-        charset = CsvOptionUtil.resolveCharset(charsetValue as CharSequence)
-      } else {
-        throw new IllegalArgumentException("Charset must be a java.nio.charset.Charset or CharSequence but was ${charsetValue?.class} = $charsetValue")
-      }
-    }
-    builder.to(file, charset)
+    CsvWriter.write(matrix, file, CsvWriteOptions.fromMap(options))
   }
 
   @Override
@@ -177,58 +116,5 @@ class CsvFormatProvider extends AbstractFormatProvider {
   @Override
   List<OptionDescriptor> writeOptionDescriptors() {
     CsvWriteOptions.descriptors()
-  }
-
-  /**
-   * Applies TSV defaults when the file extension is {@code .tsv} or {@code .tab}
-   * and no delimiter is specified in the options map.
-   *
-   * @param fileName the file name or path to check extension
-   * @param options the original options map
-   * @return a new map with TSV defaults applied if needed
-   */
-  private static Map<String, ?> applyTsvDefaults(String fileName, Map<String, ?> options) {
-    Map<String, Object> result = copyOptions(options)
-    String ext = extractExtension(fileName)
-    if (TSV_EXTENSIONS.contains(ext) && !hasDelimiterKey(result)) {
-      result.put(CsvOption.Delimiter.name(), '\t')
-    }
-    result
-  }
-
-  /**
-   * Creates a mutable copy of an options map.
-   *
-   * @param options the original options map
-   * @return a new LinkedHashMap with the same entries
-   */
-  private static Map<String, Object> copyOptions(Map<String, ?> options) {
-    Map<String, Object> result = [:]
-    if (options == null) {
-      return result
-    }
-    options.each { k, v -> result.put(String.valueOf(k), v) }
-    result
-  }
-
-  /**
-   * Checks whether the options map contains a delimiter key (case-insensitive).
-   *
-   * @param options the options map to check
-   * @return true if a delimiter key is present
-   */
-  private static boolean hasDelimiterKey(Map<String, ?> options) {
-    options.keySet().any { String key -> key.equalsIgnoreCase(OPTION_DELIMITER) }
-  }
-
-  private static Map<String, Object> normalizeOptions(Map<String, ?> options) {
-    Map<String, Object> normalized = [:]
-    if (options == null) {
-      return normalized
-    }
-    options.each { k, v ->
-      normalized.put(String.valueOf(k).toLowerCase(Locale.ROOT), v)
-    }
-    normalized
   }
 }
