@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
+import org.apache.commons.csv.QuoteMode
 import org.apache.commons.io.input.CloseShieldInputStream
 import org.apache.commons.io.input.CloseShieldReader
 
@@ -454,6 +455,18 @@ class CsvReader {
     List<String> headerRow = []
     if (parser.headerNames != null && parser.headerNames.size() > 0) {
       headerRow = parser.headerNames
+      if (headerRow.size() != ncols) {
+        List<String> resolvedHeaderRow = [''] * ncols
+        Map<String, Integer> headerMap = parser.headerMap
+        if (headerMap != null) {
+          headerMap.each { String name, Integer index ->
+            if (index != null && index >= 0 && index < ncols) {
+              resolvedHeaderRow[index] = name ?: ''
+            }
+          }
+        }
+        headerRow = resolvedHeaderRow
+      }
     } else if (firstRowAsHeader) {
       headerRow = rows.remove(0)
     } else {
@@ -574,6 +587,8 @@ class CsvReader {
     private boolean ignoreSurroundingSpaces = true
     private String nullString = null
     private String recordSeparator = '\n'
+    private QuoteMode quoteMode = null
+    private boolean allowMissingColumnNames = false
     private boolean firstRowAsHeader = true
     private List<String> header = null
     private Charset charset = StandardCharsets.UTF_8
@@ -751,14 +766,14 @@ class CsvReader {
 
     // ── Preset methods ────────────────────────────────────────
 
-    /** Configures Excel-compatible CSV format with CRLF record separators. */
-    ReadBuilder excel() { recordSeparator = CsvFormat.CRLF; this }
+    /** Configures Excel-compatible CSV format, including missing-header tolerance. */
+    ReadBuilder excel() { applyFormat(CsvFormat.EXCEL) }
 
     /** Configures tab-delimited format (TSV). */
-    ReadBuilder tsv() { delimiter = '\t' as char; this }
+    ReadBuilder tsv() { applyFormat(CsvFormat.TDF) }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    ReadBuilder rfc4180() { recordSeparator = CsvFormat.CRLF; this }
+    ReadBuilder rfc4180() { applyFormat(CsvFormat.RFC4180) }
 
     // ── Terminal operations ───────────────────────────────────
 
@@ -889,6 +904,8 @@ class CsvReader {
           .ignoreSurroundingSpaces(ignoreSurroundingSpaces)
           .nullString(nullString)
           .recordSeparator(recordSeparator)
+          .quoteMode(quoteMode)
+          .allowMissingColumnNames(allowMissingColumnNames)
           .build()
       CSVFormat.Builder builder = CSVFormat.Builder.create(format.toCSVFormat())
           .setDuplicateHeaderMode(duplicateHeaderMode)
@@ -900,6 +917,21 @@ class CsvReader {
         builder.setSkipHeaderRecord(true)
       }
       builder.build()
+    }
+
+    private ReadBuilder applyFormat(CsvFormat format) {
+      delimiter = format.delimiter
+      quoteCharacter = format.quoteCharacter
+      escapeCharacter = format.escapeCharacter
+      commentMarker = format.commentMarker
+      trimValue = format.trim
+      ignoreEmptyLines = format.ignoreEmptyLines
+      ignoreSurroundingSpaces = format.ignoreSurroundingSpaces
+      nullString = format.nullString
+      recordSeparator = format.recordSeparator
+      quoteMode = format.quoteMode
+      allowMissingColumnNames = format.allowMissingColumnNames
+      this
     }
   }
 }

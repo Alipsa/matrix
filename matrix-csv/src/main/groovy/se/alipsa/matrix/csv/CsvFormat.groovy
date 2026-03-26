@@ -5,6 +5,7 @@ import groovy.transform.PackageScope
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.DuplicateHeaderMode
+import org.apache.commons.csv.QuoteMode
 
 /**
  * Internal immutable CSV format configuration class used by the fluent builder APIs
@@ -26,8 +27,12 @@ class CsvFormat {
   /** Default CSV format: comma-delimited, double-quote quoted, trimmed, ignoring empty lines. */
   static final CsvFormat DEFAULT = builder().build()
 
-  /** Excel-compatible CSV format with CRLF record separators. */
-  static final CsvFormat EXCEL = builder().recordSeparator(CRLF).build()
+  /** Excel-compatible CSV format with CRLF record separators and all non-null fields quoted. */
+  static final CsvFormat EXCEL = builder()
+      .recordSeparator(CRLF)
+      .quoteMode(QuoteMode.ALL_NON_NULL)
+      .allowMissingColumnNames(true)
+      .build()
 
   /** Tab-delimited format (TSV). */
   static final CsvFormat TDF = builder().delimiter('\t' as char).build()
@@ -62,6 +67,12 @@ class CsvFormat {
   /** The record separator string. Default: {@code '\n'} */
   final String recordSeparator
 
+  /** Quote mode used by Apache Commons CSV when writing. Default: Apache Commons CSV default. */
+  final QuoteMode quoteMode
+
+  /** Whether empty header names are allowed when parsing header rows. Default: {@code false}. */
+  final boolean allowMissingColumnNames
+
   private CsvFormat(Builder builder) {
     this.delimiter = builder.delimiter
     this.quoteCharacter = builder.quoteCharacter
@@ -72,6 +83,8 @@ class CsvFormat {
     this.ignoreSurroundingSpaces = builder.ignoreSurroundingSpaces
     this.nullString = builder.nullString
     this.recordSeparator = builder.recordSeparator
+    this.quoteMode = builder.quoteMode
+    this.allowMissingColumnNames = builder.allowMissingColumnNames
   }
 
   /**
@@ -98,20 +111,16 @@ class CsvFormat {
         .setIgnoreEmptyLines(ignoreEmptyLines)
         .setIgnoreSurroundingSpaces(ignoreSurroundingSpaces)
         .setRecordSeparator(recordSeparator)
+        .setAllowMissingColumnNames(allowMissingColumnNames)
         .setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
 
-    if (quoteCharacter != null) {
-      b.setQuote(quoteCharacter)
+    b.setQuote(quoteCharacter)
+    if (quoteMode != null) {
+      b.setQuoteMode(quoteMode)
     }
-    if (escapeCharacter != null) {
-      b.setEscape(escapeCharacter)
-    }
-    if (commentMarker != null) {
-      b.setCommentMarker(commentMarker)
-    }
-    if (nullString != null) {
-      b.setNullString(nullString)
-    }
+    b.setEscape(escapeCharacter)
+    b.setCommentMarker(commentMarker)
+    b.setNullString(nullString)
     b.build()
   }
 
@@ -120,7 +129,8 @@ class CsvFormat {
     "CsvFormat[delimiter=${delimiter}, quote=${quoteCharacter}, escape=${escapeCharacter}, " +
         "commentMarker=${commentMarker}, trim=${trim}, ignoreEmptyLines=${ignoreEmptyLines}, " +
         "ignoreSurroundingSpaces=${ignoreSurroundingSpaces}, nullString=${nullString}, " +
-        "recordSeparator=${recordSeparator?.inspect()}]"
+        "recordSeparator=${recordSeparator?.inspect()}, quoteMode=${quoteMode}, " +
+        "allowMissingColumnNames=${allowMissingColumnNames}]"
   }
 
   /**
@@ -140,6 +150,8 @@ class CsvFormat {
     private boolean ignoreSurroundingSpaces = true
     private String nullString = null
     private String recordSeparator = '\n'
+    private QuoteMode quoteMode = null
+    private boolean allowMissingColumnNames = false
 
     /**
      * Sets the field delimiter character.
@@ -237,6 +249,28 @@ class CsvFormat {
      */
     Builder recordSeparator(String s) {
       this.recordSeparator = s
+      this
+    }
+
+    /**
+     * Sets the quote mode used when writing values.
+     *
+     * @param mode the quote mode, or {@code null} to use Apache Commons CSV defaults
+     * @return this builder
+     */
+    Builder quoteMode(QuoteMode mode) {
+      this.quoteMode = mode
+      this
+    }
+
+    /**
+     * Sets whether empty header names are allowed when parsing CSV headers.
+     *
+     * @param allow {@code true} to allow missing column names
+     * @return this builder
+     */
+    Builder allowMissingColumnNames(boolean allow) {
+      this.allowMissingColumnNames = allow
       this
     }
 

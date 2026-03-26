@@ -134,8 +134,8 @@ class CsvWriterTest {
     String csvContent = CsvWriter.writeExcelCsvString(matrix)
 
     assertNotNull(csvContent, "Excel CSV string should not be null")
-    assertTrue(csvContent.contains('a,b'), "Should contain header")
-    assertTrue(csvContent.contains('1,2'), "Should contain data")
+    assertTrue(csvContent.contains('"a","b"'), "Should contain quoted header")
+    assertTrue(csvContent.contains('"1","2"'), "Should contain quoted data")
   }
 
   @Test

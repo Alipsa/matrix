@@ -144,6 +144,9 @@ class CsvFormatProviderTest {
     assertNotNull(description, 'Description should not be null')
     assertFalse(description.isEmpty(), 'Description should not be empty')
     assertTrue(description.contains('delimiter'), 'Description should mention delimiter')
+    assertTrue(description.contains('escape'), 'Description should mention escape')
+    assertTrue(description.contains('nullString'), 'Description should mention nullString')
+    assertFalse(description.contains('ignoreEmptyLines'), 'Write description should not advertise parse-only options')
   }
 
   @Test

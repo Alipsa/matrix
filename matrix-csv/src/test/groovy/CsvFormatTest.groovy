@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*
 
+import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -176,6 +177,16 @@ Bob,25'''
   }
 
   @Test
+  void readWithExcelPresetAllowsMissingHeaderNames() {
+    String csvContent = "id,,amount\r\n1,2,3\r\n"
+
+    Matrix matrix = CsvReader.read().excel().fromString(csvContent)
+
+    assertEquals(['id', '', 'amount'], matrix.columnNames())
+    assertEquals(['1', '2', '3'], matrix.row(0))
+  }
+
+  @Test
   void readWithRfc4180Preset() {
     String csvContent = "name,age\r\nAlice,30\r\nBob,25"
 
@@ -183,6 +194,15 @@ Bob,25'''
 
     assertEquals(2, matrix.rowCount())
     assertEquals(['name', 'age'], matrix.columnNames())
+  }
+
+  @Test
+  void readWithRfc4180PresetRejectsMissingHeaderNames() {
+    String csvContent = "id,,amount\r\n1,2,3\r\n"
+
+    assertThrows(IllegalArgumentException) {
+      CsvReader.read().rfc4180().fromString(csvContent)
+    }
   }
 
   // ── Read: reader-specific options ──────────────────────────
@@ -353,6 +373,20 @@ Alice,30'''
     String csvContent = CsvWriter.write(matrix).excel().asString()
 
     assertTrue(csvContent.contains('\r\n'), "Excel preset should use CRLF")
+  }
+
+  @Test
+  void writeWithExcelPresetQuotesAllNonNullValuesUnlikeRfc4180() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['name', 'age'])
+        .rows([['Alice', '30']])
+        .build()
+
+    String excelContent = CsvWriter.write(matrix).excel().asString()
+    String rfcContent = CsvWriter.write(matrix).rfc4180().asString()
+
+    assertEquals('"name","age"\r\n"Alice","30"\r\n', excelContent)
+    assertEquals('name,age\r\nAlice,30\r\n', rfcContent)
   }
 
   @Test
@@ -641,5 +675,18 @@ Bob,100'''
     assertEquals(String, matrix.type(0), "id should remain String")
     assertEquals(String, matrix.type(1), "name should remain String")
     assertEquals(String, matrix.type(2), "amount should remain String")
+  }
+
+  @Test
+  void deprecatedReaderCharsetParameterHasNoBehavioralEffect() {
+    String csvContent = 'id,name\n1,Åsa\n'
+
+    Matrix utf8 = CsvReader.read(new StringReader(csvContent), CSVFormat.DEFAULT, true, StandardCharsets.UTF_8, 'reader-test')
+    Matrix latin1 = CsvReader.read(new StringReader(csvContent), CSVFormat.DEFAULT, true, StandardCharsets.ISO_8859_1, 'reader-test')
+
+    assertEquals(utf8.columnNames(), latin1.columnNames())
+    assertEquals(utf8.row(0).toList(), latin1.row(0).toList())
+    assertEquals('reader-test', utf8.matrixName)
+    assertEquals('reader-test', latin1.matrixName)
   }
 }
