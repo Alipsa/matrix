@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.apache.commons.csv.QuoteMode
 import org.apache.commons.io.output.CloseShieldWriter
 
 import se.alipsa.matrix.core.Matrix
@@ -348,8 +349,10 @@ class CsvWriter {
     WriteBuilder builder = write(matrix)
         .delimiter(resolveWriteDelimiter(writeOptions, targetName))
         .quoteCharacter(writeOptions.quote)
+        .escapeCharacter(writeOptions.escape)
         .withHeader(writeOptions.withHeader)
         .recordSeparator(writeOptions.recordSeparator)
+        .nullString(writeOptions.nullString)
     builder
   }
 
@@ -370,6 +373,10 @@ class CsvWriter {
    * <p>Obtained via {@link CsvWriter#write(Matrix)}. Chain format configuration methods
    * and finish with a terminal {@code to*()} or {@code asString()} method to trigger I/O.</p>
    *
+   * <p>Preset-only format concerns such as Apache quote modes are intentionally
+   * modeled through {@link #excel()}, {@link #tsv()}, and {@link #rfc4180()}
+   * rather than standalone fluent setters.</p>
+   *
    * <pre>
    * CsvWriter.write(matrix)
    *     .delimiter(';')
@@ -382,16 +389,10 @@ class CsvWriter {
     private char delimiter = ',' as char
     private Character quoteCharacter = '"' as Character
     private Character escapeCharacter = null
-    private Character commentMarker = null
-    // These three options are primarily relevant for parsing/reading CSV.
-    // They are forwarded to the underlying Apache Commons CSVFormat for
-    // API symmetry with CsvReader and CsvFormat, but callers should not
-    // rely on them to transform Matrix cell contents during write.
-    private boolean trimValue = true
-    private boolean ignoreEmptyLines = true
-    private boolean ignoreSurroundingSpaces = true
     private String nullString = null
     private String recordSeparator = '\n'
+    private QuoteMode quoteMode = null
+    private boolean allowMissingColumnNames = false
     private boolean withHeaderValue = true
 
     private WriteBuilder(Matrix matrix) {
@@ -436,27 +437,6 @@ class CsvWriter {
       this
     }
 
-    /** Sets the comment marker character. */
-    WriteBuilder commentMarker(Character c) { commentMarker = c; this }
-
-    /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
-    WriteBuilder commentMarker(String s) {
-      if (s != null && s.length() > 1) {
-        throw new IllegalArgumentException("Comment marker must be a single character string, got: ${s}")
-      }
-      commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
-      this
-    }
-
-    /** Sets whether to trim whitespace. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder trim(boolean b) { trimValue = b; this }
-
-    /** Sets whether to ignore empty lines. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder ignoreEmptyLines(boolean b) { ignoreEmptyLines = b; this }
-
-    /** Sets whether to ignore spaces around quoted values. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
-    WriteBuilder ignoreSurroundingSpaces(boolean b) { ignoreSurroundingSpaces = b; this }
-
     /** Sets the string to interpret as null. */
     WriteBuilder nullString(String s) { nullString = s; this }
 
@@ -470,14 +450,14 @@ class CsvWriter {
 
     // ── Preset methods ────────────────────────────────────────
 
-    /** Configures Excel-compatible CSV format with CRLF record separators. */
-    WriteBuilder excel() { recordSeparator = CsvFormat.CRLF; this }
+    /** Configures Apache Excel-compatible CSV format, including CRLF output and {@link QuoteMode#ALL_NON_NULL}. */
+    WriteBuilder excel() { applyFormat(CsvFormat.EXCEL) }
 
     /** Configures tab-delimited format (TSV). */
-    WriteBuilder tsv() { delimiter = '\t' as char; this }
+    WriteBuilder tsv() { applyFormat(CsvFormat.TDF) }
 
     /** Configures RFC 4180 compliant format with CRLF record separators. */
-    WriteBuilder rfc4180() { recordSeparator = CsvFormat.CRLF; this }
+    WriteBuilder rfc4180() { applyFormat(CsvFormat.RFC4180) }
 
     // ── Terminal operations ───────────────────────────────────
 
@@ -583,13 +563,22 @@ class CsvWriter {
           .delimiter(delimiter)
           .quoteCharacter(quoteCharacter)
           .escapeCharacter(escapeCharacter)
-          .commentMarker(commentMarker)
-          .trim(trimValue)
-          .ignoreEmptyLines(ignoreEmptyLines)
-          .ignoreSurroundingSpaces(ignoreSurroundingSpaces)
           .nullString(nullString)
           .recordSeparator(recordSeparator)
+          .quoteMode(quoteMode)
+          .allowMissingColumnNames(allowMissingColumnNames)
           .build()
+    }
+
+    private WriteBuilder applyFormat(CsvFormat format) {
+      delimiter = format.delimiter
+      quoteCharacter = format.quoteCharacter
+      escapeCharacter = format.escapeCharacter
+      nullString = format.nullString
+      recordSeparator = format.recordSeparator
+      quoteMode = format.quoteMode
+      allowMissingColumnNames = format.allowMissingColumnNames
+      this
     }
   }
 }

@@ -208,24 +208,24 @@ CsvWriter.write(matrix).to(file)
 
 ## Fluent builder options
 
-### Format configuration (read and write)
+### Shared format configuration
 
 | Method                             | Default | Description                              |
 |------------------------------------|---------|------------------------------------------|
 | `delimiter(char)`                  | `,`     | Field separator character                |
 | `quoteCharacter(Character)`        | `"`     | Quote character for enclosing fields     |
 | `escapeCharacter(Character)`       | `null`  | Escape character for special characters  |
-| `commentMarker(Character)`         | `null`  | Character marking comment lines          |
-| `trim(boolean)`                    | `true`  | Trim whitespace from values              |
-| `ignoreEmptyLines(boolean)`        | `true`  | Skip blank lines when reading            |
-| `ignoreSurroundingSpaces(boolean)` | `true`  | Ignore spaces around quoted values       |
-| `nullString(String)`               | `null`  | String to interpret as null when reading |
+| `nullString(String)`               | `null`  | Null sentinel used during read/write     |
 | `recordSeparator(String)`          | `\n`    | Record separator for writing             |
 
 ### Read-specific options
 
 | Method                          | Default | Description                                             |
 |---------------------------------|---------|---------------------------------------------------------|
+| `commentMarker(Character)`      | `null`  | Character marking comment lines                         |
+| `trim(boolean)`                 | `true`  | Trim whitespace from values                             |
+| `ignoreEmptyLines(boolean)`     | `true`  | Skip blank lines when reading                           |
+| `ignoreSurroundingSpaces(boolean)` | `true` | Ignore spaces around quoted values                    |
 | `firstRowAsHeader(boolean)`     | `true`  | Whether the first row contains column names             |
 | `header(List<String>)`          | `null`  | Explicit header; sets firstRowAsHeader to false          |
 | `charset(Charset)`              | `UTF-8` | Character encoding                                      |
@@ -246,7 +246,7 @@ CsvWriter.write(matrix).to(file)
 
 | Method       | Effect                                         |
 |--------------|-------------------------------------------------|
-| `excel()`    | Sets `recordSeparator('\r\n')`                  |
+| `excel()`    | Applies Apache Excel semantics: `recordSeparator('\r\n')`, `QuoteMode.ALL_NON_NULL` on writes, `allowMissingColumnNames(true)`, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)` |
 | `tsv()`      | Sets `delimiter('\t')`                          |
 | `rfc4180()`  | Sets `recordSeparator('\r\n')`                  |
 

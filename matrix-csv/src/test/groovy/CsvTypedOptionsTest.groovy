@@ -62,9 +62,11 @@ class CsvTypedOptionsTest {
     CsvWriteOptions options = CsvWriteOptions.fromMap([
         delimiter      : ';',
         quote          : '\'',
+        escape         : '\\',
         withHeader     : false,
         charset        : 'ISO-8859-1',
-        recordSeparator: '\r\n'
+        recordSeparator: '\r\n',
+        nullString     : 'NULL'
     ])
 
     Map<String, ?> serialized = options.toMap()
@@ -72,9 +74,11 @@ class CsvTypedOptionsTest {
 
     assertEquals(';' as Character, serialized.delimiter)
     assertEquals('\'' as Character, reparsed.quote)
+    assertEquals('\\' as Character, reparsed.escape)
     assertFalse(reparsed.withHeader)
     assertEquals(StandardCharsets.ISO_8859_1, reparsed.charset)
     assertEquals('\r\n', reparsed.recordSeparator)
+    assertEquals('NULL', reparsed.nullString)
   }
 
   @Test
@@ -93,6 +97,17 @@ class CsvTypedOptionsTest {
     }
 
     assertTrue(exception.message.contains("Unknown CsvWriteOptions option: 'unknownoption'"))
+  }
+
+  @Test
+  void writeOptionsRejectParseOnlyKeys() {
+    ['trim', 'ignoreEmptyLines', 'ignoreSurroundingSpaces', 'commentMarker'].each { String optionName ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        CsvWriteOptions.fromMap([(optionName): true])
+      }
+
+      assertTrue(exception.message.contains("Unknown CsvWriteOptions option: '${optionName.toLowerCase()}'"))
+    }
   }
 
   @Test
@@ -186,5 +201,50 @@ class CsvTypedOptionsTest {
     assertTrue(Files.readString(pathTarget).contains(';'))
     assertFalse(writerContent.contains('id;name'))
     assertEquals(writerContent, csvString)
+  }
+
+  @Test
+  void typedWriteSupportsEscapeAndNullStringAndMatchesProviderAndFluentApis() {
+    Matrix matrix = Matrix.builder()
+        .matrixName('special')
+        .columnNames(['name', 'note'])
+        .rows([
+            [null, 'A,B'],
+            ['Bob', 'plain']
+        ])
+        .types([String, String])
+        .build()
+
+    CsvWriteOptions typedOptions = new CsvWriteOptions()
+        .quote('')
+        .escape('\\')
+        .nullString('NULL')
+
+    File spiFile = tempDir.resolve('special-spi.csv').toFile()
+    String typed = CsvWriter.writeString(matrix, typedOptions)
+    String fluent = CsvWriter.write(matrix)
+        .quoteCharacter('')
+        .escapeCharacter('\\')
+        .nullString('NULL')
+        .asString()
+    matrix.write([
+        quote     : '',
+        escape    : '\\',
+        nullString: 'NULL'
+    ], spiFile)
+    String spi = Files.readString(spiFile.toPath())
+
+    assertEquals(typed, fluent)
+    assertEquals(typed, spi)
+    assertTrue(typed.contains('NULL'))
+    assertTrue(typed.contains('A\\,B'))
+
+    Matrix roundTripped = CsvReader.read()
+        .quoteCharacter('')
+        .escapeCharacter('\\')
+        .nullString('NULL')
+        .fromString(typed)
+    assertNull(roundTripped[0, 'name'])
+    assertEquals('A,B', roundTripped[0, 'note'])
   }
 }
