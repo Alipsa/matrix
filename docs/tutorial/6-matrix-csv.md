@@ -1,20 +1,20 @@
 # Matrix CSV Module
 
-The matrix-csv module provides comprehensive support for creating Matrix objects from structured text files (CSV files) and writing Matrix objects to CSV files in the format of choice. It leverages Apache Commons CSV for parsing and writing CSV files, providing flexibility in handling various CSV formats.
+The `matrix-csv` module reads and writes CSV-style tabular data through a fluent API, typed options objects, and the generic Matrix SPI. It supports standard CSV plus `.tsv` and `.tab` files, and uses Apache Commons CSV internally while keeping the recommended API surface Matrix-specific.
 
 ## Installation
 
-To use the matrix-csv module, you need to add it as a dependency to your project.
+Use the Matrix BOM when you depend on multiple Matrix modules:
 
-### Gradle Configuration
+### Gradle
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
-implementation 'se.alipsa.matrix:matrix-core'
-implementation 'se.alipsa.matrix:matrix-csv'
+implementation platform("se.alipsa.matrix:matrix-bom:2.5.0-SNAPSHOT")
+implementation "se.alipsa.matrix:matrix-core"
+implementation "se.alipsa.matrix:matrix-csv"
 ```
 
-### Maven Configuration
+### Maven
 
 ```xml
 <project>
@@ -23,280 +23,234 @@ implementation 'se.alipsa.matrix:matrix-csv'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.2.0</version>
+        <version>2.5.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
     </dependencies>
-    </dependencyManagement>
+  </dependencyManagement>
   <dependencies>
     <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-core</artifactId>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-csv</artifactId>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-csv</artifactId>
     </dependency>
   </dependencies>
 </project>
 ```
 
-## Importing CSV Files
+## Fluent API: Reading CSV
 
-The matrix-csv module uses Apache Commons CSV to parse CSV files. This provides a high degree of flexibility in handling different CSV formats, including custom delimiters, quote characters, and header configurations.
-
-### Basic CSV Import
-
-Here's a simple example of importing a basic CSV file:
+The fluent API is the primary way to use `matrix-csv`.
 
 ```groovy
-import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.csv.CsvReader
 
-// Import a CSV file with default settings
-URL url = getClass().getResource("/basic.csv")
-CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
-Matrix basic = CsvImporter.importCsv(url, format)
+Matrix basic = CsvReader.read().from(new File("basic.csv"))
 
-// Print the imported data
-println(basic.content())
+Matrix semicolon = CsvReader.read()
+    .delimiter(';')
+    .from(new File("sales.csv"))
+
+Matrix fromString = CsvReader.read()
+    .fromString("name,age\nAlice,30\nBob,25\n")
 ```
 
-### Customizing CSV Import
-
-For more complex CSV files, you can customize the CSV format using the Apache Commons CSV builder:
+### Reading Without Headers
 
 ```groovy
-import org.apache.commons.csv.CSVFormat
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+Matrix matrix = CsvReader.read()
+    .firstRowAsHeader(false)
+    .fromString("1,Alice,100.00\n2,Bob,200.00\n")
 
-// Import a CSV file with custom settings
-URL url = getClass().getResource("/data.csv")
-CSVFormat format = CSVFormat.Builder.create()
-    .setDelimiter(',')           // Set the delimiter (comma is default)
-    .setQuote('"' as Character)  // Set the quote character
-    .setTrim(true)               // Trim whitespace from values
-    .setIgnoreEmptyLines(true)   // Skip empty lines
-    .build()
-    
-Matrix data = CsvImporter.importCsv(url, format)
+assert ['c0', 'c1', 'c2'] == matrix.columnNames()
 ```
 
-### Handling Complex CSV Formats
-
-Let's look at a more complex example with semicolon-delimited fields, quoted strings, and empty lines:
+If you already know both headers and types, use `columns(...)`:
 
 ```groovy
-import org.apache.commons.csv.CSVFormat
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
-
-// Sample CSV content:
-// 1;"Per";"2023-Apr-30";234,12
-// 
-// 2;"Karin";"2023-May-10";345,22
-// 3;"Tage";"2023-Jun-20";3489,01
-// 4;"Arne";"2023-Jul-01";222,99
-
-URL url = getClass().getResource("/colonQuotesEmptyLine.csv")
-CSVFormat format = CSVFormat.Builder.create()
-    .setTrim(true)
-    .setDelimiter(';')
-    .setIgnoreEmptyLines(true)
-    .setQuote('"' as Character)
-    .setHeader('id', 'name', 'date', 'amount')  // Explicitly set column names
-    .build()
-    
-Matrix matrix = CsvImporter.importCsv(url, format)
+Matrix typed = CsvReader.read()
+    .columns(id: Integer, name: String, amount: BigDecimal)
+    .fromString("1,Alice,100.00\n2,Bob,200.00\n")
 ```
 
-### Converting Data Types
-
-When importing CSV files, all values are initially imported as strings. To convert the content to appropriate data types, use the `convert` method:
+### Type Conversion During Read
 
 ```groovy
-import org.apache.commons.csv.CSVFormat
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.text.NumberFormat
-import java.util.Locale
 
-// Import the CSV file
-URL url = getClass().getResource("/data.csv")
-CSVFormat format = CSVFormat.Builder.create()
-    .setDelimiter(';')
-    .setQuote('"' as Character)
-    .setIgnoreEmptyLines(true)
-    .setHeader('id', 'name', 'date', 'amount')
-    .build()
-    
-Matrix matrix = CsvImporter.importCsv(url, format)
-
-// Convert columns to appropriate types
-Matrix table = matrix.convert(
-    [
-        "id": Integer,
-        "name": String,
-        "date": LocalDate,
-        "amount": BigDecimal
-    ],
-    "yyyy-MMM-dd",
-    NumberFormat.getInstance(Locale.GERMANY)  // For parsing numbers with comma as decimal separator
-)
-
-// Verify the conversion
-assert 4 == table.rowCount()
-assert ['id', 'name', 'date', 'amount'] == table.columnNames()
-assert [4, 'Arne', LocalDate.parse('2023-07-01'), 222.99] == table.row(3)
+Matrix sales = CsvReader.read()
+    .types(Integer, String, LocalDate, BigDecimal)
+    .dateTimeFormat('yyyy-MM-dd')
+    .fromString("""id,name,date,amount
+1,Alice,2025-01-15,100.50
+2,Bob,2025-01-20,200.75
+""")
 ```
 
-## Exporting to CSV Files
+For locale-specific numbers, add `numberFormat(...)`.
 
-The matrix-csv module also provides functionality to export Matrix objects to CSV files using the `CsvExporter` class.
-
-### Basic CSV Export
-
-Here's a simple example of exporting a Matrix to a CSV file:
+### Presets
 
 ```groovy
-import se.alipsa.matrix.core.*
-import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.csv.CsvExporter
-import org.apache.commons.csv.CSVFormat
+Matrix excel = CsvReader.read()
+    .excel()
+    .from(new File("report.csv"))
 
-// Load a sample dataset
-Matrix mtcars = Dataset.mtcars()
-
-// Create a temporary file for the export
-File file = File.createTempFile('mtcars', '.csv')
-
-// Export the Matrix to a CSV file with default settings
-CsvExporter.exportToCsv(mtcars, file)
-
-println("CSV file exported to: ${file.absolutePath}")
+Matrix tsv = CsvReader.read()
+    .tsv()
+    .from(new File("report.tsv"))
 ```
 
-### Customizing CSV Export
+`excel()` applies Apache Excel semantics, including CRLF records and more literal read handling (`trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)`).
 
-You can customize the CSV format for export using the Apache Commons CSV builder:
+## Fluent API: Writing CSV
+
+```groovy
+import se.alipsa.matrix.csv.CsvWriter
+
+CsvWriter.write(sales).to(new File("sales-copy.csv"))
+
+String csv = CsvWriter.write(sales).asString()
+
+CsvWriter.write(sales)
+    .delimiter(';')
+    .to(new File("sales-semicolon.csv"))
+
+CsvWriter.write(sales)
+    .withHeader(false)
+    .to(new File("sales-no-header.csv"))
+```
+
+### Excel and TSV Output
+
+```groovy
+CsvWriter.write(sales).excel().to(new File("sales-excel.csv"))
+CsvWriter.write(sales).tsv().to(new File("sales.tsv"))
+```
+
+`excel()` writes CRLF-separated output and quotes all non-null values.
+
+## Typed Options API
+
+Use typed options when you want an explicit configuration object instead of chained fluent calls.
+
+### Typed Reads
+
+```groovy
+import org.apache.commons.csv.DuplicateHeaderMode
+import se.alipsa.matrix.csv.CsvReadOptions
+import se.alipsa.matrix.csv.CsvReader
+
+CsvReadOptions readOptions = new CsvReadOptions()
+    .delimiter(';')
+    .charset('ISO-8859-1')
+    .tableName('sales')
+    .types([Integer, String, BigDecimal])
+    .duplicateHeaderMode(DuplicateHeaderMode.ALLOW_ALL)
+
+Matrix sales = CsvReader.read(new File("sales.csv"), readOptions)
+```
+
+Read-side source semantics:
+
+- charset affects `File`, `Path`, `URL`, and `InputStream`
+- charset has no effect for `Reader` or `String`
+- `tableName(...)` overrides source-derived matrix names
+- `.tsv` and `.tab` auto-detect tab delimiters unless the delimiter was explicitly configured
+
+### Typed Writes
+
+```groovy
+import se.alipsa.matrix.csv.CsvWriteOptions
+import se.alipsa.matrix.csv.CsvWriter
+
+CsvWriteOptions writeOptions = new CsvWriteOptions()
+    .delimiter(';')
+    .escape('\\')
+    .nullString('NULL')
+    .recordSeparator('\r\n')
+
+CsvWriter.write(sales, new File("sales.csv"), writeOptions)
+String csv = CsvWriter.writeString(sales, writeOptions)
+```
+
+The typed write contract only includes options with observable write behavior:
+
+- delimiter
+- quote
+- escape
+- withHeader
+- charset
+- recordSeparator
+- nullString
+
+Parse-only keys such as `trim`, `ignoreEmptyLines`, `ignoreSurroundingSpaces`, and `commentMarker` are rejected when used as write options.
+
+### `fromMap(...)` Normalization
+
+The typed options classes can normalize SPI-style maps:
+
+```groovy
+import se.alipsa.matrix.csv.CsvReadOptions
+import se.alipsa.matrix.csv.CsvWriteOptions
+
+CsvReadOptions readOptions = CsvReadOptions.fromMap([
+    delimiter          : ';',
+    duplicateHeaderMode: 'ALLOW_ALL'
+])
+
+CsvWriteOptions writeOptions = CsvWriteOptions.fromMap([
+    delimiter  : ';',
+    escape     : '\\',
+    nullString : 'NULL'
+])
+```
+
+This keeps direct typed usage and SPI usage aligned.
+
+## Generic Matrix SPI
+
+If `matrix-csv` is on the classpath, Matrix automatically discovers the CSV provider for `.csv`, `.tsv`, and `.tab`.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvExporter
-import org.apache.commons.csv.CSVFormat
 
-// Create or obtain a Matrix
-Matrix salesData = Matrix.builder().data(
-    date: ['2023-01-15', '2023-02-20', '2023-03-10'],
-    product: ['Widget A', 'Widget B', 'Widget C'],
-    quantity: [120, 85, 150],
-    price: [40.00, 60.00, 38.00]
-).build()
+Matrix csv = Matrix.read(new File("basic.csv"))
+Matrix renamed = Matrix.read([tableName: 'sales'], new File("sales.csv"))
+Matrix tsv = Matrix.read(new File("report.tsv"))
 
-// Create a custom CSV format
-CSVFormat format = CSVFormat.Builder.create()
-    .setDelimiter(';')
-    .setQuote('"' as Character)
-    .setRecordSeparator('\r\n')  // Windows-style line endings
-    .build()
-
-// Export to a file
-File file = new File('/path/to/sales_data.csv')
-CsvExporter.exportToCsv(salesData, format, file)
-println "exported to $file.absolutePath"
+csv.write(new File("copy.csv"))
+csv.write([delimiter: ';', nullString: 'NULL'], new File("copy.csv"))
 ```
 
-### Exporting to a Writer
-
-Instead of exporting to a file, you can export to a Writer, which is useful for streaming CSV data:
+Runtime option discovery is available through:
 
 ```groovy
+import se.alipsa.matrix.csv.CsvReadOptions
+import se.alipsa.matrix.csv.CsvWriteOptions
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvExporter
-import org.apache.commons.csv.CSVFormat
 
-// Create or obtain a Matrix
-Matrix data = Matrix.builder().data(
-    id: [1, 2, 3],
-    name: ['Alice', 'Bob', 'Charlie'],
-    score: [85, 92, 78]
-).build()
-
-// Export to a StringWriter to get the CSV as a string
-StringWriter writer = new StringWriter()
-CsvExporter.exportToCsv(data, CSVFormat.DEFAULT, writer)
-String csvContent = writer.toString()
-println(csvContent)
-
-// Export to a FileWriter
-File file = new File('/path/to/output.csv')
-FileWriter fileWriter = new FileWriter(file)
-CsvExporter.exportToCsv(data, CSVFormat.DEFAULT, fileWriter)
-fileWriter.close()
+println Matrix.listReadOptions('csv')
+println Matrix.listWriteOptions('csv')
+println CsvReadOptions.describe()
+println CsvWriteOptions.describe()
 ```
 
-## Working with Apache Commons CSV
+## Legacy Apache `CSVFormat` Overloads
 
-The matrix-csv module leverages Apache Commons CSV, which provides a rich set of features for handling CSV files. Here are some additional configuration options you might find useful:
+The old overloads that accept Apache Commons `CSVFormat` directly still exist for compatibility, but they are deprecated. Prefer one of these instead:
 
-### CSV Format Presets
+- the fluent `CsvReader` / `CsvWriter` API
+- the typed `CsvReadOptions` / `CsvWriteOptions` API
+- the generic `Matrix.read(...)` / `matrix.write(...)` SPI
 
-Apache Commons CSV provides several predefined formats:
+## Summary
 
-```groovy
-// Standard CSV format
-CSVFormat csvFormat = CSVFormat.DEFAULT
-
-// Excel-compatible CSV format
-CSVFormat excelFormat = CSVFormat.EXCEL
-
-// Tab-delimited format
-CSVFormat tsvFormat = CSVFormat.TDF
-
-// RFC 4180 compliant format
-CSVFormat rfc4180Format = CSVFormat.RFC4180
-```
-
-### Custom Format Options
-
-You can customize various aspects of the CSV format:
-
-```groovy
-CSVFormat customFormat = CSVFormat.Builder.create()
-    .setDelimiter(',')                // Character separating fields
-    .setQuote('"' as Character)       // Character used to quote fields
-    .setEscape('\\' as Character)     // Character used to escape special characters
-    .setHeader("ID", "Name", "Value") // Specify header names
-    .setSkipHeaderRecord(true)        // Skip writing the header record
-    .setIgnoreEmptyLines(true)        // Ignore empty lines
-    .setAllowMissingColumnNames(true) // Allow missing column names
-    .setTrim(true)                    // Trim leading/trailing whitespace
-    .setTrailingDelimiter(false)      // Don't add a delimiter at the end of each record
-    .setNullString("NULL")            // String to write for null values
-    .build()
-```
-
-## Best Practices
-
-1. **Data Type Conversion**: Always convert imported CSV data to appropriate types using the `convert` method for proper data handling.
-
-2. **Character Encoding**: Be aware of character encoding issues when working with CSV files. You may need to specify the encoding when reading from or writing to files.
-
-3. **Headers**: Using headers makes your CSV files more self-documenting and easier to work with. Consider using the `setHeader` method when defining your CSV format.
-
-4. **Error Handling**: Implement proper error handling when importing CSV files, as they may contain unexpected formats or values.
-
-5. **Large Files**: For large CSV files, consider processing them in chunks to avoid memory issues.
-
-## Conclusion
-
-The matrix-csv module provides a powerful and flexible way to import data from CSV files into Matrix objects and export Matrix objects to CSV files. By leveraging Apache Commons CSV, it offers extensive customization options to handle various CSV formats and requirements.
-
-In the next section, we'll explore the matrix-json module, which provides similar functionality for working with JSON data.
+Use the fluent API by default, reach for typed options when you want explicit reusable configuration, and use the generic Matrix SPI when you want extension-based file handling. The three paths share the same behavior and option normalization.
 
 Go to [previous section](5-matrix-spreadsheet.md) | Go to [next section](7-matrix-json.md) | Back to [outline](outline.md)
