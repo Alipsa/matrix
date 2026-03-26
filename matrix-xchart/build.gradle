@@ -3,7 +3,7 @@ plugins {
     id('java-library')
     id('maven-publish')
     id('signing')
-    id("se.alipsa.nexus-release-plugin") version '2.1.1'
+    id("se.alipsa.nexus-release-plugin") version '2.1.2'
 }
 
 group = 'se.alipsa.matrix'

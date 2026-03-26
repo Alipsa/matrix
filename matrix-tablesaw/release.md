@@ -1,6 +1,8 @@
 # Matrix-Tablesaw Version history
 
 ## v0.2.2, 2026-01-31
+- Dependency updates:
+  - com.github.miachm.sods:SODS 1.8.1 -> 1.8.2
 
 ### Build Configuration Improvements
 - Added `compileTestJava` configuration with deprecation and unchecked warnings enabled

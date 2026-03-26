@@ -7,7 +7,7 @@ plugins {
   //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.1.1'
+  id("se.alipsa.nexus-release-plugin") version '2.1.2'
 }
 
 group = 'se.alipsa.matrix'

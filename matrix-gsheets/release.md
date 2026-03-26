@@ -1,5 +1,13 @@
 # Release history
 
+## 0.2.0, In progress
+- Dependencies:
+  - com.google.apis:google-api-services-drive v3-rev20260220-2.0.0 -> v3-rev20260322-2.0.0
+  - com.google.apis:google-api-services-sheets v4-rev20251110-2.0.0 -> v4-rev20260213-2.0.0
+  - org.mockito:mockito-core 5.22.0 -> 5.23.0
+  - org.mockito:mockito-junit-jupiter 5.22.0 -> 5.23.0
+  - se.alipsa.nexus-release-plugin:se.alipsa.nexus-release-plugin.gradle.plugin 2.1.1 -> 2.1.2
+
 ## 0.1.1, 2026-01-31
 Move actual implementation for GsheetsReader and GsheetsWriter and utility methods to GsUtil so that GsImporter and GsExporter are just empty wrappers.
 - com.google.apis:google-api-services-drive v3-rev20251210-2.0.0 -> v3-rev20260220-2.0.0

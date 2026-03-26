@@ -2,8 +2,8 @@
 
 ## v2.1.3, In progress
 - upgrade dependencies
-  - com.fasterxml.jackson.core:jackson-core 2.21.0 -> 2.21.1 
-  - com.fasterxml.jackson.core:jackson-databind 2.21.0 -> 2.21.1
+  - com.fasterxml.jackson.core:jackson-core 2.21.0 -> 2.21.2 
+  - com.fasterxml.jackson.core:jackson-databind 2.21.0 -> 2.21.2
 - change JSON float parsing to deserialize floating-point numbers as `BigDecimal` instead of `Double` so imported decimal values keep their exact textual precision
 
 ## v2.1.2, 2026-01-31

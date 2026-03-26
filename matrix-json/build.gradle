@@ -3,7 +3,7 @@ plugins {
   id('java-library')
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.1.1'
+  id("se.alipsa.nexus-release-plugin") version '2.1.2'
 }
 
 group = 'se.alipsa.matrix'
@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-  def jacksonVersion = '2.21.1'
+  def jacksonVersion = '2.21.2'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
