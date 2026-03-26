@@ -116,14 +116,14 @@ publishing {
       pom {
         name = 'Matrix CSV import/export'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-csv"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-csv"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-csv/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-csv/LICENSE'
           }
         }
         developers {
@@ -133,7 +133,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-csv/tree/master'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-csv'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
