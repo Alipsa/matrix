@@ -1,5 +1,14 @@
 # Release history
 
+## v2.3.0, 2026-03-26
+- clean up deprecated `CsvImporter` dead code and suppress legacy enum naming violations without breaking backward compatibility
+- fix remaining CodeNarc priority 2 issues across `matrix-csv`, including builder field naming and deprecated Reader charset documentation
+- make the typed options API first-class through `CsvReadOptions` / `CsvWriteOptions` direct overloads, SPI normalization via `fromMap(...)`, and parity between direct and SPI usage
+- correct the CSV format model so Excel and RFC4180 are no longer treated as the same preset
+- make the write options contract explicit by supporting only observable write-time options and rejecting parse-only write settings at the typed/SPI boundary
+- align Excel behavior with Apache Commons CSV semantics, including `QuoteMode.ALL_NON_NULL`, CRLF output, and missing-header support
+- refresh the README, cookbook, and tutorial around `CsvReader`, `CsvWriter`, typed options, default behavior, and runtime option discovery
+
 ## v2.2.2, 2026-01-31
 - deprecate CsvImporter and CsvExporter in favor of CsvReader and CsvWriter
 - upgrade commons-csv from 1.14.0 to 1.14.1
