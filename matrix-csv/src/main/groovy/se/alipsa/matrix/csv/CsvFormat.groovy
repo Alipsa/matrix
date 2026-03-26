@@ -27,9 +27,17 @@ class CsvFormat {
   /** Default CSV format: comma-delimited, double-quote quoted, trimmed, ignoring empty lines. */
   static final CsvFormat DEFAULT = builder().build()
 
-  /** Excel-compatible CSV format with CRLF record separators and all non-null fields quoted. */
+  /**
+   * Excel-compatible CSV format aligned with Apache Commons {@link CSVFormat#EXCEL},
+   * including CRLF line endings, {@link QuoteMode#ALL_NON_NULL}, no trimming,
+   * no skipped empty lines, no ignored surrounding spaces, and support for
+   * missing header names.
+   */
   static final CsvFormat EXCEL = builder()
       .recordSeparator(CRLF)
+      .trim(false)
+      .ignoreEmptyLines(false)
+      .ignoreSurroundingSpaces(false)
       .quoteMode(QuoteMode.ALL_NON_NULL)
       .allowMissingColumnNames(true)
       .build()
@@ -118,8 +126,12 @@ class CsvFormat {
     if (quoteMode != null) {
       b.setQuoteMode(quoteMode)
     }
-    b.setEscape(escapeCharacter)
-    b.setCommentMarker(commentMarker)
+    if (escapeCharacter != null) {
+      b.setEscape(escapeCharacter)
+    }
+    if (commentMarker != null) {
+      b.setCommentMarker(commentMarker)
+    }
     b.setNullString(nullString)
     b.build()
   }

@@ -200,9 +200,11 @@ Bob,25'''
   void readWithRfc4180PresetRejectsMissingHeaderNames() {
     String csvContent = "id,,amount\r\n1,2,3\r\n"
 
-    assertThrows(IllegalArgumentException) {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       CsvReader.read().rfc4180().fromString(csvContent)
     }
+
+    assertTrue(exception.message.contains('A header name is missing'))
   }
 
   // ── Read: reader-specific options ──────────────────────────
@@ -387,6 +389,42 @@ Alice,30'''
 
     assertEquals('"name","age"\r\n"Alice","30"\r\n', excelContent)
     assertEquals('name,age\r\nAlice,30\r\n', rfcContent)
+  }
+
+  @Test
+  void writeWithExcelPresetLeavesNullsUnquoted() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['name', 'note'])
+        .rows([
+            [null, 'A,B'],
+            ['Bob', null]
+        ])
+        .build()
+
+    String excelContent = CsvWriter.write(matrix).excel().asString()
+    Matrix result = CsvReader.read().excel().nullString('').fromString(excelContent)
+
+    assertTrue(excelContent.contains(',"A,B"'))
+    assertTrue(excelContent.contains('"Bob",'))
+    assertNull(result[0, 'name'])
+    assertEquals('A,B', result[0, 'note'])
+    assertEquals('Bob', result[1, 'name'])
+    assertNull(result[1, 'note'])
+  }
+
+  @Test
+  void presetCanBeOverriddenAfterExcel() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['name', 'value'])
+        .rows([['Alice', '100']])
+        .build()
+
+    String csvContent = CsvWriter.write(matrix)
+        .excel()
+        .delimiter(';')
+        .asString()
+
+    assertEquals('"name";"value"\r\n"Alice";"100"\r\n', csvContent)
   }
 
   @Test

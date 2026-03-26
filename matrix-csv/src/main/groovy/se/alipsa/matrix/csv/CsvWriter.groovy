@@ -373,6 +373,10 @@ class CsvWriter {
    * <p>Obtained via {@link CsvWriter#write(Matrix)}. Chain format configuration methods
    * and finish with a terminal {@code to*()} or {@code asString()} method to trigger I/O.</p>
    *
+   * <p>Preset-only format concerns such as Apache quote modes are intentionally
+   * modeled through {@link #excel()}, {@link #tsv()}, and {@link #rfc4180()}
+   * rather than standalone fluent setters.</p>
+   *
    * <pre>
    * CsvWriter.write(matrix)
    *     .delimiter(';')
@@ -446,7 +450,7 @@ class CsvWriter {
 
     // ── Preset methods ────────────────────────────────────────
 
-    /** Configures Excel-compatible CSV format with CRLF record separators and all non-null values quoted. */
+    /** Configures Apache Excel-compatible CSV format, including CRLF output and {@link QuoteMode#ALL_NON_NULL}. */
     WriteBuilder excel() { applyFormat(CsvFormat.EXCEL) }
 
     /** Configures tab-delimited format (TSV). */

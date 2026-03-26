@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets
 @SuppressWarnings('DuplicateStringLiteral')
 class CsvWriteOptions {
 
-  private static final String BOOLEAN_TRUE = 'true'
   private static final Character DEFAULT_DELIMITER = ',' as Character
   private static final Character DEFAULT_QUOTE = '"' as Character
   private static final Character DEFAULT_ESCAPE = null
@@ -187,7 +186,7 @@ class CsvWriteOptions {
         new OptionDescriptor('delimiter', Character, ',', 'The character used to separate values'),
         new OptionDescriptor('quote', Character, '"', 'The character used to enclose fields'),
         new OptionDescriptor('escape', Character, null, 'The escape character used when quoting is disabled or escaping is required'),
-        new OptionDescriptor('withHeader', Boolean, BOOLEAN_TRUE, 'Whether to include column names in the first row'),
+        new OptionDescriptor('withHeader', Boolean, 'true', 'Whether to include column names in the first row'),
         new OptionDescriptor('charset', Charset, 'UTF-8', 'The character encoding'),
         new OptionDescriptor('recordSeparator', String, '\\n', 'The record separator string'),
         new OptionDescriptor('nullString', String, null, 'String to write for null values'),

@@ -246,7 +246,7 @@ CsvWriter.write(matrix).to(file)
 
 | Method       | Effect                                         |
 |--------------|-------------------------------------------------|
-| `excel()`    | Sets `recordSeparator('\r\n')`, quotes all non-null fields when writing, and allows missing header names when reading |
+| `excel()`    | Applies Apache Excel semantics: `recordSeparator('\r\n')`, `QuoteMode.ALL_NON_NULL` on writes, `allowMissingColumnNames(true)`, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)` |
 | `tsv()`      | Sets `delimiter('\t')`                          |
 | `rfc4180()`  | Sets `recordSeparator('\r\n')`                  |
 
