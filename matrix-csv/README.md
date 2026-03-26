@@ -308,6 +308,49 @@ Legacy overloads that accept Apache Commons CSV `CSVFormat` directly still exist
 def matrix = CsvReader.read().delimiter(';').from(file)
 ```
 
+## Quick Reference
+
+### Shared fluent methods
+
+| Method | Default | Notes |
+|--------|---------|-------|
+| `delimiter(...)` | `,` | Read and write |
+| `quoteCharacter(...)` | `"` | Read and write |
+| `escapeCharacter(...)` | `null` | Read and write |
+| `nullString(...)` | `null` | Read and write |
+| `recordSeparator(...)` | `\n` | Read and write |
+
+### Read-only fluent methods
+
+| Method | Default | Notes |
+|--------|---------|-------|
+| `commentMarker(...)` | `null` | Read only |
+| `trim(...)` | `true` | Read only, except `excel()` changes this to `false` |
+| `ignoreEmptyLines(...)` | `true` | Read only, except `excel()` changes this to `false` |
+| `ignoreSurroundingSpaces(...)` | `true` | Read only, except `excel()` changes this to `false` |
+| `firstRowAsHeader(...)` | `true` | Read only |
+| `header(...)` | `null` | Read only |
+| `charset(...)` | `UTF-8` | Only affects byte-based sources |
+| `matrixName(...)` | source-derived / `matrix` | Read only |
+| `types(...)` | `null` | Read only |
+| `columns(...)` | `null` | Read only |
+| `dateTimeFormat(...)` | `null` | Read only |
+| `numberFormat(...)` | `null` | Read only |
+
+### Write-only fluent methods
+
+| Method | Default | Notes |
+|--------|---------|-------|
+| `withHeader(...)` | `true` | Write only |
+
+### Presets
+
+| Method | Effect |
+|--------|--------|
+| `excel()` | Apache Excel semantics, CRLF output, `QuoteMode.ALL_NON_NULL`, missing-header tolerance, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)` |
+| `tsv()` | `delimiter('\t')` |
+| `rfc4180()` | `recordSeparator('\r\n')` |
+
 ## Release Version Compatibility Matrix
 
 See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended combinations of Matrix library versions.

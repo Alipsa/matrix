@@ -103,7 +103,9 @@ matrix.write(new File('copy.csv'))
 matrix.write([delimiter: ';', nullString: 'NULL'], new File('copy.csv'))
 ```
 
-At runtime you can inspect the currently supported options:
+## Inspect Supported Options at Runtime
+
+If you want option discovery rather than just read/write usage:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
