@@ -16,3 +16,4 @@ build/
 
 /agent-api.log
 /matrix-bom/.flattened-pom.xml
+/.remember/
