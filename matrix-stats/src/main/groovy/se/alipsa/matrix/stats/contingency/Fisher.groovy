@@ -25,6 +25,7 @@ import se.alipsa.matrix.core.Matrix
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class Fisher {
 
   /**
@@ -181,9 +182,15 @@ class Fisher {
   private static double getZScore(double alpha) {
     // Approximate z-score for common confidence levels
     // For 95% CI: alpha/2 = 0.025, z ≈ 1.96
-    if (Math.abs(alpha - 0.025) < 0.001) return 1.96
-    if (Math.abs(alpha - 0.05) < 0.001) return 1.645
-    if (Math.abs(alpha - 0.005) < 0.001) return 2.576
+    if (Math.abs(alpha - 0.025) < 0.001) {
+      return 1.96
+    }
+    if (Math.abs(alpha - 0.05) < 0.001) {
+      return 1.645
+    }
+    if (Math.abs(alpha - 0.005) < 0.001) {
+      return 2.576
+    }
 
     // Default approximation
     return 1.96

@@ -18,6 +18,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution
  * Reference: Ljung, G. M. and Box, G. E. P. (1978). "On a Measure of Lack of Fit in Time Series Models"
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Portmanteau {
 
   /**

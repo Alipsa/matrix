@@ -122,7 +122,9 @@ enum Kernel {
   EPANECHNIKOV {
     @Override
     double evaluate(double u) {
-      if (Math.abs(u) > 1) return 0.0
+      if (Math.abs(u) > 1) {
+        return 0.0
+      }
       return 0.75 * (1.0 - u * u)
     }
   },
@@ -134,7 +136,9 @@ enum Kernel {
   UNIFORM {
     @Override
     double evaluate(double u) {
-      if (Math.abs(u) > 1) return 0.0
+      if (Math.abs(u) > 1) {
+        return 0.0
+      }
       return 0.5
     }
   },
@@ -147,7 +151,9 @@ enum Kernel {
     @Override
     double evaluate(double u) {
       double absU = Math.abs(u)
-      if (absU > 1) return 0.0
+      if (absU > 1) {
+        return 0.0
+      }
       return 1.0 - absU
     }
   }
@@ -168,7 +174,9 @@ enum Kernel {
    * @throws IllegalArgumentException if the kernel name is not recognized
    */
   static Kernel fromString(String name) {
-    if (name == null) return GAUSSIAN
+    if (name == null) {
+      return GAUSSIAN
+    }
     switch (name.toLowerCase()) {
       case 'gaussian':
       case 'normal':

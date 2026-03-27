@@ -5,6 +5,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution
 /**
  * Confidence ellipse calculations for bivariate normal data.
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 class Ellipse {
 
   /**
@@ -74,8 +75,12 @@ class Ellipse {
     double lambda2 = trace / 2 - Math.sqrt(discriminant)
 
     // Guard against negative eigenvalues (shouldn't happen but protect against numerical issues)
-    if (lambda1 < 0) lambda1 = 0
-    if (lambda2 < 0) lambda2 = 0
+    if (lambda1 < 0) {
+      lambda1 = 0
+    }
+    if (lambda2 < 0) {
+      lambda2 = 0
+    }
 
     // Angle of rotation
     double theta

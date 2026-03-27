@@ -73,6 +73,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class TurningPoint {
 
   /**

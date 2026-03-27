@@ -107,6 +107,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution
  * separately or using stratified logistic regression.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CochranMantelHaenszel {
 
   /**

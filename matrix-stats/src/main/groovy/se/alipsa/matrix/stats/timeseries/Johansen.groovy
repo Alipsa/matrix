@@ -74,6 +74,7 @@ import org.apache.commons.math3.linear.*
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Johansen {
 
   /**

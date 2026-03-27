@@ -108,7 +108,7 @@ import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest as ApacheKS
 @CompileStatic
 class KolmogorovSmirnov {
 
-  private static final ApacheKSTest ksTest = new ApacheKSTest()
+  private static final ApacheKSTest KS_TEST = new ApacheKSTest()
 
   /**
    * Performs a one-sample Kolmogorov-Smirnov test to check if the data follows a normal distribution.
@@ -165,10 +165,10 @@ class KolmogorovSmirnov {
     double[] values = data.collect { it.doubleValue() } as double[]
 
     // Calculate D statistic
-    double dStatistic = ksTest.kolmogorovSmirnovStatistic(distribution, values)
+    double dStatistic = KS_TEST.kolmogorovSmirnovStatistic(distribution, values)
 
     // Calculate p-value
-    double pValue = ksTest.kolmogorovSmirnovTest(distribution, values)
+    double pValue = KS_TEST.kolmogorovSmirnovTest(distribution, values)
 
     return new KSResult(
       dStatistic: dStatistic,
@@ -194,10 +194,10 @@ class KolmogorovSmirnov {
     double[] values2 = sample2.collect { it.doubleValue() } as double[]
 
     // Calculate D statistic
-    double dStatistic = ksTest.kolmogorovSmirnovStatistic(values1, values2)
+    double dStatistic = KS_TEST.kolmogorovSmirnovStatistic(values1, values2)
 
     // Calculate p-value
-    double pValue = ksTest.kolmogorovSmirnovTest(values1, values2)
+    double pValue = KS_TEST.kolmogorovSmirnovTest(values1, values2)
 
     return new KSResult(
       dStatistic: dStatistic,

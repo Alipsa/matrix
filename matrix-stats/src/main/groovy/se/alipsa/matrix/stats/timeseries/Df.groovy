@@ -57,6 +57,7 @@ import groovy.transform.CompileStatic
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Df {
 
   /**
@@ -84,8 +85,12 @@ class Df {
     double yMin = Double.POSITIVE_INFINITY
     double yMax = Double.NEGATIVE_INFINITY
     for (double val : data) {
-      if (val < yMin) yMin = val
-      if (val > yMax) yMax = val
+      if (val < yMin) {
+        yMin = val
+      }
+      if (val > yMax) {
+        yMax = val
+      }
     }
 
     if (Math.abs(yMax - yMin) < 1e-10) {
@@ -107,8 +112,12 @@ class Df {
 
     // Count number of predictors based on type
     int nPredictors = 1  // Always have y_{t-1}
-    if (type == "drift" || type == "trend") nPredictors++  // Add intercept
-    if (type == "trend") nPredictors++  // Add time trend
+    if (type == "drift" || type == "trend") {
+      nPredictors++  // Add intercept
+    }
+    if (type == "trend") {
+      nPredictors++  // Add time trend
+    }
 
     // Build design matrix
     double[][] X = new double[nObs][nPredictors]
@@ -321,17 +330,29 @@ class Df {
     double[] params
 
     if (type == "none") {
-      if (significance == 0.01) params = [-2.66, -2.62, -1.26, 0.00] as double[]
-      else if (significance == 0.05) params = [-1.95, -1.95, -0.99, 0.00] as double[]
-      else params = [-1.60, -1.62, -0.88, 0.00] as double[]  // 10%
+      if (significance == 0.01) {
+        params = [-2.66, -2.62, -1.26, 0.00] as double[]
+      } else if (significance == 0.05) {
+        params = [-1.95, -1.95, -0.99, 0.00] as double[]
+      } else {
+        params = [-1.60, -1.62, -0.88, 0.00] as double[]  // 10%
+      }
     } else if (type == "drift") {
-      if (significance == 0.01) params = [-3.75, -3.52, -1.79, -0.38] as double[]
-      else if (significance == 0.05) params = [-3.00, -2.89, -1.47, -0.27] as double[]
-      else params = [-2.63, -2.58, -1.29, -0.22] as double[]  // 10%
+      if (significance == 0.01) {
+        params = [-3.75, -3.52, -1.79, -0.38] as double[]
+      } else if (significance == 0.05) {
+        params = [-3.00, -2.89, -1.47, -0.27] as double[]
+      } else {
+        params = [-2.63, -2.58, -1.29, -0.22] as double[]  // 10%
+      }
     } else {  // trend
-      if (significance == 0.01) params = [-4.38, -3.95, -1.95, -0.40] as double[]
-      else if (significance == 0.05) params = [-3.60, -3.43, -1.68, -0.31] as double[]
-      else params = [-3.24, -3.13, -1.53, -0.26] as double[]  // 10%
+      if (significance == 0.01) {
+        params = [-4.38, -3.95, -1.95, -0.40] as double[]
+      } else if (significance == 0.05) {
+        params = [-3.60, -3.43, -1.68, -0.31] as double[]
+      } else {
+        params = [-3.24, -3.13, -1.53, -0.26] as double[]  // 10%
+      }
     }
 
     // MacKinnon approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³

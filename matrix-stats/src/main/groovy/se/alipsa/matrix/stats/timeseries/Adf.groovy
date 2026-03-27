@@ -19,6 +19,7 @@ import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
  * Reference: R's tseries::adf.test() and urca::ur.df()
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Adf {
 
   /**
@@ -128,8 +129,12 @@ class Adf {
   private static double[][] buildDesignMatrix(double[] y, double[] dy, int lags, String type, int nObs, int n) {
     // Determine number of predictors
     int nPredictors = 1 // y_{t-1}
-    if (type == "drift" || type == "trend") nPredictors++ // constant
-    if (type == "trend") nPredictors++ // time trend
+    if (type == "drift" || type == "trend") {
+      nPredictors++ // constant
+    }
+    if (type == "trend") {
+      nPredictors++ // time trend
+    }
     nPredictors += lags // lagged differences
 
     double[][] X = new double[nObs][nPredictors]

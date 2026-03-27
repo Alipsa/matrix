@@ -25,6 +25,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
  * - Anderson, T.W. (1962). "On the Distribution of the Two-Sample Cramer-von Mises Criterion"
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CramerVonMises {
 
   /**

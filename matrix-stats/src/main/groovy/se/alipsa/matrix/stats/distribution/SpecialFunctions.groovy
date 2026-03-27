@@ -15,6 +15,7 @@ import java.math.RoundingMode
  * and is self-contained with no external dependencies.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class SpecialFunctions {
 
   private static final double EPSILON = 1e-14
@@ -46,8 +47,12 @@ class SpecialFunctions {
       throw new IllegalArgumentException("a and b must be positive, got a=$a, b=$b")
     }
 
-    if (x == 0.0d) return 0.0d
-    if (x == 1.0d) return 1.0d
+    if (x == 0.0d) {
+      return 0.0d
+    }
+    if (x == 1.0d) {
+      return 1.0d
+    }
 
     // Use symmetry relation for faster convergence when x > (a+1)/(a+b+2)
     if (x > (a + 1.0) / (a + b + 2.0)) {
@@ -71,8 +76,12 @@ class SpecialFunctions {
       throw new IllegalArgumentException("a and b must be positive, got a=$a, b=$b")
     }
 
-    if (x == ZERO) return ZERO
-    if (x == ONE) return ONE
+    if (x == ZERO) {
+      return ZERO
+    }
+    if (x == ONE) {
+      return ONE
+    }
 
     // Use symmetry relation for faster convergence when x > (a+1)/(a+b+2)
     BigDecimal threshold = div(a + 1.0, a + b + 2.0)
@@ -101,7 +110,9 @@ class SpecialFunctions {
     double qam = a - 1.0d
     double c = 1.0d
     double d = 1.0d - qab * x / qap
-    if (Math.abs(d) < 1e-30) d = 1e-30
+    if (Math.abs(d) < 1e-30) {
+      d = 1e-30
+    }
     d = 1.0d / d
     double h = d
 
@@ -109,17 +120,25 @@ class SpecialFunctions {
       int m2 = 2 * m
       double aa = m * (b - m) * x / ((qam + m2) * (a + m2))
       d = 1.0d + aa * d
-      if (Math.abs(d) < 1e-30) d = 1e-30
+      if (Math.abs(d) < 1e-30) {
+      d = 1e-30
+    }
       c = 1.0d + aa / c
-      if (Math.abs(c) < 1e-30) c = 1e-30
+      if (Math.abs(c) < 1e-30) {
+        c = 1e-30
+      }
       d = 1.0d / d
       h *= d * c
 
       aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
       d = 1.0 + aa * d
-      if (Math.abs(d) < 1e-30) d = 1e-30
+      if (Math.abs(d) < 1e-30) {
+      d = 1e-30
+    }
       c = 1.0 + aa / c
-      if (Math.abs(c) < 1e-30) c = 1e-30
+      if (Math.abs(c) < 1e-30) {
+        c = 1e-30
+      }
       d = 1.0 / d
       double delta = d * c
       h *= delta
@@ -137,7 +156,9 @@ class SpecialFunctions {
     BigDecimal qam = a - ONE
     BigDecimal c = ONE
     BigDecimal d = ONE - div(qab * x, qap)
-    if (d.abs() < BETA_TINY) d = BETA_TINY
+    if (d.abs() < BETA_TINY) {
+      d = BETA_TINY
+    }
     d = div(ONE, d)
     BigDecimal h = d
 
@@ -145,17 +166,25 @@ class SpecialFunctions {
       int m2 = 2 * m
       BigDecimal aa = div(m * (b - m) * x, (qam + m2) * (a + m2))
       d = ONE + aa * d
-      if (d.abs() < BETA_TINY) d = BETA_TINY
+      if (d.abs() < BETA_TINY) {
+      d = BETA_TINY
+    }
       c = ONE + div(aa, c)
-      if (c.abs() < BETA_TINY) c = BETA_TINY
+      if (c.abs() < BETA_TINY) {
+        c = BETA_TINY
+      }
       d = div(ONE, d)
       h *= d * c
 
       aa = div(-(a + m) * (qab + m) * x, (a + m2) * (qap + m2))
       d = ONE + aa * d
-      if (d.abs() < BETA_TINY) d = BETA_TINY
+      if (d.abs() < BETA_TINY) {
+      d = BETA_TINY
+    }
       c = ONE + div(aa, c)
-      if (c.abs() < BETA_TINY) c = BETA_TINY
+      if (c.abs() < BETA_TINY) {
+        c = BETA_TINY
+      }
       d = div(ONE, d)
       BigDecimal delta = d * c
       h *= delta

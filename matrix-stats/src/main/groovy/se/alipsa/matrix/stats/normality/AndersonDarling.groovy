@@ -19,6 +19,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
  * Reference: R's nortest::ad.test()
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class AndersonDarling {
 
   /**

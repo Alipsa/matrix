@@ -38,6 +38,7 @@ import java.math.RoundingMode
  * see the {@link Welch} class.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Student {
 
   private static final int SCALE = 15

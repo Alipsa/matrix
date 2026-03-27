@@ -157,6 +157,7 @@ import java.math.RoundingMode
  * or machine learning libraries. The dependent variable must be binary (coded as 0 or 1).</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class LogisticRegression {
 
   /** The slope coefficient (β1) */

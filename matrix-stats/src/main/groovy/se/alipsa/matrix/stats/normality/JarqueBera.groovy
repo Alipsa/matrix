@@ -92,6 +92,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution
  * or Shapiro-Francia tests.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class JarqueBera {
 
   private static final int MIN_SAMPLE_SIZE = 4  // Need at least 4 observations to calculate kurtosis

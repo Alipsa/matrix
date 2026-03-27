@@ -23,6 +23,7 @@ import groovy.transform.CompileStatic
  * Reference: R's lmtest::dwtest()
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class DurbinWatson {
 
   /**

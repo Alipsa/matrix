@@ -79,6 +79,7 @@ import groovy.transform.CompileStatic
  * test or Barnard's test instead.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Boschloo {
 
   /**

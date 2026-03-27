@@ -62,6 +62,7 @@ import groovy.transform.CompileStatic
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Ccm {
 
   /**
@@ -199,7 +200,9 @@ class Ccm {
     List<NeighborDistance> neighbors = []
 
     for (Integer idx : validIndices) {
-      if (idx == queryIdx) continue  // Exclude self
+      if (idx == queryIdx) {
+        continue  // Exclude self
+      }
 
       double dist = euclideanDistance(query, manifold[idx])
       neighbors.add(new NeighborDistance(index: idx, distance: dist))
@@ -360,7 +363,9 @@ class Ccm {
      * @return true if evidence suggests X causes Y
      */
     boolean xCausesY(double threshold = 0.3) {
-      if (ymapX.length < 2) return false
+      if (ymapX.length < 2) {
+        return false
+      }
       // Check if correlation is positive and increasing
       return ymapX[-1] > threshold && ymapX[-1] > ymapX[0]
     }
@@ -372,7 +377,9 @@ class Ccm {
      * @return true if evidence suggests Y causes X
      */
     boolean yCausesX(double threshold = 0.3) {
-      if (xmapY.length < 2) return false
+      if (xmapY.length < 2) {
+        return false
+      }
       // Check if correlation is positive and increasing
       return xmapY[-1] > threshold && xmapY[-1] > xmapY[0]
     }

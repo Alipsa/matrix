@@ -127,6 +127,7 @@ package se.alipsa.matrix.stats.cluster
  * @see KMeansPlusPlus
  */
 
+@SuppressWarnings('DuplicateNumberLiteral')
 class GroupEstimator {
 
   private final CalculationMethod method

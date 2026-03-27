@@ -17,6 +17,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
  * Reference: R's nortest::lillie.test()
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Lilliefors {
 
   /**

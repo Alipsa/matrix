@@ -161,6 +161,7 @@ import java.math.RoundingMode
  * The quantile parameter τ must be in the open interval (0, 1).</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class QuantileRegression {
 
   /** The slope coefficient */

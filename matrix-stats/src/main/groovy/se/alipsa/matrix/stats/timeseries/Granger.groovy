@@ -70,6 +70,7 @@ import org.apache.commons.math3.distribution.FDistribution
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Granger {
 
   /**

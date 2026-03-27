@@ -10,6 +10,7 @@ import org.apache.commons.math3.linear.RealMatrix
  * Internal helpers for regression diagnostics and standard error calculations.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class RegressionUtils {
 
   /**

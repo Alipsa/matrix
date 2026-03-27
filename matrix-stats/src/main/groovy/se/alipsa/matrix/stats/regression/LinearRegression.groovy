@@ -27,6 +27,7 @@ import java.math.RoundingMode
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class LinearRegression {
 
   BigDecimal slope

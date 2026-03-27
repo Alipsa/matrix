@@ -19,6 +19,7 @@ import groovy.transform.CompileStatic
  * Reference: R's tseries::kpss.test()
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Kpss {
 
   /**

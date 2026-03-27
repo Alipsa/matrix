@@ -103,6 +103,7 @@ import org.apache.commons.math3.stat.StatUtils
  * consider using Anderson-Darling or other tests designed for large samples.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class ShapiroWilk {
 
   private static final int MIN_SAMPLE_SIZE = 3
@@ -275,6 +276,7 @@ class ShapiroWilk {
   /**
    * Result class for the Shapiro-Wilk test.
    */
+  @SuppressWarnings('PropertyName')
   static class ShapiroWilkResult {
     /** The W test statistic (0 < W ≤ 1, closer to 1 indicates normality) */
     Double W

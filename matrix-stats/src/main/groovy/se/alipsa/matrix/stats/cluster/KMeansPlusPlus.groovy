@@ -8,7 +8,7 @@ import se.alipsa.matrix.core.util.Logger
 /**
  * KMeans++ is an enhanced K-Means clustering algorithm that uses an improved initialization
  * strategy to produce better clustering results. It partitions n observations into k clusters
- * by iteratively minimizing the Within-Cluster Sum of Squares (WCSS).
+ * by iteratively minimizing the Within-Cluster Sum of Squares (wcss).
  *
  * <p>This implementation is based on <a href='https://github.com/JasonAltschuler/KMeansPlusPlus'>Jason Altschuler's
  * implementation</a> (used with explicit permission). It provides a low-level API for clustering
@@ -24,7 +24,7 @@ import se.alipsa.matrix.core.util.Logger
  *
  * <h3>When to Use KMeansPlusPlus</h3>
  * <ul>
- *   <li><strong>Low-Level Control:</strong> When you need direct access to centroids, WCSS, or distance metrics</li>
+ *   <li><strong>Low-Level Control:</strong> When you need direct access to centroids, wcss, or distance metrics</li>
  *   <li><strong>Performance Tuning:</strong> When you want to customize epsilon, iterations, or distance norms</li>
  *   <li><strong>Non-Matrix Data:</strong> When working with double[][] arrays instead of Matrix objects</li>
  *   <li><strong>Algorithmic Research:</strong> When studying clustering behavior or implementing variants</li>
@@ -56,12 +56,12 @@ import se.alipsa.matrix.core.util.Logger
  *   <dd>The k cluster centers, each represented as an n-dimensional point. Updated iteratively
  *   as the mean of all points assigned to the cluster. Access via getCentroids().</dd>
  *
- *   <dt><strong>WCSS (Within-Cluster Sum of Squares)</strong></dt>
- *   <dd>The objective function being minimized: WCSS = Σᵢ Σⱼ ||Cᵢ - Xⱼ||², where Cᵢ is the
- *   i-th centroid and Xⱼ is a point assigned to cluster i. Lower WCSS = better clustering.</dd>
+ *   <dt><strong>wcss (Within-Cluster Sum of Squares)</strong></dt>
+ *   <dd>The objective function being minimized: wcss = Σᵢ Σⱼ ||Cᵢ - Xⱼ||², where Cᵢ is the
+ *   i-th centroid and Xⱼ is a point assigned to cluster i. Lower wcss = better clustering.</dd>
  *
  *   <dt><strong>Convergence</strong></dt>
- *   <dd>The algorithm stops when WCSS improvement falls below epsilon (default: 0.001) or when
+ *   <dd>The algorithm stops when wcss improvement falls below epsilon (default: 0.001) or when
  *   no improvement occurs. Runs multiple iterations (default: 50) and keeps the best result.</dd>
  *
  *   <dt><strong>Distance Metrics</strong></dt>
@@ -88,7 +88,7 @@ import se.alipsa.matrix.core.util.Logger
  * KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(2, points)
  *     .iterations(50)           // Run 50 times, keep best result
  *     .pp(true)                 // Use KMeans++ initialization (recommended)
- *     .epsilon(0.001)           // Stop when WCSS improvement &lt; 0.001
+ *     .epsilon(0.001)           // Stop when wcss improvement &lt; 0.001
  *     .useEpsilon(true)         // Enable epsilon-based stopping
  *     .useL1norm(false)         // Use L2 (Euclidean) distance
  *     .build()
@@ -103,7 +103,7 @@ import se.alipsa.matrix.core.util.Logger
  * ClusteredPoint[] assignments = clustering.getAssignment()
  * double wcss = clustering.getWCSS()
  *
- * println "WCSS: $wcss"
+ * println "wcss: $wcss"
  * println "Execution time: ${clustering.getTiming()}"
  *
  * // Examine cluster assignments
@@ -140,8 +140,8 @@ import se.alipsa.matrix.core.util.Logger
  *   <li><strong>Initialization:</strong> Select k initial centroids using KMeans++ or random sampling</li>
  *   <li><strong>Assignment Step:</strong> Assign each point to its nearest centroid (using L1 or L2 distance)</li>
  *   <li><strong>Update Step:</strong> Recalculate each centroid as the mean of its assigned points</li>
- *   <li><strong>Convergence Check:</strong> If WCSS improvement &lt; epsilon (or 0), stop; otherwise repeat from step 2</li>
- *   <li><strong>Multi-Run:</strong> Repeat the entire process 'iterations' times and keep the best result (lowest WCSS)</li>
+ *   <li><strong>Convergence Check:</strong> If wcss improvement &lt; epsilon (or 0), stop; otherwise repeat from step 2</li>
+ *   <li><strong>Multi-Run:</strong> Repeat the entire process 'iterations' times and keep the best result (lowest wcss)</li>
  * </ol>
  *
  * <h3>Parameters</h3>
@@ -149,11 +149,11 @@ import se.alipsa.matrix.core.util.Logger
  *   <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
  *   <tr><td>k</td><td>int</td><td>required</td><td>Number of clusters (must be ≤ number of distinct points)</td></tr>
  *   <tr><td>points</td><td>double[][]</td><td>required</td><td>Input data (m × n array: m points, n dimensions)</td></tr>
- *   <tr><td>iterations</td><td>int</td><td>50</td><td>Number of independent runs (keeps best WCSS)</td></tr>
+ *   <tr><td>iterations</td><td>int</td><td>50</td><td>Number of independent runs (keeps best wcss)</td></tr>
  *   <tr><td>pp</td><td>boolean</td><td>true</td><td>Use KMeans++ initialization (vs. random)</td></tr>
- *   <tr><td>epsilon</td><td>double</td><td>0.001</td><td>Convergence threshold for WCSS improvement</td></tr>
+ *   <tr><td>epsilon</td><td>double</td><td>0.001</td><td>Convergence threshold for wcss improvement</td></tr>
  *   <tr><td>useEpsilon</td><td>boolean</td><td>true</td><td>Enable epsilon-based stopping (vs. exact convergence)</td></tr>
- *   <tr><td>L1norm</td><td>boolean</td><td>true</td><td>Use L1 (Manhattan) vs. L2 (Euclidean) distance</td></tr>
+ *   <tr><td>l1Norm</td><td>boolean</td><td>true</td><td>Use L1 (Manhattan) vs. L2 (Euclidean) distance</td></tr>
  * </table>
  *
  * <h3>Output Methods</h3>
@@ -172,7 +172,7 @@ import se.alipsa.matrix.core.util.Logger
  *   <li><strong>Normalize data:</strong> Use Normalize.minMaxNorm() before clustering for better results</li>
  *   <li><strong>Check for empty clusters:</strong> The algorithm automatically reinitializes empty clusters to random points</li>
  *   <li><strong>Validate k:</strong> Ensure k ≤ number of distinct points, or construction will fail</li>
- *   <li><strong>Monitor WCSS:</strong> Compare WCSS values to assess clustering quality</li>
+ *   <li><strong>Monitor wcss:</strong> Compare wcss values to assess clustering quality</li>
  * </ul>
  *
  * <h3>References</h3>
@@ -196,6 +196,7 @@ import se.alipsa.matrix.core.util.Logger
  * @see ClusteredPoint
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class KMeansPlusPlus {
 
   private static final Logger log = Logger.getLogger(KMeansPlusPlus)
@@ -207,12 +208,12 @@ class KMeansPlusPlus {
   private double[][] points    // n-dimensional data points.
 
   // optional parameters
-  private int iterations       // number of times to repeat the clustering. Choose run with lowest WCSS
+  private int iterations       // number of times to repeat the clustering. Choose run with lowest wcss
   private boolean pp           // true --> KMeans++. false --> basic random sampling
   private double epsilon       // stops running when improvement in error < epsilon
-  private boolean useEpsilon;  // true  --> stop running when marginal improvement in WCSS < epsilon
+  private boolean useEpsilon;  // true  --> stop running when marginal improvement in wcss < epsilon
   // false --> stop running when 0 improvement
-  private boolean L1norm       // true --> L1 norm to calculate distance; false --> L2 norm
+  private boolean l1Norm       // true --> L1 norm to calculate distance; false --> L2 norm
 
   // calculated from dimension of points[][]
   private int m                // number of data points   (# of pixels for PhenoRipper)
@@ -221,7 +222,7 @@ class KMeansPlusPlus {
   // output
   private double[][] centroids // position vectors of centroids                      dim(2): (k) by (number of channels)
   private ClusteredPoint[] assignment // assigns each point to nearest centroid [0, k-1]    dim(1): (number of pixels)
-  private double WCSS          // within-cluster sum-of-squares. Cost function to minimize
+  private double wcss          // within-cluster sum-of-squares. Cost function to minimize
 
   // timing information
   private long start
@@ -254,7 +255,7 @@ class KMeansPlusPlus {
     pp = builder.pp
     epsilon = builder.epsilon
     useEpsilon = builder.useEpsilon
-    L1norm = builder.L1norm
+    l1Norm = builder.l1Norm
     randomSeed = builder.randomSeed
 
     // get dimensions to set last 2 fields
@@ -282,7 +283,7 @@ class KMeansPlusPlus {
     private boolean pp         = true
     private double epsilon     = .001
     private boolean useEpsilon = true
-    private boolean L1norm = true
+    private boolean l1Norm = true
     private Long randomSeed = null
 
 
@@ -340,12 +341,13 @@ class KMeansPlusPlus {
      * Set the number of clustering iterations (default is 50).
      * Each iteration runs KMeans independently and retains the best result.
      *
-     * @param iterations the number of runs; must be ≥ 1
+    * @param iterations the number of runs; must be ≥ 1
      * @return the updated builder instance
      */
     Builder iterations(int iterations) {
-      if (iterations < 1)
+      if (iterations < 1) {
         throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50");
+      }
       this.iterations = iterations
       return this
     }
@@ -362,7 +364,7 @@ class KMeansPlusPlus {
     }
 
     /**
-     * Set the convergence threshold. When the improvement in WCSS is less than epsilon, the algorithm stops.
+     * Set the convergence threshold. When the improvement in wcss is less than epsilon, the algorithm stops.
      * <p>
      * <ul>
      *   <li>Smaller - slower, more precision.</li>
@@ -379,17 +381,18 @@ class KMeansPlusPlus {
      * @return the updated builder instance
      */
     Builder epsilon(double epsilon) {
-      if (epsilon < 0.0)
+      if (epsilon < 0.0) {
         throw new IllegalArgumentException("Required: non-negative value of epsilon. Ex: .001")
+      }
 
       this.epsilon = epsilon
       return this
     }
 
     /**
-     * Enable or disable stopping based on marginal WCSS improvement. Default value is true.
+     * Enable or disable stopping based on marginal wcss improvement. Default value is true.
      *  <ul>
-     *   <li>true: stop running when marginal improvement in WCSS &lt; epsilon</li>
+     *   <li>true: stop running when marginal improvement in wcss &lt; epsilon</li>
      *   <li>false: stop running when 0 improvement</li>
      * </ul>
      * Recommended unless extremely exact.
@@ -409,11 +412,11 @@ class KMeansPlusPlus {
      *   <li>false for L2 (Euclidean) distance</li>
      * </ul>
      *
-     * @param L1norm true to use L1 norm, false for L2 norm
+     * @param l1Norm true to use L1 norm, false for L2 norm
      * @return the updated builder instance
      */
-    Builder useL1norm(boolean L1norm) {
-      this.L1norm = L1norm
+    Builder useL1norm(boolean l1Norm) {
+      this.l1Norm = l1Norm
       return this
     }
 
@@ -462,18 +465,18 @@ class KMeansPlusPlus {
       cluster()
 
       // store info if it was the best run so far
-      if (WCSS < bestWCSS) {
-        //println "$n WCSS < bestWCSS = $WCSS < $bestWCSS"
+      if (wcss < bestWCSS) {
+        //println "$n wcss < bestWCSS = $wcss < $bestWCSS"
         //println("$n Centroids: ${centroids} clusters")
         //println("$n Assignment: ${assignment.length} points assigned to clusters")
-        bestWCSS = WCSS
+        bestWCSS = wcss
         bestCentroids = centroids
         bestAssignment = assignment
       }
     }
 
     // keep info from best run
-    WCSS = bestWCSS
+    wcss = bestWCSS
     centroids = bestCentroids
     assignment = bestAssignment
   }
@@ -486,12 +489,12 @@ class KMeansPlusPlus {
     centroids = new double[k][n]
     // continue to re-cluster until marginal gains are small enough
     chooseInitialCentroids()
-    WCSS = Double.POSITIVE_INFINITY
+    wcss = Double.POSITIVE_INFINITY
     double prevWCSS
     do {
       assignmentStep()   // assign points to the closest centroids
       updateStep()       // update centroids
-      prevWCSS = WCSS    // check if cost function meets stopping criteria
+      prevWCSS = wcss    // check if cost function meets stopping criteria
       calcWCSS()
     } while (!stop(prevWCSS))
   }
@@ -572,10 +575,11 @@ class KMeansPlusPlus {
    * Uses either plusplus (KMeans++) or a basic randoms sample to choose initial centroids
    */
   private void chooseInitialCentroids() {
-    if (pp)
+    if (pp) {
       plusplus()
-    else
+    } else {
       basicRandSample()
+    }
   }
 
   /**
@@ -610,30 +614,29 @@ class KMeansPlusPlus {
     for (int c = 0; c < k; c++) {
 
       // first centroid: choose any data point
-      if (c == 0)
+      if (c == 0) {
         choose = random.nextInt(m)
-
-      // after first centroid, use a weighted distribution
-      else {
+      } else {
+        // after first centroid, use a weighted distribution
 
         // check if the most recently added centroid is closer to any of the points than previously added ones
         for (int p = 0; p < m; p++) {
           // gives chosen points 0 probability of being chosen again -> sampling without replacement
-          double tempDistance = Distance.L2(points[p], centroids[c - 1]); // need L2 norm here, not L1
+          double tempDistance = Distance.euclideanDistance(points[p], centroids[c - 1]); // need L2 norm here, not L1
 
           // base case: if we have only chosen one centroid so far, nothing to compare to
-          if (c == 1)
+          if (c == 1) {
             distToClosestCentroid[p] = tempDistance
-
-          else { // c != 1
-            if (tempDistance < distToClosestCentroid[p])
+          } else if (tempDistance < distToClosestCentroid[p]) { // c != 1
               distToClosestCentroid[p] = tempDistance
           }
 
           // no need to square because the distance is the square of the euclidean dist
-          if (p == 0)
+          if (p == 0) {
             weightedDistribution[0] = distToClosestCentroid[0]
-          else weightedDistribution[p] = weightedDistribution[p-1] + distToClosestCentroid[p]
+          } else {
+            weightedDistribution[p] = weightedDistribution[p - 1] + distToClosestCentroid[p]
+          }
 
         }
 
@@ -655,8 +658,9 @@ class KMeansPlusPlus {
       }
 
       // store the chosen centroid
-      for (int i = 0; i < n; i++)
+      for (int i = 0; i < n; i++) {
         centroids[c][i] = points[choose][i]
+      }
     }
   }
 
@@ -671,20 +675,21 @@ class KMeansPlusPlus {
    * @return
    */
   private boolean stop(double prevWCSS) {
-    if (useEpsilon)
+    if (useEpsilon) {
       return epsilonTest(prevWCSS)
-    else
-      return prevWCSS == WCSS
+    } else {
+      return prevWCSS == wcss
+    }
   }
 
   /**
-   * Signals to stop running KMeans when the marginal improvement in WCSS
+   * Signals to stop running KMeans when the marginal improvement in wcss
    * from the last step is small.
    * @param prevWCSS error from previous step in the run
    * @return
    */
   private boolean epsilonTest(double prevWCSS) {
-    return epsilon > 1 - (WCSS / prevWCSS)
+    return epsilon > 1 - (wcss / prevWCSS)
   }
 
   /***********************************************************************
@@ -697,7 +702,7 @@ class KMeansPlusPlus {
    * @return
    */
   private double distance(double[] x, double[] y) {
-    return L1norm ? Distance.L1(x, y) : Distance.L2(x, y)
+    return l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
   }
 
   private Random randomForIteration(int iteration) {
@@ -710,14 +715,17 @@ class KMeansPlusPlus {
      * L1 norm: distance(X,Y) = sum_i=1:n[|x_i - y_i|]
      * <P> Minkowski distance of order 1.
      * @param x
-     * @param y
-     * @return
+    * @param y
+    * @return
      */
-    static double L1(double[] x, double[] y) {
-      if (x.length != y.length) throw new IllegalArgumentException("dimension error")
+    static double manhattanDistance(double[] x, double[] y) {
+      if (x.length != y.length) {
+        throw new IllegalArgumentException("dimension error")
+      }
       double dist = 0
-      for (int i = 0; i < x.length; i++)
+      for (int i = 0; i < x.length; i++) {
         dist += Math.abs(x[i] - y[i])
+      }
       return dist
     }
 
@@ -728,8 +736,10 @@ class KMeansPlusPlus {
      * @param y the second n-dimensional point
      * @return the squared distance between the two points
      */
-    static double L2(double[] x, double[] y) {
-      if (x.length != y.length) throw new IllegalArgumentException("dimension error")
+    static double euclideanDistance(double[] x, double[] y) {
+      if (x.length != y.length) {
+        throw new IllegalArgumentException("dimension error")
+      }
       double dist = 0
       for (int i = 0; i < x.length; i++) {
         double diff = x[i] - y[i]
@@ -740,14 +750,14 @@ class KMeansPlusPlus {
   }
 
   /**
-   * Calculates WCSS (Within-Cluster-Sum-of-Squares), a measure of the clustering's error.
+   * Calculates wcss (Within-Cluster-Sum-of-Squares), a measure of the clustering's error.
    */
   private void calcWCSS() {
     double total = 0
     for (ClusteredPoint cp : assignment) {
       total += distance(cp.point, centroids[cp.clusterId])
     }
-    this.WCSS = total
+    this.wcss = total
   }
 
   /***********************************************************************
@@ -799,16 +809,16 @@ class KMeansPlusPlus {
   }
 
   /**
-   * Returns the WCSS (Within-Cluster-Sum-of-Squares, also known as inertia) of the clustering.
-   * WCSS is a metric used to measure the compactness or cohesion of clusters.
+   * Returns the wcss (Within-Cluster-Sum-of-Squares, also known as inertia) of the clustering.
+   * wcss is a metric used to measure the compactness or cohesion of clusters.
    * It represents the sum of squared distances between each data point and the centroid of its assigned cluster.
-   * A smaller WCSS value indicates that the data points within a cluster are more tightly grouped around their centroid,
+   * A smaller wcss value indicates that the data points within a cluster are more tightly grouped around their centroid,
    * resulting in a more compact cluster.
    *
-   * @return WCSS the Within-Cluster-Sum-of-Squares
+   * @return wcss the Within-Cluster-Sum-of-Squares
    */
   double getWCSS() {
-    return WCSS
+    return wcss
   }
 
   /**

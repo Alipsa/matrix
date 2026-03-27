@@ -9,6 +9,7 @@ import java.math.RoundingMode
  * Contains all relevant statistics from a t-test comparison of two independent samples.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class TtestResult {
   Integer n1
   Integer n2

@@ -137,6 +137,7 @@ import java.math.RoundingMode
  * regression trees, consider using ensemble methods or dedicated machine learning libraries.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class DecisionTree {
 
   /**
