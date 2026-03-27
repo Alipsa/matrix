@@ -147,7 +147,7 @@ class SpecialFunctions {
         return h
       }
     }
-    throw new RuntimeException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
   }
 
   private static BigDecimal betaContinuedFraction(BigDecimal x, BigDecimal a, BigDecimal b) {
@@ -193,7 +193,7 @@ class SpecialFunctions {
         return h
       }
     }
-    throw new RuntimeException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
+    throw new IllegalStateException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
   }
 
   private static BigDecimal div(BigDecimal numerator, BigDecimal denominator) {

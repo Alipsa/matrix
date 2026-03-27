@@ -103,7 +103,7 @@ class Barnard {
       double pi = i / (double) gridSize
 
       // Calculate p-value for this π
-      double pValue = calculatePValueForPi(n1, n2, n, observedT, pi)
+      double pValue = calculatePValueForPi(n1, n2, observedT, pi)
 
       if (pValue > maxPValue) {
         maxPValue = pValue
@@ -159,7 +159,7 @@ class Barnard {
    * This involves enumerating all possible tables with the same margins
    * and calculating their probabilities under the binomial model.
    */
-  private static double calculatePValueForPi(int n1, int n2, int n, double observedT, double pi) {
+  private static double calculatePValueForPi(int n1, int n2, double observedT, double pi) {
     double pValue = 0.0
 
     // Enumerate all possible values of x1 (count in cell a)

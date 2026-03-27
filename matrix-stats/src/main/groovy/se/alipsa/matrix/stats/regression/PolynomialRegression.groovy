@@ -168,7 +168,7 @@ class PolynomialRegression {
   String summary() {
     StringBuilder sb = new StringBuilder()
     sb.append("Polynomial Regression (degree $degree)\n")
-    sb.append("Equation: ${toString()}\n")
+    sb.append("Equation: ${this}\n")
     sb.append("\nCoefficients:\n")
     for (int i = 0; i <= degree; i++) {
       String term = i == 0 ? "(Intercept)" : (i == 1 ? x : "${x}^$i")

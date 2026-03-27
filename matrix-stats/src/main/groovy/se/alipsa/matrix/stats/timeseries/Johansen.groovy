@@ -86,41 +86,55 @@ class Johansen {
    * @return JohansenResult containing test statistics and eigenvalues
    */
   static JohansenResult test(List<double[]> data, int lags = 1, String type = 'const') {
+    validateInputs(data, lags, type)
+
+    int k = data.size()
+    int n = data[0].length
+    DifferencedData differencedData = createDifferencedData(data, lags, n, k)
+    ResidualMatrices residualMatrices = createResidualMatrices(data, lags, type, k, differencedData)
+    MomentMatrices momentMatrices = computeMomentMatrices(residualMatrices, differencedData.effectiveN)
+    double[] sortedEigenvalues = solveEigenvalues(momentMatrices)
+    double[] traceStats = computeTraceStatistics(sortedEigenvalues, k, differencedData.effectiveN)
+
+    // Critical values (5% significance) from Johansen tables
+    // These are approximate values for comparison
+    double[][] criticalValues = getCriticalValues(type)
+
+    return new JohansenResult(
+      eigenvalues: sortedEigenvalues,
+      traceStatistics: traceStats,
+      criticalValues5pct: criticalValues,
+      sampleSize: differencedData.effectiveN,
+      numVariables: k,
+      lags: lags,
+      type: type
+    )
+  }
+
+  private static void validateInputs(List<double[]> data, int lags, String type) {
     if (data == null || data.isEmpty()) {
       throw new IllegalArgumentException("Data cannot be null or empty")
     }
-
     if (lags < 1) {
       throw new IllegalArgumentException("Lags must be at least 1 (got ${lags})")
     }
-
     if (!(type in ['none', 'const', 'trend'])) {
       throw new IllegalArgumentException("Type must be 'none', 'const', or 'trend' (got '${type}')")
     }
 
-    int k = data.size()  // Number of variables
-    int n = data[0].length  // Number of observations
-
-    // Validate all series have same length
-    for (int i = 1; i < k; i++) {
+    int n = data[0].length
+    for (int i = 1; i < data.size(); i++) {
       if (data[i].length != n) {
         throw new IllegalArgumentException("All series must have the same length")
       }
     }
-
     if (n < lags + 20) {
       throw new IllegalArgumentException("Need at least ${lags + 20} observations (got ${n})")
     }
+  }
 
-    // Form the VAR model: ΔY_t = Π Y_{t-1} + Γ_1 ΔY_{t-1} + ... + Γ_{p-1} ΔY_{t-p+1} + μ + ε_t
-    // We use the two-step approach:
-    // 1. Regress ΔY_t and Y_{t-1} on lagged differences and deterministic terms
-    // 2. Compute moment matrices from residuals
-    // 3. Solve eigenvalue problem
-
+  private static DifferencedData createDifferencedData(List<double[]> data, int lags, int n, int k) {
     int effectiveN = n - lags
-
-    // Create differenced data
     double[][] deltaY = new double[effectiveN][k]
     double[][] laggedY = new double[effectiveN][k]
 
@@ -132,84 +146,97 @@ class Johansen {
       }
     }
 
-    // Build design matrix with short-run dynamics only (lagged differences + deterministic)
-    int numRegressors = (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
+    return new DifferencedData(deltaY: deltaY, laggedY: laggedY, effectiveN: effectiveN)
+  }
 
-    RealMatrix R0, R1  // Residuals
-
-    if (numRegressors > 0) {
-      double[][] Z = new double[effectiveN][numRegressors]
-
-      for (int t = 0; t < effectiveN; t++) {
-        int col = 0
-        int actualT = t + lags
-
-        // Lagged differences
-        if (lags > 1) {
-          for (int lag = 1; lag < lags; lag++) {
-            for (int i = 0; i < k; i++) {
-              Z[t][col++] = data[i][actualT - lag] - data[i][actualT - lag - 1]
-            }
-          }
-        }
-
-        // Deterministic terms
-        if (type == 'const') {
-          Z[t][col++] = 1.0
-        }
-        if (type == 'trend') {
-          Z[t][col++] = t + 1
-        }
-      }
-
-      RealMatrix ZMatrix = MatrixUtils.createRealMatrix(Z)
-      RealMatrix deltaYMatrix = MatrixUtils.createRealMatrix(deltaY)
-      RealMatrix laggedYMatrix = MatrixUtils.createRealMatrix(laggedY)
-
-      // Compute projection matrix: M = I - Z(Z'Z)^{-1}Z'
-      RealMatrix ZtZ = ZMatrix.transpose().multiply(ZMatrix)
-      DecompositionSolver solver = new LUDecomposition(ZtZ).getSolver()
-
-      if (!solver.isNonSingular()) {
-        throw new IllegalArgumentException("Singular matrix in short-run regression - cannot perform Johansen test")
-      }
-
-      RealMatrix ZtZinv = solver.getInverse()
-      RealMatrix projZ = ZMatrix.multiply(ZtZinv).multiply(ZMatrix.transpose())
-
-      // Compute residuals: R0 = M * ΔY, R1 = M * Y_{t-1}
-      R0 = deltaYMatrix.subtract(projZ.multiply(deltaYMatrix))
-      R1 = laggedYMatrix.subtract(projZ.multiply(laggedYMatrix))
-    } else {
-      // No regressors - residuals are just the original data
-      R0 = MatrixUtils.createRealMatrix(deltaY)
-      R1 = MatrixUtils.createRealMatrix(laggedY)
+  private static ResidualMatrices createResidualMatrices(List<double[]> data, int lags, String type, int k,
+                                                         DifferencedData differencedData) {
+    int numRegressors = countRegressors(lags, type, k)
+    if (numRegressors == 0) {
+      return new ResidualMatrices(
+        r0: MatrixUtils.createRealMatrix(differencedData.deltaY),
+        r1: MatrixUtils.createRealMatrix(differencedData.laggedY)
+      )
     }
 
-    // Compute moment matrices from residuals
-    RealMatrix S00 = R0.transpose().multiply(R0).scalarMultiply(1.0 / effectiveN)
-    RealMatrix S11 = R1.transpose().multiply(R1).scalarMultiply(1.0 / effectiveN)
-    RealMatrix S01 = R0.transpose().multiply(R1).scalarMultiply(1.0 / effectiveN)
+    double[][] designMatrix = buildShortRunDesignMatrix(data, lags, type, k, differencedData.effectiveN, numRegressors)
+    return projectResiduals(designMatrix, differencedData.deltaY, differencedData.laggedY)
+  }
 
-    // Solve generalized eigenvalue problem: |λ S11 - S10' S00^{-1} S01| = 0
-    // Equivalent to eigenvalues of S11^{-1} S10' S00^{-1} S01
+  private static int countRegressors(int lags, String type, int k) {
+    return (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
+  }
 
-    RealMatrix S00Inv = new LUDecomposition(S00).getSolver().getInverse()
-    RealMatrix S11Inv = new LUDecomposition(S11).getSolver().getInverse()
+  private static double[][] buildShortRunDesignMatrix(List<double[]> data, int lags, String type, int k,
+                                                      int effectiveN, int numRegressors) {
+    double[][] z = new double[effectiveN][numRegressors]
+    for (int t = 0; t < effectiveN; t++) {
+      int actualT = t + lags
+      int col = 0
 
-    RealMatrix product = S11Inv.multiply(S01.transpose()).multiply(S00Inv).multiply(S01)
+      if (lags > 1) {
+        for (int lag = 1; lag < lags; lag++) {
+          for (int i = 0; i < k; i++) {
+            z[t][col++] = data[i][actualT - lag] - data[i][actualT - lag - 1]
+          }
+        }
+      }
+      if (type == 'const') {
+        z[t][col++] = 1.0
+      }
+      if (type == 'trend') {
+        z[t][col++] = t + 1
+      }
+    }
+    return z
+  }
+
+  private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
+    RealMatrix zMatrix = MatrixUtils.createRealMatrix(designMatrix)
+    RealMatrix deltaYMatrix = MatrixUtils.createRealMatrix(deltaY)
+    RealMatrix laggedYMatrix = MatrixUtils.createRealMatrix(laggedY)
+
+    RealMatrix ztZ = zMatrix.transpose() * zMatrix
+    DecompositionSolver solver = new LUDecomposition(ztZ).solver
+    if (!solver.isNonSingular()) {
+      throw new IllegalArgumentException("Singular matrix in short-run regression - cannot perform Johansen test")
+    }
+
+    RealMatrix projection = (zMatrix * solver.inverse) * zMatrix.transpose()
+    return new ResidualMatrices(
+      r0: deltaYMatrix.subtract(projection * deltaYMatrix),
+      r1: laggedYMatrix.subtract(projection * laggedYMatrix)
+    )
+  }
+
+  private static MomentMatrices computeMomentMatrices(ResidualMatrices residualMatrices, int effectiveN) {
+    double scale = 1.0d / effectiveN
+    return new MomentMatrices(
+      s00: (residualMatrices.r0.transpose() * residualMatrices.r0).scalarMultiply(scale),
+      s11: (residualMatrices.r1.transpose() * residualMatrices.r1).scalarMultiply(scale),
+      s01: (residualMatrices.r0.transpose() * residualMatrices.r1).scalarMultiply(scale)
+    )
+  }
+
+  private static double[] solveEigenvalues(MomentMatrices momentMatrices) {
+    RealMatrix s00Inv = new LUDecomposition(momentMatrices.s00).solver.inverse
+    RealMatrix s11Inv = new LUDecomposition(momentMatrices.s11).solver.inverse
+    RealMatrix product = ((s11Inv * momentMatrices.s01.transpose()) * s00Inv) * momentMatrices.s01
 
     EigenDecomposition eigen = new EigenDecomposition(product)
-    double[] eigenvalues = eigen.getRealEigenvalues()
+    return sortDescending(eigen.realEigenvalues)
+  }
 
-    // Sort eigenvalues in descending order
+  private static double[] sortDescending(double[] eigenvalues) {
     Arrays.sort(eigenvalues)
     double[] sortedEigenvalues = new double[eigenvalues.length]
     for (int i = 0; i < eigenvalues.length; i++) {
       sortedEigenvalues[i] = eigenvalues[eigenvalues.length - 1 - i]
     }
+    return sortedEigenvalues
+  }
 
-    // Compute trace statistics for different values of r
+  private static double[] computeTraceStatistics(double[] sortedEigenvalues, int k, int effectiveN) {
     double[] traceStats = new double[k]
     for (int r = 0; r < k; r++) {
       double sum = 0.0
@@ -218,20 +245,7 @@ class Johansen {
       }
       traceStats[r] = -effectiveN * sum
     }
-
-    // Critical values (5% significance) from Johansen tables
-    // These are approximate values for comparison
-    double[][] criticalValues = getCriticalValues(type)
-
-    return new JohansenResult(
-      eigenvalues: sortedEigenvalues,
-      traceStatistics: traceStats,
-      criticalValues5pct: criticalValues,
-      sampleSize: effectiveN,
-      numVariables: k,
-      lags: lags,
-      type: type
-    )
+    return traceStats
   }
 
   /**
@@ -335,5 +349,25 @@ class Johansen {
 
   ${interpret()}"""
     }
+  }
+
+  @CompileStatic
+  private static class DifferencedData {
+    double[][] deltaY
+    double[][] laggedY
+    int effectiveN
+  }
+
+  @CompileStatic
+  private static class ResidualMatrices {
+    RealMatrix r0
+    RealMatrix r1
+  }
+
+  @CompileStatic
+  private static class MomentMatrices {
+    RealMatrix s00
+    RealMatrix s11
+    RealMatrix s01
   }
 }

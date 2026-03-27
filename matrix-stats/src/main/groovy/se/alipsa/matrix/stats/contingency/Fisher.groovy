@@ -113,7 +113,7 @@ class Fisher {
       case "two.sided":
       default:
         // Two-sided: sum probabilities of tables as or more extreme
-        pValue = calculateTwoSidedPValue(dist, a, rowSum1)
+        pValue = calculateTwoSidedPValue(dist, a)
         break
     }
 
@@ -136,7 +136,7 @@ class Fisher {
     return (a * d) / (b * c) as double
   }
 
-  private static double calculateTwoSidedPValue(HypergeometricDistribution dist, int observed, int sampleSize) {
+  private static double calculateTwoSidedPValue(HypergeometricDistribution dist, int observed) {
     double observedProb = dist.probability(observed)
     double pValue = 0.0
 

@@ -191,33 +191,7 @@ class Correlation {
     BigDecimalPair[] pairsDestination = new BigDecimalPair[n]
     for (int segmentSize = 1; segmentSize < n; segmentSize <<= 1) {
       for (int offset = 0; offset < n; offset += 2 * segmentSize) {
-        int i = offset
-        final int iEnd = Math.min(i + segmentSize, n)
-        int j = iEnd
-        final int jEnd = Math.min(j + segmentSize, n)
-
-        int copyLocation = offset
-        while (i < iEnd || j < jEnd) {
-          if (i < iEnd) {
-            if (j < jEnd) {
-              if (compare(pairs[i].getSecond(), pairs[j].getSecond()) <= 0) {
-                pairsDestination[copyLocation] = pairs[i]
-                i++
-              } else {
-                pairsDestination[copyLocation] = pairs[j]
-                j++
-                swaps += iEnd - i
-              }
-            } else {
-              pairsDestination[copyLocation] = pairs[i]
-              i++
-            }
-          } else {
-            pairsDestination[copyLocation] = pairs[j]
-            j++
-          }
-          copyLocation++
-        }
+        swaps += mergeSegment(pairs, pairsDestination, offset, segmentSize, n)
       }
       final BigDecimalPair[] pairsTemp = pairs
       pairs = pairsDestination
@@ -305,6 +279,37 @@ class Correlation {
     return (long)(n * (n + 1) / 2)
   }
 
+  private static long mergeSegment(BigDecimalPair[] pairs, BigDecimalPair[] pairsDestination, int offset, int segmentSize, int n) {
+    int i = offset
+    final int iEnd = Math.min(i + segmentSize, n)
+    int j = iEnd
+    final int jEnd = Math.min(j + segmentSize, n)
+
+    long swaps = 0
+    int copyLocation = offset
+    while (i < iEnd || j < jEnd) {
+      MergeSelection selection = selectNextPair(pairs, i, iEnd, j, jEnd)
+      pairsDestination[copyLocation++] = selection.pair
+      i = selection.nextI
+      j = selection.nextJ
+      swaps += selection.swaps
+    }
+    return swaps
+  }
+
+  private static MergeSelection selectNextPair(BigDecimalPair[] pairs, int i, int iEnd, int j, int jEnd) {
+    if (i >= iEnd) {
+      return new MergeSelection(pair: pairs[j], nextI: i, nextJ: j + 1, swaps: 0)
+    }
+    if (j >= jEnd) {
+      return new MergeSelection(pair: pairs[i], nextI: i + 1, nextJ: j, swaps: 0)
+    }
+    if (compare(pairs[i].getSecond(), pairs[j].getSecond()) <= 0) {
+      return new MergeSelection(pair: pairs[i], nextI: i + 1, nextJ: j, swaps: 0)
+    }
+    return new MergeSelection(pair: pairs[j], nextI: i, nextJ: j + 1, swaps: iEnd - i)
+  }
+
   /**
    * Validates correlation inputs for null, empty, size mismatch, and insufficient observations.
    * @param x the first list
@@ -355,6 +360,14 @@ class Correlation {
       return second
     }
 
+  }
+
+  @CompileStatic
+  private static class MergeSelection {
+    BigDecimalPair pair
+    int nextI
+    int nextJ
+    long swaps
   }
 
 }

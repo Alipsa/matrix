@@ -205,7 +205,7 @@ class LinearRegression {
         ])
     .build()
     """
-Equation: ${toString()}
+Equation: ${this}
 Residuals: (not yet implemented)
 
 Coefficients

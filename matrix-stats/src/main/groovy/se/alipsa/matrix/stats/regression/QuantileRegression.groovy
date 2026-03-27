@@ -305,7 +305,7 @@ class QuantileRegression {
       this.slope = slopeValue
 
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
         "Failed to solve quantile regression for tau=${tau}. " +
         "This may be due to numerical instability or degenerate data. " +
         "Error: ${e.message}", e

@@ -6,11 +6,9 @@ import org.apache.commons.math3.analysis.solvers.AllowedSolution
 import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
 import org.apache.commons.math3.analysis.solvers.UnivariateSolver
 
-
 /**
-Similar to the excel goal seek function.
+ * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */
-
 class GoalSeek {
 
   /**

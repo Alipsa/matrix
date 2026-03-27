@@ -13,16 +13,18 @@ import org.apache.commons.math3.linear.RealMatrix
 @SuppressWarnings('DuplicateNumberLiteral')
 class RegressionUtils {
 
+  private static final BigDecimal[][] EMPTY_BIG_DECIMAL_MATRIX = new BigDecimal[0][0]
+
   /**
    * Compute (X'X)^{-1} for a polynomial design matrix [1, x, x^2, ...].
-   * Returns null when the matrix is singular.
+   * Returns an empty array when the input is invalid or the matrix is singular.
    */
   // TODO implement our own Array2DRowRealMatrix and LUDecomposition that works with BigDecimal for cleaner groovy code,
   //  better precision and to avoid dependency on commons-math3
   static BigDecimal[][] polynomialXtxInverse(List<? extends Number> xValues, int degree) {
     int n = xValues.size()
     if (n == 0 || degree < 1) {
-      return null
+      return EMPTY_BIG_DECIMAL_MATRIX
     }
     double[][] design = new double[n][degree + 1]
     for (int i = 0; i < n; i++) {
@@ -34,10 +36,10 @@ class RegressionUtils {
       }
     }
     RealMatrix xMatrix = new Array2DRowRealMatrix(design, false)
-    RealMatrix xtx = xMatrix.transpose().multiply(xMatrix)
+    RealMatrix xtx = xMatrix.transpose() * xMatrix
     def solver = new LUDecomposition(xtx).solver
     if (!solver.isNonSingular()) {
-      return null
+      return EMPTY_BIG_DECIMAL_MATRIX
     }
     double[][] inverse = solver.inverse.data
     BigDecimal[][] result = new BigDecimal[inverse.length][inverse[0].length]
@@ -55,7 +57,7 @@ class RegressionUtils {
    */
   @Deprecated
   static double polynomialLeverage(double[][] xtxInv, double x, int degree) {
-    if (xtxInv == null) {
+    if (xtxInv == null || xtxInv.length == 0) {
       return Double.NaN
     }
     int size = degree + 1
@@ -82,7 +84,7 @@ class RegressionUtils {
   }
 
   static BigDecimal polynomialLeverage(BigDecimal[][] xtxInv, BigDecimal x, int degree) {
-    if (xtxInv == null) {
+    if (xtxInv == null || xtxInv.length == 0) {
       return null
     }
     int size = degree + 1
