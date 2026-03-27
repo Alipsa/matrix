@@ -308,7 +308,7 @@ class KernelDensityTest {
   @Test
   void testToString() {
     def kde = new KernelDensity(TEST_DATA, [kernel: Kernel.EPANECHNIKOV])
-    String str = kde.toString()
+    String str = kde
 
     assertTrue(str.contains("EPANECHNIKOV"), "toString should contain kernel name")
     assertTrue(str.contains("bandwidth"), "toString should contain bandwidth")

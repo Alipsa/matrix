@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.timeseries.DurbinWatson
  */
 class DurbinWatsonTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testNoAutocorrelation() {
     // Random residuals with no autocorrelation
@@ -100,7 +98,7 @@ class DurbinWatsonTest {
 
     def result = DurbinWatson.test(residuals)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Durbin-Watson Test'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('Test statistic'), 'Should contain test statistic')

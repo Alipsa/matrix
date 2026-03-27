@@ -236,7 +236,7 @@ class JohansenTest {
     }
 
     def result = Johansen.test([y1, y2], 1)
-    String str = result.toString()
+    String str = result
 
     assertTrue(str.contains('Johansen'))
     assertTrue(str.contains('Number of variables'))

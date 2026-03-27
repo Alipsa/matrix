@@ -162,7 +162,7 @@ class ShapiroFranciaTest {
 
     def result = ShapiroFrancia.test(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Shapiro-Francia'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('W\''), 'Should contain test statistic')

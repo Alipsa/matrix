@@ -208,7 +208,7 @@ class AnovaTest {
     ]
 
     def result = Anova.aov(data)
-    String str = result.toString()
+    String str = result
 
     assertTrue(str.contains('pValue'), 'toString should contain pValue')
     assertTrue(str.contains('fValue'), 'toString should contain fValue')

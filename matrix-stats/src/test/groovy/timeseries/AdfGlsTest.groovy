@@ -119,7 +119,9 @@ class AdfGlsTest {
 
     // Constant series
     double[] constant = new double[20]
-    for (int i = 0; i < 20; i++) constant[i] = 100.0
+    for (int i = 0; i < 20; i++) {
+      constant[i] = 100.0
+    }
     assertThrows(IllegalArgumentException) {
       AdfGls.test(constant, 0, "drift")
     }
@@ -192,7 +194,7 @@ class AdfGlsTest {
 
     def result = AdfGls.test(data, 0, "drift")
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('ADF-GLS'), 'Should contain test name')
     assertTrue(str.contains('Elliott-Rothenberg-Stock'), 'Should contain authors')
     assertTrue(str.contains('statistic'), 'Should contain statistic')

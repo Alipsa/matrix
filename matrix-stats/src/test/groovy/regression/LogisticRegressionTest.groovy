@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.regression.LogisticRegression
  */
 class LogisticRegressionTest {
 
-  private static final double TOLERANCE = 0.1
-
   @Test
   void testBasicLogisticRegression() {
     // Simple separable data
@@ -168,7 +166,7 @@ class LogisticRegressionTest {
 
     def lr = new LogisticRegression(x, y)
 
-    String str = lr.toString()
+    String str = lr
     assertTrue(str.contains('P('), 'String should contain probability notation')
     assertTrue(str.contains('exp'), 'String should contain exponential function')
     assertTrue(str.contains('Y'), 'String should contain dependent variable name')

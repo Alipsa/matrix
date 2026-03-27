@@ -180,7 +180,7 @@ class GrangerTest {
 
     def result = Granger.test(x, y, 2)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Granger Causality'))
     assertTrue(str.contains('Lags'))
     assertTrue(str.contains('F-statistic'))

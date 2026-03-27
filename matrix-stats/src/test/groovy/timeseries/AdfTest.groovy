@@ -179,7 +179,7 @@ class AdfTest {
 
     def result = Adf.test(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Augmented Dickey-Fuller Test'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('ADF statistic'), 'Should contain test statistic')

@@ -12,8 +12,6 @@ import se.alipsa.matrix.stats.normality.AndersonDarling
  */
 class AndersonDarlingTest {
 
-  private static final double TOLERANCE = 1e-4
-
   @Test
   void testNormalDataAcceptsNullHypothesis() {
     // Normal data: should NOT reject H0
@@ -102,7 +100,7 @@ class AndersonDarlingTest {
 
     def result = AndersonDarling.testNormality(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Anderson-Darling Normality Test'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('P-value'), 'Should contain p-value')

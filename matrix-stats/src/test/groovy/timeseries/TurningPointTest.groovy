@@ -256,7 +256,7 @@ class TurningPointTest {
 
     def result = TurningPoint.test(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Turning Point Test'))
     assertTrue(str.contains('Sample size'))
     assertTrue(str.contains('Turning points'))

@@ -12,8 +12,6 @@ import se.alipsa.matrix.stats.normality.KSquared
  */
 class KSquaredTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testNormalData() {
     // Approximately normal data
@@ -229,7 +227,7 @@ class KSquaredTest {
     ] as double[]
 
     def result = KSquared.test(data)
-    String str = result.toString()
+    String str = result
 
     assertTrue(str.contains('D\'Agostino'), 'Should contain test name')
     assertTrue(str.contains('K²'), 'Should contain K²')

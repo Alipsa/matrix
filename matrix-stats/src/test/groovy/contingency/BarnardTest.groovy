@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.contingency.Barnard
  */
 class BarnardTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testBasicAssociation() {
     // Simple case with clear association
@@ -153,7 +151,7 @@ class BarnardTest {
 
     def result = Barnard.test(table)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Barnard'), 'Should contain test name')
     assertTrue(str.contains('Wald score'), 'Should contain test statistic name')
     assertTrue(str.contains('p-value'), 'Should contain p-value')

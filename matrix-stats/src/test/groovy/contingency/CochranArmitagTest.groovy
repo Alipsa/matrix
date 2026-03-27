@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.contingency.CochranArmitage
  */
 class CochranArmitagTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testIncreasingTrend() {
     // Clear increasing trend: more cases with higher exposure
@@ -170,7 +168,7 @@ class CochranArmitagTest {
 
     def result = CochranArmitage.test(cases, controls)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Cochran-Armitage'), 'Should contain test name')
     assertTrue(str.contains('Categories'), 'Should contain number of categories')
     assertTrue(str.contains('Z-statistic'), 'Should contain test statistic')

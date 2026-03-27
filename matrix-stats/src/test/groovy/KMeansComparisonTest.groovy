@@ -49,10 +49,10 @@ class KMeansComparisonTest {
     List<double[]> matchedSmileCentroids = []
 
     matrixCentroids.each { m ->
-      def (closest, _) = smileCentroids.collect { s ->
+      def closestPair = smileCentroids.collect { s ->
         [s, sqrt(pow(m[0] - s[0], 2) + pow(m[1] - s[1], 2))]
       }.min { it[1] } // Find closest Smile centroid
-      matchedSmileCentroids << closest
+      matchedSmileCentroids << closestPair[0]
     }
 
     // Now do assertions

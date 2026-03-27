@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.timeseries.Df
  */
 class DfTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testRandomWalk() {
     // Random walk (non-stationary)
@@ -108,7 +106,9 @@ class DfTest {
 
     // Constant series
     double[] constant = new double[20]
-    for (int i = 0; i < 20; i++) constant[i] = 100.0
+    for (int i = 0; i < 20; i++) {
+      constant[i] = 100.0
+    }
     assertThrows(IllegalArgumentException) {
       Df.test(constant, "drift")
     }
@@ -181,7 +181,7 @@ class DfTest {
 
     def result = Df.test(data, "drift")
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Dickey-Fuller'), 'Should contain test name')
     assertTrue(str.contains('DF statistic'), 'Should contain statistic')
     assertTrue(str.contains('γ coefficient'), 'Should contain gamma')

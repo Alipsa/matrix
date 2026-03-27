@@ -152,7 +152,7 @@ class KpssTest {
 
     def result = Kpss.test(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('KPSS Stationarity Test'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('KPSS statistic'), 'Should contain test statistic')
