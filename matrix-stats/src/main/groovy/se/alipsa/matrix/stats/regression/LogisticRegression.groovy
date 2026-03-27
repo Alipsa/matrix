@@ -284,7 +284,7 @@ class LogisticRegression {
       this.slope = optimalCoefficients[1] as BigDecimal
 
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
         "Failed to fit logistic regression model. " +
         "This may be due to numerical instability or perfect separation in the data. " +
         "Error: ${e.message}", e

@@ -114,7 +114,7 @@ class Adf {
         criticalValue: criticalValue
       )
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
         "Failed to perform ADF test. This may be due to perfect collinearity in the data " +
         "(e.g., perfect linear trend or constant differences). " +
         "Try using a different lag order or test type. Error: ${e.message}", e

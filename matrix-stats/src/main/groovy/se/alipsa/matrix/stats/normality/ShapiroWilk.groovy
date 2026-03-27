@@ -127,7 +127,7 @@ class ShapiroWilk {
     double variance = StatUtils.variance(sorted, mean)
 
     // Calculate W statistic
-    double w = calculateW(sorted, n, mean, variance)
+    double w = calculateW(sorted, n, variance)
 
     // Calculate p-value using Royston's approximation
     double pValue = calculatePValue(w, n)
@@ -168,7 +168,7 @@ class ShapiroWilk {
     }
   }
 
-  private static double calculateW(double[] sorted, int n, double mean, double variance) {
+  private static double calculateW(double[] sorted, int n, double variance) {
     // Calculate coefficients a[] for the Shapiro-Wilk test
     double[] a = calculateCoefficients(n)
 

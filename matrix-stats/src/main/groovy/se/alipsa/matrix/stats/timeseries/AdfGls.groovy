@@ -179,9 +179,9 @@ class AdfGls {
     double tStatistic = gamma / gammaSE
 
     // Get critical values
-    double cv1pct = getCriticalValue(type, n, p, 0.01)
-    double cv5pct = getCriticalValue(type, n, p, 0.05)
-    double cv10pct = getCriticalValue(type, n, p, 0.10)
+    double cv1pct = getCriticalValue(type, n, 0.01)
+    double cv5pct = getCriticalValue(type, n, 0.05)
+    double cv10pct = getCriticalValue(type, n, 0.10)
 
     return new AdfGlsResult(
       statistic: tStatistic,
@@ -396,7 +396,7 @@ class AdfGls {
    * Get critical values for ADF-GLS test.
    * Based on Elliott, Rothenberg, and Stock (1996) and updated tables.
    */
-  private static double getCriticalValue(String type, int n, int p, double significance) {
+  private static double getCriticalValue(String type, int n, double significance) {
     // Critical values are less negative than standard ADF
     // Using approximate values from ERS (1996) Table 1
 

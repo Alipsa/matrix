@@ -264,7 +264,7 @@ class Ccm {
     }
 
     Random rnd = new Random()
-    Set<Integer> selected = new HashSet<>()
+    Set<Integer> selected = [] as Set
     while (selected.size() < n) {
       selected.add(rnd.nextInt(max))
     }

@@ -129,7 +129,7 @@ class ShapiroFrancia {
     }
 
     // Calculate W' statistic
-    double wPrime = calculateWPrime(sorted, n, mean, variance)
+    double wPrime = calculateWPrime(sorted, n, variance)
 
     // Calculate p-value using approximation
     double pValue = calculatePValue(wPrime, n)
@@ -183,7 +183,7 @@ class ShapiroFrancia {
    *
    * where mᵢ = Φ⁻¹((i - 3/8)/(n + 1/4)) are the expected normal quantiles.
    */
-  private static double calculateWPrime(double[] sorted, int n, double mean, double variance) {
+  private static double calculateWPrime(double[] sorted, int n, double variance) {
     NormalDistribution normalDist = new NormalDistribution(0.0, 1.0)
 
     // Calculate expected normal quantiles (m values)

@@ -321,7 +321,7 @@ class KMeansPlusPlus {
       }
 
       // Check for at least k distinct points by wrapping double[] as List<Double>
-      Set<List<Double>> distinctPoints = new HashSet<>()
+      Set<List<Double>> distinctPoints = [] as Set
       for (double[] pt : points) {
         List<Double> list = Arrays.stream(pt).boxed().toList()
         if (distinctPoints.add(list) && distinctPoints.size() >= k) {
@@ -781,14 +781,17 @@ class KMeansPlusPlus {
   Map<Integer, Matrix> getClustersById() {
     Map<Integer, List<double[]>> grouped = [:]
     assignment.each { ClusteredPoint cp ->
-      grouped.computeIfAbsent(cp.clusterId) { [] as List<double[]> }.add(cp.point)
+      List<double[]> clusterPoints = grouped[cp.clusterId]
+      if (clusterPoints == null) {
+        clusterPoints = []
+        grouped[cp.clusterId] = clusterPoints
+      }
+      clusterPoints.add(cp.point)
     }
 
     Map<Integer, Matrix> result = [:]
     grouped.each { Integer clusterId, List<double[]> pointList ->
-      List<List<Double>> rows = pointList.collect { double[] row ->
-        row.collect { double value -> value }
-      }
+      List<List<Double>> rows = pointList.collect { double[] row -> row.toList() }
       result[clusterId] = Matrix.builder("Cluster $clusterId").data(rows).build()
     }
     result

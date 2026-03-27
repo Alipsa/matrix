@@ -21,12 +21,21 @@ class RegressionUtilsTest {
   }
 
   @Test
-  void testPolynomialXtxInverseReturnsNullForSingularMatrix() {
+  void testPolynomialXtxInverseReturnsEmptyArrayForSingularMatrix() {
     List<Number> xValues = [1, 1, 1, 1]
 
     BigDecimal[][] inverse = RegressionUtils.polynomialXtxInverse(xValues, 1)
 
-    assertNull(inverse)
+    assertNotNull(inverse)
+    assertEquals(0, inverse.length)
+  }
+
+  @Test
+  void testPolynomialXtxInverseReturnsEmptyArrayForInvalidInput() {
+    BigDecimal[][] inverse = RegressionUtils.polynomialXtxInverse([], 0)
+
+    assertNotNull(inverse)
+    assertEquals(0, inverse.length)
   }
 
   @Test
