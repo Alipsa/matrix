@@ -12,6 +12,15 @@ final class TimeSeriesUtils {
   private TimeSeriesUtils() {
   }
 
+  /**
+   * Solve a linear system {@code Ax = b} using Gaussian elimination with partial pivoting.
+   * Rectangular overdetermined systems are handled directly to preserve the original
+   * timeseries implementation behavior used by {@link AdfGls}.
+   *
+   * @param A the coefficient matrix
+   * @param b the right-hand-side vector
+   * @return the solved coefficient vector
+   */
   static double[] solveLinearSystem(double[][] A, double[] b) {
     if (A == null || b == null) {
       throw new IllegalArgumentException("Matrix and vector cannot be null")
@@ -30,9 +39,6 @@ final class TimeSeriesUtils {
     }
     if (rowCount < columnCount) {
       throw new IllegalArgumentException("Underdetermined system: ${rowCount} rows for ${columnCount} columns")
-    }
-    if (rowCount != columnCount) {
-      return fitOLS(b, A)
     }
 
     double[][] augmented = new double[rowCount][columnCount + 1]
@@ -57,14 +63,12 @@ final class TimeSeriesUtils {
       if (maxRow != k) {
         swapRows(augmented, k, maxRow)
       }
-      if (Math.abs(augmented[k][k]) < SINGULARITY_THRESHOLD) {
-        throw new IllegalArgumentException("Singular matrix - cannot solve linear system")
-      }
-
-      for (int i = k + 1; i < rowCount; i++) {
-        double factor = augmented[i][k] / augmented[k][k]
-        for (int j = k; j < columnCount + 1; j++) {
-          augmented[i][j] -= factor * augmented[k][j]
+      if (Math.abs(augmented[k][k]) > SINGULARITY_THRESHOLD) {
+        for (int i = k + 1; i < rowCount; i++) {
+          double factor = augmented[i][k] / augmented[k][k]
+          for (int j = k; j < columnCount + 1; j++) {
+            augmented[i][j] -= factor * augmented[k][j]
+          }
         }
       }
     }
@@ -80,6 +84,12 @@ final class TimeSeriesUtils {
     x
   }
 
+  /**
+   * Invert a square matrix using Gauss-Jordan elimination.
+   *
+   * @param A the matrix to invert
+   * @return the inverted matrix
+   */
   static double[][] invertMatrix(double[][] A) {
     if (A == null || A.length == 0 || A[0].length == 0) {
       throw new IllegalArgumentException("Matrix must contain at least one row and one column")
@@ -103,24 +113,7 @@ final class TimeSeriesUtils {
     }
 
     for (int k = 0; k < n; k++) {
-      int maxRow = k
-      double maxVal = Math.abs(augmented[k][k])
-      for (int i = k + 1; i < n; i++) {
-        double value = Math.abs(augmented[i][k])
-        if (value > maxVal) {
-          maxVal = value
-          maxRow = i
-        }
-      }
-
-      if (maxRow != k) {
-        swapRows(augmented, k, maxRow)
-      }
       double pivot = augmented[k][k]
-      if (Math.abs(pivot) < SINGULARITY_THRESHOLD) {
-        throw new IllegalArgumentException("Singular matrix - cannot invert")
-      }
-
       for (int j = 0; j < 2 * n; j++) {
         augmented[k][j] /= pivot
       }
@@ -143,6 +136,13 @@ final class TimeSeriesUtils {
     result
   }
 
+  /**
+   * Fit an ordinary least squares regression and return the coefficient vector.
+   *
+   * @param y the response vector
+   * @param X the design matrix
+   * @return the fitted regression coefficients
+   */
   static double[] fitOLS(double[] y, double[][] X) {
     if (y == null || X == null) {
       throw new IllegalArgumentException("Response vector and design matrix cannot be null")
@@ -183,6 +183,14 @@ final class TimeSeriesUtils {
     solveLinearSystem(XtX, Xty)
   }
 
+  /**
+   * Calculate the residual sum of squares for a fitted regression model.
+   *
+   * @param y the observed response vector
+   * @param X the design matrix
+   * @param beta the fitted coefficient vector
+   * @return the residual sum of squares
+   */
   static double calculateRSS(double[] y, double[][] X, double[] beta) {
     if (y == null || X == null || beta == null) {
       throw new IllegalArgumentException("Response vector, design matrix, and coefficients cannot be null")
