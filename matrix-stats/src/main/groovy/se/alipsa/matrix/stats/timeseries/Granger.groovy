@@ -134,12 +134,12 @@ class Granger {
     }
 
     // Fit restricted model (Y ~ lags of Y)
-    double[] betaRestricted = fitOLS(yResponse, XRestricted)
-    double rssRestricted = calculateRSS(yResponse, XRestricted, betaRestricted)
+    double[] betaRestricted = TimeSeriesUtils.fitOLS(yResponse, XRestricted)
+    double rssRestricted = TimeSeriesUtils.calculateRSS(yResponse, XRestricted, betaRestricted)
 
     // Fit unrestricted model (Y ~ lags of Y + lags of X)
-    double[] betaUnrestricted = fitOLS(yResponse, XUnrestricted)
-    double rssUnrestricted = calculateRSS(yResponse, XUnrestricted, betaUnrestricted)
+    double[] betaUnrestricted = TimeSeriesUtils.fitOLS(yResponse, XUnrestricted)
+    double rssUnrestricted = TimeSeriesUtils.calculateRSS(yResponse, XUnrestricted, betaUnrestricted)
 
     // Calculate F-statistic
     // F = [(RSS_R - RSS_U) / p] / [RSS_U / (n - 2p - 1)]
@@ -206,119 +206,6 @@ class Granger {
     }
 
     return bestLag
-  }
-
-  /**
-   * Fit OLS regression and return coefficients.
-   */
-  private static double[] fitOLS(double[] y, double[][] X) {
-    int n = y.length
-    int k = X[0].length
-
-    // Calculate X'X
-    double[][] XtX = new double[k][k]
-    for (int i = 0; i < k; i++) {
-      for (int j = 0; j < k; j++) {
-        double sum = 0.0
-        for (int m = 0; m < n; m++) {
-          sum += X[m][i] * X[m][j]
-        }
-        XtX[i][j] = sum
-      }
-    }
-
-    // Calculate X'y
-    double[] Xty = new double[k]
-    for (int i = 0; i < k; i++) {
-      double sum = 0.0
-      for (int m = 0; m < n; m++) {
-        sum += X[m][i] * y[m]
-      }
-      Xty[i] = sum
-    }
-
-    // Solve for beta
-    return solveLinearSystem(XtX, Xty)
-  }
-
-  /**
-   * Calculate residual sum of squares.
-   */
-  private static double calculateRSS(double[] y, double[][] X, double[] beta) {
-    int n = y.length
-    double rss = 0.0
-
-    for (int i = 0; i < n; i++) {
-      double fitted = 0.0
-      for (int j = 0; j < beta.length; j++) {
-        fitted += X[i][j] * beta[j]
-      }
-      double residual = y[i] - fitted
-      rss += residual * residual
-    }
-
-    return rss
-  }
-
-  /**
-   * Solve linear system Ax = b using Gaussian elimination.
-   */
-  private static double[] solveLinearSystem(double[][] A, double[] b) {
-    int n = b.length
-    double[][] augmented = new double[n][n + 1]
-
-    // Create augmented matrix
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        augmented[i][j] = A[i][j]
-      }
-      augmented[i][n] = b[i]
-    }
-
-    // Forward elimination with partial pivoting
-    for (int k = 0; k < n; k++) {
-      // Find pivot
-      int maxRow = k
-      double maxVal = Math.abs(augmented[k][k])
-      for (int i = k + 1; i < n; i++) {
-        if (Math.abs(augmented[i][k]) > maxVal) {
-          maxVal = Math.abs(augmented[i][k])
-          maxRow = i
-        }
-      }
-
-      // Swap rows
-      if (maxRow != k) {
-        double[] temp = augmented[k]
-        augmented[k] = augmented[maxRow]
-        augmented[maxRow] = temp
-      }
-
-      // Check for singular matrix
-      if (Math.abs(augmented[k][k]) < 1e-14) {
-        throw new IllegalArgumentException("Singular matrix - cannot solve linear system")
-      }
-
-      // Eliminate column
-      for (int i = k + 1; i < n; i++) {
-        double factor = augmented[i][k] / augmented[k][k]
-        for (int j = k; j < n + 1; j++) {
-          augmented[i][j] -= factor * augmented[k][j]
-        }
-      }
-    }
-
-    // Back substitution
-    double[] x = new double[n]
-    for (int i = n - 1; i >= 0; i--) {
-      double sum = augmented[i][n]
-      for (int j = i + 1; j < n; j++) {
-        sum -= augmented[i][j] * x[j]
-      }
-      x[i] = sum / augmented[i][i]
-    }
-
-    return x
   }
 
   /**
