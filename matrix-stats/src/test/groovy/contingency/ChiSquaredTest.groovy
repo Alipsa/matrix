@@ -12,8 +12,6 @@ import se.alipsa.matrix.stats.contingency.ChiSquared
  */
 class ChiSquaredTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testPearsonBasic2x2() {
     // Simple 2×2 table
@@ -266,7 +264,7 @@ class ChiSquaredTest {
 
     def result = ChiSquared.pearsonTest(table)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Chi-Squared'), 'Should contain test name')
     assertTrue(str.contains('Pearson'), 'Should contain test type')
     assertTrue(str.contains('test statistic'), 'Should contain test statistic')

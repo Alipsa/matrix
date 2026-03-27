@@ -46,10 +46,10 @@ class TDistributionTest {
   @Test
   void testBigDecimalCdfMatchesDoubleCdf() {
     def dist = new TDistribution(10)
-    BigDecimal bigResult = dist.cdf(1.5 as BigDecimal)
+    BigDecimal bigResult = dist.cdf(1.5)
     double doubleResult = dist.cdf(1.5d)
 
-    assertEquals(doubleResult, bigResult as double, TOLERANCE)
+    assertEquals(doubleResult, bigResult.doubleValue(), TOLERANCE)
   }
 
   @Test

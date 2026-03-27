@@ -36,7 +36,7 @@ class KMeansPlusPlusTest {
     println clustering.getTiming()
     // get output
     double[][] centroids = clustering.getCentroids()
-    double WCSS          = clustering.getWCSS()
+    double wcss          = clustering.getWCSS()
 
     def groupCounts = clustering.getAssignment().toList().countBy { it.clusterId }
     //println("Assignments: " + groupCounts)
@@ -55,8 +55,8 @@ class KMeansPlusPlusTest {
     // for (int i = 0; i < k; i++) println("(" + centroids[i][0] + ", " + centroids[i][1] + ")")
     assertEquals(4, centroids.length, "Centroids should be 4")
 
-    println("The within-cluster sum-of-squares (WCSS) = " + WCSS)
-    assertTrue(WCSS < 250 && WCSS > 230, "WCSS should be approximately 240")
+    println("The within-cluster sum-of-squares (WCSS) = " + wcss)
+    assertTrue(wcss < 250 && wcss > 230, "WCSS should be approximately 240")
   }
 
   @Test

@@ -176,7 +176,7 @@ class PortmanteauTest {
 
     def result = Portmanteau.ljungBox(data, 5)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Ljung-Box'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('Q statistic'), 'Should contain test statistic')

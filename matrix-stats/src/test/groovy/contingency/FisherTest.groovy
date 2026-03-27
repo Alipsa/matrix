@@ -210,7 +210,7 @@ class FisherTest {
   void testToStringMethod() {
     def table = [[8, 4], [3, 7]]
     def result = Fisher.test(table)
-    String str = result.toString()
+    String str = result
 
     assertNotNull(str)
     assertTrue(str.contains("Fisher's Exact Test"))

@@ -9,6 +9,7 @@ import se.alipsa.matrix.stats.timeseries.Chow
 /**
  * Tests for Chow test for structural breaks.
  */
+@SuppressWarnings('VariableName')
 class ChowTest {
 
   @Test
@@ -219,7 +220,7 @@ class ChowTest {
 
     def result = Chow.test(y, X, 10)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Chow Test'), 'Should contain test name')
     assertTrue(str.contains('Break point'), 'Should contain break point')
     assertTrue(str.contains('F-statistic'), 'Should contain statistic')

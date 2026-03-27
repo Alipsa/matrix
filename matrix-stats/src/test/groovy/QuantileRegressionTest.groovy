@@ -214,7 +214,7 @@ class QuantileRegressionTest {
 
     def qr = new QuantileRegression(x, y, 0.5)
 
-    String str = qr.toString()
+    String str = qr
     assertNotNull(str)
     assertTrue(str.contains("Y"))
     assertTrue(str.contains("X"))

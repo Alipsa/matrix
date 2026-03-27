@@ -308,7 +308,7 @@ class DecisionTreeTest {
 
     def tree = new DecisionTree(x, y)
 
-    String str = tree.toString()
+    String str = tree
     assertTrue(str.contains('DecisionTree'), 'toString should contain class name')
     assertTrue(str.contains('depth='), 'toString should contain depth')
     assertTrue(str.contains('leaves='), 'toString should contain leaf count')

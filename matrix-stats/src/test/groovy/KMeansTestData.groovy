@@ -1,3 +1,7 @@
+/**
+ * Shared synthetic datasets for k-means tests.
+ */
+@SuppressWarnings('DuplicateNumberLiteral')
 class KMeansTestData {
 
   static final long RANDOM_SEED = 42L

@@ -212,7 +212,7 @@ class UnitRootTest {
     }
 
     def result = UnitRoot.test(data)
-    String str = result.toString()
+    String str = result
 
     assertNotNull(str)
     // toString should return same as summary
@@ -353,9 +353,15 @@ class UnitRootTest {
 
     // Count how many unit root tests reject (ADF only has one critical value at 5%)
     int rejections = 0
-    if (result.dfResult.statistic < result.dfResult.criticalValue5pct) rejections++
-    if (result.adfResult.statistic < result.adfResult.criticalValue) rejections++
-    if (result.adfGlsResult.statistic < result.adfGlsResult.criticalValue5pct) rejections++
+    if (result.dfResult.statistic < result.dfResult.criticalValue5pct) {
+      rejections++
+    }
+    if (result.adfResult.statistic < result.adfResult.criticalValue) {
+      rejections++
+    }
+    if (result.adfGlsResult.statistic < result.adfGlsResult.criticalValue5pct) {
+      rejections++
+    }
 
     boolean kpssRejects = result.kpssResult.statistic > result.kpssResult.criticalValue
 

@@ -169,7 +169,7 @@ class CramerVonMisesTest {
 
     def result = CramerVonMises.testNormality(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Cramér-von Mises'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('W²*'), 'Should contain test statistic')

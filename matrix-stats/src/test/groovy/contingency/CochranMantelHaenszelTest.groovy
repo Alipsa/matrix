@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.contingency.CochranMantelHaenszel
  */
 class CochranMantelHaenszelTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testSingleStratum() {
     // Single stratum (equivalent to Fisher's exact or chi-squared test)
@@ -172,7 +170,7 @@ class CochranMantelHaenszelTest {
     List<int[][]> strata = [stratum1]
     def result = CochranMantelHaenszel.test(strata)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Cochran-Mantel-Haenszel'), 'Should contain test name')
     assertTrue(str.contains('Strata'), 'Should contain number of strata')
     assertTrue(str.contains('χ²'), 'Should contain chi-squared symbol')

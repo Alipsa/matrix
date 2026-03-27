@@ -288,7 +288,7 @@ class CcmTest {
     }
 
     def result = Ccm.test(x, y, 2, 1, [15, 30, 45])
-    String str = result.toString()
+    String str = result
 
     assertNotNull(str)
     // toString should return same as interpret

@@ -11,8 +11,6 @@ import se.alipsa.matrix.stats.contingency.Boschloo
  */
 class BoschlooTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testBasicAssociation() {
     // Simple case with clear association
@@ -151,7 +149,7 @@ class BoschlooTest {
 
     def result = Boschloo.test(table)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Boschloo'), 'Should contain test name')
     assertTrue(str.contains('p-value'), 'Should contain p-value')
     assertTrue(str.contains('Fisher'), 'Should contain Fisher p-value')

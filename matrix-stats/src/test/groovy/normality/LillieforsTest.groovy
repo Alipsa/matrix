@@ -12,8 +12,6 @@ import se.alipsa.matrix.stats.normality.Lilliefors
  */
 class LillieforsTest {
 
-  private static final double TOLERANCE = 0.01
-
   @Test
   void testNormalLikeData() {
     // Data that is approximately normal
@@ -59,7 +57,7 @@ class LillieforsTest {
 
     def result = Lilliefors.testNormality(data)
 
-    String str = result.toString()
+    String str = result
     assertTrue(str.contains('Lilliefors Normality Test'), 'Should contain test name')
     assertTrue(str.contains('Sample size'), 'Should contain sample size')
     assertTrue(str.contains('P-value'), 'Should contain p-value')
