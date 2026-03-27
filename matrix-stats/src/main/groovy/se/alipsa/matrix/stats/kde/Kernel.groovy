@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.kde
 
+import groovy.transform.CompileStatic
 
 /**
  * Kernel functions for Kernel Density Estimation (KDE), providing different weighting
@@ -100,6 +101,7 @@ package se.alipsa.matrix.stats.kde
  * @see KernelDensity
  * @see BandwidthSelector
  */
+@CompileStatic
 enum Kernel {
 
   /**
