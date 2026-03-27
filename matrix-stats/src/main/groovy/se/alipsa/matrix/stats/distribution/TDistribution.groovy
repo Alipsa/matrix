@@ -11,6 +11,7 @@ import se.alipsa.matrix.core.Stat
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class TDistribution {
 
   private final BigDecimal degreesOfFreedom

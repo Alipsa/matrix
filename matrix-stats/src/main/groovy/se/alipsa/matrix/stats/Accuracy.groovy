@@ -11,9 +11,10 @@ import java.math.MathContext
  * All methods accept lists of actual and predicted values and return accuracy measures.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'VariableName'])
 class Accuracy {
 
-  static final MathContext precision = new MathContext(9)
+  static final MathContext PRECISION = new MathContext(9)
 
   /**
    * Evaluate predictions against actuals and return all common accuracy metrics.
@@ -34,7 +35,7 @@ class Accuracy {
       sse += (act - pred)**2
       m += ((act-pred)/act).abs()/N
     }
-    [mae: sae/N, mse: sse/N, rmse: (sse/N).sqrt(precision), mape: m]
+    [mae: sae/N, mse: sse/N, rmse: (sse/N).sqrt(PRECISION), mape: m]
   }
 
   /**
@@ -88,7 +89,7 @@ class Accuracy {
    * @return Root mean squared error
    */
   static BigDecimal rmse(List actuals, List predictions) {
-    return mse(actuals, predictions).sqrt(precision)
+    return mse(actuals, predictions).sqrt(PRECISION)
   }
 
   /**

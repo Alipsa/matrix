@@ -19,6 +19,7 @@ import java.math.RoundingMode
  * which may result in non-integer degrees of freedom.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class Welch {
 
   private static final int SCALE = 15

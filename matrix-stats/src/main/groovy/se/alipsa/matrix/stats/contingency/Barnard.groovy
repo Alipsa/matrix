@@ -65,6 +65,7 @@ import groovy.transform.CompileStatic
  * consider using the chi-squared test instead.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Barnard {
 
   /**

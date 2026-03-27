@@ -33,6 +33,7 @@ import se.alipsa.matrix.core.Matrix
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class ChiSquared {
 
   /**
@@ -204,7 +205,9 @@ class ChiSquared {
 
         // Apply Yates' correction: subtract 0.5 from |O - E|
         double correctedDiff = Math.abs(observed - expected) - 0.5
-        if (correctedDiff < 0) correctedDiff = 0  // Don't allow negative values
+        if (correctedDiff < 0) {
+          correctedDiff = 0  // Don't allow negative values
+        }
 
         chiSquared += Math.pow(correctedDiff, 2) / expected
       }

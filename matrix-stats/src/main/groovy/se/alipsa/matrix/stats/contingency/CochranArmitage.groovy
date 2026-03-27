@@ -85,6 +85,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
  * or non-linear modeling approaches instead.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CochranArmitage {
 
   /**

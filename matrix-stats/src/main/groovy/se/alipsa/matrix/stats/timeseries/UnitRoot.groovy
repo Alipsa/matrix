@@ -89,6 +89,7 @@ import groovy.transform.CompileStatic
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class UnitRoot {
 
   /**
@@ -238,9 +239,15 @@ class UnitRoot {
 
       // Count how many tests reject unit root (suggesting stationarity)
       // For DF/ADF/ADF-GLS: reject if statistic < critical value (more negative)
-      if (dfResult.statistic < dfCritical) unitRootTests++
-      if (adfResult.statistic < adfCritical) unitRootTests++
-      if (adfGlsResult.statistic < adfGlsCritical) unitRootTests++
+      if (dfResult.statistic < dfCritical) {
+        unitRootTests++
+      }
+      if (adfResult.statistic < adfCritical) {
+        unitRootTests++
+      }
+      if (adfGlsResult.statistic < adfGlsCritical) {
+        unitRootTests++
+      }
 
       // KPSS has opposite null: reject stationarity if statistic > critical value
       boolean kpssRejectsStationarity = kpssResult.statistic > kpssResult.criticalValue
@@ -284,14 +291,22 @@ class UnitRoot {
       // Handle different result types
       if (result instanceof Df.DfResult) {
         Df.DfResult dfRes = (Df.DfResult) result
-        if (alpha <= 0.01) return dfRes.criticalValue1pct
-        else if (alpha <= 0.05) return dfRes.criticalValue5pct
-        else return dfRes.criticalValue10pct
+        if (alpha <= 0.01) {
+          return dfRes.criticalValue1pct
+        } else if (alpha <= 0.05) {
+          return dfRes.criticalValue5pct
+        } else {
+          return dfRes.criticalValue10pct
+        }
       } else if (result instanceof AdfGls.AdfGlsResult) {
         AdfGls.AdfGlsResult adfGlsRes = (AdfGls.AdfGlsResult) result
-        if (alpha <= 0.01) return adfGlsRes.criticalValue1pct
-        else if (alpha <= 0.05) return adfGlsRes.criticalValue5pct
-        else return adfGlsRes.criticalValue10pct
+        if (alpha <= 0.01) {
+          return adfGlsRes.criticalValue1pct
+        } else if (alpha <= 0.05) {
+          return adfGlsRes.criticalValue5pct
+        } else {
+          return adfGlsRes.criticalValue10pct
+        }
       } else if (result instanceof Adf.AdfResult) {
         // ADF only has one critical value (5%)
         return ((Adf.AdfResult) result).criticalValue
@@ -312,9 +327,15 @@ class UnitRoot {
       double adfCritical = getCriticalValue(adfResult, alpha)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alpha)
 
-      if (dfResult.statistic < dfCritical) unitRootTests++
-      if (adfResult.statistic < adfCritical) unitRootTests++
-      if (adfGlsResult.statistic < adfGlsCritical) unitRootTests++
+      if (dfResult.statistic < dfCritical) {
+        unitRootTests++
+      }
+      if (adfResult.statistic < adfCritical) {
+        unitRootTests++
+      }
+      if (adfGlsResult.statistic < adfGlsCritical) {
+        unitRootTests++
+      }
 
       boolean kpssRejectsStationarity = kpssResult.statistic > kpssResult.criticalValue
 
@@ -334,9 +355,15 @@ class UnitRoot {
       double adfCritical = getCriticalValue(adfResult, alpha)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alpha)
 
-      if (dfResult.statistic < dfCritical) unitRootTests++
-      if (adfResult.statistic < adfCritical) unitRootTests++
-      if (adfGlsResult.statistic < adfGlsCritical) unitRootTests++
+      if (dfResult.statistic < dfCritical) {
+        unitRootTests++
+      }
+      if (adfResult.statistic < adfCritical) {
+        unitRootTests++
+      }
+      if (adfGlsResult.statistic < adfGlsCritical) {
+        unitRootTests++
+      }
 
       boolean kpssRejectsStationarity = kpssResult.statistic > kpssResult.criticalValue
 

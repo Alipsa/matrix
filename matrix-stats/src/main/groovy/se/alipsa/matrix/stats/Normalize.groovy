@@ -68,8 +68,12 @@ class Normalize {
     // Force BigDecimal preservation - if any input was BigDecimal, ensure outputs stay BigDecimal
     if (values.any { it instanceof BigDecimal }) {
       result = result.collect { val ->
-        if (val == null) return null
-        if (val instanceof String) return val
+        if (val == null) {
+          return null
+        }
+        if (val instanceof String) {
+          return val
+        }
         if (val instanceof BigInteger) {
           // Convert BigInteger back to BigDecimal (Groovy may have auto-converted)
           return new BigDecimal(val).setScale(decimals.length > 0 ? decimals[0] : 6, RoundingMode.HALF_EVEN)
@@ -146,7 +150,9 @@ class Normalize {
    * Apply min-max normalization to an array of values.
    */
   static <T extends Number> List<T> minMaxNorm(T[] values, int... decimals) {
-    if (values.length == 0) return []
+    if (values.length == 0) {
+      return []
+    }
 
     T min = values.min()
     T max = values.max()
@@ -158,8 +164,12 @@ class Normalize {
    * Apply min-max normalization to a list of values.
    */
   static List minMaxNorm(List values, int... decimals) {
-    if (values.isEmpty()) return []
-    if (values[0] instanceof String) return values  // Return strings as-is
+    if (values.isEmpty()) {
+      return []
+    }
+    if (values[0] instanceof String) {
+      return values  // Return strings as-is
+    }
 
     def min = values.min()
     def max = values.max()
@@ -231,7 +241,9 @@ class Normalize {
    * Apply mean normalization to an array of values.
    */
   static <T extends Number> List<T> meanNorm(T[] values, int... decimals) {
-    if (values.length == 0) return []
+    if (values.length == 0) {
+      return []
+    }
 
     List<T> list = Arrays.asList(values)
     BigDecimal mean = Stat.mean(list)
@@ -245,8 +257,12 @@ class Normalize {
    * Apply mean normalization to a list of values.
    */
   static List meanNorm(List values, int... decimals) {
-    if (values.isEmpty()) return []
-    if (values[0] instanceof String) return values  // Return strings as-is
+    if (values.isEmpty()) {
+      return []
+    }
+    if (values[0] instanceof String) {
+      return values  // Return strings as-is
+    }
 
     BigDecimal mean = Stat.mean(values)
     def min = values.min()
@@ -316,7 +332,9 @@ class Normalize {
    * Apply standard deviation normalization to an array of values.
    */
   static <T extends Number> List<T> stdScaleNorm(T[] values, int... decimals) {
-    if (values.length == 0) return []
+    if (values.length == 0) {
+      return []
+    }
 
     List<T> list = Arrays.asList(values)
     BigDecimal mean = Stat.mean(list)
@@ -329,8 +347,12 @@ class Normalize {
    * Apply standard deviation normalization to a list of values.
    */
   static List stdScaleNorm(List values, int... decimals) {
-    if (values.isEmpty()) return []
-    if (values[0] instanceof String) return values  // Return strings as-is
+    if (values.isEmpty()) {
+      return []
+    }
+    if (values[0] instanceof String) {
+      return values  // Return strings as-is
+    }
 
     BigDecimal mean = Stat.mean(values)
     BigDecimal stdDev = Stat.sd(values)

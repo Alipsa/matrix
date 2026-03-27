@@ -53,6 +53,7 @@ import groovy.transform.CompileStatic
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class AdfGls {
 
   /**
@@ -81,8 +82,12 @@ class AdfGls {
     double yMin = Double.POSITIVE_INFINITY
     double yMax = Double.NEGATIVE_INFINITY
     for (double val : data) {
-      if (val < yMin) yMin = val
-      if (val > yMax) yMax = val
+      if (val < yMin) {
+        yMin = val
+      }
+      if (val > yMax) {
+        yMax = val
+      }
     }
 
     if (Math.abs(yMax - yMin) < 1e-10) {
@@ -398,13 +403,21 @@ class AdfGls {
     double[] params
 
     if (type == "drift") {
-      if (significance == 0.01) params = [-2.64, -1.95, -0.80, 0.00] as double[]
-      else if (significance == 0.05) params = [-1.95, -1.53, -0.60, 0.00] as double[]
-      else params = [-1.62, -1.33, -0.49, 0.00] as double[]  // 10%
+      if (significance == 0.01) {
+        params = [-2.64, -1.95, -0.80, 0.00] as double[]
+      } else if (significance == 0.05) {
+        params = [-1.95, -1.53, -0.60, 0.00] as double[]
+      } else {
+        params = [-1.62, -1.33, -0.49, 0.00] as double[]  // 10%
+      }
     } else {  // trend
-      if (significance == 0.01) params = [-3.58, -2.58, -1.04, -0.10] as double[]
-      else if (significance == 0.05) params = [-3.03, -2.22, -0.87, -0.08] as double[]
-      else params = [-2.74, -2.03, -0.78, -0.07] as double[]  // 10%
+      if (significance == 0.01) {
+        params = [-3.58, -2.58, -1.04, -0.10] as double[]
+      } else if (significance == 0.05) {
+        params = [-3.03, -2.22, -0.87, -0.08] as double[]
+      } else {
+        params = [-2.74, -2.03, -0.78, -0.07] as double[]  // 10%
+      }
     }
 
     // Asymptotic approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³

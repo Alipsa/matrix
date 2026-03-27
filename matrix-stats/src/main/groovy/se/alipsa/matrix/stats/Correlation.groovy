@@ -60,6 +60,7 @@ import groovy.transform.CompileStatic
  * @see <a href="https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient">Kendall Tau Correlation</a>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class Correlation {
 
   static final String PEARSON = "pearson"
@@ -67,9 +68,15 @@ class Correlation {
   static final String KENDALL = "kendall"
 
   static BigDecimal cor(List<? extends Number> valuesX, List<? extends Number> valuesY, String method = PEARSON) {
-    if (method == PEARSON) return corPearson(valuesX, valuesY)
-    if (method == SPEARMAN) return corSpearman(valuesX, valuesY)
-    if (method == KENDALL) return corKendall(valuesX, valuesY)
+    if (method == PEARSON) {
+      return corPearson(valuesX, valuesY)
+    }
+    if (method == SPEARMAN) {
+      return corSpearman(valuesX, valuesY)
+    }
+    if (method == KENDALL) {
+      return corKendall(valuesX, valuesY)
+    }
     throw new IllegalArgumentException("Unknown method: ${method}")
   }
 
@@ -106,7 +113,9 @@ class Correlation {
     }
 
     BigDecimal bottomSquared = (size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY)
-    if (bottomSquared == 0) return 0
+    if (bottomSquared == 0) {
+      return 0
+    }
     BigDecimal bottom = bottomSquared.sqrt()
     BigDecimal top = size * sumXY - sumX * sumY
     return top / bottom

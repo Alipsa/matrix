@@ -101,6 +101,7 @@ import org.apache.commons.math3.stat.StatUtils
  * of 50 to 5000 observations where it provides an excellent balance of power and computational efficiency.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ShapiroFrancia {
 
   private static final int MIN_SAMPLE_SIZE = 5
@@ -274,6 +275,7 @@ class ShapiroFrancia {
    * Result class for the Shapiro-Francia test.
    */
   @CompileStatic
+  @SuppressWarnings('PropertyName')
   static class ShapiroFranciaResult {
     /** The Shapiro-Francia W' test statistic (0 to 1, higher values indicate more normality) */
     double W

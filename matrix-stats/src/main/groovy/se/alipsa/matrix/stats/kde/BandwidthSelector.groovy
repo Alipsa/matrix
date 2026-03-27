@@ -10,6 +10,7 @@ package se.alipsa.matrix.stats.kde
  *
  * This class provides automatic bandwidth selection using common rules of thumb.
  */
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class BandwidthSelector {
 
   /**
@@ -116,7 +117,9 @@ class BandwidthSelector {
    */
   private static double percentile(double[] sortedData, double p) {
     int n = sortedData.length
-    if (n == 1) return sortedData[0]
+    if (n == 1) {
+      return sortedData[0]
+    }
 
     double index = p * (n - 1)
     int lower = (int) index

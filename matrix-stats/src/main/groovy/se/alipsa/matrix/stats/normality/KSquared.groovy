@@ -96,6 +96,7 @@ import se.alipsa.matrix.core.Matrix
  * simpler, though K² generally has better finite-sample properties.</p>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class KSquared {
 
   /**

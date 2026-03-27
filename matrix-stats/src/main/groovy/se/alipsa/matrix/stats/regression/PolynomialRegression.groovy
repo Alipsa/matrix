@@ -25,6 +25,7 @@ import java.math.RoundingMode
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class PolynomialRegression {
 
   /** Polynomial coefficients [a0, a1, a2, ...] where a0 is constant */

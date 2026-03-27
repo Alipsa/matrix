@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution {
 
   private final double dfNumerator
@@ -41,7 +42,9 @@ class FDistribution {
     if (f < 0) {
       throw new IllegalArgumentException("f must be non-negative, got: $f")
     }
-    if (f == 0) return 0.0
+    if (f == 0) {
+      return 0.0
+    }
 
     // F-distribution CDF in terms of incomplete beta function
     // F ~ (dfNum/dfDen) * (B/A) where A,B are chi-squared
