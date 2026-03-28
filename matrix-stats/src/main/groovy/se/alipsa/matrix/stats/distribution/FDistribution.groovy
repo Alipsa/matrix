@@ -10,7 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
-class FDistribution {
+class FDistribution implements ContinuousDistribution {
 
   private final double dfNumerator
   private final double dfDenominator

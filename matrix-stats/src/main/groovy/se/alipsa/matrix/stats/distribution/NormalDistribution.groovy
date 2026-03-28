@@ -43,6 +43,8 @@ class NormalDistribution implements ContinuousDistribution {
       2.445134137142996e+00,
       3.754408661907416e+00
   ] as double[]
+  private static final double[] B_EXTENDED = [B[0], B[1], B[2], B[3], B[4], 1.0d] as double[]
+  private static final double[] D_EXTENDED = [D[0], D[1], D[2], D[3], 1.0d] as double[]
 
   private static final double P_LOW = 0.02425d
   private static final double P_HIGH = 1.0d - P_LOW
@@ -98,17 +100,17 @@ class NormalDistribution implements ContinuousDistribution {
     double x
     if (p < P_LOW) {
       double q = Math.sqrt(-2.0d * Math.log(p))
-      x = polynomial(C, q) / polynomial([D[0], D[1], D[2], D[3], 1.0d] as double[], q)
+      x = polynomial(C, q) / polynomial(D_EXTENDED, q)
     } else if (p <= P_HIGH) {
       double q = p - 0.5d
       double r = q * q
-      x = q * polynomial(A, r) / polynomial([B[0], B[1], B[2], B[3], B[4], 1.0d] as double[], r)
+      x = q * polynomial(A, r) / polynomial(B_EXTENDED, r)
     } else {
       double q = Math.sqrt(-2.0d * Math.log(1.0d - p))
-      x = -polynomial(C, q) / polynomial([D[0], D[1], D[2], D[3], 1.0d] as double[], q)
+      x = -polynomial(C, q) / polynomial(D_EXTENDED, q)
     }
 
-    // One Halley refinement step brings the approximation close to machine precision.
+    // One Newton refinement step brings the approximation close to machine precision.
     double error = cumulativeProbability(mean + standardDeviation * x) - p
     double density = Math.exp(-0.5d * x * x) / Math.sqrt(2.0d * Math.PI)
     x -= error / density
