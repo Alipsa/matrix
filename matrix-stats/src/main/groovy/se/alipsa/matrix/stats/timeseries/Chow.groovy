@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.FDistribution
+import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * The Chow test, proposed by econometrician Gregory Chow in 1960, tests whether the coefficients

@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * The Jarque-Bera test is a goodness-of-fit test that determines whether sample data have skewness

@@ -2,8 +2,9 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.StatUtils
+
+import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
  * The Shapiro-Wilk test is widely considered the most powerful statistical test for assessing

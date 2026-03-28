@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.contingency
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * The Cochran-Mantel-Haenszel (CMH) test is a statistical test for assessing the association between

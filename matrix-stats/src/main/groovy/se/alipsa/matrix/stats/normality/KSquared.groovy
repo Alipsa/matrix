@@ -2,9 +2,8 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
-
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * D'Agostino's K² test (K-squared test) is a powerful omnibus test for normality that combines

@@ -10,7 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
-class FDistribution {
+class FDistribution implements ContinuousDistribution {
 
   private final double dfNumerator
   private final double dfDenominator
@@ -51,6 +51,16 @@ class FDistribution {
     // CDF = I_x(dfNum/2, dfDen/2) where x = (dfNum*f)/(dfNum*f + dfDen)
     double x = (dfNumerator * f) / (dfNumerator * f + dfDenominator)
     return SpecialFunctions.regularizedIncompleteBeta(x, dfNumerator / 2.0d, dfDenominator / 2.0d)
+  }
+
+  /**
+   * Alias matching the commons-math3 distribution API.
+   *
+   * @param f the F-value (must be >= 0)
+   * @return probability P(F <= f)
+   */
+  double cumulativeProbability(double f) {
+    cdf(f)
   }
 
   /**

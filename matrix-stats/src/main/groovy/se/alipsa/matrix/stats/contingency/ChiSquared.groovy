@@ -2,9 +2,8 @@ package se.alipsa.matrix.stats.contingency
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
-
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * A chi-squared test (also chi-square or χ² test) is a statistical hypothesis test

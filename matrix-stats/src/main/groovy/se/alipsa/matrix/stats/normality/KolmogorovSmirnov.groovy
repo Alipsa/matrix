@@ -2,9 +2,10 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.NormalDistribution
-import org.apache.commons.math3.distribution.RealDistribution
 import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest as ApacheKSTest
+
+import se.alipsa.matrix.stats.distribution.ContinuousDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
  * The Kolmogorov-Smirnov (K-S) test is a nonparametric goodness-of-fit test that compares a sample
@@ -159,16 +160,12 @@ class KolmogorovSmirnov {
    * @return KSResult containing the D statistic and p-value
    * @throws IllegalArgumentException if data is null or has fewer than 2 observations
    */
-  static KSResult testAgainstDistribution(List<? extends Number> data, RealDistribution distribution, String testName = "K-S Test") {
+  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = "K-S Test") {
     validateData(data)
 
-    double[] values = data.collect { it.doubleValue() } as double[]
-
-    // Calculate D statistic
-    double dStatistic = KS_TEST.kolmogorovSmirnovStatistic(distribution, values)
-
-    // Calculate p-value
-    double pValue = KS_TEST.kolmogorovSmirnovTest(distribution, values)
+    double[] values = (data.collect { it.doubleValue() } as List<Double>).sort() as double[]
+    double dStatistic = calculateOneSampleStatistic(values, distribution)
+    double pValue = calculateOneSamplePValue(dStatistic, values.length)
 
     return new KSResult(
       dStatistic: dStatistic,
@@ -216,6 +213,42 @@ class KolmogorovSmirnov {
    */
   static KSResult twoSampleTest(double[] sample1, double[] sample2) {
     return twoSampleTest(sample1.toList(), sample2.toList())
+  }
+
+  private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution) {
+    int n = sortedValues.length
+    double dPlus = 0.0d
+    double dMinus = 0.0d
+
+    for (int i = 0; i < n; i++) {
+      double theoretical = distribution.cumulativeProbability(sortedValues[i])
+      double empiricalUpper = (i + 1) / (double) n
+      double empiricalLower = i / (double) n
+      dPlus = Math.max(dPlus, empiricalUpper - theoretical)
+      dMinus = Math.max(dMinus, theoretical - empiricalLower)
+    }
+
+    return Math.max(dPlus, dMinus)
+  }
+
+  private static double calculateOneSamplePValue(double dStatistic, int sampleSize) {
+    if (dStatistic <= 0.0d) {
+      return 1.0d
+    }
+
+    double sqrtN = Math.sqrt(sampleSize)
+    double lambda = (sqrtN + 0.12d + 0.11d / sqrtN) * dStatistic
+    double sum = 0.0d
+
+    for (int j = 1; j <= 100; j++) {
+      double term = Math.exp(-2.0d * j * j * lambda * lambda)
+      sum += (j % 2 == 1 ? 1.0d : -1.0d) * term
+      if (term < 1e-12d) {
+        break
+      }
+    }
+
+    return Math.max(0.0d, Math.min(1.0d, 2.0d * sum))
   }
 
   private static void validateData(List<? extends Number> data) {

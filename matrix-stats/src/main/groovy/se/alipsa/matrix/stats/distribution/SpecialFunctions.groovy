@@ -19,6 +19,7 @@ import java.math.RoundingMode
 class SpecialFunctions {
 
   private static final double EPSILON = 1e-14
+  private static final double GAMMA_TINY = 1e-300
   private static final int MAX_ITERATIONS = 200
   private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
   private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
@@ -301,5 +302,108 @@ class SpecialFunctions {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
     return logGamma(x).exp()
+  }
+
+  /**
+   * Computes the regularized lower incomplete gamma function P(a, x).
+   *
+   * @param a shape parameter (a > 0)
+   * @param x integration limit (x >= 0)
+   * @return the regularized lower incomplete gamma function
+   * @throws IllegalArgumentException if a <= 0 or x < 0
+   */
+  static double regularizedIncompleteGammaP(double a, double x) {
+    if (a <= 0.0d) {
+      throw new IllegalArgumentException("a must be positive, got: $a")
+    }
+    if (x < 0.0d) {
+      throw new IllegalArgumentException("x must be non-negative, got: $x")
+    }
+    if (x == 0.0d) {
+      return 0.0d
+    }
+    if (Double.isInfinite(x)) {
+      return 1.0d
+    }
+    if (x < a + 1.0d) {
+      return gammaSeries(a, x)
+    }
+    return 1.0d - regularizedIncompleteGammaQ(a, x)
+  }
+
+  /**
+   * Computes the regularized upper incomplete gamma function Q(a, x).
+   *
+   * @param a shape parameter (a > 0)
+   * @param x integration limit (x >= 0)
+   * @return the regularized upper incomplete gamma function
+   * @throws IllegalArgumentException if a <= 0 or x < 0
+   */
+  static double regularizedIncompleteGammaQ(double a, double x) {
+    if (a <= 0.0d) {
+      throw new IllegalArgumentException("a must be positive, got: $a")
+    }
+    if (x < 0.0d) {
+      throw new IllegalArgumentException("x must be non-negative, got: $x")
+    }
+    if (x == 0.0d) {
+      return 1.0d
+    }
+    if (Double.isInfinite(x)) {
+      return 0.0d
+    }
+    if (x < a + 1.0d) {
+      return 1.0d - gammaSeries(a, x)
+    }
+    return gammaContinuedFraction(a, x)
+  }
+
+  private static double gammaSeries(double a, double x) {
+    double gln = logGamma(a)
+    double sum = 1.0d / a
+    double delta = sum
+    double ap = a
+
+    for (int n = 1; n <= MAX_ITERATIONS; n++) {
+      ap += 1.0d
+      delta *= x / ap
+      sum += delta
+
+      if (Math.abs(delta) < Math.abs(sum) * EPSILON) {
+        return sum * Math.exp(-x + a * Math.log(x) - gln)
+      }
+    }
+
+    throw new IllegalStateException("Gamma series failed to converge after $MAX_ITERATIONS iterations")
+  }
+
+  private static double gammaContinuedFraction(double a, double x) {
+    double gln = logGamma(a)
+    double b = x + 1.0d - a
+    double c = 1.0d / GAMMA_TINY
+    double d = 1.0d / b
+    double h = d
+
+    for (int i = 1; i <= MAX_ITERATIONS; i++) {
+      double an = -i * (i - a)
+      b += 2.0d
+      d = an * d + b
+      if (Math.abs(d) < GAMMA_TINY) {
+        d = GAMMA_TINY
+      }
+      c = b + an / c
+      if (Math.abs(c) < GAMMA_TINY) {
+        c = GAMMA_TINY
+      }
+      d = 1.0d / d
+      double delta = d * c
+      h *= delta
+
+      if (Math.abs(delta - 1.0d) < EPSILON) {
+        return Math.exp(-x + a * Math.log(x) - gln) * h
+      }
+    }
+
+    throw new IllegalStateException("Gamma continued fraction failed to converge after $MAX_ITERATIONS iterations")
   }
 }

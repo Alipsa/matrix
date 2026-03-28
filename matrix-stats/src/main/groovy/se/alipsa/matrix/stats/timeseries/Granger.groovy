@@ -2,9 +2,8 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.FDistribution
-
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * The Granger causality test determines whether one time series is useful in forecasting another.
