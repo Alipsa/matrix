@@ -88,7 +88,7 @@ def model = new LinearRegression(x, y)
 println(model.getIntercept(4))
 println(model.getSlope(4))
 println(model.predict(10, 4))
-println(model.getRSquared(4))
+println(model.getRsquared(4))
 ```
 
 ## Time Series Stationarity Tests
@@ -111,7 +111,7 @@ If you only want one test, call the individual implementation directly:
 import se.alipsa.matrix.stats.timeseries.Adf
 import se.alipsa.matrix.stats.timeseries.Kpss
 
-println(Adf.test(series, 0, 'drift'))
+println(Adf.test(series))
 println(Kpss.test(series, 'level'))
 ```
 

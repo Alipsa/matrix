@@ -120,7 +120,7 @@ Matrix table = Matrix.builder().data(
 ).build()
 
 def matrixModel = new LinearRegression(table, 'x', 'y')
-println(matrixModel.getRSquared(4))
+println(matrixModel.getRsquared(4))
 ```
 
 ## T-tests
@@ -183,6 +183,18 @@ def result = Anova.aov([
 println(result)
 assert result.evaluate()
 ```
+
+## Result Objects
+
+Most `matrix-stats` APIs return a small result object rather than raw tuples.
+
+- `Welch.tTest()` returns [TtestResult](/home/per/project/groovy-projects/matrix/matrix-stats/src/main/groovy/se/alipsa/matrix/stats/ttest/TtestResult.groovy) with `tVal`, `pVal`, `df`, `mean1`, `mean2`, `var1`, `var2`, `sd1`, `sd2`, `n1`, `n2`, and `description`.
+- `Student.tTest(first, second, true)` returns `Student.Result`, which extends `TtestResult` for the pooled-variance case.
+- `Student.tTest(values, comparison)` returns `Student.SingleResult` with `tVal`, `pVal`, `df`, `mean`, `var`, `sd`, `n`, and `description`.
+- `Student.pairedTTest()` returns `Student.PairedResult`, which extends the two-sample result and adds `sd` for the standard deviation of paired differences.
+- `Anova.aov()` returns `Anova.AnovaResult` with `fValue` and `pValue`.
+
+All of these result types provide a readable `toString()` and helper getters like `getT(int decimals)` or `getP(int decimals)` where that makes sense. For the full API surface, use the GroovyDoc and the source classes above.
 
 ## More Examples
 
