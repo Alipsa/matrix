@@ -6,14 +6,18 @@ hypothesis testing, time-series diagnostics, regression, and clustering.
 ## Installation
 
 Use the Matrix BOM so `matrix-core`, `matrix-stats`, and any additional Matrix modules stay aligned.
+`matrix-stats` publishes Groovy as `compileOnly`, so you must add Groovy explicitly. The examples
+below also use `matrix-datasets` for `Dataset.iris()`.
 
 ### Gradle
 
 ```groovy
 dependencies {
+  implementation "org.apache.groovy:groovy:GROOVY_VERSION"
   implementation platform("se.alipsa.matrix:matrix-bom:MATRIX_VERSION")
   implementation "se.alipsa.matrix:matrix-core"
   implementation "se.alipsa.matrix:matrix-stats"
+  implementation "se.alipsa.matrix:matrix-datasets"
 }
 ```
 
@@ -34,12 +38,21 @@ dependencies {
 
 <dependencies>
   <dependency>
+    <groupId>org.apache.groovy</groupId>
+    <artifactId>groovy</artifactId>
+    <version>GROOVY_VERSION</version>
+  </dependency>
+  <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-stats</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-datasets</artifactId>
   </dependency>
 </dependencies>
 ```

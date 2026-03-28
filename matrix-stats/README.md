@@ -8,11 +8,14 @@ hypothesis tests, time-series diagnostics, normality tests, and clustering.
 ## Using the dependency
 
 The recommended setup is to import the Matrix BOM and then declare only the modules you use.
+`matrix-stats` publishes Groovy as `compileOnly`, so consumers must add their preferred Groovy
+runtime/compiler dependency explicitly.
 
 Gradle:
 
 ```groovy
 dependencies {
+  implementation "org.apache.groovy:groovy:GROOVY_VERSION"
   implementation platform("se.alipsa.matrix:matrix-bom:MATRIX_VERSION")
   implementation "se.alipsa.matrix:matrix-core"
   implementation "se.alipsa.matrix:matrix-stats"
@@ -35,6 +38,11 @@ Maven:
 </dependencyManagement>
 
 <dependencies>
+  <dependency>
+    <groupId>org.apache.groovy</groupId>
+    <artifactId>groovy</artifactId>
+    <version>GROOVY_VERSION</version>
+  </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
