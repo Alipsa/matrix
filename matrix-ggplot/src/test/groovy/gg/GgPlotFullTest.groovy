@@ -387,6 +387,28 @@ class GgPlotFullTest {
     }
 
     @Test
+    void testStatEllipseSkipsUndersizedData() {
+        def small = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1.0, 1.0],
+                [2.0, 2.0]
+            ])
+            .build()
+
+        def chart = ggplot(small, aes(x: 'x', y: 'y')) +
+            geom_point() +
+            stat_ellipse([level: 0.95])
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        def circles = svg.descendants().findAll { it instanceof Circle }
+
+        assertEquals(2, circles.size(), 'Point layer should still render')
+    }
+
+    @Test
     void testStatSummaryBin() {
         // Test binned summary
         def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +

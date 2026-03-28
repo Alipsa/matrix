@@ -27,6 +27,9 @@ class Sampler {
       throw new IllegalArgumentException("Ratio must be greater than 0 and at most 1")
     }
     int size = (int) (data.rowCount() * ratio)
+    if (size == 0) {
+      throw new IllegalArgumentException("Ratio ${ratio} produces an empty training set for ${data.rowCount()} rows")
+    }
     def samples = (0..data.rowCount()-1).collect()
     samples.shuffle()
     def train = samples.take(size)

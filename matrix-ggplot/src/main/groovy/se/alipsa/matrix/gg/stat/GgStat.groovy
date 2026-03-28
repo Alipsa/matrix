@@ -1821,6 +1821,10 @@ class GgStat {
       throw new IllegalArgumentException("stat_ellipse segments must be at least 3, was: $segments")
     }
 
+    if (xValues.size() < 3) {
+      return Matrix.builder().data([x: [], y: []]).build()
+    }
+
     // Delegate to matrix-stats Ellipse class for calculation
     se.alipsa.matrix.stats.Ellipse.EllipseData result =
         se.alipsa.matrix.stats.Ellipse.calculate(xValues, yValues, level, type, segments)
