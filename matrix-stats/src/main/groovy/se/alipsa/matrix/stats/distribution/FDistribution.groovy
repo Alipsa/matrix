@@ -84,19 +84,13 @@ class FDistribution {
    */
   static double oneWayAnovaFValue(List<double[]> groups) {
     int k = groups.size()  // number of groups
-    int n = 0  // total observations
-
-    // Calculate group means and sizes
-    double[] groupMeans = new double[k]
-    int[] groupSizes = new int[k]
     double grandSum = 0.0
-
-    for (int i = 0; i < k; i++) {
-      double[] group = groups[i]
-      groupSizes[i] = group.length
-      n += group.length
+    List<Integer> groupSizes = groups.collect { double[] group -> group.length }
+    int n = groupSizes.sum() as int  // total observations
+    double[] groupMeans = new double[k]
+    groups.eachWithIndex { double[] group, int i ->
       double sum = 0.0
-      for (double v : group) {
+      group.each { double v ->
         sum += v
         grandSum += v
       }
@@ -106,21 +100,20 @@ class FDistribution {
     double grandMean = grandSum / n
 
     // Sum of squares between groups (SSB)
-    double ssb = 0.0
-    for (int i = 0; i < k; i++) {
+    double ssb = (0..<k).sum { int i ->
       double diff = groupMeans[i] - grandMean
-      ssb += groupSizes[i] * diff * diff
-    }
+      (groupSizes[i] * diff * diff) as double
+    } as double
 
     // Sum of squares within groups (SSW)
-    double ssw = 0.0
-    for (int i = 0; i < k; i++) {
+    double ssw = (0..<k).sum { int i ->
       double[] group = groups[i]
-      for (double v : group) {
-        double diff = v - groupMeans[i]
-        ssw += diff * diff
+      double mean = groupMeans[i]
+      group.sum { double v ->
+        double diff = v - mean
+        (diff * diff) as double
       }
-    }
+    } as double
 
     // Degrees of freedom
     double dfBetween = k - 1
@@ -142,10 +135,7 @@ class FDistribution {
    */
   static double oneWayAnovaPValue(List<double[]> groups) {
     int k = groups.size()
-    int n = 0
-    for (double[] group : groups) {
-      n += group.length
-    }
+    int n = groups.sum { double[] group -> group.length } as int
 
     double f = oneWayAnovaFValue(groups)
     double dfBetween = k - 1

@@ -245,7 +245,7 @@ class Normalize {
       return []
     }
 
-    List<T> list = Arrays.asList(values)
+    List<T> list = values.toList()
     BigDecimal mean = Stat.mean(list)
     T min = list.min()
     T max = list.max()
@@ -282,10 +282,7 @@ class Normalize {
    * Apply mean normalization to all numeric columns in a Matrix.
    */
   static Matrix meanNorm(Matrix table, int... decimals) {
-    List<List> columns = []
-    for (Column col in table.columns()) {
-      columns << meanNorm(col as List, decimals)
-    }
+    List<List> columns = table.columns().collect { Column col -> meanNorm(col as List, decimals) }
     return Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
@@ -336,7 +333,7 @@ class Normalize {
       return []
     }
 
-    List<T> list = Arrays.asList(values)
+    List<T> list = values.toList()
     BigDecimal mean = Stat.mean(list)
     BigDecimal stdDev = Stat.sd(list)
 
