@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.core.Row
 
 /**
@@ -120,8 +119,7 @@ class Randomize {
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle()
-    MatrixBuilder builder = Matrix.builder()
-    return builder
+    return Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
         .rowList(rows)
@@ -140,8 +138,7 @@ class Randomize {
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle(random)
-    MatrixBuilder builder = Matrix.builder()
-    return builder
+    return Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
         .rowList(rows)
