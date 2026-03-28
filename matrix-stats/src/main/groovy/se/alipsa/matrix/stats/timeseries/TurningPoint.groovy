@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.NormalDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
  * The Turning Point test is a non-parametric statistical test for randomness (independence) in a time series

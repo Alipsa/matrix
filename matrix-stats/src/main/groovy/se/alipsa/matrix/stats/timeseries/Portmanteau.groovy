@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * A portmanteau test is a type of statistical hypothesis test in which the null hypothesis is well specified,

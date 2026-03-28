@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.contingency
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.NormalDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
  * The Cochran-Armitage test for trend is a statistical test used to detect linear trends in

@@ -2,9 +2,8 @@ package se.alipsa.matrix.stats.contingency
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.HypergeometricDistribution
-
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
 
 /**
  * Fisher's exact test is a statistical significance test used in the analysis of contingency tables.

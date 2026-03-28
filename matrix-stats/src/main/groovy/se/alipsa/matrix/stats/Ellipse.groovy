@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * Confidence ellipse calculations for bivariate normal data.

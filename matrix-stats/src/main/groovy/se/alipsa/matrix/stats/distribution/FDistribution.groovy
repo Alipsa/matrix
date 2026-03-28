@@ -54,6 +54,16 @@ class FDistribution {
   }
 
   /**
+   * Alias matching the commons-math3 distribution API.
+   *
+   * @param f the F-value (must be >= 0)
+   * @return probability P(F <= f)
+   */
+  double cumulativeProbability(double f) {
+    cdf(f)
+  }
+
+  /**
    * Computes the p-value (upper tail probability) for an F-statistic.
    * This is P(F > f) = 1 - CDF(f)
    *

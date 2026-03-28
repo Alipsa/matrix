@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.distribution.NormalDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
  * The Anderson–Darling test is a statistical test of whether a given sample of data is drawn from a
