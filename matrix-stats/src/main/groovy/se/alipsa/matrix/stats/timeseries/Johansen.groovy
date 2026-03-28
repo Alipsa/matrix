@@ -2,7 +2,8 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.linear.*
+import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.linear.SingularMatrixException
 
 /**
  * The Johansen cointegration test, named after Søren Johansen, is a procedure for testing cointegration
@@ -154,8 +155,8 @@ class Johansen {
     int numRegressors = countRegressors(lags, type, k)
     if (numRegressors == 0) {
       return new ResidualMatrices(
-        r0: MatrixUtils.createRealMatrix(differencedData.deltaY),
-        r1: MatrixUtils.createRealMatrix(differencedData.laggedY)
+        r0: differencedData.deltaY,
+        r1: differencedData.laggedY
       )
     }
 
@@ -192,39 +193,49 @@ class Johansen {
   }
 
   private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
-    RealMatrix zMatrix = MatrixUtils.createRealMatrix(designMatrix)
-    RealMatrix deltaYMatrix = MatrixUtils.createRealMatrix(deltaY)
-    RealMatrix laggedYMatrix = MatrixUtils.createRealMatrix(laggedY)
-
-    RealMatrix ztZ = zMatrix.transpose() * zMatrix
-    DecompositionSolver solver = new LUDecomposition(ztZ).solver
-    if (!solver.isNonSingular()) {
+    double[][] ztZ = MatrixAlgebra.multiply(MatrixAlgebra.transpose(designMatrix), designMatrix)
+    double[][] ztZInv
+    try {
+      ztZInv = MatrixAlgebra.inverse(ztZ)
+    } catch (SingularMatrixException ignored) {
       throw new IllegalArgumentException("Singular matrix in short-run regression - cannot perform Johansen test")
     }
 
-    RealMatrix projection = (zMatrix * solver.inverse) * zMatrix.transpose()
+    double[][] projection = MatrixAlgebra.multiply(
+        MatrixAlgebra.multiply(designMatrix, ztZInv),
+        MatrixAlgebra.transpose(designMatrix)
+    )
     return new ResidualMatrices(
-      r0: deltaYMatrix.subtract(projection * deltaYMatrix),
-      r1: laggedYMatrix.subtract(projection * laggedYMatrix)
+      r0: MatrixAlgebra.subtract(deltaY, MatrixAlgebra.multiply(projection, deltaY)),
+      r1: MatrixAlgebra.subtract(laggedY, MatrixAlgebra.multiply(projection, laggedY))
     )
   }
 
   private static MomentMatrices computeMomentMatrices(ResidualMatrices residualMatrices, int effectiveN) {
     double scale = 1.0d / effectiveN
     return new MomentMatrices(
-      s00: (residualMatrices.r0.transpose() * residualMatrices.r0).scalarMultiply(scale),
-      s11: (residualMatrices.r1.transpose() * residualMatrices.r1).scalarMultiply(scale),
-      s01: (residualMatrices.r0.transpose() * residualMatrices.r1).scalarMultiply(scale)
+      s00: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r0), scale),
+      s11: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r1), residualMatrices.r1), scale),
+      s01: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r1), scale)
     )
   }
 
   private static double[] solveEigenvalues(MomentMatrices momentMatrices) {
-    RealMatrix s00Inv = new LUDecomposition(momentMatrices.s00).solver.inverse
-    RealMatrix s11Inv = new LUDecomposition(momentMatrices.s11).solver.inverse
-    RealMatrix product = ((s11Inv * momentMatrices.s01.transpose()) * s00Inv) * momentMatrices.s01
+    double[][] s00Inv = MatrixAlgebra.inverse(momentMatrices.s00)
+    double[][] symmetricCore = MatrixAlgebra.multiply(
+        MatrixAlgebra.multiply(MatrixAlgebra.transpose(momentMatrices.s01), s00Inv),
+        momentMatrices.s01
+    )
+    double[][] s11Cholesky = MatrixAlgebra.cholesky(momentMatrices.s11)
+    double[][] s11CholeskyInv = MatrixAlgebra.inverse(s11Cholesky)
+    double[][] symmetricProduct = MatrixAlgebra.multiply(
+        MatrixAlgebra.multiply(s11CholeskyInv, symmetricCore),
+        MatrixAlgebra.transpose(s11CholeskyInv)
+    )
 
-    EigenDecomposition eigen = new EigenDecomposition(product)
-    return sortDescending(eigen.realEigenvalues)
+    return sortDescending(MatrixAlgebra.symmetricEigenvalues(symmetricProduct).collect { double eigenvalue ->
+      Math.max(0.0d, Math.min(1.0d - 1e-12d, eigenvalue))
+    } as double[])
   }
 
   private static double[] sortDescending(double[] eigenvalues) {
@@ -360,14 +371,14 @@ class Johansen {
 
   @CompileStatic
   private static class ResidualMatrices {
-    RealMatrix r0
-    RealMatrix r1
+    double[][] r0
+    double[][] r1
   }
 
   @CompileStatic
   private static class MomentMatrices {
-    RealMatrix s00
-    RealMatrix s11
-    RealMatrix s01
+    double[][] s00
+    double[][] s11
+    double[][] s01
   }
 }
