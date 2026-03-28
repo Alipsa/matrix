@@ -84,7 +84,35 @@ class GoalSeekTest {
     assertEquals(expected, actual.value as double, 1e-10)
   }
 
+  @Test
+  void testLargeMagnitudeRootMatchesApacheBrentReference() {
+    double target = 1_000_000_000_000.123d
+    double minValue = 0.0d
+    double maxValue = 2.0e12d
+    double threshold = 1.0e-8d
+
+    def actual = GoalSeek.solve(target, minValue, maxValue, threshold, 10) { value ->
+      value
+    }
+    double expected = apacheGoalSeek(target, minValue, maxValue, threshold, 10) { value ->
+      value
+    }
+
+    assertEquals(expected, actual.value as double, 1e-8)
+  }
+
   private static double apacheGoalSeek(double target, double minValue, double maxValue, double threshold, Closure<Double> algorithm) {
+    apacheGoalSeek(target, minValue, maxValue, threshold, 100, algorithm)
+  }
+
+  private static double apacheGoalSeek(
+      double target,
+      double minValue,
+      double maxValue,
+      double threshold,
+      int maxIterations,
+      Closure<Double> algorithm
+  ) {
     UnivariateFunction function = new UnivariateFunction() {
       @Override
       double value(double v) {
@@ -94,6 +122,6 @@ class GoalSeekTest {
     double relativeAccuracy = threshold / 10_000.0d
     double absoluteAccuracy = threshold
     def solver = new BracketingNthOrderBrentSolver(relativeAccuracy, absoluteAccuracy, 5)
-    solver.solve(100, function, minValue, maxValue, AllowedSolution.LEFT_SIDE)
+    solver.solve(maxIterations, function, minValue, maxValue, AllowedSolution.LEFT_SIDE)
   }
 }

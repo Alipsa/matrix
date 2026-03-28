@@ -60,8 +60,54 @@ class GoalSeek {
         absoluteAccuracy,
         maxIterations
     )
-    double val = solverResult.root
+    double val = refineRoot(function, solverResult.root, solverResult.lowerBound, solverResult.upperBound, absoluteAccuracy)
     double result = algorithm.call(val) as double
     return [value: val, result: result, diff: (targetValue-result), iterations: solverResult.evaluations]
+  }
+
+  private static double refineRoot(
+      UnivariateObjective function,
+      double root,
+      double lowerBound,
+      double upperBound,
+      double absoluteAccuracy
+  ) {
+    if ((upperBound - lowerBound) <= 4.0d * absoluteAccuracy) {
+      return root
+    }
+    if (lowerBound == upperBound) {
+      return lowerBound
+    }
+
+    double low = lowerBound
+    double high = upperBound
+    double lowValue = function.value(low)
+    double highValue = function.value(high)
+
+    if (lowValue == 0.0d) {
+      return low
+    }
+    if (highValue == 0.0d) {
+      return high
+    }
+
+    for (int iteration = 0; iteration < 128 && (high - low) > absoluteAccuracy; iteration++) {
+      double candidate = low - lowValue * (high - low) / (highValue - lowValue)
+      if (!Double.isFinite(candidate) || candidate <= low || candidate >= high) {
+        candidate = low + (high - low) / 2.0d
+      }
+      double candidateValue = function.value(candidate)
+      if (candidateValue == 0.0d) {
+        return candidate
+      }
+      if (Math.signum(candidateValue) == Math.signum(lowValue)) {
+        low = candidate
+        lowValue = candidateValue
+      } else {
+        high = candidate
+        highValue = candidateValue
+      }
+    }
+    low + (high - low) / 2.0d
   }
 }

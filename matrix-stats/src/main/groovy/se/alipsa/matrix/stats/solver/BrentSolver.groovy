@@ -55,10 +55,10 @@ final class BrentSolver {
     int evaluations = 2
 
     if (fa == 0.0d) {
-      return new SolverResult(root: a, evaluations: evaluations, iterations: 0)
+      return new SolverResult(root: a, evaluations: evaluations, iterations: 0, lowerBound: a, upperBound: a)
     }
     if (fb == 0.0d) {
-      return new SolverResult(root: b, evaluations: evaluations, iterations: 0)
+      return new SolverResult(root: b, evaluations: evaluations, iterations: 0, lowerBound: b, upperBound: b)
     }
     if (fa * fb > 0.0d) {
       throw new IllegalArgumentException("Function values at the interval endpoints must bracket a root")
@@ -86,10 +86,16 @@ final class BrentSolver {
         fc = fa
       }
 
-      double tolerance = absoluteAccuracy
+      double tolerance = 2.0d * relativeAccuracy * Math.abs(b) + absoluteAccuracy
       double midpoint = 0.5d * (c - b)
       if (Math.abs(midpoint) <= tolerance || fb == 0.0d) {
-        return new SolverResult(root: b, evaluations: evaluations, iterations: iteration)
+        return new SolverResult(
+            root: b,
+            evaluations: evaluations,
+            iterations: iteration,
+            lowerBound: Math.min(b, c),
+            upperBound: Math.max(b, c)
+        )
       }
 
       if (Math.abs(e) >= tolerance && Math.abs(fa) > Math.abs(fb)) {
@@ -152,5 +158,9 @@ final class BrentSolver {
     int evaluations
     /** Number of Brent iterations performed. */
     int iterations
+    /** Lower bound of the final bracketing interval. */
+    double lowerBound
+    /** Upper bound of the final bracketing interval. */
+    double upperBound
   }
 }

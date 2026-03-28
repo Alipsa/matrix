@@ -138,6 +138,19 @@ class PolynomialRegressionTest {
     }
   }
 
+  @Test
+  void testRankDeficientQuadraticMatchesApacheReference() {
+    def x = [1, 1, 1, 2]
+    def y = [1, 1, 1, 4]
+
+    def poly = new PolynomialRegression(x, y, 2)
+    double[] expected = apachePolynomialFit(x, y, 2)
+
+    for (int i = 0; i < expected.length; i++) {
+      assertEquals(expected[i], poly.getCoefficient(i).doubleValue(), 1e-10)
+    }
+  }
+
   private static double[] apachePolynomialFit(List<? extends Number> xValues, List<? extends Number> yValues, int degree) {
     WeightedObservedPoints obs = new WeightedObservedPoints()
     for (int i = 0; i < xValues.size(); i++) {
