@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * The ADF-GLS test (or DF-GLS test) is a test for a unit root in a time series.
@@ -55,6 +56,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class AdfGls {
+  private static final Logger log = Logger.getLogger(AdfGls)
 
   /**
    * Performs the ADF-GLS test for a unit root.
@@ -139,7 +141,7 @@ class AdfGls {
     }
 
     // Perform OLS regression
-    double[] beta = solveLinearSystem(X, response)
+    double[] beta = TimeSeriesUtils.solveLinearSystem(X, response)
     double gamma = beta[0]
 
     // Calculate residuals and standard error
@@ -172,7 +174,7 @@ class AdfGls {
       }
     }
 
-    double[][] XtXinv = invertMatrix(XtX)
+    double[][] XtXinv = TimeSeriesUtils.invertMatrix(XtX)
     double gammaSE = Math.sqrt(sigma2 * XtXinv[0][0])
 
     // Calculate t-statistic (ADF-GLS statistic)
@@ -237,7 +239,7 @@ class AdfGls {
     }
 
     // Perform GLS regression: z = X*β + ε
-    double[] beta = solveLinearSystem(X, z)
+    double[] beta = TimeSeriesUtils.solveLinearSystem(X, z)
 
     // Compute fitted values on original deterministic terms
     double[] fitted = new double[n]
@@ -280,116 +282,28 @@ class AdfGls {
           bestMAIC = maic
           bestLag = p
         }
-      } catch (Exception ignored) {
-        // Skip this lag if calculation fails
+      } catch (IllegalArgumentException e) {
+        if (isNumericalFailure(e)) {
+          log.warn("Numerical failure for ADF-GLS lag $p during MAIC selection: ${e.message}")
+        } else {
+          log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
+        }
+      } catch (RuntimeException e) {
+        log.error("Potential bug while selecting lag $p for ADF-GLS: ${e.message}", e)
+        throw e
       }
+    }
+
+    if (bestMAIC == Double.POSITIVE_INFINITY) {
+      throw new IllegalArgumentException("Unable to select ADF-GLS lag: all candidate lags 0..${maxLags} failed")
     }
 
     return bestLag
   }
 
-  /**
-   * Solve linear system Ax = b using Gaussian elimination with partial pivoting.
-   */
-  private static double[] solveLinearSystem(double[][] A, double[] b) {
-    int n = b.length
-    int m = A[0].length
-    double[][] augmented = new double[n][m + 1]
-
-    // Create augmented matrix
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < m; j++) {
-        augmented[i][j] = A[i][j]
-      }
-      augmented[i][m] = b[i]
-    }
-
-    // Forward elimination with partial pivoting
-    for (int k = 0; k < m; k++) {
-      // Find pivot
-      int maxRow = k
-      double maxVal = Math.abs(augmented[k][k])
-      for (int i = k + 1; i < n; i++) {
-        if (Math.abs(augmented[i][k]) > maxVal) {
-          maxVal = Math.abs(augmented[i][k])
-          maxRow = i
-        }
-      }
-
-      // Swap rows
-      if (maxRow != k && maxRow < n) {
-        double[] temp = augmented[k]
-        augmented[k] = augmented[maxRow]
-        augmented[maxRow] = temp
-      }
-
-      // Eliminate column
-      if (Math.abs(augmented[k][k]) > 1e-14) {
-        for (int i = k + 1; i < n; i++) {
-          double factor = augmented[i][k] / augmented[k][k]
-          for (int j = k; j < m + 1; j++) {
-            augmented[i][j] -= factor * augmented[k][j]
-          }
-        }
-      }
-    }
-
-    // Back substitution
-    double[] x = new double[m]
-    for (int i = m - 1; i >= 0; i--) {
-      double sum = augmented[i][m]
-      for (int j = i + 1; j < m; j++) {
-        sum -= augmented[i][j] * x[j]
-      }
-      x[i] = sum / augmented[i][i]
-    }
-
-    return x
-  }
-
-  /**
-   * Invert a matrix using Gaussian elimination.
-   */
-  private static double[][] invertMatrix(double[][] A) {
-    int n = A.length
-    double[][] result = new double[n][n]
-    double[][] augmented = new double[n][2 * n]
-
-    // Create augmented matrix [A | I]
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        augmented[i][j] = A[i][j]
-        augmented[i][j + n] = (i == j) ? 1.0 : 0.0
-      }
-    }
-
-    // Gaussian elimination
-    for (int k = 0; k < n; k++) {
-      // Pivot
-      double pivot = augmented[k][k]
-      for (int j = 0; j < 2 * n; j++) {
-        augmented[k][j] /= pivot
-      }
-
-      // Eliminate
-      for (int i = 0; i < n; i++) {
-        if (i != k) {
-          double factor = augmented[i][k]
-          for (int j = 0; j < 2 * n; j++) {
-            augmented[i][j] -= factor * augmented[k][j]
-          }
-        }
-      }
-    }
-
-    // Extract result
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        result[i][j] = augmented[i][j + n]
-      }
-    }
-
-    return result
+  private static boolean isNumericalFailure(IllegalArgumentException e) {
+    String message = e.message ?: ''
+    message.contains('Singular matrix') || message.contains('Non-finite value')
   }
 
   /**

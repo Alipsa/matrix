@@ -161,7 +161,7 @@ class Df {
     }
 
     // Solve for coefficients using Gaussian elimination
-    double[] beta = solveLinearSystem(XtX, Xty)
+    double[] beta = TimeSeriesUtils.solveLinearSystem(XtX, Xty)
 
     // The coefficient we care about is γ (coefficient for y_{t-1})
     int gammaIndex = nPredictors - 1  // Last coefficient is always y_{t-1}
@@ -186,7 +186,7 @@ class Df {
     double sigma2 = rss / df
 
     // Calculate (X'X)^(-1) for standard errors
-    double[][] XtXinv = invertMatrix(XtX)
+    double[][] XtXinv = TimeSeriesUtils.invertMatrix(XtX)
 
     // Standard error of gamma
     double gammaSE = Math.sqrt(sigma2 * XtXinv[gammaIndex][gammaIndex])
@@ -217,107 +217,6 @@ class Df {
   static DfResult test(List<? extends Number> data, String type = "drift") {
     double[] array = data.collect { it.doubleValue() } as double[]
     return test(array, type)
-  }
-
-  /**
-   * Solve linear system Ax = b using Gaussian elimination with partial pivoting.
-   */
-  private static double[] solveLinearSystem(double[][] A, double[] b) {
-    int n = b.length
-    double[][] augmented = new double[n][n + 1]
-
-    // Create augmented matrix
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        augmented[i][j] = A[i][j]
-      }
-      augmented[i][n] = b[i]
-    }
-
-    // Forward elimination with partial pivoting
-    for (int k = 0; k < n; k++) {
-      // Find pivot
-      int maxRow = k
-      double maxVal = Math.abs(augmented[k][k])
-      for (int i = k + 1; i < n; i++) {
-        if (Math.abs(augmented[i][k]) > maxVal) {
-          maxVal = Math.abs(augmented[i][k])
-          maxRow = i
-        }
-      }
-
-      // Swap rows
-      if (maxRow != k) {
-        double[] temp = augmented[k]
-        augmented[k] = augmented[maxRow]
-        augmented[maxRow] = temp
-      }
-
-      // Eliminate column
-      for (int i = k + 1; i < n; i++) {
-        double factor = augmented[i][k] / augmented[k][k]
-        for (int j = k; j < n + 1; j++) {
-          augmented[i][j] -= factor * augmented[k][j]
-        }
-      }
-    }
-
-    // Back substitution
-    double[] x = new double[n]
-    for (int i = n - 1; i >= 0; i--) {
-      double sum = augmented[i][n]
-      for (int j = i + 1; j < n; j++) {
-        sum -= augmented[i][j] * x[j]
-      }
-      x[i] = sum / augmented[i][i]
-    }
-
-    return x
-  }
-
-  /**
-   * Invert a matrix using Gaussian elimination.
-   */
-  private static double[][] invertMatrix(double[][] A) {
-    int n = A.length
-    double[][] result = new double[n][n]
-    double[][] augmented = new double[n][2 * n]
-
-    // Create augmented matrix [A | I]
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        augmented[i][j] = A[i][j]
-        augmented[i][j + n] = (i == j) ? 1.0 : 0.0
-      }
-    }
-
-    // Gaussian elimination
-    for (int k = 0; k < n; k++) {
-      // Pivot
-      double pivot = augmented[k][k]
-      for (int j = 0; j < 2 * n; j++) {
-        augmented[k][j] /= pivot
-      }
-
-      // Eliminate
-      for (int i = 0; i < n; i++) {
-        if (i != k) {
-          double factor = augmented[i][k]
-          for (int j = 0; j < 2 * n; j++) {
-            augmented[i][j] -= factor * augmented[k][j]
-          }
-        }
-      }
-    }
-
-    // Extract result
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        result[i][j] = augmented[i][j + n]
-      }
-    }
-
-    return result
   }
 
   /**

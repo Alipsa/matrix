@@ -103,6 +103,18 @@ class GrangerTest {
   }
 
   @Test
+  void testSingularUnrestrictedModelThrows() {
+    double[] x = (1..30).collect { it as double } as double[]
+    double[] y = (1..30).collect { it as double } as double[]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Granger.test(x, y, 1)
+    }
+
+    assertTrue(exception.message.contains('Singular matrix'))
+  }
+
+  @Test
   void testDifferentLags() {
     double[] x = new double[50]
     double[] y = new double[50]
@@ -141,6 +153,18 @@ class GrangerTest {
     assertNotNull(result)
     assertTrue(result.lags >= 1, 'Auto-selected lag should be at least 1')
     assertTrue(result.lags <= 10, 'Auto-selected lag should be reasonable')
+  }
+
+  @Test
+  void testAutoLagSelectionThrowsWhenAllCandidatesFail() {
+    double[] x = (1..30).collect { it as double } as double[]
+    double[] y = (1..30).collect { it as double } as double[]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Granger.test(x, y, null as Integer)
+    }
+
+    assertTrue(exception.message.contains('Unable to select Granger lag'))
   }
 
   @Test
