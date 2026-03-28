@@ -2,12 +2,8 @@ package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.optim.MaxIter
-import org.apache.commons.math3.optim.PointValuePair
-import org.apache.commons.math3.optim.linear.*
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
-
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.solver.LinearProgramSolver
 
 import java.math.RoundingMode
 
@@ -248,16 +244,11 @@ class QuantileRegression {
     int n = xValues.size()
     double tauDouble = tauValue as double
 
-    // Convert to double arrays for Apache Commons Math
     double[] x = xValues.collect { it as double } as double[]
     double[] y = yValues.collect { it as double } as double[]
 
-    // Apache Commons Math SimplexSolver requires all variables to be >= 0,
-    // but the intercept and slope should be allowed to take negative values.
-    // To handle this, we reformulate: let intercept = β0+ - β0- and slope = β1+ - β1-,
-    // and keep residuals as non-negative variables u+ and u- for each observation.
-    // Variables: [β0+, β0-, β1+, β1-, u1+, u1-, u2+, u2-, ..., un+, un-]
-    // Total variables: 4 + 2*n
+    // Intercept and slope are decomposed into positive and negative parts so that the
+    // linear program remains in non-negative-variable form.
     int numVarsReformulated = 4 + 2 * n
     double[] objectiveReformulated = new double[numVarsReformulated]
     objectiveReformulated[0] = 0.0  // β0+
@@ -268,8 +259,7 @@ class QuantileRegression {
       objectiveReformulated[4 + 2*i] = tauDouble           // u+
       objectiveReformulated[4 + 2*i + 1] = 1.0 - tauDouble  // u-
     }
-
-    List<LinearConstraint> constraintsReformulated = []
+    double[][] constraintsReformulated = new double[n][numVarsReformulated]
     for (int i = 0; i < n; i++) {
       double[] coeffs = new double[numVarsReformulated]
       coeffs[0] = 1.0       // β0+
@@ -279,23 +269,17 @@ class QuantileRegression {
       coeffs[4 + 2*i] = 1.0       // u+[i]
       coeffs[4 + 2*i + 1] = -1.0  // -u-[i]
 
-      constraintsReformulated << new LinearConstraint(coeffs, Relationship.EQ, y[i])
+      constraintsReformulated[i] = coeffs
     }
-    // TODO implement our own LinearObjectiveFunction and LinearConstraintSet that works with BigDecimal for
-    //  cleaner groovy code, better precision and to avoid dependency on commons-math3
-    LinearObjectiveFunction objFuncReformulated = new LinearObjectiveFunction(objectiveReformulated, 0.0d)
 
     try {
-      SimplexSolver solver = new SimplexSolver()
-      PointValuePair solution = solver.optimize(
-        new MaxIter(10000),
-        objFuncReformulated,
-        new LinearConstraintSet(constraintsReformulated),
-        GoalType.MINIMIZE,
-        new NonNegativeConstraint(true)
+      LinearProgramSolver.Solution solution = LinearProgramSolver.minimize(
+          objectiveReformulated,
+          constraintsReformulated,
+          y,
+          10_000
       )
-
-      double[] point = solution.getPoint()
+      double[] point = solution.point
 
       // Extract coefficients: intercept = β0+ - β0-, slope = β1+ - β1-
       BigDecimal interceptValue = (point[0] - point[1]) as BigDecimal

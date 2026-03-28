@@ -2,17 +2,15 @@ package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.fitting.PolynomialCurveFitter
-import org.apache.commons.math3.fitting.WeightedObservedPoints
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.linear.SingularMatrixException
 
 import java.math.RoundingMode
 
 /**
  * Polynomial regression fits a polynomial of degree n to the data.
- * Uses commons-math3's PolynomialCurveFitter.
  *
  * The model is: Y = a0 + a1*X + a2*X^2 + ... + an*X^n
  *
@@ -27,6 +25,8 @@ import java.math.RoundingMode
 @CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class PolynomialRegression {
+
+  private static final double RANK_THRESHOLD = 1e-12d
 
   /** Polynomial coefficients [a0, a1, a2, ...] where a0 is constant */
   double[] coefficients
@@ -62,19 +62,129 @@ class PolynomialRegression {
 
     this.degree = degree
 
-    // Build observations for fitting
-    WeightedObservedPoints obs = new WeightedObservedPoints()
     int n = x.size()
+    double[][] design = new double[n][degree + 1]
+    double[] response = new double[n]
     for (int i = 0; i < n; i++) {
-      obs.add(x[i].doubleValue(), y[i].doubleValue())
+      double xValue = x[i].doubleValue()
+      double term = 1.0d
+      for (int j = 0; j <= degree; j++) {
+        design[i][j] = term
+        term *= xValue
+      }
+      response[i] = y[i].doubleValue()
     }
 
-    // Fit polynomial
-    PolynomialCurveFitter fitter = PolynomialCurveFitter.create(degree)
-    coefficients = fitter.fit(obs.toList())
+    coefficients = fitCoefficients(design, response)
 
     // Compute R-squared
     computeRSquared(x, y)
+  }
+
+  private static double[] fitCoefficients(double[][] design, double[] response) {
+    try {
+      return solveLeastSquares(design, response)
+    } catch (SingularMatrixException ignored) {
+      int[] selectedColumns = selectIndependentColumns(design)
+      if (selectedColumns.length == 0) {
+        throw new IllegalStateException("Polynomial design matrix has no independent columns")
+      }
+      double[][] reducedDesign = new double[design.length][selectedColumns.length]
+      for (int row = 0; row < design.length; row++) {
+        for (int column = 0; column < selectedColumns.length; column++) {
+          reducedDesign[row][column] = design[row][selectedColumns[column]]
+        }
+      }
+
+      double[] reducedCoefficients = solveLeastSquares(reducedDesign, response)
+      double[] fullCoefficients = new double[design[0].length]
+      for (int i = 0; i < selectedColumns.length; i++) {
+        fullCoefficients[selectedColumns[i]] = reducedCoefficients[i]
+      }
+      return fullCoefficients
+    }
+  }
+
+  private static double[] solveLeastSquares(double[][] design, double[] response) {
+    double[][] xt = MatrixAlgebra.transpose(design)
+    double[][] xtx = MatrixAlgebra.multiply(xt, design)
+    double[][] xtxInv = MatrixAlgebra.inverse(xtx)
+    double[] xty = new double[xt.length]
+    for (int i = 0; i < xt.length; i++) {
+      double sum = 0.0d
+      for (int j = 0; j < response.length; j++) {
+        sum += xt[i][j] * response[j]
+      }
+      xty[i] = sum
+    }
+
+    double[] fitted = new double[xt.length]
+    for (int i = 0; i < xt.length; i++) {
+      double sum = 0.0d
+      for (int j = 0; j < xt.length; j++) {
+        sum += xtxInv[i][j] * xty[j]
+      }
+      fitted[i] = sum
+    }
+    fitted
+  }
+
+  private static int[] selectIndependentColumns(double[][] design) {
+    int rowCount = design.length
+    int columnCount = design[0].length
+    boolean[] used = new boolean[columnCount]
+    List<double[]> orthonormalBasis = []
+    List<Integer> selectedColumns = []
+
+    for (int selection = 0; selection < columnCount; selection++) {
+      int bestColumn = -1
+      double bestNorm = 0.0d
+      double[] bestResidual = null
+
+      for (int column = 0; column < columnCount; column++) {
+        if (used[column]) {
+          continue
+        }
+        double[] residual = new double[rowCount]
+        for (int row = 0; row < rowCount; row++) {
+          residual[row] = design[row][column]
+        }
+        orthonormalBasis.each { double[] basisVector ->
+          double projection = 0.0d
+          for (int row = 0; row < rowCount; row++) {
+            projection += residual[row] * basisVector[row]
+          }
+          for (int row = 0; row < rowCount; row++) {
+            residual[row] -= projection * basisVector[row]
+          }
+        }
+
+        double norm = 0.0d
+        for (int row = 0; row < rowCount; row++) {
+          norm += residual[row] * residual[row]
+        }
+        if (norm > bestNorm + RANK_THRESHOLD ||
+            (Math.abs(norm - bestNorm) <= RANK_THRESHOLD && (bestColumn < 0 || column > bestColumn))) {
+          bestColumn = column
+          bestNorm = norm
+          bestResidual = residual
+        }
+      }
+
+      if (bestColumn < 0 || bestNorm <= RANK_THRESHOLD) {
+        break
+      }
+
+      double scale = Math.sqrt(bestNorm)
+      for (int row = 0; row < rowCount; row++) {
+        bestResidual[row] /= scale
+      }
+      orthonormalBasis << bestResidual
+      selectedColumns << bestColumn
+      used[bestColumn] = true
+    }
+
+    selectedColumns as int[]
   }
 
   private void computeRSquared(List<? extends Number> x, List<? extends Number> y) {

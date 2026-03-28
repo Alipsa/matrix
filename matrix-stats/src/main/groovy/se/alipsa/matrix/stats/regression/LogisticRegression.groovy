@@ -2,16 +2,9 @@ package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.analysis.MultivariateFunction
-import org.apache.commons.math3.optim.InitialGuess
-import org.apache.commons.math3.optim.MaxEval
-import org.apache.commons.math3.optim.PointValuePair
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
-import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer
-
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.solver.MultivariateObjective
+import se.alipsa.matrix.stats.solver.NelderMeadOptimizer
 
 import java.math.RoundingMode
 
@@ -124,7 +117,7 @@ import java.math.RoundingMode
  * LL(β0, β1) = Σ[yi * log(pi) + (1-yi) * log(1-pi)]
  * </pre>
  * where pi = P(Y=1|Xi) is the predicted probability for observation i. This implementation uses
- * the Nelder-Mead simplex optimization algorithm to find the coefficients that maximize LL.
+ * a native Nelder-Mead simplex optimization algorithm to find the coefficients that maximize LL.
  *
  * <p><b>Interpreting coefficients:</b></p>
  * <ul>
@@ -240,45 +233,39 @@ class LogisticRegression {
     double[] x = xValues.collect { it.doubleValue() } as double[]
     double[] y = yValues.collect { it.doubleValue() } as double[]
 
-    // Define the negative log-likelihood function to minimize
-    MultivariateFunction negativeLogLikelihood = new MultivariateFunction() {
-      @Override
-      double value(double[] coefficients) {
-        double beta0 = coefficients[0]
-        double beta1 = coefficients[1]
+    MultivariateObjective negativeLogLikelihood = { double[] coefficients ->
+      double beta0 = coefficients[0]
+      double beta1 = coefficients[1]
 
-        double logLikelihood = 0.0
-        for (int i = 0; i < n; i++) {
-          double z = beta0 + beta1 * x[i]
-          double p = sigmoid(z)
+      double logLikelihood = 0.0
+      for (int i = 0; i < n; i++) {
+        double z = beta0 + beta1 * x[i]
+        double p = sigmoid(z)
 
-          // Avoid log(0) by clamping p to [epsilon, 1-epsilon]
-          double epsilon = 1e-15
-          p = Math.max(epsilon, Math.min(1.0 - epsilon, p))
+        // Avoid log(0) by clamping p to [epsilon, 1-epsilon]
+        double epsilon = 1e-15
+        p = Math.max(epsilon, Math.min(1.0 - epsilon, p))
 
-          logLikelihood += y[i] * Math.log(p) + (1.0 - y[i]) * Math.log(1.0 - p)
-        }
-
-        return -logLikelihood  // Return negative for minimization
+        logLikelihood += y[i] * Math.log(p) + (1.0 - y[i]) * Math.log(1.0 - p)
       }
-    }
 
-    // Initial guess: start with coefficients [0, 0]
+      -logLikelihood
+    } as MultivariateObjective
+
     double[] initialGuess = [0.0, 0.0] as double[]
-
-    // Use Nelder-Mead simplex optimizer
-    SimplexOptimizer optimizer = new SimplexOptimizer(1e-10, 1e-30)
+    double[] stepSizes = [1.0d, 1.0d] as double[]
 
     try {
-      PointValuePair optimum = optimizer.optimize(
-        new MaxEval(10000),
-        new ObjectiveFunction(negativeLogLikelihood),
-        GoalType.MINIMIZE,
-        new InitialGuess(initialGuess),
-        new NelderMeadSimplex(2)  // 2 parameters
+      NelderMeadOptimizer.OptimizationResult optimum = NelderMeadOptimizer.minimize(
+        negativeLogLikelihood,
+        initialGuess,
+        stepSizes,
+        10_000,
+        1e-10,
+        1e-30
       )
 
-      double[] optimalCoefficients = optimum.getPoint()
+      double[] optimalCoefficients = optimum.point
 
       this.intercept = optimalCoefficients[0] as BigDecimal
       this.slope = optimalCoefficients[1] as BigDecimal
