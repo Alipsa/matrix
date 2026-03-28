@@ -108,6 +108,7 @@ class ShapiroWilk {
 
   private static final int MIN_SAMPLE_SIZE = 3
   private static final int MAX_SAMPLE_SIZE = 5000
+  private static final double W_EPSILON = 1e-15
 
   /**
    * Performs the Shapiro-Wilk test for normality.
@@ -249,8 +250,12 @@ class ShapiroWilk {
    * This provides good accuracy for 3 ≤ n ≤ 5000.
    */
   private static double calculatePValue(double w, int n) {
+    if (w >= 1.0) {
+      return 1.0
+    }
+
     // Transform W to get better approximation
-    double logW = Math.log(1.0 - w)
+    double logW = Math.log(Math.max(W_EPSILON, 1.0 - w))
     double mu, sigma
 
     if (n <= 11) {

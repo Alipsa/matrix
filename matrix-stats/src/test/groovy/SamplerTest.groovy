@@ -28,4 +28,13 @@ class SamplerTest {
     assertIterableEquals(ids.columnNames(), train.columnNames())
     assertIterableEquals(ids.columnNames(), test.columnNames())
   }
+
+  @Test
+  void testRejectZeroRatio() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Sampler.split(Dataset.cars(), 0.0)
+    }
+
+    assertEquals('Ratio must be greater than 0 and at most 1', exception.message)
+  }
 }
