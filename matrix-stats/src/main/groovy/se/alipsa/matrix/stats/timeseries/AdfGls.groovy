@@ -283,14 +283,27 @@ class AdfGls {
           bestLag = p
         }
       } catch (IllegalArgumentException e) {
-        log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
+        if (isNumericalFailure(e)) {
+          log.warn("Numerical failure for ADF-GLS lag $p during MAIC selection: ${e.message}")
+        } else {
+          log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
+        }
       } catch (RuntimeException e) {
-        log.error("Unexpected error while selecting lag $p for ADF-GLS: ${e.message}", e)
+        log.error("Potential bug while selecting lag $p for ADF-GLS: ${e.message}", e)
         throw e
       }
     }
 
+    if (bestMAIC == Double.POSITIVE_INFINITY) {
+      throw new IllegalArgumentException("Unable to select ADF-GLS lag: all candidate lags 0..${maxLags} failed")
+    }
+
     return bestLag
+  }
+
+  private static boolean isNumericalFailure(IllegalArgumentException e) {
+    String message = e.message ?: ''
+    message.contains('Singular matrix') || message.contains('Non-finite value')
   }
 
   /**

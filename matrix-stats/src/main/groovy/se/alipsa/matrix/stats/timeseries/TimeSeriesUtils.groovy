@@ -6,7 +6,7 @@ import se.alipsa.matrix.core.util.Logger
 
 /**
  * Shared linear algebra helpers for the time-series test implementations in this package.
- * The solving routines preserve legacy behavior where required by older callers while adding
+ * The solving routines support the current time-series callers while adding
  * consistent validation, singularity checks, and diagnostic logging for numerical edge cases.
  */
 @CompileStatic
@@ -23,9 +23,9 @@ final class TimeSeriesUtils {
 
   /**
    * Solve a linear system {@code Ax = b} using Gaussian elimination with partial pivoting.
-   * Rectangular overdetermined systems are reduced over the pivoted column subset to preserve
-   * the original timeseries implementation behavior used by {@link AdfGls}; this is legacy
-   * compatibility behavior rather than a general least-squares solver.
+   * {@link AdfGls} passes its GLS-detrending design matrix directly as a rectangular
+   * overdetermined system, so this method reduces the pivoted column subset directly rather than
+   * forming the normal equations; this is not a general least-squares solver.
    *
    * @param A the coefficient matrix
    * @param b the right-hand-side vector
@@ -86,7 +86,7 @@ final class TimeSeriesUtils {
         log.warn("Singular pivot at column $k while solving ${rowCount}x${columnCount} system")
         throw new IllegalArgumentException("Singular matrix at column ${k} - cannot solve linear system")
       } else {
-        log.warn("Near-singular pivot at column $k while solving ${rowCount}x${columnCount} overdetermined system; skipping elimination to preserve legacy behavior")
+        log.warn("Near-singular pivot at column $k while reducing ${rowCount}x${columnCount} overdetermined system; back-substitution will validate the diagonal before division")
       }
     }
 
@@ -96,7 +96,12 @@ final class TimeSeriesUtils {
       for (int j = i + 1; j < columnCount; j++) {
         sum -= augmented[i][j] * x[j]
       }
-      x[i] = sum / augmented[i][i]
+      double diagonal = augmented[i][i]
+      if (Math.abs(diagonal) <= SINGULARITY_THRESHOLD) {
+        log.warn("Singular diagonal at column $i during back-substitution for ${rowCount}x${columnCount} system")
+        throw new IllegalArgumentException("Singular matrix at column ${i} - cannot solve linear system")
+      }
+      x[i] = sum / diagonal
     }
     validateFiniteVector(x, 'linear system solution')
     x
@@ -107,7 +112,8 @@ final class TimeSeriesUtils {
    *
    * @param A the matrix to invert
    * @return the inverted matrix
-   * @throws IllegalArgumentException if the input is invalid or the matrix is singular
+   * @throws IllegalArgumentException if the input is invalid, the matrix is singular,
+   * or the computed inverse contains non-finite values
    */
   static double[][] invertMatrix(double[][] A) {
     if (A == null || A.length == 0 || A[0].length == 0) {
@@ -233,6 +239,9 @@ final class TimeSeriesUtils {
     }
     if (X[0].length != beta.length) {
       throw new IllegalArgumentException("Coefficient count (${beta.length}) must match design matrix column count (${X[0].length})")
+    }
+    if (X.any { double[] row -> row.length != beta.length }) {
+      throw new IllegalArgumentException("Design matrix rows must all have the same length")
     }
 
     int n = y.length

@@ -156,6 +156,18 @@ class GrangerTest {
   }
 
   @Test
+  void testAutoLagSelectionThrowsWhenAllCandidatesFail() {
+    double[] x = (1..30).collect { it as double } as double[]
+    double[] y = (1..30).collect { it as double } as double[]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Granger.test(x, y, null as Integer)
+    }
+
+    assertTrue(exception.message.contains('Unable to select Granger lag'))
+  }
+
+  @Test
   void testResultInterpret() {
     double[] x = (1..30).collect { it + Math.random() * 0.5 } as double[]
     double[] y = (1..30).collect { it * 1.5 + Math.random() * 0.5 } as double[]

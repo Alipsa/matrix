@@ -203,14 +203,27 @@ class Granger {
           bestLag = p
         }
       } catch (IllegalArgumentException e) {
-        log.debug("Skipping lag $p during Granger AIC selection: ${e.message}")
+        if (isNumericalFailure(e)) {
+          log.warn("Numerical failure for Granger lag $p during AIC selection: ${e.message}")
+        } else {
+          log.debug("Skipping lag $p during Granger AIC selection: ${e.message}")
+        }
       } catch (RuntimeException e) {
-        log.error("Unexpected error while selecting lag $p for Granger causality: ${e.message}", e)
+        log.error("Potential bug while selecting lag $p for Granger causality: ${e.message}", e)
         throw e
       }
     }
 
+    if (bestAIC == Double.POSITIVE_INFINITY) {
+      throw new IllegalArgumentException("Unable to select Granger lag: all candidate lags 1..${maxPossibleLag} failed")
+    }
+
     return bestLag
+  }
+
+  private static boolean isNumericalFailure(IllegalArgumentException e) {
+    String message = e.message ?: ''
+    message.contains('Singular matrix') || message.contains('Non-finite value')
   }
 
   /**
