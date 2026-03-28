@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.kde
 
+import groovy.transform.CompileStatic
 
 /**
  * Bandwidth selection methods for kernel density estimation.
@@ -11,6 +12,7 @@ package se.alipsa.matrix.stats.kde
  * This class provides automatic bandwidth selection using common rules of thumb.
  */
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
+@CompileStatic
 class BandwidthSelector {
 
   /**

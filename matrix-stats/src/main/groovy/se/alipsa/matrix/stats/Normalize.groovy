@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats
 
 import static se.alipsa.matrix.core.ValueConverter.convert
 
+import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
@@ -20,6 +22,7 @@ import java.math.RoundingMode
  * </ol>
  *
  */
+@CompileStatic
 class Normalize {
 
   // ===== LOG NORMALIZATION =====
@@ -92,7 +95,7 @@ class Normalize {
    * Apply logarithmic normalization to a specific column in a Matrix.
    */
   static List<? extends Number> logNorm(Matrix table, String columnName, int... decimals) {
-    return logNorm(table.column(columnName).data as List, decimals)
+    return logNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -171,8 +174,8 @@ class Normalize {
       return values  // Return strings as-is
     }
 
-    def min = values.min()
-    def max = values.max()
+    Number min = values.min() as Number
+    Number max = values.max() as Number
 
     return values.collect { minMaxNorm(it as Number, min, max, decimals) }
   }
@@ -181,7 +184,7 @@ class Normalize {
    * Apply min-max normalization to a specific column in a Matrix.
    */
   static List<? extends Number> minMaxNorm(Matrix table, String columnName, int... decimals) {
-    return minMaxNorm(table.column(columnName).data as List, decimals)
+    return minMaxNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -265,8 +268,8 @@ class Normalize {
     }
 
     BigDecimal mean = Stat.mean(values)
-    def min = values.min()
-    def max = values.max()
+    Number min = values.min() as Number
+    Number max = values.max() as Number
 
     return values.collect { meanNorm(it as Number, mean, min, max, decimals) }
   }
@@ -275,7 +278,7 @@ class Normalize {
    * Apply mean normalization to a specific column in a Matrix.
    */
   static List<? extends Number> meanNorm(Matrix table, String columnName, int... decimals) {
-    return meanNorm(table.column(columnName).data as List, decimals)
+    return meanNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -361,7 +364,7 @@ class Normalize {
    * Apply standard deviation normalization to a specific column in a Matrix.
    */
   static List<? extends Number> stdScaleNorm(Matrix table, String columnName, int... decimals) {
-    return stdScaleNorm(table.column(columnName).data as List, decimals)
+    return stdScaleNorm(table.column(columnName) as List, decimals)
   }
 
   /**

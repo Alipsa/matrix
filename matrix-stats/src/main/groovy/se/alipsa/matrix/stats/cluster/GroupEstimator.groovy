@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.cluster
 
+import groovy.transform.CompileStatic
+
 /**
  * GroupEstimator determines the optimal number of clusters (k) for K-Means clustering
  * using heuristic and analytical methods. Choosing the right k is critical for meaningful
@@ -128,6 +130,7 @@ package se.alipsa.matrix.stats.cluster
  */
 
 @SuppressWarnings('DuplicateNumberLiteral')
+@CompileStatic
 class GroupEstimator {
 
   private final CalculationMethod method
@@ -142,7 +145,7 @@ class GroupEstimator {
 
   int estimateNumberOfGroups(double[][] points) {
     if (points.length < 2) {
-      throw new IllegalArgumentException("Number of points must be at least 2, but was $numPoints")
+      throw new IllegalArgumentException("Number of points must be at least 2, but was ${points.length}")
     }
 
     switch (method) {
@@ -185,7 +188,7 @@ class GroupEstimator {
     int estimatedSqrt = (int) Math.round(Math.sqrt(n / 2.0d))
     // More conservative heuristic: cbrt(n), tends to underestimate
     int estimatedQbrt = Math.max(2, (int) Math.round(Math.cbrt(points.length)))
-    return (estimatedSqrt + estimatedQbrt)/2
+    return ((estimatedSqrt + estimatedQbrt) / 2) as int
   }
 
   /**

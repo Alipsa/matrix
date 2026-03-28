@@ -1,9 +1,11 @@
 package se.alipsa.matrix.stats
 
 
+import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 
 /**
  * Utility class for randomly shuffling the rows of a Matrix.
@@ -104,6 +106,7 @@ import se.alipsa.matrix.core.Matrix
  * @see Sampler for train/test splitting after randomization
  * @see <a href="https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle">Fisher-Yates Shuffle Algorithm</a>
  */
+@CompileStatic
 class Randomize {
 
   /**
@@ -113,13 +116,13 @@ class Randomize {
    * @return a new Matrix with the rows randomly distributed
    */
   static Matrix randomOrder(@NotNull Matrix data) {
-    def copy = data.clone()
-    def rows = copy.rows()
+    Matrix copy = data.clone()
+    List<Row> rows = copy.rows()
     rows.shuffle()
     return Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
-        .rows(rows)
+        .rowList(rows)
         .types(copy.types())
         .build()
   }
@@ -132,13 +135,13 @@ class Randomize {
    * @return a new Matrix with the rows randomly distributed
    */
   static Matrix randomOrder(Matrix data, Random random) {
-    def copy = data.clone()
-    def rows = copy.rows()
+    Matrix copy = data.clone()
+    List<Row> rows = copy.rows()
     rows.shuffle(random)
     return Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
-        .rows(rows)
+        .rowList(rows)
         .types(copy.types())
         .build()
   }

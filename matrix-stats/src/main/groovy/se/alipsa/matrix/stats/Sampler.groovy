@@ -1,6 +1,9 @@
 package se.alipsa.matrix.stats
 
+import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 
 /**
  * Utility class for sampling and splitting matrices.
@@ -9,6 +12,7 @@ import se.alipsa.matrix.core.Matrix
  * which is useful for machine learning workflows. This is distinct from
  * Matrix.split() and Matrix.splitInto() which provide deterministic chunking.</p>
  */
+@CompileStatic
 class Sampler {
 
   /**
@@ -30,24 +34,25 @@ class Sampler {
     if (size == 0) {
       throw new IllegalArgumentException("Ratio ${ratio} produces an empty training set for ${data.rowCount()} rows")
     }
-    def samples = (0..data.rowCount()-1).collect()
+    List<Integer> samples = (0..data.rowCount() - 1).collect() as List<Integer>
     samples.shuffle()
-    def train = samples.take(size)
-    def test = samples.takeRight(data.rowCount()-size)
+    List<Integer> train = samples.take(size) as List<Integer>
+    List<Integer> test = samples.takeRight(data.rowCount() - size) as List<Integer>
+    List<Row> trainRows = data.rows(train)
+    List<Row> testRows = data.rows(test)
 
     Matrix trainMatrix = Matrix.builder()
-    .matrixName(data.matrixName + '-train')
-    .columnNames(data.columnNames())
-    .rows(data.rows(train))
-    .types(data.types())
-    .build()
-    Matrix testMatrix =
-        Matrix.builder()
-            .matrixName(data.matrixName + '-test')
-            .columnNames(data.columnNames())
-            .rows(data.rows(test))
-            .types(data.types())
-            .build()
+        .matrixName(data.matrixName + '-train')
+        .columnNames(data.columnNames())
+        .rowList(trainRows)
+        .types(data.types())
+        .build()
+    Matrix testMatrix = Matrix.builder()
+        .matrixName(data.matrixName + '-test')
+        .columnNames(data.columnNames())
+        .rowList(testRows)
+        .types(data.types())
+        .build()
     return [trainMatrix, testMatrix]
   }
 }

@@ -1,6 +1,8 @@
 package se.alipsa.matrix.stats.solver
 
 
+import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.analysis.UnivariateFunction
 import org.apache.commons.math3.analysis.solvers.AllowedSolution
 import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
@@ -9,6 +11,7 @@ import org.apache.commons.math3.analysis.solvers.UnivariateSolver
 /**
  * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */
+@CompileStatic
 class GoalSeek {
 
   /**

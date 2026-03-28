@@ -1,6 +1,8 @@
 package se.alipsa.matrix.stats.cluster
 
 
+import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
@@ -104,7 +106,7 @@ import se.alipsa.matrix.core.Matrix
  * @see GroupEstimator
  * @see ClusteredPoint
  */
-
+@CompileStatic
 class KMeans {
 
   private Matrix matrix
@@ -166,7 +168,10 @@ class KMeans {
   }
 
   int getExecutionTimeMillis() {
-    return clustering?.executionTimeMillis ?: -1
+    if (clustering == null) {
+      return -1
+    }
+    return clustering.executionTimeMillis as int
   }
 
 }
