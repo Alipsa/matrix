@@ -2,6 +2,14 @@ package regression
 
 import static org.junit.jupiter.api.Assertions.*
 
+import org.apache.commons.math3.analysis.MultivariateFunction
+import org.apache.commons.math3.optim.InitialGuess
+import org.apache.commons.math3.optim.MaxEval
+import org.apache.commons.math3.optim.PointValuePair
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
+import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.regression.LogisticRegression
@@ -210,5 +218,49 @@ class LogisticRegressionTest {
 
     assertTrue(prob1 < prob4, 'Probability should increase with x')
     assertTrue(prob4 < prob8, 'Probability should increase with x')
+  }
+
+  @Test
+  void testMatchesApacheNelderMeadReference() {
+    List<Double> x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    List<Integer> y = [0, 0, 1, 0, 1, 1, 1, 1]
+
+    def lr = new LogisticRegression(x, y)
+    double[] expected = apacheLogisticFit(x, y)
+
+    assertEquals(expected[0], lr.intercept.doubleValue(), 1e-4)
+    assertEquals(expected[1], lr.slope.doubleValue(), 1e-4)
+  }
+
+  private static double[] apacheLogisticFit(List<? extends Number> xValues, List<? extends Number> yValues) {
+    int n = xValues.size()
+    double[] x = xValues.collect { it.doubleValue() } as double[]
+    double[] y = yValues.collect { it.doubleValue() } as double[]
+
+    MultivariateFunction negativeLogLikelihood = new MultivariateFunction() {
+      @Override
+      double value(double[] coefficients) {
+        double beta0 = coefficients[0]
+        double beta1 = coefficients[1]
+        double logLikelihood = 0.0d
+        for (int i = 0; i < n; i++) {
+          double z = beta0 + beta1 * x[i]
+          double p = 1.0d / (1.0d + Math.exp(-z))
+          p = Math.max(1e-15d, Math.min(1.0d - 1e-15d, p))
+          logLikelihood += y[i] * Math.log(p) + (1.0d - y[i]) * Math.log(1.0d - p)
+        }
+        -logLikelihood
+      }
+    }
+
+    SimplexOptimizer optimizer = new SimplexOptimizer(1e-10, 1e-30)
+    PointValuePair optimum = optimizer.optimize(
+        new MaxEval(10_000),
+        new ObjectiveFunction(negativeLogLikelihood),
+        GoalType.MINIMIZE,
+        new InitialGuess([0.0d, 0.0d] as double[]),
+        new NelderMeadSimplex(2)
+    )
+    optimum.point
   }
 }

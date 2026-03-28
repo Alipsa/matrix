@@ -3,11 +3,6 @@ package se.alipsa.matrix.stats.solver
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.analysis.UnivariateFunction
-import org.apache.commons.math3.analysis.solvers.AllowedSolution
-import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
-import org.apache.commons.math3.analysis.solvers.UnivariateSolver
-
 /**
  * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */
@@ -16,9 +11,8 @@ class GoalSeek {
 
   /**
    * Provides similar functionality to the excel/calc goal seek function.
-   * It uses an extension of the Brent-Dekker algorithm which uses inverse nth order polynomial
-   * interpolation instead of inverse quadratic interpolation, and which allows selection
-   * of the side of the convergence interval for result bracketing.
+   * It uses a native Brent-Dekker bracketing solver to combine bisection robustness
+   * with secant and inverse quadratic interpolation steps when they are safe.
    * Example usage
    * <pre><code>
    * def val = GoalSeek.solve(27000, 0, 100) {
@@ -43,24 +37,31 @@ class GoalSeek {
    * </ul>
    * @throws RuntimeException if the goal cannot be found within the maxIterations
    */
-  static Map solve(final double targetValue, double minValue, double maxValue, double threshold = 1.0e-8, int maxIterations = 1000, Closure<Double> algorithm) {
+  static Map solve(
+      final double targetValue,
+      double minValue,
+      double maxValue,
+      double threshold = 1.0e-8,
+      int maxIterations = 1000,
+      Closure<? extends Number> algorithm
+  ) {
     if (minValue >= maxValue) {
       throw new IllegalArgumentException("minValue ($minValue) must be smaller than maxValue ($maxValue)")
     }
-    UnivariateFunction function = new UnivariateFunction() {
-      @Override
-      double value(double v) {
-        targetValue - algorithm.call(v)
-      }
-    }
+    UnivariateObjective function = { double v -> targetValue - (algorithm.call(v) as double) } as UnivariateObjective
     // Recommended 1.0e-12 when a an absolute accuracy is 1.0e-8 so the divide by 10 000 to get a similar ratio
     final double relativeAccuracy = threshold / 10_000
     final double absoluteAccuracy = threshold
-    final int maxOrder = 5
-    UnivariateSolver solver = new BracketingNthOrderBrentSolver(relativeAccuracy, absoluteAccuracy, maxOrder);
-    double val = solver.solve(maxIterations, function, minValue, maxValue, AllowedSolution.LEFT_SIDE);
-    //[value: val, result: algorithm.call(val), diff: seeker.getDiff(currentValue), iterations: i]
-    double result = algorithm.call(val)
-    return [value: val, result: result, diff: (targetValue-result), iterations: solver.getEvaluations()]
+    BrentSolver.SolverResult solverResult = BrentSolver.solve(
+        function,
+        minValue,
+        maxValue,
+        relativeAccuracy,
+        absoluteAccuracy,
+        maxIterations
+    )
+    double val = solverResult.root
+    double result = algorithm.call(val) as double
+    return [value: val, result: result, diff: (targetValue-result), iterations: solverResult.evaluations]
   }
 }

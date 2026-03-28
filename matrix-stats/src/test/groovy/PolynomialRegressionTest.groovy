@@ -1,5 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*
 
+import org.apache.commons.math3.fitting.PolynomialCurveFitter
+import org.apache.commons.math3.fitting.WeightedObservedPoints
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.regression.PolynomialRegression
@@ -121,5 +123,26 @@ class PolynomialRegressionTest {
     }
     assertTrue(ex.message.contains('at least 3'))
     assertTrue(ex.message.contains('degree 2'))
+  }
+
+  @Test
+  void testMatchesApacheCurveFitterReference() {
+    def x = [1, 2, 3, 4, 5]
+    def y = [1, 4, 9, 16, 25]
+
+    def poly = new PolynomialRegression(x, y, 2)
+    double[] expected = apachePolynomialFit(x, y, 2)
+
+    for (int i = 0; i < expected.length; i++) {
+      assertEquals(expected[i], poly.getCoefficient(i).doubleValue(), 1e-10)
+    }
+  }
+
+  private static double[] apachePolynomialFit(List<? extends Number> xValues, List<? extends Number> yValues, int degree) {
+    WeightedObservedPoints obs = new WeightedObservedPoints()
+    for (int i = 0; i < xValues.size(); i++) {
+      obs.add(xValues[i].doubleValue(), yValues[i].doubleValue())
+    }
+    PolynomialCurveFitter.create(degree).fit(obs.toList())
   }
 }

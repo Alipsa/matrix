@@ -1,5 +1,14 @@
 import static org.junit.jupiter.api.Assertions.*
 
+import org.apache.commons.math3.optim.MaxIter
+import org.apache.commons.math3.optim.PointValuePair
+import org.apache.commons.math3.optim.linear.LinearConstraint
+import org.apache.commons.math3.optim.linear.LinearConstraintSet
+import org.apache.commons.math3.optim.linear.LinearObjectiveFunction
+import org.apache.commons.math3.optim.linear.NonNegativeConstraint
+import org.apache.commons.math3.optim.linear.Relationship
+import org.apache.commons.math3.optim.linear.SimplexSolver
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -312,5 +321,51 @@ class QuantileRegressionTest {
     // Upper quantile should have higher slope due to outliers
     assertTrue(qr75.slope >= qr50.slope,
       "Upper quantile should have higher slope. q75=${qr75.slope}, q50=${qr50.slope}")
+  }
+
+  @Test
+  void testMatchesApacheSimplexReference() {
+    def x = [1, 2, 3, 4, 5]
+    def y = [3.1, 4.9, 7.2, 8.8, 11.1]
+
+    def qr = new QuantileRegression(x, y, 0.5)
+    double[] expected = apacheQuantileFit(x, y, 0.5d)
+
+    assertEquals(expected[0], qr.intercept as double, 1e-6)
+    assertEquals(expected[1], qr.slope as double, 1e-6)
+  }
+
+  private static double[] apacheQuantileFit(List<? extends Number> xValues, List<? extends Number> yValues, double tau) {
+    int n = xValues.size()
+    double[] x = xValues.collect { it as double } as double[]
+    double[] y = yValues.collect { it as double } as double[]
+    int numVars = 4 + 2 * n
+    double[] objective = new double[numVars]
+    for (int i = 0; i < n; i++) {
+      objective[4 + 2 * i] = tau
+      objective[4 + 2 * i + 1] = 1.0d - tau
+    }
+
+    List<LinearConstraint> constraints = []
+    for (int i = 0; i < n; i++) {
+      double[] coeffs = new double[numVars]
+      coeffs[0] = 1.0d
+      coeffs[1] = -1.0d
+      coeffs[2] = x[i]
+      coeffs[3] = -x[i]
+      coeffs[4 + 2 * i] = 1.0d
+      coeffs[4 + 2 * i + 1] = -1.0d
+      constraints << new LinearConstraint(coeffs, Relationship.EQ, y[i])
+    }
+
+    PointValuePair solution = new SimplexSolver().optimize(
+        new MaxIter(10_000),
+        new LinearObjectiveFunction(objective, 0.0d),
+        new LinearConstraintSet(constraints),
+        GoalType.MINIMIZE,
+        new NonNegativeConstraint(true)
+    )
+    double[] point = solution.point
+    [(point[0] - point[1]), (point[2] - point[3])] as double[]
   }
 }

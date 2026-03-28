@@ -2,17 +2,14 @@ package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.fitting.PolynomialCurveFitter
-import org.apache.commons.math3.fitting.WeightedObservedPoints
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
 import java.math.RoundingMode
 
 /**
  * Polynomial regression fits a polynomial of degree n to the data.
- * Uses commons-math3's PolynomialCurveFitter.
  *
  * The model is: Y = a0 + a1*X + a2*X^2 + ... + an*X^n
  *
@@ -62,16 +59,39 @@ class PolynomialRegression {
 
     this.degree = degree
 
-    // Build observations for fitting
-    WeightedObservedPoints obs = new WeightedObservedPoints()
     int n = x.size()
+    double[][] design = new double[n][degree + 1]
+    double[] response = new double[n]
     for (int i = 0; i < n; i++) {
-      obs.add(x[i].doubleValue(), y[i].doubleValue())
+      double xValue = x[i].doubleValue()
+      double term = 1.0d
+      for (int j = 0; j <= degree; j++) {
+        design[i][j] = term
+        term *= xValue
+      }
+      response[i] = y[i].doubleValue()
     }
 
-    // Fit polynomial
-    PolynomialCurveFitter fitter = PolynomialCurveFitter.create(degree)
-    coefficients = fitter.fit(obs.toList())
+    double[][] xt = MatrixAlgebra.transpose(design)
+    double[][] xtx = MatrixAlgebra.multiply(xt, design)
+    double[][] xtxInv = MatrixAlgebra.inverse(xtx)
+    double[] xty = new double[degree + 1]
+    for (int i = 0; i <= degree; i++) {
+      double sum = 0.0d
+      for (int j = 0; j < n; j++) {
+        sum += xt[i][j] * response[j]
+      }
+      xty[i] = sum
+    }
+
+    coefficients = new double[degree + 1]
+    for (int i = 0; i <= degree; i++) {
+      double sum = 0.0d
+      for (int j = 0; j <= degree; j++) {
+        sum += xtxInv[i][j] * xty[j]
+      }
+      coefficients[i] = sum
+    }
 
     // Compute R-squared
     computeRSquared(x, y)
