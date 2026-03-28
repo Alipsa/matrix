@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.CompileStatic
 
 import org.apache.commons.math3.distribution.FDistribution
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * The Granger causality test determines whether one time series is useful in forecasting another.
@@ -72,6 +73,7 @@ import org.apache.commons.math3.distribution.FDistribution
 @CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Granger {
+  private static final Logger log = Logger.getLogger(Granger)
 
   /**
    * Performs the Granger causality test.
@@ -200,8 +202,11 @@ class Granger {
           bestAIC = aic
           bestLag = p
         }
-      } catch (Exception ignored) {
-        // Skip this lag if calculation fails
+      } catch (IllegalArgumentException e) {
+        log.debug("Skipping lag $p during Granger AIC selection: ${e.message}")
+      } catch (RuntimeException e) {
+        log.error("Unexpected error while selecting lag $p for Granger causality: ${e.message}", e)
+        throw e
       }
     }
 

@@ -103,6 +103,18 @@ class GrangerTest {
   }
 
   @Test
+  void testSingularUnrestrictedModelThrows() {
+    double[] x = (1..30).collect { it as double } as double[]
+    double[] y = (1..30).collect { it as double } as double[]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Granger.test(x, y, 1)
+    }
+
+    assertTrue(exception.message.contains('Singular matrix'))
+  }
+
+  @Test
   void testDifferentLags() {
     double[] x = new double[50]
     double[] y = new double[50]

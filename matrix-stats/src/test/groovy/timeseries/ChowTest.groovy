@@ -110,6 +110,18 @@ class ChowTest {
   }
 
   @Test
+  void testSingularDesignMatrixThrows() {
+    double[] y = (1..20).collect { 2.0 + 3.0 * it } as double[]
+    double[][] X = (1..20).collect { [1.0, it as double, it as double] as double[] } as double[][]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Chow.test(y, X, 10)
+    }
+
+    assertTrue(exception.message.contains('Singular matrix'))
+  }
+
+  @Test
   void testDifferentBreakPoints() {
     // Use seeded random for deterministic test
     Random random = new Random(42)

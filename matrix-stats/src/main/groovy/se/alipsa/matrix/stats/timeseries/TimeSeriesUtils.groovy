@@ -2,24 +2,36 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+import se.alipsa.matrix.core.util.Logger
 
+/**
+ * Shared linear algebra helpers for the time-series test implementations in this package.
+ * The solving routines preserve legacy behavior where required by older callers while adding
+ * consistent validation, singularity checks, and diagnostic logging for numerical edge cases.
+ */
 @CompileStatic
 @PackageScope
+@SuppressWarnings(['ParameterName'])
 final class TimeSeriesUtils {
 
+  /** Threshold below which a pivot is treated as numerically singular. */
   private static final double SINGULARITY_THRESHOLD = 1e-14
+  private static final Logger log = Logger.getLogger(TimeSeriesUtils)
 
   private TimeSeriesUtils() {
   }
 
   /**
    * Solve a linear system {@code Ax = b} using Gaussian elimination with partial pivoting.
-   * Rectangular overdetermined systems are handled directly to preserve the original
-   * timeseries implementation behavior used by {@link AdfGls}.
+   * Rectangular overdetermined systems are reduced over the pivoted column subset to preserve
+   * the original timeseries implementation behavior used by {@link AdfGls}; this is legacy
+   * compatibility behavior rather than a general least-squares solver.
    *
    * @param A the coefficient matrix
    * @param b the right-hand-side vector
    * @return the solved coefficient vector
+   * @throws IllegalArgumentException if the inputs are invalid, the square system is singular,
+   * or the computed solution contains non-finite values
    */
   static double[] solveLinearSystem(double[][] A, double[] b) {
     if (A == null || b == null) {
@@ -70,6 +82,11 @@ final class TimeSeriesUtils {
             augmented[i][j] -= factor * augmented[k][j]
           }
         }
+      } else if (rowCount == columnCount) {
+        log.warn("Singular pivot at column $k while solving ${rowCount}x${columnCount} system")
+        throw new IllegalArgumentException("Singular matrix at column ${k} - cannot solve linear system")
+      } else {
+        log.warn("Near-singular pivot at column $k while solving ${rowCount}x${columnCount} overdetermined system; skipping elimination to preserve legacy behavior")
       }
     }
 
@@ -81,14 +98,16 @@ final class TimeSeriesUtils {
       }
       x[i] = sum / augmented[i][i]
     }
+    validateFiniteVector(x, 'linear system solution')
     x
   }
 
   /**
-   * Invert a square matrix using Gauss-Jordan elimination.
+   * Invert a square matrix using Gauss-Jordan elimination with partial pivoting.
    *
    * @param A the matrix to invert
    * @return the inverted matrix
+   * @throws IllegalArgumentException if the input is invalid or the matrix is singular
    */
   static double[][] invertMatrix(double[][] A) {
     if (A == null || A.length == 0 || A[0].length == 0) {
@@ -113,7 +132,15 @@ final class TimeSeriesUtils {
     }
 
     for (int k = 0; k < n; k++) {
+      int maxRow = findPivotRow(augmented, k, n)
+      if (maxRow != k) {
+        swapRows(augmented, k, maxRow)
+      }
       double pivot = augmented[k][k]
+      if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
+        log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
+        throw new IllegalArgumentException("Singular matrix at column ${k} - cannot invert matrix")
+      }
       for (int j = 0; j < 2 * n; j++) {
         augmented[k][j] /= pivot
       }
@@ -133,6 +160,7 @@ final class TimeSeriesUtils {
         result[i][j] = augmented[i][j + n]
       }
     }
+    validateFiniteMatrix(result, 'matrix inverse')
     result
   }
 
@@ -142,6 +170,7 @@ final class TimeSeriesUtils {
    * @param y the response vector
    * @param X the design matrix
    * @return the fitted regression coefficients
+   * @throws IllegalArgumentException if the inputs are invalid or the normal equations cannot be solved
    */
   static double[] fitOLS(double[] y, double[][] X) {
     if (y == null || X == null) {
@@ -190,6 +219,7 @@ final class TimeSeriesUtils {
    * @param X the design matrix
    * @param beta the fitted coefficient vector
    * @return the residual sum of squares
+   * @throws IllegalArgumentException if the inputs are invalid
    */
   static double calculateRSS(double[] y, double[][] X, double[] beta) {
     if (y == null || X == null || beta == null) {
@@ -216,6 +246,39 @@ final class TimeSeriesUtils {
       rss += residual * residual
     }
     rss
+  }
+
+  private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {
+    int maxRow = pivotColumn
+    double maxVal = Math.abs(matrix[pivotColumn][pivotColumn])
+    for (int i = pivotColumn + 1; i < rowCount; i++) {
+      double value = Math.abs(matrix[i][pivotColumn])
+      if (value > maxVal) {
+        maxVal = value
+        maxRow = i
+      }
+    }
+    maxRow
+  }
+
+  private static void validateFiniteVector(double[] values, String label) {
+    for (int i = 0; i < values.length; i++) {
+      if (!Double.isFinite(values[i])) {
+        log.error("Non-finite value in $label at index $i: ${values[i]}")
+        throw new IllegalArgumentException("Non-finite value in ${label} at index ${i}")
+      }
+    }
+  }
+
+  private static void validateFiniteMatrix(double[][] matrix, String label) {
+    for (int i = 0; i < matrix.length; i++) {
+      for (int j = 0; j < matrix[i].length; j++) {
+        if (!Double.isFinite(matrix[i][j])) {
+          log.error("Non-finite value in $label at row $i, column $j: ${matrix[i][j]}")
+          throw new IllegalArgumentException("Non-finite value in ${label} at row ${i}, column ${j}")
+        }
+      }
+    }
   }
 
   private static void swapRows(double[][] matrix, int firstRow, int secondRow) {

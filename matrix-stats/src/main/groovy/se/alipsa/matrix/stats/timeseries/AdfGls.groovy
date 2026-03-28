@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * The ADF-GLS test (or DF-GLS test) is a test for a unit root in a time series.
@@ -55,6 +56,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class AdfGls {
+  private static final Logger log = Logger.getLogger(AdfGls)
 
   /**
    * Performs the ADF-GLS test for a unit root.
@@ -280,8 +282,11 @@ class AdfGls {
           bestMAIC = maic
           bestLag = p
         }
-      } catch (Exception ignored) {
-        // Skip this lag if calculation fails
+      } catch (IllegalArgumentException e) {
+        log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
+      } catch (RuntimeException e) {
+        log.error("Unexpected error while selecting lag $p for ADF-GLS: ${e.message}", e)
+        throw e
       }
     }
 

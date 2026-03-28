@@ -206,7 +206,7 @@ class AdfGlsTest {
   void testDriftVsTrend() {
     double[] data = new double[30]
     for (int i = 0; i < 30; i++) {
-      data[i] = 100 + i * 0.5
+      data[i] = 100 + i * 0.5 + Math.sin(i * 0.2) * 0.1
     }
 
     // Test both types
