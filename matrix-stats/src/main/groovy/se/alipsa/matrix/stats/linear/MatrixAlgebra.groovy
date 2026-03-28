@@ -14,6 +14,7 @@ final class MatrixAlgebra {
 
   private static final double SINGULARITY_THRESHOLD = 1e-14
   private static final double SYMMETRY_THRESHOLD = 1e-10
+  private static final double JACOBI_CONVERGENCE_THRESHOLD = 1e-10
   private static final int MAX_JACOBI_SWEEPS = 100
   private static final Logger log = Logger.getLogger(MatrixAlgebra)
 
@@ -125,7 +126,8 @@ final class MatrixAlgebra {
    *
    * @param matrix the matrix to invert
    * @return the inverse matrix
-   * @throws IllegalArgumentException if the matrix is invalid or singular
+   * @throws IllegalArgumentException if the matrix is invalid
+   * @throws SingularMatrixException if the matrix is singular
    */
   static double[][] inverse(double[][] matrix) {
     int[] shape = validateRectangular(matrix, 'matrix')
@@ -151,7 +153,7 @@ final class MatrixAlgebra {
       double pivot = augmented[k][k]
       if (Math.abs(pivot) <= SINGULARITY_THRESHOLD) {
         log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
-        throw new IllegalArgumentException("Singular matrix at column ${k} - cannot invert matrix")
+        throw new SingularMatrixException("Singular matrix at column ${k} - cannot invert matrix")
       }
 
       for (int j = 0; j < 2 * n; j++) {
@@ -184,7 +186,8 @@ final class MatrixAlgebra {
    *
    * @param matrix the symmetric positive-definite matrix
    * @return lower-triangular matrix {@code L} such that {@code LL' = matrix}
-   * @throws IllegalArgumentException if the matrix is invalid, non-symmetric, or not positive definite
+   * @throws IllegalArgumentException if the matrix is invalid or non-symmetric
+   * @throws SingularMatrixException if the matrix is not positive definite
    */
   static double[][] cholesky(double[][] matrix) {
     int[] shape = validateRectangular(matrix, 'matrix')
@@ -205,7 +208,7 @@ final class MatrixAlgebra {
         if (i == j) {
           if (sum <= SINGULARITY_THRESHOLD) {
             log.warn("Non-positive diagonal at row $i during Cholesky decomposition")
-            throw new IllegalArgumentException("Matrix is not positive definite")
+            throw new SingularMatrixException("Matrix is not positive definite")
           }
           lower[i][j] = Math.sqrt(sum)
         } else {
@@ -253,7 +256,7 @@ final class MatrixAlgebra {
         }
       }
 
-      if (maxOffDiagonal <= SYMMETRY_THRESHOLD) {
+      if (maxOffDiagonal <= JACOBI_CONVERGENCE_THRESHOLD) {
         return diagonal(a)
       }
 

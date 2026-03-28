@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.linear.SingularMatrixException
 
 /**
  * The Johansen cointegration test, named after Søren Johansen, is a procedure for testing cointegration
@@ -196,7 +197,7 @@ class Johansen {
     double[][] ztZInv
     try {
       ztZInv = MatrixAlgebra.inverse(ztZ)
-    } catch (IllegalArgumentException ignored) {
+    } catch (SingularMatrixException ignored) {
       throw new IllegalArgumentException("Singular matrix in short-run regression - cannot perform Johansen test")
     }
 

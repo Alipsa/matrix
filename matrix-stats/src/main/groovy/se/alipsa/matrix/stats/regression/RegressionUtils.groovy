@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.regression
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.linear.SingularMatrixException
 
 /**
  * Internal helpers for regression diagnostics and standard error calculations.
@@ -35,7 +36,7 @@ class RegressionUtils {
     double[][] inverse
     try {
       inverse = MatrixAlgebra.inverse(xtx)
-    } catch (IllegalArgumentException ignored) {
+    } catch (SingularMatrixException ignored) {
       return EMPTY_BIG_DECIMAL_MATRIX
     }
     BigDecimal[][] result = new BigDecimal[inverse.length][inverse[0].length]
