@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.util.Logger
 
 /**

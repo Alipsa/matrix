@@ -18,15 +18,18 @@ class Sampler {
    * This is useful for creating train/test splits for machine learning models.</p>
    *
    * @param data the matrix to split
-   * @param ratio the fraction of data to use for training (0 < ratio < 1)
+   * @param ratio the fraction of data to use for training (0 < ratio <= 1)
    * @return a list containing [trainMatrix, testMatrix]
    * @throws IllegalArgumentException if ratio is not between 0 and 1
    */
   static List<Matrix> split(Matrix data, BigDecimal ratio) {
-    if (ratio > 1.0 || ratio < 0) {
-      throw new IllegalArgumentException("Ratio must be a number between 0 and 1")
+    if (ratio > 1.0 || ratio <= 0) {
+      throw new IllegalArgumentException("Ratio must be greater than 0 and at most 1")
     }
     int size = (int) (data.rowCount() * ratio)
+    if (size == 0) {
+      throw new IllegalArgumentException("Ratio ${ratio} produces an empty training set for ${data.rowCount()} rows")
+    }
     def samples = (0..data.rowCount()-1).collect()
     samples.shuffle()
     def train = samples.take(size)

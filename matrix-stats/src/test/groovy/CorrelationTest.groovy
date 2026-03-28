@@ -70,4 +70,17 @@ class CorrelationTest {
     // BigDecimal implementation gives comparable precision
     assertEquals(-0.47140452079103, corKendall(x1, x2).setScale(14, RoundingMode.HALF_EVEN), 1e-14)
   }
+
+  @Test
+  void testKendallsCorrelationWithMixedNumericTypesAndTies() {
+    List<Number> x = [1, 1L, 2.0G, 2.0d, 3]
+    List<Number> y = [3.0G, 2, 2L, 1.0d, 1]
+
+    def apacheCor = new KendallsCorrelation().correlation(
+        x.collect { it as double } as double[],
+        y.collect { it as double } as double[]
+    )
+
+    assertEquals(apacheCor, corKendall(x, y) as double, 1e-14)
+  }
 }

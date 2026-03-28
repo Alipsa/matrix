@@ -156,11 +156,12 @@ class DurbinWatsonTest {
 
   @Test
   void testZeroResiduals() {
-    // All zeros should handle gracefully (though not a realistic scenario)
     List<Double> residuals = [0.0, 0.0, 0.0, 0.0]
 
-    // This will cause division by zero - the result will be NaN or Infinity
-    def result = DurbinWatson.test(residuals)
-    assertNotNull(result, 'Result should not be null even with zero residuals')
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      DurbinWatson.test(residuals)
+    }
+
+    assertEquals('Durbin-Watson test requires at least one non-zero residual', exception.message)
   }
 }
