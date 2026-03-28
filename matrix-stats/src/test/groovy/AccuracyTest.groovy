@@ -61,6 +61,22 @@ class AccuracyTest {
   }
 
   @Test
+  void testZeroActualsRejectedForPercentageMetrics() {
+    def actuals = [10, 0, 30]
+    def preds = [9, 1, 29]
+
+    IllegalArgumentException evaluateException = assertThrows(IllegalArgumentException) {
+      Accuracy.evaluatePredictions(actuals, preds)
+    }
+    assertEquals('Actual values must be non-zero for evaluatePredictions (found 0 at index 1)', evaluateException.message)
+
+    IllegalArgumentException mapeException = assertThrows(IllegalArgumentException) {
+      Accuracy.mape(actuals, preds)
+    }
+    assertEquals('Actual values must be non-zero for mape (found 0 at index 1)', mapeException.message)
+  }
+
+  @Test
   void testSmape() {
     def actuals = [10, 20, 30, 40, 50]
     def preds = [12, 18, 28, 45, 48]

@@ -50,6 +50,9 @@ class DurbinWatson {
     for (int i = 0; i < n; i++) {
       denominator += res[i] * res[i]
     }
+    if (denominator == 0.0) {
+      throw new IllegalArgumentException('Durbin-Watson test requires at least one non-zero residual')
+    }
 
     double dwStatistic = numerator / denominator
 

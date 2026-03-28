@@ -114,14 +114,14 @@ publishing {
       pom {
         name = 'Matrix Stats'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-stats"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-stats"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-stats/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-stats/LICENSE'
           }
         }
         developers {
@@ -131,7 +131,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-stats/tree/master'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-stats'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }

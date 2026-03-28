@@ -33,12 +33,15 @@ class Ellipse {
    * @param type Ellipse type: 't', 'norm', or 'euclid' (default 't')
    * @param segments Number of points to generate (default 51)
    * @return EllipseData containing x,y coordinates of the ellipse
+   * @throws IllegalArgumentException if either input has fewer than 3 points or the input sizes differ
    */
   static EllipseData calculate(List<BigDecimal> xValues, List<BigDecimal> yValues,
                                 double level = 0.95, String type = 't', int segments = 51) {
-    if (xValues.size() < 3 || yValues.size() < 3 || xValues.size() != yValues.size()) {
-      // Need at least 3 points for ellipse
-      return new EllipseData([], [])
+    if (xValues.size() != yValues.size()) {
+      throw new IllegalArgumentException("X and Y must have the same number of points (got ${xValues.size()} and ${yValues.size()})")
+    }
+    if (xValues.size() < 3) {
+      throw new IllegalArgumentException("Ellipse calculation requires at least 3 points per axis (got ${xValues.size()})")
     }
 
     int n = xValues.size()

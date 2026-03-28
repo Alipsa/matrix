@@ -346,11 +346,7 @@ class KernelDensity {
    * @return list of density estimates
    */
   List<Double> density(List<? extends Number> points) {
-    List<Double> result = new ArrayList<>(points.size())
-    for (Number p : points) {
-      result.add(computeDensityAt(p.doubleValue()))
-    }
-    return result
+    return points.collect { Number point -> computeDensityAt(point.doubleValue()) }
   }
 
   /**
@@ -405,12 +401,8 @@ class KernelDensity {
    * @return a Matrix containing the density estimate
    */
   Matrix toMatrix() {
-    List<Double> xList = new ArrayList<>(n)
-    List<Double> densityList = new ArrayList<>(n)
-    for (int i = 0; i < n; i++) {
-      xList.add(x[i])
-      densityList.add(density[i])
-    }
+    List<Double> xList = (0..<n).collect { int i -> x[i] }
+    List<Double> densityList = (0..<n).collect { int i -> density[i] }
 
     return Matrix.builder()
         .matrixName('KernelDensity')
@@ -429,11 +421,7 @@ class KernelDensity {
    * @return list of [x, density] pairs
    */
   List<double[]> toPointList() {
-    List<double[]> result = new ArrayList<>(n)
-    for (int i = 0; i < n; i++) {
-      result.add([x[i], density[i]] as double[])
-    }
-    return result
+    return (0..<n).collect { int i -> [x[i], density[i]] as double[] }
   }
 
   @Override

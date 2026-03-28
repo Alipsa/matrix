@@ -134,6 +134,20 @@ class AdfGlsTest {
   }
 
   @Test
+  void testAutoLagSelectionThrowsWhenAllCandidatesFail() {
+    double[] data = new double[30]
+    for (int i = 0; i < 30; i++) {
+      data[i] = 100 + i * 0.5
+    }
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      AdfGls.test(data, null as Integer, "trend")
+    }
+
+    assertTrue(exception.message.contains('Unable to select ADF-GLS lag'))
+  }
+
+  @Test
   void testCriticalValues() {
     // Test that critical values are reasonable
     double[] data = new double[100]
@@ -206,7 +220,7 @@ class AdfGlsTest {
   void testDriftVsTrend() {
     double[] data = new double[30]
     for (int i = 0; i < 30; i++) {
-      data[i] = 100 + i * 0.5
+      data[i] = 100 + i * 0.5 + Math.sin(i * 0.2) * 0.1
     }
 
     // Test both types

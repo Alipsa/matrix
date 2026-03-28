@@ -14,20 +14,26 @@ class EllipseTest {
 
   @Test
   void testInsufficientPoints() {
-    // Test with 0 points
-    def result0 = Ellipse.calculate([], [], 0.95, 't', 51)
-    assertTrue(result0.x.isEmpty(), "Should return empty for 0 points")
-    assertTrue(result0.y.isEmpty(), "Should return empty for 0 points")
+    assertEquals('Ellipse calculation requires at least 3 points per axis (got 0)', assertThrows(IllegalArgumentException) {
+      Ellipse.calculate([], [], 0.95, 't', 51)
+    }.message)
 
-    // Test with 1 point
-    def result1 = Ellipse.calculate([1.0G], [1.0G], 0.95, 't', 51)
-    assertTrue(result1.x.isEmpty(), "Should return empty for 1 point")
-    assertTrue(result1.y.isEmpty(), "Should return empty for 1 point")
+    assertEquals('Ellipse calculation requires at least 3 points per axis (got 1)', assertThrows(IllegalArgumentException) {
+      Ellipse.calculate([1.0G], [1.0G], 0.95, 't', 51)
+    }.message)
 
-    // Test with 2 points
-    def result2 = Ellipse.calculate([1.0G, 2.0G], [1.0G, 2.0G], 0.95, 't', 51)
-    assertTrue(result2.x.isEmpty(), "Should return empty for 2 points")
-    assertTrue(result2.y.isEmpty(), "Should return empty for 2 points")
+    assertEquals('Ellipse calculation requires at least 3 points per axis (got 2)', assertThrows(IllegalArgumentException) {
+      Ellipse.calculate([1.0G, 2.0G], [1.0G, 2.0G], 0.95, 't', 51)
+    }.message)
+  }
+
+  @Test
+  void testMismatchedAxisLengthsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Ellipse.calculate([1.0G, 2.0G, 3.0G], [1.0G, 2.0G], 0.95, 't', 51)
+    }
+
+    assertEquals('X and Y must have the same number of points (got 3 and 2)', exception.message)
   }
 
   @Test
@@ -233,18 +239,14 @@ class EllipseTest {
 
   @Test
   void testMismatchedSizes() {
-    // Test with mismatched x and y sizes
     def xVals = [1G, 2G, 3G]
-    def yVals = [1G, 2G, 3G, 4G] // One extra
+    def yVals = [1G, 2G, 3G, 4G]
 
-    def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
+    }
 
-    // Should handle gracefully (will only use min(xVals.size, yVals.size))
-    // Actually, current implementation doesn't check sizes explicitly,
-    // so this may throw an IndexOutOfBoundsException or use only matching pairs
-    // For now, just verify it doesn't crash catastrophically
-    assertTrue(result.x.size() >= 0)
-    assertTrue(result.y.size() >= 0)
+    assertEquals('X and Y must have the same number of points (got 3 and 4)', exception.message)
   }
 
   // Helper methods
