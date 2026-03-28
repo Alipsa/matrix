@@ -54,27 +54,14 @@ class ChiSquared {
 
     int rows = table.rowCount()
     int cols = table.columnCount()
-
-    // Calculate row and column totals
-    double[] rowTotals = new double[rows]
-    double[] colTotals = new double[cols]
-    double grandTotal = 0
-
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        double value = table.get(i, j) as double
-        rowTotals[i] += value
-        colTotals[j] += value
-        grandTotal += value
-      }
-    }
+    TableTotals totals = calculateTotals(table)
 
     // Calculate chi-squared statistic
     double chiSquared = 0
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
+    (0..<rows).each { int i ->
+      (0..<cols).each { int j ->
         double observed = table.get(i, j) as double
-        double expected = (rowTotals[i] * colTotals[j]) / grandTotal
+        double expected = (totals.rowTotals[i] * totals.colTotals[j]) / totals.grandTotal
 
         if (expected < 1.0) {
           throw new IllegalArgumentException("Expected frequency too small (< 1). Consider using Fisher's exact test instead.")
@@ -115,27 +102,14 @@ class ChiSquared {
 
     int rows = table.rowCount()
     int cols = table.columnCount()
-
-    // Calculate row and column totals
-    double[] rowTotals = new double[rows]
-    double[] colTotals = new double[cols]
-    double grandTotal = 0
-
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        double value = table.get(i, j) as double
-        rowTotals[i] += value
-        colTotals[j] += value
-        grandTotal += value
-      }
-    }
+    TableTotals totals = calculateTotals(table)
 
     // Calculate G statistic
     double gStatistic = 0
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
+    (0..<rows).each { int i ->
+      (0..<cols).each { int j ->
         double observed = table.get(i, j) as double
-        double expected = (rowTotals[i] * colTotals[j]) / grandTotal
+        double expected = (totals.rowTotals[i] * totals.colTotals[j]) / totals.grandTotal
 
         if (observed > 0) {  // Only include if observed > 0 (log of 0 is undefined)
           gStatistic += observed * Math.log(observed / expected)
@@ -181,27 +155,14 @@ class ChiSquared {
 
     int rows = 2
     int cols = 2
-
-    // Calculate row and column totals
-    double[] rowTotals = new double[2]
-    double[] colTotals = new double[2]
-    double grandTotal = 0
-
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        double value = table.get(i, j) as double
-        rowTotals[i] += value
-        colTotals[j] += value
-        grandTotal += value
-      }
-    }
+    TableTotals totals = calculateTotals(table)
 
     // Calculate chi-squared statistic with Yates' correction
     double chiSquared = 0
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
+    (0..<rows).each { int i ->
+      (0..<cols).each { int j ->
         double observed = table.get(i, j) as double
-        double expected = (rowTotals[i] * colTotals[j]) / grandTotal
+        double expected = (totals.rowTotals[i] * totals.colTotals[j]) / totals.grandTotal
 
         // Apply Yates' correction: subtract 0.5 from |O - E|
         double correctedDiff = Math.abs(observed - expected) - 0.5
@@ -237,13 +198,42 @@ class ChiSquared {
     }
 
     // Check for negative values
-    for (int i = 0; i < table.rowCount(); i++) {
-      for (int j = 0; j < table.columnCount(); j++) {
+    (0..<table.rowCount()).each { int i ->
+      (0..<table.columnCount()).each { int j ->
         double value = table.get(i, j) as double
         if (value < 0) {
           throw new IllegalArgumentException("Table values must be non-negative (found ${value} at [${i},${j}])")
         }
       }
+    }
+  }
+
+  private static TableTotals calculateTotals(Matrix table) {
+    double[] rowTotals = new double[table.rowCount()]
+    double[] colTotals = new double[table.columnCount()]
+    double grandTotal = 0
+
+    (0..<table.rowCount()).each { int i ->
+      (0..<table.columnCount()).each { int j ->
+        double value = table.get(i, j) as double
+        rowTotals[i] += value
+        colTotals[j] += value
+        grandTotal += value
+      }
+    }
+
+    return new TableTotals(rowTotals, colTotals, grandTotal)
+  }
+
+  private static class TableTotals {
+    final double[] rowTotals
+    final double[] colTotals
+    final double grandTotal
+
+    TableTotals(double[] rowTotals, double[] colTotals, double grandTotal) {
+      this.rowTotals = rowTotals
+      this.colTotals = colTotals
+      this.grandTotal = grandTotal
     }
   }
 
