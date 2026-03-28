@@ -2,6 +2,11 @@ package timeseries
 
 import static org.junit.jupiter.api.Assertions.*
 
+import org.apache.commons.math3.linear.DecompositionSolver
+import org.apache.commons.math3.linear.EigenDecomposition
+import org.apache.commons.math3.linear.LUDecomposition
+import org.apache.commons.math3.linear.MatrixUtils
+import org.apache.commons.math3.linear.RealMatrix
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.timeseries.Johansen
@@ -406,5 +411,130 @@ class JohansenTest {
 
     assertNotNull(result)
     assertEquals(n - 1, result.sampleSize)
+  }
+
+  @Test
+  void testMatchesApacheReferenceForConstModel() {
+    List<double[]> data = sampleCointegratedData(2026, 120)
+
+    def actual = Johansen.test(data, 2, 'const')
+    Map<String, Object> expected = apacheJohansenReference(data, 2, 'const')
+
+    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues, 1e-10)
+    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics, 1e-9)
+  }
+
+  @Test
+  void testMatchesApacheReferenceForTrendModel() {
+    List<double[]> data = sampleCointegratedData(3030, 110)
+
+    def actual = Johansen.test(data, 1, 'trend')
+    Map<String, Object> expected = apacheJohansenReference(data, 1, 'trend')
+
+    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues, 1e-10)
+    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics, 1e-9)
+  }
+
+  private static List<double[]> sampleCointegratedData(int seed, int n) {
+    Random rnd = new Random(seed)
+    double[] y1 = new double[n]
+    double[] y2 = new double[n]
+    double[] y3 = new double[n]
+
+    y1[0] = 0
+    y2[0] = 0
+    y3[0] = 0
+
+    for (int i = 1; i < n; i++) {
+      y1[i] = y1[i - 1] + rnd.nextGaussian() * 0.6
+      y2[i] = y1[i] + rnd.nextGaussian() * 0.15
+      y3[i] = 0.5 * y1[i] - 0.25 * y2[i] + rnd.nextGaussian() * 0.2
+    }
+
+    [y1, y2, y3]
+  }
+
+  private static Map<String, Object> apacheJohansenReference(List<double[]> data, int lags, String type) {
+    int k = data.size()
+    int n = data[0].length
+    int effectiveN = n - lags
+    double[][] deltaY = new double[effectiveN][k]
+    double[][] laggedY = new double[effectiveN][k]
+
+    for (int t = 0; t < effectiveN; t++) {
+      int actualT = t + lags
+      for (int i = 0; i < k; i++) {
+        deltaY[t][i] = data[i][actualT] - data[i][actualT - 1]
+        laggedY[t][i] = data[i][actualT - 1]
+      }
+    }
+
+    int numRegressors = (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
+    RealMatrix r0
+    RealMatrix r1
+
+    if (numRegressors == 0) {
+      r0 = MatrixUtils.createRealMatrix(deltaY)
+      r1 = MatrixUtils.createRealMatrix(laggedY)
+    } else {
+      double[][] z = new double[effectiveN][numRegressors]
+      for (int t = 0; t < effectiveN; t++) {
+        int actualT = t + lags
+        int col = 0
+        if (lags > 1) {
+          for (int lag = 1; lag < lags; lag++) {
+            for (int i = 0; i < k; i++) {
+              z[t][col++] = data[i][actualT - lag] - data[i][actualT - lag - 1]
+            }
+          }
+        }
+        if (type == 'const') {
+          z[t][col++] = 1.0d
+        }
+        if (type == 'trend') {
+          z[t][col++] = t + 1.0d
+        }
+      }
+
+      RealMatrix zMatrix = MatrixUtils.createRealMatrix(z)
+      RealMatrix deltaYMatrix = MatrixUtils.createRealMatrix(deltaY)
+      RealMatrix laggedYMatrix = MatrixUtils.createRealMatrix(laggedY)
+      RealMatrix ztZ = zMatrix.transpose() * zMatrix
+      DecompositionSolver solver = new LUDecomposition(ztZ).solver
+      RealMatrix projection = (zMatrix * solver.inverse) * zMatrix.transpose()
+
+      r0 = deltaYMatrix.subtract(projection * deltaYMatrix)
+      r1 = laggedYMatrix.subtract(projection * laggedYMatrix)
+    }
+
+    double scale = 1.0d / effectiveN
+    RealMatrix s00 = (r0.transpose() * r0).scalarMultiply(scale)
+    RealMatrix s11 = (r1.transpose() * r1).scalarMultiply(scale)
+    RealMatrix s01 = (r0.transpose() * r1).scalarMultiply(scale)
+
+    RealMatrix s00Inv = new LUDecomposition(s00).solver.inverse
+    RealMatrix s11Inv = new LUDecomposition(s11).solver.inverse
+    RealMatrix product = ((s11Inv * s01.transpose()) * s00Inv) * s01
+
+    double[] eigenvalues = sortDescending(new EigenDecomposition(product).realEigenvalues)
+    double[] traceStatistics = new double[k]
+    for (int r = 0; r < k; r++) {
+      double sum = 0.0d
+      for (int i = r; i < k; i++) {
+        sum += Math.log(1.0d - eigenvalues[i])
+      }
+      traceStatistics[r] = -effectiveN * sum
+    }
+
+    [eigenvalues: eigenvalues, traceStatistics: traceStatistics]
+  }
+
+  private static double[] sortDescending(double[] values) {
+    Arrays.sort(values)
+    double[] sorted = new double[values.length]
+    for (int i = 0; i < values.length; i++) {
+      sorted[i] = values[values.length - 1 - i]
+    }
+    sorted
   }
 }

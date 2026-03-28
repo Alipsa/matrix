@@ -2,9 +2,7 @@ package se.alipsa.matrix.stats.regression
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import org.apache.commons.math3.linear.LUDecomposition
-import org.apache.commons.math3.linear.RealMatrix
+import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
 /**
  * Internal helpers for regression diagnostics and standard error calculations.
@@ -19,8 +17,6 @@ class RegressionUtils {
    * Compute (X'X)^{-1} for a polynomial design matrix [1, x, x^2, ...].
    * Returns an empty array when the input is invalid or the matrix is singular.
    */
-  // TODO implement our own Array2DRowRealMatrix and LUDecomposition that works with BigDecimal for cleaner groovy code,
-  //  better precision and to avoid dependency on commons-math3
   static BigDecimal[][] polynomialXtxInverse(List<? extends Number> xValues, int degree) {
     int n = xValues.size()
     if (n == 0 || degree < 1) {
@@ -35,13 +31,13 @@ class RegressionUtils {
         term *= x
       }
     }
-    RealMatrix xMatrix = new Array2DRowRealMatrix(design, false)
-    RealMatrix xtx = xMatrix.transpose() * xMatrix
-    def solver = new LUDecomposition(xtx).solver
-    if (!solver.isNonSingular()) {
+    double[][] xtx = MatrixAlgebra.multiply(MatrixAlgebra.transpose(design), design)
+    double[][] inverse
+    try {
+      inverse = MatrixAlgebra.inverse(xtx)
+    } catch (IllegalArgumentException ignored) {
       return EMPTY_BIG_DECIMAL_MATRIX
     }
-    double[][] inverse = solver.inverse.data
     BigDecimal[][] result = new BigDecimal[inverse.length][inverse[0].length]
     for (int i = 0; i < inverse.length; i++) {
       for (int j = 0; j < inverse[i].length; j++) {
