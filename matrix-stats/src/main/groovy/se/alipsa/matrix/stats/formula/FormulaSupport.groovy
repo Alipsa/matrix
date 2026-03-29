@@ -68,6 +68,9 @@ final class FormulaSupport {
 
   private static FormulaExpression normalizeResponse(FormulaExpression expression) {
     FormulaExpression unwrapped = unwrapGrouping(expression)
+    if (isMultiResponseFunctionCall(unwrapped)) {
+      throw new FormulaParseException('Multiple responses are not supported; use a single response expression', unwrapped.start)
+    }
     if (unwrapped instanceof FormulaExpression.Variable || unwrapped instanceof FormulaExpression.FunctionCall) {
       return unwrapped
     }
@@ -88,6 +91,11 @@ final class FormulaSupport {
   private static boolean isMultipleResponseExpression(FormulaExpression expression) {
     FormulaExpression unwrapped = unwrapGrouping(expression)
     unwrapped instanceof FormulaExpression.Binary && (unwrapped as FormulaExpression.Binary).operator == '+'
+  }
+
+  private static boolean isMultiResponseFunctionCall(FormulaExpression expression) {
+    expression instanceof FormulaExpression.FunctionCall &&
+      ((expression as FormulaExpression.FunctionCall).name.equalsIgnoreCase('cbind'))
   }
 
   private static FormulaExpression replaceDots(FormulaExpression expression, FormulaExpression replacement) {
@@ -254,6 +262,12 @@ final class FormulaSupport {
   }
 
   private static Set<FormulaTerm> powerTerms(FormulaExpression left, FormulaExpression right) {
+    if (containsDot(left)) {
+      throw new FormulaParseException(
+        "Dot expansion with interaction power (^) cannot be normalized before model-frame expansion",
+        left.start
+      )
+    }
     int exponent = positiveIntegerExponent(right)
     Set<FormulaTerm> baseTerms = expandTerms(left)
     if (baseTerms.isEmpty()) {
@@ -267,6 +281,25 @@ final class FormulaSupport {
       appendCombinations(orderedTerms, degree, 0, [] as List<FormulaTerm>, result)
     }
     result
+  }
+
+  private static boolean containsDot(FormulaExpression expression) {
+    FormulaExpression unwrapped = unwrapGrouping(expression)
+    if (unwrapped instanceof FormulaExpression.Dot) {
+      return true
+    }
+    if (unwrapped instanceof FormulaExpression.Unary) {
+      return containsDot((unwrapped as FormulaExpression.Unary).expression)
+    }
+    if (unwrapped instanceof FormulaExpression.Binary) {
+      FormulaExpression.Binary binary = unwrapped as FormulaExpression.Binary
+      return containsDot(binary.left) || containsDot(binary.right)
+    }
+    if (unwrapped instanceof FormulaExpression.FunctionCall) {
+      FormulaExpression.FunctionCall functionCall = unwrapped as FormulaExpression.FunctionCall
+      return functionCall.arguments.any { FormulaExpression argument -> containsDot(argument) }
+    }
+    false
   }
 
   private static int positiveIntegerExponent(FormulaExpression expression) {

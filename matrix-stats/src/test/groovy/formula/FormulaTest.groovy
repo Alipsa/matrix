@@ -131,6 +131,15 @@ class FormulaTest {
   }
 
   @Test
+  void testRejectsCbindMultipleResponses() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('cbind(y1, y2) ~ x')
+    }
+
+    assertTrue(exception.message.contains('Multiple responses are not supported'))
+  }
+
+  @Test
   void testRejectsInvalidResponseSideExpressions() {
     FormulaParseException subtraction = assertThrows(FormulaParseException) {
       Formula.normalize('y - z ~ x')
@@ -214,6 +223,15 @@ class FormulaTest {
 
     assertTrue(exception.message.contains("requires a positive integer exponent"))
     assertTrue(exception.message.contains("got '1.5e0'"))
+  }
+
+  @Test
+  void testRejectsDotInteractionPowerBeforeExpansion() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ .^2')
+    }
+
+    assertTrue(exception.message.contains('Dot expansion with interaction power'))
   }
 
   @Test
