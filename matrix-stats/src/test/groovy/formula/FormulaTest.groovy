@@ -48,6 +48,15 @@ class FormulaTest {
   }
 
   @Test
+  void testParsesDottedIdentifiersWithoutQuoting() {
+    ParsedFormula parsed = Formula.parse('y.foo ~ x.bar')
+
+    assertEquals('y.foo', parsed.response.asFormulaString())
+    assertEquals('x.bar', parsed.predictors.asFormulaString())
+    assertEquals('y.foo ~ 1 + x.bar', parsed.normalize().asFormulaString())
+  }
+
+  @Test
   void testNormalizesInteractionsAndInterceptControl() {
     def normalized = Formula.normalize('y ~ 0 + x * z')
 
@@ -105,12 +114,33 @@ class FormulaTest {
   }
 
   @Test
+  void testUpdatesFormulaWithImplicitResponseShorthand() {
+    ParsedFormula updated = Formula.update('y ~ x + z', '~ . - z + w')
+
+    assertEquals('y ~ x + z - z + w', updated.toString())
+    assertEquals('y ~ 1 + w + x', updated.normalize().asFormulaString())
+  }
+
+  @Test
   void testRejectsMultipleResponses() {
     FormulaParseException exception = assertThrows(FormulaParseException) {
       Formula.normalize('y1 + y2 ~ x')
     }
 
     assertTrue(exception.message.contains('Multiple responses are not supported'))
+  }
+
+  @Test
+  void testRejectsInvalidResponseSideExpressions() {
+    FormulaParseException subtraction = assertThrows(FormulaParseException) {
+      Formula.normalize('y - z ~ x')
+    }
+    FormulaParseException interceptRemoval = assertThrows(FormulaParseException) {
+      Formula.normalize('y - 1 ~ x')
+    }
+
+    assertTrue(subtraction.message.contains('Response must be a single variable or transform'))
+    assertTrue(interceptRemoval.message.contains('Response must be a single variable or transform'))
   }
 
   @Test

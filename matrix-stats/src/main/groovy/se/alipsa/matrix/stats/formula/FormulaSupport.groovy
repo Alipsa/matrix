@@ -21,7 +21,12 @@ final class FormulaSupport {
   static ParsedFormula update(String baseFormula, String updateFormula) {
     ParsedFormula base = parse(baseFormula, null)
     String safeUpdate = requireFormulaText(updateFormula, 'Update formula')
-    String normalizedUpdate = safeUpdate.contains('~') ? safeUpdate : ". ~ ${safeUpdate}"
+    String leadingTrimmedUpdate = safeUpdate.stripLeading()
+    String normalizedUpdate = !safeUpdate.contains('~')
+      ? ". ~ ${safeUpdate}"
+      : leadingTrimmedUpdate.startsWith('~')
+      ? ". ${leadingTrimmedUpdate}"
+      : safeUpdate
     ParsedFormula updater = parse(normalizedUpdate, null)
     FormulaExpression response = replaceDots(updater.response, base.response)
     FormulaExpression predictors = replaceDots(updater.predictors, base.predictors)
@@ -62,15 +67,27 @@ final class FormulaSupport {
   }
 
   private static FormulaExpression normalizeResponse(FormulaExpression expression) {
-    Set<FormulaTerm> responseTerms = expandTerms(expression)
-    if (responseTerms.size() != 1) {
-      throw new FormulaParseException('Multiple responses are not supported; use a single response expression', expression.start)
+    FormulaExpression unwrapped = unwrapGrouping(expression)
+    if (unwrapped instanceof FormulaExpression.Variable || unwrapped instanceof FormulaExpression.FunctionCall) {
+      return unwrapped
     }
-    FormulaTerm term = responseTerms.first()
-    if (term.factors.size() != 1 || term.factors[0] instanceof FormulaExpression.Dot) {
-      throw new FormulaParseException('Response must be a single variable or transform', expression.start)
+    if (isMultipleResponseExpression(unwrapped)) {
+      throw new FormulaParseException('Multiple responses are not supported; use a single response expression', unwrapped.start)
     }
-    term.factors[0]
+    throw new FormulaParseException('Response must be a single variable or transform', unwrapped.start)
+  }
+
+  private static FormulaExpression unwrapGrouping(FormulaExpression expression) {
+    FormulaExpression current = expression
+    while (current instanceof FormulaExpression.Grouping) {
+      current = (current as FormulaExpression.Grouping).expression
+    }
+    current
+  }
+
+  private static boolean isMultipleResponseExpression(FormulaExpression expression) {
+    FormulaExpression unwrapped = unwrapGrouping(expression)
+    unwrapped instanceof FormulaExpression.Binary && (unwrapped as FormulaExpression.Binary).operator == '+'
   }
 
   private static FormulaExpression replaceDots(FormulaExpression expression, FormulaExpression replacement) {
@@ -402,13 +419,13 @@ final class FormulaSupport {
           tokens << numberLiteral(start)
           continue
         }
+        if (isIdentifierStart(current)) {
+          tokens << identifier(start)
+          continue
+        }
         FormulaToken singleCharacterToken = singleCharacterToken(current, start)
         if (singleCharacterToken != null) {
           tokens << singleCharacterToken
-          continue
-        }
-        if (Character.isLetter(current) || current == '_') {
-          tokens << identifier(start)
           continue
         }
 
@@ -420,6 +437,12 @@ final class FormulaSupport {
 
     private boolean isNumberStart(char current) {
       Character.isDigit(current) || (current == '.' && index + 1 < source.length() && Character.isDigit(source.charAt(index + 1)))
+    }
+
+    private boolean isIdentifierStart(char current) {
+      Character.isLetter(current) ||
+        current == '_' ||
+        (current == '.' && index + 1 < source.length() && isIdentifierCharacter(source.charAt(index + 1)) && !Character.isDigit(source.charAt(index + 1)))
     }
 
     private FormulaToken singleCharacterToken(char current, int start) {
@@ -443,7 +466,7 @@ final class FormulaSupport {
     private FormulaToken identifier(int start) {
       while (index < source.length()) {
         char value = source.charAt(index)
-        if (!(Character.isLetterOrDigit(value) || value == '_')) {
+        if (!isIdentifierCharacter(value)) {
           break
         }
         index++
@@ -485,6 +508,10 @@ final class FormulaSupport {
 
     private static boolean isExponentMarker(char current) {
       current == 'e' || current == 'E'
+    }
+
+    private static boolean isIdentifierCharacter(char value) {
+      Character.isLetterOrDigit(value) || value == '_' || value == '.'
     }
 
     private FormulaToken backtickIdentifier(int start) {

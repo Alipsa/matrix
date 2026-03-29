@@ -44,7 +44,7 @@ abstract class FormulaExpression {
 
     @Override
     String asFormulaString() {
-      if (quoted || !(name ==~ /[A-Za-z_]\w*/)) {
+      if (quoted || !isSimpleIdentifier(name)) {
         return "`${name}`"
       }
       name
@@ -186,6 +186,26 @@ abstract class FormulaExpression {
       throw new IllegalArgumentException("${label} cannot be null or blank")
     }
     value
+  }
+
+  private static boolean isSimpleIdentifier(String name) {
+    if (name == '.') {
+      return false
+    }
+    char first = name.charAt(0)
+    if (!(Character.isLetter(first) || first == '_' || first == '.')) {
+      return false
+    }
+    if (first == '.' && name.length() > 1 && Character.isDigit(name.charAt(1))) {
+      return false
+    }
+    for (int i = 1; i < name.length(); i++) {
+      char value = name.charAt(i)
+      if (!(Character.isLetterOrDigit(value) || value == '_' || value == '.')) {
+        return false
+      }
+    }
+    true
   }
 
   private static <T> T requireNonNullValue(T value, String label) {
