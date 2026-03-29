@@ -6,6 +6,11 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
 /**
  * Ordinary least squares multiple linear regression for a fixed design matrix.
+ *
+ * This implementation solves the normal equations {@code (X'X)^-1 X'y}, which is sufficient for the
+ * current low-dimensional stats callers such as {@code Adf}. If this class grows into a broader
+ * regression utility for higher-dimensional or more ill-conditioned problems, it should move to a
+ * QR- or SVD-based solver rather than relying on the normal equations.
  */
 @CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')

@@ -5,8 +5,6 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.stats.distribution.ContinuousDistribution
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 
-import java.math.MathContext
-
 /**
  * The Kolmogorov-Smirnov (K-S) test is a nonparametric goodness-of-fit test that compares a sample
  * with a reference probability distribution (one-sample K-S test), or compares two samples to determine
@@ -110,7 +108,6 @@ import java.math.MathContext
 class KolmogorovSmirnov {
 
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
-  private static final MathContext DECIMAL_CONTEXT = MathContext.DECIMAL128
 
   /**
    * Performs a one-sample Kolmogorov-Smirnov test to check if the data follows a normal distribution.
@@ -237,6 +234,8 @@ class KolmogorovSmirnov {
       return 1.0d
     }
 
+    // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
+    // so callers and tests should not expect exact agreement with finite-sample reference tables.
     double sqrtN = Math.sqrt(sampleSize)
     double lambda = (sqrtN + 0.12d + 0.11d / sqrtN) * dStatistic
     kolmogorovProbability(lambda)
@@ -289,7 +288,8 @@ class KolmogorovSmirnov {
   private static double calculateExactTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
     BigInteger validPathCount = countValidPaths(sampleSize1, sampleSize2, dStatistic)
     BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
-    BigDecimal cdf = new BigDecimal(validPathCount).divide(new BigDecimal(totalPathCount), DECIMAL_CONTEXT)
+    BigDecimal cdf = new BigDecimal(validPathCount)
+      .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
     double pValue = 1.0d - cdf.doubleValue()
     Math.max(0.0d, Math.min(1.0d, pValue))
   }
