@@ -1,0 +1,264 @@
+package formula
+
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertInstanceOf
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
+
+import groovy.transform.CompileStatic
+
+import org.junit.jupiter.api.Test
+
+import se.alipsa.matrix.stats.formula.Formula
+import se.alipsa.matrix.stats.formula.FormulaExpression
+import se.alipsa.matrix.stats.formula.FormulaParseException
+import se.alipsa.matrix.stats.formula.ParsedFormula
+
+/**
+ * Tests for formula parsing, normalization, and update helpers.
+ */
+@CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
+class FormulaTest {
+
+  @Test
+  void testParsesTransformsAndQuotedNames() {
+    ParsedFormula parsed = Formula.parse('`gross margin` ~ log(x) + sqrt(y) + exp(z) + poly(w, 2) + I(a + b)')
+
+    assertEquals('`gross margin`', parsed.response.asFormulaString())
+    assertEquals('log(x) + sqrt(y) + exp(z) + poly(w, 2) + I(a + b)', parsed.predictors.asFormulaString())
+
+    def normalized = parsed.normalize()
+    assertEquals('`gross margin` ~ 1 + I(a + b) + exp(z) + log(x) + poly(w, 2) + sqrt(y)', normalized.asFormulaString())
+  }
+
+  @Test
+  void testParsesScientificNotationAndLeadingDecimalNumbers() {
+    ParsedFormula parsed = Formula.parse('y ~ I(+.5 + 1.5e-2 + x)')
+
+    assertEquals('I(+.5 + 1.5e-2 + x)', parsed.predictors.asFormulaString())
+  }
+
+  @Test
+  void testCreatesFormulaFromFragments() {
+    ParsedFormula parsed = Formula.of('y', 'x + z')
+
+    assertEquals('y ~ x + z', parsed.toString())
+    assertEquals('y ~ 1 + x + z', parsed.normalizedFormulaString())
+  }
+
+  @Test
+  void testParsesDottedIdentifiersWithoutQuoting() {
+    ParsedFormula parsed = Formula.parse('y.foo ~ x.bar')
+
+    assertEquals('y.foo', parsed.response.asFormulaString())
+    assertEquals('x.bar', parsed.predictors.asFormulaString())
+    assertEquals('y.foo ~ 1 + x.bar', parsed.normalize().asFormulaString())
+  }
+
+  @Test
+  void testNormalizesInteractionsAndInterceptControl() {
+    def normalized = Formula.normalize('y ~ 0 + x * z')
+
+    assertEquals('y ~ 0 + x + z + x:z', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesPowerExpansionAndSubtraction() {
+    def normalized = Formula.normalize('y ~ (a + b + c)^2 - b:c')
+
+    assertEquals('y ~ 1 + a + b + c + a:b + a:c', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesNestingOperator() {
+    def normalized = Formula.normalize('y ~ a / b')
+
+    assertEquals('y ~ 1 + a + a:b', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesGroupedNestingOperator() {
+    def normalized = Formula.normalize('y ~ (a + b) / c')
+
+    assertEquals('y ~ 1 + a + b + a:b:c', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesChainedNestingOperator() {
+    def normalized = Formula.normalize('y ~ a / b / c')
+
+    assertEquals('y ~ 1 + a + a:b + a:b:c', normalized.asFormulaString())
+  }
+
+  @Test
+  void testPreservesDotForLaterModelFrameExpansion() {
+    def normalized = Formula.normalize('y ~ . + x')
+
+    assertEquals('y ~ 1 + . + x', normalized.asFormulaString())
+  }
+
+  @Test
+  void testDefaultsPredictorOnlyFormulaToResponse() {
+    def normalized = Formula.normalize('x + z', 'y')
+
+    assertEquals('y ~ 1 + x + z', normalized.asFormulaString())
+  }
+
+  @Test
+  void testUpdatesFormulaWithDotSubstitution() {
+    ParsedFormula updated = Formula.update('y ~ x + z', '. ~ . - z + w')
+
+    assertEquals('y ~ x + z - z + w', updated.toString())
+    assertEquals('y ~ 1 + w + x', updated.normalize().asFormulaString())
+  }
+
+  @Test
+  void testUpdatesFormulaWithImplicitResponseShorthand() {
+    ParsedFormula updated = Formula.update('y ~ x + z', '~ . - z + w')
+
+    assertEquals('y ~ x + z - z + w', updated.toString())
+    assertEquals('y ~ 1 + w + x', updated.normalize().asFormulaString())
+  }
+
+  @Test
+  void testRejectsMultipleResponses() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y1 + y2 ~ x')
+    }
+
+    assertTrue(exception.message.contains('Multiple responses are not supported'))
+  }
+
+  @Test
+  void testRejectsCbindMultipleResponses() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('cbind(y1, y2) ~ x')
+    }
+
+    assertTrue(exception.message.contains('Multiple responses are not supported'))
+  }
+
+  @Test
+  void testRejectsInvalidResponseSideExpressions() {
+    FormulaParseException subtraction = assertThrows(FormulaParseException) {
+      Formula.normalize('y - z ~ x')
+    }
+    FormulaParseException interceptRemoval = assertThrows(FormulaParseException) {
+      Formula.normalize('y - 1 ~ x')
+    }
+
+    assertTrue(subtraction.message.contains('Response must be a single variable or transform'))
+    assertTrue(interceptRemoval.message.contains('Response must be a single variable or transform'))
+  }
+
+  @Test
+  void testRejectsNullAndBlankFormulaInputs() {
+    FormulaParseException nullException = assertThrows(FormulaParseException) {
+      Formula.parse(null)
+    }
+    FormulaParseException blankException = assertThrows(FormulaParseException) {
+      Formula.normalize('')
+    }
+
+    assertTrue(nullException.message.contains('Formula cannot be null or blank'))
+    assertTrue(blankException.message.contains('Formula cannot be null or blank'))
+  }
+
+  @Test
+  void testRejectsNullFormulaFragments() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Formula.of(null, 'x')
+    }
+
+    assertTrue(exception.message.contains('response cannot be null or blank'))
+  }
+
+  @Test
+  void testRejectsMissingFormulaClosingParenthesisWithLocation() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ log(x')
+    }
+
+    assertTrue(exception.message.contains("Expected ')'"))
+    assertTrue(exception.message.contains('position'))
+  }
+
+  @Test
+  void testRejectsMissingRightHandSide() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.parse('y ~')
+    }
+
+    assertTrue(exception.message.contains('missing a right-hand side'))
+  }
+
+  @Test
+  void testRejectsUnterminatedAndEmptyBackticks() {
+    FormulaParseException unterminated = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ `foo')
+    }
+    FormulaParseException empty = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ ``')
+    }
+
+    assertTrue(unterminated.message.contains('Unterminated backtick identifier'))
+    assertTrue(empty.message.contains('Backtick identifier cannot be blank'))
+  }
+
+  @Test
+  void testRejectsInvalidScientificNotation() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ I(1.5e)')
+    }
+
+    assertTrue(exception.message.contains('Invalid scientific notation'))
+  }
+
+  @Test
+  void testRejectsNonIntegerExponentWithValueInMessage() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ (a + b)^1.5e0')
+    }
+
+    assertTrue(exception.message.contains("requires a positive integer exponent"))
+    assertTrue(exception.message.contains("got '1.5e0'"))
+  }
+
+  @Test
+  void testRejectsDotInteractionPowerUntilModelFrameExpansion() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ .^2')
+    }
+
+    assertTrue(exception.message.contains('Dot expansion with interaction power'))
+  }
+
+  @Test
+  void testRejectsNumericLiteralOutsideInterceptControl() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ 2 + x')
+    }
+
+    assertTrue(exception.message.contains("Numeric literal '2' is only supported for intercept control"))
+  }
+
+  @Test
+  void testRejectsNullUpdateFormula() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.update('y ~ x', null)
+    }
+
+    assertTrue(exception.message.contains('Update formula cannot be null or blank'))
+  }
+
+  @Test
+  void testProducesStructuredAst() {
+    ParsedFormula parsed = Formula.parse('y ~ x:z')
+
+    FormulaExpression.Binary predictors = assertInstanceOf(FormulaExpression.Binary, parsed.predictors)
+    assertEquals(':', predictors.operator)
+    assertEquals('x', predictors.left.asFormulaString())
+    assertEquals('z', predictors.right.asFormulaString())
+  }
+}
