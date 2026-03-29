@@ -74,7 +74,50 @@ grep -L "@CompileStatic" src/main/groovy/**/*.groovy | grep -v test
 
 ---
 
-## Phase 2: Semantic Correctness Testing (CRITICAL)
+## Phase 2: Specification Compliance (CRITICAL)
+
+**Verify the implementation matches the documented requirements.**
+
+### 2.1 Roadmap/Requirements Cross-Reference
+
+When a PR claims to implement a specific section or feature:
+
+1. **Read the requirements first** - Don't review code in isolation
+2. **Check every bullet point** in the requirements against the implementation
+3. **Question rejections** - If the code throws an error, verify it SHOULD error per the spec
+
+**Example:**
+```
+Roadmap says: "Supported syntax: dot expansion (.), interaction expansion (^)"
+Test shows: "Dot expansion with interaction power (^) cannot be normalized"
+Question: Does the roadmap imply these should work together? (.^2)
+If yes: Implementation is incomplete
+If no: Roadmap should document the limitation
+```
+
+**Red flags:**
+- Requirements say "supports X and Y" but code rejects "X + Y" combination
+- Tests validate rejection of syntax that should work per requirements
+- Requirements are updated to match implementation rather than vice versa
+
+### 2.2 Feature Completeness Matrix
+
+For features with multiple components, verify the matrix of combinations:
+
+| Feature A | Feature B | Status | Test |
+|-----------|-----------|--------|------|
+| Supported | Supported | Should work | `testAWithB()` |
+| Supported | Rejected | Should error | Document why |
+| Rejected | Rejected | Should error | N/A |
+
+**Example:**
+- `.` (dot expansion) = Supported
+- `^` (power) = Supported
+- `.^2` (combination) = ??? (Must check requirements)
+
+---
+
+## Phase 3: Semantic Correctness Testing (CRITICAL)
 
 **This phase finds logic bugs that don't crash but produce wrong results.**
 
@@ -578,6 +621,7 @@ When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
 | **Real-world disconnect** | Tested `` `foo bar` `` but missed `sepal.length` | Used synthetic examples, not dataset patterns | Use actual column names from famous datasets |
 | **Silent acceptance** | Didn't catch that invalid inputs produced valid-looking outputs | Only checked for crashes, not correctness | Verify invalid inputs produce errors, not garbage |
 | **Feature interaction blindspot** | Tested `.` and `^` separately, missed `.^2` | Tested features in isolation | Phase 2.8: Test combinations of features |
+| **Specification compliance gap** | Accepted `.^2` rejection without checking if roadmap requires it | Didn't cross-reference with requirements | Phase 2.1: Roadmap/requirements cross-reference |
 | **Rejection policy gap** | Tested `y1 + y2 ~ x` but missed `cbind(y1, y2) ~ x` | Only tested one form of invalid input | Phase 2.9: Test ALL syntactic forms of invalid input |
 
 ### Analysis Template
@@ -594,15 +638,24 @@ When an issue is found post-review, document:
 |-----|--------------------------|-----------|------------|
 | Invalid operation accepted on wrong side of DSL | Test ALL operators in ALL contexts | Context sensitivity gap | Phase 2.4: Context-sensitive semantics |
 | Feature combination loses semantics | Test features together, not just separately | Feature interaction blindspot | Phase 2.8: Feature interaction testing |
+| Feature rejects valid combination per spec | Check if roadmap/requirements say it should work | Spec compliance gap | Phase 2.1: Roadmap/requirements cross-reference |
 | Invalid input accepted in alternative syntax | Test ALL syntactic forms of invalid input | Rejection policy gap | Phase 2.9: Rejection policy completeness |
 | Shorthand syntax rejected | Test ALL documented syntax variations | Syntax variation gap | Phase 2.6: Syntax variation testing |
 | Real-world patterns fail | Use actual dataset patterns, not synthetic | Real-world disconnect | Phase 2.7: Real-world pattern testing |
 
 **Detailed Example from PR #275 (formula parsing):**
+
+*Example 1: Context-sensitive semantics*
 - **Bug:** `Formula.normalize('y - z ~ x')` produced `'y ~ 1 + x'` instead of erroring
 - **Root cause:** Response-side validation only checked for `+` (multi-response), not other operators
 - **Why missed:** Happy path bias - tested what should work, not what should fail
 - **Fix:** Added comprehensive response-side validation and `testRejectsInvalidResponseSideExpressions()`
+
+*Example 2: Specification compliance*
+- **Bug:** Roadmap claimed `.` and `^` were supported, but `.^2` was rejected
+- **Root cause:** Didn't verify feature combinations against requirements
+- **Why missed:** Assumed rejection was correct without checking roadmap
+- **Fix:** Added Phase 2.1 to require roadmap cross-reference before accepting rejections
 
 ---
 
