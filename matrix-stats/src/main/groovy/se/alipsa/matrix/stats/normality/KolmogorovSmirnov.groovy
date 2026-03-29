@@ -242,6 +242,11 @@ class KolmogorovSmirnov {
   }
 
   private static double calculateTwoSampleStatistic(double[] sample1, double[] sample2) {
+    long maxDifferenceCount = calculateTwoSampleDifferenceCount(sample1, sample2)
+    maxDifferenceCount / ((sample1.length as long) * sample2.length as double)
+  }
+
+  private static long calculateTwoSampleDifferenceCount(double[] sample1, double[] sample2) {
     double[] values1 = sample1.clone()
     double[] values2 = sample2.clone()
     Arrays.sort(values1)
@@ -249,7 +254,7 @@ class KolmogorovSmirnov {
 
     int index1 = 0
     int index2 = 0
-    double dStatistic = 0.0d
+    long maxDifferenceCount = 0L
 
     while (index1 < values1.length || index2 < values2.length) {
       double nextValue = Math.min(
@@ -264,12 +269,11 @@ class KolmogorovSmirnov {
         index2++
       }
 
-      double empirical1 = index1 / (double) values1.length
-      double empirical2 = index2 / (double) values2.length
-      dStatistic = Math.max(dStatistic, Math.abs(empirical1 - empirical2))
+      long scaledDifference = Math.abs((index1 as long) * values2.length - (index2 as long) * values1.length)
+      maxDifferenceCount = Math.max(maxDifferenceCount, scaledDifference)
     }
 
-    dStatistic
+    maxDifferenceCount
   }
 
   private static double calculateTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
@@ -277,7 +281,8 @@ class KolmogorovSmirnov {
       return 1.0d
     }
     if ((sampleSize1 as long) * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
-      return calculateExactTwoSamplePValue(dStatistic, sampleSize1, sampleSize2)
+      long differenceCount = Math.round(dStatistic * sampleSize1 * sampleSize2)
+      return calculateExactTwoSamplePValue(differenceCount, sampleSize1, sampleSize2)
     }
 
     double effectiveSize = Math.sqrt((sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
@@ -285,8 +290,8 @@ class KolmogorovSmirnov {
     kolmogorovProbability(lambda)
   }
 
-  private static double calculateExactTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
-    BigInteger validPathCount = countValidPaths(sampleSize1, sampleSize2, dStatistic)
+  private static double calculateExactTwoSamplePValue(long thresholdCount, int sampleSize1, int sampleSize2) {
+    BigInteger validPathCount = countValidPaths(sampleSize1, sampleSize2, thresholdCount)
     BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
     BigDecimal cdf = new BigDecimal(validPathCount)
       .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
@@ -294,7 +299,7 @@ class KolmogorovSmirnov {
     Math.max(0.0d, Math.min(1.0d, pValue))
   }
 
-  private static BigInteger countValidPaths(int sampleSize1, int sampleSize2, double threshold) {
+  private static BigInteger countValidPaths(int sampleSize1, int sampleSize2, long thresholdCount) {
     BigInteger[][] pathCounts = new BigInteger[sampleSize1 + 1][sampleSize2 + 1]
     pathCounts[0][0] = BigInteger.ONE
 
@@ -304,8 +309,8 @@ class KolmogorovSmirnov {
           continue
         }
 
-        double difference = Math.abs(i / (double) sampleSize1 - j / (double) sampleSize2)
-        if (difference > threshold) {
+        long differenceCount = Math.abs((i as long) * sampleSize2 - (j as long) * sampleSize1)
+        if (differenceCount > thresholdCount) {
           pathCounts[i][j] = BigInteger.ZERO
           continue
         }

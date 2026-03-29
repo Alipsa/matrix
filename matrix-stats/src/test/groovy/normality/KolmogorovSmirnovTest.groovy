@@ -53,6 +53,20 @@ class KolmogorovSmirnovTest {
   }
 
   @Test
+  void testTwoSampleExactBranchHandlesBoundaryStatistic() {
+    List<Double> sample1 = [1.0d, 3.0d, 4.0d, 7.0d, 9.0d]
+    List<Double> sample2 = [2.0d, 5.0d, 6.0d, 8.0d, 10.0d]
+    def result = KolmogorovSmirnov.twoSampleTest(sample1, sample2)
+
+    ApacheKolmogorovSmirnovTest apacheTest = new ApacheKolmogorovSmirnovTest()
+    double[] first = sample1 as double[]
+    double[] second = sample2 as double[]
+
+    assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic, D_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue, TWO_SAMPLE_P_TOLERANCE)
+  }
+
+  @Test
   void testRejectsNullValues() {
     assertThrows(IllegalArgumentException) {
       KolmogorovSmirnov.twoSampleTest([1.0d, null, 3.0d], [1.0d, 2.0d, 3.0d])
