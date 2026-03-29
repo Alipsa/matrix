@@ -54,9 +54,9 @@ Maven:
 </dependencies>
 ```
 
-`matrix-stats` currently still brings in Apache Commons Math as a transitive runtime dependency while
-the native implementation migration is in progress. Consumers do not need to declare `commons-math3`
-explicitly unless they also use that library directly.
+`matrix-stats` no longer brings in Apache Commons Math at runtime. `commons-math3` is kept as a
+test-only dependency to validate the native implementations, so consumers do not need to declare it
+unless they use that library directly in their own code.
 
 ## Correlation
 

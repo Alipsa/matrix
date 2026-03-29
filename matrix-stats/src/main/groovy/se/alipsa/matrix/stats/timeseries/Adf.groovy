@@ -2,7 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
+import se.alipsa.matrix.stats.regression.MultipleLinearRegression
 
 /**
  * The augmented Dickey–Fuller test (ADF) tests the null hypothesis that a unit root is present in a time series sample.
@@ -82,13 +82,11 @@ class Adf {
 
     try {
       // Perform OLS regression
-      OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression()
-      regression.setNoIntercept(true) // We manually add intercept to design matrix
-      regression.newSampleData(response, predictors)
+      MultipleLinearRegression regression = new MultipleLinearRegression(response, predictors)
 
       // Get the coefficient for y_{t-1} (this is the γ coefficient)
-      double[] coefficients = regression.estimateRegressionParameters()
-      double[] standardErrors = regression.estimateRegressionParametersStandardErrors()
+      double[] coefficients = regression.coefficients
+      double[] standardErrors = regression.standardErrors
 
       // The coefficient index for y_{t-1} depends on the type
       int gammaIndex = getGammaIndex(type)
