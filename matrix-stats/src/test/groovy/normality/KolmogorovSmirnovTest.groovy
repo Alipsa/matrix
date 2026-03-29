@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.distribution.NormalDistribution as ApacheNormalDistribution
 import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest as ApacheKolmogorovSmirnovTest
 import org.junit.jupiter.api.Test
@@ -13,10 +15,14 @@ import se.alipsa.matrix.stats.normality.KolmogorovSmirnov
 /**
  * Tests for the native Kolmogorov-Smirnov implementation.
  */
+@CompileStatic
 class KolmogorovSmirnovTest {
 
   private static final double D_TOLERANCE = 1e-12d
-  private static final double P_TOLERANCE = 0.03d
+  // The one-sample implementation intentionally uses the asymptotic Kolmogorov distribution,
+  // so it does not match Apache's exact/reference p-value as tightly as the statistic itself.
+  private static final double ONE_SAMPLE_P_TOLERANCE = 0.025d
+  private static final double TWO_SAMPLE_P_TOLERANCE = 0.01d
 
   @Test
   void testAgainstDistributionMatchesApacheReference() {
@@ -29,7 +35,7 @@ class KolmogorovSmirnovTest {
     double[] sample = data as double[]
 
     assertEquals(apacheTest.kolmogorovSmirnovStatistic(apacheDistribution, sample), result.dStatistic, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(apacheDistribution, sample), result.pValue, P_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(apacheDistribution, sample), result.pValue, ONE_SAMPLE_P_TOLERANCE)
   }
 
   @Test
@@ -43,7 +49,7 @@ class KolmogorovSmirnovTest {
     double[] second = sample2 as double[]
 
     assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue, P_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue, TWO_SAMPLE_P_TOLERANCE)
   }
 
   @Test

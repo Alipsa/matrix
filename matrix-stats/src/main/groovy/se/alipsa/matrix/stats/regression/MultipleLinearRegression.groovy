@@ -120,6 +120,11 @@ class MultipleLinearRegression {
     }
 
     int columnCount = predictors[0].length
+    if (response.length <= columnCount) {
+      throw new IllegalArgumentException(
+        "Ordinary least squares requires more observations (${response.length}) than predictors (${columnCount})"
+      )
+    }
     for (double[] row : predictors) {
       if (row.length != columnCount) {
         throw new IllegalArgumentException("Design matrix rows must all have the same length")

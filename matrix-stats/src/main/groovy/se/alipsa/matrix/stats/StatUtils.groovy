@@ -21,9 +21,14 @@ final class StatUtils {
   static double mean(double[] values) {
     validateNotEmpty(values, 'Mean')
 
+    // Use compensated summation to reduce drift when these helpers are reused for larger samples.
     double sum = 0.0d
+    double compensation = 0.0d
     for (double value : values) {
-      sum += value
+      double adjusted = value - compensation
+      double nextSum = sum + adjusted
+      compensation = (nextSum - sum) - adjusted
+      sum = nextSum
     }
     sum / values.length
   }

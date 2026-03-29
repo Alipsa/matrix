@@ -3,6 +3,8 @@ package regression
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 
+import groovy.transform.CompileStatic
+
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import org.junit.jupiter.api.Test
 
@@ -11,6 +13,7 @@ import se.alipsa.matrix.stats.regression.MultipleLinearRegression
 /**
  * Tests for native ordinary least squares multiple linear regression.
  */
+@CompileStatic
 class MultipleLinearRegressionTest {
 
   @Test

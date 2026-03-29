@@ -277,7 +277,7 @@ class KolmogorovSmirnov {
     if (dStatistic <= 0.0d) {
       return 1.0d
     }
-    if (sampleSize1 * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
+    if ((sampleSize1 as long) * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
       return calculateExactTwoSamplePValue(dStatistic, sampleSize1, sampleSize2)
     }
 
