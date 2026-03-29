@@ -6,6 +6,17 @@ This document provides instructions for conducting thorough code reviews that ma
 
 Don't just read code—**attack it**. Assume bugs exist and find them. Question every assumption. Test edge cases mentally or actually. **Verify that the implementation matches the specification, not just that it doesn't crash.**
 
+## Review Workflow
+
+### Branch Management
+
+**CRITICAL:** Stay on the development branch for the entire review session. Do not switch back to `main` or any other branch until:
+- The user explicitly says the PR is merged
+- The user asks you to switch branches
+- The review is completely finished and the user is done working on that PR
+
+**Why:** Switching branches disrupts the development workflow, loses uncommitted context, and makes it harder to verify incremental fixes.
+
 ---
 
 ## Phase 1: Static Analysis Checklist
@@ -69,13 +80,16 @@ grep -L "@CompileStatic" src/main/groovy/**/*.groovy | grep -v test
 
 ### 2.1 Round-trip Verification
 
-For parser/normalizer implementations, verify:
+For parser/normalizer implementations, verify that transformations are intentional:
 
 ```groovy
-// Input should match output for simple cases
+// Example: A normalizer may change syntax while preserving semantics
 input = 'y ~ x + z'
-output = Formula.normalize(input).asFormulaString()
-// If input != output, is the transformation correct and intentional?
+output = normalize(input).toString()
+// If input != output, is the transformation:
+//   1. Correct (semantics preserved)?
+//   2. Intentional (documented behavior)?
+//   3. Consistent (same input always produces same output)?
 ```
 
 ### 2.2 Invalid Input Rejection
@@ -83,71 +97,147 @@ output = Formula.normalize(input).asFormulaString()
 **Question:** Should this input be accepted?
 
 Test cases that should **REJECT** with clear errors:
-```groovy
-// Response-side operations (if not supported)
-Formula.normalize('y - z ~ x')        // Should error: response-side subtraction not supported
-Formula.normalize('y + z ~ x')        // Should error: multiple responses not supported
-Formula.normalize('y - 1 ~ x')        // Should error: response-side intercept control not supported
 
-// Invalid nesting
-Formula.normalize('y ~ / x')          // Should error: missing left operand
-Formula.normalize('y ~ x :')          // Should error: missing right operand
+```groovy
+// Example: In a formula DSL, response-side should reject predictor-side operators
+// These should error if response-side operations are not supported:
+//   'y - z ~ x'       // Subtraction on response
+//   'y + z ~ x'       // Multiple responses
+//   'y - 1 ~ x'       // Intercept control on response
+
+// Example: Missing operands
+//   'y ~ / x'         // Missing left operand
+//   'y ~ x :'         // Missing right operand
 ```
 
 **Red flag:** If malformed inputs produce valid-looking outputs instead of errors.
 
 ### 2.3 Reference Implementation Comparison
 
-For domain-specific implementations (R-style formulas, statistical tests, etc.):
+For domain-specific implementations (parsers, statistical tests, protocol handlers):
 
-- [ ] Test against known reference behavior (R, Python, established libraries)
+- [ ] Test against known reference behavior (reference implementations, standards, specifications)
 - [ ] Document intentional deviations from reference behavior
-- [ ] Test common patterns from real-world datasets
+- [ ] Test common patterns from real-world usage
 
-Example for R-style formulas:
+Example:
 ```groovy
-// Real column names from datasets
-Formula.parse('sepal.length ~ sepal.width')  // Dotted names common in R
-Formula.parse('`gross margin` ~ revenue')     // Backtick quoting
-
-// R-style update formulas
-Formula.update('y ~ x + z', '. ~ . - z + w')   // Standard
-Formula.update('y ~ x + z', '~ . - z + w')     // Omitting LHS (R allows this)
+// If implementing R-style formula parsing:
+// Test real column naming patterns from R datasets:
+//   'sepal.length ~ sepal.width'  // Dotted identifiers
+//   '`gross margin` ~ revenue'     // Backtick quoting
+//   'y ~ x + z'                    // Basic form
+//   update(base, '~ . - z + w')    // Shorthand syntax
 ```
 
-### 2.4 Side-specific Semantics
+### 2.4 Context-Sensitive Semantics
 
-For two-sided formulas (response ~ predictors), verify:
+For DSLs with context-sensitive semantics (e.g., left-side vs right-side), verify that operators/keywords have the correct meaning in each context:
 
 ```groovy
-// Left side (response) should reject what right side accepts
-Formula.normalize('y ~ 0 + x')        // OK: no intercept on predictor side
-Formula.normalize('0 ~ x')            // Should this be OK? Probably not!
-Formula.normalize('y - 1 ~ x')        // Should error: can't subtract from response
+// Example: Formula parsing has different semantics on each side of '~'
+// Right side (predictors): accepts operators like +, -, *, /, ^
+// Left side (response): should reject most operators
 
-// Operators that differ by side
-Formula.normalize('y ~ x - z')        // OK: remove z from model
-Formula.normalize('y - z ~ x')        // Should error: can't subtract from response
+// Valid on right side, invalid on left side:
+//   'y ~ x - z'     // OK: remove z from predictors
+//   'y - z ~ x'     // ERROR: can't subtract from response
+
+// Valid on right side, invalid on left side:
+//   'y ~ 0 + x'     // OK: no intercept
+//   '0 ~ x'         // ERROR: literal 0 as response
 ```
 
-**Check:** Is the parser correctly distinguishing response-side from predictor-side semantics?
+**Check:** Does the implementation correctly track context and apply appropriate validation rules?
 
 ### 2.5 Tokenization Ambiguity
 
-Test token boundaries:
+Test token boundaries where lexical elements might be confused:
+
 ```groovy
-// Dotted identifiers vs dot operator
-Formula.parse('y.foo ~ x')            // Is 'y.foo' one identifier or 'y' '.' 'foo'?
-Formula.parse('y . foo ~ x')          // Explicit dot operator
+// Example: Dotted identifiers vs dot operator in formula parsing
+// Is 'y.foo' one identifier or 'y' '.' 'foo'?
+// Test both: 'y.foo ~ x' vs 'y . foo ~ x'
 
-// Scientific notation edge cases
-Formula.parse('y ~ 1e2')              // Exponent notation
-Formula.parse('y ~ 1e')               // Invalid: incomplete exponent
-Formula.parse('y ~ 1.5.6')            // Invalid: multiple decimals
-
-// Backtick contents
-Formula.parse('y ~ `x + y`')          // Should 'x + y' be literal name, not expression
+// General cases to consider:
+// - Special characters in identifiers (dots, underscores, numbers)
+// - Multi-character operators vs sequences of single-character operators
+// - Escaped/quoted content that should be treated as literal
+// - Whitespace sensitivity (when present vs absent)
 ```
+
+### 2.6 Syntax Variation Testing (CRITICAL)
+
+Test ALL variations of supported syntax, not just the canonical form:
+
+**Principle:** If a feature has multiple syntactic forms, test each one.
+
+```groovy
+// Example: R-style formula update syntax has multiple forms
+// All of these should work equivalently:
+// update(base, '. ~ . - z + w')      // Standard: explicit dot
+// update(base, '~ . - z + w')        // Shorthand: omitted LHS
+// update(base, '. ~ - z + w')        // Without dot on RHS
+```
+
+**Key insight:** Different user communities (R, Python, SAS, SQL) have different syntax conventions. Users will try variations based on their background. Test the variations that users from each background might try.
+
+### 2.7 Real-World Pattern Testing
+
+Test with realistic data patterns, not just synthetic examples:
+
+```groovy
+// Example: Formula parsing should handle real column naming patterns
+// Synthetic: 'y ~ x + z'
+// Real-world: 'sepal.length ~ sepal.width' (dot-separated)
+// Real-world: '`Gross Margin` ~ Revenue' (spaces in names)
+// Real-world: 'log(Income) ~ Age + Education' (transforms + multiple terms)
+```
+
+Use patterns from:
+- Famous public datasets in the domain
+- The project's own example data
+- Documentation examples from reference implementations
+- Community usage patterns (Stack Overflow, forums)
+
+### 2.8 Feature Interaction Testing (CRITICAL)
+
+**Test combinations of features**, not just features in isolation:
+
+```groovy
+// Example: Dot expansion + Power operator in formulas
+// Tested separately:
+//   normalize('y ~ .')      // Dot expansion
+//   normalize('y ~ (a+b)^2') // Power operator
+// Must ALSO test combined:
+//   normalize('y ~ .^2')    // Dot + Power interaction
+
+// Example: Grouping + Operators
+//   normalize('y ~ (a + b)^2 - a:b')  // Power then subtraction
+//   normalize('y ~ (a + b) * c')      // Grouping then expansion
+```
+
+**Key insight:** Features that work independently may fail when combined. The matrix of feature combinations must be tested.
+
+### 2.9 Rejection Policy Completeness
+
+When a feature should reject certain inputs, test ALL syntactic forms of that invalid input:
+
+```groovy
+// Example: Multi-response formulas should be rejected
+// Same conceptual error, different syntax:
+//   'y1 + y2 ~ x'           // Binary operator
+//   'cbind(y1, y2) ~ x'     // Function call
+//   'c(y1, y2) ~ x'         // Alternative function name
+//   '(y1 + y2) ~ x'         // Grouped expression
+
+// Example: Invalid response-side operations
+//   'y - z ~ x'             // Subtraction
+//   'y * z ~ x'             // Multiplication
+//   'y:z ~ x'               // Interaction syntax
+```
+
+**Check:** Is the rejection logic consistent across all syntactic forms of the same conceptual error?
 
 ---
 
@@ -164,12 +254,13 @@ For **every public method**, mentally execute these inputs:
 | Array | `null`, `[]` | Same as above |
 | Number | `null`, `NaN`, `Infinity` | Validate appropriately |
 
-Example for `Formula.parse(String formula)`:
+Example:
 ```groovy
-Formula.parse(null)        // Should throw, not NPE
-Formula.parse("")          // Should throw descriptive error
-Formula.parse("   ")       // Should throw (blank check)
-Formula.parse("y ~ `foo")  // Unterminated backtick
+// For a parser method:
+parse(null)                // Should throw, not NPE
+parse("")                  // Should throw descriptive error
+parse("   ")               // Should throw (blank check)
+parse("unterminated `foo") // Unterminated quote/escape
 ```
 
 ### 3.2 Boundary Values
@@ -294,18 +385,23 @@ Look for missing tests of:
 
 ```groovy
 // BAD: This test passes but behavior is wrong
-void testResponseSideSubtraction() {
-  def result = Formula.normalize('y - z ~ x')
-  assertEquals('y ~ 1 + x', result.asFormulaString())  // Silent data loss!
+void testInvalidOperation() {
+  def result = parser.parse('invalid - operation')
+  assertEquals('simplified', result.toString())  // Silent data loss!
 }
 
 // GOOD: Invalid input should error
-void testRejectsResponseSideSubtraction() {
-  assertThrows(FormulaParseException) {
-    Formula.normalize('y - z ~ x')
+void testRejectsInvalidOperation() {
+  assertThrows(ParseException) {
+    parser.parse('invalid - operation')
   }
 }
 ```
+
+**Key rule:** Tests should verify that:
+1. Valid inputs produce correct outputs
+2. Invalid inputs produce errors (not garbage outputs)
+3. Edge cases are handled consistently
 
 ---
 
@@ -339,22 +435,19 @@ grep -rn "println\|System.out\|System.err\|LoggerFactory\|log4j" src/main/groovy
 
 ## Phase 8: Domain-Specific Validation
 
-### 8.1 Formula/Grammar Implementations
+### 8.1 Parser/Grammar Implementations
 
 Additional checks for parser/grammar implementations:
 
 ```groovy
 // 1. Operator precedence correctness
-Formula.parse('y ~ a + b * c')       // Should parse as a + (b * c) or (a + b) * c?
-Formula.parse('y ~ a : b ^ 2')       // Should parse as (a : b) ^ 2 or a : (b ^ 2)?
+// Example: 'a + b * c' should parse as a + (b * c), not (a + b) * c
 
 // 2. Associativity
-Formula.parse('y ~ a - b - c')       // Should be (a - b) - c, not a - (b - c)
-Formula.parse('y ~ a / b / c')       // Nesting associativity
+// Example: 'a - b - c' should be (a - b) - c, not a - (b - c)
 
 // 3. Whitespace handling
-Formula.parse('y~x+z')               // Should work without spaces
-Formula.parse('y ~ x   +   z')       // Should work with extra spaces
+// Test both: 'a+b' and 'a + b' should be equivalent
 
 // 4. Comment/documentation examples actually work
 // Copy examples from GroovyDoc and verify they produce expected output
@@ -438,9 +531,10 @@ Before submitting review, verify:
 
 When reviewing matrix-stats:
 - Statistical classes often need to reject constant/zero-variance data
-- R-style formulas have specific semantics (intercept handling, `^` for interactions)
-- **CRITICAL:** Response-side operators differ from predictor-side
-- **CRITICAL:** Dotted identifiers (`sepal.length`) must work
+- **CRITICAL:** R-style formulas have complex context-sensitive semantics
+  - Response-side vs predictor-side validation differs
+  - Operators interact (e.g., dot expansion + power)
+  - Multiple syntactic forms for same concept (multi-response)
 - Distribution classes need validation for probability range [0,1]
 - All new code should remove/replace commons-math3 dependencies
 
@@ -468,6 +562,47 @@ find src/main/groovy -name "*.groovy" -exec grep -L "@CompileStatic" {} \;  # Mi
 # Test semantic edge cases (add to test file temporarily)
 echo "Testing semantic edge cases..."
 ```
+
+---
+
+## Post-Review Analysis: Learning from Misses
+
+When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
+
+### Common Miss Patterns
+
+| Miss Type | Example | Why It Happened | Prevention |
+|-----------|---------|-----------------|------------|
+| **Happy path bias** | Only tested `y + z ~ x` (multiple responses), missed `y - z ~ x` (invalid operation) | Focused on "does it work" not "does it fail correctly" | Test ALL operators on both sides of `~` |
+| **Syntax variation gap** | Tested `. ~ . - z + w` but missed `~ . - z + w` | Assumed one form was sufficient | Test ALL documented syntax variations |
+| **Real-world disconnect** | Tested `` `foo bar` `` but missed `sepal.length` | Used synthetic examples, not dataset patterns | Use actual column names from famous datasets |
+| **Silent acceptance** | Didn't catch that invalid inputs produced valid-looking outputs | Only checked for crashes, not correctness | Verify invalid inputs produce errors, not garbage |
+| **Feature interaction blindspot** | Tested `.` and `^` separately, missed `.^2` | Tested features in isolation | Phase 2.8: Test combinations of features |
+| **Rejection policy gap** | Tested `y1 + y2 ~ x` but missed `cbind(y1, y2) ~ x` | Only tested one form of invalid input | Phase 2.9: Test ALL syntactic forms of invalid input |
+
+### Analysis Template
+
+When an issue is found post-review, document:
+1. **The bug:** What was the incorrect behavior?
+2. **The test that would have caught it:** What specific input triggers it?
+3. **Why it was missed:** Which checklist item was insufficient?
+4. **The fix:** What was added to prevent recurrence?
+
+**Example Analysis:**
+
+| Bug | Test That Would Catch It | Miss Type | Prevention |
+|-----|--------------------------|-----------|------------|
+| Invalid operation accepted on wrong side of DSL | Test ALL operators in ALL contexts | Context sensitivity gap | Phase 2.4: Context-sensitive semantics |
+| Feature combination loses semantics | Test features together, not just separately | Feature interaction blindspot | Phase 2.8: Feature interaction testing |
+| Invalid input accepted in alternative syntax | Test ALL syntactic forms of invalid input | Rejection policy gap | Phase 2.9: Rejection policy completeness |
+| Shorthand syntax rejected | Test ALL documented syntax variations | Syntax variation gap | Phase 2.6: Syntax variation testing |
+| Real-world patterns fail | Use actual dataset patterns, not synthetic | Real-world disconnect | Phase 2.7: Real-world pattern testing |
+
+**Detailed Example from PR #275 (formula parsing):**
+- **Bug:** `Formula.normalize('y - z ~ x')` produced `'y ~ 1 + x'` instead of erroring
+- **Root cause:** Response-side validation only checked for `+` (multi-response), not other operators
+- **Why missed:** Happy path bias - tested what should work, not what should fail
+- **Fix:** Added comprehensive response-side validation and `testRejectsInvalidResponseSideExpressions()`
 
 ---
 
