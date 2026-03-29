@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
  * Canonical formula representation with explicit intercept handling and normalized predictor terms.
  */
 @CompileStatic
-class NormalizedFormula {
+final class NormalizedFormula {
 
   final FormulaExpression response
   final boolean includeIntercept
@@ -20,9 +20,9 @@ class NormalizedFormula {
    * @param predictorTerms the canonical predictor terms
    */
   NormalizedFormula(FormulaExpression response, boolean includeIntercept, List<FormulaTerm> predictorTerms) {
-    this.response = response
+    this.response = requireNonNullValue(response, 'response')
     this.includeIntercept = includeIntercept
-    this.predictorTerms = List.copyOf(predictorTerms)
+    this.predictorTerms = copyTerms(predictorTerms, 'predictorTerms')
   }
 
   /**
@@ -39,5 +39,22 @@ class NormalizedFormula {
   @Override
   String toString() {
     asFormulaString()
+  }
+
+  private static <T> T requireNonNullValue(T value, String label) {
+    if (value == null) {
+      throw new IllegalArgumentException("${label} cannot be null")
+    }
+    value
+  }
+
+  private static List<FormulaTerm> copyTerms(List<FormulaTerm> terms, String label) {
+    if (terms == null) {
+      throw new IllegalArgumentException("${label} cannot be null")
+    }
+    if (terms.any { FormulaTerm term -> term == null }) {
+      throw new IllegalArgumentException("${label} cannot contain null values")
+    }
+    List.copyOf(terms)
   }
 }

@@ -15,19 +15,17 @@ final class FormulaSupport {
   }
 
   static ParsedFormula parse(String formula, String defaultResponse) {
-    if (formula == null || formula.isBlank()) {
-      throw new FormulaParseException('Formula cannot be null or blank', 0)
-    }
-    new Parser(formula).parseFormula(defaultResponse)
+    new Parser(requireFormulaText(formula, 'Formula')).parseFormula(defaultResponse)
   }
 
   static ParsedFormula update(String baseFormula, String updateFormula) {
     ParsedFormula base = parse(baseFormula, null)
-    String normalizedUpdate = updateFormula.contains('~') ? updateFormula : ". ~ ${updateFormula}"
+    String safeUpdate = requireFormulaText(updateFormula, 'Update formula')
+    String normalizedUpdate = safeUpdate.contains('~') ? safeUpdate : ". ~ ${safeUpdate}"
     ParsedFormula updater = parse(normalizedUpdate, null)
     FormulaExpression response = replaceDots(updater.response, base.response)
     FormulaExpression predictors = replaceDots(updater.predictors, base.predictors)
-    new ParsedFormula("${baseFormula} | update ${updateFormula}", response, predictors)
+    new ParsedFormula("${baseFormula} | update ${safeUpdate}", response, predictors)
   }
 
   static NormalizedFormula normalize(ParsedFormula parsedFormula) {
@@ -154,7 +152,13 @@ final class FormulaSupport {
       return [FormulaTerm.of(expression)] as LinkedHashSet<FormulaTerm>
     }
     if (expression instanceof FormulaExpression.NumberLiteral) {
-      return [] as LinkedHashSet<FormulaTerm>
+      if (interceptDirective(expression) != null) {
+        return [] as LinkedHashSet<FormulaTerm>
+      }
+      throw new FormulaParseException(
+        "Numeric literal '${(expression as FormulaExpression.NumberLiteral).sourceText}' is only supported for intercept control",
+        expression.start
+      )
     }
     if (expression instanceof FormulaExpression.Unary) {
       FormulaExpression.Unary unary = expression as FormulaExpression.Unary
@@ -174,14 +178,16 @@ final class FormulaSupport {
 
     FormulaExpression.Binary binary = expression as FormulaExpression.Binary
     Set<FormulaTerm> leftTerms = expandTerms(binary.left)
-    Set<FormulaTerm> rightTerms = expandTerms(binary.right)
 
     switch (binary.operator) {
-      case '+' -> combineSets(leftTerms, rightTerms)
-      case '-' -> subtractSets(leftTerms, rightTerms)
-      case ':' -> interactions(leftTerms, rightTerms)
-      case '*' -> combineSets(combineSets(leftTerms, rightTerms), interactions(leftTerms, rightTerms))
-      case '/' -> combineSets(leftTerms, interactions(nestingBasis(binary.left), rightTerms))
+      case '+' -> combineSets(leftTerms, expandTerms(binary.right))
+      case '-' -> subtractSets(leftTerms, expandTerms(binary.right))
+      case ':' -> interactions(leftTerms, expandTerms(binary.right))
+      case '*' -> {
+        Set<FormulaTerm> rightTerms = expandTerms(binary.right)
+        combineSets(combineSets(leftTerms, rightTerms), interactions(leftTerms, rightTerms))
+      }
+      case '/' -> combineSets(leftTerms, interactions(nestingBasis(binary.left), expandTerms(binary.right)))
       case '^' -> powerTerms(binary.left, binary.right)
       default -> throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
     }
@@ -275,7 +281,7 @@ final class FormulaSupport {
       return
     }
     for (int i = startIndex; i <= terms.size() - (targetSize - current.size()); i++) {
-      List<FormulaTerm> next = new ArrayList<>(current)
+      List<FormulaTerm> next = [*current]
       next << terms[i]
       appendCombinations(terms, targetSize, i + 1, next, result)
     }
@@ -491,6 +497,9 @@ final class FormulaSupport {
       if (index >= source.length()) {
         throw parseError('Unterminated backtick identifier', start)
       }
+      if (builder.isEmpty()) {
+        throw parseError('Backtick identifier cannot be blank', start)
+      }
       index++ // closing backtick
       new FormulaToken(TokenType.BACKTICK_IDENTIFIER, builder.toString(), start, index)
     }
@@ -668,6 +677,13 @@ final class FormulaSupport {
   }
 
   private static FormulaParseException invalidExponent(int position, String sourceText) {
-    parseError(sourceText, Math.max(0, sourceText.length() - 1), "Interaction expansion (^) requires a positive integer exponent, got '${sourceText}'")
+    new FormulaParseException("Interaction expansion (^) requires a positive integer exponent, got '${sourceText}'", position)
+  }
+
+  private static String requireFormulaText(String value, String label) {
+    if (value == null || value.isBlank()) {
+      throw new FormulaParseException("${label} cannot be null or blank", 0)
+    }
+    value
   }
 }

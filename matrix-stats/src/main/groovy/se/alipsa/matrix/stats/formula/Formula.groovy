@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
  * Public entry point for formula parsing, normalization, and updates.
  */
 @CompileStatic
-class Formula {
+final class Formula {
 
   private Formula() {
   }
@@ -40,7 +40,9 @@ class Formula {
    * @return the parsed formula AST
    */
   static ParsedFormula of(String response, String predictors) {
-    parse("${response} ~ ${predictors}")
+    String safeResponse = requireFragment(response, 'response')
+    String safePredictors = requireFragment(predictors, 'predictors')
+    parse("${safeResponse} ~ ${safePredictors}")
   }
 
   /**
@@ -83,5 +85,12 @@ class Formula {
    */
   static ParsedFormula update(String baseFormula, String updateFormula) {
     FormulaSupport.update(baseFormula, updateFormula)
+  }
+
+  private static String requireFragment(String value, String label) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("${label} cannot be null or blank")
+    }
+    value
   }
 }

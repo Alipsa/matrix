@@ -28,6 +28,9 @@ abstract class FormulaExpression {
     asFormulaString()
   }
 
+  /**
+   * Variable reference, including optional backtick-quoted names.
+   */
   @CompileStatic
   static final class Variable extends FormulaExpression {
     final String name
@@ -35,7 +38,7 @@ abstract class FormulaExpression {
 
     Variable(String name, boolean quoted, int start, int end) {
       super(start, end)
-      this.name = name
+      this.name = requireNonBlank(name, 'name')
       this.quoted = quoted
     }
 
@@ -48,6 +51,9 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Dot placeholder used for later model-frame expansion.
+   */
   @CompileStatic
   static final class Dot extends FormulaExpression {
     Dot(int start, int end) {
@@ -60,6 +66,9 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Numeric literal used inside formula expressions.
+   */
   @CompileStatic
   static final class NumberLiteral extends FormulaExpression {
     final BigDecimal value
@@ -67,8 +76,8 @@ abstract class FormulaExpression {
 
     NumberLiteral(BigDecimal value, String sourceText, int start, int end) {
       super(start, end)
-      this.value = value
-      this.sourceText = sourceText
+      this.value = requireNonNullValue(value, 'value')
+      this.sourceText = requireNonBlank(sourceText, 'sourceText')
     }
 
     @Override
@@ -77,6 +86,9 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Function or transform call such as {@code log(x)} or {@code I(x + y)}.
+   */
   @CompileStatic
   static final class FunctionCall extends FormulaExpression {
     final String name
@@ -84,8 +96,8 @@ abstract class FormulaExpression {
 
     FunctionCall(String name, List<FormulaExpression> arguments, int start, int end) {
       super(start, end)
-      this.name = name
-      this.arguments = List.copyOf(arguments)
+      this.name = requireNonBlank(name, 'name')
+      this.arguments = copyExpressions(arguments, 'arguments')
     }
 
     @Override
@@ -94,6 +106,9 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Unary expression such as {@code -1} or {@code +x}.
+   */
   @CompileStatic
   static final class Unary extends FormulaExpression {
     final String operator
@@ -101,8 +116,8 @@ abstract class FormulaExpression {
 
     Unary(String operator, FormulaExpression expression, int start, int end) {
       super(start, end)
-      this.operator = operator
-      this.expression = expression
+      this.operator = requireNonBlank(operator, 'operator')
+      this.expression = requireNonNullValue(expression, 'expression')
     }
 
     @Override
@@ -112,6 +127,9 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Binary operator expression such as addition, interaction, or nesting.
+   */
   @CompileStatic
   static final class Binary extends FormulaExpression {
     final String operator
@@ -120,9 +138,9 @@ abstract class FormulaExpression {
 
     Binary(String operator, FormulaExpression left, FormulaExpression right, int start, int end) {
       super(start, end)
-      this.operator = operator
-      this.left = left
-      this.right = right
+      this.operator = requireNonBlank(operator, 'operator')
+      this.left = requireNonNullValue(left, 'left')
+      this.right = requireNonNullValue(right, 'right')
     }
 
     @Override
@@ -145,18 +163,45 @@ abstract class FormulaExpression {
     }
   }
 
+  /**
+   * Parenthesized subexpression that preserves grouping during parsing.
+   */
   @CompileStatic
   static final class Grouping extends FormulaExpression {
     final FormulaExpression expression
 
     Grouping(FormulaExpression expression, int start, int end) {
       super(start, end)
-      this.expression = expression
+      this.expression = requireNonNullValue(expression, 'expression')
     }
 
     @Override
     String asFormulaString() {
       "(${expression.asFormulaString()})"
     }
+  }
+
+  private static String requireNonBlank(String value, String label) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("${label} cannot be null or blank")
+    }
+    value
+  }
+
+  private static <T> T requireNonNullValue(T value, String label) {
+    if (value == null) {
+      throw new IllegalArgumentException("${label} cannot be null")
+    }
+    value
+  }
+
+  private static List<FormulaExpression> copyExpressions(List<FormulaExpression> expressions, String label) {
+    if (expressions == null) {
+      throw new IllegalArgumentException("${label} cannot be null")
+    }
+    if (expressions.any { FormulaExpression expression -> expression == null }) {
+      throw new IllegalArgumentException("${label} cannot contain null values")
+    }
+    List.copyOf(expressions)
   }
 }

@@ -40,6 +40,14 @@ class FormulaTest {
   }
 
   @Test
+  void testCreatesFormulaFromFragments() {
+    ParsedFormula parsed = Formula.of('y', 'x + z')
+
+    assertEquals('y ~ x + z', parsed.toString())
+    assertEquals('y ~ 1 + x + z', parsed.normalizedFormulaString())
+  }
+
+  @Test
   void testNormalizesInteractionsAndInterceptControl() {
     def normalized = Formula.normalize('y ~ 0 + x * z')
 
@@ -106,6 +114,28 @@ class FormulaTest {
   }
 
   @Test
+  void testRejectsNullAndBlankFormulaInputs() {
+    FormulaParseException nullException = assertThrows(FormulaParseException) {
+      Formula.parse(null)
+    }
+    FormulaParseException blankException = assertThrows(FormulaParseException) {
+      Formula.normalize('')
+    }
+
+    assertTrue(nullException.message.contains('Formula cannot be null or blank'))
+    assertTrue(blankException.message.contains('Formula cannot be null or blank'))
+  }
+
+  @Test
+  void testRejectsNullFormulaFragments() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Formula.of(null, 'x')
+    }
+
+    assertTrue(exception.message.contains('response cannot be null or blank'))
+  }
+
+  @Test
   void testRejectsMissingFormulaClosingParenthesisWithLocation() {
     FormulaParseException exception = assertThrows(FormulaParseException) {
       Formula.parse('y ~ log(x')
@@ -116,6 +146,37 @@ class FormulaTest {
   }
 
   @Test
+  void testRejectsMissingRightHandSide() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.parse('y ~')
+    }
+
+    assertTrue(exception.message.contains('missing a right-hand side'))
+  }
+
+  @Test
+  void testRejectsUnterminatedAndEmptyBackticks() {
+    FormulaParseException unterminated = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ `foo')
+    }
+    FormulaParseException empty = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ ``')
+    }
+
+    assertTrue(unterminated.message.contains('Unterminated backtick identifier'))
+    assertTrue(empty.message.contains('Backtick identifier cannot be blank'))
+  }
+
+  @Test
+  void testRejectsInvalidScientificNotation() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ I(1.5e)')
+    }
+
+    assertTrue(exception.message.contains('Invalid scientific notation'))
+  }
+
+  @Test
   void testRejectsNonIntegerExponentWithValueInMessage() {
     FormulaParseException exception = assertThrows(FormulaParseException) {
       Formula.normalize('y ~ (a + b)^1.5e0')
@@ -123,6 +184,24 @@ class FormulaTest {
 
     assertTrue(exception.message.contains("requires a positive integer exponent"))
     assertTrue(exception.message.contains("got '1.5e0'"))
+  }
+
+  @Test
+  void testRejectsNumericLiteralOutsideInterceptControl() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ 2 + x')
+    }
+
+    assertTrue(exception.message.contains("Numeric literal '2' is only supported for intercept control"))
+  }
+
+  @Test
+  void testRejectsNullUpdateFormula() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.update('y ~ x', null)
+    }
+
+    assertTrue(exception.message.contains('Update formula cannot be null or blank'))
   }
 
   @Test
