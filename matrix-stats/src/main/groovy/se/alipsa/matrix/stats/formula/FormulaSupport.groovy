@@ -3,8 +3,6 @@ package se.alipsa.matrix.stats.formula
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
-import java.math.MathContext
-
 /**
  * Internal parsing and normalization support for formula handling.
  */
@@ -12,8 +10,6 @@ import java.math.MathContext
 @PackageScope
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 final class FormulaSupport {
-
-  private static final MathContext MATH_CONTEXT = MathContext.DECIMAL64
 
   private FormulaSupport() {
   }
@@ -59,18 +55,11 @@ final class FormulaSupport {
 
   static int operatorPrecedence(String operator) {
     switch (operator) {
-      case ':':
-        return 4
-      case '^':
-        return 3
-      case '*':
-      case '/':
-        return 2
-      case '+':
-      case '-':
-        return 1
-      default:
-        return 0
+      case ':' -> 4
+      case '^' -> 3
+      case '*', '/' -> 2
+      case '+', '-' -> 1
+      default -> 0
     }
   }
 
@@ -188,20 +177,13 @@ final class FormulaSupport {
     Set<FormulaTerm> rightTerms = expandTerms(binary.right)
 
     switch (binary.operator) {
-      case '+':
-        return combineSets(leftTerms, rightTerms)
-      case '-':
-        return subtractSets(leftTerms, rightTerms)
-      case ':':
-        return interactions(leftTerms, rightTerms)
-      case '*':
-        return combineSets(combineSets(leftTerms, rightTerms), interactions(leftTerms, rightTerms))
-      case '/':
-        return combineSets(leftTerms, interactions(nestingBasis(binary.left), rightTerms))
-      case '^':
-        return powerTerms(binary.left, binary.right)
-      default:
-        throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
+      case '+' -> combineSets(leftTerms, rightTerms)
+      case '-' -> subtractSets(leftTerms, rightTerms)
+      case ':' -> interactions(leftTerms, rightTerms)
+      case '*' -> combineSets(combineSets(leftTerms, rightTerms), interactions(leftTerms, rightTerms))
+      case '/' -> combineSets(leftTerms, interactions(nestingBasis(binary.left), rightTerms))
+      case '^' -> powerTerms(binary.left, binary.right)
+      default -> throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
     }
   }
 
@@ -241,17 +223,10 @@ final class FormulaSupport {
 
     FormulaExpression.Binary binary = expression as FormulaExpression.Binary
     switch (binary.operator) {
-      case '+':
-      case ':':
-      case '*':
-      case '/':
-        return mergeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
-      case '-':
-        return removeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
-      case '^':
-        return nestingFactors(binary.left)
-      default:
-        throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
+      case '+', ':', '*', '/' -> mergeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
+      case '-' -> removeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
+      case '^' -> nestingFactors(binary.left)
+      default -> throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
     }
   }
 
@@ -272,22 +247,19 @@ final class FormulaSupport {
   }
 
   private static int positiveIntegerExponent(FormulaExpression expression) {
+    String sourceText = expression.asFormulaString()
     if (!(expression instanceof FormulaExpression.NumberLiteral)) {
-      throw new FormulaParseException('Interaction expansion (^) requires a positive integer exponent', expression.start)
+      throw invalidExponent(expression.start, sourceText)
     }
     FormulaExpression.NumberLiteral numberLiteral = expression as FormulaExpression.NumberLiteral
+    BigDecimal normalized = numberLiteral.value.stripTrailingZeros()
+    if (normalized.scale() > 0 || normalized <= BigDecimal.ZERO) {
+      throw invalidExponent(expression.start, numberLiteral.sourceText)
+    }
     try {
-      BigDecimal integerValue = numberLiteral.value.round(MATH_CONTEXT)
-      if (integerValue.scale() > 0 && integerValue.stripTrailingZeros().scale() > 0) {
-        throw new NumberFormatException(numberLiteral.sourceText)
-      }
-      int exponent = integerValue.intValueExact()
-      if (exponent < 1) {
-        throw new NumberFormatException(numberLiteral.sourceText)
-      }
-      exponent
-    } catch (ArithmeticException | NumberFormatException ignored) {
-      throw new FormulaParseException('Interaction expansion (^) requires a positive integer exponent', expression.start)
+      normalized.intValueExact()
+    } catch (ArithmeticException ignored) {
+      throw invalidExponent(expression.start, numberLiteral.sourceText)
     }
   }
 
@@ -420,49 +392,13 @@ final class FormulaSupport {
         }
 
         int start = index
-        switch (current) {
-          case '~':
-            tokens << new FormulaToken(TokenType.TILDE, '~', start, ++index)
-            continue
-          case '+':
-            tokens << new FormulaToken(TokenType.PLUS, '+', start, ++index)
-            continue
-          case '-':
-            tokens << new FormulaToken(TokenType.MINUS, '-', start, ++index)
-            continue
-          case ':':
-            tokens << new FormulaToken(TokenType.COLON, ':', start, ++index)
-            continue
-          case '*':
-            tokens << new FormulaToken(TokenType.STAR, '*', start, ++index)
-            continue
-          case '/':
-            tokens << new FormulaToken(TokenType.SLASH, '/', start, ++index)
-            continue
-          case '^':
-            tokens << new FormulaToken(TokenType.CARET, '^', start, ++index)
-            continue
-          case '(':
-            tokens << new FormulaToken(TokenType.LPAREN, '(', start, ++index)
-            continue
-          case ')':
-            tokens << new FormulaToken(TokenType.RPAREN, ')', start, ++index)
-            continue
-          case ',':
-            tokens << new FormulaToken(TokenType.COMMA, ',', start, ++index)
-            continue
-          case '.':
-            tokens << new FormulaToken(TokenType.DOT, '.', start, ++index)
-            continue
-          case '`':
-            tokens << backtickIdentifier(start)
-            continue
-          default:
-            break
-        }
-
-        if (Character.isDigit(current)) {
+        if (isNumberStart(current)) {
           tokens << numberLiteral(start)
+          continue
+        }
+        FormulaToken singleCharacterToken = singleCharacterToken(current, start)
+        if (singleCharacterToken != null) {
+          tokens << singleCharacterToken
           continue
         }
         if (Character.isLetter(current) || current == '_') {
@@ -474,6 +410,28 @@ final class FormulaSupport {
       }
       tokens << new FormulaToken(TokenType.EOF, '', source.length(), source.length())
       tokens
+    }
+
+    private boolean isNumberStart(char current) {
+      Character.isDigit(current) || (current == '.' && index + 1 < source.length() && Character.isDigit(source.charAt(index + 1)))
+    }
+
+    private FormulaToken singleCharacterToken(char current, int start) {
+      switch (current) {
+        case '~' -> new FormulaToken(TokenType.TILDE, '~', start, ++index)
+        case '+' -> new FormulaToken(TokenType.PLUS, '+', start, ++index)
+        case '-' -> new FormulaToken(TokenType.MINUS, '-', start, ++index)
+        case ':' -> new FormulaToken(TokenType.COLON, ':', start, ++index)
+        case '*' -> new FormulaToken(TokenType.STAR, '*', start, ++index)
+        case '/' -> new FormulaToken(TokenType.SLASH, '/', start, ++index)
+        case '^' -> new FormulaToken(TokenType.CARET, '^', start, ++index)
+        case '(' -> new FormulaToken(TokenType.LPAREN, '(', start, ++index)
+        case ')' -> new FormulaToken(TokenType.RPAREN, ')', start, ++index)
+        case ',' -> new FormulaToken(TokenType.COMMA, ',', start, ++index)
+        case '.' -> new FormulaToken(TokenType.DOT, '.', start, ++index)
+        case '`' -> backtickIdentifier(start)
+        default -> null
+      }
     }
 
     private FormulaToken identifier(int start) {
@@ -488,16 +446,39 @@ final class FormulaSupport {
     }
 
     private FormulaToken numberLiteral(int start) {
-      while (index < source.length() && Character.isDigit(source.charAt(index))) {
+      if (source.charAt(index) == '.') {
         index++
+        while (index < source.length() && Character.isDigit(source.charAt(index))) {
+          index++
+        }
+      } else {
+        while (index < source.length() && Character.isDigit(source.charAt(index))) {
+          index++
+        }
+        if (index < source.length() && source.charAt(index) == '.') {
+          index++
+          while (index < source.length() && Character.isDigit(source.charAt(index))) {
+            index++
+          }
+        }
       }
-      if (index < source.length() && source.charAt(index) == '.') {
-        index++
+      if (index < source.length() && isExponentMarker(source.charAt(index))) {
+        int exponentStart = index++
+        if (index < source.length() && (source.charAt(index) == '+' || source.charAt(index) == '-')) {
+          index++
+        }
+        if (index >= source.length() || !Character.isDigit(source.charAt(index))) {
+          throw parseError('Invalid scientific notation', exponentStart)
+        }
         while (index < source.length() && Character.isDigit(source.charAt(index))) {
           index++
         }
       }
       new FormulaToken(TokenType.NUMBER, source.substring(start, index), start, index)
+    }
+
+    private static boolean isExponentMarker(char current) {
+      current == 'e' || current == 'E'
     }
 
     private FormulaToken backtickIdentifier(int start) {
@@ -611,25 +592,27 @@ final class FormulaSupport {
 
     private FormulaExpression parsePrimary() {
       FormulaToken token = advance()
-      switch (token.type) {
-        case TokenType.IDENTIFIER:
-          if (match(TokenType.LPAREN)) {
-            return parseFunctionCall(token)
-          }
-          return new FormulaExpression.Variable(token.text, false, token.start, token.end)
-        case TokenType.BACKTICK_IDENTIFIER:
-          return new FormulaExpression.Variable(token.text, true, token.start, token.end)
-        case TokenType.NUMBER:
-          return new FormulaExpression.NumberLiteral(new BigDecimal(token.text), token.text, token.start, token.end)
-        case TokenType.DOT:
-          return new FormulaExpression.Dot(token.start, token.end)
-        case TokenType.LPAREN:
-          FormulaExpression inner = parseExpression()
-          FormulaToken closing = expect(TokenType.RPAREN, "Expected ')' to close grouped expression")
-          return new FormulaExpression.Grouping(inner, token.start, closing.end)
-        default:
-          throw parseError("Unexpected token '${token.text ?: token.type.name()}'", token.start)
+      if (token.type == TokenType.IDENTIFIER) {
+        if (match(TokenType.LPAREN)) {
+          return parseFunctionCall(token)
+        }
+        return new FormulaExpression.Variable(token.text, false, token.start, token.end)
       }
+      if (token.type == TokenType.BACKTICK_IDENTIFIER) {
+        return new FormulaExpression.Variable(token.text, true, token.start, token.end)
+      }
+      if (token.type == TokenType.NUMBER) {
+        return new FormulaExpression.NumberLiteral(new BigDecimal(token.text), token.text, token.start, token.end)
+      }
+      if (token.type == TokenType.DOT) {
+        return new FormulaExpression.Dot(token.start, token.end)
+      }
+      if (token.type == TokenType.LPAREN) {
+        FormulaExpression inner = parseExpression()
+        FormulaToken closing = expect(TokenType.RPAREN, "Expected ')' to close grouped expression")
+        return new FormulaExpression.Grouping(inner, token.start, closing.end)
+      }
+      throw parseError("Unexpected token '${token.text ?: token.type.name()}'", token.start)
     }
 
     private FormulaExpression parseFunctionCall(FormulaToken nameToken) {
@@ -682,5 +665,9 @@ final class FormulaSupport {
     int safePosition = Math.max(0, Math.min(position, source.length()))
     String pointer = "${' ' * safePosition}^"
     new FormulaParseException("${message} at position ${safePosition}\n${source}\n${pointer}", safePosition)
+  }
+
+  private static FormulaParseException invalidExponent(int position, String sourceText) {
+    parseError(sourceText, Math.max(0, sourceText.length() - 1), "Interaction expansion (^) requires a positive integer exponent, got '${sourceText}'")
   }
 }

@@ -33,6 +33,13 @@ class FormulaTest {
   }
 
   @Test
+  void testParsesScientificNotationAndLeadingDecimalNumbers() {
+    ParsedFormula parsed = Formula.parse('y ~ I(+.5 + 1.5e-2 + x)')
+
+    assertEquals('I(+.5 + 1.5e-2 + x)', parsed.predictors.asFormulaString())
+  }
+
+  @Test
   void testNormalizesInteractionsAndInterceptControl() {
     def normalized = Formula.normalize('y ~ 0 + x * z')
 
@@ -106,6 +113,16 @@ class FormulaTest {
 
     assertTrue(exception.message.contains("Expected ')'"))
     assertTrue(exception.message.contains('position'))
+  }
+
+  @Test
+  void testRejectsNonIntegerExponentWithValueInMessage() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.normalize('y ~ (a + b)^1.5e0')
+    }
+
+    assertTrue(exception.message.contains("requires a positive integer exponent"))
+    assertTrue(exception.message.contains("got '1.5e0'"))
   }
 
   @Test
