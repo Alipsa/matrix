@@ -226,7 +226,7 @@ class FormulaTest {
   }
 
   @Test
-  void testRejectsDotInteractionPowerBeforeExpansion() {
+  void testRejectsDotInteractionPowerUntilModelFrameExpansion() {
     FormulaParseException exception = assertThrows(FormulaParseException) {
       Formula.normalize('y ~ .^2')
     }
