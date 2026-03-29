@@ -54,6 +54,20 @@ class FormulaTest {
   }
 
   @Test
+  void testNormalizesGroupedNestingOperator() {
+    def normalized = Formula.normalize('y ~ (a + b) / c')
+
+    assertEquals('y ~ 1 + a + b + a:b:c', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesChainedNestingOperator() {
+    def normalized = Formula.normalize('y ~ a / b / c')
+
+    assertEquals('y ~ 1 + a + a:b + a:b:c', normalized.asFormulaString())
+  }
+
+  @Test
   void testPreservesDotForLaterModelFrameExpansion() {
     def normalized = Formula.normalize('y ~ . + x')
 

@@ -197,9 +197,59 @@ final class FormulaSupport {
       case '*':
         return combineSets(combineSets(leftTerms, rightTerms), interactions(leftTerms, rightTerms))
       case '/':
-        return combineSets(leftTerms, interactions(leftTerms, rightTerms))
+        return combineSets(leftTerms, interactions(nestingBasis(binary.left), rightTerms))
       case '^':
         return powerTerms(binary.left, binary.right)
+      default:
+        throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
+    }
+  }
+
+  private static Set<FormulaTerm> nestingBasis(FormulaExpression expression) {
+    List<FormulaExpression> factors = nestingFactors(expression)
+    if (factors.isEmpty()) {
+      return [] as LinkedHashSet<FormulaTerm>
+    }
+    [new FormulaTerm(factors)] as LinkedHashSet<FormulaTerm>
+  }
+
+  private static List<FormulaExpression> nestingFactors(FormulaExpression expression) {
+    if (expression instanceof FormulaExpression.Grouping) {
+      return nestingFactors((expression as FormulaExpression.Grouping).expression)
+    }
+    if (expression instanceof FormulaExpression.Variable ||
+      expression instanceof FormulaExpression.Dot ||
+      expression instanceof FormulaExpression.FunctionCall) {
+      return [expression]
+    }
+    if (expression instanceof FormulaExpression.NumberLiteral) {
+      return []
+    }
+    if (expression instanceof FormulaExpression.Unary) {
+      FormulaExpression.Unary unary = expression as FormulaExpression.Unary
+      if (unary.operator == '+') {
+        return nestingFactors(unary.expression)
+      }
+      if (unary.operator == '-' && interceptDirective(unary) != null) {
+        return []
+      }
+      throw new FormulaParseException("Unary '${unary.operator}' is only supported for intercept control", unary.start)
+    }
+    if (!(expression instanceof FormulaExpression.Binary)) {
+      throw new FormulaParseException("Unsupported formula expression: ${expression.class.simpleName}", expression.start)
+    }
+
+    FormulaExpression.Binary binary = expression as FormulaExpression.Binary
+    switch (binary.operator) {
+      case '+':
+      case ':':
+      case '*':
+      case '/':
+        return mergeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
+      case '-':
+        return removeFactors(nestingFactors(binary.left), nestingFactors(binary.right))
+      case '^':
+        return nestingFactors(binary.left)
       default:
         throw new FormulaParseException("Unsupported formula operator '${binary.operator}'", binary.start)
     }
@@ -274,6 +324,22 @@ final class FormulaSupport {
     result.addAll(leftTerms)
     result.addAll(rightTerms)
     result
+  }
+
+  private static List<FormulaExpression> mergeFactors(List<FormulaExpression> leftFactors, List<FormulaExpression> rightFactors) {
+    Map<String, FormulaExpression> merged = [:]
+    for (FormulaExpression factor : leftFactors) {
+      merged[factor.asFormulaString()] = factor
+    }
+    for (FormulaExpression factor : rightFactors) {
+      merged[factor.asFormulaString()] = factor
+    }
+    merged.values().toList()
+  }
+
+  private static List<FormulaExpression> removeFactors(List<FormulaExpression> leftFactors, List<FormulaExpression> rightFactors) {
+    Set<String> excluded = rightFactors.collect { FormulaExpression factor -> factor.asFormulaString() } as Set<String>
+    leftFactors.findAll { FormulaExpression factor -> !excluded.contains(factor.asFormulaString()) }
   }
 
   private static Set<FormulaTerm> subtractSets(Set<FormulaTerm> leftTerms, Set<FormulaTerm> rightTerms) {
