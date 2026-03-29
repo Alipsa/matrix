@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
  * A normalized predictor term made up of one or more factors.
  */
 @CompileStatic
-class FormulaTerm {
+final class FormulaTerm {
 
   final List<FormulaExpression> factors
 
