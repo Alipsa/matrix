@@ -58,12 +58,12 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     }
     Matrix data = matrix.selectColumns(columnNames)
     int size = columnNames.size()
-    List<BigDecimal> corr = [size<..0, 0..<size].combinations().collect { a, b ->
-      int i = a as int
-      int j = b as int
-      List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
-      List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
-      Correlation.cor(xValues, yValues).round(2)
+    List<BigDecimal> corr = ((size - 1)..0).collectMany { int i ->
+      (0..<size).collect { int j ->
+        List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
+        List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
+        Correlation.cor(xValues, yValues).round(2)
+      }
     }
     def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
         .types([Number] * 2)
