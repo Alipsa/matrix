@@ -66,8 +66,9 @@ class AdfGlsTest {
   void testWithLags() {
     // Test with explicit lag specification
     double[] data = new double[50]
+    Random rnd = new Random(42)
     for (int i = 0; i < 50; i++) {
-      data[i] = 100 + Math.sin(i * 0.2) * 10 + (Math.random() - 0.5) * 3
+      data[i] = 100 + Math.sin(i * 0.2) * 10 + (rnd.nextDouble() - 0.5) * 3
     }
 
     def result = AdfGls.test(data, 2, "drift")
@@ -243,9 +244,10 @@ class AdfGlsTest {
   void testGammaCoefficient() {
     // For a series with unit root, gamma should be close to 0
     double[] randomWalk = new double[50]
+    Random rnd = new Random(123)
     randomWalk[0] = 100
     for (int i = 1; i < 50; i++) {
-      randomWalk[i] = randomWalk[i - 1] + (Math.random() - 0.5)
+      randomWalk[i] = randomWalk[i - 1] + (rnd.nextDouble() - 0.5)
     }
 
     def result = AdfGls.test(randomWalk, 0, "drift")

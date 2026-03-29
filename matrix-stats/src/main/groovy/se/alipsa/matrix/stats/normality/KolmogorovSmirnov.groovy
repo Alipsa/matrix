@@ -2,8 +2,6 @@ package se.alipsa.matrix.stats.normality
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest as ApacheKSTest
-
 import se.alipsa.matrix.stats.distribution.ContinuousDistribution
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 
@@ -109,7 +107,7 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
 @CompileStatic
 class KolmogorovSmirnov {
 
-  private static final ApacheKSTest KS_TEST = new ApacheKSTest()
+  private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
 
   /**
    * Performs a one-sample Kolmogorov-Smirnov test to check if the data follows a normal distribution.
@@ -191,10 +189,10 @@ class KolmogorovSmirnov {
     double[] values2 = sample2.collect { it.doubleValue() } as double[]
 
     // Calculate D statistic
-    double dStatistic = KS_TEST.kolmogorovSmirnovStatistic(values1, values2)
+    double dStatistic = calculateTwoSampleStatistic(values1, values2)
 
     // Calculate p-value
-    double pValue = KS_TEST.kolmogorovSmirnovTest(values1, values2)
+    double pValue = calculateTwoSamplePValue(dStatistic, values1.length, values2.length)
 
     return new KSResult(
       dStatistic: dStatistic,
@@ -236,8 +234,107 @@ class KolmogorovSmirnov {
       return 1.0d
     }
 
+    // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
+    // so callers and tests should not expect exact agreement with finite-sample reference tables.
     double sqrtN = Math.sqrt(sampleSize)
     double lambda = (sqrtN + 0.12d + 0.11d / sqrtN) * dStatistic
+    kolmogorovProbability(lambda)
+  }
+
+  private static double calculateTwoSampleStatistic(double[] sample1, double[] sample2) {
+    long maxDifferenceCount = calculateTwoSampleDifferenceCount(sample1, sample2)
+    maxDifferenceCount / ((sample1.length as long) * sample2.length as double)
+  }
+
+  private static long calculateTwoSampleDifferenceCount(double[] sample1, double[] sample2) {
+    double[] values1 = sample1.clone()
+    double[] values2 = sample2.clone()
+    Arrays.sort(values1)
+    Arrays.sort(values2)
+
+    int index1 = 0
+    int index2 = 0
+    long maxDifferenceCount = 0L
+
+    while (index1 < values1.length || index2 < values2.length) {
+      double nextValue = Math.min(
+        index1 < values1.length ? values1[index1] : Double.POSITIVE_INFINITY,
+        index2 < values2.length ? values2[index2] : Double.POSITIVE_INFINITY
+      )
+
+      while (index1 < values1.length && values1[index1] <= nextValue) {
+        index1++
+      }
+      while (index2 < values2.length && values2[index2] <= nextValue) {
+        index2++
+      }
+
+      long scaledDifference = Math.abs((index1 as long) * values2.length - (index2 as long) * values1.length)
+      maxDifferenceCount = Math.max(maxDifferenceCount, scaledDifference)
+    }
+
+    maxDifferenceCount
+  }
+
+  private static double calculateTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
+    if (dStatistic <= 0.0d) {
+      return 1.0d
+    }
+    if ((sampleSize1 as long) * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
+      long differenceCount = Math.round(dStatistic * sampleSize1 * sampleSize2)
+      return calculateExactTwoSamplePValue(differenceCount, sampleSize1, sampleSize2)
+    }
+
+    double effectiveSize = Math.sqrt((sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
+    double lambda = (effectiveSize + 0.12d + 0.11d / effectiveSize) * dStatistic
+    kolmogorovProbability(lambda)
+  }
+
+  private static double calculateExactTwoSamplePValue(long thresholdCount, int sampleSize1, int sampleSize2) {
+    BigInteger validPathCount = countValidPaths(sampleSize1, sampleSize2, thresholdCount)
+    BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
+    BigDecimal cdf = new BigDecimal(validPathCount)
+      .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
+    double pValue = 1.0d - cdf.doubleValue()
+    Math.max(0.0d, Math.min(1.0d, pValue))
+  }
+
+  private static BigInteger countValidPaths(int sampleSize1, int sampleSize2, long thresholdCount) {
+    BigInteger[][] pathCounts = new BigInteger[sampleSize1 + 1][sampleSize2 + 1]
+    pathCounts[0][0] = BigInteger.ONE
+
+    for (int i = 0; i <= sampleSize1; i++) {
+      for (int j = 0; j <= sampleSize2; j++) {
+        if (i == 0 && j == 0) {
+          continue
+        }
+
+        long differenceCount = Math.abs((i as long) * sampleSize2 - (j as long) * sampleSize1)
+        if (differenceCount > thresholdCount) {
+          pathCounts[i][j] = BigInteger.ZERO
+          continue
+        }
+
+        BigInteger pathsFromLeft = i > 0 ? pathCounts[i - 1][j] : BigInteger.ZERO
+        BigInteger pathsFromBelow = j > 0 ? pathCounts[i][j - 1] : BigInteger.ZERO
+        pathCounts[i][j] = pathsFromLeft.add(pathsFromBelow)
+      }
+    }
+
+    pathCounts[sampleSize1][sampleSize2]
+  }
+
+  private static BigInteger binomial(int n, int k) {
+    int effectiveK = Math.min(k, n - k)
+    BigInteger result = BigInteger.ONE
+    for (int i = 1; i <= effectiveK; i++) {
+      result = result.multiply(BigInteger.valueOf(n - effectiveK + i))
+      result = result.divide(BigInteger.valueOf(i))
+    }
+    result
+  }
+
+  private static double kolmogorovProbability(double lambda) {
     double sum = 0.0d
 
     for (int j = 1; j <= 100; j++) {
@@ -257,6 +354,11 @@ class KolmogorovSmirnov {
     }
     if (data.size() < 2) {
       throw new IllegalArgumentException("Kolmogorov-Smirnov test requires at least 2 observations (got ${data.size()})")
+    }
+    for (Number value : data) {
+      if (value == null) {
+        throw new IllegalArgumentException("Data cannot contain null values")
+      }
     }
   }
 

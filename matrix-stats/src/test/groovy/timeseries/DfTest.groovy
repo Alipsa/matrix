@@ -218,9 +218,10 @@ class DfTest {
   void testGammaCoefficient() {
     // For a series with unit root, gamma should be close to 0
     double[] randomWalk = new double[50]
+    Random rnd = new Random(123)
     randomWalk[0] = 100
     for (int i = 1; i < 50; i++) {
-      randomWalk[i] = randomWalk[i - 1] + (Math.random() - 0.5)
+      randomWalk[i] = randomWalk[i - 1] + (rnd.nextDouble() - 0.5)
     }
 
     def result = Df.test(randomWalk, "drift")
@@ -233,10 +234,11 @@ class DfTest {
   @Test
   void testStatisticRange() {
     // Test multiple series to ensure statistics are in reasonable range
+    Random rnd = new Random(456)
     double[][] testData = [
       (0..29).collect { 100 + it * 0.5 } as double[],  // Trend
       (0..29).collect { 100 + Math.sin(it * 0.3) * 5 } as double[],  // Cyclical
-      (0..29).collect { 100 + (Math.random() - 0.5) * 2 } as double[]  // Stationary
+      (0..29).collect { 100 + (rnd.nextDouble() - 0.5) * 2 } as double[]  // Stationary
     ]
 
     for (double[] data : testData) {
