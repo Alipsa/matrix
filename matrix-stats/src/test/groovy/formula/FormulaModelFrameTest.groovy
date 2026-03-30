@@ -410,4 +410,73 @@ class FormulaModelFrameTest {
     }
     assertTrue(ex.message.contains('Weights size'))
   }
+
+  @Test
+  void testNaOmitDropsRowsWithNulls() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [10.0, 1.0, 2.0],
+        [null, 3.0, 4.0],
+        [30.0, null, 6.0],
+        [40.0, 7.0, 8.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x + z', data)
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 40.0], result.response)
+    assertEquals(2, result.data.rowCount())
+    assertEquals([1, 2], result.droppedRows)
+  }
+
+  @Test
+  void testNaFailThrowsOnNulls() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [null, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .naAction(NaAction.FAIL)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('NA values found'))
+    assertTrue(ex.message.contains('FAIL'))
+  }
+
+  @Test
+  void testNoNullsProducesEmptyDroppedRows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data).evaluate()
+
+    assertTrue(result.droppedRows.isEmpty())
+  }
+
+  @Test
+  void testEmptyDataAfterNaOmitThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[null, 1.0], [null, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data).evaluate()
+    }
+    assertTrue(ex.message.contains('No observations remaining'))
+  }
 }
