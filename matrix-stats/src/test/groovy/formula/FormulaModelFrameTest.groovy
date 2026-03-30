@@ -144,4 +144,39 @@ class FormulaModelFrameTest {
     assertEquals(false, result.includeIntercept)
     assertEquals(['x'], result.predictorNames)
   }
+
+  @Test
+  void testDotPowerExpansion() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b', 'c'])
+      .rows([
+        [10.0, 1.0, 2.0, 3.0],
+        [20.0, 4.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ .^2', data).evaluate()
+
+    // .^2 expands to (a + b + c)^2 = a + b + c + a:b + a:c + b:c
+    assertEquals(['a', 'b', 'c', 'a:b', 'a:c', 'b:c'], result.predictorNames)
+  }
+
+  @Test
+  void testMixedDotPowerExpansion() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b', 'x'])
+      .rows([
+        [10.0, 1.0, 2.0, 3.0],
+        [20.0, 4.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    // dot expands to a, b (x is explicitly named so excluded from dot)
+    // (a + b + x)^2 = a + b + x + a:b + a:x + b:x
+    ModelFrameResult result = ModelFrame.of('y ~ (. + x)^2', data).evaluate()
+
+    assertEquals(['a', 'b', 'x', 'a:b', 'a:x', 'b:x'], result.predictorNames)
+  }
 }
