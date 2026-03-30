@@ -593,4 +593,80 @@ class FormulaModelFrameTest {
     assertEquals(['x', 'z'], result.predictorNames)
     assertEquals([10.0, 20.0], result.response)
   }
+
+  @Test
+  void testSubsetThenNaOmit() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, 2.0],
+        [null, 3.0],
+        [40.0, 4.0],
+        [50.0, 5.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    // Subset keeps rows 1-4 (x > 1), then NA omit drops row 2 (null y)
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .subset { Row row -> (row['x'] as BigDecimal) > 1.0 }
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([20.0, 40.0, 50.0], result.response)
+    assertEquals([2], result.droppedRows) // original row index 2
+  }
+
+  @Test
+  void testWeightsFilteredBySubsetAndNaOmit() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'w'])
+      .rows([
+        [10.0, 1.0, 0.5],
+        [20.0, 2.0, 1.0],
+        [null, 3.0, 1.5],
+        [40.0, 4.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    // Subset keeps rows 1-3 (x > 1), then NA omit drops row 2 (null y)
+    // Surviving weights: row 1 (1.0) and row 3 (2.0)
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights('w')
+      .subset { Row row -> (row['x'] as BigDecimal) > 1.0 }
+      .evaluate()
+
+    assertEquals([20.0, 40.0], result.response)
+    assertEquals([1.0, 2.0], result.weights)
+  }
+
+  @Test
+  void testWeightsColumnNotFoundThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data).weights('w').evaluate()
+    }
+    assertTrue(ex.message.contains("Weights column 'w' not found"))
+  }
+
+  @Test
+  void testOffsetColumnNotFoundThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data).offset('off').evaluate()
+    }
+    assertTrue(ex.message.contains("Offset column 'off' not found"))
+  }
 }
