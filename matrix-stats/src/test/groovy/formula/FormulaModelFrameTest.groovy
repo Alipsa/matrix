@@ -72,4 +72,76 @@ class FormulaModelFrameTest {
     assertNull(result.offset)
     assertTrue(result.droppedRows.isEmpty())
   }
+
+  @Test
+  void testSimpleNumericFormula() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [10.0, 1.0, 2.0],
+        [20.0, 3.0, 4.0],
+        [30.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x + z', data).evaluate()
+
+    assertEquals('y', result.responseName)
+    assertEquals([10.0, 20.0, 30.0], result.response)
+    assertTrue(result.includeIntercept)
+    assertEquals(['x', 'z'], result.predictorNames)
+    assertEquals(3, result.data.rowCount())
+    assertEquals(2, result.data.columnCount())
+    assertTrue(result.droppedRows.isEmpty())
+    assertNull(result.weights)
+    assertNull(result.offset)
+  }
+
+  @Test
+  void testDotExpansion() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b', 'c'])
+      .rows([
+        [10.0, 1.0, 2.0, 3.0],
+        [20.0, 4.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ .', data).evaluate()
+
+    assertEquals(['a', 'b', 'c'], result.predictorNames)
+    assertEquals(2, result.data.rowCount())
+  }
+
+  @Test
+  void testDotWithExclusion() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b', 'c'])
+      .rows([
+        [10.0, 1.0, 2.0, 3.0],
+        [20.0, 4.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ . - b', data).evaluate()
+
+    assertEquals(['a', 'c'], result.predictorNames)
+  }
+
+  @Test
+  void testInterceptExcluded() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ 0 + x', data).evaluate()
+
+    assertEquals(false, result.includeIntercept)
+    assertEquals(['x'], result.predictorNames)
+  }
 }
