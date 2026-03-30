@@ -274,4 +274,140 @@ class FormulaModelFrameTest {
     // Single level -> no indicator columns
     assertEquals(['x'], result.predictorNames)
   }
+
+  @Test
+  void testWeightsByColumnName() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'w'])
+      .rows([
+        [10.0, 1.0, 0.5],
+        [20.0, 2.0, 1.0],
+        [30.0, 3.0, 1.5],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ .', data)
+      .weights('w')
+      .evaluate()
+
+    // w should be excluded from dot expansion
+    assertEquals(['x'], result.predictorNames)
+    assertEquals([0.5, 1.0, 1.5], result.weights)
+  }
+
+  @Test
+  void testWeightsByList() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    List<Number> weights = [1.0, 2.0] as List<Number>
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights(weights)
+      .evaluate()
+
+    assertEquals([1.0, 2.0], result.weights)
+  }
+
+  @Test
+  void testNegativeWeightsThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .weights([-1.0, 2.0] as List<Number>)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('non-negative'))
+  }
+
+  @Test
+  void testOffsetByColumnName() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'off'])
+      .rows([
+        [10.0, 1.0, 0.1],
+        [20.0, 2.0, 0.2],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ .', data)
+      .offset('off')
+      .evaluate()
+
+    assertEquals(['x'], result.predictorNames)
+    assertEquals([0.1, 0.2], result.offset)
+  }
+
+  @Test
+  void testSubsetByClosure() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0], [30.0, 3.0], [40.0, 4.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .subset { Row row -> (row['x'] as BigDecimal) > 1.0 }
+      .evaluate()
+
+    assertEquals([20.0, 30.0, 40.0], result.response)
+    assertEquals(3, result.data.rowCount())
+  }
+
+  @Test
+  void testSubsetByBooleanMask() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0], [30.0, 3.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .subset([true, false, true])
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals(2, result.data.rowCount())
+  }
+
+  @Test
+  void testSubsetMaskSizeMismatchThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .subset([true, false, true])
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('Subset mask size'))
+  }
+
+  @Test
+  void testWeightsSizeMismatchThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .weights([1.0, 2.0, 3.0] as List<Number>)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('Weights size'))
+  }
 }
