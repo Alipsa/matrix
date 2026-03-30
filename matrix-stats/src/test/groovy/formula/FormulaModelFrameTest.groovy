@@ -479,4 +479,118 @@ class FormulaModelFrameTest {
     }
     assertTrue(ex.message.contains('No observations remaining'))
   }
+
+  @Test
+  void testEnvironmentResolvesUnknownVariable() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [z: [3.0, 4.0]]
+    ModelFrameResult result = ModelFrame.of('y ~ x + z', data)
+      .environment(env)
+      .evaluate()
+
+    assertEquals(['x', 'z'], result.predictorNames)
+    assertEquals(2, result.data.rowCount())
+  }
+
+  @Test
+  void testMissingVariableThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x + z + w', data).evaluate()
+    }
+    assertTrue(ex.message.contains('Unknown variable(s)'))
+    assertTrue(ex.message.contains('z'))
+    assertTrue(ex.message.contains('w'))
+  }
+
+  @Test
+  void testMissingResponseThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['a', 'b'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ a + b', data).evaluate()
+    }
+    assertTrue(ex.message.contains("Response variable 'y' not found"))
+  }
+
+  @Test
+  void testNonNumericResponseThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([['hello', 1.0]])
+      .types([String, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data).evaluate()
+    }
+    assertTrue(ex.message.contains('must be numeric'))
+    assertTrue(ex.message.contains('String'))
+  }
+
+  @Test
+  void testNullDataThrows() {
+    assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', (Matrix) null)
+    }
+  }
+
+  @Test
+  void testNullFormulaStringThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    assertThrows(IllegalArgumentException) {
+      ModelFrame.of((String) null, data)
+    }
+  }
+
+  @Test
+  void testNormalizedFormulaPathWithDot() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b', 'c'])
+      .rows([
+        [10.0, 1.0, 2.0, 3.0],
+        [20.0, 4.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    NormalizedFormula normalized = Formula.normalize('y ~ .')
+    ModelFrameResult result = ModelFrame.of(normalized, data).evaluate()
+
+    assertEquals(['a', 'b', 'c'], result.predictorNames)
+  }
+
+  @Test
+  void testNormalizedFormulaWithoutDots() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([[10.0, 1.0, 2.0], [20.0, 3.0, 4.0]])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    NormalizedFormula normalized = Formula.normalize('y ~ x + z')
+    ModelFrameResult result = ModelFrame.of(normalized, data).evaluate()
+
+    assertEquals(['x', 'z'], result.predictorNames)
+    assertEquals([10.0, 20.0], result.response)
+  }
 }
