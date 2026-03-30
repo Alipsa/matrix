@@ -31,9 +31,9 @@ class FormulaModelFrameTest {
       .rows([[1.0, 2.0], [3.0, 4.0]])
       .types([BigDecimal, BigDecimal])
       .build()
-    List<Number> response = [10.0, 20.0] as List<Number>
-    List<Number> weights = [1.0, 2.0] as List<Number>
-    List<Number> offset = [0.1, 0.2] as List<Number>
+    List<Number> response = [10.0, 20.0]
+    List<Number> weights = [1.0, 2.0]
+    List<Number> offset = [0.1, 0.2]
     List<Integer> dropped = [2, 5]
     NormalizedFormula formula = Formula.normalize('y ~ x + z')
 
@@ -60,7 +60,7 @@ class FormulaModelFrameTest {
       .rows([[1.0]])
       .types([BigDecimal])
       .build()
-    List<Number> response = [10.0] as List<Number>
+    List<Number> response = [10.0]
     NormalizedFormula formula = Formula.normalize('y ~ x')
 
     ModelFrameResult result = new ModelFrameResult(
@@ -200,16 +200,16 @@ class FormulaModelFrameTest {
     assertEquals(4, result.data.rowCount())
 
     // Row 0: setosa -> versicolor=0, virginica=0
-    assertEquals(0.0 as BigDecimal, result.data[0, 'species_versicolor'])
-    assertEquals(0.0 as BigDecimal, result.data[0, 'species_virginica'])
+    assertEquals(0.0G, result.data[0, 'species_versicolor'])
+    assertEquals(0.0G, result.data[0, 'species_virginica'])
 
     // Row 1: versicolor -> versicolor=1, virginica=0
-    assertEquals(1.0 as BigDecimal, result.data[1, 'species_versicolor'])
-    assertEquals(0.0 as BigDecimal, result.data[1, 'species_virginica'])
+    assertEquals(1.0G, result.data[1, 'species_versicolor'])
+    assertEquals(0.0G, result.data[1, 'species_virginica'])
 
     // Row 2: virginica -> versicolor=0, virginica=1
-    assertEquals(0.0 as BigDecimal, result.data[2, 'species_versicolor'])
-    assertEquals(1.0 as BigDecimal, result.data[2, 'species_virginica'])
+    assertEquals(0.0G, result.data[2, 'species_versicolor'])
+    assertEquals(1.0G, result.data[2, 'species_virginica'])
   }
 
   @Test
@@ -228,8 +228,8 @@ class FormulaModelFrameTest {
 
     // Normalization sorts alphabetically: active before x
     assertEquals(['active_true', 'x'], result.predictorNames)
-    assertEquals(0.0 as BigDecimal, result.data[0, 'active_true'])
-    assertEquals(1.0 as BigDecimal, result.data[1, 'active_true'])
+    assertEquals(0.0G, result.data[0, 'active_true'])
+    assertEquals(1.0G, result.data[1, 'active_true'])
   }
 
   @Test
@@ -304,7 +304,7 @@ class FormulaModelFrameTest {
       .types([BigDecimal, BigDecimal])
       .build()
 
-    List<Number> weights = [1.0, 2.0] as List<Number>
+    List<Number> weights = [1.0, 2.0]
     ModelFrameResult result = ModelFrame.of('y ~ x', data)
       .weights(weights)
       .evaluate()
@@ -322,7 +322,7 @@ class FormulaModelFrameTest {
 
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       ModelFrame.of('y ~ x', data)
-        .weights([-1.0, 2.0] as List<Number>)
+        .weights([-1.0, 2.0])
         .evaluate()
     }
     assertTrue(ex.message.contains('non-negative'))
@@ -405,7 +405,7 @@ class FormulaModelFrameTest {
 
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       ModelFrame.of('y ~ x', data)
-        .weights([1.0, 2.0, 3.0] as List<Number>)
+        .weights([1.0, 2.0, 3.0])
         .evaluate()
     }
     assertTrue(ex.message.contains('Weights size'))
