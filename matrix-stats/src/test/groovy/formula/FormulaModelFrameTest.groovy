@@ -179,4 +179,99 @@ class FormulaModelFrameTest {
 
     assertEquals(['a', 'b', 'x', 'a:b', 'a:x', 'b:x'], result.predictorNames)
   }
+
+  @Test
+  void testCategoricalTreatmentContrasts() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'species'])
+      .rows([
+        [1.0, 10.0, 'setosa'],
+        [2.0, 20.0, 'versicolor'],
+        [3.0, 30.0, 'virginica'],
+        [4.0, 40.0, 'setosa'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x + species', data).evaluate()
+
+    // Normalization sorts alphabetically: species before x
+    assertEquals(['species_versicolor', 'species_virginica', 'x'], result.predictorNames)
+    assertEquals(4, result.data.rowCount())
+
+    // Row 0: setosa -> versicolor=0, virginica=0
+    assertEquals(0.0 as BigDecimal, result.data[0, 'species_versicolor'])
+    assertEquals(0.0 as BigDecimal, result.data[0, 'species_virginica'])
+
+    // Row 1: versicolor -> versicolor=1, virginica=0
+    assertEquals(1.0 as BigDecimal, result.data[1, 'species_versicolor'])
+    assertEquals(0.0 as BigDecimal, result.data[1, 'species_virginica'])
+
+    // Row 2: virginica -> versicolor=0, virginica=1
+    assertEquals(0.0 as BigDecimal, result.data[2, 'species_versicolor'])
+    assertEquals(1.0 as BigDecimal, result.data[2, 'species_virginica'])
+  }
+
+  @Test
+  void testBooleanCategoricalEncoding() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'active'])
+      .rows([
+        [1.0, 10.0, false],
+        [2.0, 20.0, true],
+        [3.0, 30.0, true],
+      ])
+      .types([BigDecimal, BigDecimal, Boolean])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x + active', data).evaluate()
+
+    // Normalization sorts alphabetically: active before x
+    assertEquals(['active_true', 'x'], result.predictorNames)
+    assertEquals(0.0 as BigDecimal, result.data[0, 'active_true'])
+    assertEquals(1.0 as BigDecimal, result.data[1, 'active_true'])
+  }
+
+  @Test
+  void testCategoricalInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'weight', 'color'])
+      .rows([
+        [1.0, 10.0, 'blue'],
+        [2.0, 20.0, 'green'],
+        [3.0, 30.0, 'red'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ color:weight', data).evaluate()
+
+    // color: blue (ref), green, red -> interaction with weight
+    assertEquals(['color_green:weight', 'color_red:weight'], result.predictorNames)
+
+    // Row 1: green -> green:weight = 1 * 20 = 20 (use == for BigDecimal scale-insensitive comparison)
+    assertTrue((result.data[1, 'color_green:weight'] as BigDecimal) == 20.0)
+    assertTrue((result.data[1, 'color_red:weight'] as BigDecimal) == 0.0)
+
+    // Row 2: red -> red:weight = 1 * 30 = 30
+    assertTrue((result.data[2, 'color_green:weight'] as BigDecimal) == 0.0)
+    assertTrue((result.data[2, 'color_red:weight'] as BigDecimal) == 30.0)
+  }
+
+  @Test
+  void testSingleLevelCategoricalProducesNoColumns() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'group'])
+      .rows([
+        [1.0, 10.0, 'A'],
+        [2.0, 20.0, 'A'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x + group', data).evaluate()
+
+    // Single level -> no indicator columns
+    assertEquals(['x'], result.predictorNames)
+  }
 }
