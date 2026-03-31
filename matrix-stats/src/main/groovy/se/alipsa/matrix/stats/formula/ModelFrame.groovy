@@ -16,6 +16,10 @@ import se.alipsa.matrix.core.util.Logger
  *   .naAction(NaAction.OMIT)
  *   .evaluate()
  * </pre>
+ *
+ * <p><strong>Categorical handling:</strong> Non-numeric columns are encoded using treatment
+ * contrasts (dummy coding). The first level (alphabetically) is the reference and omitted.
+ * Single-level categoricals produce no indicator columns and are silently dropped.
  */
 @CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
@@ -47,6 +51,7 @@ final class ModelFrame {
    * @param formula the formula source, for example {@code y ~ x + z}
    * @param data the input dataset
    * @return a new builder
+   * @throws IllegalArgumentException if formula is null or blank, or data is null
    */
   static ModelFrame of(String formula, Matrix data) {
     if (formula == null || formula.isBlank()) {
@@ -62,6 +67,7 @@ final class ModelFrame {
    * @param formula the normalized formula
    * @param data the input dataset
    * @return a new builder
+   * @throws IllegalArgumentException if formula is null or data is null
    */
   static ModelFrame of(NormalizedFormula formula, Matrix data) {
     requireNonNull(formula, 'formula')
@@ -73,6 +79,7 @@ final class ModelFrame {
    *
    * @param weights the weight values
    * @return this builder
+   * @throws IllegalArgumentException if weights contain negative values or size does not match data
    */
   ModelFrame weights(List<? extends Number> weights) {
     this.weightsList = weights
@@ -85,6 +92,7 @@ final class ModelFrame {
    *
    * @param columnName the weights column name
    * @return this builder
+   * @throws IllegalArgumentException if column does not exist in data
    */
   ModelFrame weights(String columnName) {
     this.weightsColumn = columnName
@@ -97,6 +105,7 @@ final class ModelFrame {
    *
    * @param offset the offset values
    * @return this builder
+   * @throws IllegalArgumentException if size does not match data row count
    */
   ModelFrame offset(List<? extends Number> offset) {
     this.offsetList = offset
@@ -109,6 +118,7 @@ final class ModelFrame {
    *
    * @param columnName the offset column name
    * @return this builder
+   * @throws IllegalArgumentException if column does not exist in data
    */
   ModelFrame offset(String columnName) {
     this.offsetColumn = columnName
@@ -166,6 +176,8 @@ final class ModelFrame {
    * Evaluates the formula against the data and returns the result.
    *
    * @return the model frame result
+   * @throws IllegalArgumentException if response column is missing or non-numeric, variables not found,
+   *                                  no observations remain after subset/NA removal, or weights are negative
    */
   ModelFrameResult evaluate() {
     // Stage 1: Determine excluded columns for dot expansion
@@ -523,6 +535,9 @@ final class ModelFrame {
 
     if (colIdx < 0 && env != null && env.containsKey(name)) {
       List<?> envValues = env[name]
+      if (envValues.any { it == null }) {
+        throw new IllegalArgumentException("Environment variable '${name}' contains null values")
+      }
       outNames << name
       outColumns << envValues.collect { Object val -> val as BigDecimal }
       return

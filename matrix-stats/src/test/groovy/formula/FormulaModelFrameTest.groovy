@@ -529,6 +529,41 @@ class FormulaModelFrameTest {
   }
 
   @Test
+  void testNonNumericEnvironmentVariableThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [z: ['not-a-number', 'also-not-numeric']]
+
+    assertThrows(Exception) {
+      ModelFrame.of('y ~ x + z', data)
+        .environment(env)
+        .evaluate()
+    }
+  }
+
+  @Test
+  void testEnvironmentVariableWithNullThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [z: [3.0, null]]
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x + z', data)
+        .environment(env)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains("Environment variable 'z' contains null values"))
+  }
+
+  @Test
   void testMissingResponseThrows() {
     Matrix data = Matrix.builder()
       .columnNames(['a', 'b'])
