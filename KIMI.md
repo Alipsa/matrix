@@ -527,26 +527,50 @@ Quick security audit:
 
 ## Review Output Format
 
+**Output format:**
+- Only list findings that require action
+- Group related issues by type (e.g., "Documentation Defects", "Null Safety Issues")
+- Provide exact file paths and line numbers
+- Include ready-to-paste code snippets for fixes
+- Include exact test commands to verify fixes
+- Omit "Good", "Correct", "Well done" assessments entirely
+- Omit summary sections
+
 Structure findings as:
 
 ```markdown
-## Critical Issues (X found)
+## Issue Group: [Descriptive Type]
 
-1. **[Brief name]**
-   - Location: `File.groovy:line`
-   - Problem: One-line description
-   - Reproduction: Specific input that triggers the issue
-   - Fix: Specific recommendation
+**Impact:** Important Issues (N found) | Minor Issues (N found)
 
-## Important Issues (X found)
+### Issue 1: [Brief name]
+- Location: `File.groovy:line`
+- Problem: One-line description
+- Fix:
+  ```groovy
+  // ready-to-paste code
+  ```
 
-## Minor Issues (X found)
+**Test command:**
+```bash
+./gradlew :module:test --tests 'TestClass.testMethod' -g ./.gradle-user
+```
 
-## Test Coverage Gaps
+### Issue 2: [Brief name with test coverage gap]
+- Location: `File.groovy:line`
+- Problem: Missing test for edge case X
+- Test to add:
+  ```groovy
+  @Test
+  void testXYZ() {
+    // test code
+  }
+  ```
 
-| Priority | Gap | Suggested Test |
-|----------|-----|----------------|
-| 1 | ... | ... |
+**Test command:**
+```bash
+./gradlew :module:test --tests 'TestClass.testXYZ' -g ./.gradle-user
+```
 ```
 
 ---
@@ -634,14 +658,14 @@ When an issue is found post-review, document:
 
 **Example Analysis:**
 
-| Bug | Test That Would Catch It | Miss Type | Prevention |
-|-----|--------------------------|-----------|------------|
-| Invalid operation accepted on wrong side of DSL | Test ALL operators in ALL contexts | Context sensitivity gap | Phase 2.4: Context-sensitive semantics |
-| Feature combination loses semantics | Test features together, not just separately | Feature interaction blindspot | Phase 2.8: Feature interaction testing |
-| Feature rejects valid combination per spec | Check if roadmap/requirements say it should work | Spec compliance gap | Phase 2.1: Roadmap/requirements cross-reference |
-| Invalid input accepted in alternative syntax | Test ALL syntactic forms of invalid input | Rejection policy gap | Phase 2.9: Rejection policy completeness |
-| Shorthand syntax rejected | Test ALL documented syntax variations | Syntax variation gap | Phase 2.6: Syntax variation testing |
-| Real-world patterns fail | Use actual dataset patterns, not synthetic | Real-world disconnect | Phase 2.7: Real-world pattern testing |
+| Bug                                             | Test That Would Catch It                         | Miss Type                     | Prevention                                      |
+|-------------------------------------------------|--------------------------------------------------|-------------------------------|-------------------------------------------------|
+| Invalid operation accepted on wrong side of DSL | Test ALL operators in ALL contexts               | Context sensitivity gap       | Phase 2.4: Context-sensitive semantics          |
+| Feature combination loses semantics             | Test features together, not just separately      | Feature interaction blindspot | Phase 2.8: Feature interaction testing          |
+| Feature rejects valid combination per spec      | Check if roadmap/requirements say it should work | Spec compliance gap           | Phase 2.1: Roadmap/requirements cross-reference |
+| Invalid input accepted in alternative syntax    | Test ALL syntactic forms of invalid input        | Rejection policy gap          | Phase 2.9: Rejection policy completeness        |
+| Shorthand syntax rejected                       | Test ALL documented syntax variations            | Syntax variation gap          | Phase 2.6: Syntax variation testing             |
+| Real-world patterns fail                        | Use actual dataset patterns, not synthetic       | Real-world disconnect         | Phase 2.7: Real-world pattern testing           |
 
 **Detailed Example from PR #275 (formula parsing):**
 

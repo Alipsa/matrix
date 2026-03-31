@@ -132,6 +132,67 @@ final class FormulaSupport {
     expression
   }
 
+  static FormulaExpression expandDots(FormulaExpression expression, List<String> dotColumns) {
+    if (dotColumns.isEmpty()) {
+      return expression
+    }
+    if (expression instanceof FormulaExpression.Dot) {
+      return buildAdditionChain(dotColumns, expression.start, expression.end)
+    }
+    if (expression instanceof FormulaExpression.Grouping) {
+      FormulaExpression.Grouping grouping = expression as FormulaExpression.Grouping
+      FormulaExpression expanded = expandDots(grouping.expression, dotColumns)
+      if (expanded.is(grouping.expression)) {
+        return expression
+      }
+      return new FormulaExpression.Grouping(expanded, grouping.start, grouping.end)
+    }
+    if (expression instanceof FormulaExpression.Unary) {
+      FormulaExpression.Unary unary = expression as FormulaExpression.Unary
+      FormulaExpression expanded = expandDots(unary.expression, dotColumns)
+      if (expanded.is(unary.expression)) {
+        return expression
+      }
+      return new FormulaExpression.Unary(unary.operator, expanded, unary.start, unary.end)
+    }
+    if (expression instanceof FormulaExpression.Binary) {
+      FormulaExpression.Binary binary = expression as FormulaExpression.Binary
+      FormulaExpression expandedLeft = expandDots(binary.left, dotColumns)
+      FormulaExpression expandedRight = expandDots(binary.right, dotColumns)
+      if (expandedLeft.is(binary.left) && expandedRight.is(binary.right)) {
+        return expression
+      }
+      return new FormulaExpression.Binary(binary.operator, expandedLeft, expandedRight, binary.start, binary.end)
+    }
+    if (expression instanceof FormulaExpression.FunctionCall) {
+      FormulaExpression.FunctionCall call = expression as FormulaExpression.FunctionCall
+      List<FormulaExpression> expandedArgs = call.arguments.collect { FormulaExpression arg ->
+        expandDots(arg, dotColumns)
+      }
+      boolean changed = false
+      for (int i = 0; i < expandedArgs.size(); i++) {
+        if (!expandedArgs[i].is(call.arguments[i])) {
+          changed = true
+          break
+        }
+      }
+      if (!changed) {
+        return expression
+      }
+      return new FormulaExpression.FunctionCall(call.name, expandedArgs, call.start, call.end)
+    }
+    expression
+  }
+
+  private static FormulaExpression buildAdditionChain(List<String> names, int start, int end) {
+    FormulaExpression result = new FormulaExpression.Variable(names[0], false, start, end)
+    for (int i = 1; i < names.size(); i++) {
+      FormulaExpression right = new FormulaExpression.Variable(names[i], false, start, end)
+      result = new FormulaExpression.Binary('+', result, right, start, end)
+    }
+    result
+  }
+
   private static List<SignedExpression> flattenSignedExpressions(FormulaExpression expression, int sign) {
     if (expression instanceof FormulaExpression.Binary) {
       FormulaExpression.Binary binary = expression as FormulaExpression.Binary
