@@ -263,9 +263,10 @@ final class ModelFrame {
     working = naResult.data
     List<Integer> droppedRows = naResult.droppedRows
 
-    // Filter weights/offset to surviving original row indices
+    // Filter weights/offset/env to surviving original row indices
     resolvedWeights = filterToSurvivors(resolvedWeights, naResult.survivingIndices)
     resolvedOffset = filterToSurvivors(resolvedOffset, naResult.survivingIndices)
+    Map<String, List<?>> filteredEnv = filterEnvToSurvivors(env, naResult.survivingIndices)
 
     // Validate non-empty
     if (working.rowCount() == 0) {
@@ -277,7 +278,7 @@ final class ModelFrame {
 
     // Stage 8: Build design matrix via dedicated builder
     List<Number> responseValues = extractResponseColumn(working, responseName)
-    DesignMatrixBuilder designBuilder = new DesignMatrixBuilder(working, env, contrastConfig, defaultContrast)
+    DesignMatrixBuilder designBuilder = new DesignMatrixBuilder(working, filteredEnv, contrastConfig, defaultContrast)
     DesignMatrixBuilder.DesignMatrix designMatrix = designBuilder.build(normalized)
 
     new ModelFrameResult(
@@ -445,15 +446,9 @@ final class ModelFrame {
     if (unwrapped instanceof FormulaExpression.Variable) {
       return (unwrapped as FormulaExpression.Variable).name
     }
-    if (unwrapped instanceof FormulaExpression.FunctionCall) {
-      // For transforms like log(x), extract the inner variable name if simple
-      FormulaExpression.FunctionCall call = unwrapped as FormulaExpression.FunctionCall
-      if (call.arguments.size() == 1 && call.arguments[0] instanceof FormulaExpression.Variable) {
-        return (call.arguments[0] as FormulaExpression.Variable).name
-      }
-    }
-    // Fallback to formula string (may include backticks, but caller can handle)
-    unwrapped.asFormulaString()
+    throw new IllegalArgumentException(
+      "Transformed responses are not yet supported; use a raw variable on the left-hand side, got: ${response.asFormulaString()}"
+    )
   }
 
   private void validateResponseColumn(String responseName) {
@@ -648,6 +643,17 @@ final class ModelFrame {
       return null
     }
     survivingOriginalIndices.collect { Integer originalIdx -> values[originalIdx] } as List<Number>
+  }
+
+  private static Map<String, List<?>> filterEnvToSurvivors(Map<String, List<?>> env, List<Integer> survivingOriginalIndices) {
+    if (env == null) {
+      return null
+    }
+    Map<String, List<?>> filtered = [:]
+    for (Map.Entry<String, List<?>> entry : env.entrySet()) {
+      filtered[entry.key] = survivingOriginalIndices.collect { Integer originalIdx -> entry.value[originalIdx] }
+    }
+    filtered
   }
 
   private static <T> T requireNonNull(T value, String label) {

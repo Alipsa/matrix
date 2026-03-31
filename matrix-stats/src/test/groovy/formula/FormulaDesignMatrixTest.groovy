@@ -576,4 +576,85 @@ class FormulaDesignMatrixTest {
     assertEquals(['active_true'], activeTerm.columns)
     assertEquals(['false', 'true'], activeTerm.factorLevels)
   }
+
+  @Test
+  void testTransformedResponseThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 1.0], [2.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('log(y) ~ x', data).evaluate()
+    }
+    assertTrue(ex.message.contains('Transformed responses are not yet supported'))
+    assertTrue(ex.message.contains('log(y)'))
+  }
+
+  @Test
+  void testEnvironmentVariableAlignedAfterSubset() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [1.0, 1.0],
+        [2.0, 2.0],
+        [3.0, 3.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [z: [10.0, 20.0, 30.0]]
+    ModelFrameResult result = ModelFrame.of('y ~ x + z', data)
+      .environment(env)
+      .subset([false, true, true])
+      .evaluate()
+
+    assertEquals(2, result.data.rowCount())
+    assertTrue((result.data[0, 'z'] as BigDecimal) == 20.0)
+    assertTrue((result.data[1, 'z'] as BigDecimal) == 30.0)
+  }
+
+  @Test
+  void testEnvironmentVariableAlignedAfterNaOmit() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [1.0, 1.0],
+        [null, 2.0],
+        [3.0, 3.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [z: [10.0, 20.0, 30.0]]
+    ModelFrameResult result = ModelFrame.of('y ~ x + z', data)
+      .environment(env)
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals(2, result.data.rowCount())
+    assertEquals([1], result.droppedRows)
+    assertTrue((result.data[0, 'z'] as BigDecimal) == 10.0)
+    assertTrue((result.data[1, 'z'] as BigDecimal) == 30.0)
+  }
+
+  @Test
+  void testEmptyPredictorMatrixPreservesRowCount() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'group'])
+      .rows([
+        [1.0, 'A'],
+        [2.0, 'A'],
+      ])
+      .types([BigDecimal, String])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ group', data).evaluate()
+
+    assertTrue(result.predictorNames.isEmpty())
+    assertEquals(0, result.data.columnCount())
+    assertEquals(2, result.data.rowCount())
+    assertEquals(2, result.response.size())
+  }
 }

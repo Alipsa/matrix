@@ -269,9 +269,10 @@ final class DesignMatrixBuilder {
     binaryName
   }
 
-  private static Matrix buildMatrix(List<String> names, List<List<BigDecimal>> columns) {
+  private Matrix buildMatrix(List<String> names, List<List<BigDecimal>> columns) {
     if (names.isEmpty()) {
-      return Matrix.builder().columnNames([]).rows([]).build()
+      List<List> emptyRows = (0..<data.rowCount()).collect { [] }
+      return Matrix.builder().columnNames([]).rows(emptyRows).build()
     }
     Map<String, List> columnMap = [:]
     for (int i = 0; i < names.size(); i++) {

@@ -4,6 +4,7 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import se.alipsa.matrix.core.spi.FormatRegistry
@@ -1578,6 +1579,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       types << it.type
     }
     Matrix copy = new Matrix(mName, headers, mColumns as List<List>, types)
+    if (mColumns.isEmpty() && mRowCount > 0) {
+      copy.setRowCount(mRowCount)
+    }
     copyIndexTo(copy)
     copy
   }
@@ -2954,9 +2958,19 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @return the number of rows in this matrix
    */
+  private int mRowCount = 0
+
+  @PackageScope
+  void setRowCount(int rowCount) {
+    this.mRowCount = rowCount
+  }
+
   int rowCount() {
-    if (mColumns == null || mColumns.isEmpty()) {
+    if (mColumns == null) {
       return 0
+    }
+    if (mColumns.isEmpty()) {
+      return mRowCount
     }
     return mColumns.get(0).size()
   }
