@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 enum NaAction {
 
-  /** Drop rows containing null values in any formula-referenced column. */
+  /** Drop rows containing null values in any formula-referenced column. This is the default. */
   OMIT,
 
   /** Throw an exception if any formula-referenced column contains null values. */

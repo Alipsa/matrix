@@ -313,6 +313,21 @@ class FormulaModelFrameTest {
   }
 
   @Test
+  void testZeroWeightsAllowed() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0], [30.0, 3.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights([0.0, 1.0, 0.0])
+      .evaluate()
+
+    assertEquals([0.0, 1.0, 0.0], result.weights)
+  }
+
+  @Test
   void testNegativeWeightsThrows() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x'])
