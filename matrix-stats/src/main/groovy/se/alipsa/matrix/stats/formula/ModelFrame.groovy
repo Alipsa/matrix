@@ -38,6 +38,8 @@ final class ModelFrame {
   private List<Boolean> subsetMask
   private NaAction naActionPolicy = NaAction.OMIT
   private Map<String, List<?>> env
+  private Map<String, ContrastType> contrastConfig = [:]
+  private ContrastType defaultContrast = ContrastType.TREATMENT
 
   private ModelFrame(ParsedFormula parsedFormula, NormalizedFormula preNormalized, Matrix data) {
     this.parsedFormula = parsedFormula
@@ -173,6 +175,42 @@ final class ModelFrame {
   }
 
   /**
+   * Sets the default contrast type for all categorical columns.
+   *
+   * @param contrastType the default contrast type
+   * @return this builder
+   */
+  ModelFrame defaultContrast(ContrastType contrastType) {
+    this.defaultContrast = requireNonNull(contrastType, 'defaultContrast')
+    this
+  }
+
+  /**
+   * Sets the contrast type for a specific categorical column.
+   *
+   * @param columnName the categorical column name
+   * @param contrastType the contrast type to use
+   * @return this builder
+   */
+  ModelFrame contrasts(String columnName, ContrastType contrastType) {
+    requireNonBlank(columnName, 'columnName')
+    this.contrastConfig[columnName] = requireNonNull(contrastType, 'contrastType')
+    this
+  }
+
+  /**
+   * Sets contrast types for multiple categorical columns.
+   *
+   * @param contrasts map of column name to contrast type
+   * @return this builder
+   */
+  ModelFrame contrasts(Map<String, ContrastType> contrasts) {
+    requireNonNull(contrasts, 'contrasts')
+    this.contrastConfig.putAll(contrasts)
+    this
+  }
+
+  /**
    * Evaluates the formula against the data and returns the result.
    *
    * @return the model frame result
@@ -200,7 +238,7 @@ final class ModelFrame {
     }
 
     // Stage 4: Validate response
-    String responseName = normalized.response.asFormulaString()
+    String responseName = extractResponseName(normalized.response)
     validateResponseColumn(responseName)
 
     // Stage 4: Validate all predictor variables
@@ -234,20 +272,18 @@ final class ModelFrame {
       throw new IllegalArgumentException('No observations remaining after subset and NA removal')
     }
 
-    // Stage 7: Categorical encoding + build predictor matrix
-    List<String> predictorNames = []
-    List<List<BigDecimal>> predictorColumns = []
-    for (FormulaTerm term : normalized.predictorTerms) {
-      encodeTerm(term, working, predictorNames, predictorColumns)
-    }
+    // Stage 7: Validate contrast configuration
+    validateContrastConfiguration(working, variableNames)
 
-    // Stage 8: Build result
+    // Stage 8: Build design matrix via dedicated builder
     List<Number> responseValues = extractResponseColumn(working, responseName)
-    Matrix designMatrix = buildDesignMatrix(predictorNames, predictorColumns)
+    DesignMatrixBuilder designBuilder = new DesignMatrixBuilder(working, env, contrastConfig, defaultContrast)
+    DesignMatrixBuilder.DesignMatrix designMatrix = designBuilder.build(normalized)
 
     new ModelFrameResult(
-      designMatrix, responseValues, responseName, normalized.includeIntercept,
-      predictorNames, resolvedWeights, resolvedOffset, droppedRows, normalized
+      designMatrix.data, responseValues, responseName, normalized.includeIntercept,
+      designMatrix.predictorNames, resolvedWeights, resolvedOffset, droppedRows, normalized,
+      designMatrix.terms
     )
   }
 
@@ -401,6 +437,25 @@ final class ModelFrame {
     }
   }
 
+  private static String extractResponseName(FormulaExpression response) {
+    FormulaExpression unwrapped = response
+    while (unwrapped instanceof FormulaExpression.Grouping) {
+      unwrapped = (unwrapped as FormulaExpression.Grouping).expression
+    }
+    if (unwrapped instanceof FormulaExpression.Variable) {
+      return (unwrapped as FormulaExpression.Variable).name
+    }
+    if (unwrapped instanceof FormulaExpression.FunctionCall) {
+      // For transforms like log(x), extract the inner variable name if simple
+      FormulaExpression.FunctionCall call = unwrapped as FormulaExpression.FunctionCall
+      if (call.arguments.size() == 1 && call.arguments[0] instanceof FormulaExpression.Variable) {
+        return (call.arguments[0] as FormulaExpression.Variable).name
+      }
+    }
+    // Fallback to formula string (may include backticks, but caller can handle)
+    unwrapped.asFormulaString()
+  }
+
   private void validateResponseColumn(String responseName) {
     if (data.columnIndex(responseName) < 0) {
       throw new IllegalArgumentException("Response variable '${responseName}' not found in data")
@@ -513,121 +568,22 @@ final class ModelFrame {
     new NaResult(working.subset(keptRows), droppedOriginal, survivingIndices)
   }
 
-  // --- Stage 7: Categorical encoding ---
-
-  private void encodeTerm(
-    FormulaTerm term, Matrix working,
-    List<String> outNames, List<List<BigDecimal>> outColumns
-  ) {
-    if (term.isInteraction()) {
-      encodeInteraction(term, working, outNames, outColumns)
-    } else {
-      encodeSingleFactor(term.factors[0], working, outNames, outColumns)
-    }
-  }
-
-  private void encodeSingleFactor(
-    FormulaExpression factor, Matrix working,
-    List<String> outNames, List<List<BigDecimal>> outColumns
-  ) {
-    String name = factor.asFormulaString()
-    int colIdx = working.columnIndex(name)
-
-    if (colIdx < 0 && env != null && env.containsKey(name)) {
-      List<?> envValues = env[name]
-      if (envValues.any { it == null }) {
-        throw new IllegalArgumentException("Environment variable '${name}' contains null values")
+  private void validateContrastConfiguration(Matrix working, List<String> variableNames) {
+    List<String> dataColumns = working.columnNames()
+    for (String colName : contrastConfig.keySet()) {
+      if (!dataColumns.contains(colName) && (env == null || !env.containsKey(colName))) {
+        throw new IllegalArgumentException(
+          "Contrast configured for unknown column '${colName}'. Available columns: ${dataColumns}"
+        )
       }
-      outNames << name
-      outColumns << envValues.collect { Object val -> val as BigDecimal }
-      return
-    }
-
-    Class colType = working.type(name)
-    if (Number.isAssignableFrom(colType)) {
-      outNames << name
-      outColumns << (0..<working.rowCount()).collect { int i ->
-        working[i, name] as BigDecimal
-      }
-    } else {
-      encodeCategorical(name, working, outNames, outColumns)
-    }
-  }
-
-  private void encodeCategorical(
-    String columnName, Matrix working,
-    List<String> outNames, List<List<BigDecimal>> outColumns
-  ) {
-    List<Object> values = (0..<working.rowCount()).collect { int i -> working[i, columnName] }
-    List<Object> uniqueValues = (values.toUnique() as List<Object>).sort() as List<Object>
-
-    if (uniqueValues.size() <= 1) {
-      log.warn("Categorical column '${columnName}' has only ${uniqueValues.size()} unique value(s) — produces no indicator columns")
-      return
-    }
-
-    for (int k = 1; k < uniqueValues.size(); k++) {
-      Object level = uniqueValues[k]
-      String indicatorName = "${columnName}_${level}"
-      List<BigDecimal> indicator = values.collect { Object val ->
-        val == level ? 1.0 as BigDecimal : 0.0 as BigDecimal
-      }
-      outNames << indicatorName
-      outColumns << indicator
-    }
-  }
-
-  private void encodeInteraction(
-    FormulaTerm term, Matrix working,
-    List<String> outNames, List<List<BigDecimal>> outColumns
-  ) {
-    List<List<String>> factorNameSets = []
-    List<List<List<BigDecimal>>> factorColumnSets = []
-
-    for (FormulaExpression factor : term.factors) {
-      List<String> factorNames = []
-      List<List<BigDecimal>> factorCols = []
-      encodeSingleFactor(factor, working, factorNames, factorCols)
-      factorNameSets << factorNames
-      factorColumnSets << factorCols
-    }
-
-    List<List<Integer>> indexCombos = cartesianProductIndices(
-      factorNameSets.collect { List<String> names -> names.size() }
-    )
-    for (List<Integer> combo : indexCombos) {
-      List<String> nameParts = []
-      for (int f = 0; f < combo.size(); f++) {
-        nameParts << factorNameSets[f][combo[f]]
-      }
-      String interactionName = nameParts.join(':')
-
-      List<BigDecimal> product = (0..<working.rowCount()).collect { int row ->
-        BigDecimal result = 1.0
-        for (int f = 0; f < combo.size(); f++) {
-          result = result * factorColumnSets[f][combo[f]][row]
-        }
-        result
-      }
-      outNames << interactionName
-      outColumns << product
-    }
-  }
-
-  private static List<List<Integer>> cartesianProductIndices(List<Integer> sizes) {
-    List<List<Integer>> result = [[]]
-    for (int size : sizes) {
-      List<List<Integer>> newResult = []
-      for (List<Integer> existing : result) {
-        for (int i = 0; i < size; i++) {
-          List<Integer> combo = [*existing]
-          combo << i
-          newResult << combo
+      int colIdx = working.columnIndex(colName)
+      if (colIdx >= 0) {
+        Class colType = working.type(colName)
+        if (Number.isAssignableFrom(colType)) {
+          throw new IllegalArgumentException("Contrast only applies to categorical columns, '${colName}' is numeric")
         }
       }
-      result = newResult
     }
-    result
   }
 
   // --- Stage 8: Build result ---
@@ -636,19 +592,11 @@ final class ModelFrame {
     (0..<working.rowCount()).collect { int i -> working[i, responseName] as Number }
   }
 
-  private static Matrix buildDesignMatrix(List<String> names, List<List<BigDecimal>> columns) {
-    if (names.isEmpty()) {
-      return Matrix.builder().columnNames([]).rows([]).build()
+  private static String requireNonBlank(String value, String label) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("${label} cannot be null or blank")
     }
-    Map<String, List> columnMap = [:]
-    for (int i = 0; i < names.size(); i++) {
-      columnMap[names[i]] = columns[i]
-    }
-    Matrix.builder()
-      .columnNames(names)
-      .columns(columnMap)
-      .types(names.collect { BigDecimal } as List<Class>)
-      .build()
+    value
   }
 
   // --- Weights and offset helpers ---

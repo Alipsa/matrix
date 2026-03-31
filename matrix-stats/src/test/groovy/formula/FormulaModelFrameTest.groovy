@@ -16,6 +16,7 @@ import se.alipsa.matrix.stats.formula.ModelFrame
 import se.alipsa.matrix.stats.formula.ModelFrameResult
 import se.alipsa.matrix.stats.formula.NaAction
 import se.alipsa.matrix.stats.formula.NormalizedFormula
+import se.alipsa.matrix.stats.formula.Terms
 
 /**
  * Tests for ModelFrame evaluation pipeline.
@@ -36,10 +37,11 @@ class FormulaModelFrameTest {
     List<Number> offset = [0.1, 0.2]
     List<Integer> dropped = [2, 5]
     NormalizedFormula formula = Formula.normalize('y ~ x + z')
+    Terms terms = new Terms(formula.response, true, [])
 
     ModelFrameResult result = new ModelFrameResult(
       predictors, response, 'y', true,
-      ['x', 'z'], weights, offset, dropped, formula
+      ['x', 'z'], weights, offset, dropped, formula, terms
     )
 
     assertEquals(predictors, result.data)
@@ -62,10 +64,11 @@ class FormulaModelFrameTest {
       .build()
     List<Number> response = [10.0]
     NormalizedFormula formula = Formula.normalize('y ~ x')
+    Terms terms = new Terms(formula.response, true, [])
 
     ModelFrameResult result = new ModelFrameResult(
       predictors, response, 'y', true,
-      ['x'], null, null, [], formula
+      ['x'], null, null, [], formula, terms
     )
 
     assertNull(result.weights)
