@@ -20,6 +20,7 @@ final class ModelFrameResult {
   final List<Number> offset
   final List<Integer> droppedRows
   final NormalizedFormula formula
+  final Terms terms
 
   /**
    * Creates a model frame result.
@@ -33,6 +34,7 @@ final class ModelFrameResult {
    * @param offset offset values aligned to surviving rows, or null
    * @param droppedRows original row indices removed by subset and NA handling
    * @param formula the fully resolved normalized formula
+   * @param terms metadata mapping formula terms to design matrix columns
    */
   ModelFrameResult(
     Matrix data,
@@ -43,7 +45,8 @@ final class ModelFrameResult {
     List<Number> weights,
     List<Number> offset,
     List<Integer> droppedRows,
-    NormalizedFormula formula
+    NormalizedFormula formula,
+    Terms terms
   ) {
     this.data = requireNonNull(data, 'data')
     this.response = List.copyOf(requireNonNull(response, 'response'))
@@ -54,6 +57,7 @@ final class ModelFrameResult {
     this.offset = offset != null ? List.copyOf(offset) : null
     this.droppedRows = List.copyOf(requireNonNull(droppedRows, 'droppedRows'))
     this.formula = requireNonNull(formula, 'formula')
+    this.terms = requireNonNull(terms, 'terms')
   }
 
   private static <T> T requireNonNull(T value, String label) {

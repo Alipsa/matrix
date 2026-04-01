@@ -160,6 +160,10 @@ class MatrixBuilder {
     if (rows == null || rows.isEmpty()) {
       return this
     }
+    if (rows.every { it == null || it.isEmpty() }) {
+      this.columns = []
+      return this
+    }
     this.columns = rows.transpose()
     this
   }

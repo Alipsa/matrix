@@ -1,5 +1,10 @@
 # Matrix Core Release History
 
+### 3.7.1-SNAPSHOT
+- A zero-column matrix now reports `rowCount() == 0`. Downstream consumers
+  (e.g. design matrices for intercept-only models) use `response.size()` for
+  row alignment instead.
+
 ### 3.7.0, 2016-03-23
 - enforcing Groovy 5 or greater. Groovy 5 has been used for quite some time to build the matrix library. While Groovy 4 works most of the time, there are several cases where it does not. Since groovy 6 is on the way and groovy 5 is already stable, it makes sense to enforce Groovy 5 as the minimum version for matrix-core.
 - New native CSV serialization format in Matrix

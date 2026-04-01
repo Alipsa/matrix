@@ -587,6 +587,8 @@ Before submitting review, verify:
 - [ ] **Did I verify that invalid inputs are REJECTED, not silently converted?**
 - [ ] **Did I test against real-world usage patterns (dotted names, update syntax)?**
 - [ ] **Did I verify response-side vs predictor-side semantics are correctly handled?**
+- [ ] **Did I verify ALL parallel data sources stay aligned after filtering (subset, NA handling)?**
+- [ ] **Did I test zero-dimension edge cases (empty matrices, single-level categoricals)?**
 - [ ] Did I actually run the tests?
 - [ ] Did I verify build passes with spotless/codenarc?
 
@@ -602,6 +604,12 @@ When reviewing matrix-stats:
   - Response-side vs predictor-side validation differs
   - Operators interact (e.g., dot expansion + power)
   - Multiple syntactic forms for same concept (multi-response)
+- **CRITICAL:** Formula pipeline data alignment
+  - When subset/NA filtering drops rows, ALL data sources must be filtered: matrix columns, environment variables, weights, offset
+  - Test: `ModelFrame.of('y ~ x + z', data).environment(env).subset(mask).evaluate()` - verify env values align with surviving rows
+- **CRITICAL:** Empty design matrix edge cases
+  - When all predictors drop (single-level categoricals), design matrix must preserve row count (N rows, 0 columns)
+  - Test: `y ~ group` where group has 1 level - verify `result.data.rowCount() == result.response.size()`
 - Distribution classes need validation for probability range [0,1]
 - All new code should remove/replace commons-math3 dependencies
 
@@ -647,6 +655,9 @@ When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
 | **Feature interaction blindspot** | Tested `.` and `^` separately, missed `.^2` | Tested features in isolation | Phase 2.8: Test combinations of features |
 | **Specification compliance gap** | Accepted `.^2` rejection without checking if roadmap requires it | Didn't cross-reference with requirements | Phase 2.1: Roadmap/requirements cross-reference |
 | **Rejection policy gap** | Tested `y1 + y2 ~ x` but missed `cbind(y1, y2) ~ x` | Only tested one form of invalid input | Phase 2.9: Test ALL syntactic forms of invalid input |
+| **Data alignment after filtering** | Subset/NA filtering updated matrix but not env vars | Assumed all data sources filtered together | Phase 3.x: Verify ALL data sources stay aligned |
+| **Empty collection edge cases** | Empty predictor matrix lost row count (0 rows vs N observations) | Didn't verify empty structures maintain dimensions | Phase 3.x: Test zero-dimension edge cases |
+| **Asymmetric DSL semantics** | Tested `log(x)` on RHS but not `log(y)` on LHS | Assumed symmetry in DSL sides | Phase 2.4: Test BOTH sides of DSL operators |
 
 ### Analysis Template
 
@@ -680,6 +691,26 @@ When an issue is found post-review, document:
 - **Root cause:** Didn't verify feature combinations against requirements
 - **Why missed:** Assumed rejection was correct without checking roadmap
 - **Fix:** Added Phase 2.1 to require roadmap cross-reference before accepting rejections
+
+**Detailed Example from PR #277 (Design Matrix) - Codex findings that Claude missed:**
+
+*Miss 1: Asymmetric DSL semantics (Response-side expression evaluation)*
+- **Bug:** `ModelFrame.of('log(y) ~ x', data)` returned untransformed `y` values but metadata indicated transformed response
+- **Root cause:** `extractResponseName()` unwrapped `log(y)` to `y` for column lookup, but `extractResponseColumn()` didn't evaluate the expression
+- **Why missed:** Assumed `ExpressionEvaluator` was used for both sides; didn't trace response-side path separately
+- **Fix:** Add explicit test `testTransformedResponseEvaluated()` and either implement LHS expression evaluation or reject non-variable responses
+
+*Miss 2: Data alignment after filtering*
+- **Bug:** Environment variables returned wrong values after `.subset()` or `naAction(OMIT)` because env wasn't filtered to match surviving rows
+- **Root cause:** Matrix rows filtered at line 256, but original `env` passed unchanged to `DesignMatrixBuilder` at line 280
+- **Why missed:** Focused on matrix data flow; didn't consider environment variables as parallel data source needing filtering
+- **Fix:** Filter `env` alongside matrix/weights/offset when subsetting, or document that environment variables must be pre-aligned
+
+*Miss 3: Empty structure dimensions*
+- **Bug:** When all predictors dropped (e.g., single-level categorical), `result.data` had 0 rows but `result.response` had N rows
+- **Root cause:** `DesignMatrixBuilder.buildMatrix()` returned empty matrix with no rows when `names.isEmpty()`
+- **Why missed:** Test `testTermsMetadataForDroppedTerm` verified metadata but not matrix dimensions
+- **Fix:** Ensure empty design matrix preserves row count: `Matrix.builder().rows(rowCount).columnNames([]).build()`
 
 ---
 
