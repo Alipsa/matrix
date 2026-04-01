@@ -271,8 +271,7 @@ final class DesignMatrixBuilder {
 
   private Matrix buildMatrix(List<String> names, List<List<BigDecimal>> columns) {
     if (names.isEmpty()) {
-      List<List> emptyRows = (0..<data.rowCount()).collect { [] }
-      return Matrix.builder().columnNames([]).rows(emptyRows).build()
+      return Matrix.builder().columnNames([]).columns([]).build()
     }
     Map<String, List> columnMap = [:]
     for (int i = 0; i < names.size(); i++) {

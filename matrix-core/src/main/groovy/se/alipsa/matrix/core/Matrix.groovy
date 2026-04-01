@@ -1579,9 +1579,6 @@ class Matrix implements Iterable<Row>, Cloneable {
       types << it.type
     }
     Matrix copy = new Matrix(mName, headers, mColumns as List<List>, types)
-    if (mColumns.isEmpty() && mRowCount > 0) {
-      copy.setRowCount(mRowCount)
-    }
     copyIndexTo(copy)
     copy
   }
@@ -2958,19 +2955,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @return the number of rows in this matrix
    */
-  private int mRowCount = 0
-
-  @PackageScope
-  void setRowCount(int rowCount) {
-    this.mRowCount = rowCount
-  }
-
   int rowCount() {
-    if (mColumns == null) {
+    if (mColumns == null || mColumns.isEmpty()) {
       return 0
-    }
-    if (mColumns.isEmpty()) {
-      return mRowCount
     }
     return mColumns.get(0).size()
   }

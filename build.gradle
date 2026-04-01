@@ -2,7 +2,7 @@ plugins {
   //id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
   id "com.github.ben-manes.versions" version "0.53.0" apply false
   id 'com.diffplug.spotless' version '8.4.0' apply false
-  id 'se.alipsa.gradle.maven-module' version '0.1.1'
+  id 'se.alipsa.gradle.maven-module' version '0.2.0-SNAPSHOT'
 }
 
 description = "Groovy libraries for working with matrix ([][] data)"
@@ -29,6 +29,9 @@ mavenModules {
   matrixAll {
     pomFile = file('matrix-bom/pom.xml')
     mustRunAfter 'matrixBom'
+    dependsOnAllPublishedSubprojects() {
+      exclude group: 'matrix-examples'
+    }
   }
 }
 
