@@ -274,6 +274,22 @@ final class ModelFrame {
     resolvedOffset = filterToSurvivors(resolvedOffset, naResult.survivingIndices)
     Map<String, List<?>> filteredEnv = filterEnvToSurvivors(env, naResult.survivingIndices)
 
+    // Handle nulls in list-based weights/offset (column-based nulls are already handled above)
+    Set<Integer> listNullRows = findNullIndices(resolvedWeights, resolvedOffset)
+    if (!listNullRows.isEmpty()) {
+      if (naActionPolicy == NaAction.FAIL) {
+        throw new IllegalArgumentException('NA values found in weights/offset (na.action is FAIL)')
+      }
+      List<Integer> kept = (0..<working.rowCount()).findAll { int i -> !listNullRows.contains(i) }
+      for (int i : listNullRows) {
+        droppedRows = droppedRows + [naResult.survivingIndices[i]]
+      }
+      working = working.subset(kept)
+      resolvedWeights = filterByIndices(resolvedWeights, kept)
+      resolvedOffset = filterByIndices(resolvedOffset, kept)
+      filteredEnv = filterEnvByIndices(filteredEnv, kept)
+    }
+
     // Validate non-empty
     if (working.rowCount() == 0) {
       throw new IllegalArgumentException('No observations remaining after subset and NA removal')
@@ -658,6 +674,43 @@ final class ModelFrame {
     Map<String, List<?>> filtered = [:]
     for (Map.Entry<String, List<?>> entry : env.entrySet()) {
       filtered[entry.key] = survivingOriginalIndices.collect { Integer originalIdx -> entry.value[originalIdx] }
+    }
+    filtered
+  }
+
+  private static Set<Integer> findNullIndices(List<Number> weights, List<Number> offset) {
+    Set<Integer> nullRows = [] as Set<Integer>
+    if (weights != null) {
+      for (int i = 0; i < weights.size(); i++) {
+        if (weights[i] == null) {
+          nullRows << i
+        }
+      }
+    }
+    if (offset != null) {
+      for (int i = 0; i < offset.size(); i++) {
+        if (offset[i] == null) {
+          nullRows << i
+        }
+      }
+    }
+    nullRows
+  }
+
+  private static List<Number> filterByIndices(List<Number> values, List<Integer> indices) {
+    if (values == null) {
+      return null
+    }
+    indices.collect { int i -> values[i] } as List<Number>
+  }
+
+  private static Map<String, List<?>> filterEnvByIndices(Map<String, List<?>> env, List<Integer> indices) {
+    if (env == null) {
+      return null
+    }
+    Map<String, List<?>> filtered = [:]
+    for (Map.Entry<String, List<?>> entry : env.entrySet()) {
+      filtered[entry.key] = indices.collect { int i -> entry.value[i] }
     }
     filtered
   }

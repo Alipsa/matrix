@@ -140,9 +140,6 @@ final class FormulaSupport {
       }
       return buildAdditionChain(dotColumns, expression.start, expression.end)
     }
-    if (dotColumns.isEmpty()) {
-      return expression
-    }
     if (expression instanceof FormulaExpression.Grouping) {
       FormulaExpression.Grouping grouping = expression as FormulaExpression.Grouping
       FormulaExpression expanded = expandDots(grouping.expression, dotColumns)
