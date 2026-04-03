@@ -64,6 +64,9 @@ class GamMethod implements FitMethod {
     }
 
     double lambda = options.lambda
+    if (lambda > 1000.0d) {
+      log.warn("GAM lambda ${lambda} is very large; consider a smaller value for better numerical stability")
+    }
 
     int n = frame.response.size()
     Matrix designMatrix = frame.data

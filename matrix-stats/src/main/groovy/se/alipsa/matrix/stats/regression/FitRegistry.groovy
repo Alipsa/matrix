@@ -46,6 +46,9 @@ final class FitRegistry {
    * @throws IllegalArgumentException if no method is registered under that name
    */
   FitMethod get(String name) {
+    if (name == null) {
+      throw new IllegalArgumentException('Fit method name must not be null')
+    }
     FitMethod method = methods[name]
     if (method == null) {
       throw new IllegalArgumentException(

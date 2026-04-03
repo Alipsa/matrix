@@ -18,3 +18,4 @@ build/
 /matrix-bom/.flattened-pom.xml
 /.remember/
 /matrix-stats/.remember/
+/.codex
