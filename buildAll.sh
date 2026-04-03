@@ -56,7 +56,8 @@ fi
 
 echo "Building and locally publishing matrix"
 # Force a clean rebuild so cross-module Groovy syntax/compile issues are not hidden by incremental outputs.
-./gradlew clean spotlessApply build publishToMavenLocal
+./gradlew clean
+./gradlew spotlessApply build publishToMavenLocal
 
 #echo "Verify bom and install matrix-all"
 #pushd matrix-bom
