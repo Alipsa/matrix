@@ -82,4 +82,24 @@ class GamMethodTest {
     assertTrue(lowPenalty.rSquared >= highPenalty.rSquared,
       "Lower lambda should give equal or higher R-squared: ${lowPenalty.rSquared} vs ${highPenalty.rSquared}")
   }
+
+  @Test
+  void testGamSupportsLinearAndSmoothForSameVariable() {
+    List<List> rows = (0..<30).collect { int i ->
+      BigDecimal x = i * 0.2
+      BigDecimal y = (3.0 * x) + (Math.sin(x as double) as BigDecimal)
+      [x, y]
+    }
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows(rows)
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ x + s(x)', data).evaluate()
+    FitResult result = FitRegistry.instance().get('gam').fit(frame)
+
+    assertEquals(frame.data.columnCount() + 1, result.coefficients.length)
+    assertTrue(result.rSquared > 0.95d, "Model should fit combined linear and smooth effects, got ${result.rSquared}")
+  }
 }

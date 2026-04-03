@@ -93,19 +93,9 @@ class LoessMethod implements FitMethod {
    */
   private static double fitLocal(double[] x, double[] y, double[] w,
                                   double target, int bandwidth, int degree) {
-    int n = x.length
-    int halfBw = bandwidth / 2 as int
-
-    // Find the nearest bandwidth observations
-    int center = Arrays.binarySearch(x, target)
-    if (center < 0) {
-      center = -(center + 1)
-    }
-    int lo = Math.max(0, center - halfBw)
-    int hi = Math.min(n - 1, lo + bandwidth - 1)
-    if (hi - lo + 1 < bandwidth) {
-      lo = Math.max(0, hi - bandwidth + 1)
-    }
+    int[] window = nearestWindow(x, target, bandwidth)
+    int lo = window[0]
+    int hi = window[1]
 
     double maxDist = 0.0d
     for (int i = lo; i <= hi; i++) {
@@ -167,6 +157,39 @@ class LoessMethod implements FitMethod {
     }
     double t = 1.0d - u * u * u
     t * t * t
+  }
+
+  /**
+   * Returns the contiguous window in sorted {@code x} containing the nearest
+   * {@code bandwidth} observations to {@code target}.
+   */
+  private static int[] nearestWindow(double[] x, double target, int bandwidth) {
+    int n = x.length
+    int center = Arrays.binarySearch(x, target)
+    if (center < 0) {
+      center = -(center + 1)
+    }
+
+    int left = center - 1
+    int right = center
+    int selected = 0
+    while (selected < bandwidth) {
+      if (left < 0) {
+        right++
+      } else if (right >= n) {
+        left--
+      } else {
+        double leftDistance = Math.abs(x[left] - target)
+        double rightDistance = Math.abs(x[right] - target)
+        if (leftDistance <= rightDistance) {
+          left--
+        } else {
+          right++
+        }
+      }
+      selected++
+    }
+    [left + 1, right - 1] as int[]
   }
 
   private static double[][] applyWeights(double[][] x, double[] w) {

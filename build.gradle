@@ -1,5 +1,3 @@
-import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
-import groovy.transform.CompileStatic
 plugins {
   //id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
   id "com.github.ben-manes.versions" version "0.53.0" apply false
@@ -76,10 +74,10 @@ allprojects {
 }
 
 subprojects {
-  // Compile all groovy code statically per default
-  it.tasks.withType(GroovyCompile).configureEach {
-    groovyOptions.addCompilerCustomizers(new ASTTransformationCustomizer(CompileStatic))
-  }
+  // Compile all groovy code statically by default
+  //tasks.withType(GroovyCompile).configureEach {
+  //  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+  //}
   plugins.withId('groovy') {
     apply plugin: 'codenarc'
     codenarc {

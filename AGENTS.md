@@ -16,7 +16,13 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 - `./gradlew dependencyUpdates`: report newer dependency versions.
 
 ## Coding Style & Naming Conventions
-Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. **Static compilation is enabled globally** in `build.gradle` — do not add `@CompileStatic` to new code, and remove it from existing classes when you touch them. Use `@CompileDynamic` on classes or methods that require dynamic Groovy features. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format).
+Use Groovy 5.0.5 and target Java 21. 
+Follow the existing 2-space indentation and import style in each file. 
+Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. 
+Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. 
+Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. 
+Always add GroovyDoc for public classes and public methods. 
+Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format).
 
 ### Avoid `Object` Parameters — Use Typed Overloads
 **CRITICAL:** Never use `Object` as a method parameter or field type when specific types are known. `Object` parameters are not type-safe and provide no IDE assistance. Instead, use method overloads with concrete types:
@@ -394,7 +400,7 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 ## Code Style
 
-- **Static compilation is enabled globally** via `build.gradle` (`ASTTransformationCustomizer(CompileStatic)`). All Groovy code compiles statically by default. You do **not** need to add `@CompileStatic` to classes — when touching existing classes, remove the annotation since it is redundant. Use `@CompileDynamic` on classes or methods that require dynamic Groovy features.
+- **Static compilation is enabled globally** via `config/groovy/compileStatic.groovy`. Do **not** add `@CompileStatic` to new code — when touching existing classes, remove the annotation since it is redundant. Use `@CompileDynamic` on classes or methods that require dynamic Groovy features.
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
 - MIT License

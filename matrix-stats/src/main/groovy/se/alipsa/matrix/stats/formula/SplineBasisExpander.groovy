@@ -7,8 +7,9 @@ import groovy.transform.CompileStatic
  * Uses equally-spaced interior knots and the truncated-power basis with the
  * natural constraint (linear beyond boundary knots).
  *
- * <p>The basis is intercept-free and centered to avoid non-identifiability
- * when the outer model includes its own intercept column.
+ * <p>The basis is centered and excludes the linear {@code x} term so
+ * {@code y ~ x + s(x)} can combine an unpenalized linear effect with a
+ * separate smooth component without duplicating columns.
  */
 @CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
@@ -17,16 +18,14 @@ final class SplineBasisExpander {
   private SplineBasisExpander() {}
 
   /**
-   * Generates an intercept-free, centered natural cubic spline basis matrix.
+   * Generates a centered natural cubic spline basis matrix without the raw {@code x} term.
    *
-   * <p>The basis does NOT include a constant column or a raw x column — those
-   * are supplied by the outer model (intercept from the formula, raw x as a
-   * separate linear term if desired). This avoids non-identifiability when the
-   * model already includes an intercept.
+   * <p>The basis does NOT include a constant column or the raw/centered {@code x}
+   * column. The outer model supplies the intercept, and callers can add {@code x}
+   * explicitly when they want a separate linear term.
    *
-   * <p>Produces {@code df} centered basis columns using the constrained
-   * truncated-power representation: one centered-x column plus {@code df - 1}
-   * constrained spline columns.
+   * <p>Produces {@code df} centered nonlinear basis columns using a constrained
+   * truncated-power representation with equally spaced interior knots.
    *
    * @param x the predictor values (length n)
    * @param df degrees of freedom (number of basis columns, must be >= 1)
@@ -39,13 +38,6 @@ final class SplineBasisExpander {
 
     int n = x.length
 
-    // Center x to avoid collinearity with a model intercept
-    double xMean = 0.0d
-    for (double v : x) {
-      xMean += v
-    }
-    xMean /= n
-
     double xMin = Double.MAX_VALUE
     double xMax = -Double.MAX_VALUE
     for (double v : x) {
@@ -53,50 +45,59 @@ final class SplineBasisExpander {
       if (v > xMax) xMax = v
     }
 
-    if (df == 1) {
-      // Single centered-x column
-      double[][] basis = new double[n][1]
-      for (int i = 0; i < n; i++) {
-        basis[i][0] = x[i] - xMean
-      }
-      return basis
+    if (xMax == xMin) {
+      return new double[n][df]
     }
 
-    // nKnots = df + 1 (boundary + interior); produces df columns:
-    //   column 0 = centered x
-    //   columns 1..df-1 = constrained truncated-power spline functions
-    int nKnots = df + 1
+    // Use one extra interior knot so the nonlinear part still has df columns
+    // after excluding the linear x component from the returned basis.
+    int nKnots = df + 3
     double[] knots = new double[nKnots]
     for (int i = 0; i < nKnots; i++) {
       knots[i] = xMin + (xMax - xMin) * i / (nKnots - 1)
     }
 
-    int nInterior = nKnots - 2
-    double kLast = knots[nKnots - 1]
-    double kSecondLast = knots[nKnots - 2]
-    double denom = kLast - kSecondLast
+    double boundaryMax = knots[nKnots - 1]
+    double referenceInterior = knots[nKnots - 2]
+    double denom = boundaryMax - referenceInterior
     if (denom == 0.0d) {
       denom = 1.0d
     }
 
     double[][] basis = new double[n][df]
     for (int i = 0; i < n; i++) {
-      // Column 0: centered x
-      basis[i][0] = x[i] - xMean
-
-      // Columns 1..df-1: constrained truncated-power basis
-      for (int j = 0; j < nInterior; j++) {
-        double kj = knots[j + 1] // interior knots
-        double d_j = (truncPow3(x[i] - kj) - truncPow3(x[i] - kLast)) / denom
-        double d_last = (truncPow3(x[i] - kSecondLast) - truncPow3(x[i] - kLast)) / denom
-        basis[i][j + 1] = d_j - d_last
+      for (int j = 0; j < df; j++) {
+        double knot = knots[j + 1]
+        double basisAtKnot = (truncPow3(x[i] - knot) - truncPow3(x[i] - boundaryMax)) / (boundaryMax - knot)
+        double basisAtReference =
+          (truncPow3(x[i] - referenceInterior) - truncPow3(x[i] - boundaryMax)) / denom
+        basis[i][j] = basisAtKnot - basisAtReference
       }
     }
 
+    centerColumns(basis)
     basis
   }
 
   private static double truncPow3(double v) {
     v > 0.0d ? v * v * v : 0.0d
+  }
+
+  private static void centerColumns(double[][] basis) {
+    if (basis.length == 0 || basis[0].length == 0) {
+      return
+    }
+    int rows = basis.length
+    int columns = basis[0].length
+    for (int column = 0; column < columns; column++) {
+      double mean = 0.0d
+      for (int row = 0; row < rows; row++) {
+        mean += basis[row][column]
+      }
+      mean /= rows
+      for (int row = 0; row < rows; row++) {
+        basis[row][column] -= mean
+      }
+    }
   }
 }

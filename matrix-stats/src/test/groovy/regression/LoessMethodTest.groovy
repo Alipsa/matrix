@@ -119,4 +119,26 @@ class LoessMethodTest {
       FitRegistry.instance().get('loess').fit(frame)
     }
   }
+
+  @Test
+  void testLoessUsesNearestNeighborsForUnevenSpacing() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows([
+        [0.0, 0.0],
+        [0.1, 0.1],
+        [0.2, 0.2],
+        [10.0, 100.0],
+        [10.1, 101.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ x', data).evaluate()
+    FitResult result = FitRegistry.instance().get('loess').fit(frame, new LoessOptions(0.6d))
+
+    assertEquals(5, result.fittedValues.length)
+    assertTrue(result.fittedValues[2] < 1.0d,
+      "Fit near x=0.2 should be driven by nearby points, got ${result.fittedValues[2]}")
+  }
 }
