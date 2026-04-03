@@ -722,4 +722,174 @@ class FormulaModelFrameTest {
     }
     assertTrue(ex.message.contains("Offset column 'off' not found"))
   }
+
+  @Test
+  void testNaOmitHandlesNullInWeightsColumn() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'w'])
+      .rows([
+        [10.0, 1.0, 0.5],
+        [20.0, 2.0, null],
+        [30.0, 3.0, 1.5],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights('w')
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals([0.5, 1.5], result.weights)
+    assertEquals([1], result.droppedRows)
+  }
+
+  @Test
+  void testNaOmitHandlesNullInOffsetColumn() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'off'])
+      .rows([
+        [10.0, 1.0, 0.1],
+        [20.0, 2.0, null],
+        [30.0, 3.0, 0.3],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .offset('off')
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals([0.1, 0.3], result.offset)
+    assertEquals([1], result.droppedRows)
+  }
+
+  @Test
+  void testNaFailRejectsNullInWeightsColumn() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'w'])
+      .rows([
+        [10.0, 1.0, 0.5],
+        [20.0, 2.0, null],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .weights('w')
+        .naAction(NaAction.FAIL)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('NA values found'))
+  }
+
+  @Test
+  void testDotExpandsToInterceptOnlyWhenEmpty() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'w'])
+      .rows([
+        [10.0, 0.5],
+        [20.0, 1.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    // With y as response and w as weights, dot has no columns to expand into
+    ModelFrameResult result = ModelFrame.of('y ~ .', data)
+      .weights('w')
+      .evaluate()
+
+    assertTrue(result.predictorNames.isEmpty())
+    assertTrue(result.includeIntercept)
+    assertEquals([10.0, 20.0], result.response)
+  }
+
+  @Test
+  void testNaOmitHandlesNullInListBasedWeights() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, 2.0],
+        [30.0, 3.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights([1.0, null, 2.0])
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals([1.0, 2.0], result.weights)
+    assertEquals([1], result.droppedRows)
+  }
+
+  @Test
+  void testNaOmitHandlesNullInListBasedOffset() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, 2.0],
+        [30.0, 3.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .offset([0.1, null, 0.3])
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals([0.1, 0.3], result.offset)
+    assertEquals([1], result.droppedRows)
+  }
+
+  @Test
+  void testNaFailRejectsNullInListBasedWeights() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .weights([1.0, null])
+        .naAction(NaAction.FAIL)
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('NA values found'))
+  }
+
+  @Test
+  void testNestedDotExpandsToInterceptWhenEmpty() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'w', 'x'])
+      .rows([
+        [10.0, 0.5, 1.0],
+        [20.0, 1.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    // dot expands to nothing (only x and w remain; w is weights, x is explicit)
+    // so (. + x)^2 simplifies to (1 + x)^2 which is just x
+    ModelFrameResult result = ModelFrame.of('y ~ (. + x)^2', data)
+      .weights('w')
+      .evaluate()
+
+    assertEquals(['x'], result.predictorNames)
+    assertEquals([10.0, 20.0], result.response)
+  }
 }

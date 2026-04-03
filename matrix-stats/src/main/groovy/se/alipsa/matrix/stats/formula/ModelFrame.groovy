@@ -256,9 +256,15 @@ final class ModelFrame {
     working = subsetResult.data
     originalIndices = subsetResult.indices
 
-    // Stage 6: NA handling
+    // Stage 6: NA handling (include weights/offset columns so nulls there are handled)
     List<String> allFormulaColumns = [responseName]
     allFormulaColumns.addAll(variableNames)
+    if (weightsColumn != null) {
+      allFormulaColumns << weightsColumn
+    }
+    if (offsetColumn != null) {
+      allFormulaColumns << offsetColumn
+    }
     NaResult naResult = handleNa(working, originalIndices, allFormulaColumns)
     working = naResult.data
     List<Integer> droppedRows = naResult.droppedRows
@@ -267,6 +273,22 @@ final class ModelFrame {
     resolvedWeights = filterToSurvivors(resolvedWeights, naResult.survivingIndices)
     resolvedOffset = filterToSurvivors(resolvedOffset, naResult.survivingIndices)
     Map<String, List<?>> filteredEnv = filterEnvToSurvivors(env, naResult.survivingIndices)
+
+    // Handle nulls in list-based weights/offset (column-based nulls are already handled above)
+    Set<Integer> listNullRows = findNullIndices(resolvedWeights, resolvedOffset)
+    if (!listNullRows.isEmpty()) {
+      if (naActionPolicy == NaAction.FAIL) {
+        throw new IllegalArgumentException('NA values found in weights/offset (na.action is FAIL)')
+      }
+      List<Integer> kept = (0..<working.rowCount()).findAll { int i -> !listNullRows.contains(i) }
+      for (int i : listNullRows) {
+        droppedRows = droppedRows + [naResult.survivingIndices[i]]
+      }
+      working = working.subset(kept)
+      resolvedWeights = filterByIndices(resolvedWeights, kept)
+      resolvedOffset = filterByIndices(resolvedOffset, kept)
+      filteredEnv = filterEnvByIndices(filteredEnv, kept)
+    }
 
     // Validate non-empty
     if (working.rowCount() == 0) {
@@ -652,6 +674,43 @@ final class ModelFrame {
     Map<String, List<?>> filtered = [:]
     for (Map.Entry<String, List<?>> entry : env.entrySet()) {
       filtered[entry.key] = survivingOriginalIndices.collect { Integer originalIdx -> entry.value[originalIdx] }
+    }
+    filtered
+  }
+
+  private static Set<Integer> findNullIndices(List<Number> weights, List<Number> offset) {
+    Set<Integer> nullRows = [] as Set<Integer>
+    if (weights != null) {
+      for (int i = 0; i < weights.size(); i++) {
+        if (weights[i] == null) {
+          nullRows << i
+        }
+      }
+    }
+    if (offset != null) {
+      for (int i = 0; i < offset.size(); i++) {
+        if (offset[i] == null) {
+          nullRows << i
+        }
+      }
+    }
+    nullRows
+  }
+
+  private static List<Number> filterByIndices(List<Number> values, List<Integer> indices) {
+    if (values == null) {
+      return null
+    }
+    indices.collect { int i -> values[i] } as List<Number>
+  }
+
+  private static Map<String, List<?>> filterEnvByIndices(Map<String, List<?>> env, List<Integer> indices) {
+    if (env == null) {
+      return null
+    }
+    Map<String, List<?>> filtered = [:]
+    for (Map.Entry<String, List<?>> entry : env.entrySet()) {
+      filtered[entry.key] = indices.collect { int i -> entry.value[i] }
     }
     filtered
   }

@@ -52,6 +52,7 @@ final class DesignMatrixBuilder {
           [],
           false,
           [],
+          false,
           true,
           'Term produced no columns'
         )
@@ -59,12 +60,14 @@ final class DesignMatrixBuilder {
         boolean termIsCategorical = columns.any { ColumnInfo col -> col.isCategorical }
         List<String> allLevels = columns.collectMany { ColumnInfo col -> col.factorLevels }.unique()
         List<String> colNames = columns.collect { ColumnInfo col -> col.name }
+        boolean termIsSmooth = columns.any { ColumnInfo col -> col.isSmooth }
         termInfos << new Terms.TermInfo(
           term,
           term.asFormulaString(),
           colNames,
           termIsCategorical,
           allLevels,
+          termIsSmooth,
           false,
           null
         )
@@ -90,11 +93,14 @@ final class DesignMatrixBuilder {
   }
 
   private List<ColumnInfo> encodeFactor(FormulaExpression factor) {
-    // Special handling for poly(x, n)
+    // Special handling for poly(x, n) and s(x) / s(x, df)
     if (factor instanceof FormulaExpression.FunctionCall) {
       FormulaExpression.FunctionCall call = factor as FormulaExpression.FunctionCall
       if (call.name.equalsIgnoreCase('poly')) {
         return encodePoly(call)
+      }
+      if (call.name.equalsIgnoreCase('s')) {
+        return encodeSmooth(call)
       }
     }
 
@@ -153,12 +159,57 @@ final class DesignMatrixBuilder {
     result
   }
 
+  private static final int DEFAULT_SMOOTH_DF = 4
+
+  private List<ColumnInfo> encodeSmooth(FormulaExpression.FunctionCall call) {
+    if (call.arguments.isEmpty() || call.arguments.size() > 2) {
+      throw new IllegalArgumentException("s() requires 1 or 2 arguments (variable and optional df), got ${call.arguments.size()}")
+    }
+
+    FormulaExpression varExpr = call.arguments[0]
+    int df = DEFAULT_SMOOTH_DF
+    if (call.arguments.size() == 2) {
+      FormulaExpression dfExpr = call.arguments[1]
+      if (!(dfExpr instanceof FormulaExpression.NumberLiteral)) {
+        throw new IllegalArgumentException('s() df must be a numeric literal')
+      }
+      BigDecimal dfValue = (dfExpr as FormulaExpression.NumberLiteral).value
+      if (dfValue.scale() > 0 || dfValue < 1) {
+        throw new IllegalArgumentException("s() df must be an integer >= 1, got ${dfValue}")
+      }
+      df = dfValue.intValue()
+    }
+
+    List<BigDecimal> baseValues = evaluator.evaluate(varExpr)
+    String baseName = generateColumnName(varExpr)
+
+    double[] x = new double[baseValues.size()]
+    for (int i = 0; i < baseValues.size(); i++) {
+      x[i] = baseValues[i].doubleValue()
+    }
+    double[][] basis = SplineBasisExpander.naturalCubicSplineBasis(x, df)
+
+    List<ColumnInfo> result = []
+    for (int j = 0; j < df; j++) {
+      String colName = "s_${baseName}_${j + 1}"
+      List<BigDecimal> values = (0..<baseValues.size()).collect { int i -> basis[i][j] as BigDecimal }
+      // Mark as smooth so GamMethod can apply penalty selectively
+      result << new ColumnInfo(colName, values, false, [], true)
+    }
+    result
+  }
+
   private List<ColumnInfo> encodeInteraction(FormulaTerm term) {
     List<List<ColumnInfo>> factorColumns = []
     for (FormulaExpression factor : term.factors) {
       List<ColumnInfo> cols = encodeFactor(factor)
       if (cols.isEmpty()) {
         return []
+      }
+      if (cols.any { ColumnInfo col -> col.isSmooth }) {
+        throw new IllegalArgumentException(
+          "Smooth terms cannot be used in interactions: ${term.asFormulaString()}"
+        )
       }
       factorColumns << cols
     }
@@ -303,12 +354,15 @@ final class DesignMatrixBuilder {
     final List<BigDecimal> values
     final boolean isCategorical
     final List<String> factorLevels
+    final boolean isSmooth
 
-    ColumnInfo(String name, List<BigDecimal> values, boolean isCategorical, List<String> factorLevels) {
+    ColumnInfo(String name, List<BigDecimal> values, boolean isCategorical,
+               List<String> factorLevels, boolean isSmooth = false) {
       this.name = name
       this.values = List.copyOf(values)
       this.isCategorical = isCategorical
       this.factorLevels = List.copyOf(factorLevels)
+      this.isSmooth = isSmooth
     }
   }
 }
