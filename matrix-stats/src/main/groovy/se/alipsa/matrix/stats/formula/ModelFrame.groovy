@@ -256,9 +256,15 @@ final class ModelFrame {
     working = subsetResult.data
     originalIndices = subsetResult.indices
 
-    // Stage 6: NA handling
+    // Stage 6: NA handling (include weights/offset columns so nulls there are handled)
     List<String> allFormulaColumns = [responseName]
     allFormulaColumns.addAll(variableNames)
+    if (weightsColumn != null) {
+      allFormulaColumns << weightsColumn
+    }
+    if (offsetColumn != null) {
+      allFormulaColumns << offsetColumn
+    }
     NaResult naResult = handleNa(working, originalIndices, allFormulaColumns)
     working = naResult.data
     List<Integer> droppedRows = naResult.droppedRows
