@@ -18,7 +18,18 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.temporal.TemporalAccessor
 
-
+@SuppressWarnings([
+    'ConsecutiveBlankLines',
+    'ClassSize',
+    'UnnecessaryGString',
+    'ClosureAsLastMethodParameter',
+    'SpaceAfterCommentDelimiter',
+    'BlockEndsWithBlankLine',
+    'UnnecessaryBigDecimalInstantiation',
+    'UnnecessaryCollectCall',
+    'UnnecessaryDotClass',
+    'ClassEndsWithBlankLine'
+])
 class MatrixTest {
 
   @Test
