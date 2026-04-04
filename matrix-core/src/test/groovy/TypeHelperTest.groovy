@@ -36,4 +36,5 @@ class TypeHelperTest {
 
     assertEquals('Number of columns (2) differs from number of datatypes provided (1)', ex.message)
   }
+
 }

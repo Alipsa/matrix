@@ -22,7 +22,7 @@ class ListConverterTest {
     // using hyphens as negative symbol (US format), should be converted
     // to minus
     assertIterableEquals(expected,
-    ListConverter.convert(['50', '2000', '-145292', '-4.0', '300', '3,14'], Double, null,null, numberFormat))
+        ListConverter.convert(['50', '2000', '-145292', '-4.0', '300', '3,14'], Double, null, null, numberFormat))
     numberFormat = NumberFormat.getInstance(Locale.of('en', 'US'))
     assertIterableEquals(expected, ListConverter.convert(
         ['50', '2000', '-145292', '-4.0', '300', '3.14'],
@@ -132,7 +132,6 @@ class ListConverterTest {
         YearMonth.of(2023, 5)
     ]
     assert expectedList == ListConverter.toYearMonths(map.keySet())
-
   }
 
   @Test
@@ -162,4 +161,5 @@ class ListConverterTest {
     def expected = [1.1G, 2.2G, 3.3G]
     assertIterableEquals(expected, ListConverter.toBigDecimals(numbers))
   }
+
 }

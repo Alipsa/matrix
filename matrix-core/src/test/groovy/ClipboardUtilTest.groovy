@@ -9,7 +9,6 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
-import java.io.IOException
 
 class ClipboardUtilTest {
 
@@ -66,6 +65,7 @@ class ClipboardUtilTest {
   }
 
   private static final class NullStringTransferable implements Transferable {
+
     @Override
     DataFlavor[] getTransferDataFlavors() {
       return [DataFlavor.stringFlavor] as DataFlavor[]
@@ -80,9 +80,11 @@ class ClipboardUtilTest {
     Object getTransferData(DataFlavor flavor) {
       return null
     }
+
   }
 
   private static final class NoStringTransferable implements Transferable {
+
     @Override
     DataFlavor[] getTransferDataFlavors() {
       return [DataFlavor.imageFlavor] as DataFlavor[]
@@ -97,9 +99,11 @@ class ClipboardUtilTest {
     Object getTransferData(DataFlavor flavor) {
       throw new UnsupportedFlavorException(flavor)
     }
+
   }
 
   private static final class IOExceptionTransferable implements Transferable {
+
     @Override
     DataFlavor[] getTransferDataFlavors() {
       return [DataFlavor.stringFlavor] as DataFlavor[]
@@ -114,5 +118,7 @@ class ClipboardUtilTest {
     Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
       throw new IOException('boom')
     }
+
   }
+
 }
