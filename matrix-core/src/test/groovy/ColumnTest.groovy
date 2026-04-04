@@ -170,9 +170,9 @@ class ColumnTest {
   void testLeftShift() {
     Column c1 = new Column([1, 2, 3, 4])
     c1 << 5
-    assert [1,2,3,4,5] == c1
-    c1 << [6,7]
-    assert [1,2,3,4,5,6,7] == c1
+    assert [1, 2, 3, 4, 5] == c1
+    c1 << [6, 7]
+    assert [1, 2, 3, 4, 5, 6, 7] == c1
   }
 
   @Test
@@ -187,28 +187,28 @@ class ColumnTest {
 
   @Test
   void testAsType() {
-    Column c = [1,2,3] as Column
-    assert [1,2,3] == c
+    Column c = [1, 2, 3] as Column
+    assert [1, 2, 3] == c
 
     List<Number> l = []
     l.add(1)
     l.add(2)
     l.add(1)
     Column col = l as Column
-    assert [2,4,4] == col + c
+    assert [2, 4, 4] == col + c
   }
 
   @Test
   void testSubList() {
-    Column c = [1,2,3,4] as Column
-    assert [1,2,3] == c.subList(0..2)
+    Column c = [1, 2, 3, 4] as Column
+    assert [1, 2, 3] == c.subList(0..2)
   }
 
   @Test
   void testUnique() {
     Column c = new Column([1, 2, 3, 4, 1, 2, 3])
-    assert [1, 2, 3, 4] == c.unique() : "unique() should return a new Column with unique values"
-    assert new Column([1, 2, 3, 4, 1, 2, 3]) == c : "unique() should not mutate the original Column"
+    assert [1, 2, 3, 4] == c.unique() : 'unique() should return a new Column with unique values'
+    assert new Column([1, 2, 3, 4, 1, 2, 3]) == c : 'unique() should not mutate the original Column'
   }
 
   @Test
@@ -226,7 +226,7 @@ class ColumnTest {
   void testRemoveNulls() {
     Column c = new Column([1, null, 3, null, 5])
     Column noNulls = c.removeNulls()
-    assert [1,3,5] == noNulls
+    assert [1, 3, 5] == noNulls
     assert [1, null, 3, null, 5] == c // original should be unchanged
   }
 
@@ -234,16 +234,16 @@ class ColumnTest {
   void testReplaceNulls() {
     Column c = new Column([1, null, 3, null, 5])
     Column result = c.replaceNulls(0)
-    assert [1, 0, 3, 0, 5] == c : "replaceNulls() should mutate in place"
-    assert result.is(c) : "replaceNulls() should return the same column instance"
+    assert [1, 0, 3, 0, 5] == c : 'replaceNulls() should mutate in place'
+    assert result.is(c) : 'replaceNulls() should return the same column instance'
   }
 
   @Test
   void testReplace() {
     Column c = new Column([1, 2, 3, 2, 5])
     Column result = c.replace(2, 99)
-    assert [1, 99, 3, 99, 5] == c : "replace() should mutate in place"
-    assert result.is(c) : "replace() should return the same column instance"
+    assert [1, 99, 3, 99, 5] == c : 'replace() should mutate in place'
+    assert result.is(c) : 'replace() should return the same column instance'
   }
 
   @Test
@@ -570,9 +570,9 @@ class ColumnTest {
   void testShiftAndDiffRejectIntegerMinValue() {
     Column c = new Column('value', [1, 2, 3], Integer)
 
-    assert "shift does not support periods == Integer.MIN_VALUE" ==
+    assert 'shift does not support periods == Integer.MIN_VALUE' ==
         assertThrows(IllegalArgumentException) { c.shift(Integer.MIN_VALUE) }.message
-    assert "diff does not support periods == Integer.MIN_VALUE" ==
+    assert 'diff does not support periods == Integer.MIN_VALUE' ==
         assertThrows(IllegalArgumentException) { c.diff(Integer.MIN_VALUE) }.message
   }
 
@@ -810,4 +810,5 @@ class ColumnTest {
     assert result as Set == [1, 2, 3, 4, 5] as Set
     assert result.size() == 5
   }
+
 }
