@@ -4,6 +4,7 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import se.alipsa.matrix.core.spi.FormatRegistry
