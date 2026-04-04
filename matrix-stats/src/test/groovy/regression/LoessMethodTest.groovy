@@ -41,7 +41,7 @@ class LoessMethodTest {
     for (double r : result.residuals) {
       maxResidual = Math.max(maxResidual, Math.abs(r))
     }
-    assertTrue(maxResidual < 1.0, "Residuals should be bounded for smooth data")
+    assertTrue(maxResidual < 1.0, 'Residuals should be bounded for smooth data')
   }
 
   @Test
@@ -60,6 +60,9 @@ class LoessMethodTest {
     FitResult result = FitRegistry.instance().get('loess').fit(frame)
 
     assertEquals(20, result.fittedValues.length)
+    assertEquals(0, result.coefficients.length)
+    assertEquals(0, result.standardErrors.length)
+    assertTrue(result.predictorNames.isEmpty())
     // linear data: loess should fit well
     assertTrue(result.rSquared > 0.99)
   }
@@ -141,4 +144,25 @@ class LoessMethodTest {
     assertTrue(result.fittedValues[2] < 1.0d,
       "Fit near x=0.2 should be driven by nearby points, got ${result.fittedValues[2]}")
   }
+
+  @Test
+  void testLoessRejectsOffsets() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y', 'off'])
+      .rows([
+        [1.0, 3.0, 0.1],
+        [2.0, 5.0, 0.2],
+        [3.0, 7.0, 0.3],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ x', data).offset('off').evaluate()
+    UnsupportedOperationException ex = assertThrows(UnsupportedOperationException) {
+      FitRegistry.instance().get('loess').fit(frame)
+    }
+
+    assertTrue(ex.message.contains('offsets'))
+  }
+
 }

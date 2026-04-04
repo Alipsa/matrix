@@ -4,6 +4,22 @@ import groovy.transform.CompileStatic
 
 /**
  * Public entry point for formula parsing, normalization, and updates.
+ *
+ * <p>The formula syntax follows a compact R-style subset built around a response and
+ * predictor side separated by {@code ~}. Supported constructs include:
+ * <ul>
+ *   <li>additive terms: {@code y ~ x + z}</li>
+ *   <li>intercept control: {@code y ~ 0 + x}, {@code y ~ x - 1}</li>
+ *   <li>interactions: {@code :}, {@code *}, {@code ^}, and nesting via {@code /}</li>
+ *   <li>quoted identifiers using backticks, for example {@code `gross margin`}</li>
+ *   <li>identity expressions via {@code I(...)}</li>
+ *   <li>polynomial expansion via {@code poly(x, n)}</li>
+ *   <li>smooth terms via {@code s(x)} and {@code s(x, df)}</li>
+ * </ul>
+ *
+ * <p>Normalization canonicalizes predictor ordering and expands shorthand such as
+ * {@code *} and grouped powers into explicit interaction terms. Dot expansion is
+ * resolved later by {@link ModelFrame} because it depends on the available data columns.
  */
 @CompileStatic
 final class Formula {
@@ -93,4 +109,5 @@ final class Formula {
     }
     value
   }
+
 }

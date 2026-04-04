@@ -92,6 +92,47 @@ class LmMethodTest {
     assertEquals(3, result.coefficients.length)
     assertEquals('(Intercept)', result.predictorNames[0])
     assertEquals(6, result.fittedValues.length)
+    assertEquals(6, result.residuals.length)
+    assertEquals(3, result.standardErrors.length)
     assertTrue(result.rSquared > 0.8)
   }
+
+  @Test
+  void testLmRejectsWeights() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y', 'w'])
+      .rows([
+        [1.0, 3.0, 1.0],
+        [2.0, 5.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ x', data).weights('w').evaluate()
+
+    UnsupportedOperationException ex = assertThrows(UnsupportedOperationException) {
+      FitRegistry.instance().get('lm').fit(frame)
+    }
+    assertTrue(ex.message.contains('weights'))
+  }
+
+  @Test
+  void testLmRejectsOffsets() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y', 'off'])
+      .rows([
+        [1.0, 3.0, 0.1],
+        [2.0, 5.0, 0.2],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ x', data).offset('off').evaluate()
+
+    UnsupportedOperationException ex = assertThrows(UnsupportedOperationException) {
+      FitRegistry.instance().get('lm').fit(frame)
+    }
+    assertTrue(ex.message.contains('offsets'))
+  }
+
 }

@@ -26,6 +26,10 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  *   <li>{@code lambda} (double, default 1.0): smoothing penalty parameter</li>
  * </ul>
  *
+ * <p>This method expects smooth terms to be expanded by the formula pipeline into
+ * spline basis columns and relies on {@link Terms} metadata to identify which columns
+ * should be penalized. Unsupported frame features are rejected rather than ignored.
+ *
  * <h3>Known Limitations</h3>
  * <ul>
  *   <li>Tensor product smooth terms ({@code te(x, z)}) are not supported</li>
@@ -148,4 +152,5 @@ class GamMethod implements FitMethod {
     }
     fit(frame, options as GamOptions)
   }
+
 }

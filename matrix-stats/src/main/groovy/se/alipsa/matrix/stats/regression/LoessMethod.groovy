@@ -21,6 +21,9 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * weights from the model frame. Only univariate smoothing is supported; frames
  * with more than one predictor are rejected.
  *
+ * <p>Offsets are not supported. The returned {@link FitResult} contains fitted values,
+ * residuals, and {@code rSquared}, but no global coefficient vector.
+ *
  * <p>Loess is a local method with no global coefficients. {@link FitResult#coefficients}
  * and {@link FitResult#standardErrors} return empty arrays.
  */
@@ -242,4 +245,5 @@ class LoessMethod implements FitMethod {
     }
     fit(frame, options as LoessOptions)
   }
+
 }

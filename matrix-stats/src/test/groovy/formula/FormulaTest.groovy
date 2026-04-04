@@ -57,6 +57,15 @@ class FormulaTest {
   }
 
   @Test
+  void testParsesSmoothTermsAndBacktickArguments() {
+    ParsedFormula parsed = Formula.parse('`response value` ~ s(`predictor value`) + s(x, 6)')
+
+    assertEquals('`response value`', parsed.response.asFormulaString())
+    assertEquals('s(`predictor value`) + s(x, 6)', parsed.predictors.asFormulaString())
+    assertEquals('`response value` ~ 1 + s(`predictor value`) + s(x, 6)', parsed.normalize().asFormulaString())
+  }
+
+  @Test
   void testNormalizesInteractionsAndInterceptControl() {
     def normalized = Formula.normalize('y ~ 0 + x * z')
 
@@ -89,6 +98,13 @@ class FormulaTest {
     def normalized = Formula.normalize('y ~ a / b / c')
 
     assertEquals('y ~ 1 + a + a:b + a:b:c', normalized.asFormulaString())
+  }
+
+  @Test
+  void testNormalizesGroupedPowerAndNestingWithParentheses() {
+    def normalized = Formula.normalize('y ~ (a + b)^2 / c')
+
+    assertEquals('y ~ 1 + a + b + a:b + a:b:c', normalized.asFormulaString())
   }
 
   @Test
@@ -221,7 +237,7 @@ class FormulaTest {
       Formula.normalize('y ~ (a + b)^1.5e0')
     }
 
-    assertTrue(exception.message.contains("requires a positive integer exponent"))
+    assertTrue(exception.message.contains('requires a positive integer exponent'))
     assertTrue(exception.message.contains("got '1.5e0'"))
   }
 
@@ -244,6 +260,19 @@ class FormulaTest {
   }
 
   @Test
+  void testRejectsMalformedFunctionArgumentLists() {
+    FormulaParseException smooth = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ s(x, )')
+    }
+    FormulaParseException poly = assertThrows(FormulaParseException) {
+      Formula.parse('y ~ poly(x 2)')
+    }
+
+    assertTrue(smooth.message.contains("Unexpected token ')'"))
+    assertTrue(poly.message.contains("Expected ')' after function arguments"))
+  }
+
+  @Test
   void testRejectsNullUpdateFormula() {
     FormulaParseException exception = assertThrows(FormulaParseException) {
       Formula.update('y ~ x', null)
@@ -261,4 +290,5 @@ class FormulaTest {
     assertEquals('x', predictors.left.asFormulaString())
     assertEquals('z', predictors.right.asFormulaString())
   }
+
 }

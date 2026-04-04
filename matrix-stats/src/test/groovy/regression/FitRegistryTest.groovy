@@ -6,7 +6,9 @@ import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.stats.formula.ModelFrameResult
 import se.alipsa.matrix.stats.regression.FitMethod
+import se.alipsa.matrix.stats.regression.FitOptions
 import se.alipsa.matrix.stats.regression.FitRegistry
 import se.alipsa.matrix.stats.regression.FitResult
 
@@ -33,15 +35,18 @@ class FitRegistryTest {
     // defensive copies
     coefficients[0] = 999.0
     assertEquals(1.5, result.coefficients[0], 1e-10)
+    predictorNamesCannotBeModified(result)
   }
 
   @Test
   void testRegistryLookup() {
     FitRegistry registry = FitRegistry.instance()
     assertNotNull(registry.get('lm'))
-    assertThrows(IllegalArgumentException) {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       registry.get('nonexistent')
     }
+    assertTrue(ex.message.contains('Unknown fit method'))
+    assertTrue(ex.message.contains('lm'))
   }
 
   @Test
@@ -52,4 +57,35 @@ class FitRegistryTest {
     assertTrue(registry.contains('gam'))
     assertFalse(registry.contains('nonexistent'))
   }
+
+  @Test
+  void testRegistryAllowsCustomRegistration() {
+    FitRegistry registry = FitRegistry.instance()
+    registry.register('dummy', new DummyFitMethod())
+
+    assertTrue(registry.contains('dummy'))
+    assertNotNull(registry.get('dummy'))
+  }
+
+  private static void predictorNamesCannotBeModified(FitResult result) {
+    assertThrows(UnsupportedOperationException) {
+      result.predictorNames << 'z'
+    }
+  }
+
+  @CompileStatic
+  private static final class DummyFitMethod implements FitMethod {
+
+    @Override
+    FitResult fit(ModelFrameResult frame) {
+      new FitResult([] as double[], [] as double[], [] as double[], [] as double[], 0.0d, [])
+    }
+
+    @Override
+    FitResult fit(ModelFrameResult frame, FitOptions options) {
+      fit(frame)
+    }
+
+  }
+
 }
