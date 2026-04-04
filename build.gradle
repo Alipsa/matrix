@@ -74,9 +74,12 @@ allprojects {
 }
 
 subprojects {
+  // Compile all groovy code statically by default
+  //tasks.withType(GroovyCompile).configureEach {
+  //  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+  //}
   plugins.withId('groovy') {
     apply plugin: 'codenarc'
-
     codenarc {
       toolVersion = libs.versions.codenarc.get()
       configFile = rootProject.file('config/codenarc/ruleset.groovy')

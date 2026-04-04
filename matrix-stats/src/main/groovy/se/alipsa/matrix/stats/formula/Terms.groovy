@@ -32,6 +32,7 @@ final class Terms {
     final List<String> columns
     final boolean isCategorical
     final List<String> factorLevels
+    final boolean isSmooth
     final boolean isDropped
     final String droppedReason
 
@@ -41,6 +42,7 @@ final class Terms {
       List<String> columns,
       boolean isCategorical,
       List<String> factorLevels,
+      boolean isSmooth,
       boolean isDropped,
       String droppedReason
     ) {
@@ -49,6 +51,7 @@ final class Terms {
       this.columns = List.copyOf(columns ?: [])
       this.isCategorical = isCategorical
       this.factorLevels = List.copyOf(factorLevels ?: [])
+      this.isSmooth = isSmooth
       this.isDropped = isDropped
       this.droppedReason = droppedReason
     }

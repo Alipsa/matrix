@@ -133,10 +133,11 @@ final class FormulaSupport {
   }
 
   static FormulaExpression expandDots(FormulaExpression expression, List<String> dotColumns) {
-    if (dotColumns.isEmpty()) {
-      return expression
-    }
     if (expression instanceof FormulaExpression.Dot) {
+      if (dotColumns.isEmpty()) {
+        // Dot expands to nothing; replace with intercept literal for an intercept-only model
+        return new FormulaExpression.NumberLiteral(BigDecimal.ONE, '1', expression.start, expression.end)
+      }
       return buildAdditionChain(dotColumns, expression.start, expression.end)
     }
     if (expression instanceof FormulaExpression.Grouping) {
