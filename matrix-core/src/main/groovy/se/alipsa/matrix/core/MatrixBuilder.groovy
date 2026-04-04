@@ -46,6 +46,7 @@ class MatrixBuilder {
   List<Class> dataTypes
   Map<String, Object> metadata = [:]
   private List<String> indexColumns = null
+  private int explicitRowCount = 0
 
   /**
    * Create a MatrixBuilder with no name. This is package scoped as the way to create a MatrixBuilder
@@ -69,6 +70,9 @@ class MatrixBuilder {
 
   Matrix build() {
     Matrix m = new Matrix(matrixName, headerList, columns, dataTypes)
+    if (explicitRowCount > 0) {
+      m.setRowCount(explicitRowCount)
+    }
     if (!metadata.isEmpty()) {
       (m.metaData as Map<String, Object>).putAll(metadata)
     }
@@ -160,6 +164,12 @@ class MatrixBuilder {
     if (rows == null || rows.isEmpty()) {
       return this
     }
+    if (rows.every { it == null || it.isEmpty() }) {
+      this.columns = []
+      this.explicitRowCount = rows.size()
+      return this
+    }
+    this.explicitRowCount = 0
     this.columns = rows.transpose()
     this
   }

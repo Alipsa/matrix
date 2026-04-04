@@ -185,6 +185,16 @@ class MatrixBuilderTest {
   }
 
   @Test
+  void testCreationFromAllEmptyRowsPreservesRowCount() {
+    Matrix matrix = Matrix.builder()
+        .rows([[], [], []])
+        .build()
+
+    assertEquals(3, matrix.rowCount())
+    assertEquals(0, matrix.columnCount())
+  }
+
+  @Test
   void testCreationFromMapList() {
     def result = []
     result << [place: 1, firstname: 'Lorena', start: asLocalDate('2021-12-01')]

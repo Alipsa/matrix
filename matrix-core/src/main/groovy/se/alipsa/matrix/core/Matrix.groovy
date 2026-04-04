@@ -68,6 +68,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final Logger log = Logger.getLogger(Matrix)
 
   private List<Column> mColumns
+  private int mRowCount = 0
   private String mName
   public static final Boolean ASC = Boolean.FALSE
   public static final Boolean DESC = Boolean.TRUE
@@ -1578,6 +1579,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       types << it.type
     }
     Matrix copy = new Matrix(mName, headers, mColumns as List<List>, types)
+    if (mColumns.isEmpty() && mRowCount > 0) {
+      copy.setRowCount(mRowCount)
+    }
     copyIndexTo(copy)
     copy
   }
@@ -2954,9 +2958,17 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @return the number of rows in this matrix
    */
+  @PackageScope
+  void setRowCount(int rowCount) {
+    this.mRowCount = rowCount
+  }
+
   int rowCount() {
-    if (mColumns == null || mColumns.isEmpty()) {
+    if (mColumns == null) {
       return 0
+    }
+    if (mColumns.isEmpty()) {
+      return mRowCount
     }
     return mColumns.get(0).size()
   }

@@ -2516,6 +2516,19 @@ class MatrixTest {
   }
 
   @Test
+  void testClonePreservesRowCountForZeroColumnMatrix() {
+    Matrix matrix = Matrix.builder()
+        .rows([[], []])
+        .build()
+
+    Matrix copy = matrix.clone()
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(2, copy.rowCount())
+    assertEquals(0, copy.columnCount())
+  }
+
+  @Test
   void testSubsetPreservesIndex() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK', 'USA'],

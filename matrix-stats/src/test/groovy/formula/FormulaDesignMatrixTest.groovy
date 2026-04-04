@@ -654,7 +654,7 @@ class FormulaDesignMatrixTest {
 
     assertTrue(result.predictorNames.isEmpty())
     assertEquals(0, result.data.columnCount())
-    assertEquals(0, result.data.rowCount())
+    assertEquals(2, result.data.rowCount())
     assertEquals(2, result.response.size())
   }
 }
