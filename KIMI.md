@@ -600,6 +600,9 @@ When reviewing implementation plans or roadmap documents:
 - [ ] **Compare against established patterns** - New sections should follow conventions established in earlier sections. Example: If sections 1-3 consistently use `./gradlew :matrix-stats:spotlessApply :matrix-stats:test`, verify section 17 maintains this pattern.
 - [ ] **Verify quality gate consistency** - If earlier sections include `codenarcMain` and `codenarcTest`, ensure later sections include both, not just one.
 - [ ] **Check command syntax** - Verify Gradle commands, especially those with multiple flags or filters, follow working patterns from earlier in the project.
+- [ ] **Cross-reference plan items with actual changes** - Verify that every file/task listed in the implementation plan was actually modified. Check the PR diff against the plan to identify gaps (e.g., DesignMatrixBuilder listed for GroovyDoc updates but not touched).
+- [ ] **Verify sub-task traceability** - When parent tasks are marked complete but sub-tasks remain unchecked, verify whether: (1) sub-tasks were completed but not checked, (2) existing coverage was sufficient, or (3) the sub-tasks were skipped. Require explicit documentation of which case applies.
+- [ ] **Analyze test data changes** - When test data is modified (new rows, changed values), determine if it's: (1) new test coverage, (2) a bug fix to existing test data, or (3) unrelated noise. Bug fixes to test data should be called out in commit messages.
 
 ---
 
@@ -670,6 +673,9 @@ When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
 | **Documentation-to-code naming drift** | Plan said `NaAction.DROP`, code had `NaAction.OMIT` | Didn't verify enum values against actual source | Cross-reference ALL named types with source code |
 | **Pattern consistency gap** | Missed missing `spotlessApply` in new section | Didn't compare new commands against established conventions | Compare new sections against patterns in earlier sections |
 | **Quality gate regression** | New test section omitted `codenarcMain` | Didn't verify quality gates remained consistent | Check that all quality gates (spotless, codenarcMain, codenarcTest) are present |
+| **Plan-to-implementation gap** | DesignMatrixBuilder listed for GroovyDoc but not touched | Didn't cross-reference plan items with actual PR changes | Verify every planned file/task appears in the diff |
+| **Sub-task traceability gap** | Parent tasks marked done but sub-tasks unchecked | Assumed parent completion implied sub-task completion | Verify sub-task status or document why skipped |
+| **Test data change analysis gap** | New test row was actually a bug fix to existing test | Didn't analyze if data changes were bug fixes vs new coverage | Analyze test data modifications for intent |
 
 ### Analysis Template
 
