@@ -592,6 +592,15 @@ Before submitting review, verify:
 - [ ] Did I actually run the tests?
 - [ ] Did I verify build passes with spotless/codenarc?
 
+### Plan/Implementation Review Additional Checks
+
+When reviewing implementation plans or roadmap documents:
+
+- [ ] **Cross-reference with actual source code** - When a plan references existing types (enums, classes, methods, constants), verify they exist with the exact names/values described. Example: If a plan says `NaAction.DROP`, check the enum to confirm the actual value is `OMIT` not `DROP`.
+- [ ] **Compare against established patterns** - New sections should follow conventions established in earlier sections. Example: If sections 1-3 consistently use `./gradlew :matrix-stats:spotlessApply :matrix-stats:test`, verify section 17 maintains this pattern.
+- [ ] **Verify quality gate consistency** - If earlier sections include `codenarcMain` and `codenarcTest`, ensure later sections include both, not just one.
+- [ ] **Check command syntax** - Verify Gradle commands, especially those with multiple flags or filters, follow working patterns from earlier in the project.
+
 ---
 
 ## Project-Specific Context
@@ -658,6 +667,9 @@ When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
 | **Data alignment after filtering** | Subset/NA filtering updated matrix but not env vars | Assumed all data sources filtered together | Phase 3.x: Verify ALL data sources stay aligned |
 | **Empty collection edge cases** | Empty predictor matrix lost row count (0 rows vs N observations) | Didn't verify empty structures maintain dimensions | Phase 3.x: Test zero-dimension edge cases |
 | **Asymmetric DSL semantics** | Tested `log(x)` on RHS but not `log(y)` on LHS | Assumed symmetry in DSL sides | Phase 2.4: Test BOTH sides of DSL operators |
+| **Documentation-to-code naming drift** | Plan said `NaAction.DROP`, code had `NaAction.OMIT` | Didn't verify enum values against actual source | Cross-reference ALL named types with source code |
+| **Pattern consistency gap** | Missed missing `spotlessApply` in new section | Didn't compare new commands against established conventions | Compare new sections against patterns in earlier sections |
+| **Quality gate regression** | New test section omitted `codenarcMain` | Didn't verify quality gates remained consistent | Check that all quality gates (spotless, codenarcMain, codenarcTest) are present |
 
 ### Analysis Template
 
