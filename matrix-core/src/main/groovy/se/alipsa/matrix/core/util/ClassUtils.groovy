@@ -34,7 +34,7 @@ class ClassUtils {
   }
 
   static Class convertPrimitiveToWrapper(Class type) {
-    if (type != null && type.isPrimitive()) {
+    if (type?.isPrimitive()) {
       return primitiveWrapper(type)
     }
     return type
@@ -43,7 +43,7 @@ class ClassUtils {
   static List<Class> convertPrimitivesToWrapper(List<Class> types) {
     List<Class> safeTypes = []
     types.each {
-      if (it != null && it.isPrimitive()) {
+      if (it?.isPrimitive()) {
         safeTypes.add(primitiveWrapper(it))
       } else {
         safeTypes.add(it)
@@ -65,7 +65,7 @@ class ClassUtils {
     if (columnType.isAssignableFrom(updatedClass)) {
       return columnType
     }
-    if (Number.isAssignableFrom(updatedClass) && Number.isAssignableFrom(columnType) ) {
+    if (Number.isAssignableFrom(updatedClass) && Number.isAssignableFrom(columnType)) {
       return findNearestNumberClass(updatedClass as Class<? extends Number>, columnType as Class<? extends Number>)
     }
 
@@ -134,12 +134,13 @@ class ClassUtils {
     return NEAREST_TYPE_MAP.get(key, Number)
   }
 
+  @SuppressWarnings('Instanceof')
   static GroovyClassLoader findGroovyClassLoader(Object obj) {
-
     ClassLoader cl = obj.class.classLoader
-    while(cl != null && !(cl instanceof GroovyClassLoader)) {
+    while (cl != null && !(cl instanceof GroovyClassLoader)) {
       cl = cl.parent
     }
     cl as GroovyClassLoader ?: new GroovyClassLoader()
   }
+
 }

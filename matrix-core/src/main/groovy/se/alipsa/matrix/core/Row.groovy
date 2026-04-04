@@ -1,6 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
@@ -14,16 +13,18 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
  */
 @CompileStatic
 class Row implements GroovyObject, List<Object> {
+
     private static final String UNSUPPORTED_MUTATION_MESSAGE = 'Adding and deleting values from a row is not supported.'
     private static final String UNKNOWN_COLUMN_MESSAGE_PREFIX = 'Failed to find a column with the name '
+
     @PackageScope
     static final int COLUMN_NOT_FOUND = -1
 
-    private int rowNumber
-    private List<Object> content
+    private final int rowNumber
+    private final List<Object> content
     private Matrix parent
-    private List<String> columnNames
-    private List<Class> types
+    private final List<String> columnNames
+    private final List<Class> types
 
     /** this method must be package scoped as only a Matrix should be able to use it */
     @PackageScope
@@ -99,7 +100,7 @@ class Row implements GroovyObject, List<Object> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings('unchecked')
     <T> T[] toArray(T[] a) {
         return content.toArray(a)
     }
@@ -335,7 +336,7 @@ class Row implements GroovyObject, List<Object> {
      *
      * @param index the column index to set
      * @param value the new value
-     * @return
+     * @return the previous value at the column index
      */
     Object putAt(int index, Object value) {
         return set(index, value)
@@ -347,7 +348,7 @@ class Row implements GroovyObject, List<Object> {
      *
      * @param index the column index to set
      * @param value the new value
-     * @return
+     * @return the previous value at the column index
      */
     Object putAt(Number index, Object value) {
         return set(index.intValue(), value)
@@ -359,7 +360,7 @@ class Row implements GroovyObject, List<Object> {
      *
      * @param columnName the column columnName to set
      * @param value the new value
-     * @return
+     * @return the previous value in the named column
      */
     Object putAt(String columnName, Object value) {
         int idx = columnNames.indexOf(columnName)
@@ -372,7 +373,7 @@ class Row implements GroovyObject, List<Object> {
     /**
      * Short notation to get a value e.g. <code>def val = row[1]</code>
      *
-     * @param index
+     * @param index the column index
      * @return the value as the type specified in the types() assignment
      */
     <T> T getAt(int index) {
@@ -384,7 +385,7 @@ class Row implements GroovyObject, List<Object> {
     /**
      * Short notation to get a value e.g. <code>def val = row[foo]</code>
      *
-     * @param index
+     * @param index the column index
      * @return the value as the type specified in the types() assignment
      */
     <T> T getAt(Number index) {
@@ -402,7 +403,7 @@ class Row implements GroovyObject, List<Object> {
      * @return the value converted to the type specified
      */
     <T> T getAt(Number index, Class<T> type) {
-        return ValueConverter.convert(get(index.intValue()),type)
+        return ValueConverter.convert(get(index.intValue()), type)
     }
 
     /**
@@ -498,25 +499,29 @@ class Row implements GroovyObject, List<Object> {
         content.set(index, e)
     }
 
+    @SuppressWarnings('UnnecessaryCollectCall')
     def asType(Class type) {
         if (type == Row) {
             return this
-        } else if (type == Map) {
-            return toMap()
-        } else if (type == List) {
-            return content
-        } else if (type == Set) {
-            return content as Set
-        } else if (type == String) {
-            return content.collect { it.toString() }.join(', ')
-        } else {
-            DefaultGroovyMethods.asType(this, type as Class<Object>)
         }
+        if (type == Map) {
+            return toMap()
+        }
+        if (type == List) {
+            return content
+        }
+        if (type == Set) {
+            return content as Set
+        }
+        if (type == String) {
+            return content.collect { it.toString() }.join(', ')
+        }
+        DefaultGroovyMethods.asType(this, type as Class<Object>)
     }
 
   Row move(int fromIndex, int toIndex) {
     if (fromIndex < 0 || fromIndex >= size() || toIndex < 0 || toIndex >= size()) {
-      throw new IndexOutOfBoundsException("Invalid indices for move operation")
+      throw new IndexOutOfBoundsException('Invalid indices for move operation')
     }
 
     List values = content.collect { it }
@@ -530,4 +535,5 @@ class Row implements GroovyObject, List<Object> {
     }
     this
   }
+
 }

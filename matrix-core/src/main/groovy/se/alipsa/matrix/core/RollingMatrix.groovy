@@ -130,6 +130,7 @@ class RollingMatrix {
     result
   }
 
+  @SuppressWarnings(['Instanceof', 'NestedForLoop'])
   private Matrix aggregateNumericColumns(boolean decimalResult = true, Closure<?> function) {
     Matrix result = source.clone()
     source.columnNames().eachWithIndex { String columnName, int index ->
@@ -199,4 +200,5 @@ class RollingMatrix {
     int orderedPosition = orderedPositionsByRowIndex[rowIndex]
     RollingWindowHelper.windowRange(orderedRowIndices.size(), orderedPosition, options)
   }
+
 }

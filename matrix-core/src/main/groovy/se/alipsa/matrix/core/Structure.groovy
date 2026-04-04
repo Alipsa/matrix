@@ -34,7 +34,7 @@ class Structure {
                 .append(' (')
                 .append(String.join(', ', it.value))
                 .append(')\n')
-                .append("-"*(sb.length()-1))
+                .append('-' * (sb.length() - 1))
                 .append('\n')
             } else {
                 sb.append(it.key)
@@ -46,4 +46,5 @@ class Structure {
         }
         return sb.toString()
     }
+
 }

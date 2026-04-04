@@ -78,4 +78,5 @@ class PipeExtension {
   static Object or(GroupedMatrix self, Closure transform) {
     self.pipe(transform)
   }
+
 }

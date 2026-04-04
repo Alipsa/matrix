@@ -27,8 +27,9 @@ import se.alipsa.matrix.core.util.Logger
  * @see MatrixFormatProvider
  */
 @CompileStatic
-@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings(['DuplicateStringLiteral', 'GetterMethodCouldBeProperty'])
 class FormatRegistry {
+
   private static final String INDENT = '  '
   private static final String EXTENSION_SEPARATOR = ', '
   private static final String HEADER_LINE_CHAR = '='
@@ -227,6 +228,7 @@ class FormatRegistry {
     }
   }
 
+  @SuppressWarnings('NestedForLoop')
   private Map<String, MatrixFormatProvider> loadProviders() {
     Map<String, MatrixFormatProvider> loadedProviders = [:]
     ServiceLoader<MatrixFormatProvider> loader = ServiceLoader.load(MatrixFormatProvider)
@@ -248,4 +250,5 @@ class FormatRegistry {
   private static String indent(String text, String prefix) {
     text.readLines().collect { prefix + it }.join('\n')
   }
+
 }

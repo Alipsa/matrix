@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.Row
  * see resources/META-INF.groovy
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class RowExtension {
 
   static Object getAt(Row self, String[] colNames) {

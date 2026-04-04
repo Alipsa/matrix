@@ -30,6 +30,7 @@ class ComparisonHelper {
    * @param row the row values to inspect
    * @return true if at least one value is non-null, otherwise false
    */
+  @SuppressWarnings('Instanceof')
   static boolean containsValues(Iterable row) {
     for (def element in row) {
       if (element != null && (!(element instanceof CharSequence) || !element.toString().isBlank())) {
@@ -38,4 +39,5 @@ class ComparisonHelper {
     }
     false
   }
+
 }

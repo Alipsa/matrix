@@ -45,6 +45,29 @@ import java.time.LocalDateTime
  *
  */
 @CompileStatic
+@SuppressWarnings([
+    'JavadocEmptyLastLine',
+    'ClassSize',
+    'ClassStartsWithBlankLine',
+    'SpaceAroundOperator',
+    'SpaceAfterMethodCallName',
+    'UnnecessaryGString',
+    'Instanceof',
+    'NestedForLoop',
+    'UnnecessaryCollectCall',
+    'SpaceAfterOpeningBrace',
+    'SpaceBeforeClosingBrace',
+    'SpaceBeforeOpeningBrace',
+    'JavadocMissingParamDescription',
+    'JavadocEmptyReturnTag',
+    'JavadocEmptyFirstLine',
+    'ConsecutiveBlankLines',
+    'BlockStartsWithBlankLine',
+    'SpaceAfterComma',
+    'UnnecessaryElseStatement',
+    'SpaceAfterCommentDelimiter',
+    'DuplicateListLiteral'
+])
 class Matrix implements Iterable<Row>, Cloneable {
   private static final String ANONYMOUS_COLUMN_PREFIX = 'c'
   private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
@@ -73,7 +96,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private String mName
   public static final Boolean ASC = Boolean.FALSE
   public static final Boolean DESC = Boolean.TRUE
-  private Map<String, ?> metaData = [:]
+  private final Map<String, ?> metaData = [:]
 
   /** Column names over which an index has been created. Empty means no index. */
   private List<String> indexedColumnNames = []
@@ -89,7 +112,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     if (majorVersion < 5) {
       throw new IllegalStateException(
-          "Unsupported Groovy version! This library requires Groovy 5.0.0 or higher. " +
+          'Unsupported Groovy version! This library requires Groovy 5.0.0 or higher. ' +
               "Current version: ${GroovySystem.version}"
       )
     }
@@ -3705,7 +3728,7 @@ class Matrix implements Iterable<Row>, Cloneable {
             String a = s as String
             def key = a.substring(0, a.indexOf(':')).trim()
             def value = a.substring(a.indexOf(':')+1).trim()
-            alignment.put( key, value)
+          alignment.put(key, value)
           }
         } else {
           sb.append(' ').append(k).append('="').append(v).append('"')
@@ -4355,4 +4378,5 @@ class Matrix implements Iterable<Row>, Cloneable {
   GroupedMatrix groupBy(List<String> columnNames) {
     Stat.groupBy(this, columnNames)
   }
+
 }

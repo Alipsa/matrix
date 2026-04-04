@@ -6,6 +6,7 @@ package se.alipsa.matrix.core
  * <p>The current implementation provides hash-based merge helpers for inner and
  * left joins while preserving the column order expected by existing callers.</p>
  */
+@SuppressWarnings('JavadocEmptyFirstLine')
 class Joiner {
 
     /**
@@ -70,4 +71,5 @@ class Joiner {
     static Matrix merge(Matrix x, Matrix y, String by, boolean all = false) {
         return merge(x, y, [x: by, y: by], all)
     }
+
 }

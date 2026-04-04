@@ -33,23 +33,23 @@ class GroupedMatrix {
    */
   GroupedMatrix(Matrix source, List<String> groupColumns, Map<List<?>, Matrix> groups) {
     if (source == null) {
-      throw new IllegalArgumentException("source must not be null")
+      throw new IllegalArgumentException('source must not be null')
     }
     if (groupColumns == null || groupColumns.isEmpty()) {
-      throw new IllegalArgumentException("groupColumns must not be null or empty")
+      throw new IllegalArgumentException('groupColumns must not be null or empty')
     }
     if (groups == null) {
-      throw new IllegalArgumentException("groups must not be null")
+      throw new IllegalArgumentException('groups must not be null')
     }
     this.source = source
     this.groupColumns = Collections.unmodifiableList(new ArrayList<>(groupColumns))
     Map<List<?>, Matrix> normalizedGroups = [:]
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
       if (entry.key == null) {
-        throw new IllegalArgumentException("group keys must not be null")
+        throw new IllegalArgumentException('group keys must not be null')
       }
       if (entry.value == null) {
-        throw new IllegalArgumentException("group values must not be null")
+        throw new IllegalArgumentException('group values must not be null')
       }
       if (entry.key.size() != groupColumns.size()) {
         throw new IllegalArgumentException(
@@ -182,9 +182,10 @@ class GroupedMatrix {
    * @param aggregations map of source column name to aggregation closure
    * @return a new Matrix with group columns and aggregated values
    */
+  @SuppressWarnings('NestedForLoop')
   Matrix agg(Map<String, Closure> aggregations) {
     if (aggregations == null) {
-      throw new IllegalArgumentException("aggregations must not be null")
+      throw new IllegalArgumentException('aggregations must not be null')
     }
     List<String> colNames = new ArrayList<>(groupColumns)
     List<String> aggKeys = aggregations.keySet() as List<String>
@@ -250,7 +251,7 @@ class GroupedMatrix {
    */
   Matrix agg(Closure aggregation) {
     if (aggregation == null) {
-      throw new IllegalArgumentException("aggregation must not be null")
+      throw new IllegalArgumentException('aggregation must not be null')
     }
     List<String> nonGroupCols = source.columnNames().findAll { !(it in groupColumns) }
     Map<String, Closure> aggregations = [:]
@@ -313,4 +314,5 @@ class GroupedMatrix {
   String toString() {
     "GroupedMatrix[columns=${groupColumns}, groups=${groups.size()}]"
   }
+
 }

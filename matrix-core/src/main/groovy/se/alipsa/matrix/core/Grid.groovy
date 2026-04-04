@@ -12,10 +12,10 @@ import java.text.NumberFormat
  * Note than unlike a Matrix, the getAt and putAt methods with
  * a single argument refers to a row and not (as with a Matrix) to a column.
  *
- *
- * @param <T>
+ * @param <T> the grid element type
  */
 @CompileStatic
+@SuppressWarnings(['Instanceof', 'NestedForLoop'])
 class Grid<T> implements Iterable<List<T>> {
 
   List<List<T>> data
@@ -30,7 +30,7 @@ class Grid<T> implements Iterable<List<T>> {
     } else if (data instanceof List) {
       this.data = [data]
     } else {
-      throw new IllegalArgumentException("data is invalid")
+      throw new IllegalArgumentException('data is invalid')
     }
   }
 
@@ -62,7 +62,6 @@ class Grid<T> implements Iterable<List<T>> {
       data << ([null] * ncol) as List<T>
     }
   }
-
 
   Grid(T value, int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
@@ -154,10 +153,10 @@ class Grid<T> implements Iterable<List<T>> {
    */
   void putAt(Integer rowIdx, List<T> values) {
     if (rowIdx == null) {
-      throw new IllegalArgumentException("Observation index cannot be null")
+      throw new IllegalArgumentException('Observation index cannot be null')
     }
     if (rowIdx < 0) {
-      throw new IllegalArgumentException("Observation index cannot be less than zero")
+      throw new IllegalArgumentException('Observation index cannot be less than zero')
     }
     if (rowIdx < data.size()) {
       replaceRow(rowIdx, values.collect())
@@ -169,10 +168,10 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
-   *
    * @return a Map<String, Integer> of the number of observations (rows) and the number of
    * variables (columns) in the Grid with the keys 'observations' and 'variables'
    */
+  @SuppressWarnings('UnnecessaryCollectCall')
   Map<String, Integer> dimensions() {
     ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.collect { it.size() }.max()]
   }
@@ -185,7 +184,6 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
-   *
    * @return the list of rows in the grid.
    * Note that this enables mutability, i.e. changes to the result is reflected in the Grid
    */
@@ -194,7 +192,6 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
-   *
    * @return a copy of the list of rows in the grid
    * Immutable, i.e. changes to the result is not reflected in the Grid unless
    * the grid contains mutable objects that are changed.
@@ -398,6 +395,5 @@ class Grid<T> implements Iterable<List<T>> {
   private static Class<?> safeElementType(Class<?> elementType) {
     ClassUtils.convertPrimitiveToWrapper(elementType) ?: Object
   }
-
 
 }

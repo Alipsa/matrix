@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @CompileStatic
 class Logger {
+
   private static final String SLF4J_FACTORY_CLASS = 'org.slf4j.LoggerFactory'
   private static final String SLF4J_LOGGER_CLASS = 'org.slf4j.Logger'
   private static final String SLF4J_PLACEHOLDER = '{}'
@@ -36,7 +37,7 @@ class Logger {
   private static final boolean SLF4J_AVAILABLE
   private static final Map<String, Logger> LOGGER_CACHE = new ConcurrentHashMap<>()
   private static volatile LogLevel CURRENT_LEVEL = LogLevel.INFO
-  private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+  private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS')
 
   // Instance fields
   private final String className
@@ -99,6 +100,7 @@ class Logger {
   /**
    * Get the current log level for fallback mode
    */
+  @SuppressWarnings('GetterMethodCouldBeProperty')
   static LogLevel getLevel() {
     CURRENT_LEVEL
   }
@@ -265,7 +267,7 @@ class Logger {
 
     // Build the log line
     String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
-    String levelStr = String.format("%-5s", level.name())
+    String levelStr = String.format('%-5s', level.name())
     String logLine = "${timestamp} [${levelStr}] ${className} - ${message}"
 
     // Output to appropriate stream
@@ -286,7 +288,7 @@ class Logger {
       return getLoggerMethod.invoke(null, className)
     } catch (Exception e) {
       // Should not happen since we already checked SLF4J availability
-      throw new IllegalStateException("Failed to create SLF4J logger", e)
+      throw new IllegalStateException('Failed to create SLF4J logger', e)
     }
   }
 
@@ -298,8 +300,9 @@ class Logger {
   }
 
   private static ClassLoader contextClassLoader() {
-    Thread.currentThread().contextClassLoader ?: Logger.class.classLoader
+    Thread.currentThread().contextClassLoader ?: Logger.classLoader
   }
+
 }
 
 /**
@@ -307,8 +310,10 @@ class Logger {
  */
 @CompileStatic
 enum LogLevel {
+
   DEBUG,
   INFO,
   WARN,
   ERROR
+
 }

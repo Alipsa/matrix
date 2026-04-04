@@ -121,4 +121,5 @@ interface MatrixFormatProvider {
    * @return list of write option descriptors
    */
   List<OptionDescriptor> writeOptionDescriptors()
+
 }
