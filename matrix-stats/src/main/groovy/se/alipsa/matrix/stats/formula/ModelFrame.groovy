@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
-import se.alipsa.matrix.core.util.Logger
 
 /**
  * Evaluates a formula against a Matrix dataset to produce an expanded design matrix.
@@ -20,13 +19,23 @@ import se.alipsa.matrix.core.util.Logger
  * <p><strong>Categorical handling:</strong> Non-numeric columns are encoded using treatment
  * contrasts (dummy coding). The first level (alphabetically) is the reference and omitted.
  * Single-level categoricals produce no indicator columns and are silently dropped.
+ *
+ * <p><strong>Supported builder options:</strong>
+ * <ul>
+ *   <li>{@link #weights(String)} / {@link #weights(List)}</li>
+ *   <li>{@link #offset(String)} / {@link #offset(List)}</li>
+ *   <li>{@link #subset(Closure)} / {@link #subset(List)}</li>
+ *   <li>{@link #naAction(NaAction)} with {@link NaAction#OMIT} and {@link NaAction#FAIL}</li>
+ *   <li>{@link #environment(Map)} for external variables referenced by the formula</li>
+ *   <li>{@link #defaultContrast(ContrastType)} and {@link #contrasts(String, ContrastType)}</li>
+ * </ul>
+ *
+ * <p>No pass-through NA mode exists today. Rows containing nulls in formula-referenced
+ * columns are either omitted or rejected depending on {@code na.action}.
  */
 @CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 final class ModelFrame {
-
-  private static final Logger log = Logger.getLogger(ModelFrame)
-
   private final ParsedFormula parsedFormula
   private final NormalizedFormula preNormalized
   private final Matrix data
@@ -38,7 +47,7 @@ final class ModelFrame {
   private List<Boolean> subsetMask
   private NaAction naActionPolicy = NaAction.OMIT
   private Map<String, List<?>> env
-  private Map<String, ContrastType> contrastConfig = [:]
+  private final Map<String, ContrastType> contrastConfig = [:]
   private ContrastType defaultContrast = ContrastType.TREATMENT
 
   private ModelFrame(ParsedFormula parsedFormula, NormalizedFormula preNormalized, Matrix data) {
@@ -296,7 +305,7 @@ final class ModelFrame {
     }
 
     // Stage 7: Validate contrast configuration
-    validateContrastConfiguration(working, variableNames)
+    validateContrastConfiguration(working)
 
     // Stage 8: Build design matrix via dedicated builder
     List<Number> responseValues = extractResponseColumn(working, responseName)
@@ -585,7 +594,7 @@ final class ModelFrame {
     new NaResult(working.subset(keptRows), droppedOriginal, survivingIndices)
   }
 
-  private void validateContrastConfiguration(Matrix working, List<String> variableNames) {
+  private void validateContrastConfiguration(Matrix working) {
     List<String> dataColumns = working.columnNames()
     for (String colName : contrastConfig.keySet()) {
       if (!dataColumns.contains(colName) && (env == null || !env.containsKey(colName))) {
@@ -724,6 +733,7 @@ final class ModelFrame {
 
   @CompileStatic
   private static final class SubsetResult {
+
     final Matrix data
     final List<Integer> indices
 
@@ -731,10 +741,12 @@ final class ModelFrame {
       this.data = data
       this.indices = indices
     }
+
   }
 
   @CompileStatic
   private static final class NaResult {
+
     final Matrix data
     final List<Integer> droppedRows
     final List<Integer> survivingIndices
@@ -744,5 +756,7 @@ final class ModelFrame {
       this.droppedRows = droppedRows
       this.survivingIndices = survivingIndices
     }
+
   }
+
 }

@@ -60,6 +60,9 @@ class GamMethodTest {
 
     // Should have intercept + 4 spline basis + z = 6 coefficients
     assertEquals(frame.data.columnCount() + 1, result.coefficients.length) // +1 for intercept
+    assertEquals(result.coefficients.length, result.standardErrors.length)
+    assertEquals(frame.response.size(), result.fittedValues.length)
+    assertEquals(frame.response.size(), result.residuals.length)
     assertTrue(result.rSquared > 0.95)
   }
 
@@ -102,4 +105,47 @@ class GamMethodTest {
     assertEquals(frame.data.columnCount() + 1, result.coefficients.length)
     assertTrue(result.rSquared > 0.95d, "Model should fit combined linear and smooth effects, got ${result.rSquared}")
   }
+
+  @Test
+  void testGamRejectsWeights() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y', 'w'])
+      .rows([
+        [1.0, 2.0, 1.0],
+        [2.0, 5.0, 2.0],
+        [3.0, 10.0, 1.0],
+        [4.0, 17.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ s(x)', data).weights('w').evaluate()
+    UnsupportedOperationException ex = assertThrows(UnsupportedOperationException) {
+      FitRegistry.instance().get('gam').fit(frame)
+    }
+
+    assertTrue(ex.message.contains('weights'))
+  }
+
+  @Test
+  void testGamRejectsOffsets() {
+    Matrix data = Matrix.builder()
+      .columnNames(['x', 'y', 'off'])
+      .rows([
+        [1.0, 2.0, 0.1],
+        [2.0, 5.0, 0.2],
+        [3.0, 10.0, 0.3],
+        [4.0, 17.0, 0.4],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult frame = ModelFrame.of('y ~ s(x)', data).offset('off').evaluate()
+    UnsupportedOperationException ex = assertThrows(UnsupportedOperationException) {
+      FitRegistry.instance().get('gam').fit(frame)
+    }
+
+    assertTrue(ex.message.contains('offsets'))
+  }
+
 }

@@ -3,8 +3,18 @@ package se.alipsa.matrix.stats.regression
 import groovy.transform.CompileStatic
 
 /**
- * Registry of named fit methods. Provides built-in methods (lm, loess, gam)
- * and allows registration of custom methods.
+ * Registry of named fit methods.
+ *
+ * <p>Built-in methods:
+ * <ul>
+ *   <li>{@code lm} - ordinary least squares</li>
+ *   <li>{@code loess} - univariate local regression</li>
+ *   <li>{@code gam} - additive model using spline-expanded smooth terms</li>
+ * </ul>
+ *
+ * <p>Callers typically build a {@link se.alipsa.matrix.stats.formula.ModelFrameResult}
+ * via {@code ModelFrame.of(...).evaluate()} and then dispatch to the chosen fit method
+ * through this registry.
  */
 @CompileStatic
 final class FitRegistry {
@@ -67,4 +77,5 @@ final class FitRegistry {
   boolean contains(String name) {
     methods.containsKey(name)
   }
+
 }

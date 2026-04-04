@@ -11,6 +11,10 @@ import se.alipsa.matrix.stats.formula.ModelFrameResult
  *
  * <p>Weights and offsets are not yet supported. If the model frame carries non-null
  * weights or offsets, an {@link UnsupportedOperationException} is thrown.
+ *
+ * <p>Use this method for formulas whose predictors are already fully expanded by
+ * {@code ModelFrame}, including transformed numeric terms and categorical encodings
+ * supplied by the formula pipeline.
  */
 @CompileStatic
 class LmMethod implements FitMethod {
@@ -46,4 +50,5 @@ class LmMethod implements FitMethod {
   FitResult fit(ModelFrameResult frame, FitOptions options) {
     fit(frame) // lm has no method-specific options
   }
+
 }

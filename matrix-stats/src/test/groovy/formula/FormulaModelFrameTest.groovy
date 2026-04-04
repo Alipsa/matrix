@@ -316,6 +316,33 @@ class FormulaModelFrameTest {
   }
 
   @Test
+  void testWeightsAndOffsetStayAlignedAfterSubsetAndNaOmit() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, null],
+        [30.0, 3.0],
+        [40.0, 4.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .weights([1.0, 2.0, null, 4.0])
+      .offset([0.1, 0.2, 0.3, 0.4])
+      .subset([true, true, true, true])
+      .naAction(NaAction.OMIT)
+      .evaluate()
+
+    assertEquals([10.0, 40.0], result.response)
+    assertEquals([1.0, 4.0], result.weights)
+    assertEquals([0.1, 0.4], result.offset)
+    assertEquals([1, 2], result.droppedRows)
+    assertEquals(2, result.data.rowCount())
+  }
+
+  @Test
   void testZeroWeightsAllowed() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x'])
@@ -366,6 +393,53 @@ class FormulaModelFrameTest {
   }
 
   @Test
+  void testOffsetByList() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .offset([0.25, 0.5])
+      .evaluate()
+
+    assertEquals([0.25, 0.5], result.offset)
+  }
+
+  @Test
+  void testOffsetSizeMismatchThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .offset([0.1, 0.2, 0.3])
+        .evaluate()
+    }
+    assertTrue(ex.message.contains('Offset size'))
+  }
+
+  @Test
+  void testOffsetUnknownColumnThrows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ x', data)
+        .offset('missing')
+        .evaluate()
+    }
+    assertTrue(ex.message.contains("Offset column 'missing' not found"))
+  }
+
+  @Test
   void testSubsetByClosure() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x'])
@@ -395,6 +469,30 @@ class FormulaModelFrameTest {
 
     assertEquals([10.0, 30.0], result.response)
     assertEquals(2, result.data.rowCount())
+  }
+
+  @Test
+  void testDotExpansionWithWeightsOffsetAndExclusionAfterFiltering() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z', 'w', 'off'])
+      .rows([
+        [10.0, 1.0, 5.0, 0.5, 0.1],
+        [20.0, 2.0, 6.0, 1.0, 0.2],
+        [30.0, 3.0, 7.0, 1.5, 0.3],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ . - z', data)
+      .weights('w')
+      .offset('off')
+      .subset([true, false, true])
+      .evaluate()
+
+    assertEquals(['x'], result.predictorNames)
+    assertEquals([0.5, 1.5], result.weights)
+    assertEquals([0.1, 0.3], result.offset)
+    assertEquals([10.0, 30.0], result.response)
   }
 
   @Test
@@ -469,6 +567,11 @@ class FormulaModelFrameTest {
     }
     assertTrue(ex.message.contains('NA values found'))
     assertTrue(ex.message.contains('FAIL'))
+  }
+
+  @Test
+  void testNaActionEnumOnlySupportsOmitAndFail() {
+    assertEquals([NaAction.OMIT, NaAction.FAIL], NaAction.values().toList())
   }
 
   @Test
@@ -892,4 +995,5 @@ class FormulaModelFrameTest {
     assertEquals(['x'], result.predictorNames)
     assertEquals([10.0, 20.0], result.response)
   }
+
 }

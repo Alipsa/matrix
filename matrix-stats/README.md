@@ -99,6 +99,60 @@ assert 2.81388732 == model.getSlope(8)
 assert 30.34082454 == model.predict(13, 8)
 ```
 
+## Formula Models
+
+The formula pipeline supports a focused R-style subset for model-frame evaluation and
+fit-method dispatch:
+
+- additive terms and intercept control: `y ~ x + z`, `y ~ 0 + x`
+- interactions and shorthand expansion: `:`, `*`, `^`, `/`
+- quoted identifiers: `` `gross margin` ~ `unit price` ``
+- transformed numeric terms: `log(x)`, `sqrt(x)`, `exp(x)`, `I(x + 1)`
+- polynomial terms: `poly(x, 3)`
+- smooth terms for GAMs: `s(x)` and `s(x, 6)`
+
+Example:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.formula.ModelFrame
+import se.alipsa.matrix.stats.formula.NaAction
+import se.alipsa.matrix.stats.regression.FitRegistry
+
+Matrix data = Matrix.builder()
+    .columnNames(['y', 'x', 'group'])
+    .rows([
+        [1.0, 1.0, 'A'],
+        [2.0, 2.0, 'B'],
+        [3.0, 3.0, 'A'],
+        [4.0, 4.0, 'B']
+    ])
+    .types([BigDecimal, BigDecimal, String])
+    .build()
+
+def frame = ModelFrame.of('y ~ x + group', data)
+    .naAction(NaAction.OMIT)
+    .evaluate()
+
+def lm = FitRegistry.instance().get('lm').fit(frame)
+assert lm.fittedValues.length == data.rowCount()
+```
+
+Supported fit methods through `FitRegistry`:
+
+- `lm` for ordinary least squares
+- `loess` for univariate local regression
+- `gam` for additive models using `s(...)` smooth terms
+
+Current limitations:
+
+- transformed responses on the left-hand side are not supported
+- `na.action` supports only `OMIT` and `FAIL`
+- `loess` supports only a single predictor
+- `lm`, `loess`, and `gam` currently reject unsupported frame metadata rather than silently ignoring it:
+  `lm` rejects weights and offsets, `loess` rejects offsets, and `gam` rejects weights and offsets
+- smooth terms cannot be used inside interactions such as `s(x):z` or `s(x) * z`
+
 ## T-tests
 
 Use `Welch` for the default unequal-variance two-sample test, and `Student` when you explicitly want

@@ -3,7 +3,6 @@ package formula
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -276,6 +275,7 @@ class FormulaDesignMatrixTest {
         [1.0, 'A1', 'B1'],
         [2.0, 'A2', 'B1'],
         [3.0, 'A1', 'B2'],
+        [4.0, 'A2', 'B2'],
       ])
       .types([BigDecimal, String, String])
       .build()
@@ -288,6 +288,25 @@ class FormulaDesignMatrixTest {
     assertTrue((result.data[0, 'a_A2:b_B2'] as BigDecimal) == 0.0)
     assertTrue((result.data[1, 'a_A2:b_B2'] as BigDecimal) == 0.0)
     assertTrue((result.data[2, 'a_A2:b_B2'] as BigDecimal) == 0.0)
+    assertTrue((result.data[3, 'a_A2:b_B2'] as BigDecimal) == 1.0)
+  }
+
+  @Test
+  void testNumericNumericInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [1.0, 2.0, 3.0],
+        [2.0, 4.0, 5.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ x:z', data).evaluate()
+
+    assertEquals(['x:z'], result.predictorNames)
+    assertTrue((result.data[0, 'x:z'] as BigDecimal) == 6.0)
+    assertTrue((result.data[1, 'x:z'] as BigDecimal) == 20.0)
   }
 
   @Test
@@ -417,6 +436,30 @@ class FormulaDesignMatrixTest {
     assertTrue(groupTerm.isDropped)
     assertEquals('Term produced no columns', groupTerm.droppedReason)
     assertTrue(groupTerm.columns.isEmpty())
+  }
+
+  @Test
+  void testSmoothTermMetadataAndColumnNames() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [1.0, 1.0],
+        [2.0, 2.0],
+        [3.0, 3.0],
+        [4.0, 4.0],
+        [5.0, 5.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult result = ModelFrame.of('y ~ s(x, 3)', data).evaluate()
+
+    assertEquals(['s_x_1', 's_x_2', 's_x_3'], result.predictorNames)
+    Terms.TermInfo smoothTerm = result.terms.terms.find { Terms.TermInfo t -> t.label == 's(x, 3)' }
+    assertNotNull(smoothTerm)
+    assertTrue(smoothTerm.isSmooth)
+    assertFalse(smoothTerm.isCategorical)
+    assertEquals(['s_x_1', 's_x_2', 's_x_3'], smoothTerm.columns)
   }
 
   @Test
@@ -657,4 +700,5 @@ class FormulaDesignMatrixTest {
     assertEquals(2, result.data.rowCount())
     assertEquals(2, result.response.size())
   }
+
 }
