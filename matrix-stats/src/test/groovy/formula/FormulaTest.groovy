@@ -268,8 +268,8 @@ class FormulaTest {
       Formula.parse('y ~ poly(x 2)')
     }
 
-    assertTrue(smooth.message != null && !smooth.message.isBlank())
-    assertTrue(poly.message != null && !poly.message.isBlank())
+    assertTrue(smooth.message.contains("Unexpected token ')'"))
+    assertTrue(poly.message.contains("Expected ')' after function arguments"))
   }
 
   @Test
