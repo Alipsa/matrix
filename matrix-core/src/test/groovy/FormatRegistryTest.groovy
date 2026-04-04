@@ -256,6 +256,7 @@ class FormatRegistryTest {
     void write(Matrix matrix, File file, Map<String, ?> options) {
       lastWrittenFile = file.absolutePath
     }
+
   }
 
   private static class UnsupportedReadProvider extends AbstractFormatProvider {
@@ -289,9 +290,11 @@ class FormatRegistryTest {
     void write(Matrix matrix, File file, Map<String, ?> options) {
       throw new UnsupportedOperationException('not used')
     }
+
   }
 
   private static void awaitLatch(CountDownLatch latch) {
     latch.await()
   }
+
 }

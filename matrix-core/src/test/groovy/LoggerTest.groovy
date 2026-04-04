@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.util.Logger
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
+@SuppressWarnings(['UnnecessaryGroovyImport', 'UnnecessaryGString', 'ClassEndsWithBlankLine'])
 class LoggerTest {
 
   @BeforeEach

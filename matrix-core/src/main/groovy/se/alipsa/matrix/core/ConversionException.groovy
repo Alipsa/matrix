@@ -10,6 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class ConversionException extends RuntimeException {
+
     ConversionException(String message, Throwable cause) {
         super(message, cause)
     }
@@ -17,4 +18,5 @@ class ConversionException extends RuntimeException {
     ConversionException(GString message, Throwable cause) {
         super(message.toString(), cause)
     }
+
 }

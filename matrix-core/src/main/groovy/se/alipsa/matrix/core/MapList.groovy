@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * individual elements from the list associated with a key.</p>
  */
 @CompileStatic
+@SuppressWarnings('JavadocMissingParamDescription')
 class MapList<M,L> {
 
   Map<M, List<L>> data = [:]
@@ -80,4 +81,5 @@ class MapList<M,L> {
   String toString() {
     return String.valueOf(data)
   }
+
 }

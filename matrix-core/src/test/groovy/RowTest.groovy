@@ -20,9 +20,9 @@ class RowTest {
         .matrixName('empData')
         .data(
             emp_id: 1..5,
-            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
             salary: [623.3, 515.2, 611.0, 729.0, 843.25],
-            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+            start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
         )
         .types([int, String, Number, LocalDate])
         .build()
@@ -64,7 +64,7 @@ class RowTest {
       row[[0, 'b']]
     }
 
-    assertEquals("Dont know what to do with 2 parameters ([0, b]) to getAt()", ex.message)
+    assertEquals('Dont know what to do with 2 parameters ([0, b]) to getAt()', ex.message)
   }
 
   @Test
@@ -97,4 +97,5 @@ class RowTest {
     assertEquals('Failed to find a column with the name salary', ex.message)
     assertEquals([1, 'Rick'], row)
   }
+
 }

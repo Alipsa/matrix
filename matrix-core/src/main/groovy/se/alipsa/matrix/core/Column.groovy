@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.util.ShiftHelper
  * new Column([1,2,3]) * 2 == [2,4,6] instead of [2,4,6,2,4,6] which the default result would on a list i Groovy.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class Column extends ArrayList {
 
   String name
@@ -80,19 +81,19 @@ class Column extends ArrayList {
   @CompileDynamic
   List plus(Object val) {
     if (val == null) {
-      throw new IllegalArgumentException("Cannot add null to a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before adding")
+      throw new IllegalArgumentException('Cannot add null to a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before adding')
     }
-    applyOperation(val, { a, b -> a + b })
+    applyOperation(val) { a, b -> a + b }
   }
 
   @CompileDynamic
   List plus(List list) {
     if (list == null) {
-      throw new IllegalArgumentException("Cannot add a null list to a column")
+      throw new IllegalArgumentException('Cannot add a null list to a column')
     }
     List result = new Column()
     def that = fill(list)
-    this.eachWithIndex {it, idx ->
+    this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
@@ -105,7 +106,6 @@ class Column extends ArrayList {
       } else {
         result.add(it + val)
       }
-
     }
     result
   }
@@ -113,19 +113,19 @@ class Column extends ArrayList {
   @CompileDynamic
   List minus(Object val) {
     if (val == null) {
-      throw new IllegalArgumentException("Cannot subtract null from a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before subtracting")
+      throw new IllegalArgumentException('Cannot subtract null from a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before subtracting')
     }
-    applyOperation(val, { a, b -> a - b })
+    applyOperation(val) { a, b -> a - b }
   }
 
   @CompileDynamic
   List minus(List list) {
     if (list == null) {
-      throw new IllegalArgumentException("Cannot subtract a null list from a column")
+      throw new IllegalArgumentException('Cannot subtract a null list from a column')
     }
     List result = new Column()
     def that = fill(list)
-    this.eachWithIndex {it, idx ->
+    this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
@@ -145,19 +145,19 @@ class Column extends ArrayList {
   @CompileDynamic
   List multiply(Number val) {
     if (val == null) {
-      throw new IllegalArgumentException("Cannot multiply null with a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before multiplying")
+      throw new IllegalArgumentException('Cannot multiply null with a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before multiplying')
     }
-    applyOperation(val, { a, b -> a * b })
+    applyOperation(val) { a, b -> a * b }
   }
 
   @CompileDynamic
   List multiply(List list) {
     if (list == null) {
-      throw new IllegalArgumentException("Cannot multiply a column by a null list")
+      throw new IllegalArgumentException('Cannot multiply a column by a null list')
     }
     List result = new Column()
     def that = fill(list)
-    this.eachWithIndex {it, idx ->
+    this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
@@ -173,19 +173,19 @@ class Column extends ArrayList {
   @CompileDynamic
   List div(Number val) {
     if (val == null) {
-      throw new IllegalArgumentException("Cannot divide a column by null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before dividing")
+      throw new IllegalArgumentException('Cannot divide a column by null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before dividing')
     }
-    applyOperation(val, { a, b -> a / b })
+    applyOperation(val) { a, b -> a / b }
   }
 
   @CompileDynamic
   List div(List list) {
     if (list == null) {
-      throw new IllegalArgumentException("Cannot divide a column by a null list")
+      throw new IllegalArgumentException('Cannot divide a column by a null list')
     }
     List result = new Column()
     def that = fill(list)
-    this.eachWithIndex {it, idx ->
+    this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
@@ -201,19 +201,19 @@ class Column extends ArrayList {
   @CompileDynamic
   List power(Number val) {
     if (val == null) {
-      throw new IllegalArgumentException("Cannot raise a column to the power of null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before exponentiating")
+      throw new IllegalArgumentException('Cannot raise a column to the power of null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before exponentiating')
     }
-    applyOperation(val, { a, b -> a ** b })
+    applyOperation(val) { a, b -> a ** b }
   }
 
   @CompileDynamic
   List power(List list) {
     if (list == null) {
-      throw new IllegalArgumentException("Cannot raise a column to the power of a null list")
+      throw new IllegalArgumentException('Cannot raise a column to the power of a null list')
     }
     List result = new Column()
     def that = fill(list)
-    this.eachWithIndex {it, idx ->
+    this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
@@ -281,13 +281,13 @@ class Column extends ArrayList {
     int listSize = list.size()
     int size = this.size()
     if (listSize < size) {
-      that.addAll([null]*(size-listSize))
+      that.addAll([null] * (size - listSize))
     }
     that
   }
 
   List subList(IntRange range) {
-    this.subList(range.min(), range.max() +1)
+    this.subList(range.min(), range.max() + 1)
   }
 
   /**
@@ -456,4 +456,5 @@ class Column extends ArrayList {
   List getValues() {
     this.collect { it }
   }
+
 }

@@ -9,13 +9,13 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.UnsupportedFlavorException
-import java.io.IOException
 
 /**
  * Clipboard utilities for reading and writing plain text.
  */
 @CompileStatic
 final class ClipboardUtil {
+
   private static final String HEADLESS_CLIPBOARD_MESSAGE = 'Clipboard is not available in a headless environment'
 
   /**
@@ -62,4 +62,5 @@ final class ClipboardUtil {
   private ClipboardUtil() {
     // Utility class
   }
+
 }

@@ -3,7 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
-import java.sql.Date
+import java.sql.Date as SqlDate
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter
  */
 @CompileStatic
 class ListConverter {
+
   private static final String ISO_LOCAL_DATE_FORMAT = 'yyyy-MM-dd'
 
   static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, Locale numberFormat, T valueIfNull = null,
@@ -27,6 +28,7 @@ class ListConverter {
     convert(list, type, valueIfNull, dateTimeFormat, NumberFormat.getInstance(numberFormat))
   }
 
+  @SuppressWarnings('Instanceof')
   static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, T valueIfNull = null,
                              String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<T> c = []
@@ -60,13 +62,13 @@ class ListConverter {
     }
   }
 
-  static List<java.util.Date> toDates(List<String> dates, Date valueIfNull) {
+  static List<Date> toDates(List<String> dates, Date valueIfNull) {
     toDates(dates, valueIfNull, ISO_LOCAL_DATE_FORMAT)
   }
 
-  static List<java.util.Date> toDates(List<String> dates, java.util.Date valueIfNull, String formatPattern) {
+  static List<Date> toDates(List<String> dates, Date valueIfNull, String formatPattern) {
     def format = new SimpleDateFormat(formatPattern, Locale.getDefault())
-    def dat = new ArrayList<java.util.Date>(dates.size())
+    def dat = new ArrayList<Date>(dates.size())
     dates.eachWithIndex { String d, int i ->
       try {
         dat.add(d == null ? valueIfNull : format.parse(d))
@@ -77,24 +79,24 @@ class ListConverter {
     return dat
   }
 
-  static List<Date> toSqlDates(String... dates) {
+  static List<SqlDate> toSqlDates(String... dates) {
     toSqlDates(dates as List, null)
   }
 
-  static List<Date> toSqlDates(List<String> dates) {
+  static List<SqlDate> toSqlDates(List<String> dates) {
     toSqlDates(dates, null)
   }
 
-  static List<Date> toSqlDates(List<String> dates, Date valueIfNull) {
+  static List<SqlDate> toSqlDates(List<String> dates, SqlDate valueIfNull) {
     toSqlDates(dates, valueIfNull, ISO_LOCAL_DATE_FORMAT)
   }
 
-  static List<Date> toSqlDates(List<String> dates, Date valueIfNull, String formatPattern) {
+  static List<SqlDate> toSqlDates(List<String> dates, SqlDate valueIfNull, String formatPattern) {
     def format = new SimpleDateFormat(formatPattern, Locale.getDefault())
-    def dat = new ArrayList<Date>(dates.size())
+    def dat = new ArrayList<SqlDate>(dates.size())
     dates.eachWithIndex { String d, int i ->
       try {
-        dat.add(d == null ? valueIfNull : new Date(format.parse(d).getTime()))
+        dat.add(d == null ? valueIfNull : new SqlDate(format.parse(d).getTime()))
       } catch (Exception e) {
         throw new ConversionException("Failed to convert $d to java.sql.Date in index $i", e)
       }
@@ -167,43 +169,43 @@ class ListConverter {
   }
 
   static List<YearMonth> toYearMonths(Object... localDates) {
-    localDates.collect({ValueConverter.asYearMonth(it)})
+    localDates.collect { ValueConverter.asYearMonth(it) }
   }
 
   static List<YearMonth> toYearMonths(Collection<?> objList) {
-    objList.collect({ValueConverter.asYearMonth(it)})
+    objList.collect { ValueConverter.asYearMonth(it) }
   }
 
   static List<String> toStrings(Collection<?> objList) {
-    objList.collect({ValueConverter.asString(it)})
+    objList.collect { ValueConverter.asString(it) }
   }
 
   static List<String> toStrings(Object... objList) {
-    objList.collect({ValueConverter.asString(it)})
+    objList.collect { ValueConverter.asString(it) }
   }
 
   static List<Float> toFloats(List<? extends Number> numbers) {
-    numbers.collect({ValueConverter.asFloat(it)})
+    numbers.collect { ValueConverter.asFloat(it) }
   }
 
   static List<Float> toFloats(Object... numbers) {
-    numbers.collect({ValueConverter.asFloat(it)})
+    numbers.collect { ValueConverter.asFloat(it) }
   }
 
   static List<Double> toDoubles(Object... numbers) {
-    numbers.collect({ValueConverter.asDouble(it)})
+    numbers.collect { ValueConverter.asDouble(it) }
   }
 
   static List<Double> toDoubles(List numbers) {
-    numbers.collect({ValueConverter.asDouble(it)})
+    numbers.collect { ValueConverter.asDouble(it) }
   }
 
   static List<Integer> toIntegers(Object... numbers) {
-    numbers.collect({ValueConverter.asInteger(it)})
+    numbers.collect { ValueConverter.asInteger(it) }
   }
 
   static List<Integer> toIntegers(List numbers) {
-    numbers.collect({ValueConverter.asInteger(it)})
+    numbers.collect { ValueConverter.asInteger(it) }
   }
 
   /**
@@ -256,4 +258,5 @@ class ListConverter {
     }
     return list
   }
+
 }

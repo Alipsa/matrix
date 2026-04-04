@@ -2,8 +2,6 @@ package se.alipsa.matrix.core.spi
 
 import groovy.transform.CompileStatic
 
-import java.util.Locale
-
 /**
  * Shared helpers for normalizing SPI option maps.
  */
@@ -40,4 +38,5 @@ class OptionMaps {
   static String stringValueOrNull(Object value) {
     value == null ? null : String.valueOf(value)
   }
+
 }

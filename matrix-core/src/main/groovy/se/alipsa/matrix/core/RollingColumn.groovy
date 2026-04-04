@@ -168,4 +168,5 @@ class RollingColumn {
       throw new IllegalArgumentException("rolling ${operationName} requires a numeric column")
     }
   }
+
 }

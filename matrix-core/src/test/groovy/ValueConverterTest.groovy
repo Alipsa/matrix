@@ -51,14 +51,14 @@ class ValueConverterTest {
   @Test
   void testAsDate() {
     assertEquals(new Date(1728667826640), ValueConverter.asDate(1728667826640))
-    assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate(20241011))
-    assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate('20241011'))
-    assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate("2024-10-11"))
-    assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate("2024/10/11", "yy/MM/dd"))
+    assertEquals(java.sql.Date.valueOf('2024-10-11'), ValueConverter.asDate(20241011))
+    assertEquals(java.sql.Date.valueOf('2024-10-11'), ValueConverter.asDate('20241011'))
+    assertEquals(java.sql.Date.valueOf('2024-10-11'), ValueConverter.asDate('2024-10-11'))
+    assertEquals(java.sql.Date.valueOf('2024-10-11'), ValueConverter.asDate('2024/10/11', 'yy/MM/dd'))
     def ld = LocalDate.of(2024, 10, 11)
     assertEquals(
         ld.toString(),
-        new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(ValueConverter.asDate(ld))
+        new SimpleDateFormat('yyyy-MM-dd', Locale.getDefault()).format(ValueConverter.asDate(ld))
     )
     def ldt = LocalDateTime.now()
     assertEquals(
@@ -81,8 +81,8 @@ class ValueConverterTest {
 
   @Test
   void testAsInteger() {
-    assertEquals(485160, ValueConverter.asInteger("485160.00"))
-    assertEquals(485161, ValueConverter.asInteger("485161"))
+    assertEquals(485160, ValueConverter.asInteger('485160.00'))
+    assertEquals(485161, ValueConverter.asInteger('485161'))
     assertEquals(485162, ValueConverter.asInteger(485162G))
     assertEquals(485163, ValueConverter.asInteger(485163.01))
     assertEquals(485164, ValueConverter.asInteger(485164.999))
@@ -94,18 +94,18 @@ class ValueConverterTest {
 
   @Test
   void testAsIntegerRound() {
-    assertEquals(485160, ValueConverter.asIntegerRound("485160.00"))
-    assertEquals(485161, ValueConverter.asIntegerRound("485160.7"))
+    assertEquals(485160, ValueConverter.asIntegerRound('485160.00'))
+    assertEquals(485161, ValueConverter.asIntegerRound('485160.7'))
     assertEquals(485162, ValueConverter.asIntegerRound(485161.5G))
     assertEquals(485163, ValueConverter.asIntegerRound(485163.01))
     assertEquals(485164, ValueConverter.asIntegerRound(485163.999))
-    assertEquals(485165, ValueConverter.asIntegerRound("485165"))
+    assertEquals(485165, ValueConverter.asIntegerRound('485165'))
   }
 
   @Test
   void testIsNumeric() {
     NumberFormat enFormat = NumberFormat.getInstance(Locale.ENGLISH)
-    NumberFormat swFormat = NumberFormat.getInstance(Locale.of("sv", "SE"))
+    NumberFormat swFormat = NumberFormat.getInstance(Locale.of('sv', 'SE'))
     assertTrue(ValueConverter.isNumeric('123'))
     assertTrue(ValueConverter.isNumeric('123.4', enFormat))
     assertTrue(ValueConverter.isNumeric('123,4', swFormat))
@@ -119,14 +119,14 @@ class ValueConverterTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
-  @SuppressWarnings("removal")
+  @SuppressWarnings('deprecation')
+  @SuppressWarnings('removal')
   void testAsYearMonth() {
     def expected = YearMonth.of(2023, 5)
     assertEquals(expected, ValueConverter.asYearMonth(new Date(2023 - 1900, 4, 10)))
     assertEquals(expected, ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
     assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
-    assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
+    assertEquals(expected, ValueConverter.asYearMonth('2023-05'))
     assertEquals(expected, ValueConverter.asYearMonth(202305.0))
   }
 
@@ -140,47 +140,47 @@ class ValueConverterTest {
 
   @Test
   void testAsByte() {
-    assertEquals((byte) 127, ValueConverter.asByte("127"))
-    assertEquals((byte) -128, ValueConverter.asByte("-128"))
-    assertEquals((byte) 0, ValueConverter.asByte("0"))
+    assertEquals((byte) 127, ValueConverter.asByte('127'))
+    assertEquals((byte) -128, ValueConverter.asByte('-128'))
+    assertEquals((byte) 0, ValueConverter.asByte('0'))
     assertNull(ValueConverter.asByte(null))
   }
 
   @Test
   void testAsShort() {
-    assertEquals((short) 32767, ValueConverter.asShort("32767"))
-    assertEquals((short) -32768, ValueConverter.asShort("-32768"))
-    assertEquals((short) 0, ValueConverter.asShort("0"))
+    assertEquals((short) 32767, ValueConverter.asShort('32767'))
+    assertEquals((short) -32768, ValueConverter.asShort('-32768'))
+    assertEquals((short) 0, ValueConverter.asShort('0'))
     assertNull(ValueConverter.asShort(null))
   }
 
   @Test
   void testAsBigInteger() {
-    assertEquals(new BigInteger("12345678901234567890"), ValueConverter.asBigInteger("12345678901234567890"))
-    assertEquals(new BigInteger("-12345678901234567890"), ValueConverter.asBigInteger("-12345678901234567890"))
+    assertEquals(12345678901234567890G, ValueConverter.asBigInteger('12345678901234567890'))
+    assertEquals(-12345678901234567890G, ValueConverter.asBigInteger('-12345678901234567890'))
     assertNull(ValueConverter.asBigInteger(null))
   }
 
   @Test
   void testAsLocalTime() {
-    assertEquals(LocalTime.of(12, 34, 56), ValueConverter.asLocalTime("12:34:56"))
-    assertEquals(LocalTime.of(0, 0, 0), ValueConverter.asLocalTime("00:00:00"))
+    assertEquals(LocalTime.of(12, 34, 56), ValueConverter.asLocalTime('12:34:56'))
+    assertEquals(LocalTime.of(0, 0, 0), ValueConverter.asLocalTime('00:00:00'))
     assertNull(ValueConverter.asLocalTime(null))
   }
 
   @Test
   void testAsTimestamp() {
-    assertEquals(Timestamp.valueOf("2024-10-11 12:34:56"), ValueConverter.asTimestamp("2024-10-11 12:34:56"))
-    assertEquals(Timestamp.valueOf("2024-10-11 00:00:00"), ValueConverter.asTimestamp(LocalDate.parse("2024-10-11")))
+    assertEquals(Timestamp.valueOf('2024-10-11 12:34:56'), ValueConverter.asTimestamp('2024-10-11 12:34:56'))
+    assertEquals(Timestamp.valueOf('2024-10-11 00:00:00'), ValueConverter.asTimestamp(LocalDate.parse('2024-10-11')))
     assertNull(ValueConverter.asTimestamp(null))
   }
 
   @Test
   void testAsSqlTime() {
-    assertEquals(Time.valueOf("12:34:56"), ValueConverter.asSqlTime("12:34:56"))
-    assertEquals(Time.valueOf("00:00:00"), ValueConverter.asSqlTime("00:00:00"))
+    assertEquals(Time.valueOf('12:34:56'), ValueConverter.asSqlTime('12:34:56'))
+    assertEquals(Time.valueOf('00:00:00'), ValueConverter.asSqlTime('00:00:00'))
     assertNull(ValueConverter.asSqlTime(null))
-    assertEquals(Time.valueOf("12:34:56"), ValueConverter.asSqlTIme("12:34:56"))
+    assertEquals(Time.valueOf('12:34:56'), ValueConverter.asSqlTIme('12:34:56'))
   }
 
   @Test
@@ -190,8 +190,8 @@ class ValueConverterTest {
 
   @Test
   void testAsNumber() {
-    assert 123 == ValueConverter.asNumber("123")
-    assert 123.45 == ValueConverter.asNumber("123.45")
+    assert 123 == ValueConverter.asNumber('123')
+    assert 123.45 == ValueConverter.asNumber('123.45')
     assertNull(ValueConverter.asNumber(null))
   }
 

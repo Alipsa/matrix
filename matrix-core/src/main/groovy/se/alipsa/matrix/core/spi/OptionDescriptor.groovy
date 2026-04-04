@@ -21,6 +21,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class OptionDescriptor {
+
   private static final String OPTION_HEADER = 'Option'
   private static final String TYPE_HEADER = 'Type'
   private static final String DEFAULT_HEADER = 'Default'
@@ -110,4 +111,5 @@ class OptionDescriptor {
   private static String formatDefaultValue(Object defaultValue) {
     defaultValue == null ? '' : String.valueOf(defaultValue)
   }
+
 }

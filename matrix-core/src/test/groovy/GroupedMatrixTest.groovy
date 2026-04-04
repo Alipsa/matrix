@@ -335,4 +335,5 @@ class GroupedMatrixTest {
     assertEquals(2, result.rowCount())
     assertTrue(result.columnNames().contains('salary'))
   }
+
 }

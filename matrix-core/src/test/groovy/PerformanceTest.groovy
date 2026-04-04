@@ -84,4 +84,5 @@ class PerformanceTest {
     }
     assertEquals(LARGE_SIZE, result.size())
   }
+
 }

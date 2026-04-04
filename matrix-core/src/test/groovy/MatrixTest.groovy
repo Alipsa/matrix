@@ -18,7 +18,18 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.temporal.TemporalAccessor
 
-
+@SuppressWarnings([
+    'ConsecutiveBlankLines',
+    'ClassSize',
+    'UnnecessaryGString',
+    'ClosureAsLastMethodParameter',
+    'SpaceAfterCommentDelimiter',
+    'BlockEndsWithBlankLine',
+    'UnnecessaryBigDecimalInstantiation',
+    'UnnecessaryCollectCall',
+    'UnnecessaryDotClass',
+    'ClassEndsWithBlankLine'
+])
 class MatrixTest {
 
   @Test
@@ -2513,6 +2524,19 @@ class MatrixTest {
     assertTrue(copy.hasIndex())
     assertEquals(['country'], copy.indexedColumns())
     assertEquals(1, copy.lookup('USA').rowCount())
+  }
+
+  @Test
+  void testClonePreservesRowCountForZeroColumnMatrix() {
+    Matrix matrix = Matrix.builder()
+        .rows([[], []])
+        .build()
+
+    Matrix copy = matrix.clone()
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(2, copy.rowCount())
+    assertEquals(0, copy.columnCount())
   }
 
   @Test

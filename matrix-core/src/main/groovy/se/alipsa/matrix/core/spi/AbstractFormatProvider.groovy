@@ -66,4 +66,5 @@ abstract class AbstractFormatProvider implements MatrixFormatProvider {
   protected static String extractExtension(String fileName) {
     FormatRegistry.extractExtension(fileName)
   }
+
 }

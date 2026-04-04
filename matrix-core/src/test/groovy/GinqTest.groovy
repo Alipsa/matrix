@@ -1,4 +1,3 @@
-
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*
 
@@ -14,10 +13,11 @@ class GinqTest {
   void testSimple() {
     Matrix m = Matrix.builder().data(
         name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
-        price: [11,6,4,29,32],
-        stock: [2,3,1,10,9])
-    .types(String, int, int)
-    .build()
+        price: [11, 6, 4, 29, 32],
+        stock: [2, 3, 1, 10, 9]
+    )
+        .types(String, int, int)
+        .build()
 
     def expected = [['Mango', 29, 10], ['Orange', 11, 2], ['Apple', 6, 3], ['Banana', 4, 1]]
 
@@ -35,16 +35,17 @@ class GinqTest {
         .columnNames(m)
         .types(m)
         .build()
-    assertIterableEquals(m.subset{it.price < 32}.orderBy('price', true), m2)
+    assertIterableEquals(m.subset { it.price < 32 }.orderBy('price', true), m2)
   }
 
   @Test
   void testJoin() {
     Matrix warehouse = Matrix.builder().data(
-        id: [1,2,3,4],
+        id: [1, 2, 3, 4],
         name: ['Orange', 'Apple', 'Banana', 'Mango'],
-        price: [11,6,4,29],
-        stock: [2,3,1,10])
+        price: [11, 6, 4, 29],
+        stock: [2, 3, 1, 10]
+    )
         .types(int, String, Double, int)
         .build()
 
@@ -73,6 +74,7 @@ class GinqTest {
   }
 
   class Warehouse {
+
     int id
     String name
     Double price
@@ -84,9 +86,11 @@ class GinqTest {
       this.price = price
       this.stock = stock
     }
+
   }
 
   class Sales {
+
     LocalDate date
     int item
 
@@ -94,11 +98,12 @@ class GinqTest {
       this.date = date
       this.item = item
     }
+
   }
 
   @Test
   void testJoinFromPojos() {
-     Matrix warehouse = Matrix.builder().data([
+    Matrix warehouse = Matrix.builder().data([
         new Warehouse(1, 'Orange', 11, 2),
         new Warehouse(2, 'Apple', 6, 3),
         new Warehouse(3, 'Banana', 4, 1),
@@ -150,4 +155,5 @@ class GinqTest {
     }
     assertIterableEquals([['Orange', 22.0], ['Banana', 4.0]], qSum.toList())
   }
+
 }

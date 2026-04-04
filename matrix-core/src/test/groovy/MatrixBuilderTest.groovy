@@ -19,6 +19,16 @@ import java.time.LocalDate
  * Note the calls to content() is a decent way to check the integrity of the matrix and is there to ensure
  * there is no exception from doing that
  */
+@SuppressWarnings([
+    'ConsecutiveBlankLines',
+    'UnnecessaryGString',
+    'SpaceAfterComma',
+    'SpaceAroundOperator',
+    'SpaceAfterCommentDelimiter',
+    'MethodSize',
+    'ClassStartsWithBlankLine',
+    'ClassEndsWithBlankLine'
+])
 class MatrixBuilderTest {
 
 
@@ -182,6 +192,16 @@ class MatrixBuilderTest {
         .rowList(table.rows())
         .build()
     assertEquals(table, t2)
+  }
+
+  @Test
+  void testCreationFromAllEmptyRowsPreservesRowCount() {
+    Matrix matrix = Matrix.builder()
+        .rows([[], [], []])
+        .build()
+
+    assertEquals(3, matrix.rowCount())
+    assertEquals(0, matrix.columnCount())
   }
 
   @Test

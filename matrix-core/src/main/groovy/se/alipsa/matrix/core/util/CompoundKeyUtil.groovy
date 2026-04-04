@@ -2,8 +2,6 @@ package se.alipsa.matrix.core.util
 
 import groovy.transform.CompileStatic
 
-import java.util.Collections
-
 /**
  * Helper methods for compound list keys used in grouped and indexed lookups.
  */
@@ -42,4 +40,5 @@ class CompoundKeyUtil {
     map[immutableKey] = bucket
     bucket
   }
+
 }

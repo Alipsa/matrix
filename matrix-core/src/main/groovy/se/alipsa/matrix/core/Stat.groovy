@@ -17,6 +17,14 @@ import java.math.RoundingMode
  *
  */
 @CompileStatic
+@SuppressWarnings([
+    'JavadocEmptyLastLine',
+    'MissingBlankLineBeforeAnnotatedField',
+    'UnnecessaryGString',
+    'Instanceof',
+    'NestedForLoop',
+    'UnnecessaryNullCheckBeforeInstanceOf'
+])
 class Stat {
 
     private static final Logger log = Logger.getLogger(Stat)
@@ -27,14 +35,14 @@ class Stat {
     private static final String LEGACY_GROUP_KEY_SEPARATOR = '_'
     private static final int PERCENT_SCALE = 2
     private static final int PERCENT_BASE = 100
-    static final String FREQUENCY_VALUE = "Value"
-    static final String FREQUENCY_FREQUENCY = "Frequency"
-    static final String FREQUENCY_PERCENT = "Percent"
+    static final String FREQUENCY_VALUE = 'Value'
+    static final String FREQUENCY_FREQUENCY = 'Frequency'
+    static final String FREQUENCY_PERCENT = 'Percent'
 
     static Structure str(Matrix table) {
         Structure map = new Structure()
         def name = table.matrixName == null ? '' : table.matrixName + ', '
-        map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
+        map['Matrix'] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             Class type = table.type(colName)
             if (type == null) {
@@ -43,7 +51,7 @@ class Stat {
             def vals = [type?.getSimpleName()]
             def endRowIndex = Math.min(3, table.lastRowIndex())
             if (endRowIndex >= 0) {
-                def samples = ListConverter.convert(table[colName][0..endRowIndex], String.class)
+                def samples = ListConverter.convert(table[colName][0..endRowIndex], String)
                 vals.addAll(samples)
             }
             map[colName] = vals
@@ -107,12 +115,12 @@ class Stat {
     @SuppressWarnings('DuplicateNumberLiteral')
     static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
         def freq = frequency(objects)
-        def mostFrequent = freq.subset(FREQUENCY_FREQUENCY, {it == max(freq[FREQUENCY_FREQUENCY])})
+        def mostFrequent = freq.subset(FREQUENCY_FREQUENCY) { it == max(freq[FREQUENCY_FREQUENCY]) }
 
         return [
             SUMMARY_TYPE: type.getSimpleName(),
             'Number of unique values': freq.rowCount(),
-            'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)".toString()
+            'Most frequent': "${mostFrequent[0, 0]} occurs ${mostFrequent[0, 1]} times (${mostFrequent[0, 2]}%)"
         ]
     }
 
@@ -171,7 +179,6 @@ class Stat {
             } else {
                 sums << null
             }
-
         }
         return sums
     }
@@ -197,7 +204,7 @@ class Stat {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    //s.set(idx, s.get(colNum) + value)
+                    // s.set(idx, s.get(colNum) + value)
                     s[idx] = s[idx] + value as T
                 }
                 idx++
@@ -252,7 +259,7 @@ class Stat {
             counts.add([it.key, it.value.rowCount()])
         }
         Matrix.builder()
-            .matrixName("${table.matrixName} - counts by $groupBy".toString())
+            .matrixName("${table.matrixName} - counts by $groupBy")
             .columnNames([groupBy, "${groupBy}_count".toString()])
             .rows(counts)
             .types([table.type(groupBy), Integer])
@@ -261,7 +268,7 @@ class Stat {
 
     static Matrix sumBy(Matrix table, String sumColumn, String groupBy) {
         Matrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
-        sums.setMatrixName("${table.matrixName}-sums by $groupBy".toString())
+        sums.setMatrixName("${table.matrixName}-sums by $groupBy")
         return sums
     }
 
@@ -270,14 +277,14 @@ class Stat {
         means = means.apply(meanColumn) { BigDecimal it ->
             it.setScale(scale, RoundingMode.HALF_UP)
         }
-        means.setMatrixName("${table.matrixName}-means by $groupBy".toString())
+        means.setMatrixName("${table.matrixName}-means by $groupBy")
         return means
     }
 
     static Matrix medianBy(Matrix table, String medianColumn, String groupBy) {
         def sorted = table.clone().orderBy(medianColumn)
         Matrix medians = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
-        medians.setMatrixName("${table.matrixName ?: ''}-medians by $groupBy".toString())
+        medians.setMatrixName("${table.matrixName ?: ''}-medians by $groupBy")
         return medians
     }
 
@@ -361,8 +368,6 @@ class Stat {
     static GroupedMatrix groupBy(Matrix table, List<String> columnNames) {
         groupBy(table, columnNames as String[])
     }
-
-
     /**
      * Splits the table into separate tables, one for each value in groupBy column,
      * then apply the closure to the columnName column.
@@ -376,7 +381,7 @@ class Stat {
      * @param fun the closure to apply to the column values (List<?>)
      * @param columnType the type of list (class) that the closure function returns (e.g. if the closure returns a
      * List<Double> then the columnType should be Double
-     * @return
+     * @return a matrix with grouped rows and calculated values
      */
     static Matrix funBy(Matrix table, String columnName, String groupBy, Closure fun, Class<?> columnType) {
         Map<?, Matrix> groups = table.split(groupBy)
@@ -386,7 +391,7 @@ class Stat {
             calculations.add([ it.key,  val])
         }
         Matrix.builder()
-            .matrixName("${table.matrixName} - by $groupBy".toString())
+            .matrixName("${table.matrixName} - by $groupBy")
             .columnNames([groupBy, columnName])
             .rows(calculations)
             .types([table.type(groupBy), columnType])
@@ -467,7 +472,6 @@ class Stat {
         means
     }
     /**
-     *
      * @param m the matrix containing the data
      * @param colNames the names of the columns to include, if omitted, all columns will be included
      * @return a list of the row sums
@@ -582,7 +586,6 @@ class Stat {
     }
 
     /**
-     *
      * @param m the matrix containing the data
      * @param colNames the names of the columns to include, if omitted, all columns will be included
      * @return a list of the row sums
@@ -622,14 +625,13 @@ class Stat {
         List<? extends Number> vals = new ArrayList(valueList)
         vals.sort()
         if (vals.size() % 2 == 0) {
-            def index = vals.size()/2 as int
-            def val1 = vals[index -1] as Number
+            def index = vals.size() / 2 as int
+            def val1 = vals[index - 1] as Number
             def val2 = vals[index] as Number
             BigDecimal median = (val1 + val2) / 2
             return median
-        } else {
-            return asBigDecimal(vals[vals.size()/2 as int])
         }
+        return asBigDecimal(vals[vals.size() / 2 as int])
     }
 
     /**
@@ -648,8 +650,8 @@ class Stat {
         List<Number> v = values.collect() as List<Number>
         v.sort()
 
-        int q1 = ((v.size() -1) * 25 / 100).round(0).intValue()
-        int q3 = ((v.size() -1) * 75 / 100).round(0).intValue()
+        int q1 = ((v.size() - 1) * 25 / 100).round(0).intValue()
+        int q3 = ((v.size() - 1) * 75 / 100).round(0).intValue()
 
         return [v[q1], v[q3]]
     }
@@ -738,7 +740,7 @@ class Stat {
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
-        List<T> maxVals = [null] * colNums.size()
+        List<T> maxVals = new ArrayList<>(Collections.nCopies(colNums.size(), null))
         def idx
         for (row in matrix) {
             idx = 0
@@ -767,14 +769,11 @@ class Stat {
     static <T extends Comparable> T max(Matrix table, String colName) {
         max(table.rows() as List<List<T>>, table.columnIndex(colName))
     }
-
-
     static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
     }
 
     /**
-     *
      * @param matrix the matrix containing the column to compute
      * @param colNum the column index for the column
      * @param isBiasCorrected - whether or not the variance computation will use the bias-corrected formula
@@ -782,12 +781,12 @@ class Stat {
      */
     static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
         def value
-        Map<String, List> numberMap = [:].withDefault{key -> return []}
+        Map<String, List> numberMap = [:].withDefault { key -> return [] }
         for (row in matrix) {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    //numberMap[String.valueOf(colNum)].add(value.doubleValue())
+                    // numberMap[String.valueOf(colNum)].add(value.doubleValue())
                     numberMap[String.valueOf(colNum)].add(value)
                 }
             }
@@ -981,4 +980,5 @@ class Stat {
         }
         return null
     }
+
 }

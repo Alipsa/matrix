@@ -14,6 +14,7 @@ import se.alipsa.matrix.core.ValueConverter
  */
 @CompileStatic
 class CumulativeHelper {
+
   private static final String CUMSUM_OPERATION = 'cumsum'
   private static final String CUMPROD_OPERATION = 'cumprod'
   private static final String CUMMIN_OPERATION = 'cummin'
@@ -140,6 +141,7 @@ class CumulativeHelper {
     }
   }
 
+  @SuppressWarnings('Instanceof')
   private static void requireComparable(Column source, String operationName) {
     if (source == null) {
       throw new IllegalArgumentException("${operationName} requires a non-null column")
@@ -152,7 +154,7 @@ class CumulativeHelper {
     }
   }
 
-  @SuppressWarnings('ExplicitCallToCompareToMethod')
+  @SuppressWarnings(['ExplicitCallToCompareToMethod', 'Instanceof'])
   private static int compareValues(Comparable left, Comparable right, String operationName, Column source) {
     if (left instanceof Number && right instanceof Number) {
       BigDecimal leftValue = numericValue(left, source, operationName)
@@ -169,6 +171,7 @@ class CumulativeHelper {
     }
   }
 
+  @SuppressWarnings('Instanceof')
   static BigDecimal numericValue(Object element, Column source, String operationName) {
     if (!(element instanceof Number)) {
       throw new IllegalArgumentException(
@@ -183,4 +186,5 @@ class CumulativeHelper {
     }
     value
   }
+
 }

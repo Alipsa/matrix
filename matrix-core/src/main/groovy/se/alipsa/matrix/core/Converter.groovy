@@ -10,6 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class Converter {
+
   String columnName
   Class<?> type
   Closure converter
@@ -23,4 +24,5 @@ class Converter {
     this.type = type
     this.converter = converter
   }
+
 }

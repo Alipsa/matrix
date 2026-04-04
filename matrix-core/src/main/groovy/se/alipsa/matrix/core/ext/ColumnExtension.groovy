@@ -14,7 +14,7 @@ import se.alipsa.matrix.core.Column
 @CompileStatic
 class ColumnExtension {
 
-  static def asType(List self, Class cls) {
+  static Object asType(List self, Class cls) {
     if (cls == Column) {
       new Column(self)
     } else {
@@ -27,10 +27,12 @@ class ColumnExtension {
     self
   }
 
+  @SuppressWarnings('Instanceof')
   static Object getAt(Column self, Collection indices) {
     if (indices.size() == 2 && indices[1] instanceof Class) {
       return self.getAt(indices[0] as Number, indices[1] as Class)
     }
     self[indices]
   }
+
 }

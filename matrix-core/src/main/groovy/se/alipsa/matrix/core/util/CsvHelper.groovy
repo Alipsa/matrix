@@ -72,6 +72,7 @@ class CsvHelper {
     type.name
   }
 
+  @SuppressWarnings('Instanceof')
   static String serializeMetadataValue(Object value) {
     if (value == null) {
       return ''
@@ -84,4 +85,5 @@ class CsvHelper {
     }
     value.toString()
   }
+
 }

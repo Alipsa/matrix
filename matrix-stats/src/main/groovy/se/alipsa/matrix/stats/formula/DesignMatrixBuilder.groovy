@@ -322,7 +322,9 @@ final class DesignMatrixBuilder {
 
   private Matrix buildMatrix(List<String> names, List<List<BigDecimal>> columns) {
     if (names.isEmpty()) {
-      return Matrix.builder().columnNames([]).columns([]).build()
+      return Matrix.builder()
+        .rows((0..<data.rowCount()).collect { [] as List })
+        .build()
     }
     Map<String, List> columnMap = [:]
     for (int i = 0; i < names.size(); i++) {

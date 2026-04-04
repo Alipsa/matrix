@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.Column
  */
 @CompileStatic
 class ShiftHelper {
+
   private static final String SHIFT_OPERATION = 'shift'
   private static final String DIFF_OPERATION = 'diff'
 
@@ -145,4 +146,5 @@ class ShiftHelper {
       throw new IllegalArgumentException("${operationName} does not support periods == Integer.MIN_VALUE")
     }
   }
+
 }

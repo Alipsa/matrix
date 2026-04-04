@@ -9,6 +9,20 @@ import se.alipsa.matrix.core.Matrix
 
 import java.text.DecimalFormat
 
+@SuppressWarnings([
+    'UnnecessaryGString',
+    'SpaceAfterComma',
+    'BlockEndsWithBlankLine',
+    'UnnecessaryDotClass',
+    'ClosureStatementOnOpeningLineOfMultipleLineClosure',
+    'SpaceAfterClosingBrace',
+    'SpaceBeforeClosingBrace',
+    'ClosureAsLastMethodParameter',
+    'UnnecessarySemicolon',
+    'SpaceAfterFor',
+    'SpaceAfterCommentDelimiter',
+    'ClassEndsWithBlankLine'
+])
 class GridTest {
 
     @Test
