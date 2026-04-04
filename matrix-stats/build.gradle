@@ -39,6 +39,7 @@ dependencies {
   compileOnly libs.groovy
 
   compileOnly project(':matrix-core')
+  implementation libs.ejml.simple
 
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
