@@ -5,8 +5,17 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 /**
- * Builds a design matrix from a normalized formula, handling expression evaluation,
- * categorical encoding with contrasts, and interaction expansion.
+ * Builds the predictor-side design matrix for a normalized formula.
+ * <p>
+ * The builder is responsible for turning normalized {@link FormulaTerm} instances into
+ * concrete matrix columns, including arithmetic expressions, categorical contrasts,
+ * interaction expansion, and special formula helpers such as {@code poly(...)} and
+ * {@code s(...)}. It also records the emitted term metadata used by downstream fit
+ * methods to understand which columns came from each logical term.
+ * <p>
+ * When a term expands to no columns, for example because a categorical predictor has
+ * only a reference level after filtering, the returned {@link Terms} metadata preserves
+ * that dropped-term state even though no predictor column is emitted.
  */
 @CompileStatic
 final class DesignMatrixBuilder {
@@ -35,8 +44,9 @@ final class DesignMatrixBuilder {
   /**
    * Builds the design matrix and term metadata from a normalized formula.
    *
-   * @param formula the normalized formula
-   * @return the design matrix result
+   * @param formula the normalized formula whose predictor terms should be encoded
+   * @return a {@link DesignMatrix} containing the predictor matrix, emitted column names,
+   *   and aligned {@link Terms} metadata
    */
   DesignMatrix build(NormalizedFormula formula) {
     List<String> predictorNames = []

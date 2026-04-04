@@ -275,6 +275,8 @@ class FormulaDesignMatrixTest {
         [1.0, 'A1', 'B1'],
         [2.0, 'A2', 'B1'],
         [3.0, 'A1', 'B2'],
+        // Keep the non-reference/non-reference combination so the interaction column
+        // is exercised by a positive value rather than only zeros.
         [4.0, 'A2', 'B2'],
       ])
       .types([BigDecimal, String, String])

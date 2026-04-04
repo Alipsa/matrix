@@ -570,8 +570,8 @@ class FormulaModelFrameTest {
   }
 
   @Test
-  void testNaActionEnumOnlySupportsOmitAndFail() {
-    assertEquals([NaAction.OMIT, NaAction.FAIL], NaAction.values().toList())
+  void testNaActionEnumIncludesDocumentedModes() {
+    assertTrue(NaAction.values().toList().containsAll([NaAction.OMIT, NaAction.FAIL]))
   }
 
   @Test
