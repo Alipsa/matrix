@@ -116,29 +116,22 @@ assert 30.34082454 == model.predict(13, 8)
 ## Linear Algebra
 
 `matrix-stats` exposes a public dense linear algebra facade in `se.alipsa.matrix.stats.linalg.Linalg`.
-The facade accepts `double[][]`, `Matrix`, and `Grid` inputs, performs computations in `double`
-precision, and returns:
+The facade accepts `Matrix`, `Grid`, and list-backed numeric vectors, performs computations in
+`double` precision internally, and returns:
 
-- `double[][]` for low-level matrix results
-- `Matrix` for matrix-shaped results from `Matrix` and `Grid` inputs
-- `double[]` for `solve(A, b)` and `eigenvalues(...)`
-- `SvdResult` for singular value decomposition
+- `Matrix` for inverse results from `Matrix` inputs
+- `Grid<BigDecimal>` for inverse results from `Grid` inputs
+- `BigDecimal` for scalar results such as `det(...)`
+- `List<BigDecimal>` for vector results such as `solve(A, b)` and `eigenvalues(...)`
+- `SvdResult` for singular value decomposition from `Matrix` and `Grid` inputs
 
 Matrix-shaped computed outputs use synthetic column names (`c0`, `c1`, ...) because inverse and
 decomposition result spaces do not preserve the semantics of the original input column labels.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.stats.linalg.Linalg
-
-double[] coefficients = Linalg.solve(
-    [
-        [4.0d, 7.0d],
-        [2.0d, 6.0d]
-    ] as double[][],
-    [1.0d, 0.0d]
-)
-assert [0.6d, -0.2d] == coefficients.toList()
 
 Matrix source = Matrix.builder()
     .columnNames(['x', 'y'])
@@ -149,15 +142,24 @@ Matrix source = Matrix.builder()
     .types([Double, Double])
     .build()
 
+List<BigDecimal> coefficients = Linalg.solve(source, [1.0, 0.0])
+assert [0.6, -0.2] == coefficients
+
+BigDecimal determinant = Linalg.det(source)
+assert determinant == 10.0
+
 Matrix inverse = Linalg.inverse(source)
 assert ['c0', 'c1'] == inverse.columnNames()
 assert Math.abs((inverse[0, 0] as double) - 0.6d) < 1e-9
 
-def svd = Linalg.svd([
-    [3.0d, 1.0d],
-    [1.0d, 3.0d],
-    [1.0d, 1.0d]
-] as double[][])
+Grid<Number> grid = new Grid<Number>([
+    [4.0, 7.0],
+    [2.0, 6.0]
+])
+Grid<BigDecimal> inverseGrid = Linalg.inverse(grid)
+assert inverseGrid[0, 0] == 0.6
+
+def svd = Linalg.svd(grid)
 assert svd.singularValues.length == 2
 ```
 
@@ -169,7 +171,7 @@ assert svd.singularValues.length == 2
 The current v2.4.0 scope is intentionally narrow:
 
 - linear interpolation only
-- `double[][]`/`double[]`-style floating-point numeric contract
+- idiomatic Groovy numeric inputs with `BigDecimal` scalar results
 - explicit `(x, y, targetX)` interpolation as the primitive operation
 - convenience overloads for evenly spaced numeric series and Matrix/Grid-backed columns
 - no extrapolation: target positions outside the supported domain are rejected
@@ -181,13 +183,13 @@ Public spline interpolation is not part of the v2.4.0 API. The existing spline l
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.interpolation.Interpolation
 
-assert 5.0d == Interpolation.linear(
-    [0.0d, 2.0d, 4.0d] as double[],
-    [0.0d, 10.0d, 20.0d] as double[],
-    1.0d
+assert 5.0 == Interpolation.linear(
+    [0.0, 2.0, 4.0],
+    [0.0, 10.0, 20.0],
+    1.0
 )
 
-assert 30.0d == Interpolation.linear([10.0d, 20.0d, 40.0d] as double[], 1.5d)
+assert 30.0 == Interpolation.linear([10.0, 20.0, 40.0], 1.5)
 
 Matrix points = Matrix.builder()
     .columnNames(['time', 'value'])
@@ -199,7 +201,7 @@ Matrix points = Matrix.builder()
     .types([Double, Double])
     .build()
 
-assert 9.0d == Interpolation.linear(points, 'time', 'value', 3.0d)
+assert 9.0 == Interpolation.linear(points, 'time', 'value', 3.0)
 ```
 
 ## Formula Models

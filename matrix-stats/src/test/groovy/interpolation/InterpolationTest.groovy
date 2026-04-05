@@ -13,42 +13,40 @@ import se.alipsa.matrix.stats.interpolation.Interpolation
 
 class InterpolationTest {
 
-  private static final double TOLERANCE = 1e-12
-
   @Test
   void testLinearInterpolationForExplicitDomain() {
-    double result = Interpolation.linear(
-      [0.0d, 2.0d, 4.0d] as double[],
-      [0.0d, 10.0d, 20.0d] as double[],
+    BigDecimal result = Interpolation.linear(
+      [0.0, 2.0, 4.0],
+      [0.0, 10.0, 20.0],
       1.0d
     )
 
-    assertEquals(5.0d, result, TOLERANCE)
+    assertEquals(5.0, result)
   }
 
   @Test
   void testLinearInterpolationForListOverload() {
-    double result = Interpolation.linear([1.0, 4.0, 10.0], [2.0, 8.0, 20.0], 7.0)
+    BigDecimal result = Interpolation.linear([1.0, 4.0, 10.0], [2.0, 8.0, 20.0], 7.0)
 
-    assertEquals(14.0d, result, TOLERANCE)
+    assertEquals(14.0, result)
   }
 
   @Test
   void testLinearInterpolationReturnsExactKnotValue() {
-    double result = Interpolation.linear(
-      [1.0d, 2.0d, 4.0d] as double[],
-      [3.0d, 6.0d, 12.0d] as double[],
+    BigDecimal result = Interpolation.linear(
+      [1.0, 2.0, 4.0],
+      [3.0, 6.0, 12.0],
       2.0d
     )
 
-    assertEquals(6.0d, result, TOLERANCE)
+    assertEquals(6.0, result)
   }
 
   @Test
   void testSeriesInterpolationUsesZeroBasedPositions() {
-    double result = Interpolation.linear([10.0d, 20.0d, 40.0d] as double[], 1.5d)
+    BigDecimal result = Interpolation.linear([10.0, 20.0, 40.0], 1.5d)
 
-    assertEquals(30.0d, result, TOLERANCE)
+    assertEquals(30.0, result)
   }
 
   @Test
@@ -63,8 +61,8 @@ class InterpolationTest {
       .types([Double, Double])
       .build()
 
-    assertEquals(9.0d, Interpolation.linear(data, 'time', 'value', 3.0), TOLERANCE)
-    assertEquals(9.0d, Interpolation.linear(data, 'value', 1.5), TOLERANCE)
+    assertEquals(9.0, Interpolation.linear(data, 'time', 'value', 3.0))
+    assertEquals(9.0, Interpolation.linear(data, 'value', 1.5))
   }
 
   @Test
@@ -75,8 +73,8 @@ class InterpolationTest {
       [4.0, 12.0],
     ])
 
-    assertEquals(9.0d, Interpolation.linear(data, 0, 1, 3.0), TOLERANCE)
-    assertEquals(9.0d, Interpolation.linear(data, 1, 1.5), TOLERANCE)
+    assertEquals(9.0, Interpolation.linear(data, 0, 1, 3.0))
+    assertEquals(9.0, Interpolation.linear(data, 1, 1.5))
   }
 
   @Test
@@ -97,8 +95,8 @@ class InterpolationTest {
   void testRejectsUnsortedExplicitDomain() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Interpolation.linear(
-        [1.0d, 4.0d, 3.0d] as double[],
-        [2.0d, 8.0d, 6.0d] as double[],
+        [1.0, 4.0, 3.0],
+        [2.0, 8.0, 6.0],
         2.0d
       )
     }
@@ -110,8 +108,8 @@ class InterpolationTest {
   void testRejectsDuplicateExplicitDomainValues() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Interpolation.linear(
-        [1.0d, 2.0d, 2.0d] as double[],
-        [3.0d, 6.0d, 7.0d] as double[],
+        [1.0, 2.0, 2.0],
+        [3.0, 6.0, 7.0],
         2.0d
       )
     }
@@ -123,8 +121,8 @@ class InterpolationTest {
   void testRejectsExtrapolation() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Interpolation.linear(
-        [1.0d, 2.0d, 4.0d] as double[],
-        [3.0d, 6.0d, 12.0d] as double[],
+        [1.0, 2.0, 4.0],
+        [3.0, 6.0, 12.0],
         0.5d
       )
     }
@@ -136,8 +134,8 @@ class InterpolationTest {
   void testRejectsLengthMismatch() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Interpolation.linear(
-        [1.0d, 2.0d, 4.0d] as double[],
-        [3.0d, 6.0d] as double[],
+        [1.0, 2.0, 4.0],
+        [3.0, 6.0],
         2.0d
       )
     }

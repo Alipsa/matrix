@@ -70,17 +70,56 @@ final class LinalgAdapters {
     List<String> columnNames = syntheticColumnNames(shape[1])
     List<List> rows = []
     for (int row = 0; row < shape[0]; row++) {
-      List<Double> currentRow = []
+      List<BigDecimal> currentRow = []
       for (int col = 0; col < shape[1]; col++) {
-        currentRow << values[row][col]
+        currentRow << BigDecimal.valueOf(values[row][col])
       }
       rows << currentRow
     }
     Matrix.builder()
       .columnNames(columnNames)
       .rows(rows)
-      .types(([Double] * shape[1]) as List<Class>)
+      .types(([BigDecimal] * shape[1]) as List<Class>)
       .build()
+  }
+
+  /**
+   * Convert a dense numeric array into a {@code Grid<BigDecimal>}.
+   *
+   * @param values the dense numeric array
+   * @return a grid containing the supplied values
+   */
+  static Grid<BigDecimal> toGrid(double[][] values) {
+    int[] shape = validateRectangular(values, 'values')
+    List<List<BigDecimal>> rows = []
+    for (int row = 0; row < shape[0]; row++) {
+      List<BigDecimal> currentRow = []
+      for (int col = 0; col < shape[1]; col++) {
+        currentRow << BigDecimal.valueOf(values[row][col])
+      }
+      rows << currentRow
+    }
+    new Grid<BigDecimal>(rows, BigDecimal)
+  }
+
+  /**
+   * Convert a dense numeric vector into {@code BigDecimal} values.
+   *
+   * @param values the dense numeric vector
+   * @return the converted numeric values
+   */
+  static List<BigDecimal> toBigDecimalVector(double[] values) {
+    if (values == null || values.length == 0) {
+      throw new IllegalArgumentException('Values must contain at least one value')
+    }
+    List<BigDecimal> converted = []
+    for (double value : values) {
+      if (!Double.isFinite(value)) {
+        throw new IllegalArgumentException('Values must contain only finite values')
+      }
+      converted << BigDecimal.valueOf(value)
+    }
+    converted
   }
 
   /**

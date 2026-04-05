@@ -2,7 +2,9 @@ package se.alipsa.matrix.stats.contingency
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Cochran-Armitage test for trend is a statistical test used to detect linear trends in
@@ -38,9 +40,9 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
  * <p><b>Example usage:</b></p>
  * <pre>
  * // Test for trend in disease incidence across smoking levels
- * int[] cases = [10, 18, 32, 45]          // Disease cases in each group
- * int[] controls = [90, 82, 68, 55]       // Controls in each group
- * double[] scores = [0, 5, 15, 30]        // Cigarettes per day (custom scoring)
+ * List<Integer> cases = [10, 18, 32, 45]  // Disease cases in each group
+ * List<Integer> controls = [90, 82, 68, 55] // Controls in each group
+ * List<Number> scores = [0, 5, 15, 30]    // Cigarettes per day (custom scoring)
  *
  * def result = CochranArmitage.test(cases, controls, scores)
  * println "Z-statistic: ${result.statistic}"
@@ -96,7 +98,19 @@ class CochranArmitage {
    * @param scores Optional ordinal scores for categories (default: 0, 1, 2, ..., k-1)
    * @return CochranArmitagResult containing test statistic, p-value, and conclusion
    */
-  static CochranArmitagResult test(int[] cases, int[] controls, double[] scores = null) {
+  static CochranArmitagResult test(List<? extends Number> cases,
+                                   List<? extends Number> controls,
+                                   List<? extends Number> scores = null) {
+    int[] caseCounts = toCountArray(cases, 'cases')
+    int[] controlCounts = toCountArray(controls, 'controls')
+    double[] scoreValues = scores == null ? null : NumericConversion.toDoubleArray(scores, 'scores')
+    test(caseCounts, controlCounts, scoreValues, scores)
+  }
+
+  private static CochranArmitagResult test(int[] cases,
+                                           int[] controls,
+                                           double[] scores = null,
+                                           List<? extends Number> originalScores = null) {
     validateInput(cases, controls, scores)
 
     int k = cases.length
@@ -116,7 +130,7 @@ class CochranArmitage {
     }
 
     if (grandTotal == 0) {
-      throw new IllegalArgumentException("Total sample size cannot be zero")
+      throw new IllegalArgumentException('Total sample size cannot be zero')
     }
 
     // Calculate weighted sum of cases
@@ -144,13 +158,13 @@ class CochranArmitage {
     double varianceDenominator = grandTotal * grandTotal * (grandTotal - 1)
 
     if (varianceDenominator == 0) {
-      throw new IllegalArgumentException("Cannot compute variance with sample size = 1")
+      throw new IllegalArgumentException('Cannot compute variance with sample size = 1')
     }
 
     double variance = varianceNumerator / varianceDenominator
 
     if (variance < 1e-10) {
-      throw new IllegalArgumentException("Variance is too small - data may have no variation in scores")
+      throw new IllegalArgumentException('Variance is too small - data may have no variation in scores')
     }
 
     // Calculate test statistic (Z-score)
@@ -161,24 +175,14 @@ class CochranArmitage {
     double pValue = 2.0 * (1.0 - normalDist.cumulativeProbability(Math.abs(zStatistic)))
 
     return new CochranArmitagResult(
-      statistic: zStatistic,
-      pValue: pValue,
+      statistic: BigDecimal.valueOf(zStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: grandTotal,
       categories: k,
       cases: casesTotal,
       controls: controlsTotal,
-      scores: categoryScores
+      scores: originalScores == null ? (0..<k).collect { int index -> index as BigDecimal } : ListConverter.toBigDecimals(originalScores)
     )
-  }
-
-  /**
-   * Performs the Cochran-Armitage test using Lists instead of arrays.
-   */
-  static CochranArmitagResult test(List<Integer> cases, List<Integer> controls, List<Double> scores = null) {
-    int[] casesArray = cases as int[]
-    int[] controlsArray = controls as int[]
-    double[] scoresArray = scores ? (scores as double[]) : null
-    return test(casesArray, controlsArray, scoresArray)
   }
 
   private static void validateInput(int[] cases, int[] controls, double[] scores) {
@@ -210,16 +214,35 @@ class CochranArmitage {
     }
   }
 
+  private static int[] toCountArray(List<? extends Number> values, String label) {
+    if (values == null) {
+      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
+    }
+    if (values.isEmpty()) {
+      throw new IllegalArgumentException("${label.capitalize()} must contain at least 2 values")
+    }
+
+    int[] counts = new int[values.size()]
+    for (int i = 0; i < values.size(); i++) {
+      BigDecimal numericValue = NumericConversion.toBigDecimal(values[i], "${label} value at index ${i}")
+      if (numericValue.stripTrailingZeros().scale() > 0) {
+        throw new IllegalArgumentException("${label.capitalize()} must contain only whole numbers")
+      }
+      counts[i] = numericValue.intValueExact()
+    }
+    counts
+  }
+
   /**
    * Result class for the Cochran-Armitage test.
    */
   @CompileStatic
   static class CochranArmitagResult {
     /** The test statistic (Z-score) */
-    double statistic
+    BigDecimal statistic
 
     /** The two-sided p-value */
-    double pValue
+    BigDecimal pValue
 
     /** The total sample size */
     int sampleSize
@@ -234,7 +257,7 @@ class CochranArmitage {
     int controls
 
     /** The scores used for the categories */
-    double[] scores
+    List<BigDecimal> scores
 
     /**
      * Interprets the Cochran-Armitage test result.
@@ -242,12 +265,13 @@ class CochranArmitage {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether there is a significant trend
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toBigDecimal(alpha, 'alpha')
+      if (pValue < alphaValue) {
         String direction = statistic > 0 ? "increasing" : "decreasing"
-        return "Reject H0: Significant ${direction} trend detected (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
+        return "Reject H0: Significant ${direction} trend detected (Z = ${String.format('%.4f', statistic as double)}, p = ${String.format('%.4f', pValue as double)})"
       } else {
-        return "Fail to reject H0: No significant trend detected (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
+        return "Fail to reject H0: No significant trend detected (Z = ${String.format('%.4f', statistic as double)}, p = ${String.format('%.4f', pValue as double)})"
       }
     }
 
@@ -256,9 +280,10 @@ class CochranArmitage {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toBigDecimal(alpha, 'alpha')
       String direction = statistic > 0 ? "increasing" : "decreasing"
-      String significance = pValue < alpha ? "significant" : "not significant"
+      String significance = pValue < alphaValue ? "significant" : "not significant"
 
       return String.format(
         "Cochran-Armitage trend test:\n" +
@@ -266,7 +291,7 @@ class CochranArmitage {
         "p-value: %.4f\n" +
         "Sample: n=%d (%d cases, %d controls across %d categories)\n" +
         "Conclusion: Trend is %s at %.0f%% significance level",
-        statistic, direction, pValue, sampleSize, cases, controls, categories, significance, alpha * 100
+        statistic as double, direction, pValue as double, sampleSize, cases, controls, categories, significance, alphaValue * 100
       )
     }
 
@@ -275,11 +300,12 @@ class CochranArmitage {
       return """Cochran-Armitage Trend Test
   Categories: ${categories}
   Sample size: ${sampleSize} (${cases} cases, ${controls} controls)
-  Scores: ${scores.collect { String.format('%.2f', it) }.join(', ')}
-  Z-statistic: ${String.format('%.4f', statistic)}
-  p-value: ${String.format('%.4f', pValue)}
+  Scores: ${scores.collect { BigDecimal score -> String.format('%.2f', score as double) }.join(', ')}
+  Z-statistic: ${String.format('%.4f', statistic as double)}
+  p-value: ${String.format('%.4f', pValue as double)}
 
   ${interpret()}"""
     }
   }
+
 }

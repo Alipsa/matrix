@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.kde
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Kernel functions for Kernel Density Estimation (KDE), providing different weighting
  * schemes for smoothing data when estimating probability density functions.
@@ -75,7 +77,7 @@ import groovy.transform.CompileStatic
  * Kernel k = Kernel.fromString('gaussian')  // GAUSSIAN
  *
  * // Evaluate kernel function directly
- * double weight = Kernel.GAUSSIAN.evaluate(0.5)  // Weight at 0.5 bandwidths from center
+ * BigDecimal weight = Kernel.GAUSSIAN.evaluate(0.5)  // Weight at 0.5 bandwidths from center
  * </pre>
  *
  * <h3>Mathematical Definitions</h3>
@@ -110,10 +112,12 @@ enum Kernel {
    * This is the default kernel in R's density() function.
    */
   GAUSSIAN {
+
     @Override
-    double evaluate(double u) {
+    double evaluateValue(double u) {
       return Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI)
     }
+
   },
 
   /**
@@ -122,13 +126,15 @@ enum Kernel {
    * Optimal in the sense of minimizing mean integrated squared error.
    */
   EPANECHNIKOV {
+
     @Override
-    double evaluate(double u) {
+    double evaluateValue(double u) {
       if (Math.abs(u) > 1) {
         return 0.0
       }
       return 0.75 * (1.0 - u * u)
     }
+
   },
 
   /**
@@ -136,13 +142,15 @@ enum Kernel {
    * Support: [-1, 1]
    */
   UNIFORM {
+
     @Override
-    double evaluate(double u) {
+    double evaluateValue(double u) {
       if (Math.abs(u) > 1) {
         return 0.0
       }
       return 0.5
     }
+
   },
 
   /**
@@ -150,14 +158,16 @@ enum Kernel {
    * Support: [-1, 1]
    */
   TRIANGULAR {
+
     @Override
-    double evaluate(double u) {
+    double evaluateValue(double u) {
       double absU = Math.abs(u)
       if (absU > 1) {
         return 0.0
       }
       return 1.0 - absU
     }
+
   }
 
   /**
@@ -166,7 +176,11 @@ enum Kernel {
    * @param u the standardized distance (x - xi) / h
    * @return the kernel density contribution
    */
-  abstract double evaluate(double u)
+  BigDecimal evaluate(Number u) {
+    BigDecimal.valueOf(evaluateValue(NumericConversion.toFiniteDouble(u, 'u')))
+  }
+
+  abstract double evaluateValue(double u)
 
   /**
    * Parse a kernel from a string name (case-insensitive).
@@ -198,4 +212,5 @@ enum Kernel {
             "Supported kernels: gaussian, epanechnikov, uniform, triangular")
     }
   }
+
 }

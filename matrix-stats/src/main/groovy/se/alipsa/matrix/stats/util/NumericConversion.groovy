@@ -13,6 +13,8 @@ import se.alipsa.matrix.core.Matrix
  */
 final class NumericConversion {
 
+  private static final String GRID_LABEL = 'grid'
+
   private NumericConversion() {
   }
 
@@ -125,28 +127,6 @@ final class NumericConversion {
   }
 
   /**
-   * Convert a numeric vector into a {@code List<BigDecimal>}.
-   *
-   * @param values the numeric vector
-   * @param label the label used in validation messages
-   * @return the numeric vector
-   * @since 2.4.0
-   */
-  static List<BigDecimal> toBigDecimalList(List<? extends Number> values, String label = 'values') {
-    if (values == null) {
-      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
-    }
-    if (values.isEmpty()) {
-      throw new IllegalArgumentException("${label.capitalize()} must contain at least one value")
-    }
-    List<BigDecimal> numericValues = []
-    for (int i = 0; i < values.size(); i++) {
-      numericValues << toBigDecimal(values[i], "${label} value at index ${i}")
-    }
-    numericValues
-  }
-
-  /**
    * Extract a numeric Matrix column as {@code BigDecimal} values.
    *
    * @param matrix the source matrix
@@ -159,13 +139,10 @@ final class NumericConversion {
     if (columnName == null) {
       throw new IllegalArgumentException('Column name cannot be null')
     }
-
-    Column column
-    try {
-      column = matrix.column(columnName)
-    } catch (IndexOutOfBoundsException e) {
-      throw new IllegalArgumentException("Matrix does not contain column '${columnName}'", e)
+    if (!matrix.columnNames().contains(columnName)) {
+      throw new IllegalArgumentException("Matrix does not contain column '${columnName}'")
     }
+    Column column = matrix.column(columnName)
 
     List<BigDecimal> values = []
     for (int row = 0; row < matrix.rowCount(); row++) {
@@ -183,7 +160,7 @@ final class NumericConversion {
    * @since 2.4.0
    */
   static List<BigDecimal> toBigDecimalColumn(Grid<?> grid, int columnIndex) {
-    int[] shape = validateRectangular(grid, 'grid')
+    int[] shape = validateRectangular(grid, GRID_LABEL)
     if (columnIndex < 0 || columnIndex >= shape[1]) {
       throw new IllegalArgumentException("Grid column index ${columnIndex} is out of bounds for ${shape[1]} columns")
     }
@@ -227,7 +204,7 @@ final class NumericConversion {
    * @since 2.4.0
    */
   static Grid<BigDecimal> toBigDecimalGrid(Grid<?> grid) {
-    int[] shape = validateRectangular(grid, 'grid')
+    int[] shape = validateRectangular(grid, GRID_LABEL)
 
     List<List<?>> rowData = grid.data
     List<List<BigDecimal>> rows = []

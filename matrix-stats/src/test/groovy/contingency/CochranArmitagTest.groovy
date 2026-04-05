@@ -14,8 +14,8 @@ class CochranArmitagTest {
   @Test
   void testIncreasingTrend() {
     // Clear increasing trend: more cases with higher exposure
-    int[] cases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
+    List<Integer> cases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -33,8 +33,8 @@ class CochranArmitagTest {
   @Test
   void testDecreasingTrend() {
     // Clear decreasing trend: fewer cases with higher exposure
-    int[] cases = [30, 20, 10]
-    int[] controls = [70, 80, 90]
+    List<Integer> cases = [30, 20, 10]
+    List<Integer> controls = [70, 80, 90]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -48,29 +48,29 @@ class CochranArmitagTest {
   @Test
   void testNoTrend() {
     // No trend: similar proportions across categories
-    int[] cases = [20, 20, 20]
-    int[] controls = [80, 80, 80]
+    List<Integer> cases = [20, 20, 20]
+    List<Integer> controls = [80, 80, 80]
 
     def result = CochranArmitage.test(cases, controls)
 
     assertNotNull(result, 'Result should not be null')
 
     // Should not detect trend
-    assertTrue(Math.abs(result.statistic) < 0.5, 'Z-statistic should be close to 0 for no trend')
+    assertTrue(result.statistic.abs() < 0.5, 'Z-statistic should be close to 0 for no trend')
     assertTrue(result.pValue > 0.05, 'Should not be significant')
   }
 
   @Test
   void testCustomScores() {
     // Test with custom ordinal scores
-    int[] cases = [10, 15, 25]
-    int[] controls = [90, 85, 75]
-    double[] scores = [1.0, 2.0, 3.0]  // Custom scores instead of default 0, 1, 2
+    List<Integer> cases = [10, 15, 25]
+    List<Integer> controls = [90, 85, 75]
+    List<BigDecimal> scores = [1.0, 2.0, 3.0]  // Custom scores instead of default 0, 1, 2
 
     def result = CochranArmitage.test(cases, controls, scores)
 
     assertNotNull(result, 'Result should not be null')
-    assertArrayEquals(scores, result.scores, 1e-10, 'Should use provided scores')
+    assertEquals(scores, result.scores, 'Should use provided scores')
 
     // Should still detect increasing trend
     assertTrue(result.statistic > 0, 'Should detect increasing trend with custom scores')
@@ -81,7 +81,7 @@ class CochranArmitagTest {
     // Test with List inputs instead of arrays
     List<Integer> cases = [10, 20, 30]
     List<Integer> controls = [90, 80, 70]
-    List<Double> scores = [0.0, 1.0, 2.0]
+    List<BigDecimal> scores = [0.0, 1.0, 2.0]
 
     def result = CochranArmitage.test(cases, controls, scores)
 
@@ -92,8 +92,8 @@ class CochranArmitagTest {
   @Test
   void testTwoCategories() {
     // Minimum case: 2 categories
-    int[] cases = [10, 30]
-    int[] controls = [90, 70]
+    List<Integer> cases = [10, 30]
+    List<Integer> controls = [90, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -105,8 +105,8 @@ class CochranArmitagTest {
   @Test
   void testManyCategories() {
     // Test with many categories (5)
-    int[] cases = [5, 10, 15, 20, 25]
-    int[] controls = [95, 90, 85, 80, 75]
+    List<Integer> cases = [5, 10, 15, 20, 25]
+    List<Integer> controls = [95, 90, 85, 80, 75]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -117,8 +117,8 @@ class CochranArmitagTest {
 
   @Test
   void testValidation() {
-    int[] validCases = [10, 20, 30]
-    int[] validControls = [90, 80, 70]
+    List<Integer> validCases = [10, 20, 30]
+    List<Integer> validControls = [90, 80, 70]
 
     // Null cases
     assertThrows(IllegalArgumentException) {
@@ -132,39 +132,39 @@ class CochranArmitagTest {
 
     // Mismatched lengths
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test([10, 20] as int[], validControls)
+      CochranArmitage.test([10, 20], validControls)
     }
 
     // Too few categories (need at least 2)
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test([10] as int[], [90] as int[])
+      CochranArmitage.test([10], [90])
     }
 
     // Negative cases
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test([-10, 20, 30] as int[], validControls)
+      CochranArmitage.test([-10, 20, 30], validControls)
     }
 
     // Negative controls
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test(validCases, [90, -80, 70] as int[])
+      CochranArmitage.test(validCases, [90, -80, 70])
     }
 
     // Wrong scores length
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test(validCases, validControls, [0.0, 1.0] as double[])
+      CochranArmitage.test(validCases, validControls, [0.0, 1.0])
     }
 
     // Zero total (all zeros)
     assertThrows(IllegalArgumentException) {
-      CochranArmitage.test([0, 0, 0] as int[], [0, 0, 0] as int[])
+      CochranArmitage.test([0, 0, 0], [0, 0, 0])
     }
   }
 
   @Test
   void testResultToString() {
-    int[] cases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
+    List<Integer> cases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -177,8 +177,8 @@ class CochranArmitagTest {
 
   @Test
   void testInterpret() {
-    int[] cases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
+    List<Integer> cases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -190,8 +190,8 @@ class CochranArmitagTest {
 
   @Test
   void testEvaluate() {
-    int[] cases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
+    List<Integer> cases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -205,9 +205,9 @@ class CochranArmitagTest {
   @Test
   void testZeroVariance() {
     // All same scores should cause zero variance
-    int[] cases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
-    double[] scores = [1.0, 1.0, 1.0]  // All same score
+    List<Integer> cases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
+    List<BigDecimal> scores = [1.0, 1.0, 1.0]  // All same score
 
     assertThrows(IllegalArgumentException) {
       CochranArmitage.test(cases, controls, scores)
@@ -217,14 +217,14 @@ class CochranArmitagTest {
   @Test
   void testPValueRange() {
     // Test multiple scenarios to ensure p-values are always valid
-    int[][] testCases = [
+    List<List<Integer>> testCases = [
       [10, 20, 30],
       [30, 20, 10],
       [20, 20, 20],
       [5, 15, 25],
       [1, 5, 10]
     ]
-    int[][] testControls = [
+    List<List<Integer>> testControls = [
       [90, 80, 70],
       [70, 80, 90],
       [80, 80, 80],
@@ -232,7 +232,7 @@ class CochranArmitagTest {
       [99, 95, 90]
     ]
 
-    for (int i = 0; i < testCases.length; i++) {
+    for (int i = 0; i < testCases.size(); i++) {
       def result = CochranArmitage.test(testCases[i], testControls[i])
 
       assertTrue(result.pValue >= 0, "p-value should be >= 0, got ${result.pValue}")
@@ -243,29 +243,29 @@ class CochranArmitagTest {
   @Test
   void testSymmetry() {
     // Reversing the trend should give opposite Z-statistic but same p-value
-    int[] cases1 = [10, 20, 30]
-    int[] controls1 = [90, 80, 70]
+    List<Integer> cases1 = [10, 20, 30]
+    List<Integer> controls1 = [90, 80, 70]
 
-    int[] cases2 = [30, 20, 10]
-    int[] controls2 = [70, 80, 90]
+    List<Integer> cases2 = [30, 20, 10]
+    List<Integer> controls2 = [70, 80, 90]
 
     def result1 = CochranArmitage.test(cases1, controls1)
     def result2 = CochranArmitage.test(cases2, controls2)
 
     // Z-statistics should have opposite signs
-    assertEquals(result1.statistic, -result2.statistic, 0.0001,
+    assertEquals(result1.statistic as double, (-result2.statistic) as double, 0.0001,
                  'Reversed trend should have opposite Z-statistic')
 
     // p-values should be approximately equal
-    assertEquals(result1.pValue, result2.pValue, 0.0001,
+    assertEquals(result1.pValue as double, result2.pValue as double, 0.0001,
                  'Reversed trend should have same p-value')
   }
 
   @Test
   void testLargeNumbers() {
     // Test with larger sample sizes
-    int[] cases = [100, 200, 300]
-    int[] controls = [900, 800, 700]
+    List<Integer> cases = [100, 200, 300]
+    List<Integer> controls = [900, 800, 700]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -278,8 +278,8 @@ class CochranArmitagTest {
   @Test
   void testSingleCategory_ZeroCounts() {
     // Edge case: one category has zero counts
-    int[] cases = [0, 20, 30]
-    int[] controls = [100, 80, 70]
+    List<Integer> cases = [0, 20, 30]
+    List<Integer> controls = [100, 80, 70]
 
     def result = CochranArmitage.test(cases, controls)
 
@@ -289,15 +289,15 @@ class CochranArmitagTest {
 
   @Test
   void testDirection() {
-    int[] increasingCases = [10, 20, 30]
-    int[] controls = [90, 80, 70]
+    List<Integer> increasingCases = [10, 20, 30]
+    List<Integer> controls = [90, 80, 70]
 
     def result = CochranArmitage.test(increasingCases, controls)
 
     String eval = result.evaluate()
     assertTrue(eval.contains('increasing'), 'Should identify increasing trend')
 
-    int[] decreasingCases = [30, 20, 10]
+    List<Integer> decreasingCases = [30, 20, 10]
     def result2 = CochranArmitage.test(decreasingCases, controls)
 
     String eval2 = result2.evaluate()
