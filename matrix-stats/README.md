@@ -58,6 +58,9 @@ Maven:
 test-only dependency to validate the native implementations, so consumers do not need to declare it
 unless they use that library directly in their own code.
 
+The public linear algebra facade uses EJML internally via an `implementation` dependency. Consumers
+do not need to declare EJML unless they want to use EJML APIs directly in their own code.
+
 ## Correlation
 
 ```groovy
@@ -97,6 +100,54 @@ def model = new LinearRegression(x, y)
 assert -6.23971066 == model.getIntercept(8)
 assert 2.81388732 == model.getSlope(8)
 assert 30.34082454 == model.predict(13, 8)
+```
+
+## Linear Algebra
+
+`matrix-stats` exposes a public dense linear algebra facade in `se.alipsa.matrix.stats.linalg.Linalg`.
+The facade accepts `double[][]`, `Matrix`, and `Grid` inputs, performs computations in `double`
+precision, and returns:
+
+- `double[][]` for low-level matrix results
+- `Matrix` for matrix-shaped results from `Matrix` and `Grid` inputs
+- `double[]` for `solve(A, b)` and `eigenvalues(...)`
+- `SvdResult` for singular value decomposition
+
+Matrix-shaped computed outputs use synthetic column names (`c0`, `c1`, ...) because inverse and
+decomposition result spaces do not preserve the semantics of the original input column labels.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.linalg.Linalg
+
+double[] coefficients = Linalg.solve(
+    [
+        [4.0d, 7.0d],
+        [2.0d, 6.0d]
+    ] as double[][],
+    [1.0d, 0.0d]
+)
+assert [0.6d, -0.2d] == coefficients.toList()
+
+Matrix source = Matrix.builder()
+    .columnNames(['x', 'y'])
+    .rows([
+        [4.0, 7.0],
+        [2.0, 6.0]
+    ])
+    .types([Double, Double])
+    .build()
+
+Matrix inverse = Linalg.inverse(source)
+assert ['c0', 'c1'] == inverse.columnNames()
+assert Math.abs((inverse[0, 0] as double) - 0.6d) < 1e-9
+
+def svd = Linalg.svd([
+    [3.0d, 1.0d],
+    [1.0d, 3.0d],
+    [1.0d, 1.0d]
+] as double[][])
+assert svd.singularValues.length == 2
 ```
 
 ## Formula Models

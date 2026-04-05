@@ -603,6 +603,11 @@ When reviewing implementation plans or roadmap documents:
 - [ ] **Cross-reference plan items with actual changes** - Verify that every file/task listed in the implementation plan was actually modified. Check the PR diff against the plan to identify gaps (e.g., DesignMatrixBuilder listed for GroovyDoc updates but not touched).
 - [ ] **Verify sub-task traceability** - When parent tasks are marked complete but sub-tasks remain unchecked, verify whether: (1) sub-tasks were completed but not checked, (2) existing coverage was sufficient, or (3) the sub-tasks were skipped. Require explicit documentation of which case applies.
 - [ ] **Analyze test data changes** - When test data is modified (new rows, changed values), determine if it's: (1) new test coverage, (2) a bug fix to existing test data, or (3) unrelated noise. Bug fixes to test data should be called out in commit messages.
+- [ ] **Verify dependency scope** - When new dependencies are added, verify the Gradle scope is correct: `implementation` for runtime dependencies that shouldn't leak to consumers, `api` for types exposed in public API, `compileOnly` for compile-time only. Match the pattern of existing dependencies in the build file.
+- [ ] **Check for implementation leakage into API specs** - API specification sections should not reference implementation details (specific libraries, internal types). Keep API contracts abstract ("computations in double") separate from implementation choices ("use EJML DMatrixRMaj").
+- [ ] **Inventory existing capabilities vs new facade** - When creating a facade over existing code, compare what exists internally against what the facade will expose. Note gaps (existing capabilities not exposed) and justify omissions.
+- [ ] **Verify package naming rationale** - When introducing packages with similar names (e.g., `linear` and `linalg`), document the intentional separation or consider consolidation to avoid contributor confusion.
+- [ ] **Cross-reference interop tests with all callers** - When listing regression/interop tests, verify the complete set of callers that could be affected. Don't assume the listed tests cover all risk.
 
 ---
 
@@ -676,6 +681,11 @@ When other reviewers (Codex, Claude, human) find issues you missed, analyze why:
 | **Plan-to-implementation gap** | DesignMatrixBuilder listed for GroovyDoc but not touched | Didn't cross-reference plan items with actual PR changes | Verify every planned file/task appears in the diff |
 | **Sub-task traceability gap** | Parent tasks marked done but sub-tasks unchecked | Assumed parent completion implied sub-task completion | Verify sub-task status or document why skipped |
 | **Test data change analysis gap** | New test row was actually a bug fix to existing test | Didn't analyze if data changes were bug fixes vs new coverage | Analyze test data modifications for intent |
+| **Dependency scope gap** | EJML scope not specified (should be implementation) | Didn't consider Gradle dependency scope implications | Verify dependency scope against existing patterns |
+| **API-implementation leakage** | EJML types mentioned in API contract section | Mixed API design with implementation decisions | Keep API contracts abstract, implementation separate |
+| **Package naming confusion** | Both `linear` and `linalg` packages without rationale | Didn't question similar package names coexisting | Document intentional package separation or consolidate |
+| **Incomplete caller inventory** | Interop tests missed 4 of 6 MatrixAlgebra callers | Didn't verify complete set of affected components | Cross-reference all callers when listing interop tests |
+| **Facade coverage gap** | MatrixAlgebra has transpose/multiply but facade doesn't | Didn't inventory existing vs exposed capabilities | Compare internal capabilities against facade scope |
 
 ### Analysis Template
 
