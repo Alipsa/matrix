@@ -103,11 +103,12 @@ final class Linalg {
   }
 
   /**
-   * Compute the real eigenvalues of a square dense matrix.
+   * Compute the real eigenvalues of a square Matrix.
    * <p>
    * Symmetric matrices are always supported. General real matrices are supported when
    * their eigenvalues are real within the configured imaginary-part tolerance. Matrices
-   * Compute the real eigenvalues of a square Matrix.
+   * with genuinely complex eigenvalues are rejected because this facade does not expose
+   * complex-number results.
    *
    * @param matrix the matrix whose eigenvalues should be computed
    * @return the eigenvalues in descending order

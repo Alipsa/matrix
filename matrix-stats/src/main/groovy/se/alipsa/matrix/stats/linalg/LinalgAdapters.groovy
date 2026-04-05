@@ -83,6 +83,12 @@ final class LinalgAdapters {
       .build()
   }
 
+  /**
+   * Convert a dense numeric array into a {@code Grid<BigDecimal>}.
+   *
+   * @param values the dense numeric array
+   * @return a grid containing the supplied values
+   */
   static Grid<BigDecimal> toGrid(double[][] values) {
     int[] shape = validateRectangular(values, 'values')
     List<List<BigDecimal>> rows = []
@@ -96,6 +102,12 @@ final class LinalgAdapters {
     new Grid<BigDecimal>(rows, BigDecimal)
   }
 
+  /**
+   * Convert a dense numeric vector into {@code BigDecimal} values.
+   *
+   * @param values the dense numeric vector
+   * @return the converted numeric values
+   */
   static List<BigDecimal> toBigDecimalVector(double[] values) {
     if (values == null || values.length == 0) {
       throw new IllegalArgumentException('Values must contain at least one value')
