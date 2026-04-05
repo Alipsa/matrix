@@ -21,7 +21,7 @@ class KSquaredTest {
       2.2, 2.6, 2.85, 3.05, 3.25, 3.55, 3.85, 4.05
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(24, result.sampleSize, 'Sample size should be 24')
@@ -38,7 +38,7 @@ class KSquaredTest {
       9, 10, 12, 15, 20, 25, 30, 40
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.skewness > 0, 'Should detect positive skewness')
@@ -53,7 +53,7 @@ class KSquaredTest {
       9, 8, 8, 7, 6, 5, 3, 1
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.skewness < 0, 'Should detect negative skewness')
@@ -68,7 +68,7 @@ class KSquaredTest {
       0, 0, 0, 0, 0, 0, 15, 20
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.kurtosis > 3, 'Should detect heavy tails')
@@ -85,7 +85,7 @@ class KSquaredTest {
       17, 18, 19, 20, 21, 22, 23, 24
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.kurtosis < 3, 'Should detect light tails')
@@ -99,14 +99,14 @@ class KSquaredTest {
       2.3, 2.7, 2.9, 3.1, 3.3, 3.6, 3.9, 4.1
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result.zSkewness, 'Z-score for skewness should be calculated')
     assertNotNull(result.zKurtosis, 'Z-score for kurtosis should be calculated')
 
     // K² should equal sum of squared Z-scores
-    double expected = result.zSkewness * result.zSkewness + result.zKurtosis * result.zKurtosis
-    assertEquals(expected, result.statistic, 0.0001, 'K² should equal sum of Z²')
+    double expected = (result.zSkewness * result.zSkewness + result.zKurtosis * result.zKurtosis) as double
+    assertEquals(expected, result.statistic as double, 0.0001, 'K² should equal sum of Z²')
   }
 
   @Test
@@ -146,19 +146,19 @@ class KSquaredTest {
   void testValidation() {
     // Null data
     assertThrows(IllegalArgumentException) {
-      KSquared.test(null as double[])
+      KSquared.test(null as List<Double>)
     }
 
     // Too small sample
     double[] tooSmall = [1, 2, 3, 4, 5, 6, 7] as double[]
     assertThrows(IllegalArgumentException) {
-      KSquared.test(tooSmall)
+      KSquared.test(tooSmall.toList())
     }
 
     // Zero variance
     double[] constant = [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0] as double[]
     assertThrows(IllegalArgumentException) {
-      KSquared.test(constant)
+      KSquared.test(constant.toList())
     }
 
     // Null matrix
@@ -175,7 +175,7 @@ class KSquaredTest {
       2.3, 2.7, 2.9, 3.1, 3.3, 3.6, 3.9, 4.1
     ] as double[]
 
-    def normalResult = KSquared.test(normalData)
+    def normalResult = KSquared.test(normalData.toList())
     String normalInterp = normalResult.interpret()
 
     assertTrue(normalInterp.contains('Fail to reject H0'), 'Should not reject H0 for normal data')
@@ -187,7 +187,7 @@ class KSquaredTest {
       3, 4, 5, 7, 10, 15, 25, 50
     ] as double[]
 
-    def skewedResult = KSquared.test(skewedData)
+    def skewedResult = KSquared.test(skewedData.toList())
 
     // Skewed data should show departure from normality (check p-value is low)
     if (skewedResult.pValue < 0.05) {
@@ -208,7 +208,7 @@ class KSquaredTest {
       2.3, 2.7, 2.9, 3.1, 3.3, 3.6, 3.9, 4.1
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
     String evaluation = result.evaluate()
 
     assertNotNull(evaluation, 'Evaluation should not be null')
@@ -226,7 +226,7 @@ class KSquaredTest {
       2.3, 2.7, 2.9, 3.1, 3.3, 3.6, 3.9, 4.1
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
     String str = result
 
     assertTrue(str.contains('D\'Agostino'), 'Should contain test name')
@@ -247,7 +247,7 @@ class KSquaredTest {
     ]
 
     for (double[] data : testData) {
-      def result = KSquared.test(data)
+      def result = KSquared.test(data.toList())
 
       assertTrue(result.pValue >= 0, "p-value should be >= 0, got ${result.pValue}")
       assertTrue(result.pValue <= 1, "p-value should be <= 1, got ${result.pValue}")
@@ -262,7 +262,7 @@ class KSquaredTest {
       10, 15, 20, 25, 30, 40, 50, 60
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     String interp01 = result.interpret(0.01)
     String interp05 = result.interpret(0.05)
@@ -278,7 +278,7 @@ class KSquaredTest {
     // Test with minimum allowed sample size (8)
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Should handle minimum sample size')
     assertEquals(8, result.sampleSize, 'Sample size should be 8')
@@ -293,7 +293,7 @@ class KSquaredTest {
       data[i] = rnd.nextGaussian() * 2 + 5
     }
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Should handle large samples')
     assertEquals(100, result.sampleSize, 'Sample size should be 100')
@@ -308,10 +308,10 @@ class KSquaredTest {
       4, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertNotNull(result, 'Result should not be null')
-    assertTrue(Math.abs(result.skewness) < 0.5, 'Skewness should be near 0 for symmetric data')
+    assertTrue((result.skewness as BigDecimal).abs() < 0.5, 'Skewness should be near 0 for symmetric data')
   }
 
   @Test
@@ -322,7 +322,7 @@ class KSquaredTest {
       15, 20, 30, 40, 50, 60, 70, 80
     ] as double[]
 
-    def skewedResult = KSquared.test(skewed)
+    def skewedResult = KSquared.test(skewed.toList())
     if (skewedResult.pValue < 0.05) {
       String interp = skewedResult.interpret()
       assertTrue(interp.contains('skewness') || interp.contains('tail'),
@@ -339,7 +339,7 @@ class KSquaredTest {
       2.3, 2.7, 2.9, 3.1, 3.3, 3.6, 3.9, 4.1
     ] as double[]
 
-    def result = KSquared.test(data)
+    def result = KSquared.test(data.toList())
 
     assertTrue(result.kurtosis > 0, 'Kurtosis should be calculated')
     // For roughly normal data, kurtosis should be near 3

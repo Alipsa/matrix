@@ -34,8 +34,8 @@ class KolmogorovSmirnovTest {
     ApacheNormalDistribution apacheDistribution = new ApacheNormalDistribution(0.0d, 1.0d)
     double[] sample = data as double[]
 
-    assertEquals(apacheTest.kolmogorovSmirnovStatistic(apacheDistribution, sample), result.dStatistic, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(apacheDistribution, sample), result.pValue, ONE_SAMPLE_P_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovStatistic(apacheDistribution, sample), result.dStatistic as double, D_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(apacheDistribution, sample), result.pValue as double, ONE_SAMPLE_P_TOLERANCE)
   }
 
   @Test
@@ -48,8 +48,8 @@ class KolmogorovSmirnovTest {
     double[] first = sample1 as double[]
     double[] second = sample2 as double[]
 
-    assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue, TWO_SAMPLE_P_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic as double, D_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue as double, TWO_SAMPLE_P_TOLERANCE)
   }
 
   @Test
@@ -62,8 +62,8 @@ class KolmogorovSmirnovTest {
     double[] first = sample1 as double[]
     double[] second = sample2 as double[]
 
-    assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic, D_TOLERANCE)
-    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue, TWO_SAMPLE_P_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovStatistic(first, second), result.dStatistic as double, D_TOLERANCE)
+    assertEquals(apacheTest.kolmogorovSmirnovTest(first, second), result.pValue as double, TWO_SAMPLE_P_TOLERANCE)
   }
 
   @Test

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.distribution.ContinuousDistribution
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Kolmogorov-Smirnov (K-S) test is a nonparametric goodness-of-fit test that compares a sample
@@ -166,8 +167,8 @@ class KolmogorovSmirnov {
     double pValue = calculateOneSamplePValue(dStatistic, values.length)
 
     return new KSResult(
-      dStatistic: dStatistic,
-      pValue: pValue,
+      dStatistic: BigDecimal.valueOf(dStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: values.length,
       testType: testName
     )
@@ -195,22 +196,11 @@ class KolmogorovSmirnov {
     double pValue = calculateTwoSamplePValue(dStatistic, values1.length, values2.length)
 
     return new KSResult(
-      dStatistic: dStatistic,
-      pValue: pValue,
+      dStatistic: BigDecimal.valueOf(dStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: values1.length + values2.length,
       testType: "Two-Sample K-S"
     )
-  }
-
-  /**
-   * Performs a two-sample Kolmogorov-Smirnov test on double arrays.
-   *
-   * @param sample1 The first sample
-   * @param sample2 The second sample
-   * @return KSResult containing the D statistic and p-value
-   */
-  static KSResult twoSampleTest(double[] sample1, double[] sample2) {
-    return twoSampleTest(sample1.toList(), sample2.toList())
   }
 
   private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution) {
@@ -367,10 +357,10 @@ class KolmogorovSmirnov {
    */
   static class KSResult {
     /** The D test statistic (maximum distance between ECDFs) */
-    Double dStatistic
+    BigDecimal dStatistic
 
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The total sample size */
     Integer sampleSize
@@ -384,15 +374,15 @@ class KolmogorovSmirnov {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha)
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     /**
      * For normality tests, returns true if data appears normally distributed.
      */
-    boolean isNormal(double alpha = 0.05) {
-      return pValue >= alpha
+    boolean isNormal(Number alpha = 0.05) {
+      pValue >= NumericConversion.toAlpha(alpha)
     }
 
     @Override
