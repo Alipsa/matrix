@@ -43,11 +43,11 @@ elif [[ "$1" == "--all" || "$1" == "-a" ]]; then
 fi
 # ---------------------------------
 
-localRepo=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
-if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
-  echo "Removing local cache in $localRepo/se/alipsa/matrix"
-  rm -r "$localRepo/se/alipsa/matrix"
-fi
+#localRepo=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
+#if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
+#  echo "Removing local cache in $localRepo/se/alipsa/matrix"
+#  rm -r "$localRepo/se/alipsa/matrix"
+#fi
 
 #echo "Locally publish bom"
 #pushd matrix-bom
@@ -56,7 +56,7 @@ fi
 
 echo "Building and locally publishing matrix"
 # Force a clean rebuild so cross-module Groovy syntax/compile issues are not hidden by incremental outputs.
-./gradlew clean
+./gradlew clean || true
 ./gradlew spotlessApply build publishToMavenLocal
 
 #echo "Verify bom and install matrix-all"
