@@ -56,8 +56,8 @@ Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Gr
 ## Numeric types
 - Use Number in method parameters and use BigDecimal when returning numeric values
 - In the case that there is proven performance issue with this, create a small java utility that does the calculation in double and returns it as BigDecimal. The groovy code should be free of non-idiomatic groovy and use of double is a strong code smell.
-- Prefer `List<Number>` or `List<BigDecimal>` over `double[]`/`float[]` in public Groovy-facing APIs.
-- `double[]` and `double[][]` are acceptable for internal or low-level numeric computations where performance matters, for example interpolation and linear algebra but should be handled by java classes rather than groovy.
+- Prefer `List<Number>` or `List<BigDecimal>` over `double[]`/`float[]` in public Groovy-facing APIs. If generic type erasure is a problem, use Number[] or BigDecimal[] instead.
+- `double[]` and `double[][]` are acceptable for internal or low-level numeric computations where performance matters, for example interpolation and linear algebra but should be handled by java classes rather than groovy. In those cases, an idiomatic groovy alternative should exist alongside the java style construct.
 - Prefer `Grid<BigDecimal>` or `Grid<Number>` over `double[][]` in public Groovy-facing APIs.
 
 Examples
