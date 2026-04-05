@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.linalg
 
+import groovy.transform.CompileStatic
+
 import org.ejml.data.Complex_F64
 import org.ejml.simple.SimpleEVD
 import org.ejml.simple.SimpleMatrix
@@ -7,9 +9,6 @@ import org.ejml.simple.SimpleSVD
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
-
-import java.util.ArrayList
-import java.util.Collections
 
 /**
  * Public linear algebra facade for `matrix-stats`.
@@ -22,6 +21,7 @@ import java.util.Collections
  * `c1`, ...) because decompositions and inverse matrices do not preserve the semantic
  * meaning of the original input column labels.
  */
+@CompileStatic
 final class Linalg {
 
   private static final double SINGULARITY_TOLERANCE = 1e-12
@@ -52,6 +52,8 @@ final class Linalg {
    *
    * @param matrix the matrix to invert
    * @return the inverse matrix as a Matrix with synthetic column names
+   * @throws IllegalArgumentException if the matrix is null, empty, contains non-numeric values, or is not square
+   * @throws LinalgSingularMatrixException if the matrix is singular
    */
   static Matrix inverse(Matrix matrix) {
     LinalgAdapters.toMatrix(inverse(LinalgAdapters.toDoubleArray(matrix)))
@@ -62,6 +64,8 @@ final class Linalg {
    *
    * @param grid the grid to invert
    * @return the inverse matrix as a Matrix with synthetic column names
+   * @throws IllegalArgumentException if the grid is null, empty, ragged, contains non-numeric values, or is not square
+   * @throws LinalgSingularMatrixException if the grid is singular
    */
   static Matrix inverse(Grid<?> grid) {
     LinalgAdapters.toMatrix(inverse(LinalgAdapters.toDoubleArray(grid)))
@@ -85,6 +89,7 @@ final class Linalg {
    *
    * @param matrix the matrix whose determinant should be computed
    * @return the determinant
+   * @throws IllegalArgumentException if the matrix is null, empty, contains non-numeric values, or is not square
    */
   static double det(Matrix matrix) {
     det(LinalgAdapters.toDoubleArray(matrix))
@@ -95,6 +100,7 @@ final class Linalg {
    *
    * @param grid the grid whose determinant should be computed
    * @return the determinant
+   * @throws IllegalArgumentException if the grid is null, empty, ragged, contains non-numeric values, or is not square
    */
   static double det(Grid<?> grid) {
     det(LinalgAdapters.toDoubleArray(grid))
@@ -126,6 +132,8 @@ final class Linalg {
    * @param matrix the coefficient matrix
    * @param vector the right-hand-side vector
    * @return the solution vector
+   * @throws IllegalArgumentException if dimensions do not match or the inputs are invalid
+   * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(double[][] matrix, List<? extends Number> vector) {
     solve(matrix, LinalgAdapters.toDoubleArray(vector))
@@ -137,6 +145,8 @@ final class Linalg {
    * @param matrix the coefficient matrix
    * @param vector the right-hand-side vector
    * @return the solution vector
+   * @throws IllegalArgumentException if dimensions do not match or the inputs are invalid
+   * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(Matrix matrix, double[] vector) {
     solve(LinalgAdapters.toDoubleArray(matrix), vector)
@@ -148,6 +158,8 @@ final class Linalg {
    * @param matrix the coefficient matrix
    * @param vector the right-hand-side vector
    * @return the solution vector
+   * @throws IllegalArgumentException if dimensions do not match or the inputs are invalid
+   * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(Matrix matrix, List<? extends Number> vector) {
     solve(LinalgAdapters.toDoubleArray(matrix), vector)
@@ -159,6 +171,8 @@ final class Linalg {
    * @param grid the coefficient matrix
    * @param vector the right-hand-side vector
    * @return the solution vector
+   * @throws IllegalArgumentException if dimensions do not match or the inputs are invalid
+   * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(Grid<?> grid, double[] vector) {
     solve(LinalgAdapters.toDoubleArray(grid), vector)
@@ -170,6 +184,8 @@ final class Linalg {
    * @param grid the coefficient matrix
    * @param vector the right-hand-side vector
    * @return the solution vector
+   * @throws IllegalArgumentException if dimensions do not match or the inputs are invalid
+   * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(Grid<?> grid, List<? extends Number> vector) {
     solve(LinalgAdapters.toDoubleArray(grid), vector)
@@ -200,9 +216,8 @@ final class Linalg {
       }
       values << eigenvalue.getReal()
     }
-    List<Double> sorted = new ArrayList<>(values)
-    Collections.sort(sorted)
-    Collections.reverse(sorted)
+    List<Double> sorted = [*values] as List<Double>
+    sorted.sort { Double a, Double b -> b <=> a }
     double[] eigenvalues = new double[sorted.size()]
     for (int i = 0; i < sorted.size(); i++) {
       eigenvalues[i] = sorted[i]
@@ -215,6 +230,7 @@ final class Linalg {
    *
    * @param matrix the matrix whose eigenvalues should be computed
    * @return the eigenvalues in descending order
+   * @throws IllegalArgumentException if the matrix is invalid, not square, or has complex eigenvalues
    */
   static double[] eigenvalues(Matrix matrix) {
     eigenvalues(LinalgAdapters.toDoubleArray(matrix))
@@ -225,6 +241,7 @@ final class Linalg {
    *
    * @param grid the grid whose eigenvalues should be computed
    * @return the eigenvalues in descending order
+   * @throws IllegalArgumentException if the grid is invalid, not square, or has complex eigenvalues
    */
   static double[] eigenvalues(Grid<?> grid) {
     eigenvalues(LinalgAdapters.toDoubleArray(grid))
@@ -256,6 +273,7 @@ final class Linalg {
    *
    * @param matrix the matrix to decompose
    * @return the singular value decomposition result
+   * @throws IllegalArgumentException if the matrix is null, empty, or contains non-numeric values
    */
   static SvdResult svd(Matrix matrix) {
     svd(LinalgAdapters.toDoubleArray(matrix))
@@ -266,6 +284,7 @@ final class Linalg {
    *
    * @param grid the grid to decompose
    * @return the singular value decomposition result
+   * @throws IllegalArgumentException if the grid is null, empty, ragged, or contains non-numeric values
    */
   static SvdResult svd(Grid<?> grid) {
     svd(LinalgAdapters.toDoubleArray(grid))

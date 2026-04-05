@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.linalg
 
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import se.alipsa.matrix.core.Column
@@ -13,6 +14,7 @@ import se.alipsa.matrix.core.Matrix
  * {@code se.alipsa.matrix.stats.linear} package remains an internal implementation
  * package used by existing statistics code.
  */
+@CompileStatic
 @PackageScope
 final class LinalgAdapters {
 
@@ -155,7 +157,7 @@ final class LinalgAdapters {
    * @return the generated column names
    */
   static List<String> syntheticColumnNames(int columnCount) {
-    (0..<columnCount).collect { int index -> "${SYNTHETIC_COLUMN_PREFIX}${index}" }
+    (0..<columnCount).collect { int index -> SYNTHETIC_COLUMN_PREFIX + index }
   }
 
   private static double toFiniteDouble(Object value, String label) {

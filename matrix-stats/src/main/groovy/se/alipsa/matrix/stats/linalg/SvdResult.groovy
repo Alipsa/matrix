@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.linalg
 
+import groovy.transform.CompileStatic
+
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
@@ -10,6 +12,7 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * convenience accessors synthesize column names (`c0`, `c1`, ...) because the result
  * spaces no longer correspond directly to the original input column metadata.
  */
+@CompileStatic
 class SvdResult {
 
   final double[][] u

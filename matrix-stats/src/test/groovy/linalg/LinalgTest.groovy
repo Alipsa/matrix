@@ -169,9 +169,57 @@ class LinalgTest {
         [4.0d, 5.0d, 6.0d],
       ] as double[][])
     }
+    IllegalArgumentException eigenvalues = assertThrows(IllegalArgumentException) {
+      Linalg.eigenvalues([
+        [1.0d, 2.0d, 3.0d],
+        [4.0d, 5.0d, 6.0d],
+      ] as double[][])
+    }
 
     assertTrue(inverse.message.contains('square'))
     assertTrue(determinant.message.contains('square'))
+    assertTrue(eigenvalues.message.contains('square'))
+  }
+
+  @Test
+  void testRejectsNullFacadeInputs() {
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.inverse((Matrix) null)
+    }.message.contains('cannot be null'))
+
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.det((Grid) null)
+    }.message.contains('cannot be null'))
+
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.solve((Matrix) null, [1.0d] as double[])
+    }.message.contains('cannot be null'))
+
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.solve([[1.0d]] as double[][], (List<Number>) null)
+    }.message.contains('cannot be null'))
+
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.eigenvalues((Grid) null)
+    }.message.contains('cannot be null'))
+
+    assertTrue(assertThrows(IllegalArgumentException) {
+      Linalg.svd((Matrix) null)
+    }.message.contains('cannot be null'))
+  }
+
+  @Test
+  void testRejectsRaggedDenseArrayInput() {
+    double[][] ragged = [
+      [1.0d, 2.0d] as double[],
+      [3.0d] as double[],
+    ] as double[][]
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Linalg.svd(ragged)
+    }
+
+    assertTrue(exception.message.contains('same length'))
   }
 
   @Test
