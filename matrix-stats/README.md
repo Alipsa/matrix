@@ -169,7 +169,7 @@ assert svd.singularValues.length == 2
 The current v2.4.0 scope is intentionally narrow:
 
 - linear interpolation only
-- `double[][]`/`double[]`-style floating-point numeric contract
+- idiomatic Groovy numeric inputs with `BigDecimal` scalar results
 - explicit `(x, y, targetX)` interpolation as the primitive operation
 - convenience overloads for evenly spaced numeric series and Matrix/Grid-backed columns
 - no extrapolation: target positions outside the supported domain are rejected
@@ -181,13 +181,13 @@ Public spline interpolation is not part of the v2.4.0 API. The existing spline l
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.interpolation.Interpolation
 
-assert 5.0d == Interpolation.linear(
-    [0.0d, 2.0d, 4.0d] as double[],
-    [0.0d, 10.0d, 20.0d] as double[],
-    1.0d
+assert 5.0 == Interpolation.linear(
+    [0.0, 2.0, 4.0],
+    [0.0, 10.0, 20.0],
+    1.0
 )
 
-assert 30.0d == Interpolation.linear([10.0d, 20.0d, 40.0d] as double[], 1.5d)
+assert 30.0 == Interpolation.linear([10.0, 20.0, 40.0], 1.5)
 
 Matrix points = Matrix.builder()
     .columnNames(['time', 'value'])
@@ -199,7 +199,7 @@ Matrix points = Matrix.builder()
     .types([Double, Double])
     .build()
 
-assert 9.0d == Interpolation.linear(points, 'time', 'value', 3.0d)
+assert 9.0 == Interpolation.linear(points, 'time', 'value', 3.0)
 ```
 
 ## Formula Models

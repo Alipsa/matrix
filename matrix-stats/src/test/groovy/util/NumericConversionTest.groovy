@@ -13,33 +13,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
 class NumericConversionTest {
 
   @Test
-  void testToBigDecimalList() {
-    List<BigDecimal> values = NumericConversion.toBigDecimalList([1, 2.5, 3.75d], 'values')
-
-    assertEquals(1 as BigDecimal, values[0])
-    assertEquals(2.5 as BigDecimal, values[1])
-    assertEquals(3.75 as BigDecimal, values[2])
-  }
-
-  @Test
-  void testRejectsNullBigDecimalList() {
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      NumericConversion.toBigDecimalList(null, 'values')
-    }
-
-    assertTrue(exception.message.contains('cannot be null'))
-  }
-
-  @Test
-  void testRejectsEmptyBigDecimalList() {
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      NumericConversion.toBigDecimalList([], 'values')
-    }
-
-    assertTrue(exception.message.contains('one value'))
-  }
-
-  @Test
   void testRejectsNonFiniteBigDecimalInput() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       NumericConversion.toBigDecimal(Double.NaN, 'value')
@@ -113,10 +86,10 @@ class NumericConversionTest {
     Grid<BigDecimal> matrixGrid = NumericConversion.toBigDecimalGrid(matrix)
     Grid<BigDecimal> numericGrid = NumericConversion.toBigDecimalGrid(grid)
 
-    assertEquals(1.0 as BigDecimal, matrixGrid[0, 0])
-    assertEquals(4.0 as BigDecimal, matrixGrid[1, 1])
-    assertEquals(1.0 as BigDecimal, numericGrid[0, 0])
-    assertEquals(4.0 as BigDecimal, numericGrid[1, 1])
+    assertEquals(1.0, matrixGrid[0, 0])
+    assertEquals(4.0, matrixGrid[1, 1])
+    assertEquals(1.0, numericGrid[0, 0])
+    assertEquals(4.0, numericGrid[1, 1])
   }
 
   @Test

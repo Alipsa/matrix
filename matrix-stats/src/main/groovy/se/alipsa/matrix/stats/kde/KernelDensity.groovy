@@ -2,8 +2,8 @@ package se.alipsa.matrix.stats.kde
 
 import groovy.transform.CompileStatic
 
-import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.util.NumericConversion
 
 import java.math.RoundingMode
 
@@ -79,7 +79,7 @@ import java.math.RoundingMode
  * println kde.summary()  // Print summary statistics
  *
  * // Query density at specific point
- * double density = kde.density(2.5)
+ * BigDecimal density = kde.density(2.5)
  * println "Density at 2.5: ${density}"
  *
  * // Get results as Matrix for plotting
@@ -185,28 +185,19 @@ class KernelDensity {
   final int n
 
   /** Bandwidth adjustment multiplier */
-  final double adjust
+  final BigDecimal adjust
 
   /** Whether to trim density to the data range */
   final boolean trim
 
-  /** The computed bandwidth */
-  final double bandwidth
-
-  /** The evaluation points (x values) */
-  final double[] x
-
-  /** The density values at each evaluation point */
-  final double[] density
-
   /** The original data (sorted) */
   private final double[] data
 
-  /** Minimum data value */
-  final double dataMin
-
-  /** Maximum data value */
-  final double dataMax
+  private final double bandwidthValue
+  private final double[] xValues
+  private final double[] densityValues
+  private final double dataMinValue
+  private final double dataMaxValue
 
   /**
    * Create a kernel density estimate from a list of numbers using default settings.
@@ -231,23 +222,22 @@ class KernelDensity {
    *        - to: custom range end
    */
   KernelDensity(List<? extends Number> values, Map params) {
-    // Filter nulls and convert to double array
-    List<Double> filtered = []
+    List<BigDecimal> filtered = []
     for (Number v : values) {
       if (v != null) {
-        filtered.add(v.doubleValue())
+        filtered << NumericConversion.toBigDecimal(v, 'value')
       }
     }
 
     if (filtered.size() < 2) {
-      throw new IllegalArgumentException("KernelDensity requires at least 2 non-null data points")
+      throw new IllegalArgumentException('KernelDensity requires at least 2 non-null data points')
     }
 
-    this.data = ListConverter.toDoubleArray(filtered)
+    this.data = NumericConversion.toDoubleArray(filtered, 'values')
     Arrays.sort(this.data)
 
-    this.dataMin = this.data[0]
-    this.dataMax = this.data[this.data.length - 1]
+    this.dataMinValue = this.data[0]
+    this.dataMaxValue = this.data[-1]
 
     // Parse kernel parameter
     Object kernelParam = params['kernel']
@@ -261,25 +251,25 @@ class KernelDensity {
 
     // Parse other parameters with defaults
     this.n = params['n'] != null ? ((Number) params['n']).intValue() : 512
-    this.adjust = params['adjust'] != null ? ((Number) params['adjust']).doubleValue() : 1.0d
+    this.adjust = params['adjust'] != null ? NumericConversion.toBigDecimal(params['adjust'], 'adjust') : 1.0
     this.trim = params['trim'] != null ? (Boolean) params['trim'] : false
 
     // Compute bandwidth
     if (params['bandwidth'] != null) {
-      this.bandwidth = ((Number) params['bandwidth']).doubleValue() * this.adjust
+      this.bandwidthValue = (NumericConversion.toBigDecimal(params['bandwidth'], 'bandwidth') * this.adjust) as double
     } else {
-      this.bandwidth = BandwidthSelector.silverman(this.data) * this.adjust
+      this.bandwidthValue = (BandwidthSelector.silvermanValue(this.data) * this.adjust) as double
     }
 
     // Determine evaluation range
-    double range = this.dataMax - this.dataMin
+    double range = this.dataMaxValue - this.dataMinValue
     double extension = this.trim ? 0.0 : range * 0.1
-    double evalMin = params['from'] != null ? ((Number) params['from']).doubleValue() : (this.dataMin - extension)
-    double evalMax = params['to'] != null ? ((Number) params['to']).doubleValue() : (this.dataMax + extension)
+    double evalMin = params['from'] != null ? NumericConversion.toFiniteDouble(params['from'], 'from') : (this.dataMinValue - extension)
+    double evalMax = params['to'] != null ? NumericConversion.toFiniteDouble(params['to'], 'to') : (this.dataMaxValue + extension)
 
     // Compute density on the grid
-    this.x = new double[this.n]
-    this.density = new double[this.n]
+    this.xValues = new double[this.n]
+    this.densityValues = new double[this.n]
 
     computeDensity(evalMin, evalMax)
   }
@@ -312,8 +302,8 @@ class KernelDensity {
     double step = (evalMax - evalMin) / (this.n - 1)
 
     for (int i = 0; i < this.n; i++) {
-      this.x[i] = evalMin + i * step
-      this.density[i] = computeDensityAt(this.x[i])
+      this.xValues[i] = evalMin + i * step
+      this.densityValues[i] = computeDensityAt(this.xValues[i])
     }
   }
 
@@ -323,10 +313,10 @@ class KernelDensity {
   private double computeDensityAt(double point) {
     double sum = 0.0
     for (double xi : this.data) {
-      double u = (point - xi) / this.bandwidth
-      sum += this.kernel.evaluate(u)
+      double u = (point - xi) / this.bandwidthValue
+      sum += this.kernel.evaluateValue(u)
     }
-    return sum / (this.data.length * this.bandwidth)
+    return sum / (this.data.length * this.bandwidthValue)
   }
 
   /**
@@ -335,8 +325,8 @@ class KernelDensity {
    * @param point the point at which to estimate density
    * @return the estimated density at that point
    */
-  double density(Number point) {
-    return computeDensityAt(point.doubleValue())
+  BigDecimal density(Number point) {
+    BigDecimal.valueOf(computeDensityAt(NumericConversion.toFiniteDouble(point, 'point')))
   }
 
   /**
@@ -345,8 +335,8 @@ class KernelDensity {
    * @param points the points at which to estimate density
    * @return list of density estimates
    */
-  List<Double> density(List<? extends Number> points) {
-    return points.collect { Number point -> computeDensityAt(point.doubleValue()) }
+  List<BigDecimal> density(List<? extends Number> points) {
+    points.collect { Number point -> density(point) }
   }
 
   /**
@@ -354,8 +344,8 @@ class KernelDensity {
    *
    * @return the bandwidth used for density estimation
    */
-  double getBandwidth() {
-    return bandwidth
+  BigDecimal getBandwidth() {
+    BigDecimal.valueOf(bandwidthValue)
   }
 
   /**
@@ -365,25 +355,43 @@ class KernelDensity {
    * @return the rounded bandwidth
    */
   BigDecimal getBandwidth(int decimals) {
-    return BigDecimal.valueOf(bandwidth).setScale(decimals, RoundingMode.HALF_EVEN)
+    bandwidth.setScale(decimals, RoundingMode.HALF_EVEN)
   }
 
   /**
    * Get the evaluation points (x values).
    *
-   * @return copy of the evaluation points array
+   * @return copy of the evaluation points
    */
-  double[] getX() {
-    return Arrays.copyOf(x, x.length)
+  List<BigDecimal> getX() {
+    toBigDecimalList(xValues)
   }
 
   /**
    * Get the density values.
    *
-   * @return copy of the density values array
+   * @return copy of the density values
    */
-  double[] getDensity() {
-    return Arrays.copyOf(density, density.length)
+  List<BigDecimal> getDensity() {
+    toBigDecimalList(densityValues)
+  }
+
+  /**
+   * Get the minimum data value.
+   *
+   * @return the minimum data value
+   */
+  BigDecimal getDataMin() {
+    BigDecimal.valueOf(dataMinValue)
+  }
+
+  /**
+   * Get the maximum data value.
+   *
+   * @return the maximum data value
+   */
+  BigDecimal getDataMax() {
+    BigDecimal.valueOf(dataMaxValue)
   }
 
   /**
@@ -401,8 +409,8 @@ class KernelDensity {
    * @return a Matrix containing the density estimate
    */
   Matrix toMatrix() {
-    List<Double> xList = (0..<n).collect { int i -> x[i] }
-    List<Double> densityList = (0..<n).collect { int i -> density[i] }
+    List<BigDecimal> xList = x
+    List<BigDecimal> densityList = density
 
     return Matrix.builder()
         .matrixName('KernelDensity')
@@ -410,7 +418,7 @@ class KernelDensity {
             'x': xList,
             'density': densityList
         ])
-        .types(Double, Double)
+        .types(BigDecimal, BigDecimal)
         .build()
   }
 
@@ -420,8 +428,13 @@ class KernelDensity {
    *
    * @return list of [x, density] pairs
    */
-  List<double[]> toPointList() {
-    return (0..<n).collect { int i -> [x[i], density[i]] as double[] }
+  List<List<BigDecimal>> toPointList() {
+    List<List<BigDecimal>> points = []
+    for (int i = 0; i < n; i++) {
+      List<BigDecimal> point = [BigDecimal.valueOf(xValues[i]), BigDecimal.valueOf(densityValues[i])]
+      points << point
+    }
+    points
   }
 
   @Override
@@ -438,9 +451,9 @@ class KernelDensity {
     double maxDensity = 0.0
     double maxX = 0.0
     for (int i = 0; i < n; i++) {
-      if (density[i] > maxDensity) {
-        maxDensity = density[i]
-        maxX = x[i]
+      if (densityValues[i] > maxDensity) {
+        maxDensity = densityValues[i]
+        maxX = xValues[i]
       }
     }
 
@@ -451,8 +464,17 @@ Kernel:      ${kernel}
 Bandwidth:   ${getBandwidth(6)}
 Data points: ${data.length}
 Eval points: ${n}
-Data range:  [${BigDecimal.valueOf(dataMin).setScale(4, RoundingMode.HALF_EVEN)}, ${BigDecimal.valueOf(dataMax).setScale(4, RoundingMode.HALF_EVEN)}]
+Data range:  [${BigDecimal.valueOf(dataMinValue).setScale(4, RoundingMode.HALF_EVEN)}, ${BigDecimal.valueOf(dataMaxValue).setScale(4, RoundingMode.HALF_EVEN)}]
 Peak:        x = ${BigDecimal.valueOf(maxX).setScale(4, RoundingMode.HALF_EVEN)}, density = ${BigDecimal.valueOf(maxDensity).setScale(6, RoundingMode.HALF_EVEN)}
 """.stripIndent()
   }
+
+  private static List<BigDecimal> toBigDecimalList(double[] values) {
+    List<BigDecimal> converted = []
+    for (double value : values) {
+      converted << BigDecimal.valueOf(value)
+    }
+    converted
+  }
+
 }

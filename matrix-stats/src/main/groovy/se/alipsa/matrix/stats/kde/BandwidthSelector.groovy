@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.kde
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.interpolation.Interpolation
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Bandwidth selection methods for kernel density estimation.
@@ -25,17 +26,14 @@ class BandwidthSelector {
    *
    * Reference: Silverman, B. W. (1986). Density Estimation for Statistics and Data Analysis.
    *
-   * @param data sorted array of data points
+   * @param data numeric data points
    * @return the estimated optimal bandwidth
    */
-  static double silverman(double[] data) {
-    if (data == null || data.length < 2) {
-      throw new IllegalArgumentException("Data must contain at least 2 values")
-    }
-
-    int n = data.length
-    double std = computeStd(data)
-    double iqr = computeIQR(data)
+  static BigDecimal silverman(List<? extends Number> data) {
+    double[] sorted = validateAndSort(data)
+    int n = sorted.length
+    double std = computeStd(sorted)
+    double iqr = computeIQR(sorted)
 
     // Use robust scale estimate: min of std and IQR/1.34
     double scale = Math.min(std, iqr / 1.34)
@@ -45,7 +43,7 @@ class BandwidthSelector {
       scale = std > 0 ? std : 1.0d
     }
 
-    return 0.9 * scale * Math.pow(n, -0.2)
+    BigDecimal.valueOf(0.9 * scale * Math.pow(n, -0.2))
   }
 
   /**
@@ -55,23 +53,30 @@ class BandwidthSelector {
    *
    * Reference: Scott, D. W. (1992). Multivariate Density Estimation.
    *
-   * @param data sorted array of data points
+   * @param data numeric data points
    * @return the estimated optimal bandwidth
    */
-  static double scott(double[] data) {
-    if (data == null || data.length < 2) {
-      throw new IllegalArgumentException("Data must contain at least 2 values")
-    }
-
-    int n = data.length
-    double std = computeStd(data)
+  static BigDecimal scott(List<? extends Number> data) {
+    double[] sorted = validateAndSort(data)
+    int n = sorted.length
+    double std = computeStd(sorted)
 
     // Handle edge case where std is 0
     if (std <= 0) {
       std = 1.0
     }
 
-    return 3.49 * std * Math.pow(n, -1.0 / 3.0)
+    BigDecimal.valueOf(3.49 * std * Math.pow(n, -1.0 / 3.0))
+  }
+
+  static double silvermanValue(double[] data) {
+    validateDenseData(data)
+    silverman(data.collect { double value -> value } as List<Double>) as double
+  }
+
+  static double scottValue(double[] data) {
+    validateDenseData(data)
+    scott(data.collect { double value -> value } as List<Double>) as double
   }
 
   /**
@@ -120,6 +125,20 @@ class BandwidthSelector {
    * @return the interpolated percentile value
    */
   private static double percentile(double[] sortedData, double p) {
-    Interpolation.linear(sortedData, p * (sortedData.length - 1))
+    Interpolation.linear(sortedData.collect { double value -> value } as List<Double>, p * (sortedData.length - 1)) as double
   }
+
+  private static double[] validateAndSort(List<? extends Number> data) {
+    double[] values = NumericConversion.toDoubleArray(data, 'data')
+    validateDenseData(values)
+    Arrays.sort(values)
+    values
+  }
+
+  private static void validateDenseData(double[] data) {
+    if (data == null || data.length < 2) {
+      throw new IllegalArgumentException('Data must contain at least 2 values')
+    }
+  }
+
 }
