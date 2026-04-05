@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.linalg
 
-import groovy.transform.CompileStatic
-
 import org.ejml.data.Complex_F64
 import org.ejml.simple.SimpleEVD
 import org.ejml.simple.SimpleMatrix
@@ -21,7 +19,6 @@ import se.alipsa.matrix.core.Matrix
  * `c1`, ...) because decompositions and inverse matrices do not preserve the semantic
  * meaning of the original input column labels.
  */
-@CompileStatic
 final class Linalg {
 
   private static final double SINGULARITY_TOLERANCE = 1e-12
@@ -44,7 +41,7 @@ final class Linalg {
 
     SimpleMatrix dense = dense(matrix)
     requireNonSingular(dense, 'Matrix')
-    toDoubleArray(dense.invert())
+    LinalgAdapters.toDoubleArray(dense.invert())
   }
 
   /**
@@ -265,7 +262,7 @@ final class Linalg {
     for (int i = 0; i < singularValues.length; i++) {
       singularValues[i] = w.get(i, i)
     }
-    new SvdResult(toDoubleArray(u), toDoubleArray(vt), singularValues)
+    new SvdResult(LinalgAdapters.toDoubleArray(u), LinalgAdapters.toDoubleArray(vt), singularValues)
   }
 
   /**
@@ -321,16 +318,6 @@ final class Linalg {
       copy[i] = vector[i]
     }
     copy
-  }
-
-  private static double[][] toDoubleArray(SimpleMatrix matrix) {
-    double[][] values = new double[matrix.numRows()][matrix.numCols()]
-    for (int row = 0; row < matrix.numRows(); row++) {
-      for (int col = 0; col < matrix.numCols(); col++) {
-        values[row][col] = matrix.get(row, col)
-      }
-    }
-    values
   }
 
   private static double[] toVector(SimpleMatrix matrix) {

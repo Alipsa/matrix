@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.linalg
 
-import groovy.transform.CompileStatic
-
 import org.ejml.simple.SimpleMatrix
 
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,6 @@ import se.alipsa.matrix.core.Matrix
  * convenience accessors synthesize column names (`c0`, `c1`, ...) because the result
  * spaces no longer correspond directly to the original input column metadata.
  */
-@CompileStatic
 class SvdResult {
 
   final double[][] u
@@ -46,7 +43,7 @@ class SvdResult {
    * @return the reconstructed dense matrix
    */
   double[][] reconstruct() {
-    toDoubleArray(new SimpleMatrix(u).mult(new SimpleMatrix(sigma())).mult(new SimpleMatrix(vt)))
+    LinalgAdapters.toDoubleArray(new SimpleMatrix(u).mult(new SimpleMatrix(sigma())).mult(new SimpleMatrix(vt)))
   }
 
   /**
@@ -91,15 +88,5 @@ class SvdResult {
       copy[i] = values[i]
     }
     copy
-  }
-
-  private static double[][] toDoubleArray(SimpleMatrix matrix) {
-    double[][] values = new double[matrix.numRows()][matrix.numCols()]
-    for (int row = 0; row < matrix.numRows(); row++) {
-      for (int col = 0; col < matrix.numCols(); col++) {
-        values[row][col] = matrix.get(row, col)
-      }
-    }
-    values
   }
 }

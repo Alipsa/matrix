@@ -1,7 +1,8 @@
 package se.alipsa.matrix.stats.linalg
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+
+import org.ejml.simple.SimpleMatrix
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
@@ -14,7 +15,6 @@ import se.alipsa.matrix.core.Matrix
  * {@code se.alipsa.matrix.stats.linear} package remains an internal implementation
  * package used by existing statistics code.
  */
-@CompileStatic
 @PackageScope
 final class LinalgAdapters {
 
@@ -96,6 +96,22 @@ final class LinalgAdapters {
     double[] values = new double[vector.size()]
     for (int i = 0; i < vector.size(); i++) {
       values[i] = toFiniteDouble(vector[i], "${label} value at index ${i}")
+    }
+    values
+  }
+
+  /**
+   * Convert an EJML matrix into a dense {@code double[][]} array.
+   *
+   * @param matrix the source EJML matrix
+   * @return a dense numeric array with the same shape
+   */
+  static double[][] toDoubleArray(SimpleMatrix matrix) {
+    double[][] values = new double[matrix.numRows()][matrix.numCols()]
+    for (int row = 0; row < matrix.numRows(); row++) {
+      for (int col = 0; col < matrix.numCols(); col++) {
+        values[row][col] = matrix.get(row, col)
+      }
     }
     values
   }
