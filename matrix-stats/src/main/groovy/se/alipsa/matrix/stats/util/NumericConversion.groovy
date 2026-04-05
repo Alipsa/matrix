@@ -127,6 +127,22 @@ final class NumericConversion {
   }
 
   /**
+   * Convert a significance level to {@code BigDecimal} and validate that it lies in {@code (0, 1)}.
+   *
+   * @param value the source significance level
+   * @param label the label used in validation messages
+   * @return the validated significance level
+   * @since 2.4.0
+   */
+  static BigDecimal toAlpha(Object value, String label = 'alpha') {
+    BigDecimal alpha = toBigDecimal(value, label)
+    if (alpha <= 0 || alpha >= 1) {
+      throw new IllegalArgumentException("${label.capitalize()} must be between 0 and 1, got ${alpha}")
+    }
+    alpha
+  }
+
+  /**
    * Extract a numeric Matrix column as {@code BigDecimal} values.
    *
    * @param matrix the source matrix

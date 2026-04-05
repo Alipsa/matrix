@@ -31,6 +31,21 @@ class NumericConversionTest {
   }
 
   @Test
+  void testToAlphaValidation() {
+    assertEquals(0.05, NumericConversion.toAlpha(0.05))
+
+    IllegalArgumentException low = assertThrows(IllegalArgumentException) {
+      NumericConversion.toAlpha(0.0)
+    }
+    IllegalArgumentException high = assertThrows(IllegalArgumentException) {
+      NumericConversion.toAlpha(1.0)
+    }
+
+    assertTrue(low.message.contains('between 0 and 1'))
+    assertTrue(high.message.contains('between 0 and 1'))
+  }
+
+  @Test
   void testToDoubleArrayForMatrixAndGridColumns() {
     Matrix matrix = Matrix.builder()
       .columnNames(['x', 'y'])

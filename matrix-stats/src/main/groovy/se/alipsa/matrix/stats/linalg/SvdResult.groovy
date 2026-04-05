@@ -3,21 +3,29 @@ package se.alipsa.matrix.stats.linalg
 import org.ejml.simple.SimpleMatrix
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Result carrier for singular value decomposition.
  * <p>
  * The decomposition uses the standard layout {@code A = U * Sigma * Vt}. Matrix-shaped
- * convenience accessors synthesize column names (`c0`, `c1`, ...) because the result
- * spaces no longer correspond directly to the original input column metadata.
+ * components use synthetic column names (`c0`, `c1`, ...) because the result spaces no
+ * longer correspond directly to the original input column metadata.
  */
 class SvdResult {
 
-  final double[][] u
-  final double[][] vt
-  final double[] singularValues
+  final Matrix u
+  final Matrix vt
+  final List<BigDecimal> singularValues
 
-  SvdResult(double[][] u, double[][] vt, double[] singularValues) {
+  /**
+   * Create a singular value decomposition result with idiomatic Groovy-facing components.
+   *
+   * @param u the left singular vectors
+   * @param vt the transposed right singular vectors
+   * @param singularValues the singular values on the Sigma diagonal
+   */
+  SvdResult(Matrix u, Matrix vt, List<? extends Number> singularValues) {
     this.u = copyMatrix(u, 'u')
     this.vt = copyMatrix(vt, 'vt')
     this.singularValues = copyVector(singularValues, 'singularValues')
@@ -28,65 +36,65 @@ class SvdResult {
    *
    * @return the Sigma matrix with singular values on the diagonal
    */
-  double[][] sigma() {
-    double[][] sigma = new double[u.length][vt[0].length]
-    int diagonalSize = Math.min(Math.min(u.length, vt[0].length), singularValues.length)
-    for (int i = 0; i < diagonalSize; i++) {
-      sigma[i][i] = singularValues[i]
+  Matrix sigma() {
+    int rows = u.rowCount()
+    int columns = vt.columnCount()
+    List<List<BigDecimal>> matrixRows = []
+    for (int row = 0; row < rows; row++) {
+      List<BigDecimal> currentRow = []
+      for (int col = 0; col < columns; col++) {
+        currentRow << (row == col && row < singularValues.size() ? singularValues[row] : 0.0)
+      }
+      matrixRows << currentRow
     }
-    sigma
+    Matrix.builder()
+      .columnNames(LinalgAdapters.syntheticColumnNames(columns))
+      .rows(matrixRows)
+      .types(([BigDecimal] * columns) as List<Class>)
+      .build()
   }
 
   /**
    * Reconstruct the original matrix using {@code U * Sigma * Vt}.
    *
-   * @return the reconstructed dense matrix
+   * @return the reconstructed matrix with synthetic column names
    */
-  double[][] reconstruct() {
-    LinalgAdapters.toDoubleArray(new SimpleMatrix(u).mult(new SimpleMatrix(sigma())).mult(new SimpleMatrix(vt)))
+  Matrix reconstruct() {
+    SimpleMatrix denseU = new SimpleMatrix(LinalgAdapters.toDoubleArray(u))
+    SimpleMatrix denseSigma = new SimpleMatrix(LinalgAdapters.toDoubleArray(sigma()))
+    SimpleMatrix denseVt = new SimpleMatrix(LinalgAdapters.toDoubleArray(vt))
+    LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(denseU.mult(denseSigma).mult(denseVt)))
   }
 
   /**
    * @return {@code U} as a Matrix with synthetic column names
    */
   Matrix uMatrix() {
-    LinalgAdapters.toMatrix(u)
+    u
   }
 
   /**
    * @return {@code Vt} as a Matrix with synthetic column names
    */
   Matrix vtMatrix() {
-    LinalgAdapters.toMatrix(vt)
+    vt
   }
 
   /**
    * @return {@code Sigma} as a Matrix with synthetic column names
    */
   Matrix sigmaMatrix() {
-    LinalgAdapters.toMatrix(sigma())
+    sigma()
   }
 
-  private static double[][] copyMatrix(double[][] matrix, String label) {
-    int[] shape = LinalgAdapters.validateRectangular(matrix, label)
-    double[][] copy = new double[shape[0]][shape[1]]
-    for (int row = 0; row < shape[0]; row++) {
-      System.arraycopy(matrix[row], 0, copy[row], 0, shape[1])
+  private static Matrix copyMatrix(Matrix matrix, String label) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
     }
-    copy
+    LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(matrix))
   }
 
-  private static double[] copyVector(double[] values, String label) {
-    if (values == null || values.length == 0) {
-      throw new IllegalArgumentException("${label.capitalize()} must contain at least one value")
-    }
-    double[] copy = new double[values.length]
-    for (int i = 0; i < values.length; i++) {
-      if (!Double.isFinite(values[i])) {
-        throw new IllegalArgumentException("${label.capitalize()} must contain only finite values")
-      }
-      copy[i] = values[i]
-    }
-    copy
+  private static List<BigDecimal> copyVector(List<? extends Number> values, String label) {
+    LinalgAdapters.toBigDecimalVector(NumericConversion.toDoubleArray(values, label)).asImmutable() as List<BigDecimal>
   }
 }

@@ -132,8 +132,8 @@ class CramerVonMisesTest {
     def result05 = CramerVonMises.testNormality(data, 0.05)
     def result01 = CramerVonMises.testNormality(data, 0.01)
 
-    assertEquals(0.05, result05.alpha, TOLERANCE, 'Alpha should be 0.05')
-    assertEquals(0.01, result01.alpha, TOLERANCE, 'Alpha should be 0.01')
+    assertEquals(0.05, result05.alpha as double, TOLERANCE, 'Alpha should be 0.05')
+    assertEquals(0.01, result01.alpha as double, TOLERANCE, 'Alpha should be 0.01')
 
     // Critical values should be different
     assertTrue(result01.criticalValue > result05.criticalValue,
@@ -214,9 +214,9 @@ class CramerVonMisesTest {
 
     def result = CramerVonMises.testNormality(data)
 
-    assertEquals(3.0, result.mean, TOLERANCE, 'Mean should be 3.0')
+    assertEquals(3.0, result.mean as double, TOLERANCE, 'Mean should be 3.0')
     // Sample std dev = sqrt(2.5) ≈ 1.581
-    assertEquals(1.581, result.stdDev, 0.01, 'Std dev should be approximately 1.581')
+    assertEquals(1.581, result.stdDev as double, 0.01, 'Std dev should be approximately 1.581')
   }
 
   @Test

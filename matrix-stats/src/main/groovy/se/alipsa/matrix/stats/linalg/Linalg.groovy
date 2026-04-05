@@ -15,7 +15,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * This API accepts idiomatic Groovy-facing numeric inputs such as {@link Matrix},
  * {@link Grid}, and numeric lists. Matrix-heavy computation still runs in floating-point
  * {@code double} precision internally through EJML, but public scalar and vector results
- * are exposed as {@code BigDecimal} and {@code List<BigDecimal>}.
+ * are exposed as {@code BigDecimal} and {@code List<BigDecimal>}. Decomposition results
+ * are exposed as {@link Matrix} components plus {@code List<BigDecimal>} singular values.
  * <p>
  * Matrix-shaped results returned as {@link Matrix} use synthetic column names (`c0`,
  * `c1`, ...) because decompositions and inverse matrices do not preserve the semantic
@@ -147,7 +148,11 @@ final class Linalg {
     for (int i = 0; i < singularValues.length; i++) {
       singularValues[i] = w.get(i, i)
     }
-    new SvdResult(LinalgAdapters.toDoubleArray(u), LinalgAdapters.toDoubleArray(vt), singularValues)
+    new SvdResult(
+      LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(u)),
+      LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(vt)),
+      LinalgAdapters.toBigDecimalVector(singularValues)
+    )
   }
 
   /**

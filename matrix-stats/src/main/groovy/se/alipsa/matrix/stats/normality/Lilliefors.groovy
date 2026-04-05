@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.normality
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Lilliefors test is a normality test based on the Kolmogorov–Smirnov test.
@@ -31,8 +32,9 @@ class Lilliefors {
    * @return LillieforsResult containing test statistic and p-value
    * @throws IllegalArgumentException if data is null, empty, or has fewer than 4 observations
    */
-  static LillieforsResult testNormality(List<? extends Number> data, double alpha = 0.05) {
+  static LillieforsResult testNormality(List<? extends Number> data, Number alpha = 0.05) {
     validateInput(data)
+    BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
 
     int n = data.size()
 
@@ -53,12 +55,12 @@ class Lilliefors {
     double pValue = calculatePValue(dStatistic, n)
 
     return new LillieforsResult(
-      statistic: dStatistic,
-      pValue: pValue,
-      alpha: alpha,
+      statistic: BigDecimal.valueOf(dStatistic),
+      pValue: BigDecimal.valueOf(pValue),
+      alpha: alphaValue,
       sampleSize: n,
-      mean: mean,
-      stdDev: stdDev
+      mean: BigDecimal.valueOf(mean),
+      stdDev: BigDecimal.valueOf(stdDev)
     )
   }
 
@@ -165,22 +167,22 @@ class Lilliefors {
   @CompileStatic
   static class LillieforsResult {
     /** The Kolmogorov-Smirnov test statistic D */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value for the test */
-    double pValue
+    BigDecimal pValue
 
     /** The significance level used for evaluation */
-    double alpha
+    BigDecimal alpha
 
     /** The sample size */
     int sampleSize
 
     /** The sample mean */
-    double mean
+    BigDecimal mean
 
     /** The sample standard deviation */
-    double stdDev
+    BigDecimal stdDev
 
     /**
      * Evaluates the test result at the specified significance level.

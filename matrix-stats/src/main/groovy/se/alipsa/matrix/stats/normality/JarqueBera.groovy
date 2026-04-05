@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.normality
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Jarque-Bera test is a goodness-of-fit test that determines whether sample data have skewness
@@ -147,23 +148,13 @@ class JarqueBera {
     double pValue = 1.0 - chiSq.cumulativeProbability(jbStatistic)
 
     return new JarqueBeraResult(
-      jbStatistic: jbStatistic,
-      skewness: skewness,
-      kurtosis: kurtosis,
-      excessKurtosis: kurtosis - 3,
-      pValue: pValue,
+      jbStatistic: BigDecimal.valueOf(jbStatistic),
+      skewness: BigDecimal.valueOf(skewness),
+      kurtosis: BigDecimal.valueOf(kurtosis),
+      excessKurtosis: BigDecimal.valueOf(kurtosis - 3),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: n
     )
-  }
-
-  /**
-   * Performs the Jarque-Bera test on a double array.
-   *
-   * @param data The sample data array
-   * @return JarqueBeraResult containing the test statistic and p-value
-   */
-  static JarqueBeraResult test(double[] data) {
-    return test(data.toList())
   }
 
   private static void validateData(List<? extends Number> data) {
@@ -187,19 +178,19 @@ class JarqueBera {
    */
   static class JarqueBeraResult {
     /** The Jarque-Bera test statistic */
-    Double jbStatistic
+    BigDecimal jbStatistic
 
     /** The sample skewness */
-    Double skewness
+    BigDecimal skewness
 
     /** The sample kurtosis */
-    Double kurtosis
+    BigDecimal kurtosis
 
     /** The excess kurtosis (kurtosis - 3) */
-    Double excessKurtosis
+    BigDecimal excessKurtosis
 
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The sample size */
     Integer sampleSize
@@ -210,15 +201,15 @@ class JarqueBera {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha), indicating non-normality
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     /**
      * Returns true if the data appears to be normally distributed at the given significance level.
      */
-    boolean isNormal(double alpha = 0.05) {
-      return pValue >= alpha
+    boolean isNormal(Number alpha = 0.05) {
+      pValue >= NumericConversion.toAlpha(alpha)
     }
 
     @Override

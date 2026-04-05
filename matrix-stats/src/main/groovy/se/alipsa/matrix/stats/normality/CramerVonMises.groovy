@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.normality
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Cramér-von Mises test for normality.
@@ -35,8 +36,9 @@ class CramerVonMises {
    * @param alpha The significance level (default: 0.05)
    * @return CramerVonMisesResult containing test statistic, p-value, and conclusion
    */
-  static CramerVonMisesResult testNormality(List<? extends Number> data, double alpha = 0.05) {
-    validateInput(data, alpha)
+  static CramerVonMisesResult testNormality(List<? extends Number> data, Number alpha = 0.05) {
+    BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+    validateInput(data, alphaValue)
 
     int n = data.size()
 
@@ -91,17 +93,17 @@ class CramerVonMises {
 
     // Calculate p-value and critical value
     double pValue = calculatePValue(modifiedWSquared)
-    double criticalValue = getCriticalValue(alpha)
+    double criticalValue = getCriticalValue(alphaValue as double)
 
     return new CramerVonMisesResult(
-      statistic: modifiedWSquared,
-      rawStatistic: wSquared,
+      statistic: BigDecimal.valueOf(modifiedWSquared),
+      rawStatistic: BigDecimal.valueOf(wSquared),
       sampleSize: n,
-      mean: mean,
-      stdDev: stdDev,
-      alpha: alpha,
-      pValue: pValue,
-      criticalValue: criticalValue
+      mean: BigDecimal.valueOf(mean),
+      stdDev: BigDecimal.valueOf(stdDev),
+      alpha: alphaValue,
+      pValue: BigDecimal.valueOf(pValue),
+      criticalValue: BigDecimal.valueOf(criticalValue)
     )
   }
 
@@ -157,7 +159,7 @@ class CramerVonMises {
     }
   }
 
-  private static void validateInput(List<? extends Number> data, double alpha) {
+  private static void validateInput(List<? extends Number> data, BigDecimal alpha) {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
     }
@@ -166,9 +168,6 @@ class CramerVonMises {
     }
     if (data.size() < 3) {
       throw new IllegalArgumentException("Cramér-von Mises test requires at least 3 observations, got ${data.size()}")
-    }
-    if (alpha <= 0 || alpha >= 1) {
-      throw new IllegalArgumentException("Alpha must be between 0 and 1, got ${alpha}")
     }
     // Check for non-null values
     for (Number value : data) {
@@ -184,28 +183,28 @@ class CramerVonMises {
   @CompileStatic
   static class CramerVonMisesResult {
     /** The modified Cramér-von Mises test statistic W²* */
-    double statistic
+    BigDecimal statistic
 
     /** The raw W² statistic before modification */
-    double rawStatistic
+    BigDecimal rawStatistic
 
     /** The sample size */
     int sampleSize
 
     /** The sample mean */
-    double mean
+    BigDecimal mean
 
     /** The sample standard deviation */
-    double stdDev
+    BigDecimal stdDev
 
     /** The significance level */
-    double alpha
+    BigDecimal alpha
 
     /** The approximate p-value */
-    double pValue
+    BigDecimal pValue
 
     /** The critical value at the specified alpha level */
-    double criticalValue
+    BigDecimal criticalValue
 
     /**
      * Interprets the Cramér-von Mises test result.
