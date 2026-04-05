@@ -22,12 +22,39 @@ class NumericConversionTest {
   }
 
   @Test
+  void testRejectsNullBigDecimalList() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      NumericConversion.toBigDecimalList(null, 'values')
+    }
+
+    assertTrue(exception.message.contains('cannot be null'))
+  }
+
+  @Test
+  void testRejectsEmptyBigDecimalList() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      NumericConversion.toBigDecimalList([], 'values')
+    }
+
+    assertTrue(exception.message.contains('one value'))
+  }
+
+  @Test
   void testRejectsNonFiniteBigDecimalInput() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       NumericConversion.toBigDecimal(Double.NaN, 'value')
     }
 
     assertTrue(exception.message.contains('finite'))
+  }
+
+  @Test
+  void testRejectsNonNumericBigDecimalInput() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      NumericConversion.toBigDecimal('not a number', 'value')
+    }
+
+    assertTrue(exception.message.contains('numeric'))
   }
 
   @Test

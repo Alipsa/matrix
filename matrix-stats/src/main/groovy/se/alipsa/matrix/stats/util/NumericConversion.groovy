@@ -45,6 +45,7 @@ final class NumericConversion {
    * @param matrix the source matrix
    * @param columnName the column name to extract
    * @return the dense numeric vector
+   * @since 2.4.0
    */
   static double[] toDoubleArray(Matrix matrix, String columnName) {
     List<BigDecimal> values = toBigDecimalColumn(matrix, columnName)
@@ -61,6 +62,7 @@ final class NumericConversion {
    * @param grid the source grid
    * @param columnIndex the zero-based column index
    * @return the dense numeric vector
+   * @since 2.4.0
    */
   static double[] toDoubleArray(Grid<?> grid, int columnIndex) {
     List<BigDecimal> values = toBigDecimalColumn(grid, columnIndex)
@@ -76,6 +78,7 @@ final class NumericConversion {
    *
    * @param matrix the source matrix
    * @return the dense numeric array
+   * @since 2.4.0
    */
   static double[][] toDoubleArray(Matrix matrix) {
     Grid<BigDecimal> grid = toBigDecimalGrid(matrix)
@@ -87,6 +90,7 @@ final class NumericConversion {
    *
    * @param grid the source grid
    * @return the dense numeric array
+   * @since 2.4.0
    */
   static double[][] toDoubleArray(Grid<?> grid) {
     int[] shape = validateRectangular(grid, 'grid')
@@ -106,6 +110,7 @@ final class NumericConversion {
    * @param value the source value
    * @param label the label used in validation messages
    * @return the numeric value as {@code BigDecimal}
+   * @since 2.4.0
    */
   static BigDecimal toBigDecimal(Object value, String label) {
     if (!(value instanceof Number)) {
@@ -127,6 +132,7 @@ final class NumericConversion {
    * @param values the numeric vector
    * @param label the label used in validation messages
    * @return the numeric vector
+   * @since 2.4.0
    */
   static List<BigDecimal> toBigDecimalList(List<? extends Number> values, String label = 'values') {
     if (values == null) {
@@ -135,7 +141,7 @@ final class NumericConversion {
     if (values.isEmpty()) {
       throw new IllegalArgumentException("${label.capitalize()} must contain at least one value")
     }
-    List<BigDecimal> numericValues = new ArrayList<>(values.size())
+    List<BigDecimal> numericValues = []
     for (int i = 0; i < values.size(); i++) {
       numericValues << toBigDecimal(values[i], "${label} value at index ${i}")
     }
@@ -148,6 +154,7 @@ final class NumericConversion {
    * @param matrix the source matrix
    * @param columnName the column name to extract
    * @return the extracted numeric values
+   * @since 2.4.0
    */
   static List<BigDecimal> toBigDecimalColumn(Matrix matrix, String columnName) {
     validateMatrix(matrix)
@@ -162,7 +169,7 @@ final class NumericConversion {
       throw new IllegalArgumentException("Matrix does not contain column '${columnName}'", e)
     }
 
-    List<BigDecimal> values = new ArrayList<>(matrix.rowCount())
+    List<BigDecimal> values = []
     for (int row = 0; row < matrix.rowCount(); row++) {
       values << toBigDecimal(column[row], "matrix value at row ${row}, column '${columnName}'")
     }
@@ -175,6 +182,7 @@ final class NumericConversion {
    * @param grid the source grid
    * @param columnIndex the zero-based column index
    * @return the extracted numeric values
+   * @since 2.4.0
    */
   static List<BigDecimal> toBigDecimalColumn(Grid<?> grid, int columnIndex) {
     int[] shape = validateRectangular(grid, 'grid')
@@ -182,7 +190,7 @@ final class NumericConversion {
       throw new IllegalArgumentException("Grid column index ${columnIndex} is out of bounds for ${shape[1]} columns")
     }
 
-    List<BigDecimal> values = new ArrayList<>(shape[0])
+    List<BigDecimal> values = []
     List<List<?>> rowData = grid.data
     for (int row = 0; row < shape[0]; row++) {
       values << toBigDecimal(rowData[row][columnIndex], "grid value at row ${row}, column ${columnIndex}")
@@ -195,14 +203,15 @@ final class NumericConversion {
    *
    * @param matrix the source matrix
    * @return the numeric grid
+   * @since 2.4.0
    */
   static Grid<BigDecimal> toBigDecimalGrid(Matrix matrix) {
     validateMatrix(matrix)
 
     List<Column> columns = matrix.columns()
-    List<List<BigDecimal>> rows = new ArrayList<>(matrix.rowCount())
+    List<List<BigDecimal>> rows = []
     for (int row = 0; row < matrix.rowCount(); row++) {
-      List<BigDecimal> currentRow = new ArrayList<>(matrix.columnCount())
+      List<BigDecimal> currentRow = []
       for (int col = 0; col < columns.size(); col++) {
         Column column = columns[col]
         currentRow << toBigDecimal(column[row], "matrix value at row ${row}, column '${column.name}'")
@@ -217,14 +226,15 @@ final class NumericConversion {
    *
    * @param grid the source grid
    * @return the numeric grid
+   * @since 2.4.0
    */
   static Grid<BigDecimal> toBigDecimalGrid(Grid<?> grid) {
     int[] shape = validateRectangular(grid, 'grid')
 
     List<List<?>> rowData = grid.data
-    List<List<BigDecimal>> rows = new ArrayList<>(shape[0])
+    List<List<BigDecimal>> rows = []
     for (int row = 0; row < shape[0]; row++) {
-      List<BigDecimal> currentRow = new ArrayList<>(shape[1])
+      List<BigDecimal> currentRow = []
       for (int col = 0; col < shape[1]; col++) {
         currentRow << toBigDecimal(rowData[row][col], "grid value at row ${row}, column ${col}")
       }
@@ -257,6 +267,7 @@ final class NumericConversion {
    * @param values the source array
    * @param label the array label used in validation messages
    * @return `[rowCount, columnCount]`
+   * @since 2.4.0
    */
   static int[] validateRectangular(double[][] values, String label = 'values') {
     if (values == null || values.length == 0 || values[0] == null || values[0].length == 0) {
@@ -283,6 +294,7 @@ final class NumericConversion {
    * @param grid the source grid
    * @param label the grid label used in validation messages
    * @return `[rowCount, columnCount]`
+   * @since 2.4.0
    */
   static int[] validateRectangular(Grid<?> grid, String label = 'grid') {
     if (grid == null) {
