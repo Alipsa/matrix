@@ -80,6 +80,20 @@ class InterpolationTest {
   }
 
   @Test
+  void testRejectsGridColumnOutOfBounds() {
+    Grid<Number> data = new Grid<Number>([
+      [1.0, 3.0],
+      [2.0, 6.0],
+    ])
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Interpolation.linear(data, 5, 1, 1.5)
+    }
+
+    assertTrue(exception.message.contains('out of bounds'))
+  }
+
+  @Test
   void testRejectsUnsortedExplicitDomain() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Interpolation.linear(
