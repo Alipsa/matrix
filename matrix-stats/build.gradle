@@ -31,8 +31,12 @@ JavaCompile javaCompile = compileJava {
   options.compilerArgs << "-Xlint:unchecked"
 }
 
+tasks.withType(GroovyCompile).configureEach { task ->
+  task.options.deprecation = true
+}
+
 compileGroovy {
-  options.deprecation = true
+  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
 dependencies {

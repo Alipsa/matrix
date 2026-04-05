@@ -2,11 +2,14 @@ package se.alipsa.matrix.stats.linear
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.stats.linalg.LinalgSingularMatrixException
+
 /**
- * Signals that a matrix operation failed because the matrix is singular or numerically singular.
+ * Internal specialization of {@link LinalgSingularMatrixException} used by the legacy
+ * {@code stats.linear} implementation package.
  */
 @CompileStatic
-class SingularMatrixException extends IllegalArgumentException {
+class SingularMatrixException extends LinalgSingularMatrixException {
 
   SingularMatrixException(String message) {
     super(message)

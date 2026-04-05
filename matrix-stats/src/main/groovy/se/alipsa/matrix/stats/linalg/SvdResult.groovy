@@ -2,8 +2,9 @@ package se.alipsa.matrix.stats.linalg
 
 import groovy.transform.CompileStatic
 
+import org.ejml.simple.SimpleMatrix
+
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
 /**
  * Result carrier for singular value decomposition.
@@ -45,7 +46,7 @@ class SvdResult {
    * @return the reconstructed dense matrix
    */
   double[][] reconstruct() {
-    MatrixAlgebra.multiply(MatrixAlgebra.multiply(u, sigma()), vt)
+    toDoubleArray(new SimpleMatrix(u).mult(new SimpleMatrix(sigma())).mult(new SimpleMatrix(vt)))
   }
 
   /**
@@ -90,5 +91,15 @@ class SvdResult {
       copy[i] = values[i]
     }
     copy
+  }
+
+  private static double[][] toDoubleArray(SimpleMatrix matrix) {
+    double[][] values = new double[matrix.numRows()][matrix.numCols()]
+    for (int row = 0; row < matrix.numRows(); row++) {
+      for (int col = 0; col < matrix.numCols(); col++) {
+        values[row][col] = matrix.get(row, col)
+      }
+    }
+    values
   }
 }
