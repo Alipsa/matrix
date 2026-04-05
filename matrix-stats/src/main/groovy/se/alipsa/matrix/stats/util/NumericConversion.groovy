@@ -4,8 +4,6 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 
-import java.math.BigDecimal
-
 /**
  * Shared numeric conversion helpers for `matrix-stats`.
  * <p>
