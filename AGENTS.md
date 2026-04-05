@@ -51,7 +51,31 @@ Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Gr
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.
- - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Prefer BigDecimal over double/float unless performance is critical.
+ - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Stringly prefer BigDecimal over double/float unless performance is critical. 
+
+## Numeric types
+- Use Number in method parameters and use BigDecimal when returning numeric values
+- In the case that there is proven performance issue with this, create a small java utility that does the calculation in double and returns it as BigDecimal. The groovy code should be free of non-idiomatic groovy and use of double is a string code smell.
+- Don't use double[] or float[], use List<Number> or List<BigDecimal>
+- Don't use double[][] or float[][], use Grid<BigDecimal> or Grid<Number>
+
+Examples
+```groovy
+double evaluate(double u) // BAD
+BigDecimal evaluate(Number u) // GOOD
+
+// DON'T DO THIS
+List<double[]> categoryData = []
+data.each { String key, List<? extends Number> values ->
+   categoryData.add(ListConverter.toDoubleArray(values))
+}
+
+// DO THIS
+Grid<Number> categoryData = new Grid<>()
+data.each { String key, List<? extends Number> values ->
+   categoryData << values
+}
+```
 
 ## Logging Guidelines
 

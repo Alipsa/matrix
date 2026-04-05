@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.kde
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.stats.interpolation.Interpolation
+
 /**
  * Bandwidth selection methods for kernel density estimation.
  *
@@ -118,19 +120,6 @@ class BandwidthSelector {
    * @return the interpolated percentile value
    */
   private static double percentile(double[] sortedData, double p) {
-    int n = sortedData.length
-    if (n == 1) {
-      return sortedData[0]
-    }
-
-    double index = p * (n - 1)
-    int lower = (int) index
-    int upper = lower + 1
-    double fraction = index - lower
-
-    if (upper >= n) {
-      return sortedData[n - 1]
-    }
-    return sortedData[lower] + fraction * (sortedData[upper] - sortedData[lower])
+    Interpolation.linear(sortedData, p * (sortedData.length - 1))
   }
 }

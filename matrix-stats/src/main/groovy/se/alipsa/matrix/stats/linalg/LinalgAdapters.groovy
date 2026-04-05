@@ -7,6 +7,7 @@ import org.ejml.simple.SimpleMatrix
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Internal conversion helpers for the public linear algebra facade.
@@ -42,7 +43,7 @@ final class LinalgAdapters {
     for (int col = 0; col < columns.size(); col++) {
       Column column = columns[col]
       for (int row = 0; row < matrix.rowCount(); row++) {
-        values[row][col] = toFiniteDouble(column[row], "matrix value at row ${row}, column '${column.name}'")
+        values[row][col] = NumericConversion.toFiniteDouble(column[row], "matrix value at row ${row}, column '${column.name}'")
       }
     }
     values
@@ -73,7 +74,7 @@ final class LinalgAdapters {
         throw new IllegalArgumentException("Grid rows must all have the same length; row ${row} has ${currentRow == null ? 'null' : currentRow.size()} values, expected ${columns}")
       }
       for (int col = 0; col < columns; col++) {
-        values[row][col] = toFiniteDouble(currentRow[col], "grid value at row ${row}, column ${col}")
+        values[row][col] = NumericConversion.toFiniteDouble(currentRow[col], "grid value at row ${row}, column ${col}")
       }
     }
     values
@@ -87,17 +88,7 @@ final class LinalgAdapters {
    * @return the dense numeric vector
    */
   static double[] toDoubleArray(List<? extends Number> vector, String label = 'vector') {
-    if (vector == null) {
-      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
-    }
-    if (vector.isEmpty()) {
-      throw new IllegalArgumentException("${label.capitalize()} must contain at least one value")
-    }
-    double[] values = new double[vector.size()]
-    for (int i = 0; i < vector.size(); i++) {
-      values[i] = toFiniteDouble(vector[i], "${label} value at index ${i}")
-    }
-    values
+    NumericConversion.toDoubleArray(vector, label)
   }
 
   /**
@@ -174,16 +165,5 @@ final class LinalgAdapters {
    */
   static List<String> syntheticColumnNames(int columnCount) {
     (0..<columnCount).collect { int index -> SYNTHETIC_COLUMN_PREFIX + index }
-  }
-
-  private static double toFiniteDouble(Object value, String label) {
-    if (!(value instanceof Number)) {
-      throw new IllegalArgumentException("${label.capitalize()} must be numeric")
-    }
-    double numericValue = (value as Number).doubleValue()
-    if (!Double.isFinite(numericValue)) {
-      throw new IllegalArgumentException("${label.capitalize()} must be finite")
-    }
-    numericValue
   }
 }
