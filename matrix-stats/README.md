@@ -116,29 +116,22 @@ assert 30.34082454 == model.predict(13, 8)
 ## Linear Algebra
 
 `matrix-stats` exposes a public dense linear algebra facade in `se.alipsa.matrix.stats.linalg.Linalg`.
-The facade accepts `double[][]`, `Matrix`, and `Grid` inputs, performs computations in `double`
-precision, and returns:
+The facade accepts `Matrix`, `Grid`, and list-backed numeric vectors, performs computations in
+`double` precision internally, and returns:
 
-- `double[][]` for low-level matrix results
-- `Matrix` for matrix-shaped results from `Matrix` and `Grid` inputs
-- `double[]` for `solve(A, b)` and `eigenvalues(...)`
-- `SvdResult` for singular value decomposition
+- `Matrix` for inverse results from `Matrix` inputs
+- `Grid<BigDecimal>` for inverse results from `Grid` inputs
+- `BigDecimal` for scalar results such as `det(...)`
+- `List<BigDecimal>` for vector results such as `solve(A, b)` and `eigenvalues(...)`
+- `SvdResult` for singular value decomposition from `Matrix` and `Grid` inputs
 
 Matrix-shaped computed outputs use synthetic column names (`c0`, `c1`, ...) because inverse and
 decomposition result spaces do not preserve the semantics of the original input column labels.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.stats.linalg.Linalg
-
-double[] coefficients = Linalg.solve(
-    [
-        [4.0d, 7.0d],
-        [2.0d, 6.0d]
-    ] as double[][],
-    [1.0d, 0.0d]
-)
-assert [0.6d, -0.2d] == coefficients.toList()
 
 Matrix source = Matrix.builder()
     .columnNames(['x', 'y'])
@@ -149,15 +142,24 @@ Matrix source = Matrix.builder()
     .types([Double, Double])
     .build()
 
+List<BigDecimal> coefficients = Linalg.solve(source, [1.0, 0.0])
+assert [0.6, -0.2] == coefficients
+
+BigDecimal determinant = Linalg.det(source)
+assert determinant == 10.0
+
 Matrix inverse = Linalg.inverse(source)
 assert ['c0', 'c1'] == inverse.columnNames()
 assert Math.abs((inverse[0, 0] as double) - 0.6d) < 1e-9
 
-def svd = Linalg.svd([
-    [3.0d, 1.0d],
-    [1.0d, 3.0d],
-    [1.0d, 1.0d]
-] as double[][])
+Grid<Number> grid = new Grid<Number>([
+    [4.0, 7.0],
+    [2.0, 6.0]
+])
+Grid<BigDecimal> inverseGrid = Linalg.inverse(grid)
+assert inverseGrid[0, 0] == 0.6
+
+def svd = Linalg.svd(grid)
 assert svd.singularValues.length == 2
 ```
 
