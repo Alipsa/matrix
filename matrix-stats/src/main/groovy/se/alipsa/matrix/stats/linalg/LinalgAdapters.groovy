@@ -4,7 +4,6 @@ import groovy.transform.PackageScope
 
 import org.ejml.simple.SimpleMatrix
 
-import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.util.NumericConversion
@@ -31,22 +30,7 @@ final class LinalgAdapters {
    * @return a dense numeric array with the same shape and column order
    */
   static double[][] toDoubleArray(Matrix matrix) {
-    if (matrix == null) {
-      throw new IllegalArgumentException('Matrix cannot be null')
-    }
-    if (matrix.rowCount() == 0 || matrix.columnCount() == 0) {
-      throw new IllegalArgumentException('Matrix must contain at least one row and one column')
-    }
-
-    List<Column> columns = matrix.columns()
-    double[][] values = new double[matrix.rowCount()][matrix.columnCount()]
-    for (int col = 0; col < columns.size(); col++) {
-      Column column = columns[col]
-      for (int row = 0; row < matrix.rowCount(); row++) {
-        values[row][col] = NumericConversion.toFiniteDouble(column[row], "matrix value at row ${row}, column '${column.name}'")
-      }
-    }
-    values
+    NumericConversion.toDoubleArray(matrix)
   }
 
   /**
@@ -56,39 +40,7 @@ final class LinalgAdapters {
    * @return a dense numeric array with the same shape
    */
   static double[][] toDoubleArray(Grid<?> grid) {
-    if (grid == null) {
-      throw new IllegalArgumentException('Grid cannot be null')
-    }
-    Map<String, Integer> dimensions = grid.dimensions()
-    int rows = dimensions.observations
-    int columns = dimensions.variables
-    if (rows == 0 || columns == 0) {
-      throw new IllegalArgumentException('Grid must contain at least one row and one column')
-    }
-
-    double[][] values = new double[rows][columns]
-    List<List<?>> rowData = grid.data
-    for (int row = 0; row < rows; row++) {
-      List<?> currentRow = rowData[row]
-      if (currentRow == null || currentRow.size() != columns) {
-        throw new IllegalArgumentException("Grid rows must all have the same length; row ${row} has ${currentRow == null ? 'null' : currentRow.size()} values, expected ${columns}")
-      }
-      for (int col = 0; col < columns; col++) {
-        values[row][col] = NumericConversion.toFiniteDouble(currentRow[col], "grid value at row ${row}, column ${col}")
-      }
-    }
-    values
-  }
-
-  /**
-   * Convert a numeric vector into a dense {@code double[]} array.
-   *
-   * @param vector the numeric vector
-   * @param label the label used in validation messages
-   * @return the dense numeric vector
-   */
-  static double[] toDoubleArray(List<? extends Number> vector, String label = 'vector') {
-    NumericConversion.toDoubleArray(vector, label)
+    NumericConversion.toDoubleArray(grid)
   }
 
   /**
@@ -139,22 +91,7 @@ final class LinalgAdapters {
    * @return `[rowCount, columnCount]`
    */
   static int[] validateRectangular(double[][] values, String label) {
-    if (values == null || values.length == 0 || values[0] == null || values[0].length == 0) {
-      throw new IllegalArgumentException("${label.capitalize()} must contain at least one row and one column")
-    }
-    int columns = values[0].length
-    for (int row = 0; row < values.length; row++) {
-      double[] currentRow = values[row]
-      if (currentRow == null || currentRow.length != columns) {
-        throw new IllegalArgumentException("${label.capitalize()} rows must all have the same length")
-      }
-      for (int col = 0; col < columns; col++) {
-        if (!Double.isFinite(currentRow[col])) {
-          throw new IllegalArgumentException("${label.capitalize()} contains a non-finite value at row ${row}, column ${col}")
-        }
-      }
-    }
-    [values.length, columns] as int[]
+    NumericConversion.validateRectangular(values, label)
   }
 
   /**

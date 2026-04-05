@@ -7,6 +7,7 @@ import org.ejml.simple.SimpleSVD
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Public linear algebra facade for `matrix-stats`.
@@ -133,7 +134,7 @@ final class Linalg {
    * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static double[] solve(double[][] matrix, List<? extends Number> vector) {
-    solve(matrix, LinalgAdapters.toDoubleArray(vector))
+    solve(matrix, NumericConversion.toDoubleArray(vector, 'vector'))
   }
 
   /**

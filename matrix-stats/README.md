@@ -61,6 +61,17 @@ unless they use that library directly in their own code.
 The public linear algebra facade uses EJML internally via an `implementation` dependency. Consumers
 do not need to declare EJML unless they want to use EJML APIs directly in their own code.
 
+## Numeric API Direction
+
+`matrix-stats` is in the middle of an idiomatic Groovy numeric cleanup. Existing APIs still expose
+some `double`, `double[]`, and `double[][]` signatures, but the intended public direction is:
+
+- use `Number` in public method parameters
+- return `BigDecimal` for public scalar numeric results
+- prefer `List<BigDecimal>` and `Grid<BigDecimal>` for public numeric collections
+- keep primitive numeric computation only in small internal Java utilities when benchmark results
+  justify that implementation detail
+
 ## Correlation
 
 ```groovy
