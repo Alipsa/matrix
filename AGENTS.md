@@ -51,7 +51,32 @@ Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Gr
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.
- - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Prefer BigDecimal over double/float unless performance is critical.
+ - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Stringly prefer BigDecimal over double/float unless performance is critical. 
+
+## Numeric types
+- Use Number in method parameters and use BigDecimal when returning numeric values
+- In the case that there is proven performance issue with this, create a small java utility that does the calculation in double and returns it as BigDecimal. The groovy code should be free of non-idiomatic groovy and use of double is a strong code smell.
+- Prefer `List<Number>` or `List<BigDecimal>` over `double[]`/`float[]` in public Groovy-facing APIs. If generic type erasure is a problem, use Number[] or BigDecimal[] instead.
+- `double[]` and `double[][]` are acceptable for internal or low-level numeric computations where performance matters, for example interpolation and linear algebra but should be handled by java classes rather than groovy. In those cases, an idiomatic groovy alternative should exist alongside the java style construct.
+- Prefer `Grid<BigDecimal>` or `Grid<Number>` over `double[][]` in public Groovy-facing APIs.
+
+Examples
+```groovy
+double evaluate(double u) // BAD
+BigDecimal evaluate(Number u) // GOOD
+
+// DON'T DO THIS
+List<double[]> categoryData = []
+data.each { String key, List<? extends Number> values ->
+   categoryData.add(ListConverter.toDoubleArray(values))
+}
+
+// DO THIS
+Grid<Number> categoryData = new Grid<>()
+data.each { String key, List<? extends Number> values ->
+   categoryData << values
+}
+```
 
 ## Logging Guidelines
 

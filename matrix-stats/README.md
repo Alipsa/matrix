@@ -150,6 +150,47 @@ def svd = Linalg.svd([
 assert svd.singularValues.length == 2
 ```
 
+## Interpolation
+
+`matrix-stats` exposes public linear interpolation utilities in
+`se.alipsa.matrix.stats.interpolation.Interpolation`.
+
+The current v2.4.0 scope is intentionally narrow:
+
+- linear interpolation only
+- `double[][]`/`double[]`-style floating-point numeric contract
+- explicit `(x, y, targetX)` interpolation as the primitive operation
+- convenience overloads for evenly spaced numeric series and Matrix/Grid-backed columns
+- no extrapolation: target positions outside the supported domain are rejected
+
+Public spline interpolation is not part of the v2.4.0 API. The existing spline logic in
+`matrix-stats` remains internal to formula/GAM smooth-term support.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.interpolation.Interpolation
+
+assert 5.0d == Interpolation.linear(
+    [0.0d, 2.0d, 4.0d] as double[],
+    [0.0d, 10.0d, 20.0d] as double[],
+    1.0d
+)
+
+assert 30.0d == Interpolation.linear([10.0d, 20.0d, 40.0d] as double[], 1.5d)
+
+Matrix points = Matrix.builder()
+    .columnNames(['time', 'value'])
+    .rows([
+        [1.0, 3.0],
+        [2.0, 6.0],
+        [4.0, 12.0]
+    ])
+    .types([Double, Double])
+    .build()
+
+assert 9.0d == Interpolation.linear(points, 'time', 'value', 3.0d)
+```
+
 ## Formula Models
 
 The formula pipeline supports a focused R-style subset for model-frame evaluation and
