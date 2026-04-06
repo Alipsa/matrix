@@ -218,7 +218,6 @@ final class LinearProgramSolver {
     negated
   }
 
-  @CompileStatic
   static class Solution {
     /** Optimal point for the original variables. */
     double[] point
@@ -228,7 +227,6 @@ final class LinearProgramSolver {
     int iterations
   }
 
-  @CompileStatic
   private static class PhaseState {
     double[][] tableau
     int[] basis
