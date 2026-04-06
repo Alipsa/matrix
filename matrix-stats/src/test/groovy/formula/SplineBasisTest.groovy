@@ -36,6 +36,22 @@ class SplineBasisTest {
   }
 
   @Test
+  void testSplineBasisListOverload() {
+    List<BigDecimal> x = [1.0, 2.0, 3.0, 4.0]
+
+    double[][] fromList = SplineBasisExpander.naturalCubicSplineBasis(x, 2)
+    double[][] fromArray = SplineBasisExpander.naturalCubicSplineBasis([1.0d, 2.0d, 3.0d, 4.0d] as double[], 2)
+
+    assertEquals(fromArray.length, fromList.length)
+    assertEquals(fromArray[0].length, fromList[0].length)
+    for (int row = 0; row < fromArray.length; row++) {
+      for (int column = 0; column < fromArray[row].length; column++) {
+        assertEquals(fromArray[row][column], fromList[row][column], 1e-10d)
+      }
+    }
+  }
+
+  @Test
   void testSplineBasisDf1() {
     double[] x = [1.0, 2.0, 3.0] as double[]
     double[][] basis = SplineBasisExpander.naturalCubicSplineBasis(x, 1)

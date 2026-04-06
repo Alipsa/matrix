@@ -398,12 +398,13 @@ class KMeansPlusPlus {
      * @param epsilon a small non-negative number (e.g., 0.001)
      * @return the updated builder instance
      */
-    Builder epsilon(double epsilon) {
-      if (epsilon < 0.0) {
+    Builder epsilon(Number epsilon) {
+      double normalizedEpsilon = NumericConversion.toFiniteDouble(epsilon, 'epsilon')
+      if (normalizedEpsilon < 0.0d) {
         throw new IllegalArgumentException("Required: non-negative value of epsilon. Ex: .001")
       }
 
-      this.epsilon = epsilon
+      this.epsilon = normalizedEpsilon
       return this
     }
 

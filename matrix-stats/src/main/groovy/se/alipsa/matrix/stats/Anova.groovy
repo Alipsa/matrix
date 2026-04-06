@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Analysis of variance (ANOVA) is a collection of statistical models and their associated estimation
@@ -50,8 +51,8 @@ class Anova {
       return "pValue: ${pValue}, fValue: ${fValue}"
     }
 
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
   }
 }

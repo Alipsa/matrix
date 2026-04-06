@@ -243,6 +243,7 @@ class ChiSquaredTest {
 
     // Should reject null hypothesis at 0.05 level
     assertTrue(result.evaluate(0.05), 'Should reject H0 at 0.05 for strong dependence')
+    assertTrue(result.evaluate(0.05G), 'Should reject H0 at 0.05 for strong dependence with BigDecimal alpha')
     assertTrue(result.evaluate(0.01), 'Should reject H0 at 0.01 for strong dependence')
 
     // Test with independent data

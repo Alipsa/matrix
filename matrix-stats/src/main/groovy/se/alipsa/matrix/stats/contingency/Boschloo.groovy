@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.contingency
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Boschloo's exact test is an unconditional exact test for 2×2 contingency tables that provides
  * uniformly greater statistical power than Fisher's exact test. It tests for association between
@@ -317,8 +319,9 @@ class Boschloo {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether there is a significant association
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected (p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant association detected (p = ${String.format('%.4f', pValue)})"
@@ -330,8 +333,9 @@ class Boschloo {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String significance = pValue < alpha ? "significant" : "not significant"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
 
       return String.format(
         "Boschloo's exact test:\\n" +
@@ -340,7 +344,7 @@ class Boschloo {
         "Nuisance parameter (π): %.4f\\n" +
         "Sample size: %d\\n" +
         "Conclusion: Association is %s at %.0f%% significance level",
-        pValue, fisherPValue, nuisanceParameter, sampleSize, significance, alpha * 100
+        pValue, fisherPValue, nuisanceParameter, sampleSize, significance, normalizedAlpha * 100
       )
     }
 

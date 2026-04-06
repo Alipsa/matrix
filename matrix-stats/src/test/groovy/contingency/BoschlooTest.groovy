@@ -226,10 +226,12 @@ class BoschlooTest {
     String interp01 = result.interpret(0.01)
     String interp05 = result.interpret(0.05)
     String interp10 = result.interpret(0.10)
+    String interp05BigDecimal = result.interpret(0.05G)
 
     assertNotNull(interp01, 'Interpretation at α=0.01 should not be null')
     assertNotNull(interp05, 'Interpretation at α=0.05 should not be null')
     assertNotNull(interp10, 'Interpretation at α=0.10 should not be null')
+    assertEquals(interp05, interp05BigDecimal, 'BigDecimal alpha should produce the same interpretation')
   }
 
   @Test

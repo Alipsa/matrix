@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.contingency
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Fisher's exact test is a statistical significance test used in the analysis of contingency tables.
@@ -214,8 +215,8 @@ class Fisher {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha)
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     @Override

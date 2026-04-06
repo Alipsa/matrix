@@ -179,6 +179,7 @@ class FisherTest {
     def table1 = [[18, 2], [4, 16]]
     def result1 = Fisher.test(table1)
     assertTrue(result1.evaluate(0.05), "Should reject null at 5% level")
+    assertTrue(result1.evaluate(0.05G), "Should reject null at 5% level with BigDecimal alpha")
     assertTrue(result1.evaluate(), "Should reject null with default alpha")
 
     // Non-significant result

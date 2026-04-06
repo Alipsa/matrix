@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.contingency
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Barnard's exact test is an unconditional exact test for 2×2 contingency tables that is uniformly
  * more powerful than Fisher's exact test. It tests for association between two binary variables
@@ -301,8 +303,9 @@ class Barnard {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether there is a significant association
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -314,8 +317,9 @@ class Barnard {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String significance = pValue < alpha ? "significant" : "not significant"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
 
       return String.format(
         "Barnard's exact test:\\n" +
@@ -324,7 +328,7 @@ class Barnard {
         "Nuisance parameter (π): %.4f\\n" +
         "Sample size: %d\\n" +
         "Conclusion: Association is %s at %.0f%% significance level",
-        statistic, pValue, nuisanceParameter, sampleSize, significance, alpha * 100
+        statistic, pValue, nuisanceParameter, sampleSize, significance, normalizedAlpha * 100
       )
     }
 

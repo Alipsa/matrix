@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Native statistical utility functions used by the stats module.
  */
@@ -31,6 +33,17 @@ final class StatUtils {
   }
 
   /**
+   * Computes the arithmetic mean for the supplied values.
+   *
+   * @param values the sample values
+   * @return the arithmetic mean
+   * @throws IllegalArgumentException if the list is null or empty
+   */
+  static double mean(List<? extends Number> values) {
+    mean(NumericConversion.toDoubleArray(values, 'values'))
+  }
+
+  /**
    * Computes the sample variance using Bessel's correction.
    *
    * @param values the sample values
@@ -39,6 +52,17 @@ final class StatUtils {
    */
   static double variance(double[] values) {
     variance(values, mean(values))
+  }
+
+  /**
+   * Computes the sample variance using Bessel's correction.
+   *
+   * @param values the sample values
+   * @return the sample variance
+   * @throws IllegalArgumentException if the list is null or has fewer than two observations
+   */
+  static double variance(List<? extends Number> values) {
+    variance(NumericConversion.toDoubleArray(values, 'values'))
   }
 
   /**
@@ -58,6 +82,21 @@ final class StatUtils {
       sumSquaredDeviation += deviation * deviation
     }
     sumSquaredDeviation / (values.length - 1)
+  }
+
+  /**
+   * Computes the sample variance using a precomputed mean and Bessel's correction.
+   *
+   * @param values the sample values
+   * @param mean the precomputed arithmetic mean
+   * @return the sample variance
+   * @throws IllegalArgumentException if the list is null or has fewer than two observations
+   */
+  static double variance(List<? extends Number> values, Number mean) {
+    variance(
+      NumericConversion.toDoubleArray(values, 'values'),
+      NumericConversion.toFiniteDouble(mean, 'mean')
+    )
   }
 
   private static void validateNotEmpty(double[] values, String operation) {

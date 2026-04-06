@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.formula
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Generates natural cubic spline basis functions for use in GAM smooth terms.
  * Uses equally-spaced interior knots and the truncated-power basis with the
@@ -81,6 +83,17 @@ final class SplineBasisExpander {
 
     centerColumns(basis)
     basis
+  }
+
+  /**
+   * Generates a centered natural cubic spline basis matrix without the raw {@code x} term.
+   *
+   * @param x the predictor values (length n)
+   * @param df degrees of freedom (number of basis columns, must be >= 1)
+   * @return an n x df matrix of basis function evaluations
+   */
+  static double[][] naturalCubicSplineBasis(List<? extends Number> x, int df) {
+    naturalCubicSplineBasis(NumericConversion.toDoubleArray(x, 'x'), df)
   }
 
   private static double truncPow3(double v) {

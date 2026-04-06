@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.contingency
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * A chi-squared test (also chi-square or χ² test) is a statistical hypothesis test
@@ -255,8 +256,8 @@ class ChiSquared {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha)
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     @Override

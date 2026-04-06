@@ -66,4 +66,13 @@ class SolverApiTest {
     assertEquals(-2.0d, result.pointValues[1] as double, 1e-3d)
     assertEquals(0.0d, result.objectiveValue as double, 1e-6d)
   }
+
+  @Test
+  void testObjectiveInterfacesAcceptGroovyFacingInputs() {
+    UnivariateObjective scalarObjective = { double x -> x * x } as UnivariateObjective
+    MultivariateObjective vectorObjective = { double[] point -> point[0] + point[1] } as MultivariateObjective
+
+    assertEquals(2.25d, scalarObjective.value(1.5G), 1e-10d)
+    assertEquals(3.0d, vectorObjective.value([1.0G, 2.0G]), 1e-10d)
+  }
 }

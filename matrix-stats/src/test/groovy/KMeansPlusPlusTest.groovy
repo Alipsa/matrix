@@ -101,4 +101,20 @@ class KMeansPlusPlusTest {
     assertTrue(clustering.wcssValue > 0)
     assertTrue(clustering.executionTimeValue >= 0)
   }
+
+  @Test
+  void testBuilderAcceptsNumberEpsilon() {
+    List<List<BigDecimal>> points = gaussianClusters(20, 0.05).collectNested { Double value ->
+      BigDecimal.valueOf(value)
+    } as List<List<BigDecimal>>
+
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(4, points)
+        .iterations(5)
+        .epsilon(0.003G)
+        .useEpsilon(true)
+        .randomSeed(RANDOM_SEED)
+        .build()
+
+    assertEquals(points.size(), clustering.assignments.size())
+  }
 }
