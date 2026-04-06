@@ -348,8 +348,13 @@ class Johansen {
 
       int cointRank = 0
       for (int r = 0; r < numVariables; r++) {
-        Number critVal = r < criticalValues5pct.size() && numVariables - 1 < criticalValues5pct[r].size() ?
-                         criticalValues5pct[r][numVariables - 1] : Double.NaN
+        BigDecimal critVal = r < criticalValues5pct.size() && numVariables - 1 < criticalValues5pct[r].size() ?
+                             criticalValues5pct[r][numVariables - 1] : null
+
+        if (critVal == null) {
+          sb.append("H0: r = ${r} — no critical value available\n")
+          break
+        }
 
         if (traceStatistics[r] > critVal) {
           cointRank = r + 1
@@ -364,14 +369,20 @@ class Johansen {
       sb.toString()
     }
 
+    /** @deprecated Use the {@code eigenvalues} property directly. */
+    @Deprecated
     List<BigDecimal> getEigenvalueValues() {
       eigenvalues
     }
 
+    /** @deprecated Use the {@code traceStatistics} property directly. */
+    @Deprecated
     List<BigDecimal> getTraceStatisticValues() {
       traceStatistics
     }
 
+    /** @deprecated Use the {@code criticalValues5pct} property directly. */
+    @Deprecated
     List<List<BigDecimal>> getCriticalValueRows5pct() {
       criticalValues5pct
     }
