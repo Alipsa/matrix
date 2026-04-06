@@ -96,8 +96,8 @@ class Correlation {
     BigDecimal sumY2 = 0
     int size = numbersX.size()
 
-    def final itX = numbersX.iterator()
-    def final itY = numbersY.iterator()
+    final Iterator<? extends Number> itX = numbersX.iterator()
+    final Iterator<? extends Number> itY = numbersY.iterator()
     for (int i = 0; i < size; i++) {
       BigDecimal x = itX.next() as BigDecimal
       BigDecimal y = itY.next() as BigDecimal

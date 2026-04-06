@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Hypergeometric distribution implementation for exact contingency-table calculations.
  */
@@ -40,6 +42,11 @@ class HypergeometricDistribution {
     supportUpperBound
   }
 
+  BigDecimal probability(Number x) {
+    BigDecimal.valueOf(probability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+  }
+
+  @Deprecated
   double probability(int x) {
     if (x < supportLowerBound || x > supportUpperBound) {
       return 0.0d
@@ -52,6 +59,11 @@ class HypergeometricDistribution {
     return Math.exp(logProbability)
   }
 
+  BigDecimal cumulativeProbability(Number x) {
+    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+  }
+
+  @Deprecated
   double cumulativeProbability(int x) {
     if (x < supportLowerBound) {
       return 0.0d
@@ -67,6 +79,11 @@ class HypergeometricDistribution {
     return Math.min(1.0d, sum)
   }
 
+  BigDecimal upperCumulativeProbability(Number x) {
+    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+  }
+
+  @Deprecated
   double upperCumulativeProbability(int x) {
     if (x <= supportLowerBound) {
       return 1.0d

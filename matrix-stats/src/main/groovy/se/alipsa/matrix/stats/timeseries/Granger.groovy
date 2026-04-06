@@ -205,7 +205,7 @@ class Granger {
         } else {
           log.debug("Skipping lag $p during Granger AIC selection: ${e.message}")
         }
-      } catch (RuntimeException e) {
+      } catch (Exception e) {
         log.error("Potential bug while selecting lag $p for Granger causality: ${e.message}", e)
         throw e
       }

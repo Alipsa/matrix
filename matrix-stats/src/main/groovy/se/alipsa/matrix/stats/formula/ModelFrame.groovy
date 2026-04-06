@@ -669,6 +669,7 @@ final class ModelFrame {
     }
   }
 
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static List<Number> filterToSurvivors(List<Number> values, List<Integer> survivingOriginalIndices) {
     if (values == null) {
       return null
@@ -676,6 +677,7 @@ final class ModelFrame {
     survivingOriginalIndices.collect { Integer originalIdx -> values[originalIdx] } as List<Number>
   }
 
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static Map<String, List<?>> filterEnvToSurvivors(Map<String, List<?>> env, List<Integer> survivingOriginalIndices) {
     if (env == null) {
       return null
@@ -706,6 +708,7 @@ final class ModelFrame {
     nullRows
   }
 
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static List<Number> filterByIndices(List<Number> values, List<Integer> indices) {
     if (values == null) {
       return null
@@ -713,6 +716,7 @@ final class ModelFrame {
     indices.collect { int i -> values[i] } as List<Number>
   }
 
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static Map<String, List<?>> filterEnvByIndices(Map<String, List<?>> env, List<Integer> indices) {
     if (env == null) {
       return null

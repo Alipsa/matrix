@@ -220,7 +220,7 @@ final class Linalg {
       }
       values << eigenvalue.getReal()
     }
-    List<Double> sorted = [*values] as List<Double>
+    List<Double> sorted = [*values]
     sorted.sort { Double a, Double b -> b <=> a }
     double[] eigenvalues = new double[sorted.size()]
     for (int i = 0; i < sorted.size(); i++) {

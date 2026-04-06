@@ -16,7 +16,6 @@ import java.math.RoundingMode
  *   <li>Mean normalization, X´ = ( X - μ ) / ( max(X) - min(X) )</li>
  *   <li>Standard deviation normalization (Z score), Z = ( X<sub>i</sub> - μ ) / σ</li>
  * </ol>
- *
  */
 class Normalize {
 

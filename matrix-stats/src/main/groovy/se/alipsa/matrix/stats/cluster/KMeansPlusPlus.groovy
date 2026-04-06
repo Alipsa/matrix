@@ -208,7 +208,7 @@ class KMeansPlusPlus {
   private int iterations       // number of times to repeat the clustering. Choose run with lowest wcss
   private boolean pp           // true --> KMeans++. false --> basic random sampling
   private double epsilon       // stops running when improvement in error < epsilon
-  private boolean useEpsilon;  // true  --> stop running when marginal improvement in wcss < epsilon
+  private boolean useEpsilon   // true  --> stop running when marginal improvement in wcss < epsilon
   // false --> stop running when 0 improvement
   private boolean l1Norm       // true --> L1 norm to calculate distance; false --> L2 norm
 
@@ -343,7 +343,7 @@ class KMeansPlusPlus {
      */
     Builder iterations(int iterations) {
       if (iterations < 1) {
-        throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50");
+        throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50")
       }
       this.iterations = iterations
       return this
@@ -586,7 +586,7 @@ class KMeansPlusPlus {
     centroids = new double[k][n]
     double[][] copy = points
 
-    int rand;
+    int rand
     for (int i = 0; i < k; i++) {
       rand = random.nextInt(m - i)
       for (int j = 0; j < n; j++) {
@@ -619,7 +619,7 @@ class KMeansPlusPlus {
         // check if the most recently added centroid is closer to any of the points than previously added ones
         for (int p = 0; p < m; p++) {
           // gives chosen points 0 probability of being chosen again -> sampling without replacement
-          double tempDistance = Distance.euclideanDistance(points[p], centroids[c - 1]); // need L2 norm here, not L1
+          double tempDistance = Distance.euclideanDistance(points[p], centroids[c - 1]) // need L2 norm here, not L1
 
           // base case: if we have only chosen one centroid so far, nothing to compare to
           if (c == 1) {
@@ -669,7 +669,7 @@ class KMeansPlusPlus {
   /**
    * Calculates whether to stop the run
    * @param prevWCSS error from previous step in the run
-   * @return
+   * @return true when the algorithm should stop iterating
    */
   private boolean stop(double prevWCSS) {
     if (useEpsilon) {
@@ -683,7 +683,7 @@ class KMeansPlusPlus {
    * Signals to stop running KMeans when the marginal improvement in wcss
    * from the last step is small.
    * @param prevWCSS error from previous step in the run
-   * @return
+   * @return true when the epsilon threshold indicates convergence
    */
   private boolean epsilonTest(double prevWCSS) {
     return epsilon > 1 - (wcss / prevWCSS)
@@ -694,9 +694,9 @@ class KMeansPlusPlus {
    **********************************************************************/
   /**
    * Calculates distance between two n-dimensional points.
-   * @param x
-   * @param y
-   * @return
+   * @param x the first point
+   * @param y the second point
+   * @return the configured distance between the two points
    */
   private double distance(double[] x, double[] y) {
     return l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
@@ -711,9 +711,9 @@ class KMeansPlusPlus {
     /**
      * L1 norm: distance(X,Y) = sum_i=1:n[|x_i - y_i|]
      * <P> Minkowski distance of order 1.
-     * @param x
-    * @param y
-    * @return
+     * @param x the first point
+     * @param y the second point
+     * @return the Manhattan distance between the two points
      */
     static double manhattanDistance(double[] x, double[] y) {
       if (x.length != y.length) {

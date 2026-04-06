@@ -35,7 +35,7 @@ class CramerVonMises {
    */
   static CramerVonMisesResult testNormality(List<? extends Number> data, Number alpha = 0.05) {
     BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-    validateInput(data, alphaValue)
+    validateInput(data)
 
     int n = data.size()
 
@@ -156,7 +156,7 @@ class CramerVonMises {
     }
   }
 
-  private static void validateInput(List<? extends Number> data, BigDecimal alpha) {
+  private static void validateInput(List<? extends Number> data) {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
     }

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats
 
-import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.FDistribution
 
@@ -26,7 +25,6 @@ class Anova {
 
   /**
    * Implements one-way ANOVA (analysis of variance) statistics.
-   *
    */
   static AnovaResult aov(Map<String, List<? extends Number>> data) {
     if (data.size() < 2) {
@@ -34,13 +32,13 @@ class Anova {
     }
     def result = new AnovaResult()
     // Use native FDistribution for ANOVA calculations
-    List<double[]> categoryData = []
+    List<List<? extends Number>> categoryData = []
     data.each { String key, List<? extends Number> values ->
-      categoryData.add(ListConverter.toDoubleArray(values))
+      categoryData << values
     }
 
-    result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
-    result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
+    result.fValue = FDistribution.oneWayAnovaFValue(categoryData) as Double
+    result.pValue = FDistribution.oneWayAnovaPValue(categoryData) as Double
     return result
   }
 

@@ -315,7 +315,7 @@ class KolmogorovSmirnov {
     int effectiveK = Math.min(k, n - k)
     BigInteger result = BigInteger.ONE
     for (int i = 1; i <= effectiveK; i++) {
-      result = result.multiply(BigInteger.valueOf(n - effectiveK + i))
+      result *= BigInteger.valueOf(n - effectiveK + i)
       result = result.divide(BigInteger.valueOf(i))
     }
     result
@@ -326,7 +326,7 @@ class KolmogorovSmirnov {
 
     for (int j = 1; j <= 100; j++) {
       double term = Math.exp(-2.0d * j * j * lambda * lambda)
-      sum += (j % 2 == 1 ? 1.0d : -1.0d) * term
+      sum += (j % 2 != 0 ? 1.0d : -1.0d) * term
       if (term < 1e-12d) {
         break
       }

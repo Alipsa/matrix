@@ -36,6 +36,7 @@ final class ModelFrameResult {
    * @param formula the fully resolved normalized formula
    * @param terms metadata mapping formula terms to design matrix columns
    */
+  @SuppressWarnings('ParameterCount')
   ModelFrameResult(
     Matrix data,
     List<Number> response,

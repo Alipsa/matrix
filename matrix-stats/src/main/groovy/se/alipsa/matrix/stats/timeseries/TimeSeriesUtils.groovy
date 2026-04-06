@@ -194,27 +194,27 @@ final class TimeSeriesUtils {
       throw new IllegalArgumentException("Design matrix rows must all have the same length")
     }
 
-    double[][] XtX = new double[k][k]
+    double[][] xtx = new double[k][k]
     for (int i = 0; i < k; i++) {
       for (int j = 0; j < k; j++) {
         double sum = 0.0
         for (int m = 0; m < n; m++) {
           sum += X[m][i] * X[m][j]
         }
-        XtX[i][j] = sum
+        xtx[i][j] = sum
       }
     }
 
-    double[] Xty = new double[k]
+    double[] xty = new double[k]
     for (int i = 0; i < k; i++) {
       double sum = 0.0
       for (int m = 0; m < n; m++) {
         sum += X[m][i] * y[m]
       }
-      Xty[i] = sum
+      xty[i] = sum
     }
 
-    solveLinearSystem(XtX, Xty)
+    solveLinearSystem(xtx, xty)
   }
 
   /**

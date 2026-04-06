@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Student's t-distribution implementation.
@@ -22,6 +23,10 @@ class TDistribution {
 
   TDistribution(double degreesOfFreedom) {
     this(degreesOfFreedom as BigDecimal)
+  }
+
+  TDistribution(Number degreesOfFreedom) {
+    this(NumericConversion.toBigDecimal(degreesOfFreedom, 'degreesOfFreedom'))
   }
 
   /**
@@ -54,6 +59,10 @@ class TDistribution {
     }
   }
 
+  BigDecimal cdf(Number t) {
+    cdf(NumericConversion.toBigDecimal(t, 't'))
+  }
+
   /**
    * Computes the two-tailed p-value for a t-statistic.
    * This is 2 * P(T > |t|) = 2 * (1 - CDF(|t|))
@@ -71,6 +80,10 @@ class TDistribution {
     return BigDecimal.TWO * (BigDecimal.ONE - cdf(absT))
   }
 
+  BigDecimal twoTailedPValue(Number t) {
+    twoTailedPValue(NumericConversion.toBigDecimal(t, 't'))
+  }
+
   /**
    * Computes the one-tailed p-value for a t-statistic (upper tail).
    * This is P(T > t) = 1 - CDF(t)
@@ -80,6 +93,10 @@ class TDistribution {
    */
   BigDecimal oneTailedPValueUpper(BigDecimal t) {
     return BigDecimal.ONE - cdf(t)
+  }
+
+  BigDecimal oneTailedPValueUpper(Number t) {
+    oneTailedPValueUpper(NumericConversion.toBigDecimal(t, 't'))
   }
 
   double oneTailedPValueUpper(double t) {
@@ -97,6 +114,10 @@ class TDistribution {
     return cdf(t)
   }
 
+  BigDecimal oneTailedPValueLower(Number t) {
+    cdf(NumericConversion.toBigDecimal(t, 't'))
+  }
+
   /**
    * Static convenience method for computing two-tailed p-value.
    *
@@ -110,6 +131,10 @@ class TDistribution {
 
   static BigDecimal pValue(BigDecimal t, BigDecimal df) {
     return new TDistribution(df).twoTailedPValue(t)
+  }
+
+  static BigDecimal pValue(Number t, Number df) {
+    new TDistribution(df).twoTailedPValue(t)
   }
 
   /**
@@ -161,6 +186,12 @@ class TDistribution {
     return pValue(t, df)
   }
 
+  static BigDecimal twoSampleTTest(List<? extends Number> sample1, List<? extends Number> sample2) {
+    BigDecimal[] left = sample1.collect { Number value -> NumericConversion.toBigDecimal(value, 'sample1 value') } as BigDecimal[]
+    BigDecimal[] right = sample2.collect { Number value -> NumericConversion.toBigDecimal(value, 'sample2 value') } as BigDecimal[]
+    twoSampleTTest(left, right)
+  }
+
   /**
    * Computes the one-sample t-test p-value (two-tailed).
    *
@@ -184,6 +215,11 @@ class TDistribution {
     BigDecimal t = (mean - mu) / (sd / n.sqrt())
     BigDecimal df = n - 1
     return pValue(t, df)
+  }
+
+  static BigDecimal oneSampleTTest(Number mu, List<? extends Number> sample) {
+    BigDecimal[] values = sample.collect { Number value -> NumericConversion.toBigDecimal(value, 'sample value') } as BigDecimal[]
+    oneSampleTTest(NumericConversion.toBigDecimal(mu, 'mu'), values)
   }
 
   private static double mean(double[] values) {

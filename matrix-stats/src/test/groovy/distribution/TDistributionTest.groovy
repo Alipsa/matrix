@@ -95,6 +95,21 @@ class TDistributionTest {
   }
 
   @Test
+  void testIdiomaticListAndNumberOverloadsReturnBigDecimal() {
+    def dist = new TDistribution(9)
+    List<Integer> sample1 = [10, 12, 11, 13, 9]
+    List<Integer> sample2 = [14, 15, 13, 16, 14]
+
+    BigDecimal cdf = dist.cdf(1.5)
+    BigDecimal twoTailed = dist.twoTailedPValue(2.262)
+    BigDecimal listPValue = TDistribution.twoSampleTTest(sample1, sample2)
+
+    assertEquals(dist.cdf(1.5d), cdf as double, TOLERANCE)
+    assertEquals(0.05001284550245466, twoTailed as double, TOLERANCE)
+    assertEquals(0.005470215157182601, listPValue as double, TOLERANCE)
+  }
+
+  @Test
   void testOneSampleTTest() {
     // Sample: mean=11.5, sd=1.58, n=10, t=(11.5-10)/(1.58/sqrt(10))=3.0
     // p-value from Apache Commons Math for t=3, df=9

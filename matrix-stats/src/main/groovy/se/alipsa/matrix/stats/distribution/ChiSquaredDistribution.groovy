@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Chi-squared distribution implementation backed by the regularized incomplete gamma function.
  */
@@ -8,28 +10,47 @@ class ChiSquaredDistribution implements ContinuousDistribution {
 
   private static final int MAX_INVERSE_ITERATIONS = 80
 
-  private final double degreesOfFreedom
+  private final BigDecimal degreesOfFreedom
 
-  ChiSquaredDistribution(double degreesOfFreedom) {
-    if (degreesOfFreedom <= 0.0d) {
+  ChiSquaredDistribution(Number degreesOfFreedom) {
+    BigDecimal normalizedDegreesOfFreedom = NumericConversion.toBigDecimal(degreesOfFreedom, 'degreesOfFreedom')
+    if (normalizedDegreesOfFreedom <= 0.0d) {
       throw new IllegalArgumentException("Degrees of freedom must be positive, got: $degreesOfFreedom")
     }
-    this.degreesOfFreedom = degreesOfFreedom
+    this.degreesOfFreedom = normalizedDegreesOfFreedom
   }
 
-  double getDegreesOfFreedom() {
+  BigDecimal getDegreesOfFreedom() {
     degreesOfFreedom
   }
 
+  BigDecimal cumulativeProbability(Number x) {
+    BigDecimal.valueOf(cumulativeProbabilityValue(NumericConversion.toFiniteDouble(x, 'x')))
+  }
+
   @Override
+  @Deprecated
   double cumulativeProbability(double x) {
+    cumulativeProbabilityValue(x)
+  }
+
+  BigDecimal inverseCumulativeProbability(Number p) {
+    BigDecimal.valueOf(inverseCumulativeProbabilityValue(NumericConversion.toFiniteDouble(p, 'p')))
+  }
+
+  @Deprecated
+  double inverseCumulativeProbability(double p) {
+    inverseCumulativeProbabilityValue(p)
+  }
+
+  private double cumulativeProbabilityValue(double x) {
     if (x <= 0.0d) {
       return 0.0d
     }
-    return SpecialFunctions.regularizedIncompleteGammaP(degreesOfFreedom / 2.0d, x / 2.0d)
+    return SpecialFunctions.regularizedIncompleteGammaP((degreesOfFreedom as double) / 2.0d, x / 2.0d)
   }
 
-  double inverseCumulativeProbability(double p) {
+  private double inverseCumulativeProbabilityValue(double p) {
     if (p < 0.0d || p > 1.0d) {
       throw new IllegalArgumentException("p must be between 0 and 1, got: $p")
     }
@@ -42,12 +63,13 @@ class ChiSquaredDistribution implements ContinuousDistribution {
 
     double guess = initialQuantileGuess(p)
     double low = 0.0d
-    double high = Math.max(guess, degreesOfFreedom)
+    double degrees = degreesOfFreedom as double
+    double high = Math.max(guess, degrees)
     if (high <= 0.0d || !Double.isFinite(high)) {
-      high = degreesOfFreedom
+      high = degrees
     }
 
-    while (cumulativeProbability(high) < p) {
+    while (cumulativeProbabilityValue(high) < p) {
       low = high
       high *= 2.0d
       if (high > Double.MAX_VALUE / 4.0d) {
@@ -57,7 +79,7 @@ class ChiSquaredDistribution implements ContinuousDistribution {
 
     for (int i = 0; i < MAX_INVERSE_ITERATIONS; i++) {
       double mid = 0.5d * (low + high)
-      double cdf = cumulativeProbability(mid)
+      double cdf = cumulativeProbabilityValue(mid)
       if (Math.abs(cdf - p) < 1e-12d || high - low < 1e-12d * Math.max(1.0d, mid)) {
         return mid
       }
@@ -74,11 +96,12 @@ class ChiSquaredDistribution implements ContinuousDistribution {
   private double initialQuantileGuess(double p) {
     NormalDistribution standardNormal = new NormalDistribution()
     double z = standardNormal.inverseCumulativeProbability(p)
-    double a = 2.0d / (9.0d * degreesOfFreedom)
+    double degrees = degreesOfFreedom as double
+    double a = 2.0d / (9.0d * degrees)
     double term = 1.0d - a + z * Math.sqrt(a)
     if (term <= 0.0d) {
-      return degreesOfFreedom * 0.25d
+      return degrees * 0.25d
     }
-    return degreesOfFreedom * term * term * term
+    return degrees * term * term * term
   }
 }

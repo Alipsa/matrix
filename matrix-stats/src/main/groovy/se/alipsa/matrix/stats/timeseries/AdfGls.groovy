@@ -64,6 +64,7 @@ class AdfGls {
    * @param type The type of test: "drift" (constant only) or "trend" (constant and trend)
    * @return AdfGlsResult containing test statistic and conclusion
    */
+  @SuppressWarnings('MethodSize')
   static AdfGlsResult test(double[] data, Integer lags = null, String type = "drift") {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
@@ -286,7 +287,7 @@ class AdfGls {
         } else {
           log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
         }
-      } catch (RuntimeException e) {
+      } catch (Exception e) {
         log.error("Potential bug while selecting lag $p for ADF-GLS: ${e.message}", e)
         throw e
       }

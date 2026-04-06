@@ -24,6 +24,7 @@ final class BrentSolver {
    * @param maxIterations maximum iteration count
    * @return solver result containing the root and iteration metadata
    */
+  @SuppressWarnings('MethodSize')
   static SolverResult solve(
       UnivariateObjective function,
       double min,

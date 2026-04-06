@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 /**
  * Barnard's exact test is an unconditional exact test for 2×2 contingency tables that is uniformly
  * more powerful than Fisher's exact test. It tests for association between two binary variables

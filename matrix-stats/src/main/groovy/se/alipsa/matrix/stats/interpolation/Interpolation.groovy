@@ -50,8 +50,8 @@ final class Interpolation {
     List<BigDecimal> range = InterpolationAdapters.validateRange(ListConverter.toBigDecimals(y), domain.size())
     BigDecimal target = InterpolationAdapters.validateTarget(targetX, TARGET_X_LABEL)
 
-    if (target < domain[0] || target > domain[domain.size() - 1]) {
-      throw new IllegalArgumentException("TargetX ${target} is outside the interpolation domain [${domain[0]}, ${domain[domain.size() - 1]}]")
+    if (target < domain[0] || target > domain[-1]) {
+      throw new IllegalArgumentException("TargetX ${target} is outside the interpolation domain [${domain[0]}, ${domain[-1]}]")
     }
 
     if (domain.size() == 1) {
@@ -70,7 +70,7 @@ final class Interpolation {
         return interpolate(domain[i - 1], range[i - 1], domain[i], range[i], target)
       }
     }
-    range[range.size() - 1]
+    range[-1]
   }
 
   /**

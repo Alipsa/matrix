@@ -36,6 +36,7 @@ final class Terms {
     final boolean isDropped
     final String droppedReason
 
+    @SuppressWarnings('ParameterCount')
     TermInfo(
       FormulaTerm sourceTerm,
       String label,

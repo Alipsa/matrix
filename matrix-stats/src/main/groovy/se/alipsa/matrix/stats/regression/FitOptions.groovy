@@ -14,4 +14,13 @@ interface FitOptions {
 
   /** Empty options for methods that require no configuration. */
   static final FitOptions NONE = new FitOptions() {}
+
+  /**
+   * Indicates whether these options carry configuration beyond {@link #NONE}.
+   *
+   * @return true when this instance is not the sentinel no-options value
+   */
+  default boolean configured() {
+    this != NONE
+  }
 }

@@ -64,6 +64,7 @@ class Df {
    * @param type The type of test: "none" (no intercept/trend), "drift" (intercept only), or "trend" (intercept and trend)
    * @return DfResult containing test statistic and conclusion
    */
+  @SuppressWarnings('MethodSize')
   static DfResult test(double[] data, String type = "drift") {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")

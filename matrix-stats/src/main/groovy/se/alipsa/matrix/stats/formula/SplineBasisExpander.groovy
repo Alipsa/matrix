@@ -41,8 +41,12 @@ final class SplineBasisExpander {
     double xMin = Double.MAX_VALUE
     double xMax = -Double.MAX_VALUE
     for (double v : x) {
-      if (v < xMin) xMin = v
-      if (v > xMax) xMax = v
+      if (v < xMin) {
+        xMin = v
+      }
+      if (v > xMax) {
+        xMax = v
+      }
     }
 
     if (xMax == xMin) {

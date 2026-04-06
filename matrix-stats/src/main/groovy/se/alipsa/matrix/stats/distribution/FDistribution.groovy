@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * F-distribution (Fisher-Snedecor distribution) implementation.
  * Provides CDF and p-value calculations for ANOVA and variance ratio tests.
@@ -9,8 +11,8 @@ package se.alipsa.matrix.stats.distribution
 @SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution implements ContinuousDistribution {
 
-  private final double dfNumerator
-  private final double dfDenominator
+  private final BigDecimal dfNumerator
+  private final BigDecimal dfDenominator
 
   /**
    * Creates an F-distribution with the specified degrees of freedom.
@@ -18,15 +20,21 @@ class FDistribution implements ContinuousDistribution {
    * @param dfNumerator degrees of freedom for the numerator (between groups)
    * @param dfDenominator degrees of freedom for the denominator (within groups)
    */
-  FDistribution(double dfNumerator, double dfDenominator) {
-    if (dfNumerator <= 0 || dfDenominator <= 0) {
+  FDistribution(Number dfNumerator, Number dfDenominator) {
+    BigDecimal normalizedDfNumerator = NumericConversion.toBigDecimal(dfNumerator, 'dfNumerator')
+    BigDecimal normalizedDfDenominator = NumericConversion.toBigDecimal(dfDenominator, 'dfDenominator')
+    if (normalizedDfNumerator <= 0 || normalizedDfDenominator <= 0) {
       throw new IllegalArgumentException(
           "Degrees of freedom must be positive, got: dfNumerator=$dfNumerator, dfDenominator=$dfDenominator"
       )
     }
-    this.dfNumerator = dfNumerator
-    this.dfDenominator = dfDenominator
+    this.dfNumerator = normalizedDfNumerator
+    this.dfDenominator = normalizedDfDenominator
   }
+
+  BigDecimal getDfNumerator() { dfNumerator }
+
+  BigDecimal getDfDenominator() { dfDenominator }
 
   /**
    * Computes the cumulative distribution function (CDF) of the F-distribution.
@@ -35,7 +43,16 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-value (must be >= 0)
    * @return probability P(F <= f)
    */
+  BigDecimal cdf(Number f) {
+    BigDecimal.valueOf(cdfValue(NumericConversion.toFiniteDouble(f, 'f')))
+  }
+
+  @Deprecated
   double cdf(double f) {
+    cdfValue(f)
+  }
+
+  private double cdfValue(double f) {
     if (f < 0) {
       throw new IllegalArgumentException("f must be non-negative, got: $f")
     }
@@ -46,8 +63,10 @@ class FDistribution implements ContinuousDistribution {
     // F-distribution CDF in terms of incomplete beta function
     // F ~ (dfNum/dfDen) * (B/A) where A,B are chi-squared
     // CDF = I_x(dfNum/2, dfDen/2) where x = (dfNum*f)/(dfNum*f + dfDen)
-    double x = (dfNumerator * f) / (dfNumerator * f + dfDenominator)
-    return SpecialFunctions.regularizedIncompleteBeta(x, dfNumerator / 2.0d, dfDenominator / 2.0d)
+    double numerator = dfNumerator as double
+    double denominator = dfDenominator as double
+    double x = (numerator * f) / (numerator * f + denominator)
+    return SpecialFunctions.regularizedIncompleteBeta(x, numerator / 2.0d, denominator / 2.0d)
   }
 
   /**
@@ -56,8 +75,14 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-value (must be >= 0)
    * @return probability P(F <= f)
    */
-  double cumulativeProbability(double f) {
+  BigDecimal cumulativeProbability(Number f) {
     cdf(f)
+  }
+
+  @Override
+  @Deprecated
+  double cumulativeProbability(double f) {
+    cdfValue(f)
   }
 
   /**
@@ -67,8 +92,13 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-statistic
    * @return p-value (probability of observing a value at least as extreme)
    */
+  BigDecimal pValue(Number f) {
+    1.0 - cdf(f)
+  }
+
+  @Deprecated
   double pValue(double f) {
-    return 1.0 - cdf(f)
+    1.0d - cdfValue(f)
   }
 
   /**
@@ -79,8 +109,13 @@ class FDistribution implements ContinuousDistribution {
    * @param dfDenominator degrees of freedom for the denominator
    * @return p-value
    */
+  static BigDecimal pValue(Number f, Number dfNumerator, Number dfDenominator) {
+    new FDistribution(dfNumerator, dfDenominator).pValue(f)
+  }
+
+  @Deprecated
   static double pValue(double f, double dfNumerator, double dfDenominator) {
-    return new FDistribution(dfNumerator, dfDenominator).pValue(f)
+    new FDistribution(dfNumerator, dfDenominator).pValue(f) as double
   }
 
   /**
@@ -89,7 +124,11 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the F-statistic
    */
-  static double oneWayAnovaFValue(List<double[]> groups) {
+  static BigDecimal oneWayAnovaFValue(List<?> groups) {
+    BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizeGroups(groups)))
+  }
+
+  private static double oneWayAnovaFValueInternal(List<double[]> groups) {
     int k = groups.size()  // number of groups
     double grandSum = 0.0
     List<Integer> groupSizes = groups.collect { double[] group -> group.length }
@@ -131,7 +170,7 @@ class FDistribution implements ContinuousDistribution {
     double msw = ssw / dfWithin
 
     // F-statistic
-    return msb / msw
+    msb / msw
   }
 
   /**
@@ -140,14 +179,26 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the p-value for the ANOVA test
    */
-  static double oneWayAnovaPValue(List<double[]> groups) {
+  static BigDecimal oneWayAnovaPValue(List<?> groups) {
     int k = groups.size()
-    int n = groups.sum { double[] group -> group.length } as int
+    int n = normalizeGroups(groups).sum { double[] group -> group.length } as int
 
-    double f = oneWayAnovaFValue(groups)
-    double dfBetween = k - 1
-    double dfWithin = n - k
+    BigDecimal f = oneWayAnovaFValue(groups)
+    BigDecimal dfBetween = k - 1
+    BigDecimal dfWithin = n - k
 
-    return pValue(f, dfBetween, dfWithin)
+    pValue(f, dfBetween, dfWithin)
+  }
+
+  private static List<double[]> normalizeGroups(List<?> groups) {
+    groups.collect { Object group ->
+      if (group instanceof double[]) {
+        group as double[]
+      } else if (group instanceof List) {
+        NumericConversion.toDoubleArray(group as List<? extends Number>, 'group')
+      } else {
+        throw new IllegalArgumentException("Each group must be a List<Number> or double[], got ${group?.class?.simpleName}")
+      }
+    }
   }
 }
