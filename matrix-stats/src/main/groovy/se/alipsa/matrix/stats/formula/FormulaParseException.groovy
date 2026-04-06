@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Exception raised when a formula cannot be tokenized or parsed.
  */
-@CompileStatic
 class FormulaParseException extends IllegalArgumentException {
 
   final int position

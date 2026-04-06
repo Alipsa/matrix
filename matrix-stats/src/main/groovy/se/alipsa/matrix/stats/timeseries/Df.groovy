@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 /**
  * The Dickey-Fuller (DF) test is the foundational statistical test for detecting unit roots in time series.
  * A unit root indicates non-stationarity, meaning the series has no tendency to return to a long-run mean
@@ -56,7 +54,6 @@ import groovy.transform.CompileStatic
  * <li>R's tseries package: adf.test() and urca package: ur.df()</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Df {
 
@@ -262,7 +259,6 @@ class Df {
   /**
    * Result class for Dickey-Fuller test.
    */
-  @CompileStatic
   static class DfResult {
     /** The Dickey-Fuller test statistic (t-statistic for γ) */
     double statistic

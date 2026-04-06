@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 /**
  * Chi-squared distribution implementation backed by the regularized incomplete gamma function.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ChiSquaredDistribution implements ContinuousDistribution {
 

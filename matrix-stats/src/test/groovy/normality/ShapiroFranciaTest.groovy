@@ -123,12 +123,11 @@ class ShapiroFranciaTest {
   }
 
   @Test
-  void testArrayInput() {
-    // Test with array input
-    double[] data = new double[50]
+  void testListInputFromArraySource() {
+    List<Double> data = []
     Random rnd = new Random(789)
     for (int i = 0; i < 50; i++) {
-      data[i] = rnd.nextGaussian()
+      data << rnd.nextGaussian()
     }
 
     def result = ShapiroFrancia.test(data)

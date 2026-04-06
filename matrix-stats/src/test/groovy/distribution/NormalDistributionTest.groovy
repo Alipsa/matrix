@@ -3,8 +3,6 @@ package distribution
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 
-import groovy.transform.CompileStatic
-
 import org.apache.commons.math3.distribution.NormalDistribution as ApacheNormalDistribution
 import org.junit.jupiter.api.Test
 
@@ -13,7 +11,6 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
 /**
  * Reference tests for the native normal distribution implementation.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class NormalDistributionTest {
 

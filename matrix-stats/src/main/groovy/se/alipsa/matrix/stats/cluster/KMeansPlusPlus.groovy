@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.cluster
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
@@ -195,7 +193,6 @@ import se.alipsa.matrix.core.util.Logger
  * @see GroupEstimator
  * @see ClusteredPoint
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class KMeansPlusPlus {
 

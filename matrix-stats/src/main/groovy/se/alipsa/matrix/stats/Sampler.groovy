@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
@@ -12,7 +10,6 @@ import se.alipsa.matrix.core.Row
  * which is useful for machine learning workflows. This is distinct from
  * Matrix.split() and Matrix.splitInto() which provide deterministic chunking.</p>
  */
-@CompileStatic
 class Sampler {
 
   /**

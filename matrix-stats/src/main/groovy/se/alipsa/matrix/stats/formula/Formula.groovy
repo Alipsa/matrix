@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Public entry point for formula parsing, normalization, and updates.
  *
@@ -21,7 +19,6 @@ import groovy.transform.CompileStatic
  * {@code *} and grouped powers into explicit interaction terms. Dot expansion is
  * resolved later by {@link ModelFrame} because it depends on the available data columns.
  */
-@CompileStatic
 final class Formula {
 
   private Formula() {

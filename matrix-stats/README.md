@@ -160,7 +160,8 @@ Grid<BigDecimal> inverseGrid = Linalg.inverse(grid)
 assert inverseGrid[0, 0] == 0.6
 
 def svd = Linalg.svd(grid)
-assert svd.singularValues.length == 2
+assert svd.singularValues.size() == 2
+assert svd.reconstruct()[0, 0] == 3.0
 ```
 
 ## Interpolation

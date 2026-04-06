@@ -1,14 +1,11 @@
 package se.alipsa.matrix.stats.ttest
 
-import groovy.transform.CompileStatic
-
 import java.math.RoundingMode
 
 /**
  * Result object for two-sample t-tests (Student's and Welch's).
  * Contains all relevant statistics from a t-test comparison of two independent samples.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class TtestResult {
   Integer n1

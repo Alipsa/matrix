@@ -64,7 +64,6 @@ import groovy.transform.CompileStatic
  * enumerate all possible tables and optimize over the nuisance parameter π. For very large samples,
  * consider using the chi-squared test instead.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Barnard {
 
@@ -285,7 +284,6 @@ class Barnard {
   /**
    * Result class for Barnard's test.
    */
-  @CompileStatic
   static class BarnardResult {
     /** The Wald score statistic */
     double statistic

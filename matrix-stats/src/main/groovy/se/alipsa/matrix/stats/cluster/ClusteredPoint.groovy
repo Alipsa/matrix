@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.cluster
 
-import groovy.transform.CompileStatic
-
 /**
  * ClusteredPoint is a simple data structure that represents a data point assigned to a cluster
  * in K-Means clustering. It pairs a cluster identifier with the point's feature vector.
@@ -121,7 +119,6 @@ import groovy.transform.CompileStatic
  * @see KMeansPlusPlus
  * @see KMeans
  */
-@CompileStatic
 class ClusteredPoint {
   final int clusterId
   final double[] point

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 /**
  * Minimal interface for continuous distributions that expose a cumulative distribution function.
  */
-@CompileStatic
 interface ContinuousDistribution {
 
   /**

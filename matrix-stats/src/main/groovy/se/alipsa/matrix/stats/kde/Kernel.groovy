@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.kde
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -103,7 +101,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * @see KernelDensity
  * @see BandwidthSelector
  */
-@CompileStatic
 enum Kernel {
 
   /**

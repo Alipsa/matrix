@@ -1,6 +1,5 @@
 package linalg
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -122,7 +121,7 @@ class LinalgTest {
 
     def result = Linalg.svd(matrix)
 
-    assertArrayEquals([4.242640687119285d, 2.0d] as double[], result.singularValues, 1e-8)
+    assertVectorEquals([4.242640687119285d, 2.0d] as double[], result.singularValues, 1e-8)
     assertMatrixEquals([
       [3.0d, 1.0d],
       [1.0d, 3.0d],
@@ -245,14 +244,6 @@ class LinalgTest {
       for (int col = 0; col < expected[row].length; col++) {
         assertEquals(expected[row][col], actual[row, col] as double, tolerance, "Mismatch at [${row},${col}]")
       }
-    }
-  }
-
-  private static void assertMatrixEquals(double[][] expected, double[][] actual, double tolerance = TOLERANCE) {
-    assertEquals(expected.length, actual.length)
-    assertEquals(expected[0].length, actual[0].length)
-    for (int row = 0; row < expected.length; row++) {
-      assertArrayEquals(expected[row], actual[row], tolerance, "Mismatch at row ${row}")
     }
   }
 

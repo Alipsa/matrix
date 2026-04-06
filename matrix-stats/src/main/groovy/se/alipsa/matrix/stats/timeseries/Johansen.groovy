@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 import se.alipsa.matrix.stats.linear.SingularMatrixException
 
@@ -74,7 +72,6 @@ import se.alipsa.matrix.stats.linear.SingularMatrixException
  * <li>Stata's vecrank command</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Johansen {
 
@@ -298,7 +295,6 @@ class Johansen {
   /**
    * Result class for Johansen cointegration test.
    */
-  @CompileStatic
   static class JohansenResult {
     /** Eigenvalues (sorted in descending order) */
     double[] eigenvalues
@@ -362,20 +358,17 @@ class Johansen {
     }
   }
 
-  @CompileStatic
   private static class DifferencedData {
     double[][] deltaY
     double[][] laggedY
     int effectiveN
   }
 
-  @CompileStatic
   private static class ResidualMatrices {
     double[][] r0
     double[][] r1
   }
 
-  @CompileStatic
   private static class MomentMatrices {
     double[][] s00
     double[][] s11

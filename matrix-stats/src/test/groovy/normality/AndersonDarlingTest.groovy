@@ -50,8 +50,8 @@ class AndersonDarlingTest {
 
     def result = AndersonDarling.testNormality(data)
 
-    assertEquals(0.1558, result.adjustedStatistic, 0.01, 'Adjusted A² statistic')
-    assertEquals(0.9427, result.pValue, 0.05, 'P-value')
+    assertEquals(0.1558, result.adjustedStatistic as double, 0.01, 'Adjusted A² statistic')
+    assertEquals(0.9427, result.pValue as double, 0.05, 'P-value')
   }
 
   @Test
@@ -143,8 +143,8 @@ class AndersonDarlingTest {
 
     def result = AndersonDarling.testNormality(data)
 
-    assertEquals(0.2697, result.adjustedStatistic, 0.01, 'Adjusted A² for standard normal')
-    assertEquals(0.6414, result.pValue, 0.05, 'P-value for standard normal')
+    assertEquals(0.2697, result.adjustedStatistic as double, 0.01, 'Adjusted A² for standard normal')
+    assertEquals(0.6414, result.pValue as double, 0.05, 'P-value for standard normal')
     assertTrue(result.pValue > 0.05, 'Should not reject H0 for standard normal data')
   }
 }

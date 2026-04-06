@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Stat
 
 /**
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.Stat
  *
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class TDistribution {
 

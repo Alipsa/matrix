@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.kde
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.util.NumericConversion
 
@@ -175,7 +173,6 @@ import java.math.RoundingMode
  * @see BandwidthSelector
  */
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
-@CompileStatic
 class KernelDensity {
 
   /** The kernel function used for density estimation */

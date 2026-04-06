@@ -3,8 +3,6 @@ package se.alipsa.matrix.stats.distribution
 import static java.math.BigDecimal.*
 import static se.alipsa.matrix.ext.NumberExtension.*
 
-import groovy.transform.CompileStatic
-
 import java.math.MathContext
 import java.math.RoundingMode
 /**
@@ -14,7 +12,6 @@ import java.math.RoundingMode
  * <p>This implementation provides excellent numerical accuracy (1e-10 or better)
  * and is self-contained with no external dependencies.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class SpecialFunctions {
 

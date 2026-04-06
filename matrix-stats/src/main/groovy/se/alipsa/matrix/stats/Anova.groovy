@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.FDistribution
@@ -15,7 +13,6 @@ import se.alipsa.matrix.stats.distribution.FDistribution
  * two or more population means are equal, and therefore generalizes the t-test beyond two means.
  * In other words, the ANOVA is used to test the difference between two or more means.
  */
-@CompileStatic
 class Anova {
 
   static AnovaResult aov(Matrix data, List<String> colNames) {

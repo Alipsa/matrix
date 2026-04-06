@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
 
@@ -23,7 +21,6 @@ import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
  * println "odds ratio: ${result.oddsRatio}"
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class Fisher {
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.Logger
 
 /**
@@ -54,7 +52,6 @@ import se.alipsa.matrix.core.util.Logger
  * <li>Stata's dfuller command with -gls option</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class AdfGls {
   private static final Logger log = Logger.getLogger(AdfGls)
@@ -343,7 +340,6 @@ class AdfGls {
   /**
    * Result class for ADF-GLS test.
    */
-  @CompileStatic
   static class AdfGlsResult {
     /** The ADF-GLS test statistic (t-statistic for γ) */
     double statistic

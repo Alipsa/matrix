@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
@@ -17,7 +15,6 @@ import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
  *
  * Reference: Ljung, G. M. and Box, G. E. P. (1978). "On a Measure of Lack of Fit in Time Series Models"
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Portmanteau {
 
@@ -148,7 +145,6 @@ class Portmanteau {
   /**
    * Result class for the Ljung-Box test.
    */
-  @CompileStatic
   static class LjungBoxResult {
     /** The Ljung-Box Q test statistic */
     double statistic

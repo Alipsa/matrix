@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 
 /**
@@ -72,7 +70,6 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
  * <li>Mood, A. M. (1940). "The Distribution Theory of Runs", Annals of Mathematical Statistics, 11(4), 367-392.</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class TurningPoint {
 
@@ -147,7 +144,6 @@ class TurningPoint {
   /**
    * Result class for Turning Point test.
    */
-  @CompileStatic
   static class TurningPointResult {
     /** The Z-statistic (standardized test statistic) */
     double statistic

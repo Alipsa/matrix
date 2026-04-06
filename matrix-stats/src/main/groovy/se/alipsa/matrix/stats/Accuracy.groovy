@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Stat
 
 import java.math.MathContext
@@ -10,7 +8,6 @@ import java.math.MathContext
  * Statistical accuracy metrics for evaluating predictions against actual values.
  * All methods accept lists of actual and predicted values and return accuracy measures.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'VariableName'])
 class Accuracy {
 

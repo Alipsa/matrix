@@ -1,9 +1,8 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * D'Agostino's K² test (K-squared test) is a powerful omnibus test for normality that combines
@@ -53,7 +52,7 @@ import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
  * <p><b>Example usage:</b></p>
  * <pre>
  * // Test normality of a dataset
- * def data = [2.3, 3.1, 2.8, 3.5, 2.9, 3.2, 2.7, 3.0, 3.3, 2.6] as double[]
+ * def data = [2.3, 3.1, 2.8, 3.5, 2.9, 3.2, 2.7, 3.0, 3.3, 2.6]
  * def result = KSquared.test(data)
  * println "K² statistic: ${result.statistic}"
  * println "p-value: ${result.pValue}"
@@ -94,29 +93,29 @@ import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
  * For very large samples (n > 2000), the Jarque-Bera test is also appropriate and computationally
  * simpler, though K² generally has better finite-sample properties.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class KSquared {
 
   /**
    * Performs D'Agostino's K² test for normality.
    *
-   * @param data The sample data as double array
+   * @param data The sample data
    * @return KSquaredResult containing test statistic, p-value, and component Z-scores
    */
-  static KSquaredResult test(double[] data) {
+  static KSquaredResult test(List<? extends Number> data) {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
     }
-    if (data.length < 8) {
-      throw new IllegalArgumentException("Sample size must be at least 8 (got ${data.length})")
+    if (data.size() < 8) {
+      throw new IllegalArgumentException("Sample size must be at least 8 (got ${data.size()})")
     }
 
-    int n = data.length
+    double[] numericData = NumericConversion.toDoubleArray(data, 'data')
+    int n = numericData.length
 
     // Calculate mean
     double mean = 0.0
-    for (double x : data) {
+    for (double x : numericData) {
       mean += x
     }
     mean /= n
@@ -126,7 +125,7 @@ class KSquared {
     double m3 = 0.0  // Third moment (for skewness)
     double m4 = 0.0  // Fourth moment (for kurtosis)
 
-    for (double x : data) {
+    for (double x : numericData) {
       double diff = x - mean
       double diff2 = diff * diff
       m2 += diff2
@@ -177,12 +176,12 @@ class KSquared {
     double pValue = 1.0 - chiSq.cumulativeProbability(kSquared)
 
     return new KSquaredResult(
-      statistic: kSquared,
-      pValue: pValue,
-      skewness: b1,
-      kurtosis: b2,
-      zSkewness: zSkewness,
-      zKurtosis: zKurtosis,
+      statistic: BigDecimal.valueOf(kSquared),
+      pValue: BigDecimal.valueOf(pValue),
+      skewness: BigDecimal.valueOf(b1),
+      kurtosis: BigDecimal.valueOf(b2),
+      zSkewness: BigDecimal.valueOf(zSkewness),
+      zKurtosis: BigDecimal.valueOf(zKurtosis),
       sampleSize: n
     )
   }
@@ -199,10 +198,8 @@ class KSquared {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
 
-    List<Object> column = matrix.column(columnName)
-    double[] data = column.collect { it as double } as double[]
-
-    return test(data)
+    List<?> column = matrix.column(columnName)
+    test(toNumericList(column, "Matrix column '${columnName}'"))
   }
 
   /**
@@ -217,34 +214,31 @@ class KSquared {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
 
-    List<Object> column = matrix.column(columnIndex)
-    double[] data = column.collect { it as double } as double[]
-
-    return test(data)
+    List<?> column = matrix.column(columnIndex)
+    test(toNumericList(column, "Matrix column ${columnIndex}"))
   }
 
   /**
    * Result class for D'Agostino's K² test.
    */
-  @CompileStatic
   static class KSquaredResult {
     /** The K² test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Sample skewness */
-    double skewness
+    BigDecimal skewness
 
     /** Sample kurtosis (excess kurtosis relative to normal distribution) */
-    double kurtosis
+    BigDecimal kurtosis
 
     /** Z-score for skewness */
-    double zSkewness
+    BigDecimal zSkewness
 
     /** Z-score for kurtosis */
-    double zKurtosis
+    BigDecimal zKurtosis
 
     /** Sample size */
     int sampleSize
@@ -255,8 +249,9 @@ class KSquared {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether the data appears normal
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         String reason = determineReason()
         return "Reject H0: Data significantly departs from normality (K² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)}) - ${reason}"
       } else {
@@ -268,8 +263,8 @@ class KSquared {
      * Determines the primary reason for departure from normality.
      */
     private String determineReason() {
-      double absZSkew = Math.abs(zSkewness)
-      double absZKurt = Math.abs(zKurtosis)
+      BigDecimal absZSkew = zSkewness.abs()
+      BigDecimal absZKurt = zKurtosis.abs()
 
       if (absZSkew > 1.96 && absZKurt > 1.96) {
         return "both skewness and kurtosis"
@@ -286,8 +281,9 @@ class KSquared {
      * @param alpha The significance level (default: 0.05)
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "significant departure from normality" : "consistent with normality"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ? "significant departure from normality" : "consistent with normality"
 
       return String.format(
         "D'Agostino's K² test:\\n" +
@@ -298,7 +294,7 @@ class KSquared {
         "Kurtosis: %.4f (Z = %.4f)\\n" +
         "Conclusion: Data shows %s at %.0f%% significance level",
         statistic, pValue, sampleSize, skewness, zSkewness, kurtosis, zKurtosis,
-        conclusion, alpha * 100
+        conclusion, alphaValue * 100
       )
     }
 
@@ -311,7 +307,19 @@ class KSquared {
   Skewness: ${String.format('%.4f', skewness)} (Z = ${String.format('%.4f', zSkewness)})
   Kurtosis: ${String.format('%.4f', kurtosis)} (Z = ${String.format('%.4f', zKurtosis)})
 
-  ${interpret()}"""
+      ${interpret()}"""
     }
+  }
+
+  private static List<Number> toNumericList(List<?> values, String label) {
+    List<Number> numericValues = []
+    for (int i = 0; i < values.size(); i++) {
+      Object value = values[i]
+      if (!(value instanceof Number)) {
+        throw new IllegalArgumentException("${label} must be numeric")
+      }
+      numericValues << (value as Number)
+    }
+    numericValues
   }
 }

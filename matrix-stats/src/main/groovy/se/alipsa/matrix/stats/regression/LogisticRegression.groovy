@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.solver.MultivariateObjective
 import se.alipsa.matrix.stats.solver.NelderMeadOptimizer
@@ -149,7 +147,6 @@ import java.math.RoundingMode
  * For multivariate logistic regression with multiple predictors, consider using dedicated statistical
  * or machine learning libraries. The dependent variable must be binary (coded as 0 or 1).</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class LogisticRegression {
 

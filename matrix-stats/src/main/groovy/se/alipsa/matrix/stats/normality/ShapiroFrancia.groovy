@@ -1,9 +1,8 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.StatUtils
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Shapiro-Francia test is a simplified and computationally efficient approximation to the
@@ -100,7 +99,6 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
  * or asymptotic tests like Jarque-Bera. The Shapiro-Francia test is optimal for the intermediate range
  * of 50 to 5000 observations where it provides an excellent balance of power and computational efficiency.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ShapiroFrancia {
 
@@ -135,22 +133,12 @@ class ShapiroFrancia {
     double pValue = calculatePValue(wPrime, n)
 
     return new ShapiroFranciaResult(
-      W: wPrime,
-      pValue: pValue,
+      W: BigDecimal.valueOf(wPrime),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: n,
-      mean: mean,
-      stdDev: Math.sqrt(variance)
+      mean: BigDecimal.valueOf(mean),
+      stdDev: BigDecimal.valueOf(Math.sqrt(variance))
     )
-  }
-
-  /**
-   * Performs the Shapiro-Francia test for normality on an array of doubles.
-   *
-   * @param data The sample data array
-   * @return ShapiroFranciaResult containing W' statistic and p-value
-   */
-  static ShapiroFranciaResult test(double[] data) {
-    return test(data.toList())
   }
 
   private static void validateData(List<? extends Number> data) {
@@ -274,23 +262,22 @@ class ShapiroFrancia {
   /**
    * Result class for the Shapiro-Francia test.
    */
-  @CompileStatic
   @SuppressWarnings('PropertyName')
   static class ShapiroFranciaResult {
     /** The Shapiro-Francia W' test statistic (0 to 1, higher values indicate more normality) */
-    double W
+    BigDecimal W
 
     /** The p-value for the test */
-    double pValue
+    BigDecimal pValue
 
     /** The sample size */
     int sampleSize
 
     /** The sample mean */
-    double mean
+    BigDecimal mean
 
     /** The sample standard deviation */
-    double stdDev
+    BigDecimal stdDev
 
     /**
      * Interprets the test result at the 5% significance level.
@@ -298,8 +285,9 @@ class ShapiroFrancia {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether the data appears normally distributed
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         return "Reject H0: Data does not appear to be normally distributed (W' = ${String.format('%.4f', W)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: Data appears to be consistent with a normal distribution (W' = ${String.format('%.4f', W)}, p = ${String.format('%.4f', pValue)})"
@@ -311,8 +299,9 @@ class ShapiroFrancia {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ?
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ?
         "not normally distributed" :
         "consistent with a normal distribution"
 
@@ -321,7 +310,7 @@ class ShapiroFrancia {
         "p-value: %.4f\n" +
         "Sample: n=%d, mean=%.4f, sd=%.4f\n" +
         "Conclusion at %.0f%% level: Data appears %s",
-        W, pValue, sampleSize, mean, stdDev, alpha * 100, conclusion
+        W, pValue, sampleSize, mean, stdDev, alphaValue * 100, conclusion
       )
     }
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.regression.MultipleLinearRegression
 
 /**
@@ -18,7 +16,6 @@ import se.alipsa.matrix.stats.regression.MultipleLinearRegression
  *
  * Reference: R's tseries::adf.test() and urca::ur.df()
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Adf {
 
@@ -247,7 +244,6 @@ class Adf {
   /**
    * Result class for the Augmented Dickey-Fuller test.
    */
-  @CompileStatic
   static class AdfResult {
     /** The ADF test statistic (t-statistic for γ coefficient) */
     double statistic

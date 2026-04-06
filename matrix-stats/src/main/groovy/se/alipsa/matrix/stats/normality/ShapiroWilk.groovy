@@ -1,9 +1,8 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.StatUtils
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Shapiro-Wilk test is widely considered the most powerful statistical test for assessing
@@ -102,7 +101,6 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
  * which provides good accuracy for sample sizes 3 ≤ n ≤ 5000. For very large samples (n > 5000),
  * consider using Anderson-Darling or other tests designed for large samples.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ShapiroWilk {
 
@@ -134,20 +132,10 @@ class ShapiroWilk {
     double pValue = calculatePValue(w, n)
 
     return new ShapiroWilkResult(
-      W: w,
-      pValue: pValue,
+      W: BigDecimal.valueOf(w),
+      pValue: BigDecimal.valueOf(pValue),
       sampleSize: n
     )
-  }
-
-  /**
-   * Performs the Shapiro-Wilk test for normality on an array of doubles.
-   *
-   * @param data The sample data array
-   * @return ShapiroWilkResult containing W statistic and p-value
-   */
-  static ShapiroWilkResult test(double[] data) {
-    return test(data.toList())
   }
 
   private static void validateData(List<? extends Number> data) {
@@ -284,10 +272,10 @@ class ShapiroWilk {
   @SuppressWarnings('PropertyName')
   static class ShapiroWilkResult {
     /** The W test statistic (0 < W ≤ 1, closer to 1 indicates normality) */
-    Double W
+    BigDecimal W
 
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The sample size */
     Integer sampleSize
@@ -298,15 +286,15 @@ class ShapiroWilk {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha), indicating non-normality
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     /**
      * Returns true if the data appears to be normally distributed at the 5% significance level.
      */
-    boolean isNormal(double alpha = 0.05) {
-      return pValue >= alpha
+    boolean isNormal(Number alpha = 0.05) {
+      pValue >= NumericConversion.toAlpha(alpha)
     }
 
     @Override

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import se.alipsa.matrix.core.util.Logger
@@ -10,7 +9,6 @@ import se.alipsa.matrix.core.util.Logger
  * The solving routines support the current time-series callers while adding
  * consistent validation, singularity checks, and diagnostic logging for numerical edge cases.
  */
-@CompileStatic
 @PackageScope
 @SuppressWarnings(['ParameterName'])
 final class TimeSeriesUtils {

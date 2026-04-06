@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 /**
  * Kwiatkowski–Phillips–Schmidt–Shin (KPSS) tests are used for testing a null hypothesis that an observable
  * time series is stationary around a deterministic trend (i.e. trend-stationary) against the alternative
@@ -18,7 +16,6 @@ import groovy.transform.CompileStatic
  *
  * Reference: R's tseries::kpss.test()
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Kpss {
 
@@ -185,7 +182,6 @@ class Kpss {
   /**
    * Result class for the KPSS test.
    */
-  @CompileStatic
   static class KpssResult {
     /** The KPSS test statistic */
     double statistic

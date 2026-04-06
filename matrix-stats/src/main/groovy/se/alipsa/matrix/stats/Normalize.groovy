@@ -1,9 +1,5 @@
 package se.alipsa.matrix.stats
 
-import static se.alipsa.matrix.core.ValueConverter.convert
-
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
@@ -22,7 +18,6 @@ import java.math.RoundingMode
  * </ol>
  *
  */
-@CompileStatic
 class Normalize {
 
   // ===== LOG NORMALIZATION =====

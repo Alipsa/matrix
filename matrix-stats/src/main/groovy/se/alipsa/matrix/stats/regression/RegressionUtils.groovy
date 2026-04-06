@@ -1,14 +1,11 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 import se.alipsa.matrix.stats.linear.SingularMatrixException
 
 /**
  * Internal helpers for regression diagnostics and standard error calculations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class RegressionUtils {
 

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.stats.linear
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.Logger
 
 /**
  * Native matrix operations used by the statistics implementations to avoid runtime
  * dependence on commons-math3 linear algebra classes.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class MatrixAlgebra {
 

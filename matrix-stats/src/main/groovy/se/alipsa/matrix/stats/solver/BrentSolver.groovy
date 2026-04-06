@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 /**
  * Bracketing Brent-Dekker root solver for one-dimensional continuous functions.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * rather than BigDecimal to preserve the algorithm's expected floating-point behavior
  * and avoid allocation inside the iteration loop.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class BrentSolver {
 
@@ -150,7 +147,6 @@ final class BrentSolver {
     throw new IllegalStateException("Brent solver failed to converge after $maxIterations iterations")
   }
 
-  @CompileStatic
   static class SolverResult {
     /** Root value returned by the solver. */
     double root

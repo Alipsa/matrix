@@ -1,8 +1,7 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Anderson–Darling test is a statistical test of whether a given sample of data is drawn from a
@@ -18,7 +17,6 @@ import se.alipsa.matrix.stats.distribution.NormalDistribution
  *
  * Reference: R's nortest::ad.test()
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class AndersonDarling {
 
@@ -33,8 +31,9 @@ class AndersonDarling {
    * @return AndersonDarlingResult containing test statistic, adjusted statistic, and p-value
    * @throws IllegalArgumentException if data is null, empty, or has fewer than 3 observations
    */
-  static AndersonDarlingResult testNormality(List<? extends Number> data, double alpha = 0.05) {
+  static AndersonDarlingResult testNormality(List<? extends Number> data, Number alpha = 0.05) {
     validateInput(data)
+    BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
 
     int n = data.size()
 
@@ -66,13 +65,13 @@ class AndersonDarling {
     double pValue = calculatePValue(adjustedASquared)
 
     return new AndersonDarlingResult(
-      statistic: aSquared,
-      adjustedStatistic: adjustedASquared,
-      pValue: pValue,
-      alpha: alpha,
+      statistic: BigDecimal.valueOf(aSquared),
+      adjustedStatistic: BigDecimal.valueOf(adjustedASquared),
+      pValue: BigDecimal.valueOf(pValue),
+      alpha: alphaValue,
       sampleSize: n,
-      mean: mean,
-      stdDev: stdDev
+      mean: BigDecimal.valueOf(mean),
+      stdDev: BigDecimal.valueOf(stdDev)
     )
   }
 
@@ -141,28 +140,27 @@ class AndersonDarling {
   /**
    * Result class for the Anderson-Darling normality test.
    */
-  @CompileStatic
   static class AndersonDarlingResult {
     /** The raw Anderson-Darling test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The adjusted test statistic (accounting for estimated parameters) */
-    double adjustedStatistic
+    BigDecimal adjustedStatistic
 
     /** The p-value for the test */
-    double pValue
+    BigDecimal pValue
 
     /** The significance level used for evaluation */
-    double alpha
+    BigDecimal alpha
 
     /** The sample size */
     int sampleSize
 
     /** The sample mean */
-    double mean
+    BigDecimal mean
 
     /** The sample standard deviation */
-    double stdDev
+    BigDecimal stdDev
 
     /**
      * Evaluates the test result at the specified significance level.

@@ -1368,10 +1368,10 @@ class GgStat {
     groups.each { groupKey, values ->
       if (values.size() >= 2) {
         KernelDensity kde = new KernelDensity(values, kdeParams)
-        double[] xVals = kde.getX()
-        double[] densityVals = kde.getDensity()
+        List<BigDecimal> xVals = kde.getX()
+        List<BigDecimal> densityVals = kde.getDensity()
 
-        for (int i = 0; i < xVals.length; i++) {
+        for (int i = 0; i < xVals.size(); i++) {
           allRows << [
               x: xVals[i],
               density: densityVals[i],

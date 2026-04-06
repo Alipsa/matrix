@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.ttest
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
 
@@ -37,7 +35,6 @@ import java.math.RoundingMode
  * which does not assume equal variances. For a cleaner API that always uses Welch's t-test,
  * see the {@link Welch} class.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Student {
 

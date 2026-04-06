@@ -1,14 +1,11 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 
 /**
  * Confidence ellipse calculations for bivariate normal data.
  */
 @SuppressWarnings('DuplicateNumberLiteral')
-@CompileStatic
 class Ellipse {
 
   /**

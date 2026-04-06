@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 /**
  * Comprehensive unit root testing framework that runs multiple complementary tests and synthesizes
  * their results into a unified assessment. Unit roots indicate non-stationarity where shocks have
@@ -88,7 +86,6 @@ import groovy.transform.CompileStatic
  * <li>Enders, W. (2014). Applied Econometric Time Series, 4th Edition, Chapter 4.</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class UnitRoot {
 
@@ -152,7 +149,6 @@ class UnitRoot {
   /**
    * Result class containing results from multiple unit root tests.
    */
-  @CompileStatic
   static class UnitRootResult {
     /** Dickey-Fuller test result */
     Df.DfResult dfResult

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.stats.distribution.NormalDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
@@ -86,7 +84,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * If you suspect a non-linear dose-response relationship, consider using multiple indicator variables
  * or non-linear modeling approaches instead.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CochranArmitage {
 
@@ -236,7 +233,6 @@ class CochranArmitage {
   /**
    * Result class for the Cochran-Armitage test.
    */
-  @CompileStatic
   static class CochranArmitagResult {
     /** The test statistic (Z-score) */
     BigDecimal statistic

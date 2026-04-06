@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 /**
  * Boschloo's exact test is an unconditional exact test for 2×2 contingency tables that provides
  * uniformly greater statistical power than Fisher's exact test. It tests for association between
@@ -78,7 +76,6 @@ import groovy.transform.CompileStatic
  * at multiple values of the nuisance parameter. For very large samples, consider using the chi-squared
  * test or Barnard's test instead.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Boschloo {
 
@@ -301,7 +298,6 @@ class Boschloo {
   /**
    * Result class for Boschloo's test.
    */
-  @CompileStatic
   static class BoschlooResult {
     /** The p-value (two-sided) */
     double pValue

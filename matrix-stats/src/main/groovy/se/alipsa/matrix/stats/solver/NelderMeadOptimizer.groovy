@@ -9,7 +9,6 @@ import groovy.transform.CompileStatic
  * That keeps the implementation close to the standard algorithm and avoids boxing or
  * BigDecimal overhead inside hot optimization loops.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class NelderMeadOptimizer {
 

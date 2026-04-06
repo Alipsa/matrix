@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.ttest
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
 
@@ -18,7 +16,6 @@ import java.math.RoundingMode
  * <p>The test uses the Welch-Satterthwaite equation to compute the degrees of freedom,
  * which may result in non-integer degrees of freedom.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class Welch {
 

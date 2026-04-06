@@ -44,13 +44,13 @@ class DensityStat {
       }
 
       KernelDensity kde = new KernelDensity(values, kdeParams)
-      double[] xVals = kde.getX()
-      double[] densityVals = kde.getDensity()
+      List<BigDecimal> xVals = kde.getX()
+      List<BigDecimal> densityVals = kde.getDensity()
       LayerData template = bucket.first()
-      for (int i = 0; i < xVals.length; i++) {
+      for (int i = 0; i < xVals.size(); i++) {
         LayerData datum = new LayerData(
-            x: xVals[i] as BigDecimal,
-            y: densityVals[i] as BigDecimal,
+            x: xVals[i],
+            y: densityVals[i],
             color: template?.color,
             fill: template?.fill,
             group: template?.group,
