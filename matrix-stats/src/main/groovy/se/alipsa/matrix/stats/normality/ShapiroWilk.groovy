@@ -103,7 +103,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * which provides good accuracy for sample sizes 3 ≤ n ≤ 5000. For very large samples (n > 5000),
  * consider using Anderson-Darling or other tests designed for large samples.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ShapiroWilk {
 

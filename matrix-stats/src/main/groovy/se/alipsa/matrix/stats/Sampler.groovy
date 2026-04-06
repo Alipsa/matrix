@@ -12,7 +12,6 @@ import se.alipsa.matrix.core.Row
  * which is useful for machine learning workflows. This is distinct from
  * Matrix.split() and Matrix.splitInto() which provide deterministic chunking.</p>
  */
-@CompileStatic
 class Sampler {
 
   /**

@@ -23,7 +23,6 @@ import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
  * println "odds ratio: ${result.oddsRatio}"
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class Fisher {
 

@@ -121,7 +121,6 @@ import groovy.transform.CompileStatic
  * @see KMeansPlusPlus
  * @see KMeans
  */
-@CompileStatic
 class ClusteredPoint {
   final int clusterId
   final double[] point

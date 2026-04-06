@@ -70,7 +70,6 @@ import se.alipsa.matrix.stats.distribution.FDistribution
  * <li>Stata's vargranger command</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Granger {
   private static final Logger log = Logger.getLogger(Granger)
@@ -229,7 +228,6 @@ class Granger {
   /**
    * Result class for Granger causality test.
    */
-  @CompileStatic
   static class GrangerResult {
     /** The F-statistic */
     double statistic

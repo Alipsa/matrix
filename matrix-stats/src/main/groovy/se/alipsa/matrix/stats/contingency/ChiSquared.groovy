@@ -31,7 +31,6 @@ import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
  * println "p-value: ${result.pValue}"
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ChiSquared {
 

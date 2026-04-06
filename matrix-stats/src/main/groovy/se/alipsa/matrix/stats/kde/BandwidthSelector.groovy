@@ -15,7 +15,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * This class provides automatic bandwidth selection using common rules of thumb.
  */
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
-@CompileStatic
 class BandwidthSelector {
 
   /**

@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 /**
  * Normal (Gaussian) distribution implementation with cumulative and inverse cumulative probability.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class NormalDistribution implements ContinuousDistribution {
 

@@ -6,7 +6,6 @@ import groovy.transform.CompileStatic
 /**
  * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */
-@CompileStatic
 class GoalSeek {
 
   /**

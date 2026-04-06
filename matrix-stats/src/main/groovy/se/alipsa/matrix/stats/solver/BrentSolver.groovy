@@ -9,7 +9,6 @@ import groovy.transform.CompileStatic
  * rather than BigDecimal to preserve the algorithm's expected floating-point behavior
  * and avoid allocation inside the iteration loop.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class BrentSolver {
 

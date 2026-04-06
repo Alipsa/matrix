@@ -10,7 +10,6 @@ import java.math.MathContext
  * Statistical accuracy metrics for evaluating predictions against actual values.
  * All methods accept lists of actual and predicted values and return accuracy measures.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'VariableName'])
 class Accuracy {
 

@@ -156,7 +156,6 @@ import java.math.RoundingMode
  * For multivariate quantile regression, consider using R's quantreg package or Python's statsmodels.
  * The quantile parameter τ must be in the open interval (0, 1).</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class QuantileRegression {
 

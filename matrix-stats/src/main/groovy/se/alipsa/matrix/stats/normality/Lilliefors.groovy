@@ -17,7 +17,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *
  * Reference: R's nortest::lillie.test()
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class Lilliefors {
 
@@ -164,7 +163,6 @@ class Lilliefors {
   /**
    * Result class for the Lilliefors normality test.
    */
-  @CompileStatic
   static class LillieforsResult {
     /** The Kolmogorov-Smirnov test statistic D */
     BigDecimal statistic

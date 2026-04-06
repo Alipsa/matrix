@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
  * <p>This low-level solver boundary intentionally uses primitive doubles to avoid
  * boxing and to match the native numeric kernels used by the concrete solvers.</p>
  */
-@CompileStatic
 interface UnivariateObjective {
 
   /**

@@ -25,7 +25,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * - von Mises, R. (1928). "Wahrscheinlichkeit, Statistik und Wahrheit"
  * - Anderson, T.W. (1962). "On the Distribution of the Two-Sample Cramer-von Mises Criterion"
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CramerVonMises {
 
@@ -180,7 +179,6 @@ class CramerVonMises {
   /**
    * Result class for the Cramér-von Mises test.
    */
-  @CompileStatic
   static class CramerVonMisesResult {
     /** The modified Cramér-von Mises test statistic W²* */
     BigDecimal statistic

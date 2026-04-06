@@ -59,7 +59,6 @@ import groovy.transform.CompileStatic
  * @see <a href="https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient">Spearman's Rank Correlation</a>
  * @see <a href="https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient">Kendall Tau Correlation</a>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class Correlation {
 
@@ -362,7 +361,6 @@ class Correlation {
 
   }
 
-  @CompileStatic
   private static class MergeSelection {
     BigDecimalPair pair
     int nextI

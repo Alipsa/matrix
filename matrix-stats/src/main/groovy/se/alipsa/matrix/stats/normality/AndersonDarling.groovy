@@ -19,7 +19,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *
  * Reference: R's nortest::ad.test()
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class AndersonDarling {
 
@@ -143,7 +142,6 @@ class AndersonDarling {
   /**
    * Result class for the Anderson-Darling normality test.
    */
-  @CompileStatic
   static class AndersonDarlingResult {
     /** The raw Anderson-Darling test statistic */
     BigDecimal statistic

@@ -92,7 +92,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * consider using the Shapiro-Wilk test. For medium samples (50 ≤ n < 2000), consider Anderson-Darling
  * or Shapiro-Francia tests.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class JarqueBera {
 

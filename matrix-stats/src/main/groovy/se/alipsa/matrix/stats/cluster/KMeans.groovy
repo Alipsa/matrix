@@ -106,7 +106,6 @@ import se.alipsa.matrix.core.Matrix
  * @see GroupEstimator
  * @see ClusteredPoint
  */
-@CompileStatic
 class KMeans {
 
   private Matrix matrix

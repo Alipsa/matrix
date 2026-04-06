@@ -195,7 +195,6 @@ import se.alipsa.matrix.core.util.Logger
  * @see GroupEstimator
  * @see ClusteredPoint
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class KMeansPlusPlus {
 

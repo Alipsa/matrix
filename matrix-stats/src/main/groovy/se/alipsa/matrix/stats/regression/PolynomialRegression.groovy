@@ -22,7 +22,6 @@ import java.math.RoundingMode
  * println poly.predict(6)  // ~36
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class PolynomialRegression {
 

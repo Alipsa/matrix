@@ -56,7 +56,6 @@ import groovy.transform.CompileStatic
  * <li>R's tseries package: adf.test() and urca package: ur.df()</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Df {
 
@@ -262,7 +261,6 @@ class Df {
   /**
    * Result class for Dickey-Fuller test.
    */
-  @CompileStatic
   static class DfResult {
     /** The Dickey-Fuller test statistic (t-statistic for γ) */
     double statistic

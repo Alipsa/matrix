@@ -106,7 +106,6 @@ import se.alipsa.matrix.core.Row
  * @see Sampler for train/test splitting after randomization
  * @see <a href="https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle">Fisher-Yates Shuffle Algorithm</a>
  */
-@CompileStatic
 class Randomize {
 
   /**

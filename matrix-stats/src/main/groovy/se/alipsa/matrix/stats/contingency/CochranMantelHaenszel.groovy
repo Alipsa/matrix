@@ -106,7 +106,6 @@ import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
  * interpreting the CMH test results. When heterogeneity is present, consider analyzing strata
  * separately or using stratified logistic regression.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CochranMantelHaenszel {
 
@@ -240,7 +239,6 @@ class CochranMantelHaenszel {
   /**
    * Result class for the Cochran-Mantel-Haenszel test.
    */
-  @CompileStatic
   static class CochranMantelHaenszelResult {
     /** The CMH test statistic (chi-squared) */
     double statistic

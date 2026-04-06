@@ -78,7 +78,6 @@ import groovy.transform.CompileStatic
  * at multiple values of the nuisance parameter. For very large samples, consider using the chi-squared
  * test or Barnard's test instead.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class Boschloo {
 
@@ -301,7 +300,6 @@ class Boschloo {
   /**
    * Result class for Boschloo's test.
    */
-  @CompileStatic
   static class BoschlooResult {
     /** The p-value (two-sided) */
     double pValue

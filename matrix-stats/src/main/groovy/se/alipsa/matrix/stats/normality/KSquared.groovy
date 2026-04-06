@@ -95,7 +95,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * For very large samples (n > 2000), the Jarque-Bera test is also appropriate and computationally
  * simpler, though K² generally has better finite-sample properties.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'VariableName'])
 class KSquared {
 

@@ -130,7 +130,6 @@ import groovy.transform.CompileStatic
  */
 
 @SuppressWarnings('DuplicateNumberLiteral')
-@CompileStatic
 class GroupEstimator {
 
   private final CalculationMethod method

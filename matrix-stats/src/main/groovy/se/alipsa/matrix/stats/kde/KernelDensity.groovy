@@ -175,7 +175,6 @@ import java.math.RoundingMode
  * @see BandwidthSelector
  */
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
-@CompileStatic
 class KernelDensity {
 
   /** The kernel function used for density estimation */

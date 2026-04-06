@@ -69,7 +69,7 @@ grep -n "Object " src/main/groovy/**/*.groovy | grep -v "Object>" | grep -v "imp
 grep -L "@CompileStatic" src/main/groovy/**/*.groovy | grep -v test
 ```
 
-- [ ] All production classes have `@CompileStatic`
+- [ ] All production classes have `@CompileStatic` unless the build script sets it to compile statically per default (e.g. in matrix-stats).
 - [ ] Only use `@CompileDynamic` when explicitly justified
 
 ---
@@ -649,6 +649,8 @@ When reviewing charting code:
 # Find potential issues
 grep -rn "TODO\|FIXME\|XXX" src/main/groovy/  # Unresolved items
 grep -rn "throw new RuntimeException" src/main/groovy/  # Should be specific type
+
+# Not in matrix-stats as all classes are compiled statically per default in that module
 find src/main/groovy -name "*.groovy" -exec grep -L "@CompileStatic" {} \;  # Missing annotation
 
 # Test semantic edge cases (add to test file temporarily)

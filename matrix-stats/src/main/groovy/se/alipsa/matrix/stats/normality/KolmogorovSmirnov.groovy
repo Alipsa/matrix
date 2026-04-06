@@ -105,7 +105,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * Lilliefors test instead, which provides a corrected version of the K-S test specifically for normality
  * testing with estimated parameters.</p>
  */
-@CompileStatic
 class KolmogorovSmirnov {
 
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000

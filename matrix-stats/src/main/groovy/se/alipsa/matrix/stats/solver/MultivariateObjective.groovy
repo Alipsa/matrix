@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
  * <p>This low-level solver boundary intentionally uses primitive double arrays to avoid
  * boxing and to preserve parity with the native optimization kernels.</p>
  */
-@CompileStatic
 interface MultivariateObjective {
 
   /**

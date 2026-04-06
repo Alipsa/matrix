@@ -149,7 +149,6 @@ import java.math.RoundingMode
  * For multivariate logistic regression with multiple predictors, consider using dedicated statistical
  * or machine learning libraries. The dependent variable must be binary (coded as 0 or 1).</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class LogisticRegression {
 

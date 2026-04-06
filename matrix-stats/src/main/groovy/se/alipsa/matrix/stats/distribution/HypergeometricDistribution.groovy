@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 /**
  * Hypergeometric distribution implementation for exact contingency-table calculations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class HypergeometricDistribution {
 

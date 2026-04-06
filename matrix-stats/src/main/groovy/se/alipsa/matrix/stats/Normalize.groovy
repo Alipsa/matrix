@@ -22,7 +22,6 @@ import java.math.RoundingMode
  * </ol>
  *
  */
-@CompileStatic
 class Normalize {
 
   // ===== LOG NORMALIZATION =====

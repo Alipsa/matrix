@@ -103,7 +103,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * @see KernelDensity
  * @see BandwidthSelector
  */
-@CompileStatic
 enum Kernel {
 
   /**

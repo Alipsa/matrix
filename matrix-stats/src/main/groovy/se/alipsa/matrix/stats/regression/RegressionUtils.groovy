@@ -8,7 +8,6 @@ import se.alipsa.matrix.stats.linear.SingularMatrixException
 /**
  * Internal helpers for regression diagnostics and standard error calculations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class RegressionUtils {
 

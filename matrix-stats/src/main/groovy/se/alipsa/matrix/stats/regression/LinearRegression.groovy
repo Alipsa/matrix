@@ -26,7 +26,6 @@ import java.math.RoundingMode
  *   <li>X is the independent variable.</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class LinearRegression {
 

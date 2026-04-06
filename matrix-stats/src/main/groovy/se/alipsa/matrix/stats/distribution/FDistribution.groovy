@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
  *
  * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution implements ContinuousDistribution {
 

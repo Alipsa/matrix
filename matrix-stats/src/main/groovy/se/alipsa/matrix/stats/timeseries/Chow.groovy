@@ -57,7 +57,6 @@ import se.alipsa.matrix.stats.distribution.FDistribution
  * <li>Stata's chow command</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Chow {
 
@@ -155,7 +154,6 @@ class Chow {
   /**
    * Result class for Chow test.
    */
-  @CompileStatic
   static class ChowResult {
     /** The Chow F-statistic */
     double statistic

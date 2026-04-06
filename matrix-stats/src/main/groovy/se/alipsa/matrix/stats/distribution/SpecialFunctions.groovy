@@ -14,7 +14,6 @@ import java.math.RoundingMode
  * <p>This implementation provides excellent numerical accuracy (1e-10 or better)
  * and is self-contained with no external dependencies.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class SpecialFunctions {
 

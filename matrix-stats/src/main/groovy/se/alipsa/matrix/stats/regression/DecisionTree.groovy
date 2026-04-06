@@ -136,14 +136,12 @@ import java.math.RoundingMode
  * <p><b>Note:</b> This implementation supports single-feature (univariate) regression only. For multivariate
  * regression trees, consider using ensemble methods or dedicated machine learning libraries.</p>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class DecisionTree {
 
   /**
    * Internal node class representing a binary tree node
    */
-  @CompileStatic
   static class Node {
     /** Split threshold (null for leaf nodes) */
     BigDecimal threshold

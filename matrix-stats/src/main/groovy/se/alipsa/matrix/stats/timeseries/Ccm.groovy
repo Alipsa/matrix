@@ -61,7 +61,6 @@ import groovy.transform.CompileStatic
  * Scientific Reports, 5, 14750.</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ParameterName', 'VariableName'])
 class Ccm {
 
@@ -327,7 +326,6 @@ class Ccm {
   /**
    * Helper class for nearest neighbor with distance.
    */
-  @CompileStatic
   private static class NeighborDistance {
     int index
     double distance
@@ -336,7 +334,6 @@ class Ccm {
   /**
    * Result class for CCM test.
    */
-  @CompileStatic
   static class CcmResult {
     /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X) */
     double[] xmapY
