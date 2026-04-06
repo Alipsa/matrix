@@ -160,11 +160,11 @@ class Ccm {
       List<? extends Number> librarySizes = null
   ) {
     List<Integer> normalizedLibrarySizes = librarySizes?.collect { Number value ->
-      NumericConversion.toBigDecimal(value, 'library size').intValue()
+      NumericConversion.toExactInt(value, 'library size')
     }
     test(
-      NumericConversion.toDoubleArray(x as List<? extends Number>, 'x'),
-      NumericConversion.toDoubleArray(y as List<? extends Number>, 'y'),
+      NumericConversion.toDoubleArray(x, 'x'),
+      NumericConversion.toDoubleArray(y, 'y'),
       E,
       tau,
       normalizedLibrarySizes

@@ -43,7 +43,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal probability(Number x) {
-    BigDecimal.valueOf(probability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+    BigDecimal.valueOf(probability(NumericConversion.toExactInt(x, 'x')))
   }
 
   @Deprecated
@@ -60,7 +60,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal cumulativeProbability(Number x) {
-    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toExactInt(x, 'x')))
   }
 
   @Deprecated
@@ -80,7 +80,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal upperCumulativeProbability(Number x) {
-    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toBigDecimal(x, 'x').intValue()))
+    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toExactInt(x, 'x')))
   }
 
   @Deprecated

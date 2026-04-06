@@ -218,6 +218,23 @@ final class NumericConversion {
   }
 
   /**
+   * Convert an integral numeric value to {@code int} and reject non-integral inputs.
+   *
+   * @param value the source value
+   * @param label the label used in validation messages
+   * @return the validated integer value
+   * @since 2.4.0
+   */
+  static int toExactInt(Object value, String label) {
+    BigDecimal normalized = toBigDecimal(value, label)
+    try {
+      normalized.intValueExact()
+    } catch (ArithmeticException e) {
+      throw new IllegalArgumentException("${label.capitalize()} must be an integer, got ${normalized}", e)
+    }
+  }
+
+  /**
    * Convert a unit-interval value to {@code BigDecimal} and validate that it lies in {@code [0, 1]}.
    *
    * @param value the source value

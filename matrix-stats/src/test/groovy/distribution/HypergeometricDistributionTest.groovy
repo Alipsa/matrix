@@ -83,4 +83,19 @@ class HypergeometricDistributionTest {
     assertEquals(distribution.cumulativeProbability(10), lowerTail as double, TOLERANCE)
     assertEquals(distribution.upperCumulativeProbability(10), upperTail as double, TOLERANCE)
   }
+
+  @Test
+  void testIdiomaticNumberOverloadsRejectNonIntegralInput() {
+    HypergeometricDistribution distribution = new HypergeometricDistribution(37, 21, 17)
+
+    IllegalArgumentException probabilityException = assertThrows(IllegalArgumentException) {
+      distribution.probability(10.5G)
+    }
+    assertEquals('X must be an integer, got 10.5', probabilityException.message)
+
+    IllegalArgumentException cumulativeException = assertThrows(IllegalArgumentException) {
+      distribution.cumulativeProbability(10.5G)
+    }
+    assertEquals('X must be an integer, got 10.5', cumulativeException.message)
+  }
 }

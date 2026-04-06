@@ -152,6 +152,18 @@ class CcmTest {
   }
 
   @Test
+  void testListOverloadRejectsNonIntegralLibrarySizes() {
+    List<BigDecimal> x = (1..30).collect { int i -> i * 0.1 }
+    List<BigDecimal> y = (1..30).collect { int i -> i * 0.2 }
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Ccm.test(x, y, 3, 1, [10.5G, 15])
+    }
+
+    assertEquals('Library size must be an integer, got 10.5', ex.message)
+  }
+
+  @Test
   void testValidation() {
     double[] x = new double[50]
     double[] y = new double[50]
