@@ -3,8 +3,6 @@ package se.alipsa.matrix.stats.distribution
 import static java.math.BigDecimal.*
 import static se.alipsa.matrix.ext.NumberExtension.*
 
-import groovy.transform.CompileStatic
-
 import java.math.MathContext
 import java.math.RoundingMode
 /**

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 /**
  * Convergent Cross Mapping (CCM) is a statistical test for detecting causal relationships between variables
  * in dynamical systems. Unlike Granger causality which assumes separable influences, CCM is designed for

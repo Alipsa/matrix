@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.cluster
 
-import groovy.transform.CompileStatic
-
 /**
  * GroupEstimator determines the optimal number of clusters (k) for K-Means clustering
  * using heuristic and analytical methods. Choosing the right k is critical for meaningful

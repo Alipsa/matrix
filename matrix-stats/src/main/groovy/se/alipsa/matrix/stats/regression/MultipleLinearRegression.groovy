@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 
 /**
@@ -12,7 +10,6 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * regression utility for higher-dimensional or more ill-conditioned problems, it should move to a
  * QR- or SVD-based solver rather than relying on the normal equations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class MultipleLinearRegression {
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.ttest
 
-import groovy.transform.CompileStatic
-
 import java.math.RoundingMode
 
 /**

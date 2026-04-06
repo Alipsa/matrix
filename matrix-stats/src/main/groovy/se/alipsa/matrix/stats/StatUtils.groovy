@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 /**
  * Native statistical utility functions used by the stats module.
  */
-@CompileStatic
 final class StatUtils {
 
   private StatUtils() {

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 /**
  * F-distribution (Fisher-Snedecor distribution) implementation.
  * Provides CDF and p-value calculations for ANOVA and variance ratio tests.

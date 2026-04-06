@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 /**
  * Objective function for one-dimensional root-finding.
  *

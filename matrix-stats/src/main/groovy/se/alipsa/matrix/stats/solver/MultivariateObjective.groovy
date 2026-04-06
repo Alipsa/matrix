@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 /**
  * Objective function for multivariate derivative-free optimization.
  *

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 

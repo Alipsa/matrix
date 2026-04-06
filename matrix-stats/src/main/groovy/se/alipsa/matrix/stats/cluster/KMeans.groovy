@@ -1,8 +1,5 @@
 package se.alipsa.matrix.stats.cluster
 
-
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 

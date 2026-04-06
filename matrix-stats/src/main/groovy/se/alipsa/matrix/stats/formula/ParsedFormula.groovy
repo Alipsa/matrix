@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Parsed formula containing the raw expression AST for the response and predictors.
  */
-@CompileStatic
 final class ParsedFormula {
 
   final String source

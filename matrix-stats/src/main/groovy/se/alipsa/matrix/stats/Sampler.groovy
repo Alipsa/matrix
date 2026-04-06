@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.timeseries
 
-import groovy.transform.CompileStatic
-
 /**
  * Comprehensive unit root testing framework that runs multiple complementary tests and synthesizes
  * their results into a unified assessment. Unit roots indicate non-stationarity where shocks have

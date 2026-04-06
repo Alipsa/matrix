@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.normality
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
@@ -223,7 +221,6 @@ class KSquared {
   /**
    * Result class for D'Agostino's K² test.
    */
-  @CompileStatic
   static class KSquaredResult {
     /** The K² test statistic */
     BigDecimal statistic

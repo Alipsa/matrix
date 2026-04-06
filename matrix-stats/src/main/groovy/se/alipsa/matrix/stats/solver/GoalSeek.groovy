@@ -1,8 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-
-import groovy.transform.CompileStatic
-
 /**
  * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */

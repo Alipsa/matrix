@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 /**
  * Bracketing Brent-Dekker root solver for one-dimensional continuous functions.
  *
@@ -149,7 +147,6 @@ final class BrentSolver {
     throw new IllegalStateException("Brent solver failed to converge after $maxIterations iterations")
   }
 
-  @CompileStatic
   static class SolverResult {
     /** Root value returned by the solver. */
     double root

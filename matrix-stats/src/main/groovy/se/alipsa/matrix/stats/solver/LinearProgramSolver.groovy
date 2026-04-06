@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 /**
  * Two-phase simplex solver for linear programs in equality form with non-negative variables.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * pivots are numerically low-level operations where primitive arrays keep the code fast
  * and predictable while the public stats APIs still expose Groovy-friendly types.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class LinearProgramSolver {
 

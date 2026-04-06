@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Base type for parsed formula expressions.
  */
-@CompileStatic
 abstract class FormulaExpression {
 
   final int start
@@ -31,7 +28,6 @@ abstract class FormulaExpression {
   /**
    * Variable reference, including optional backtick-quoted names.
    */
-  @CompileStatic
   static final class Variable extends FormulaExpression {
     final String name
     final boolean quoted
@@ -54,7 +50,6 @@ abstract class FormulaExpression {
   /**
    * Dot placeholder used for later model-frame expansion.
    */
-  @CompileStatic
   static final class Dot extends FormulaExpression {
     Dot(int start, int end) {
       super(start, end)
@@ -69,7 +64,6 @@ abstract class FormulaExpression {
   /**
    * Numeric literal used inside formula expressions.
    */
-  @CompileStatic
   static final class NumberLiteral extends FormulaExpression {
     final BigDecimal value
     final String sourceText
@@ -89,7 +83,6 @@ abstract class FormulaExpression {
   /**
    * Function or transform call such as {@code log(x)} or {@code I(x + y)}.
    */
-  @CompileStatic
   static final class FunctionCall extends FormulaExpression {
     final String name
     final List<FormulaExpression> arguments
@@ -109,7 +102,6 @@ abstract class FormulaExpression {
   /**
    * Unary expression such as {@code -1} or {@code +x}.
    */
-  @CompileStatic
   static final class Unary extends FormulaExpression {
     final String operator
     final FormulaExpression expression
@@ -130,7 +122,6 @@ abstract class FormulaExpression {
   /**
    * Binary operator expression such as addition, interaction, or nesting.
    */
-  @CompileStatic
   static final class Binary extends FormulaExpression {
     final String operator
     final FormulaExpression left
@@ -166,7 +157,6 @@ abstract class FormulaExpression {
   /**
    * Parenthesized subexpression that preserves grouping during parsing.
    */
-  @CompileStatic
   static final class Grouping extends FormulaExpression {
     final FormulaExpression expression
 

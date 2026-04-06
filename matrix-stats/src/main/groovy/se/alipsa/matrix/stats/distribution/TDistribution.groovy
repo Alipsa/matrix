@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Stat
 
 /**

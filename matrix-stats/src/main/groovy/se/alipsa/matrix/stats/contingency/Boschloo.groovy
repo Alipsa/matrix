@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 /**
  * Boschloo's exact test is an unconditional exact test for 2×2 contingency tables that provides
  * uniformly greater statistical power than Fisher's exact test. It tests for association between

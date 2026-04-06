@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.distribution
 
-import groovy.transform.CompileStatic
-
 /**
  * Hypergeometric distribution implementation for exact contingency-table calculations.
  */

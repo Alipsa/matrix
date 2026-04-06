@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats
 
-import groovy.transform.CompileStatic
-
 /**
  * Statistical correlation measures that quantify the relationship between two variables.
  *
