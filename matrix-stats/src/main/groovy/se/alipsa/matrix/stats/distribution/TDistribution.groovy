@@ -72,12 +72,12 @@ class TDistribution {
    */
   double twoTailedPValue(double t) {
     double absT = Math.abs(t)
-    return 2.0d * (1.0d - cdf(absT))
+    2.0d * (1.0d - cdf(absT))
   }
 
   BigDecimal twoTailedPValue(BigDecimal t) {
     BigDecimal absT = t.abs()
-    return BigDecimal.TWO * (BigDecimal.ONE - cdf(absT))
+    BigDecimal.TWO * (BigDecimal.ONE - cdf(absT))
   }
 
   BigDecimal twoTailedPValue(Number t) {
@@ -92,7 +92,7 @@ class TDistribution {
    * @return one-tailed p-value (upper)
    */
   BigDecimal oneTailedPValueUpper(BigDecimal t) {
-    return BigDecimal.ONE - cdf(t)
+    BigDecimal.ONE - cdf(t)
   }
 
   BigDecimal oneTailedPValueUpper(Number t) {
@@ -100,7 +100,7 @@ class TDistribution {
   }
 
   double oneTailedPValueUpper(double t) {
-    return 1.0d - cdf(t)
+    1.0d - cdf(t)
   }
 
   /**
@@ -111,7 +111,7 @@ class TDistribution {
    * @return one-tailed p-value (lower)
    */
   double oneTailedPValueLower(double t) {
-    return cdf(t)
+    cdf(t)
   }
 
   BigDecimal oneTailedPValueLower(Number t) {
@@ -126,11 +126,11 @@ class TDistribution {
    * @return two-tailed p-value
    */
   static double pValue(double t, double df) {
-    return new TDistribution(df).twoTailedPValue(t)
+    new TDistribution(df).twoTailedPValue(t)
   }
 
   static BigDecimal pValue(BigDecimal t, BigDecimal df) {
-    return new TDistribution(df).twoTailedPValue(t)
+    new TDistribution(df).twoTailedPValue(t)
   }
 
   static BigDecimal pValue(Number t, Number df) {
@@ -162,7 +162,7 @@ class TDistribution {
     double denom = Math.pow(var1 / n1 as double, 2) / (n1 - 1) + Math.pow(var2 / n2 as double, 2) / (n2 - 1)
     double df = num / denom
 
-    return pValue(t, df)
+    pValue(t, df)
   }
 
   static BigDecimal twoSampleTTest(BigDecimal[] sample1, BigDecimal[] sample2) {
@@ -183,7 +183,7 @@ class TDistribution {
     BigDecimal denom = ((var1 / n1) ** 2) / (n1 - 1) + ((var2 / n2) ** 2) / (n2 - 1)
     BigDecimal df = num / denom
 
-    return pValue(t, df)
+    pValue(t, df)
   }
 
   static BigDecimal twoSampleTTest(List<? extends Number> sample1, List<? extends Number> sample2) {
@@ -205,7 +205,7 @@ class TDistribution {
     double sd = Math.sqrt(variance(sample, mean))
     double t = (mean - mu) / (sd / Math.sqrt(n))
     double df = n - 1
-    return pValue(t, df)
+    pValue(t, df)
   }
 
   static BigDecimal oneSampleTTest(BigDecimal mu, BigDecimal[] sample) {
@@ -214,7 +214,7 @@ class TDistribution {
     BigDecimal sd = Stat.variance(sample, mean).sqrt()
     BigDecimal t = (mean - mu) / (sd / n.sqrt())
     BigDecimal df = n - 1
-    return pValue(t, df)
+    pValue(t, df)
   }
 
   static BigDecimal oneSampleTTest(Number mu, List<? extends Number> sample) {
@@ -227,7 +227,7 @@ class TDistribution {
     for (double v : values) {
       sum += v
     }
-    return sum / values.length
+    sum / values.length
   }
 
   private static double variance(double[] values, double mean) {
@@ -236,6 +236,6 @@ class TDistribution {
       double diff = v - mean
       sum += diff * diff
     }
-    return sum / (values.length - 1)
+    sum / (values.length - 1)
   }
 }

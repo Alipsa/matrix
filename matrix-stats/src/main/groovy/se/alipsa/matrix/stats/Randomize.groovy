@@ -116,7 +116,7 @@ class Randomize {
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle()
-    return Matrix.builder()
+    Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
         .rowList(rows)
@@ -135,7 +135,7 @@ class Randomize {
     Matrix copy = data.clone()
     List<Row> rows = copy.rows()
     rows.shuffle(random)
-    return Matrix.builder()
+    Matrix.builder()
         .matrixName(copy.matrixName)
         .columnNames(copy.columnNames())
         .rowList(rows)
@@ -152,6 +152,6 @@ class Randomize {
    */
   static Matrix randomOrder(Matrix data, long seed) {
     Random random = new Random(seed)
-    return randomOrder(data, random)
+    randomOrder(data, random)
   }
 }

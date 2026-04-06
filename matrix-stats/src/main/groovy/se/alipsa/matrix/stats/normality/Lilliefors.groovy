@@ -51,7 +51,7 @@ class Lilliefors {
     // Calculate p-value using Lilliefors-specific approximation
     double pValue = calculatePValue(dStatistic, n)
 
-    return new LillieforsResult(
+    new LillieforsResult(
       statistic: BigDecimal.valueOf(dStatistic),
       pValue: BigDecimal.valueOf(pValue),
       alpha: alphaValue,
@@ -96,7 +96,7 @@ class Lilliefors {
       maxDifference = Math.max(maxDifference, Math.max(diff1, diff2))
     }
 
-    return maxDifference
+    maxDifference
   }
 
   /**
@@ -198,7 +198,7 @@ class Lilliefors {
 
     @Override
     String toString() {
-      return """Lilliefors Normality Test
+      """Lilliefors Normality Test
   Sample size: ${sampleSize}
   Sample mean: ${String.format("%.4f", mean)}
   Sample SD: ${String.format("%.4f", stdDev)}

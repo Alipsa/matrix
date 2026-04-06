@@ -21,7 +21,7 @@ class Anova {
       String colName = it
       d.put(colName, data[colName] as List<? extends Number>)
     }
-    return aov(d)
+    aov(d)
   }
 
   /**
@@ -40,7 +40,7 @@ class Anova {
 
     result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
     result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
-    return result
+    result
   }
 
   static class AnovaResult {
@@ -48,7 +48,7 @@ class Anova {
     BigDecimal fValue
 
     String toString() {
-      return "pValue: ${pValue}, fValue: ${fValue}"
+      "pValue: ${pValue}, fValue: ${fValue}"
     }
 
     boolean evaluate(Number alpha = 0.05) {

@@ -57,7 +57,7 @@ class DurbinWatson {
     // ρ ≈ 1 - (DW / 2)
     double autocorrelation = 1.0 - (dwStatistic / 2.0)
 
-    return new DurbinWatsonResult(
+    new DurbinWatsonResult(
       statistic: BigDecimal.valueOf(dwStatistic),
       autocorrelation: BigDecimal.valueOf(autocorrelation),
       sampleSize: n
@@ -75,7 +75,7 @@ class DurbinWatson {
     validateAlternative(alternative)
     DurbinWatsonResult result = test(residuals)
     result.alternative = alternative
-    return result
+    result
   }
 
   private static void validateInput(List<? extends Number> residuals) {
@@ -152,13 +152,13 @@ class DurbinWatson {
         autocorrType = "negligible"
       }
 
-      return String.format("Durbin-Watson statistic: %.4f (ρ ≈ %.4f, %s autocorrelation)\n%s",
+      String.format("Durbin-Watson statistic: %.4f (ρ ≈ %.4f, %s autocorrelation)\n%s",
                            statistic, autocorrelation, autocorrType, interpret())
     }
 
     @Override
     String toString() {
-      return """Durbin-Watson Test
+      """Durbin-Watson Test
   Sample size: ${sampleSize}
   Test statistic (DW): ${String.format("%.4f", statistic)}
   Autocorrelation (ρ): ${String.format("%.4f", autocorrelation)}

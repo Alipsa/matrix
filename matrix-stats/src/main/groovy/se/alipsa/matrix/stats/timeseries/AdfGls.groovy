@@ -185,7 +185,7 @@ class AdfGls {
     double cv5pct = getCriticalValue(type, n, 0.05)
     double cv10pct = getCriticalValue(type, n, 0.10)
 
-    return new AdfGlsResult(
+    new AdfGlsResult(
       statistic: BigDecimal.valueOf(tStatistic),
       gamma: BigDecimal.valueOf(gamma),
       standardError: BigDecimal.valueOf(gammaSE),
@@ -203,7 +203,7 @@ class AdfGls {
    */
   static AdfGlsResult test(List<? extends Number> data, Integer lags = null, String type = "drift") {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array, lags, type)
+    test(array, lags, type)
   }
 
   /**
@@ -256,7 +256,7 @@ class AdfGls {
       detrended[i] = data[i] - fitted[i]
     }
 
-    return detrended
+    detrended
   }
 
   /**
@@ -298,7 +298,7 @@ class AdfGls {
       throw new IllegalArgumentException("Unable to select ADF-GLS lag: all candidate lags 0..${maxLags} failed")
     }
 
-    return bestLag
+    bestLag
   }
 
   private static boolean isNumericalFailure(IllegalArgumentException e) {
@@ -336,7 +336,7 @@ class AdfGls {
 
     // Asymptotic approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³
     double T = n as double
-    return params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
+    params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
   }
 
   /**
@@ -395,7 +395,7 @@ class AdfGls {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
 
-      return String.format(
+      String.format(
         "ADF-GLS test:\\n" +
         "Test type: %s\\n" +
         "Lags: %d\\n" +
@@ -410,7 +410,7 @@ class AdfGls {
 
     @Override
     String toString() {
-      return """ADF-GLS Test (Elliott-Rothenberg-Stock)
+      """ADF-GLS Test (Elliott-Rothenberg-Stock)
   Type: ${testType}
   Lags: ${lags}
   Sample size: ${sampleSize}

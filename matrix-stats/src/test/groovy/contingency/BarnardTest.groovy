@@ -107,8 +107,6 @@ class BarnardTest {
 
   @Test
   void testValidation() {
-    int[][] validTable = [[10, 5], [5, 10]]
-
     // Null table
     assertThrows(IllegalArgumentException) {
       Barnard.test(null)

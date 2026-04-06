@@ -64,7 +64,7 @@ final class LinearProgramSolver {
     for (int i = 0; i < variableCount; i++) {
       objectiveValue += objective[i] * point[i]
     }
-    return new Solution(point: point, value: objectiveValue, iterations: phaseTwo.iterations)
+    new Solution(point: point, value: objectiveValue, iterations: phaseTwo.iterations)
   }
 
   /**

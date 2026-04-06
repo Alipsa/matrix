@@ -100,7 +100,7 @@ class Johansen {
     // These are approximate values for comparison
     double[][] criticalValues = getCriticalValues(type)
 
-    return new JohansenResult(
+    new JohansenResult(
       eigenvalues: NumericConversion.toBigDecimalList(sortedEigenvalues, 'eigenvalues'),
       traceStatistics: NumericConversion.toBigDecimalList(traceStats, 'traceStatistics'),
       criticalValues5pct: NumericConversion.toBigDecimalRows(criticalValues, 'criticalValues5pct'),
@@ -164,7 +164,7 @@ class Johansen {
       }
     }
 
-    return new DifferencedData(deltaY: deltaY, laggedY: laggedY, effectiveN: effectiveN)
+    new DifferencedData(deltaY: deltaY, laggedY: laggedY, effectiveN: effectiveN)
   }
 
   private static ResidualMatrices createResidualMatrices(List<double[]> data, int lags, String type, int k,
@@ -178,11 +178,11 @@ class Johansen {
     }
 
     double[][] designMatrix = buildShortRunDesignMatrix(data, lags, type, k, differencedData.effectiveN, numRegressors)
-    return projectResiduals(designMatrix, differencedData.deltaY, differencedData.laggedY)
+    projectResiduals(designMatrix, differencedData.deltaY, differencedData.laggedY)
   }
 
   private static int countRegressors(int lags, String type, int k) {
-    return (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
+    (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
   }
 
   private static double[][] buildShortRunDesignMatrix(List<double[]> data, int lags, String type, int k,
@@ -206,7 +206,7 @@ class Johansen {
         z[t][col++] = t + 1
       }
     }
-    return z
+    z
   }
 
   private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
@@ -222,7 +222,7 @@ class Johansen {
         MatrixAlgebra.multiply(designMatrix, ztZInv),
         MatrixAlgebra.transpose(designMatrix)
     )
-    return new ResidualMatrices(
+    new ResidualMatrices(
       r0: MatrixAlgebra.subtract(deltaY, MatrixAlgebra.multiply(projection, deltaY)),
       r1: MatrixAlgebra.subtract(laggedY, MatrixAlgebra.multiply(projection, laggedY))
     )
@@ -230,7 +230,7 @@ class Johansen {
 
   private static MomentMatrices computeMomentMatrices(ResidualMatrices residualMatrices, int effectiveN) {
     double scale = 1.0d / effectiveN
-    return new MomentMatrices(
+    new MomentMatrices(
       s00: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r0), scale),
       s11: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r1), residualMatrices.r1), scale),
       s01: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r1), scale)
@@ -250,7 +250,7 @@ class Johansen {
         MatrixAlgebra.transpose(s11CholeskyInv)
     )
 
-    return sortDescending(MatrixAlgebra.symmetricEigenvalues(symmetricProduct).collect { double eigenvalue ->
+    sortDescending(MatrixAlgebra.symmetricEigenvalues(symmetricProduct).collect { double eigenvalue ->
       Math.max(0.0d, Math.min(1.0d - 1e-12d, eigenvalue))
     } as double[])
   }
@@ -261,7 +261,7 @@ class Johansen {
     for (int i = 0; i < eigenvalues.length; i++) {
       sortedEigenvalues[i] = eigenvalues[eigenvalues.length - 1 - i]
     }
-    return sortedEigenvalues
+    sortedEigenvalues
   }
 
   private static double[] computeTraceStatistics(double[] sortedEigenvalues, int k, int effectiveN) {
@@ -273,7 +273,7 @@ class Johansen {
       }
       traceStats[r] = -effectiveN * sum
     }
-    return traceStats
+    traceStats
   }
 
   /**
@@ -361,7 +361,7 @@ class Johansen {
       }
 
       sb.append("\nConclusion: Evidence suggests ${cointRank} cointegrating relationship(s)")
-      return sb.toString()
+      sb.toString()
     }
 
     List<BigDecimal> getEigenvalueValues() {
@@ -378,7 +378,7 @@ class Johansen {
 
     @Override
     String toString() {
-      return """Johansen Cointegration Test
+      """Johansen Cointegration Test
   Number of variables: ${numVariables}
   Sample size: ${sampleSize}
   Lags: ${lags}

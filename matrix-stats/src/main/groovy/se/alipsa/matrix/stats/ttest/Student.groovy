@@ -97,7 +97,7 @@ class Student {
     result.sd2 = sd2
     result.pVal = p
     result.df = df
-    return result
+    result
   }
 
   /**
@@ -180,7 +180,7 @@ class Student {
 
     // Use native TDistribution for p-value calculation
     result.pVal = TDistribution.pValue(result.tVal as double, result.df as double)
-    return result
+    result
   }
 
   /**
@@ -228,7 +228,7 @@ class Student {
     result.df = n - 1
     // Use native TDistribution for p-value calculation
     result.pVal = TDistribution.pValue(result.tVal as double, result.df as double)
-    return result
+    result
   }
 
   /**
@@ -254,61 +254,61 @@ class Student {
     }
 
     BigDecimal getT() {
-      return tVal
+      tVal
     }
 
     BigDecimal getT(int numberOfDecimals) {
-      return getT().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getT().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
     BigDecimal getP() {
-      return pVal
+      pVal
     }
 
     BigDecimal getP(int numberOfDecimals) {
-      return getP().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getP().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
     Integer getDf() {
-      return df
+      df
     }
 
     BigDecimal getMean() {
-      return mean
+      mean
     }
 
     BigDecimal getMean(int numberOfDecimals) {
-      return getMean().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getMean().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
 
     BigDecimal getVar() {
-      return var
+      var
     }
 
     BigDecimal getVar(int numberOfDecimals) {
-      return getVar().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getVar().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
     BigDecimal getSd() {
-      return sd
+      sd
     }
 
     BigDecimal getSd(int numberOfDecimals) {
-      return getSd().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getSd().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
     Integer getN() {
-      return n
+      n
     }
 
     String getDescription() {
-      return description
+      description
     }
 
     @Override
     String toString() {
-      return """
+      """
       ${getDescription()}
       t = ${getT(3)}, df = ${getDf()}, p = ${getP(3)}
       mean = ${getMean(3)}, size = ${getN()}, sd = ${getSd(3)}
@@ -323,16 +323,16 @@ class Student {
      * @return the sample standard deviation of the differences
      */
     BigDecimal getSd() {
-      return sd
+      sd
     }
 
     BigDecimal getSd(int numberOfDecimals) {
-      return getSd().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+      getSd().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
     }
 
     @Override
     String toString() {
-      return """
+      """
       ${getDescription()}
       t = ${getT(3)}, df = ${getDf()}, p = ${getP(4)}, sd diff = ${getSd(3)}
       x: mean = ${getMean1(3)}, size = ${getN1()}, sd = ${getSd1(3)}

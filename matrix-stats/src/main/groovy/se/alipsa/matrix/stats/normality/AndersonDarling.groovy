@@ -64,7 +64,7 @@ class AndersonDarling {
     // Calculate p-value using the adjusted statistic
     double pValue = calculatePValue(adjustedASquared)
 
-    return new AndersonDarlingResult(
+    new AndersonDarlingResult(
       statistic: BigDecimal.valueOf(aSquared),
       adjustedStatistic: BigDecimal.valueOf(adjustedASquared),
       pValue: BigDecimal.valueOf(pValue),
@@ -98,7 +98,7 @@ class AndersonDarling {
       sum += term
     }
 
-    return -n - sum / n
+    -n - sum / n
   }
 
   /**
@@ -180,7 +180,7 @@ class AndersonDarling {
 
     @Override
     String toString() {
-      return """Anderson-Darling Normality Test
+      """Anderson-Darling Normality Test
   Sample size: ${sampleSize}
   Sample mean: ${String.format("%.4f", mean)}
   Sample SD: ${String.format("%.4f", stdDev)}

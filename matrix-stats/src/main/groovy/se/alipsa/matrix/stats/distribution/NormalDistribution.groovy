@@ -102,7 +102,7 @@ class NormalDistribution implements ContinuousDistribution {
     if (z >= 0.0d) {
       return 0.5d * (1.0d + gamma)
     }
-    return 0.5d * (1.0d - gamma)
+    0.5d * (1.0d - gamma)
   }
 
   private double inverseCumulativeProbabilityValue(double p) {
@@ -134,7 +134,7 @@ class NormalDistribution implements ContinuousDistribution {
     double density = Math.exp(-0.5d * x * x) / Math.sqrt(2.0d * Math.PI)
     x -= error / density
 
-    return (mean as double) + (standardDeviation as double) * x
+    (mean as double) + (standardDeviation as double) * x
   }
 
   private static double polynomial(double[] coefficients, double x) {

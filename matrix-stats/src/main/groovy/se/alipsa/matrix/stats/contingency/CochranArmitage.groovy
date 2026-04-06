@@ -171,7 +171,7 @@ class CochranArmitage {
     NormalDistribution normalDist = new NormalDistribution(0.0, 1.0)
     double pValue = 2.0 * (1.0 - normalDist.cumulativeProbability(Math.abs(zStatistic)))
 
-    return new CochranArmitagResult(
+    new CochranArmitagResult(
       statistic: BigDecimal.valueOf(zStatistic),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: grandTotal,
@@ -281,7 +281,7 @@ class CochranArmitage {
       String direction = statistic > 0 ? "increasing" : "decreasing"
       String significance = pValue < alphaValue ? "significant" : "not significant"
 
-      return String.format(
+      String.format(
         "Cochran-Armitage trend test:\n" +
         "Z-statistic: %.4f (direction: %s)\n" +
         "p-value: %.4f\n" +
@@ -293,7 +293,7 @@ class CochranArmitage {
 
     @Override
     String toString() {
-      return """Cochran-Armitage Trend Test
+      """Cochran-Armitage Trend Test
   Categories: ${categories}
   Sample size: ${sampleSize} (${cases} cases, ${controls} controls)
   Scores: ${scores.collect { BigDecimal score -> String.format('%.2f', score as double) }.join(', ')}

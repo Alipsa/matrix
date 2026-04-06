@@ -127,7 +127,7 @@ class Chow {
     FDistribution fDist = new FDistribution(k, n - 2 * k)
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
-    return new ChowResult(
+    new ChowResult(
       statistic: BigDecimal.valueOf(fStatistic),
       pValue: BigDecimal.valueOf(pValue),
       df1: k,
@@ -147,7 +147,7 @@ class Chow {
   static ChowResult test(List<? extends Number> y, List<List<? extends Number>> X, int breakPoint) {
     double[] yArray = y.collect { it.doubleValue() } as double[]
     double[][] XArray = X.collect { row -> row.collect { it.doubleValue() } as double[] } as double[][]
-    return test(yArray, XArray, breakPoint)
+    test(yArray, XArray, breakPoint)
   }
 
   /**
@@ -206,7 +206,7 @@ class Chow {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = pValue < alphaValue ? "structural break present" : "no structural break detected"
 
-      return String.format(
+      String.format(
         "Chow test:\\n" +
         "Break point: %d\\n" +
         "F-statistic: %.4f\\n" +
@@ -226,7 +226,7 @@ class Chow {
 
     @Override
     String toString() {
-      return """Chow Test for Structural Break
+      """Chow Test for Structural Break
   Break point: ${breakPoint}
   Sample size: ${sampleSize}
   Parameters: ${numParameters}

@@ -124,7 +124,7 @@ final class NelderMeadOptimizer {
     }
 
     sortSimplex(simplex, values)
-    return new OptimizationResult(point: simplex[0], value: values[0], evaluations: evaluations, iterations: iterations)
+    new OptimizationResult(point: simplex[0], value: values[0], evaluations: evaluations, iterations: iterations)
   }
 
   /**

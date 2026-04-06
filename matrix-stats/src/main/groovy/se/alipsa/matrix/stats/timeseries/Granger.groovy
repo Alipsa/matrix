@@ -158,7 +158,7 @@ class Granger {
     FDistribution fDist = new FDistribution(df1, df2)
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
-    return new GrangerResult(
+    new GrangerResult(
       statistic: BigDecimal.valueOf(fStatistic),
       pValue: BigDecimal.valueOf(pValue),
       lags: p,
@@ -177,7 +177,7 @@ class Granger {
   static GrangerResult test(List<? extends Number> x, List<? extends Number> y, Integer maxLag = null) {
     double[] xArray = x.collect { it.doubleValue() } as double[]
     double[] yArray = y.collect { it.doubleValue() } as double[]
-    return test(xArray, yArray, maxLag)
+    test(xArray, yArray, maxLag)
   }
 
   /**
@@ -216,7 +216,7 @@ class Granger {
       throw new IllegalArgumentException("Unable to select Granger lag: all candidate lags 1..${maxPossibleLag} failed")
     }
 
-    return bestLag
+    bestLag
   }
 
   private static boolean isNumericalFailure(IllegalArgumentException e) {
@@ -277,7 +277,7 @@ class Granger {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = pValue < alphaValue ? "X Granger-causes Y" : "X does not Granger-cause Y"
 
-      return String.format(
+      String.format(
         "Granger causality test:\\n" +
         "Lags: %d\\n" +
         "F-statistic: %.4f\\n" +
@@ -296,7 +296,7 @@ class Granger {
 
     @Override
     String toString() {
-      return """Granger Causality Test
+      """Granger Causality Test
   Lags: ${lags}
   Sample size: ${sampleSize} (effective: ${effectiveSampleSize})
   F-statistic: ${String.format('%.4f', statistic)}

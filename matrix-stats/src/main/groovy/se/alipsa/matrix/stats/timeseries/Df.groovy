@@ -103,7 +103,7 @@ class Df {
     double cv5pct = getCriticalValue(type, n, 0.05)
     double cv10pct = getCriticalValue(type, n, 0.10)
 
-    return new DfResult(
+    new DfResult(
       statistic: toBigDecimalOrNull(dfStatistic),
       gamma: toBigDecimalOrNull(gamma),
       standardError: toBigDecimalOrNull(gammaSE),
@@ -225,7 +225,7 @@ class Df {
    */
   static DfResult test(List<? extends Number> data, String type = "drift") {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array, type)
+    test(array, type)
   }
 
   /**
@@ -265,7 +265,7 @@ class Df {
 
     // MacKinnon approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³
     double T = n as double
-    return params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
+    params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
   }
 
   /**
@@ -321,7 +321,7 @@ class Df {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = statistic != null && statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
 
-      return String.format(
+      String.format(
         "Dickey-Fuller test:\\n" +
         "Test type: %s\\n" +
         "DF statistic: %.4f\\n" +
@@ -335,7 +335,7 @@ class Df {
 
     @Override
     String toString() {
-      return """Dickey-Fuller Test
+      """Dickey-Fuller Test
   Type: ${testType}
   Sample size: ${sampleSize}
   DF statistic: ${format(statistic, '%.4f')}

@@ -58,7 +58,7 @@ class Accuracy {
       def pred = predictions[i] as BigDecimal
       sae += (act - pred).abs()
     }
-    return sae / N
+    sae / N
   }
 
   /**
@@ -80,7 +80,7 @@ class Accuracy {
       def pred = predictions[i] as BigDecimal
       sse += (act - pred)**2
     }
-    return sse / N
+    sse / N
   }
 
   /**
@@ -94,7 +94,7 @@ class Accuracy {
    * @return Root mean squared error
    */
   static BigDecimal rmse(List actuals, List predictions) {
-    return mse(actuals, predictions).sqrt(PRECISION)
+    mse(actuals, predictions).sqrt(PRECISION)
   }
 
   /**
@@ -119,7 +119,7 @@ class Accuracy {
       def pred = predictions[i] as BigDecimal
       m += ((act - pred) / act).abs() / N
     }
-    return m
+    m
   }
 
   /**
@@ -145,7 +145,7 @@ class Accuracy {
         s += numerator / denominator
       }
     }
-    return s / N
+    s / N
   }
 
   /**
@@ -168,7 +168,7 @@ class Accuracy {
       def pred = predictions[i] as BigDecimal
       sumError += (pred - act)
     }
-    return sumError / N
+    sumError / N
   }
 
   /**
@@ -193,7 +193,7 @@ class Accuracy {
         maxErr = err
       }
     }
-    return maxErr
+    maxErr
   }
 
   /**
@@ -215,7 +215,7 @@ class Accuracy {
       def pred = predictions[i] as BigDecimal
       errors << (act - pred).abs()
     }
-    return Stat.median(errors)
+    Stat.median(errors)
   }
 
   /**
@@ -248,7 +248,7 @@ class Accuracy {
       return 1.0G  // Perfect fit if all actuals are the same
     }
 
-    return 1 - (ssRes / ssTot)
+    1 - (ssRes / ssTot)
   }
 
   private static void validatePredictionInputs(List actuals, List predictions) {

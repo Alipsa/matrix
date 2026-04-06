@@ -108,7 +108,7 @@ class Portmanteau {
     ChiSquaredDistribution chiSquared = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - chiSquared.cumulativeProbability(qStatistic)
 
-    return new LjungBoxResult(
+    new LjungBoxResult(
       statistic: BigDecimal.valueOf(qStatistic),
       lags: h,
       fitdf: fitdf,
@@ -202,7 +202,7 @@ class Portmanteau {
       }
       sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, (alphaValue * 100) as double))
 
-      return sb.toString()
+      sb.toString()
     }
 
     /**
@@ -215,7 +215,7 @@ class Portmanteau {
       if (lag < 1 || lag > lags) {
         throw new IllegalArgumentException("Lag must be between 1 and ${lags}, got ${lag}")
       }
-      return autocorrelations[lag - 1]
+      autocorrelations[lag - 1]
     }
 
     @Override
@@ -239,7 +239,7 @@ class Portmanteau {
         sb.append("  ... (${lags - 10} more lags)\n")
       }
 
-      return sb.toString()
+      sb.toString()
     }
   }
 }

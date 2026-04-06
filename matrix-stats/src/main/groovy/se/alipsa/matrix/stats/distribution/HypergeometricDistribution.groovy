@@ -56,7 +56,7 @@ class HypergeometricDistribution {
         logCombination(populationSize - numberOfSuccesses, sampleSize - x) -
         logCombination(populationSize, sampleSize)
 
-    return Math.exp(logProbability)
+    Math.exp(logProbability)
   }
 
   BigDecimal cumulativeProbability(Number x) {
@@ -76,7 +76,7 @@ class HypergeometricDistribution {
     for (int k = supportLowerBound; k <= x; k++) {
       sum += probability(k)
     }
-    return Math.min(1.0d, sum)
+    Math.min(1.0d, sum)
   }
 
   BigDecimal upperCumulativeProbability(Number x) {
@@ -96,14 +96,14 @@ class HypergeometricDistribution {
     for (int k = x; k <= supportUpperBound; k++) {
       sum += probability(k)
     }
-    return Math.min(1.0d, sum)
+    Math.min(1.0d, sum)
   }
 
   private static double logCombination(int n, int k) {
     if (k < 0 || k > n) {
       return Double.NEGATIVE_INFINITY
     }
-    return SpecialFunctions.logGamma(n + 1.0d) -
+    SpecialFunctions.logGamma(n + 1.0d) -
         SpecialFunctions.logGamma(k + 1.0d) -
         SpecialFunctions.logGamma(n - k + 1.0d)
   }

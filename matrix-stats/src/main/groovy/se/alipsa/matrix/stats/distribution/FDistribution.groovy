@@ -66,7 +66,7 @@ class FDistribution implements ContinuousDistribution {
     double numerator = dfNumerator as double
     double denominator = dfDenominator as double
     double x = (numerator * f) / (numerator * f + denominator)
-    return SpecialFunctions.regularizedIncompleteBeta(x, numerator / 2.0d, denominator / 2.0d)
+    SpecialFunctions.regularizedIncompleteBeta(x, numerator / 2.0d, denominator / 2.0d)
   }
 
   /**

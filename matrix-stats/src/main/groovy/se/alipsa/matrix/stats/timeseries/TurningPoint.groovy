@@ -121,7 +121,7 @@ class TurningPoint {
     NormalDistribution normal = new NormalDistribution(0, 1)
     double pValue = 2.0 * (1.0 - normal.cumulativeProbability(Math.abs(zStatistic)))
 
-    return new TurningPointResult(
+    new TurningPointResult(
       statistic: BigDecimal.valueOf(zStatistic),
       pValue: BigDecimal.valueOf(pValue),
       turningPoints: turningPoints,
@@ -139,7 +139,7 @@ class TurningPoint {
    */
   static TurningPointResult test(List<? extends Number> data) {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array)
+    test(array)
   }
 
   /**
@@ -197,7 +197,7 @@ class TurningPoint {
       String conclusion = pValue < alphaValue ? "data is not random" : "data is consistent with randomness"
       String direction = turningPoints > expectedTurningPoints ? "cyclicity" : "trend"
 
-      return String.format(
+      String.format(
         "Turning Point test:\\n" +
         "Sample size: %d\\n" +
         "Turning points observed: %d (peaks: %d, troughs: %d)\\n" +
@@ -218,7 +218,7 @@ class TurningPoint {
 
     @Override
     String toString() {
-      return """Turning Point Test
+      """Turning Point Test
   Sample size: ${sampleSize}
   Turning points: ${turningPoints} (peaks: ${peaks}, troughs: ${troughs})
   Expected: ${String.format('%.4f', expectedTurningPoints)}

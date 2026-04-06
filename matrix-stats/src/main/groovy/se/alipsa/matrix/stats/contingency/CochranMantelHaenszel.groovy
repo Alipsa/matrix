@@ -186,7 +186,7 @@ class CochranMantelHaenszel {
       commonOddsRatio = sumOddsRatioNumerator / sumOddsRatioDenominator
     }
 
-    return new CochranMantelHaenszelResult(
+    new CochranMantelHaenszelResult(
       statistic: BigDecimal.valueOf(cmhStatistic),
       pValue: BigDecimal.valueOf(pValue),
       strata: k,
@@ -292,7 +292,7 @@ class CochranMantelHaenszel {
         }
       }
 
-      return String.format(
+      String.format(
         "Cochran-Mantel-Haenszel test:\n" +
         "χ² statistic: %.4f\n" +
         "p-value: %.4f\n" +
@@ -312,7 +312,7 @@ class CochranMantelHaenszel {
         "undefined" :
         String.format('%.4f', commonOddsRatio)
 
-      return """Cochran-Mantel-Haenszel Test
+      """Cochran-Mantel-Haenszel Test
   Strata: ${strata}
   χ² statistic: ${String.format('%.4f', statistic)}
   p-value: ${String.format('%.4f', pValue)}

@@ -41,7 +41,7 @@ class Fisher {
     int c = table[1][0]
     int d = table[1][1]
 
-    return calculateFisherTest(a, b, c, d, alternative)
+    calculateFisherTest(a, b, c, d, alternative)
   }
 
   /**
@@ -62,7 +62,7 @@ class Fisher {
     int c = table.get(1, 0) as int
     int d = table.get(1, 1) as int
 
-    return calculateFisherTest(a, b, c, d, alternative)
+    calculateFisherTest(a, b, c, d, alternative)
   }
 
   private static void validateTable(List<List<Integer>> table) {
@@ -84,9 +84,7 @@ class Fisher {
   private static FisherResult calculateFisherTest(int a, int b, int c, int d, String alternative) {
     int n = a + b + c + d
     int rowSum1 = a + b
-    int rowSum2 = c + d
     int colSum1 = a + c
-    int colSum2 = b + d
 
     // Calculate odds ratio
     double oddsRatio = calculateOddsRatio(a, b, c, d)
@@ -117,7 +115,7 @@ class Fisher {
     // Calculate confidence interval for odds ratio (95% by default)
     double[] confInt = calculateConfidenceInterval(a, b, c, d, 0.95)
 
-    return new FisherResult(
+    new FisherResult(
       pValue: BigDecimal.valueOf(pValue),
       oddsRatio: BigDecimal.valueOf(oddsRatio),
       confidenceInterval: NumericConversion.toBigDecimalList(confInt, 'confidenceInterval'),
@@ -130,7 +128,7 @@ class Fisher {
       // Avoid division by zero - add 0.5 to all cells (Haldane-Anscombe correction)
       return ((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))
     }
-    return (a * d) / (b * c) as double
+    (a * d) / (b * c) as double
   }
 
   private static double calculateTwoSidedPValue(HypergeometricDistribution dist, int observed) {
@@ -145,7 +143,7 @@ class Fisher {
       }
     }
 
-    return Math.min(pValue, 1.0)  // Ensure p-value doesn't exceed 1 due to rounding
+    Math.min(pValue, 1.0)  // Ensure p-value doesn't exceed 1 due to rounding
   }
 
   private static double[] calculateConfidenceInterval(int a, int b, int c, int d, double confidenceLevel) {
@@ -173,7 +171,7 @@ class Fisher {
     double lower = Math.exp(logOddsRatio - z * se)
     double upper = Math.exp(logOddsRatio + z * se)
 
-    return [lower, upper] as double[]
+    [lower, upper] as double[]
   }
 
   private static double getZScore(double alpha) {
@@ -190,7 +188,7 @@ class Fisher {
     }
 
     // Default approximation
-    return 1.96
+    1.96
   }
 
   /**
@@ -221,7 +219,7 @@ class Fisher {
 
     @Override
     String toString() {
-      return """Fisher's Exact Test Result:
+      """Fisher's Exact Test Result:
   p-value: ${pValue}
   odds ratio: ${oddsRatio}
   ${confidenceInterval ? sprintf('95%% CI: [%.4f, %.4f]', confidenceInterval[0], confidenceInterval[1]) : '95% CI: N/A'}

@@ -129,6 +129,6 @@ class Ellipse {
       ellipseY << ((ry + meanY) as BigDecimal)
     }
 
-    return new EllipseData(ellipseX, ellipseY)
+    new EllipseData(ellipseX, ellipseY)
   }
 }

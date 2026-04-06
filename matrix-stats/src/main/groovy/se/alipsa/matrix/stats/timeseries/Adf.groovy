@@ -165,7 +165,7 @@ class Adf {
       }
     }
 
-    return X
+    X
   }
 
   /**
@@ -292,13 +292,13 @@ class Adf {
         "stationary (no unit root)" :
         "non-stationary (unit root present)"
 
-      return String.format("ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s",
+      String.format("ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s",
                            statistic, criticalValue, gammaCoefficient, gammaStandardError, conclusion)
     }
 
     @Override
     String toString() {
-      return """Augmented Dickey-Fuller Test
+      """Augmented Dickey-Fuller Test
   Type: ${type}
   Lags: ${lag}
   Sample size: ${sampleSize} (effective: ${effectiveSize})

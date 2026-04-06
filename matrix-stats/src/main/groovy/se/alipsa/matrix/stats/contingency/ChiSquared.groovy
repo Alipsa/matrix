@@ -75,7 +75,7 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
-    return new ChiSquaredResult(
+    new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
@@ -122,7 +122,7 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(gStatistic)
 
-    return new ChiSquaredResult(
+    new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(gStatistic),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
@@ -178,7 +178,7 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
-    return new ChiSquaredResult(
+    new ChiSquaredResult(
       testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
@@ -219,7 +219,7 @@ class ChiSquared {
       }
     }
 
-    return new TableTotals(rowTotals, colTotals, grandTotal)
+    new TableTotals(rowTotals, colTotals, grandTotal)
   }
 
   private static class TableTotals {
@@ -262,7 +262,7 @@ class ChiSquared {
 
     @Override
     String toString() {
-      return """Chi-Squared Test Result (${testType}):
+      """Chi-Squared Test Result (${testType}):
   test statistic: ${testStatistic}
   degrees of freedom: ${degreesOfFreedom}
   p-value: ${pValue}"""

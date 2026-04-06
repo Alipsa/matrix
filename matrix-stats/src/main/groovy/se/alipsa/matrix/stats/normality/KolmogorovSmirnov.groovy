@@ -131,7 +131,7 @@ class KolmogorovSmirnov {
     // Create normal distribution with sample mean and std dev
     NormalDistribution normalDist = new NormalDistribution(mean, stdDev)
 
-    return testAgainstDistribution(data, normalDist, "Normality")
+    testAgainstDistribution(data, normalDist, "Normality")
   }
 
   /**
@@ -144,7 +144,7 @@ class KolmogorovSmirnov {
   static KSResult testStandardNormality(List<? extends Number> data) {
     validateData(data)
     NormalDistribution standardNormal = new NormalDistribution(0, 1)
-    return testAgainstDistribution(data, standardNormal, "Standard Normality")
+    testAgainstDistribution(data, standardNormal, "Standard Normality")
   }
 
   /**
@@ -163,7 +163,7 @@ class KolmogorovSmirnov {
     double dStatistic = calculateOneSampleStatistic(values, distribution)
     double pValue = calculateOneSamplePValue(dStatistic, values.length)
 
-    return new KSResult(
+    new KSResult(
       dStatistic: BigDecimal.valueOf(dStatistic),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: values.length,
@@ -192,7 +192,7 @@ class KolmogorovSmirnov {
     // Calculate p-value
     double pValue = calculateTwoSamplePValue(dStatistic, values1.length, values2.length)
 
-    return new KSResult(
+    new KSResult(
       dStatistic: BigDecimal.valueOf(dStatistic),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: values1.length + values2.length,
@@ -213,7 +213,7 @@ class KolmogorovSmirnov {
       dMinus = Math.max(dMinus, theoretical - empiricalLower)
     }
 
-    return Math.max(dPlus, dMinus)
+    Math.max(dPlus, dMinus)
   }
 
   private static double calculateOneSamplePValue(double dStatistic, int sampleSize) {
@@ -332,7 +332,7 @@ class KolmogorovSmirnov {
       }
     }
 
-    return Math.max(0.0d, Math.min(1.0d, 2.0d * sum))
+    Math.max(0.0d, Math.min(1.0d, 2.0d * sum))
   }
 
   private static void validateData(List<? extends Number> data) {
@@ -391,7 +391,7 @@ class KolmogorovSmirnov {
         result = evaluate() ? "Samples appear to differ" : "Samples do not significantly differ"
       }
 
-      return """Kolmogorov-Smirnov Test Result (${testType}):
+      """Kolmogorov-Smirnov Test Result (${testType}):
   D statistic: ${dStatistic}
   p-value: ${pValue}
   sample size: ${sampleSize}

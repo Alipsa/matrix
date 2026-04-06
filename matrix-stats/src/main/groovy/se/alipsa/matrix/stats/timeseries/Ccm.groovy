@@ -132,7 +132,7 @@ class Ccm {
       ymapX[i] = crossMap(x, y, E, tau, L)
     }
 
-    return new CcmResult(
+    new CcmResult(
       xmapY: toCorrelationValues(xmapY),
       ymapX: toCorrelationValues(ymapX),
       librarySizes: librarySizes.asImmutable() as List<Integer>,
@@ -224,7 +224,7 @@ class Ccm {
     }
 
     // Compute Pearson correlation between predictions and actuals
-    return pearsonCorrelation(predictions as double[], actuals as double[])
+    pearsonCorrelation(predictions as double[], actuals as double[])
   }
 
   /**
@@ -246,7 +246,7 @@ class Ccm {
 
     // Sort by distance and take k nearest
     neighbors.sort { it.distance }
-    return neighbors.take(Math.min(k, neighbors.size()))
+    neighbors.take(Math.min(k, neighbors.size()))
   }
 
   /**
@@ -276,7 +276,7 @@ class Ccm {
       prediction += w * targetVal
     }
 
-    return prediction
+    prediction
   }
 
   /**
@@ -288,7 +288,7 @@ class Ccm {
       double diff = a[i] - b[i]
       sum += diff * diff
     }
-    return Math.sqrt(sum)
+    Math.sqrt(sum)
   }
 
   /**
@@ -304,7 +304,7 @@ class Ccm {
     while (selected.size() < n) {
       selected.add(rnd.nextInt(max))
     }
-    return selected.toList()
+    selected.toList()
   }
 
   /**
@@ -334,7 +334,7 @@ class Ccm {
       return 0.0
     }
 
-    return numerator / denominator
+    numerator / denominator
   }
 
   /**
@@ -357,7 +357,7 @@ class Ccm {
       sizes.add(maxLib)
     }
 
-    return sizes
+    sizes
   }
 
   /**
@@ -406,7 +406,7 @@ class Ccm {
       if (!Double.isFinite(last) || !Double.isFinite(first)) {
         return false
       }
-      return last > thresholdValue && last > first
+      last > thresholdValue && last > first
     }
 
     /**
@@ -425,7 +425,7 @@ class Ccm {
       if (!Double.isFinite(last) || !Double.isFinite(first)) {
         return false
       }
-      return last > thresholdValue && last > first
+      last > thresholdValue && last > first
     }
 
     List<Number> getXmapYValues() {
@@ -484,12 +484,12 @@ class Ccm {
       sb.append("\nNote: CCM detects causality via state space reconstruction.\n")
       sb.append("Positive, increasing cross-map skill indicates causal influence.\n")
 
-      return sb.toString()
+      sb.toString()
     }
 
     @Override
     String toString() {
-      return interpret()
+      interpret()
     }
   }
 }

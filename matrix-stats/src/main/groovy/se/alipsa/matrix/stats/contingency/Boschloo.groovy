@@ -126,7 +126,7 @@ class Boschloo {
     // Clamp p-value to [0, 1] to handle numerical precision issues
     maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
 
-    return new BoschlooResult(
+    new BoschlooResult(
       pValue: BigDecimal.valueOf(maxPValue),
       fisherPValue: BigDecimal.valueOf(observedFisherP),
       nuisanceParameter: BigDecimal.valueOf(optimalPi),
@@ -159,7 +159,7 @@ class Boschloo {
       }
     }
 
-    return pValue
+    pValue
   }
 
   /**
@@ -184,7 +184,6 @@ class Boschloo {
     double pValue = 0.0
 
     for (int x = 0; x <= Math.min(n1, k1); x++) {
-      int y = n1 - x
       int z = k1 - x
       int w = n2 - z
 
@@ -200,7 +199,7 @@ class Boschloo {
     }
 
     // Clamp p-value to [0, 1] to handle numerical precision issues
-    return Math.max(0.0, Math.min(1.0, pValue))
+    Math.max(0.0, Math.min(1.0, pValue))
   }
 
   /**
@@ -222,7 +221,7 @@ class Boschloo {
                      logBinomialCoefficient(N - t, n - k) -
                      logBinomialCoefficient(N, n)
 
-    return Math.exp(logProb)
+    Math.exp(logProb)
   }
 
   /**
@@ -244,7 +243,7 @@ class Boschloo {
     // Use log probabilities for numerical stability
     double logProb = logBinomialCoefficient(n, k) + k * Math.log(p) + (n - k) * Math.log(1 - p)
 
-    return Math.exp(logProb)
+    Math.exp(logProb)
   }
 
   /**
@@ -269,7 +268,7 @@ class Boschloo {
       result += Math.log(n - k + i) - Math.log(i)
     }
 
-    return result
+    result
   }
 
   private static void validateTable(int[][] table) {
@@ -337,7 +336,7 @@ class Boschloo {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       String significance = pValue < normalizedAlpha ? "significant" : "not significant"
 
-      return String.format(
+      String.format(
         "Boschloo's exact test:\\n" +
         "p-value: %.4f\\n" +
         "Fisher's p-value: %.4f\\n" +
@@ -350,7 +349,7 @@ class Boschloo {
 
     @Override
     String toString() {
-      return """Boschloo's Exact Test
+      """Boschloo's Exact Test
   Sample size: ${sampleSize}
   p-value: ${String.format('%.4f', pValue)}
   Fisher's p-value: ${String.format('%.4f', fisherPValue)}

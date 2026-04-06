@@ -115,8 +115,6 @@ class CochranMantelHaenszelTest {
 
   @Test
   void testValidation() {
-    int[][] validStratum = [[12, 8], [6, 14]]
-
     // Null strata list
     assertThrows(IllegalArgumentException) {
       CochranMantelHaenszel.test(null)

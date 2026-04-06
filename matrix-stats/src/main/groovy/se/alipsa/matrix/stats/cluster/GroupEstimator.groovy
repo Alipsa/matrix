@@ -187,7 +187,7 @@ class GroupEstimator {
       wcssList << clustering.getWCSS()
     }
 
-    return findElbow(ks, wcssList)
+    findElbow(ks, wcssList)
   }
 
   /**
@@ -209,7 +209,7 @@ class GroupEstimator {
     int estimatedSqrt = (int) Math.round(Math.sqrt(n / 2.0d))
     // More conservative heuristic: cbrt(n), tends to underestimate
     int estimatedQbrt = Math.max(2, (int) Math.round(Math.cbrt(points.length)))
-    return ((estimatedSqrt + estimatedQbrt) / 2) as int
+    ((estimatedSqrt + estimatedQbrt) / 2) as int
   }
 
   /**
@@ -240,6 +240,6 @@ class GroupEstimator {
       }
     }
 
-    return bestK
+    bestK
   }
 }

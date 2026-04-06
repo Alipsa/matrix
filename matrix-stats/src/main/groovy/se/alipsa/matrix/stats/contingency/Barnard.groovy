@@ -113,7 +113,7 @@ class Barnard {
     // Clamp p-value to [0, 1] to handle numerical precision issues
     maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
 
-    return new BarnardResult(
+    new BarnardResult(
       statistic: BigDecimal.valueOf(observedT),
       pValue: BigDecimal.valueOf(maxPValue),
       nuisanceParameter: BigDecimal.valueOf(optimalPi),
@@ -150,7 +150,7 @@ class Barnard {
       return (Math.abs(p1 - p2) > 1e-10) ? (Double.POSITIVE_INFINITY as double) : (0.0 as double)
     }
 
-    return (p1 - p2) / Math.sqrt(variance)
+    (p1 - p2) / Math.sqrt(variance)
   }
 
   /**
@@ -179,7 +179,7 @@ class Barnard {
       }
     }
 
-    return pValue
+    pValue
   }
 
   /**
@@ -206,7 +206,7 @@ class Barnard {
       return Math.abs(p1 - p2) > 1e-10 ? 1000.0 : 0.0
     }
 
-    return (p1 - p2) / Math.sqrt(variance)
+    (p1 - p2) / Math.sqrt(variance)
   }
 
   /**
@@ -228,7 +228,7 @@ class Barnard {
     // Use log probabilities for numerical stability
     double logProb = logBinomialCoefficient(n, k) + k * Math.log(p) + (n - k) * Math.log(1 - p)
 
-    return Math.exp(logProb)
+    Math.exp(logProb)
   }
 
   /**
@@ -253,7 +253,7 @@ class Barnard {
       result += Math.log(n - k + i) - Math.log(i)
     }
 
-    return result
+    result
   }
 
   private static void validateTable(int[][] table) {
@@ -321,7 +321,7 @@ class Barnard {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       String significance = pValue < normalizedAlpha ? "significant" : "not significant"
 
-      return String.format(
+      String.format(
         "Barnard's exact test:\\n" +
         "Wald score statistic: %.4f\\n" +
         "p-value: %.4f\\n" +
@@ -334,7 +334,7 @@ class Barnard {
 
     @Override
     String toString() {
-      return """Barnard's Exact Test
+      """Barnard's Exact Test
   Sample size: ${sampleSize}
   Wald score statistic: ${String.format('%.4f', statistic)}
   p-value: ${String.format('%.4f', pValue)}

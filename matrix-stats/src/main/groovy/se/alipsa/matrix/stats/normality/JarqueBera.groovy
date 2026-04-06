@@ -144,7 +144,7 @@ class JarqueBera {
     ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
     double pValue = 1.0 - chiSq.cumulativeProbability(jbStatistic)
 
-    return new JarqueBeraResult(
+    new JarqueBeraResult(
       jbStatistic: BigDecimal.valueOf(jbStatistic),
       skewness: BigDecimal.valueOf(skewness),
       kurtosis: BigDecimal.valueOf(kurtosis),
@@ -211,7 +211,7 @@ class JarqueBera {
 
     @Override
     String toString() {
-      return """Jarque-Bera Normality Test Result:
+      """Jarque-Bera Normality Test Result:
   JB statistic: ${jbStatistic}
   skewness: ${skewness}
   kurtosis: ${kurtosis} (excess: ${excessKurtosis})

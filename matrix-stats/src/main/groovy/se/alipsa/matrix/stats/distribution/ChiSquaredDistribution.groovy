@@ -47,7 +47,7 @@ class ChiSquaredDistribution implements ContinuousDistribution {
     if (x <= 0.0d) {
       return 0.0d
     }
-    return SpecialFunctions.regularizedIncompleteGammaP((degreesOfFreedom as double) / 2.0d, x / 2.0d)
+    SpecialFunctions.regularizedIncompleteGammaP((degreesOfFreedom as double) / 2.0d, x / 2.0d)
   }
 
   private double inverseCumulativeProbabilityValue(double p) {
@@ -90,7 +90,7 @@ class ChiSquaredDistribution implements ContinuousDistribution {
       }
     }
 
-    return 0.5d * (low + high)
+    0.5d * (low + high)
   }
 
   private double initialQuantileGuess(double p) {
@@ -102,6 +102,6 @@ class ChiSquaredDistribution implements ContinuousDistribution {
     if (term <= 0.0d) {
       return degrees * 0.25d
     }
-    return degrees * term * term * term
+    degrees * term * term * term
   }
 }

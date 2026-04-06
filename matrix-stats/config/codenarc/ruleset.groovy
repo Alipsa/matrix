@@ -2,9 +2,6 @@ ruleset {
     description 'CodeNarc ruleset for Matrix Stats'
 
     ruleset('rulesets/basic.xml') {
-        exclude 'EmptyCatchBlock'
-        exclude 'EmptyIfStatement'
-        exclude 'EmptyElseBlock'
     }
 
     ruleset('rulesets/braces.xml')
@@ -80,13 +77,10 @@ ruleset {
         exclude 'UnnecessaryGetter'
         exclude 'UnnecessaryObjectReferences'
         exclude 'UnnecessaryPublicModifier'
-        exclude 'UnnecessaryReturnKeyword'
         exclude 'UnnecessarySetter'
     }
 
-    ruleset('rulesets/unused.xml') {
-        exclude 'UnusedVariable'
-    }
+    ruleset('rulesets/unused.xml')
 
     ruleset('rulesets/formatting.xml') {
         exclude 'BlockEndsWithBlankLine'

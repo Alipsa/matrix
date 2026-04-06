@@ -63,7 +63,7 @@ class Kpss {
     // Get critical value
     double criticalValue = getCriticalValue(type)
 
-    return new KpssResult(
+    new KpssResult(
       statistic: BigDecimal.valueOf(kpssStatistic),
       type: type,
       lags: l,
@@ -114,7 +114,7 @@ class Kpss {
       }
     }
 
-    return residuals
+    residuals
   }
 
   /**
@@ -143,7 +143,7 @@ class Kpss {
       variance += 2.0 * weight * autocovariance
     }
 
-    return variance
+    variance
   }
 
   /**
@@ -221,13 +221,13 @@ class Kpss {
         "non-stationary (unit root present)" :
         "${type}-stationary"
 
-      return String.format("KPSS statistic: %.4f (critical value: %.3f at 5%% level)\nLags used: %d\nConclusion: Series appears %s",
+      String.format("KPSS statistic: %.4f (critical value: %.3f at 5%% level)\nLags used: %d\nConclusion: Series appears %s",
                            statistic, criticalValue, lags, conclusion)
     }
 
     @Override
     String toString() {
-      return """KPSS Stationarity Test
+      """KPSS Stationarity Test
   Type: ${type}
   Sample size: ${sampleSize}
   Lags: ${lags}

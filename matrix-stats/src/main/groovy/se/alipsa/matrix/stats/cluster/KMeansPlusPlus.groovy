@@ -367,7 +367,7 @@ class KMeansPlusPlus {
         throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50")
       }
       this.iterations = iterations
-      return this
+      this
     }
 
     /**
@@ -378,7 +378,7 @@ class KMeansPlusPlus {
      */
     Builder pp(boolean pp) {
       this.pp = pp
-      return this
+      this
     }
 
     /**
@@ -405,7 +405,7 @@ class KMeansPlusPlus {
       }
 
       this.epsilon = normalizedEpsilon
-      return this
+      this
     }
 
     /**
@@ -421,7 +421,7 @@ class KMeansPlusPlus {
      */
     Builder useEpsilon(boolean useEpsilon) {
       this.useEpsilon = useEpsilon
-      return this
+      this
     }
 
     /**
@@ -436,7 +436,7 @@ class KMeansPlusPlus {
      */
     Builder useL1norm(boolean l1Norm) {
       this.l1Norm = l1Norm
-      return this
+      this
     }
 
     /**
@@ -459,7 +459,7 @@ class KMeansPlusPlus {
       //println "Running KMeansPlusPlus clustering..."
       //println "Input points: ${points.length}"
       //println "k = $k, iterations = $iterations"
-      return new KMeansPlusPlus(this)
+      new KMeansPlusPlus(this)
     }
   }
 
@@ -708,7 +708,7 @@ class KMeansPlusPlus {
    * @return true when the epsilon threshold indicates convergence
    */
   private boolean epsilonTest(double prevWCSS) {
-    return epsilon > 1 - (wcss / prevWCSS)
+    epsilon > 1 - (wcss / prevWCSS)
   }
 
   /***********************************************************************
@@ -721,7 +721,7 @@ class KMeansPlusPlus {
    * @return the configured distance between the two points
    */
   private double distance(double[] x, double[] y) {
-    return l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
+    l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
   }
 
   private Random randomForIteration(int iteration) {
@@ -745,7 +745,7 @@ class KMeansPlusPlus {
       for (int i = 0; i < x.length; i++) {
         dist += Math.abs(x[i] - y[i])
       }
-      return dist
+      dist
     }
 
     /**
@@ -764,7 +764,7 @@ class KMeansPlusPlus {
         double diff = x[i] - y[i]
         dist += diff * diff
       }
-      return dist
+      dist
     }
   }
 
@@ -789,7 +789,7 @@ class KMeansPlusPlus {
    * @return an array where each entry corresponds to a {@link ClusteredPoint} and its assigned cluster
    */
   ClusteredPoint[] getAssignment() {
-    return assignment
+    assignment
   }
 
   /**
@@ -836,7 +836,7 @@ class KMeansPlusPlus {
    * where each centroid is represented as an array of doubles.
    */
   double[][] getCentroids() {
-    return centroids
+    centroids
   }
 
   /**
@@ -858,7 +858,7 @@ class KMeansPlusPlus {
    * @return wcss the Within-Cluster-Sum-of-Squares
    */
   double getWCSS() {
-    return wcss
+    wcss
   }
 
   /**
@@ -877,7 +877,7 @@ class KMeansPlusPlus {
    * @return a string indicating the time taken for KMeans++ clustering
    */
   String getTiming() {
-    return "KMeans++ took: " + getExecutionTimeMillis() / 1000.0 + " seconds"
+    "KMeans++ took: " + getExecutionTimeMillis() / 1000.0 + " seconds"
   }
 
   /**
@@ -887,7 +887,7 @@ class KMeansPlusPlus {
    * @return the execution time in milliseconds
    */
   double getExecutionTimeMillis() {
-    return end - start
+    end - start
   }
 
   /**

@@ -130,7 +130,7 @@ class UnitRoot {
     // Run KPSS test (note: KPSS tests stationarity, opposite null hypothesis)
     Kpss.KpssResult kpssResult = Kpss.test(dataList, kpssType)
 
-    return new UnitRootResult(
+    new UnitRootResult(
       dfResult: dfResult,
       adfResult: adfResult,
       adfGlsResult: adfGlsResult,
@@ -145,7 +145,7 @@ class UnitRoot {
    */
   static UnitRootResult test(List<? extends Number> data, String type = 'drift', Integer lags = 0) {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array, type, lags)
+    test(array, type, lags)
   }
 
   /**
@@ -219,7 +219,7 @@ class UnitRoot {
       sb.append("=" * 60).append("\n")
       sb.append(getConsensus(alphaValue))
 
-      return sb.toString()
+      sb.toString()
     }
 
     /**
@@ -281,7 +281,7 @@ class UnitRoot {
         consensus.append("Conclusion: Results are mixed, consider additional analysis")
       }
 
-      return consensus.toString()
+      consensus.toString()
     }
 
     /**
@@ -341,7 +341,7 @@ class UnitRoot {
       boolean kpssRejectsStationarity = kpssResult.statistic > kpssResult.criticalValue
 
       // Consider stationary if majority of unit root tests reject AND KPSS doesn't reject stationarity
-      return unitRootTests >= 2 && !kpssRejectsStationarity
+      unitRootTests >= 2 && !kpssRejectsStationarity
     }
 
     /**
@@ -370,12 +370,12 @@ class UnitRoot {
       boolean kpssRejectsStationarity = kpssResult.statistic > kpssResult.criticalValue
 
       // Consider unit root if no unit root tests reject AND KPSS rejects stationarity
-      return unitRootTests == 0 && kpssRejectsStationarity
+      unitRootTests == 0 && kpssRejectsStationarity
     }
 
     @Override
     String toString() {
-      return summary()
+      summary()
     }
   }
 }

@@ -97,7 +97,7 @@ class BandwidthSelector {
     }
     variance /= (n - 1)  // Sample variance (Bessel's correction)
 
-    return Math.sqrt(variance)
+    Math.sqrt(variance)
   }
 
   /**
@@ -107,11 +107,10 @@ class BandwidthSelector {
    * @return the interquartile range
    */
   private static double computeIQR(double[] data) {
-    int n = data.length
     // Simple quartile calculation using linear interpolation
     double q1 = percentile(data, 0.25)
     double q3 = percentile(data, 0.75)
-    return q3 - q1
+    q3 - q1
   }
 
   /**

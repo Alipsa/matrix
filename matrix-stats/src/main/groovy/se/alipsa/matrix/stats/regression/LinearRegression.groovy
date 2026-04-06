@@ -90,35 +90,35 @@ class LinearRegression {
   }
 
   BigDecimal predict(Number dependentVariable) {
-    return (slope * dependentVariable) + intercept
+    (slope * dependentVariable) + intercept
   }
 
   BigDecimal predict(Number dependentVariable, int numberOfDecimals) {
-    return predict(dependentVariable).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    predict(dependentVariable).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   List<BigDecimal> predict(List<Number> dependentVariables) {
-    return dependentVariables.collect { predict(it) }
+    dependentVariables.collect { predict(it) }
   }
 
   List<BigDecimal> predict(List<Number> dependentVariables, int numberOfDecimals) {
-    return dependentVariables.collect { predict(it, numberOfDecimals) }
+    dependentVariables.collect { predict(it, numberOfDecimals) }
   }
 
   BigDecimal getSlope() {
-    return slope
+    slope
   }
 
   BigDecimal getSlope(int numberOfDecimals) {
-    return slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getIntercept() {
-    return intercept
+    intercept
   }
 
   BigDecimal getIntercept(int numberOfDecimals) {
-    return intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -136,11 +136,11 @@ class LinearRegression {
    * r2 <- summary(model)$r.squared
   */
   BigDecimal getRsquared() {
-    return r2
+    r2
   }
 
   BigDecimal getRsquared(int numberOfDecimals) {
-    return getRsquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getRsquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -155,11 +155,11 @@ class LinearRegression {
    * @return the standard error of the estimate for the intercept
    */
   BigDecimal getInterceptStdErr() {
-    return interceptStdErr
+    interceptStdErr
   }
 
   BigDecimal getInterceptStdErr(int numberOfDecimals) {
-    return getInterceptStdErr().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getInterceptStdErr().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -174,16 +174,16 @@ class LinearRegression {
    * @return the standard error of the estimate for the slope
    */
   BigDecimal getSlopeStdErr() {
-    return slopeStdErr
+    slopeStdErr
   }
 
   BigDecimal getSlopeStdErr(int numberOfDecimals) {
-    return getSlopeStdErr().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getSlopeStdErr().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   @Override
   String toString() {
-    return "Y = ${getSlope(2)}X ${intercept > 0 ? '+' : '-'} ${getIntercept(2).abs()}"
+    "Y = ${getSlope(2)}X ${intercept > 0 ? '+' : '-'} ${getIntercept(2).abs()}"
   }
 
   String summary() {
