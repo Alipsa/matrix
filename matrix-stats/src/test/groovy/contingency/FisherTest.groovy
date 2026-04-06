@@ -194,10 +194,10 @@ class FisherTest {
     def result = Fisher.test(table)
 
     assertNotNull(result.confidenceInterval)
-    assertEquals(2, result.confidenceInterval.length)
+    assertEquals(2, result.confidenceInterval.size())
 
-    double lower = result.confidenceInterval[0]
-    double upper = result.confidenceInterval[1]
+    BigDecimal lower = result.confidenceInterval[0]
+    BigDecimal upper = result.confidenceInterval[1]
 
     // Lower bound should be less than odds ratio
     assertTrue(lower < result.oddsRatio, "Lower CI bound should be < odds ratio")

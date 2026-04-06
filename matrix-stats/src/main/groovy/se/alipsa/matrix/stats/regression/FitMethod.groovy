@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.formula.ModelFrameResult
 
 /**
@@ -14,7 +12,6 @@ import se.alipsa.matrix.stats.formula.ModelFrameResult
  * Both methods are available through the {@link FitRegistry} without
  * downcasting to a concrete class.
  */
-@CompileStatic
 interface FitMethod {
 
   /**

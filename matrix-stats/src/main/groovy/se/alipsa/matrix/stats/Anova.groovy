@@ -38,14 +38,14 @@ class Anova {
       categoryData << values
     }
 
-    result.fValue = FDistribution.oneWayAnovaFValue(categoryData) as Double
-    result.pValue = FDistribution.oneWayAnovaPValue(categoryData) as Double
+    result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
+    result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
     return result
   }
 
   static class AnovaResult {
-    Double pValue
-    Double fValue
+    BigDecimal pValue
+    BigDecimal fValue
 
     String toString() {
       return "pValue: ${pValue}, fValue: ${fValue}"

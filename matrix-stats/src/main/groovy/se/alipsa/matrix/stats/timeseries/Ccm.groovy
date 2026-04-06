@@ -133,13 +133,21 @@ class Ccm {
     }
 
     return new CcmResult(
-      xmapY: xmapY,
-      ymapX: ymapX,
-      librarySizes: librarySizes.toArray(new Integer[0]),
+      xmapY: toCorrelationValues(xmapY),
+      ymapX: toCorrelationValues(ymapX),
+      librarySizes: librarySizes.asImmutable() as List<Integer>,
       embeddingDim: E,
       timeLag: tau,
       seriesLength: n
     )
+  }
+
+  private static List<Number> toCorrelationValues(double[] values) {
+    List<Number> converted = []
+    for (double value : values) {
+      converted << (Double.isFinite(value) ? BigDecimal.valueOf(value) : Double.NaN)
+    }
+    converted.asImmutable() as List<Number>
   }
 
   /**
@@ -365,13 +373,13 @@ class Ccm {
    */
   static class CcmResult {
     /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X) */
-    double[] xmapY
+    List<Number> xmapY
 
     /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y) */
-    double[] ymapX
+    List<Number> ymapX
 
     /** Library sizes used for testing */
-    Integer[] librarySizes
+    List<Integer> librarySizes
 
     /** Embedding dimension */
     int embeddingDim
@@ -390,11 +398,15 @@ class Ccm {
      */
     boolean xCausesY(Number threshold = 0.3) {
       BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
-      if (ymapX.length < 2) {
+      if (ymapX.size() < 2) {
         return false
       }
-      // Check if correlation is positive and increasing
-      return ymapX[-1] > thresholdValue && ymapX[-1] > ymapX[0]
+      double last = ymapX[-1] as double
+      double first = ymapX[0] as double
+      if (!Double.isFinite(last) || !Double.isFinite(first)) {
+        return false
+      }
+      return last > thresholdValue && last > first
     }
 
     /**
@@ -405,23 +417,27 @@ class Ccm {
      */
     boolean yCausesX(Number threshold = 0.3) {
       BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
-      if (xmapY.length < 2) {
+      if (xmapY.size() < 2) {
         return false
       }
-      // Check if correlation is positive and increasing
-      return xmapY[-1] > thresholdValue && xmapY[-1] > xmapY[0]
+      double last = xmapY[-1] as double
+      double first = xmapY[0] as double
+      if (!Double.isFinite(last) || !Double.isFinite(first)) {
+        return false
+      }
+      return last > thresholdValue && last > first
     }
 
-    List<BigDecimal> getXmapYValues() {
-      NumericConversion.toBigDecimalList(xmapY, 'xmapY')
+    List<Number> getXmapYValues() {
+      xmapY
     }
 
-    List<BigDecimal> getYmapXValues() {
-      NumericConversion.toBigDecimalList(ymapX, 'ymapX')
+    List<Number> getYmapXValues() {
+      ymapX
     }
 
     List<Integer> getLibrarySizeValues() {
-      librarySizes.toList().asImmutable() as List<Integer>
+      librarySizes
     }
 
     /**
@@ -443,7 +459,7 @@ class Ccm {
       sb.append(String.format("%-15s %-20s %-20s\n", "Library Size", "X|M(Y) (Y→X)", "Y|M(X) (X→Y)"))
       sb.append("-" * 60).append("\n")
 
-      for (int i = 0; i < librarySizes.length; i++) {
+      for (int i = 0; i < librarySizes.size(); i++) {
         sb.append(String.format("%-15d %-20.4f %-20.4f\n",
                                 librarySizes[i], xmapY[i], ymapX[i]))
       }

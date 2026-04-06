@@ -128,14 +128,14 @@ class Chow {
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
     return new ChowResult(
-      statistic: fStatistic,
-      pValue: pValue,
+      statistic: BigDecimal.valueOf(fStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       df1: k,
       df2: n - 2 * k,
       breakPoint: breakPoint,
-      rssFull: rssFull,
-      rss1: rss1,
-      rss2: rss2,
+      rssFull: BigDecimal.valueOf(rssFull),
+      rss1: BigDecimal.valueOf(rss1),
+      rss2: BigDecimal.valueOf(rss2),
       sampleSize: n,
       numParameters: k
     )
@@ -155,10 +155,10 @@ class Chow {
    */
   static class ChowResult {
     /** The Chow F-statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Degrees of freedom (numerator) */
     int df1
@@ -170,13 +170,13 @@ class Chow {
     int breakPoint
 
     /** RSS for full model */
-    double rssFull
+    BigDecimal rssFull
 
     /** RSS for first sub-model */
-    double rss1
+    BigDecimal rss1
 
     /** RSS for second sub-model */
-    double rss2
+    BigDecimal rss2
 
     /** Sample size */
     int sampleSize
@@ -191,7 +191,7 @@ class Chow {
      * @return Interpretation string
      */
     String interpret(Number alpha = 0.05) {
-      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: Structural break detected at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
@@ -204,7 +204,7 @@ class Chow {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < (alphaValue as double) ? "structural break present" : "no structural break detected"
+      String conclusion = pValue < alphaValue ? "structural break present" : "no structural break detected"
 
       return String.format(
         "Chow test:\\n" +

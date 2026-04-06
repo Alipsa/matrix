@@ -131,7 +131,7 @@ class ClusteredPoint {
   }
 
   ClusteredPoint(int clusterId, List<? extends Number> point) {
-    this(clusterId, NumericConversion.toDoubleArray(point as List<? extends Number>, 'point'))
+    this(clusterId, NumericConversion.toDoubleArray(point, 'point'))
   }
 
   int getClusterId() { clusterId }

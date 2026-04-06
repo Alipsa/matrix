@@ -109,13 +109,13 @@ class Portmanteau {
     double pValue = 1.0 - chiSquared.cumulativeProbability(qStatistic)
 
     return new LjungBoxResult(
-      statistic: qStatistic,
+      statistic: BigDecimal.valueOf(qStatistic),
       lags: h,
       fitdf: fitdf,
       degreesOfFreedom: degreesOfFreedom,
       sampleSize: n,
-      pValue: pValue,
-      autocorrelations: autocorrelations.toList()
+      pValue: BigDecimal.valueOf(pValue),
+      autocorrelations: NumericConversion.toBigDecimalList(autocorrelations, 'autocorrelations')
     )
   }
 
@@ -148,7 +148,7 @@ class Portmanteau {
    */
   static class LjungBoxResult {
     /** The Ljung-Box Q test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The number of lags tested */
     int lags
@@ -163,10 +163,10 @@ class Portmanteau {
     int sampleSize
 
     /** The p-value from the chi-squared distribution */
-    double pValue
+    BigDecimal pValue
 
     /** The sample autocorrelations at each lag */
-    List<Double> autocorrelations
+    List<BigDecimal> autocorrelations
 
     /**
      * Interprets the Ljung-Box test result at the 5% significance level.
@@ -175,7 +175,7 @@ class Portmanteau {
      * @return A string describing whether the series appears to be independent
      */
     String interpret(Number alpha = 0.05) {
-      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: Series shows significant autocorrelation (p = ${String.format('%.4f', pValue)})"
       } else {
@@ -190,7 +190,7 @@ class Portmanteau {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < (alphaValue as double) ?
+      String conclusion = pValue < alphaValue ?
         "significant autocorrelation present" :
         "no significant autocorrelation"
 
@@ -211,7 +211,7 @@ class Portmanteau {
      * @param lag The lag (1-indexed)
      * @return The autocorrelation coefficient
      */
-    double getAutocorrelation(int lag) {
+    BigDecimal getAutocorrelation(int lag) {
       if (lag < 1 || lag > lags) {
         throw new IllegalArgumentException("Lag must be between 1 and ${lags}, got ${lag}")
       }

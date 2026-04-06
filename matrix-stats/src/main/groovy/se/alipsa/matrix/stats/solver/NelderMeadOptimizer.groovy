@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.solver
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -242,7 +240,6 @@ final class NelderMeadOptimizer {
     copy
   }
 
-  @CompileStatic
   static class OptimizationResult {
     /** Best parameter vector found. */
     double[] point

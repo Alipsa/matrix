@@ -186,15 +186,15 @@ class AdfGls {
     double cv10pct = getCriticalValue(type, n, 0.10)
 
     return new AdfGlsResult(
-      statistic: tStatistic,
-      gamma: gamma,
-      standardError: gammaSE,
+      statistic: BigDecimal.valueOf(tStatistic),
+      gamma: BigDecimal.valueOf(gamma),
+      standardError: BigDecimal.valueOf(gammaSE),
       lags: p,
       sampleSize: n,
       testType: type,
-      criticalValue1pct: cv1pct,
-      criticalValue5pct: cv5pct,
-      criticalValue10pct: cv10pct
+      criticalValue1pct: BigDecimal.valueOf(cv1pct),
+      criticalValue5pct: BigDecimal.valueOf(cv5pct),
+      criticalValue10pct: BigDecimal.valueOf(cv10pct)
     )
   }
 
@@ -344,13 +344,13 @@ class AdfGls {
    */
   static class AdfGlsResult {
     /** The ADF-GLS test statistic (t-statistic for γ) */
-    double statistic
+    BigDecimal statistic
 
     /** The estimated γ coefficient */
-    double gamma
+    BigDecimal gamma
 
     /** Standard error of γ */
-    double standardError
+    BigDecimal standardError
 
     /** Number of lags used */
     int lags
@@ -362,13 +362,13 @@ class AdfGls {
     String testType
 
     /** Critical value at 1% significance */
-    double criticalValue1pct
+    BigDecimal criticalValue1pct
 
     /** Critical value at 5% significance */
-    double criticalValue5pct
+    BigDecimal criticalValue5pct
 
     /** Critical value at 10% significance */
-    double criticalValue10pct
+    BigDecimal criticalValue10pct
 
     /**
      * Interprets the test result.
@@ -378,8 +378,8 @@ class AdfGls {
      */
     String interpret(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      double cv = alphaValue == 0.01 ? criticalValue1pct :
-                  alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
+      BigDecimal cv = alphaValue == 0.01 ? criticalValue1pct :
+        alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
 
       if (statistic < cv) {
         return "Reject H0: Series appears stationary (ADF-GLS = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"

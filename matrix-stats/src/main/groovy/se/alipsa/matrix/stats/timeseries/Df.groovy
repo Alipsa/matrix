@@ -68,97 +68,15 @@ class Df {
    */
   @SuppressWarnings('MethodSize')
   static DfResult test(double[] data, String type = "drift") {
-    if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
-    }
-    if (data.length < 10) {
-      throw new IllegalArgumentException("Data must have at least 10 observations (got ${data.length})")
-    }
-
-    if (type != "none" && type != "drift" && type != "trend") {
-      throw new IllegalArgumentException("Type must be 'none', 'drift', or 'trend' (got '${type}')")
-    }
-
+    validateInput(data, type)
     int n = data.length
-
-    // Check for constant series
-    double yMin = Double.POSITIVE_INFINITY
-    double yMax = Double.NEGATIVE_INFINITY
-    for (double val : data) {
-      if (val < yMin) {
-        yMin = val
-      }
-      if (val > yMax) {
-        yMax = val
-      }
-    }
-
-    if (Math.abs(yMax - yMin) < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant series)")
-    }
-
-    // Calculate first differences: Δy_t = y_t - y_{t-1}
-    double[] dy = new double[n - 1]
-    for (int i = 1; i < n; i++) {
-      dy[i - 1] = data[i] - data[i - 1]
-    }
-
-    // Build regression: Δy_t = α + βt + γy_{t-1} + ε_t
-    // Response: Δy_t for t = 2, ..., n
-    // Predictors: [1, t, y_{t-1}] depending on type
-
-    int nObs = n - 1
-    double[] response = dy
-
-    // Count number of predictors based on type
-    int nPredictors = 1  // Always have y_{t-1}
-    if (type == "drift" || type == "trend") {
-      nPredictors++  // Add intercept
-    }
-    if (type == "trend") {
-      nPredictors++  // Add time trend
-    }
-
-    // Build design matrix
-    double[][] X = new double[nObs][nPredictors]
-    for (int i = 0; i < nObs; i++) {
-      int col = 0
-
-      if (type == "drift" || type == "trend") {
-        X[i][col++] = 1.0  // Intercept
-      }
-
-      if (type == "trend") {
-        X[i][col++] = i + 1.0  // Time trend (1, 2, 3, ...)
-      }
-
-      X[i][col++] = data[i]  // y_{t-1}
-    }
-
-    // Perform OLS regression using simple matrix calculations
-    // β = (X'X)^(-1) X'y
-
-    // Calculate X'X
-    double[][] XtX = new double[nPredictors][nPredictors]
-    for (int i = 0; i < nPredictors; i++) {
-      for (int j = 0; j < nPredictors; j++) {
-        double sum = 0.0
-        for (int k = 0; k < nObs; k++) {
-          sum += X[k][i] * X[k][j]
-        }
-        XtX[i][j] = sum
-      }
-    }
-
-    // Calculate X'y
-    double[] Xty = new double[nPredictors]
-    for (int i = 0; i < nPredictors; i++) {
-      double sum = 0.0
-      for (int k = 0; k < nObs; k++) {
-        sum += X[k][i] * response[k]
-      }
-      Xty[i] = sum
-    }
+    ensureVariation(data)
+    double[] response = firstDifferences(data)
+    int nObs = response.length
+    int nPredictors = predictorCount(type)
+    double[][] X = buildDesignMatrix(data, type, nObs, nPredictors)
+    double[][] XtX = crossProduct(X, nPredictors, nObs)
+    double[] Xty = crossProduct(X, response, nPredictors, nObs)
 
     // Solve for coefficients using Gaussian elimination
     double[] beta = TimeSeriesUtils.solveLinearSystem(XtX, Xty)
@@ -167,21 +85,7 @@ class Df {
     int gammaIndex = nPredictors - 1  // Last coefficient is always y_{t-1}
     double gamma = beta[gammaIndex]
 
-    // Calculate residuals and standard error
-    double[] residuals = new double[nObs]
-    for (int i = 0; i < nObs; i++) {
-      double fitted = 0.0
-      for (int j = 0; j < nPredictors; j++) {
-        fitted += X[i][j] * beta[j]
-      }
-      residuals[i] = response[i] - fitted
-    }
-
-    double rss = 0.0  // Residual sum of squares
-    for (double r : residuals) {
-      rss += r * r
-    }
-
+    double rss = residualSumOfSquares(X, beta, response, nPredictors, nObs)
     int df = nObs - nPredictors
     double sigma2 = rss / df
 
@@ -200,15 +104,120 @@ class Df {
     double cv10pct = getCriticalValue(type, n, 0.10)
 
     return new DfResult(
-      statistic: dfStatistic,
-      gamma: gamma,
-      standardError: gammaSE,
+      statistic: toBigDecimalOrNull(dfStatistic),
+      gamma: toBigDecimalOrNull(gamma),
+      standardError: toBigDecimalOrNull(gammaSE),
       sampleSize: n,
       testType: type,
-      criticalValue1pct: cv1pct,
-      criticalValue5pct: cv5pct,
-      criticalValue10pct: cv10pct
+      criticalValue1pct: BigDecimal.valueOf(cv1pct),
+      criticalValue5pct: BigDecimal.valueOf(cv5pct),
+      criticalValue10pct: BigDecimal.valueOf(cv10pct)
     )
+  }
+
+  private static BigDecimal toBigDecimalOrNull(double value) {
+    Double.isFinite(value) ? BigDecimal.valueOf(value) : null
+  }
+
+  private static void validateInput(double[] data, String type) {
+    if (data == null) {
+      throw new IllegalArgumentException("Data cannot be null")
+    }
+    if (data.length < 10) {
+      throw new IllegalArgumentException("Data must have at least 10 observations (got ${data.length})")
+    }
+    if (!(type in ["none", "drift", "trend"])) {
+      throw new IllegalArgumentException("Type must be 'none', 'drift', or 'trend' (got '${type}')")
+    }
+  }
+
+  private static void ensureVariation(double[] data) {
+    double yMin = Double.POSITIVE_INFINITY
+    double yMax = Double.NEGATIVE_INFINITY
+    for (double value : data) {
+      if (value < yMin) {
+        yMin = value
+      }
+      if (value > yMax) {
+        yMax = value
+      }
+    }
+    if (Math.abs(yMax - yMin) < 1e-10) {
+      throw new IllegalArgumentException("Data has no variation (constant series)")
+    }
+  }
+
+  private static double[] firstDifferences(double[] data) {
+    double[] differences = new double[data.length - 1]
+    for (int i = 1; i < data.length; i++) {
+      differences[i - 1] = data[i] - data[i - 1]
+    }
+    differences
+  }
+
+  private static int predictorCount(String type) {
+    int count = 1
+    if (type == "drift" || type == "trend") {
+      count++
+    }
+    if (type == "trend") {
+      count++
+    }
+    count
+  }
+
+  private static double[][] buildDesignMatrix(double[] data, String type, int nObs, int nPredictors) {
+    double[][] designMatrix = new double[nObs][nPredictors]
+    for (int i = 0; i < nObs; i++) {
+      int column = 0
+      if (type == "drift" || type == "trend") {
+        designMatrix[i][column++] = 1.0
+      }
+      if (type == "trend") {
+        designMatrix[i][column++] = i + 1.0
+      }
+      designMatrix[i][column] = data[i]
+    }
+    designMatrix
+  }
+
+  private static double[][] crossProduct(double[][] X, int nPredictors, int nObs) {
+    double[][] XtX = new double[nPredictors][nPredictors]
+    for (int i = 0; i < nPredictors; i++) {
+      for (int j = 0; j < nPredictors; j++) {
+        double sum = 0.0
+        for (int k = 0; k < nObs; k++) {
+          sum += X[k][i] * X[k][j]
+        }
+        XtX[i][j] = sum
+      }
+    }
+    XtX
+  }
+
+  private static double[] crossProduct(double[][] X, double[] response, int nPredictors, int nObs) {
+    double[] Xty = new double[nPredictors]
+    for (int i = 0; i < nPredictors; i++) {
+      double sum = 0.0
+      for (int k = 0; k < nObs; k++) {
+        sum += X[k][i] * response[k]
+      }
+      Xty[i] = sum
+    }
+    Xty
+  }
+
+  private static double residualSumOfSquares(double[][] X, double[] beta, double[] response, int nPredictors, int nObs) {
+    double rss = 0.0
+    for (int i = 0; i < nObs; i++) {
+      double fitted = 0.0
+      for (int j = 0; j < nPredictors; j++) {
+        fitted += X[i][j] * beta[j]
+      }
+      double residual = response[i] - fitted
+      rss += residual * residual
+    }
+    rss
   }
 
   /**
@@ -264,13 +273,13 @@ class Df {
    */
   static class DfResult {
     /** The Dickey-Fuller test statistic (t-statistic for γ) */
-    double statistic
+    BigDecimal statistic
 
     /** The estimated γ coefficient */
-    double gamma
+    BigDecimal gamma
 
     /** Standard error of γ */
-    double standardError
+    BigDecimal standardError
 
     /** Sample size */
     int sampleSize
@@ -279,13 +288,13 @@ class Df {
     String testType
 
     /** Critical value at 1% significance */
-    double criticalValue1pct
+    BigDecimal criticalValue1pct
 
     /** Critical value at 5% significance */
-    double criticalValue5pct
+    BigDecimal criticalValue5pct
 
     /** Critical value at 10% significance */
-    double criticalValue10pct
+    BigDecimal criticalValue10pct
 
     /**
      * Interprets the test result.
@@ -295,13 +304,13 @@ class Df {
      */
     String interpret(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      double cv = alphaValue == 0.01 ? criticalValue1pct :
-                  alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
+      BigDecimal cv = alphaValue == 0.01 ? criticalValue1pct :
+        alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
 
-      if (statistic < cv) {
-        return "Reject H0: Series appears stationary (DF = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
+      if (statistic != null && statistic < cv) {
+        return "Reject H0: Series appears stationary (DF = ${format(statistic, '%.4f')}, CV = ${format(cv, '%.4f')})"
       } else {
-        return "Fail to reject H0: Unit root likely present, series appears non-stationary (DF = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
+        return "Fail to reject H0: Unit root likely present, series appears non-stationary (DF = ${format(statistic, '%.4f')}, CV = ${format(cv, '%.4f')})"
       }
     }
 
@@ -310,7 +319,7 @@ class Df {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
+      String conclusion = statistic != null && statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
 
       return String.format(
         "Dickey-Fuller test:\\n" +
@@ -319,7 +328,7 @@ class Df {
         "Critical values: 1%% = %.4f, 5%% = %.4f, 10%% = %.4f\\n" +
         "Sample size: %d\\n" +
         "Conclusion: Series appears %s at %.0f%% significance level",
-        testType, statistic, criticalValue1pct, criticalValue5pct, criticalValue10pct,
+        testType, statistic ?: Double.NaN, criticalValue1pct, criticalValue5pct, criticalValue10pct,
         sampleSize, conclusion, (alphaValue * 100) as double
       )
     }
@@ -329,15 +338,19 @@ class Df {
       return """Dickey-Fuller Test
   Type: ${testType}
   Sample size: ${sampleSize}
-  DF statistic: ${String.format('%.4f', statistic)}
-  γ coefficient: ${String.format('%.6f', gamma)}
-  Standard error: ${String.format('%.6f', standardError)}
+  DF statistic: ${format(statistic, '%.4f')}
+  γ coefficient: ${format(gamma, '%.6f')}
+  Standard error: ${format(standardError, '%.6f')}
   Critical values:
-    1%: ${String.format('%.4f', criticalValue1pct)}
-    5%: ${String.format('%.4f', criticalValue5pct)}
-   10%: ${String.format('%.4f', criticalValue10pct)}
+    1%: ${format(criticalValue1pct, '%.4f')}
+    5%: ${format(criticalValue5pct, '%.4f')}
+   10%: ${format(criticalValue10pct, '%.4f')}
 
   ${interpret()}"""
+    }
+
+    private static String format(Number value, String pattern) {
+      value == null ? 'NaN' : String.format(pattern, value)
     }
   }
 }

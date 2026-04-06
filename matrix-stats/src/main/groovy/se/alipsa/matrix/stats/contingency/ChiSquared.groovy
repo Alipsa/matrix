@@ -76,9 +76,9 @@ class ChiSquared {
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
     return new ChiSquaredResult(
-      testStatistic: chiSquared,
+      testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "Pearson"
     )
   }
@@ -123,9 +123,9 @@ class ChiSquared {
     double pValue = 1.0 - distribution.cumulativeProbability(gStatistic)
 
     return new ChiSquaredResult(
-      testStatistic: gStatistic,
+      testStatistic: BigDecimal.valueOf(gStatistic),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "G-test"
     )
   }
@@ -179,9 +179,9 @@ class ChiSquared {
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
     return new ChiSquaredResult(
-      testStatistic: chiSquared,
+      testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "Yates"
     )
   }
@@ -239,13 +239,13 @@ class ChiSquared {
    */
   static class ChiSquaredResult {
     /** The chi-squared test statistic (or G statistic for G-test) */
-    Double testStatistic
+    BigDecimal testStatistic
 
     /** Degrees of freedom for the test */
     Integer degreesOfFreedom
 
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The type of test performed */
     String testType

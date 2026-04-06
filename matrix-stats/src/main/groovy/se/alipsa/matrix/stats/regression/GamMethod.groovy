@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.formula.ModelFrameResult
@@ -41,7 +39,6 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  *   <li>Weights and offsets</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class GamMethod implements FitMethod {
 

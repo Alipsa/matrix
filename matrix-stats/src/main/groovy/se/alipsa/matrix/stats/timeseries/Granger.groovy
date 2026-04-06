@@ -159,13 +159,13 @@ class Granger {
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
     return new GrangerResult(
-      statistic: fStatistic,
-      pValue: pValue,
+      statistic: BigDecimal.valueOf(fStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       lags: p,
       df1: df1,
       df2: df2,
-      rssRestricted: rssRestricted,
-      rssUnrestricted: rssUnrestricted,
+      rssRestricted: BigDecimal.valueOf(rssRestricted),
+      rssUnrestricted: BigDecimal.valueOf(rssUnrestricted),
       sampleSize: n,
       effectiveSampleSize: nObs
     )
@@ -229,10 +229,10 @@ class Granger {
    */
   static class GrangerResult {
     /** The F-statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Number of lags used */
     int lags
@@ -244,10 +244,10 @@ class Granger {
     int df2
 
     /** RSS for restricted model */
-    double rssRestricted
+    BigDecimal rssRestricted
 
     /** RSS for unrestricted model */
-    double rssUnrestricted
+    BigDecimal rssUnrestricted
 
     /** Original sample size */
     int sampleSize
@@ -262,7 +262,7 @@ class Granger {
      * @return Interpretation string
      */
     String interpret(Number alpha = 0.05) {
-      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: X Granger-causes Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
@@ -275,7 +275,7 @@ class Granger {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < (alphaValue as double) ? "X Granger-causes Y" : "X does not Granger-cause Y"
+      String conclusion = pValue < alphaValue ? "X Granger-causes Y" : "X does not Granger-cause Y"
 
       return String.format(
         "Granger causality test:\\n" +

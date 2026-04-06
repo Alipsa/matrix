@@ -1,14 +1,11 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Immutable result of model frame evaluation, containing the expanded design matrix
  * and associated metadata.
  */
-@CompileStatic
 final class ModelFrameResult {
 
   final Matrix data

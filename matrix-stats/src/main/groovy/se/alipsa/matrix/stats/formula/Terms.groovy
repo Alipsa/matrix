@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Immutable metadata describing the mapping from formula terms to design matrix columns.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * which design matrix columns belong to which predictor term, whether a term is categorical,
  * and what factor levels were detected.
  */
-@CompileStatic
 final class Terms {
 
   final FormulaExpression response
@@ -25,7 +22,6 @@ final class Terms {
   /**
    * Metadata for a single predictor term.
    */
-  @CompileStatic
   static final class TermInfo {
     final FormulaTerm sourceTerm
     final String label

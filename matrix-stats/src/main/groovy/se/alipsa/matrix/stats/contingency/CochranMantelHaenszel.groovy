@@ -187,10 +187,10 @@ class CochranMantelHaenszel {
     }
 
     return new CochranMantelHaenszelResult(
-      statistic: cmhStatistic,
-      pValue: pValue,
+      statistic: BigDecimal.valueOf(cmhStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       strata: k,
-      commonOddsRatio: commonOddsRatio,
+      commonOddsRatio: Double.isNaN(commonOddsRatio) ? null : BigDecimal.valueOf(commonOddsRatio),
       continuityCorrection: continuityCorrection
     )
   }
@@ -240,16 +240,16 @@ class CochranMantelHaenszel {
    */
   static class CochranMantelHaenszelResult {
     /** The CMH test statistic (chi-squared) */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** The number of strata */
     int strata
 
     /** The common odds ratio (Mantel-Haenszel estimator) */
-    double commonOddsRatio
+    BigDecimal commonOddsRatio
 
     /** Whether continuity correction was applied */
     boolean continuityCorrection
@@ -277,12 +277,12 @@ class CochranMantelHaenszel {
     String evaluate(Number alpha = 0.05) {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       String significance = pValue < normalizedAlpha ? "significant" : "not significant"
-      String oddsRatioStr = Double.isNaN(commonOddsRatio) ?
+      String oddsRatioStr = commonOddsRatio == null ?
         "undefined" :
         String.format("%.4f", commonOddsRatio)
 
       String direction = ""
-      if (!Double.isNaN(commonOddsRatio)) {
+      if (commonOddsRatio != null) {
         if (commonOddsRatio > 1) {
           direction = " (positive association)"
         } else if (commonOddsRatio < 1) {
@@ -308,7 +308,7 @@ class CochranMantelHaenszel {
 
     @Override
     String toString() {
-      String oddsRatioStr = Double.isNaN(commonOddsRatio) ?
+      String oddsRatioStr = commonOddsRatio == null ?
         "undefined" :
         String.format('%.4f', commonOddsRatio)
 

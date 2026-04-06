@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
@@ -33,7 +31,6 @@ import se.alipsa.matrix.core.Row
  * <p>No pass-through NA mode exists today. Rows containing nulls in formula-referenced
  * columns are either omitted or rejected depending on {@code na.action}.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 final class ModelFrame {
   private final ParsedFormula parsedFormula
@@ -735,7 +732,6 @@ final class ModelFrame {
     value
   }
 
-  @CompileStatic
   private static final class SubsetResult {
 
     final Matrix data
@@ -748,7 +744,6 @@ final class ModelFrame {
 
   }
 
-  @CompileStatic
   private static final class NaResult {
 
     final Matrix data

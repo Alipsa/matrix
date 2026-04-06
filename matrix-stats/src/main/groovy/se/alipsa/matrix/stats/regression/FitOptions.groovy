@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 /**
  * Marker interface for method-specific fit options. Each fit method defines its
  * own options class (e.g. {@link LoessOptions}, {@link GamOptions}). Methods that
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  *
  * <p>A singleton {@link #NONE} instance is provided for methods with no options.
  */
-@CompileStatic
 interface FitOptions {
 
   /** Empty options for methods that require no configuration. */

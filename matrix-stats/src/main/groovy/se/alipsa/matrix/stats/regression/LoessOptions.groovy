@@ -1,13 +1,10 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Typed options for loess local regression.
  */
-@CompileStatic
 final class LoessOptions implements FitOptions {
   final double span
   final int degree

@@ -41,16 +41,16 @@ class JohansenTest {
     assertEquals('const', result.type)
 
     // Should have 2 eigenvalues
-    assertEquals(2, result.eigenvalues.length)
-    assertEquals(2, result.traceStatistics.length)
+    assertEquals(2, result.eigenvalues.size())
+    assertEquals(2, result.traceStatistics.size())
 
     // Eigenvalues should be between 0 and 1
-    for (double eigen : result.eigenvalues) {
+    for (BigDecimal eigen : result.eigenvalues) {
       assertTrue(eigen >= 0 && eigen <= 1, "Eigenvalue should be in [0,1]: ${eigen}")
     }
 
     // Trace statistics should be positive
-    for (double trace : result.traceStatistics) {
+    for (BigDecimal trace : result.traceStatistics) {
       assertTrue(trace >= 0, "Trace statistic should be non-negative: ${trace}")
     }
   }
@@ -103,8 +103,8 @@ class JohansenTest {
 
     assertNotNull(result)
     assertEquals(3, result.numVariables)
-    assertEquals(3, result.eigenvalues.length)
-    assertEquals(3, result.traceStatistics.length)
+    assertEquals(3, result.eigenvalues.size())
+    assertEquals(3, result.traceStatistics.size())
   }
 
   @Test
@@ -268,7 +268,7 @@ class JohansenTest {
     def result = Johansen.test([y1, y2], 1)
 
     // Eigenvalues should be sorted in descending order
-    for (int i = 0; i < result.eigenvalues.length - 1; i++) {
+    for (int i = 0; i < result.eigenvalues.size() - 1; i++) {
       assertTrue(result.eigenvalues[i] >= result.eigenvalues[i+1],
                  "Eigenvalues should be in descending order")
     }
@@ -292,7 +292,7 @@ class JohansenTest {
     def result = Johansen.test([y1, y2], 1)
 
     // Trace statistics should decrease as r increases
-    for (int i = 0; i < result.traceStatistics.length - 1; i++) {
+    for (int i = 0; i < result.traceStatistics.size() - 1; i++) {
       assertTrue(result.traceStatistics[i] >= result.traceStatistics[i+1],
                  "Trace statistics should be non-increasing")
     }
@@ -317,7 +317,7 @@ class JohansenTest {
 
     // Critical values should be available
     assertNotNull(result.criticalValues5pct)
-    assertTrue(result.criticalValues5pct.length > 0)
+    assertFalse(result.criticalValues5pct.isEmpty())
   }
 
   @Test
@@ -346,8 +346,8 @@ class JohansenTest {
 
     assertNotNull(result)
     assertEquals(4, result.numVariables)
-    assertEquals(4, result.eigenvalues.length)
-    assertEquals(4, result.traceStatistics.length)
+    assertEquals(4, result.eigenvalues.size())
+    assertEquals(4, result.traceStatistics.size())
   }
 
   @Test
@@ -420,8 +420,8 @@ class JohansenTest {
     def actual = Johansen.test(data, 2, 'const')
     Map<String, Object> expected = apacheJohansenReference(data, 2, 'const')
 
-    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues, 1e-10)
-    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics, 1e-9)
+    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues.collect { it as double } as double[], 1e-10)
+    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics.collect { it as double } as double[], 1e-9)
   }
 
   @Test
@@ -431,8 +431,8 @@ class JohansenTest {
     def actual = Johansen.test(data, 1, 'trend')
     Map<String, Object> expected = apacheJohansenReference(data, 1, 'trend')
 
-    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues, 1e-10)
-    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics, 1e-9)
+    assertArrayEquals(expected.eigenvalues as double[], actual.eigenvalues.collect { it as double } as double[], 1e-10)
+    assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics.collect { it as double } as double[], 1e-9)
   }
 
   @Test

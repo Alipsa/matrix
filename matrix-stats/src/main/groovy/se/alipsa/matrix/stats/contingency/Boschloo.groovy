@@ -127,9 +127,9 @@ class Boschloo {
     maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
 
     return new BoschlooResult(
-      pValue: maxPValue,
-      fisherPValue: observedFisherP,
-      nuisanceParameter: optimalPi,
+      pValue: BigDecimal.valueOf(maxPValue),
+      fisherPValue: BigDecimal.valueOf(observedFisherP),
+      nuisanceParameter: BigDecimal.valueOf(optimalPi),
       sampleSize: n
     )
   }
@@ -302,13 +302,13 @@ class Boschloo {
    */
   static class BoschlooResult {
     /** The p-value (two-sided) */
-    double pValue
+    BigDecimal pValue
 
     /** Fisher's exact p-value for the observed table */
-    double fisherPValue
+    BigDecimal fisherPValue
 
     /** The nuisance parameter that maximizes p-value */
-    double nuisanceParameter
+    BigDecimal nuisanceParameter
 
     /** The total sample size */
     int sampleSize

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Supported contrast types for categorical predictor encoding.
  */
-@CompileStatic
 enum ContrastType {
   /**
    * Treatment contrasts (dummy coding): one level is the reference and omitted.

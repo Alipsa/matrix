@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.formula.ModelFrameResult
@@ -27,7 +25,6 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * <p>Loess is a local method with no global coefficients. {@link FitResult#coefficients}
  * and {@link FitResult#standardErrors} return empty arrays.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class LoessMethod implements FitMethod {
 

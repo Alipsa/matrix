@@ -58,8 +58,8 @@ class DurbinWatson {
     double autocorrelation = 1.0 - (dwStatistic / 2.0)
 
     return new DurbinWatsonResult(
-      statistic: dwStatistic,
-      autocorrelation: autocorrelation,
+      statistic: BigDecimal.valueOf(dwStatistic),
+      autocorrelation: BigDecimal.valueOf(autocorrelation),
       sampleSize: n
     )
   }
@@ -107,10 +107,10 @@ class DurbinWatson {
    */
   static class DurbinWatsonResult {
     /** The Durbin-Watson test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The estimated first-order autocorrelation coefficient */
-    double autocorrelation
+    BigDecimal autocorrelation
 
     /** The sample size */
     int sampleSize

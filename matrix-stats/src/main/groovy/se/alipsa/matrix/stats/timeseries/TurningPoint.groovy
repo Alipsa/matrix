@@ -122,11 +122,11 @@ class TurningPoint {
     double pValue = 2.0 * (1.0 - normal.cumulativeProbability(Math.abs(zStatistic)))
 
     return new TurningPointResult(
-      statistic: zStatistic,
-      pValue: pValue,
+      statistic: BigDecimal.valueOf(zStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       turningPoints: turningPoints,
-      expectedTurningPoints: expectedTurningPoints,
-      variance: variance,
+      expectedTurningPoints: BigDecimal.valueOf(expectedTurningPoints),
+      variance: BigDecimal.valueOf(variance),
       peaks: peaks,
       troughs: troughs,
       sampleSize: n,
@@ -147,19 +147,19 @@ class TurningPoint {
    */
   static class TurningPointResult {
     /** The Z-statistic (standardized test statistic) */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Observed number of turning points */
     int turningPoints
 
     /** Expected number of turning points under H0 */
-    double expectedTurningPoints
+    BigDecimal expectedTurningPoints
 
     /** Variance of turning points under H0 */
-    double variance
+    BigDecimal variance
 
     /** Number of peaks (local maxima) */
     int peaks
@@ -180,7 +180,7 @@ class TurningPoint {
      * @return Interpretation string
      */
     String interpret(Number alpha = 0.05) {
-      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         String direction = turningPoints > expectedTurningPoints ? "more" : "fewer"
         return "Reject H0: Data shows ${direction} turning points than expected under randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -194,7 +194,7 @@ class TurningPoint {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < (alphaValue as double) ? "data is not random" : "data is consistent with randomness"
+      String conclusion = pValue < alphaValue ? "data is not random" : "data is consistent with randomness"
       String direction = turningPoints > expectedTurningPoints ? "cyclicity" : "trend"
 
       return String.format(

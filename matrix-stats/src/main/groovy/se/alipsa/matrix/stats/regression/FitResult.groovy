@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 /**
  * Immutable result of a model fit, containing coefficients, diagnostics, and fitted values.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * for {@code coefficients} and {@code standardErrors}. Consumers should check
  * {@code coefficients.length} before accessing coefficient values.
  */
-@CompileStatic
 final class FitResult {
 
   final double[] coefficients

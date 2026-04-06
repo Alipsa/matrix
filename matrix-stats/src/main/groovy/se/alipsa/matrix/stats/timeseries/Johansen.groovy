@@ -101,9 +101,9 @@ class Johansen {
     double[][] criticalValues = getCriticalValues(type)
 
     return new JohansenResult(
-      eigenvalues: sortedEigenvalues,
-      traceStatistics: traceStats,
-      criticalValues5pct: criticalValues,
+      eigenvalues: NumericConversion.toBigDecimalList(sortedEigenvalues, 'eigenvalues'),
+      traceStatistics: NumericConversion.toBigDecimalList(traceStats, 'traceStatistics'),
+      criticalValues5pct: NumericConversion.toBigDecimalRows(criticalValues, 'criticalValues5pct'),
       sampleSize: differencedData.effectiveN,
       numVariables: k,
       lags: lags,
@@ -317,13 +317,13 @@ class Johansen {
    */
   static class JohansenResult {
     /** Eigenvalues (sorted in descending order) */
-    double[] eigenvalues
+    List<BigDecimal> eigenvalues
 
     /** Trace statistics for different cointegration ranks */
-    double[] traceStatistics
+    List<BigDecimal> traceStatistics
 
     /** Critical values at 5% significance level [r][k-1] */
-    double[][] criticalValues5pct
+    List<List<BigDecimal>> criticalValues5pct
 
     /** Effective sample size */
     int sampleSize
@@ -348,7 +348,7 @@ class Johansen {
 
       int cointRank = 0
       for (int r = 0; r < numVariables; r++) {
-        double critVal = r < criticalValues5pct.length && numVariables - 1 < criticalValues5pct[r].length ?
+        Number critVal = r < criticalValues5pct.size() && numVariables - 1 < criticalValues5pct[r].size() ?
                          criticalValues5pct[r][numVariables - 1] : Double.NaN
 
         if (traceStatistics[r] > critVal) {
@@ -365,15 +365,15 @@ class Johansen {
     }
 
     List<BigDecimal> getEigenvalueValues() {
-      NumericConversion.toBigDecimalList(eigenvalues, 'eigenvalues')
+      eigenvalues
     }
 
     List<BigDecimal> getTraceStatisticValues() {
-      NumericConversion.toBigDecimalList(traceStatistics, 'traceStatistics')
+      traceStatistics
     }
 
     List<List<BigDecimal>> getCriticalValueRows5pct() {
-      NumericConversion.toBigDecimalRows(criticalValues5pct, 'criticalValues5pct')
+      criticalValues5pct
     }
 
     @Override

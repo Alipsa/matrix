@@ -64,11 +64,11 @@ class Kpss {
     double criticalValue = getCriticalValue(type)
 
     return new KpssResult(
-      statistic: kpssStatistic,
+      statistic: BigDecimal.valueOf(kpssStatistic),
       type: type,
       lags: l,
       sampleSize: n,
-      criticalValue: criticalValue
+      criticalValue: BigDecimal.valueOf(criticalValue)
     )
   }
 
@@ -184,7 +184,7 @@ class Kpss {
    */
   static class KpssResult {
     /** The KPSS test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The type of test performed */
     String type
@@ -196,7 +196,7 @@ class Kpss {
     int sampleSize
 
     /** The approximate 5% critical value */
-    double criticalValue
+    BigDecimal criticalValue
 
     /**
      * Interprets the KPSS test result.

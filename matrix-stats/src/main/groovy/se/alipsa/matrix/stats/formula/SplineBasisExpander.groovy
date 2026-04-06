@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -13,7 +11,6 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * {@code y ~ x + s(x)} can combine an unpenalized linear effect with a
  * separate smooth component without duplicating columns.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 final class SplineBasisExpander {
 

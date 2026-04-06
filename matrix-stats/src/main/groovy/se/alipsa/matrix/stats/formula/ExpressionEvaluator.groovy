@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.Matrix
  * such as {@code log}, {@code sqrt}, and {@code exp}. The {@code I(...)} function is
  * treated as an arithmetic expression wrapper.
  */
-@CompileStatic
 final class ExpressionEvaluator {
 
   private final Matrix data

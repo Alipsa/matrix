@@ -1,13 +1,10 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Typed options for GAM penalized least squares.
  */
-@CompileStatic
 final class GamOptions implements FitOptions {
   final double lambda
 

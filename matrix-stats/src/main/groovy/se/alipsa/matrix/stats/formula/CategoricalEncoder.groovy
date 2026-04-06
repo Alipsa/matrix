@@ -1,13 +1,10 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Encodes categorical columns using configurable contrasts.
  */
-@CompileStatic
 final class CategoricalEncoder {
 
   private final Matrix data

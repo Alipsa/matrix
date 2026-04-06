@@ -118,9 +118,9 @@ class Fisher {
     double[] confInt = calculateConfidenceInterval(a, b, c, d, 0.95)
 
     return new FisherResult(
-      pValue: pValue,
-      oddsRatio: oddsRatio,
-      confidenceInterval: confInt,
+      pValue: BigDecimal.valueOf(pValue),
+      oddsRatio: BigDecimal.valueOf(oddsRatio),
+      confidenceInterval: NumericConversion.toBigDecimalList(confInt, 'confidenceInterval'),
       alternative: alternative
     )
   }
@@ -198,13 +198,13 @@ class Fisher {
    */
   static class FisherResult {
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The estimated odds ratio */
-    Double oddsRatio
+    BigDecimal oddsRatio
 
     /** 95% confidence interval for the odds ratio [lower, upper] */
-    double[] confidenceInterval
+    List<BigDecimal> confidenceInterval
 
     /** The alternative hypothesis used */
     String alternative

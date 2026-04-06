@@ -114,9 +114,9 @@ class Barnard {
     maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
 
     return new BarnardResult(
-      statistic: observedT,
-      pValue: maxPValue,
-      nuisanceParameter: optimalPi,
+      statistic: BigDecimal.valueOf(observedT),
+      pValue: BigDecimal.valueOf(maxPValue),
+      nuisanceParameter: BigDecimal.valueOf(optimalPi),
       sampleSize: n
     )
   }
@@ -286,13 +286,13 @@ class Barnard {
    */
   static class BarnardResult {
     /** The Wald score statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value (two-sided) */
-    double pValue
+    BigDecimal pValue
 
     /** The nuisance parameter that maximizes p-value */
-    double nuisanceParameter
+    BigDecimal nuisanceParameter
 
     /** The total sample size */
     int sampleSize
