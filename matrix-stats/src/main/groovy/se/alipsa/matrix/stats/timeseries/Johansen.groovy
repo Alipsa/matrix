@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 import se.alipsa.matrix.stats.linear.SingularMatrixException
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Johansen cointegration test, named after Søren Johansen, is a procedure for testing cointegration
@@ -83,13 +84,14 @@ class Johansen {
    * @param type Type of deterministic component ('none', 'const', 'trend')
    * @return JohansenResult containing test statistics and eigenvalues
    */
-  static JohansenResult test(List<double[]> data, int lags = 1, String type = 'const') {
-    validateInputs(data, lags, type)
+  static JohansenResult test(List<?> data, int lags = 1, String type = 'const') {
+    List<double[]> numericData = normalizeInputs(data)
+    validateInputs(numericData, lags, type)
 
-    int k = data.size()
-    int n = data[0].length
-    DifferencedData differencedData = createDifferencedData(data, lags, n, k)
-    ResidualMatrices residualMatrices = createResidualMatrices(data, lags, type, k, differencedData)
+    int k = numericData.size()
+    int n = numericData[0].length
+    DifferencedData differencedData = createDifferencedData(numericData, lags, n, k)
+    ResidualMatrices residualMatrices = createResidualMatrices(numericData, lags, type, k, differencedData)
     MomentMatrices momentMatrices = computeMomentMatrices(residualMatrices, differencedData.effectiveN)
     double[] sortedEigenvalues = solveEigenvalues(momentMatrices)
     double[] traceStats = computeTraceStatistics(sortedEigenvalues, k, differencedData.effectiveN)
@@ -107,6 +109,24 @@ class Johansen {
       lags: lags,
       type: type
     )
+  }
+
+  private static List<double[]> normalizeInputs(List<?> data) {
+    if (data == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    for (int i = 0; i < data.size(); i++) {
+      Object series = data[i]
+      if (series instanceof double[]) {
+        normalized << (((double[]) series).clone() as double[])
+      } else if (series instanceof List) {
+        normalized << NumericConversion.toDoubleArray(series as List<? extends Number>, "data series ${i}")
+      } else {
+        throw new IllegalArgumentException("Each series must be a List<Number> or double[], got ${series?.class?.simpleName}")
+      }
+    }
+    normalized
   }
 
   private static void validateInputs(List<double[]> data, int lags, String type) {
@@ -342,6 +362,18 @@ class Johansen {
 
       sb.append("\nConclusion: Evidence suggests ${cointRank} cointegrating relationship(s)")
       return sb.toString()
+    }
+
+    List<BigDecimal> getEigenvalueValues() {
+      NumericConversion.toBigDecimalList(eigenvalues, 'eigenvalues')
+    }
+
+    List<BigDecimal> getTraceStatisticValues() {
+      NumericConversion.toBigDecimalList(traceStatistics, 'traceStatistics')
+    }
+
+    List<List<BigDecimal>> getCriticalValueRows5pct() {
+      NumericConversion.toBigDecimalRows(criticalValues5pct, 'criticalValues5pct')
     }
 
     @Override

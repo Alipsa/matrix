@@ -3,6 +3,8 @@ package se.alipsa.matrix.stats.distribution
 import static java.math.BigDecimal.*
 import static se.alipsa.matrix.ext.NumberExtension.*
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 import java.math.MathContext
 import java.math.RoundingMode
 
@@ -65,6 +67,22 @@ class SpecialFunctions {
     )
 
     return bt * betaContinuedFraction(x, a, b) / a
+  }
+
+  /**
+   * BigDecimal-friendly incomplete beta function.
+   *
+   * @param x the evaluation point
+   * @param a the first shape parameter
+   * @param b the second shape parameter
+   * @return the regularized incomplete beta value
+   */
+  static BigDecimal regularizedIncompleteBeta(Number x, Number a, Number b) {
+    BigDecimal.valueOf(regularizedIncompleteBeta(
+      NumericConversion.toFiniteDouble(x, 'x'),
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(b, 'b')
+    ))
   }
 
   static BigDecimal regularizedIncompleteBeta(BigDecimal x, BigDecimal a, BigDecimal b) {
@@ -330,6 +348,20 @@ class SpecialFunctions {
   }
 
   /**
+   * BigDecimal-friendly lower regularized incomplete gamma function.
+   *
+   * @param a the shape parameter
+   * @param x the evaluation point
+   * @return the regularized incomplete gamma value
+   */
+  static BigDecimal regularizedIncompleteGammaP(Number a, Number x) {
+    BigDecimal.valueOf(regularizedIncompleteGammaP(
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(x, 'x')
+    ))
+  }
+
+  /**
    * Computes the regularized upper incomplete gamma function Q(a, x).
    *
    * @param a shape parameter (a > 0)
@@ -354,6 +386,20 @@ class SpecialFunctions {
       return 1.0d - gammaSeries(a, x)
     }
     return gammaContinuedFraction(a, x)
+  }
+
+  /**
+   * BigDecimal-friendly upper regularized incomplete gamma function.
+   *
+   * @param a the shape parameter
+   * @param x the evaluation point
+   * @return the upper-tail regularized incomplete gamma value
+   */
+  static BigDecimal regularizedIncompleteGammaQ(Number a, Number x) {
+    BigDecimal.valueOf(regularizedIncompleteGammaQ(
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(x, 'x')
+    ))
   }
 
   private static double gammaSeries(double a, double x) {

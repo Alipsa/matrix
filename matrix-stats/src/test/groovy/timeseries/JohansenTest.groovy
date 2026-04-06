@@ -435,6 +435,28 @@ class JohansenTest {
     assertArrayEquals(expected.traceStatistics as double[], actual.traceStatistics, 1e-9)
   }
 
+  @Test
+  void testGroovyFacingInputsAndValueAccessors() {
+    Random rnd = new Random(987)
+    int n = 80
+    List<BigDecimal> y1 = []
+    List<BigDecimal> y2 = []
+
+    BigDecimal current = 0
+    for (int i = 0; i < n; i++) {
+      current += rnd.nextGaussian() * 0.3d
+      y1 << current
+      y2 << current + rnd.nextGaussian() * 0.05d
+    }
+
+    def result = Johansen.test([y1, y2], 1)
+
+    assertEquals(2, result.eigenvalueValues.size())
+    assertEquals(2, result.traceStatisticValues.size())
+    assertFalse(result.criticalValueRows5pct.isEmpty())
+    assertFalse(result.criticalValueRows5pct[0].isEmpty())
+  }
+
   private static List<double[]> sampleCointegratedData(int seed, int n) {
     Random rnd = new Random(seed)
     double[] y1 = new double[n]

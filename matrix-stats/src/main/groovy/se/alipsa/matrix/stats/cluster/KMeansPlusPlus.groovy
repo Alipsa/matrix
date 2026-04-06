@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.cluster
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * KMeans++ is an enhanced K-Means clustering algorithm that uses an improved initialization
@@ -302,6 +303,16 @@ class KMeansPlusPlus {
     }
 
     /**
+     * Create a Builder that estimates the number of clusters automatically using Groovy-facing point rows.
+     *
+     * @param points the data points to cluster
+     * @param method the cluster estimation strategy to use
+     */
+    Builder(List<? extends List<? extends Number>> points, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW) {
+      this(NumericConversion.toDoubleMatrix(points, 'points'), method)
+    }
+
+    /**
      * Create a Builder with a fixed number of clusters.
      *
      * @param k the number of clusters to find
@@ -332,6 +343,16 @@ class KMeansPlusPlus {
 
       this.k = k
       this.points = points
+    }
+
+    /**
+     * Create a Builder with a fixed number of clusters from Groovy-facing point rows.
+     *
+     * @param k the number of clusters to find
+     * @param points the data points to cluster
+     */
+    Builder(int k, List<? extends List<? extends Number>> points) {
+      this(k, NumericConversion.toDoubleMatrix(points, 'points'))
     }
 
     /**
@@ -771,6 +792,15 @@ class KMeansPlusPlus {
   }
 
   /**
+   * Returns cluster assignments as an immutable list.
+   *
+   * @return the clustered points
+   */
+  List<ClusteredPoint> getAssignments() {
+    assignment.toList().asImmutable() as List<ClusteredPoint>
+  }
+
+  /**
    * Returns a map of cluster ID to a Matrix containing the points assigned to that cluster.
    *
    * @return a map where keys are cluster IDs (0 to k-1) and values are a {@link Matrix} containing cluster points
@@ -809,6 +839,15 @@ class KMeansPlusPlus {
   }
 
   /**
+   * Returns the centroids as immutable BigDecimal rows.
+   *
+   * @return the centroid rows
+   */
+  List<List<BigDecimal>> getCentroidValues() {
+    NumericConversion.toBigDecimalRows(centroids, 'centroids')
+  }
+
+  /**
    * Returns the wcss (Within-Cluster-Sum-of-Squares, also known as inertia) of the clustering.
    * wcss is a metric used to measure the compactness or cohesion of clusters.
    * It represents the sum of squared distances between each data point and the centroid of its assigned cluster.
@@ -819,6 +858,15 @@ class KMeansPlusPlus {
    */
   double getWCSS() {
     return wcss
+  }
+
+  /**
+   * Returns the within-cluster sum of squares as {@code BigDecimal}.
+   *
+   * @return the clustering error
+   */
+  BigDecimal getWcssValue() {
+    BigDecimal.valueOf(wcss)
   }
 
   /**
@@ -839,6 +887,15 @@ class KMeansPlusPlus {
    */
   double getExecutionTimeMillis() {
     return end - start
+  }
+
+  /**
+   * Returns the execution time in milliseconds as {@code BigDecimal}.
+   *
+   * @return the execution time
+   */
+  BigDecimal getExecutionTimeValue() {
+    BigDecimal.valueOf(getExecutionTimeMillis())
   }
 
 }

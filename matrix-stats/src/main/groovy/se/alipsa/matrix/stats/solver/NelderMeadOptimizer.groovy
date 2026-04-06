@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.solver
 
 import groovy.transform.CompileStatic
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Native Nelder-Mead simplex optimizer for low-dimensional derivative-free minimization.
  *
@@ -127,6 +129,35 @@ final class NelderMeadOptimizer {
     return new OptimizationResult(point: simplex[0], value: values[0], evaluations: evaluations, iterations: iterations)
   }
 
+  /**
+   * Minimizes an objective from idiomatic numeric vectors.
+   *
+   * @param objective objective function to minimize
+   * @param initialGuess initial simplex anchor point
+   * @param stepSizes axis-aligned simplex edge sizes
+   * @param maxEvaluations maximum objective evaluations
+   * @param relativeThreshold relative convergence threshold
+   * @param absoluteThreshold absolute convergence threshold
+   * @return best point and value found by the optimizer
+   */
+  static OptimizationResult minimize(
+      MultivariateObjective objective,
+      List<? extends Number> initialGuess,
+      List<? extends Number> stepSizes,
+      int maxEvaluations,
+      Number relativeThreshold,
+      Number absoluteThreshold
+  ) {
+    minimize(
+      objective,
+      NumericConversion.toDoubleArray(initialGuess, 'initialGuess'),
+      NumericConversion.toDoubleArray(stepSizes, 'stepSizes'),
+      maxEvaluations,
+      NumericConversion.toFiniteDouble(relativeThreshold, 'relativeThreshold'),
+      NumericConversion.toFiniteDouble(absoluteThreshold, 'absoluteThreshold')
+    )
+  }
+
   private static double[] centroid(double[][] simplex, int dimension) {
     double[] centroid = new double[dimension]
     for (int i = 0; i < dimension; i++) {
@@ -221,5 +252,13 @@ final class NelderMeadOptimizer {
     int evaluations
     /** Number of simplex iterations performed. */
     int iterations
+
+    List<BigDecimal> getPointValues() {
+      NumericConversion.toBigDecimalList(point, 'point')
+    }
+
+    BigDecimal getObjectiveValue() {
+      BigDecimal.valueOf(value)
+    }
   }
 }

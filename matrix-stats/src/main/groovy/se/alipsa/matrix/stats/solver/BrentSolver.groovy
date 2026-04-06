@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.solver
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Bracketing Brent-Dekker root solver for one-dimensional continuous functions.
  *
@@ -148,6 +150,35 @@ final class BrentSolver {
     throw new IllegalStateException("Brent solver failed to converge after $maxIterations iterations")
   }
 
+  /**
+   * Finds a root using idiomatic numeric inputs.
+   *
+   * @param function objective function
+   * @param min lower bracket endpoint
+   * @param max upper bracket endpoint
+   * @param relativeAccuracy relative convergence threshold
+   * @param absoluteAccuracy absolute convergence threshold
+   * @param maxIterations maximum iteration count
+   * @return solver result containing the root and iteration metadata
+   */
+  static SolverResult solve(
+      UnivariateObjective function,
+      Number min,
+      Number max,
+      Number relativeAccuracy,
+      Number absoluteAccuracy,
+      int maxIterations
+  ) {
+    solve(
+      function,
+      NumericConversion.toFiniteDouble(min, 'min'),
+      NumericConversion.toFiniteDouble(max, 'max'),
+      NumericConversion.toFiniteDouble(relativeAccuracy, 'relativeAccuracy'),
+      NumericConversion.toFiniteDouble(absoluteAccuracy, 'absoluteAccuracy'),
+      maxIterations
+    )
+  }
+
   static class SolverResult {
     /** Root value returned by the solver. */
     double root
@@ -159,5 +190,17 @@ final class BrentSolver {
     double lowerBound
     /** Upper bound of the final bracketing interval. */
     double upperBound
+
+    BigDecimal getRootValue() {
+      BigDecimal.valueOf(root)
+    }
+
+    BigDecimal getLowerBoundValue() {
+      BigDecimal.valueOf(lowerBound)
+    }
+
+    BigDecimal getUpperBoundValue() {
+      BigDecimal.valueOf(upperBound)
+    }
   }
 }

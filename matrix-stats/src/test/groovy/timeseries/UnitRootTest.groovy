@@ -410,4 +410,20 @@ class UnitRootTest {
     assertNotNull(consensus)
     assertTrue(consensus.length() > 0)
   }
+
+  @Test
+  void testSummaryAndConsensusSupportNumberAlpha() {
+    Random rnd = new Random(888)
+    double[] data = new double[60]
+    for (int i = 0; i < 60; i++) {
+      data[i] = rnd.nextGaussian()
+    }
+
+    def result = UnitRoot.test(data)
+
+    assertNotNull(result.summary(0.10G))
+    assertNotNull(result.getConsensus(0.10G))
+    assertNotNull(result.isStationary(0.10G))
+    assertNotNull(result.hasUnitRoot(0.10G))
+  }
 }

@@ -54,4 +54,26 @@ class MultipleLinearRegressionTest {
       new MultipleLinearRegression(response, predictors)
     }
   }
+
+  @Test
+  void testGroovyFacingConstructorAndValueAccessors() {
+    List<BigDecimal> response = [2.1, 3.9, 5.8, 8.2, 9.7, 11.9]
+    List<List<BigDecimal>> predictors = [
+      [1.0, 0.5, 1.2],
+      [1.0, 1.0, 1.8],
+      [1.0, 1.5, 2.1],
+      [1.0, 2.0, 2.9],
+      [1.0, 2.5, 3.2],
+      [1.0, 3.0, 3.8]
+    ]
+
+    MultipleLinearRegression model = new MultipleLinearRegression(response, predictors)
+
+    assertEquals(model.coefficients.length, model.coefficientValues.size())
+    assertEquals(model.standardErrors.length, model.standardErrorValues.size())
+    assertEquals(model.coefficients[0], model.coefficientValues[0] as double, 1e-12d)
+    assertEquals(model.standardErrors[0], model.standardErrorValues[0] as double, 1e-12d)
+    assertEquals(model.residualSumOfSquares, model.residualSumOfSquaresValue as double, 1e-12d)
+    assertEquals(model.errorVariance, model.errorVarianceValue as double, 1e-12d)
+  }
 }

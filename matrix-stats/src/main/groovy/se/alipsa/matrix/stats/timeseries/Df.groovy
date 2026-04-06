@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * The Dickey-Fuller (DF) test is the foundational statistical test for detecting unit roots in time series.
  * A unit root indicates non-stationarity, meaning the series has no tendency to return to a long-run mean
@@ -291,9 +293,10 @@ class Df {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      double cv = alpha == 0.01 ? criticalValue1pct :
-                  alpha == 0.10 ? criticalValue10pct : criticalValue5pct
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      double cv = alphaValue == 0.01 ? criticalValue1pct :
+                  alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
 
       if (statistic < cv) {
         return "Reject H0: Series appears stationary (DF = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
@@ -305,7 +308,8 @@ class Df {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
 
       return String.format(
@@ -316,7 +320,7 @@ class Df {
         "Sample size: %d\\n" +
         "Conclusion: Series appears %s at %.0f%% significance level",
         testType, statistic, criticalValue1pct, criticalValue5pct, criticalValue10pct,
-        sampleSize, conclusion, alpha * 100
+        sampleSize, conclusion, (alphaValue * 100) as double
       )
     }
 

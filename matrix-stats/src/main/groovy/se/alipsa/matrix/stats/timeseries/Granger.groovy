@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Granger causality test determines whether one time series is useful in forecasting another.
@@ -260,8 +261,9 @@ class Granger {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      if (pValue < alphaValue) {
         return "Reject H0: X Granger-causes Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: X does not Granger-cause Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -271,8 +273,9 @@ class Granger {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "X Granger-causes Y" : "X does not Granger-cause Y"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < (alphaValue as double) ? "X Granger-causes Y" : "X does not Granger-cause Y"
 
       return String.format(
         "Granger causality test:\\n" +
@@ -287,7 +290,7 @@ class Granger {
         lags, statistic, pValue, df1, df2,
         rssRestricted, rssUnrestricted,
         sampleSize, effectiveSampleSize,
-        conclusion, alpha * 100
+        conclusion, (alphaValue * 100) as double
       )
     }
 

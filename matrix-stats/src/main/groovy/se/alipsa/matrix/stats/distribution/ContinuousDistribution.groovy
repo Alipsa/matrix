@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Minimal interface for continuous distributions that expose a cumulative distribution function.
  */
@@ -11,5 +13,17 @@ interface ContinuousDistribution {
    * @param x the evaluation point
    * @return cumulative probability at {@code x}
    */
-  double cumulativeProbability(double x)
+  BigDecimal cumulativeProbability(Number x)
+
+  /**
+   * Primitive compatibility bridge retained during the idiomatic API transition.
+   *
+   * @param x the evaluation point
+   * @return cumulative probability at {@code x}
+   * @deprecated Prefer {@link #cumulativeProbability(Number)}
+   */
+  @Deprecated
+  default double cumulativeProbability(double x) {
+    cumulativeProbability(NumericConversion.toBigDecimal(x, 'x')) as double
+  }
 }

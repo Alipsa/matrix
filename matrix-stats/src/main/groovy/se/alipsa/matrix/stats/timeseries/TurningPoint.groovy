@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Turning Point test is a non-parametric statistical test for randomness (independence) in a time series
@@ -178,8 +179,9 @@ class TurningPoint {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      if (pValue < alphaValue) {
         String direction = turningPoints > expectedTurningPoints ? "more" : "fewer"
         return "Reject H0: Data shows ${direction} turning points than expected under randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
@@ -190,8 +192,9 @@ class TurningPoint {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "data is not random" : "data is consistent with randomness"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < (alphaValue as double) ? "data is not random" : "data is consistent with randomness"
       String direction = turningPoints > expectedTurningPoints ? "cyclicity" : "trend"
 
       return String.format(
@@ -207,7 +210,7 @@ class TurningPoint {
         sampleSize, turningPoints, peaks, troughs,
         expectedTurningPoints, variance,
         statistic, pValue,
-        conclusion, alpha * 100,
+        conclusion, (alphaValue * 100) as double,
         turningPoints > expectedTurningPoints ? "More" : "Fewer",
         direction
       )

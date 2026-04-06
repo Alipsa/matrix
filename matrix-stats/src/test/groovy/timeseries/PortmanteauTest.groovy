@@ -330,4 +330,18 @@ class PortmanteauTest {
     assertEquals(20, result.lags, 'Should test 20 lags')
     assertNotNull(result, 'Should handle long series')
   }
+
+  @Test
+  void testResultSupportsNumberAlphaEvaluate() {
+    List<Double> data = []
+    Random rnd = new Random(204)
+    for (int i = 0; i < 50; i++) {
+      data.add(rnd.nextGaussian())
+    }
+
+    def result = Portmanteau.ljungBox(data)
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

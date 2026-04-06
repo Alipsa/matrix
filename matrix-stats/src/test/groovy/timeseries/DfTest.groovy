@@ -300,4 +300,17 @@ class DfTest {
     assertTrue(result.standardError < 1.0,
                'Standard error should be reasonable')
   }
+
+  @Test
+  void testResultSupportsNumberAlpha() {
+    double[] data = [
+      100, 101, 99, 100, 102, 98, 100, 101, 99, 100,
+      101, 99, 100, 102, 98, 100, 101, 99, 100, 101
+    ] as double[]
+
+    def result = Df.test(data, "drift")
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

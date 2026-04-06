@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Convergent Cross Mapping (CCM) is a statistical test for detecting causal relationships between variables
  * in dynamical systems. Unlike Granger causality which assumes separable influences, CCM is designed for
@@ -137,6 +139,35 @@ class Ccm {
       embeddingDim: E,
       timeLag: tau,
       seriesLength: n
+    )
+  }
+
+  /**
+   * Performs convergent cross mapping test from Groovy-facing numeric inputs.
+   *
+   * @param x first time series
+   * @param y second time series
+   * @param E embedding dimension
+   * @param tau time delay
+   * @param librarySizes library sizes to test for convergence
+   * @return CCM result
+   */
+  static CcmResult test(
+      List<? extends Number> x,
+      List<? extends Number> y,
+      int E = 3,
+      int tau = 1,
+      List<? extends Number> librarySizes = null
+  ) {
+    List<Integer> normalizedLibrarySizes = librarySizes?.collect { Number value ->
+      NumericConversion.toBigDecimal(value, 'library size').intValue()
+    }
+    test(
+      NumericConversion.toDoubleArray(x as List<? extends Number>, 'x'),
+      NumericConversion.toDoubleArray(y as List<? extends Number>, 'y'),
+      E,
+      tau,
+      normalizedLibrarySizes
     )
   }
 
@@ -357,12 +388,13 @@ class Ccm {
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests X causes Y
      */
-    boolean xCausesY(double threshold = 0.3) {
+    boolean xCausesY(Number threshold = 0.3) {
+      BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
       if (ymapX.length < 2) {
         return false
       }
       // Check if correlation is positive and increasing
-      return ymapX[-1] > threshold && ymapX[-1] > ymapX[0]
+      return ymapX[-1] > thresholdValue && ymapX[-1] > ymapX[0]
     }
 
     /**
@@ -371,12 +403,25 @@ class Ccm {
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests Y causes X
      */
-    boolean yCausesX(double threshold = 0.3) {
+    boolean yCausesX(Number threshold = 0.3) {
+      BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
       if (xmapY.length < 2) {
         return false
       }
       // Check if correlation is positive and increasing
-      return xmapY[-1] > threshold && xmapY[-1] > xmapY[0]
+      return xmapY[-1] > thresholdValue && xmapY[-1] > xmapY[0]
+    }
+
+    List<BigDecimal> getXmapYValues() {
+      NumericConversion.toBigDecimalList(xmapY, 'xmapY')
+    }
+
+    List<BigDecimal> getYmapXValues() {
+      NumericConversion.toBigDecimalList(ymapX, 'ymapX')
+    }
+
+    List<Integer> getLibrarySizeValues() {
+      librarySizes.toList().asImmutable() as List<Integer>
     }
 
     /**

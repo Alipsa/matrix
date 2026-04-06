@@ -380,4 +380,22 @@ class ChowTest {
     assertTrue(result.statistic >= 0)
     assertTrue(result.pValue >= 0 && result.pValue <= 1)
   }
+
+  @Test
+  void testResultSupportsNumberAlpha() {
+    double[] y = new double[20]
+    double[][] X = new double[20][2]
+    Random rnd = new Random(91)
+
+    for (int i = 0; i < 20; i++) {
+      X[i][0] = 1.0
+      X[i][1] = i + 1.0
+      y[i] = 2.0 + 3.0 * (i + 1.0) + (rnd.nextDouble() - 0.5) * 0.05
+    }
+
+    def result = Chow.test(y, X, 10)
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

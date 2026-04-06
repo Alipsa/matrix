@@ -459,4 +459,18 @@ class CcmTest {
     assertEquals(2, result.embeddingDim)
     assertEquals(1, result.timeLag)
   }
+
+  @Test
+  void testGroovyFacingInputsAndValueAccessors() {
+    List<BigDecimal> x = (0..<120).collect { Math.sin(it * 0.1d) + 0.01d * it }
+    List<BigDecimal> y = (0..<120).collect { Math.cos(it * 0.08d) + 0.015d * it }
+
+    def result = Ccm.test(x, y, 3, 1, [20, 40, 60])
+
+    assertEquals([20, 40, 60], result.librarySizeValues)
+    assertEquals(3, result.xmapYValues.size())
+    assertEquals(3, result.ymapXValues.size())
+    assertNotNull(result.xCausesY(0.2G))
+    assertNotNull(result.yCausesX(0.2G))
+  }
 }

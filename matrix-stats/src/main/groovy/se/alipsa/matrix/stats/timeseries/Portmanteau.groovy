@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * A portmanteau test is a type of statistical hypothesis test in which the null hypothesis is well specified,
@@ -173,8 +174,9 @@ class Portmanteau {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether the series appears to be independent
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      if (pValue < alphaValue) {
         return "Reject H0: Series shows significant autocorrelation (p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant autocorrelation detected (p = ${String.format('%.4f', pValue)})"
@@ -186,8 +188,9 @@ class Portmanteau {
      *
      * @return A description of the test result with interpretation
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ?
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < (alphaValue as double) ?
         "significant autocorrelation present" :
         "no significant autocorrelation"
 
@@ -197,7 +200,7 @@ class Portmanteau {
       if (fitdf > 0) {
         sb.append(String.format("Model fit df: %d\n", fitdf))
       }
-      sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, alpha * 100))
+      sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, (alphaValue * 100) as double))
 
       return sb.toString()
     }

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Comprehensive unit root testing framework that runs multiple complementary tests and synthesizes
  * their results into a unified assessment. Unit roots indicate non-stationarity where shocks have
@@ -174,20 +176,21 @@ class UnitRoot {
      * @param alpha Significance level (default 0.05)
      * @return Summary string with all test conclusions
      */
-    String summary(double alpha = 0.05) {
+    String summary(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       StringBuilder sb = new StringBuilder()
       sb.append("Unit Root Test Summary\n")
       sb.append("=" * 60).append("\n")
       sb.append("Sample size: ${sampleSize}\n")
       sb.append("Type: ${type}\n")
-      sb.append("Significance level: ${alpha * 100}%\n")
+      sb.append("Significance level: ${alphaValue * 100}%\n")
       sb.append("=" * 60).append("\n\n")
 
       // DF Test
       sb.append("1. Dickey-Fuller Test:\n")
       sb.append("   Statistic: ${String.format('%.4f', dfResult.statistic)}\n")
       sb.append("   Critical value (5%): ${String.format('%.4f', dfResult.criticalValue5pct)}\n")
-      sb.append("   Conclusion: ${dfResult.interpret()}\n\n")
+      sb.append("   Conclusion: ${dfResult.interpret(alphaValue)}\n\n")
 
       // ADF Test
       sb.append("2. Augmented Dickey-Fuller Test:\n")
@@ -201,7 +204,7 @@ class UnitRoot {
       sb.append("   Lags: ${adfGlsResult.lags}\n")
       sb.append("   Statistic: ${String.format('%.4f', adfGlsResult.statistic)}\n")
       sb.append("   Critical value (5%): ${String.format('%.4f', adfGlsResult.criticalValue5pct)}\n")
-      sb.append("   Conclusion: ${adfGlsResult.interpret()}\n\n")
+      sb.append("   Conclusion: ${adfGlsResult.interpret(alphaValue)}\n\n")
 
       // KPSS Test (note: opposite null hypothesis)
       sb.append("4. KPSS Test (tests stationarity, opposite null):\n")
@@ -214,7 +217,7 @@ class UnitRoot {
       sb.append("=" * 60).append("\n")
       sb.append("Overall Assessment:\n")
       sb.append("=" * 60).append("\n")
-      sb.append(getConsensus(alpha))
+      sb.append(getConsensus(alphaValue))
 
       return sb.toString()
     }
@@ -225,13 +228,14 @@ class UnitRoot {
      * @param alpha Significance level
      * @return Consensus interpretation
      */
-    String getConsensus(double alpha = 0.05) {
+    String getConsensus(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0  // DF, ADF, ADF-GLS reject null → stationary
 
       // Get critical values based on alpha
-      double dfCritical = getCriticalValue(dfResult, alpha)
-      double adfCritical = getCriticalValue(adfResult, alpha)
-      double adfGlsCritical = getCriticalValue(adfGlsResult, alpha)
+      double dfCritical = getCriticalValue(dfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       // Count how many tests reject unit root (suggesting stationarity)
       // For DF/ADF/ADF-GLS: reject if statistic < critical value (more negative)
@@ -317,11 +321,12 @@ class UnitRoot {
      * @param alpha Significance level
      * @return true if consensus suggests stationarity
      */
-    boolean isStationary(double alpha = 0.05) {
+    boolean isStationary(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
-      double dfCritical = getCriticalValue(dfResult, alpha)
-      double adfCritical = getCriticalValue(adfResult, alpha)
-      double adfGlsCritical = getCriticalValue(adfGlsResult, alpha)
+      double dfCritical = getCriticalValue(dfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {
         unitRootTests++
@@ -345,11 +350,12 @@ class UnitRoot {
      * @param alpha Significance level
      * @return true if consensus suggests unit root
      */
-    boolean hasUnitRoot(double alpha = 0.05) {
+    boolean hasUnitRoot(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
-      double dfCritical = getCriticalValue(dfResult, alpha)
-      double adfCritical = getCriticalValue(adfResult, alpha)
-      double adfGlsCritical = getCriticalValue(adfGlsResult, alpha)
+      double dfCritical = getCriticalValue(dfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {
         unitRootTests++

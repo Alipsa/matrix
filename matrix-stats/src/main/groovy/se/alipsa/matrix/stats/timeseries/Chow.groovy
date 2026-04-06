@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Chow test, proposed by econometrician Gregory Chow in 1960, tests whether the coefficients
@@ -189,8 +190,9 @@ class Chow {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      double alphaValue = NumericConversion.toAlpha(alpha) as double
+      if (pValue < alphaValue) {
         return "Reject H0: Structural break detected at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No evidence of structural break at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -200,8 +202,9 @@ class Chow {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "structural break present" : "no structural break detected"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < (alphaValue as double) ? "structural break present" : "no structural break detected"
 
       return String.format(
         "Chow test:\\n" +
@@ -217,7 +220,7 @@ class Chow {
         breakPoint, statistic, pValue, df1, df2,
         rssFull, rss1, rss2, rss1 + rss2,
         sampleSize, numParameters,
-        conclusion, alpha * 100
+        conclusion, (alphaValue * 100) as double
       )
     }
 
