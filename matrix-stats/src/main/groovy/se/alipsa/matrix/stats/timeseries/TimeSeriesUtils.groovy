@@ -3,11 +3,14 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.PackageScope
 
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 
 /**
  * Shared linear algebra helpers for the time-series test implementations in this package.
  * The solving routines support the current time-series callers while adding
  * consistent validation, singularity checks, and diagnostic logging for numerical edge cases.
+ * The section-4.6 hotspot decision keeps the Groovy-facing package helpers here while routing
+ * dense OLS loops through a shared Java kernel.
  */
 @PackageScope
 @SuppressWarnings(['ParameterName'])
@@ -178,43 +181,7 @@ final class TimeSeriesUtils {
    * @throws IllegalArgumentException if the inputs are invalid or the normal equations cannot be solved
    */
   static double[] fitOLS(double[] y, double[][] X) {
-    if (y == null || X == null) {
-      throw new IllegalArgumentException("Response vector and design matrix cannot be null")
-    }
-    if (X.length == 0 || X[0].length == 0) {
-      throw new IllegalArgumentException("Design matrix must contain at least one row and one column")
-    }
-    if (X.length != y.length) {
-      throw new IllegalArgumentException("Design matrix row count (${X.length}) must match response length (${y.length})")
-    }
-
-    int n = y.length
-    int k = X[0].length
-    if (X.any { double[] row -> row.length != k }) {
-      throw new IllegalArgumentException("Design matrix rows must all have the same length")
-    }
-
-    double[][] xtx = new double[k][k]
-    for (int i = 0; i < k; i++) {
-      for (int j = 0; j < k; j++) {
-        double sum = 0.0
-        for (int m = 0; m < n; m++) {
-          sum += X[m][i] * X[m][j]
-        }
-        xtx[i][j] = sum
-      }
-    }
-
-    double[] xty = new double[k]
-    for (int i = 0; i < k; i++) {
-      double sum = 0.0
-      for (int m = 0; m < n; m++) {
-        sum += X[m][i] * y[m]
-      }
-      xty[i] = sum
-    }
-
-    solveLinearSystem(xtx, xty)
+    LeastSquaresKernel.fitOls(y, X)
   }
 
   /**
@@ -227,33 +194,7 @@ final class TimeSeriesUtils {
    * @throws IllegalArgumentException if the inputs are invalid
    */
   static double calculateRSS(double[] y, double[][] X, double[] beta) {
-    if (y == null || X == null || beta == null) {
-      throw new IllegalArgumentException("Response vector, design matrix, and coefficients cannot be null")
-    }
-    if (X.length == 0) {
-      throw new IllegalArgumentException("Design matrix must contain at least one row")
-    }
-    if (X.length != y.length) {
-      throw new IllegalArgumentException("Design matrix row count (${X.length}) must match response length (${y.length})")
-    }
-    if (X[0].length != beta.length) {
-      throw new IllegalArgumentException("Coefficient count (${beta.length}) must match design matrix column count (${X[0].length})")
-    }
-    if (X.any { double[] row -> row.length != beta.length }) {
-      throw new IllegalArgumentException("Design matrix rows must all have the same length")
-    }
-
-    int n = y.length
-    double rss = 0.0
-    for (int i = 0; i < n; i++) {
-      double fitted = 0.0
-      for (int j = 0; j < beta.length; j++) {
-        fitted += X[i][j] * beta[j]
-      }
-      double residual = y[i] - fitted
-      rss += residual * residual
-    }
-    rss
+    LeastSquaresKernel.calculateResidualSumOfSquares(y, X, beta)
   }
 
   private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {
