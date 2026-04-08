@@ -9,6 +9,7 @@ import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.regression.MultipleLinearRegression
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
 
 /**
  * Tests for native ordinary least squares multiple linear regression.
@@ -75,5 +76,29 @@ class MultipleLinearRegressionTest {
     assertEquals(model.standardErrors[0], model.standardErrorValues[0] as double, 1e-12d)
     assertEquals(model.residualSumOfSquares, model.residualSumOfSquaresValue as double, 1e-12d)
     assertEquals(model.errorVariance, model.errorVarianceValue as double, 1e-12d)
+  }
+
+  @Test
+  void testGroovyFacingConstructorMatchesLeastSquaresKernel() {
+    List<BigDecimal> response = [2.1, 3.9, 5.8, 8.2, 9.7, 11.9]
+    List<List<BigDecimal>> predictors = [
+      [1.0, 0.5, 1.2],
+      [1.0, 1.0, 1.8],
+      [1.0, 1.5, 2.1],
+      [1.0, 2.0, 2.9],
+      [1.0, 2.5, 3.2],
+      [1.0, 3.0, 3.8]
+    ]
+
+    MultipleLinearRegression model = new MultipleLinearRegression(response, predictors)
+    LeastSquaresKernel.OlsComputation kernel = LeastSquaresKernel.fitMultipleLinearRegression(
+      response.collect { BigDecimal value -> value as double } as double[],
+      predictors.collect { List<BigDecimal> row -> row.collect { BigDecimal value -> value as double } as double[] } as double[][]
+    )
+
+    assertEquals(kernel.coefficients().toList(), model.coefficients.toList())
+    assertEquals(kernel.standardErrors().toList(), model.standardErrors.toList())
+    assertEquals(kernel.residualSumOfSquares(), model.residualSumOfSquares, 1e-12d)
+    assertEquals(kernel.errorVariance(), model.errorVariance, 1e-12d)
   }
 }

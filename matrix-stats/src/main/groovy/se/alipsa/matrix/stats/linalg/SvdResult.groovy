@@ -60,9 +60,9 @@ class SvdResult {
    * @return the reconstructed matrix with synthetic column names
    */
   Matrix reconstruct() {
-    SimpleMatrix denseU = new SimpleMatrix(LinalgAdapters.toDoubleArray(u))
-    SimpleMatrix denseSigma = new SimpleMatrix(LinalgAdapters.toDoubleArray(sigma()))
-    SimpleMatrix denseVt = new SimpleMatrix(LinalgAdapters.toDoubleArray(vt))
+    SimpleMatrix denseU = new SimpleMatrix(NumericConversion.toDoubleArray(u))
+    SimpleMatrix denseSigma = new SimpleMatrix(NumericConversion.toDoubleArray(sigma()))
+    SimpleMatrix denseVt = new SimpleMatrix(NumericConversion.toDoubleArray(vt))
     LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(denseU.mult(denseSigma).mult(denseVt)))
   }
 
@@ -91,7 +91,7 @@ class SvdResult {
     if (matrix == null) {
       throw new IllegalArgumentException("${label.capitalize()} cannot be null")
     }
-    LinalgAdapters.toMatrix(LinalgAdapters.toDoubleArray(matrix))
+    LinalgAdapters.toMatrix(NumericConversion.toDoubleArray(matrix))
   }
 
   private static List<BigDecimal> copyVector(List<? extends Number> values, String label) {

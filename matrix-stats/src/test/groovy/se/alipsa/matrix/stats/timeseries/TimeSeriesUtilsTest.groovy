@@ -8,6 +8,8 @@ import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
+
 /**
  * Regression tests for shared linear algebra helpers used by the time-series package.
  */
@@ -120,6 +122,20 @@ class TimeSeriesUtilsTest {
   }
 
   @Test
+  void fitOLSMatchesLeastSquaresKernel() {
+    double[][] x = [
+      [1.0, 0.0] as double[],
+      [1.0, 1.0] as double[],
+      [1.0, 2.0] as double[],
+      [1.0, 3.0] as double[],
+      [1.0, 4.0] as double[]
+    ] as double[][]
+    double[] y = [1.2, 2.9, 5.1, 7.05, 9.2] as double[]
+
+    assertArrayEquals(LeastSquaresKernel.fitOls(y, x), TimeSeriesUtils.fitOLS(y, x), 1e-12d)
+  }
+
+  @Test
   void calculateRSSReturnsExpectedValue() {
     double[][] x = [
       [1.0, 0.0] as double[],
@@ -136,6 +152,21 @@ class TimeSeriesUtilsTest {
   }
 
   @Test
+  void calculateRSSMatchesLeastSquaresKernel() {
+    double[][] x = [
+      [1.0, 0.0] as double[],
+      [1.0, 1.0] as double[],
+      [1.0, 2.0] as double[],
+      [1.0, 3.0] as double[],
+      [1.0, 4.0] as double[]
+    ] as double[][]
+    double[] y = [1.2, 2.9, 5.1, 7.05, 9.2] as double[]
+    double[] beta = TimeSeriesUtils.fitOLS(y, x)
+
+    assertEquals(LeastSquaresKernel.calculateResidualSumOfSquares(y, x, beta), TimeSeriesUtils.calculateRSS(y, x, beta), 1e-12d)
+  }
+
+  @Test
   void calculateRSSThrowsOnRaggedMatrix() {
     double[][] x = [
       [1.0, 0.0] as double[],
@@ -146,7 +177,7 @@ class TimeSeriesUtilsTest {
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       TimeSeriesUtils.calculateRSS(y, x, beta)
-  }
+    }
 
     assertEquals("Design matrix rows must all have the same length", exception.message)
   }

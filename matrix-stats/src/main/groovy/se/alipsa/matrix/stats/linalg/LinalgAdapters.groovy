@@ -24,26 +24,6 @@ final class LinalgAdapters {
   }
 
   /**
-   * Convert a rectangular numeric matrix into a {@code double[][]}.
-   *
-   * @param matrix the source matrix
-   * @return a dense numeric array with the same shape and column order
-   */
-  static double[][] toDoubleArray(Matrix matrix) {
-    NumericConversion.toDoubleArray(matrix)
-  }
-
-  /**
-   * Convert a rectangular numeric grid into a {@code double[][]}.
-   *
-   * @param grid the source grid
-   * @return a dense numeric array with the same shape
-   */
-  static double[][] toDoubleArray(Grid<?> grid) {
-    NumericConversion.toDoubleArray(grid)
-  }
-
-  /**
    * Convert an EJML matrix into a dense {@code double[][]} array.
    *
    * @param matrix the source EJML matrix
