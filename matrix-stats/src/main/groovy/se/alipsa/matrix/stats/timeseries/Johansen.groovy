@@ -84,8 +84,45 @@ class Johansen {
    * @param type Type of deterministic component ('none', 'const', 'trend')
    * @return JohansenResult containing test statistics and eigenvalues
    */
+  @Deprecated
   static JohansenResult test(List<?> data, int lags = 1, String type = 'const') {
-    List<double[]> numericData = normalizeInputs(data)
+    if (data == null) {
+      return testArrays(null, lags, type)
+    }
+    if (data.isEmpty() || data.every { Object item -> item instanceof double[] }) {
+      return testArrays(data as List<double[]>, lags, type)
+    }
+    if (data.every { Object item -> item instanceof List<?> }) {
+      return testSeries(data as Collection<? extends List<? extends Number>>, lags, type)
+    }
+    throw new IllegalArgumentException("Each series must be a List<Number> or double[], got mixed input types")
+  }
+
+  /**
+   * Performs the Johansen cointegration test from primitive series arrays.
+   *
+   * @param data list of time series, each series represented as {@code double[]}
+   * @param lags Number of lags in the VAR model
+   * @param type Type of deterministic component ('none', 'const', 'trend')
+   * @return JohansenResult containing test statistics and eigenvalues
+   */
+  static JohansenResult testArrays(List<double[]> data, int lags = 1, String type = 'const') {
+    runTest(copyPrimitiveInputs(data), lags, type)
+  }
+
+  /**
+   * Performs the Johansen cointegration test from idiomatic Groovy numeric lists.
+   *
+   * @param data collection of time series, each series represented as numeric list values
+   * @param lags Number of lags in the VAR model
+   * @param type Type of deterministic component ('none', 'const', 'trend')
+   * @return JohansenResult containing test statistics and eigenvalues
+   */
+  static JohansenResult testSeries(Collection<? extends List<? extends Number>> data, int lags = 1, String type = 'const') {
+    runTest(normalizeListInputs(data), lags, type)
+  }
+
+  private static JohansenResult runTest(List<double[]> numericData, int lags, String type) {
     validateInputs(numericData, lags, type)
 
     int k = numericData.size()
@@ -111,20 +148,26 @@ class Johansen {
     )
   }
 
-  private static List<double[]> normalizeInputs(List<?> data) {
+  private static List<double[]> copyPrimitiveInputs(List<double[]> data) {
     if (data == null) {
       return []
     }
     List<double[]> normalized = []
-    for (int i = 0; i < data.size(); i++) {
-      Object series = data[i]
-      if (series instanceof double[]) {
-        normalized << (((double[]) series).clone() as double[])
-      } else if (series instanceof List) {
-        normalized << NumericConversion.toDoubleArray(series as List<? extends Number>, "data series ${i}")
-      } else {
-        throw new IllegalArgumentException("Each series must be a List<Number> or double[], got ${series?.class?.simpleName}")
-      }
+    for (double[] series : data) {
+      normalized << (series == null ? null : (series.clone() as double[]))
+    }
+    normalized
+  }
+
+  private static List<double[]> normalizeListInputs(Collection<? extends List<? extends Number>> data) {
+    if (data == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    int index = 0
+    for (List<? extends Number> row : data) {
+      normalized << NumericConversion.toDoubleArray(row, "data series ${index}")
+      index++
     }
     normalized
   }

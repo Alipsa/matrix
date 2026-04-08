@@ -13,6 +13,8 @@ class FDistribution implements ContinuousDistribution {
 
   private final BigDecimal dfNumerator
   private final BigDecimal dfDenominator
+  private final double dfNumeratorValue
+  private final double dfDenominatorValue
 
   /**
    * Creates an F-distribution with the specified degrees of freedom.
@@ -30,6 +32,8 @@ class FDistribution implements ContinuousDistribution {
     }
     this.dfNumerator = normalizedDfNumerator
     this.dfDenominator = normalizedDfDenominator
+    this.dfNumeratorValue = normalizedDfNumerator as double
+    this.dfDenominatorValue = normalizedDfDenominator as double
   }
 
   BigDecimal getDfNumerator() { dfNumerator }
@@ -63,10 +67,8 @@ class FDistribution implements ContinuousDistribution {
     // F-distribution CDF in terms of incomplete beta function
     // F ~ (dfNum/dfDen) * (B/A) where A,B are chi-squared
     // CDF = I_x(dfNum/2, dfDen/2) where x = (dfNum*f)/(dfNum*f + dfDen)
-    double numerator = dfNumerator as double
-    double denominator = dfDenominator as double
-    double x = (numerator * f) / (numerator * f + denominator)
-    SpecialFunctions.regularizedIncompleteBeta(x, numerator / 2.0d, denominator / 2.0d)
+    double x = (dfNumeratorValue * f) / (dfNumeratorValue * f + dfDenominatorValue)
+    SpecialFunctions.regularizedIncompleteBeta(x, dfNumeratorValue / 2.0d, dfDenominatorValue / 2.0d)
   }
 
   /**
@@ -124,8 +126,38 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the F-statistic
    */
+  @Deprecated
   static BigDecimal oneWayAnovaFValue(List<?> groups) {
-    BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizeGroups(groups)))
+    if (groups == null) {
+      return oneWayAnovaFValueArrays(null)
+    }
+    if (groups.isEmpty() || groups.every { Object group -> group instanceof double[] }) {
+      return oneWayAnovaFValueArrays(groups as List<double[]>)
+    }
+    if (groups.every { Object group -> group instanceof List<?> }) {
+      return oneWayAnovaFValueFromLists(groups as Collection<? extends List<? extends Number>>)
+    }
+    throw new IllegalArgumentException("Each group must be a List<Number> or double[], got mixed input types")
+  }
+
+  /**
+   * Computes the one-way ANOVA F-statistic from primitive group arrays.
+   *
+   * @param groups list of primitive group arrays
+   * @return the F-statistic
+   */
+  static BigDecimal oneWayAnovaFValueArrays(List<double[]> groups) {
+    BigDecimal.valueOf(oneWayAnovaFValueInternal(copyPrimitiveGroups(groups)))
+  }
+
+  /**
+   * Computes the one-way ANOVA F-statistic from idiomatic Groovy numeric lists.
+   *
+   * @param groups collection of numeric group values
+   * @return the F-statistic
+   */
+  static BigDecimal oneWayAnovaFValueFromLists(Collection<? extends List<? extends Number>> groups) {
+    BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizeListGroups(groups)))
   }
 
   private static double oneWayAnovaFValueInternal(List<double[]> groups) {
@@ -179,26 +211,73 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the p-value for the ANOVA test
    */
+  @Deprecated
   static BigDecimal oneWayAnovaPValue(List<?> groups) {
-    int k = groups.size()
-    int n = normalizeGroups(groups).sum { double[] group -> group.length } as int
+    if (groups == null) {
+      return oneWayAnovaPValueArrays(null)
+    }
+    if (groups.isEmpty() || groups.every { Object group -> group instanceof double[] }) {
+      return oneWayAnovaPValueArrays(groups as List<double[]>)
+    }
+    if (groups.every { Object group -> group instanceof List<?> }) {
+      return oneWayAnovaPValueFromLists(groups as Collection<? extends List<? extends Number>>)
+    }
+    throw new IllegalArgumentException("Each group must be a List<Number> or double[], got mixed input types")
+  }
 
-    BigDecimal f = oneWayAnovaFValue(groups)
+  /**
+   * Computes the one-way ANOVA p-value from primitive group arrays.
+   *
+   * @param groups list of primitive group arrays
+   * @return the p-value for the ANOVA test
+   */
+  static BigDecimal oneWayAnovaPValueArrays(List<double[]> groups) {
+    List<double[]> normalizedGroups = copyPrimitiveGroups(groups)
+    int k = normalizedGroups.size()
+    int n = normalizedGroups.sum { double[] group -> group.length } as int
+
+    BigDecimal f = oneWayAnovaFValueArrays(normalizedGroups)
     BigDecimal dfBetween = k - 1
     BigDecimal dfWithin = n - k
 
     pValue(f, dfBetween, dfWithin)
   }
 
-  private static List<double[]> normalizeGroups(List<?> groups) {
-    groups.collect { Object group ->
-      if (group instanceof double[]) {
-        group as double[]
-      } else if (group instanceof List) {
-        NumericConversion.toDoubleArray(group as List<? extends Number>, 'group')
-      } else {
-        throw new IllegalArgumentException("Each group must be a List<Number> or double[], got ${group?.class?.simpleName}")
-      }
+  /**
+   * Computes the one-way ANOVA p-value from idiomatic Groovy numeric lists.
+   *
+   * @param groups collection of numeric group values
+   * @return the p-value for the ANOVA test
+   */
+  static BigDecimal oneWayAnovaPValueFromLists(Collection<? extends List<? extends Number>> groups) {
+    List<double[]> normalizedGroups = normalizeListGroups(groups)
+    int k = normalizedGroups.size()
+    int n = normalizedGroups.sum { double[] group -> group.length } as int
+
+    BigDecimal f = oneWayAnovaFValueFromLists(groups)
+    BigDecimal dfBetween = k - 1
+    BigDecimal dfWithin = n - k
+
+    pValue(f, dfBetween, dfWithin)
+  }
+
+  private static List<double[]> copyPrimitiveGroups(List<double[]> groups) {
+    if (groups == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    for (double[] group : groups) {
+      normalized << (group == null ? null : (group.clone() as double[]))
+    }
+    normalized
+  }
+
+  private static List<double[]> normalizeListGroups(Collection<? extends List<? extends Number>> groups) {
+    if (groups == null) {
+      return []
+    }
+    groups.collect { List<? extends Number> group ->
+      NumericConversion.toDoubleArray(group, 'group')
     }
   }
 }

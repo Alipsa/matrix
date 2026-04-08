@@ -38,8 +38,8 @@ class Anova {
       categoryData << values
     }
 
-    result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
-    result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
+    result.fValue = FDistribution.oneWayAnovaFValueFromLists(categoryData)
+    result.pValue = FDistribution.oneWayAnovaPValueFromLists(categoryData)
     result
   }
 

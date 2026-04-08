@@ -36,14 +36,7 @@ public final class LeastSquaresKernel {
     double[] coefficients = multiply(xtxInverse, xty);
     double residualSumOfSquares = calculateResidualSumOfSquaresUnchecked(response, predictors, coefficients);
 
-    int degreesOfFreedom = observationCount - predictorCount;
-    if (degreesOfFreedom <= 0) {
-      throw new IllegalArgumentException(
-          "Ordinary least squares requires more observations (" + observationCount + ") than predictors (" + predictorCount + ")"
-      );
-    }
-
-    double errorVariance = residualSumOfSquares / degreesOfFreedom;
+    double errorVariance = residualSumOfSquares / (observationCount - predictorCount);
     double[] standardErrors = calculateStandardErrors(xtxInverse, errorVariance);
     return new OlsComputation(coefficients, standardErrors, residualSumOfSquares, errorVariance);
   }

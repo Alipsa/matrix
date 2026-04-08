@@ -428,14 +428,23 @@ class Ccm {
       last > thresholdValue && last > first
     }
 
+    /**
+     * Alias for {@link #getXmapY()} kept to match the `*Values` naming pattern used by other result objects.
+     */
     List<Number> getXmapYValues() {
       xmapY
     }
 
+    /**
+     * Alias for {@link #getYmapX()} kept to match the `*Values` naming pattern used by other result objects.
+     */
     List<Number> getYmapXValues() {
       ymapX
     }
 
+    /**
+     * Alias for {@link #getLibrarySizes()} kept to match the `*Values` naming pattern used by other result objects.
+     */
     List<Integer> getLibrarySizeValues() {
       librarySizes
     }
