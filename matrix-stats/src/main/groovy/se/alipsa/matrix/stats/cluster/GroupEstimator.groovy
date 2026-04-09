@@ -148,12 +148,9 @@ class GroupEstimator {
     }
 
     switch (method) {
-      case CalculationMethod.RULE_OF_THUMB:
-        return ruleOfThumb(points)
-      case CalculationMethod.ELBOW:
-        return estimateKByElbow(points)
-      default:
-        throw new IllegalArgumentException("Unknown calculation method: $method")
+      case CalculationMethod.RULE_OF_THUMB -> ruleOfThumb(points)
+      case CalculationMethod.ELBOW -> estimateKByElbow(points)
+      default -> throw new IllegalArgumentException("Unknown calculation method: $method")
     }
   }
 

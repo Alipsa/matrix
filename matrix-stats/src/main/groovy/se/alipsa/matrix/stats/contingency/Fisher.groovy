@@ -95,21 +95,10 @@ class Fisher {
     // with colSum1 successes
     HypergeometricDistribution dist = new HypergeometricDistribution(n, colSum1, rowSum1)
 
-    double pValue
-    switch (alternative.toLowerCase()) {
-      case "greater":
-        // P(X >= a)
-        pValue = dist.upperCumulativeProbability(a)
-        break
-      case "less":
-        // P(X <= a)
-        pValue = dist.cumulativeProbability(a)
-        break
-      case "two.sided":
-      default:
-        // Two-sided: sum probabilities of tables as or more extreme
-        pValue = calculateTwoSidedPValue(dist, a)
-        break
+    double pValue = switch (alternative.toLowerCase()) {
+      case 'greater' -> dist.upperCumulativeProbability(a)       // P(X >= a)
+      case 'less' -> dist.cumulativeProbability(a)               // P(X <= a)
+      default -> calculateTwoSidedPValue(dist, a)                // two-sided
     }
 
     // Calculate confidence interval for odds ratio (95% by default)
