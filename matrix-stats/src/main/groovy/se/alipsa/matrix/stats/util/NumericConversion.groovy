@@ -40,6 +40,38 @@ final class NumericConversion {
   }
 
   /**
+   * Convert a rectangular numeric row collection into a dense {@code double[][]} array.
+   *
+   * @param rows the numeric rows
+   * @param label the label used in validation messages
+   * @return the dense numeric matrix
+   */
+  static double[][] toDoubleMatrix(List<? extends List<? extends Number>> rows, String label) {
+    if (rows == null) {
+      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
+    }
+    if (rows.isEmpty()) {
+      throw new IllegalArgumentException("${label.capitalize()} must contain at least one row")
+    }
+    if (rows[0] == null || rows[0].isEmpty()) {
+      throw new IllegalArgumentException("${label.capitalize()} must contain at least one column")
+    }
+
+    int columnCount = rows[0].size()
+    double[][] values = new double[rows.size()][columnCount]
+    for (int row = 0; row < rows.size(); row++) {
+      List<? extends Number> currentRow = rows[row]
+      if (currentRow == null || currentRow.size() != columnCount) {
+        throw new IllegalArgumentException("${label.capitalize()} rows must all have the same length")
+      }
+      for (int col = 0; col < columnCount; col++) {
+        values[row][col] = toFiniteDouble(currentRow[col], "${label} value at row ${row}, column ${col}")
+      }
+    }
+    values
+  }
+
+  /**
    * Convert a numeric Matrix column into a dense {@code double[]} array.
    *
    * @param matrix the source matrix
@@ -127,6 +159,49 @@ final class NumericConversion {
   }
 
   /**
+   * Convert a dense primitive vector into immutable {@code BigDecimal} values.
+   *
+   * @param values the primitive vector
+   * @param label the label used in validation messages
+   * @return the converted values
+   */
+  static List<BigDecimal> toBigDecimalList(double[] values, String label = 'values') {
+    if (values == null) {
+      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
+    }
+    List<BigDecimal> converted = []
+    for (int i = 0; i < values.length; i++) {
+      if (!Double.isFinite(values[i])) {
+        throw new IllegalArgumentException("${label.capitalize()} must contain only finite values")
+      }
+      converted << BigDecimal.valueOf(values[i])
+    }
+    converted.asImmutable() as List<BigDecimal>
+  }
+
+  /**
+   * Convert a dense primitive matrix into immutable {@code BigDecimal} rows.
+   *
+   * @param values the primitive matrix
+   * @param label the label used in validation messages
+   * @return the converted rows
+   */
+  static List<List<BigDecimal>> toBigDecimalRows(double[][] values, String label = 'values') {
+    if (values == null) {
+      throw new IllegalArgumentException("${label.capitalize()} cannot be null")
+    }
+    List<List<BigDecimal>> rows = []
+    int columnCount = values.length == 0 ? 0 : values[0].length
+    for (int row = 0; row < values.length; row++) {
+      if (values[row] == null || values[row].length != columnCount) {
+        throw new IllegalArgumentException("${label.capitalize()} rows must all have the same length")
+      }
+      rows << toBigDecimalList(values[row], "${label} row ${row}")
+    }
+    rows.asImmutable() as List<List<BigDecimal>>
+  }
+
+  /**
    * Convert a significance level to {@code BigDecimal} and validate that it lies in {@code (0, 1)}.
    *
    * @param value the source significance level
@@ -140,6 +215,38 @@ final class NumericConversion {
       throw new IllegalArgumentException("${label.capitalize()} must be between 0 and 1, got ${alpha}")
     }
     alpha
+  }
+
+  /**
+   * Convert an integral numeric value to {@code int} and reject non-integral inputs.
+   *
+   * @param value the source value
+   * @param label the label used in validation messages
+   * @return the validated integer value
+   * @since 2.4.0
+   */
+  static int toExactInt(Object value, String label) {
+    BigDecimal normalized = toBigDecimal(value, label)
+    try {
+      normalized.intValueExact()
+    } catch (ArithmeticException e) {
+      throw new IllegalArgumentException("${label.capitalize()} must be an integer, got ${normalized}", e)
+    }
+  }
+
+  /**
+   * Convert a unit-interval value to {@code BigDecimal} and validate that it lies in {@code [0, 1]}.
+   *
+   * @param value the source value
+   * @param label the label used in validation messages
+   * @return the validated value
+   */
+  static BigDecimal toUnitInterval(Object value, String label = 'value') {
+    BigDecimal normalized = toBigDecimal(value, label)
+    if (normalized < 0 || normalized > 1) {
+      throw new IllegalArgumentException("${label.capitalize()} must be between 0 and 1, got ${normalized}")
+    }
+    normalized
   }
 
   /**
@@ -306,6 +413,33 @@ final class NumericConversion {
       }
     }
     [rows, columns] as int[]
+  }
+
+  /**
+   * Dispatch a mixed {@code List<?>} to either a primitive-array handler or a list handler.
+   *
+   * <p>This is a shared helper for legacy bridge methods that accept untyped lists and need to
+   * determine whether the caller passed {@code List<double[]>} or {@code List<List<Number>>}.</p>
+   *
+   * @param data the untyped input list
+   * @param arrayHandler called when every element is a {@code double[]}
+   * @param listHandler called when every element is a {@code List}
+   * @param label used in the error message for mixed-type inputs
+   * @return the result of whichever handler was invoked
+   */
+  static <T> T dispatchPrimitiveOrList(
+      List<?> data,
+      Closure<T> arrayHandler,
+      Closure<T> listHandler,
+      String label = 'element'
+  ) {
+    if (data == null || data.isEmpty() || data.every { Object item -> item instanceof double[] }) {
+      return arrayHandler(data)
+    }
+    if (data.every { Object item -> item instanceof List<?> }) {
+      return listHandler(data)
+    }
+    throw new IllegalArgumentException("Each ${label} must be a List<Number> or double[], got mixed input types")
   }
 
   private static void validateMatrix(Matrix matrix) {

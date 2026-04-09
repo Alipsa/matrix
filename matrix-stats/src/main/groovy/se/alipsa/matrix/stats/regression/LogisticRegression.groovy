@@ -297,7 +297,7 @@ class LogisticRegression {
    */
   BigDecimal predictProbability(Number x) {
     double z = (slope * x + intercept).doubleValue()
-    return sigmoid(z) as BigDecimal
+    sigmoid(z) as BigDecimal
   }
 
   /**
@@ -308,7 +308,7 @@ class LogisticRegression {
    * @return Predicted probability rounded to specified decimals
    */
   BigDecimal predictProbability(Number x, int numberOfDecimals) {
-    return predictProbability(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    predictProbability(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -318,7 +318,7 @@ class LogisticRegression {
    * @return List of predicted probabilities
    */
   List<BigDecimal> predictProbability(List<Number> xValues) {
-    return xValues.collect { predictProbability(it) }
+    xValues.collect { predictProbability(it) }
   }
 
   /**
@@ -329,7 +329,7 @@ class LogisticRegression {
    * @return List of predicted probabilities rounded to specified decimals
    */
   List<BigDecimal> predictProbability(List<Number> xValues, int numberOfDecimals) {
-    return xValues.collect { predictProbability(it, numberOfDecimals) }
+    xValues.collect { predictProbability(it, numberOfDecimals) }
   }
 
   /**
@@ -339,7 +339,7 @@ class LogisticRegression {
    * @return Predicted class: 0 if P(Y=1) < threshold, 1 otherwise
    */
   int predict(Number x) {
-    return predictProbability(x) >= threshold ? 1 : 0
+    predictProbability(x) >= threshold ? 1 : 0
   }
 
   /**
@@ -349,7 +349,7 @@ class LogisticRegression {
    * @return List of predicted classes (0 or 1)
    */
   List<Integer> predict(List<Number> xValues) {
-    return xValues.collect { predict(it) }
+    xValues.collect { predict(it) }
   }
 
   /**
@@ -373,7 +373,7 @@ class LogisticRegression {
    * @return The slope (β1)
    */
   BigDecimal getSlope() {
-    return slope
+    slope
   }
 
   /**
@@ -386,7 +386,7 @@ class LogisticRegression {
     if (numberOfDecimals < 0) {
       return slope
     }
-    return slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -395,7 +395,7 @@ class LogisticRegression {
    * @return The intercept (β0)
    */
   BigDecimal getIntercept() {
-    return intercept
+    intercept
   }
 
   /**
@@ -408,7 +408,7 @@ class LogisticRegression {
     if (numberOfDecimals < 0) {
       return intercept
     }
-    return intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -418,7 +418,7 @@ class LogisticRegression {
    * @return Log-odds: β0 + β1*x
    */
   BigDecimal logOdds(Number x) {
-    return slope * x + intercept
+    slope * x + intercept
   }
 
   /**
@@ -429,6 +429,6 @@ class LogisticRegression {
   @Override
   String toString() {
     String sign = intercept >= 0 ? '+' : '-'
-    return "P(${y}=1) = 1/(1 + exp(-(${getIntercept(2)} ${sign} ${getSlope(2).abs()}*${x})))"
+    "P(${y}=1) = 1/(1 + exp(-(${getIntercept(2)} ${sign} ${getSlope(2).abs()}*${x})))"
   }
 }

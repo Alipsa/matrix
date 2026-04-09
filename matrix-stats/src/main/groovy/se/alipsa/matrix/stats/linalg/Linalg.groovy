@@ -40,7 +40,7 @@ final class Linalg {
    * @throws LinalgSingularMatrixException if the matrix is singular
    */
   static Matrix inverse(Matrix matrix) {
-    LinalgAdapters.toMatrix(inverseValues(LinalgAdapters.toDoubleArray(matrix)))
+    LinalgAdapters.toMatrix(inverseValues(NumericConversion.toDoubleArray(matrix)))
   }
 
   /**
@@ -52,7 +52,7 @@ final class Linalg {
    * @throws LinalgSingularMatrixException if the grid is singular
    */
   static Grid<BigDecimal> inverse(Grid<?> grid) {
-    LinalgAdapters.toGrid(inverseValues(LinalgAdapters.toDoubleArray(grid)))
+    LinalgAdapters.toGrid(inverseValues(NumericConversion.toDoubleArray(grid)))
   }
 
   /**
@@ -63,7 +63,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the matrix is null, empty, contains non-numeric values, or is not square
    */
   static BigDecimal det(Matrix matrix) {
-    BigDecimal.valueOf(detValue(LinalgAdapters.toDoubleArray(matrix)))
+    BigDecimal.valueOf(detValue(NumericConversion.toDoubleArray(matrix)))
   }
 
   /**
@@ -74,7 +74,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the grid is null, empty, ragged, contains non-numeric values, or is not square
    */
   static BigDecimal det(Grid<?> grid) {
-    BigDecimal.valueOf(detValue(LinalgAdapters.toDoubleArray(grid)))
+    BigDecimal.valueOf(detValue(NumericConversion.toDoubleArray(grid)))
   }
 
   /**
@@ -87,7 +87,7 @@ final class Linalg {
    * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static List<BigDecimal> solve(Matrix matrix, List<? extends Number> vector) {
-    LinalgAdapters.toBigDecimalVector(solveValues(LinalgAdapters.toDoubleArray(matrix), vector))
+    LinalgAdapters.toBigDecimalVector(solveValues(NumericConversion.toDoubleArray(matrix), vector))
   }
 
   /**
@@ -100,7 +100,7 @@ final class Linalg {
    * @throws LinalgSingularMatrixException if the coefficient matrix is singular
    */
   static List<BigDecimal> solve(Grid<?> grid, List<? extends Number> vector) {
-    LinalgAdapters.toBigDecimalVector(solveValues(LinalgAdapters.toDoubleArray(grid), vector))
+    LinalgAdapters.toBigDecimalVector(solveValues(NumericConversion.toDoubleArray(grid), vector))
   }
 
   /**
@@ -116,7 +116,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the matrix is invalid, not square, or has complex eigenvalues
    */
   static List<BigDecimal> eigenvalues(Matrix matrix) {
-    LinalgAdapters.toBigDecimalVector(eigenvaluesValues(LinalgAdapters.toDoubleArray(matrix)))
+    LinalgAdapters.toBigDecimalVector(eigenvaluesValues(NumericConversion.toDoubleArray(matrix)))
   }
 
   /**
@@ -127,7 +127,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the grid is invalid, not square, or has complex eigenvalues
    */
   static List<BigDecimal> eigenvalues(Grid<?> grid) {
-    LinalgAdapters.toBigDecimalVector(eigenvaluesValues(LinalgAdapters.toDoubleArray(grid)))
+    LinalgAdapters.toBigDecimalVector(eigenvaluesValues(NumericConversion.toDoubleArray(grid)))
   }
 
   /**
@@ -163,7 +163,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the matrix is null, empty, or contains non-numeric values
    */
   static SvdResult svd(Matrix matrix) {
-    svdValues(LinalgAdapters.toDoubleArray(matrix))
+    svdValues(NumericConversion.toDoubleArray(matrix))
   }
 
   /**
@@ -174,7 +174,7 @@ final class Linalg {
    * @throws IllegalArgumentException if the grid is null, empty, ragged, or contains non-numeric values
    */
   static SvdResult svd(Grid<?> grid) {
-    svdValues(LinalgAdapters.toDoubleArray(grid))
+    svdValues(NumericConversion.toDoubleArray(grid))
   }
 
   private static double[][] inverseValues(double[][] matrix) {
@@ -220,7 +220,7 @@ final class Linalg {
       }
       values << eigenvalue.getReal()
     }
-    List<Double> sorted = [*values] as List<Double>
+    List<Double> sorted = [*values]
     sorted.sort { Double a, Double b -> b <=> a }
     double[] eigenvalues = new double[sorted.size()]
     for (int i = 0; i < sorted.size(); i++) {

@@ -165,4 +165,12 @@ class LoessMethodTest {
     assertTrue(ex.message.contains('offsets'))
   }
 
+  @Test
+  void testLoessOptionsAcceptNumberSpan() {
+    LoessOptions options = new LoessOptions(0.3G, 2)
+
+    assertEquals(0.3d, options.span, 1e-10d)
+    assertEquals(2, options.degree)
+  }
+
 }

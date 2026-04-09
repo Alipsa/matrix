@@ -149,9 +149,9 @@ class QuantileRegressionTest {
     def x = [1, 2, 3, 4, 5]
     def y = [2, 4, 6, 8, 10]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, 0.0)
-    })
+    }
 
     assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
   }
@@ -161,9 +161,9 @@ class QuantileRegressionTest {
     def x = [1, 2, 3, 4, 5]
     def y = [2, 4, 6, 8, 10]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, 1.0)
-    })
+    }
 
     assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
   }
@@ -173,9 +173,9 @@ class QuantileRegressionTest {
     def x = [1, 2, 3, 4, 5]
     def y = [2, 4, 6, 8, 10]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, -0.5)
-    })
+    }
 
     assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
   }
@@ -185,9 +185,9 @@ class QuantileRegressionTest {
     def x = [1, 2, 3, 4, 5]
     def y = [2, 4, 6, 8, 10]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, 1.5)
-    })
+    }
 
     assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
   }
@@ -197,9 +197,9 @@ class QuantileRegressionTest {
     def x = [1]
     def y = [2]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, 0.5)
-    })
+    }
 
     assertTrue(exception.message.contains("Need at least 2 data points"))
   }
@@ -209,9 +209,9 @@ class QuantileRegressionTest {
     def x = [1, 2, 3]
     def y = [2, 4]
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new QuantileRegression(x, y, 0.5)
-    })
+    }
 
     assertTrue(exception.message.contains("Must have equal number"))
   }

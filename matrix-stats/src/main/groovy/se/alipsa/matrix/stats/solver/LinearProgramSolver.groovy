@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.solver
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Two-phase simplex solver for linear programs in equality form with non-negative variables.
  *
@@ -62,7 +64,30 @@ final class LinearProgramSolver {
     for (int i = 0; i < variableCount; i++) {
       objectiveValue += objective[i] * point[i]
     }
-    return new Solution(point: point, value: objectiveValue, iterations: phaseTwo.iterations)
+    new Solution(point: point, value: objectiveValue, iterations: phaseTwo.iterations)
+  }
+
+  /**
+   * Solves an equality-form linear program from idiomatic Groovy collections.
+   *
+   * @param objective minimization objective coefficients
+   * @param constraints equality constraint matrix rows
+   * @param rhs right-hand-side vector
+   * @param maxIterations maximum simplex iterations per phase
+   * @return optimal solution point and objective value
+   */
+  static Solution minimize(
+      List<? extends Number> objective,
+      List<? extends List<? extends Number>> constraints,
+      List<? extends Number> rhs,
+      int maxIterations = 10_000
+  ) {
+    minimize(
+      NumericConversion.toDoubleArray(objective, 'objective'),
+      NumericConversion.toDoubleMatrix(constraints, 'constraints'),
+      NumericConversion.toDoubleArray(rhs, 'rhs'),
+      maxIterations
+    )
   }
 
   private static PhaseState buildPhaseOne(double[][] constraints, double[] rhs) {
@@ -225,6 +250,14 @@ final class LinearProgramSolver {
     double value
     /** Total simplex iterations performed. */
     int iterations
+
+    List<BigDecimal> getPointValues() {
+      NumericConversion.toBigDecimalList(point, 'point')
+    }
+
+    BigDecimal getObjectiveValue() {
+      BigDecimal.valueOf(value)
+    }
   }
 
   private static class PhaseState {

@@ -78,6 +78,6 @@ class Welch {
 
     // Use native TDistribution for p-value calculation
     result.pVal = TDistribution.pValue(t as double, result.df as double)
-    return result
+    result
   }
 }

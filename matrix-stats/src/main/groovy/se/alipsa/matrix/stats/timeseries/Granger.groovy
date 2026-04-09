@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Granger causality test determines whether one time series is useful in forecasting another.
@@ -157,14 +158,14 @@ class Granger {
     FDistribution fDist = new FDistribution(df1, df2)
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
-    return new GrangerResult(
-      statistic: fStatistic,
-      pValue: pValue,
+    new GrangerResult(
+      statistic: BigDecimal.valueOf(fStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       lags: p,
       df1: df1,
       df2: df2,
-      rssRestricted: rssRestricted,
-      rssUnrestricted: rssUnrestricted,
+      rssRestricted: BigDecimal.valueOf(rssRestricted),
+      rssUnrestricted: BigDecimal.valueOf(rssUnrestricted),
       sampleSize: n,
       effectiveSampleSize: nObs
     )
@@ -176,7 +177,7 @@ class Granger {
   static GrangerResult test(List<? extends Number> x, List<? extends Number> y, Integer maxLag = null) {
     double[] xArray = x.collect { it.doubleValue() } as double[]
     double[] yArray = y.collect { it.doubleValue() } as double[]
-    return test(xArray, yArray, maxLag)
+    test(xArray, yArray, maxLag)
   }
 
   /**
@@ -205,7 +206,7 @@ class Granger {
         } else {
           log.debug("Skipping lag $p during Granger AIC selection: ${e.message}")
         }
-      } catch (RuntimeException e) {
+      } catch (Exception e) {
         log.error("Potential bug while selecting lag $p for Granger causality: ${e.message}", e)
         throw e
       }
@@ -215,7 +216,7 @@ class Granger {
       throw new IllegalArgumentException("Unable to select Granger lag: all candidate lags 1..${maxPossibleLag} failed")
     }
 
-    return bestLag
+    bestLag
   }
 
   private static boolean isNumericalFailure(IllegalArgumentException e) {
@@ -228,10 +229,10 @@ class Granger {
    */
   static class GrangerResult {
     /** The F-statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Number of lags used */
     int lags
@@ -243,10 +244,10 @@ class Granger {
     int df2
 
     /** RSS for restricted model */
-    double rssRestricted
+    BigDecimal rssRestricted
 
     /** RSS for unrestricted model */
-    double rssUnrestricted
+    BigDecimal rssUnrestricted
 
     /** Original sample size */
     int sampleSize
@@ -260,8 +261,9 @@ class Granger {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         return "Reject H0: X Granger-causes Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: X does not Granger-cause Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -271,10 +273,11 @@ class Granger {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "X Granger-causes Y" : "X does not Granger-cause Y"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ? "X Granger-causes Y" : "X does not Granger-cause Y"
 
-      return String.format(
+      String.format(
         "Granger causality test:\\n" +
         "Lags: %d\\n" +
         "F-statistic: %.4f\\n" +
@@ -287,13 +290,13 @@ class Granger {
         lags, statistic, pValue, df1, df2,
         rssRestricted, rssUnrestricted,
         sampleSize, effectiveSampleSize,
-        conclusion, alpha * 100
+        conclusion, (alphaValue * 100) as double
       )
     }
 
     @Override
     String toString() {
-      return """Granger Causality Test
+      """Granger Causality Test
   Lags: ${lags}
   Sample size: ${sampleSize} (effective: ${effectiveSampleSize})
   F-statistic: ${String.format('%.4f', statistic)}

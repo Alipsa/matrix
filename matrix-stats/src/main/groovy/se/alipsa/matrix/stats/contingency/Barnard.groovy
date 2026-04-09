@@ -1,6 +1,6 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Barnard's exact test is an unconditional exact test for 2×2 contingency tables that is uniformly
@@ -113,10 +113,10 @@ class Barnard {
     // Clamp p-value to [0, 1] to handle numerical precision issues
     maxPValue = Math.max(0.0, Math.min(1.0, maxPValue))
 
-    return new BarnardResult(
-      statistic: observedT,
-      pValue: maxPValue,
-      nuisanceParameter: optimalPi,
+    new BarnardResult(
+      statistic: BigDecimal.valueOf(observedT),
+      pValue: BigDecimal.valueOf(maxPValue),
+      nuisanceParameter: BigDecimal.valueOf(optimalPi),
       sampleSize: n
     )
   }
@@ -150,7 +150,7 @@ class Barnard {
       return (Math.abs(p1 - p2) > 1e-10) ? (Double.POSITIVE_INFINITY as double) : (0.0 as double)
     }
 
-    return (p1 - p2) / Math.sqrt(variance)
+    (p1 - p2) / Math.sqrt(variance)
   }
 
   /**
@@ -179,7 +179,7 @@ class Barnard {
       }
     }
 
-    return pValue
+    pValue
   }
 
   /**
@@ -206,7 +206,7 @@ class Barnard {
       return Math.abs(p1 - p2) > 1e-10 ? 1000.0 : 0.0
     }
 
-    return (p1 - p2) / Math.sqrt(variance)
+    (p1 - p2) / Math.sqrt(variance)
   }
 
   /**
@@ -228,7 +228,7 @@ class Barnard {
     // Use log probabilities for numerical stability
     double logProb = logBinomialCoefficient(n, k) + k * Math.log(p) + (n - k) * Math.log(1 - p)
 
-    return Math.exp(logProb)
+    Math.exp(logProb)
   }
 
   /**
@@ -253,7 +253,7 @@ class Barnard {
       result += Math.log(n - k + i) - Math.log(i)
     }
 
-    return result
+    result
   }
 
   private static void validateTable(int[][] table) {
@@ -286,13 +286,13 @@ class Barnard {
    */
   static class BarnardResult {
     /** The Wald score statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value (two-sided) */
-    double pValue
+    BigDecimal pValue
 
     /** The nuisance parameter that maximizes p-value */
-    double nuisanceParameter
+    BigDecimal nuisanceParameter
 
     /** The total sample size */
     int sampleSize
@@ -303,8 +303,9 @@ class Barnard {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether there is a significant association
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -316,23 +317,24 @@ class Barnard {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String significance = pValue < alpha ? "significant" : "not significant"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
 
-      return String.format(
+      String.format(
         "Barnard's exact test:\\n" +
         "Wald score statistic: %.4f\\n" +
         "p-value: %.4f\\n" +
         "Nuisance parameter (π): %.4f\\n" +
         "Sample size: %d\\n" +
         "Conclusion: Association is %s at %.0f%% significance level",
-        statistic, pValue, nuisanceParameter, sampleSize, significance, alpha * 100
+        statistic, pValue, nuisanceParameter, sampleSize, significance, normalizedAlpha * 100
       )
     }
 
     @Override
     String toString() {
-      return """Barnard's Exact Test
+      """Barnard's Exact Test
   Sample size: ${sampleSize}
   Wald score statistic: ${String.format('%.4f', statistic)}
   p-value: ${String.format('%.4f', pValue)}

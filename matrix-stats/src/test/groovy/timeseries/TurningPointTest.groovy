@@ -361,4 +361,14 @@ class TurningPointTest {
     def result2 = TurningPoint.test(monotonic)
     assertTrue(result2.statistic < 0, 'Fewer turning points should give negative statistic')
   }
+
+  @Test
+  void testResultSupportsNumberAlphaEvaluate() {
+    double[] data = (1..40).collect { it + Math.sin(it * 0.5d) } as double[]
+
+    def result = TurningPoint.test(data)
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

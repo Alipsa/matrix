@@ -16,7 +16,6 @@ import java.math.RoundingMode
  *   <li>Mean normalization, X´ = ( X - μ ) / ( max(X) - min(X) )</li>
  *   <li>Standard deviation normalization (Z score), Z = ( X<sub>i</sub> - μ ) / σ</li>
  * </ol>
- *
  */
 class Normalize {
 
@@ -43,14 +42,14 @@ class Normalize {
       return convertToType(bd, x)
     }
 
-    return convertToType(logResult, x)
+    convertToType(logResult, x)
   }
 
   /**
    * Apply logarithmic normalization to an array of values.
    */
   static <T extends Number> List<T> logNorm(T[] values, int... decimals) {
-    return values.collect { logNorm(it, decimals) }
+    values.collect { logNorm(it, decimals) }
   }
 
   /**
@@ -61,7 +60,7 @@ class Normalize {
       if (val instanceof String) {
         return val
       }
-      return logNorm(val as Number, decimals)
+      logNorm(val as Number, decimals)
     }
     // Force BigDecimal preservation - if any input was BigDecimal, ensure outputs stay BigDecimal
     if (values.any { it instanceof BigDecimal }) {
@@ -80,17 +79,17 @@ class Normalize {
           // Safety: convert any other numeric type to BigDecimal
           return new BigDecimal(val.toString()).setScale(decimals.length > 0 ? decimals[0] : 6, RoundingMode.HALF_EVEN)
         }
-        return val
+        val
       }
     }
-    return result
+    result
   }
 
   /**
    * Apply logarithmic normalization to a specific column in a Matrix.
    */
   static List<? extends Number> logNorm(Matrix table, String columnName, int... decimals) {
-    return logNorm(table.column(columnName) as List, decimals)
+    logNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -101,7 +100,7 @@ class Normalize {
     for (Column col in table.columns()) {
       columns << logNorm(col as List, decimals)
     }
-    return Matrix.builder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
         .types(table.types())
@@ -141,7 +140,7 @@ class Normalize {
       return convertToType(bd, x)
     }
 
-    return convertToType(result, x)
+    convertToType(result, x)
   }
 
   /**
@@ -155,7 +154,7 @@ class Normalize {
     T min = values.min()
     T max = values.max()
 
-    return values.collect { minMaxNorm(it, min, max, decimals) }
+    values.collect { minMaxNorm(it, min, max, decimals) }
   }
 
   /**
@@ -172,14 +171,14 @@ class Normalize {
     Number min = values.min() as Number
     Number max = values.max() as Number
 
-    return values.collect { minMaxNorm(it as Number, min, max, decimals) }
+    values.collect { minMaxNorm(it as Number, min, max, decimals) }
   }
 
   /**
    * Apply min-max normalization to a specific column in a Matrix.
    */
   static List<? extends Number> minMaxNorm(Matrix table, String columnName, int... decimals) {
-    return minMaxNorm(table.column(columnName) as List, decimals)
+    minMaxNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -190,7 +189,7 @@ class Normalize {
     for (Column col in table.columns()) {
       columns << minMaxNorm(col as List, decimals)
     }
-    return Matrix.builder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
         .types(table.types())
@@ -232,7 +231,7 @@ class Normalize {
       return convertToType(bd, x)
     }
 
-    return convertToType(result, x)
+    convertToType(result, x)
   }
 
   /**
@@ -248,7 +247,7 @@ class Normalize {
     T min = list.min()
     T max = list.max()
 
-    return values.collect { meanNorm(it, mean, min, max, decimals) }
+    values.collect { meanNorm(it, mean, min, max, decimals) }
   }
 
   /**
@@ -266,14 +265,14 @@ class Normalize {
     Number min = values.min() as Number
     Number max = values.max() as Number
 
-    return values.collect { meanNorm(it as Number, mean, min, max, decimals) }
+    values.collect { meanNorm(it as Number, mean, min, max, decimals) }
   }
 
   /**
    * Apply mean normalization to a specific column in a Matrix.
    */
   static List<? extends Number> meanNorm(Matrix table, String columnName, int... decimals) {
-    return meanNorm(table.column(columnName) as List, decimals)
+    meanNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -281,7 +280,7 @@ class Normalize {
    */
   static Matrix meanNorm(Matrix table, int... decimals) {
     List<List> columns = table.columns().collect { Column col -> meanNorm(col as List, decimals) }
-    return Matrix.builder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
         .types(table.types())
@@ -320,7 +319,7 @@ class Normalize {
       return convertToType(bd, x)
     }
 
-    return convertToType(result, x)
+    convertToType(result, x)
   }
 
   /**
@@ -335,7 +334,7 @@ class Normalize {
     BigDecimal mean = Stat.mean(list)
     BigDecimal stdDev = Stat.sd(list)
 
-    return values.collect { stdScaleNorm(it, mean, stdDev, decimals) }
+    values.collect { stdScaleNorm(it, mean, stdDev, decimals) }
   }
 
   /**
@@ -352,14 +351,14 @@ class Normalize {
     BigDecimal mean = Stat.mean(values)
     BigDecimal stdDev = Stat.sd(values)
 
-    return values.collect { stdScaleNorm(it as Number, mean, stdDev, decimals) }
+    values.collect { stdScaleNorm(it as Number, mean, stdDev, decimals) }
   }
 
   /**
    * Apply standard deviation normalization to a specific column in a Matrix.
    */
   static List<? extends Number> stdScaleNorm(Matrix table, String columnName, int... decimals) {
-    return stdScaleNorm(table.column(columnName) as List, decimals)
+    stdScaleNorm(table.column(columnName) as List, decimals)
   }
 
   /**
@@ -370,7 +369,7 @@ class Normalize {
     for (Column col in table.columns()) {
       columns << stdScaleNorm(col as List, decimals)
     }
-    return Matrix.builder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
         .types(table.types())
@@ -390,7 +389,7 @@ class Normalize {
       return Double.NaN as T
     }
     // Byte, Short, Float
-    return Float.NaN as T
+    Float.NaN as T
   }
 
   /**
@@ -404,7 +403,7 @@ class Normalize {
       return Double.NaN as T
     }
     // Byte, Short, Integer, Long, Float
-    return Float.NaN as T
+    Float.NaN as T
   }
 
   /**
@@ -446,6 +445,6 @@ class Normalize {
       return value.floatValue() as T
     }
     // Default to the value's natural type
-    return value as T
+    value as T
   }
 }

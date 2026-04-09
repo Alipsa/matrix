@@ -131,7 +131,7 @@ class ShapiroWilk {
     // Calculate p-value using Royston's approximation
     double pValue = calculatePValue(w, n)
 
-    return new ShapiroWilkResult(
+    new ShapiroWilkResult(
       W: BigDecimal.valueOf(w),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: n
@@ -172,7 +172,7 @@ class ShapiroWilk {
     // Calculate denominator: Σ(xᵢ - x̄)²
     double denominator = variance * (n - 1)
 
-    return numerator / denominator
+    numerator / denominator
   }
 
   /**
@@ -230,7 +230,7 @@ class ShapiroWilk {
       }
     }
 
-    return a
+    a
   }
 
   /**
@@ -248,7 +248,6 @@ class ShapiroWilk {
 
     if (n <= 11) {
       // For small samples (n <= 11)
-      double gamma = 0.459 * n - 2.273
       mu = -0.0006714 * Math.pow(n, 3.0) + 0.025054 * Math.pow(n, 2.0) - 0.39978 * n + 0.544
       sigma = Math.exp(-0.0020322 * Math.pow(n, 3.0) + 0.062767 * Math.pow(n, 2.0) - 0.77857 * n + 1.3822)
     } else {
@@ -263,7 +262,7 @@ class ShapiroWilk {
     NormalDistribution normal = new NormalDistribution(0, 1)
     double pValue = normal.cumulativeProbability(z)
 
-    return Math.max(0.0, Math.min(1.0, pValue))  // Ensure p-value is in [0, 1]
+    Math.max(0.0, Math.min(1.0, pValue))  // Ensure p-value is in [0, 1]
   }
 
   /**
@@ -299,7 +298,7 @@ class ShapiroWilk {
 
     @Override
     String toString() {
-      return """Shapiro-Wilk Normality Test Result:
+      """Shapiro-Wilk Normality Test Result:
   W statistic: ${W}
   p-value: ${pValue}
   sample size: ${sampleSize}

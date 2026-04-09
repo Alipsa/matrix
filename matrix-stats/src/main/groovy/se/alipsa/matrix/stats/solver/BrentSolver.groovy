@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.solver
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Bracketing Brent-Dekker root solver for one-dimensional continuous functions.
  *
@@ -24,6 +26,7 @@ final class BrentSolver {
    * @param maxIterations maximum iteration count
    * @return solver result containing the root and iteration metadata
    */
+  @SuppressWarnings('MethodSize')
   static SolverResult solve(
       UnivariateObjective function,
       double min,
@@ -147,16 +150,69 @@ final class BrentSolver {
     throw new IllegalStateException("Brent solver failed to converge after $maxIterations iterations")
   }
 
+  /**
+   * Finds a root using idiomatic numeric inputs.
+   *
+   * @param function objective function
+   * @param min lower bracket endpoint
+   * @param max upper bracket endpoint
+   * @param relativeAccuracy relative convergence threshold
+   * @param absoluteAccuracy absolute convergence threshold
+   * @param maxIterations maximum iteration count
+   * @return solver result containing the root and iteration metadata
+   */
+  static SolverResult solve(
+      UnivariateObjective function,
+      Number min,
+      Number max,
+      Number relativeAccuracy,
+      Number absoluteAccuracy,
+      int maxIterations
+  ) {
+    solve(
+      function,
+      NumericConversion.toFiniteDouble(min, 'min'),
+      NumericConversion.toFiniteDouble(max, 'max'),
+      NumericConversion.toFiniteDouble(relativeAccuracy, 'relativeAccuracy'),
+      NumericConversion.toFiniteDouble(absoluteAccuracy, 'absoluteAccuracy'),
+      maxIterations
+    )
+  }
+
   static class SolverResult {
-    /** Root value returned by the solver. */
-    double root
+    private double root
     /** Number of function evaluations performed. */
     int evaluations
     /** Number of Brent iterations performed. */
     int iterations
-    /** Lower bound of the final bracketing interval. */
-    double lowerBound
-    /** Upper bound of the final bracketing interval. */
-    double upperBound
+    private double lowerBound
+    private double upperBound
+
+    /** Returns the root as {@code BigDecimal}. */
+    BigDecimal getRootValue() {
+      BigDecimal.valueOf(root)
+    }
+
+    /** Returns the lower bound of the final bracketing interval as {@code BigDecimal}. */
+    BigDecimal getLowerBoundValue() {
+      BigDecimal.valueOf(lowerBound)
+    }
+
+    /** Returns the upper bound of the final bracketing interval as {@code BigDecimal}. */
+    BigDecimal getUpperBoundValue() {
+      BigDecimal.valueOf(upperBound)
+    }
+
+    /** @deprecated Use {@link #getRootValue()} instead. */
+    @Deprecated
+    double getRoot() { root }
+
+    /** @deprecated Use {@link #getLowerBoundValue()} instead. */
+    @Deprecated
+    double getLowerBound() { lowerBound }
+
+    /** @deprecated Use {@link #getUpperBoundValue()} instead. */
+    @Deprecated
+    double getUpperBound() { upperBound }
   }
 }

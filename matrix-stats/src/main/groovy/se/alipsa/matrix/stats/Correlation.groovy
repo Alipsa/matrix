@@ -96,8 +96,8 @@ class Correlation {
     BigDecimal sumY2 = 0
     int size = numbersX.size()
 
-    def final itX = numbersX.iterator()
-    def final itY = numbersY.iterator()
+    final Iterator<? extends Number> itX = numbersX.iterator()
+    final Iterator<? extends Number> itY = numbersY.iterator()
     for (int i = 0; i < size; i++) {
       BigDecimal x = itX.next() as BigDecimal
       BigDecimal y = itY.next() as BigDecimal
@@ -115,7 +115,7 @@ class Correlation {
     }
     BigDecimal bottom = bottomSquared.sqrt()
     BigDecimal top = size * sumXY - sumX * sumY
-    return top / bottom
+    top / bottom
   }
 
   /**
@@ -132,7 +132,7 @@ class Correlation {
 
     List<BigDecimal> ranksX = rank(numbersX)
     List<BigDecimal> ranksY = rank(numbersY)
-    return corPearson(ranksX, ranksY)
+    corPearson(ranksX, ranksY)
   }
 
   /**
@@ -155,7 +155,7 @@ class Correlation {
 
     Arrays.sort(pairs, (p1, p2) -> {
       int compareKey = compare(p1.getFirst(), p2.getFirst())
-      return compareKey != 0 ? compareKey : compare(p1.getSecond(), p2.getSecond())
+      compareKey != 0 ? compareKey : compare(p1.getSecond(), p2.getSecond())
     })
 
     long tiedXPairs = 0
@@ -212,7 +212,7 @@ class Correlation {
 
     final long concordantMinusDiscordant = numPairs - tiedXPairs - tiedYPairs + tiedXYPairs - 2 * swaps
     final BigDecimal nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (numPairs - tiedYPairs)
-    return concordantMinusDiscordant / nonTiedPairsMultiplied.sqrt()
+    concordantMinusDiscordant / nonTiedPairsMultiplied.sqrt()
   }
 
   /**
@@ -252,7 +252,7 @@ class Correlation {
       i = j + 1
     }
 
-    return ranks.toList()
+    ranks.toList()
   }
 
   private static int compare(Number x, Number y) {
@@ -262,7 +262,7 @@ class Correlation {
     if (x < y) {
       return -1
     }
-    return 1
+    1
   }
 
   /**
@@ -273,7 +273,7 @@ class Correlation {
    * @return the sum of the number from 1 to n
    */
   private static long sumN(long n) {
-    return (long)(n * (n + 1) / 2)
+    (long)(n * (n + 1) / 2)
   }
 
   private static long mergeSegment(BigDecimalPair[] pairs, BigDecimalPair[] pairsDestination, int offset, int segmentSize, int n) {
@@ -291,7 +291,7 @@ class Correlation {
       j = selection.nextJ
       swaps += selection.swaps
     }
-    return swaps
+    swaps
   }
 
   private static MergeSelection selectNextPair(BigDecimalPair[] pairs, int i, int iEnd, int j, int jEnd) {
@@ -304,7 +304,7 @@ class Correlation {
     if (compare(pairs[i].getSecond(), pairs[j].getSecond()) <= 0) {
       return new MergeSelection(pair: pairs[i], nextI: i + 1, nextJ: j, swaps: 0)
     }
-    return new MergeSelection(pair: pairs[j], nextI: i, nextJ: j + 1, swaps: iEnd - i)
+    new MergeSelection(pair: pairs[j], nextI: i, nextJ: j + 1, swaps: iEnd - i)
   }
 
   /**
@@ -349,12 +349,12 @@ class Correlation {
 
     /** @return the first value.  */
     BigDecimal getFirst() {
-      return first
+      first
     }
 
     /** @return the second value.  */
     BigDecimal getSecond() {
-      return second
+      second
     }
 
   }

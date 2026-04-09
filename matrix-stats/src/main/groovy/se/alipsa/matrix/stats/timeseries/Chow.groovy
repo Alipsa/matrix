@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Chow test, proposed by econometrician Gregory Chow in 1960, tests whether the coefficients
@@ -126,15 +127,15 @@ class Chow {
     FDistribution fDist = new FDistribution(k, n - 2 * k)
     double pValue = 1.0 - fDist.cumulativeProbability(fStatistic)
 
-    return new ChowResult(
-      statistic: fStatistic,
-      pValue: pValue,
+    new ChowResult(
+      statistic: BigDecimal.valueOf(fStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       df1: k,
       df2: n - 2 * k,
       breakPoint: breakPoint,
-      rssFull: rssFull,
-      rss1: rss1,
-      rss2: rss2,
+      rssFull: BigDecimal.valueOf(rssFull),
+      rss1: BigDecimal.valueOf(rss1),
+      rss2: BigDecimal.valueOf(rss2),
       sampleSize: n,
       numParameters: k
     )
@@ -146,7 +147,7 @@ class Chow {
   static ChowResult test(List<? extends Number> y, List<List<? extends Number>> X, int breakPoint) {
     double[] yArray = y.collect { it.doubleValue() } as double[]
     double[][] XArray = X.collect { row -> row.collect { it.doubleValue() } as double[] } as double[][]
-    return test(yArray, XArray, breakPoint)
+    test(yArray, XArray, breakPoint)
   }
 
   /**
@@ -154,10 +155,10 @@ class Chow {
    */
   static class ChowResult {
     /** The Chow F-statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Degrees of freedom (numerator) */
     int df1
@@ -169,13 +170,13 @@ class Chow {
     int breakPoint
 
     /** RSS for full model */
-    double rssFull
+    BigDecimal rssFull
 
     /** RSS for first sub-model */
-    double rss1
+    BigDecimal rss1
 
     /** RSS for second sub-model */
-    double rss2
+    BigDecimal rss2
 
     /** Sample size */
     int sampleSize
@@ -189,8 +190,9 @@ class Chow {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         return "Reject H0: Structural break detected at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No evidence of structural break at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -200,10 +202,11 @@ class Chow {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "structural break present" : "no structural break detected"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ? "structural break present" : "no structural break detected"
 
-      return String.format(
+      String.format(
         "Chow test:\\n" +
         "Break point: %d\\n" +
         "F-statistic: %.4f\\n" +
@@ -217,13 +220,13 @@ class Chow {
         breakPoint, statistic, pValue, df1, df2,
         rssFull, rss1, rss2, rss1 + rss2,
         sampleSize, numParameters,
-        conclusion, alpha * 100
+        conclusion, (alphaValue * 100) as double
       )
     }
 
     @Override
     String toString() {
-      return """Chow Test for Structural Break
+      """Chow Test for Structural Break
   Break point: ${breakPoint}
   Sample size: ${sampleSize}
   Parameters: ${numParameters}

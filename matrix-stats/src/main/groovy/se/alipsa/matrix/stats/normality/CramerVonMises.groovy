@@ -35,7 +35,7 @@ class CramerVonMises {
    */
   static CramerVonMisesResult testNormality(List<? extends Number> data, Number alpha = 0.05) {
     BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-    validateInput(data, alphaValue)
+    validateInput(data)
 
     int n = data.size()
 
@@ -92,7 +92,7 @@ class CramerVonMises {
     double pValue = calculatePValue(modifiedWSquared)
     double criticalValue = getCriticalValue(alphaValue as double)
 
-    return new CramerVonMisesResult(
+    new CramerVonMisesResult(
       statistic: BigDecimal.valueOf(modifiedWSquared),
       rawStatistic: BigDecimal.valueOf(wSquared),
       sampleSize: n,
@@ -156,7 +156,7 @@ class CramerVonMises {
     }
   }
 
-  private static void validateInput(List<? extends Number> data, BigDecimal alpha) {
+  private static void validateInput(List<? extends Number> data) {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
     }
@@ -225,7 +225,7 @@ class CramerVonMises {
         "not normally distributed" :
         "consistent with a normal distribution"
 
-      return String.format(
+      String.format(
         "Cramér-von Mises W²*: %.4f (critical value: %.3f at %.0f%% level)\n" +
         "p-value: %.4f\n" +
         "Sample: n=%d, mean=%.4f, sd=%.4f\n" +
@@ -237,7 +237,7 @@ class CramerVonMises {
 
     @Override
     String toString() {
-      return """Cramér-von Mises Normality Test
+      """Cramér-von Mises Normality Test
   Sample size: ${sampleSize}
   Mean: ${String.format('%.4f', mean)}
   Std Dev: ${String.format('%.4f', stdDev)}

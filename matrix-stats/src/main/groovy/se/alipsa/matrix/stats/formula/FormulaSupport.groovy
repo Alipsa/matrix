@@ -1,12 +1,10 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 /**
  * Internal parsing and normalization support for formula handling.
  */
-@CompileStatic
 @PackageScope
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 final class FormulaSupport {
@@ -446,7 +444,6 @@ final class FormulaSupport {
     } as List<FormulaTerm>
   }
 
-  @CompileStatic
   private static final class SignedExpression {
     final int sign
     final FormulaExpression expression
@@ -457,7 +454,6 @@ final class FormulaSupport {
     }
   }
 
-  @CompileStatic
   private enum TokenType {
     IDENTIFIER,
     BACKTICK_IDENTIFIER,
@@ -476,7 +472,6 @@ final class FormulaSupport {
     EOF
   }
 
-  @CompileStatic
   private static final class FormulaToken {
     final TokenType type
     final String text
@@ -491,7 +486,6 @@ final class FormulaSupport {
     }
   }
 
-  @CompileStatic
   private static final class Tokenizer {
     private final String source
     private int index = 0
@@ -631,7 +625,6 @@ final class FormulaSupport {
     }
   }
 
-  @CompileStatic
   private static final class Parser {
     private final String source
     private final List<FormulaToken> tokens

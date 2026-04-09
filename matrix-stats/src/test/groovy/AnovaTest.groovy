@@ -165,6 +165,7 @@ class AnovaTest {
     assertTrue(result.evaluate(0.01), 'should reject null at alpha=0.01')
     assertTrue(result.evaluate(0.001), 'should reject null at alpha=0.001')
     assertTrue(result.evaluate(0.0001), 'should reject null at alpha=0.0001')
+    assertTrue(result.evaluate(0.05G), 'should reject null at alpha=0.05 as BigDecimal')
   }
 
   @Test

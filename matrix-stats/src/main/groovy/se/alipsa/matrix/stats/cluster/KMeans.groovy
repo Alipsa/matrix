@@ -127,7 +127,7 @@ class KMeans {
     m.eachWithIndex { row, i ->
       points[i] = ListConverter.toDoubleArray(row as List<? extends Number>)
     }
-    return points
+    points
   }
 
   Matrix fit(List<String> columnNames, int k, int iterations, String columnName = "Group", boolean mutate = true) {
@@ -137,7 +137,7 @@ class KMeans {
         .pp(true)
         .useEpsilon(true)
         .build()
-    return addClusterColumn(clustering, columnName, mutate)
+    addClusterColumn(clustering, columnName, mutate)
   }
 
   Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = "Group", boolean mutate = true) {
@@ -147,7 +147,7 @@ class KMeans {
         .pp(true)
         .useEpsilon(true)
         .build()
-    return addClusterColumn(clustering, columnName, mutate)
+    addClusterColumn(clustering, columnName, mutate)
   }
 
   private Matrix addClusterColumn(KMeansPlusPlus clustering, String columnName, boolean mutate) {
@@ -160,14 +160,14 @@ class KMeans {
   }
 
   String reportTime() {
-    return clustering?.timing ?: "No clustering performed yet, call fit() first."
+    clustering?.timing ?: "No clustering performed yet, call fit() first."
   }
 
   int getExecutionTimeMillis() {
     if (clustering == null) {
       return -1
     }
-    return clustering.executionTimeMillis as int
+    clustering.executionTimeMillis as int
   }
 
 }

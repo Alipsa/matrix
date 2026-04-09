@@ -39,6 +39,11 @@ compileGroovy {
   groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
+codenarc {
+  configFile = file('config/codenarc/ruleset.groovy')
+  ignoreFailures = false
+}
+
 dependencies {
   compileOnly libs.groovy
 

@@ -365,4 +365,17 @@ class AdfGlsTest {
     // For trend-stationary series, should generally reject unit root
     assertTrue(result.statistic <= 0, 'Statistic should be negative')
   }
+
+  @Test
+  void testResultSupportsNumberAlpha() {
+    double[] data = [
+      100, 101, 99, 100, 102, 98, 100, 101, 99, 100,
+      101, 99, 100, 102, 98, 100, 101, 99, 100, 101
+    ] as double[]
+
+    def result = AdfGls.test(data, 0, "drift")
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

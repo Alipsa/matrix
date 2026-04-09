@@ -212,19 +212,19 @@ class PolynomialRegression {
     for (int i = degree - 1; i >= 0; i--) {
       result = result * xd + coefficients[i]
     }
-    return BigDecimal.valueOf(result)
+    BigDecimal.valueOf(result)
   }
 
   BigDecimal predict(Number xVal, int numberOfDecimals) {
-    return predict(xVal).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    predict(xVal).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   List<BigDecimal> predict(List<Number> xVals) {
-    return xVals.collect { predict(it) }
+    xVals.collect { predict(it) }
   }
 
   List<BigDecimal> predict(List<Number> xVals, int numberOfDecimals) {
-    return xVals.collect { predict(it, numberOfDecimals) }
+    xVals.collect { predict(it, numberOfDecimals) }
   }
 
   /**
@@ -237,19 +237,19 @@ class PolynomialRegression {
     if (power < 0 || power > degree) {
       throw new IllegalArgumentException("Power must be between 0 and $degree (inclusive)")
     }
-    return BigDecimal.valueOf(coefficients[power])
+    BigDecimal.valueOf(coefficients[power])
   }
 
   BigDecimal getRsquared() {
-    return r2
+    r2
   }
 
   BigDecimal getRsquared(int numberOfDecimals) {
-    return getRsquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getRsquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   int getDegree() {
-    return degree
+    degree
   }
 
   @Override
@@ -269,7 +269,7 @@ class PolynomialRegression {
         }
       }
     }
-    return sb.toString()
+    sb.toString()
   }
 
   String summary() {
@@ -282,6 +282,6 @@ class PolynomialRegression {
       sb.append("  $term: ${getCoefficient(i).setScale(6, RoundingMode.HALF_EVEN)}\n")
     }
     sb.append("\nR-squared: ${getRsquared(4)}\n")
-    return sb.toString()
+    sb.toString()
   }
 }

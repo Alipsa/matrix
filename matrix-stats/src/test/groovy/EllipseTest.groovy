@@ -266,7 +266,7 @@ class EllipseTest {
         maxDist = dist
       }
     }
-    return maxDist
+    maxDist
   }
 
   private void assertAllFinite(List<BigDecimal> xVals, List<BigDecimal> yVals) {

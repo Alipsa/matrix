@@ -37,12 +37,12 @@ class CcmTest {
     assertEquals(3, result.embeddingDim)
     assertEquals(1, result.timeLag)
     assertEquals(200, result.seriesLength)
-    assertEquals(5, result.xmapY.length)
-    assertEquals(5, result.ymapX.length)
+    assertEquals(5, result.xmapY.size())
+    assertEquals(5, result.ymapX.size())
 
     // X drives Y, so Y|M(X) should show cross-map skill
     // Note: Due to randomness in library selection, exact causality detection may vary
-    assertTrue(result.ymapX.length > 0, "Should compute cross-map skills")
+    assertFalse(result.ymapX.isEmpty(), "Should compute cross-map skills")
   }
 
   @Test
@@ -148,7 +148,19 @@ class CcmTest {
 
     assertNotNull(result)
     assertNotNull(result.librarySizes)
-    assertTrue(result.librarySizes.length > 0)
+    assertFalse(result.librarySizes.isEmpty())
+  }
+
+  @Test
+  void testListOverloadRejectsNonIntegralLibrarySizes() {
+    List<BigDecimal> x = (1..30).collect { int i -> i * 0.1 }
+    List<BigDecimal> y = (1..30).collect { int i -> i * 0.2 }
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Ccm.test(x, y, 3, 1, [10.5G, 15])
+    }
+
+    assertEquals('Library size must be an integer, got 10.5', ex.message)
   }
 
   @Test
@@ -313,7 +325,7 @@ class CcmTest {
     def result = Ccm.test(x, y, 3, 1, [20, 40, 60, 80, 100])
 
     // Library sizes should be sorted
-    for (int i = 0; i < result.librarySizes.length - 1; i++) {
+    for (int i = 0; i < result.librarySizes.size() - 1; i++) {
       assertTrue(result.librarySizes[i] < result.librarySizes[i + 1],
                  "Library sizes should be increasing")
     }
@@ -367,7 +379,7 @@ class CcmTest {
     def result = Ccm.test(x, y, 3, 1, [40])
 
     assertNotNull(result)
-    assertEquals(1, result.librarySizes.length)
+    assertEquals(1, result.librarySizes.size())
     assertEquals(40, result.librarySizes[0])
   }
 
@@ -393,8 +405,8 @@ class CcmTest {
     assertEquals(100, result.seriesLength)
 
     // Arrays should match library sizes
-    assertEquals(result.librarySizes.length, result.xmapY.length)
-    assertEquals(result.librarySizes.length, result.ymapX.length)
+    assertEquals(result.librarySizes.size(), result.xmapY.size())
+    assertEquals(result.librarySizes.size(), result.ymapX.size())
   }
 
   @Test
@@ -416,8 +428,8 @@ class CcmTest {
 
     assertNotNull(result)
     // Chaotic systems should show measurable cross-map skill
-    assertTrue(result.xmapY.length == 4)
-    assertTrue(result.ymapX.length == 4)
+    assertEquals(4, result.xmapY.size())
+    assertEquals(4, result.ymapX.size())
   }
 
   @Test
@@ -458,5 +470,19 @@ class CcmTest {
     assertNotNull(result)
     assertEquals(2, result.embeddingDim)
     assertEquals(1, result.timeLag)
+  }
+
+  @Test
+  void testGroovyFacingInputsAndValueAccessors() {
+    List<BigDecimal> x = (0..<120).collect { Math.sin(it * 0.1d) + 0.01d * it }
+    List<BigDecimal> y = (0..<120).collect { Math.cos(it * 0.08d) + 0.015d * it }
+
+    def result = Ccm.test(x, y, 3, 1, [20, 40, 60])
+
+    assertEquals([20, 40, 60], result.librarySizeValues)
+    assertEquals(3, result.xmapYValues.size())
+    assertEquals(3, result.ymapXValues.size())
+    assertNotNull(result.xCausesY(0.2G))
+    assertNotNull(result.yCausesX(0.2G))
   }
 }

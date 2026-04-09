@@ -58,7 +58,7 @@ class GoalSeek {
     )
     double val = refineRoot(function, solverResult.root, solverResult.lowerBound, solverResult.upperBound, absoluteAccuracy)
     double result = algorithm.call(val) as double
-    return [value: val, result: result, diff: (targetValue-result), iterations: solverResult.evaluations]
+    [value: val, result: result, diff: (targetValue-result), iterations: solverResult.evaluations]
   }
 
   private static double refineRoot(

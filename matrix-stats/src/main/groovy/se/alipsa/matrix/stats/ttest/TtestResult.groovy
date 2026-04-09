@@ -22,92 +22,92 @@ class TtestResult {
   String description
 
   BigDecimal getT() {
-    return tVal
+    tVal
   }
 
   BigDecimal getT(int numberOfDecimals) {
-    return getT().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getT().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getP() {
-    return pVal
+    pVal
   }
 
   BigDecimal getP(int numberOfDecimals) {
-    return getP().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getP().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getDf() {
-    return df
+    df
   }
 
   BigDecimal getDf(int numberOfDecimals) {
-    return getDf().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getDf().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getMean1() {
-    return mean1
+    mean1
   }
 
   BigDecimal getMean1(int numberOfDecimals) {
-    return getMean1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getMean1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getMean2() {
-    return mean2
+    mean2
   }
 
   BigDecimal getMean2(int numberOfDecimals) {
-    return getMean2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getMean2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getVar1() {
-    return var1
+    var1
   }
 
   BigDecimal getVar1(int numberOfDecimals) {
-    return getVar1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getVar1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getVar2() {
-    return var2
+    var2
   }
 
   BigDecimal getVar2(int numberOfDecimals) {
-    return getVar2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getVar2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getSd1() {
-    return sd1
+    sd1
   }
 
   BigDecimal getSd1(int numberOfDecimals) {
-    return getSd1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getSd1().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   BigDecimal getSd2() {
-    return sd2
+    sd2
   }
 
   BigDecimal getSd2(int numberOfDecimals) {
-    return getSd2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getSd2().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   Integer getN1() {
-    return n1
+    n1
   }
 
   Integer getN2() {
-    return n2
+    n2
   }
 
   String getDescription() {
-    return description
+    description
   }
 
   @Override
   String toString() {
-    return """
+    """
       ${getDescription()}
       t = ${getT(3)}, df = ${getDf(3)}, p = ${getP(3)}
       x: mean = ${getMean1(3)}, size = ${getN1()}, sd = ${getSd1(3)}

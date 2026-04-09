@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -17,7 +15,6 @@ import se.alipsa.matrix.core.Matrix
  * only a reference level after filtering, the returned {@link Terms} metadata preserves
  * that dropped-term state even though no predictor column is emitted.
  */
-@CompileStatic
 final class DesignMatrixBuilder {
 
   private final Matrix data
@@ -347,7 +344,6 @@ final class DesignMatrixBuilder {
       .build()
   }
 
-  @CompileStatic
   static final class DesignMatrix {
     final Matrix data
     final List<String> predictorNames
@@ -360,7 +356,6 @@ final class DesignMatrixBuilder {
     }
   }
 
-  @CompileStatic
   private static final class ColumnInfo {
     final String name
     final List<BigDecimal> values

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Normal (Gaussian) distribution implementation with cumulative and inverse cumulative probability.
  */
@@ -46,28 +48,48 @@ class NormalDistribution implements ContinuousDistribution {
   private static final double P_LOW = 0.02425d
   private static final double P_HIGH = 1.0d - P_LOW
 
-  private final double mean
-  private final double standardDeviation
+  private final BigDecimal mean
+  private final BigDecimal standardDeviation
 
-  NormalDistribution(double mean = 0.0d, double standardDeviation = 1.0d) {
-    if (standardDeviation <= 0.0d) {
+  NormalDistribution(Number mean = 0.0d, Number standardDeviation = 1.0d) {
+    BigDecimal normalizedMean = NumericConversion.toBigDecimal(mean, 'mean')
+    BigDecimal normalizedStandardDeviation = NumericConversion.toBigDecimal(standardDeviation, 'standardDeviation')
+    if (normalizedStandardDeviation <= 0.0d) {
       throw new IllegalArgumentException("Standard deviation must be positive, got: $standardDeviation")
     }
-    this.mean = mean
-    this.standardDeviation = standardDeviation
+    this.mean = normalizedMean
+    this.standardDeviation = normalizedStandardDeviation
   }
 
-  double getMean() {
+  BigDecimal getMean() {
     mean
   }
 
-  double getStandardDeviation() {
+  BigDecimal getStandardDeviation() {
     standardDeviation
   }
 
+  BigDecimal cumulativeProbability(Number x) {
+    BigDecimal.valueOf(cumulativeProbabilityValue(NumericConversion.toFiniteDouble(x, 'x')))
+  }
+
   @Override
+  @Deprecated
   double cumulativeProbability(double x) {
-    double standardized = (x - mean) / standardDeviation
+    cumulativeProbabilityValue(x)
+  }
+
+  BigDecimal inverseCumulativeProbability(Number p) {
+    BigDecimal.valueOf(inverseCumulativeProbabilityValue(NumericConversion.toFiniteDouble(p, 'p')))
+  }
+
+  @Deprecated
+  double inverseCumulativeProbability(double p) {
+    inverseCumulativeProbabilityValue(p)
+  }
+
+  private double cumulativeProbabilityValue(double x) {
+    double standardized = (x - (mean as double)) / (standardDeviation as double)
     if (standardized == Double.NEGATIVE_INFINITY) {
       return 0.0d
     }
@@ -80,10 +102,10 @@ class NormalDistribution implements ContinuousDistribution {
     if (z >= 0.0d) {
       return 0.5d * (1.0d + gamma)
     }
-    return 0.5d * (1.0d - gamma)
+    0.5d * (1.0d - gamma)
   }
 
-  double inverseCumulativeProbability(double p) {
+  private double inverseCumulativeProbabilityValue(double p) {
     if (p < 0.0d || p > 1.0d) {
       throw new IllegalArgumentException("p must be between 0 and 1, got: $p")
     }
@@ -108,11 +130,11 @@ class NormalDistribution implements ContinuousDistribution {
     }
 
     // One Newton refinement step brings the approximation close to machine precision.
-    double error = cumulativeProbability(mean + standardDeviation * x) - p
+    double error = cumulativeProbabilityValue((mean as double) + (standardDeviation as double) * x) - p
     double density = Math.exp(-0.5d * x * x) / Math.sqrt(2.0d * Math.PI)
     x -= error / density
 
-    return mean + standardDeviation * x
+    (mean as double) + (standardDeviation as double) * x
   }
 
   private static double polynomial(double[] coefficients, double x) {

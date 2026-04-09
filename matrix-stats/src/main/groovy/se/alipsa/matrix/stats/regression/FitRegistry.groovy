@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 /**
  * Registry of named fit methods.
  *
@@ -16,7 +14,6 @@ import groovy.transform.CompileStatic
  * via {@code ModelFrame.of(...).evaluate()} and then dispatch to the chosen fit method
  * through this registry.
  */
-@CompileStatic
 final class FitRegistry {
 
   private static final FitRegistry INSTANCE = new FitRegistry()

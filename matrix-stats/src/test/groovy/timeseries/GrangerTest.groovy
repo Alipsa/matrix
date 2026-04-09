@@ -291,4 +291,15 @@ class GrangerTest {
     assertNotNull(interp05)
     assertNotNull(interp10)
   }
+
+  @Test
+  void testResultSupportsNumberAlphaEvaluate() {
+    double[] x = (1..30).collect { it + Math.random() * 0.5 } as double[]
+    double[] y = (1..30).collect { it * 1.5 + Math.random() * 0.5 } as double[]
+
+    def result = Granger.test(x, y, 2)
+
+    assertNotNull(result.interpret(0.10G))
+    assertNotNull(result.evaluate(0.10G))
+  }
 }

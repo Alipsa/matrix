@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.Matrix
  * such as {@code log}, {@code sqrt}, and {@code exp}. The {@code I(...)} function is
  * treated as an arithmetic expression wrapper.
  */
-@CompileStatic
 final class ExpressionEvaluator {
 
   private final Matrix data
@@ -83,21 +80,21 @@ final class ExpressionEvaluator {
         throw new IllegalArgumentException("log() requires exactly 1 argument, got ${call.arguments.size()}")
       }
       BigDecimal value = evaluateRow(call.arguments[0], rowIndex)
-      return Math.log(value as double) as BigDecimal
+      return value.log()
     }
     if (name == 'sqrt') {
       if (call.arguments.size() != 1) {
         throw new IllegalArgumentException("sqrt() requires exactly 1 argument, got ${call.arguments.size()}")
       }
       BigDecimal value = evaluateRow(call.arguments[0], rowIndex)
-      return Math.sqrt(value as double) as BigDecimal
+      return value.sqrt()
     }
     if (name == 'exp') {
       if (call.arguments.size() != 1) {
         throw new IllegalArgumentException("exp() requires exactly 1 argument, got ${call.arguments.size()}")
       }
       BigDecimal value = evaluateRow(call.arguments[0], rowIndex)
-      return Math.exp(value as double) as BigDecimal
+      return value.exp()
     }
     if (name == 'i') {
       if (call.arguments.size() != 1) {
@@ -130,7 +127,7 @@ final class ExpressionEvaluator {
         }
         left / right
       }
-      case '^' -> (Math.pow(left as double, right as double)) as BigDecimal
+      case '^' -> left ** right
       default -> throw new IllegalArgumentException("Unsupported binary operator: ${binary.operator}")
     }
   }

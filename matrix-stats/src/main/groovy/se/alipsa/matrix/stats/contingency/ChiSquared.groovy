@@ -1,9 +1,8 @@
 package se.alipsa.matrix.stats.contingency
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * A chi-squared test (also chi-square or χ² test) is a statistical hypothesis test
@@ -76,10 +75,10 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
-    return new ChiSquaredResult(
-      testStatistic: chiSquared,
+    new ChiSquaredResult(
+      testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "Pearson"
     )
   }
@@ -123,10 +122,10 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(gStatistic)
 
-    return new ChiSquaredResult(
-      testStatistic: gStatistic,
+    new ChiSquaredResult(
+      testStatistic: BigDecimal.valueOf(gStatistic),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "G-test"
     )
   }
@@ -179,10 +178,10 @@ class ChiSquared {
     ChiSquaredDistribution distribution = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - distribution.cumulativeProbability(chiSquared)
 
-    return new ChiSquaredResult(
-      testStatistic: chiSquared,
+    new ChiSquaredResult(
+      testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
-      pValue: pValue,
+      pValue: BigDecimal.valueOf(pValue),
       testType: "Yates"
     )
   }
@@ -220,7 +219,7 @@ class ChiSquared {
       }
     }
 
-    return new TableTotals(rowTotals, colTotals, grandTotal)
+    new TableTotals(rowTotals, colTotals, grandTotal)
   }
 
   private static class TableTotals {
@@ -240,13 +239,13 @@ class ChiSquared {
    */
   static class ChiSquaredResult {
     /** The chi-squared test statistic (or G statistic for G-test) */
-    Double testStatistic
+    BigDecimal testStatistic
 
     /** Degrees of freedom for the test */
     Integer degreesOfFreedom
 
     /** The p-value of the test */
-    Double pValue
+    BigDecimal pValue
 
     /** The type of test performed */
     String testType
@@ -257,13 +256,13 @@ class ChiSquared {
      * @param alpha Significance level (default 0.05)
      * @return true if null hypothesis should be rejected (p-value < alpha)
      */
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
 
     @Override
     String toString() {
-      return """Chi-Squared Test Result (${testType}):
+      """Chi-Squared Test Result (${testType}):
   test statistic: ${testStatistic}
   degrees of freedom: ${degreesOfFreedom}
   p-value: ${pValue}"""

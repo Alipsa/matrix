@@ -81,4 +81,40 @@ class KMeansPlusPlusTest {
     assert clustering.getCentroids().length <= (int)Math.max(2, Math.sqrt(data.length / 2.0d))
     assert clustering.getCentroids().length >= Math.max(2, (int) Math.round(Math.cbrt(data.length)))
   }
+
+  @Test
+  void testGroovyFacingBuilderAndValueAccessors() {
+    List<List<BigDecimal>> points = gaussianClusters(25, 0.05).collectNested { Double value ->
+      BigDecimal.valueOf(value)
+    } as List<List<BigDecimal>>
+
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(4, points)
+        .iterations(10)
+        .pp(true)
+        .randomSeed(RANDOM_SEED)
+        .build()
+
+    assertEquals(points.size(), clustering.assignments.size())
+    assertEquals(4, clustering.centroidValues.size())
+    assertEquals(2, clustering.centroidValues[0].size())
+    assertEquals(2, clustering.assignments[0].pointValues.size())
+    assertTrue(clustering.wcssValue > 0)
+    assertTrue(clustering.executionTimeValue >= 0)
+  }
+
+  @Test
+  void testBuilderAcceptsNumberEpsilon() {
+    List<List<BigDecimal>> points = gaussianClusters(20, 0.05).collectNested { Double value ->
+      BigDecimal.valueOf(value)
+    } as List<List<BigDecimal>>
+
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(4, points)
+        .iterations(5)
+        .epsilon(0.003G)
+        .useEpsilon(true)
+        .randomSeed(RANDOM_SEED)
+        .build()
+
+    assertEquals(points.size(), clustering.assignments.size())
+  }
 }

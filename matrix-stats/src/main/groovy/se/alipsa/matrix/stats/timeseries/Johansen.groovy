@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.linear.MatrixAlgebra
 import se.alipsa.matrix.stats.linear.SingularMatrixException
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Johansen cointegration test, named after Søren Johansen, is a procedure for testing cointegration
@@ -83,13 +84,48 @@ class Johansen {
    * @param type Type of deterministic component ('none', 'const', 'trend')
    * @return JohansenResult containing test statistics and eigenvalues
    */
-  static JohansenResult test(List<double[]> data, int lags = 1, String type = 'const') {
-    validateInputs(data, lags, type)
+  /** @deprecated Use {@link #testArrays} or {@link #testSeries} instead. */
+  @Deprecated
+  static JohansenResult test(List<?> data, int lags = 1, String type = 'const') {
+    NumericConversion.<JohansenResult> dispatchPrimitiveOrList(
+      data,
+      { List<?> d -> testArrays(d as List<double[]>, lags, type) },
+      { List<?> d -> testSeries(d as Collection<? extends List<? extends Number>>, lags, type) },
+      'series'
+    )
+  }
 
-    int k = data.size()
-    int n = data[0].length
-    DifferencedData differencedData = createDifferencedData(data, lags, n, k)
-    ResidualMatrices residualMatrices = createResidualMatrices(data, lags, type, k, differencedData)
+  /**
+   * Performs the Johansen cointegration test from primitive series arrays.
+   *
+   * @param data list of time series, each series represented as {@code double[]}
+   * @param lags Number of lags in the VAR model
+   * @param type Type of deterministic component ('none', 'const', 'trend')
+   * @return JohansenResult containing test statistics and eigenvalues
+   */
+  static JohansenResult testArrays(List<double[]> data, int lags = 1, String type = 'const') {
+    runTest(copyPrimitiveInputs(data), lags, type)
+  }
+
+  /**
+   * Performs the Johansen cointegration test from idiomatic Groovy numeric lists.
+   *
+   * @param data collection of time series, each series represented as numeric list values
+   * @param lags Number of lags in the VAR model
+   * @param type Type of deterministic component ('none', 'const', 'trend')
+   * @return JohansenResult containing test statistics and eigenvalues
+   */
+  static JohansenResult testSeries(Collection<? extends List<? extends Number>> data, int lags = 1, String type = 'const') {
+    runTest(normalizeListInputs(data), lags, type)
+  }
+
+  private static JohansenResult runTest(List<double[]> numericData, int lags, String type) {
+    validateInputs(numericData, lags, type)
+
+    int k = numericData.size()
+    int n = numericData[0].length
+    DifferencedData differencedData = createDifferencedData(numericData, lags, n, k)
+    ResidualMatrices residualMatrices = createResidualMatrices(numericData, lags, type, k, differencedData)
     MomentMatrices momentMatrices = computeMomentMatrices(residualMatrices, differencedData.effectiveN)
     double[] sortedEigenvalues = solveEigenvalues(momentMatrices)
     double[] traceStats = computeTraceStatistics(sortedEigenvalues, k, differencedData.effectiveN)
@@ -98,15 +134,43 @@ class Johansen {
     // These are approximate values for comparison
     double[][] criticalValues = getCriticalValues(type)
 
-    return new JohansenResult(
-      eigenvalues: sortedEigenvalues,
-      traceStatistics: traceStats,
-      criticalValues5pct: criticalValues,
+    new JohansenResult(
+      eigenvalues: NumericConversion.toBigDecimalList(sortedEigenvalues, 'eigenvalues'),
+      traceStatistics: NumericConversion.toBigDecimalList(traceStats, 'traceStatistics'),
+      criticalValues5pct: NumericConversion.toBigDecimalRows(criticalValues, 'criticalValues5pct'),
       sampleSize: differencedData.effectiveN,
       numVariables: k,
       lags: lags,
       type: type
     )
+  }
+
+  private static List<double[]> copyPrimitiveInputs(List<double[]> data) {
+    if (data == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    for (int i = 0; i < data.size(); i++) {
+      double[] series = data[i]
+      if (series == null) {
+        throw new IllegalArgumentException("Series at index ${i} cannot be null")
+      }
+      normalized << (series.clone() as double[])
+    }
+    normalized
+  }
+
+  private static List<double[]> normalizeListInputs(Collection<? extends List<? extends Number>> data) {
+    if (data == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    int index = 0
+    for (List<? extends Number> row : data) {
+      normalized << NumericConversion.toDoubleArray(row, "data series ${index}")
+      index++
+    }
+    normalized
   }
 
   private static void validateInputs(List<double[]> data, int lags, String type) {
@@ -144,7 +208,7 @@ class Johansen {
       }
     }
 
-    return new DifferencedData(deltaY: deltaY, laggedY: laggedY, effectiveN: effectiveN)
+    new DifferencedData(deltaY: deltaY, laggedY: laggedY, effectiveN: effectiveN)
   }
 
   private static ResidualMatrices createResidualMatrices(List<double[]> data, int lags, String type, int k,
@@ -158,11 +222,11 @@ class Johansen {
     }
 
     double[][] designMatrix = buildShortRunDesignMatrix(data, lags, type, k, differencedData.effectiveN, numRegressors)
-    return projectResiduals(designMatrix, differencedData.deltaY, differencedData.laggedY)
+    projectResiduals(designMatrix, differencedData.deltaY, differencedData.laggedY)
   }
 
   private static int countRegressors(int lags, String type, int k) {
-    return (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
+    (lags > 1 ? k * (lags - 1) : 0) + (type == 'const' ? 1 : 0) + (type == 'trend' ? 1 : 0)
   }
 
   private static double[][] buildShortRunDesignMatrix(List<double[]> data, int lags, String type, int k,
@@ -186,7 +250,7 @@ class Johansen {
         z[t][col++] = t + 1
       }
     }
-    return z
+    z
   }
 
   private static ResidualMatrices projectResiduals(double[][] designMatrix, double[][] deltaY, double[][] laggedY) {
@@ -202,7 +266,7 @@ class Johansen {
         MatrixAlgebra.multiply(designMatrix, ztZInv),
         MatrixAlgebra.transpose(designMatrix)
     )
-    return new ResidualMatrices(
+    new ResidualMatrices(
       r0: MatrixAlgebra.subtract(deltaY, MatrixAlgebra.multiply(projection, deltaY)),
       r1: MatrixAlgebra.subtract(laggedY, MatrixAlgebra.multiply(projection, laggedY))
     )
@@ -210,7 +274,7 @@ class Johansen {
 
   private static MomentMatrices computeMomentMatrices(ResidualMatrices residualMatrices, int effectiveN) {
     double scale = 1.0d / effectiveN
-    return new MomentMatrices(
+    new MomentMatrices(
       s00: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r0), scale),
       s11: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r1), residualMatrices.r1), scale),
       s01: MatrixAlgebra.scale(MatrixAlgebra.multiply(MatrixAlgebra.transpose(residualMatrices.r0), residualMatrices.r1), scale)
@@ -230,7 +294,7 @@ class Johansen {
         MatrixAlgebra.transpose(s11CholeskyInv)
     )
 
-    return sortDescending(MatrixAlgebra.symmetricEigenvalues(symmetricProduct).collect { double eigenvalue ->
+    sortDescending(MatrixAlgebra.symmetricEigenvalues(symmetricProduct).collect { double eigenvalue ->
       Math.max(0.0d, Math.min(1.0d - 1e-12d, eigenvalue))
     } as double[])
   }
@@ -241,7 +305,7 @@ class Johansen {
     for (int i = 0; i < eigenvalues.length; i++) {
       sortedEigenvalues[i] = eigenvalues[eigenvalues.length - 1 - i]
     }
-    return sortedEigenvalues
+    sortedEigenvalues
   }
 
   private static double[] computeTraceStatistics(double[] sortedEigenvalues, int k, int effectiveN) {
@@ -253,7 +317,7 @@ class Johansen {
       }
       traceStats[r] = -effectiveN * sum
     }
-    return traceStats
+    traceStats
   }
 
   /**
@@ -297,13 +361,13 @@ class Johansen {
    */
   static class JohansenResult {
     /** Eigenvalues (sorted in descending order) */
-    double[] eigenvalues
+    List<BigDecimal> eigenvalues
 
     /** Trace statistics for different cointegration ranks */
-    double[] traceStatistics
+    List<BigDecimal> traceStatistics
 
     /** Critical values at 5% significance level [r][k-1] */
-    double[][] criticalValues5pct
+    List<List<BigDecimal>> criticalValues5pct
 
     /** Effective sample size */
     int sampleSize
@@ -328,8 +392,13 @@ class Johansen {
 
       int cointRank = 0
       for (int r = 0; r < numVariables; r++) {
-        double critVal = r < criticalValues5pct.length && numVariables - 1 < criticalValues5pct[r].length ?
-                         criticalValues5pct[r][numVariables - 1] : Double.NaN
+        BigDecimal critVal = r < criticalValues5pct.size() && numVariables - 1 < criticalValues5pct[r].size() ?
+                             criticalValues5pct[r][numVariables - 1] : null
+
+        if (critVal == null) {
+          sb.append("H0: r = ${r} — no critical value available\n")
+          break
+        }
 
         if (traceStatistics[r] > critVal) {
           cointRank = r + 1
@@ -341,12 +410,30 @@ class Johansen {
       }
 
       sb.append("\nConclusion: Evidence suggests ${cointRank} cointegrating relationship(s)")
-      return sb.toString()
+      sb.toString()
+    }
+
+    /** @deprecated Use the {@code eigenvalues} property directly. */
+    @Deprecated
+    List<BigDecimal> getEigenvalueValues() {
+      eigenvalues
+    }
+
+    /** @deprecated Use the {@code traceStatistics} property directly. */
+    @Deprecated
+    List<BigDecimal> getTraceStatisticValues() {
+      traceStatistics
+    }
+
+    /** @deprecated Use the {@code criticalValues5pct} property directly. */
+    @Deprecated
+    List<List<BigDecimal>> getCriticalValueRows5pct() {
+      criticalValues5pct
     }
 
     @Override
     String toString() {
-      return """Johansen Cointegration Test
+      """Johansen Cointegration Test
   Number of variables: ${numVariables}
   Sample size: ${sampleSize}
   Lags: ${lags}

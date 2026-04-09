@@ -158,7 +158,7 @@ class DecisionTree {
      * @return true if this is a leaf node (no children)
      */
     boolean isLeaf() {
-      return left == null && right == null
+      left == null && right == null
     }
   }
 
@@ -358,7 +358,7 @@ class DecisionTree {
     node.left = buildTree(leftX, leftY, currentDepth + 1)
     node.right = buildTree(rightX, rightY, currentDepth + 1)
 
-    return node
+    node
   }
 
   /**
@@ -368,7 +368,7 @@ class DecisionTree {
     this.leafCount++
     Node leaf = new Node()
     leaf.value = Stat.mean(yData)
-    return leaf
+    leaf
   }
 
   /**
@@ -428,7 +428,7 @@ class DecisionTree {
       }
     }
 
-    return bestGain > 0 ? bestThreshold : null
+    bestGain > 0 ? bestThreshold : null
   }
 
   /**
@@ -440,7 +440,7 @@ class DecisionTree {
     }
     BigDecimal mean = Stat.mean(values)
     BigDecimal sumSquaredDiff = values.collect { (it - mean) ** 2 }.sum() as BigDecimal
-    return sumSquaredDiff / values.size()
+    sumSquaredDiff / values.size()
   }
 
   /**
@@ -487,7 +487,7 @@ class DecisionTree {
         current = current.right
       }
     }
-    return current.value
+    current.value
   }
 
   /**
@@ -497,7 +497,7 @@ class DecisionTree {
    * @return Predicted value
    */
   BigDecimal predict(Number x) {
-    return predictInternal(x as BigDecimal)
+    predictInternal(x as BigDecimal)
   }
 
   /**
@@ -508,7 +508,7 @@ class DecisionTree {
    * @return Predicted value rounded to specified decimals
    */
   BigDecimal predict(Number x, int numberOfDecimals) {
-    return predict(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    predict(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -518,7 +518,7 @@ class DecisionTree {
    * @return List of predicted values
    */
   List<BigDecimal> predict(List<? extends Number> xValues) {
-    return xValues.collect { predict(it) }
+    xValues.collect { predict(it) }
   }
 
   /**
@@ -529,7 +529,7 @@ class DecisionTree {
    * @return List of predicted values rounded to specified decimals
    */
   List<BigDecimal> predict(List<? extends Number> xValues, int numberOfDecimals) {
-    return xValues.collect { predict(it, numberOfDecimals) }
+    xValues.collect { predict(it, numberOfDecimals) }
   }
 
   /**
@@ -538,7 +538,7 @@ class DecisionTree {
    * @return R² value (between 0 and 1)
    */
   BigDecimal getRSquared() {
-    return trainingR2
+    trainingR2
   }
 
   /**
@@ -548,7 +548,7 @@ class DecisionTree {
    * @return R² value rounded to specified decimals
    */
   BigDecimal getRSquared(int numberOfDecimals) {
-    return getRSquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getRSquared().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -557,7 +557,7 @@ class DecisionTree {
    * @return MSE value
    */
   BigDecimal getMse() {
-    return trainingMse
+    trainingMse
   }
 
   /**
@@ -567,7 +567,7 @@ class DecisionTree {
    * @return MSE value rounded to specified decimals
    */
   BigDecimal getMse(int numberOfDecimals) {
-    return getMse().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getMse().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -576,7 +576,7 @@ class DecisionTree {
    * @return RMSE value
    */
   BigDecimal getRmse() {
-    return trainingRmse
+    trainingRmse
   }
 
   /**
@@ -586,7 +586,7 @@ class DecisionTree {
    * @return RMSE value rounded to specified decimals
    */
   BigDecimal getRmse(int numberOfDecimals) {
-    return getRmse().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getRmse().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -595,7 +595,7 @@ class DecisionTree {
    * @return MAE value
    */
   BigDecimal getMae() {
-    return trainingMae
+    trainingMae
   }
 
   /**
@@ -605,7 +605,7 @@ class DecisionTree {
    * @return MAE value rounded to specified decimals
    */
   BigDecimal getMae(int numberOfDecimals) {
-    return getMae().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    getMae().setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -614,7 +614,7 @@ class DecisionTree {
    * @return Tree depth
    */
   int getDepth() {
-    return depth
+    depth
   }
 
   /**
@@ -623,7 +623,7 @@ class DecisionTree {
    * @return Number of leaf nodes
    */
   int getLeafCount() {
-    return leafCount
+    leafCount
   }
 
   /**
@@ -632,7 +632,7 @@ class DecisionTree {
    * @return Maximum depth setting
    */
   int getMaxDepth() {
-    return maxDepth
+    maxDepth
   }
 
   /**
@@ -641,7 +641,7 @@ class DecisionTree {
    * @return Minimum samples per leaf setting
    */
   int getMinSamplesLeaf() {
-    return minSamplesLeaf
+    minSamplesLeaf
   }
 
   /**
@@ -651,7 +651,7 @@ class DecisionTree {
    */
   @Override
   String toString() {
-    return "DecisionTree[depth=${depth}, leaves=${leafCount}, R²=${getRSquared(3)}]"
+    "DecisionTree[depth=${depth}, leaves=${leafCount}, R²=${getRSquared(3)}]"
   }
 
   /**
@@ -676,7 +676,7 @@ class DecisionTree {
     sb.append("  MAE:  ${getMae(4)}\n\n")
     sb.append("Tree Rules:\n")
     appendTreeRules(sb, root, "  ", "root")
-    return sb.toString()
+    sb.toString()
   }
 
   /**

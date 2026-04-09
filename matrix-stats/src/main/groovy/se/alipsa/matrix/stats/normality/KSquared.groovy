@@ -175,7 +175,7 @@ class KSquared {
     ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
     double pValue = 1.0 - chiSq.cumulativeProbability(kSquared)
 
-    return new KSquaredResult(
+    new KSquaredResult(
       statistic: BigDecimal.valueOf(kSquared),
       pValue: BigDecimal.valueOf(pValue),
       skewness: BigDecimal.valueOf(b1),
@@ -285,7 +285,7 @@ class KSquared {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = pValue < alphaValue ? "significant departure from normality" : "consistent with normality"
 
-      return String.format(
+      String.format(
         "D'Agostino's K² test:\\n" +
         "K² statistic: %.4f\\n" +
         "p-value: %.4f\\n" +
@@ -300,7 +300,7 @@ class KSquared {
 
     @Override
     String toString() {
-      return """D'Agostino's K² Test
+      """D'Agostino's K² Test
   Sample size: ${sampleSize}
   K² statistic: ${String.format('%.4f', statistic)}
   p-value: ${String.format('%.4f', pValue)}

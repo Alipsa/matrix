@@ -112,7 +112,7 @@ enum Kernel {
 
     @Override
     double evaluateValue(double u) {
-      return Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI)
+      Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI)
     }
 
   },
@@ -129,7 +129,7 @@ enum Kernel {
       if (Math.abs(u) > 1) {
         return 0.0
       }
-      return 0.75 * (1.0 - u * u)
+      0.75 * (1.0 - u * u)
     }
 
   },
@@ -145,7 +145,7 @@ enum Kernel {
       if (Math.abs(u) > 1) {
         return 0.0
       }
-      return 0.5
+      0.5
     }
 
   },
@@ -162,7 +162,7 @@ enum Kernel {
       if (absU > 1) {
         return 0.0
       }
-      return 1.0 - absU
+      1.0 - absU
     }
 
   }

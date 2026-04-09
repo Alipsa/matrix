@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.cluster
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * GroupEstimator determines the optimal number of clusters (k) for K-Means clustering
  * using heuristic and analytical methods. Choosing the right k is critical for meaningful
@@ -155,6 +157,16 @@ class GroupEstimator {
     }
   }
 
+  /**
+   * Estimates the number of groups from Groovy-facing point rows.
+   *
+   * @param points the numeric point rows
+   * @return the estimated number of groups
+   */
+  int estimateNumberOfGroups(List<? extends List<? extends Number>> points) {
+    estimateNumberOfGroups(NumericConversion.toDoubleMatrix(points, 'points'))
+  }
+
   static int estimateKByElbow(double[][] points, int maxK = 10, int iterations = 10) {
     Set<String> uniquePoints = points.collect { it.toList().toString() }.toSet()
     int maxClusters = Math.min(maxK, uniquePoints.size())
@@ -175,7 +187,19 @@ class GroupEstimator {
       wcssList << clustering.getWCSS()
     }
 
-    return findElbow(ks, wcssList)
+    findElbow(ks, wcssList)
+  }
+
+  /**
+   * Estimates {@code k} from Groovy-facing point rows using the elbow method.
+   *
+   * @param points the numeric point rows
+   * @param maxK maximum number of clusters to test
+   * @param iterations number of KMeans runs per candidate {@code k}
+   * @return the estimated number of groups
+   */
+  static int estimateKByElbow(List<? extends List<? extends Number>> points, int maxK = 10, int iterations = 10) {
+    estimateKByElbow(NumericConversion.toDoubleMatrix(points, 'points'), maxK, iterations)
   }
 
   private static int ruleOfThumb(double[][] points) {
@@ -185,7 +209,7 @@ class GroupEstimator {
     int estimatedSqrt = (int) Math.round(Math.sqrt(n / 2.0d))
     // More conservative heuristic: cbrt(n), tends to underestimate
     int estimatedQbrt = Math.max(2, (int) Math.round(Math.cbrt(points.length)))
-    return ((estimatedSqrt + estimatedQbrt) / 2) as int
+    ((estimatedSqrt + estimatedQbrt) / 2) as int
   }
 
   /**
@@ -216,6 +240,6 @@ class GroupEstimator {
       }
     }
 
-    return bestK
+    bestK
   }
 }

@@ -86,4 +86,15 @@ class ChiSquaredDistributionTest {
     assertEquals(0.0d, distribution.inverseCumulativeProbability(0.0d), TOLERANCE)
     assertTrue(Double.isInfinite(distribution.inverseCumulativeProbability(1.0d)))
   }
+
+  @Test
+  void testIdiomaticNumberOverloadsReturnBigDecimal() {
+    ChiSquaredDistribution distribution = new ChiSquaredDistribution(2)
+
+    BigDecimal cdf = distribution.cumulativeProbability(5.99)
+    BigDecimal quantile = distribution.inverseCumulativeProbability(0.95)
+
+    assertEquals(0.95d, cdf as double, 1e-2)
+    assertEquals(5.99d, quantile as double, 1e-1)
+  }
 }

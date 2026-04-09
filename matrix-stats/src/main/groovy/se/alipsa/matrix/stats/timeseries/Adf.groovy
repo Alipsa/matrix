@@ -99,14 +99,14 @@ class Adf {
       double criticalValue = getCriticalValue(type, nObs)
 
       return new AdfResult(
-        statistic: tStatistic,
+        statistic: BigDecimal.valueOf(tStatistic),
         lag: lags,
         type: type,
         sampleSize: n,
         effectiveSize: nObs,
-        gammaCoefficient: gammaCoef,
-        gammaStandardError: gammaSE,
-        criticalValue: criticalValue
+        gammaCoefficient: BigDecimal.valueOf(gammaCoef),
+        gammaStandardError: BigDecimal.valueOf(gammaSE),
+        criticalValue: BigDecimal.valueOf(criticalValue)
       )
     } catch (Exception e) {
       throw new IllegalStateException(
@@ -165,7 +165,7 @@ class Adf {
       }
     }
 
-    return X
+    X
   }
 
   /**
@@ -246,7 +246,7 @@ class Adf {
    */
   static class AdfResult {
     /** The ADF test statistic (t-statistic for γ coefficient) */
-    double statistic
+    BigDecimal statistic
 
     /** The number of lags used */
     int lag
@@ -261,13 +261,13 @@ class Adf {
     int effectiveSize
 
     /** The estimated γ coefficient on y_{t-1} */
-    double gammaCoefficient
+    BigDecimal gammaCoefficient
 
     /** The standard error of the γ coefficient */
-    double gammaStandardError
+    BigDecimal gammaStandardError
 
     /** The approximate 5% critical value */
-    double criticalValue
+    BigDecimal criticalValue
 
     /**
      * Interprets the ADF test result.
@@ -292,13 +292,13 @@ class Adf {
         "stationary (no unit root)" :
         "non-stationary (unit root present)"
 
-      return String.format("ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s",
+      String.format("ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s",
                            statistic, criticalValue, gammaCoefficient, gammaStandardError, conclusion)
     }
 
     @Override
     String toString() {
-      return """Augmented Dickey-Fuller Test
+      """Augmented Dickey-Fuller Test
   Type: ${type}
   Lags: ${lag}
   Sample size: ${sampleSize} (effective: ${effectiveSize})

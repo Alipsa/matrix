@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.solver
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Objective function for multivariate derivative-free optimization.
  *
@@ -15,4 +17,14 @@ interface MultivariateObjective {
    * @return objective value
    */
   double value(double[] point)
+
+  /**
+   * Evaluates the objective at the supplied point using a Groovy-facing numeric vector.
+   *
+   * @param point current parameter vector
+   * @return objective value
+   */
+  default double value(List<? extends Number> point) {
+    value(NumericConversion.toDoubleArray(point, 'point'))
+  }
 }

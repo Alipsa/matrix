@@ -74,7 +74,7 @@ class RegressionUtils {
     for (int i = 0; i < size; i++) {
       leverage += v[i] * tmp[i]
     }
-    return leverage
+    leverage
   }
 
   static BigDecimal polynomialLeverage(BigDecimal[][] xtxInv, BigDecimal x, int degree) {
@@ -101,6 +101,6 @@ class RegressionUtils {
     for (int i = 0; i < size; i++) {
       leverage += v[i] * tmp[i]
     }
-    return leverage
+    leverage
   }
 }

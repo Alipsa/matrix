@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Convergent Cross Mapping (CCM) is a statistical test for detecting causal relationships between variables
  * in dynamical systems. Unlike Granger causality which assumes separable influences, CCM is designed for
@@ -130,13 +132,50 @@ class Ccm {
       ymapX[i] = crossMap(x, y, E, tau, L)
     }
 
-    return new CcmResult(
-      xmapY: xmapY,
-      ymapX: ymapX,
-      librarySizes: librarySizes.toArray(new Integer[0]),
+    new CcmResult(
+      xmapY: toCorrelationValues(xmapY),
+      ymapX: toCorrelationValues(ymapX),
+      librarySizes: librarySizes.asImmutable() as List<Integer>,
       embeddingDim: E,
       timeLag: tau,
       seriesLength: n
+    )
+  }
+
+  private static List<BigDecimal> toCorrelationValues(double[] values) {
+    List<BigDecimal> converted = []
+    for (double value : values) {
+      converted << (Double.isFinite(value) ? BigDecimal.valueOf(value) : null)
+    }
+    converted.asImmutable() as List<BigDecimal>
+  }
+
+  /**
+   * Performs convergent cross mapping test from Groovy-facing numeric inputs.
+   *
+   * @param x first time series
+   * @param y second time series
+   * @param E embedding dimension
+   * @param tau time delay
+   * @param librarySizes library sizes to test for convergence
+   * @return CCM result
+   */
+  static CcmResult test(
+      List<? extends Number> x,
+      List<? extends Number> y,
+      int E = 3,
+      int tau = 1,
+      List<? extends Number> librarySizes = null
+  ) {
+    List<Integer> normalizedLibrarySizes = librarySizes?.collect { Number value ->
+      NumericConversion.toExactInt(value, 'library size')
+    }
+    test(
+      NumericConversion.toDoubleArray(x, 'x'),
+      NumericConversion.toDoubleArray(y, 'y'),
+      E,
+      tau,
+      normalizedLibrarySizes
     )
   }
 
@@ -185,7 +224,7 @@ class Ccm {
     }
 
     // Compute Pearson correlation between predictions and actuals
-    return pearsonCorrelation(predictions as double[], actuals as double[])
+    pearsonCorrelation(predictions as double[], actuals as double[])
   }
 
   /**
@@ -207,7 +246,7 @@ class Ccm {
 
     // Sort by distance and take k nearest
     neighbors.sort { it.distance }
-    return neighbors.take(Math.min(k, neighbors.size()))
+    neighbors.take(Math.min(k, neighbors.size()))
   }
 
   /**
@@ -237,7 +276,7 @@ class Ccm {
       prediction += w * targetVal
     }
 
-    return prediction
+    prediction
   }
 
   /**
@@ -249,7 +288,7 @@ class Ccm {
       double diff = a[i] - b[i]
       sum += diff * diff
     }
-    return Math.sqrt(sum)
+    Math.sqrt(sum)
   }
 
   /**
@@ -265,7 +304,7 @@ class Ccm {
     while (selected.size() < n) {
       selected.add(rnd.nextInt(max))
     }
-    return selected.toList()
+    selected.toList()
   }
 
   /**
@@ -295,7 +334,7 @@ class Ccm {
       return 0.0
     }
 
-    return numerator / denominator
+    numerator / denominator
   }
 
   /**
@@ -318,7 +357,7 @@ class Ccm {
       sizes.add(maxLib)
     }
 
-    return sizes
+    sizes
   }
 
   /**
@@ -333,14 +372,14 @@ class Ccm {
    * Result class for CCM test.
    */
   static class CcmResult {
-    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X) */
-    double[] xmapY
+    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X). Null entries indicate non-finite values. */
+    List<BigDecimal> xmapY
 
-    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y) */
-    double[] ymapX
+    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y). Null entries indicate non-finite values. */
+    List<BigDecimal> ymapX
 
     /** Library sizes used for testing */
-    Integer[] librarySizes
+    List<Integer> librarySizes
 
     /** Embedding dimension */
     int embeddingDim
@@ -357,12 +396,17 @@ class Ccm {
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests X causes Y
      */
-    boolean xCausesY(double threshold = 0.3) {
-      if (ymapX.length < 2) {
+    boolean xCausesY(Number threshold = 0.3) {
+      BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
+      if (ymapX.size() < 2) {
         return false
       }
-      // Check if correlation is positive and increasing
-      return ymapX[-1] > threshold && ymapX[-1] > ymapX[0]
+      BigDecimal last = ymapX[-1]
+      BigDecimal first = ymapX[0]
+      if (last == null || first == null) {
+        return false
+      }
+      last > thresholdValue && last > first
     }
 
     /**
@@ -371,12 +415,38 @@ class Ccm {
      * @param threshold Minimum correlation for last library size
      * @return true if evidence suggests Y causes X
      */
-    boolean yCausesX(double threshold = 0.3) {
-      if (xmapY.length < 2) {
+    boolean yCausesX(Number threshold = 0.3) {
+      BigDecimal thresholdValue = NumericConversion.toUnitInterval(threshold, 'threshold')
+      if (xmapY.size() < 2) {
         return false
       }
-      // Check if correlation is positive and increasing
-      return xmapY[-1] > threshold && xmapY[-1] > xmapY[0]
+      BigDecimal last = xmapY[-1]
+      BigDecimal first = xmapY[0]
+      if (last == null || first == null) {
+        return false
+      }
+      last > thresholdValue && last > first
+    }
+
+    /**
+     * Alias for {@link #getXmapY()} kept to match the `*Values` naming pattern used by other result objects.
+     */
+    List<BigDecimal> getXmapYValues() {
+      xmapY
+    }
+
+    /**
+     * Alias for {@link #getYmapX()} kept to match the `*Values` naming pattern used by other result objects.
+     */
+    List<BigDecimal> getYmapXValues() {
+      ymapX
+    }
+
+    /**
+     * Alias for {@link #getLibrarySizes()} kept to match the `*Values` naming pattern used by other result objects.
+     */
+    List<Integer> getLibrarySizeValues() {
+      librarySizes
     }
 
     /**
@@ -398,9 +468,10 @@ class Ccm {
       sb.append(String.format("%-15s %-20s %-20s\n", "Library Size", "X|M(Y) (Y→X)", "Y|M(X) (X→Y)"))
       sb.append("-" * 60).append("\n")
 
-      for (int i = 0; i < librarySizes.length; i++) {
-        sb.append(String.format("%-15d %-20.4f %-20.4f\n",
-                                librarySizes[i], xmapY[i], ymapX[i]))
+      for (int i = 0; i < librarySizes.size(); i++) {
+        String xVal = xmapY[i] != null ? String.format('%.4f', xmapY[i]) : 'NaN'
+        String yVal = ymapX[i] != null ? String.format('%.4f', ymapX[i]) : 'NaN'
+        sb.append(String.format("%-15d %-20s %-20s\n", librarySizes[i], xVal, yVal))
       }
 
       sb.append("\n")
@@ -423,12 +494,12 @@ class Ccm {
       sb.append("\nNote: CCM detects causality via state space reconstruction.\n")
       sb.append("Positive, increasing cross-map skill indicates causal influence.\n")
 
-      return sb.toString()
+      sb.toString()
     }
 
     @Override
     String toString() {
-      return interpret()
+      interpret()
     }
   }
 }

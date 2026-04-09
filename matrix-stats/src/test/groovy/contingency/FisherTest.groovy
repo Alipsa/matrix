@@ -179,6 +179,7 @@ class FisherTest {
     def table1 = [[18, 2], [4, 16]]
     def result1 = Fisher.test(table1)
     assertTrue(result1.evaluate(0.05), "Should reject null at 5% level")
+    assertTrue(result1.evaluate(0.05G), "Should reject null at 5% level with BigDecimal alpha")
     assertTrue(result1.evaluate(), "Should reject null with default alpha")
 
     // Non-significant result
@@ -193,10 +194,10 @@ class FisherTest {
     def result = Fisher.test(table)
 
     assertNotNull(result.confidenceInterval)
-    assertEquals(2, result.confidenceInterval.length)
+    assertEquals(2, result.confidenceInterval.size())
 
-    double lower = result.confidenceInterval[0]
-    double upper = result.confidenceInterval[1]
+    BigDecimal lower = result.confidenceInterval[0]
+    BigDecimal upper = result.confidenceInterval[1]
 
     // Lower bound should be less than odds ratio
     assertTrue(lower < result.oddsRatio, "Lower CI bound should be < odds ratio")

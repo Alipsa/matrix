@@ -115,8 +115,6 @@ class CochranMantelHaenszelTest {
 
   @Test
   void testValidation() {
-    int[][] validStratum = [[12, 8], [6, 14]]
-
     // Null strata list
     assertThrows(IllegalArgumentException) {
       CochranMantelHaenszel.test(null)
@@ -201,7 +199,9 @@ class CochranMantelHaenszelTest {
     def result = CochranMantelHaenszel.test(strata)
 
     String evaluation = result.evaluate()
+    String bigDecimalEvaluation = result.evaluate(0.05G)
     assertNotNull(evaluation, 'Evaluation should not be null')
+    assertEquals(evaluation, bigDecimalEvaluation, 'BigDecimal alpha should produce the same evaluation at the default level')
     assertTrue(evaluation.contains('χ² statistic'), 'Should contain statistic info')
     assertTrue(evaluation.contains('Common odds ratio'), 'Should contain odds ratio')
     assertTrue(evaluation.contains('Conclusion'), 'Should contain conclusion')

@@ -313,7 +313,7 @@ class KernelDensity {
       double u = (point - xi) / this.bandwidthValue
       sum += this.kernel.evaluateValue(u)
     }
-    return sum / (this.data.length * this.bandwidthValue)
+    sum / (this.data.length * this.bandwidthValue)
   }
 
   /**
@@ -397,7 +397,7 @@ class KernelDensity {
    * @return the number of data points
    */
   int getDataCount() {
-    return data.length
+    data.length
   }
 
   /**
@@ -409,7 +409,7 @@ class KernelDensity {
     List<BigDecimal> xList = x
     List<BigDecimal> densityList = density
 
-    return Matrix.builder()
+    Matrix.builder()
         .matrixName('KernelDensity')
         .columns([
             'x': xList,
@@ -436,7 +436,7 @@ class KernelDensity {
 
   @Override
   String toString() {
-    return "KernelDensity(kernel=${kernel}, n=${n}, bandwidth=${getBandwidth(6)})"
+    "KernelDensity(kernel=${kernel}, n=${n}, bandwidth=${getBandwidth(6)})"
   }
 
   /**
@@ -454,7 +454,7 @@ class KernelDensity {
       }
     }
 
-    return """
+    """
 Kernel Density Estimation
 =========================
 Kernel:      ${kernel}

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.formula.ModelFrameResult
 
@@ -16,7 +14,6 @@ import se.alipsa.matrix.stats.formula.ModelFrameResult
  * {@code ModelFrame}, including transformed numeric terms and categorical encodings
  * supplied by the formula pipeline.
  */
-@CompileStatic
 class LmMethod implements FitMethod {
 
   @Override

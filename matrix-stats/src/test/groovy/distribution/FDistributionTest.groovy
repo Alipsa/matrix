@@ -74,6 +74,19 @@ class FDistributionTest {
   }
 
   @Test
+  void testIdiomaticNumberOverloadsReturnBigDecimal() {
+    def dist = new FDistribution(5, 10)
+
+    BigDecimal cdf = dist.cdf(2.5)
+    BigDecimal pValue = dist.pValue(2.5)
+    BigDecimal staticPValue = FDistribution.pValue(4.26, 3, 16)
+
+    assertEquals(0.8979977233557302, cdf as double, TOLERANCE)
+    assertEquals(0.1020022766442698, pValue as double, TOLERANCE)
+    assertEquals(0.021635907788579045, staticPValue as double, TOLERANCE)
+  }
+
+  @Test
   void testOneWayAnovaFValue() {
     // R> group1 <- c(10, 12, 11, 13, 9)
     // R> group2 <- c(14, 15, 13, 16, 14)
@@ -201,5 +214,20 @@ class FDistributionTest {
 
     double pValue = FDistribution.oneWayAnovaPValue([g1, g2, g3, g4])
     assertTrue(pValue < 0.0001, 'p-value should be very small for distinct groups')
+  }
+
+  @Test
+  void testOneWayAnovaIdiomaticListOverloads() {
+    List<List<Integer>> groups = [
+        [10, 12, 11, 13, 9],
+        [14, 15, 13, 16, 14],
+        [8, 9, 7, 10, 8]
+    ]
+
+    BigDecimal fValue = FDistribution.oneWayAnovaFValue(groups)
+    BigDecimal pValue = FDistribution.oneWayAnovaPValue(groups)
+
+    assertEquals(26.63, fValue as double, 0.01)
+    assertEquals(3.867e-5, pValue as double, 1e-6)
   }
 }

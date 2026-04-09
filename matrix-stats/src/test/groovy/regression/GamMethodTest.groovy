@@ -148,4 +148,11 @@ class GamMethodTest {
     assertTrue(ex.message.contains('offsets'))
   }
 
+  @Test
+  void testGamOptionsAcceptNumberLambda() {
+    GamOptions options = new GamOptions(1.5G)
+
+    assertEquals(1.5d, options.lambda, 1e-10d)
+  }
+
 }

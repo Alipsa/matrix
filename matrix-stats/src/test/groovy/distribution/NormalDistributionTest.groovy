@@ -88,4 +88,15 @@ class NormalDistributionTest {
       assertEquals(p, distribution.cumulativeProbability(x), 1e-10, "Round-trip mismatch for p=$p")
     }
   }
+
+  @Test
+  void testIdiomaticNumberOverloadsReturnBigDecimal() {
+    NormalDistribution distribution = new NormalDistribution(2, 1.5)
+
+    BigDecimal cdf = distribution.cumulativeProbability(2)
+    BigDecimal quantile = distribution.inverseCumulativeProbability(0.5)
+
+    assertEquals(0.5d, cdf as double, TOLERANCE)
+    assertEquals(2.0d, quantile as double, TOLERANCE)
+  }
 }

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * A normalized predictor term made up of one or more factors.
  */

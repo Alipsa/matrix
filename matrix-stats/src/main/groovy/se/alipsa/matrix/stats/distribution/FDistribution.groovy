@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * F-distribution (Fisher-Snedecor distribution) implementation.
  * Provides CDF and p-value calculations for ANOVA and variance ratio tests.
@@ -9,8 +11,10 @@ package se.alipsa.matrix.stats.distribution
 @SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution implements ContinuousDistribution {
 
-  private final double dfNumerator
-  private final double dfDenominator
+  private final BigDecimal dfNumerator
+  private final BigDecimal dfDenominator
+  private final double dfNumeratorValue
+  private final double dfDenominatorValue
 
   /**
    * Creates an F-distribution with the specified degrees of freedom.
@@ -18,15 +22,23 @@ class FDistribution implements ContinuousDistribution {
    * @param dfNumerator degrees of freedom for the numerator (between groups)
    * @param dfDenominator degrees of freedom for the denominator (within groups)
    */
-  FDistribution(double dfNumerator, double dfDenominator) {
-    if (dfNumerator <= 0 || dfDenominator <= 0) {
+  FDistribution(Number dfNumerator, Number dfDenominator) {
+    BigDecimal normalizedDfNumerator = NumericConversion.toBigDecimal(dfNumerator, 'dfNumerator')
+    BigDecimal normalizedDfDenominator = NumericConversion.toBigDecimal(dfDenominator, 'dfDenominator')
+    if (normalizedDfNumerator <= 0 || normalizedDfDenominator <= 0) {
       throw new IllegalArgumentException(
           "Degrees of freedom must be positive, got: dfNumerator=$dfNumerator, dfDenominator=$dfDenominator"
       )
     }
-    this.dfNumerator = dfNumerator
-    this.dfDenominator = dfDenominator
+    this.dfNumerator = normalizedDfNumerator
+    this.dfDenominator = normalizedDfDenominator
+    this.dfNumeratorValue = normalizedDfNumerator as double
+    this.dfDenominatorValue = normalizedDfDenominator as double
   }
+
+  BigDecimal getDfNumerator() { dfNumerator }
+
+  BigDecimal getDfDenominator() { dfDenominator }
 
   /**
    * Computes the cumulative distribution function (CDF) of the F-distribution.
@@ -35,7 +47,16 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-value (must be >= 0)
    * @return probability P(F <= f)
    */
+  BigDecimal cdf(Number f) {
+    BigDecimal.valueOf(cdfValue(NumericConversion.toFiniteDouble(f, 'f')))
+  }
+
+  @Deprecated
   double cdf(double f) {
+    cdfValue(f)
+  }
+
+  private double cdfValue(double f) {
     if (f < 0) {
       throw new IllegalArgumentException("f must be non-negative, got: $f")
     }
@@ -46,8 +67,8 @@ class FDistribution implements ContinuousDistribution {
     // F-distribution CDF in terms of incomplete beta function
     // F ~ (dfNum/dfDen) * (B/A) where A,B are chi-squared
     // CDF = I_x(dfNum/2, dfDen/2) where x = (dfNum*f)/(dfNum*f + dfDen)
-    double x = (dfNumerator * f) / (dfNumerator * f + dfDenominator)
-    return SpecialFunctions.regularizedIncompleteBeta(x, dfNumerator / 2.0d, dfDenominator / 2.0d)
+    double x = (dfNumeratorValue * f) / (dfNumeratorValue * f + dfDenominatorValue)
+    SpecialFunctions.regularizedIncompleteBeta(x, dfNumeratorValue / 2.0d, dfDenominatorValue / 2.0d)
   }
 
   /**
@@ -56,8 +77,14 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-value (must be >= 0)
    * @return probability P(F <= f)
    */
-  double cumulativeProbability(double f) {
+  BigDecimal cumulativeProbability(Number f) {
     cdf(f)
+  }
+
+  @Override
+  @Deprecated
+  double cumulativeProbability(double f) {
+    cdfValue(f)
   }
 
   /**
@@ -67,8 +94,13 @@ class FDistribution implements ContinuousDistribution {
    * @param f the F-statistic
    * @return p-value (probability of observing a value at least as extreme)
    */
+  BigDecimal pValue(Number f) {
+    1.0 - cdf(f)
+  }
+
+  @Deprecated
   double pValue(double f) {
-    return 1.0 - cdf(f)
+    1.0d - cdfValue(f)
   }
 
   /**
@@ -79,8 +111,13 @@ class FDistribution implements ContinuousDistribution {
    * @param dfDenominator degrees of freedom for the denominator
    * @return p-value
    */
+  static BigDecimal pValue(Number f, Number dfNumerator, Number dfDenominator) {
+    new FDistribution(dfNumerator, dfDenominator).pValue(f)
+  }
+
+  @Deprecated
   static double pValue(double f, double dfNumerator, double dfDenominator) {
-    return new FDistribution(dfNumerator, dfDenominator).pValue(f)
+    new FDistribution(dfNumerator, dfDenominator).pValue(f) as double
   }
 
   /**
@@ -89,7 +126,38 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the F-statistic
    */
-  static double oneWayAnovaFValue(List<double[]> groups) {
+  /** @deprecated Use {@link #oneWayAnovaFValueArrays} or {@link #oneWayAnovaFValueFromLists} instead. */
+  @Deprecated
+  static BigDecimal oneWayAnovaFValue(List<?> groups) {
+    NumericConversion.<BigDecimal> dispatchPrimitiveOrList(
+      groups,
+      { List<?> g -> oneWayAnovaFValueArrays(g as List<double[]>) },
+      { List<?> g -> oneWayAnovaFValueFromLists(g as Collection<? extends List<? extends Number>>) },
+      'group'
+    )
+  }
+
+  /**
+   * Computes the one-way ANOVA F-statistic from primitive group arrays.
+   *
+   * @param groups list of primitive group arrays
+   * @return the F-statistic
+   */
+  static BigDecimal oneWayAnovaFValueArrays(List<double[]> groups) {
+    BigDecimal.valueOf(oneWayAnovaFValueInternal(copyPrimitiveGroups(groups)))
+  }
+
+  /**
+   * Computes the one-way ANOVA F-statistic from idiomatic Groovy numeric lists.
+   *
+   * @param groups collection of numeric group values
+   * @return the F-statistic
+   */
+  static BigDecimal oneWayAnovaFValueFromLists(Collection<? extends List<? extends Number>> groups) {
+    BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizeListGroups(groups)))
+  }
+
+  private static double oneWayAnovaFValueInternal(List<double[]> groups) {
     int k = groups.size()  // number of groups
     double grandSum = 0.0
     List<Integer> groupSizes = groups.collect { double[] group -> group.length }
@@ -131,7 +199,7 @@ class FDistribution implements ContinuousDistribution {
     double msw = ssw / dfWithin
 
     // F-statistic
-    return msb / msw
+    msb / msw
   }
 
   /**
@@ -140,14 +208,74 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the p-value for the ANOVA test
    */
-  static double oneWayAnovaPValue(List<double[]> groups) {
-    int k = groups.size()
-    int n = groups.sum { double[] group -> group.length } as int
+  /** @deprecated Use {@link #oneWayAnovaPValueArrays} or {@link #oneWayAnovaPValueFromLists} instead. */
+  @Deprecated
+  static BigDecimal oneWayAnovaPValue(List<?> groups) {
+    NumericConversion.<BigDecimal> dispatchPrimitiveOrList(
+      groups,
+      { List<?> g -> oneWayAnovaPValueArrays(g as List<double[]>) },
+      { List<?> g -> oneWayAnovaPValueFromLists(g as Collection<? extends List<? extends Number>>) },
+      'group'
+    )
+  }
 
-    double f = oneWayAnovaFValue(groups)
-    double dfBetween = k - 1
-    double dfWithin = n - k
+  /**
+   * Computes the one-way ANOVA p-value from primitive group arrays.
+   *
+   * @param groups list of primitive group arrays
+   * @return the p-value for the ANOVA test
+   */
+  static BigDecimal oneWayAnovaPValueArrays(List<double[]> groups) {
+    List<double[]> normalizedGroups = copyPrimitiveGroups(groups)
+    int k = normalizedGroups.size()
+    int n = normalizedGroups.sum { double[] group -> group.length } as int
 
-    return pValue(f, dfBetween, dfWithin)
+    BigDecimal f = oneWayAnovaFValueArrays(normalizedGroups)
+    BigDecimal dfBetween = k - 1
+    BigDecimal dfWithin = n - k
+
+    pValue(f, dfBetween, dfWithin)
+  }
+
+  /**
+   * Computes the one-way ANOVA p-value from idiomatic Groovy numeric lists.
+   *
+   * @param groups collection of numeric group values
+   * @return the p-value for the ANOVA test
+   */
+  static BigDecimal oneWayAnovaPValueFromLists(Collection<? extends List<? extends Number>> groups) {
+    List<double[]> normalizedGroups = normalizeListGroups(groups)
+    int k = normalizedGroups.size()
+    int n = normalizedGroups.sum { double[] group -> group.length } as int
+
+    BigDecimal f = BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizedGroups))
+    BigDecimal dfBetween = k - 1
+    BigDecimal dfWithin = n - k
+
+    pValue(f, dfBetween, dfWithin)
+  }
+
+  private static List<double[]> copyPrimitiveGroups(List<double[]> groups) {
+    if (groups == null) {
+      return []
+    }
+    List<double[]> normalized = []
+    for (int i = 0; i < groups.size(); i++) {
+      double[] group = groups[i]
+      if (group == null) {
+        throw new IllegalArgumentException("Group at index ${i} cannot be null")
+      }
+      normalized << (group.clone() as double[])
+    }
+    normalized
+  }
+
+  private static List<double[]> normalizeListGroups(Collection<? extends List<? extends Number>> groups) {
+    if (groups == null) {
+      return []
+    }
+    groups.collect { List<? extends Number> group ->
+      NumericConversion.toDoubleArray(group, 'group')
+    }
   }
 }

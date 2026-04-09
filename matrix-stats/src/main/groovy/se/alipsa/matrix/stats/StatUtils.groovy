@@ -1,7 +1,11 @@
 package se.alipsa.matrix.stats
 
 /**
- * Native statistical utility functions used by the stats module.
+ * Primitive double-precision statistical utilities for internal use by the stats module.
+ *
+ * <p>These methods operate on {@code double[]} and use compensated (Kahan) summation
+ * for numerical stability. For BigDecimal / List-based mean and variance, use
+ * {@link se.alipsa.matrix.core.Stat} instead.</p>
  */
 final class StatUtils {
 
@@ -9,7 +13,7 @@ final class StatUtils {
   }
 
   /**
-   * Computes the arithmetic mean for the supplied values.
+   * Computes the arithmetic mean for the supplied values using compensated summation.
    *
    * @param values the sample values
    * @return the arithmetic mean
@@ -18,7 +22,6 @@ final class StatUtils {
   static double mean(double[] values) {
     validateNotEmpty(values, 'Mean')
 
-    // Use compensated summation to reduce drift when these helpers are reused for larger samples.
     double sum = 0.0d
     double compensation = 0.0d
     for (double value : values) {

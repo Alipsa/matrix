@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * A portmanteau test is a type of statistical hypothesis test in which the null hypothesis is well specified,
@@ -107,14 +108,14 @@ class Portmanteau {
     ChiSquaredDistribution chiSquared = new ChiSquaredDistribution(degreesOfFreedom)
     double pValue = 1.0 - chiSquared.cumulativeProbability(qStatistic)
 
-    return new LjungBoxResult(
-      statistic: qStatistic,
+    new LjungBoxResult(
+      statistic: BigDecimal.valueOf(qStatistic),
       lags: h,
       fitdf: fitdf,
       degreesOfFreedom: degreesOfFreedom,
       sampleSize: n,
-      pValue: pValue,
-      autocorrelations: autocorrelations.toList()
+      pValue: BigDecimal.valueOf(pValue),
+      autocorrelations: NumericConversion.toBigDecimalList(autocorrelations, 'autocorrelations')
     )
   }
 
@@ -147,7 +148,7 @@ class Portmanteau {
    */
   static class LjungBoxResult {
     /** The Ljung-Box Q test statistic */
-    double statistic
+    BigDecimal statistic
 
     /** The number of lags tested */
     int lags
@@ -162,10 +163,10 @@ class Portmanteau {
     int sampleSize
 
     /** The p-value from the chi-squared distribution */
-    double pValue
+    BigDecimal pValue
 
     /** The sample autocorrelations at each lag */
-    List<Double> autocorrelations
+    List<BigDecimal> autocorrelations
 
     /**
      * Interprets the Ljung-Box test result at the 5% significance level.
@@ -173,8 +174,9 @@ class Portmanteau {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether the series appears to be independent
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         return "Reject H0: Series shows significant autocorrelation (p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant autocorrelation detected (p = ${String.format('%.4f', pValue)})"
@@ -186,8 +188,9 @@ class Portmanteau {
      *
      * @return A description of the test result with interpretation
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ?
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ?
         "significant autocorrelation present" :
         "no significant autocorrelation"
 
@@ -197,9 +200,9 @@ class Portmanteau {
       if (fitdf > 0) {
         sb.append(String.format("Model fit df: %d\n", fitdf))
       }
-      sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, alpha * 100))
+      sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, (alphaValue * 100) as double))
 
-      return sb.toString()
+      sb.toString()
     }
 
     /**
@@ -208,11 +211,11 @@ class Portmanteau {
      * @param lag The lag (1-indexed)
      * @return The autocorrelation coefficient
      */
-    double getAutocorrelation(int lag) {
+    BigDecimal getAutocorrelation(int lag) {
       if (lag < 1 || lag > lags) {
         throw new IllegalArgumentException("Lag must be between 1 and ${lags}, got ${lag}")
       }
-      return autocorrelations[lag - 1]
+      autocorrelations[lag - 1]
     }
 
     @Override
@@ -236,7 +239,7 @@ class Portmanteau {
         sb.append("  ... (${lags - 10} more lags)\n")
       }
 
-      return sb.toString()
+      sb.toString()
     }
   }
 }

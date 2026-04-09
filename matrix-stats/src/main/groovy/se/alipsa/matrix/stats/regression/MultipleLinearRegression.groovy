@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.regression
 
-import se.alipsa.matrix.stats.linear.MatrixAlgebra
+import se.alipsa.matrix.stats.util.LeastSquaresKernel
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Ordinary least squares multiple linear regression for a fixed design matrix.
@@ -8,7 +9,9 @@ import se.alipsa.matrix.stats.linear.MatrixAlgebra
  * This implementation solves the normal equations {@code (X'X)^-1 X'y}, which is sufficient for the
  * current low-dimensional stats callers such as {@code Adf}. If this class grows into a broader
  * regression utility for higher-dimensional or more ill-conditioned problems, it should move to a
- * QR- or SVD-based solver rather than relying on the normal equations.
+ * QR- or SVD-based solver rather than relying on the normal equations. The public Groovy-facing
+ * API remains idiomatic, while the dense least-squares kernel now runs in Java for the section-4.6
+ * hotspot decision.
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class MultipleLinearRegression {
@@ -33,22 +36,25 @@ class MultipleLinearRegression {
     observationCount = response.length
     predictorCount = predictors[0].length
 
-    double[][] transpose = MatrixAlgebra.transpose(predictors)
-    double[][] xtx = MatrixAlgebra.multiply(transpose, predictors)
-    double[][] xtxInverse = MatrixAlgebra.inverse(xtx)
-    double[] xty = multiply(transpose, response)
+    LeastSquaresKernel.OlsComputation computation = LeastSquaresKernel.fitMultipleLinearRegression(response, predictors)
+    coefficients = computation.coefficients()
+    standardErrors = computation.standardErrors()
+    residualSumOfSquares = computation.residualSumOfSquares()
+    errorVariance = computation.errorVariance()
+  }
 
-    coefficients = multiply(xtxInverse, xty)
-    residualSumOfSquares = calculateResidualSumOfSquares(response, predictors, coefficients)
-
-    int degreesOfFreedom = observationCount - predictorCount
-    if (degreesOfFreedom <= 0) {
-      throw new IllegalArgumentException(
-        "Ordinary least squares requires more observations (${observationCount}) than predictors (${predictorCount})"
-      )
-    }
-    errorVariance = residualSumOfSquares / degreesOfFreedom
-    standardErrors = calculateStandardErrors(xtxInverse, errorVariance)
+  /**
+   * Fits an ordinary least squares model from idiomatic Groovy-facing inputs.
+   *
+   * @param response the response vector
+   * @param predictors the design matrix rows
+   * @throws IllegalArgumentException if the inputs are invalid or the model is not estimable
+   */
+  MultipleLinearRegression(List<? extends Number> response, List<? extends List<? extends Number>> predictors) {
+    this(
+      NumericConversion.toDoubleArray(response, 'response'),
+      NumericConversion.toDoubleMatrix(predictors, 'predictors')
+    )
   }
 
   /**
@@ -61,12 +67,30 @@ class MultipleLinearRegression {
   }
 
   /**
+   * Returns the fitted regression coefficients as immutable {@code BigDecimal} values.
+   *
+   * @return the coefficient values
+   */
+  List<BigDecimal> getCoefficientValues() {
+    NumericConversion.toBigDecimalList(coefficients, 'coefficients')
+  }
+
+  /**
    * Returns the standard errors for the fitted coefficients.
    *
    * @return a defensive copy of the standard-error vector
    */
   double[] getStandardErrors() {
     standardErrors.clone()
+  }
+
+  /**
+   * Returns the coefficient standard errors as immutable {@code BigDecimal} values.
+   *
+   * @return the standard-error values
+   */
+  List<BigDecimal> getStandardErrorValues() {
+    NumericConversion.toBigDecimalList(standardErrors, 'standardErrors')
   }
 
   /**
@@ -79,12 +103,30 @@ class MultipleLinearRegression {
   }
 
   /**
+   * Returns the residual sum of squares as {@code BigDecimal}.
+   *
+   * @return the residual sum of squares
+   */
+  BigDecimal getResidualSumOfSquaresValue() {
+    BigDecimal.valueOf(residualSumOfSquares)
+  }
+
+  /**
    * Returns the estimated residual variance.
    *
    * @return the residual variance estimate
    */
   double getErrorVariance() {
     errorVariance
+  }
+
+  /**
+   * Returns the residual variance estimate as {@code BigDecimal}.
+   *
+   * @return the residual variance estimate
+   */
+  BigDecimal getErrorVarianceValue() {
+    BigDecimal.valueOf(errorVariance)
   }
 
   /**
@@ -132,39 +174,5 @@ class MultipleLinearRegression {
         throw new IllegalArgumentException("Design matrix rows must all have the same length")
       }
     }
-  }
-
-  private static double[] multiply(double[][] matrix, double[] vector) {
-    double[] result = new double[matrix.length]
-    for (int i = 0; i < matrix.length; i++) {
-      double sum = 0.0d
-      for (int j = 0; j < vector.length; j++) {
-        sum += matrix[i][j] * vector[j]
-      }
-      result[i] = sum
-    }
-    result
-  }
-
-  private static double calculateResidualSumOfSquares(double[] response, double[][] predictors, double[] beta) {
-    double rss = 0.0d
-    for (int i = 0; i < response.length; i++) {
-      double fitted = 0.0d
-      for (int j = 0; j < beta.length; j++) {
-        fitted += predictors[i][j] * beta[j]
-      }
-      double residual = response[i] - fitted
-      rss += residual * residual
-    }
-    rss
-  }
-
-  private static double[] calculateStandardErrors(double[][] xtxInverse, double variance) {
-    double[] result = new double[xtxInverse.length]
-    for (int i = 0; i < xtxInverse.length; i++) {
-      double diagonal = Math.max(0.0d, xtxInverse[i][i])
-      result[i] = Math.sqrt(variance * diagonal)
-    }
-    result
   }
 }

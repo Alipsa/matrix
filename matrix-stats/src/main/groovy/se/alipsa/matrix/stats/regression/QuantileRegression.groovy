@@ -301,7 +301,7 @@ class QuantileRegression {
    * @return Predicted value of the dependent variable
    */
   BigDecimal predict(Number x) {
-    return slope * x + intercept
+    slope * x + intercept
   }
 
   /**
@@ -312,7 +312,7 @@ class QuantileRegression {
    * @return Predicted value rounded to specified decimals
    */
   BigDecimal predict(Number x, int numberOfDecimals) {
-    return predict(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    predict(x).setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -322,7 +322,7 @@ class QuantileRegression {
    * @return List of predicted values
    */
   List<BigDecimal> predict(List<Number> xValues) {
-    return xValues.collect { predict(it) }
+    xValues.collect { predict(it) }
   }
 
   /**
@@ -333,7 +333,7 @@ class QuantileRegression {
    * @return List of predicted values rounded to specified decimals
    */
   List<BigDecimal> predict(List<Number> xValues, int numberOfDecimals) {
-    return xValues.collect { predict(it, numberOfDecimals) }
+    xValues.collect { predict(it, numberOfDecimals) }
   }
 
   /**
@@ -342,7 +342,7 @@ class QuantileRegression {
    * @return The slope
    */
   BigDecimal getSlope() {
-    return slope
+    slope
   }
 
   /**
@@ -355,7 +355,7 @@ class QuantileRegression {
     if (numberOfDecimals < 0) {
       return slope
     }
-    return slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    slope.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -364,7 +364,7 @@ class QuantileRegression {
    * @return The intercept
    */
   BigDecimal getIntercept() {
-    return intercept
+    intercept
   }
 
   /**
@@ -377,7 +377,7 @@ class QuantileRegression {
     if (numberOfDecimals < 0) {
       return intercept
     }
-    return intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
+    intercept.setScale(numberOfDecimals, RoundingMode.HALF_EVEN)
   }
 
   /**
@@ -388,6 +388,6 @@ class QuantileRegression {
   @Override
   String toString() {
     String sign = intercept >= 0 ? '+' : '-'
-    return "${y} = ${getSlope(2)}${x} ${sign} ${getIntercept(2).abs()} (τ=${tau.setScale(2, RoundingMode.HALF_EVEN)})"
+    "${y} = ${getSlope(2)}${x} ${sign} ${getIntercept(2).abs()} (τ=${tau.setScale(2, RoundingMode.HALF_EVEN)})"
   }
 }

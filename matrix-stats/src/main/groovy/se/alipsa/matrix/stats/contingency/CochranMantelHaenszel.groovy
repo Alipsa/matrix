@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.contingency
 
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Cochran-Mantel-Haenszel (CMH) test is a statistical test for assessing the association between
@@ -185,11 +186,11 @@ class CochranMantelHaenszel {
       commonOddsRatio = sumOddsRatioNumerator / sumOddsRatioDenominator
     }
 
-    return new CochranMantelHaenszelResult(
-      statistic: cmhStatistic,
-      pValue: pValue,
+    new CochranMantelHaenszelResult(
+      statistic: BigDecimal.valueOf(cmhStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       strata: k,
-      commonOddsRatio: commonOddsRatio,
+      commonOddsRatio: Double.isNaN(commonOddsRatio) ? null : BigDecimal.valueOf(commonOddsRatio),
       continuityCorrection: continuityCorrection
     )
   }
@@ -239,16 +240,16 @@ class CochranMantelHaenszel {
    */
   static class CochranMantelHaenszelResult {
     /** The CMH test statistic (chi-squared) */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** The number of strata */
     int strata
 
     /** The common odds ratio (Mantel-Haenszel estimator) */
-    double commonOddsRatio
+    BigDecimal commonOddsRatio
 
     /** Whether continuity correction was applied */
     boolean continuityCorrection
@@ -259,8 +260,9 @@ class CochranMantelHaenszel {
      * @param alpha The significance level (default: 0.05)
      * @return A string describing whether there is a significant association
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected across strata (χ² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
         return "Fail to reject H0: No significant association detected across strata (χ² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
@@ -272,14 +274,15 @@ class CochranMantelHaenszel {
      *
      * @return A detailed description of the test result
      */
-    String evaluate(double alpha = 0.05) {
-      String significance = pValue < alpha ? "significant" : "not significant"
-      String oddsRatioStr = Double.isNaN(commonOddsRatio) ?
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
+      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
+      String oddsRatioStr = commonOddsRatio == null ?
         "undefined" :
         String.format("%.4f", commonOddsRatio)
 
       String direction = ""
-      if (!Double.isNaN(commonOddsRatio)) {
+      if (commonOddsRatio != null) {
         if (commonOddsRatio > 1) {
           direction = " (positive association)"
         } else if (commonOddsRatio < 1) {
@@ -289,7 +292,7 @@ class CochranMantelHaenszel {
         }
       }
 
-      return String.format(
+      String.format(
         "Cochran-Mantel-Haenszel test:\n" +
         "χ² statistic: %.4f\n" +
         "p-value: %.4f\n" +
@@ -299,17 +302,17 @@ class CochranMantelHaenszel {
         "Conclusion: Association is %s at %.0f%% significance level",
         statistic, pValue, oddsRatioStr, direction, strata,
         continuityCorrection ? "yes" : "no",
-        significance, alpha * 100
+        significance, normalizedAlpha * 100
       )
     }
 
     @Override
     String toString() {
-      String oddsRatioStr = Double.isNaN(commonOddsRatio) ?
+      String oddsRatioStr = commonOddsRatio == null ?
         "undefined" :
         String.format('%.4f', commonOddsRatio)
 
-      return """Cochran-Mantel-Haenszel Test
+      """Cochran-Mantel-Haenszel Test
   Strata: ${strata}
   χ² statistic: ${String.format('%.4f', statistic)}
   p-value: ${String.format('%.4f', pValue)}

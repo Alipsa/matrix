@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.stats.distribution.NormalDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The Turning Point test is a non-parametric statistical test for randomness (independence) in a time series
@@ -120,12 +121,12 @@ class TurningPoint {
     NormalDistribution normal = new NormalDistribution(0, 1)
     double pValue = 2.0 * (1.0 - normal.cumulativeProbability(Math.abs(zStatistic)))
 
-    return new TurningPointResult(
-      statistic: zStatistic,
-      pValue: pValue,
+    new TurningPointResult(
+      statistic: BigDecimal.valueOf(zStatistic),
+      pValue: BigDecimal.valueOf(pValue),
       turningPoints: turningPoints,
-      expectedTurningPoints: expectedTurningPoints,
-      variance: variance,
+      expectedTurningPoints: BigDecimal.valueOf(expectedTurningPoints),
+      variance: BigDecimal.valueOf(variance),
       peaks: peaks,
       troughs: troughs,
       sampleSize: n,
@@ -138,7 +139,7 @@ class TurningPoint {
    */
   static TurningPointResult test(List<? extends Number> data) {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array)
+    test(array)
   }
 
   /**
@@ -146,19 +147,19 @@ class TurningPoint {
    */
   static class TurningPointResult {
     /** The Z-statistic (standardized test statistic) */
-    double statistic
+    BigDecimal statistic
 
     /** The p-value */
-    double pValue
+    BigDecimal pValue
 
     /** Observed number of turning points */
     int turningPoints
 
     /** Expected number of turning points under H0 */
-    double expectedTurningPoints
+    BigDecimal expectedTurningPoints
 
     /** Variance of turning points under H0 */
-    double variance
+    BigDecimal variance
 
     /** Number of peaks (local maxima) */
     int peaks
@@ -178,8 +179,9 @@ class TurningPoint {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      if (pValue < alpha) {
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      if (pValue < alphaValue) {
         String direction = turningPoints > expectedTurningPoints ? "more" : "fewer"
         return "Reject H0: Data shows ${direction} turning points than expected under randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       } else {
@@ -190,11 +192,12 @@ class TurningPoint {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
-      String conclusion = pValue < alpha ? "data is not random" : "data is consistent with randomness"
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      String conclusion = pValue < alphaValue ? "data is not random" : "data is consistent with randomness"
       String direction = turningPoints > expectedTurningPoints ? "cyclicity" : "trend"
 
-      return String.format(
+      String.format(
         "Turning Point test:\\n" +
         "Sample size: %d\\n" +
         "Turning points observed: %d (peaks: %d, troughs: %d)\\n" +
@@ -207,7 +210,7 @@ class TurningPoint {
         sampleSize, turningPoints, peaks, troughs,
         expectedTurningPoints, variance,
         statistic, pValue,
-        conclusion, alpha * 100,
+        conclusion, (alphaValue * 100) as double,
         turningPoints > expectedTurningPoints ? "More" : "Fewer",
         direction
       )
@@ -215,7 +218,7 @@ class TurningPoint {
 
     @Override
     String toString() {
-      return """Turning Point Test
+      """Turning Point Test
   Sample size: ${sampleSize}
   Turning points: ${turningPoints} (peaks: ${peaks}, troughs: ${troughs})
   Expected: ${String.format('%.4f', expectedTurningPoints)}

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * The ADF-GLS test (or DF-GLS test) is a test for a unit root in a time series.
@@ -64,6 +65,7 @@ class AdfGls {
    * @param type The type of test: "drift" (constant only) or "trend" (constant and trend)
    * @return AdfGlsResult containing test statistic and conclusion
    */
+  @SuppressWarnings('MethodSize')
   static AdfGlsResult test(double[] data, Integer lags = null, String type = "drift") {
     if (data == null) {
       throw new IllegalArgumentException("Data cannot be null")
@@ -183,16 +185,16 @@ class AdfGls {
     double cv5pct = getCriticalValue(type, n, 0.05)
     double cv10pct = getCriticalValue(type, n, 0.10)
 
-    return new AdfGlsResult(
-      statistic: tStatistic,
-      gamma: gamma,
-      standardError: gammaSE,
+    new AdfGlsResult(
+      statistic: BigDecimal.valueOf(tStatistic),
+      gamma: BigDecimal.valueOf(gamma),
+      standardError: BigDecimal.valueOf(gammaSE),
       lags: p,
       sampleSize: n,
       testType: type,
-      criticalValue1pct: cv1pct,
-      criticalValue5pct: cv5pct,
-      criticalValue10pct: cv10pct
+      criticalValue1pct: BigDecimal.valueOf(cv1pct),
+      criticalValue5pct: BigDecimal.valueOf(cv5pct),
+      criticalValue10pct: BigDecimal.valueOf(cv10pct)
     )
   }
 
@@ -201,7 +203,7 @@ class AdfGls {
    */
   static AdfGlsResult test(List<? extends Number> data, Integer lags = null, String type = "drift") {
     double[] array = data.collect { it.doubleValue() } as double[]
-    return test(array, lags, type)
+    test(array, lags, type)
   }
 
   /**
@@ -254,7 +256,7 @@ class AdfGls {
       detrended[i] = data[i] - fitted[i]
     }
 
-    return detrended
+    detrended
   }
 
   /**
@@ -286,7 +288,7 @@ class AdfGls {
         } else {
           log.debug("Skipping lag $p during ADF-GLS MAIC selection: ${e.message}")
         }
-      } catch (RuntimeException e) {
+      } catch (Exception e) {
         log.error("Potential bug while selecting lag $p for ADF-GLS: ${e.message}", e)
         throw e
       }
@@ -296,7 +298,7 @@ class AdfGls {
       throw new IllegalArgumentException("Unable to select ADF-GLS lag: all candidate lags 0..${maxLags} failed")
     }
 
-    return bestLag
+    bestLag
   }
 
   private static boolean isNumericalFailure(IllegalArgumentException e) {
@@ -334,7 +336,7 @@ class AdfGls {
 
     // Asymptotic approximation: CV(T) = β₀ + β₁/T + β₂/T² + β₃/T³
     double T = n as double
-    return params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
+    params[0] + params[1] / T + params[2] / (T * T) + params[3] / (T * T * T)
   }
 
   /**
@@ -342,13 +344,13 @@ class AdfGls {
    */
   static class AdfGlsResult {
     /** The ADF-GLS test statistic (t-statistic for γ) */
-    double statistic
+    BigDecimal statistic
 
     /** The estimated γ coefficient */
-    double gamma
+    BigDecimal gamma
 
     /** Standard error of γ */
-    double standardError
+    BigDecimal standardError
 
     /** Number of lags used */
     int lags
@@ -360,13 +362,13 @@ class AdfGls {
     String testType
 
     /** Critical value at 1% significance */
-    double criticalValue1pct
+    BigDecimal criticalValue1pct
 
     /** Critical value at 5% significance */
-    double criticalValue5pct
+    BigDecimal criticalValue5pct
 
     /** Critical value at 10% significance */
-    double criticalValue10pct
+    BigDecimal criticalValue10pct
 
     /**
      * Interprets the test result.
@@ -374,9 +376,10 @@ class AdfGls {
      * @param alpha Significance level (default 0.05)
      * @return Interpretation string
      */
-    String interpret(double alpha = 0.05) {
-      double cv = alpha == 0.01 ? criticalValue1pct :
-                  alpha == 0.10 ? criticalValue10pct : criticalValue5pct
+    String interpret(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
+      BigDecimal cv = alphaValue == 0.01 ? criticalValue1pct :
+        alphaValue == 0.10 ? criticalValue10pct : criticalValue5pct
 
       if (statistic < cv) {
         return "Reject H0: Series appears stationary (ADF-GLS = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
@@ -388,10 +391,11 @@ class AdfGls {
     /**
      * Evaluates the test result with detailed information.
      */
-    String evaluate(double alpha = 0.05) {
+    String evaluate(Number alpha = 0.05) {
+      BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
 
-      return String.format(
+      String.format(
         "ADF-GLS test:\\n" +
         "Test type: %s\\n" +
         "Lags: %d\\n" +
@@ -400,13 +404,13 @@ class AdfGls {
         "Sample size: %d\\n" +
         "Conclusion: Series appears %s at %.0f%% significance level",
         testType, lags, statistic, criticalValue1pct, criticalValue5pct, criticalValue10pct,
-        sampleSize, conclusion, alpha * 100
+        sampleSize, conclusion, (alphaValue * 100) as double
       )
     }
 
     @Override
     String toString() {
-      return """ADF-GLS Test (Elliott-Rothenberg-Stock)
+      """ADF-GLS Test (Elliott-Rothenberg-Stock)
   Type: ${testType}
   Lags: ${lags}
   Sample size: ${sampleSize}

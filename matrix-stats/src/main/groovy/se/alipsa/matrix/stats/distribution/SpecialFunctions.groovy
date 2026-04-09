@@ -3,8 +3,11 @@ package se.alipsa.matrix.stats.distribution
 import static java.math.BigDecimal.*
 import static se.alipsa.matrix.ext.NumberExtension.*
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 import java.math.MathContext
 import java.math.RoundingMode
+
 /**
  * Special mathematical functions used in statistical distributions.
  * Implementation based on algorithms from Numerical Recipes and NIST.
@@ -63,7 +66,23 @@ class SpecialFunctions {
         a * Math.log(x) + b * Math.log(1.0d - x)
     )
 
-    return bt * betaContinuedFraction(x, a, b) / a
+    bt * betaContinuedFraction(x, a, b) / a
+  }
+
+  /**
+   * BigDecimal-friendly incomplete beta function.
+   *
+   * @param x the evaluation point
+   * @param a the first shape parameter
+   * @param b the second shape parameter
+   * @return the regularized incomplete beta value
+   */
+  static BigDecimal regularizedIncompleteBeta(Number x, Number a, Number b) {
+    BigDecimal.valueOf(regularizedIncompleteBeta(
+      NumericConversion.toFiniteDouble(x, 'x'),
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(b, 'b')
+    ))
   }
 
   static BigDecimal regularizedIncompleteBeta(BigDecimal x, BigDecimal a, BigDecimal b) {
@@ -241,7 +260,7 @@ class SpecialFunctions {
       a += coef[i] / (x + i)
     }
 
-    return 0.5 * Math.log(2.0 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a)
+    0.5 * Math.log(2.0 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a)
   }
 
   static BigDecimal logGamma(BigDecimal x) {
@@ -274,7 +293,7 @@ class SpecialFunctions {
       a += coef[i] / (x + i)
     }
 
-    return 0.5 * (2.0 * PI).log() + (x + 0.5) * t.log() - t + a.log()
+    0.5 * (2.0 * PI).log() + (x + 0.5) * t.log() - t + a.log()
   }
 
   /**
@@ -291,14 +310,14 @@ class SpecialFunctions {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
 
-    return Math.exp(logGamma(x))
+    Math.exp(logGamma(x))
   }
 
   static BigDecimal gamma(BigDecimal x) {
     if (x <= 0.0) {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
-    return logGamma(x).exp()
+    logGamma(x).exp()
   }
 
   /**
@@ -325,7 +344,21 @@ class SpecialFunctions {
     if (x < a + 1.0d) {
       return gammaSeries(a, x)
     }
-    return 1.0d - regularizedIncompleteGammaQ(a, x)
+    1.0d - regularizedIncompleteGammaQ(a, x)
+  }
+
+  /**
+   * BigDecimal-friendly lower regularized incomplete gamma function.
+   *
+   * @param a the shape parameter
+   * @param x the evaluation point
+   * @return the regularized incomplete gamma value
+   */
+  static BigDecimal regularizedIncompleteGammaP(Number a, Number x) {
+    BigDecimal.valueOf(regularizedIncompleteGammaP(
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(x, 'x')
+    ))
   }
 
   /**
@@ -352,7 +385,21 @@ class SpecialFunctions {
     if (x < a + 1.0d) {
       return 1.0d - gammaSeries(a, x)
     }
-    return gammaContinuedFraction(a, x)
+    gammaContinuedFraction(a, x)
+  }
+
+  /**
+   * BigDecimal-friendly upper regularized incomplete gamma function.
+   *
+   * @param a the shape parameter
+   * @param x the evaluation point
+   * @return the upper-tail regularized incomplete gamma value
+   */
+  static BigDecimal regularizedIncompleteGammaQ(Number a, Number x) {
+    BigDecimal.valueOf(regularizedIncompleteGammaQ(
+      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(x, 'x')
+    ))
   }
 
   private static double gammaSeries(double a, double x) {

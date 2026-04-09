@@ -132,7 +132,7 @@ class ShapiroFrancia {
     // Calculate p-value using approximation
     double pValue = calculatePValue(wPrime, n)
 
-    return new ShapiroFranciaResult(
+    new ShapiroFranciaResult(
       W: BigDecimal.valueOf(wPrime),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: n,
@@ -200,7 +200,7 @@ class ShapiroFrancia {
     // W' = (Σ mᵢ xᵢ)² / (Σ mᵢ² × Σ(xᵢ - x̄)²)
     double wPrime = (sumMX * sumMX) / (sumM2 * sumSquaredDeviations)
 
-    return wPrime
+    wPrime
   }
 
   /**
@@ -305,7 +305,7 @@ class ShapiroFrancia {
         "not normally distributed" :
         "consistent with a normal distribution"
 
-      return String.format(
+      String.format(
         "Shapiro-Francia W' statistic: %.4f\n" +
         "p-value: %.4f\n" +
         "Sample: n=%d, mean=%.4f, sd=%.4f\n" +
@@ -316,7 +316,7 @@ class ShapiroFrancia {
 
     @Override
     String toString() {
-      return """Shapiro-Francia Normality Test
+      """Shapiro-Francia Normality Test
   Sample size: ${sampleSize}
   Mean: ${String.format('%.4f', mean)}
   Std Dev: ${String.format('%.4f', stdDev)}

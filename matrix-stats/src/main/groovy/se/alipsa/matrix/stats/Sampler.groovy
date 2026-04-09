@@ -50,6 +50,6 @@ class Sampler {
         .rowList(testRows)
         .types(data.types())
         .build()
-    return [trainMatrix, testMatrix]
+    [trainMatrix, testMatrix]
   }
 }

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
-import groovy.transform.CompileStatic
-
 /**
  * Canonical formula representation with explicit intercept handling and normalized predictor terms.
  */
-@CompileStatic
 final class NormalizedFormula {
 
   final FormulaExpression response

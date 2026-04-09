@@ -1,8 +1,8 @@
 package se.alipsa.matrix.stats
 
-import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.FDistribution
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * Analysis of variance (ANOVA) is a collection of statistical models and their associated estimation
@@ -21,12 +21,11 @@ class Anova {
       String colName = it
       d.put(colName, data[colName] as List<? extends Number>)
     }
-    return aov(d)
+    aov(d)
   }
 
   /**
    * Implements one-way ANOVA (analysis of variance) statistics.
-   *
    */
   static AnovaResult aov(Map<String, List<? extends Number>> data) {
     if (data.size() < 2) {
@@ -34,26 +33,26 @@ class Anova {
     }
     def result = new AnovaResult()
     // Use native FDistribution for ANOVA calculations
-    List<double[]> categoryData = []
+    List<List<? extends Number>> categoryData = []
     data.each { String key, List<? extends Number> values ->
-      categoryData.add(ListConverter.toDoubleArray(values))
+      categoryData << values
     }
 
-    result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
-    result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
-    return result
+    result.fValue = FDistribution.oneWayAnovaFValueFromLists(categoryData)
+    result.pValue = FDistribution.oneWayAnovaPValueFromLists(categoryData)
+    result
   }
 
   static class AnovaResult {
-    Double pValue
-    Double fValue
+    BigDecimal pValue
+    BigDecimal fValue
 
     String toString() {
-      return "pValue: ${pValue}, fValue: ${fValue}"
+      "pValue: ${pValue}, fValue: ${fValue}"
     }
 
-    boolean evaluate(double alpha = 0.05) {
-      return pValue < alpha
+    boolean evaluate(Number alpha = 0.05) {
+      pValue < NumericConversion.toAlpha(alpha)
     }
   }
 }

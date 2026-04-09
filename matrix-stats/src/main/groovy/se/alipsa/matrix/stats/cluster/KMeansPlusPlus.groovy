@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.cluster
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
  * KMeans++ is an enhanced K-Means clustering algorithm that uses an improved initialization
@@ -208,7 +209,7 @@ class KMeansPlusPlus {
   private int iterations       // number of times to repeat the clustering. Choose run with lowest wcss
   private boolean pp           // true --> KMeans++. false --> basic random sampling
   private double epsilon       // stops running when improvement in error < epsilon
-  private boolean useEpsilon;  // true  --> stop running when marginal improvement in wcss < epsilon
+  private boolean useEpsilon   // true  --> stop running when marginal improvement in wcss < epsilon
   // false --> stop running when 0 improvement
   private boolean l1Norm       // true --> L1 norm to calculate distance; false --> L2 norm
 
@@ -302,6 +303,16 @@ class KMeansPlusPlus {
     }
 
     /**
+     * Create a Builder that estimates the number of clusters automatically using Groovy-facing point rows.
+     *
+     * @param points the data points to cluster
+     * @param method the cluster estimation strategy to use
+     */
+    Builder(List<? extends List<? extends Number>> points, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW) {
+      this(NumericConversion.toDoubleMatrix(points, 'points'), method)
+    }
+
+    /**
      * Create a Builder with a fixed number of clusters.
      *
      * @param k the number of clusters to find
@@ -335,6 +346,16 @@ class KMeansPlusPlus {
     }
 
     /**
+     * Create a Builder with a fixed number of clusters from Groovy-facing point rows.
+     *
+     * @param k the number of clusters to find
+     * @param points the data points to cluster
+     */
+    Builder(int k, List<? extends List<? extends Number>> points) {
+      this(k, NumericConversion.toDoubleMatrix(points, 'points'))
+    }
+
+    /**
      * Set the number of clustering iterations (default is 50).
      * Each iteration runs KMeans independently and retains the best result.
      *
@@ -343,10 +364,10 @@ class KMeansPlusPlus {
      */
     Builder iterations(int iterations) {
       if (iterations < 1) {
-        throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50");
+        throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50")
       }
       this.iterations = iterations
-      return this
+      this
     }
 
     /**
@@ -357,7 +378,7 @@ class KMeansPlusPlus {
      */
     Builder pp(boolean pp) {
       this.pp = pp
-      return this
+      this
     }
 
     /**
@@ -377,13 +398,14 @@ class KMeansPlusPlus {
      * @param epsilon a small non-negative number (e.g., 0.001)
      * @return the updated builder instance
      */
-    Builder epsilon(double epsilon) {
-      if (epsilon < 0.0) {
+    Builder epsilon(Number epsilon) {
+      double normalizedEpsilon = NumericConversion.toFiniteDouble(epsilon, 'epsilon')
+      if (normalizedEpsilon < 0.0d) {
         throw new IllegalArgumentException("Required: non-negative value of epsilon. Ex: .001")
       }
 
-      this.epsilon = epsilon
-      return this
+      this.epsilon = normalizedEpsilon
+      this
     }
 
     /**
@@ -399,7 +421,7 @@ class KMeansPlusPlus {
      */
     Builder useEpsilon(boolean useEpsilon) {
       this.useEpsilon = useEpsilon
-      return this
+      this
     }
 
     /**
@@ -414,7 +436,7 @@ class KMeansPlusPlus {
      */
     Builder useL1norm(boolean l1Norm) {
       this.l1Norm = l1Norm
-      return this
+      this
     }
 
     /**
@@ -437,7 +459,7 @@ class KMeansPlusPlus {
       //println "Running KMeansPlusPlus clustering..."
       //println "Input points: ${points.length}"
       //println "k = $k, iterations = $iterations"
-      return new KMeansPlusPlus(this)
+      new KMeansPlusPlus(this)
     }
   }
 
@@ -586,7 +608,7 @@ class KMeansPlusPlus {
     centroids = new double[k][n]
     double[][] copy = points
 
-    int rand;
+    int rand
     for (int i = 0; i < k; i++) {
       rand = random.nextInt(m - i)
       for (int j = 0; j < n; j++) {
@@ -619,7 +641,7 @@ class KMeansPlusPlus {
         // check if the most recently added centroid is closer to any of the points than previously added ones
         for (int p = 0; p < m; p++) {
           // gives chosen points 0 probability of being chosen again -> sampling without replacement
-          double tempDistance = Distance.euclideanDistance(points[p], centroids[c - 1]); // need L2 norm here, not L1
+          double tempDistance = Distance.euclideanDistance(points[p], centroids[c - 1]) // need L2 norm here, not L1
 
           // base case: if we have only chosen one centroid so far, nothing to compare to
           if (c == 1) {
@@ -669,7 +691,7 @@ class KMeansPlusPlus {
   /**
    * Calculates whether to stop the run
    * @param prevWCSS error from previous step in the run
-   * @return
+   * @return true when the algorithm should stop iterating
    */
   private boolean stop(double prevWCSS) {
     if (useEpsilon) {
@@ -683,10 +705,10 @@ class KMeansPlusPlus {
    * Signals to stop running KMeans when the marginal improvement in wcss
    * from the last step is small.
    * @param prevWCSS error from previous step in the run
-   * @return
+   * @return true when the epsilon threshold indicates convergence
    */
   private boolean epsilonTest(double prevWCSS) {
-    return epsilon > 1 - (wcss / prevWCSS)
+    epsilon > 1 - (wcss / prevWCSS)
   }
 
   /***********************************************************************
@@ -694,12 +716,12 @@ class KMeansPlusPlus {
    **********************************************************************/
   /**
    * Calculates distance between two n-dimensional points.
-   * @param x
-   * @param y
-   * @return
+   * @param x the first point
+   * @param y the second point
+   * @return the configured distance between the two points
    */
   private double distance(double[] x, double[] y) {
-    return l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
+    l1Norm ? Distance.manhattanDistance(x, y) : Distance.euclideanDistance(x, y)
   }
 
   private Random randomForIteration(int iteration) {
@@ -711,9 +733,9 @@ class KMeansPlusPlus {
     /**
      * L1 norm: distance(X,Y) = sum_i=1:n[|x_i - y_i|]
      * <P> Minkowski distance of order 1.
-     * @param x
-    * @param y
-    * @return
+     * @param x the first point
+     * @param y the second point
+     * @return the Manhattan distance between the two points
      */
     static double manhattanDistance(double[] x, double[] y) {
       if (x.length != y.length) {
@@ -723,7 +745,7 @@ class KMeansPlusPlus {
       for (int i = 0; i < x.length; i++) {
         dist += Math.abs(x[i] - y[i])
       }
-      return dist
+      dist
     }
 
     /**
@@ -742,7 +764,7 @@ class KMeansPlusPlus {
         double diff = x[i] - y[i]
         dist += diff * diff
       }
-      return dist
+      dist
     }
   }
 
@@ -767,7 +789,16 @@ class KMeansPlusPlus {
    * @return an array where each entry corresponds to a {@link ClusteredPoint} and its assigned cluster
    */
   ClusteredPoint[] getAssignment() {
-    return assignment
+    assignment
+  }
+
+  /**
+   * Returns cluster assignments as an immutable list.
+   *
+   * @return the clustered points
+   */
+  List<ClusteredPoint> getAssignments() {
+    assignment.toList().asImmutable() as List<ClusteredPoint>
   }
 
   /**
@@ -805,7 +836,16 @@ class KMeansPlusPlus {
    * where each centroid is represented as an array of doubles.
    */
   double[][] getCentroids() {
-    return centroids
+    centroids
+  }
+
+  /**
+   * Returns the centroids as immutable BigDecimal rows.
+   *
+   * @return the centroid rows
+   */
+  List<List<BigDecimal>> getCentroidValues() {
+    NumericConversion.toBigDecimalRows(centroids, 'centroids')
   }
 
   /**
@@ -818,7 +858,16 @@ class KMeansPlusPlus {
    * @return wcss the Within-Cluster-Sum-of-Squares
    */
   double getWCSS() {
-    return wcss
+    wcss
+  }
+
+  /**
+   * Returns the within-cluster sum of squares as {@code BigDecimal}.
+   *
+   * @return the clustering error
+   */
+  BigDecimal getWcssValue() {
+    BigDecimal.valueOf(wcss)
   }
 
   /**
@@ -828,7 +877,7 @@ class KMeansPlusPlus {
    * @return a string indicating the time taken for KMeans++ clustering
    */
   String getTiming() {
-    return "KMeans++ took: " + getExecutionTimeMillis() / 1000.0 + " seconds"
+    "KMeans++ took: " + getExecutionTimeMillis() / 1000.0 + " seconds"
   }
 
   /**
@@ -838,7 +887,16 @@ class KMeansPlusPlus {
    * @return the execution time in milliseconds
    */
   double getExecutionTimeMillis() {
-    return end - start
+    end - start
+  }
+
+  /**
+   * Returns the execution time in milliseconds as {@code BigDecimal}.
+   *
+   * @return the execution time
+   */
+  BigDecimal getExecutionTimeValue() {
+    BigDecimal.valueOf(getExecutionTimeMillis())
   }
 
 }

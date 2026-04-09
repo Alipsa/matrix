@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * Hypergeometric distribution implementation for exact contingency-table calculations.
  */
@@ -40,6 +42,11 @@ class HypergeometricDistribution {
     supportUpperBound
   }
 
+  BigDecimal probability(Number x) {
+    BigDecimal.valueOf(probability(NumericConversion.toExactInt(x, 'x')))
+  }
+
+  @Deprecated
   double probability(int x) {
     if (x < supportLowerBound || x > supportUpperBound) {
       return 0.0d
@@ -49,9 +56,14 @@ class HypergeometricDistribution {
         logCombination(populationSize - numberOfSuccesses, sampleSize - x) -
         logCombination(populationSize, sampleSize)
 
-    return Math.exp(logProbability)
+    Math.exp(logProbability)
   }
 
+  BigDecimal cumulativeProbability(Number x) {
+    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toExactInt(x, 'x')))
+  }
+
+  @Deprecated
   double cumulativeProbability(int x) {
     if (x < supportLowerBound) {
       return 0.0d
@@ -64,9 +76,14 @@ class HypergeometricDistribution {
     for (int k = supportLowerBound; k <= x; k++) {
       sum += probability(k)
     }
-    return Math.min(1.0d, sum)
+    Math.min(1.0d, sum)
   }
 
+  BigDecimal upperCumulativeProbability(Number x) {
+    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toExactInt(x, 'x')))
+  }
+
+  @Deprecated
   double upperCumulativeProbability(int x) {
     if (x <= supportLowerBound) {
       return 1.0d
@@ -79,14 +96,14 @@ class HypergeometricDistribution {
     for (int k = x; k <= supportUpperBound; k++) {
       sum += probability(k)
     }
-    return Math.min(1.0d, sum)
+    Math.min(1.0d, sum)
   }
 
   private static double logCombination(int n, int k) {
     if (k < 0 || k > n) {
       return Double.NEGATIVE_INFINITY
     }
-    return SpecialFunctions.logGamma(n + 1.0d) -
+    SpecialFunctions.logGamma(n + 1.0d) -
         SpecialFunctions.logGamma(k + 1.0d) -
         SpecialFunctions.logGamma(n - k + 1.0d)
   }

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.cluster
 
+import se.alipsa.matrix.stats.util.NumericConversion
+
 /**
  * ClusteredPoint is a simple data structure that represents a data point assigned to a cluster
  * in K-Means clustering. It pairs a cluster identifier with the point's feature vector.
@@ -128,6 +130,14 @@ class ClusteredPoint {
     this.point = point
   }
 
+  ClusteredPoint(int clusterId, List<? extends Number> point) {
+    this(clusterId, NumericConversion.toDoubleArray(point, 'point'))
+  }
+
   int getClusterId() { clusterId }
   double[] getPoint() { point }
+
+  List<BigDecimal> getPointValues() {
+    NumericConversion.toBigDecimalList(point, 'point')
+  }
 }
