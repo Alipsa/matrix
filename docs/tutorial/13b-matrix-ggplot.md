@@ -10,7 +10,7 @@ Add `matrix-ggplot` to your dependencies:
 ### Gradle
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
 implementation 'se.alipsa.matrix:matrix-ggplot'
 implementation 'se.alipsa.matrix:matrix-datasets'
 ```

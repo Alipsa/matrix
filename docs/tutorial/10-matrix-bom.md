@@ -19,7 +19,7 @@ This approach simplifies dependency management and helps avoid version conflicts
 To use the Matrix BOM in a Gradle project, add the following to your build script:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.2.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
 // Add other matrix modules as needed without specifying versions
@@ -40,7 +40,7 @@ To use the Matrix BOM in a Maven project, add the following to your `pom.xml` fi
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.2.0</version>
+            <version>2.4.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
@@ -92,10 +92,10 @@ repositories {
 
 dependencies {
     // Import the BOM
-    implementation(platform('se.alipsa.matrix:matrix-bom:2.3.0'))
+    implementation(platform('se.alipsa.matrix:matrix-bom:2.4.0'))
     
     // Add Groovy
-    implementation 'org.apache.groovy:groovy:5.0.4'
+    implementation 'org.apache.groovy:groovy:5.0.5'
     
     // Add Matrix modules without specifying versions
     implementation 'se.alipsa.matrix:matrix-core'
@@ -118,7 +118,7 @@ dependencies {
     <version>1.0.0</version>
     
     <properties>
-        <groovy.version>5.0.3</groovy.version>
+        <groovy.version>5.0.5</groovy.version>
     </properties>
     
     <dependencyManagement>
@@ -126,7 +126,7 @@ dependencies {
             <dependency>
                 <groupId>se.alipsa.matrix</groupId>
                 <artifactId>matrix-bom</artifactId>
-                <version>2.3.0</version>
+                <version>2.4.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

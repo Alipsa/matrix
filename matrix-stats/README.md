@@ -3,7 +3,8 @@
 # matrix-stats
 
 `matrix-stats` adds statistical analysis to Matrix data: correlation, normalization, regression,
-hypothesis tests, time-series diagnostics, normality tests, and clustering.
+formula/model-frame workflows, linear algebra, interpolation, hypothesis tests, time-series
+diagnostics, normality tests, native distributions, numerical solvers, and clustering.
 
 ## Using the dependency
 
@@ -290,6 +291,55 @@ def result = UnitRoot.test(series, 'drift')
 
 println(result.summary())
 println(result.isStationary() ? 'Stationary' : 'Needs differencing')
+```
+
+## Native Distributions
+
+`matrix-stats` now ships native probability distribution implementations for the module's runtime
+needs. Public Groovy-facing APIs include `NormalDistribution`, `TDistribution`,
+`FDistribution`, `ChiSquaredDistribution`, and `HypergeometricDistribution`.
+
+```groovy
+import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
+
+def normal = new NormalDistribution(2, 1.5)
+assert 0.5 == normal.cumulativeProbability(2)
+assert 2.0 == normal.inverseCumulativeProbability(0.5)
+
+def hyper = new HypergeometricDistribution(37, 21, 17)
+assert hyper.supportLowerBound == 1
+assert hyper.supportUpperBound == 17
+assert hyper.probability(10) > 0
+```
+
+## Numerical Solvers
+
+`matrix-stats` also exposes low-level native solvers for common numerical tasks:
+
+- `BrentSolver` for one-dimensional root finding
+- `GoalSeek` for spreadsheet-style goal seeking on top of Brent
+- `NelderMeadOptimizer` for derivative-free multivariate optimization
+- `LinearProgramSolver` for equality-form linear programs with non-negative variables
+
+```groovy
+import se.alipsa.matrix.stats.solver.BrentSolver
+import se.alipsa.matrix.stats.solver.LinearProgramSolver
+import se.alipsa.matrix.stats.solver.UnivariateObjective
+
+def root = BrentSolver.solve(
+    { double x -> x * x - 2.0d } as UnivariateObjective,
+    0.0,
+    2.0,
+    1.0e-12,
+    1.0e-12,
+    100
+)
+assert Math.abs((root.rootValue as double) - Math.sqrt(2.0d)) < 1e-10
+
+def solution = LinearProgramSolver.minimize([1.0, 2.0], [[1.0, 1.0]], [1.0])
+assert [1.0, 0.0] == solution.pointValues
+assert solution.objectiveValue == 1.0
 ```
 
 ## Clustering

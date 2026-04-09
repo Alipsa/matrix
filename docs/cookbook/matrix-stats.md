@@ -2,6 +2,11 @@
 
 Focused recipes for the `matrix-stats` module.
 
+## Setup Notes
+
+Use the Matrix BOM and add Groovy explicitly. `matrix-stats` publishes Groovy as `compileOnly` and
+does not bring Apache Commons Math in as a runtime dependency anymore.
+
 ## Correlation
 
 Compute Pearson, Spearman, and Kendall correlations with the same entry point.
@@ -35,6 +40,82 @@ Matrix zScore = Normalize.stdScaleNorm(sales)
 
 println(minMax['amount'])
 println(zScore['amount'])
+```
+
+## Linear Algebra
+
+Use `Linalg` for inverse, determinant, eigenvalues, SVD, and linear solves.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.linalg.Linalg
+
+Matrix source = Matrix.builder()
+  .columnNames(['x', 'y'])
+  .rows([
+    [4.0, 7.0],
+    [2.0, 6.0]
+  ])
+  .types([Double, Double])
+  .build()
+
+println(Linalg.det(source))
+println(Linalg.solve(source, [1.0, 0.0]))
+println(Linalg.inverse(source).content())
+```
+
+## Interpolation
+
+Use `Interpolation.linear(...)` for explicit domains, evenly spaced series, or Matrix/Grid columns.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.interpolation.Interpolation
+
+assert 5.0 == Interpolation.linear([0.0, 2.0, 4.0], [0.0, 10.0, 20.0], 1.0)
+assert 30.0 == Interpolation.linear([10.0, 20.0, 40.0], 1.5)
+
+Matrix points = Matrix.builder()
+  .columnNames(['time', 'value'])
+  .rows([
+    [1.0, 3.0],
+    [2.0, 6.0],
+    [4.0, 12.0]
+  ])
+  .types([Double, Double])
+  .build()
+
+assert 9.0 == Interpolation.linear(points, 'time', 'value', 3.0)
+```
+
+## Formula Models
+
+Build a model frame first, then dispatch to a named fit method through `FitRegistry`.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.formula.ModelFrame
+import se.alipsa.matrix.stats.formula.NaAction
+import se.alipsa.matrix.stats.regression.FitRegistry
+
+Matrix data = Matrix.builder()
+  .columnNames(['y', 'x', 'group'])
+  .rows([
+    [1.0, 1.0, 'A'],
+    [2.0, 2.0, 'B'],
+    [3.0, 3.0, 'A'],
+    [4.0, 4.0, 'B']
+  ])
+  .types([BigDecimal, BigDecimal, String])
+  .build()
+
+def frame = ModelFrame.of('y ~ x + group', data)
+  .naAction(NaAction.OMIT)
+  .evaluate()
+
+def fit = FitRegistry.instance().get('lm').fit(frame)
+println(fit.predictorNames)
+println(fit.rSquared)
 ```
 
 ## T-tests
@@ -72,6 +153,47 @@ def anova = Anova.aov([
 
 println("F = ${anova.fValue}, p = ${anova.pValue}")
 println(anova.evaluate() ? 'Reject equal means' : 'Fail to reject equal means')
+```
+
+## Native Distributions
+
+Use the native distribution classes directly when you need CDF, quantile, or exact probability helpers.
+
+```groovy
+import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
+import se.alipsa.matrix.stats.distribution.NormalDistribution
+
+def normal = new NormalDistribution(2, 1.5)
+println(normal.cumulativeProbability(2))
+println(normal.inverseCumulativeProbability(0.975))
+
+def hyper = new HypergeometricDistribution(37, 21, 17)
+println(hyper.probability(10))
+println(hyper.cumulativeProbability(10))
+```
+
+## Numerical Solvers
+
+Use Brent for scalar roots and the simplex solver for equality-form linear programs.
+
+```groovy
+import se.alipsa.matrix.stats.solver.BrentSolver
+import se.alipsa.matrix.stats.solver.LinearProgramSolver
+import se.alipsa.matrix.stats.solver.UnivariateObjective
+
+def root = BrentSolver.solve(
+  { double x -> x * x - 2.0d } as UnivariateObjective,
+  0.0,
+  2.0,
+  1.0e-12,
+  1.0e-12,
+  100
+)
+println(root.rootValue)
+
+def solution = LinearProgramSolver.minimize([1.0, 2.0], [[1.0, 1.0]], [1.0])
+println(solution.pointValues)
+println(solution.objectiveValue)
 ```
 
 ## Linear Regression

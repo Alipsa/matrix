@@ -7,7 +7,7 @@ The Matrix BigQuery module lets you query BigQuery into a `Matrix`, manage datas
 ### Gradle
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
+implementation 'org.apache.groovy:groovy:5.0.5'
 implementation 'se.alipsa.matrix:matrix-core:3.6.0'
 implementation 'se.alipsa.matrix:matrix-bigquery:0.6.0'
 ```
