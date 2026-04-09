@@ -126,18 +126,15 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the F-statistic
    */
+  /** @deprecated Use {@link #oneWayAnovaFValueArrays} or {@link #oneWayAnovaFValueFromLists} instead. */
   @Deprecated
   static BigDecimal oneWayAnovaFValue(List<?> groups) {
-    if (groups == null) {
-      return oneWayAnovaFValueArrays(null)
-    }
-    if (groups.isEmpty() || groups.every { Object group -> group instanceof double[] }) {
-      return oneWayAnovaFValueArrays(groups as List<double[]>)
-    }
-    if (groups.every { Object group -> group instanceof List<?> }) {
-      return oneWayAnovaFValueFromLists(groups as Collection<? extends List<? extends Number>>)
-    }
-    throw new IllegalArgumentException("Each group must be a List<Number> or double[], got mixed input types")
+    NumericConversion.<BigDecimal> dispatchPrimitiveOrList(
+      groups,
+      { List<?> g -> oneWayAnovaFValueArrays(g as List<double[]>) },
+      { List<?> g -> oneWayAnovaFValueFromLists(g as Collection<? extends List<? extends Number>>) },
+      'group'
+    )
   }
 
   /**
@@ -211,18 +208,15 @@ class FDistribution implements ContinuousDistribution {
    * @param groups list of double arrays, each representing a group
    * @return the p-value for the ANOVA test
    */
+  /** @deprecated Use {@link #oneWayAnovaPValueArrays} or {@link #oneWayAnovaPValueFromLists} instead. */
   @Deprecated
   static BigDecimal oneWayAnovaPValue(List<?> groups) {
-    if (groups == null) {
-      return oneWayAnovaPValueArrays(null)
-    }
-    if (groups.isEmpty() || groups.every { Object group -> group instanceof double[] }) {
-      return oneWayAnovaPValueArrays(groups as List<double[]>)
-    }
-    if (groups.every { Object group -> group instanceof List<?> }) {
-      return oneWayAnovaPValueFromLists(groups as Collection<? extends List<? extends Number>>)
-    }
-    throw new IllegalArgumentException("Each group must be a List<Number> or double[], got mixed input types")
+    NumericConversion.<BigDecimal> dispatchPrimitiveOrList(
+      groups,
+      { List<?> g -> oneWayAnovaPValueArrays(g as List<double[]>) },
+      { List<?> g -> oneWayAnovaPValueFromLists(g as Collection<? extends List<? extends Number>>) },
+      'group'
+    )
   }
 
   /**
@@ -254,7 +248,7 @@ class FDistribution implements ContinuousDistribution {
     int k = normalizedGroups.size()
     int n = normalizedGroups.sum { double[] group -> group.length } as int
 
-    BigDecimal f = oneWayAnovaFValueFromLists(groups)
+    BigDecimal f = BigDecimal.valueOf(oneWayAnovaFValueInternal(normalizedGroups))
     BigDecimal dfBetween = k - 1
     BigDecimal dfWithin = n - k
 
@@ -266,8 +260,12 @@ class FDistribution implements ContinuousDistribution {
       return []
     }
     List<double[]> normalized = []
-    for (double[] group : groups) {
-      normalized << (group == null ? null : (group.clone() as double[]))
+    for (int i = 0; i < groups.size(); i++) {
+      double[] group = groups[i]
+      if (group == null) {
+        throw new IllegalArgumentException("Group at index ${i} cannot be null")
+      }
+      normalized << (group.clone() as double[])
     }
     normalized
   }

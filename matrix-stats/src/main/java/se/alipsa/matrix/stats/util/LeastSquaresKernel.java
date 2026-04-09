@@ -7,6 +7,13 @@ package se.alipsa.matrix.stats.util;
  * {@code Number}, {@code List}, {@code Matrix}, and {@code Grid} inputs. This utility keeps
  * the hot floating-point linear algebra loops in Java so those Groovy APIs can remain
  * idiomatic without paying repeated dynamic-loop overhead in solver-heavy call paths.</p>
+ *
+ * <p><strong>Numerical limitations:</strong> Matrix inversion and linear system solving use
+ * Gauss-Jordan elimination with partial pivoting and a singularity threshold of {@code 1e-14}.
+ * This is suitable for the current low-dimensional use cases (unit root tests, simple OLS)
+ * but may produce inaccurate results for near-singular or ill-conditioned matrices. If this
+ * class is extended to higher-dimensional problems, consider switching to a QR- or SVD-based
+ * decomposition.</p>
  */
 public final class LeastSquaresKernel {
 

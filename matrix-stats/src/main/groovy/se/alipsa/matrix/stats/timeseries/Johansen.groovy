@@ -84,18 +84,15 @@ class Johansen {
    * @param type Type of deterministic component ('none', 'const', 'trend')
    * @return JohansenResult containing test statistics and eigenvalues
    */
+  /** @deprecated Use {@link #testArrays} or {@link #testSeries} instead. */
   @Deprecated
   static JohansenResult test(List<?> data, int lags = 1, String type = 'const') {
-    if (data == null) {
-      return testArrays(null, lags, type)
-    }
-    if (data.isEmpty() || data.every { Object item -> item instanceof double[] }) {
-      return testArrays(data as List<double[]>, lags, type)
-    }
-    if (data.every { Object item -> item instanceof List<?> }) {
-      return testSeries(data as Collection<? extends List<? extends Number>>, lags, type)
-    }
-    throw new IllegalArgumentException("Each series must be a List<Number> or double[], got mixed input types")
+    NumericConversion.<JohansenResult> dispatchPrimitiveOrList(
+      data,
+      { List<?> d -> testArrays(d as List<double[]>, lags, type) },
+      { List<?> d -> testSeries(d as Collection<? extends List<? extends Number>>, lags, type) },
+      'series'
+    )
   }
 
   /**
@@ -153,8 +150,12 @@ class Johansen {
       return []
     }
     List<double[]> normalized = []
-    for (double[] series : data) {
-      normalized << (series == null ? null : (series.clone() as double[]))
+    for (int i = 0; i < data.size(); i++) {
+      double[] series = data[i]
+      if (series == null) {
+        throw new IllegalArgumentException("Series at index ${i} cannot be null")
+      }
+      normalized << (series.clone() as double[])
     }
     normalized
   }

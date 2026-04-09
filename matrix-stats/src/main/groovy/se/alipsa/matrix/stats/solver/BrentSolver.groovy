@@ -180,27 +180,39 @@ final class BrentSolver {
   }
 
   static class SolverResult {
-    /** Root value returned by the solver. */
-    double root
+    private double root
     /** Number of function evaluations performed. */
     int evaluations
     /** Number of Brent iterations performed. */
     int iterations
-    /** Lower bound of the final bracketing interval. */
-    double lowerBound
-    /** Upper bound of the final bracketing interval. */
-    double upperBound
+    private double lowerBound
+    private double upperBound
 
+    /** Returns the root as {@code BigDecimal}. */
     BigDecimal getRootValue() {
       BigDecimal.valueOf(root)
     }
 
+    /** Returns the lower bound of the final bracketing interval as {@code BigDecimal}. */
     BigDecimal getLowerBoundValue() {
       BigDecimal.valueOf(lowerBound)
     }
 
+    /** Returns the upper bound of the final bracketing interval as {@code BigDecimal}. */
     BigDecimal getUpperBoundValue() {
       BigDecimal.valueOf(upperBound)
     }
+
+    /** @deprecated Use {@link #getRootValue()} instead. */
+    @Deprecated
+    double getRoot() { root }
+
+    /** @deprecated Use {@link #getLowerBoundValue()} instead. */
+    @Deprecated
+    double getLowerBound() { lowerBound }
+
+    /** @deprecated Use {@link #getUpperBoundValue()} instead. */
+    @Deprecated
+    double getUpperBound() { upperBound }
   }
 }

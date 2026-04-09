@@ -11,6 +11,7 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.ext.NumberExtension
 import se.alipsa.matrix.stats.formula.ContrastType
 import se.alipsa.matrix.stats.formula.ModelFrame
 import se.alipsa.matrix.stats.formula.ModelFrameResult
@@ -28,15 +29,15 @@ class FormulaDesignMatrixTest {
   void testLogTransform() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x'])
-      .rows([[1.0, 1.0], [2.0, Math.E]])
+      .rows([[1.0, 1.0], [2.0, NumberExtension.E]])
       .types([BigDecimal, BigDecimal])
       .build()
 
     ModelFrameResult result = ModelFrame.of('y ~ log(x)', data).evaluate()
 
     assertEquals(['log_x'], result.predictorNames)
-    assertTrue((result.data[0, 'log_x'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'log_x'] as BigDecimal) == 1.0)
+    assertEquals(0.0, result.data[0, 'log_x'] as BigDecimal)
+    assertEquals(NumberExtension.E.log(), result.data[1, 'log_x'] as BigDecimal)
   }
 
   @Test
@@ -65,8 +66,8 @@ class FormulaDesignMatrixTest {
     ModelFrameResult result = ModelFrame.of('y ~ exp(x)', data).evaluate()
 
     assertEquals(['exp_x'], result.predictorNames)
-    assertTrue((result.data[0, 'exp_x'] as BigDecimal) == 1.0)
-    assertTrue((result.data[1, 'exp_x'] as BigDecimal) == Math.E as BigDecimal)
+    assertEquals(1.0, result.data[0, 'exp_x'] as BigDecimal)
+    assertEquals(1.0.exp(), result.data[1, 'exp_x'] as BigDecimal)
   }
 
   @Test
@@ -346,7 +347,7 @@ class FormulaDesignMatrixTest {
     // Factors sorted alphabetically: group before log(x)
     assertEquals(['group_B:log_x'], result.predictorNames)
     assertTrue((result.data[0, 'group_B:log_x'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'group_B:log_x'] as BigDecimal) == Math.log(9.0) as BigDecimal)
+    assertTrue((result.data[1, 'group_B:log_x'] as BigDecimal) == 9.0.log())
   }
 
   @Test
@@ -515,7 +516,7 @@ class FormulaDesignMatrixTest {
     assertEquals(2, result.data.rowCount())
     assertEquals([1], result.droppedRows)
     assertTrue((result.data[0, 'log_x'] as BigDecimal) == 0.0)
-    assertTrue((result.data[1, 'log_x'] as BigDecimal) == Math.log(3.0) as BigDecimal)
+    assertTrue((result.data[1, 'log_x'] as BigDecimal) == 3.0.log())
   }
 
   @Test

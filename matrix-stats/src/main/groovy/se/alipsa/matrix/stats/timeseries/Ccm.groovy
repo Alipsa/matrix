@@ -142,12 +142,12 @@ class Ccm {
     )
   }
 
-  private static List<Number> toCorrelationValues(double[] values) {
-    List<Number> converted = []
+  private static List<BigDecimal> toCorrelationValues(double[] values) {
+    List<BigDecimal> converted = []
     for (double value : values) {
-      converted << (Double.isFinite(value) ? BigDecimal.valueOf(value) : Double.NaN)
+      converted << (Double.isFinite(value) ? BigDecimal.valueOf(value) : null)
     }
-    converted.asImmutable() as List<Number>
+    converted.asImmutable() as List<BigDecimal>
   }
 
   /**
@@ -372,11 +372,11 @@ class Ccm {
    * Result class for CCM test.
    */
   static class CcmResult {
-    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X) */
-    List<Number> xmapY
+    /** Cross-map skill: X cross-mapped from Y (if positive and increasing, Y causes X). Null entries indicate non-finite values. */
+    List<BigDecimal> xmapY
 
-    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y) */
-    List<Number> ymapX
+    /** Cross-map skill: Y cross-mapped from X (if positive and increasing, X causes Y). Null entries indicate non-finite values. */
+    List<BigDecimal> ymapX
 
     /** Library sizes used for testing */
     List<Integer> librarySizes
@@ -401,9 +401,9 @@ class Ccm {
       if (ymapX.size() < 2) {
         return false
       }
-      double last = ymapX[-1] as double
-      double first = ymapX[0] as double
-      if (!Double.isFinite(last) || !Double.isFinite(first)) {
+      BigDecimal last = ymapX[-1]
+      BigDecimal first = ymapX[0]
+      if (last == null || first == null) {
         return false
       }
       last > thresholdValue && last > first
@@ -420,9 +420,9 @@ class Ccm {
       if (xmapY.size() < 2) {
         return false
       }
-      double last = xmapY[-1] as double
-      double first = xmapY[0] as double
-      if (!Double.isFinite(last) || !Double.isFinite(first)) {
+      BigDecimal last = xmapY[-1]
+      BigDecimal first = xmapY[0]
+      if (last == null || first == null) {
         return false
       }
       last > thresholdValue && last > first
@@ -431,14 +431,14 @@ class Ccm {
     /**
      * Alias for {@link #getXmapY()} kept to match the `*Values` naming pattern used by other result objects.
      */
-    List<Number> getXmapYValues() {
+    List<BigDecimal> getXmapYValues() {
       xmapY
     }
 
     /**
      * Alias for {@link #getYmapX()} kept to match the `*Values` naming pattern used by other result objects.
      */
-    List<Number> getYmapXValues() {
+    List<BigDecimal> getYmapXValues() {
       ymapX
     }
 
@@ -469,8 +469,9 @@ class Ccm {
       sb.append("-" * 60).append("\n")
 
       for (int i = 0; i < librarySizes.size(); i++) {
-        sb.append(String.format("%-15d %-20.4f %-20.4f\n",
-                                librarySizes[i], xmapY[i], ymapX[i]))
+        String xVal = xmapY[i] != null ? String.format('%.4f', xmapY[i]) : 'NaN'
+        String yVal = ymapX[i] != null ? String.format('%.4f', ymapX[i]) : 'NaN'
+        sb.append(String.format("%-15d %-20s %-20s\n", librarySizes[i], xVal, yVal))
       }
 
       sb.append("\n")

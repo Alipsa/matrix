@@ -415,6 +415,33 @@ final class NumericConversion {
     [rows, columns] as int[]
   }
 
+  /**
+   * Dispatch a mixed {@code List<?>} to either a primitive-array handler or a list handler.
+   *
+   * <p>This is a shared helper for legacy bridge methods that accept untyped lists and need to
+   * determine whether the caller passed {@code List<double[]>} or {@code List<List<Number>>}.</p>
+   *
+   * @param data the untyped input list
+   * @param arrayHandler called when every element is a {@code double[]}
+   * @param listHandler called when every element is a {@code List}
+   * @param label used in the error message for mixed-type inputs
+   * @return the result of whichever handler was invoked
+   */
+  static <T> T dispatchPrimitiveOrList(
+      List<?> data,
+      Closure<T> arrayHandler,
+      Closure<T> listHandler,
+      String label = 'element'
+  ) {
+    if (data == null || data.isEmpty() || data.every { Object item -> item instanceof double[] }) {
+      return arrayHandler(data)
+    }
+    if (data.every { Object item -> item instanceof List<?> }) {
+      return listHandler(data)
+    }
+    throw new IllegalArgumentException("Each ${label} must be a List<Number> or double[], got mixed input types")
+  }
+
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {
       throw new IllegalArgumentException('Matrix cannot be null')
