@@ -4,6 +4,10 @@ import groovy.transform.CompileDynamic
 
 /**
  * Closure delegate for Groovy-native formula expressions.
+ *
+ * <p>This class is intentionally dynamic: it relies on {@code propertyMissing} and
+ * operator dispatch for concise column references, so full {@code @CompileStatic}
+ * support is not required for the operator DSL.</p>
  */
 class GroovyFormulaDsl {
 

@@ -26,17 +26,8 @@ abstract class TermExpr {
   }
 
   /**
-   * Creates an interaction with another term.
-   *
-   * @param other the term to interact with
-   * @return an interaction term expression
-   */
-  TermExpr mod(TermExpr other) {
-    new InteractionExpr([this, requireTerm(other, 'other')])
-  }
-
-  /**
-   * Creates an interaction with another term.
+   * Creates an interaction with another term via the {@code %} operator.
+   * Groovy 5 dispatches {@code %} to {@code remainder()}.
    *
    * @param other the term to interact with
    * @return an interaction term expression

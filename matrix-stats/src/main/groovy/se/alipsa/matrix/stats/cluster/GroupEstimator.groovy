@@ -147,7 +147,7 @@ class GroupEstimator {
       throw new IllegalArgumentException("Number of points must be at least 2, but was ${points.length}")
     }
 
-    switch (method) {
+    return switch (method) {
       case CalculationMethod.RULE_OF_THUMB -> ruleOfThumb(points)
       case CalculationMethod.ELBOW -> estimateKByElbow(points)
       default -> throw new IllegalArgumentException("Unknown calculation method: $method")

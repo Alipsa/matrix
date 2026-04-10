@@ -287,7 +287,7 @@ final class DesignMatrixBuilder {
   private String generateFunctionName(FormulaExpression.FunctionCall call) {
     String name = call.name.toLowerCase()
     String defaultName = "${name}_${call.arguments.collect { FormulaExpression arg -> generateColumnName(arg) }.join('_')}"
-    switch (name) {
+    return switch (name) {
       case 'log', 'sqrt', 'exp' -> call.arguments.size() == 1
           ? "${name}_${generateColumnName(call.arguments[0])}"
           : defaultName

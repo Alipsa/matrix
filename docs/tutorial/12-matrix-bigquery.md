@@ -8,30 +8,42 @@ The Matrix BigQuery module lets you query BigQuery into a `Matrix`, manage datas
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.6.0'
+implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-bigquery'
 ```
 
 ### Maven
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy</artifactId>
-    <version>5.0.4</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>3.6.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-bigquery</artifactId>
-    <version>0.6.0</version>
-  </dependency>
-</dependencies>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.4.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>5.0.5</version>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-bigquery</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 ## Authentication
