@@ -1,5 +1,8 @@
 package se.alipsa.matrix.stats.formula
 
+import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaDsl
+import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaSpec
+
 /**
  * Public entry point for formula parsing, normalization, and updates.
  *
@@ -77,6 +80,19 @@ final class Formula {
    */
   static NormalizedFormula normalize(String formula, String defaultResponse) {
     parse(formula, defaultResponse).normalize()
+  }
+
+  /**
+   * Builds and normalizes a formula from the Groovy-native formula DSL.
+   *
+   * @param formula the formula DSL closure, for example {@code { y | x + group }}
+   * @return the normalized formula
+   */
+  static NormalizedFormula build(
+      @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
+      Closure<GroovyFormulaSpec> formula
+  ) {
+    normalize(GroovyFormulaDsl.evaluate(formula).render())
   }
 
   /**

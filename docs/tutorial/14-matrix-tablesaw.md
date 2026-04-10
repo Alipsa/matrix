@@ -15,7 +15,7 @@ To use the matrix-tablesaw module, you need to add it as a dependency to your pr
 ### Gradle Configuration
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
 implementation 'se.alipsa.matrix:core'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```

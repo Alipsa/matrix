@@ -37,14 +37,14 @@ Whether you're performing data analysis, building data processing pipelines, or 
 
 ## Installation and Setup
 
-The Matrix library is designed to work with any Groovy 4.x version and requires JDK 21 or higher. You can add the library to your project using your preferred build system.
+The Matrix library targets Groovy 5 and requires JDK 21. You can add the library to your project using your preferred build system.
 
 ### Gradle Configuration
 
 For Gradle projects, you can use the Bill of Materials (BOM) to simplify dependency management:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.2.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 
@@ -66,7 +66,7 @@ For Maven projects, add the following to your `pom.xml`:
         <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.2.0</version>
+            <version>2.4.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -87,7 +87,7 @@ If you're using the Matrix library from Java, you'll need to add the Groovy core
 
 ```groovy
 // For Gradle
-implementation('org.apache.groovy:groovy:5.0.4')
+implementation('org.apache.groovy:groovy:5.0.5')
 ```
 
 ```xml
@@ -95,7 +95,7 @@ implementation('org.apache.groovy:groovy:5.0.4')
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.3</version>
+    <version>5.0.5</version>
 </dependency>
 ```
 
@@ -105,7 +105,7 @@ The Matrix project consists of multiple modules, each providing specific functio
 
 1. **matrix-core**: The heart of the library, containing the Matrix and Grid classes along with utility classes for basic statistics and data conversion.
 
-2. **matrix-stats**: Advanced statistical methods and tests including correlations, normalization, linear regression, t-tests, and more.
+2. **matrix-stats**: Advanced statistical methods and tests including correlations, normalization, formula/model-frame evaluation, regression, linear algebra, interpolation, distributions, solvers, t-tests, time-series diagnostics, and more.
 
 3. **matrix-datasets**: Common datasets used in data science, similar to those available in R and Python.
 
@@ -132,4 +132,3 @@ The Matrix project consists of multiple modules, each providing specific functio
 In the following sections, we'll explore each of these modules in detail, starting with the core functionality provided by the matrix-core module.
 
 Go to [previous section](outline.md) | Go to [next section](2-matrix-core.md)
-

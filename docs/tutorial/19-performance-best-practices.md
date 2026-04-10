@@ -9,7 +9,7 @@ Performance optimization applies to all Matrix modules. The core module is:
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
+implementation 'org.apache.groovy:groovy:5.0.5'
 implementation "se.alipsa.matrix:matrix-core:3.5.0"
 ```
 

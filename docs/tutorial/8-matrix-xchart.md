@@ -9,8 +9,8 @@ To use the matrix-xchart module, you need to add it as a dependency to your proj
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
-implementation platform('se.alipsa.matrix:matrix-bom:2.3.0')
+implementation 'org.apache.groovy:groovy:5.0.5'
+implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-xchart'
 ```

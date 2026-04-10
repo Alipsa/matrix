@@ -139,6 +139,7 @@ Matrix.rolling(window: 30).apply { it.max() - it.min() }  // Custom rolling
 | **Regression**       | Linear, Polynomial, Quantile, Logistic, Ridge, LASSO, ElasticNet | via statsmodels/sklearn  |
 | **T-tests**          | Welch, Student, paired, one-sample                      | scipy.stats                     |
 | **ANOVA**            | One-way                                                 | scipy.stats                     |
+| **Linear algebra**   | `matrix-stats` `Linalg` facade (inverse, det, solve, SVD, eigenvalues) | `numpy.linalg`, `scipy.linalg` |
 | **Clustering**       | K-means, K-means++, DBSCAN (via Smile)                  | sklearn comparable              |
 | **Distributions**    | Normal, Exponential, Gamma, Beta, Poisson, etc. + fitting | scipy.stats comparable        |
 | **Classification**   | Random Forest, Decision Trees (via Smile)               | sklearn comparable              |
@@ -172,33 +173,24 @@ The matrix-smile module provides comprehensive ML capabilities via integration w
 ### NumPy/SciPy Advantages
 
 1. **Broadcasting** - Automatic shape expansion for operations
-2. **Linear algebra** - `np.linalg` (eigenvalues, SVD, matrix inverse, determinant)
+2. **Broader linear algebra ecosystem** - `np.linalg`, `scipy.linalg`, sparse matrices, factorizations
 3. **FFT** - Fast Fourier Transform
 4. **Signal processing** - scipy.signal
 5. **Optimization** - scipy.optimize (minimize, curve fitting)
-6. **Interpolation** - scipy.interpolate
+6. **Broader interpolation families** - scipy.interpolate goes far beyond the current linear interpolation helpers in `matrix-stats`
 
 ### Potential Improvements for Matrix
 
 **Medium effort:**
 
 ```groovy
-// 1. Linear algebra module (HIGH VALUE for scientific computing)
-import se.alipsa.matrix.linalg.Linalg
-
-Linalg.inverse(matrix)           // Matrix inverse
-Linalg.det(matrix)               // Determinant
-Linalg.eigenvalues(matrix)       // Eigenvalue decomposition
-Linalg.svd(matrix)               // Singular value decomposition
-Linalg.solve(A, b)               // Solve Ax = b
-
-// 2. Cumulative operations (EASY)
+// 1. Cumulative operations (EASY)
 table['value'].cumsum()          // Cumulative sum
 table['value'].cumprod()         // Cumulative product
 table['value'].cummax()          // Running maximum
 table['value'].cummin()          // Running minimum
 
-// 3. Diff/shift operations (EASY)
+// 2. Diff/shift operations (EASY)
 table['value'].diff()            // First difference
 table['value'].diff(2)           // Second difference
 table['value'].shift(1)          // Lag by 1

@@ -286,22 +286,16 @@ final class DesignMatrixBuilder {
 
   private String generateFunctionName(FormulaExpression.FunctionCall call) {
     String name = call.name.toLowerCase()
+    String defaultName = "${name}_${call.arguments.collect { FormulaExpression arg -> generateColumnName(arg) }.join('_')}"
     switch (name) {
-      case 'log':
-      case 'sqrt':
-      case 'exp':
-        if (call.arguments.size() == 1) {
-          return "${name}_${generateColumnName(call.arguments[0])}"
-        }
-        break
-      case 'i':
-        if (call.arguments.size() == 1) {
-          String innerName = generateStructuralName(call.arguments[0])
-          return "I_${innerName}"
-        }
-        break
+      case 'log', 'sqrt', 'exp' -> call.arguments.size() == 1
+          ? "${name}_${generateColumnName(call.arguments[0])}"
+          : defaultName
+      case 'i' -> call.arguments.size() == 1
+          ? "I_${generateStructuralName(call.arguments[0])}"
+          : defaultName
+      default -> defaultName
     }
-    "${name}_${call.arguments.collect { FormulaExpression arg -> generateColumnName(arg) }.join('_')}"
   }
 
   private String generateBinaryName(FormulaExpression.Binary binary) {

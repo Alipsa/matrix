@@ -191,22 +191,12 @@ enum Kernel {
       return GAUSSIAN
     }
     switch (name.toLowerCase()) {
-      case 'gaussian':
-      case 'normal':
-        return GAUSSIAN
-      case 'epanechnikov':
-      case 'epan':
-        return EPANECHNIKOV
-      case 'uniform':
-      case 'rectangular':
-      case 'rect':
-        return UNIFORM
-      case 'triangular':
-      case 'triangle':
-        return TRIANGULAR
-      default:
-        throw new IllegalArgumentException("Unknown kernel type: ${name}. " +
-            "Supported kernels: gaussian, epanechnikov, uniform, triangular")
+      case 'gaussian', 'normal' -> GAUSSIAN
+      case 'epanechnikov', 'epan' -> EPANECHNIKOV
+      case 'uniform', 'rectangular', 'rect' -> UNIFORM
+      case 'triangular', 'triangle' -> TRIANGULAR
+      default -> throw new IllegalArgumentException("Unknown kernel type: ${name}. " +
+          "Supported kernels: gaussian, epanechnikov, uniform, triangular")
     }
   }
 
