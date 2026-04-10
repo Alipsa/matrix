@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
@@ -12,17 +13,20 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.stats.formula.Formula
+import se.alipsa.matrix.stats.formula.FormulaParseException
 import se.alipsa.matrix.stats.formula.ModelFrame
 import se.alipsa.matrix.stats.formula.ModelFrameResult
 import se.alipsa.matrix.stats.formula.NaAction
 import se.alipsa.matrix.stats.formula.NormalizedFormula
 import se.alipsa.matrix.stats.formula.Terms
+import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaSpec
+import se.alipsa.matrix.stats.formula.dsl.TermRef
 
 /**
  * Tests for ModelFrame evaluation pipeline.
  */
 @CompileStatic
-@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
+@SuppressWarnings(['ClassSize', 'DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class FormulaModelFrameTest {
 
   @Test
@@ -994,6 +998,355 @@ class FormulaModelFrameTest {
 
     assertEquals(['x'], result.predictorNames)
     assertEquals([10.0, 20.0], result.response)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForNumericPredictors() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [10.0, 1.0, 2.0],
+        [20.0, 3.0, 4.0],
+        [30.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ x + z', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | x + z
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForCategoricalEncoding() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'species'])
+      .rows([
+        [1.0, 10.0, 'setosa'],
+        [2.0, 20.0, 'versicolor'],
+        [3.0, 30.0, 'virginica'],
+        [4.0, 40.0, 'setosa'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ x + species', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | x + species
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForInteractions() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'group'])
+      .rows([
+        [1.0, 2.0, 'A'],
+        [2.0, 3.0, 'B'],
+        [3.0, 4.0, 'A'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ x + group + x:group', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | x + group + (x % group)
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForInteractionFunctionAlias() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'group'])
+      .rows([
+        [1.0, 2.0, 'A'],
+        [2.0, 3.0, 'B'],
+        [3.0, 4.0, 'A'],
+      ])
+      .types([BigDecimal, BigDecimal, String])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ x + group + x:group', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | x + group + interaction(x, group)
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForAllExpansionAndNoIntercept() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z', 'id'])
+      .rows([
+        [10.0, 1.0, 2.0, 100.0],
+        [20.0, 3.0, 4.0, 200.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult allExpected = ModelFrame.of('y ~ . - id', data).evaluate()
+    ModelFrameResult allActual = ModelFrame.of(data) {
+      y | all - id
+    }.evaluate()
+    assertModelFrameParity(allExpected, allActual)
+
+    ModelFrameResult noInterceptExpected = ModelFrame.of('y ~ 0 + x + z', data).evaluate()
+    ModelFrameResult noInterceptActual = ModelFrame.of(data) {
+      y | noIntercept + x + z
+    }.evaluate()
+    assertModelFrameParity(noInterceptExpected, noInterceptActual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForQuotedIdentifiers() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y value', 'gross margin', 'unit price'])
+      .rows([
+        [10.0, 1.5, 3.0],
+        [20.0, 2.5, 4.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('`y value` ~ `gross margin` + `unit price`', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      col('y value') | col('gross margin') + col('unit price')
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFramePreservesBuilderMethodsAndMatchesStringFormula() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'group', 'w', 'off', 'active', 'id'])
+      .rows([
+        [10.0, 1.0, 'A', 0.5, 0.1, true, 101.0],
+        [20.0, null, 'B', 1.0, 0.2, true, 102.0],
+        [30.0, 3.0, 'A', 1.5, 0.3, false, 103.0],
+        [40.0, 4.0, 'B', 2.0, 0.4, true, 104.0],
+      ])
+      .types([BigDecimal, BigDecimal, String, BigDecimal, BigDecimal, Boolean, BigDecimal])
+      .build()
+
+    ModelFrame expected = ModelFrame.of('y ~ . - id', data)
+      .weights('w')
+      .offset('off')
+      .subset { Row row -> row['active'] }
+      .naAction(NaAction.OMIT)
+
+    ModelFrame actual = ModelFrame.of(data) {
+      y | all - id
+    }
+      .weights('w')
+      .offset('off')
+      .subset { Row row -> row['active'] }
+      .naAction(NaAction.OMIT)
+
+    assertModelFrameParity(expected.evaluate(), actual.evaluate())
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslOwnerPropertyDoesNotOverrideFormulaColumnReference() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+    Expando owner = new Expando(x: 'owner-value')
+    Closure<GroovyFormulaSpec> formula = ({ col('y') | x } as Closure<GroovyFormulaSpec>).rehydrate(owner, owner, owner)
+
+    ModelFrameResult expected = ModelFrame.of('`y` ~ x', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data, formula).evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  void testDslModelFrameNullDataThrowsClearMessage() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of((Matrix) null, { null } as Closure<GroovyFormulaSpec>)
+    }
+
+    assertEquals('Data cannot be null', exception.message)
+  }
+
+  @Test
+  void testDslModelFrameNullClosureThrowsClearMessage() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data, (Closure<GroovyFormulaSpec>) null)
+    }
+
+    assertEquals('Formula closure cannot be null', exception.message)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameClosureReturningNonFormulaValueThrowsClearMessage() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([[1.0, 2.0, 3.0]])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        x + z
+      }
+    }
+
+    assertEquals('Formula closure must return a Groovy formula expression such as y | x + group', exception.message)
+  }
+
+  @Test
+  void testDslModelFrameRejectsMissingResponseSpec() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      ModelFrame.of(data) {
+        new GroovyFormulaSpec(null, new TermRef('x'))
+      }
+    }
+
+    assertEquals('Formula expression must define a response term such as y | x + group', exception.message)
+  }
+
+  @Test
+  void testDslModelFrameRejectsMissingPredictorsSpec() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      ModelFrame.of(data) {
+        new GroovyFormulaSpec(new TermRef('y'), null)
+      }
+    }
+
+    assertEquals('Formula expression must define predictor terms such as y | x + group', exception.message)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameUnknownColumnMatchesStringPathError() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        y | x + z
+      }.evaluate()
+    }
+
+    assertTrue(exception.message.contains('Unknown variable(s) in formula'))
+    assertTrue(exception.message.contains('z'))
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameRejectsZeroArgumentInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        y | interaction()
+      }
+    }
+
+    assertEquals('interaction(...) requires at least two terms', exception.message)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameRejectsOneArgumentInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        y | interaction(x)
+      }
+    }
+
+    assertEquals('interaction(...) requires at least two terms', exception.message)
+  }
+
+  private static void assertModelFrameParity(ModelFrameResult expected, ModelFrameResult actual) {
+    assertEquals(expected.responseName, actual.responseName)
+    assertEquals(expected.response, actual.response)
+    assertEquals(expected.includeIntercept, actual.includeIntercept)
+    assertEquals(expected.predictorNames, actual.predictorNames)
+    assertEquals(expected.weights, actual.weights)
+    assertEquals(expected.offset, actual.offset)
+    assertEquals(expected.droppedRows, actual.droppedRows)
+    assertEquals(expected.formula.asFormulaString(), actual.formula.asFormulaString())
+    assertEquals(expected.data.rowCount(), actual.data.rowCount())
+    assertEquals(expected.data.columnCount(), actual.data.columnCount())
+
+    expected.predictorNames.each { String columnName ->
+      for (int row = 0; row < expected.data.rowCount(); row++) {
+        assertTrue(expected.data[row, columnName] == actual.data[row, columnName])
+      }
+    }
+
+    assertTermsParity(expected.terms, actual.terms)
+  }
+
+  private static void assertTermsParity(Terms expected, Terms actual) {
+    assertEquals(expected.response.asFormulaString(), actual.response.asFormulaString())
+    assertEquals(expected.includeIntercept, actual.includeIntercept)
+    assertEquals(expected.terms.size(), actual.terms.size())
+
+    for (int i = 0; i < expected.terms.size(); i++) {
+      Terms.TermInfo expectedTerm = expected.terms[i]
+      Terms.TermInfo actualTerm = actual.terms[i]
+      assertEquals(expectedTerm.sourceTerm.asFormulaString(), actualTerm.sourceTerm.asFormulaString())
+      assertEquals(expectedTerm.label, actualTerm.label)
+      assertEquals(expectedTerm.columns, actualTerm.columns)
+      assertEquals(expectedTerm.isCategorical, actualTerm.isCategorical)
+      assertEquals(expectedTerm.factorLevels, actualTerm.factorLevels)
+      assertEquals(expectedTerm.isSmooth, actualTerm.isSmooth)
+      assertEquals(expectedTerm.isDropped, actualTerm.isDropped)
+      assertEquals(expectedTerm.droppedReason, actualTerm.droppedReason)
+    }
   }
 
 }
