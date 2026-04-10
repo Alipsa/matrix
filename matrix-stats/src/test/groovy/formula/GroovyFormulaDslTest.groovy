@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
-import groovy.lang.MissingMethodException
-
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.formula.Formula
