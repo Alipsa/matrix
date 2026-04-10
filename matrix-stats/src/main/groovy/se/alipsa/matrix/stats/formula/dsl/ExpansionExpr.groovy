@@ -26,6 +26,7 @@ class ExpansionExpr extends TermExpr {
 
   @Override
   String render() {
-    "(${base.render()})^${degree}"
+    String renderedBase = base instanceof TermRef ? base.render() : "(${base.render()})"
+    "${renderedBase}^${degree}"
   }
 }

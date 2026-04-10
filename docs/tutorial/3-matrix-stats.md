@@ -190,6 +190,11 @@ Supported formula features include:
 - polynomial terms: `poly(x, 3)`
 - smooth terms for GAMs: `s(x)` and `s(x, 6)`
 
+The Groovy-native closure DSL, `Formula.build { y | x + group }`, relies on dynamic
+`propertyMissing` lookup for bare column names and is not supported inside `@CompileStatic`
+callers; use string formulas or a `@CompileDynamic` helper there. In that DSL, write
+intercept removal as `noIntercept + x` rather than `0 + x`.
+
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.formula.ModelFrame

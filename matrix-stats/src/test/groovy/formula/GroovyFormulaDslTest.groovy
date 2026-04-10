@@ -4,10 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import groovy.lang.MissingMethodException
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.formula.Formula
 import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaDsl
+import se.alipsa.matrix.stats.formula.dsl.TermRef
 
 /**
  * Tests for the Groovy-native formula DSL core syntax.
@@ -62,6 +65,15 @@ class GroovyFormulaDslTest {
     assertDslEquals('y ~ (a + b + c)^2') {
       y | (a + b + c) ** 2
     }
+  }
+
+  @Test
+  void testRendersSingleTermPowerExpansionWithoutParens() {
+    def spec = GroovyFormulaDsl.evaluate {
+      y | x ** 2
+    }
+
+    assertEquals('y ~ x^2', spec.render())
   }
 
   @Test
@@ -136,13 +148,15 @@ class GroovyFormulaDslTest {
 
   @Test
   void testRejectsUnsupportedZeroPlusTermSyntax() {
-    RuntimeException exception = assertThrows(RuntimeException) {
+    MissingMethodException exception = assertThrows(MissingMethodException) {
       Formula.build {
         y | 0 + x
       }
     }
 
-    assertTrue(exception.message != null)
+    assertEquals('plus', exception.method)
+    assertEquals(Integer, exception.type)
+    assertEquals(TermRef, exception.arguments[0].class)
   }
 
   @Test

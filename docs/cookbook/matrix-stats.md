@@ -91,6 +91,10 @@ assert 9.0 == Interpolation.linear(points, 'time', 'value', 3.0)
 ## Formula Models
 
 Build a model frame first, then dispatch to a named fit method through `FitRegistry`.
+When using the Groovy-native closure DSL, `Formula.build { y | x + group }`, keep it
+outside `@CompileStatic` callers or wrap it in a `@CompileDynamic` helper because bare
+column names use dynamic `propertyMissing` lookup. In that DSL, write intercept removal
+as `noIntercept + x` rather than `0 + x`.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
