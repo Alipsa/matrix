@@ -6,6 +6,16 @@ package se.alipsa.matrix.stats.formula.dsl
 abstract class TermExpr {
 
   /**
+   * Builds a full formula expression using this term as the response.
+   *
+   * @param predictors the predictor-side term expression
+   * @return the full formula specification
+   */
+  GroovyFormulaSpec or(TermExpr predictors) {
+    new GroovyFormulaSpec(this, requireTerm(predictors, 'predictors'))
+  }
+
+  /**
    * Adds a term to this expression.
    *
    * @param other the term to add
