@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.ext.NumberExtension
 import se.alipsa.matrix.stats.formula.ContrastType
+import se.alipsa.matrix.stats.formula.FormulaParseException
 import se.alipsa.matrix.stats.formula.ModelFrame
 import se.alipsa.matrix.stats.formula.ModelFrameResult
 import se.alipsa.matrix.stats.formula.NaAction
@@ -631,11 +632,10 @@ class FormulaDesignMatrixTest {
       .types([BigDecimal, BigDecimal])
       .build()
 
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+    FormulaParseException ex = assertThrows(FormulaParseException) {
       ModelFrame.of('log(y) ~ x', data).evaluate()
     }
-    assertTrue(ex.message.contains('Transformed responses are not yet supported'))
-    assertTrue(ex.message.contains('log(y)'))
+    assertEquals('Transformed responses are not supported: log(y) ~ x. Move transforms to the predictor side.', ex.message)
   }
 
   @Test

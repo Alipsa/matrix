@@ -74,6 +74,114 @@ class GroovyFormulaDsl {
   }
 
   /**
+   * Creates a logarithm transform term.
+   *
+   * @param expression the transformed input
+   * @return the transform term
+   */
+  TermExpr log(TermExpr expression) {
+    new FunctionTermExpr('log', [expression])
+  }
+
+  /**
+   * Creates a square-root transform term.
+   *
+   * @param expression the transformed input
+   * @return the transform term
+   */
+  TermExpr sqrt(TermExpr expression) {
+    new FunctionTermExpr('sqrt', [expression])
+  }
+
+  /**
+   * Creates an exponential transform term.
+   *
+   * @param expression the transformed input
+   * @return the transform term
+   */
+  TermExpr exp(TermExpr expression) {
+    new FunctionTermExpr('exp', [expression])
+  }
+
+  /**
+   * Creates a polynomial expansion term.
+   *
+   * @param expression the base term
+   * @param degree the polynomial degree
+   * @return the polynomial term
+   */
+  TermExpr poly(TermExpr expression, Number degree) {
+    if (degree == null) {
+      throw new IllegalArgumentException('degree cannot be null')
+    }
+    new FunctionTermExpr('poly', [expression, degree])
+  }
+
+  /**
+   * Creates a smooth term using the default basis size.
+   *
+   * @param expression the smooth input
+   * @return the smooth term
+   */
+  TermExpr smooth(TermExpr expression) {
+    new FunctionTermExpr('s', [expression])
+  }
+
+  /**
+   * Creates a smooth term with an explicit basis size.
+   *
+   * @param expression the smooth input
+   * @param df the requested degrees of freedom
+   * @return the smooth term
+   */
+  TermExpr smooth(TermExpr expression, Number df) {
+    if (df == null) {
+      throw new IllegalArgumentException('df cannot be null')
+    }
+    new FunctionTermExpr('s', [expression, df])
+  }
+
+  /**
+   * Alias for {@link #smooth(TermExpr)}.
+   *
+   * @param expression the smooth input
+   * @return the smooth term
+   */
+  TermExpr s(TermExpr expression) {
+    smooth(expression)
+  }
+
+  /**
+   * Alias for {@link #smooth(TermExpr, Number)}.
+   *
+   * @param expression the smooth input
+   * @param df the requested degrees of freedom
+   * @return the smooth term
+   */
+  TermExpr s(TermExpr expression, Number df) {
+    smooth(expression, df)
+  }
+
+  /**
+   * Creates an identity expression term from an arithmetic-expression closure.
+   *
+   * <p>The closure is evaluated against {@link ExpressionDsl}, not the outer formula DSL, so
+   * operators such as {@code +} and {@code *} build arithmetic expressions instead of formula
+   * terms. For example: {@code y | I { (x + 1) * z }}.</p>
+   *
+   * @param expression the arithmetic-expression closure
+   * @return the identity term
+   */
+  @CompileDynamic
+  @SuppressWarnings('MethodName')
+  TermExpr I(
+    @DelegatesTo(value = ExpressionDsl, strategy = Closure.DELEGATE_FIRST)
+    Closure<?> expression
+  ) {
+    new FunctionTermExpr('I', [ExpressionDsl.evaluate(expression)])
+  }
+
+  /**
    * Creates an interaction expression from two or more terms.
    *
    * @param first the first term

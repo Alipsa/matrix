@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.ext.NumberExtension
 import se.alipsa.matrix.stats.formula.Formula
 import se.alipsa.matrix.stats.formula.FormulaParseException
 import se.alipsa.matrix.stats.formula.ModelFrame
@@ -1132,6 +1133,90 @@ class FormulaModelFrameTest {
 
   @Test
   @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForTransforms() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z', 'w'])
+      .rows([
+        [10.0, 1.0, 4.0, 0.0],
+        [20.0, 2.0, 9.0, 1.0],
+        [30.0, NumberExtension.E, 16.0, 2.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ log(x) + sqrt(z) + exp(w)', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | log(x) + sqrt(z) + exp(w)
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForIExpression() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [10.0, 1.0, 2.0],
+        [20.0, 2.0, 3.0],
+        [30.0, 3.0, 4.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ I((x + 1) * z)', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | I { (x + 1) * z }
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForPolynomialTerms() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([
+        [10.0, 1.0],
+        [20.0, 2.0],
+        [30.0, 3.0],
+      ])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ poly(x, 3)', data).evaluate()
+    ModelFrameResult actual = ModelFrame.of(data) {
+      y | poly(x, 3)
+    }.evaluate()
+
+    assertModelFrameParity(expected, actual)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameMatchesStringFormulaForSmoothTerms() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'time'])
+      .rows((1..12).collect { int value -> [value * 2.0, value as BigDecimal] })
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult expected = ModelFrame.of('y ~ s(time, 6)', data).evaluate()
+    ModelFrameResult smoothActual = ModelFrame.of(data) {
+      y | smooth(time, 6)
+    }.evaluate()
+    ModelFrameResult aliasActual = ModelFrame.of(data) {
+      y | s(time, 6)
+    }.evaluate()
+
+    assertModelFrameParity(expected, smoothActual)
+    assertModelFrameParity(expected, aliasActual)
+  }
+
+  @Test
+  @CompileDynamic
   void testDslModelFramePreservesBuilderMethodsAndMatchesStringFormula() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x', 'group', 'w', 'off', 'active', 'id'])
@@ -1307,6 +1392,74 @@ class FormulaModelFrameTest {
     }
 
     assertEquals('interaction(...) requires at least two terms', exception.message)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameRejectsTransformedResponseExplicitly() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[1.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      ModelFrame.of(data) {
+        log(y) | x
+      }
+    }
+
+    assertEquals('Transformed responses are not supported: log(y) | x. Move transforms to the predictor side.', exception.message)
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameRejectsSmoothInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [3.0, 1.0, 2.0],
+        [5.0, 2.0, 3.0],
+        [7.0, 3.0, 4.0],
+        [9.0, 4.0, 5.0],
+        [11.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        y | smooth(x) % z
+      }.evaluate()
+    }
+
+    assertTrue(exception.message.contains('Smooth terms cannot be used in interactions'))
+    assertTrue(exception.message.contains('s(x):z'))
+  }
+
+  @Test
+  @CompileDynamic
+  void testDslModelFrameRejectsExpandedSmoothInteraction() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x', 'z'])
+      .rows([
+        [3.0, 1.0, 2.0],
+        [5.0, 2.0, 3.0],
+        [7.0, 3.0, 4.0],
+        [9.0, 4.0, 5.0],
+        [11.0, 5.0, 6.0],
+      ])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of(data) {
+        y | (smooth(x) + z) ** 2
+      }.evaluate()
+    }
+
+    assertTrue(exception.message.contains('Smooth terms cannot be used in interactions'))
+    assertTrue(exception.message.contains('s(x):z'))
   }
 
   private static void assertModelFrameParity(ModelFrameResult expected, ModelFrameResult actual) {

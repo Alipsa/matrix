@@ -270,7 +270,10 @@ final class ModelFrame {
     }
 
     // Stage 4: Validate response
-    String responseName = extractResponseName(normalized.response)
+    String responseName = extractResponseName(
+      normalized.response,
+      parsedFormula?.source ?: normalized.asFormulaString()
+    )
     validateResponseColumn(responseName)
 
     // Stage 4: Validate all predictor variables
@@ -492,7 +495,7 @@ final class ModelFrame {
     }
   }
 
-  private static String extractResponseName(FormulaExpression response) {
+  private static String extractResponseName(FormulaExpression response, String formulaSource) {
     FormulaExpression unwrapped = response
     while (unwrapped instanceof FormulaExpression.Grouping) {
       unwrapped = (unwrapped as FormulaExpression.Grouping).expression
@@ -500,8 +503,9 @@ final class ModelFrame {
     if (unwrapped instanceof FormulaExpression.Variable) {
       return (unwrapped as FormulaExpression.Variable).name
     }
-    throw new IllegalArgumentException(
-      "Transformed responses are not yet supported; use a raw variable on the left-hand side, got: ${response.asFormulaString()}"
+    throw new FormulaParseException(
+      "Transformed responses are not supported: ${formulaSource}. Move transforms to the predictor side.",
+      unwrapped.start
     )
   }
 
