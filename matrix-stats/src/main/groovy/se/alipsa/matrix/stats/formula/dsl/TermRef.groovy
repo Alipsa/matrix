@@ -29,7 +29,7 @@ class TermRef extends TermExpr {
    */
   @CompileDynamic
   GroovyFormulaSpec or(TermExpr predictors) {
-    new GroovyFormulaSpec(this, requireTerm(predictors, 'predictors'))
+    GroovyFormulaSpec.from(this, requireTerm(predictors, 'predictors'))
   }
 
   @Override
