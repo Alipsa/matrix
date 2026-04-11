@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats.regression
 
-import groovy.transform.CompileDynamic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.formula.ModelFrame
 import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaDsl
@@ -97,7 +96,6 @@ final class FitDsl {
     fit('gam', data, formula, options)
   }
 
-  @CompileDynamic
   private static FitResult fit(
     String methodName,
     Matrix data,
@@ -107,7 +105,6 @@ final class FitDsl {
     FitRegistry.instance().get(methodName).fit(ModelFrame.of(data, formula).evaluate())
   }
 
-  @CompileDynamic
   private static FitResult fit(
     String methodName,
     Matrix data,
