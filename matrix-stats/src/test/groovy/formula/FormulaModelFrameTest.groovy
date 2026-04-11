@@ -1184,7 +1184,7 @@ class FormulaModelFrameTest {
       ModelFrame.of((Matrix) null, { null } as Closure<GroovyFormulaSpec>)
     }
 
-    assertEquals('Data cannot be null', exception.message)
+    assertEquals('data cannot be null', exception.message)
   }
 
   @Test

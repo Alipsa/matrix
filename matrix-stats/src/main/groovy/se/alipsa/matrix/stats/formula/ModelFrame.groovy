@@ -94,7 +94,8 @@ final class ModelFrame {
    * @param data the input dataset
    * @param formula the formula DSL closure, for example {@code { y | x + group }}
    * @return a new builder
-   * @throws IllegalArgumentException if data or the closure is null
+   * @throws IllegalArgumentException if data is null, the closure is null, or the closure
+   *   does not return a {@link GroovyFormulaSpec}
    * @throws FormulaParseException if the closure produces a malformed formula specification
    */
   static ModelFrame of(
@@ -102,9 +103,7 @@ final class ModelFrame {
     @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<GroovyFormulaSpec> formula
   ) {
-    if (data == null) {
-      throw new IllegalArgumentException('Data cannot be null')
-    }
+    requireNonNull(data, 'data')
     ParsedFormula parsed = Formula.parse(GroovyFormulaDsl.evaluate(formula).render())
     new ModelFrame(parsed, null, data)
   }
