@@ -234,6 +234,40 @@ Current limitations:
 - `lm`, `loess`, and `gam` reject unsupported frame metadata rather than silently ignoring it
 - smooth terms cannot be used inside interactions such as `s(x):z` or `s(x) * z`
 
+The same supported formula subset is available through the Groovy operator DSL:
+
+```groovy
+def stringFrame = ModelFrame.of('y ~ x + group + x:group', data).evaluate()
+
+def dslFrame = ModelFrame.of(data) {
+    y | x + group + (x % group)
+}.evaluate()
+```
+
+The first Groovy DSL version uses deferred syntax:
+
+- `|` instead of `~`
+- `noIntercept` instead of `0 +`
+
+The DSL is intentionally dynamic because bare column names are resolved via `propertyMissing` and
+the formula syntax relies on Groovy operator dispatch. Use string formulas or a `@CompileDynamic`
+helper if you are calling it from `@CompileStatic` code.
+
+`I { ... }` is limited to the arithmetic already supported by the string parser subset: numeric
+literals, unary minus, `+`, `-`, `*`, `/`, `**`, and supported transform helpers such as `log`,
+`sqrt`, and `exp`.
+
+For fitting, you can either dispatch through `FitRegistry` or use the convenience helpers in
+`FitDsl`:
+
+```groovy
+import static se.alipsa.matrix.stats.regression.FitDsl.lm
+
+def fit = lm(data) {
+    y | x + group + interaction(x, group)
+}
+```
+
 ## Linear Regression
 
 `LinearRegression` fits a simple least-squares model with one predictor.
