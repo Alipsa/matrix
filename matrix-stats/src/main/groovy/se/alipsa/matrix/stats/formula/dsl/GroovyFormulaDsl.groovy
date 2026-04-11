@@ -165,10 +165,15 @@ class GroovyFormulaDsl {
   /**
    * Creates an identity expression term from an arithmetic-expression closure.
    *
+   * <p>The closure is evaluated against {@link ExpressionDsl}, not the outer formula DSL, so
+   * operators such as {@code +} and {@code *} build arithmetic expressions instead of formula
+   * terms. For example: {@code y | I { (x + 1) * z }}.</p>
+   *
    * @param expression the arithmetic-expression closure
    * @return the identity term
    */
   @CompileDynamic
+  @SuppressWarnings('MethodName')
   TermExpr I(
     @DelegatesTo(value = ExpressionDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<?> expression

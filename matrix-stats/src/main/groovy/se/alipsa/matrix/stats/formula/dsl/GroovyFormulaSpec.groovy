@@ -1,10 +1,12 @@
 package se.alipsa.matrix.stats.formula.dsl
 
+import groovy.transform.CompileDynamic
 import se.alipsa.matrix.stats.formula.FormulaParseException
 
 /**
  * Full Groovy formula DSL expression containing response and predictor sides.
  */
+@CompileDynamic
 class GroovyFormulaSpec {
 
   final TermExpr response
@@ -27,9 +29,16 @@ class GroovyFormulaSpec {
    * @return the rendered formula source
    */
   String render() {
-    if (response instanceof FunctionTermExpr) {
+    if (!(response instanceof TermRef)) {
+      String renderedDsl = "${response.render()} | ${predictors.render()}"
+      if (response instanceof FunctionTermExpr) {
+        throw new FormulaParseException(
+          "Transformed responses are not supported: ${renderedDsl}. Move transforms to the predictor side.",
+          0
+        )
+      }
       throw new FormulaParseException(
-        "Transformed responses are not supported: ${response.render()} | ${predictors.render()}. Move transforms to the predictor side.",
+        "Response must be a single variable in the Groovy formula DSL: ${renderedDsl}",
         0
       )
     }

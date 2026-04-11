@@ -107,7 +107,7 @@ abstract class ExpressionExpr {
   static String renderNumber(Number value) {
     BigDecimal decimal = value as BigDecimal
     BigDecimal normalized = decimal.stripTrailingZeros()
-    normalized.scale() <= 0 ? normalized.toPlainString() : normalized.toPlainString()
+    normalized.toPlainString()
   }
 
   static int precedence(String operator) {

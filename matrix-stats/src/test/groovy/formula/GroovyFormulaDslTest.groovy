@@ -212,6 +212,17 @@ class GroovyFormulaDslTest {
   }
 
   @Test
+  void testRejectsNonVariableResponseInDslUsingPipeSyntax() {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.build {
+        (x + y) | z
+      }
+    }
+
+    assertEquals('Response must be a single variable in the Groovy formula DSL: x + y | z', exception.message)
+  }
+
+  @Test
   void testRejectsMalformedIExpressionClosure() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Formula.build {
