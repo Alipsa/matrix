@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.formula.dsl
 
+import groovy.transform.CompileDynamic
+
 /**
  * Base type for Groovy-native formula DSL term expressions.
  */
@@ -44,6 +46,21 @@ abstract class TermExpr {
    */
   TermExpr power(Number degree) {
     new ExpansionExpr(this, degree)
+  }
+
+  /**
+   * Builds a full formula expression using this term as the response.
+   *
+   * <p>Most term shapes are invalid as responses, but routing them through
+   * {@link GroovyFormulaSpec} ensures users get a formula-specific error
+   * instead of Groovy's generic missing-method message.</p>
+   *
+   * @param predictors the predictor-side term expression
+   * @return the full formula specification
+   */
+  @CompileDynamic
+  GroovyFormulaSpec or(TermExpr predictors) {
+    GroovyFormulaSpec.from(this, requireTerm(predictors, 'predictors'))
   }
 
   /**

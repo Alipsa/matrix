@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats.formula.dsl
 
-import groovy.transform.CompileDynamic
 import groovy.transform.PackageScope
 
 /**
@@ -18,17 +17,6 @@ final class FunctionTermExpr extends TermExpr {
   FunctionTermExpr(String name, List<Object> arguments) {
     this.name = IdentifierRenderingSupport.requireNonBlank(name, 'name')
     this.arguments = copyArguments(arguments)
-  }
-
-  /**
-   * Builds a full formula expression using this term as the response.
-   *
-   * @param predictors the predictor-side term expression
-   * @return the full formula specification
-   */
-  @CompileDynamic
-  GroovyFormulaSpec or(TermExpr predictors) {
-    new GroovyFormulaSpec(this, requireTerm(predictors, 'predictors'))
   }
 
   @Override

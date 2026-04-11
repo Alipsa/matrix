@@ -223,6 +223,22 @@ class GroovyFormulaDslTest {
   }
 
   @Test
+  void testRejectsOtherInvalidResponseShapesInDslUsingPipeSyntax() {
+    assertInvalidResponseShape('. | z') {
+      all | z
+    }
+    assertInvalidResponseShape('x^2 | z') {
+      (x ** 2) | z
+    }
+    assertInvalidResponseShape('x:y | z') {
+      (x % y) | z
+    }
+    assertInvalidResponseShape('0 | z') {
+      noIntercept | z
+    }
+  }
+
+  @Test
   void testRejectsMalformedIExpressionClosure() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Formula.build {
@@ -255,5 +271,13 @@ class GroovyFormulaDslTest {
 
   private static void assertDslEquals(String equivalentFormula, Closure<?> dsl) {
     assertEquals(Formula.normalize(equivalentFormula).asFormulaString(), Formula.build(dsl).asFormulaString())
+  }
+
+  private static void assertInvalidResponseShape(String renderedDsl, Closure<?> dsl) {
+    FormulaParseException exception = assertThrows(FormulaParseException) {
+      Formula.build(dsl)
+    }
+
+    assertEquals("Response must be a single variable in the Groovy formula DSL: ${renderedDsl}", exception.message)
   }
 }

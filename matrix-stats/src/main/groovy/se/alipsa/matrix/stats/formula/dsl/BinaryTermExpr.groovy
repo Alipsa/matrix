@@ -1,7 +1,5 @@
 package se.alipsa.matrix.stats.formula.dsl
 
-import groovy.transform.CompileDynamic
-
 /**
  * Binary additive or subtractive formula term expression.
  */
@@ -22,17 +20,6 @@ class BinaryTermExpr extends TermExpr {
     this.left = requireTerm(left, 'left')
     this.operator = requireOperator(operator)
     this.right = requireTerm(right, 'right')
-  }
-
-  /**
-   * Builds a full formula expression using this term as the response.
-   *
-   * @param predictors the predictor-side term expression
-   * @return the full formula specification
-   */
-  @CompileDynamic
-  GroovyFormulaSpec or(TermExpr predictors) {
-    new GroovyFormulaSpec(this, requireTerm(predictors, 'predictors'))
   }
 
   @Override

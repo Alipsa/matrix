@@ -25,6 +25,17 @@ class GroovyFormulaSpec {
   }
 
   /**
+   * Creates a formula specification from response and predictor terms.
+   *
+   * @param response the response term
+   * @param predictors the predictor terms
+   * @return the formula specification
+   */
+  static GroovyFormulaSpec from(TermExpr response, TermExpr predictors) {
+    new GroovyFormulaSpec(response, predictors)
+  }
+
+  /**
    * Renders this specification to R-style formula syntax.
    *
    * @return the rendered formula source
