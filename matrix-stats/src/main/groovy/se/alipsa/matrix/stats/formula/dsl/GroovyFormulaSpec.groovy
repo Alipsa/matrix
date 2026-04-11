@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.formula.dsl
 
 import groovy.transform.CompileDynamic
+
 import se.alipsa.matrix.stats.formula.FormulaParseException
 
 /**
