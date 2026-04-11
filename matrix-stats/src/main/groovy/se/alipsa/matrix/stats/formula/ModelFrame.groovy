@@ -2,6 +2,8 @@ package se.alipsa.matrix.stats.formula
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaDsl
+import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaSpec
 
 /**
  * Evaluates a formula against a Matrix dataset to produce an expanded design matrix.
@@ -80,6 +82,30 @@ final class ModelFrame {
   static ModelFrame of(NormalizedFormula formula, Matrix data) {
     requireNonNull(formula, 'formula')
     new ModelFrame(null, formula, data)
+  }
+
+  /**
+   * Creates a model frame builder from the Groovy-native formula DSL and data.
+   *
+   * <p>The closure is rehydrated with a {@link GroovyFormulaDsl} delegate and uses
+   * {@link Closure#DELEGATE_FIRST}, so formula names inside the closure resolve against
+   * the DSL before owner properties.</p>
+   *
+   * @param data the input dataset
+   * @param formula the formula DSL closure, for example {@code { y | x + group }}
+   * @return a new builder
+   * @throws IllegalArgumentException if data is null, the closure is null, or the closure
+   *   does not return a {@link GroovyFormulaSpec}
+   * @throws FormulaParseException if the closure produces a malformed formula specification
+   */
+  static ModelFrame of(
+    Matrix data,
+    @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
+    Closure<GroovyFormulaSpec> formula
+  ) {
+    requireNonNull(data, 'data')
+    ParsedFormula parsed = Formula.parse(GroovyFormulaDsl.evaluate(formula).render())
+    new ModelFrame(parsed, null, data)
   }
 
   /**
