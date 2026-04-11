@@ -28,6 +28,7 @@
 #### Formula and Model-Frame Pipeline
 - Add R-style formula parsing and normalization support, including additive terms, intercept control, interactions, shorthand expansion, quoted identifiers, numeric transformations, `poly(...)`, and `s(...)` smooth terms.
 - Add `ModelFrame` and `ModelFrameResult` for design-matrix construction from Matrix data.
+- Add a Groovy-native operator DSL for formulas using `|`, `noIntercept`, `interaction(...)`, `smooth(...)`, and `I { ... }`.
 - Add categorical treatment encoding, dot expansion, subset support, NA handling, weights, offsets, and external environment variable resolution.
 - Add `NaAction` and formula metadata classes to make downstream model fitting explicit.
 - Reject unsupported response forms, smooth-term interactions, and unsupported frame metadata instead of silently ignoring them.
@@ -35,6 +36,7 @@
 #### Fit Registry and Formula-Based Regression
 - Add `FitRegistry`, `FitMethod`, `FitOptions`, and `FitResult` for named fit-method dispatch.
 - Add built-in `lm`, `loess`, and `gam` fit methods.
+- Add `FitDsl` convenience entry points so Groovy callers can write `lm(data) { y | x + group }`, `loess(data) { y | x }`, and `gam(data) { y | smooth(time, 6) + group }`.
 - Add `MultipleLinearRegression`, `LmMethod`, `LoessMethod`, and `GamMethod`.
 - Add `LoessOptions` and `GamOptions` with Groovy-facing numeric option surfaces.
 
@@ -76,7 +78,7 @@
 ### Documentation
 - Refresh `matrix-stats` README, tutorial, and cookbook docs for the 2.4.0 API surface.
 - Document the Commons Math runtime removal and EJML implementation detail.
-- Add examples for `Linalg`, `Interpolation`, formula/model-frame fitting, native distributions, and native solvers.
+- Add examples for `Linalg`, `Interpolation`, formula/model-frame fitting, the Groovy formula DSL, fit convenience helpers, native distributions, and native solvers.
 - Refresh broader tutorial setup snippets to use the current BOM and Groovy versions.
 
 ## v2.3.0, 2026-01-30

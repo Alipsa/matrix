@@ -265,6 +265,72 @@ Current limitations:
   `lm` rejects weights and offsets, `loess` rejects offsets, and `gam` rejects weights and offsets
 - smooth terms cannot be used inside interactions such as `s(x):z` or `s(x) * z`
 
+## Groovy Formula DSL
+
+The string formula parser and the Groovy operator DSL cover the same supported model-frame subset.
+Use string formulas when you want explicit R-style source text, or the Groovy DSL when you want
+direct column references and operator syntax.
+
+```groovy
+def stringFrame = ModelFrame.of('y ~ x + group + x:group', data).evaluate()
+
+def dslFrame = ModelFrame.of(data) {
+    y | x + group + (x % group)
+}.evaluate()
+```
+
+The Groovy DSL uses deferred syntax in two places:
+
+- `|` instead of `~`
+- `noIntercept` instead of `0 +`
+
+```groovy
+def frame = ModelFrame.of(data) {
+    y | noIntercept + x + group
+}
+```
+
+The operator DSL is intentionally dynamic. Bare names such as `y`, `x`, and `group` are resolved
+through `propertyMissing`, and the infix formula syntax relies on Groovy operator dispatch. That is
+what keeps the DSL compact, but it also means it should live in dynamic Groovy code. In
+`@CompileStatic` callers, prefer string formulas or isolate the DSL inside a `@CompileDynamic`
+helper.
+
+`I { ... }` has a deliberately narrow arithmetic scope that matches the existing supported string
+formula subset. Inside `I { ... }`, use only:
+
+- numeric literals
+- unary minus
+- `+`, `-`, `*`, `/`, and `**`
+- transform helpers already supported by the formula parser, such as `log(x)`, `sqrt(x)`, and `exp(x)`
+
+```groovy
+def transformedFrame = ModelFrame.of(data) {
+    y | x + I { (x + 1) * z }
+}.evaluate()
+```
+
+For model fitting, you can either go through `FitRegistry` or use the Groovy convenience entry
+points in `FitDsl`:
+
+```groovy
+import static se.alipsa.matrix.stats.regression.FitDsl.gam
+import static se.alipsa.matrix.stats.regression.FitDsl.lm
+import static se.alipsa.matrix.stats.regression.FitDsl.loess
+
+def lmFit = lm(data) {
+    y | x + group + interaction(x, group)
+}
+
+def loessFit = loess(data) {
+    y | x
+}
+
+def gamFit = gam(data) {
+    y | smooth(time, 6) + group
+}
+```
+
 ## T-tests
 
 Use `Welch` for the default unequal-variance two-sample test, and `Student` when you explicitly want

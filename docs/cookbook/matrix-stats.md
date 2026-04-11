@@ -122,6 +122,50 @@ println(fit.predictorNames)
 println(fit.rSquared)
 ```
 
+## Groovy Formula DSL Recipes
+
+Compare the string and Groovy operator forms side by side when building the same model frame:
+
+```groovy
+import se.alipsa.matrix.stats.formula.ModelFrame
+
+def stringFrame = ModelFrame.of('y ~ x + group + x:group', data).evaluate()
+
+def dslFrame = ModelFrame.of(data) {
+  y | x + group + (x % group)
+}.evaluate()
+```
+
+Use the fit convenience helpers when you want to go straight from data plus DSL formula to a fitted
+model:
+
+```groovy
+import static se.alipsa.matrix.stats.regression.FitDsl.lm
+
+def model = lm(data) {
+  y | x + group + interaction(x, group)
+}
+```
+
+For three-way interactions, prefer the explicit helper:
+
+```groovy
+def interactionFrame = ModelFrame.of(data) {
+  y | interaction(x, group, z)
+}.evaluate()
+```
+
+Remember the Groovy DSL uses deferred syntax and dynamic lookup:
+
+- `|` instead of `~`
+- `noIntercept` instead of `0 +`
+- bare column names are resolved through `propertyMissing`, so keep the DSL out of `@CompileStatic`
+  callers unless you wrap it in a `@CompileDynamic` helper
+
+Inside `I { ... }`, stick to the arithmetic supported by the string formula subset: numeric
+literals, unary minus, `+`, `-`, `*`, `/`, `**`, and supported transform helpers such as `log`,
+`sqrt`, and `exp`.
+
 ## T-tests
 
 Use Welch for unequal variances and Student for pooled-variance or paired designs.
