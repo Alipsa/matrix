@@ -8,6 +8,7 @@ import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToPng
 
 import java.nio.file.Files
+import javafx.scene.Group
 
 /**
  * Exports legacy chart types to PNG, base64, and JavaFX formats.
@@ -54,14 +55,14 @@ class Plot {
    * Converts a chart to a JavaFX Node for display.
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
-   * Now returns {@code javafx.scene.Node} (an SVGImage extending Group).
+   * Now returns {@code javafx.scene.Group} (an SVGImage extending Group).
    * Callers using {@code inout.view(Plot.jfx(chart))} are unaffected since
    * {@code view()} accepts {@code Node}.</p>
    *
    * @param chart the chart to convert
    * @return a JavaFX Node rendering the chart
    */
-  static javafx.scene.Node jfx(Chart chart) {
+  static Group jfx(Chart chart) {
     Svg svg = CharmBridge.convert(chart).render()
     ChartToJfx.export(svg)
   }
