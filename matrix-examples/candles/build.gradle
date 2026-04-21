@@ -35,9 +35,7 @@ dependencies {
   implementation libs.tablesaw.aggregate
   implementation libs.pebble // Upgrade of tablesaw dependency
 
-  implementation libs.slf4j.simple
   implementation libs.gi.swing
-  runtimeOnly libs.log4j.core
   testImplementation libs.junit.jupiter
   testImplementation libs.junit.platform.launcher
 }

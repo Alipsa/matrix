@@ -49,7 +49,6 @@ dependencies {
     testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.jupiter.engine
     testRuntimeOnly libs.junit.platform.launcher
-    testRuntimeOnly libs.log4j.slf4j
 }
 
 test {

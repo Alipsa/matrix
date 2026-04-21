@@ -1,5 +1,4 @@
 plugins {
-  id('groovy')
   id('java-library')
   id('signing')
   id('maven-publish')
@@ -7,8 +6,8 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.3-SNAPSHOT'
-description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
+version = '0.1.0-SNAPSHOT'
+description = 'Convenience logging setup for Matrix Groovy scripts'
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -20,10 +19,6 @@ JavaCompile javaCompile = compileJava {
   options.compilerArgs << "-Xlint:unchecked"
 }
 
-compileGroovy {
-  options.deprecation = true
-}
-
 repositories {
   if (version.toString().endsWith('SNAPSHOT')) {
     mavenLocal()
@@ -32,39 +27,26 @@ repositories {
 }
 
 dependencies {
-  compileOnly project(':matrix-core')
-  testImplementation project(':matrix-core')
-  testImplementation project(':matrix-datasets')
+  runtimeOnly platform(libs.slf4j.bom)
 
-  compileOnly libs.groovy
-  compileOnly libs.groovy.json
+  // Default lightweight SLF4J provider for Groovy scripts and small tools.
+  runtimeOnly libs.slf4j.simple
 
-  // Jackson for streaming JSON parsing (low memory footprint)
-  api platform(libs.jackson.bom)
-  api libs.jackson.core
-  api libs.jackson.databind
+  // Route Matrix's JDK System.Logger usage to SLF4J.
+  runtimeOnly libs.slf4j.jdk.platform.logging
 
-  testImplementation libs.groovy
-  testImplementation libs.groovy.json
-  testImplementation libs.junit.jupiter.api
-  testImplementation libs.groovier.junit
-  testRuntimeOnly libs.junit.jupiter.engine
-  testRuntimeOnly libs.junit.platform.launcher
+  // Route Log4j API usage from third-party libraries to SLF4J.
+  runtimeOnly libs.log4j.to.slf4j
 }
 
-test {
-  testLogging.showStandardStreams = true
-  useJUnitPlatform()
-}
-
-//Maven Central uploads
-task javadocJar(type: Jar, dependsOn: groovydoc) {
+tasks.register('javadocJar', Jar) {
+  dependsOn javadoc
   archiveClassifier.set('javadoc')
-  from groovydoc.destinationDir
+  from javadoc.destinationDir
 }
 
-
-task sourcesJar(type: Jar, dependsOn: classes) {
+tasks.register('sourcesJar', Jar) {
+  dependsOn classes
   archiveClassifier.set('sources')
   from sourceSets.main.allSource
 }
@@ -76,16 +58,16 @@ publishing {
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
-        name = 'Matrix Json'
+        name = 'Matrix Logging'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-json"
+        url = "https://github.com/Alipsa/matrix/matrix-logging"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-json/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-logging/master/LICENSE'
           }
         }
         developers {
@@ -95,7 +77,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-json/tree/master'
+          url = 'https://github.com/Alipsa/matrix/matrix-logging/tree/master'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
@@ -117,7 +99,6 @@ publishing {
 
 signing {
   if (project.properties['signing.keyId'] != null) {
-    //project.logger.lifecycle("Signing artifacts...")
     sign publishing.publications.maven
   } else {
     project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")

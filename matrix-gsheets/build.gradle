@@ -41,6 +41,7 @@ dependencies {
   compileOnly libs.groovy.json
   compileOnly libs.groovy.templates
   compileOnly project(':matrix-core')
+  api platform(libs.google.auth.library.bom)
   api libs.google.auth.library.oauth2.http
   implementation libs.google.api.services.oauth2
   implementation libs.google.http.client.gson
@@ -56,8 +57,7 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.groovy
   testImplementation libs.groovy.json
-  // Removed log4jToSlf4j - no longer needed after migrating to matrix-core Logger
-  testImplementation libs.slf4j.simple
+  mockitoAgent platform(libs.mockito.bom)
   mockitoAgent(libs.mockito.core) {
     transitive = false
   }

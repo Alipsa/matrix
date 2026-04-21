@@ -11,8 +11,8 @@ repositories {
 }
 
 dependencies {
-  implementation libs.groovy.whiskey
-  implementation libs.groovy.whiskey.ginq
+  implementation libs.groovy
+  implementation libs.groovy.ginq
   if (version.contains('SNAPSHOT')) {
     // If we are using snapshot versions of the project we need to
     // depend on the project, otherwise this example will be built before
@@ -31,7 +31,6 @@ dependencies {
   }
   implementation libs.smile.core
   implementation libs.smile.plot
-  testImplementation platform(libs.junit.bom)
   testImplementation libs.junit.jupiter
 }
 

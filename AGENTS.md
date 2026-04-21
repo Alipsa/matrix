@@ -84,7 +84,7 @@ data.each { String key, List<? extends Number> values ->
 
 ### Use the Logger Class
 
-The project provides a lightweight logging utility in `se.alipsa.matrix.core.util.Logger` that automatically detects and uses SLF4J if available, otherwise falls back to System.out/err. This supports both project dependency usage (with SLF4J) and Groovy scripting usage (without SLF4J setup).
+The project provides a lightweight logging utility in `se.alipsa.matrix.core.util.Logger` backed by the JDK `System.Logger` facade. This keeps Matrix free of logging-framework dependencies while still allowing applications to route logs through the JVM's configured logger backend.
 
 **Pattern:**
 ```groovy

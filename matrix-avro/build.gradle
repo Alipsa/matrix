@@ -6,7 +6,7 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  alias(libs.plugins.alipsaNexusReleaseLegacy)
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -38,7 +38,6 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
   testImplementation project(':matrix-parquet')
-  testImplementation libs.slf4j.simple
   testImplementation libs.groovier.junit
   testImplementation libs.junit.jupiter.api
   testRuntimeOnly libs.junit.jupiter.engine

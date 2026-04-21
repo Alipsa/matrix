@@ -79,8 +79,18 @@ subprojects {
   //}
   plugins.withId('groovy') {
     apply plugin: 'codenarc'
+    dependencies {
+      compileOnly platform(libs.groovy.bom)
+      implementation platform(libs.groovy.bom)
+      testImplementation platform(libs.groovy.bom)
+      testImplementation platform(libs.junit.bom)
+      testImplementation platform(libs.mockito.bom)
+      testImplementation platform(libs.testcontainers.bom)
+      testRuntimeOnly platform(libs.junit.bom)
+    }
+
     codenarc {
-      toolVersion = libs.versions.codenarc.get()
+      toolVersion = libs.versions.v.codenarc.get()
       configFile = rootProject.file('config/codenarc/ruleset.groovy')
       reportFormat = 'html'
       ignoreFailures = true

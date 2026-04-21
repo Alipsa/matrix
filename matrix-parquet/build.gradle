@@ -41,7 +41,8 @@ dependencies {
     api libs.parquet.column
     api libs.parquet.hadoop
     implementation(libs.hadoop.common) {
-        //exclude group: 'org.slf4j'         // optional: avoid conflicts
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+        exclude group: 'ch.qos.reload4j', module: 'reload4j'
         //exclude group: 'com.google.guava'  // optional: prevent old guava
         //exclude group: 'org.apache.hadoop.thirdparty'
         exclude group: 'org.apache.zookeeper'
@@ -49,13 +50,15 @@ dependencies {
         exclude group: 'io.netty'                   // ✅ Netty
         exclude group: 'com.squareup.okhttp3'       // optional, sometimes pulled transitively
     }
-  implementation libs.hadoop.mapreduce.client.core
+    implementation(libs.hadoop.mapreduce.client.core) {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+        exclude group: 'ch.qos.reload4j', module: 'reload4j'
+    }
     testImplementation libs.junit.jupiter.api
     testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.jupiter.engine
     testRuntimeOnly libs.junit.platform.launcher
     testImplementation libs.groovy
-    testImplementation libs.log4j.slf4j
 }
 
 test {

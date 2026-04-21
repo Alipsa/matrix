@@ -61,7 +61,6 @@ dependencies {
     testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.platform.launcher
     testImplementation libs.h2
-    testImplementation libs.slf4j.simple
     testImplementation libs.groovy
     testImplementation libs.groovy.sql
 }
@@ -109,7 +108,7 @@ test {
 
 // JaCoCo configuration for code coverage
 jacoco {
-    toolVersion = libs.versions.jacoco.get()
+    toolVersion = libs.versions.v.jacoco.get()
 }
 
 def jacocoCoverageExclusions = [

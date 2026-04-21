@@ -43,7 +43,6 @@ dependencies {
   compileOnly libs.javaparser.core
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
-  // Removed libs.log4jApi - migrated to matrix-core Logger
 
   // https://github.com/dhatim/fastexcel
   implementation libs.fast.excel
@@ -58,8 +57,6 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.groovier.junit
   testImplementation libs.groovy
-  testImplementation libs.log4j.slf4j
-  // Removed slf4jSimple - conflicts with log4jToSlf4j (both are SLF4J providers)
 }
 
 test {
@@ -73,9 +70,6 @@ test {
     }
   }
   systemProperty 'matrix.spreadsheet.ods.profile', odsProfile.toString()
-  if (odsProfile) {
-    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'info'
-  }
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
@@ -115,7 +109,7 @@ test {
 
 // JaCoCo configuration for code coverage
 jacoco {
-  toolVersion = libs.versions.jacoco.get()
+  toolVersion = libs.versions.v.jacoco.get()
 }
 
 def jacocoCoverageExclusions = [
@@ -175,7 +169,6 @@ tasks.register('spreadsheetBenchmark', JavaExec) {
   args format, rows, cols, warmups, runs, mode
   if (project.hasProperty('odsProfile')) {
     systemProperty 'matrix.spreadsheet.ods.profile', project.findProperty('odsProfile')
-    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'info'
   }
 }
 

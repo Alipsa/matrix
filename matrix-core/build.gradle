@@ -53,9 +53,6 @@ dependencies {
   api project(':matrix-groovy-ext')
   compileOnly libs.groovy
 
-  // Optional SLF4J support - not required at runtime
-  compileOnly libs.slf4j.api
-
   testImplementation libs.opentest4j
   testImplementation libs.groovy
   testImplementation libs.junit.jupiter.api
@@ -66,9 +63,6 @@ dependencies {
   testImplementation libs.h2
   testImplementation libs.groovy.sql
   testImplementation libs.groovy.ginq
-
-  // For testing with SLF4J
-  testImplementation libs.slf4j.simple
 }
 
 test {
@@ -120,7 +114,7 @@ test {
 
 // JaCoCo configuration for code coverage
 jacoco {
-  toolVersion = libs.versions.jacoco.get()
+  toolVersion = libs.versions.v.jacoco.get()
 }
 
 def jacocoCoverageExclusions = [

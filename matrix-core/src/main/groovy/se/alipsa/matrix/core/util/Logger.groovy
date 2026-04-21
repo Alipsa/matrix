@@ -1,21 +1,13 @@
 package se.alipsa.matrix.core.util
 
 import groovy.transform.CompileStatic
-import groovy.transform.TypeCheckingMode
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Lightweight logging utility that automatically detects and uses SLF4J if available,
- * otherwise falls back to System.out/err. This supports both project dependency usage
- * (with SLF4J) and Groovy scripting usage (without SLF4J setup).
- *
- * <p><strong>SLF4J Detection:</strong> The logger detects if an SLF4J <em>implementation</em>
- * is available (not just the API). In environments where only the SLF4J API is present
- * (e.g., Groovy REPL with full distribution), the logger will correctly fall back to
- * System.out/err to ensure messages are actually logged.</p>
+ * Lightweight logging utility backed by the JDK {@link System.Logger} facade.
+ * This keeps Matrix free of logging-framework dependencies while still allowing
+ * applications to route logs through the JVM's configured logger backend.
  *
  * <p>Usage:</p>
  * <pre>
@@ -27,53 +19,18 @@ import java.util.concurrent.ConcurrentHashMap
 @CompileStatic
 class Logger {
 
-  private static final String SLF4J_FACTORY_CLASS = 'org.slf4j.LoggerFactory'
-  private static final String SLF4J_LOGGER_CLASS = 'org.slf4j.Logger'
-  private static final String SLF4J_PLACEHOLDER = '{}'
   private static final String PLATFORM_NEWLINE_FORMAT = '%n'
-  private static final String GET_LOGGER_METHOD = 'getLogger'
 
-  // Static fields
-  private static final boolean SLF4J_AVAILABLE
   private static final Map<String, Logger> LOGGER_CACHE = new ConcurrentHashMap<>()
   private static volatile LogLevel CURRENT_LEVEL = LogLevel.INFO
-  private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS')
 
-  // Instance fields
-  private final String className
-  private final Object slf4jLogger  // org.slf4j.Logger if available
-
-  // Static initialization - detect SLF4J implementation (not just API)
-  static {
-    boolean slf4jDetected = false
-    try {
-      // First check if SLF4J API is available
-      loadAndInitializeClass(SLF4J_FACTORY_CLASS)
-      loadAndInitializeClass(SLF4J_LOGGER_CLASS)
-
-      // Then check if there's an actual implementation (not just NOP logger)
-      // Get a test logger and check if it's a NOP logger
-      def loggerFactoryClass = loadAndInitializeClass(SLF4J_FACTORY_CLASS)
-      def getLoggerMethod = loggerFactoryClass.getMethod(GET_LOGGER_METHOD, String)
-      def testLogger = getLoggerMethod.invoke(null, 'se.alipsa.matrix.core.util.Logger.test')
-
-      // If the logger's class name contains "NOP", there's no implementation
-      String loggerClassName = testLogger.getClass().getName()
-      if (!loggerClassName.contains('NOP')) {
-        slf4jDetected = true
-      }
-    } catch (Exception ignored) {
-      // SLF4J not available or no implementation, will use fallback
-    }
-    SLF4J_AVAILABLE = slf4jDetected
-  }
+  private final System.Logger systemLogger
 
   /**
    * Private constructor - use factory methods instead
    */
   private Logger(String className) {
-    this.className = className
-    this.slf4jLogger = SLF4J_AVAILABLE ? createSlf4jLogger(className) : null
+    this.systemLogger = System.getLogger(className)
   }
 
   /**
@@ -91,14 +48,15 @@ class Logger {
   }
 
   /**
-   * Set the log level for fallback mode (only affects fallback, not SLF4J)
+   * Set Matrix's minimum log level. The JVM logging backend may still apply
+   * additional filtering.
    */
   static void setLevel(LogLevel level) {
     CURRENT_LEVEL = level
   }
 
   /**
-   * Get the current log level for fallback mode
+   * Get the current Matrix log level.
    */
   @SuppressWarnings('GetterMethodCouldBeProperty')
   static LogLevel getLevel() {
@@ -106,10 +64,14 @@ class Logger {
   }
 
   /**
-   * Check if SLF4J is available
+   * Legacy compatibility method for callers that checked SLF4J availability.
+   *
+   * @deprecated Matrix logging no longer integrates with SLF4J directly. This
+   * method is retained for source compatibility and always returns false.
    */
+  @Deprecated
   static boolean isSlf4jAvailable() {
-    SLF4J_AVAILABLE
+    false
   }
 
   // DEBUG level logging
@@ -122,12 +84,8 @@ class Logger {
     log(LogLevel.DEBUG, format, args, null)
   }
 
-  @CompileStatic(TypeCheckingMode.SKIP)
   boolean isDebugEnabled() {
-    if (SLF4J_AVAILABLE && slf4jLogger != null) {
-      return slf4jLogger.isDebugEnabled()
-    }
-    return CURRENT_LEVEL.ordinal() <= LogLevel.DEBUG.ordinal()
+    isEnabled(LogLevel.DEBUG)
   }
 
   // INFO level logging
@@ -140,12 +98,8 @@ class Logger {
     log(LogLevel.INFO, format, args, null)
   }
 
-  @CompileStatic(TypeCheckingMode.SKIP)
   boolean isInfoEnabled() {
-    if (SLF4J_AVAILABLE && slf4jLogger != null) {
-      return slf4jLogger.isInfoEnabled()
-    }
-    return CURRENT_LEVEL.ordinal() <= LogLevel.INFO.ordinal()
+    isEnabled(LogLevel.INFO)
   }
 
   // WARN level logging
@@ -162,12 +116,8 @@ class Logger {
     log(LogLevel.WARN, message, null, t)
   }
 
-  @CompileStatic(TypeCheckingMode.SKIP)
   boolean isWarnEnabled() {
-    if (SLF4J_AVAILABLE && slf4jLogger != null) {
-      return slf4jLogger.isWarnEnabled()
-    }
-    return CURRENT_LEVEL.ordinal() <= LogLevel.WARN.ordinal()
+    isEnabled(LogLevel.WARN)
   }
 
   // ERROR level logging
@@ -184,123 +134,51 @@ class Logger {
     log(LogLevel.ERROR, message, null, t)
   }
 
-  @CompileStatic(TypeCheckingMode.SKIP)
   boolean isErrorEnabled() {
-    if (SLF4J_AVAILABLE && slf4jLogger != null) {
-      return slf4jLogger.isErrorEnabled()
-    }
-    return CURRENT_LEVEL.ordinal() <= LogLevel.ERROR.ordinal()
+    isEnabled(LogLevel.ERROR)
   }
 
   // Private helper methods
 
   private void log(LogLevel level, String format, Object[] args, Throwable t) {
-    if (SLF4J_AVAILABLE && slf4jLogger != null) {
-      logWithSlf4j(level, format, args, t)
-    } else {
-      logWithFallback(level, format, args, t)
-    }
-  }
-
-  @CompileStatic(TypeCheckingMode.SKIP)
-  private void logWithSlf4j(LogLevel level, String format, Object[] args, Throwable t) {
-    // Convert String.format style (%s, %d, etc.) to SLF4J style ({})
-    String slf4jFormat = format
-        .replace(PLATFORM_NEWLINE_FORMAT, System.lineSeparator())
-        .replace('%s', SLF4J_PLACEHOLDER)
-        .replace('%d', SLF4J_PLACEHOLDER)
-        .replace('%f', SLF4J_PLACEHOLDER)
-        .replace('%b', SLF4J_PLACEHOLDER)
-        .replace('%c', SLF4J_PLACEHOLDER)
-        .replace('%x', SLF4J_PLACEHOLDER)
-        .replace('%o', SLF4J_PLACEHOLDER)
-
-    switch (level) {
-      case LogLevel.DEBUG:
-        if (t != null) {
-          slf4jLogger.debug(slf4jFormat, t)
-        } else if (args != null && args.length > 0) {
-          slf4jLogger.debug(slf4jFormat, args)
-        } else {
-          slf4jLogger.debug(slf4jFormat)
-        }
-        break
-      case LogLevel.INFO:
-        if (t != null) {
-          slf4jLogger.info(slf4jFormat, t)
-        } else if (args != null && args.length > 0) {
-          slf4jLogger.info(slf4jFormat, args)
-        } else {
-          slf4jLogger.info(slf4jFormat)
-        }
-        break
-      case LogLevel.WARN:
-        if (t != null) {
-          slf4jLogger.warn(slf4jFormat, t)
-        } else if (args != null && args.length > 0) {
-          slf4jLogger.warn(slf4jFormat, args)
-        } else {
-          slf4jLogger.warn(slf4jFormat)
-        }
-        break
-      case LogLevel.ERROR:
-        if (t != null) {
-          slf4jLogger.error(slf4jFormat, t)
-        } else if (args != null && args.length > 0) {
-          slf4jLogger.error(slf4jFormat, args)
-        } else {
-          slf4jLogger.error(slf4jFormat)
-        }
-        break
-    }
-  }
-
-  private void logWithFallback(LogLevel level, String format, Object[] args, Throwable t) {
-    // Check if this level is enabled
-    if (CURRENT_LEVEL.ordinal() > level.ordinal()) {
+    if (!isEnabled(level)) {
       return
     }
 
-    // Format the message
-    String fallbackFormat = format.replace(PLATFORM_NEWLINE_FORMAT, System.lineSeparator())
-    String message = (args != null && args.length > 0) ? String.format(fallbackFormat, args) : fallbackFormat
-
-    // Build the log line
-    String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
-    String levelStr = String.format('%-5s', level.name())
-    String logLine = "${timestamp} [${levelStr}] ${className} - ${message}"
-
-    // Output to appropriate stream
-    PrintStream out = (level == LogLevel.DEBUG || level == LogLevel.INFO) ? System.out : System.err
-
-    out.println(logLine)
-
-    // Print exception if present
+    System.Logger.Level systemLevel = toSystemLevel(level)
+    String message = formatMessage(format, args)
     if (t != null) {
-      t.printStackTrace(out)
+      systemLogger.log(systemLevel, message, t)
+    } else {
+      systemLogger.log(systemLevel, message)
     }
   }
 
-  private static Object createSlf4jLogger(String className) {
-    try {
-      Class<?> loggerFactoryClass = loadAndInitializeClass(SLF4J_FACTORY_CLASS)
-      def getLoggerMethod = loggerFactoryClass.getMethod(GET_LOGGER_METHOD, String)
-      return getLoggerMethod.invoke(null, className)
-    } catch (Exception e) {
-      // Should not happen since we already checked SLF4J availability
-      throw new IllegalStateException('Failed to create SLF4J logger', e)
+  private boolean isEnabled(LogLevel level) {
+    CURRENT_LEVEL.ordinal() <= level.ordinal() && systemLogger.isLoggable(toSystemLevel(level))
+  }
+
+  private static String formatMessage(String format, Object[] args) {
+    String normalizedFormat = format.replace(PLATFORM_NEWLINE_FORMAT, System.lineSeparator())
+    if (args == null || args.length == 0) {
+      return normalizedFormat
     }
+    String.format(normalizedFormat, args)
   }
 
-  // SLF4J provider discovery happens in LoggerFactory's static initialization, so preserve
-  // the eager initialization semantics of the previous Class.forName(...) usage.
-  @SuppressWarnings('ClassForName')
-  private static Class<?> loadAndInitializeClass(String name) throws ClassNotFoundException {
-    Class.forName(name, true, contextClassLoader())
-  }
-
-  private static ClassLoader contextClassLoader() {
-    Thread.currentThread().contextClassLoader ?: Logger.classLoader
+  private static System.Logger.Level toSystemLevel(LogLevel level) {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return System.Logger.Level.DEBUG
+      case LogLevel.INFO:
+        return System.Logger.Level.INFO
+      case LogLevel.WARN:
+        return System.Logger.Level.WARNING
+      case LogLevel.ERROR:
+        return System.Logger.Level.ERROR
+      default:
+        return System.Logger.Level.INFO
+    }
   }
 
 }

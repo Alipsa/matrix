@@ -6,38 +6,20 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.util.LogLevel
 import se.alipsa.matrix.core.util.Logger
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
+import java.lang.reflect.Method
 
 @SuppressWarnings(['UnnecessaryGroovyImport', 'UnnecessaryGString', 'ClassEndsWithBlankLine'])
 class LoggerTest {
 
-  @BeforeEach
-  void setUp() {
-    // Reset log level to default
-    Logger.setLevel(LogLevel.INFO)
+  private static final Method FORMAT_MESSAGE = Logger.getDeclaredMethod('formatMessage', String, Object[])
+
+  static {
+    FORMAT_MESSAGE.accessible = true
   }
 
-  /**
-   * Captures System.out and System.err output while executing the given closure.
-   * @param closure the code to execute
-   * @return a Map with 'out' and 'err' keys containing the captured output
-   */
-  private Map<String, String> captureOutput(Closure closure) {
-    PrintStream originalOut = System.out
-    PrintStream originalErr = System.err
-    ByteArrayOutputStream outContent = new ByteArrayOutputStream()
-    ByteArrayOutputStream errContent = new ByteArrayOutputStream()
-
-    try {
-      System.setOut(new PrintStream(outContent))
-      System.setErr(new PrintStream(errContent))
-      closure.call()
-      return [out: outContent.toString(), err: errContent.toString()]
-    } finally {
-      System.setOut(originalOut)
-      System.setErr(originalErr)
-    }
+  @BeforeEach
+  void setUp() {
+    Logger.setLevel(LogLevel.INFO)
   }
 
   @Test
@@ -61,157 +43,76 @@ class LoggerTest {
   }
 
   @Test
-  void testSlf4jDetection() {
-    // SLF4J should be detected in tests since we have slf4j-simple as testImplementation
-    // The detection checks for an actual implementation, not just the API
-    assertTrue(Logger.isSlf4jAvailable(), "SLF4J implementation should be detected in tests")
+  void testSlf4jCompatibilityMethod() {
+    assertFalse(Logger.isSlf4jAvailable(), "Matrix Logger no longer integrates directly with SLF4J")
   }
 
   @Test
-  void testSlf4jImplementationDetection() {
-    // Verify that we're detecting an actual SLF4J implementation (slf4j-simple)
-    // and not just the SLF4J API
-    if (Logger.isSlf4jAvailable()) {
-      // If SLF4J is available, verify it's not a NOP logger
-      Logger log = Logger.getLogger("ImplementationTest")
-
-      // The logger should have been created successfully
-      assertNotNull(log, "Logger should be created")
-
-      // This test verifies that the detection logic correctly identifies
-      // when there's an actual implementation vs just the API
-      assertTrue(true, "SLF4J implementation detection is working")
-    }
+  void testJdkLoggerFacadeCreation() {
+    assertNotNull(System.getLogger('ImplementationTest'), "JDK System.Logger should be available")
   }
 
   @Test
   void testDebugLogging() {
     Logger log = Logger.getLogger("DebugTest")
-
-    // Set level to DEBUG to enable debug logging (only affects fallback mode)
     Logger.setLevel(LogLevel.DEBUG)
 
-    def output = captureOutput {
-      log.debug("Debug message")
-      log.debug("Debug with parameter: %s", "value")
-    }
+    log.debug("Debug message")
+    log.debug("Debug with parameter: %s", "value")
 
-    // When SLF4J is available, it uses its own configuration which may not include DEBUG
-    // When using fallback, DEBUG messages should appear
-    // Either way, no exceptions should be thrown and if output exists, it should be valid
-    String allOutput = output.out + output.err
-    if (!allOutput.isEmpty()) {
-      // If there is output, verify it contains debug-related content
-      assertTrue(allOutput.contains("Debug message") || allOutput.contains("DEBUG") || allOutput.contains("value"),
-          "If output exists, it should contain debug-related content")
-    }
-    // The main assertion is that logging didn't throw an exception
-    assertTrue(true, "Debug logging should complete without exceptions")
+    assertEquals(LogLevel.DEBUG, Logger.getLevel())
   }
 
   @Test
   void testInfoLogging() {
     Logger log = Logger.getLogger("InfoTest")
+    Logger.setLevel(LogLevel.WARN)
 
-    def output = captureOutput {
-      log.info("Info message")
-      log.info("Info with parameters: %s, %d", "test", 42)
-    }
+    log.info("Info message")
+    log.info("Info with parameters: %s, %d", "test", 42)
 
-    assertTrue(log.isInfoEnabled(), "Info should be enabled by default")
-
-    // Verify the output contains expected content
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("Info message") || allOutput.contains("INFO"),
-        "Output should contain info message or INFO marker")
-    assertTrue(allOutput.contains("test") && (allOutput.contains("42") || allOutput.contains("INFO")),
-        "Output should contain parameterized values")
+    assertFalse(log.isInfoEnabled(), "Info should not be enabled at WARN level")
   }
 
   @Test
   void testWarnLogging() {
     Logger log = Logger.getLogger("WarnTest")
+    Logger.setLevel(LogLevel.ERROR)
 
-    def output = captureOutput {
-      log.warn("Warning message")
-      log.warn("Warning with parameter: %s", "value")
-      log.warn("Warning with exception", new RuntimeException("Test exception"))
-    }
+    log.warn("Warning message")
+    log.warn("Warning with parameter: %s", "value")
+    log.warn("Warning with exception", new RuntimeException("Test exception"))
 
-    assertTrue(log.isWarnEnabled(), "Warn should be enabled by default")
-
-    // Verify the output contains expected content
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("Warning message") || allOutput.contains("WARN"),
-        "Output should contain warning message or WARN marker")
-    assertTrue(allOutput.contains("value"), "Output should contain parameter value")
-    assertTrue(allOutput.contains("Test exception") || allOutput.contains("RuntimeException"),
-        "Output should contain exception information")
+    assertFalse(log.isWarnEnabled(), "Warn should not be enabled at ERROR level")
   }
 
   @Test
   void testErrorLogging() {
     Logger log = Logger.getLogger("ErrorTest")
 
-    def output = captureOutput {
-      log.error("Error message")
-      log.error("Error with parameter: %s", "value")
-      log.error("Error with exception", new IllegalStateException("Test error"))
-    }
-
     assertTrue(log.isErrorEnabled(), "Error should be enabled by default")
-
-    // Verify the output contains expected content
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("Error message") || allOutput.contains("ERROR"),
-        "Output should contain error message or ERROR marker")
-    assertTrue(allOutput.contains("value"), "Output should contain parameter value")
-    assertTrue(allOutput.contains("Test error") || allOutput.contains("IllegalStateException"),
-        "Output should contain exception information")
   }
 
   @Test
   void testLogLevelChecks() {
     Logger log = Logger.getLogger("LevelTest")
 
-    // When SLF4J is available, isXXXEnabled() methods delegate to SLF4J's configuration
-    // When SLF4J is not available, they check CURRENT_LEVEL
-    // This test verifies the methods work without throwing exceptions
+    assertFalse(log.isDebugEnabled(), "Debug should not be enabled at INFO level")
+    assertTrue(log.isInfoEnabled(), "Info should be enabled at INFO level")
+    assertTrue(log.isWarnEnabled(), "Warn should be enabled at INFO level")
+    assertTrue(log.isErrorEnabled(), "Error should be enabled at INFO level")
 
-    if (Logger.isSlf4jAvailable()) {
-      // With SLF4J, level checks use SLF4J's configuration
-      // Just verify the methods work
-      log.isDebugEnabled()
-      log.isInfoEnabled()
-      log.isWarnEnabled()
-      log.isErrorEnabled()
-      assertTrue(true, "Level checks should work with SLF4J")
-    } else {
-      // Without SLF4J, level checks use CURRENT_LEVEL
-      // Default level is INFO
-      assertFalse(log.isDebugEnabled(), "Debug should not be enabled at INFO level")
-      assertTrue(log.isInfoEnabled(), "Info should be enabled at INFO level")
-      assertTrue(log.isWarnEnabled(), "Warn should be enabled at INFO level")
-      assertTrue(log.isErrorEnabled(), "Error should be enabled at INFO level")
+    Logger.setLevel(LogLevel.WARN)
+    assertFalse(log.isDebugEnabled(), "Debug should not be enabled at WARN level")
+    assertFalse(log.isInfoEnabled(), "Info should not be enabled at WARN level")
+    assertTrue(log.isWarnEnabled(), "Warn should be enabled at WARN level")
+    assertTrue(log.isErrorEnabled(), "Error should be enabled at WARN level")
 
-      // Set to DEBUG
-      Logger.setLevel(LogLevel.DEBUG)
-      assertTrue(log.isDebugEnabled(), "Debug should be enabled at DEBUG level")
-
-      // Set to WARN
-      Logger.setLevel(LogLevel.WARN)
-      assertFalse(log.isDebugEnabled(), "Debug should not be enabled at WARN level")
-      assertFalse(log.isInfoEnabled(), "Info should not be enabled at WARN level")
-      assertTrue(log.isWarnEnabled(), "Warn should be enabled at WARN level")
-      assertTrue(log.isErrorEnabled(), "Error should be enabled at WARN level")
-
-      // Set to ERROR
-      Logger.setLevel(LogLevel.ERROR)
-      assertFalse(log.isDebugEnabled(), "Debug should not be enabled at ERROR level")
-      assertFalse(log.isInfoEnabled(), "Info should not be enabled at ERROR level")
-      assertFalse(log.isWarnEnabled(), "Warn should not be enabled at ERROR level")
-      assertTrue(log.isErrorEnabled(), "Error should be enabled at ERROR level")
-    }
+    Logger.setLevel(LogLevel.ERROR)
+    assertFalse(log.isDebugEnabled(), "Debug should not be enabled at ERROR level")
+    assertFalse(log.isInfoEnabled(), "Info should not be enabled at ERROR level")
+    assertFalse(log.isWarnEnabled(), "Warn should not be enabled at ERROR level")
+    assertTrue(log.isErrorEnabled(), "Error should be enabled at ERROR level")
   }
 
   @Test
@@ -230,74 +131,36 @@ class LoggerTest {
 
   @Test
   void testParameterizedMessages() {
-    Logger log = Logger.getLogger("ParamTest")
-
-    def output = captureOutput {
-      log.info("String: %s", "test")
-      log.info("Integer: %d", 123)
-      log.info("Multiple: %s, %d, %s", "first", 42, "third")
-    }
-
-    // Verify output contains parameterized values
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("test"), "Output should contain string parameter")
-    assertTrue(allOutput.contains("123"), "Output should contain integer parameter")
-    assertTrue(allOutput.contains("first") && allOutput.contains("42") && allOutput.contains("third"),
-        "Output should contain all multiple parameters")
+    assertEquals("String: test", formatMessage("String: %s", "test"))
+    assertEquals("Integer: 123", formatMessage("Integer: %d", 123))
+    assertEquals("Multiple: first, 42, third", formatMessage("Multiple: %s, %d, %s", "first", 42, "third"))
   }
 
   @Test
   void testPlatformNewlinePlaceholderPreservesLineBreak() {
-    Logger log = Logger.getLogger("NewlineTest")
-
-    def output = captureOutput {
-      log.info("First line%nSecond line")
-    }
-
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("First line${System.lineSeparator()}Second line"),
-        "Output should contain a platform newline inside the log message")
-  }
-
-  @Test
-  void testFallbackPlatformNewlinePlaceholderPreservesLineBreakWithoutArgs() {
-    Logger log = Logger.getLogger("FallbackNewlineTest")
-    def logWithFallback = Logger.getDeclaredMethod('logWithFallback', LogLevel, String, Object[], Throwable)
-    logWithFallback.accessible = true
-
-    def output = captureOutput {
-      logWithFallback.invoke(log, LogLevel.INFO, "First line%nSecond line", null as Object[], null)
-    }
-
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("First line${System.lineSeparator()}Second line"),
-        "Fallback output should contain a platform newline inside the log message")
+    assertEquals("First line${System.lineSeparator()}Second line", formatMessage("First line%nSecond line"))
   }
 
   @Test
   void testExceptionLogging() {
     Logger log = Logger.getLogger("ExceptionTest")
+    Logger.setLevel(LogLevel.ERROR)
 
     RuntimeException exception = new RuntimeException("Test exception message")
+    log.warn("Warning with exception", exception)
 
-    def output = captureOutput {
-      log.warn("Warning with exception", exception)
-      log.error("Error with exception", exception)
-    }
-
-    // Verify output contains exception information
-    String allOutput = output.out + output.err
-    assertTrue(allOutput.contains("Test exception message") || allOutput.contains("RuntimeException"),
-        "Output should contain exception information")
-    assertTrue(allOutput.contains("Warning with exception") || allOutput.contains("Error with exception") || allOutput.contains("WARN") || allOutput.contains("ERROR"),
-        "Output should contain log message or level marker")
+    assertFalse(log.isWarnEnabled(), "Warn should not be enabled at ERROR level")
+    assertTrue(log.isErrorEnabled(), "Error should be enabled by default")
   }
 
   @Test
   void testLogLevelEnum() {
-    // Test enum ordinals for correct ordering
     assertTrue(LogLevel.DEBUG.ordinal() < LogLevel.INFO.ordinal(), "DEBUG should be less than INFO")
     assertTrue(LogLevel.INFO.ordinal() < LogLevel.WARN.ordinal(), "INFO should be less than WARN")
     assertTrue(LogLevel.WARN.ordinal() < LogLevel.ERROR.ordinal(), "WARN should be less than ERROR")
+  }
+
+  private static String formatMessage(String format, Object... args) {
+    FORMAT_MESSAGE.invoke(null, format, args as Object[]) as String
   }
 }

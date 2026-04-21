@@ -56,7 +56,7 @@ dependencies {
   } else if (os.isMacOsX()) {
     qualifier = 'mac-aarch64'
   }
-  def javaFxVersion = libs.versions.javafx.get()
+  def javaFxVersion = libs.versions.v.javafx.get()
   // compile only dependencies are not included in the pom
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
@@ -91,7 +91,6 @@ dependencies {
   testImplementation libs.junit.jupiter
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
-  testImplementation libs.slf4j.simple
   testImplementation libs.groovy.sql
 }
 
@@ -99,10 +98,6 @@ test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
-  def loggingConfig = file("${rootDir}/test-logging.properties")
-  if (loggingConfig.exists()) {
-    systemProperty 'java.util.logging.config.file', loggingConfig.absolutePath
-  }
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {

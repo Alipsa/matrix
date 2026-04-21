@@ -81,6 +81,17 @@ For Maven projects, add the following to your `pom.xml`:
 </dependencies>
 ```
 
+### Logging
+
+Matrix itself does not require a logging framework. It logs through a small
+`matrix-core` logger backed by the JDK `System.Logger` facade.
+
+Some optional Matrix modules use third-party libraries that log through SLF4J,
+Log4j, JUL, or JDK Platform Logging. Applications should choose one backend and
+route the other logging APIs into it. Groovy script users can add
+`matrix-logging` for an out-of-the-box default. See
+[Logging setup](../logging.md) for SLF4J/Logback, Log4j 2, and JUL examples.
+
 ### Using from Java
 
 If you're using the Matrix library from Java, you'll need to add the Groovy core library as a dependency:

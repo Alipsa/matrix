@@ -33,7 +33,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit-jupiter.version>6.0.3</junit-jupiter.version>
     <junitPlatformVersion.version>6.0.3</junitPlatformVersion.version>
-    <slf4j.version>2.0.17</slf4j.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -163,18 +162,6 @@
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-launcher</artifactId>
       <version>${junitPlatformVersion.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-to-slf4j</artifactId>
-      <version>2.25.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

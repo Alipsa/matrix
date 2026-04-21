@@ -35,7 +35,6 @@ dependencies {
   api libs.smile.core
   testImplementation project(':matrix-core')
   testImplementation libs.groovy
-  testImplementation libs.slf4j.simple
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine

@@ -28,6 +28,7 @@ The Matrix project consists of the following modules:
 1. _[matrix-xchart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/README.md)_ allows you to create charts in various formats (file, svg, swing) based on Matrix data and the [XChart library](https://github.com/knowm/XChart).
 1. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
 1. _[matrix-bom](https://github.com/Alipsa/matrix/blob/main/matrix-bom/readme.md)_ Bill of materials for simpler dependency management.
+1. _[matrix-logging](https://github.com/Alipsa/matrix/blob/main/matrix-logging/README.md)_ optional convenience logging setup for Groovy scripts and small tools.
 1. _[matrix-parquet](https://github.com/Alipsa/matrix/blob/main/matrix-parquet/readme.md)_ provides ways to import and export between Matrix and [Parquet](https://parquet.apache.org/). 
 1. _[matrix-avro](https://github.com/Alipsa/matrix/blob/main/matrix-avro/README.md)_ provides ways to import and export between Matrix and [Avro](https://avro.apache.org/). 
 2. _[matrix-bigquery](https://github.com/Alipsa/matrix/blob/main/matrix-bigquery/readme.md)_
@@ -73,6 +74,19 @@ implementation('se.alipsa.matrix:matrix-core')
 </project>
 ```
 
+## Logging
+
+Matrix itself does not require SLF4J, Log4j, JUL, or any other logging
+framework. Matrix logs through a small `matrix-core` logger backed by the JDK
+`System.Logger` facade.
+
+Some Matrix modules use third-party libraries that log through SLF4J, Log4j,
+JUL, or JDK Platform Logging. Applications should choose one logging backend
+and route the other logging APIs into it. Groovy script users who want an
+out-of-the-box default can add `matrix-logging`. See
+[Logging setup](docs/logging.md) for Gradle and Maven examples for
+SLF4J/Logback, Log4j 2, and JUL.
+
 ## Java Version Requirements
 
 The project requires **JDK 21**. While some modules may work with higher JDK versions, the following constraints apply:
@@ -90,4 +104,3 @@ For more information see the [tutorial](docs/tutorial/outline.md) and the readme
 <!---
 [Cookbook](docs/cookbook/cookbook.md)
 -->
-

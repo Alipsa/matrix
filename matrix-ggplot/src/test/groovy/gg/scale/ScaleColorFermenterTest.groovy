@@ -184,29 +184,11 @@ class ScaleColorFermenterTest {
 
   @Test
   void testInvalidNumericPaletteIndex() {
-    // Test: Invalid numeric palette index shows warning and uses default
-    def originalErr = System.err
-    def errStream = new ByteArrayOutputStream()
-    def scale = null
-    def errOutput = null
-
-    try {
-      System.err = new PrintStream(errStream)
-
-      // Index 999 is out of range for any type
-      scale = new ScaleColorFermenter([type: 'seq', palette: 999])
-
-      errOutput = errStream.toString()
-
-    } finally {
-      System.err = originalErr
-    }
-
-    // Should have warning about out of range
-    assertTrue(errOutput.contains('Warning'), "Should warn about invalid palette index")
-    assertTrue(errOutput.contains('out of range'), "Should mention index is out of range")
+    // Test: Invalid numeric palette index uses default palette
+    def scale = new ScaleColorFermenter([type: 'seq', palette: 999])
 
     // Should still create valid scale with default palette
+    assertNull(scale.palette)
     def colors = scale.getColors()
     assertNotNull(colors)
     assertFalse(colors.isEmpty())

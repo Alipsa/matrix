@@ -12,6 +12,7 @@ An example for matrix-core is as follows for Gradle
 implementation(platform( 'se.alipsa.matrix:matrix-bom:2.2.3'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
+runtimeOnly('se.alipsa.matrix:matrix-logging') // optional script/small-tool logging default
 ```
 ...or the following for maven
 ```xml
