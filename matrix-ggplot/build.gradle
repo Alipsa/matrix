@@ -6,7 +6,7 @@ plugins {
   id('java-library')
   id('maven-publish')
   id('signing')
-  id("se.alipsa.nexus-release-plugin") version '2.1.2'
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -46,7 +46,7 @@ dependencies {
   } else if (os.isMacOsX()) {
     qualifier = arch == 'aarch64' ? 'mac-aarch64' : 'mac'
   }
-  def javaFxVersion = '23.0.2'
+  def javaFxVersion = libs.versions.javafx.get()
 
   compileOnly libs.groovy
   compileOnly project(':matrix-core')

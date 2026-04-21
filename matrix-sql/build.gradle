@@ -5,7 +5,7 @@ plugins {
     id('java-library')
     id('signing')
     id('maven-publish')
-    id("se.alipsa.nexus-release-plugin") version '2.1.2'
+    alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -38,9 +38,9 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.6'
-    implementation 'commons-io:commons-io:2.21.0'
-    implementation 'se.alipsa:maven-utils:1.4.0'
+    implementation libs.data.utils
+    implementation libs.commons.io
+    implementation libs.maven.utils
 
     testImplementation libs.groovy
     testImplementation libs.groovy.sql

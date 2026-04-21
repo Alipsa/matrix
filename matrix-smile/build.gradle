@@ -6,7 +6,7 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  id("se.alipsa.nexus-release-plugin") version '2.1.2'
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -32,7 +32,7 @@ repositories {
 dependencies {
   compileOnly project(':matrix-core')
   compileOnly libs.groovy
-  api 'com.github.haifengl:smile-core:4.4.2'
+  api libs.smile.core
   testImplementation project(':matrix-core')
   testImplementation libs.groovy
   testImplementation libs.slf4j.simple

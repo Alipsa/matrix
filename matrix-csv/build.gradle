@@ -6,7 +6,7 @@ plugins {
   id('java-library')
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.1.1'
+  alias(libs.plugins.alipsaNexusReleaseLegacy)
 }
 
 group = 'se.alipsa.matrix'
@@ -36,17 +36,11 @@ repositories {
 }
 
 dependencies {
-  //if (version.endsWith('SNAPSHOT')) {
-    compileOnly project(':matrix-core')
-    testImplementation project(':matrix-core')
-    testImplementation project(':matrix-datasets')
-  /*} else {
-    compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-    testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-    testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-  }*/
-  api 'org.apache.commons:commons-csv:1.14.1'
-  implementation 'commons-io:commons-io:2.21.0'
+  compileOnly project(':matrix-core')
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
+  api libs.commons.csv
+  implementation libs.commons.io
   compileOnly libs.groovy
   testImplementation libs.groovy
 

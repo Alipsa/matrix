@@ -4,10 +4,9 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
   id('groovy')
   id('java-library')
-  //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('maven-publish')
   id('signing')
-  id("se.alipsa.nexus-release-plugin") version '2.1.2'
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -57,19 +56,18 @@ dependencies {
   } else if (os.isMacOsX()) {
     qualifier = 'mac-aarch64'
   }
-  def javaFxVersion = '23.0.2'
+  def javaFxVersion = libs.versions.javafx.get()
   // compile only dependencies are not included in the pom
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
   //compileOnly project(':matrix-groovy-ext')
-  api("se.alipsa.groovy:gsvg:1.0.0")
-  api("se.alipsa.groovy:gsvg-export:1.0.0")
+  api libs.gsvg
+  api libs.gsvg.export
   implementation libs.commons.text
 
-  api 'se.alipsa:fxsvgimage:1.5.1'
-  //api 'org.girod:fxsvgimage:1.4'
-  api 'com.github.weisj:jsvg:2.0.0'
+  api libs.fxsvgimage
+  api libs.jsvg
 
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
@@ -95,7 +93,6 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.slf4j.simple
   testImplementation libs.groovy.sql
-  //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }
 
 test {

@@ -4,10 +4,9 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
   id('groovy')
   id('java-library')
-  //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.1.2'
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -54,9 +53,9 @@ dependencies {
   testImplementation project(':matrix-datasets')
   //testImplementation project(':matrix-groovy-ext')
   testImplementation libs.groovy
-  testImplementation 'org.apache.commons:commons-math3:3.6.1'
-  testImplementation 'com.github.haifengl:smile-core:4.4.2'
-  testImplementation("se.alipsa:jfinancials:1.0.0")
+  testImplementation libs.commons.math3
+  testImplementation libs.smile.core
+  testImplementation libs.jfinancials
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.platform.launcher

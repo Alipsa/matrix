@@ -26,8 +26,8 @@ tasks.withType(GroovyCompile).configureEach { task ->
 }
 
 dependencies {
-    // Note that for an independent project, you must use platform("se.alipsa.matrix:matrix-bom:2.1.1")
-    // and then implementation 'se.alipsa.matrix:matrix-core' etc without a version as described in the readme.md
+    // For an independent project, use the matching matrix BOM and then declare
+    // matrix modules without versions as described in the readme.md.
     implementation libs.groovy
     implementation project(':matrix-core')
     implementation project(':matrix-datasets')

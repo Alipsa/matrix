@@ -7,7 +7,7 @@ plugins {
     id('signing')
     id('maven-publish')
     id('jacoco')
-    id("se.alipsa.nexus-release-plugin") version '2.1.2'
+    alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -43,25 +43,24 @@ java {
 }
 
 dependencies {
-    def tablesawVersion = "0.44.4"
     compileOnly libs.groovy
-    api("tech.tablesaw:tablesaw-core:${tablesawVersion}")
+    api libs.tablesaw.core
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     // for XlsxWriter, TODO: remove once contributed to tablesaw
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    implementation libs.poi.ooxml
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
-    implementation 'com.github.miachm.sods:SODS:1.8.2'
+    implementation libs.sods
     // for XmlReader and writer, TODO: remove once contributed to tablesaw
-    implementation 'org.dom4j:dom4j:2.2.0'
+    implementation libs.dom4j
 
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
-    testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
+    testImplementation libs.tablesaw.json
     testImplementation libs.junit.jupiter
     testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.platform.launcher
-    testImplementation 'com.h2database:h2:2.4.240'
+    testImplementation libs.h2
     testImplementation libs.slf4j.simple
     testImplementation libs.groovy
     testImplementation libs.groovy.sql
@@ -110,7 +109,7 @@ test {
 
 // JaCoCo configuration for code coverage
 jacoco {
-    toolVersion = "0.8.12"
+    toolVersion = libs.versions.jacoco.get()
 }
 
 def jacocoCoverageExclusions = [

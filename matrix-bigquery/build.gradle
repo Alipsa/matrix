@@ -6,7 +6,7 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  id("se.alipsa.nexus-release-plugin") version '2.1.2'
+  alias(libs.plugins.alipsaNexusRelease)
 }
 
 group = 'se.alipsa.matrix'
@@ -40,16 +40,16 @@ dependencies {
   testImplementation project(':matrix-datasets')
   compileOnly libs.groovy
 
-  api('com.google.cloud:google-cloud-bigquery:2.62.0')
-  api 'com.google.cloud:google-cloud-resourcemanager:1.90.0'
-  implementation platform('com.google.auth:google-auth-library-bom:1.43.0')
-  implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation('com.google.cloud:google-cloud-bigquerystorage:3.24.0')
-  implementation 'me.tongfei:progressbar:0.10.2'
+  api libs.google.cloud.bigquery
+  api libs.google.cloud.resourcemanager
+  implementation platform(libs.google.auth.library.bom)
+  implementation libs.google.auth.library.oauth2.http
+  implementation libs.google.cloud.bigquery.storage
+  implementation libs.progressbar
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud
-  testImplementation 'org.testcontainers:gcloud:1.21.4'
-  testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+  testImplementation libs.testcontainers.gcloud
+  testImplementation libs.testcontainers.junit.jupiter
   testImplementation libs.groovy
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit
