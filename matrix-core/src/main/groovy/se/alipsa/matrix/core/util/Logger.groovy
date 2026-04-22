@@ -167,20 +167,14 @@ class Logger {
   }
 
   private static System.Logger.Level toSystemLevel(LogLevel level) {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return System.Logger.Level.DEBUG
-      case LogLevel.INFO:
-        return System.Logger.Level.INFO
-      case LogLevel.WARN:
-        return System.Logger.Level.WARNING
-      case LogLevel.ERROR:
-        return System.Logger.Level.ERROR
-      default:
-        return System.Logger.Level.INFO
+    return switch (level) {
+      case LogLevel.DEBUG -> System.Logger.Level.DEBUG
+      case LogLevel.INFO -> System.Logger.Level.INFO
+      case LogLevel.WARN -> System.Logger.Level.WARNING
+      case LogLevel.ERROR -> System.Logger.Level.ERROR
+      default -> System.Logger.Level.INFO
     }
   }
-
 }
 
 /**
@@ -188,10 +182,8 @@ class Logger {
  */
 @CompileStatic
 enum LogLevel {
-
   DEBUG,
   INFO,
   WARN,
   ERROR
-
 }

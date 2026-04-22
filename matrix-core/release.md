@@ -1,10 +1,13 @@
 # Matrix Core Release History
 
-### 3.7.1-SNAPSHOT
+### 3.7.1, 2026-04-22
 - Preserve row count for zero-column matrices created from empty-row input so
   downstream consumers can retain observation alignment even when a design
   matrix contains no predictor columns.
-### 3.7.0, 2016-03-23
+- Added missing PackageScope import to Matrix.groovy
+- CodeNarc cleanup across ~25 main source files (mostly style, but includes making the metaData field final)
+
+### 3.7.0, 2026-03-23
 - enforcing Groovy 5 or greater. Groovy 5 has been used for quite some time to build the matrix library. While Groovy 4 works most of the time, there are several cases where it does not. Since groovy 6 is on the way and groovy 5 is already stable, it makes sense to enforce Groovy 5 as the minimum version for matrix-core.
 - New native CSV serialization format in Matrix
   - Added toCsvString() overloads with options 

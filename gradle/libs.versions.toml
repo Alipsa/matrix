@@ -28,7 +28,7 @@ v_google-oauth-client-jetty = "1.39.0"
 v_google-api-services-sheets = "v4-rev20260213-2.0.0"
 v_google-api-services-drive = "v3-rev20260322-2.0.0"
 v_progressbar = "0.10.2"
-v_testcontainers = "1.21.4"
+v_testcontainers = "2.0.5"
 v_mockito = "5.23.0"
 v_smile = "4.4.2"
 v_xchart = "3.8.8"
@@ -103,8 +103,8 @@ google-api-services-sheets = { module = "com.google.apis:google-api-services-she
 google-api-services-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "v_google-api-services-drive" }
 progressbar = { module = "me.tongfei:progressbar", version.ref = "v_progressbar" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "v_testcontainers" }
-testcontainers-gcloud = { module = "org.testcontainers:gcloud" }
-testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+testcontainers-gcloud = { module = "org.testcontainers:testcontainers-gcloud" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
 mockito-bom = { module = "org.mockito:mockito-bom", version.ref = "v_mockito" }
 mockito-core = { module = "org.mockito:mockito-core" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter" }

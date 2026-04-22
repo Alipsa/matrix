@@ -8,7 +8,7 @@ import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQueryOptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.BigQueryEmulatorContainer
+import org.testcontainers.gcloud.BigQueryEmulatorContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 

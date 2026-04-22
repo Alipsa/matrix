@@ -5,7 +5,7 @@ import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQueryOptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.BigQueryEmulatorContainer
+import org.testcontainers.gcloud.BigQueryEmulatorContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
