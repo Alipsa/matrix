@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
  * These tests live in `se.alipsa.matrix.bigquery` so they can access the
  * `@PackageScope` validation helpers used by `saveToBigQuery`.
  */
+@SuppressWarnings('ClassEndsWithBlankLine')
 @CompileStatic
 class SaveToBigQueryValidationTest {
 

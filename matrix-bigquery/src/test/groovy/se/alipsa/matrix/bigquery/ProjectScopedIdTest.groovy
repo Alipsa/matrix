@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
  * These tests live in `se.alipsa.matrix.bigquery` so they can access the
  * `@PackageScope` ID helpers used to keep dataset and table operations scoped to `projectId`.
  */
+@SuppressWarnings('ClassEndsWithBlankLine')
 @CompileStatic
 class ProjectScopedIdTest {
 

@@ -1,8 +1,15 @@
 # Matrix-bigquery Release History
 
-## v0.6.1, In progress
+## v0.6.1, 2026-04-22
 - Bug fix: Added isExpectedInsertAllPreconditionFailure() helper and downgraded expected InsertAll precondition failures from log.error → log.debug to reduce noise.
-- 
+- Dependency updates:
+  - com.google.auth:google-auth-library-bom 1.43.0 -> 1.46.0
+  - com.google.auth:google-auth-library-oauth2-http 1.43.0 -> 1.46.0
+  - com.google.cloud:google-cloud-bigquery 2.62.0 -> 2.65.0
+  - com.google.cloud:google-cloud-bigquerystorage 3.24.0 -> 3.27.0
+  - com.google.cloud:google-cloud-resourcemanager 1.90.0 -> 1.93.0
+- Codenarc fixes, build now fails if any new violations are introduced
+  
 ## v0.6.0, 2026-03-21
 - `com.google.auth:google-auth-library-bom` [1.42.1 -> 1.43.0]
 - `com.google.cloud:google-cloud-bigquery` [2.58.0 -> 2.62.0]

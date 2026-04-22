@@ -6,7 +6,6 @@ import groovy.transform.CompileStatic
 
 import com.google.cloud.bigquery.StandardSQLTypeName
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -28,6 +27,18 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @Tag("external")
+@SuppressWarnings([
+    'BlockEndsWithBlankLine',
+    'ClassEndsWithBlankLine',
+    'ConsecutiveBlankLines',
+    'NestedForLoop',
+    'SpaceAfterComma',
+    'SpaceAfterCommentDelimiter',
+    'SpaceAroundOperator',
+    'UnnecessaryBigDecimalInstantiation',
+    'UnnecessaryBigIntegerInstantiation',
+    'UnnecessaryGString'
+])
 @CompileStatic
 class BqDataTypesTest {
 

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
  * These tests live in `se.alipsa.matrix.bigquery` so they can exercise
  * package-scope progress-bar configuration helpers directly.
  */
+@SuppressWarnings('ClassEndsWithBlankLine')
 @CompileStatic
 class ProgressBarConfigurationTest {
 

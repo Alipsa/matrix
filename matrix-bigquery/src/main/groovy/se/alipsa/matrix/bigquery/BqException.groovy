@@ -2,8 +2,12 @@ package se.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
 
+/**
+ * Exception thrown when a BigQuery operation fails.
+ */
 @CompileStatic
 class BqException extends Exception {
+
   /**
    * Constructs a new exception with the specified detail message.  The
    * cause is not initialized, and may subsequently be initialized by
@@ -51,4 +55,5 @@ class BqException extends Exception {
   BqException(Throwable cause) {
     super(cause)
   }
+
 }

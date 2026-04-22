@@ -172,7 +172,7 @@ class TypeMapper {
       case StandardSQLTypeName.TIME -> {
         Object v = fv.getValue()
         if (v instanceof CharSequence) {
-          LocalTime.parse(v.toString(), Bq.bqTimeFormatter)
+          LocalTime.parse(v.toString(), Bq.BQ_TIME_FORMATTER)
         } else if (v instanceof Number) {
           LocalTime.ofNanoOfDay(((Number) v).longValue() * 1_000L)
         }
@@ -255,7 +255,7 @@ class TypeMapper {
       case StandardSQLTypeName.DATETIME -> LocalDateTime.parse(ValueConverter.asString(value))
       case StandardSQLTypeName.TIME -> {
         if (value instanceof CharSequence) {
-          LocalTime.parse(value.toString(), Bq.bqTimeFormatter)
+          LocalTime.parse(value.toString(), Bq.BQ_TIME_FORMATTER)
         } else if (value instanceof Number) {
           long micros = ((Number) value).longValue()
           LocalTime.ofNanoOfDay(micros * 1_000L)

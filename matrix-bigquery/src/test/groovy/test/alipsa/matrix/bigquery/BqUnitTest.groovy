@@ -20,6 +20,12 @@ import java.time.ZonedDateTime
  * Unit tests for Bq utility methods that don't require BigQuery connections.
  * These tests can run in CI without external dependencies.
  */
+@SuppressWarnings([
+    'ClassEndsWithBlankLine',
+    'UnnecessaryBigDecimalInstantiation',
+    'UnnecessaryBigIntegerInstantiation',
+    'UnnecessaryGString'
+])
 @CompileStatic
 class BqUnitTest {
 
@@ -96,28 +102,28 @@ class BqUnitTest {
   @Test
   void testBqDateFormatter() {
     LocalDate date = LocalDate.of(2024, 1, 15)
-    String formatted = date.format(Bq.bqDateFormatter)
+    String formatted = date.format(Bq.BQ_DATE_FORMATTER)
     assertEquals("2024-01-15", formatted)
 
-    LocalDate parsed = LocalDate.parse("2024-01-15", Bq.bqDateFormatter)
+    LocalDate parsed = LocalDate.parse("2024-01-15", Bq.BQ_DATE_FORMATTER)
     assertEquals(date, parsed)
   }
 
   @Test
   void testBqDateTimeFormatter() {
     LocalDateTime dt = LocalDateTime.of(2024, 1, 15, 13, 45, 30, 123456000)
-    String formatted = dt.format(Bq.bqDateTimeFormatter)
+    String formatted = dt.format(Bq.BQ_DATE_TIME_FORMATTER)
     assertEquals("2024-01-15T13:45:30.123456", formatted)
   }
 
   @Test
   void testBqTimeFormatter() {
     LocalTime time = LocalTime.of(13, 45, 30, 123456000)
-    String formatted = time.format(Bq.bqTimeFormatter)
+    String formatted = time.format(Bq.BQ_TIME_FORMATTER)
     assertTrue(formatted.startsWith("13:45:30"))
 
     // Test parsing with microseconds
-    LocalTime parsed = LocalTime.parse("13:45:30.123456", Bq.bqTimeFormatter)
+    LocalTime parsed = LocalTime.parse("13:45:30.123456", Bq.BQ_TIME_FORMATTER)
     assertEquals(13, parsed.hour)
     assertEquals(45, parsed.minute)
     assertEquals(30, parsed.second)
@@ -126,7 +132,7 @@ class BqUnitTest {
   @Test
   void testBqTimeFormatterWithoutMicroseconds() {
     // The formatter should handle times without microseconds
-    LocalTime parsed = LocalTime.parse("13:45:30", Bq.bqTimeFormatter)
+    LocalTime parsed = LocalTime.parse("13:45:30", Bq.BQ_TIME_FORMATTER)
     assertEquals(13, parsed.hour)
     assertEquals(45, parsed.minute)
     assertEquals(30, parsed.second)

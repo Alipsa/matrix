@@ -30,7 +30,6 @@ import java.sql.Timestamp
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Collections
 
 /**
  * BigQuery client wrapper providing Matrix-oriented operations for Google BigQuery.
@@ -95,30 +94,58 @@ import java.util.Collections
  * @see Matrix
  * @see TypeMapper
  */
+@SuppressWarnings(['ClassSize', 'Instanceof', 'NestedForLoop'])
 @CompileStatic
 class Bq {
 
   private static final Logger log = Logger.getLogger(Bq)
   static final String ENABLE_PROGRESS_BAR_PROPERTY = 'bigquery.enable_progress_bar'
+  private static final String QUERY_EXECUTION_FAILED = 'Query execution failed due to error: '
+  private static final String QUERY_FAILED = 'Query failed due to error: '
+  private static final String ENABLE_WRITE_API_PROPERTY = 'bigquery.enable_write_api'
+  private static final String TRUE_VALUE = 'true'
+  private static final String FALSE_VALUE = 'false'
+  private static final String NEWLINE = '\n'
+  private static final int DEFAULT_PAGE_SIZE = 100
 
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
-  static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  static final DateTimeFormatter BQ_DATE_FORMATTER = DateTimeFormatter.ofPattern('yyyy-MM-dd')
 
   /** Date formatter for legacy java.util.Date values using the JVM default timezone. Thread-safe. */
-  static final DateTimeFormatter bqLegacyDateFormatter = bqDateFormatter.withZone(ZoneId.systemDefault())
+  static final DateTimeFormatter BQ_LEGACY_DATE_FORMATTER = BQ_DATE_FORMATTER.withZone(ZoneId.systemDefault())
 
   /** DateTime formatter for BigQuery DATETIME type with microsecond precision. Thread-safe. */
-  static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+  static final DateTimeFormatter BQ_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
 
   /** Time formatter for BigQuery TIME type with optional microsecond precision. Thread-safe. */
-  static final DateTimeFormatter bqTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss[.SSSSSS]")
+  static final DateTimeFormatter BQ_TIME_FORMATTER = DateTimeFormatter.ofPattern('HH:mm:ss[.SSSSSS]')
+
+  /** @deprecated use {@link #BQ_DATE_FORMATTER}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final DateTimeFormatter bqDateFormatter = BQ_DATE_FORMATTER
+
+  /** @deprecated use {@link #BQ_LEGACY_DATE_FORMATTER}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final DateTimeFormatter bqLegacyDateFormatter = BQ_LEGACY_DATE_FORMATTER
+
+  /** @deprecated use {@link #BQ_DATE_TIME_FORMATTER}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final DateTimeFormatter bqDateTimeFormatter = BQ_DATE_TIME_FORMATTER
+
+  /** @deprecated use {@link #BQ_TIME_FORMATTER}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final DateTimeFormatter bqTimeFormatter = BQ_TIME_FORMATTER
 
   /** Default timeout for waiting for table availability (60 seconds). */
   static final long DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS = 60_000L
 
-  private BigQuery bigQuery
-  private String projectId
-  private boolean useAsyncQueries = false
+  private final BigQuery bigQuery
+  private final String projectId
+  private final boolean useAsyncQueries
   private long waitForTableTimeoutMs = DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS
 
   /**
@@ -179,7 +206,7 @@ class Bq {
    */
   Bq(String projectId, boolean useAsyncQueries = false) {
     if (projectId == null) {
-      throw new IllegalArgumentException("ProjectId cannot be null")
+      throw new IllegalArgumentException('ProjectId cannot be null')
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
@@ -198,12 +225,12 @@ class Bq {
    *
    * @param useAsyncQueries if true, uses asynchronous job-based queries (no size limit);
    *        if false (default), uses synchronous queries (10 GB limit, emulator compatible)
-   * @throws RuntimeException if GOOGLE_CLOUD_PROJECT environment variable is not set
+   * @throws IllegalStateException if GOOGLE_CLOUD_PROJECT environment variable is not set
    */
   Bq(boolean useAsyncQueries = false) {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      throw new RuntimeException("Please set the environment variable GOOGLE_CLOUD_PROJECT prior to creating this class (or pass it as a parameter)")
+      throw new IllegalStateException('Please set the environment variable GOOGLE_CLOUD_PROJECT prior to creating this class (or pass it as a parameter)')
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
@@ -286,27 +313,24 @@ class Bq {
           long deletedRows = dmlStats.getDeletedRowCount() != null ? dmlStats.getDeletedRowCount() : 0
 
           return (int) (insertedRows + updatedRows + deletedRows)
-        } else {
-          // This is likely a SELECT query.
-          // We get the result set and return the total number of rows.
-          TableResult result = queryJob.getQueryResults()
-          return result.getTotalRows().intValue()
         }
-      } else {
-        // Synchronous approach: 10 GB response size limit, emulator compatible
-        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-            .setUseLegacySql(useLegacySql)
-            .build()
-
-        TableResult result = bigQuery.query(queryConfig)
-
-        // When running a query synchronously, TableResult.getTotalRows() returns
-        // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
+        // This is likely a SELECT query.
+        // We get the result set and return the total number of rows.
+        TableResult result = queryJob.getQueryResults()
         return result.getTotalRows().intValue()
       }
 
+      // Synchronous approach: 10 GB response size limit, emulator compatible
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+          .setUseLegacySql(useLegacySql)
+          .build()
+      TableResult result = bigQuery.query(queryConfig)
+
+      // When running a query synchronously, TableResult.getTotalRows() returns
+      // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
+      return result.getTotalRows().intValue()
     } catch (BigQueryException | InterruptedException e) {
-      throw new BqException("Query execution failed due to error: " + e.toString(), e)
+      throw new BqException("${QUERY_EXECUTION_FAILED}${e.message}", e)
     }
   }
 
@@ -325,7 +349,7 @@ class Bq {
 
     // Check for errors
     if (queryJob == null) {
-      throw new BqException("Job no longer exists")
+      throw new BqException('Job no longer exists')
     } else if (queryJob.getStatus().getError() != null) {
       throw new BqException(queryJob.getStatus().getError().toString())
     }
@@ -368,9 +392,8 @@ class Bq {
 
       // Convert to a Matrix and return the results.
       return convertToMatrix(result)
-
     } catch (BigQueryException | InterruptedException e) {
-      throw new BqException("Query failed due to error: " + e.toString(), e)
+      throw new BqException("${QUERY_FAILED}${e.message}", e)
     }
   }
 
@@ -431,7 +454,9 @@ class Bq {
     long backoff = 300L
     while (System.currentTimeMillis() - start < timeoutMs) {
       Table t = bigQuery.getTable(tableId)
-      if (t != null && t.exists()) return
+      if (t?.exists()) {
+        return
+      }
       Thread.sleep(backoff)
       backoff = Math.min((long)(backoff * 1.7), 5000L)
     }
@@ -532,9 +557,9 @@ class Bq {
    */
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId, boolean append) throws BqException {
     // Check if write API is disabled (e.g., for emulator compatibility)
-    String enableWriteApi = System.getProperty("bigquery.enable_write_api", "true")
-    if ("false".equalsIgnoreCase(enableWriteApi)) {
-      log.debug("Write channel API disabled via system property, using InsertAll")
+    String enableWriteApi = System.getProperty(ENABLE_WRITE_API_PROPERTY, TRUE_VALUE)
+    if (FALSE_VALUE.equalsIgnoreCase(enableWriteApi)) {
+      log.debug('Write channel API disabled via system property, using InsertAll')
       return insertViaInsertAll(matrix, tableId, append, null)
     }
 
@@ -542,7 +567,7 @@ class Bq {
       return insertViaWriteChannel(matrix, tableId, append)
     } catch (Exception e) {
       if (isConnectionError(e)) {
-        log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
+        log.warn('Streaming insert failed with connection error. Falling back to InsertAll...')
         return insertViaInsertAll(matrix, tableId, append, e)
       }
       throw e
@@ -565,7 +590,7 @@ class Bq {
       if (current instanceof ConnectException) {
         return true
       }
-      if (current.message?.contains("Connection refused")) {
+      if (current.message?.contains('Connection refused')) {
         return true
       }
       current = current.cause
@@ -629,7 +654,6 @@ class Bq {
       }
 
       return waitForLoadJobAndGetStats(writer, tableId)
-
     } catch (Exception e) {
       throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
     }
@@ -671,7 +695,7 @@ class Bq {
     }
 
     json.writeEndObject()
-    json.writeRaw('\n')
+    json.writeRaw(NEWLINE)
     return lastValue
   }
 
@@ -716,7 +740,7 @@ class Bq {
 
     if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
       String details = buildErrorDetails(primary, execErrs)
-      throw new BqException("Write-channel load (JSON) failed: ${details}")
+      throw new BqException("Write-channel load (JSON) failed for ${tableId}: ${details}")
     }
 
     JobStatistics.LoadStatistics stats = loadJob.getStatistics()
@@ -742,7 +766,7 @@ class Bq {
     }
     return allErrors
         .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
-        .join("; ")
+        .join('; ')
   }
 
   /**
@@ -780,7 +804,6 @@ class Bq {
 
       log.info("InsertAll successful. Inserted ${matrix.rowCount()} rows")
       return createPlaceholderLoadStatistics(tableId)
-
     } catch (Exception fallbackException) {
       if (isExpectedInsertAllPreconditionFailure(fallbackException)) {
         log.debug("InsertAll failed: ${fallbackException.message}")
@@ -867,7 +890,7 @@ class Bq {
    * @return a map with converted values
    */
   private static Map<String, Object> convertRowForInsertAll(Row row, List<String> columnNames) {
-    Map<String, Object> content = new LinkedHashMap<>()
+    Map<String, Object> content = [:]
 
     for (String name : columnNames) {
       Object val = row[name]
@@ -891,9 +914,9 @@ class Bq {
    */
   private static String buildInsertAllErrorDetails(InsertAllResponse response) {
     return response.getInsertErrors().collect { Map.Entry<Long, List<BigQueryError>> entry ->
-      String rowErrors = entry.getValue().collect { it.getMessage() }.join(", ")
+      String rowErrors = entry.value*.message.join(', ')
       "Row ${entry.getKey()}: ${rowErrors}"
-    }.join("\n")
+    }.join(NEWLINE)
   }
 
   /**
@@ -906,7 +929,7 @@ class Bq {
    * @return placeholder load statistics (with null values)
    */
   private static JobStatistics.LoadStatistics createPlaceholderLoadStatistics(TableId tableId) {
-    List<String> emptySourceUris = Collections.emptyList()
+    List<String> emptySourceUris = []
     LoadJobConfiguration placeholderConfig = LoadJobConfiguration
         .newBuilder(tableId, emptySourceUris)
         .setFormatOptions(FormatOptions.json())
@@ -992,11 +1015,11 @@ class Bq {
     }
     if (orgVal instanceof LocalDate) {
       LocalDate date = (LocalDate) orgVal
-      return date.format(bqDateFormatter)
+      return date.format(BQ_DATE_FORMATTER)
     }
     if (orgVal instanceof LocalDateTime) {
       LocalDateTime date = (LocalDateTime) orgVal
-      return date.format(bqDateTimeFormatter)
+      return date.format(BQ_DATE_TIME_FORMATTER)
     }
     if (orgVal instanceof Instant) {
       Instant instant = (Instant) orgVal
@@ -1012,17 +1035,17 @@ class Bq {
     }
     if (orgVal instanceof LocalTime) {
       LocalTime t = ((LocalTime) orgVal).truncatedTo(ChronoUnit.MICROS)
-      return bqTimeFormatter.format(t)
+      return BQ_TIME_FORMATTER.format(t)
     }
     // Time is a subclass of Date so must come before Date
     if (orgVal instanceof Time) {
       Time t = (Time) orgVal
       LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MICROS)
-      return bqTimeFormatter.format(lt)
+      return BQ_TIME_FORMATTER.format(lt)
     }
     if (orgVal instanceof Date) {
       Date date = (Date) orgVal
-      return bqLegacyDateFormatter.format(date.toInstant())
+      return BQ_LEGACY_DATE_FORMATTER.format(date.toInstant())
     }
     String.valueOf(orgVal)
   }
@@ -1077,7 +1100,7 @@ class Bq {
     }
     Matrix.builder()
         .rows(rows)
-        .types(colTypes.collect{convertType(it)})
+        .types(colTypes.collect { convertType(it) })
         .columnNames(colNames)
         .build()
   }
@@ -1090,9 +1113,9 @@ class Bq {
    */
   List<String> getDatasets() throws BqException {
     try {
-      Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
+      Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(DEFAULT_PAGE_SIZE))
       if (datasets == null) {
-        log.debug("Dataset does not contain any models")
+        log.debug('Dataset does not contain any models')
         return []
       }
       return datasets
@@ -1116,7 +1139,7 @@ class Bq {
   List<Project> getProjects() throws BqException {
     ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
     try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
-      return pc.searchProjects("").iterateAll().collect()
+      return pc.searchProjects('').iterateAll().collect()
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
@@ -1131,7 +1154,7 @@ class Bq {
    */
   List<String> getTableNames(String datasetName) throws BqException {
     try {
-      Page<Table> tables = bigQuery.listTables(datasetId(datasetName), TableListOption.pageSize(100))
+      Page<Table> tables = bigQuery.listTables(datasetId(datasetName), TableListOption.pageSize(DEFAULT_PAGE_SIZE))
       return tables.iterateAll().collect {
         it.tableId.table
       }
@@ -1286,7 +1309,7 @@ class Bq {
       log.info("$newDatasetName created successfully")
       ds
     } catch (BigQueryException e) {
-      throw new BqException("Dataset was not created: " + e.toString(), e)
+      throw new BqException("Dataset was not created: ${e.message}", e)
     }
   }
 
@@ -1436,4 +1459,5 @@ class Bq {
   static String sanitizeString(Object input) {
     input?.toString()
   }
+
 }

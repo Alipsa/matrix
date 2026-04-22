@@ -19,6 +19,12 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+@SuppressWarnings([
+    'ClassEndsWithBlankLine',
+    'UnnecessaryBigDecimalInstantiation',
+    'UnnecessaryBigIntegerInstantiation',
+    'UnnecessaryGString'
+])
 @CompileStatic
 class ConvertObjectValueTest {
 

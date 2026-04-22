@@ -7,18 +7,10 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.*
 
 import se.alipsa.matrix.bigquery.Bq
-import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.Dataset
-
-import java.sql.Time
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZonedDateTime
 
 /**
  * The GCloud testcontainer project is not yet mature enough to rely on so
@@ -34,6 +26,15 @@ import java.time.ZonedDateTime
  * Performance optimization: Uses shared dataset and Bq instance to minimize network round-trips.
  */
 @Tag("external")
+@SuppressWarnings([
+    'ClassEndsWithBlankLine',
+    'SpaceAfterComma',
+    'SpaceAfterCommentDelimiter',
+    'SpaceAfterOpeningBrace',
+    'SpaceBeforeClosingBrace',
+    'SpaceBeforeOpeningBrace',
+    'UnnecessaryGString'
+])
 @CompileStatic
 class BqTest {
 

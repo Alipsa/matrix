@@ -20,6 +20,12 @@ import se.alipsa.matrix.datasets.Dataset
 
 @Testcontainers
 @Tag("flaky")  // BigQuery emulator testcontainer has threading issues - see issue #XXX
+@SuppressWarnings([
+    'BlockEndsWithBlankLine',
+    'ClassEndsWithBlankLine',
+    'UnnecessaryDotClass',
+    'UnnecessaryGString'
+])
 class BqTestContainerTest {
 
   // https://github.com/goccy/bigquery-emulator/pkgs/container/bigquery-emulator
