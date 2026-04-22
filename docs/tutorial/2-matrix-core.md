@@ -352,7 +352,7 @@ def variance = variance(table.v0)
 
 ### Rolling, Cumulative, and Shift Operations
 
-Matrix 3.7.0 adds time-series style helpers directly on `Column` and `Matrix`.
+Matrix 3.7.x adds time-series style helpers directly on `Column` and `Matrix`.
 
 ```groovy
 import se.alipsa.matrix.core.*

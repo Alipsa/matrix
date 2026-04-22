@@ -8,8 +8,8 @@ boolean coreJarExists = false
 println "Grape cache: ${cacheDir.absolutePath} jars:"
 cacheDir.listFiles().eachWithIndex { it, idx ->
   println idx + ". " + it.name
-  if (it.name.contains("matrix-core-3.7.0.jar")) {
+  if (it.name.contains("matrix-core-3.7.1.jar")) {
     coreJarExists = true
   }
 }
-println "\nmatrix-core-3.7.0.jar was ${coreJarExists ? 'found' : 'NOT found'} in ${cacheDir.absolutePath}"
+println "\nmatrix-core-3.7.1.jar was ${coreJarExists ? 'found' : 'NOT found'} in ${cacheDir.absolutePath}"

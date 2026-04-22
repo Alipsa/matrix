@@ -4,7 +4,7 @@
 @Grab(group='org.bytedeco', module='javacpp', version='1.5.11')
 //@Grab('org.apache.ivy:ivy:2.5.3')
 //@Grab('org.apache.groovy:groovy-ginq:5.0.4')
-@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-core:3.7.1')
 @Grab('se.alipsa.matrix:matrix-csv:2.1.1-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-stats:2.3.0')
 @Grab('se.alipsa.matrix:matrix-xchart:0.2.1')
