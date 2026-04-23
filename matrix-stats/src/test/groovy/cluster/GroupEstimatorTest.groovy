@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
+
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 
 class GroupEstimatorTest {
@@ -64,13 +65,13 @@ class GroupEstimatorTest {
   void testEstimateNumberOfGroupsTooFewPoints() {
     double[][] onePoint = [[1.0, 2.0]] as double[][]
     GroupEstimator estimator = new GroupEstimator()
-    assertThrows(IllegalArgumentException, { estimator.estimateNumberOfGroups(onePoint) })
+    assertThrows(IllegalArgumentException) { estimator.estimateNumberOfGroups(onePoint) }
   }
 
   @Test
   void testEstimateKByElbowTooFewDistinctPoints() {
     // All identical points → only 1 distinct point
     double[][] data = [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0]] as double[][]
-    assertThrows(IllegalArgumentException, { GroupEstimator.estimateKByElbow(data) })
+    assertThrows(IllegalArgumentException) { GroupEstimator.estimateKByElbow(data) }
   }
 }

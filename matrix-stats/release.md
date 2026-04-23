@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.4.0, 2026-04-09
+## v2.4.0, 2026-04-23
 **Native runtime cleanup and idiomatic Groovy API expansion**
 
 ### Runtime and Dependency Changes
@@ -71,6 +71,7 @@
 
 ### Tests and Quality
 - Add coverage for formula parsing, model-frame construction, design matrices, spline basis expansion, fit registry, `lm`, `loess`, `gam`, multiple linear regression, interpolation, linalg, SVD, native distributions, native solvers, numeric conversion, and least-squares kernels.
+- Add direct unit tests for `GroupEstimator.estimateNumberOfGroups` and `estimateKByElbow`, covering both the `double[][]` and Groovy-facing `List` overloads, custom `maxK`/`iterations`, and error cases (too few points, too few distinct points).
 - Add benchmark-oriented tests for selected Groovy-facing paths versus retained primitive kernels.
 - Update tests for BigDecimal/Groovy-friendly assertions and numeric API behavior.
 - Increase coverage around null handling, weights, offsets, subset filtering, categorical encoding, exact integer validation, singular matrices, and solver convergence.
