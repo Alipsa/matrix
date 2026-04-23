@@ -200,7 +200,6 @@ class GroupEstimator {
   }
 
   private static int ruleOfThumb(double[][] points) {
-    //println "Estimated number of clusters (k) = $estimated"
     int n = points.length
     // Simple heuristic: sqrt(n / 2), tends to overestimate
     int estimatedSqrt = (int) Math.round(Math.sqrt(n / 2.0d))

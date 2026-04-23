@@ -46,7 +46,7 @@ class Normalize {
     BigDecimal logResult = x.log()
 
     if (decimals.length > 0) {
-      BigDecimal bd = new BigDecimal(logResult).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = logResult.setScale(decimals[0], RoundingMode.HALF_EVEN)
       return convertToType(bd, x)
     }
     convertToType(logResult, x)
