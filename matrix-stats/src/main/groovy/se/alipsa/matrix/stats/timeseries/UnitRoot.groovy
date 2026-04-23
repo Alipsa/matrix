@@ -234,7 +234,7 @@ class UnitRoot {
 
       // Get critical values based on alpha
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       // Count how many tests reject unit root (suggesting stationarity)
@@ -284,34 +284,28 @@ class UnitRoot {
       consensus.toString()
     }
 
-    /**
-     * Gets the appropriate critical value for a result object based on alpha.
-     */
-    private static double getCriticalValue(Object result, double alpha) {
-      // Handle different result types
-      if (result instanceof Df.DfResult) {
-        Df.DfResult dfRes = (Df.DfResult) result
-        if (alpha <= 0.01) {
-          return dfRes.criticalValue1pct
-        } else if (alpha <= 0.05) {
-          return dfRes.criticalValue5pct
-        } else {
-          return dfRes.criticalValue10pct
-        }
-      } else if (result instanceof AdfGls.AdfGlsResult) {
-        AdfGls.AdfGlsResult adfGlsRes = (AdfGls.AdfGlsResult) result
-        if (alpha <= 0.01) {
-          return adfGlsRes.criticalValue1pct
-        } else if (alpha <= 0.05) {
-          return adfGlsRes.criticalValue5pct
-        } else {
-          return adfGlsRes.criticalValue10pct
-        }
-      } else if (result instanceof Adf.AdfResult) {
-        // ADF only has one critical value (5%)
-        return ((Adf.AdfResult) result).criticalValue
+    private static double getCriticalValue(AdfGls.AdfGlsResult adfGlsRes, double alpha) {
+      if (alpha <= 0.01) {
+        return adfGlsRes.criticalValue1pct
+      } else if (alpha <= 0.05) {
+        return adfGlsRes.criticalValue5pct
       } else {
-        throw new IllegalArgumentException("Unknown result type: ${result.class}")
+        return adfGlsRes.criticalValue10pct
+      }
+    }
+
+    private static double getCriticalValue(Adf.AdfResult adfRes) {
+      // ADF only has one critical value (5%)
+      adfRes.criticalValue
+    }
+
+    private static double getCriticalValue(Df.DfResult dfRes, double alpha) {
+      if (alpha <= 0.01) {
+        return dfRes.criticalValue1pct
+      } else if (alpha <= 0.05) {
+        return dfRes.criticalValue5pct
+      } else {
+        return dfRes.criticalValue10pct
       }
     }
 
@@ -325,7 +319,7 @@ class UnitRoot {
       double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {
@@ -354,7 +348,7 @@ class UnitRoot {
       double alphaValue = NumericConversion.toAlpha(alpha) as double
       int unitRootTests = 0
       double dfCritical = getCriticalValue(dfResult, alphaValue)
-      double adfCritical = getCriticalValue(adfResult, alphaValue)
+      double adfCritical = getCriticalValue(adfResult)
       double adfGlsCritical = getCriticalValue(adfGlsResult, alphaValue)
 
       if (dfResult.statistic < dfCritical) {

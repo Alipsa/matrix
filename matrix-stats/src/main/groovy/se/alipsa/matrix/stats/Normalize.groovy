@@ -35,13 +35,20 @@ class Normalize {
       return null  // logNorm always returns null for zero/invalid
     }
 
-    double logResult = Math.log(x.doubleValue())
+    if (x instanceof Float && (x as Float).isInfinite()) {
+      return x as T
+    }
 
-    if (decimals.length > 0 && !Double.isInfinite(logResult)) {
+    if (x instanceof Double && (x as Double).isInfinite()) {
+      return x as T
+    }
+
+    BigDecimal logResult = x.log()
+
+    if (decimals.length > 0) {
       BigDecimal bd = new BigDecimal(logResult).setScale(decimals[0], RoundingMode.HALF_EVEN)
       return convertToType(bd, x)
     }
-
     convertToType(logResult, x)
   }
 

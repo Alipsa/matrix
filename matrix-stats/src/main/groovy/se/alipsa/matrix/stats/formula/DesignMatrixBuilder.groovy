@@ -159,7 +159,7 @@ final class DesignMatrixBuilder {
     for (int d = 1; d <= degree; d++) {
       String colName = "${baseName}_poly${d}"
       List<BigDecimal> values = baseValues.collect { BigDecimal v ->
-        (Math.pow(v as double, d)) as BigDecimal
+        v.pow(d)
       }
       result << new ColumnInfo(colName, values, false, [])
     }
