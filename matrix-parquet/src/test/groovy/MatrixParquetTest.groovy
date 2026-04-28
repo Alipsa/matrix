@@ -7,12 +7,14 @@ import static se.alipsa.matrix.core.ListConverter.toDoubles
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 
+import java.nio.file.Path
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -22,16 +24,13 @@ import java.time.ZoneId
 
 class MatrixParquetTest {
 
+  @TempDir
+  Path tempDir
+
   @Test
   void testMatrixParquetCars() {
     Matrix data = Dataset.cars().withMatrixName('cars')
-    File dir = new File("build/cars")
-    if (dir.exists()) {
-      if (dir.isDirectory()) {
-        dir.listFiles().each {it.delete()}
-      }
-      dir.delete() // Ensure we start with a clean slate
-    }
+    File dir = tempDir.resolve('cars').toFile()
     dir.mkdirs()
     //println data.content()
     File file = MatrixParquetWriter.write(data, dir)
@@ -46,13 +45,7 @@ class MatrixParquetTest {
   @Test
   void testMatrixParquetCarsFixedSize() {
     Matrix data = Dataset.mtcars().withMatrixName('mtcars')
-    File dir = new File("build/mtcars")
-    if (dir.exists()) {
-      if (dir.isDirectory()) {
-        dir.listFiles().each {it.delete()}
-      }
-      dir.delete() // Ensure we start with a clean slate
-    }
+    File dir = tempDir.resolve('mtcars').toFile()
     dir.mkdirs()
     //println data.content()
     File file = MatrixParquetWriter.write(data, dir, 5, 3)
@@ -73,10 +66,7 @@ class MatrixParquetTest {
         score: toDoubles([0.5, 0.6, 0.7, 0.8, 0.9]),
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
         .types([int, String, BigDecimal, Double, LocalDate]).build()
-    File file = new File("build/empData.parquet")
-    if (file.exists()) {
-      file.delete() // Ensure we start with a clean slate
-    }
+    File file = tempDir.resolve('empData.parquet').toFile()
     MatrixParquetWriter.write(empData, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
@@ -95,10 +85,7 @@ class MatrixParquetTest {
         score: toBigDecimals([0.5123, 0.6321, 0.7190, 0.8452, 0.9198]),
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
-    File file = new File("build/empData.parquet")
-    if (file.exists()) {
-      file.delete() // Ensure we start with a clean slate
-    }
+    File file = tempDir.resolve('empData.parquet').toFile()
     MatrixParquetWriter.write(empData, file, true)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
@@ -121,10 +108,7 @@ class MatrixParquetTest {
         score: toBigDecimals(["1.2345", 0.6321, 0.7190, 0.8452, 0.9198]),
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
-    File file = new File("build/empData_valid.parquet")
-    if (file.exists()) {
-      file.delete() // Ensure we start with a clean slate
-    }
+    File file = tempDir.resolve('empData_valid.parquet').toFile()
     MatrixParquetWriter.write(empData, file, [salary: [5,2], score: [5,4]])
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
@@ -149,10 +133,7 @@ class MatrixParquetTest {
         salary: [623.30 as BigDecimal]
     ).types([BigDecimal]).build()
 
-    File file = new File("build/empData_invalid.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('empData_invalid.parquet').toFile()
 
     // Value to write: 623.30 (Unscaled: 62330, Precision: 5)
     // Declared Schema: [4, 2] (Max Unscaled: 9999, Max Value: 99.99)
@@ -197,10 +178,7 @@ class MatrixParquetTest {
         reviews: productReviews
     ).types([Integer, String, List, Map, List]).build()
 
-    File file = new File('build/products_nested.parquet')
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('products_nested.parquet').toFile()
 
     MatrixParquetWriter.write(productsNested, file)
     def matrix = MatrixParquetReader.read(file)
@@ -236,10 +214,7 @@ class MatrixParquetTest {
         sql_timestamp: [timestamp1, timestamp2, timestamp3]
     ).types([Integer, LocalDateTime, Time, Timestamp]).build()
 
-    File file = new File("build/timeData.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('timeData.parquet').toFile()
 
     MatrixParquetWriter.write(timeData, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -288,7 +263,7 @@ class MatrixParquetTest {
 
   @Test
   void testWriterValidation() {
-    File file = new File("build/validation_test.parquet")
+    File file = tempDir.resolve('validation_test.parquet').toFile()
 
     // Test null matrix
     def nullMatrixEx = assertThrows(IllegalArgumentException, {
@@ -320,14 +295,14 @@ class MatrixParquetTest {
     assertTrue(nullFileEx.message.contains("File cannot be null"))
 
     // Test non-existent file
-    def nonExistentFile = new File("build/does_not_exist.parquet")
+    def nonExistentFile = tempDir.resolve('does_not_exist.parquet').toFile()
     def noFileEx = assertThrows(IllegalArgumentException, {
       MatrixParquetReader.read(nonExistentFile)
     })
     assertTrue(noFileEx.message.contains("does not exist"))
 
     // Test directory instead of file
-    def dir = new File("build")
+    def dir = tempDir.toFile()
     def dirEx = assertThrows(IllegalArgumentException, {
       MatrixParquetReader.read(dir)
     })
@@ -341,10 +316,7 @@ class MatrixParquetTest {
         name: ['A', 'B']
     ).types([Integer, String]).build()
 
-    File file = new File("build/streamData.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('streamData.parquet').toFile()
 
     MatrixParquetWriter.write(data, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -367,10 +339,7 @@ class MatrixParquetTest {
         value: toBigDecimals([10.5, 20.75, 30.25])
     ).types([Integer, String, BigDecimal]).build()
 
-    File file = new File("build/byteArrayData.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('byteArrayData.parquet').toFile()
 
     MatrixParquetWriter.write(data, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -416,10 +385,7 @@ class MatrixParquetTest {
         amount: toBigDecimals([10.5, 20.75])
     ).types([Integer, BigDecimal]).build()
 
-    File file = new File("build/urlPathData.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('urlPathData.parquet').toFile()
 
     MatrixParquetWriter.write(data, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -445,10 +411,7 @@ class MatrixParquetTest {
         event_time: [dateTime]
     ).types([Integer, LocalDateTime]).build()
 
-    File file = new File("build/tzTest.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('tzTest.parquet').toFile()
 
     // Write with UTC timezone
     ZoneId utcZone = ZoneId.of("UTC")
@@ -463,10 +426,7 @@ class MatrixParquetTest {
     ZoneId nyZone = ZoneId.of("America/New_York")
 
     // Write with NY timezone
-    File fileNy = new File("build/tzTestNy.parquet")
-    if (fileNy.exists()) {
-      fileNy.delete()
-    }
+    File fileNy = tempDir.resolve('tzTestNy.parquet').toFile()
     MatrixParquetWriter.write(data, fileNy, nyZone)
 
     // Read back with same NY timezone
@@ -494,10 +454,7 @@ class MatrixParquetTest {
         amount: []
     ).types([Integer, String, BigDecimal]).build()
 
-    File file = new File("build/empty_rows.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('empty_rows.parquet').toFile()
 
     MatrixParquetWriter.write(emptyRows, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -518,10 +475,7 @@ class MatrixParquetTest {
         notes: [null, null, null]
     ).types([Integer, String]).build()
 
-    File file = new File("build/null_only.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('null_only.parquet').toFile()
 
     MatrixParquetWriter.write(data, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -542,10 +496,7 @@ class MatrixParquetTest {
         'col(name)': toBigDecimals([1.1, 2.2])
     ).types([Integer, String, Boolean, BigDecimal]).build()
 
-    File file = new File("build/special_columns.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('special_columns.parquet').toFile()
 
     MatrixParquetWriter.write(data, file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -574,10 +525,7 @@ class MatrixParquetTest {
         amount: largeValues
     ).types([Integer, BigDecimal]).build()
 
-    File file = new File("build/large_decimals.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('large_decimals.parquet').toFile()
 
     MatrixParquetWriter.write(data, file, true)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
@@ -670,13 +618,7 @@ class MatrixParquetTest {
     assert data.hasIndex()
     assertEquals(['country', 'quarter'], data.indexedColumns())
 
-    File dir = new File('build/indexTest')
-    if (dir.exists()) {
-      if (dir.isDirectory()) {
-        dir.listFiles().each { it.delete() }
-      }
-      dir.delete()
-    }
+    File dir = tempDir.resolve('indexTest').toFile()
     dir.mkdirs()
 
     File file = MatrixParquetWriter.write(data, dir)
@@ -730,10 +672,7 @@ class MatrixParquetTest {
   @Test
   void testWriterBuilderBasic() {
     Matrix data = Dataset.cars().withMatrixName('cars')
-    File file = new File("build/builder_basic.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('builder_basic.parquet').toFile()
 
     MatrixParquetWriter.builder(data).write(file)
     assertTrue(file.exists())
@@ -751,10 +690,7 @@ class MatrixParquetTest {
         score: toBigDecimals(["1.2345", 0.6321, 0.7190, 0.8452, 0.9198])
     ).types([int, BigDecimal, BigDecimal]).build()
 
-    File file = new File("build/builder_precision.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('builder_precision.parquet').toFile()
 
     MatrixParquetWriter.builder(data)
         .decimalMeta([salary: [5, 2] as int[], score: [5, 4] as int[]])
@@ -772,10 +708,7 @@ class MatrixParquetTest {
         amount: toBigDecimals([10.5, 20.75, 30.25])
     ).types([BigDecimal]).build()
 
-    File file = new File("build/builder_uniform.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('builder_uniform.parquet').toFile()
 
     MatrixParquetWriter.builder(data)
         .precision(10)
@@ -794,10 +727,7 @@ class MatrixParquetTest {
         event_time: [dateTime]
     ).types([LocalDateTime]).build()
 
-    File file = new File("build/builder_tz.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('builder_tz.parquet').toFile()
 
     ZoneId utcZone = ZoneId.of("UTC")
     MatrixParquetWriter.builder(data)
@@ -845,8 +775,7 @@ class MatrixParquetTest {
         name: ['A', 'B']
     ).types([Integer, String]).build()
 
-    java.nio.file.Path path = java.nio.file.Path.of('build/path_write.parquet')
-    java.nio.file.Files.deleteIfExists(path)
+    java.nio.file.Path path = tempDir.resolve('path_write.parquet')
 
     MatrixParquetWriter.builder(data).write(path)
     assertTrue(java.nio.file.Files.exists(path))
@@ -894,10 +823,7 @@ class MatrixParquetTest {
         name: ['A', 'B']
     ).types([Integer, String]).build()
 
-    File file = new File("build/reader_builder.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('reader_builder.parquet').toFile()
     MatrixParquetWriter.write(data, file)
 
     Matrix result = MatrixParquetReader.builder()
@@ -930,10 +856,7 @@ class MatrixParquetTest {
         id: [1, 2]
     ).types([Integer]).build()
 
-    File file = new File("build/reader_path.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('reader_path.parquet').toFile()
     MatrixParquetWriter.write(data, file)
 
     Matrix result = MatrixParquetReader.builder()
@@ -949,10 +872,7 @@ class MatrixParquetTest {
         event_time: [dateTime]
     ).types([LocalDateTime]).build()
 
-    File file = new File("build/reader_tz.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('reader_tz.parquet').toFile()
 
     ZoneId utc = ZoneId.of("UTC")
     MatrixParquetWriter.write(data, file, utc)
@@ -972,10 +892,7 @@ class MatrixParquetTest {
         amount: toBigDecimals([-123.45, -0.01, 0.0, 999.99])
     ).types([Integer, BigDecimal]).build()
 
-    File file = new File("build/negatives.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('negatives.parquet').toFile()
 
     MatrixParquetWriter.builder(data).write(file)
     Matrix result = MatrixParquetReader.read(file)
@@ -992,10 +909,7 @@ class MatrixParquetTest {
         event_time: [dateTime]
     ).types([LocalDateTime]).build()
 
-    File file = new File("build/reader_tz_str.parquet")
-    if (file.exists()) {
-      file.delete()
-    }
+    File file = tempDir.resolve('reader_tz_str.parquet').toFile()
 
     MatrixParquetWriter.builder(data).zoneId("UTC").write(file)
 
