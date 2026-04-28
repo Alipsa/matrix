@@ -1,33 +1,26 @@
 [![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-json/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-json)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-json/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-json)
 # matrix-json
-Json import and export functionality to and from a Matrix or Grid
+JSON import and export functionality to and from a Matrix.
 
 ## Setup
-Matrix-json should work with any 5.x version of groovy. 
-It requires version 2.0.0 or later of the Matrix-core package (recommend se.alipsa.groovy:matrix-core:3.6.0)
+Matrix-json should work with any 5.x version of Groovy.
+It requires version 2.0.0 or later of the Matrix-core package (recommend se.alipsa.groovy:matrix-core:3.6.0).
 Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-def groovyVersion = '5.0.4'
-implementation "org.apache.groovy:groovy:$groovyVersion"
-implementation "org.apache.groovy:groovy-json:$groovyVersion"
+implementation 'org.apache.groovy:groovy:5.0.5'
 implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-json:2.1.2'
+implementation 'se.alipsa.matrix:matrix-json:2.2.0'
 ```
-...and the following for maven
+...and the following for Maven
 ```xml
 <dependencies>
   <dependency>
-    <groupId>org.apache-groovy</groupId>
+    <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.4</version>
-  </dependency>
-  <dependency>
-    <groupId>org.apache-groovy</groupId>
-    <artifactId>groovy-json</artifactId>
-    <version>5.0.4</version>
+    <version>5.0.5</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -37,12 +30,15 @@ implementation 'se.alipsa.matrix:matrix-json:2.1.2'
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-json</artifactId>
-      <version>2.1.2</version>
+      <version>2.2.0</version>
   </dependency>
 </dependencies>
 ```
 
-The jvm should be JDK 21 or higher.
+The JVM should be JDK 21 or higher.
+
+Note: `groovy-json` is no longer required as a dependency. Since v2.2.0, matrix-json uses
+Jackson for both reading and writing JSON.
 
 ## Using Matrix.read() / matrix.write()
 
@@ -50,44 +46,53 @@ If `matrix-json` is on the classpath, `.json` files can be handled through the g
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.json.JsonReadOptions
-import se.alipsa.matrix.json.JsonWriteOptions
 
+// Read JSON from a file
 Matrix data = Matrix.read(new File('data.json'))
+
+// Read with options
 Matrix utf16 = Matrix.read([charset: 'UTF-16'], new File('data.json'))
 
+// Read with type conversion
+Matrix typed = Matrix.read([types: [Integer, String, LocalDate], dateTimeFormat: 'yyyy-MM-dd'], new File('data.json'))
+
+// Write JSON to a file
 data.write([indent: true], new File('pretty.json'))
 data.write([dateFormat: 'yyyy/MM/dd'], new File('custom.json'))
 
+// Discover available options
 println Matrix.listReadOptions('json')
 println Matrix.listWriteOptions('json')
-println JsonReadOptions.describe()
-println JsonWriteOptions.describe()
 ```
 
-Note: from `matrix-json` 2.1.3 onward, JSON floating-point values are read as `BigDecimal` instead of `Double` so decimal values preserve their exact text precision when imported through `JsonReader` / `Matrix.read(...)`.
+Note: from `matrix-json` 2.1.3 onward, JSON floating-point values are read as `BigDecimal` instead
+of `Double` so decimal values preserve their exact text precision when imported through
+`JsonReader` / `Matrix.read(...)`.
 
-## Exporting a Matrix to Json
+## Writing JSON with JsonWriter
 
-The simplest way is to just use the toJson method on th JsonExporter, e.g:
+The recommended way to write JSON is via the fluent `WriteBuilder` API:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.json.JsonExporter
+import se.alipsa.matrix.json.JsonWriter
 import java.time.LocalDate
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
-import groovy.json.JsonOutput
 
 def empData = Matrix.builder().data(
         emp_id: 1..3,
         emp_name: ["Rick","Dan","Michelle"],
         salary: [623.3,515.2,611.0],
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
-      .types(int, String, Number, LocalDate)
-      .build()
+    .types(int, String, Number, LocalDate)
+    .build()
 
-def exporter = new JsonExporter(empData)
-println JsonOutput.prettyPrint(exporter.toJson())
+// Write to a file with pretty-printing
+JsonWriter.write(empData).indent().to(new File('employees.json'))
+
+// Write to a string
+String json = JsonWriter.write(empData).indent().asString()
+println json
 ```
 will output
 ```json
@@ -113,94 +118,94 @@ will output
 ]
 ```
 
-Sometimes you need to convert the Matrix data in some way. You can do that by supplying a Map of 
-Closures for each column name that should be treated. E.g:
+### Custom formatting
+
+You can apply column formatters and date format patterns via the builder:
+
+```groovy
+import se.alipsa.matrix.json.JsonWriter
+
+// Custom date format
+String json = JsonWriter.write(empData)
+    .dateFormat('yy/dd/MM')
+    .indent()
+    .asString()
+
+// Column formatters
+String json = JsonWriter.write(empData)
+    .formatter('salary') { it * 10 + ' kr' }
+    .formatter('start_date') { DateTimeFormatter.ofPattern('yy/dd/MM').format(it) }
+    .indent()
+    .asString()
+```
+
+### Write targets
+
+The builder supports multiple output targets:
+
+```groovy
+JsonWriter.write(matrix).to(new File('out.json'))         // File
+JsonWriter.write(matrix).to(Path.of('out.json'))          // Path
+JsonWriter.write(matrix).to('/path/to/out.json')          // String path
+JsonWriter.write(matrix).to(writer)                       // Writer (streams directly)
+String json = JsonWriter.write(matrix).asString()         // String
+```
+
+## Reading JSON with JsonReader
+
+`JsonReader` reads JSON arrays into a Matrix using Jackson's streaming API for constant memory usage:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.json.JsonExporter
+import se.alipsa.matrix.json.JsonReader
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
-import groovy.json.JsonOutput
 
-DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern('yy/dd/MM')
-def json = exporter.toJson([
-        'salary': {it * 10 + ' kr'}, 
-        'start_date': {dateTimeFormatter.format(it)}
-])
-println JsonOutput.prettyPrint(json)
+// Read from a string
+Matrix table = JsonReader.read('''[
+    {"emp_id": 1, "emp_name": "Rick", "salary": 623.3, "start_date": "2012-01-01"},
+    {"emp_id": 2, "emp_name": "Dan", "salary": 515.2, "start_date": "2013-09-23"},
+    {"emp_id": 3, "emp_name": "Michelle", "salary": 611.0, "start_date": "2014-11-15"}
+]''')
+
+// Convert columns to specific types
+Matrix typed = table.convert([int, String, Number, LocalDate])
 ```
 
-which will result in the following
-```json
-[
-    {
-        "emp_id": 1,
-        "emp_name": "Rick",
-        "salary": "6233.0 kr",
-        "start_date": "12/01/01"
-    },
-    {
-        "emp_id": 2,
-        "emp_name": "Dan",
-        "salary": "5152.0 kr",
-        "start_date": "13/23/09"
-    },
-    {
-        "emp_id": 3,
-        "emp_name": "Michelle",
-        "salary": "6110.0 kr",
-        "start_date": "14/15/11"
-    }
-]
-```
-
-## Importing json into a Matrix
-
-The json needs to be in the format of a list `[]` with each row represented as an Object `{}`
+### Reading from various sources
 
 ```groovy
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.json.*
-import java.time.LocalDate
-import static se.alipsa.matrix.core.ListConverter.toLocalDates
-
-def importer = new JsonImporter()
-def table = importer.parse('''[
-        {
-          "emp_id": 1,
-          "emp_name": "Rick",
-          "salary": 623.3,
-          "start_date": "2012-01-01"
-        },
-        {
-          "emp_id": 2,
-          "emp_name": "Dan",
-          "salary": 515.2,
-          "start_date": "2013-09-23"
-        },
-        {
-          "emp_id": 3,
-          "emp_name": "Michelle",
-          "salary": 611.0,
-          "start_date": "2014-11-15"
-        }
-    ]''').convert([int, String, Number, LocalDate])
-// Note: there are other conversion methods that can handle more complex scenarios
-
-// the above will give you exactly this:
-Matrix empData = Matrix.builder().data(
-    emp_id: 1..3,
-    emp_name: ["Rick","Dan","Michelle"],
-    salary: [623.3,515.2,611.0],
-    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
-    .types(int, String, Number, LocalDate)
-    .build()
+Matrix m = JsonReader.read(new File('data.json'))                              // File
+Matrix m = JsonReader.read(Path.of('data.json'))                               // Path
+Matrix m = JsonReader.readFile('/path/to/data.json')                           // String file path
+Matrix m = JsonReader.read(new URL('https://api.example.com/data.json'))       // URL
+Matrix m = JsonReader.readUrl('https://api.example.com/data.json')             // String URL
+Matrix m = JsonReader.read(inputStream)                                        // InputStream
+Matrix m = JsonReader.read(reader)                                             // Reader
+Matrix m = JsonReader.readString('[{"id":1}]')                                 // Alias for read(String)
 ```
+
+When reading from a `File` or `URL`, the matrix name is automatically derived from the filename
+(e.g., `employees.json` produces a matrix named `"employees"`).
+
+### Nested JSON
+
+Nested objects are automatically flattened to dot-notation keys. Arrays use bracket notation:
+
+```groovy
+// {"person": {"name": "Alice"}, "scores": [90, 95]}
+// becomes columns: person.name, scores[0], scores[1]
+
+Matrix m = JsonReader.read('[{"person": {"name": "Alice"}, "scores": [90, 95]}]')
+println m.columnNames()  // [person.name, scores[0], scores[1]]
+```
+
+## Deprecated API
+
+The `JsonExporter` and `JsonImporter` classes are deprecated since v2.1.2.
+Use `JsonWriter` and `JsonReader` instead.
 
 # Release version compatibility matrix
-The following table illustrates the version compatibility of the matrix-csv and matrix core
+The following table illustrates the version compatibility of matrix-json and matrix-core
 
 | Matrix json |    Matrix core | 
 |------------:|---------------:|
