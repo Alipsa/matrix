@@ -822,29 +822,25 @@ class MatrixParquetReader {
 
   private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {
     if (is == null) {
-      throw new IllegalArgumentException("InputStream cannot be null")
+      throw new IllegalArgumentException('InputStream cannot be null')
     }
-    boolean hasMatrixName = matrixName != null && !matrixName.trim().isEmpty()
-    String normalizedMatrixName = hasMatrixName ? matrixName : 'matrix'
-    java.nio.file.Path tempFile = Files.createTempFile("matrix-parquet-", ".parquet")
+    java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', '.parquet')
     try {
       Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
       Matrix result
       if (zoneId != null) {
-        result = hasMatrixName
-            ? read(tempFile.toFile(), normalizedMatrixName, zoneId)
-            : read(tempFile.toFile(), zoneId)
+        result = read(tempFile.toFile(), zoneId)
       } else {
-        result = hasMatrixName
-            ? read(tempFile.toFile(), normalizedMatrixName)
-            : read(tempFile.toFile())
+        result = read(tempFile.toFile())
       }
-      return hasMatrixName ? result : result.withMatrixName(normalizedMatrixName)
+      if (matrixName != null && !matrixName.trim().isEmpty()) {
+        result = result.withMatrixName(matrixName)
+      }
+      result
     } finally {
       try {
         Files.deleteIfExists(tempFile)
       } catch (IOException ignored) {
-        // Best-effort cleanup for temp file.
       }
     }
   }
