@@ -20,9 +20,9 @@ import org.apache.parquet.schema.Types
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
-import java.math.RoundingMode
 import java.beans.Introspector
 import java.beans.PropertyDescriptor
+import java.math.RoundingMode
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.Instant

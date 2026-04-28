@@ -102,11 +102,11 @@ class ParquetWriteOptions {
     }
     if (normalized.containsKey('decimalmeta')) {
       def value = normalized.decimalmeta
-      if (value == null) {
-        // Treat null as absent to preserve defaults.
-      } else if (!(value instanceof Map)) {
-        throw new IllegalArgumentException("decimalMeta must be a Map<String, int[]> but was ${value?.class}")
-      } else {
+      // Treat null as absent to preserve defaults
+      if (value != null) {
+        if (!(value instanceof Map)) {
+          throw new IllegalArgumentException("decimalMeta must be a Map<String, int[]> but was ${value?.class}")
+        }
         result.decimalMeta(validateDecimalMeta(value as Map))
       }
     }

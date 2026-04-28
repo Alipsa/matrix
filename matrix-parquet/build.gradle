@@ -23,6 +23,12 @@ JavaCompile javaCompile = compileJava {
 
 compileGroovy {
     options.deprecation = true
+    groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+}
+
+codenarc {
+    configFile = file('config/codenarc/ruleset.groovy')
+    ignoreFailures = false
 }
 
 repositories {

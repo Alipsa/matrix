@@ -61,7 +61,7 @@ class InMemoryOutputFile implements OutputFile {
   @Override
   PositionOutputStream create(long blockSizeHint) throws IOException {
     stream = new InMemoryPositionOutputStream()
-    return stream
+    stream
   }
 
   /**
@@ -73,7 +73,7 @@ class InMemoryOutputFile implements OutputFile {
    */
   @Override
   PositionOutputStream createOrOverwrite(long blockSizeHint) throws IOException {
-    return create(blockSizeHint)
+    create(blockSizeHint)
   }
 
   /**
@@ -83,7 +83,7 @@ class InMemoryOutputFile implements OutputFile {
    */
   @Override
   boolean supportsBlockSize() {
-    return false
+    false
   }
 
   /**
@@ -93,7 +93,7 @@ class InMemoryOutputFile implements OutputFile {
    */
   @Override
   long defaultBlockSize() {
-    return 0
+    0
   }
 
   /**
@@ -108,6 +108,6 @@ class InMemoryOutputFile implements OutputFile {
     if (stream == null) {
       throw new IllegalStateException("No data has been written yet. Call this method after closing the writer.")
     }
-    return stream.toByteArray()
+    stream.toByteArray()
   }
 }

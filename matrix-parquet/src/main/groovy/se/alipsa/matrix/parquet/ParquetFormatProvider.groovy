@@ -57,13 +57,13 @@ class ParquetFormatProvider extends AbstractFormatProvider {
     }
     if (readOptions.matrixName != null) {
       url.openStream().withCloseable { InputStream is ->
-        return MatrixParquetReader.read(is, readOptions.matrixName)
+        MatrixParquetReader.read(is, readOptions.matrixName)
       }
+    } else if (readOptions.zoneId != null) {
+      MatrixParquetReader.read(url, readOptions.zoneId)
+    } else {
+      MatrixParquetReader.read(url)
     }
-    if (readOptions.zoneId != null) {
-      return MatrixParquetReader.read(url, readOptions.zoneId)
-    }
-    MatrixParquetReader.read(url)
   }
 
   @Override

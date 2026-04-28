@@ -49,7 +49,7 @@ class InMemoryPositionOutputStream extends PositionOutputStream {
    */
   @Override
   long getPos() throws IOException {
-    return position
+    position
   }
 
   /**
@@ -97,6 +97,6 @@ class InMemoryPositionOutputStream extends PositionOutputStream {
    * @return a byte array containing all the data written to this stream
    */
   byte[] toByteArray() {
-    return contents.toByteArray()
+    contents.toByteArray()
   }
 }

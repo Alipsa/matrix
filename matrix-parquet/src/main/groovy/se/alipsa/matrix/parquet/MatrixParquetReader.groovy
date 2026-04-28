@@ -15,7 +15,6 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
 
 import se.alipsa.matrix.core.Matrix
-
 import se.alipsa.matrix.core.util.Logger
 
 import java.nio.file.Files
@@ -261,10 +260,11 @@ class MatrixParquetReader {
       }
       if (options.matrixName != null) {
         url.openStream().withCloseable { InputStream is ->
-          return MatrixParquetReader.read(is, options.matrixName)
+          MatrixParquetReader.read(is, options.matrixName)
         }
+      } else {
+        MatrixParquetReader.read(url)
       }
-      MatrixParquetReader.read(url)
     }
 
     /**
@@ -300,16 +300,16 @@ class MatrixParquetReader {
    */
   private static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
-    return zoneId != null ? zoneId : ZoneId.systemDefault()
+    zoneId != null ? zoneId : ZoneId.systemDefault()
   }
 
   /**
    * Gets a cached Class object for the given class name.
-   * Uses Class.forName() and caches the result for subsequent calls.
+   * Uses Thread.currentThread().contextClassLoader.loadClass() and caches the result for subsequent calls.
    */
   private static Class<?> getCachedClass(String className) {
-    return CLASS_CACHE.computeIfAbsent(className) { name ->
-      Class.forName(name)
+    CLASS_CACHE.computeIfAbsent(className) { name ->
+      Thread.currentThread().contextClassLoader.loadClass(name)
     }
   }
 
@@ -846,8 +846,8 @@ class MatrixParquetReader {
   }
 
   private static List<Class> parseTypeString(String typeString) {
-    return typeString.split(',').collect { className ->
-      return getCachedClass(className.trim())
+    typeString.split(',').collect { className ->
+      getCachedClass(className.trim())
     }
   }
 
@@ -866,25 +866,28 @@ class MatrixParquetReader {
     schema.fields.collect { field ->
       def logical = field.getLogicalTypeAnnotation()
       if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
-        return List
-      }
-      if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
-        return Map
-      }
+        List
+      } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
+        Map
+      } else if (!field.isPrimitive()) {
+        Map
+      } else {
+        def primitive = field.asPrimitiveType().primitiveTypeName
 
-      if (!field.isPrimitive()) {
-        return Map
+        if (logical != null) {
+          if (logical == LogicalTypeAnnotation.dateType()) {
+            LocalDate
+          } else if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+            LocalDateTime
+          } else if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+            BigDecimal
+          } else {
+            getJavaType(primitive)
+          }
+        } else {
+          getJavaType(primitive)
+        }
       }
-
-      def primitive = field.asPrimitiveType().primitiveTypeName
-
-      if (logical != null) {
-        if (logical == LogicalTypeAnnotation.dateType()) return LocalDate
-        if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) return LocalDateTime
-        if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) return BigDecimal
-      }
-
-      return getJavaType(primitive)
     }
   }
 
@@ -900,12 +903,12 @@ class MatrixParquetReader {
     GroupType groupType = fieldType.asGroupType()
     def logical = groupType.logicalTypeAnnotation
     if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
-      return readList(group, fieldName, groupType)
+      readList(group, fieldName, groupType)
+    } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
+      readMap(group, fieldName, groupType)
+    } else {
+      readStruct(group, fieldName, groupType)
     }
-    if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
-      return readMap(group, fieldName, groupType)
-    }
-    return readStruct(group, fieldName, groupType)
   }
 
   private static Object readPrimitive(Group group, String fieldName, PrimitiveType fieldType, Class expectedType) {
@@ -973,11 +976,11 @@ class MatrixParquetReader {
       def element = readValue(elementGroup, elementType.name, elementType, null)
       result << element
     }
-    return result
+    result
   }
 
   private static Map readMap(Group group, String fieldName, GroupType groupType) {
-    LinkedHashMap result = new LinkedHashMap()
+    Map result = [:]
     Group mapGroup = group.getGroup(fieldName, 0)
     GroupType keyValueType = groupType.getType(0).asGroupType()
     Type keyType = keyValueType.getType(0)
@@ -989,19 +992,20 @@ class MatrixParquetReader {
       def value = valueType == null ? null : readValue(kvGroup, valueType.name, valueType, null)
       result[key] = value
     }
-    return result
+    result
   }
 
   private static Map readStruct(Group group, String fieldName, GroupType groupType) {
     if (groupType.fields.isEmpty()) {
-      return [:]
+      [:]
+    } else {
+      Group structGroup = group.getGroup(fieldName, 0)
+      Map<String, Object> result = [:]
+      groupType.fields.each { Type field ->
+        def value = readValue(structGroup, field.name, field, null)
+        result[field.name] = value
+      }
+      result
     }
-    Group structGroup = group.getGroup(fieldName, 0)
-    LinkedHashMap<String, Object> result = new LinkedHashMap<>()
-    groupType.fields.each { Type field ->
-      def value = readValue(structGroup, field.name, field, null)
-      result[field.name] = value
-    }
-    return result
   }
 }
