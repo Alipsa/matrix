@@ -18,6 +18,7 @@ import org.apache.parquet.schema.Type
 import org.apache.parquet.schema.Types
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
 import java.beans.Introspector
@@ -87,6 +88,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @CompileStatic
 class MatrixParquetWriter {
+
+  private static final Logger log = Logger.getLogger(MatrixParquetWriter)
 
   /** Metadata key for storing Matrix column types in Parquet file */
   static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
@@ -333,7 +336,7 @@ class MatrixParquetWriter {
     } else {
       schema = buildSchema(matrix, false)
     }
-    //println "Write, inferPrecisionAndScale = $inferPrecisionAndScale, schema = $schema"
+    log.debug("Write, inferPrecisionAndScale = $inferPrecisionAndScale, schema = $schema")
     File file = determineTargetFile(matrix, fileOrDir)
 
     return writeInternal(matrix, file, schema)
@@ -537,7 +540,7 @@ class MatrixParquetWriter {
     File file
     if (fileOrDir.isDirectory()) {
       file = new File(fileOrDir, "${name}.parquet")
-      // println "Writing to ${file.absolutePath}"
+      log.debug("Writing to ${file.absolutePath}")
     } else {
       file = fileOrDir
     }
@@ -548,7 +551,7 @@ class MatrixParquetWriter {
     if (options.hasDecimalMeta()) {
       return buildSchema(matrix, options.decimalMeta)
     }
-    if (options.hasFixedPrecisionAndScale()) {
+    if (options.hasUniformPrecisionAndScale()) {
       Map<String, int[]> decimalMeta = [:]
       matrix.columnNames().each { String col ->
         if (matrix.type(col) == BigDecimal) {
@@ -670,7 +673,7 @@ class MatrixParquetWriter {
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
       def meta = explicitDecimalMeta?.get(col)
-      //println "Building schema for column '$col' of type $type with decimal meta: $meta"
+      log.debug("Building schema for column '$col' of type $type with decimal meta: $meta")
       builder.addField(buildParquetType(col, matrix.column(col), type, meta))
     }
     return builder.named(matrix.matrixName ?: "MatrixSchema" )
@@ -1167,7 +1170,7 @@ class MatrixParquetWriter {
         result[col] = [maxPrecision, maxScale] as int[]
       }
     }
-    //println "Inferred decimal precision/scale: $result"
+    log.debug("Inferred decimal precision/scale: $result")
     return result
   }
 

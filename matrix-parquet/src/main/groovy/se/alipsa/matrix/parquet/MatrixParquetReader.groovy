@@ -16,6 +16,8 @@ import org.apache.parquet.schema.Type
 
 import se.alipsa.matrix.core.Matrix
 
+import se.alipsa.matrix.core.util.Logger
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.Time
@@ -87,6 +89,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @CompileStatic
 class MatrixParquetReader {
+
+  private static final Logger log = Logger.getLogger(MatrixParquetReader)
 
   /** Metadata key for storing Matrix column types in Parquet file */
   static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
@@ -745,6 +749,7 @@ class MatrixParquetReader {
    */
   static Matrix read(File file) {
     validateFile(file)
+    log.debug("Reading Parquet file: ${file.absolutePath}")
     def path = new Path(file.toURI())
     def conf = new Configuration()
     // Open Parquet file metadata

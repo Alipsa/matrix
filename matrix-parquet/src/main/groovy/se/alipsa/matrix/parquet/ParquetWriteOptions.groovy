@@ -49,8 +49,8 @@ class ParquetWriteOptions {
     this
   }
 
-  boolean hasFixedPrecisionAndScale() {
-    precision != null || scale != null
+  boolean hasUniformPrecisionAndScale() {
+    precision != null && scale != null
   }
 
   boolean hasDecimalMeta() {

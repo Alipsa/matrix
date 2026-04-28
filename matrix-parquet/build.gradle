@@ -37,7 +37,6 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation libs.ivy
     implementation libs.parquet.column
     implementation libs.parquet.hadoop
     implementation(libs.hadoop.common) {
