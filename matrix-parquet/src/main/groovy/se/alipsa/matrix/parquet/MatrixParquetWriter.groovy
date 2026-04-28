@@ -19,6 +19,7 @@ import org.apache.parquet.schema.Types
 
 import se.alipsa.matrix.core.Matrix
 
+import java.math.RoundingMode
 import java.beans.Introspector
 import java.beans.PropertyDescriptor
 import java.sql.Time
@@ -984,7 +985,7 @@ class MatrixParquetWriter {
           def bd = (BigDecimal) value
           def scale = logical.scale
           def precision = logical.precision
-          def unscaled = bd.setScale(scale, BigDecimal.ROUND_HALF_UP).unscaledValue()
+          def unscaled = bd.setScale(scale, RoundingMode.HALF_UP).unscaledValue()
           def bytes = unscaled.toByteArray()
           def size = field.typeLength
           if (bytes.length > size) {
