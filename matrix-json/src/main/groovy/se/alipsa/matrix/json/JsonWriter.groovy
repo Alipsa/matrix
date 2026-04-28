@@ -377,7 +377,7 @@ class JsonWriter {
       if (file.exists() && !file.canWrite()) {
         throw new IOException("Output file '${file.absolutePath}' is not writable")
       }
-      file.text = asString()
+      file.withWriter('UTF-8') { Writer w -> writeTo(w) }
     }
 
     /**
@@ -410,7 +410,7 @@ class JsonWriter {
       if (writer == null) {
         throw new IllegalArgumentException("Writer cannot be null")
       }
-      writer.write(asString())
+      writeTo(writer)
       writer.flush()
     }
 
@@ -420,6 +420,12 @@ class JsonWriter {
      * @return JSON string representation
      */
     String asString() {
+      StringWriter sw = new StringWriter()
+      writeTo(sw)
+      sw.toString()
+    }
+
+    private void writeTo(Writer writer) {
       if (!columnFormattersValue.isEmpty()) {
         List<String> colNames = matrix.columnNames()
         Set<String> invalidFormatters = columnFormattersValue.keySet().findAll { String it -> !colNames.contains(it) } as Set<String>
@@ -439,8 +445,7 @@ class JsonWriter {
       }
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormatValue)
 
-      StringWriter sw = new StringWriter()
-      JsonGenerator gen = FACTORY.createGenerator(sw)
+      JsonGenerator gen = FACTORY.createGenerator(writer)
       if (indentValue) {
         gen.useDefaultPrettyPrinter()
       }
@@ -458,7 +463,6 @@ class JsonWriter {
         }
         gen.writeEndArray()
       }
-      sw.toString()
     }
   }
 }
