@@ -6,9 +6,9 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 
 Add the following to your Gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-parquet:0.4.0'
+implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-parquet:0.5.0'
 ```
 
 ## Basic Usage
@@ -19,8 +19,6 @@ If `matrix-parquet` is on the classpath, `.parquet` files are also available thr
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.parquet.ParquetReadOptions
-import se.alipsa.matrix.parquet.ParquetWriteOptions
 
 Matrix data = Matrix.read(new File('data.parquet'))
 Matrix stockholm = Matrix.read([matrixName: 'events', zoneId: 'Europe/Stockholm'], new File('events.parquet'))
@@ -30,8 +28,6 @@ data.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], new File('mon
 
 println Matrix.listReadOptions('parquet')
 println Matrix.listWriteOptions('parquet')
-println ParquetReadOptions.describe()
-println ParquetWriteOptions.describe()
 ```
 
 ### Reading a Parquet file
@@ -74,6 +70,43 @@ MatrixParquetWriter.write(data, file)
 // Or write to a directory (filename derived from matrix name)
 File dir = new File("output/")
 MatrixParquetWriter.write(data, dir)  // Creates output/cars.parquet
+```
+
+### Builder API (recommended)
+
+The builder API provides a fluent, discoverable interface for reading and writing:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.parquet.MatrixParquetReader
+import se.alipsa.matrix.parquet.MatrixParquetWriter
+
+// Writing
+MatrixParquetWriter.builder(matrix)
+    .precision(38)
+    .scale(18)
+    .zoneId('Europe/Stockholm')
+    .write(new File('output.parquet'))
+
+// Writing to byte array
+byte[] bytes = MatrixParquetWriter.builder(matrix)
+    .inferPrecisionAndScale(true)
+    .writeBytes()
+
+// Writing to OutputStream
+outputStream.withCloseable { os ->
+  MatrixParquetWriter.builder(matrix).write(os)
+}
+
+// Reading
+Matrix data = MatrixParquetReader.builder()
+    .matrixName('myData')
+    .zoneId('Europe/Stockholm')
+    .read(new File('data.parquet'))
+
+// Reading from byte array, InputStream, URL, or Path also supported
+Matrix data = MatrixParquetReader.builder()
+    .read(parquetBytes)
 ```
 
 ## Supported Data Types
