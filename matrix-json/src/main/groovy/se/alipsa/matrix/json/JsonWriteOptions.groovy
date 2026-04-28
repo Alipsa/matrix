@@ -43,7 +43,7 @@ class JsonWriteOptions {
       }
     }
     if (normalized.containsKey('columnformatters')) {
-      def value = normalized.columnformatters
+      Object value = normalized.columnformatters
       if (value == null) {
         return result
       }

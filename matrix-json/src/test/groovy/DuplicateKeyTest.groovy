@@ -17,9 +17,9 @@ class DuplicateKeyTest {
     ]'''
 
     // Should throw an exception when duplicate keys are detected
-    def exception = assertThrows(IllegalArgumentException.class, {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       JsonImporter.parse(json)
-    })
+    }
 
     assertTrue(exception.message.contains("Duplicate key detected"))
     assertTrue(exception.message.contains("a.b"))
@@ -32,9 +32,9 @@ class DuplicateKeyTest {
     ]'''
 
     // Should throw an exception when duplicate keys are detected
-    def exception = assertThrows(IllegalArgumentException.class, {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       JsonImporter.parse(json)
-    })
+    }
 
     assertTrue(exception.message.contains("Duplicate key detected"))
     assertTrue(exception.message.contains("x.y.z"))

@@ -37,19 +37,22 @@ class JsonFormatProvider extends AbstractFormatProvider {
   @Override
   Matrix read(File file, Map<String, ?> options) {
     JsonReadOptions readOptions = JsonReadOptions.fromMap(options)
-    JsonReader.read(file, readOptions.charset)
+    Matrix result = JsonReader.read(file, readOptions.charset)
+    applyReadOptions(result, readOptions)
   }
 
   @Override
   Matrix read(URL url, Map<String, ?> options) {
     JsonReadOptions readOptions = JsonReadOptions.fromMap(options)
-    JsonReader.read(url, readOptions.charset)
+    Matrix result = JsonReader.read(url, readOptions.charset)
+    applyReadOptions(result, readOptions)
   }
 
   @Override
   Matrix read(InputStream is, Map<String, ?> options) {
     JsonReadOptions readOptions = JsonReadOptions.fromMap(options)
-    JsonReader.read(is, readOptions.charset)
+    Matrix result = JsonReader.read(is, readOptions.charset)
+    applyReadOptions(result, readOptions)
   }
 
   @Override
@@ -66,5 +69,15 @@ class JsonFormatProvider extends AbstractFormatProvider {
   @Override
   List<OptionDescriptor> writeOptionDescriptors() {
     JsonWriteOptions.descriptors()
+  }
+
+  private static Matrix applyReadOptions(Matrix result, JsonReadOptions readOptions) {
+    if (readOptions.matrixName != null) {
+      result.matrixName = readOptions.matrixName
+    }
+    if (readOptions.types != null) {
+      result = result.convert(readOptions.types, readOptions.dateTimeFormat)
+    }
+    result
   }
 }

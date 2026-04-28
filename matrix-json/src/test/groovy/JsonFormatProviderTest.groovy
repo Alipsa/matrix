@@ -70,4 +70,27 @@ class JsonFormatProviderTest {
 
     assertEquals('UTF-8', options.charset.name())
   }
+
+  @Test
+  void testReadWithTypeConversion() {
+    File file = tempDir.resolve('typed.json').toFile()
+    file.text = '[{"id":1,"name":"Alice","birthday":"2024-01-15"},{"id":2,"name":"Bob","birthday":"2024-03-20"}]'
+
+    Matrix matrix = Matrix.read([types: [Integer, String, LocalDate], dateTimeFormat: 'yyyy-MM-dd'], file)
+
+    assertEquals(Integer, matrix.type('id'))
+    assertEquals(String, matrix.type('name'))
+    assertEquals(LocalDate, matrix.type('birthday'))
+    assertEquals(LocalDate.of(2024, 1, 15), matrix[0, 'birthday'])
+  }
+
+  @Test
+  void testReadWithMatrixNameOption() {
+    File file = tempDir.resolve('data.json').toFile()
+    file.text = '[{"x":1}]'
+
+    Matrix matrix = Matrix.read([matrixName: 'custom_name'], file)
+
+    assertEquals('custom_name', matrix.matrixName, "matrixName option should override file-derived name")
+  }
 }

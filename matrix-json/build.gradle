@@ -22,6 +22,12 @@ JavaCompile javaCompile = compileJava {
 
 compileGroovy {
   options.deprecation = true
+  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+}
+
+codenarc {
+  configFile = file('config/codenarc/ruleset.groovy')
+  ignoreFailures = false
 }
 
 repositories {
@@ -37,15 +43,13 @@ dependencies {
   testImplementation project(':matrix-datasets')
 
   compileOnly libs.groovy
-  compileOnly libs.groovy.json
 
-  // Jackson for streaming JSON parsing (low memory footprint)
+  // Jackson for streaming JSON parsing and writing
   api platform(libs.jackson.bom)
   api libs.jackson.core
   api libs.jackson.databind
 
   testImplementation libs.groovy
-  testImplementation libs.groovy.json
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
