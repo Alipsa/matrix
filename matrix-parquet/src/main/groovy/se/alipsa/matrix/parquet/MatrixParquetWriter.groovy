@@ -135,6 +135,151 @@ class MatrixParquetWriter {
   }
 
   /**
+   * Creates a new builder for writing a Matrix to Parquet format.
+   *
+   * <h3>Usage</h3>
+   * <pre>{@code
+   * // Write to file with inferred precision
+   * MatrixParquetWriter.builder(matrix)
+   *     .write(new File("output.parquet"))
+   *
+   * // Write with explicit precision and timezone
+   * MatrixParquetWriter.builder(matrix)
+   *     .precision(38)
+   *     .scale(18)
+   *     .zoneId("Europe/Stockholm")
+   *     .write(outputDir)
+   *
+   * // Write to byte array
+   * byte[] bytes = MatrixParquetWriter.builder(matrix)
+   *     .inferPrecisionAndScale(false)
+   *     .writeBytes()
+   * }</pre>
+   *
+   * @param matrix the matrix to write
+   * @return a new WriterBuilder
+   * @throws IllegalArgumentException if matrix is null or has no columns
+   */
+  static WriterBuilder builder(Matrix matrix) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+    new WriterBuilder(matrix)
+  }
+
+  /**
+   * Fluent builder for configuring and executing Parquet write operations.
+   *
+   * <p>Obtain an instance via {@link MatrixParquetWriter#builder(Matrix)}.</p>
+   */
+  @CompileStatic
+  static class WriterBuilder {
+
+    private final Matrix matrix
+    private final ParquetWriteOptions options = new ParquetWriteOptions()
+
+    private WriterBuilder(Matrix matrix) {
+      this.matrix = matrix
+    }
+
+    /**
+     * Sets whether to infer precision and scale for BigDecimal columns (default: {@code true}).
+     *
+     * @param value {@code true} to infer, {@code false} to fall back to double storage
+     * @return this builder
+     */
+    WriterBuilder inferPrecisionAndScale(boolean value) {
+      options.inferPrecisionAndScale(value)
+      this
+    }
+
+    /**
+     * Sets uniform precision for all BigDecimal columns.
+     * Must be used together with {@link #scale(int)}.
+     *
+     * @param value the decimal precision
+     * @return this builder
+     */
+    WriterBuilder precision(int value) {
+      options.precision(value)
+      this
+    }
+
+    /**
+     * Sets uniform scale for all BigDecimal columns.
+     * Must be used together with {@link #precision(int)}.
+     *
+     * @param value the decimal scale
+     * @return this builder
+     */
+    WriterBuilder scale(int value) {
+      options.scale(value)
+      this
+    }
+
+    /**
+     * Sets per-column decimal precision and scale metadata.
+     *
+     * @param value map of column names to {@code [precision, scale]} arrays
+     * @return this builder
+     */
+    WriterBuilder decimalMeta(Map<String, int[]> value) {
+      options.decimalMeta(value)
+      this
+    }
+
+    /**
+     * Sets the timezone for converting LocalDateTime values to UTC timestamps.
+     *
+     * @param value the timezone
+     * @return this builder
+     */
+    WriterBuilder zoneId(ZoneId value) {
+      options.zoneId(value)
+      this
+    }
+
+    /**
+     * Sets the timezone for converting LocalDateTime values to UTC timestamps.
+     *
+     * @param value the timezone ID string (e.g. "Europe/Stockholm")
+     * @return this builder
+     */
+    WriterBuilder zoneId(String value) {
+      options.zoneId(value)
+      this
+    }
+
+    /**
+     * Writes the matrix to the specified file or directory.
+     *
+     * @param fileOrDir the target file or directory; if a directory, the filename is derived from the matrix name
+     * @return the file that was written
+     * @throws IllegalArgumentException if fileOrDir is null
+     */
+    File write(File fileOrDir) {
+      if (fileOrDir == null) {
+        throw new IllegalArgumentException("File or directory cannot be null")
+      }
+      options.validate()
+      MatrixParquetWriter.write(matrix, fileOrDir, options)
+    }
+
+    /**
+     * Writes the matrix to a byte array in Parquet format.
+     *
+     * @return byte array containing Parquet data
+     */
+    byte[] writeBytes() {
+      options.validate()
+      MatrixParquetWriter.writeBytes(matrix, options)
+    }
+  }
+
+  /**
    * Validates the matrix and file parameters before writing.
    *
    * @param matrix the matrix to validate
@@ -504,7 +649,7 @@ class MatrixParquetWriter {
    * @param explicitDecimalMeta map of column name to [precision, scale] array for BigDecimal columns.
    * @return the Parquet MessageType schema.
    */
-  static MessageType buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta) {
+  private static MessageType buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta) {
     def builder = Types.buildMessage()
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
@@ -523,7 +668,7 @@ class MatrixParquetWriter {
    * double storage (which leads to some loss of precision).
    * @return the Parquet MessageType schema.
    */
-  static MessageType buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
+  private static MessageType buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
     Map<String, int[]> decimalMeta = null
     if (inferPrecisionAndScale) {
       decimalMeta = inferDecimalPrecisionAndScale(matrix)
@@ -540,7 +685,7 @@ class MatrixParquetWriter {
    * @param decimalMeta optional decimal precision/scale metadata for {@link BigDecimal} columns
    * @return a Parquet {@link Type} describing the column
    */
-  static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false) {
+  private static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false) {
     if (isListType(clazz, values)) {
       List<?> nestedValues = extractListElements(values)
       Type elementType = buildParquetType(FIELD_ELEMENT, nestedValues, inferClass(nestedValues, Object), null, true)
@@ -969,7 +1114,7 @@ class MatrixParquetWriter {
    * @param matrix the matrix
    * @return a Map of column name to [precision, scale] array.
    */
-  static Map<String, int[]> inferDecimalPrecisionAndScale(Matrix matrix) {
+  private static Map<String, int[]> inferDecimalPrecisionAndScale(Matrix matrix) {
     Map<String, int[]> result = [:] // columnName -> [precision, scale]
 
     matrix.columnNames().each { col ->
@@ -1006,7 +1151,7 @@ class MatrixParquetWriter {
   }
 
 
-  static int minBytesForPrecision(int precision) {
+  private static int minBytesForPrecision(int precision) {
     // According to the Parquet spec
     def t = (Math.log(Math.pow(10, precision)) / Math.log(2) + 1) as double
     return Math.ceil( t / 8d) as int

@@ -713,4 +713,230 @@ class MatrixParquetTest {
     assert !result.hasIndex()
     assertEquals([], result.indexedColumns())
   }
+
+  @Test
+  void testWriterBuilderBasic() {
+    Matrix data = Dataset.cars().withMatrixName('cars')
+    File file = new File("build/builder_basic.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.builder(data).write(file)
+    assertTrue(file.exists())
+
+    def matrix = MatrixParquetReader.read(file)
+    assertEquals(data, matrix)
+    assertEquals(data.types(), matrix.types())
+  }
+
+  @Test
+  void testWriterBuilderWithPrecisionAndScale() {
+    def data = Matrix.builder('empData').columns(
+        emp_id: 1..5,
+        salary: [623.3, 515.2, 611, 729.0, 843.25],
+        score: toBigDecimals(["1.2345", 0.6321, 0.7190, 0.8452, 0.9198])
+    ).types([int, BigDecimal, BigDecimal]).build()
+
+    File file = new File("build/builder_precision.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.builder(data)
+        .decimalMeta([salary: [5, 2] as int[], score: [5, 4] as int[]])
+        .write(file)
+
+    def matrix = MatrixParquetReader.read(file)
+    assertEquals(data, matrix)
+    assertEquals(5, matrix.salary[0].precision())
+    assertEquals(2, matrix.salary[0].scale())
+  }
+
+  @Test
+  void testWriterBuilderWithUniformPrecision() {
+    def data = Matrix.builder('uniform').columns(
+        amount: toBigDecimals([10.5, 20.75, 30.25])
+    ).types([BigDecimal]).build()
+
+    File file = new File("build/builder_uniform.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.builder(data)
+        .precision(10)
+        .scale(2)
+        .write(file)
+
+    def matrix = MatrixParquetReader.read(file)
+    assertEquals(data.rowCount(), matrix.rowCount())
+    assertEquals(2, matrix.amount[0].scale())
+  }
+
+  @Test
+  void testWriterBuilderWithZoneId() {
+    def dateTime = LocalDateTime.of(2024, 6, 15, 12, 0, 0)
+    def data = Matrix.builder('tzBuilder').columns(
+        event_time: [dateTime]
+    ).types([LocalDateTime]).build()
+
+    File file = new File("build/builder_tz.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    ZoneId utcZone = ZoneId.of("UTC")
+    MatrixParquetWriter.builder(data)
+        .zoneId(utcZone)
+        .write(file)
+
+    Matrix result = MatrixParquetReader.builder()
+        .zoneId(utcZone)
+        .read(file)
+    assertEquals(dateTime, result.event_time[0])
+  }
+
+  @Test
+  void testWriterBuilderWriteBytes() {
+    def data = Matrix.builder('bytesBuilder').columns(
+        id: [1, 2, 3],
+        name: ["Alice", "Bob", "Charlie"]
+    ).types([Integer, String]).build()
+
+    byte[] bytes = MatrixParquetWriter.builder(data).writeBytes()
+    assert bytes != null
+    assert bytes.length > 0
+
+    Matrix result = MatrixParquetReader.read(bytes)
+    assertEquals(data, result)
+  }
+
+  @Test
+  void testWriterBuilderNoInference() {
+    def data = Matrix.builder('noInfer').columns(
+        value: toBigDecimals([12.34, 56.78])
+    ).types([BigDecimal]).build()
+
+    byte[] bytes = MatrixParquetWriter.builder(data)
+        .inferPrecisionAndScale(false)
+        .writeBytes()
+    assert bytes != null
+    assert bytes.length > 0
+  }
+
+  @Test
+  void testWriterBuilderValidation() {
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(null)
+    }
+
+    def emptyMatrix = Matrix.builder('empty').build()
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(emptyMatrix)
+    }
+
+    def validData = Matrix.builder('test').columns(id: [1]).types([Integer]).build()
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(validData).write(null)
+    }
+  }
+
+  @Test
+  void testReaderBuilderFromFile() {
+    def data = Matrix.builder('readerBuilder').columns(
+        id: [1, 2],
+        name: ['A', 'B']
+    ).types([Integer, String]).build()
+
+    File file = new File("build/reader_builder.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+    MatrixParquetWriter.write(data, file)
+
+    Matrix result = MatrixParquetReader.builder()
+        .matrixName('customName')
+        .read(file)
+    assertEquals('customName', result.matrixName)
+    assertEquals(data.columnNames(), result.columnNames())
+    assertEquals(data.rowCount(), result.rowCount())
+  }
+
+  @Test
+  void testReaderBuilderFromBytes() {
+    def data = Matrix.builder('bytesReader').columns(
+        id: [1, 2, 3],
+        value: toBigDecimals([10.5, 20.75, 30.25])
+    ).types([Integer, BigDecimal]).build()
+
+    byte[] content = MatrixParquetWriter.writeBytes(data, true)
+
+    Matrix result = MatrixParquetReader.builder()
+        .matrixName('fromBytes')
+        .read(content)
+    assertEquals('fromBytes', result.matrixName)
+    assertEquals(data.types(), result.types())
+  }
+
+  @Test
+  void testReaderBuilderFromPath() {
+    def data = Matrix.builder('pathReader').columns(
+        id: [1, 2]
+    ).types([Integer]).build()
+
+    File file = new File("build/reader_path.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+    MatrixParquetWriter.write(data, file)
+
+    Matrix result = MatrixParquetReader.builder()
+        .matrixName('fromPath')
+        .read(file.toPath())
+    assertEquals('fromPath', result.matrixName)
+  }
+
+  @Test
+  void testReaderBuilderWithZoneId() {
+    def dateTime = LocalDateTime.of(2024, 6, 15, 12, 0, 0)
+    def data = Matrix.builder('readerTz').columns(
+        event_time: [dateTime]
+    ).types([LocalDateTime]).build()
+
+    File file = new File("build/reader_tz.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    ZoneId utc = ZoneId.of("UTC")
+    MatrixParquetWriter.write(data, file, utc)
+
+    Matrix result = MatrixParquetReader.builder()
+        .matrixName('tzResult')
+        .zoneId(utc)
+        .read(file)
+    assertEquals('tzResult', result.matrixName)
+    assertEquals(dateTime, result.event_time[0])
+  }
+
+  @Test
+  void testReaderBuilderZoneIdAsString() {
+    def dateTime = LocalDateTime.of(2024, 6, 15, 12, 0, 0)
+    def data = Matrix.builder('readerTzStr').columns(
+        event_time: [dateTime]
+    ).types([LocalDateTime]).build()
+
+    File file = new File("build/reader_tz_str.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.builder(data).zoneId("UTC").write(file)
+
+    Matrix result = MatrixParquetReader.builder()
+        .zoneId("UTC")
+        .read(file)
+    assertEquals(dateTime, result.event_time[0])
+  }
 }

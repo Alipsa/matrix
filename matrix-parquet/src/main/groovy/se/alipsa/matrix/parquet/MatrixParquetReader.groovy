@@ -107,6 +107,190 @@ class MatrixParquetReader {
   private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>()
 
   /**
+   * Creates a new builder for reading Parquet data into a Matrix.
+   *
+   * <h3>Usage</h3>
+   * <pre>{@code
+   * // Read from file
+   * Matrix data = MatrixParquetReader.builder()
+   *     .matrixName("myData")
+   *     .zoneId("Europe/Stockholm")
+   *     .read(new File("data.parquet"))
+   *
+   * // Read from byte array
+   * Matrix data = MatrixParquetReader.builder()
+   *     .matrixName("imported")
+   *     .read(parquetBytes)
+   *
+   * // Read from URL
+   * Matrix data = MatrixParquetReader.builder()
+   *     .read(new URL("https://example.com/data.parquet"))
+   * }</pre>
+   *
+   * @return a new ReaderBuilder
+   */
+  static ReaderBuilder builder() {
+    new ReaderBuilder()
+  }
+
+  /**
+   * Fluent builder for configuring and executing Parquet read operations.
+   *
+   * <p>Obtain an instance via {@link MatrixParquetReader#builder()}.</p>
+   */
+  @CompileStatic
+  static class ReaderBuilder {
+
+    private final ParquetReadOptions options = new ParquetReadOptions()
+
+    private ReaderBuilder() {}
+
+    /**
+     * Sets the name for the resulting Matrix.
+     *
+     * @param value the matrix name
+     * @return this builder
+     */
+    ReaderBuilder matrixName(String value) {
+      options.matrixName(value)
+      this
+    }
+
+    /**
+     * Sets the timezone for converting UTC timestamps to LocalDateTime values.
+     *
+     * @param value the timezone
+     * @return this builder
+     */
+    ReaderBuilder zoneId(ZoneId value) {
+      options.zoneId(value)
+      this
+    }
+
+    /**
+     * Sets the timezone for converting UTC timestamps to LocalDateTime values.
+     *
+     * @param value the timezone ID string (e.g. "Europe/Stockholm")
+     * @return this builder
+     */
+    ReaderBuilder zoneId(String value) {
+      options.zoneId(value)
+      this
+    }
+
+    /**
+     * Reads a Parquet file into a Matrix.
+     *
+     * @param file the Parquet file to read
+     * @return a Matrix populated with the file contents
+     */
+    Matrix read(File file) {
+      if (options.zoneId != null && options.matrixName != null) {
+        return MatrixParquetReader.read(file, options.matrixName, options.zoneId)
+      }
+      if (options.zoneId != null) {
+        return MatrixParquetReader.read(file, options.zoneId)
+      }
+      if (options.matrixName != null) {
+        return MatrixParquetReader.read(file, options.matrixName)
+      }
+      MatrixParquetReader.read(file)
+    }
+
+    /**
+     * Reads a Parquet file from a Path into a Matrix.
+     *
+     * @param path the Path to read
+     * @return a Matrix populated with the file contents
+     */
+    Matrix read(java.nio.file.Path path) {
+      if (path == null) {
+        throw new IllegalArgumentException("Path cannot be null")
+      }
+      read(path.toFile())
+    }
+
+    /**
+     * Reads Parquet content from a byte array into a Matrix.
+     *
+     * @param content byte array containing Parquet data
+     * @return a Matrix populated with the byte array contents
+     */
+    Matrix read(byte[] content) {
+      if (content == null) {
+        throw new IllegalArgumentException("Content cannot be null")
+      }
+      read(new ByteArrayInputStream(content))
+    }
+
+    /**
+     * Reads Parquet content from an InputStream into a Matrix.
+     *
+     * @param is input stream containing Parquet data
+     * @return a Matrix populated with the stream contents
+     */
+    Matrix read(InputStream is) {
+      if (options.zoneId != null && options.matrixName != null) {
+        return MatrixParquetReader.read(is, options.matrixName, options.zoneId)
+      }
+      if (options.zoneId != null) {
+        return MatrixParquetReader.read(is, options.zoneId)
+      }
+      if (options.matrixName != null) {
+        return MatrixParquetReader.read(is, options.matrixName)
+      }
+      MatrixParquetReader.read(is)
+    }
+
+    /**
+     * Reads Parquet content from a URL into a Matrix.
+     *
+     * @param url URL pointing to Parquet content
+     * @return a Matrix populated with the URL contents
+     */
+    Matrix read(URL url) {
+      if (options.zoneId != null && options.matrixName != null) {
+        return MatrixParquetReader.read(url, options.matrixName, options.zoneId)
+      }
+      if (options.zoneId != null) {
+        return MatrixParquetReader.read(url, options.zoneId)
+      }
+      if (options.matrixName != null) {
+        url.openStream().withCloseable { InputStream is ->
+          return MatrixParquetReader.read(is, options.matrixName)
+        }
+      }
+      MatrixParquetReader.read(url)
+    }
+
+    /**
+     * Reads a Parquet file from a file path string into a Matrix.
+     *
+     * @param filePath the file path to read
+     * @return a Matrix populated with the file contents
+     */
+    Matrix readFile(String filePath) {
+      if (filePath == null) {
+        throw new IllegalArgumentException("File path cannot be null")
+      }
+      read(new File(filePath))
+    }
+
+    /**
+     * Reads Parquet content from a URL string into a Matrix.
+     *
+     * @param urlString String URL pointing to Parquet content
+     * @return a Matrix populated with the URL contents
+     */
+    Matrix readUrl(String urlString) {
+      if (urlString == null) {
+        throw new IllegalArgumentException("URL string cannot be null")
+      }
+      read(new URI(urlString).toURL())
+    }
+  }
+
+  /**
    * Gets the current timezone for timestamp conversion.
    * Returns the thread-local value if set, otherwise the system default.
    */
@@ -660,7 +844,7 @@ class MatrixParquetReader {
     }
   }
 
-  static List<Class> parseTypeString(String typeString) {
+  private static List<Class> parseTypeString(String typeString) {
     return typeString.split(',').collect { className ->
       return getCachedClass(className.trim())
     }
@@ -677,7 +861,7 @@ class MatrixParquetReader {
     }
   }
 
-  static List<Class> extractFieldTypes(GroupType schema) {
+  private static List<Class> extractFieldTypes(GroupType schema) {
     schema.fields.collect { field ->
       def logical = field.getLogicalTypeAnnotation()
       if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
