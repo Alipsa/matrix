@@ -204,8 +204,18 @@ println m.columnNames()  // [person.name, scores[0], scores[1]]
 The `JsonExporter` and `JsonImporter` classes are deprecated since v2.1.2.
 Use `JsonWriter` and `JsonReader` instead.
 
-# Release version compatibility matrix
-The following table illustrates the version compatibility of matrix-json and matrix-core
+# Release version compatibility
+
+The simplest way to get compatible versions of all matrix modules is to use the
+[matrix-bom](https://github.com/Alipsa/matrix/tree/main/matrix-bom):
+
+```groovy
+implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-json'
+```
+
+For reference, the following table shows the version compatibility of matrix-json and matrix-core:
 
 | Matrix json |    Matrix core | 
 |------------:|---------------:|
