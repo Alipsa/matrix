@@ -250,13 +250,13 @@ class MatrixParquetTest {
     assertEquals([Integer, LocalDateTime, Time, Timestamp], matrix.types(),
         "Time types should be preserved")
 
-    // Verify LocalDateTime values (note: precision may be reduced to milliseconds due to storage)
-    // The reader reconstructs LocalDateTime from milliseconds, so nanosecond precision is lost
-    assertEquals(dateTime1.withNano((dateTime1.nano / 1_000_000 as int) * 1_000_000),
-        matrix.local_datetime[0], "LocalDateTime should round-trip with millisecond precision")
-    assertEquals(dateTime2.withNano((dateTime2.nano / 1_000_000 as int) * 1_000_000),
-        matrix.local_datetime[1], "LocalDateTime should round-trip with millisecond precision")
-    assertEquals(dateTime3, matrix.local_datetime[2], "LocalDateTime midnight should round-trip exactly")
+    // Verify LocalDateTime values (note: precision may be reduced to microseconds due to storage)
+    // The reader reconstructs LocalDateTime from microseconds, so nanosecond precision below microseconds is lost
+    assertEquals(dateTime1.withNano((dateTime1.nano / 1_000 as int) * 1_000),
+        matrix.local_datetime[0], 'LocalDateTime should round-trip with microsecond precision')
+    assertEquals(dateTime2.withNano((dateTime2.nano / 1_000 as int) * 1_000),
+        matrix.local_datetime[1], 'LocalDateTime should round-trip with microsecond precision')
+    assertEquals(dateTime3, matrix.local_datetime[2], 'LocalDateTime midnight should round-trip exactly')
 
     // Verify Time values (millisecond precision)
     assertEquals(time1.toString(), matrix.sql_time[0].toString(), "Time 10:30:45 should round-trip")
@@ -271,6 +271,19 @@ class MatrixParquetTest {
     assertEquals(timestamp1.time, matrix.sql_timestamp[0].time, "Timestamp1 should round-trip")
     assertEquals(timestamp2.time, matrix.sql_timestamp[1].time, "Timestamp2 should round-trip")
     assertEquals(timestamp3.time, matrix.sql_timestamp[2].time, "Timestamp3 should round-trip")
+  }
+
+  @Test
+  void testMicrosecondTimestampPrecision() {
+    def dateTime = LocalDateTime.of(2024, 6, 15, 10, 30, 45, 123_456_000)
+    def data = Matrix.builder('microTest').columns(
+        ts: [dateTime]
+    ).types([LocalDateTime]).build()
+
+    byte[] bytes = MatrixParquetWriter.builder(data).zoneId('UTC').writeBytes()
+    Matrix result = MatrixParquetReader.builder().zoneId('UTC').read(bytes)
+
+    assertEquals(dateTime, result.ts[0], 'Microsecond precision should be preserved')
   }
 
   @Test

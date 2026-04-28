@@ -23,6 +23,7 @@ import java.beans.Introspector
 import java.beans.PropertyDescriptor
 import java.sql.Time
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -1012,12 +1013,14 @@ class MatrixParquetWriter {
         group.append(fieldName, millis)
       }
       case LocalDateTime -> {
-        def micros = ((LocalDateTime) value).atZone(getZoneId()).toInstant().toEpochMilli() * 1000
-        group.append(fieldName, (long) micros)
+        Instant instant = ((LocalDateTime) value).atZone(getZoneId()).toInstant()
+        long micros = instant.epochSecond * 1_000_000L + (long) (instant.nano / 1_000)
+        group.append(fieldName, micros)
       }
       case Timestamp -> {
-        def micros = ((Timestamp) value).toInstant().toEpochMilli() * 1000
-        group.append(fieldName, (long) micros)
+        Instant instant = ((Timestamp) value).toInstant()
+        long micros = instant.epochSecond * 1_000_000L + (long) (instant.nano / 1_000)
+        group.append(fieldName, micros)
       }
       case Date -> group.append(fieldName, ((Date) value).time)
       default -> group.append(fieldName, value.toString())

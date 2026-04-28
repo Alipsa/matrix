@@ -924,12 +924,14 @@ class MatrixParquetReader {
         return group.getInteger(fieldName, 0)
       case PrimitiveTypeName.INT64:
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-          def micros = group.getLong(fieldName, 0)
-          def millis = (long) (micros / 1000)
+          long micros = group.getLong(fieldName, 0)
+          long epochSecond = Math.floorDiv(micros, 1_000_000L)
+          int microOfSecond = (int) Math.floorMod(micros, 1_000_000L)
+          Instant instant = Instant.ofEpochSecond(epochSecond, microOfSecond * 1_000L)
           if (expectedType == java.sql.Timestamp) {
-            return new java.sql.Timestamp(millis)
+            return java.sql.Timestamp.from(instant)
           }
-          return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), getZoneId())
+          return LocalDateTime.ofInstant(instant, getZoneId())
         }
         def longValue = group.getLong(fieldName, 0)
         if (expectedType == BigInteger) {
