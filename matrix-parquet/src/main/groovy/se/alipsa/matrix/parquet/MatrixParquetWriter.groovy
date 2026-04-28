@@ -279,6 +279,20 @@ class MatrixParquetWriter {
       options.validate()
       MatrixParquetWriter.writeBytes(matrix, options)
     }
+
+    File write(java.nio.file.Path path) {
+      if (path == null) {
+        throw new IllegalArgumentException('Path cannot be null')
+      }
+      write(path.toFile())
+    }
+
+    void write(OutputStream os) {
+      if (os == null) {
+        throw new IllegalArgumentException('OutputStream cannot be null')
+      }
+      os.write(writeBytes())
+    }
   }
 
   /**

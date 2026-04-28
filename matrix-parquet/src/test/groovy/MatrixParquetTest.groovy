@@ -839,6 +839,38 @@ class MatrixParquetTest {
   }
 
   @Test
+  void testWriterBuilderToPath() {
+    def data = Matrix.builder('pathWrite').columns(
+        id: [1, 2],
+        name: ['A', 'B']
+    ).types([Integer, String]).build()
+
+    java.nio.file.Path path = java.nio.file.Path.of('build/path_write.parquet')
+    java.nio.file.Files.deleteIfExists(path)
+
+    MatrixParquetWriter.builder(data).write(path)
+    assertTrue(java.nio.file.Files.exists(path))
+
+    Matrix result = MatrixParquetReader.builder().read(path)
+    assertEquals(data, result)
+  }
+
+  @Test
+  void testWriterBuilderToOutputStream() {
+    def data = Matrix.builder('osWrite').columns(
+        id: [1, 2, 3],
+        value: toBigDecimals([10.5, 20.75, 30.25])
+    ).types([Integer, BigDecimal]).build()
+
+    ByteArrayOutputStream bos = new ByteArrayOutputStream()
+    MatrixParquetWriter.builder(data).write(bos)
+
+    assertTrue(bos.size() > 0)
+    Matrix result = MatrixParquetReader.read(bos.toByteArray())
+    assertEquals(data, result)
+  }
+
+  @Test
   void testWriterBuilderValidation() {
     assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.builder(null)
