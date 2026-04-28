@@ -758,46 +758,46 @@ class MatrixParquetReader {
       fieldTypes = parseTypeString(typeString)
     }
 
-    def reader = ParquetReader.builder(new GroupReadSupport(), path).build()
-
-    String matrixName
-    if (file.name.contains('.')) {
-      matrixName = file.name.substring(0, file.name.lastIndexOf('.'))
-    } else {
-      matrixName = file.name
-    }
-
-    Group row = reader.read()
-    GroupType schema = row != null ? row.getType() : footer.getFileMetaData().getSchema()
-    List<String> fieldNames = schema.fields.collect { it.name }
-    if (fieldTypes == null) {
-      fieldTypes = extractFieldTypes(schema)
-    }
-    if (row == null) {
-      Matrix m = Matrix.builder(matrixName)
-          .columnNames(fieldNames)
-          .types(fieldTypes)
-          .build()
-      return restoreIndex(m, indexString)
-    }
-
-    def builder = Matrix.builder(matrixName)
-    .columnNames(fieldNames)
-    .types(fieldTypes)
-
-    while (row != null) {
-      def rowData = []
-      fieldNames.eachWithIndex { name, i ->
-        def type = fieldTypes[i]
-        def field = schema.getType(name)
-        def value = readValue(row, name, field, type)
-        rowData << value
+    ParquetReader.builder(new GroupReadSupport(), path).build().withCloseable { reader ->
+      String matrixName
+      if (file.name.contains('.')) {
+        matrixName = file.name.substring(0, file.name.lastIndexOf('.'))
+      } else {
+        matrixName = file.name
       }
-      builder.addRow(rowData as Object[])
-      row = reader.read()
+
+      Group row = reader.read()
+      GroupType schema = row != null ? row.getType() : footer.getFileMetaData().getSchema()
+      List<String> fieldNames = schema.fields.collect { it.name }
+      if (fieldTypes == null) {
+        fieldTypes = extractFieldTypes(schema)
+      }
+      if (row == null) {
+        Matrix m = Matrix.builder(matrixName)
+            .columnNames(fieldNames)
+            .types(fieldTypes)
+            .build()
+        return restoreIndex(m, indexString)
+      }
+
+      def builder = Matrix.builder(matrixName)
+      .columnNames(fieldNames)
+      .types(fieldTypes)
+
+      while (row != null) {
+        def rowData = []
+        fieldNames.eachWithIndex { name, i ->
+          def type = fieldTypes[i]
+          def field = schema.getType(name)
+          def value = readValue(row, name, field, type)
+          rowData << value
+        }
+        builder.addRow(rowData as Object[])
+        row = reader.read()
+      }
+      Matrix m = builder.build()
+      restoreIndex(m, indexString)
     }
-    Matrix m = builder.build()
-    restoreIndex(m, indexString)
   }
 
   /**
