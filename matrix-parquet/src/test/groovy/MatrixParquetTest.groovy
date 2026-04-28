@@ -921,6 +921,26 @@ class MatrixParquetTest {
   }
 
   @Test
+  void testNegativeBigDecimalRoundTrip() {
+    def data = Matrix.builder('negatives').columns(
+        id: [1, 2, 3, 4],
+        amount: toBigDecimals([-123.45, -0.01, 0.0, 999.99])
+    ).types([Integer, BigDecimal]).build()
+
+    File file = new File("build/negatives.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.builder(data).write(file)
+    Matrix result = MatrixParquetReader.read(file)
+
+    assertEquals(data, result, 'Negative BigDecimal values should round-trip correctly')
+    assertEquals(new BigDecimal('-123.45'), result.amount[0])
+    assertEquals(new BigDecimal('-0.01'), result.amount[1])
+  }
+
+  @Test
   void testReaderBuilderZoneIdAsString() {
     def dateTime = LocalDateTime.of(2024, 6, 15, 12, 0, 0)
     def data = Matrix.builder('readerTzStr').columns(

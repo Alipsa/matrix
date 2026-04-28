@@ -994,6 +994,9 @@ class MatrixParquetWriter {
                 "Either increase the precision or use inferPrecisionAndScale=true.")
           }
           def padded = new byte[size]
+          if (unscaled.signum() < 0) {
+            Arrays.fill(padded, (byte) 0xFF)
+          }
           System.arraycopy(bytes, 0, padded, size - bytes.length, bytes.length)
           group.add(fieldName, Binary.fromConstantByteArray(padded))
         } else {
