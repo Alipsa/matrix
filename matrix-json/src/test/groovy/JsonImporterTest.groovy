@@ -97,7 +97,7 @@ class JsonImporterTest {
       }
       rows << new ArrayList<>(m.values())
     }
-    return Matrix.builder()
+    Matrix.builder()
         .rows(rows)
         .columnNames(keySet)
         .build()
@@ -130,16 +130,16 @@ class JsonImporterTest {
     if (jsonNode.isObject()) {
       ObjectNode objectNode = (ObjectNode) jsonNode
       Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields()
-      def pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
+      String pathPrefix = currentPath.isEmpty() ? "" : currentPath + "."
 
       while (iter.hasNext()) {
-        Map.Entry<String, JsonNode> entry = iter.next();
-        addKeys(pathPrefix + entry.getKey(), entry.getValue(), map);
+        Map.Entry<String, JsonNode> entry = iter.next()
+        addKeys(pathPrefix + entry.getKey(), entry.getValue(), map)
       }
     } else if (jsonNode.isArray()) {
-      ArrayNode arrayNode = (ArrayNode) jsonNode;
+      ArrayNode arrayNode = (ArrayNode) jsonNode
       for (int i = 0; i < arrayNode.size(); i++) {
-        addKeys(currentPath + '[' + i + ']', arrayNode.get(i), map);
+        addKeys(currentPath + '[' + i + ']', arrayNode.get(i), map)
       }
     } else if (jsonNode.isValueNode()) {
       if (jsonNode instanceof NumericNode) {
@@ -239,7 +239,7 @@ class JsonImporterTest {
         {"a": 1, "b": 2}
       ]'''
 
-      String urlString = tempFile.toURI().toURL().toString()
+      String urlString = tempFile.toURI().toURL() as String
       Matrix table = JsonImporter.parseFromUrl(urlString)
 
       assertEquals(1, table.rowCount(), "Should have 1 row")

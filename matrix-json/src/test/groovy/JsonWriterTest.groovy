@@ -76,7 +76,7 @@ class JsonWriterTest {
         .data(value: [100])
         .build()
 
-    String filePath = tempDir.resolve('string_path.json').toString()
+    String filePath = tempDir.resolve('string_path.json') as String
     JsonWriter.write(matrix, filePath)
 
     assertTrue(new File(filePath).exists(), "Output file should exist")
@@ -91,7 +91,7 @@ class JsonWriterTest {
     StringWriter writer = new StringWriter()
     JsonWriter.write(matrix, writer)
 
-    String json = writer.toString()
+    String json = writer as String
     assertTrue(json.contains('"key":"value1"'), "Should contain data")
     assertTrue(json.contains('"key":"value2"'), "Should contain data")
   }
@@ -110,7 +110,7 @@ class JsonWriterTest {
     StringWriter writer = new StringWriter()
     JsonWriter.write(matrix, writer, formatters)
 
-    String json = writer.toString()
+    String json = writer as String
     assertTrue(json.contains('10000'), "Should apply salary formatter")
     assertTrue(json.contains('20000'), "Should apply salary formatter")
     assertTrue(json.contains('500'), "Should apply bonus formatter")
@@ -206,27 +206,27 @@ class JsonWriterTest {
 
   @Test
   void testWriteNullMatrixThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException) {
       JsonWriter.writeString(null)
-    }, "Should throw on null matrix")
+    }
   }
 
   @Test
   void testWriteNullFileThrows() {
     Matrix matrix = Matrix.builder().data(a: [1]).build()
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException) {
       JsonWriter.write(matrix, (File) null)
-    }, "Should throw on null file")
+    }
   }
 
   @Test
   void testWriteNullWriterThrows() {
     Matrix matrix = Matrix.builder().data(a: [1]).build()
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException) {
       JsonWriter.write(matrix, (Writer) null)
-    }, "Should throw on null writer")
+    }
   }
 
   @Test
@@ -240,5 +240,181 @@ class JsonWriterTest {
 
     assertEquals(original.rowCount(), result.rowCount(), "Row count should match after pretty print")
     assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+  }
+
+  @Test
+  void testWriteFormatterToPath() {
+    Matrix matrix = Matrix.builder()
+        .data(price: [100, 200])
+        .build()
+
+    Path outputPath = tempDir.resolve('formatter_path.json')
+    JsonWriter.write(matrix, outputPath, [price: { it * 10 }])
+
+    String content = outputPath.toFile().text
+    assertTrue(content.contains('1000'), "Should apply formatter via Path overload")
+    assertTrue(content.contains('2000'), "Should apply formatter via Path overload")
+  }
+
+  @Test
+  void testWriteFormatterToStringPath() {
+    Matrix matrix = Matrix.builder()
+        .data(value: [5])
+        .build()
+
+    String filePath = tempDir.resolve('formatter_string.json') as String
+    JsonWriter.write(matrix, filePath, [value: { it * 3 }])
+
+    String content = new File(filePath).text
+    assertTrue(content.contains('15'), "Should apply formatter via String path overload")
+  }
+
+  @Test
+  void testWriteFormatterCreatesParentDir() {
+    Matrix matrix = Matrix.builder()
+        .data(x: [1])
+        .build()
+
+    File outputFile = tempDir.resolve('sub/dir/output.json').toFile()
+    assertFalse(outputFile.getParentFile().exists(), "Parent dir should not exist yet")
+
+    JsonWriter.write(matrix, outputFile, [x: { it + 1 }])
+
+    assertTrue(outputFile.exists(), "File should be created with parent dirs")
+    assertTrue(outputFile.text.contains('2'), "Should apply formatter")
+  }
+
+  @Test
+  void testWriteFormatterThrowsOnDirectory() {
+    Matrix matrix = Matrix.builder()
+        .data(a: [1])
+        .build()
+
+    File dir = tempDir.resolve('adir').toFile()
+    dir.mkdirs()
+
+    assertThrows(IOException) {
+      JsonWriter.write(matrix, dir, [a: { it }])
+    }
+  }
+
+  // Fluent WriteBuilder API tests
+
+  @Test
+  void testFluentWriteToFile() {
+    Matrix matrix = Matrix.builder().data(a: [1, 2]).build()
+    File file = tempDir.resolve('fluent.json').toFile()
+
+    JsonWriter.write(matrix).to(file)
+
+    assertTrue(file.exists(), "File should exist")
+    Matrix result = JsonReader.read(file)
+    assertEquals(2, result.rowCount())
+  }
+
+  @Test
+  void testFluentWriteToPath() {
+    Matrix matrix = Matrix.builder().data(x: [10]).build()
+    Path path = tempDir.resolve('fluent_path.json')
+
+    JsonWriter.write(matrix).to(path)
+
+    assertTrue(path.toFile().exists(), "File should exist via Path")
+  }
+
+  @Test
+  void testFluentWriteToStringPath() {
+    Matrix matrix = Matrix.builder().data(v: [5]).build()
+    String filePath = tempDir.resolve('fluent_str.json') as String
+
+    JsonWriter.write(matrix).to(filePath)
+
+    assertTrue(new File(filePath).exists(), "File should exist via String path")
+  }
+
+  @Test
+  void testFluentWriteToWriter() {
+    Matrix matrix = Matrix.builder().data(k: ['v']).build()
+    StringWriter sw = new StringWriter()
+
+    JsonWriter.write(matrix).to(sw)
+
+    assertTrue(sw.toString().contains('"k"'), "Writer output should contain field")
+  }
+
+  @Test
+  void testFluentAsString() {
+    Matrix matrix = Matrix.builder().data(id: [1]).build()
+
+    String json = JsonWriter.write(matrix).asString()
+
+    assertTrue(json.contains('"id"'), "asString should contain field name")
+    assertTrue(json.contains('1'), "asString should contain value")
+  }
+
+  @Test
+  void testFluentWithIndent() {
+    Matrix matrix = Matrix.builder().data(x: [1]).build()
+
+    String json = JsonWriter.write(matrix).indent().asString()
+
+    assertTrue(json.contains('\n'), "Indented output should contain newlines")
+  }
+
+  @Test
+  void testFluentWithIndentBoolean() {
+    Matrix matrix = Matrix.builder().data(x: [1]).build()
+
+    String compact = JsonWriter.write(matrix).indent(false).asString()
+    String indented = JsonWriter.write(matrix).indent(true).asString()
+
+    assertFalse(compact.contains('\n'), "Compact should not contain newlines")
+    assertTrue(indented.contains('\n'), "Indented should contain newlines")
+  }
+
+  @Test
+  void testFluentWithDateFormat() {
+    Matrix matrix = Matrix.builder()
+        .data(d: [java.time.LocalDate.of(2024, 6, 15)])
+        .types(java.time.LocalDate)
+        .build()
+
+    String json = JsonWriter.write(matrix).dateFormat('dd/MM/yyyy').asString()
+
+    assertTrue(json.contains('15/06/2024'), "Should format date with custom pattern")
+  }
+
+  @Test
+  void testFluentWithFormatter() {
+    Matrix matrix = Matrix.builder().data(price: [100]).build()
+
+    String json = JsonWriter.write(matrix).formatter('price') { it * 2 }.asString()
+
+    assertTrue(json.contains('200'), "Should apply single formatter")
+  }
+
+  @Test
+  void testFluentWithMultipleFormatters() {
+    Matrix matrix = Matrix.builder().data(a: [1], b: [2]).build()
+
+    String json = JsonWriter.write(matrix)
+        .formatter('a') { it * 10 }
+        .formatter('b') { it * 20 }
+        .asString()
+
+    assertTrue(json.contains('10'), "Should apply formatter to column a")
+    assertTrue(json.contains('40'), "Should apply formatter to column b")
+  }
+
+  @Test
+  void testFluentWithColumnFormatters() {
+    Matrix matrix = Matrix.builder().data(x: [3], y: [4]).build()
+
+    String json = JsonWriter.write(matrix)
+        .columnFormatters([x: { it * 100 }, y: { it * 200 }])
+        .asString()
+
+    assertTrue(json.contains('300'), "Should apply column formatters map")
+    assertTrue(json.contains('800'), "Should apply column formatters map")
   }
 }

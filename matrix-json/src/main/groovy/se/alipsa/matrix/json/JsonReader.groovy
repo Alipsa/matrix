@@ -70,7 +70,7 @@ class JsonReader {
    */
   static Matrix read(String str) {
     FACTORY.createParser(str).withCloseable { JsonParser parser ->
-      return parseStream(parser)
+      parseStream(parser)
     }
   }
 
@@ -83,7 +83,7 @@ class JsonReader {
    */
   static Matrix read(InputStream is, Charset charset = StandardCharsets.UTF_8) {
     FACTORY.createParser(new InputStreamReader(is, charset)).withCloseable { JsonParser parser ->
-      return parseStream(parser)
+      parseStream(parser)
     }
   }
 
@@ -95,9 +95,13 @@ class JsonReader {
    * @return a Matrix with columns derived from JSON keys
    */
   static Matrix read(File file, Charset charset = StandardCharsets.UTF_8) {
-    FACTORY.createParser(new InputStreamReader(new FileInputStream(file), charset)).withCloseable { JsonParser parser ->
-      return parseStream(parser)
-    }
+    Matrix result = file.newReader(charset.name()).withCloseable { Reader reader ->
+      FACTORY.createParser(reader).withCloseable { JsonParser parser ->
+        parseStream(parser)
+      }
+    } as Matrix
+    result.matrixName = tableName(file)
+    result
   }
 
   /**
@@ -108,7 +112,7 @@ class JsonReader {
    */
   static Matrix read(Reader reader) {
     FACTORY.createParser(reader).withCloseable { JsonParser parser ->
-      return parseStream(parser)
+      parseStream(parser)
     }
   }
 
@@ -121,9 +125,11 @@ class JsonReader {
    * @throws IOException if reading the URL fails
    */
   static Matrix read(URL url, Charset charset = StandardCharsets.UTF_8) {
-    url.openStream().withCloseable { InputStream is ->
-      return read(is, charset)
-    }
+    Matrix result = url.openStream().withCloseable { InputStream is ->
+      read(is, charset)
+    } as Matrix
+    result.matrixName = tableName(url)
+    result
   }
 
   /**
@@ -135,7 +141,7 @@ class JsonReader {
    * @throws IOException if reading the URL fails or URL is invalid
    */
   static Matrix readUrl(String urlString, Charset charset = StandardCharsets.UTF_8) {
-    return read(new URI(urlString).toURL(), charset)
+    read(new URI(urlString).toURL(), charset)
   }
 
   /**
@@ -147,7 +153,7 @@ class JsonReader {
    * @throws IOException if reading the file fails
    */
   static Matrix read(Path path, Charset charset = StandardCharsets.UTF_8) {
-    return read(path.toFile(), charset)
+    read(path.toFile(), charset)
   }
 
   /**
@@ -162,7 +168,40 @@ class JsonReader {
    * @throws IOException if reading the file fails or file not found
    */
   static Matrix readFile(String filePath, Charset charset = StandardCharsets.UTF_8) {
-    return read(new File(filePath), charset)
+    read(new File(filePath), charset)
+  }
+
+  /**
+   * Read a JSON string containing an array of objects into a Matrix.
+   *
+   * <p>This is an alias for {@link #read(String)} provided for API symmetry
+   * with other format readers (e.g. CsvReader.readString).</p>
+   *
+   * @param jsonContent a JSON string containing a list of rows (JSON objects)
+   * @return a Matrix with columns derived from JSON keys
+   */
+  static Matrix readString(String jsonContent) {
+    read(jsonContent)
+  }
+
+  /**
+   * Derive a table name from a File by stripping the extension.
+   */
+  private static String tableName(File file) {
+    String name = file.getName()
+    int dot = name.lastIndexOf('.')
+    dot > 0 ? name.substring(0, dot) : name
+  }
+
+  /**
+   * Derive a table name from a URL by extracting the filename and stripping the extension.
+   */
+  private static String tableName(URL url) {
+    String path = url.getFile() ?: url.getPath()
+    int slash = path.lastIndexOf('/')
+    String name = slash >= 0 ? path.substring(slash + 1) : path
+    int dot = name.lastIndexOf('.')
+    dot > 0 ? name.substring(0, dot) : name
   }
 
   /**
@@ -173,9 +212,9 @@ class JsonReader {
    */
   private static Matrix parseStream(JsonParser parser) {
     // Column tracking - maps column name to column index
-    Map<String, Integer> columnIndex = new LinkedHashMap<>()
-    List<String> columnNames = new ArrayList<>()
-    List<List<Object>> columns = new ArrayList<>()
+    Map<String, Integer> columnIndex = [:]
+    List<String> columnNames = []
+    List<List<Object>> columns = []
     int rowCount = 0
 
     // Expect array start
@@ -190,11 +229,11 @@ class JsonReader {
       Map<String, Object> rowObj = MAPPER.readValue(parser, Map)
 
       // Flatten nested structures to dot-notation keys
-      Map<String, Object> flatRow = new LinkedHashMap<>()
+      Map<String, Object> flatRow = [:]
       flatten('', rowObj, flatRow)
 
       // Track which columns received values in this row
-      Set<Integer> columnsUpdated = new HashSet<>()
+      Set<Integer> columnsUpdated = [] as Set<Integer>
 
       // Process each key-value pair
       for (Map.Entry<String, Object> entry : flatRow.entrySet()) {
@@ -207,7 +246,7 @@ class JsonReader {
           colIdx = columnNames.size()
           columnIndex.put(key, colIdx)
           columnNames.add(key)
-          List<Object> newColumn = new ArrayList<>()
+          List<Object> newColumn = []
           // Backfill nulls for previous rows
           for (int i = 0; i < rowCount; i++) {
             newColumn.add(null)
@@ -233,7 +272,7 @@ class JsonReader {
       return Matrix.builder().build()
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .columnNames(columnNames)
         .columns(columns)
         .build()

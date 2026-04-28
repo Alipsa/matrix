@@ -130,7 +130,7 @@ class JsonReaderTest {
     File jsonFile = tempDir.resolve('string_url_test.json').toFile()
     jsonFile.text = jsonContent
 
-    String urlString = jsonFile.toURI().toURL().toString()
+    String urlString = jsonFile.toURI().toURL() as String
     Matrix matrix = JsonReader.readUrl(urlString)
 
     assertEquals(1, matrix.rowCount(), "Number of rows")
@@ -220,9 +220,9 @@ class JsonReaderTest {
       }
     ]'''
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException) {
       JsonReader.read(json)
-    }, "Should throw on duplicate keys after flattening")
+    }
   }
 
   @Test
@@ -235,5 +235,38 @@ class JsonReaderTest {
 
     assertEquals(1, matrix.rowCount(), "Number of rows")
     assertEquals("Grüße", matrix.row(0)[matrix.columnNames().indexOf('text')], "Should handle UTF-8 characters")
+  }
+
+  @Test
+  void testMatrixNameDerivedFromFile() {
+    String jsonContent = '[{"id":1}]'
+    File jsonFile = tempDir.resolve('employees.json').toFile()
+    jsonFile.text = jsonContent
+
+    Matrix matrix = JsonReader.read(jsonFile)
+
+    assertEquals('employees', matrix.matrixName, "Matrix name should be derived from filename without extension")
+  }
+
+  @Test
+  void testMatrixNameDerivedFromUrl() {
+    String jsonContent = '[{"id":1}]'
+    File jsonFile = tempDir.resolve('people.json').toFile()
+    jsonFile.text = jsonContent
+
+    URL url = jsonFile.toURI().toURL()
+    Matrix matrix = JsonReader.read(url)
+
+    assertEquals('people', matrix.matrixName, "Matrix name should be derived from URL filename")
+  }
+
+  @Test
+  void testReadStringAlias() {
+    String json = '[{"id":1,"name":"Test"}]'
+    Matrix fromRead = JsonReader.read(json)
+    Matrix fromReadString = JsonReader.readString(json)
+
+    assertEquals(fromRead.rowCount(), fromReadString.rowCount(), "readString should produce same row count as read")
+    assertEquals(fromRead.columnNames(), fromReadString.columnNames(), "readString should produce same columns as read")
   }
 }
