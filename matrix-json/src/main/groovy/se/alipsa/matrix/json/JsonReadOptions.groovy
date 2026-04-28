@@ -120,7 +120,7 @@ class JsonReadOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('charset', Charset, 'UTF-8', 'The character encoding to use when reading JSON'),
-        new OptionDescriptor('matrixName', String, null, 'Override the name for the resulting Matrix (default: derived from filename)'),
+        new OptionDescriptor('matrixName', String, null, 'Override the name for the resulting Matrix (default: derived from filename). Also accepted as tableName'),
         new OptionDescriptor('types', List, null, 'List of column types for automatic conversion after parsing'),
         new OptionDescriptor('dateTimeFormat', String, null, 'Date/time format pattern for type conversion')
     ]

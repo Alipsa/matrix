@@ -35,7 +35,6 @@ class JsonWriter {
   private static final JsonFactory FACTORY = new JsonFactory()
 
   private JsonWriter() {
-    // Only static methods
   }
 
   /**
@@ -65,11 +64,7 @@ class JsonWriter {
    */
   @Deprecated
   static String writeString(Matrix matrix, boolean indent = false) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    Map<String, Closure> emptyFormatters = [:]
-    writeString(matrix, emptyFormatters, indent)
+    write(matrix).indent(indent).asString()
   }
 
   /**
@@ -84,49 +79,161 @@ class JsonWriter {
    */
   @Deprecated
   static String writeString(Matrix matrix, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+    WriteBuilder builder = write(matrix).indent(indent).dateFormat(dateFormat)
+    if (columnFormatters != null) {
+      builder.columnFormatters(columnFormatters)
     }
+    builder.asString()
+  }
 
-    if (columnFormatters != null && !columnFormatters.isEmpty()) {
-      List<String> colNames = matrix.columnNames()
-      Set<String> invalidFormatters = columnFormatters.keySet().findAll { String it -> !colNames.contains(it) } as Set<String>
-      if (!invalidFormatters.isEmpty()) {
-        throw new IllegalArgumentException(
-            "Column formatter(s) defined for non-existent column(s): ${invalidFormatters}. " +
-            "Available columns: ${colNames}"
-        )
-      }
-    }
+  /**
+   * Write a Matrix to a JSON string with custom date formatting.
+   *
+   * @param matrix the Matrix to write
+   * @param dateFormat date format pattern for all temporal columns
+   * @param indent whether to pretty print the JSON
+   * @return JSON string representation
+   * @deprecated Use {@code JsonWriter.write(matrix).dateFormat(pattern).asString()} instead
+   */
+  @Deprecated
+  static String writeString(Matrix matrix, String dateFormat, boolean indent = false) {
+    write(matrix).indent(indent).dateFormat(dateFormat).asString()
+  }
 
-    Matrix t = columnFormatters.isEmpty() ? matrix : (matrix.clone() as Matrix)
-    if (!columnFormatters.isEmpty()) {
-      columnFormatters.each { String k, Closure v ->
-        t.apply(k, v)
-      }
-    }
-    DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormat)
+  /**
+   * Write a Matrix to a JSON file.
+   *
+   * @param matrix the Matrix to write
+   * @param outputFile file to write JSON to
+   * @param indent whether to pretty print the JSON
+   * @throws IOException if writing fails
+   * @deprecated Use {@code JsonWriter.write(matrix).to(file)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, File outputFile, boolean indent = false) throws IOException {
+    write(matrix).indent(indent).to(outputFile)
+  }
 
-    StringWriter sw = new StringWriter()
-    JsonGenerator gen = FACTORY.createGenerator(sw)
-    if (indent) {
-      gen.useDefaultPrettyPrinter()
+  /**
+   * Write a Matrix to a JSON file specified by Path.
+   *
+   * @param matrix the Matrix to write
+   * @param outputPath path to write JSON to
+   * @param indent whether to pretty print the JSON
+   * @throws IOException if writing fails
+   * @deprecated Use {@code JsonWriter.write(matrix).to(path)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, Path outputPath, boolean indent = false) throws IOException {
+    write(matrix).indent(indent).to(outputPath)
+  }
+
+  /**
+   * Write a Matrix to a JSON file specified by String path.
+   *
+   * @param matrix the Matrix to write
+   * @param outputPath file path to write JSON to
+   * @param indent whether to pretty print the JSON
+   * @throws IOException if writing fails
+   * @deprecated Use {@code JsonWriter.write(matrix).to(filePath)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, String outputPath, boolean indent = false) throws IOException {
+    write(matrix).indent(indent).to(outputPath)
+  }
+
+  /**
+   * Write a Matrix to a Writer as JSON.
+   *
+   * @param matrix the Matrix to write
+   * @param writer the Writer to write JSON to
+   * @param indent whether to pretty print the JSON
+   * @throws IOException if writing fails
+   * @deprecated Use {@code JsonWriter.write(matrix).to(writer)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, Writer writer, boolean indent = false) throws IOException {
+    write(matrix).indent(indent).to(writer)
+  }
+
+  /**
+   * Write a Matrix to a Writer as JSON with custom formatting.
+   *
+   * @param matrix the Matrix to write
+   * @param writer the Writer to write JSON to
+   * @param columnFormatters map of column names to formatting closures
+   * @param indent whether to pretty print the JSON
+   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @throws IOException if writing fails
+   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(writer)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, Writer writer, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
+    WriteBuilder builder = write(matrix).indent(indent).dateFormat(dateFormat)
+    if (columnFormatters != null) {
+      builder.columnFormatters(columnFormatters)
     }
-    gen.withCloseable {
-      gen.writeStartArray()
-      List<String> colNames = t.columnNames()
-      int colCount = colNames.size()
-      for (Row row : t) {
-        gen.writeStartObject()
-        for (int i = 0; i < colCount; i++) {
-          gen.writeFieldName(colNames[i])
-          writeValue(gen, row[i], dtf)
-        }
-        gen.writeEndObject()
-      }
-      gen.writeEndArray()
+    builder.to(writer)
+  }
+
+  /**
+   * Write a Matrix to a JSON file with custom formatting.
+   *
+   * @param matrix the Matrix to write
+   * @param outputFile file to write JSON to
+   * @param columnFormatters map of column names to formatting closures
+   * @param indent whether to pretty print the JSON
+   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @throws IOException if writing fails
+   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(file)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, File outputFile, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
+    WriteBuilder builder = write(matrix).indent(indent).dateFormat(dateFormat)
+    if (columnFormatters != null) {
+      builder.columnFormatters(columnFormatters)
     }
-    sw.toString()
+    builder.to(outputFile)
+  }
+
+  /**
+   * Write a Matrix to a JSON file specified by Path with custom formatting.
+   *
+   * @param matrix the Matrix to write
+   * @param outputPath path to write JSON to
+   * @param columnFormatters map of column names to formatting closures
+   * @param indent whether to pretty print the JSON
+   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @throws IOException if writing fails
+   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(path)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, Path outputPath, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
+    WriteBuilder builder = write(matrix).indent(indent).dateFormat(dateFormat)
+    if (columnFormatters != null) {
+      builder.columnFormatters(columnFormatters)
+    }
+    builder.to(outputPath)
+  }
+
+  /**
+   * Write a Matrix to a JSON file specified by String path with custom formatting.
+   *
+   * @param matrix the Matrix to write
+   * @param outputPath file path to write JSON to
+   * @param columnFormatters map of column names to formatting closures
+   * @param indent whether to pretty print the JSON
+   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @throws IOException if writing fails
+   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(filePath)} instead
+   */
+  @Deprecated
+  static void write(Matrix matrix, String outputPath, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
+    WriteBuilder builder = write(matrix).indent(indent).dateFormat(dateFormat)
+    if (columnFormatters != null) {
+      builder.columnFormatters(columnFormatters)
+    }
+    builder.to(outputPath)
   }
 
   /**
@@ -159,202 +266,6 @@ class JsonWriter {
   }
 
   /**
-   * Write a Matrix to a JSON string with custom date formatting.
-   *
-   * @param matrix the Matrix to write
-   * @param dateFormat date format pattern for all temporal columns
-   * @param indent whether to pretty print the JSON
-   * @return JSON string representation
-   * @deprecated Use {@code JsonWriter.write(matrix).dateFormat(pattern).asString()} instead
-   */
-  @Deprecated
-  static String writeString(Matrix matrix, String dateFormat, boolean indent = false) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    Map<String, Closure> emptyFormatters = [:]
-    writeString(matrix, emptyFormatters, indent, dateFormat)
-  }
-
-  /**
-   * Write a Matrix to a JSON file.
-   *
-   * @param matrix the Matrix to write
-   * @param outputFile file to write JSON to
-   * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
-   * @deprecated Use {@code JsonWriter.write(matrix).to(file)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, File outputFile, boolean indent = false) throws IOException {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (outputFile == null) {
-      throw new IllegalArgumentException("Output file cannot be null")
-    }
-
-    if (outputFile.isDirectory()) {
-      throw new IOException("Output file '${outputFile.absolutePath}' is a directory, cannot write JSON data")
-    }
-
-    File parent = outputFile.getParentFile()
-    if (parent != null && !parent.exists()) {
-      if (!parent.mkdirs()) {
-        throw new IOException("Failed to create parent directory '${parent.absolutePath}' for output file '${outputFile.absolutePath}'")
-      }
-    }
-
-    if (outputFile.exists() && !outputFile.canWrite()) {
-      throw new IOException("Output file '${outputFile.absolutePath}' is not writable")
-    }
-
-    outputFile.text = writeString(matrix, indent)
-  }
-
-  /**
-   * Write a Matrix to a JSON file specified by Path.
-   *
-   * @param matrix the Matrix to write
-   * @param outputPath path to write JSON to
-   * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
-   * @deprecated Use {@code JsonWriter.write(matrix).to(path)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, Path outputPath, boolean indent = false) throws IOException {
-    write(matrix, outputPath.toFile(), indent)
-  }
-
-  /**
-   * Write a Matrix to a JSON file specified by String path.
-   *
-   * @param matrix the Matrix to write
-   * @param outputPath file path to write JSON to
-   * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
-   * @deprecated Use {@code JsonWriter.write(matrix).to(filePath)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, String outputPath, boolean indent = false) throws IOException {
-    write(matrix, new File(outputPath), indent)
-  }
-
-  /**
-   * Write a Matrix to a Writer as JSON.
-   *
-   * @param matrix the Matrix to write
-   * @param writer the Writer to write JSON to
-   * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
-   * @deprecated Use {@code JsonWriter.write(matrix).to(writer)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, Writer writer, boolean indent = false) throws IOException {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (writer == null) {
-      throw new IllegalArgumentException("Writer cannot be null")
-    }
-    writer.write(writeString(matrix, indent))
-    writer.flush()
-  }
-
-  /**
-   * Write a Matrix to a Writer as JSON with custom formatting.
-   *
-   * @param matrix the Matrix to write
-   * @param writer the Writer to write JSON to
-   * @param columnFormatters map of column names to formatting closures
-   * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
-   * @throws IOException if writing fails
-   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(writer)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, Writer writer, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (writer == null) {
-      throw new IllegalArgumentException("Writer cannot be null")
-    }
-    writer.write(writeString(matrix, columnFormatters, indent, dateFormat))
-    writer.flush()
-  }
-
-  /**
-   * Write a Matrix to a JSON file with custom formatting.
-   *
-   * @param matrix the Matrix to write
-   * @param outputFile file to write JSON to
-   * @param columnFormatters map of column names to formatting closures
-   * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
-   * @throws IOException if writing fails
-   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(file)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, File outputFile, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (outputFile == null) {
-      throw new IllegalArgumentException("Output file cannot be null")
-    }
-
-    if (outputFile.isDirectory()) {
-      throw new IOException("Output file '${outputFile.absolutePath}' is a directory, cannot write JSON data")
-    }
-
-    File parent = outputFile.getParentFile()
-    if (parent != null && !parent.exists()) {
-      if (!parent.mkdirs()) {
-        throw new IOException("Failed to create parent directory '${parent.absolutePath}' for output file '${outputFile.absolutePath}'")
-      }
-    }
-
-    if (outputFile.exists() && !outputFile.canWrite()) {
-      throw new IOException("Output file '${outputFile.absolutePath}' is not writable")
-    }
-
-    outputFile.text = writeString(matrix, columnFormatters, indent, dateFormat)
-  }
-
-  /**
-   * Write a Matrix to a JSON file specified by Path with custom formatting.
-   *
-   * @param matrix the Matrix to write
-   * @param outputPath path to write JSON to
-   * @param columnFormatters map of column names to formatting closures
-   * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
-   * @throws IOException if writing fails
-   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(path)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, Path outputPath, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
-    write(matrix, outputPath.toFile(), columnFormatters, indent, dateFormat)
-  }
-
-  /**
-   * Write a Matrix to a JSON file specified by String path with custom formatting.
-   *
-   * @param matrix the Matrix to write
-   * @param outputPath file path to write JSON to
-   * @param columnFormatters map of column names to formatting closures
-   * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
-   * @throws IOException if writing fails
-   * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(filePath)} instead
-   */
-  @Deprecated
-  static void write(Matrix matrix, String outputPath, Map<String, Closure> columnFormatters, boolean indent = false, String dateFormat = 'yyyy-MM-dd') throws IOException {
-    write(matrix, new File(outputPath), columnFormatters, indent, dateFormat)
-  }
-
-  /**
    * Fluent builder for writing Matrix data to JSON.
    *
    * <p>Obtained via {@link JsonWriter#write(Matrix)}. Configure options
@@ -375,7 +286,6 @@ class JsonWriter {
    * String json = JsonWriter.write(matrix).asString()
    * </pre>
    */
-  @CompileStatic
   static class WriteBuilder {
 
     private final Matrix matrix
@@ -452,7 +362,22 @@ class JsonWriter {
      * @throws IOException if writing fails
      */
     void to(File file) throws IOException {
-      JsonWriter.write(matrix, file, columnFormattersValue, indentValue, dateFormatValue)
+      if (file == null) {
+        throw new IllegalArgumentException("Output file cannot be null")
+      }
+      if (file.isDirectory()) {
+        throw new IOException("Output file '${file.absolutePath}' is a directory, cannot write JSON data")
+      }
+      File parent = file.getParentFile()
+      if (parent != null && !parent.exists()) {
+        if (!parent.mkdirs()) {
+          throw new IOException("Failed to create parent directory '${parent.absolutePath}' for output file '${file.absolutePath}'")
+        }
+      }
+      if (file.exists() && !file.canWrite()) {
+        throw new IOException("Output file '${file.absolutePath}' is not writable")
+      }
+      file.text = asString()
     }
 
     /**
@@ -482,7 +407,11 @@ class JsonWriter {
      * @throws IOException if writing fails
      */
     void to(Writer writer) throws IOException {
-      JsonWriter.write(matrix, writer, columnFormattersValue, indentValue, dateFormatValue)
+      if (writer == null) {
+        throw new IllegalArgumentException("Writer cannot be null")
+      }
+      writer.write(asString())
+      writer.flush()
     }
 
     /**
@@ -491,7 +420,45 @@ class JsonWriter {
      * @return JSON string representation
      */
     String asString() {
-      JsonWriter.writeString(matrix, columnFormattersValue, indentValue, dateFormatValue)
+      if (!columnFormattersValue.isEmpty()) {
+        List<String> colNames = matrix.columnNames()
+        Set<String> invalidFormatters = columnFormattersValue.keySet().findAll { String it -> !colNames.contains(it) } as Set<String>
+        if (!invalidFormatters.isEmpty()) {
+          throw new IllegalArgumentException(
+              "Column formatter(s) defined for non-existent column(s): ${invalidFormatters}. " +
+              "Available columns: ${colNames}"
+          )
+        }
+      }
+
+      Matrix t = columnFormattersValue.isEmpty() ? matrix : (matrix.clone() as Matrix)
+      if (!columnFormattersValue.isEmpty()) {
+        columnFormattersValue.each { String k, Closure v ->
+          t.apply(k, v)
+        }
+      }
+      DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormatValue)
+
+      StringWriter sw = new StringWriter()
+      JsonGenerator gen = FACTORY.createGenerator(sw)
+      if (indentValue) {
+        gen.useDefaultPrettyPrinter()
+      }
+      gen.withCloseable {
+        gen.writeStartArray()
+        List<String> colNames = t.columnNames()
+        int colCount = colNames.size()
+        for (Row row : t) {
+          gen.writeStartObject()
+          for (int i = 0; i < colCount; i++) {
+            gen.writeFieldName(colNames[i])
+            writeValue(gen, row[i], dtf)
+          }
+          gen.writeEndObject()
+        }
+        gen.writeEndArray()
+      }
+      sw.toString()
     }
   }
 }

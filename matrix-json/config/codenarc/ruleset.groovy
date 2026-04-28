@@ -49,11 +49,11 @@ ruleset {
     ruleset('rulesets/size.xml') {
         exclude 'CrapMetric'
         'AbcMetric' {
-            maxMethodAbcScore = 70
+            maxMethodAbcScore = 35
             doNotApplyToFilesMatching = /.*Test\.groovy/
         }
         'CyclomaticComplexity' {
-            maxMethodComplexity = 35
+            maxMethodComplexity = 20
             doNotApplyToFilesMatching = /.*Test\.groovy/
         }
         'MethodCount' {
