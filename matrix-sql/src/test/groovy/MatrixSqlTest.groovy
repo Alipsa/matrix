@@ -168,15 +168,15 @@ class MatrixSqlTest {
   }
 
   @Test
-  void testUpdateRequiresMatchColumn() {
+  void testUpdateAllRowsWithRow() {
     Matrix data = Matrix.builder('people2').data([
-        id: [1],
-        name: ['Alice']
+        id: [1, 2],
+        name: ['Alice', 'Bob']
     ])
     .types(int, String)
     .build()
 
-    String url = h2MemUrl('update_match_testdb')
+    String url = h2MemUrl('update_all_testdb', 'DATABASE_TO_UPPER=FALSE')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       String tableName = matrixSql.tableName(data)
       if (matrixSql.tableExists(tableName)) {
@@ -185,8 +185,12 @@ class MatrixSqlTest {
       matrixSql.create(data)
 
       Row row = data.row(0)
-      row['name'] = 'Bob'
-      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, row) }
+      row['name'] = 'Charlie'
+      assertEquals(2, matrixSql.update(tableName, row))
+
+      Matrix stored = matrixSql.select("select * from $tableName order by id")
+      assertEquals('Charlie', stored[0, 'name'])
+      assertEquals('Charlie', stored[1, 'name'])
     }
   }
 
