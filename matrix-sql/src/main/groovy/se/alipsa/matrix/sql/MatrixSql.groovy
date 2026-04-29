@@ -90,7 +90,16 @@ class MatrixSql implements Closeable {
     matrixDbUtil.select(connect(), sqlQuery).withMatrixName(matrixName)
   }
 
-  Matrix select(String sqlQuery, List params, String matrixName = 'myMatrix') throws SQLException {
+  /**
+   * Execute a prepared select query and return the result as a Matrix.
+   *
+   * @param sqlQuery the sql query to execute, with '?' placeholders for parameters
+   * @param params the parameters to bind to the prepared statement
+   * @param matrixName the name of the resulting Matrix
+   * @return a Matrix containing the query results
+   * @throws SQLException if a database access error occurs
+   */
+  Matrix select(String sqlQuery, List<Object> params, String matrixName = 'myMatrix') throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -106,7 +115,15 @@ class MatrixSql implements Closeable {
     dbUpdate(sqlQuery)
   }
 
-  int update(String sqlQuery, List params) throws SQLException {
+  /**
+   * Execute a prepared update query.
+   *
+   * @param sqlQuery the sql query to execute, with '?' placeholders for parameters
+   * @param params the parameters to bind to the prepared statement
+   * @return the number of rows affected
+   * @throws SQLException if a database access error occurs
+   */
+  int update(String sqlQuery, List<Object> params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -122,6 +139,16 @@ class MatrixSql implements Closeable {
     }
   }
 
+  /**
+   * Update a row in the given table. This overload delegates to
+   * {@link #update(String, Row, String...)} with an empty matchColumnName array,
+   * which will throw {@link IllegalArgumentException} because match columns are required.
+   *
+   * @param tableName the name of the table to update
+   * @param row the row data to update
+   * @throws SQLException if a database access error occurs
+   * @throws IllegalArgumentException because matchColumnName is required
+   */
   int update(String tableName, Row row) throws SQLException {
     update(tableName, row, new String[0])
   }
@@ -157,7 +184,18 @@ class MatrixSql implements Closeable {
     }
   }
 
-  Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
+  /**
+   * Execute a prepared sql query. The result can be one or more ResultSets
+   * or update counts. The key is the result index (0..n) and the value is either a Matrix
+   * (for ResultSets) or an Integer (for update counts). DDL statements (like CREATE TABLE)
+   * will yield an update count of -1.
+   *
+   * @param sqlQuery the sql query to execute, with '?' placeholders for parameters
+   * @param params the parameters to bind to the prepared statement
+   * @return A Map with the result index as key and either a Matrix or an Integer as value
+   * @throws SQLException if a database access error occurs
+   */
+  Map<Integer, Object> execute(String sqlQuery, List<Object> params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -309,6 +347,14 @@ class MatrixSql implements Closeable {
     insert(tableName(table), row)
   }
 
+  /**
+   * Insert the data from the given Matrix into the given table in the database.
+   *
+   * @param tableName the name of the table to insert into
+   * @param table the Matrix containing the data to insert
+   * @return the number of inserted rows
+   * @throws SQLException if any sql error occurs
+   */
   int insert(String tableName, Matrix table) throws SQLException {
     matrixDbUtil.insert(connect(), tableName, table)
   }
@@ -323,7 +369,15 @@ class MatrixSql implements Closeable {
     }
   }
 
-  int delete(String sql, List params) throws SQLException {
+  /**
+   * Execute a prepared delete query.
+   *
+   * @param sql the sql delete statement, with '?' placeholders for parameters
+   * @param params the parameters to bind to the prepared statement
+   * @return the number of rows deleted
+   * @throws SQLException if a database access error occurs
+   */
+  int delete(String sql, List<Object> params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
       int i = 1
       params.each {
