@@ -77,7 +77,6 @@ class MatrixResultSet implements ResultSet{
   }
 
   private int checkedColumnIndex(String columnLabel) throws SQLException {
-    ensureOpen()
     int columnIndex = matrix.columnIndex(columnLabel)
     if (columnIndex < 0) {
       throw new SQLException("Column not found: $columnLabel")
@@ -948,6 +947,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   int findColumn(String columnLabel) throws SQLException {
+    ensureOpen()
     checkedColumnIndex(columnLabel) + 1
   }
 
@@ -2825,7 +2825,7 @@ class MatrixResultSet implements ResultSet{
       lastReadValue = new Date(val + cal.getTimeZone().getOffset(0) as long)
       return lastReadValue as Date
     }
-    lastReadValue = readValue(columnIndex, Date)
+    lastReadValue = val as Date
   }
 
   /**
@@ -2879,7 +2879,7 @@ class MatrixResultSet implements ResultSet{
       lastReadValue = new Time(val + cal.getTimeZone().getOffset(0) as long)
       return lastReadValue as Time
     }
-    lastReadValue = readValue(columnIndex, Time)
+    lastReadValue = val as Time
   }
 
   /**
@@ -2933,7 +2933,7 @@ class MatrixResultSet implements ResultSet{
       lastReadValue = new Timestamp(val + cal.getTimeZone().getOffset(0) as long)
       return lastReadValue as Timestamp
     }
-    lastReadValue = readValue(columnIndex, Timestamp)
+    lastReadValue = val as Timestamp
   }
 
   /**

@@ -149,6 +149,46 @@ class MatrixResultSetTest {
   }
 
   @Test
+  void testCalendarGettersWithNumberMillisAppliesTimezoneOffset() {
+    long epochMillis = 1714392896000L  // 2024-04-29 12:34:56 UTC
+    Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
+    int cetOffset = cetCal.getTimeZone().getOffset(0)
+
+    Matrix matrix = Matrix.builder('millis').data([
+        d: [epochMillis],
+        t: [epochMillis],
+        ts: [epochMillis]
+    ])
+    .types(Long, Long, Long)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+
+    // UTC calendar: no offset change
+    Date dateUtc = rs.getDate(1, utcCal)
+    assertEquals(new Date(epochMillis), dateUtc)
+    assertFalse(rs.wasNull())
+
+    Time timeUtc = rs.getTime(2, utcCal)
+    assertEquals(new Time(epochMillis), timeUtc)
+    assertFalse(rs.wasNull())
+
+    Timestamp tsUtc = rs.getTimestamp(3, utcCal)
+    assertEquals(new Timestamp(epochMillis), tsUtc)
+    assertFalse(rs.wasNull())
+
+    // CET calendar: offset applied
+    Date dateCet = rs.getDate(1, cetCal)
+    assertEquals(new Date(epochMillis + cetOffset), dateCet)
+    Time timeCet = rs.getTime(2, cetCal)
+    assertEquals(new Time(epochMillis + cetOffset), timeCet)
+    Timestamp tsCet = rs.getTimestamp(3, cetCal)
+    assertEquals(new Timestamp(epochMillis + cetOffset), tsCet)
+  }
+
+  @Test
   void testGetURLRoutesThroughGuardsAndUpdatesLastReadValue() {
     Matrix matrix = Matrix.builder('urls').data([
         site: ['https://example.com', null]
