@@ -218,7 +218,7 @@ class MatrixSql implements Closeable {
   }
 
   Object dropTable(String tableName) {
-    dbExecuteSql("drop table $tableName")
+    dbExecuteSql("drop table ${SqlIdentifier.renderTable(tableName)}")
   }
 
   Object dropTable(Matrix table) {
@@ -299,7 +299,7 @@ class MatrixSql implements Closeable {
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException("No columns left to update after excluding match columns")
     }
-    String sql = SqlGenerator.createPreparedUpdateSql(table.getMatrixName(), updateColumns, matchColumns)
+    String sql = SqlGenerator.createPreparedUpdateSql(tableName(table), updateColumns, matchColumns)
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
       for (Row row : table) {
         List<Object> values = SqlGenerator.updateValues(row, updateColumns, matchColumns)
