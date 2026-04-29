@@ -6,8 +6,11 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.sql.MatrixResultSet
 
+import java.sql.Date
 import java.sql.ResultSet
 import java.sql.SQLException
+import java.sql.Time
+import java.sql.Timestamp
 import java.sql.Types
 
 class MatrixResultSetTest {
@@ -83,6 +86,65 @@ class MatrixResultSetTest {
     assertTrue(rs.wasNull())
 
     assertNull(rs.getUnicodeStream(8))
+    assertTrue(rs.wasNull())
+
+    assertNull(rs.getCharacterStream(8))
+    assertTrue(rs.wasNull())
+  }
+
+  @Test
+  void testInvalidCursorAndColumnAccessThrowsSQLException() {
+    Matrix matrix = Matrix.builder('invalidAccess').data([
+        name: ['Alice']
+    ])
+    .types(String)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertThrows(SQLException) { rs.getString(1) }
+    assertThrows(SQLException) { rs.getString(0) }
+    assertThrows(SQLException) { rs.findColumn('missing') }
+    assertThrows(SQLException) { rs.getString('missing') }
+
+    assertTrue(rs.next())
+    assertThrows(SQLException) { rs.getString(2) }
+    assertFalse(rs.next())
+    assertThrows(SQLException) { rs.getString(1) }
+
+    rs.close()
+    assertThrows(SQLException) { rs.next() }
+    assertThrows(SQLException) { rs.getMetaData() }
+    assertThrows(SQLException) { rs.wasNull() }
+  }
+
+  @Test
+  void testTemporalLabelAndCalendarGettersUpdateWasNull() {
+    Date date = Date.valueOf('2026-04-29')
+    Time time = Time.valueOf('12:34:56')
+    Timestamp timestamp = Timestamp.valueOf('2026-04-29 12:34:56')
+    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    Matrix matrix = Matrix.builder('temporal').data([
+        d: [date],
+        t: [time],
+        ts: [timestamp],
+        missingDate: [null]
+    ])
+    .types(Date, Time, Timestamp, Date)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+
+    assertEquals(date, rs.getDate('d'))
+    assertFalse(rs.wasNull())
+    assertEquals(time, rs.getTime('t'))
+    assertEquals(timestamp, rs.getTimestamp('ts'))
+
+    assertEquals(date, rs.getDate('d', calendar))
+    assertEquals(time, rs.getTime('t', calendar))
+    assertEquals(timestamp, rs.getTimestamp('ts', calendar))
+
+    assertNull(rs.getDate('missingDate', calendar))
     assertTrue(rs.wasNull())
   }
 
