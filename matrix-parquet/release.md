@@ -1,9 +1,28 @@
 # Matrix-parquet Release History
 
-## v0.5.0, in progress
-- org.apache.hadoop:hadoop-common 3.4.2 -> 3.4.3
-- org.apache.hadoop:hadoop-mapreduce-client-core 3.4.2 -> 3.4.3
-- Add indexing support
+## v0.5.0, 2026-04-29
+- Add SPI integration: `MatrixParquetFormatProvider` registers `.parquet` extension with Matrix SPI so `Matrix.read(file)` and `matrix.write(file)` work without explicit imports
+- Add `ParquetReadOptions` and `ParquetWriteOptions` typed options classes with `describe()` and `fromMap()` for runtime discovery and SPI use
+- Add builder API: `MatrixParquetReader.builder()` and `MatrixParquetWriter.builder(matrix)` as the recommended fluent interface
+- Add `write(OutputStream)` and `write(Path)` overloads to writer; add `read(byte[])`, `read(URL)`, `read(Path)`, `read(InputStream)` to builder
+- Add `writeBytes()` method to write to a byte array without a file
+- Strengthen `ParquetWriteOptions.validate()`: enforce `precision > 0`, `scale >= 0`, `scale ≤ precision` for both uniform and per-column decimal meta
+- Add `decimalMeta` per-column precision/scale validation in `validateDecimalMeta` (checks shape, range, and consistency)
+- Fix bug: resource leak in `MatrixParquetReader` — reader now wrapped in `withCloseable` to ensure streams are always closed
+- Fix bug: negative `BigDecimal` values padded with `0x00` instead of `0xFF` causing sign bit corruption on read
+- Fix bug: timestamp type mapped to `MILLIS` instead of `MICROS` causing precision loss
+- Fix bug: deprecated `BigDecimal.ROUND_HALF_UP` replaced with `RoundingMode.HALF_UP`
+- Fix `hasUniformPrecisionAndScale()` semantics: now returns true only when both `precision` and `scale` are non-null
+- Enable `@CompileStatic` by default for all production sources
+- Enable CodeNarc with `ignoreFailures=false`; fix all pre-existing violations
+- Remove ivy dependency (was unused)
+- Make internal APIs private; simplify `readFromInputStream`
+- Migrate tests to `@TempDir`; remove manual temp-file cleanup boilerplate
+- Correct POM publication URLs: `url`, `license.url`, and `scm.url` now use `tree/main` paths (Maven Central convention)
+- Add README sections: "At a Glance" goal/entry-point table, "API Surface" reference, "Default Behavior" for naming and decimal defaults
+- Upgrade dependencies
+  - org.apache.hadoop:hadoop-common [3.4.2 -> 3.4.3]
+  - org.apache.hadoop:hadoop-mapreduce-client-core [3.4.2 -> 3.4.3]
 
 ## v0.4.0, 2026-01-31
 - remove parquet-carpet dependency (MatrixCarpetIO) - now using native Parquet implementation

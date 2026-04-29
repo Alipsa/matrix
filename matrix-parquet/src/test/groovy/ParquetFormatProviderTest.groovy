@@ -93,4 +93,45 @@ class ParquetFormatProviderTest {
 
     assertTrue(exception.message.contains("decimalMeta['amount'] must be an int[] of length 2"))
   }
+
+  @Test
+  void testWriteOptionsRejectInvalidPrecision() {
+    IllegalArgumentException zeroPrecision = assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().precision(0).scale(0).validate()
+    }
+    assertTrue(zeroPrecision.message.contains('precision must be > 0'))
+
+    IllegalArgumentException negativePrecision = assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().precision(-1).scale(0).validate()
+    }
+    assertTrue(negativePrecision.message.contains('precision must be > 0'))
+
+    IllegalArgumentException negativeScale = assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().precision(10).scale(-1).validate()
+    }
+    assertTrue(negativeScale.message.contains('scale must be >= 0'))
+
+    IllegalArgumentException scaleExceedsPrecision = assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().precision(5).scale(6).validate()
+    }
+    assertTrue(scaleExceedsPrecision.message.contains('scale (6) must not exceed precision (5)'))
+  }
+
+  @Test
+  void testWriteOptionsRejectInvalidDecimalMetaValues() {
+    IllegalArgumentException zeroPrecision = assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [0, 0] as int[]]])
+    }
+    assertTrue(zeroPrecision.message.contains("decimalMeta['amount'] precision must be > 0"))
+
+    IllegalArgumentException negativeScale = assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [10, -1] as int[]]])
+    }
+    assertTrue(negativeScale.message.contains("decimalMeta['amount'] scale must be >= 0"))
+
+    IllegalArgumentException scaleExceedsPrecision = assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [5, 6] as int[]]])
+    }
+    assertTrue(scaleExceedsPrecision.message.contains("decimalMeta['amount'] scale (6) must not exceed precision (5)"))
+  }
 }

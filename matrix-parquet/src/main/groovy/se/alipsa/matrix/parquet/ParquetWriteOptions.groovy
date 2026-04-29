@@ -61,6 +61,17 @@ class ParquetWriteOptions {
     if ((precision == null) != (scale == null)) {
       throw new IllegalArgumentException('precision and scale must be provided together')
     }
+    if (precision != null) {
+      if (precision <= 0) {
+        throw new IllegalArgumentException("precision must be > 0 but was $precision")
+      }
+      if (scale < 0) {
+        throw new IllegalArgumentException("scale must be >= 0 but was $scale")
+      }
+      if (scale > precision) {
+        throw new IllegalArgumentException("scale ($scale) must not exceed precision ($precision)")
+      }
+    }
     validateDecimalMeta(decimalMeta)
   }
 
@@ -130,7 +141,17 @@ class ParquetWriteOptions {
         throw new IllegalArgumentException(
             "decimalMeta['$columnName'] must be an int[] of length 2 [precision, scale] but was ${meta?.class}")
       }
-      validated[columnName] = meta as int[]
+      int[] ps = meta as int[]
+      if (ps[0] <= 0) {
+        throw new IllegalArgumentException("decimalMeta['$columnName'] precision must be > 0 but was ${ps[0]}")
+      }
+      if (ps[1] < 0) {
+        throw new IllegalArgumentException("decimalMeta['$columnName'] scale must be >= 0 but was ${ps[1]}")
+      }
+      if (ps[1] > ps[0]) {
+        throw new IllegalArgumentException("decimalMeta['$columnName'] scale (${ps[1]}) must not exceed precision (${ps[0]})")
+      }
+      validated[columnName] = ps
     }
     validated
   }

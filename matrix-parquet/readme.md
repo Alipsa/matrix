@@ -2,6 +2,43 @@
 
 This module enables import and export of [Apache Parquet](https://parquet.apache.org/) files to and from Matrix objects using `MatrixParquetWriter` and `MatrixParquetReader`.
 
+## At a Glance
+
+| Goal | Entry point |
+|------|-------------|
+| Read a file | `MatrixParquetReader.builder().read(file)` |
+| Write a file | `MatrixParquetWriter.builder(matrix).write(file)` |
+| Read via SPI | `Matrix.read(file)` |
+| Write via SPI | `matrix.write(file)` |
+| Discover read options | `Matrix.listReadOptions('parquet')` / `ParquetReadOptions.describe()` |
+| Discover write options | `Matrix.listWriteOptions('parquet')` / `ParquetWriteOptions.describe()` |
+
+## API Surface
+
+**Direct API (recommended)**
+- `MatrixParquetReader.builder()` — fluent reader with `.matrixName()`, `.zoneId()`, `.read(File/Path/URL/InputStream/byte[])` 
+- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
+
+**SPI (generic Matrix API)**
+- `Matrix.read(options, file)` — options map with keys `matrixName`, `zoneId`
+- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `zoneId`
+
+**Typed options classes**
+- `ParquetReadOptions` — typed options for reading; use `ParquetReadOptions.describe()` for runtime discovery
+- `ParquetWriteOptions` — typed options for writing; use `ParquetWriteOptions.describe()` for runtime discovery
+
+## Default Behavior
+
+**Reading**
+- Matrix name: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
+- Timezone: system default; override with `zoneId` option
+
+**Writing**
+- Parquet message type name: `matrix.matrixName` when present, otherwise `MatrixSchema`
+- BigDecimal: precision and scale are inferred from the data by default (`inferPrecisionAndScale = true`)
+- Timezone: system default; override with `zoneId` option
+- Nested Map columns: stored as MAP when value types are homogeneous, as STRUCT when heterogeneous
+
 ## Installation
 
 Add the following to your Gradle build script:
