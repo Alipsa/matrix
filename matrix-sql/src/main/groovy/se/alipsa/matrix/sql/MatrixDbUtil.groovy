@@ -26,6 +26,10 @@ import java.util.stream.IntStream
 // @CompileStatic
 class MatrixDbUtil {
 
+  static final int DEFAULT_VARCHAR_SIZE = 255
+  static final int DEFAULT_DECIMAL_PRECISION = 38
+  static final int DEFAULT_DECIMAL_SCALE = 10
+
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
   SqlTypeMapper mapper
@@ -77,7 +81,7 @@ class MatrixDbUtil {
       throw e
     }
     try {
-      result.inserted = insert(con, tableName, table)
+      result.inserted = insert(con, tableName, table, addQuotes)
     } catch (SQLException e) {
       log.error("Failed to insert data to table $tableName: ${e.message}", e)
       throw e
@@ -96,22 +100,20 @@ class MatrixDbUtil {
    * @return the create table ddl statement
    */
   String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes, String... primaryKey) {
-    String sql = "create table $tableName (\n"
+    String sql = "create table ${SqlIdentifier.renderTable(tableName, addQuotes)} (\n"
 
-    List<String> columns = new ArrayList<>()
+    List<String> columns = []
     int i = 0
     List<Class> types = table.types()
     for (String name : table.columnNames()) {
       Class type = types.get(i++)
-      if (addQuotes) {
-        columns.add("\"" + name + "\" " + mapper.sqlType(type, props[name]))
-      } else {
-        columns.add(name + " " + mapper.sqlType(type, props[name]))
-      }
+      columns.add("${SqlIdentifier.render(name, addQuotes)} ${mapper.sqlType(type, props[name])}")
     }
     sql += String.join(",\n", columns)
     if (primaryKey.length > 0) {
-      sql += "\n , CONSTRAINT pk_" + table.getMatrixName() + " PRIMARY KEY (\"" + String.join("\", \"", primaryKey) + "\")"
+      sql += "\n , CONSTRAINT ${SqlIdentifier.constraintName('pk', tableName, addQuotes)} PRIMARY KEY ("
+      sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(', ')
+      sql += ")"
     }
     sql += "\n)"
     sql
@@ -182,8 +184,9 @@ class MatrixDbUtil {
             right = val.scale()
           }
         }
-        props.put(DECIMAL_PRECISION, left + right)
-        props.put(DECIMAL_SCALE, right)
+        Integer precision = left + right
+        props.put(DECIMAL_PRECISION, precision > 0 ? precision : DEFAULT_DECIMAL_PRECISION)
+        props.put(DECIMAL_SCALE, precision > 0 ? right : DEFAULT_DECIMAL_SCALE)
       } else if (type == String) {
         Integer maxLength = 0
         for (int r = 0; r < rowsToScan; r++) {
@@ -195,7 +198,7 @@ class MatrixDbUtil {
             maxLength = val.length()
           }
         }
-        props.put(VARCHAR_SIZE, maxLength)
+        props.put(VARCHAR_SIZE, DEFAULT_VARCHAR_SIZE.max(maxLength))
       }
       mappings.put(name, props)
     }
@@ -222,7 +225,7 @@ class MatrixDbUtil {
    * @return the result of the drop operation
    */
   Object dropTable(Connection con, String tableName) {
-    dbExecuteSql(con, "drop table $tableName")
+    dbExecuteSql(con, "drop table ${SqlIdentifier.renderTable(tableName)}")
   }
 
   /**
@@ -322,7 +325,21 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   int insert(Connection con, String tableName, Matrix table) throws SQLException {
-    String insertSql = SqlGenerator.createPreparedInsertSql(tableName, table)
+    insert(con, tableName, table, true)
+  }
+
+  /**
+   * Insert the data from the given table into the given table in the database.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to insert into
+   * @param table the table containing the data to insert
+   * @param addQuotes whether to quote identifiers
+   * @return the number of inserted rows
+   * @throws SQLException if any sql error occurs
+   */
+  int insert(Connection con, String tableName, Matrix table, boolean addQuotes) throws SQLException {
+    String insertSql = SqlGenerator.createPreparedInsertSql(tableName, table, addQuotes)
     try(PreparedStatement stm = con.prepareStatement(insertSql)) {
       for (Row row : table) {
         int i = 1
@@ -348,9 +365,9 @@ class MatrixDbUtil {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Matrix name is required but was '$name'")
     }
-    name.replace(".", "_")
-        .replace("-", "_")
-        .replace("*", "")
+    name.replaceAll(/[^A-Za-z0-9_ ]/, '_')
+        .replaceAll(/_+/, '_')
+        .replaceAll(/^_+|_+$/, '')
   }
 
   /**

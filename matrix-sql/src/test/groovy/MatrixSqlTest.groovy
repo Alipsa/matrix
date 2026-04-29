@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.sql.MatrixSqlFactory
+import se.alipsa.matrix.sql.SqlIdentifier
 
 import java.sql.Connection
 import java.sql.ResultSet
@@ -255,5 +256,62 @@ class MatrixSqlTest {
       assertEquals(ci.url, h2.connectionInfo.url, "Urls does not match")
     }
     assertEquals(ddl1, ddl2)
+  }
+
+  @Test
+  void testGeneratedSqlHandlesQuotedIdentifiers() {
+    Matrix data = Matrix.builder('odd table-name*').data([
+        'id': [1],
+        'first name': ['Alice'],
+        'select': ['reserved'],
+        'MiXeD': ['Case'],
+        'quote " col': ['quoted']
+    ])
+    .types(int, String, String, String, String)
+    .build()
+
+    String url = h2MemUrl('quoted_identifiers', 'DATABASE_TO_UPPER=FALSE')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      matrixSql.create(data, 'id')
+      assertTrue(matrixSql.tableExists(tableName))
+
+      Matrix extra = Matrix.builder('extra').data([
+          'id': [2],
+          'first name': ['Beatrice'],
+          'select': ['second'],
+          'MiXeD': ['Camel'],
+          'quote " col': ['embedded']
+      ])
+      .types(int, String, String, String, String)
+      .build()
+      assertEquals(1, matrixSql.insert(tableName, extra.row(0)))
+
+      Row changed = extra.row(0)
+      changed['first name'] = 'Bob'
+      changed['select'] = 'updated'
+      changed['MiXeD'] = 'StillMixed'
+      changed['quote " col'] = 'still " quoted'
+      assertEquals(1, matrixSql.update(tableName, changed, 'id'))
+
+      Matrix stored = matrixSql.select("""
+        select ${SqlIdentifier.quote('id')},
+               ${SqlIdentifier.quote('first name')},
+               ${SqlIdentifier.quote('select')},
+               ${SqlIdentifier.quote('MiXeD')},
+               ${SqlIdentifier.quote('quote " col')}
+        from ${SqlIdentifier.quote(tableName)}
+        order by ${SqlIdentifier.quote('id')}
+      """)
+      assertEquals(2, stored.rowCount())
+      assertEquals('Alice', stored[0, 'first name'])
+      assertEquals('Bob', stored[1, 'first name'])
+      assertEquals('updated', stored[1, 'select'])
+      assertEquals('StillMixed', stored[1, 'MiXeD'])
+      assertEquals('still " quoted', stored[1, 'quote " col'])
+
+      matrixSql.dropTable(tableName)
+      assertFalse(matrixSql.tableExists(tableName))
+    }
   }
 }

@@ -52,11 +52,29 @@ class SqlGenerator {
    * @return the SQL update statement with placeholders
    */
   static String createPreparedUpdateSql(String tableName, List<String> updateColumns, List<String> matchColumns) {
-    String sql = "update " + tableName + " set "
-    sql += updateColumns.collect { "${it} = ?" }.join(", ")
+    createPreparedUpdateSql(tableName, updateColumns, matchColumns, true)
+  }
+
+  /**
+   * Create a prepared update statement (with placeholders).
+   *
+   * @param tableName the table name
+   * @param updateColumns columns to update in the SET clause
+   * @param matchColumns columns to match in the WHERE clause
+   * @param addQuotes whether to quote identifiers
+   * @return the SQL update statement with placeholders
+   */
+  static String createPreparedUpdateSql(
+      String tableName,
+      List<String> updateColumns,
+      List<String> matchColumns,
+      boolean addQuotes
+  ) {
+    String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
+    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(", ")
     sql += " where "
-    sql += matchColumns.collect { "${it} = ?" }.join(" and ")
-    return sql
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(" and ")
+    sql
   }
 
   /**
@@ -67,9 +85,9 @@ class SqlGenerator {
    * @return update column names
    */
   static List<String> updateColumnNames(List<String> columnNames, List<String> matchColumns) {
-    List<String> updateColumns = new ArrayList<>(columnNames)
+    List<String> updateColumns = [] + columnNames
     updateColumns.removeAll(matchColumns)
-    return updateColumns
+    updateColumns
   }
 
   /**
@@ -81,10 +99,10 @@ class SqlGenerator {
    * @return ordered list of parameter values
    */
   static List<Object> updateValues(Row row, List<String> updateColumns, List<String> matchColumns) {
-    List<Object> values = new ArrayList<>(updateColumns.size() + matchColumns.size())
+    List<Object> values = []
     updateColumns.each { values.add(row[it]) }
     matchColumns.each { values.add(row[it]) }
-    return values
+    values
   }
 
   /**
@@ -93,38 +111,39 @@ class SqlGenerator {
    * @deprecated use {@link #createPreparedUpdate(String, Row, String[])}
    */
   static String createUpdateSql(String tableName, Row row, String[] matchColumnName) {
-    return createPreparedUpdate(tableName, row, matchColumnName).sql
+    createPreparedUpdate(tableName, row, matchColumnName).sql
   }
 
   static String createPreparedInsertSql(String tableName, Matrix table) {
-    StringBuilder sql = new StringBuilder("insert into " + tableName + " ( ")
-    List<String> columnNames = table.columnNames()
+    createPreparedInsertSql(tableName, table, true)
+  }
 
-    sql.append('"').append(String.join('", "', columnNames)).append('"')
+  static String createPreparedInsertSql(String tableName, Matrix table, boolean addQuotes) {
+    StringBuilder sql = new StringBuilder("insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( ")
+    List<String> columnNames = table.columnNames()
+    String placeholders = (['?'] * columnNames.size()).join(', ')
+
+    sql.append(SqlIdentifier.renderAll(columnNames, addQuotes).join(', '))
     sql.append(' ) values ( ')
-    List<String> values = new ArrayList<>()
-    columnNames.forEach(n -> {
-      values.add('?')
-    })
-    sql.append(String.join(", ", values))
+    sql.append(placeholders)
     sql.append(' ) ')
-    return sql.toString()
+    sql.toString()
   }
 
   static String createPreparedInsertSql(String tableName, Row row) {
-    String sql = "insert into " + tableName + " ( "
+    createPreparedInsertSql(tableName, row, true)
+  }
+
+  static String createPreparedInsertSql(String tableName, Row row, boolean addQuotes) {
+    String sql = "insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( "
     List<String> columnNames = row.columnNames()
+    String placeholders = (['?'] * columnNames.size()).join(', ')
 
-    sql += "\"" + String.join("\", \"", columnNames) + "\""
+    sql += SqlIdentifier.renderAll(columnNames, addQuotes).join(', ')
     sql += " ) values ( "
-
-    List<String> values = new ArrayList<>()
-    columnNames.forEach(n -> {
-      values.add('?')
-    })
-    sql += String.join(", ", values)
-    sql += " ); "
-    return sql
+    sql += placeholders
+    sql += " ) "
+    sql
   }
 
 }
