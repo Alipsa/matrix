@@ -30,7 +30,7 @@ class ParquetFormatProviderTest {
   void testSpiWriteAndReadRoundTrip() {
     Matrix source = Matrix.builder('payments')
         .columns(
-            amount: [new BigDecimal('12.30'), new BigDecimal('45.67')],
+            amount: [12.30, 45.67],
             createdAt: [
                 LocalDateTime.of(2024, 1, 2, 10, 30, 45, 123_000_000),
                 LocalDateTime.of(2024, 1, 3, 11, 15, 0, 0)
@@ -45,7 +45,7 @@ class ParquetFormatProviderTest {
     Matrix matrix = Matrix.read([matrixName: 'loaded-payments', zoneId: 'Europe/Stockholm'], file)
     assertEquals('loaded-payments', matrix.matrixName)
     assertEquals(source.columnNames(), matrix.columnNames())
-    assertEquals(new BigDecimal('12.30'), matrix[0, 'amount'])
+    assertEquals(12.30, matrix[0, 'amount'])
     assertEquals(source[0, 'createdAt'], matrix[0, 'createdAt'])
   }
 

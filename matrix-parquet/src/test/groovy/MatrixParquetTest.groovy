@@ -130,7 +130,7 @@ class MatrixParquetTest {
   @Test
   void testMatrixParquetPrecisionOverflow() {
     def empData = Matrix.builder('empData').columns(
-        salary: [623.30 as BigDecimal]
+        salary: [623.30]
     ).types([BigDecimal]).build()
 
     File file = tempDir.resolve('empData_invalid.parquet').toFile()
@@ -140,9 +140,9 @@ class MatrixParquetTest {
 
     // Expect an exception (usually IllegalArgumentException or similar) when the writer
     // attempts to store the value which exceeds the defined FIXED_LEN_BYTE_ARRAY size.
-    Exception exception = assertThrows(Exception.class, {
+    Exception exception = assertThrows(Exception) {
       MatrixParquetWriter.write(empData, file, [salary: [4, 2]])
-    })
+    }
 
     // Assert that the exception message indicates a precision overflow error
     String message = exception.getMessage() ?: ""
@@ -266,46 +266,46 @@ class MatrixParquetTest {
     File file = tempDir.resolve('validation_test.parquet').toFile()
 
     // Test null matrix
-    def nullMatrixEx = assertThrows(IllegalArgumentException, {
+    def nullMatrixEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(null, file)
-    })
+    }
     assertTrue(nullMatrixEx.message.contains("Matrix cannot be null"))
 
     // Test empty matrix (no columns)
     def emptyMatrix = Matrix.builder('empty').build()
-    def emptyMatrixEx = assertThrows(IllegalArgumentException, {
+    def emptyMatrixEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(emptyMatrix, file)
-    })
+    }
     assertTrue(emptyMatrixEx.message.contains("at least one column"))
 
     // Test null file
     def validMatrix = Matrix.builder('test').columns(id: [1, 2, 3]).types([Integer]).build()
-    def nullFileEx = assertThrows(IllegalArgumentException, {
+    def nullFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(validMatrix, null)
-    })
+    }
     assertTrue(nullFileEx.message.contains("File or directory cannot be null"))
   }
 
   @Test
   void testReaderValidation() {
     // Test null file
-    def nullFileEx = assertThrows(IllegalArgumentException, {
+    def nullFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read((File) null)
-    })
+    }
     assertTrue(nullFileEx.message.contains("File cannot be null"))
 
     // Test non-existent file
     def nonExistentFile = tempDir.resolve('does_not_exist.parquet').toFile()
-    def noFileEx = assertThrows(IllegalArgumentException, {
+    def noFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(nonExistentFile)
-    })
+    }
     assertTrue(noFileEx.message.contains("does not exist"))
 
     // Test directory instead of file
     def dir = tempDir.toFile()
-    def dirEx = assertThrows(IllegalArgumentException, {
+    def dirEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(dir)
-    })
+    }
     assertTrue(dirEx.message.contains("directory"))
   }
 
@@ -372,9 +372,9 @@ class MatrixParquetTest {
     assertIterableEquals(data.types(), matrix4.types(), "Types should match")
 
     // Test null content validation
-    def nullContentEx = assertThrows(IllegalArgumentException, {
+    def nullContentEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read((byte[]) null)
-    })
+    }
     assertTrue(nullContentEx.message.contains("Content cannot be null"))
   }
 
@@ -434,15 +434,15 @@ class MatrixParquetTest {
     assertEquals(dateTime, readNy.event_time[0], "LocalDateTime should round-trip with NY timezone")
 
     // Test null ZoneId validation in writer
-    def writerNullEx = assertThrows(IllegalArgumentException, {
+    def writerNullEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(data, file, (ZoneId) null)
-    })
+    }
     assertTrue(writerNullEx.message.contains("ZoneId cannot be null"))
 
     // Test null ZoneId validation in reader
-    def readerNullEx = assertThrows(IllegalArgumentException, {
+    def readerNullEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(file, (ZoneId) null)
-    })
+    }
     assertTrue(readerNullEx.message.contains("ZoneId cannot be null"))
   }
 
@@ -775,7 +775,7 @@ class MatrixParquetTest {
         name: ['A', 'B']
     ).types([Integer, String]).build()
 
-    java.nio.file.Path path = tempDir.resolve('path_write.parquet')
+    Path path = tempDir.resolve('path_write.parquet')
 
     MatrixParquetWriter.builder(data).write(path)
     assertTrue(java.nio.file.Files.exists(path))
@@ -898,8 +898,8 @@ class MatrixParquetTest {
     Matrix result = MatrixParquetReader.read(file)
 
     assertEquals(data, result, 'Negative BigDecimal values should round-trip correctly')
-    assertEquals(new BigDecimal('-123.45'), result.amount[0])
-    assertEquals(new BigDecimal('-0.01'), result.amount[1])
+    assertEquals(-123.45, result.amount[0])
+    assertEquals(-0.01, result.amount[1])
   }
 
   @Test

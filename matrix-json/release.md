@@ -1,6 +1,6 @@
 # Matrix-Json Release history
 
-## v2.2.0, In progress
+## v2.2.0, 2026-04-29
 - add fluent `WriteBuilder` API for `JsonWriter`: `JsonWriter.write(matrix).indent().to(file)`
 - add matrix name derivation from file/URL in `JsonReader`
 - add `matrixName` option to `JsonReadOptions` to override file-derived name
