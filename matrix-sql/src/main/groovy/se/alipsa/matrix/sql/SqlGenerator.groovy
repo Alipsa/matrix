@@ -121,14 +121,11 @@ class SqlGenerator {
   static String createPreparedInsertSql(String tableName, Matrix table, boolean addQuotes) {
     StringBuilder sql = new StringBuilder("insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( ")
     List<String> columnNames = table.columnNames()
+    String placeholders = (['?'] * columnNames.size()).join(', ')
 
     sql.append(SqlIdentifier.renderAll(columnNames, addQuotes).join(', '))
     sql.append(' ) values ( ')
-    List<String> values = []
-    columnNames.forEach(n -> {
-      values.add('?')
-    })
-    sql.append(String.join(", ", values))
+    sql.append(placeholders)
     sql.append(' ) ')
     sql.toString()
   }
@@ -140,15 +137,11 @@ class SqlGenerator {
   static String createPreparedInsertSql(String tableName, Row row, boolean addQuotes) {
     String sql = "insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( "
     List<String> columnNames = row.columnNames()
+    String placeholders = (['?'] * columnNames.size()).join(', ')
 
     sql += SqlIdentifier.renderAll(columnNames, addQuotes).join(', ')
     sql += " ) values ( "
-
-    List<String> values = []
-    columnNames.forEach(n -> {
-      values.add('?')
-    })
-    sql += String.join(", ", values)
+    sql += placeholders
     sql += " ) "
     sql
   }

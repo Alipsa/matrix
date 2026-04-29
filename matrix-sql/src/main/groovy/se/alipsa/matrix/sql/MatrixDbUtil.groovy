@@ -365,9 +365,9 @@ class MatrixDbUtil {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Matrix name is required but was '$name'")
     }
-    name.replace(".", "_")
-        .replace("-", "_")
-        .replace("*", "")
+    name.replaceAll(/[^A-Za-z0-9_ ]/, '_')
+        .replaceAll(/_+/, '_')
+        .replaceAll(/^_+|_+$/, '')
   }
 
   /**

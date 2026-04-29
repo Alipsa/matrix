@@ -77,6 +77,17 @@ class MatrixDbUtilTest {
   }
 
   @Test
+  void testTableNameSanitizesUnsafeCharacters() {
+    Matrix m = Matrix.builder('fun(data) with \'quotes\' and *stuff*').data([
+        id: [1]
+    ])
+    .types(int)
+    .build()
+
+    assertEquals('fun_data_ with _quotes_ and _stuff', MatrixDbUtil.tableName(m))
+  }
+
+  @Test
   void testCreateMappingsClampsScanRows() {
     Matrix m = Matrix.builder('small').data([
         name: ['abc'],
