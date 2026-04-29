@@ -2819,13 +2819,14 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Date getDate(int columnIndex, Calendar cal) throws SQLException {
-    def val = readValue(columnIndex)
+    int idx = checkedColumnIndex(columnIndex)
+    def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      // assume we are storing millis
       lastReadValue = new Date(val + cal.getTimeZone().getOffset(0) as long)
-      return lastReadValue as Date
+    } else {
+      lastReadValue = matrix[rowIdx, idx, Date]
     }
-    lastReadValue = val as Date
+    return lastReadValue as Date
   }
 
   /**
@@ -2873,13 +2874,14 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Time getTime(int columnIndex, Calendar cal) throws SQLException {
-    def val = readValue(columnIndex)
+    int idx = checkedColumnIndex(columnIndex)
+    def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      // assume we are storing millis
       lastReadValue = new Time(val + cal.getTimeZone().getOffset(0) as long)
-      return lastReadValue as Time
+    } else {
+      lastReadValue = matrix[rowIdx, idx, Time]
     }
-    lastReadValue = val as Time
+    return lastReadValue as Time
   }
 
   /**
@@ -2927,13 +2929,14 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
-    def val = readValue(columnIndex)
+    int idx = checkedColumnIndex(columnIndex)
+    def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      // assume we are storing millis
       lastReadValue = new Timestamp(val + cal.getTimeZone().getOffset(0) as long)
-      return lastReadValue as Timestamp
+    } else {
+      lastReadValue = matrix[rowIdx, idx, Timestamp]
     }
-    lastReadValue = val as Timestamp
+    return lastReadValue as Timestamp
   }
 
   /**

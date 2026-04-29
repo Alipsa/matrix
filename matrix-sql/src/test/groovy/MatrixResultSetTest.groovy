@@ -146,6 +146,29 @@ class MatrixResultSetTest {
 
     assertNull(rs.getDate('missingDate', calendar))
     assertTrue(rs.wasNull())
+    assertNull(rs.getTime('missingDate', calendar))
+    assertTrue(rs.wasNull())
+    assertNull(rs.getTimestamp('missingDate', calendar))
+    assertTrue(rs.wasNull())
+  }
+
+  @Test
+  void testCalendarGettersConvertStringStoredTemporalValues() {
+    Matrix matrix = Matrix.builder('stringTemporal').data([
+        d: ['2026-04-29'],
+        t: ['12:34:56'],
+        ts: ['2026-04-29 12:34:56']
+    ])
+    .types(String, String, String)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+
+    assertEquals(Date.valueOf('2026-04-29'), rs.getDate(1, cal))
+    assertEquals(Time.valueOf('12:34:56'), rs.getTime(2, cal))
+    assertEquals(Timestamp.valueOf('2026-04-29 12:34:56'), rs.getTimestamp(3, cal))
   }
 
   @Test
