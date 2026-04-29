@@ -34,6 +34,7 @@ class MatrixSql implements Closeable {
   private SqlTypeMapper mapper
   private MatrixDbUtil matrixDbUtil
   private Connection con
+  private boolean closeConnectionOnClose = true
 
   MatrixSql(ConnectionInfo ci) {
     check(ci)
@@ -49,9 +50,37 @@ class MatrixSql implements Closeable {
     matrixDbUtil = new MatrixDbUtil(mapper)
   }
 
+  /**
+   * Create a MatrixSql instance that wraps an externally managed connection.
+   * The connection will NOT be closed when {@link #close()} is called.
+   *
+   * @param connection the externally managed database connection
+   * @param dbProvider the database provider used for type mapping
+   */
+  MatrixSql(Connection connection, DataBaseProvider dbProvider) {
+    this.con = connection
+    this.mapper = SqlTypeMapper.create(dbProvider)
+    this.matrixDbUtil = new MatrixDbUtil(mapper)
+    this.closeConnectionOnClose = false
+  }
+
+  /**
+   * Create a MatrixSql instance that wraps an externally managed connection.
+   * The connection will NOT be closed when {@link #close()} is called.
+   *
+   * @param connection the externally managed database connection
+   * @param mapper the SQL type mapper to use
+   */
+  MatrixSql(Connection connection, SqlTypeMapper mapper) {
+    this.con = connection
+    this.mapper = mapper
+    this.matrixDbUtil = new MatrixDbUtil(mapper)
+    this.closeConnectionOnClose = false
+  }
+
   @Override
   void close() throws SQLException {
-    if (con != null) {
+    if (closeConnectionOnClose && con != null) {
       con.close()
     }
     con = null
@@ -61,14 +90,40 @@ class MatrixSql implements Closeable {
     matrixDbUtil.select(connect(), sqlQuery).withMatrixName(matrixName)
   }
 
+  Matrix select(String sqlQuery, List params, String matrixName = 'myMatrix') throws SQLException {
+    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+      int i = 1
+      params.each {
+        stm.setObject(i++, it)
+      }
+      try (ResultSet rs = stm.executeQuery()) {
+        return Matrix.builder().data(rs).build().withMatrixName(matrixName)
+      }
+    }
+  }
+
   int update(String sqlQuery) {
     dbUpdate(sqlQuery)
+  }
+
+  int update(String sqlQuery, List params) throws SQLException {
+    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+      int i = 1
+      params.each {
+        stm.setObject(i++, it)
+      }
+      return stm.executeUpdate()
+    }
   }
 
   private int dbUpdate(String sqlQuery) throws SQLException  {
     try(Statement stm = connect().createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)
     }
+  }
+
+  int update(String tableName, Row row) throws SQLException {
+    update(tableName, row, new String[0])
   }
 
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
@@ -99,6 +154,16 @@ class MatrixSql implements Closeable {
   Map<Integer, Object> execute(String sqlQuery) throws SQLException {
     try(Statement stm = connect().createStatement()) {
       return dbExecute(stm, sqlQuery)
+    }
+  }
+
+  Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
+    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+      int i = 1
+      params.each {
+        stm.setObject(i++, it)
+      }
+      return dbExecute(stm)
     }
   }
 
@@ -244,6 +309,10 @@ class MatrixSql implements Closeable {
     insert(tableName(table), row)
   }
 
+  int insert(String tableName, Matrix table) throws SQLException {
+    matrixDbUtil.insert(connect(), tableName, table)
+  }
+
   int insert(Matrix table) throws SQLException {
     return matrixDbUtil.insert(connect(), table)
   }
@@ -254,11 +323,29 @@ class MatrixSql implements Closeable {
     }
   }
 
+  int delete(String sql, List params) throws SQLException {
+    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+      int i = 1
+      params.each {
+        stm.setObject(i++, it)
+      }
+      return stm.executeUpdate()
+    }
+  }
+
   static Map<Integer, Object> dbExecute(Statement stm, String sqlQuery) throws SQLException {
+    return dbExecuteResults(stm, stm.execute(sqlQuery))
+  }
+
+  static Map<Integer, Object> dbExecute(PreparedStatement stm) throws SQLException {
+    return dbExecuteResults(stm, stm.execute())
+  }
+
+  private static Map<Integer, Object> dbExecuteResults(Statement stm, boolean initialIsResultSet) throws SQLException {
     Map<Integer, Object> allResults = [:]
     int index = 0
 
-    boolean isResultSet = stm.execute(sqlQuery)
+    boolean isResultSet = initialIsResultSet
     do {
       if (isResultSet) {
         try (ResultSet rs = stm.getResultSet()) {
@@ -319,15 +406,19 @@ class MatrixSql implements Closeable {
   }
 
   synchronized Connection connect() throws SQLException {
-    if (con == null || con.isClosed()) {
-      String url = ci.getUrl().toLowerCase()
-      if (!url.contains(':h2:') && !url.contains(':derby:')
-          && isBlank(ci.getPassword()) && !url.contains("passw")
-          && !url.contains("integratedsecurity=true")) {
-        log.warn("Password probably required to ${ci.getName()} for ${ci.getUser()}")
-      }
-      con = dbConnect(ci)
+    if (con != null && !con.isClosed()) {
+      return con
     }
+    if (ci == null) {
+      throw new SQLException("Connection is not available and no ConnectionInfo is configured to create one")
+    }
+    String url = ci.getUrl().toLowerCase()
+    if (!url.contains(':h2:') && !url.contains(':derby:')
+        && isBlank(ci.getPassword()) && !url.contains("passw")
+        && !url.contains("integratedsecurity=true")) {
+      log.warn("Password probably required to ${ci.getName()} for ${ci.getUser()}")
+    }
+    con = dbConnect(ci)
     con
   }
 

@@ -6,6 +6,7 @@ import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
@@ -256,6 +257,104 @@ class MatrixSqlTest {
       assertEquals(ci.url, h2.connectionInfo.url, "Urls does not match")
     }
     assertEquals(ddl1, ddl2)
+  }
+
+  @Test
+  void testPreparedParameterSelectUpdateDeleteExecute() {
+    Matrix data = Matrix.builder('people').data([
+        id: [1, 2, 3],
+        name: ['Alice', 'Bob', 'Charlie']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('prep_testdb', 'DATABASE_TO_UPPER=FALSE')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data)
+
+      // Prepared select
+      Matrix result = matrixSql.select("select * from $tableName where id > ?", [1], 'result')
+      assertEquals('result', result.matrixName)
+      assertEquals(2, result.rowCount())
+      assertEquals('Bob', result[0, 'name'])
+
+      // Prepared update
+      int updated = matrixSql.update("update $tableName set name = ? where id = ?", ['Robert', 2])
+      assertEquals(1, updated)
+
+      // Verify update
+      Matrix afterUpdate = matrixSql.select("select * from $tableName where id = ?", [2])
+      assertEquals('Robert', afterUpdate[0, 'name'])
+
+      // Prepared delete
+      int deleted = matrixSql.delete("delete from $tableName where id = ?", [3])
+      assertEquals(1, deleted)
+
+      // Verify delete
+      Matrix afterDelete = matrixSql.select("select * from $tableName")
+      assertEquals(2, afterDelete.rowCount())
+
+      // Prepared execute (update)
+      Map<Integer, Object> execResult = matrixSql.execute("update $tableName set name = ? where id = ?", ['Bobby', 2])
+      assertEquals(1, execResult[0])
+
+      // Prepared execute (select)
+      Map<Integer, Object> execSelect = matrixSql.execute("select * from $tableName where id = ?", [1])
+      assertTrue(execSelect[0] instanceof Matrix)
+      assertEquals(1, ((Matrix) execSelect[0]).rowCount())
+    }
+  }
+
+  @Test
+  void testInsertMatrixWithExplicitTableName() {
+    Matrix data = Matrix.builder('people').data([
+        id: [1],
+        name: ['Alice']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('insert_matrix_testdb', 'DATABASE_TO_UPPER=FALSE')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data)
+
+      Matrix extra = Matrix.builder('extra').data([
+          id: [2],
+          name: ['Bob']
+      ])
+      .types(int, String)
+      .build()
+
+      assertEquals(1, matrixSql.insert(tableName, extra))
+
+      Matrix stored = matrixSql.select("select * from $tableName order by id")
+      assertEquals(2, stored.rowCount())
+      assertEquals('Alice', stored[0, 'name'])
+      assertEquals('Bob', stored[1, 'name'])
+    }
+  }
+
+  @Test
+  void testManagedConnectionDoesNotCloseExternallyOwnedConnection() {
+    String url = h2MemUrl('managed_con_testdb')
+    MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')
+    try {
+      Connection con = owner.connect()
+      MatrixSql managed = new MatrixSql(con, DataBaseProvider.H2)
+      assertFalse(con.isClosed(), 'Expected external connection to be open')
+      managed.close()
+      assertFalse(con.isClosed(), 'Expected external connection to remain open after MatrixSql.close()')
+    } finally {
+      owner.close()
+    }
   }
 
   @Test
