@@ -2,6 +2,7 @@ package chart
 
 import static org.junit.jupiter.api.Assertions.*
 
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -43,6 +44,10 @@ class BoxChartTest {
 
   @Test
   void testJfxBoxChartRendering() {
+    Assumptions.assumeTrue(
+        System.getenv('DISPLAY') != null || Boolean.getBoolean('headless'),
+        'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
+    )
     def data = Matrix.builder().matrixName('BoxData').columns([
         group: ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
                 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],

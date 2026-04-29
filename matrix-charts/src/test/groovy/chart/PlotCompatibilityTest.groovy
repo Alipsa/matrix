@@ -2,6 +2,7 @@ package chart
 
 import static org.junit.jupiter.api.Assertions.*
 
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -170,6 +171,10 @@ class PlotCompatibilityTest {
 
   @Test
   void testJfxReturnsJavafxNode() {
+    Assumptions.assumeTrue(
+        System.getenv('DISPLAY') != null || Boolean.getBoolean('headless'),
+        'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
+    )
     Matrix data = sampleData()
     ScatterChart chart = ScatterChart.create('JFX Test', data, 'category', 'value')
     javafx.scene.Node node = Plot.jfx(chart)

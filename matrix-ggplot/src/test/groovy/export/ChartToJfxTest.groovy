@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 
 import org.girod.javafx.svgimage.SVGImage
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import testutil.Slow
 
@@ -19,6 +21,21 @@ import se.alipsa.matrix.gg.export.GgExport
 
 @Slow
 class ChartToJfxTest {
+
+  @BeforeAll
+  static void setup() {
+    if (Boolean.getBoolean('headless')) {
+      System.setProperty('testfx.robot', 'glass')
+      System.setProperty('testfx.headless', 'true')
+      System.setProperty('prism.order', 'sw')
+      System.setProperty('prism.text', 't2k')
+    } else {
+      Assumptions.assumeTrue(
+          System.getenv('DISPLAY') != null,
+          'No DISPLAY available; skipping JavaFX tests. Run with -Pheadless=true for headless mode.'
+      )
+    }
+  }
 
   @Test
   void testExportFromString() {
