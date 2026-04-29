@@ -2979,7 +2979,9 @@ class MatrixResultSet implements ResultSet{
   @Override
   URL getURL(int columnIndex) throws SQLException {
     try {
-      new URL(matrix[rowIdx, columnIndex - 1, String])
+      String val = readValue(columnIndex, String)
+      lastReadValue = val
+      val == null ? null : new URL(val)
     } catch (MalformedURLException e) {
       throw new SQLException(e.getMessage(), e)
     }
@@ -3003,7 +3005,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   URL getURL(String columnLabel) throws SQLException {
-    getURL(matrix.columnIndex(columnLabel) +1)
+    getURL(findColumn(columnLabel))
   }
 
   /**

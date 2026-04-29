@@ -149,6 +149,50 @@ class MatrixResultSetTest {
   }
 
   @Test
+  void testGetURLRoutesThroughGuardsAndUpdatesLastReadValue() {
+    Matrix matrix = Matrix.builder('urls').data([
+        site: ['https://example.com', null]
+    ])
+    .types(String)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+
+    // Cursor before first row should throw
+    assertThrows(SQLException) { rs.getURL(1) }
+    assertThrows(SQLException) { rs.getURL('site') }
+
+    assertTrue(rs.next())
+
+    // Valid access by index and label
+    assertEquals(new URL('https://example.com'), rs.getURL(1))
+    assertFalse(rs.wasNull())
+    assertEquals(new URL('https://example.com'), rs.getURL('site'))
+    assertFalse(rs.wasNull())
+
+    // Null value
+    assertTrue(rs.next())
+    assertNull(rs.getURL(1))
+    assertTrue(rs.wasNull())
+    assertNull(rs.getURL('site'))
+    assertTrue(rs.wasNull())
+
+    // Invalid column index and label
+    assertThrows(SQLException) { rs.getURL(0) }
+    assertThrows(SQLException) { rs.getURL(2) }
+    assertThrows(SQLException) { rs.getURL('missing') }
+
+    // After last row
+    assertFalse(rs.next())
+    assertThrows(SQLException) { rs.getURL(1) }
+
+    // Closed result set
+    rs.close()
+    assertThrows(SQLException) { rs.getURL(1) }
+    assertThrows(SQLException) { rs.getURL('site') }
+  }
+
+  @Test
   void testWrapperContracts() {
     Matrix matrix = Matrix.builder('wrap').data([
         name: ['x']
