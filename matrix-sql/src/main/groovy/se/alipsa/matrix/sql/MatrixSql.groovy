@@ -140,22 +140,17 @@ class MatrixSql implements Closeable {
   }
 
   /**
-   * Update all rows in the given table with the values from the given row.
+   * Update a row in the given table. This overload delegates to
+   * {@link #update(String, Row, String...)} with an empty matchColumnName array,
+   * which will throw {@link IllegalArgumentException} because match columns are required.
    *
    * @param tableName the name of the table to update
-   * @param row the row data to apply to all rows
-   * @return the number of rows affected
+   * @param row the row data to update
    * @throws SQLException if a database access error occurs
+   * @throws IllegalArgumentException because matchColumnName is required
    */
   int update(String tableName, Row row) throws SQLException {
-    String sql = SqlGenerator.createPreparedUpdateSql(tableName, row.columnNames(), true)
-    try(PreparedStatement stm = connect().prepareStatement(sql)) {
-      int i = 1
-      row.each {
-        stm.setObject(i++, it)
-      }
-      return stm.executeUpdate()
-    }
+    update(tableName, row, new String[0])
   }
 
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {

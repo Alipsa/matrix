@@ -78,20 +78,6 @@ class SqlGenerator {
   }
 
   /**
-   * Create a prepared update statement without a WHERE clause (updates all rows).
-   *
-   * @param tableName the table name
-   * @param updateColumns columns to update in the SET clause
-   * @param addQuotes whether to quote identifiers
-   * @return the SQL update statement with placeholders
-   */
-  static String createPreparedUpdateSql(String tableName, List<String> updateColumns, boolean addQuotes) {
-    String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
-    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(", ")
-    sql
-  }
-
-  /**
    * Determine the columns to update, excluding match columns.
    *
    * @param columnNames all column names
