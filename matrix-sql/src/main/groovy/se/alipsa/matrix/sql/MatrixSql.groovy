@@ -99,7 +99,7 @@ class MatrixSql implements Closeable {
    * @return a Matrix containing the query results
    * @throws SQLException if a database access error occurs
    */
-  Matrix select(String sqlQuery, List<Object> params, String matrixName = 'myMatrix') throws SQLException {
+  Matrix select(String sqlQuery, List params, String matrixName = 'myMatrix') throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -123,7 +123,7 @@ class MatrixSql implements Closeable {
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
    */
-  int update(String sqlQuery, List<Object> params) throws SQLException {
+  int update(String sqlQuery, List params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -195,7 +195,7 @@ class MatrixSql implements Closeable {
    * @return A Map with the result index as key and either a Matrix or an Integer as value
    * @throws SQLException if a database access error occurs
    */
-  Map<Integer, Object> execute(String sqlQuery, List<Object> params) throws SQLException {
+  Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       int i = 1
       params.each {
@@ -377,7 +377,7 @@ class MatrixSql implements Closeable {
    * @return the number of rows deleted
    * @throws SQLException if a database access error occurs
    */
-  int delete(String sql, List<Object> params) throws SQLException {
+  int delete(String sql, List params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
       int i = 1
       params.each {
