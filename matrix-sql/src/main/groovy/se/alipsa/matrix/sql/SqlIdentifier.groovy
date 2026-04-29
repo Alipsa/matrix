@@ -32,8 +32,9 @@ class SqlIdentifier {
   }
 
   /**
-   * Render a table identifier. Simple table names are left unquoted for source compatibility;
-   * names containing spaces, punctuation, reserved words, or embedded quotes are quoted.
+   * Render a table identifier. Simple table names are intentionally left unquoted for source compatibility
+   * with existing callers that create a table and later query it with raw SQL such as {@code select * from myTable}.
+   * Table names containing spaces, punctuation, reserved words, or embedded quotes are quoted.
    *
    * @param tableName the table name to render
    * @param addQuotes true to quote when needed, false to always render unquoted
@@ -83,27 +84,77 @@ class SqlIdentifier {
   }
 
   private static final Set<String> SQL_KEYWORDS = [
+      'ADD',
       'ALL',
+      'ALTER',
       'AND',
       'AS',
+      'ASC',
+      'BETWEEN',
+      'BY',
+      'CASCADE',
+      'CASE',
+      'CHECK',
+      'COLUMN',
+      'CONSTRAINT',
       'CREATE',
+      'CROSS',
+      'CURRENT_DATE',
+      'CURRENT_TIME',
+      'CURRENT_TIMESTAMP',
+      'DATABASE',
+      'DATE',
+      'DEFAULT',
       'DELETE',
+      'DESC',
+      'DISTINCT',
       'DROP',
+      'ELSE',
+      'END',
+      'EXISTS',
+      'FALSE',
+      'FOREIGN',
       'FROM',
+      'FULL',
       'GROUP',
+      'HAVING',
+      'IN',
+      'INDEX',
+      'INNER',
       'INSERT',
       'INTO',
+      'IS',
       'JOIN',
+      'KEY',
+      'LEFT',
+      'LIKE',
+      'LIMIT',
       'NOT',
       'NULL',
+      'OFFSET',
+      'ON',
       'OR',
       'ORDER',
+      'OUTER',
       'PRIMARY',
+      'REFERENCES',
+      'RIGHT',
+      'SCHEMA',
       'SELECT',
       'SET',
       'TABLE',
+      'THEN',
+      'TIME',
+      'TIMESTAMP',
+      'TRUE',
+      'TYPE',
+      'UNION',
       'UPDATE',
+      'USER',
+      'VALUE',
       'VALUES',
+      'VIEW',
+      'WHEN',
       'WHERE'
   ] as Set<String>
 }

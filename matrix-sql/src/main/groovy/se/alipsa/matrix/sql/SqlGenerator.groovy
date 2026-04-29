@@ -74,7 +74,7 @@ class SqlGenerator {
     sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(", ")
     sql += " where "
     sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(" and ")
-    return sql
+    sql
   }
 
   /**
@@ -85,9 +85,9 @@ class SqlGenerator {
    * @return update column names
    */
   static List<String> updateColumnNames(List<String> columnNames, List<String> matchColumns) {
-    List<String> updateColumns = new ArrayList<>(columnNames)
+    List<String> updateColumns = [] + columnNames
     updateColumns.removeAll(matchColumns)
-    return updateColumns
+    updateColumns
   }
 
   /**
@@ -99,10 +99,10 @@ class SqlGenerator {
    * @return ordered list of parameter values
    */
   static List<Object> updateValues(Row row, List<String> updateColumns, List<String> matchColumns) {
-    List<Object> values = new ArrayList<>(updateColumns.size() + matchColumns.size())
+    List<Object> values = []
     updateColumns.each { values.add(row[it]) }
     matchColumns.each { values.add(row[it]) }
-    return values
+    values
   }
 
   /**
@@ -111,7 +111,7 @@ class SqlGenerator {
    * @deprecated use {@link #createPreparedUpdate(String, Row, String[])}
    */
   static String createUpdateSql(String tableName, Row row, String[] matchColumnName) {
-    return createPreparedUpdate(tableName, row, matchColumnName).sql
+    createPreparedUpdate(tableName, row, matchColumnName).sql
   }
 
   static String createPreparedInsertSql(String tableName, Matrix table) {
@@ -124,13 +124,13 @@ class SqlGenerator {
 
     sql.append(SqlIdentifier.renderAll(columnNames, addQuotes).join(', '))
     sql.append(' ) values ( ')
-    List<String> values = new ArrayList<>()
+    List<String> values = []
     columnNames.forEach(n -> {
       values.add('?')
     })
     sql.append(String.join(", ", values))
     sql.append(' ) ')
-    return sql.toString()
+    sql.toString()
   }
 
   static String createPreparedInsertSql(String tableName, Row row) {
@@ -144,13 +144,13 @@ class SqlGenerator {
     sql += SqlIdentifier.renderAll(columnNames, addQuotes).join(', ')
     sql += " ) values ( "
 
-    List<String> values = new ArrayList<>()
+    List<String> values = []
     columnNames.forEach(n -> {
       values.add('?')
     })
     sql += String.join(", ", values)
-    sql += " ); "
-    return sql
+    sql += " ) "
+    sql
   }
 
 }

@@ -102,7 +102,7 @@ class MatrixDbUtil {
   String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes, String... primaryKey) {
     String sql = "create table ${SqlIdentifier.renderTable(tableName, addQuotes)} (\n"
 
-    List<String> columns = new ArrayList<>()
+    List<String> columns = []
     int i = 0
     List<Class> types = table.types()
     for (String name : table.columnNames()) {
@@ -198,7 +198,7 @@ class MatrixDbUtil {
             maxLength = val.length()
           }
         }
-        props.put(VARCHAR_SIZE, Math.max(DEFAULT_VARCHAR_SIZE, maxLength))
+        props.put(VARCHAR_SIZE, DEFAULT_VARCHAR_SIZE.max(maxLength))
       }
       mappings.put(name, props)
     }
