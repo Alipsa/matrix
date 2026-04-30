@@ -1,17 +1,21 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
  * Typed options for ARFF write operations via the SPI.
  */
-@CompileStatic
 class ArffWriteOptions {
 
   private static final int DEFAULT_NOMINAL_THRESHOLD = 50
+  private static final String NOMINAL_MAPPINGS = 'nominalMappings'
+  private static final String INFER_NOMINALS = 'inferNominals'
+  private static final String NOMINAL_THRESHOLD = 'nominalThreshold'
+  private static final String NOMINAL_COLUMNS = 'nominalColumns'
+  private static final String STRING_COLUMNS = 'stringColumns'
+  private static final String ATTRIBUTE_TYPES_BY_COLUMN = 'attributeTypesByColumn'
+  private static final String DATE_FORMATS_BY_COLUMN = 'dateFormatsByColumn'
 
   private Map<String, List<String>> nominalMappings = [:]
   private boolean inferNominals = true
@@ -73,12 +77,12 @@ class ArffWriteOptions {
   }
 
   ArffWriteOptions nominalColumns(Collection<String> value) {
-    this.nominalColumns = value == null ? [] as Set<String> : stringSet(value, 'nominalColumns')
+    this.nominalColumns = value == null ? [] as Set<String> : stringSet(value, NOMINAL_COLUMNS)
     this
   }
 
   ArffWriteOptions stringColumns(Collection<String> value) {
-    this.stringColumns = value == null ? [] as Set<String> : stringSet(value, 'stringColumns')
+    this.stringColumns = value == null ? [] as Set<String> : stringSet(value, STRING_COLUMNS)
     this
   }
 
@@ -93,7 +97,7 @@ class ArffWriteOptions {
   }
 
   ArffWriteOptions dateFormatsByColumn(Map<String, String> value) {
-    this.dateFormatsByColumn = value == null ? [:] : copyStringMap(value, 'dateFormatsByColumn')
+    this.dateFormatsByColumn = value == null ? [:] : copyStringMap(value, DATE_FORMATS_BY_COLUMN)
     this
   }
 
@@ -102,28 +106,28 @@ class ArffWriteOptions {
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
 
     if (normalized.containsKey('nominalmappings')) {
-      result.nominalMappings(nominalMappingsValue(normalized.nominalmappings, 'nominalMappings'))
+      result.nominalMappings(nominalMappingsValue(normalized.nominalmappings, NOMINAL_MAPPINGS))
     }
     if (normalized.containsKey('infernominals')) {
-      result.inferNominals(ArffOptionValues.booleanValue(normalized.infernominals, 'inferNominals'))
+      result.inferNominals(ArffOptionValues.booleanValue(normalized.infernominals, INFER_NOMINALS))
     }
     if (normalized.containsKey('nominalthreshold')) {
-      result.nominalThreshold(intValue(normalized.nominalthreshold, 'nominalThreshold'))
+      result.nominalThreshold(intValue(normalized.nominalthreshold, NOMINAL_THRESHOLD))
     }
     if (normalized.containsKey('nominalcolumns')) {
-      result.nominalColumns(stringCollectionValue(normalized.nominalcolumns, 'nominalColumns'))
+      result.nominalColumns(stringCollectionValue(normalized.nominalcolumns, NOMINAL_COLUMNS))
     }
     if (normalized.containsKey('stringcolumns')) {
-      result.stringColumns(stringCollectionValue(normalized.stringcolumns, 'stringColumns'))
+      result.stringColumns(stringCollectionValue(normalized.stringcolumns, STRING_COLUMNS))
     }
     if (normalized.containsKey('attributetypesbycolumn')) {
-      result.attributeTypesByColumn(attributeTypesValue(normalized.attributetypesbycolumn, 'attributeTypesByColumn'))
+      result.attributeTypesByColumn(attributeTypesValue(normalized.attributetypesbycolumn, ATTRIBUTE_TYPES_BY_COLUMN))
     }
     if (normalized.containsKey('dateformat')) {
       result.dateFormat(OptionMaps.stringValueOrNull(normalized.dateformat))
     }
     if (normalized.containsKey('dateformatsbycolumn')) {
-      result.dateFormatsByColumn(stringMapValue(normalized.dateformatsbycolumn, 'dateFormatsByColumn'))
+      result.dateFormatsByColumn(stringMapValue(normalized.dateformatsbycolumn, DATE_FORMATS_BY_COLUMN))
     }
 
     result
@@ -164,19 +168,19 @@ class ArffWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('nominalMappings', Map, null, 'Map of column names to explicit nominal values'),
-        new OptionDescriptor('inferNominals', Boolean, true, 'Whether String/Object columns should be auto-detected as nominal using nominalThreshold and, for 10+ rows, a 10% row-count heuristic'),
-        new OptionDescriptor('nominalThreshold', Integer, DEFAULT_NOMINAL_THRESHOLD, 'Maximum distinct values allowed before nominal inference falls back to STRING'),
-        new OptionDescriptor('nominalColumns', Collection, null, 'Columns that should always be written as nominal'),
-        new OptionDescriptor('stringColumns', Collection, null, 'Columns that should always be written as STRING'),
-        new OptionDescriptor('attributeTypesByColumn', Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
+        new OptionDescriptor(NOMINAL_MAPPINGS, Map, null, 'Map of column names to explicit nominal values'),
+        new OptionDescriptor(INFER_NOMINALS, Boolean, true, 'Whether String/Object columns should be auto-detected as nominal using nominalThreshold and, for 10+ rows, a 10% row-count heuristic'),
+        new OptionDescriptor(NOMINAL_THRESHOLD, Integer, DEFAULT_NOMINAL_THRESHOLD, 'Maximum distinct values allowed before nominal inference falls back to STRING'),
+        new OptionDescriptor(NOMINAL_COLUMNS, Collection, null, 'Columns that should always be written as nominal'),
+        new OptionDescriptor(STRING_COLUMNS, Collection, null, 'Columns that should always be written as STRING'),
+        new OptionDescriptor(ATTRIBUTE_TYPES_BY_COLUMN, Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
         new OptionDescriptor('dateFormat', String, null, 'Global DATE format override for DATE attributes'),
-        new OptionDescriptor('dateFormatsByColumn', Map, null, 'Per-column DATE format overrides')
+        new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides')
     ]
   }
 
   private static Map<String, List<String>> nominalMappingsValue(Object value, String name) {
-    if (!(value instanceof Map)) {
+    if (!Map.isInstance(value)) {
       throw new IllegalArgumentException("$name must be a Map<String, List<String>> but was ${value?.class}")
     }
     Map<String, List<String>> result = [:]
@@ -188,7 +192,7 @@ class ArffWriteOptions {
   }
 
   private static Map<String, String> stringMapValue(Object value, String name) {
-    if (!(value instanceof Map)) {
+    if (!Map.isInstance(value)) {
       throw new IllegalArgumentException("$name must be a Map<String, String> but was ${value?.class}")
     }
     Map<String, String> result = [:]
@@ -200,7 +204,7 @@ class ArffWriteOptions {
   }
 
   private static Map<String, ArffTypeDecl> attributeTypesValue(Object value, String name) {
-    if (!(value instanceof Map)) {
+    if (!Map.isInstance(value)) {
       throw new IllegalArgumentException("$name must be a Map<String, ArffTypeDecl> but was ${value?.class}")
     }
     Map<String, ArffTypeDecl> result = [:]
@@ -212,7 +216,7 @@ class ArffWriteOptions {
   }
 
   private static Collection<String> stringCollectionValue(Object value, String name) {
-    if (value instanceof Collection) {
+    if (Collection.isInstance(value)) {
       return ((Collection<?>) value).collect { Object item -> requireString(item, name) } as List<String>
     }
     if (value != null && value.getClass().array) {
@@ -224,7 +228,7 @@ class ArffWriteOptions {
   private static Map<String, List<String>> copyNominalMappings(Map<String, List<String>> value) {
     Map<String, List<String>> result = [:]
     value.each { String key, List<String> item ->
-      result[key] = stringList(item, "nominalMappings[$key]")
+      result[key] = stringList(item, "$NOMINAL_MAPPINGS[$key]")
     }
     result
   }
@@ -241,7 +245,7 @@ class ArffWriteOptions {
     Map<String, ArffTypeDecl> result = [:]
     value.each { String key, ArffTypeDecl item ->
       if (item == null) {
-        throw new IllegalArgumentException("attributeTypesByColumn[$key] must not be null")
+        throw new IllegalArgumentException("$ATTRIBUTE_TYPES_BY_COLUMN[$key] must not be null")
       }
       result[key] = item
     }
@@ -249,7 +253,7 @@ class ArffWriteOptions {
   }
 
   private static Set<String> stringSet(Collection<String> value, String name) {
-    LinkedHashSet<String> result = [] as LinkedHashSet<String>
+    Set<String> result = new LinkedHashSet<String>()
     value.each { String item ->
       result << requireString(item, name)
     }
@@ -257,7 +261,7 @@ class ArffWriteOptions {
   }
 
   private static List<String> stringList(Object value, String name) {
-    if (!(value instanceof Collection)) {
+    if (!Collection.isInstance(value)) {
       throw new IllegalArgumentException("$name must be a Collection<String> but was ${value?.class}")
     }
     List<String> result = []
@@ -284,10 +288,10 @@ class ArffWriteOptions {
   }
 
   private static ArffTypeDecl attributeTypeValue(Object value, String name) {
-    if (value instanceof ArffTypeDecl) {
+    if (ArffTypeDecl.isInstance(value)) {
       return (ArffTypeDecl) value
     }
-    if (value instanceof CharSequence) {
+    if (CharSequence.isInstance(value)) {
       try {
         return ArffTypeDecl.valueOf(value.toString().trim().toUpperCase(java.util.Locale.ROOT))
       } catch (IllegalArgumentException e) {
@@ -296,4 +300,5 @@ class ArffWriteOptions {
     }
     throw new IllegalArgumentException("$name must be an ArffTypeDecl or String but was ${value?.class}")
   }
+
 }

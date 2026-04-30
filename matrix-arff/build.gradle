@@ -10,6 +10,10 @@ group = 'se.alipsa.matrix'
 version = '0.2.0'
 description = 'Matrix ARFF import/export'
 
+codenarc {
+  ignoreFailures = false
+}
+
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true
@@ -18,6 +22,7 @@ JavaCompile javaCompile = compileJava {
 
 compileGroovy {
   options.deprecation = true
+  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
 repositories {

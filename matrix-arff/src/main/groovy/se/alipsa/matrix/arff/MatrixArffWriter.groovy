@@ -1,7 +1,5 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 import java.io.FileOutputStream
@@ -16,7 +14,6 @@ import java.time.LocalDateTime
 /**
  * Writes Matrix objects to ARFF (Attribute-Relation File Format) files.
  */
-@CompileStatic
 class MatrixArffWriter {
 
   private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
@@ -417,7 +414,6 @@ class MatrixArffWriter {
   }
 }
 
-@CompileStatic
 class ArffAttributeInfo {
   ArffTypeDecl type
   String typeDeclaration
