@@ -331,7 +331,7 @@ class MatrixArffWriter {
   }
 
   private static String formatDate(Object value, ArffAttributeInfo info) {
-    SimpleDateFormat sdf = new SimpleDateFormat(info.dateFormat ?: DEFAULT_DATE_FORMAT)
+    SimpleDateFormat sdf = ArffDateFormats.create(info.dateFormat ?: DEFAULT_DATE_FORMAT)
     if (value instanceof Date) {
       return "'${sdf.format((Date) value)}'"
     }
@@ -360,7 +360,8 @@ class MatrixArffWriter {
   }
 
   private static String escapeNominalValue(String value) {
-    if (value.contains(',') || value.contains(' ') || value.contains("'") ||
+    if (value.isEmpty() || value == '?' || value.startsWith('%') ||
+        value.contains(',') || value.contains(' ') || value.contains("'") ||
         value.contains('"') || value.contains('{') || value.contains('}')) {
       return "'${escapeQuotedContent(value)}'"
     }

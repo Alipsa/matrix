@@ -633,7 +633,7 @@ class MatrixArffReader {
 
   private static Date parseDate(String value, String format) throws ParseException {
     String resolvedFormat = format ?: "yyyy-MM-dd'T'HH:mm:ss"
-    SimpleDateFormat sdf = new SimpleDateFormat(resolvedFormat)
+    SimpleDateFormat sdf = ArffDateFormats.create(resolvedFormat)
     sdf.parse(value)
   }
 

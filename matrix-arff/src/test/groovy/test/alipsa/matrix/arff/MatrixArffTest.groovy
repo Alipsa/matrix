@@ -778,8 +778,32 @@ plain
   }
 
   @Test @Order(37)
+  void testNominalSentinelValuesRoundTripAsLiterals() {
+    Matrix m = Matrix.builder('nominal_literals')
+        .columns(category: ['', '?', '%comment', 'normal'])
+        .types([String])
+        .build()
+
+    ArffWriteOptions options = new ArffWriteOptions().nominalMappings([
+        category: ['', '?', '%comment', 'normal']
+    ])
+    String arffContent = MatrixArffWriter.writeString(m, options)
+    Matrix result = MatrixArffReader.readString(arffContent)
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','%comment',normal}"))
+    assertTrue(arffContent.contains("''"))
+    assertTrue(arffContent.contains("'?'"))
+    assertTrue(arffContent.contains("'%comment'"))
+    assertEquals('', result[0, 'category'])
+    assertEquals('?', result[1, 'category'])
+    assertEquals('%comment', result[2, 'category'])
+    assertEquals('normal', result[3, 'category'])
+  }
+
+  @Test @Order(38)
   void testWriteOptionsGlobalDateFormat() {
     SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
     Matrix m = Matrix.builder('date_format')
         .columns(created: [inputFormat.parse('2026-03-17'), inputFormat.parse('2026-03-18')])
         .types([Date])
@@ -794,9 +818,10 @@ plain
     assertTrue(arffContent.contains("'2026-03-17'"))
   }
 
-  @Test @Order(38)
+  @Test @Order(39)
   void testWriteOptionsPerColumnDateFormats() {
     SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
     Date created = inputFormat.parse('2026-03-17 11:12:13')
     Date updated = inputFormat.parse('2026-03-18 14:15:16')
     Matrix m = Matrix.builder('date_format_columns')
@@ -821,7 +846,41 @@ plain
     assertTrue(arffContent.contains("'2026/03/18 14:15'"))
   }
 
-  @Test @Order(39)
+  @Test @Order(40)
+  void testInvalidDateIsRejected() {
+    String arffContent = '''
+@RELATION invalid_date
+
+@ATTRIBUTE created DATE 'yyyy-MM-dd'
+
+@DATA
+'2026-02-31'
+'''.trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("Invalid DATE value '2026-02-31'"))
+    assertTrue(exception.message.contains('line 6'))
+  }
+
+  @Test @Order(41)
+  void testDateOutputUsesUtc() {
+    Matrix m = Matrix.builder('utc_dates')
+        .columns(created: [Instant.parse('2026-03-18T14:15:16Z')])
+        .types([Instant])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().dateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    )
+
+    assertTrue(arffContent.contains("'2026-03-18T14:15:16'"))
+  }
+
+  @Test @Order(42)
   void testWriteOptionsRejectConflictingTypeConfiguration() {
     Matrix m = Matrix.builder('conflict')
         .columns(category: ['A', 'B'])
@@ -840,7 +899,7 @@ plain
     assertTrue(exception.message.contains('nominal configuration'))
   }
 
-  @Test @Order(40)
+  @Test @Order(43)
   void testTypedReadOverloadsUseArffReadOptions() {
     String arffContent = '''
 @ATTRIBUTE id INTEGER
@@ -873,9 +932,10 @@ plain
     }
   }
 
-  @Test @Order(41)
+  @Test @Order(44)
   void testTypedWriteOverloadsProduceSameOutput() {
     SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
     Matrix m = Matrix.builder('typed_write')
         .columnNames('created', 'category', 'value')
         .columns(
@@ -911,7 +971,7 @@ plain
     assertEquals(expected, sw as String)
   }
 
-  @Test @Order(42)
+  @Test @Order(45)
   void testUnknownAttributeTypeDefaultsToString() {
     String arffContent = '''
 @RELATION unknown_type
@@ -927,7 +987,7 @@ hello
     assertEquals('hello', m[0, 'note'])
   }
 
-  @Test @Order(43)
+  @Test @Order(46)
   void testStrictUnknownAttributeTypeFails() {
     String arffContent = '''
 @RELATION unknown_type_strict
@@ -945,7 +1005,7 @@ hello
     assertTrue(exception.message.contains('line 3'))
   }
 
-  @Test @Order(44)
+  @Test @Order(47)
   void testDenseRowsStayLenientByDefault() {
     String arffContent = '''
 @RELATION lenient_rows
@@ -967,7 +1027,7 @@ hello
     assertEquals(2.5, m[1, 'second'])
   }
 
-  @Test @Order(45)
+  @Test @Order(48)
   void testStrictDenseRowsRejectMissingValues() {
     String arffContent = '''
 @RELATION strict_missing_row
@@ -988,7 +1048,7 @@ hello
     assertTrue(exception.message.contains('line 7'))
   }
 
-  @Test @Order(46)
+  @Test @Order(49)
   void testStrictDenseRowsRejectExtraValues() {
     String arffContent = '''
 @RELATION strict_extra_row
@@ -1009,7 +1069,7 @@ hello
     assertTrue(exception.message.contains('line 7'))
   }
 
-  @Test @Order(47)
+  @Test @Order(50)
   void testMalformedDenseRowReportsLineContext() {
     String arffContent = '''
 @RELATION malformed_dense
@@ -1029,7 +1089,7 @@ hello
     assertTrue(exception.message.contains("'unterminated"))
   }
 
-  @Test @Order(48)
+  @Test @Order(51)
   void testMalformedSparseRowReportsLineContext() {
     String arffContent = '''
 @RELATION malformed_sparse

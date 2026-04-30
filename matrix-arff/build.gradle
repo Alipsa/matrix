@@ -84,7 +84,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-arff/tree/master'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-arff'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
