@@ -4,7 +4,7 @@ source jdk21
 #./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
 ../gradlew -PrunExternalTests=true :matrix-arff:clean :matrix-arff:build :matrix-arff:release || exit 1
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep -E "version[[:space:]]*=?[[:space:]]*['\"]" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT uploaded, release it if it checks out"
