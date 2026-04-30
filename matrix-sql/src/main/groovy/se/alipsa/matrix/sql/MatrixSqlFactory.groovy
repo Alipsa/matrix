@@ -37,7 +37,7 @@ class MatrixSqlFactory {
             .fetchLatestVersion('com.h2database', 'h2')
       } catch (Exception e) {
         dependencyVersion = FALLBACK_VERSIONS[DataBaseProvider.H2]
-        log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}", e)
+        log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}")
       }
     } else {
       dependencyVersion = version
@@ -64,7 +64,7 @@ class MatrixSqlFactory {
             .fetchLatestVersion('org.apache.derby', 'derby')
       } catch (Exception e) {
         dependencyVersion = FALLBACK_VERSIONS[DataBaseProvider.DERBY]
-        log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}", e)
+        log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}")
       }
     } else {
       dependencyVersion = version
@@ -134,7 +134,7 @@ class MatrixSqlFactory {
         if (fallback != null) {
           dependencyVersion = fallback
           log.warn("Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId, " +
-              "falling back to version $dependencyVersion: ${e.message}", e)
+              "falling back to version $dependencyVersion: ${e.message}")
         } else {
           throw new IllegalStateException(
               "Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId" +
