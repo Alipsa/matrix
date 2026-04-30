@@ -247,6 +247,8 @@ try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
 
 # Release Version Compatibility Matrix
 
+Note: use the matrix-bom to manage compatible versions of matrix-sql and matrix-core. The table below is for reference only and may not be exhaustive. 
+
 The following table illustrates the version compatibility of matrix-sql and matrix core.
 
 | Matrix sql |    Matrix core |
@@ -259,4 +261,4 @@ The following table illustrates the version compatibility of matrix-sql and matr
 |      2.1.1 | 3.2.0 -> 3.3.0 |
 |      2.2.0 | 3.4.0 -> 3.5.0 |
 |      2.3.0 |          3.6.0 |
-|      2.3.1 |          3.7.1 |
+|      2.4.0 | 3.6.0 -> 3.7.1 |
