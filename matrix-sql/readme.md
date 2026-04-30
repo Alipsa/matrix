@@ -1,161 +1,254 @@
 [![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-sql/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-sql)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-sql/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-sql)
-# Matrix SQL
-The Matrix SQL module aims to make communication between the Matrix library and a 
-relational database as easy as possible.
 
-To use it, add the following to your gradle build script:
+# Matrix SQL
+
+The Matrix SQL module makes communication between the Matrix library and a relational
+database as simple as possible.
+
+To use it, add the following to your Gradle build script:
+
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-sql:2.3.0'
+implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-sql:2.3.1-SNAPSHOT'
 ```
-or if you use maven:
+
+or if you use Maven:
+
 ```xml
 <dependencies>
   <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>5.0.4</version>
+    <groupId>org.apache.groovy</groupId>
+    <artifactId>groovy</artifactId>
+    <version>5.0.5</version>
   </dependency>
   <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.6.0</version>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-core</artifactId>
+    <version>3.7.1</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.3.0</version>
+    <version>2.3.1-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```
 
-The core class is MatrixSql. It is created using a ConnectionInfo from the [data-utils library](https://github.com/Alipsa/data-utils).
-A connection info contains the jdbc url, credentials and info of the jdbc driver to use.
-The driver will be downloaded, if needed, and added to the classpath enabling dynamic 
-instantiation of the driver when connecting to the db.
+`MatrixSql` is the main high-level API. It can be created from a `ConnectionInfo`
+from the [data-utils library](https://github.com/Alipsa/data-utils), or with
+`MatrixSqlFactory`, which can infer the JDBC driver and dependency from the JDBC URL.
+The driver is downloaded if needed and added to the classpath before connecting.
 
-If you want to manage db connections yourself, you can directly use the MatrixDbUtil class instead.
-The api is more or less identical to MatrixSql with the difference that all methods 
-requires a java.sql.Connection. You instantiate a MatrixDbUtil with a SqlTypeMapper or a DataBaseProvider enum
-
-Creating a MatrixSql can be done as follows:
-```groovy 
+```groovy
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.matrix.sql.MatrixSql
 
 ConnectionInfo ci = new ConnectionInfo()
-ci.setDependency('org.postgresql:postgresql:42.7.3')
-ci.setUrl("jdbc:postgresql://somedb.somedomain.com/mydatabase")
+ci.setDependency('org.postgresql:postgresql:42.7.8')
+ci.setUrl('jdbc:postgresql://somedb.somedomain.com/mydatabase')
 ci.setUser('myuser')
 ci.setPassword('123password')
-ci.setDriver("org.postgresql.Driver")
-MatrixSql matrixSql = new MatrixSql(ci)
-```
-Note the that the syntax for specifying the Driver dependency follows the
-Gradle short form. e.g to get the short form for a PostgreSQL driver you can
-look it upp on [mvnrepository](https://mvnrepository.com/artifact/org.postgresql/postgresql/42.7.3)
-and find the string in the `Gradle (short)` tab i.e: 'org.postgresql:postgresql:42.7.3'
+ci.setDriver('org.postgresql.Driver')
 
-Using the MatrixSql object you can then interact with the database.
-The following operations are supported:
-
-### Create
-
-The simplest way to create a table corresponding to a Matrix and populate it is to do:
-`matrixSql.create(myMatrix)`
-if you want to define a primary key, you just append the column name(s) to the create method e.g:
-`matrixSql.create(myMatrix, 'id')`
-
-The MatrixSql is Closeable and should be used in a try with resources block.
-If that is not an option, you must close the connection to the database when you are
-finished e.g: `matrixSql.close()`
-
-### Drop
-User either the Matrix or the table to drop a table i.e.
-either `matrixSql.dropTable(myMatrix)`
-or `matrixSql.dropTable('theTableName')`
-Typically, you want to check that the table exists before attempting to drop it:
-```groovy
-if (matrixSql.tableExists(myMatrix)) {
-   matrixSql.dropTable(myMatrix)
+try (MatrixSql matrixSql = new MatrixSql(ci)) {
+  assert matrixSql.getTableNames() != null
 }
 ```
 
-### Insert
-### Select
-### Update
-### Delete
+The dependency string uses Gradle short form. For example, the PostgreSQL driver
+coordinate can be found on [mvnrepository](https://mvnrepository.com/artifact/org.postgresql/postgresql)
+under the `Gradle (short)` tab.
 
-## Caveats
+## Creating a MatrixSql
 
-### LocalDate
-When dealing with a Matrix containing LocalDate's there is an inevitable conversion between
-LocalDate and java.sql.Date you need to watch out for. If we have a Matrix that we want to 
-store in the database, the datatype for LocalDate is DATE in the DB. Since the datat type for 
-a java.util.date and a java.sql.date is also DATE when we retreive it from the database, the
-default mapping of the DATE type is java.sql.Date so this is what we will get.
-E.g:
+For common databases, use the factory:
 
-1. We have the following Matrix
-    ```groovy
-    import se.alipsa.matrix.core.Matrix
-    import se.alipsa.matrix.core.ListConverter
-    import java.time.LocalDate
+```groovy
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.sql.MatrixSqlFactory
 
-    Matrix complexData = Matrix.builder('complexData').data([
-        'place': [1, 20, 3],
-        'firstname': ['Lorena', 'Marianne', 'Lotte'],
-        'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
-    ]).types([int, String, LocalDate]).build()
-    ```
-2. We save it to the db
-   ```groovy 
-   import se.alipsa.groovy.datautil.ConnectionInfo
-   import se.alipsa.matrix.sql.MatrixSql
-   
-   ConnectionInfo ci = new ConnectionInfo()
-   ci.setDependency('com.h2database:h2:2.4.240')
-   def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
-   ci.setUrl("jdbc:h2:file:${tmpDb}")
-   ci.setUser('sa')
-   ci.setPassword('123')
-   ci.setDriver("org.h2.Driver")
-   MatrixSql matrixSql = new MatrixSql(ci)
-   matrixSql.create(complexData)
-   ```
-   We can make it much simpler and derive the driver class name and dependency from the url (if we dont specify a version, it will look up and use the latest version):
-    ```groovy
-    MatrixSql matrixSql = MatrixSqlFactory.create("jdbc:h2:file:${tmpDb}", 'sa', '123')
-    matrixSql.create(complexData)
-    ```
-   
-3. Retreive it
-   ```groovy
-   Matrix stored = matrixSql.select('* from complexData')
-   println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
-   ```
-   
-The output will be
+String url = 'jdbc:h2:mem:matrixSqlExample;DB_CLOSE_DELAY=-1'
+
+try (MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123')) {
+  assert matrixSql.connectionInfo.driver == 'org.h2.Driver'
+  assert matrixSql.connectionInfo.dependency.startsWith('com.h2database:h2:')
+}
 ```
-start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10, 2023-05-27]
+
+If you already manage the `Connection`, pass it directly. `close()` does not close
+externally supplied connections.
+
+```groovy
+import se.alipsa.groovy.datautil.DataBaseProvider
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.sql.MatrixSqlFactory
+
+String url = 'jdbc:h2:mem:managedConnectionExample;DB_CLOSE_DELAY=-1'
+
+try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+  def connection = owner.connect()
+
+  try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+    assert !connection.isClosed()
+  }
+
+  assert !connection.isClosed()
+}
 ```
-4. We can convert the Date column to a LocalDate
-    ```groovy
-    stored = stored.convert('start', LocalDate)
-    println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
-    ```
-   The output will be
-    ```
-    start column is of type class java.time.LocalDate, values are [2021-12-01, 2022-07-10, 2023-05-27]
-    ```
 
-# Release version compatibility matrix
-The following table illustrates the version compatibility of 
-matrix-sql and matrix core
+If you prefer to manage every connection yourself, use `MatrixDbUtil`. Its API is
+similar to `MatrixSql`, but every method takes a `java.sql.Connection`.
 
-| Matrix sql |    Matrix core | 
+## Workflows
+
+The examples below use H2 for brevity, but the same APIs work for other supported
+databases.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.sql.MatrixSqlFactory
+import se.alipsa.matrix.sql.SqlIdentifier
+
+String url = 'jdbc:h2:mem:workflowExample;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE'
+
+Matrix people = Matrix.builder('people').data([
+    id: [1, 2, 3],
+    name: ['Alice', 'Bob', 'Charlie']
+]).types(int, String).build()
+
+try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+  String tableName = matrixSql.tableName(people)
+  String quotedTable = SqlIdentifier.renderTable(tableName)
+
+  if (matrixSql.tableExists(tableName)) {
+    matrixSql.dropTable(tableName)
+  }
+
+  Map createResult = matrixSql.create(people, 'id')
+  assert createResult.inserted == 3
+
+  Matrix selected = matrixSql.select("select * from $quotedTable order by id")
+  assert selected.rowCount() == 3
+  assert selected[0, 'name'] == 'Alice'
+
+  Matrix extraRows = Matrix.builder('incoming_people').data([
+      id: [4],
+      name: ['Diana']
+  ]).types(int, String).build()
+  assert matrixSql.insert(tableName, extraRows) == 1
+
+  Row row = Matrix.builder('people').data([
+      id: [2],
+      name: ['Robert']
+  ]).types(int, String).build().row(0)
+  assert matrixSql.update(tableName, row, 'id') == 1
+
+  Matrix updated = matrixSql.select("select * from $quotedTable where id = 2")
+  assert updated[0, 'name'] == 'Robert'
+
+  assert matrixSql.delete("delete from $quotedTable where id = 3") == 1
+
+  Matrix remaining = matrixSql.select("select * from $quotedTable")
+  assert remaining.rowCount() == 3
+}
+```
+
+### Prepared Parameters
+
+Use the prepared-parameter overloads when values come from users or other external
+input.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.sql.MatrixSqlFactory
+import se.alipsa.matrix.sql.SqlIdentifier
+
+String url = 'jdbc:h2:mem:preparedExample;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE'
+
+Matrix people = Matrix.builder('people').data([
+    id: [1, 2, 3],
+    name: ['Alice', 'Bob', 'Charlie']
+]).types(int, String).build()
+
+try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+  matrixSql.create(people, 'id')
+  String tableName = SqlIdentifier.renderTable(matrixSql.tableName(people))
+
+  Matrix selected = matrixSql.select(
+      "select * from $tableName where id > ? order by id",
+      [1],
+      'selected_people'
+  )
+  assert selected.matrixName == 'selected_people'
+  assert selected.column('name') == ['Bob', 'Charlie']
+
+  int updated = matrixSql.update(
+      "update $tableName set name = ? where id = ?",
+      ['Bobby', 2]
+  )
+  assert updated == 1
+
+  int deleted = matrixSql.delete("delete from $tableName where id = ?", [3])
+  assert deleted == 1
+
+  Map<Integer, Object> result = matrixSql.execute(
+      "select * from $tableName where name = ?",
+      ['Bobby']
+  )
+  assert result[0] instanceof Matrix
+  assert ((Matrix) result[0]).rowCount() == 1
+}
+```
+
+`execute(String, List)` returns a map where each key is the result index. Values are
+`Matrix` instances for result sets and `Integer` update counts for update statements.
+
+## LocalDate
+
+When a Matrix contains `LocalDate` values, the database column type is `DATE`.
+When reading the data back, Matrix SQL maps `DATE` to `java.sql.Date` because JDBC
+does not distinguish between `LocalDate`, `java.util.Date`, and `java.sql.Date` in
+the column metadata. Convert the column when you want `LocalDate` values again.
+
+```groovy
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.sql.MatrixSqlFactory
+
+import java.time.LocalDate
+
+Matrix complexData = Matrix.builder('complexData').data([
+    place: [1, 20, 3],
+    firstname: ['Lorena', 'Marianne', 'Lotte'],
+    start: ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+]).types(int, String, LocalDate).build()
+
+String url = 'jdbc:h2:mem:localDateExample;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE'
+
+try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+  matrixSql.create(complexData)
+
+  Matrix stored = matrixSql.select('select * from "complexData"')
+  assert stored.type('start') == java.sql.Date
+  assert stored.column('start') == ListConverter.toSqlDates('2021-12-01', '2022-07-10', '2023-05-27')
+
+  Matrix converted = stored.convert('start', LocalDate)
+  assert converted.type('start') == LocalDate
+  assert converted.column('start') == ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+}
+```
+
+# Release Version Compatibility Matrix
+
+The following table illustrates the version compatibility of matrix-sql and matrix core.
+
+| Matrix sql |    Matrix core |
 |-----------:|---------------:|
 |      1.0.0 |          1.2.4 |
 |      1.0.1 | 2.0.0 -> 2.1.1 |
@@ -164,3 +257,5 @@ matrix-sql and matrix core
 |      2.1.0 |          3.1.0 |
 |      2.1.1 | 3.2.0 -> 3.3.0 |
 |      2.2.0 | 3.4.0 -> 3.5.0 |
+|      2.3.0 |          3.6.0 |
+|      2.3.1 |          3.7.1 |

@@ -66,7 +66,6 @@ abstract class AbstractDbTest {
 
   @Test
   void createAndVerify() {
-    //println Stat.str(dur)
     try (Connection con = matrixSql.connect()) {
       verifyDbCreation(con, getComplexData())
       verifyDbCreation(con, Dataset.airquality())
@@ -75,7 +74,6 @@ abstract class AbstractDbTest {
       verifyDbCreation(con, diamonds, diamonds.rowCount())
       verifyDbCreation(con, Dataset.plantGrowth())
     }
-    //println dur.content()
   }
 
   void verifyDbCreation(Connection con, Matrix dataset, int ... scanNumRows) {
@@ -89,11 +87,9 @@ abstract class AbstractDbTest {
     long ctm2 = System.currentTimeMillis()
     dur + [dataset.matrixName, "2. check and drop table", ctm2 - ctm1]
     if (scanNumRows.length > 0) {
-      Map map = matrixDbUtil.create(con, dataset, scanNumRows[0])
-      //println map
+      matrixDbUtil.create(con, dataset, scanNumRows[0])
     } else {
-      Map map = matrixDbUtil.create(con, dataset)
-      //println map
+      matrixDbUtil.create(con, dataset)
     }
     long ctm3 = System.currentTimeMillis()
     dur + [dataset.matrixName, "3. create table", ctm3 - ctm2]
