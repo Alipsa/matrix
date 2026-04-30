@@ -667,9 +667,10 @@ class MatrixSqlTest {
           throw new IOException("Simulated network failure")
         }
       }
-      MatrixSql ms = MatrixSqlFactory.createH2(url, 'sa', '123')
-      assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
-          "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      try (MatrixSql ms = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
+            "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      }
     } finally {
       MatrixSqlFactory.artifactLookup = original
     }
@@ -685,9 +686,10 @@ class MatrixSqlTest {
           throw new IOException("Simulated network failure")
         }
       }
-      MatrixSql ms = MatrixSqlFactory.createDerby("memory:fallback_derby_${System.nanoTime()}")
-      assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]),
-          "Expected dependency to contain Derby fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]}")
+      try (MatrixSql ms = MatrixSqlFactory.createDerby("memory:fallback_derby_${System.nanoTime()}")) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]),
+            "Expected dependency to contain Derby fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]}")
+      }
     } finally {
       MatrixSqlFactory.artifactLookup = original
     }
@@ -704,9 +706,10 @@ class MatrixSqlTest {
           throw new IOException("Simulated network failure")
         }
       }
-      MatrixSql ms = MatrixSqlFactory.create(url, 'sa', '123')
-      assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
-          "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      try (MatrixSql ms = MatrixSqlFactory.create(url, 'sa', '123')) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
+            "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      }
     } finally {
       MatrixSqlFactory.artifactLookup = original
     }
