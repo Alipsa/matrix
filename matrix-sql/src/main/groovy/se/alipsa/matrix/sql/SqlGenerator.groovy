@@ -113,15 +113,6 @@ class SqlGenerator {
     values
   }
 
-  /**
-   * Create a prepared update statement (with placeholders).
-   *
-   * @deprecated use {@link #createPreparedUpdate(String, Row, String[])}
-   */
-  static String createUpdateSql(String tableName, Row row, String[] matchColumnName) {
-    createPreparedUpdate(tableName, row, matchColumnName).sql
-  }
-
   static String createPreparedInsertSql(String tableName, Matrix table) {
     createPreparedInsertSql(tableName, table, true)
   }

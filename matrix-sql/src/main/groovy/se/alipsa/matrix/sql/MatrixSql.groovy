@@ -666,8 +666,7 @@ class MatrixSql implements Closeable {
       throw e
     }
     Properties props = new Properties()
-    if (urlContainsLogin(ci.getUrlSafe())) {
-    } else {
+    if (!urlContainsLogin(ci.getUrlSafe())) {
       if (ci.getUser() != null) {
         props.put(PROP_USER, ci.getUser())
         if (ci.getPassword() != null) {

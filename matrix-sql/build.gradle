@@ -115,7 +115,7 @@ publishing {
             artifact(javadocJar)
             artifact(sourcesJar)
             pom {
-                name = 'Matrix Core'
+                name = 'Matrix SQL'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix"
                 properties = [
