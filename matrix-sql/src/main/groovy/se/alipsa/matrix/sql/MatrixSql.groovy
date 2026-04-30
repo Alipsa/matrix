@@ -1,7 +1,5 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
@@ -24,7 +22,6 @@ import java.util.stream.IntStream
  * Bridges Matrix and SQL allowing you to go back and forth between the two.
  * Note: use the MatrixSqlFactory for more flexible ways to create a MatrixSql.
  */
-@CompileStatic
 class MatrixSql implements Closeable {
 
   private static final Logger log = Logger.getLogger(MatrixSql)

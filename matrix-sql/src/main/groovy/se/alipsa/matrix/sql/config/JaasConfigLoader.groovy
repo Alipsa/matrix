@@ -15,7 +15,7 @@ import javax.security.auth.login.Configuration
 class JaasConfigLoader {
 
   private static final Logger log = Logger.getLogger(JaasConfigLoader)
-  private static final String JAAS_CONFIG_NAME = 'SQLJDBCDriver'
+  static final String JAAS_CONFIG_NAME = 'SQLJDBCDriver'
 
   static void loadDefaultKerberosConfigIfNeeded() {
     try {

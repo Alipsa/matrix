@@ -1,14 +1,11 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
 /**
  * Generates prepared SQL statements (INSERT, UPDATE) for {@link Matrix} and {@link Row} data.
  */
-@CompileStatic
 @SuppressWarnings('SpaceInsideParentheses')
 class SqlGenerator {
 

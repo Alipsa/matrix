@@ -1,6 +1,6 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
+import groovy.transform.CompileDynamic
 
 import org.apache.commons.io.input.ReaderInputStream
 
@@ -37,8 +37,7 @@ import java.sql.Timestamp
  * assert m[0,0] == "Foo"
  * </pre></code>
  */
-// dynamic use of getAt extensions prevents this from being compiled statically
-// @CompileStatic
+@CompileDynamic
 class MatrixResultSet implements ResultSet {
 
   private static final String RESULT_SET_CLOSED = 'Result set is closed'

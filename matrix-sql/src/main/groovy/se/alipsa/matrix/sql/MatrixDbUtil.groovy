@@ -4,7 +4,7 @@ import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_PRECIS
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 
-import groovy.transform.CompileStatic
+import groovy.transform.CompileDynamic
 
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
@@ -22,8 +22,6 @@ import java.util.stream.IntStream
 /**
  * Utility class for creating tables and inserting data from Matrix objects into a database.
  */
-// dynamic use of getAt extensions prevents this from being compiled statically
-// @CompileStatic
 class MatrixDbUtil {
 
   static final int DEFAULT_VARCHAR_SIZE = 255
@@ -100,6 +98,7 @@ class MatrixDbUtil {
    * @param primaryKey name(s) of the primary key columns
    * @return the create table ddl statement
    */
+  @CompileDynamic
   String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes, String... primaryKey) {
     String sql = "create table ${SqlIdentifier.renderTable(tableName, addQuotes)} (\n"
 
@@ -161,6 +160,7 @@ class MatrixDbUtil {
    * @return a map containing the column name and a map containing sizing information using the SqlTypeMapper
    * constants as key and the size as value
    */
+  @CompileDynamic
   Map<String,Map<String, Integer>> createMappings(Matrix table, int scanNumRows) {
     List<Class<?>> types = table.types()
     Map<String, Map<String, Integer>> mappings = [:]

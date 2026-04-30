@@ -1,7 +1,5 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil
@@ -12,7 +10,6 @@ import se.alipsa.mavenutils.ArtifactLookup
  * Factory for creating {@link MatrixSql} instances from JDBC URLs or connection information,
  * automatically resolving driver dependencies from Maven Central.
  */
-@CompileStatic
 class MatrixSqlFactory {
 
   private static final Logger log = Logger.getLogger(MatrixSqlFactory)

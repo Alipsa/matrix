@@ -1,7 +1,5 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,6 @@ import java.sql.SQLException
  * Provides {@link ResultSetMetaData} backed by a {@link Matrix}, exposing column names,
  * types, and display sizes derived from the matrix structure.
  */
-@CompileStatic
 class MatrixResultSetMetaData implements ResultSetMetaData {
 
   Matrix matrix

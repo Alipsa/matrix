@@ -1,11 +1,8 @@
 package se.alipsa.matrix.sql
 
-import groovy.transform.CompileStatic
-
 /**
  * Utility methods for rendering SQL identifiers in generated statements.
  */
-@CompileStatic
 class SqlIdentifier {
 
   private static final String UNDERSCORE = '_'
