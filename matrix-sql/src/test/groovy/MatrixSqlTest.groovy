@@ -14,6 +14,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.sql.MatrixDbUtil
+import se.alipsa.mavenutils.ArtifactLookup
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.sql.MatrixSqlFactory
 import se.alipsa.matrix.sql.SqlIdentifier
@@ -652,6 +653,43 @@ class MatrixSqlTest {
       assertNotNull(matrixSql.getConnection(), 'Connection should be non-null after connect()')
       assertTrue(matrixSql.getMatrixDbUtil() instanceof MatrixDbUtil)
       assertTrue(matrixSql.getSqlTypeMapper() instanceof SqlTypeMapper)
+    }
+  }
+
+  @Test
+  void testCreateH2FallsBackOnNetworkFailure() {
+    String url = h2MemUrl('fallback_h2_testdb')
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      MatrixSql ms = MatrixSqlFactory.createH2(url, 'sa', '123')
+      assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
+          "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
+    }
+  }
+
+  @Test
+  void testCreateDerbyFallsBackOnNetworkFailure() {
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      MatrixSql ms = MatrixSqlFactory.createDerby("memory:fallback_derby_${System.nanoTime()}")
+      assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]),
+          "Expected dependency to contain Derby fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]}")
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
     }
   }
 

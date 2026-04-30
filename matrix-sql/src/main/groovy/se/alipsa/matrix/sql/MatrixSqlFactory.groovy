@@ -14,6 +14,10 @@ class MatrixSqlFactory {
   private static final Logger log = Logger.getLogger(MatrixSqlFactory)
   static String REPO_URL = "https://repo1.maven.org/maven2/"
   static ArtifactLookup artifactLookup = new ArtifactLookup(REPO_URL)
+  static final Map<DataBaseProvider, String> FALLBACK_VERSIONS = [
+      (DataBaseProvider.H2)   : '2.4.240',
+      (DataBaseProvider.DERBY): '10.17.1.0'
+  ].asImmutable()
 
   static MatrixSql createH2(String url, String user, String password, String additionalUrlProperties = null, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
@@ -31,7 +35,7 @@ class MatrixSqlFactory {
         dependencyVersion = artifactLookup
             .fetchLatestVersion('com.h2database', 'h2')
       } catch (Exception e) {
-        dependencyVersion = '2.4.240'
+        dependencyVersion = FALLBACK_VERSIONS[DataBaseProvider.H2]
         log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
@@ -58,7 +62,7 @@ class MatrixSqlFactory {
         dependencyVersion = artifactLookup
             .fetchLatestVersion('org.apache.derby', 'derby')
       } catch (Exception e) {
-        dependencyVersion = '10.17.1.0'
+        dependencyVersion = FALLBACK_VERSIONS[DataBaseProvider.DERBY]
         log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
