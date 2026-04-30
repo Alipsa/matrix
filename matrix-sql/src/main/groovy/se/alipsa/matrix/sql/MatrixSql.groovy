@@ -18,7 +18,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.concurrent.ExecutionException
 import java.util.stream.IntStream
 
 /**
@@ -429,10 +428,6 @@ class MatrixSql implements Closeable {
     dropTable(tableName(table))
   }
 
-  private int dbInsert(String sqlQuery) throws SQLException, ExecutionException, InterruptedException {
-    return (int)dbExecuteSql(sqlQuery)
-  }
-
   /**
    * Insert a single row into the named table using a prepared statement.
    *
@@ -441,7 +436,7 @@ class MatrixSql implements Closeable {
    * @return the number of rows inserted
    * @throws SQLException if a database access error occurs
    */
-  int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
+  int insert(String tableName, Row row) throws SQLException {
     String sql = SqlGenerator.createPreparedInsertSql(tableName, row)
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
       bindParams(stm, row)
@@ -458,7 +453,7 @@ class MatrixSql implements Closeable {
    * @return the number of rows inserted
    * @throws SQLException if a database access error occurs
    */
-  int insert(Matrix table, Row row) throws SQLException, ExecutionException, InterruptedException {
+  int insert(Matrix table, Row row) throws SQLException {
     insert(tableName(table), row)
   }
 
@@ -548,7 +543,7 @@ class MatrixSql implements Closeable {
       //    or an update count other than -1)
     } while (isResultSet || stm.getUpdateCount() != -1)
 
-    return allResults
+    allResults
   }
 
   private static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
