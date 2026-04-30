@@ -5,13 +5,23 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
+/**
+ * Generates prepared SQL statements (INSERT, UPDATE) for {@link Matrix} and {@link Row} data.
+ */
 @CompileStatic
+@SuppressWarnings('SpaceInsideParentheses')
 class SqlGenerator {
+
+  private static final String COMMA_SEP = ', '
+  private static final String PLACEHOLDER = '?'
+  private static final String VALUES_CLAUSE = ' ) values ( '
+  private static final String CLOSE_PAREN = ' ) '
 
   /**
    * Prepared update statement details.
    */
   static class PreparedUpdate {
+
     final String sql
     final List<Object> values
 
@@ -19,6 +29,7 @@ class SqlGenerator {
       this.sql = sql
       this.values = values
     }
+
   }
 
   /**
@@ -71,9 +82,9 @@ class SqlGenerator {
       boolean addQuotes
   ) {
     String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
-    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(", ")
-    sql += " where "
-    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = ?" }.join(" and ")
+    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(COMMA_SEP)
+    sql += ' where '
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(' and ')
     sql
   }
 
@@ -121,12 +132,12 @@ class SqlGenerator {
   static String createPreparedInsertSql(String tableName, Matrix table, boolean addQuotes) {
     StringBuilder sql = new StringBuilder("insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( ")
     List<String> columnNames = table.columnNames()
-    String placeholders = (['?'] * columnNames.size()).join(', ')
+    String placeholders = ([PLACEHOLDER] * columnNames.size()).join(COMMA_SEP)
 
-    sql.append(SqlIdentifier.renderAll(columnNames, addQuotes).join(', '))
-    sql.append(' ) values ( ')
+    sql.append(SqlIdentifier.renderAll(columnNames, addQuotes).join(COMMA_SEP))
+    sql.append(VALUES_CLAUSE)
     sql.append(placeholders)
-    sql.append(' ) ')
+    sql.append(CLOSE_PAREN)
     sql.toString()
   }
 
@@ -137,12 +148,12 @@ class SqlGenerator {
   static String createPreparedInsertSql(String tableName, Row row, boolean addQuotes) {
     String sql = "insert into ${SqlIdentifier.renderTable(tableName, addQuotes)} ( "
     List<String> columnNames = row.columnNames()
-    String placeholders = (['?'] * columnNames.size()).join(', ')
+    String placeholders = ([PLACEHOLDER] * columnNames.size()).join(COMMA_SEP)
 
-    sql += SqlIdentifier.renderAll(columnNames, addQuotes).join(', ')
-    sql += " ) values ( "
+    sql += SqlIdentifier.renderAll(columnNames, addQuotes).join(COMMA_SEP)
+    sql += VALUES_CLAUSE
     sql += placeholders
-    sql += " ) "
+    sql += CLOSE_PAREN
     sql
   }
 

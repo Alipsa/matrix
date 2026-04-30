@@ -8,6 +8,8 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class SqlIdentifier {
 
+  private static final String UNDERSCORE = '_'
+
   /**
    * Quote an identifier with standard SQL double quotes.
    *
@@ -65,9 +67,9 @@ class SqlIdentifier {
    * @return a rendered constraint identifier
    */
   static String constraintName(String prefix, String tableName, boolean addQuotes = true) {
-    String normalized = "${requireIdentifier(prefix)}_${requireIdentifier(tableName)}"
-        .replaceAll(/[^A-Za-z0-9_]/, '_')
-        .replaceAll(/_+/, '_')
+    String normalized = "${requireIdentifier(prefix)}${UNDERSCORE}${requireIdentifier(tableName)}"
+        .replaceAll(/[^A-Za-z0-9_]/, UNDERSCORE)
+        .replaceAll(/_+/, UNDERSCORE)
         .replaceAll(/^_+|_+$/, '')
     render(normalized, addQuotes)
   }
@@ -157,4 +159,5 @@ class SqlIdentifier {
       'WHEN',
       'WHERE'
   ] as Set<String>
+
 }

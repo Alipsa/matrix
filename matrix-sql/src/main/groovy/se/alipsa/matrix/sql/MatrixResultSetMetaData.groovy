@@ -9,8 +9,13 @@ import se.alipsa.matrix.core.Matrix
 import java.sql.ResultSetMetaData
 import java.sql.SQLException
 
+/**
+ * Provides {@link ResultSetMetaData} backed by a {@link Matrix}, exposing column names,
+ * types, and display sizes derived from the matrix structure.
+ */
 @CompileStatic
 class MatrixResultSetMetaData implements ResultSetMetaData {
+
   Matrix matrix
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
 
@@ -73,7 +78,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isCurrency(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column-1))
+    return Number.isAssignableFrom(matrix.type(column - 1))
   }
 
   /**
@@ -98,7 +103,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isSigned(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column-1))
+    return Number.isAssignableFrom(matrix.type(column - 1))
   }
 
   /**
@@ -111,7 +116,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getColumnDisplaySize(int column) throws SQLException {
-    matrix.maxContentLength(matrix.columnName(column-1), false)
+    matrix.maxContentLength(matrix.columnName(column - 1), false)
   }
 
   /**
@@ -127,7 +132,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnLabel(int column) throws SQLException {
-    return matrix.columnName(column-1)
+    return matrix.columnName(column - 1)
   }
 
   /**
@@ -139,7 +144,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnName(int column) throws SQLException {
-    return matrix.columnName(column-1)
+    return matrix.columnName(column - 1)
   }
 
   /**
@@ -151,7 +156,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getSchemaName(int column) throws SQLException {
-    return ""
+    return ''
   }
 
   /**
@@ -206,7 +211,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getCatalogName(int column) throws SQLException {
-    return ""
+    return ''
   }
 
   /**
@@ -219,7 +224,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getColumnType(int column) throws SQLException {
-    sqlTypeMapper.jdbcType(matrix.type(column-1))
+    sqlTypeMapper.jdbcType(matrix.type(column - 1))
   }
 
   /**
@@ -232,7 +237,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnTypeName(int column) throws SQLException {
-    sqlTypeMapper.sqlType(matrix.type(column-1))
+    sqlTypeMapper.sqlType(matrix.type(column - 1))
   }
 
   /**
@@ -288,7 +293,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnClassName(int column) throws SQLException {
-    return matrix.type(column -1).getName()
+    return matrix.type(column - 1).getName()
   }
 
   /**
@@ -336,9 +341,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isWrapperFor(Class<?> iface) throws SQLException {
-    if (iface == Matrix || iface == List) {
-      return true
-    }
-    return false
+    iface == Matrix || iface == List
   }
+
 }

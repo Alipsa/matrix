@@ -30,6 +30,9 @@ class MatrixDbUtil {
   static final int DEFAULT_DECIMAL_PRECISION = 38
   static final int DEFAULT_DECIMAL_SCALE = 10
 
+  private static final String COL_TABLE_NAME = 'TABLE_NAME'
+  private static final String UNDERSCORE = '_'
+
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
   SqlTypeMapper mapper
@@ -41,7 +44,6 @@ class MatrixDbUtil {
   MatrixDbUtil(DataBaseProvider db) {
     this.mapper = SqlTypeMapper.create(db)
   }
-
 
   /**
    * create table and insert the table data.
@@ -75,7 +77,6 @@ class MatrixDbUtil {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
       result.ddlResult = stm.execute(sql)
-
     } catch (SQLException e) {
       log.error("Failed to create table $tableName using ddl: $sql", e)
       throw e
@@ -109,13 +110,13 @@ class MatrixDbUtil {
       Class type = types.get(i++)
       columns.add("${SqlIdentifier.render(name, addQuotes)} ${mapper.sqlType(type, props[name])}")
     }
-    sql += String.join(",\n", columns)
+    sql += String.join(',\n', columns)
     if (primaryKey.length > 0) {
       sql += "\n , CONSTRAINT ${SqlIdentifier.constraintName('pk', tableName, addQuotes)} PRIMARY KEY ("
       sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(', ')
-      sql += ")"
+      sql += ')'
     }
-    sql += "\n)"
+    sql += '\n)'
     sql
   }
 
@@ -172,16 +173,11 @@ class MatrixDbUtil {
       if (BigDecimal == type) {
         Integer left = 0
         Integer right = 0
-        for (int r = 0; r < rowsToScan; r++) {
+        (0..<rowsToScan).each { int r ->
           BigDecimal val = table[r, name]
-          if (val == null) {
-            continue
-          }
-          if (val.precision() - val.scale() > left) {
-            left = val.precision() - val.scale()
-          }
-          if (val.scale() > right) {
-            right = val.scale()
+          if (val != null) {
+            left = Math.max(left, val.precision() - val.scale())
+            right = Math.max(right, val.scale())
           }
         }
         Integer precision = left + right
@@ -189,13 +185,10 @@ class MatrixDbUtil {
         props.put(DECIMAL_SCALE, precision > 0 ? right : DEFAULT_DECIMAL_SCALE)
       } else if (type == String) {
         Integer maxLength = 0
-        for (int r = 0; r < rowsToScan; r++) {
+        (0..<rowsToScan).each { int r ->
           String val = table[r, name]
-          if (val == null) {
-            continue
-          }
-          if (val.length() > maxLength) {
-            maxLength = val.length()
+          if (val != null) {
+            maxLength = Math.max(maxLength, val.length())
           }
         }
         props.put(VARCHAR_SIZE, DEFAULT_VARCHAR_SIZE.max(maxLength))
@@ -253,7 +246,6 @@ class MatrixDbUtil {
     }
   }
 
-
   /**
    * Check if the given table exists in the database.
    *
@@ -277,7 +269,7 @@ class MatrixDbUtil {
   boolean tableExists(Connection con, String tableName) throws SQLException {
     try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
       while (rs.next()) {
-        String name = rs.getString('TABLE_NAME')
+        String name = rs.getString(COL_TABLE_NAME)
         if (name.toUpperCase() == tableName.toUpperCase()) {
           return true
         }
@@ -294,10 +286,10 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   Set<String> getTableNames(Connection con) throws SQLException {
-    Set<String> names = new HashSet<>()
+    Set<String> names = [] as Set
     try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
       while (rs.next()) {
-        names << rs.getString('TABLE_NAME')
+        names << rs.getString(COL_TABLE_NAME)
       }
     }
     names
@@ -365,8 +357,8 @@ class MatrixDbUtil {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Matrix name is required but was '$name'")
     }
-    name.replaceAll(/[^A-Za-z0-9_ ]/, '_')
-        .replaceAll(/_+/, '_')
+    name.replaceAll(/[^A-Za-z0-9_ ]/, UNDERSCORE)
+        .replaceAll(/_+/, UNDERSCORE)
         .replaceAll(/^_+|_+$/, '')
   }
 
@@ -383,9 +375,8 @@ class MatrixDbUtil {
       boolean hasResultSet = stm.execute(sql)
       if (hasResultSet) {
         return Matrix.builder().data(stm.getResultSet()).build()
-      } else {
-        return stm.getUpdateCount()
       }
+      stm.getUpdateCount()
     }
   }
 
@@ -398,4 +389,5 @@ class MatrixDbUtil {
   static ResultSet asResultSet(Matrix matrix) {
     new MatrixResultSet(matrix)
   }
+
 }

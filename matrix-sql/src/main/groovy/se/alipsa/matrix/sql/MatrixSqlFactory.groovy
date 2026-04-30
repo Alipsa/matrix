@@ -8,11 +8,15 @@ import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.mavenutils.ArtifactLookup
 
+/**
+ * Factory for creating {@link MatrixSql} instances from JDBC URLs or connection information,
+ * automatically resolving driver dependencies from Maven Central.
+ */
 @CompileStatic
 class MatrixSqlFactory {
 
   private static final Logger log = Logger.getLogger(MatrixSqlFactory)
-  static final String REPO_URL = "https://repo1.maven.org/maven2/"
+  static final String REPO_URL = 'https://repo1.maven.org/maven2/'
   static ArtifactLookup artifactLookup = new ArtifactLookup(REPO_URL) // visible for testing
   static final Map<DataBaseProvider, String> FALLBACK_VERSIONS = [
       (DataBaseProvider.H2)   : '2.4.240',
@@ -21,7 +25,7 @@ class MatrixSqlFactory {
 
   static MatrixSql createH2(String url, String user, String password, String additionalUrlProperties = null, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDriver("org.h2.Driver")
+    ci.setDriver('org.h2.Driver')
     if (additionalUrlProperties == null) {
       ci.setUrl(url)
     } else {
@@ -46,7 +50,7 @@ class MatrixSqlFactory {
   }
 
   static MatrixSql createH2(File dbFile, String user, String password, String additionalUrlProperties = null, String version = null) {
-    //jdbc:h2:file:/Users/pernyf/project/analysis/Overdraft/overdraft.db
+    // jdbc:h2:file:/Users/pernyf/project/analysis/Overdraft/overdraft.db
     createH2("jdbc:h2:file:$dbFile.absolutePath", user, password, additionalUrlProperties, version)
   }
 
@@ -69,7 +73,7 @@ class MatrixSqlFactory {
       dependencyVersion = version
     }
     ci.setDependency("org.apache.derby:derby:$dependencyVersion;org.apache.derby:derbytools:$dependencyVersion;org.apache.derby:derbyshared:$dependencyVersion")
-    ci.setDriver("org.apache.derby.jdbc.EmbeddedDriver")
+    ci.setDriver('org.apache.derby.jdbc.EmbeddedDriver')
     ci.setUrl("jdbc:derby:$dbName;create=true")
     return new MatrixSql(ci)
   }
@@ -119,8 +123,8 @@ class MatrixSqlFactory {
       }
     }
     Map<String, String> dependency = getDependencyName(ci.url)
-    if (dependency == null) {
-      throw new RuntimeException("Failed to find a suitable dependency for $ci.url")
+    if (dependency == null || dependency.isEmpty()) {
+      throw new IllegalStateException("Failed to find a suitable dependency for $ci.url")
     }
     String dependencyVersion = version
     if (dependencyVersion == null) {
@@ -135,9 +139,9 @@ class MatrixSqlFactory {
           log.warn("Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId, " +
               "falling back to version $dependencyVersion: ${e.message}", e)
         } else {
-          throw new RuntimeException(
+          throw new IllegalStateException(
               "Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId" +
-              " and no fallback version is configured for this provider", e)
+              ' and no fallback version is configured for this provider', e)
         }
       }
     }
@@ -147,7 +151,7 @@ class MatrixSqlFactory {
 
   static Map<String, String> getDependencyName(String url) {
     if (url == null) {
-      return null
+      return [:]
     }
 
     // Find the first DataBaseProvider whose urlStart matches the beginning of the URL.
@@ -155,10 +159,11 @@ class MatrixSqlFactory {
       url.startsWith(it.urlStart)
     } as DataBaseProvider
 
-    return matchingProvider?.with { mapDependency(it) }
+    matchingProvider != null ? mapDependency(matchingProvider) : [:]
   }
 
   static Map<String, String> mapDependency(DataBaseProvider provider) {
-    return [groupId: provider.dependencyGroupId, artifactId: provider.dependencyArtifactId]
+    [groupId: provider.dependencyGroupId, artifactId: provider.dependencyArtifactId]
   }
+
 }

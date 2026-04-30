@@ -4,10 +4,18 @@ import se.alipsa.matrix.core.util.Logger
 
 import javax.security.auth.login.AppConfigurationEntry
 import javax.security.auth.login.Configuration
+
+/**
+ * Loads a default JAAS (Java Authentication and Authorization Service) Kerberos
+ * configuration for the SQL JDBC driver if one is not already present.
+ *
+ * <p>This ensures that Kerberos-based authentication works out of the box when
+ * no explicit JAAS configuration has been provided by the environment.</p>
+ */
 class JaasConfigLoader {
 
   private static final Logger log = Logger.getLogger(JaasConfigLoader)
-  private static final String JAAS_CONFIG_NAME = "SQLJDBCDriver";
+  private static final String JAAS_CONFIG_NAME = 'SQLJDBCDriver'
 
   static void loadDefaultKerberosConfigIfNeeded() {
     try {
@@ -28,42 +36,51 @@ class JaasConfigLoader {
       } else {
         log.info("Existing JAAS configuration for $JAAS_CONFIG_NAME found. Skipping default load.")
       }
-
     } catch (SecurityException e) {
       // This is the typical exception thrown when a security policy prevents reading the default config,
       // or when no configuration has been loaded at all. Treat this as "not configured" and set our default.
-      log.error("Security exception retrieving JAAS config. Assuming none set and registering default.", e)
+      log.error('Security exception retrieving JAAS config. Assuming none set and registering default.', e)
       Configuration.setConfiguration(new KerberosJaasConfiguration(null))
-    } catch (RuntimeException e) {
-      // Intentional fail-fast: for any other unexpected runtime exceptions we log and rethrow
+    } catch (IllegalStateException e) {
+      // Intentional fail-fast: for any other unexpected state exceptions we log and rethrow
       // to avoid continuing application startup with a potentially broken JAAS/Kerberos configuration.
       // This may prevent the application from starting if JAAS initialization fails.
-      log.error("Unexpected runtime error during JAAS check: ${e.message}", e)
+      log.error("Unexpected error during JAAS check: ${e.message}", e)
       throw e
     }
   }
+
 }
 
-// Custom Configuration class to provide the SQLJDBCDriver entry
+/**
+ * Custom {@link Configuration} that provides a default Kerberos login module
+ * entry for the SQL JDBC driver ({@code SQLJDBCDriver}).
+ *
+ * <p>Delegates to a previously loaded configuration for all other entry names,
+ * so existing JAAS settings are preserved.</p>
+ */
 class KerberosJaasConfiguration extends Configuration {
-  private final Configuration delegate;
 
-  // Delegate allows us to respect other configurations loaded previously
-  public KerberosJaasConfiguration(Configuration delegate) {
-    this.delegate = delegate;
+  private static final String BOOLEAN_TRUE = 'true'
+
+  private final Configuration delegate
+
+  /** Delegate allows us to respect other configurations loaded previously. */
+  KerberosJaasConfiguration(Configuration delegate) {
+    this.delegate = delegate
   }
 
   @Override
   AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-    if (name.equals(JaasConfigLoader.JAAS_CONFIG_NAME)) {
+    if (name == JaasConfigLoader.JAAS_CONFIG_NAME) {
       // This is the default Kerberos login module provided by the JDK
-      HashMap<String, String> options = new HashMap<>()
-      options.put("useTicketCache", "true")
-      options.put("doNotPrompt", "true")
+      Map<String, String> options = [:]
+      options.put('useTicketCache', BOOLEAN_TRUE)
+      options.put('doNotPrompt', BOOLEAN_TRUE)
 
       return new AppConfigurationEntry[] {
           new AppConfigurationEntry(
-              "com.sun.security.auth.module.Krb5LoginModule",
+              'com.sun.security.auth.module.Krb5LoginModule',
               AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
               options
           )
@@ -71,6 +88,7 @@ class KerberosJaasConfiguration extends Configuration {
     }
 
     // Delegate to the previously loaded configuration for all other names
-    return (delegate != null) ? delegate.getAppConfigurationEntry(name) : null
+    (delegate != null) ? delegate.getAppConfigurationEntry(name) : new AppConfigurationEntry[0]
   }
+
 }

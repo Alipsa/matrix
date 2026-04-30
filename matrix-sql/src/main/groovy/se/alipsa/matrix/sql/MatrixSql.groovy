@@ -28,12 +28,15 @@ import java.util.stream.IntStream
 class MatrixSql implements Closeable {
 
   private static final Logger log = Logger.getLogger(MatrixSql)
+  private static final int DEFAULT_SCAN_ROWS = 100
+  private static final String SEMICOLON = ';'
+  private static final String PROP_USER = 'user'
 
-  private ConnectionInfo ci
-  private SqlTypeMapper mapper
-  private MatrixDbUtil matrixDbUtil
+  private final ConnectionInfo ci
+  private final SqlTypeMapper mapper
+  private final MatrixDbUtil matrixDbUtil
   private Connection con
-  private boolean closeConnectionOnClose = true
+  private final boolean closeConnectionOnClose
 
   /**
    * Create a MatrixSql instance using the given ConnectionInfo. A new connection will be
@@ -44,8 +47,9 @@ class MatrixSql implements Closeable {
   MatrixSql(ConnectionInfo ci) {
     check(ci)
     this.ci = ci
-    mapper = SqlTypeMapper.create(ci)
-    matrixDbUtil = new MatrixDbUtil(mapper)
+    this.mapper = SqlTypeMapper.create(ci)
+    this.matrixDbUtil = new MatrixDbUtil(mapper)
+    this.closeConnectionOnClose = true
   }
 
   /**
@@ -58,8 +62,9 @@ class MatrixSql implements Closeable {
   MatrixSql(ConnectionInfo ci, DataBaseProvider dbProvider) {
     check(ci)
     this.ci = ci
-    mapper = SqlTypeMapper.create(dbProvider)
-    matrixDbUtil = new MatrixDbUtil(mapper)
+    this.mapper = SqlTypeMapper.create(dbProvider)
+    this.matrixDbUtil = new MatrixDbUtil(mapper)
+    this.closeConnectionOnClose = true
   }
 
   /**
@@ -70,6 +75,7 @@ class MatrixSql implements Closeable {
    * @param dbProvider the database provider used for type mapping
    */
   MatrixSql(Connection connection, DataBaseProvider dbProvider) {
+    this.ci = null
     this.con = connection
     this.mapper = SqlTypeMapper.create(dbProvider)
     this.matrixDbUtil = new MatrixDbUtil(mapper)
@@ -84,6 +90,7 @@ class MatrixSql implements Closeable {
    * @param mapper the SQL type mapper to use
    */
   MatrixSql(Connection connection, SqlTypeMapper mapper) {
+    this.ci = null
     this.con = connection
     this.mapper = mapper
     this.matrixDbUtil = new MatrixDbUtil(mapper)
@@ -293,7 +300,6 @@ class MatrixSql implements Closeable {
     matrixDbUtil.dbExecuteSql(connect(), sql)
   }
 
-
   /**
    * create a table corresponding to the Matrix and insert the matrix data.
    *
@@ -344,7 +350,7 @@ class MatrixSql implements Closeable {
    </ul>
    */
   Map create(Matrix table, String... primaryKey) throws SQLException {
-    create(table, Math.max(100, table.rowCount()), primaryKey)
+    create(table, Math.max(DEFAULT_SCAN_ROWS, table.rowCount()), primaryKey)
   }
 
   /**
@@ -361,7 +367,7 @@ class MatrixSql implements Closeable {
    </ul>
    */
   Map create(String tableName, Matrix table, String... primaryKey) throws SQLException {
-    create(tableName, table, Math.max(100, table.rowCount()), primaryKey)
+    create(tableName, table, Math.max(DEFAULT_SCAN_ROWS, table.rowCount()), primaryKey)
   }
 
   /**
@@ -391,7 +397,7 @@ class MatrixSql implements Closeable {
    * @return the DDL string
    */
   String createDdl(Matrix table, boolean addQuotes = true, int... scanNumrows) {
-    Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(100, table.rowCount()))
+    Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(DEFAULT_SCAN_ROWS, table.rowCount()))
     matrixDbUtil.createTableDdl(tableName(table), table, mappings, addQuotes)
   }
 
@@ -552,7 +558,7 @@ class MatrixSql implements Closeable {
 
   private int dbExecuteBatchUpdate(Matrix table, String[] matchColumnName) throws SQLException {
     if (matchColumnName == null || matchColumnName.length == 0) {
-      throw new IllegalArgumentException("matchColumnName is required")
+      throw new IllegalArgumentException('matchColumnName is required')
     }
     if (table.rowCount() == 0) {
       return 0
@@ -560,7 +566,7 @@ class MatrixSql implements Closeable {
     List<String> matchColumns = matchColumnName.toList()
     List<String> updateColumns = SqlGenerator.updateColumnNames(table.columnNames(), matchColumns)
     if (updateColumns.isEmpty()) {
-      throw new IllegalArgumentException("No columns left to update after excluding match columns")
+      throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
     String sql = SqlGenerator.createPreparedUpdateSql(tableName(table), updateColumns, matchColumns)
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
@@ -591,12 +597,12 @@ class MatrixSql implements Closeable {
       return con
     }
     if (ci == null) {
-      throw new SQLException("Connection is not available and no ConnectionInfo is configured to create one")
+      throw new SQLException('Connection is not available and no ConnectionInfo is configured to create one')
     }
     String url = ci.getUrl().toLowerCase()
     if (!url.contains(':h2:') && !url.contains(':derby:')
-        && isBlank(ci.getPassword()) && !url.contains("passw")
-        && !url.contains("integratedsecurity=true")) {
+        && isBlank(ci.getPassword()) && !url.contains('passw')
+        && !url.contains('integratedsecurity=true')) {
       log.warn("Password probably required to ${ci.getName()} for ${ci.getUser()}")
     }
     con = dbConnect(ci)
@@ -636,8 +642,8 @@ class MatrixSql implements Closeable {
     }
     String dependency = ci.getDependency()
     List<String> dependencies = []
-    if (dependency.contains(';')) {
-      dependency.split(';').each {
+    if (dependency.contains(SEMICOLON)) {
+      dependency.split(SEMICOLON).each {
         dependencies << (it as String)
       }
     } else {
@@ -654,7 +660,7 @@ class MatrixSql implements Closeable {
       Class<Driver> clazz = (Class<Driver>) cl.loadClass(ci.getDriver())
       try {
         driver = clazz.getDeclaredConstructor().newInstance()
-      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
         log.error("Failed to instantiate the driver: ${ci.getDriver()}, clazz is $clazz: ${e.message}", e)
         throw e
       }
@@ -663,12 +669,12 @@ class MatrixSql implements Closeable {
       throw e
     }
     Properties props = new Properties()
-    if ( urlContainsLogin(ci.getUrlSafe()) ) {
+    if (urlContainsLogin(ci.getUrlSafe())) {
     } else {
       if (ci.getUser() != null) {
-        props.put("user", ci.getUser())
+        props.put(PROP_USER, ci.getUser())
         if (ci.getPassword() != null) {
-          props.put("password", ci.getPassword())
+          props.put('password', ci.getPassword())
         }
       }
     }
@@ -695,7 +701,7 @@ class MatrixSql implements Closeable {
 
   private static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
-    return ( safeLcUrl.contains("user") && safeLcUrl.contains("pass") ) || safeLcUrl.contains("@")
+    return (safeLcUrl.contains(PROP_USER) && safeLcUrl.contains('pass')) || safeLcUrl.contains('@')
   }
 
   /**
@@ -706,7 +712,7 @@ class MatrixSql implements Closeable {
    */
   static void check(ConnectionInfo connectionInfo) {
     if (connectionInfo.getDependency() == null || connectionInfo.getDependency().isBlank()) {
-      throw new IllegalArgumentException("Dependency is required")
+      throw new IllegalArgumentException('Dependency is required')
     }
   }
 
@@ -745,4 +751,5 @@ class MatrixSql implements Closeable {
   Connection getConnection() {
     return con
   }
+
 }
