@@ -33,12 +33,12 @@ implementation "se.alipsa.matrix:matrix-smile:0.1.0"
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.3</version>
+        <version>5.0.5</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.5.0</version>
+        <version>3.7.1</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>

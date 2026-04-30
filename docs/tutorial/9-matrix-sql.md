@@ -10,7 +10,7 @@ To use the matrix-sql module, you need to add it as a dependency to your project
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-sql'
 ```
@@ -34,7 +34,7 @@ implementation 'se.alipsa.matrix:matrix-sql'
       <dependency>
           <groupId>org.apache.groovy</groupId>
           <artifactId>groovy</artifactId>
-          <version>5.0.3</version>
+          <version>5.0.5</version>
       </dependency>
       <dependency>
           <groupId>se.alipsa.matrix</groupId>

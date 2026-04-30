@@ -238,7 +238,7 @@ This file provides guidance to Claude Code (claude.ai/code) and github copilot w
 
 ## Project Overview
 
-Matrix is a Groovy library for working with tabular (2D) data. It provides Matrix and Grid classes along with specialized modules for statistics, visualization, and data I/O formats. The project targets **JDK 21** and uses **Groovy 5.0.3**.
+Matrix is a Groovy library for working with tabular (2D) data. It provides Matrix and Grid classes along with specialized modules for statistics, visualization, and data I/O formats. The project targets **JDK 21** and uses **Groovy 5.0.5**.
 
 ## Build Commands
 
@@ -857,7 +857,7 @@ Use the `return` keyword only when we need to return early, otherwise use implic
 
 ### Modern Switch Expressions (JDK 14+ / Groovy 5+)
 
-**IMPORTANT:** With Groovy 5.0.3 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
+**IMPORTANT:** With Groovy 5.0.5 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
 
 **Use modern switch expressions:**
 ```groovy
@@ -1056,7 +1056,7 @@ For a test suite with 200+ tests, this optimization saves ~30 seconds per run.
 
 ## Key Dependencies
 
-- **Groovy**: 5.0.3 (groovy, groovy-sql, groovy-ginq)
+- **Groovy**: 5.0.5 (groovy, groovy-sql, groovy-ginq)
 - **Testing**: JUnit Jupiter 6.0.1
 - **Charting**: gsvg 0.4.0, JFreeChart 1.5.6, JavaFX 23.0.2
 - **Statistics**: Smile 4.4.2, commons-math3

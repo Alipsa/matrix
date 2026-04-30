@@ -10,7 +10,7 @@ Performance optimization applies to all Matrix modules. The core module is:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation "se.alipsa.matrix:matrix-core:3.5.0"
+implementation "se.alipsa.matrix:matrix-core:3.7.1"
 ```
 
 ### Maven Configuration
@@ -20,12 +20,12 @@ implementation "se.alipsa.matrix:matrix-core:3.5.0"
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.3</version>
+        <version>5.0.5</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.5.0</version>
+        <version>3.7.1</version>
     </dependency>
 </dependencies>
 ```
