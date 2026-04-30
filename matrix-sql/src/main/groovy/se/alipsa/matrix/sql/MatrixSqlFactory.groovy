@@ -128,7 +128,17 @@ class MatrixSqlFactory {
         dependencyVersion = artifactLookup
             .fetchLatestVersion(dependency.groupId, dependency.artifactId)
       } catch (Exception e) {
-        throw new RuntimeException ("Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId", e)
+        DataBaseProvider provider = DataBaseProvider.fromUrl(ci.url)
+        String fallback = FALLBACK_VERSIONS[provider]
+        if (fallback != null) {
+          dependencyVersion = fallback
+          log.warn("Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId, " +
+              "falling back to version $dependencyVersion: ${e.message}", e)
+        } else {
+          throw new RuntimeException(
+              "Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId" +
+              " and no fallback version is configured for this provider", e)
+        }
       }
     }
     ci.setDependency("$dependency.groupId:$dependency.artifactId:$dependencyVersion")
