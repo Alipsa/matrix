@@ -43,7 +43,7 @@ Date format used below is yyyy-MM-dd
 - Remove `log4j-to-slf4j` test runtime dependency.
 - Dependency upgrades:
   - se.alipsa.groovy:data-utils [2.0.4 -> 2.0.6]
-  - se.alipsa:maven-utils (replaces maven-3.9.11-utils 1.1.0) [-> 1.4.0]
+  - se.alipsa:maven-utils (replaces maven-3.9.11-utils 1.1.0) [-> 1.4.1]
 
 ### Documentation and test hygiene
 - Comprehensive GroovyDoc on all public methods and constructors.
