@@ -103,8 +103,9 @@ similar to `MatrixSql`, but every method takes a `java.sql.Connection`.
 
 ## Workflows
 
-The examples below use H2 for brevity, but the same APIs work for other supported
-databases.
+The examples below use the explicit H2 factory for brevity, but the same APIs work
+for other supported databases. Use `MatrixSqlFactory.create(...)` as shown above
+when you want Matrix SQL to infer the driver and dependency from the JDBC URL.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
