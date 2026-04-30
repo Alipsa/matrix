@@ -8,6 +8,11 @@ plugins {
     alias(libs.plugins.alipsaNexusRelease)
 }
 
+codenarc {
+    configFile = file('config/codenarc/ruleset.groovy')
+    ignoreFailures = false
+}
+
 group = 'se.alipsa.matrix'
 version = '2.4.0'
 description = 'Groovy sql module for Matrix'
