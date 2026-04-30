@@ -8,22 +8,25 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil
+import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.sql.MatrixDbUtil
-import se.alipsa.mavenutils.ArtifactLookup
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.sql.MatrixSqlFactory
 import se.alipsa.matrix.sql.SqlIdentifier
+import se.alipsa.mavenutils.ArtifactLookup
 
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
 
 class MatrixSqlTest {
+
+  private static final Logger log = Logger.getLogger(MatrixSqlTest)
 
   private static String h2MemUrl(String name, String additionalProperties = null) {
     String uniqueName = "${name}_${System.nanoTime()}"
@@ -106,7 +109,6 @@ class MatrixSqlTest {
       matrixSql.create(complexData)
 
       Matrix stored = matrixSql.select("select * from $tableName")
-      //println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
       assertEquals(java.sql.Date, stored.type('start'))
       assertEquals(ListConverter.toSqlDates('2021-12-01', '2022-07-10', '2023-05-27'), stored.column('start'))
 
@@ -248,12 +250,10 @@ class MatrixSqlTest {
 
     // Check that the factory creates the same MatrixSql as the explicit creation does
     try (MatrixSql h2 = MatrixSqlFactory.createH2(url, 'sa', '123', null, h2version)) {
-      //println "using $h2.connectionInfo.dependency with url ${h2.connectionInfo.url}"
       ddl2 = h2.createDdl(m)
-      String latestVersion = h2.connectionInfo.dependencyVersion
-      if (latestVersion != h2version) {
-        System.err.println("We are using version $h2version when explicitly specifying it but latest version is $latestVersion")
-        System.err.println("Consider updating it!")
+      String resolvedVersion = h2.connectionInfo.dependencyVersion
+      if (resolvedVersion != h2version) {
+        log.warn("Using H2 version $h2version explicitly, but MatrixSqlFactory resolved version $resolvedVersion")
       }
       //check that DB detection works properly
       assertTrue(ddl2.contains('"local date time" datetime2'), "Expected to find datetime2 but was $ddl2")
