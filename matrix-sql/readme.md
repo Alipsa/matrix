@@ -11,7 +11,7 @@ To use it, add the following to your Gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
 implementation 'se.alipsa.matrix:matrix-core:3.7.1'
-implementation 'se.alipsa.matrix:matrix-sql:2.3.1-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-sql:2.4.0'
 ```
 
 or if you use Maven:
@@ -31,7 +31,7 @@ or if you use Maven:
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.3.1-SNAPSHOT</version>
+    <version>2.4.0</version>
   </dependency>
 </dependencies>
 ```
