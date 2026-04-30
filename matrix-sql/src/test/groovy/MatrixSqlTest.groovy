@@ -14,6 +14,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.sql.MatrixDbUtil
+import se.alipsa.mavenutils.ArtifactLookup
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.sql.MatrixSqlFactory
 import se.alipsa.matrix.sql.SqlIdentifier
@@ -652,6 +653,93 @@ class MatrixSqlTest {
       assertNotNull(matrixSql.getConnection(), 'Connection should be non-null after connect()')
       assertTrue(matrixSql.getMatrixDbUtil() instanceof MatrixDbUtil)
       assertTrue(matrixSql.getSqlTypeMapper() instanceof SqlTypeMapper)
+    }
+  }
+
+  @Test
+  void testCreateH2FallsBackOnNetworkFailure() {
+    String url = h2MemUrl('fallback_h2_testdb')
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      try (MatrixSql ms = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
+            "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      }
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
+    }
+  }
+
+  @Test
+  void testCreateDerbyFallsBackOnNetworkFailure() {
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      try (MatrixSql ms = MatrixSqlFactory.createDerby("memory:fallback_derby_${System.nanoTime()}")) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]),
+            "Expected dependency to contain Derby fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]}")
+      }
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
+    }
+  }
+
+  @Test
+  void testGenericCreateFallsBackOnNetworkFailure() {
+    String url = h2MemUrl('fallback_generic_testdb')
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      try (MatrixSql ms = MatrixSqlFactory.create(url, 'sa', '123')) {
+        assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
+            "Expected dependency to contain H2 fallback version ${MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]}")
+      }
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
+    }
+  }
+
+  @Test
+  void testGenericCreateThrowsWithCoordinatesWhenNoFallback() {
+    String pgUrl = 'jdbc:postgresql://localhost:5432/testdb'
+    Map<String, String> pgDependency = MatrixSqlFactory.getDependencyName(pgUrl)
+    assertNotNull(pgDependency, 'Expected PostgreSQL to be a known provider in DataBaseProvider')
+
+    ArtifactLookup original = MatrixSqlFactory.artifactLookup
+    try {
+      MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+        @Override
+        String fetchLatestVersion(String g, String a) throws Exception {
+          throw new IOException("Simulated network failure")
+        }
+      }
+      RuntimeException ex = assertThrows(RuntimeException) {
+        MatrixSqlFactory.create(pgUrl, 'user', 'pass')
+      }
+      assertTrue(ex.message.contains(pgDependency.groupId),
+          "Expected message to contain groupId '${pgDependency.groupId}', was: ${ex.message}")
+      assertTrue(ex.message.contains(pgDependency.artifactId),
+          "Expected message to contain artifactId '${pgDependency.artifactId}', was: ${ex.message}")
+      assertTrue(ex.message.contains('no fallback version is configured'),
+          "Expected message to mention missing fallback, was: ${ex.message}")
+    } finally {
+      MatrixSqlFactory.artifactLookup = original
     }
   }
 
