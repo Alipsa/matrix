@@ -9,7 +9,7 @@
 - Add regression tests for nominal sentinel round-trips, invalid date rejection, and UTC date output
 - Fixed all codenarc warnings and change the build to fail on any new warnings.
 
-## v0.2.0 - 2016-03-18
+## v0.2.0 - 2026-03-18
 - add sparse ARFF data row read support with validation for duplicate and out-of-range attribute indices
 - add `ArffFormatProvider` and service registration so `.arff` files work with the generic `Matrix.read(...)` / `matrix.write(...)` SPI API
 - expand `ArffReadOptions` with `fallbackMatrixName` support, strict validation toggles, and richer parser error messages with line context
