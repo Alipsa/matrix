@@ -1,20 +1,18 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
-import java.util.Locale
-
-@CompileStatic
+/**
+ * Shared coercion helpers for ARFF SPI option values.
+ */
 final class ArffOptionValues {
 
   private ArffOptionValues() {
   }
 
   static boolean booleanValue(Object value, String name) {
-    if (value instanceof Boolean) {
+    if (Boolean.isInstance(value)) {
       return (Boolean) value
     }
-    if (value instanceof CharSequence) {
+    if (CharSequence.isInstance(value)) {
       String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
       if (normalized == 'true') {
         return true
@@ -25,4 +23,5 @@ final class ArffOptionValues {
     }
     throw new IllegalArgumentException("$name must be a boolean but was ${value?.class}")
   }
+
 }

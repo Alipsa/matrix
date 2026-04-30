@@ -15,6 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 
+@SuppressWarnings('ClassSize')
 @TestMethodOrder(MethodOrderer.OrderAnnotation)
 class MatrixArffTest {
 
@@ -24,17 +25,17 @@ class MatrixArffTest {
   @BeforeAll
   static void setup() {
     // Get the iris.arff file from test resources
-    URL irisUrl = MatrixArffTest.class.getClassLoader().getResource("iris.arff")
-    assertNotNull(irisUrl, "iris.arff should be in test resources")
+    URL irisUrl = MatrixArffTest.getClassLoader().getResource('iris.arff')
+    assertNotNull(irisUrl, 'iris.arff should be in test resources')
     irisFile = new File(irisUrl.toURI())
 
     // Create temp directory for output files
-    tempDir = Files.createTempDirectory("matrix-arff-test").toFile()
+    tempDir = Files.createTempDirectory('matrix-arff-test').toFile()
   }
 
   @AfterAll
   static void cleanup() {
-    if (tempDir != null && tempDir.exists()) {
+    if (tempDir?.exists()) {
       tempDir.listFiles()?.each { it.delete() }
       tempDir.delete()
     }
@@ -44,41 +45,41 @@ class MatrixArffTest {
   void readIrisFromFile() {
     Matrix m = MatrixArffReader.read(irisFile)
 
-    assertEquals("iris", m.matrixName)
+    assertEquals('iris', m.matrixName)
     assertEquals(150, m.rowCount())
     assertEquals(5, m.columnCount())
 
     // Check column names
-    List<String> expectedColumns = ["sepallength", "sepalwidth", "petallength", "petalwidth", "class"]
+    List<String> expectedColumns = ['sepallength', 'sepalwidth', 'petallength', 'petalwidth', 'class']
     assertEquals(expectedColumns, m.columnNames())
 
     // Check first row values
-    assertEquals(new BigDecimal("5.1"), m[0, "sepallength"])
-    assertEquals(new BigDecimal("3.5"), m[0, "sepalwidth"])
-    assertEquals(new BigDecimal("1.4"), m[0, "petallength"])
-    assertEquals(new BigDecimal("0.2"), m[0, "petalwidth"])
-    assertEquals("Iris-setosa", m[0, "class"])
+    assertEquals(5.1, m[0, 'sepallength'])
+    assertEquals(3.5, m[0, 'sepalwidth'])
+    assertEquals(1.4, m[0, 'petallength'])
+    assertEquals(0.2, m[0, 'petalwidth'])
+    assertEquals('Iris-setosa', m[0, 'class'])
 
     // Check last row values
-    assertEquals(new BigDecimal("5.9"), m[149, "sepallength"])
-    assertEquals(new BigDecimal("3.0"), m[149, "sepalwidth"])
-    assertEquals(new BigDecimal("5.1"), m[149, "petallength"])
-    assertEquals(new BigDecimal("1.8"), m[149, "petalwidth"])
-    assertEquals("Iris-virginica", m[149, "class"])
+    assertEquals(5.9, m[149, 'sepallength'])
+    assertEquals(3.0, m[149, 'sepalwidth'])
+    assertEquals(5.1, m[149, 'petallength'])
+    assertEquals(1.8, m[149, 'petalwidth'])
+    assertEquals('Iris-virginica', m[149, 'class'])
 
     // Check types
-    assertEquals(BigDecimal, m.type("sepallength"))
-    assertEquals(BigDecimal, m.type("sepalwidth"))
-    assertEquals(BigDecimal, m.type("petallength"))
-    assertEquals(BigDecimal, m.type("petalwidth"))
-    assertEquals(String, m.type("class"))
+    assertEquals(BigDecimal, m.type('sepallength'))
+    assertEquals(BigDecimal, m.type('sepalwidth'))
+    assertEquals(BigDecimal, m.type('petallength'))
+    assertEquals(BigDecimal, m.type('petalwidth'))
+    assertEquals(String, m.type('class'))
   }
 
   @Test @Order(2)
   void readIrisFromPath() {
     Matrix m = MatrixArffReader.read(irisFile.toPath())
 
-    assertEquals("iris", m.matrixName)
+    assertEquals('iris', m.matrixName)
     assertEquals(150, m.rowCount())
     assertEquals(5, m.columnCount())
   }
@@ -87,7 +88,7 @@ class MatrixArffTest {
   void readIrisFromUrl() {
     Matrix m = MatrixArffReader.read(irisFile.toURI().toURL())
 
-    assertEquals("iris", m.matrixName)
+    assertEquals('iris', m.matrixName)
     assertEquals(150, m.rowCount())
     assertEquals(5, m.columnCount())
   }
@@ -95,10 +96,10 @@ class MatrixArffTest {
   @Test @Order(4)
   void readIrisFromInputStream() {
     new FileInputStream(irisFile).withStream { InputStream is ->
-      Matrix m = MatrixArffReader.read(is, "test-iris")
+      Matrix m = MatrixArffReader.read(is, 'test-iris')
 
       // Note: The name from @RELATION in the file takes precedence over the default name
-      assertEquals("iris", m.matrixName)
+      assertEquals('iris', m.matrixName)
       assertEquals(150, m.rowCount())
       assertEquals(5, m.columnCount())
     }
@@ -110,7 +111,7 @@ class MatrixArffTest {
     Matrix original = MatrixArffReader.read(irisFile)
 
     // Write to a new file
-    File outputFile = new File(tempDir, "iris_output.arff")
+    File outputFile = new File(tempDir, 'iris_output.arff')
     MatrixArffWriter.write(original, outputFile)
 
     // Read it back
@@ -122,8 +123,8 @@ class MatrixArffTest {
     assertEquals(original.columnNames(), roundTripped.columnNames())
 
     // Check a few values
-    for (int row : [0, 50, 100, 149]) {
-      for (String col : original.columnNames()) {
+    [0, 50, 100, 149].each { int row ->
+      original.columnNames().each { String col ->
         Object origVal = original[row, col]
         Object roundVal = roundTripped[row, col]
         if (origVal instanceof BigDecimal && roundVal instanceof BigDecimal) {
@@ -140,7 +141,7 @@ class MatrixArffTest {
   void writeToPath() {
     Matrix original = MatrixArffReader.read(irisFile)
 
-    Path outputPath = tempDir.toPath().resolve("iris_path_output.arff")
+    Path outputPath = tempDir.toPath().resolve('iris_path_output.arff')
     MatrixArffWriter.write(original, outputPath)
 
     assertTrue(Files.exists(outputPath))
@@ -155,12 +156,12 @@ class MatrixArffTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     MatrixArffWriter.write(original, baos)
 
-    String arffContent = baos.toString("UTF-8")
-    assertTrue(arffContent.contains("@RELATION"))
-    assertTrue(arffContent.contains("@ATTRIBUTE"))
-    assertTrue(arffContent.contains("@DATA"))
-    assertTrue(arffContent.contains("sepallength"))
-    assertTrue(arffContent.contains("5.1"))
+    String arffContent = baos.toString('UTF-8')
+    assertTrue(arffContent.contains('@RELATION'))
+    assertTrue(arffContent.contains('@ATTRIBUTE'))
+    assertTrue(arffContent.contains('@DATA'))
+    assertTrue(arffContent.contains('sepallength'))
+    assertTrue(arffContent.contains('5.1'))
   }
 
   @Test @Order(8)
@@ -170,26 +171,26 @@ class MatrixArffTest {
     StringWriter sw = new StringWriter()
     MatrixArffWriter.write(original, sw)
 
-    String arffContent = sw.toString()
-    assertTrue(arffContent.contains("@RELATION"))
-    assertTrue(arffContent.contains("@ATTRIBUTE"))
-    assertTrue(arffContent.contains("@DATA"))
+    String arffContent = sw as String
+    assertTrue(arffContent.contains('@RELATION'))
+    assertTrue(arffContent.contains('@ATTRIBUTE'))
+    assertTrue(arffContent.contains('@DATA'))
   }
 
   @Test @Order(9)
   void testNumericTypes() {
     // Create a matrix with numeric columns
-    Matrix m = Matrix.builder("numeric_test")
-        .columnNames("integers", "decimals", "longs")
+    Matrix m = Matrix.builder('numeric_test')
+        .columnNames('integers', 'decimals', 'longs')
         .columns(
-            [1, 2, 3, 4, 5] as List,
-            [1.1, 2.2, 3.3, 4.4, 5.5] as List,
-            [100L, 200L, 300L, 400L, 500L] as List
+            [1, 2, 3, 4, 5],
+            [1.1, 2.2, 3.3, 4.4, 5.5],
+            [100L, 200L, 300L, 400L, 500L]
         )
         .types([Integer, BigDecimal, Long])
         .build()
 
-    File outputFile = new File(tempDir, "numeric_test.arff")
+    File outputFile = new File(tempDir, 'numeric_test.arff')
     MatrixArffWriter.write(m, outputFile)
 
     Matrix roundTripped = MatrixArffReader.read(outputFile)
@@ -200,7 +201,7 @@ class MatrixArffTest {
   @Test @Order(10)
   void testMissingValues() {
     // Create ARFF content with missing values
-    String arffContent = """
+    String arffContent = '''
 @RELATION missing_test
 
 @ATTRIBUTE name STRING
@@ -210,51 +211,51 @@ class MatrixArffTest {
 'Alice',10.5
 'Bob',?
 ?,20.5
-""".trim()
+'''.trim()
 
-    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes("UTF-8"))
-    Matrix m = MatrixArffReader.read(bais, "missing_test")
+    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes('UTF-8'))
+    Matrix m = MatrixArffReader.read(bais, 'missing_test')
 
     assertEquals(3, m.rowCount())
-    assertEquals("Alice", m[0, "name"])
-    assertEquals(new BigDecimal("10.5"), m[0, "value"])
-    assertEquals("Bob", m[1, "name"])
-    assertNull(m[1, "value"])
-    assertNull(m[2, "name"])
-    assertEquals(new BigDecimal("20.5"), m[2, "value"])
+    assertEquals('Alice', m[0, 'name'])
+    assertEquals(10.5, m[0, 'value'])
+    assertEquals('Bob', m[1, 'name'])
+    assertNull(m[1, 'value'])
+    assertNull(m[2, 'name'])
+    assertEquals(20.5, m[2, 'value'])
   }
 
   @Test @Order(11)
   void testNominalValues() {
     // Create a matrix and specify nominal mappings when writing
-    Matrix m = Matrix.builder("nominal_test")
-        .columnNames("category", "value")
+    Matrix m = Matrix.builder('nominal_test')
+        .columnNames('category', 'value')
         .columns(
-            ["A", "B", "A", "C", "B"] as List,
-            [1.0, 2.0, 3.0, 4.0, 5.0] as List
+            ['A', 'B', 'A', 'C', 'B'],
+            [1.0, 2.0, 3.0, 4.0, 5.0]
         )
         .types([String, BigDecimal])
         .build()
 
-    File outputFile = new File(tempDir, "nominal_test.arff")
-    Map<String, List<String>> nominalMappings = ["category": ["A", "B", "C"]]
+    File outputFile = new File(tempDir, 'nominal_test.arff')
+    Map<String, List<String>> nominalMappings = ['category': ['A', 'B', 'C']]
     MatrixArffWriter.write(m, outputFile, nominalMappings)
 
     // Verify the output contains nominal type definition
     String content = outputFile.text
-    assertTrue(content.contains("{A,B,C}"))
+    assertTrue(content.contains('{A,B,C}'))
 
     // Read it back
     Matrix roundTripped = MatrixArffReader.read(outputFile)
     assertEquals(5, roundTripped.rowCount())
-    assertEquals("A", roundTripped[0, "category"])
-    assertEquals("C", roundTripped[3, "category"])
+    assertEquals('A', roundTripped[0, 'category'])
+    assertEquals('C', roundTripped[3, 'category'])
   }
 
   @Test @Order(12)
   void testQuotedValues() {
     // Create ARFF content with quoted values
-    String arffContent = """
+    String arffContent = '''
 @RELATION 'quoted test'
 
 @ATTRIBUTE 'column with space' STRING
@@ -263,19 +264,19 @@ class MatrixArffTest {
 @DATA
 'value with, comma',10.5
 'simple',20.5
-""".trim()
+'''.trim()
 
-    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes("UTF-8"))
-    Matrix m = MatrixArffReader.read(bais, "quoted_test")
+    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes('UTF-8'))
+    Matrix m = MatrixArffReader.read(bais, 'quoted_test')
 
     assertEquals(2, m.rowCount())
-    assertEquals("value with, comma", m[0, "column with space"])
-    assertEquals("simple", m[1, "column with space"])
+    assertEquals('value with, comma', m[0, 'column with space'])
+    assertEquals('simple', m[1, 'column with space'])
   }
 
   @Test @Order(13)
   void testIntegerType() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION integer_test
 
 @ATTRIBUTE id INTEGER
@@ -285,21 +286,21 @@ class MatrixArffTest {
 1,100
 2,200
 3,300
-""".trim()
+'''.trim()
 
-    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes("UTF-8"))
+    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes('UTF-8'))
     Matrix m = MatrixArffReader.read(bais)
 
     assertEquals(3, m.rowCount())
-    assertEquals(Integer, m.type("id"))
-    assertEquals(Integer, m.type("count"))
-    assertEquals(1, m[0, "id"])
-    assertEquals(200, m[1, "count"])
+    assertEquals(Integer, m.type('id'))
+    assertEquals(Integer, m.type('count'))
+    assertEquals(1, m[0, 'id'])
+    assertEquals(200, m[1, 'count'])
   }
 
   @Test @Order(14)
   void testCommentsAreIgnored() {
-    String arffContent = """
+    String arffContent = '''
 % This is a comment
 % Another comment line
 
@@ -315,34 +316,34 @@ class MatrixArffTest {
 2.0
 % Another ignored comment
 3.0
-""".trim()
+'''.trim()
 
-    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes("UTF-8"))
+    ByteArrayInputStream bais = new ByteArrayInputStream(arffContent.getBytes('UTF-8'))
     Matrix m = MatrixArffReader.read(bais)
 
     assertEquals(3, m.rowCount())
-    assertEquals(new BigDecimal("1.0"), m[0, "value"])
-    assertEquals(new BigDecimal("2.0"), m[1, "value"])
-    assertEquals(new BigDecimal("3.0"), m[2, "value"])
+    assertEquals(1.0, m[0, 'value'])
+    assertEquals(2.0, m[1, 'value'])
+    assertEquals(3.0, m[2, 'value'])
   }
 
   @Test @Order(15)
   void testReadFromFilePathString() {
     Matrix m = MatrixArffReader.readFile(irisFile.absolutePath)
-    assertEquals("iris", m.matrixName)
+    assertEquals('iris', m.matrixName)
     assertEquals(150, m.rowCount())
   }
 
   @Test @Order(16)
   void testReadFromUrlString() {
     Matrix m = MatrixArffReader.readUrl(irisFile.toURI().toString())
-    assertEquals("iris", m.matrixName)
+    assertEquals('iris', m.matrixName)
     assertEquals(150, m.rowCount())
   }
 
   @Test @Order(17)
   void testReadFromStringAndReader() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION string_test
 
 @ATTRIBUTE name STRING
@@ -350,20 +351,20 @@ class MatrixArffTest {
 
 @DATA
 'Alice',10.5
-""".trim()
+'''.trim()
 
     Matrix fromString = MatrixArffReader.readString(arffContent)
-    assertEquals("string_test", fromString.matrixName)
-    assertEquals(new BigDecimal("10.5"), fromString[0, "value"])
+    assertEquals('string_test', fromString.matrixName)
+    assertEquals(10.5, fromString[0, 'value'])
 
     Matrix fromReader = MatrixArffReader.read(new StringReader(arffContent))
-    assertEquals("string_test", fromReader.matrixName)
-    assertEquals("Alice", fromReader[0, "name"])
+    assertEquals('string_test', fromReader.matrixName)
+    assertEquals('Alice', fromReader[0, 'name'])
   }
 
   @Test @Order(18)
   void testEscapedQuotesAndWhitespace() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION 'quote test'
 
 @ATTRIBUTE 'col with \\'quote' STRING
@@ -372,40 +373,40 @@ class MatrixArffTest {
 @DATA
 '  spaced value  ','O\\'Reilly'
 'back\\\\slash','?'
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
-    assertEquals("col with 'quote", m.columnNames()[0])
-    assertEquals("  spaced value  ", m[0, "col with 'quote"])
-    assertEquals("O'Reilly", m[0, "value"])
-    assertEquals("back\\slash", m[1, "col with 'quote"])
-    assertEquals("?", m[1, "value"])
+    assertEquals('col with \'quote', m.columnNames()[0])
+    assertEquals('  spaced value  ', m[0, 'col with \'quote'])
+    assertEquals('O\'Reilly', m[0, 'value'])
+    assertEquals('back\\slash', m[1, 'col with \'quote'])
+    assertEquals('?', m[1, 'value'])
   }
 
   @Test @Order(19)
   void testLongAndBigIntegerWrittenAsNumeric() {
-    Matrix m = Matrix.builder("long_test")
-        .columnNames("longs", "bigints")
+    Matrix m = Matrix.builder('long_test')
+        .columnNames('longs', 'bigints')
         .columns(
-            [1L, 2L] as List,
-            [new BigInteger("123"), new BigInteger("456")] as List
+            [1L, 2L],
+            [123G, 456G]
         )
         .types([Long, BigInteger])
         .build()
 
-    File outputFile = new File(tempDir, "long_test.arff")
+    File outputFile = new File(tempDir, 'long_test.arff')
     MatrixArffWriter.write(m, outputFile)
 
     Matrix roundTripped = MatrixArffReader.read(outputFile)
-    assertEquals(BigDecimal, roundTripped.type("longs"))
-    assertEquals(BigDecimal, roundTripped.type("bigints"))
-    assertEquals(new BigDecimal("1"), roundTripped[0, "longs"])
-    assertEquals(new BigDecimal("456"), roundTripped[1, "bigints"])
+    assertEquals(BigDecimal, roundTripped.type('longs'))
+    assertEquals(BigDecimal, roundTripped.type('bigints'))
+    assertEquals(1 as BigDecimal, roundTripped[0, 'longs'])
+    assertEquals(456 as BigDecimal, roundTripped[1, 'bigints'])
   }
 
   @Test @Order(20)
   void testNominalValuesWithBraces() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION brace_nominal
 
 @ATTRIBUTE label {'value with }','{leading brace}','plain'}
@@ -414,18 +415,18 @@ class MatrixArffTest {
 'value with }'
 '{leading brace}'
 plain
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
     assertEquals(3, m.rowCount())
-    assertEquals("value with }", m[0, "label"])
-    assertEquals("{leading brace}", m[1, "label"])
-    assertEquals("plain", m[2, "label"])
+    assertEquals('value with }', m[0, 'label'])
+    assertEquals('{leading brace}', m[1, 'label'])
+    assertEquals('plain', m[2, 'label'])
   }
 
   @Test @Order(21)
   void testWhitespaceBeforeQuotedValue() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION whitespace_test
 
 @ATTRIBUTE id INTEGER
@@ -433,20 +434,20 @@ plain
 
 @DATA
 1,  'text'
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
-    assertEquals("text", m[0, "note"])
+    assertEquals('text', m[0, 'note'])
   }
 
   @Test @Order(22)
   void testWriteString() {
-    Matrix m = Matrix.builder("string_test")
-        .columnNames("id", "name", "value")
+    Matrix m = Matrix.builder('string_test')
+        .columnNames('id', 'name', 'value')
         .columns(
-            [1, 2, 3] as List,
-            ["Alice", "Bob", "Charlie"] as List,
-            [10.5, 20.5, 30.5] as List
+            [1, 2, 3],
+            ['Alice', 'Bob', 'Charlie'],
+            [10.5, 20.5, 30.5]
         )
         .types([Integer, String, BigDecimal])
         .build()
@@ -454,45 +455,45 @@ plain
     String arffContent = MatrixArffWriter.writeString(m)
 
     assertNotNull(arffContent)
-    assertTrue(arffContent.contains("@RELATION string_test"))
-    assertTrue(arffContent.contains("@ATTRIBUTE id INTEGER"))
-    assertTrue(arffContent.contains("@ATTRIBUTE name"))
-    assertTrue(arffContent.contains("@ATTRIBUTE value NUMERIC"))
-    assertTrue(arffContent.contains("@DATA"))
-    assertTrue(arffContent.contains("Alice"))
-    assertTrue(arffContent.contains("10.5"))
+    assertTrue(arffContent.contains('@RELATION string_test'))
+    assertTrue(arffContent.contains('@ATTRIBUTE id INTEGER'))
+    assertTrue(arffContent.contains('@ATTRIBUTE name'))
+    assertTrue(arffContent.contains('@ATTRIBUTE value NUMERIC'))
+    assertTrue(arffContent.contains('@DATA'))
+    assertTrue(arffContent.contains('Alice'))
+    assertTrue(arffContent.contains('10.5'))
   }
 
   @Test @Order(23)
   void testWriteStringWithNominalMappings() {
-    Matrix m = Matrix.builder("nominal_string_test")
-        .columnNames("category", "value")
+    Matrix m = Matrix.builder('nominal_string_test')
+        .columnNames('category', 'value')
         .columns(
-            ["A", "B", "A", "C"] as List,
-            [1, 2, 3, 4] as List
+            ['A', 'B', 'A', 'C'],
+            [1, 2, 3, 4]
         )
         .types([String, Integer])
         .build()
 
-    Map<String, List<String>> nominalMappings = ["category": ["A", "B", "C", "D"]]
+    Map<String, List<String>> nominalMappings = ['category': ['A', 'B', 'C', 'D']]
     String arffContent = MatrixArffWriter.writeString(m, nominalMappings)
 
     assertNotNull(arffContent)
-    assertTrue(arffContent.contains("@RELATION nominal_string_test"))
-    assertTrue(arffContent.contains("{A,B,C,D}"))
-    assertTrue(arffContent.contains("@DATA"))
-    assertTrue(arffContent.contains("A,1"))
-    assertTrue(arffContent.contains("C,4"))
+    assertTrue(arffContent.contains('@RELATION nominal_string_test'))
+    assertTrue(arffContent.contains('{A,B,C,D}'))
+    assertTrue(arffContent.contains('@DATA'))
+    assertTrue(arffContent.contains('A,1'))
+    assertTrue(arffContent.contains('C,4'))
   }
 
   @Test @Order(24)
   void testWriteStringRoundTrip() {
-    Matrix original = Matrix.builder("roundtrip_test")
-        .columnNames("id", "name", "score")
+    Matrix original = Matrix.builder('roundtrip_test')
+        .columnNames('id', 'name', 'score')
         .columns(
-            [1, 2, 3] as List,
-            ["Alice", "Bob", "Charlie"] as List,
-            [95.5, 87.3, 92.1] as List
+            [1, 2, 3],
+            ['Alice', 'Bob', 'Charlie'],
+            [95.5, 87.3, 92.1]
         )
         .types([Integer, String, BigDecimal])
         .build()
@@ -505,20 +506,20 @@ plain
     assertEquals(original.columnNames(), roundTripped.columnNames())
 
     // Check values
-    assertEquals(1, roundTripped[0, "id"])
-    assertEquals("Alice", roundTripped[0, "name"])
-    assertEquals(new BigDecimal("95.5"), roundTripped[0, "score"])
-    assertEquals(3, roundTripped[2, "id"])
-    assertEquals("Charlie", roundTripped[2, "name"])
+    assertEquals(1, roundTripped[0, 'id'])
+    assertEquals('Alice', roundTripped[0, 'name'])
+    assertEquals(95.5, roundTripped[0, 'score'])
+    assertEquals(3, roundTripped[2, 'id'])
+    assertEquals('Charlie', roundTripped[2, 'name'])
   }
 
   @Test @Order(25)
   void testWriteStringProducesSameOutputAsWriter() {
-    Matrix m = Matrix.builder("compare_test")
-        .columnNames("x", "y")
+    Matrix m = Matrix.builder('compare_test')
+        .columnNames('x', 'y')
         .columns(
-            [1, 2, 3] as List,
-            [10, 20, 30] as List
+            [1, 2, 3],
+            [10, 20, 30]
         )
         .types([Integer, Integer])
         .build()
@@ -529,7 +530,7 @@ plain
     // Get output from write(Writer)
     StringWriter sw = new StringWriter()
     MatrixArffWriter.write(m, sw)
-    String fromWriter = sw.toString()
+    String fromWriter = sw as String
 
     // They should be identical
     assertEquals(fromWriter, fromWriteString)
@@ -537,7 +538,7 @@ plain
 
   @Test @Order(26)
   void testReadSparseRows() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION sparse_test
 
 @ATTRIBUTE score NUMERIC
@@ -549,33 +550,33 @@ plain
 {0 1.5,2 yes}
 {1 'hello',3 4}
 {}
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
 
-    assertEquals("sparse_test", m.matrixName)
+    assertEquals('sparse_test', m.matrixName)
     assertEquals(3, m.rowCount())
     assertEquals(4, m.columnCount())
 
-    assertEquals(new BigDecimal("1.5"), m[0, "score"])
-    assertNull(m[0, "note"])
-    assertEquals("yes", m[0, "status"])
-    assertNull(m[0, "count"])
+    assertEquals(1.5, m[0, 'score'])
+    assertNull(m[0, 'note'])
+    assertEquals('yes', m[0, 'status'])
+    assertNull(m[0, 'count'])
 
-    assertNull(m[1, "score"])
-    assertEquals("hello", m[1, "note"])
-    assertNull(m[1, "status"])
-    assertEquals(4, m[1, "count"])
+    assertNull(m[1, 'score'])
+    assertEquals('hello', m[1, 'note'])
+    assertNull(m[1, 'status'])
+    assertEquals(4, m[1, 'count'])
 
-    assertNull(m[2, "score"])
-    assertNull(m[2, "note"])
-    assertNull(m[2, "status"])
-    assertNull(m[2, "count"])
+    assertNull(m[2, 'score'])
+    assertNull(m[2, 'note'])
+    assertNull(m[2, 'status'])
+    assertNull(m[2, 'count'])
   }
 
   @Test @Order(27)
   void testReadSparseRowsWithQuotedStringsAndMissingValues() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION sparse_quotes
 
 @ATTRIBUTE note STRING
@@ -585,23 +586,23 @@ plain
 @DATA
 {0 'text, with comma',1 'value with comma'}
 {0 'O\\'Reilly',2 ?}
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
 
     assertEquals(2, m.rowCount())
-    assertEquals("text, with comma", m[0, "note"])
-    assertEquals("value with comma", m[0, "category"])
-    assertNull(m[0, "amount"])
+    assertEquals('text, with comma', m[0, 'note'])
+    assertEquals('value with comma', m[0, 'category'])
+    assertNull(m[0, 'amount'])
 
-    assertEquals("O'Reilly", m[1, "note"])
-    assertNull(m[1, "category"])
-    assertNull(m[1, "amount"])
+    assertEquals('O\'Reilly', m[1, 'note'])
+    assertNull(m[1, 'category'])
+    assertNull(m[1, 'amount'])
   }
 
   @Test @Order(28)
   void testSparseRowsRejectDuplicateIndices() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION sparse_duplicate
 
 @ATTRIBUTE value NUMERIC
@@ -609,18 +610,18 @@ plain
 
 @DATA
 {0 1.0,0 2.0}
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent)
     }
 
-    assertTrue(exception.message.contains("Duplicate sparse ARFF attribute index 0"))
+    assertTrue(exception.message.contains('Duplicate sparse ARFF attribute index 0'))
   }
 
   @Test @Order(29)
   void testSparseRowsRejectOutOfRangeIndices() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION sparse_bounds
 
 @ATTRIBUTE value NUMERIC
@@ -628,18 +629,18 @@ plain
 
 @DATA
 {2 'oops'}
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent)
     }
 
-    assertTrue(exception.message.contains("out of bounds"))
+    assertTrue(exception.message.contains('out of bounds'))
   }
 
   @Test @Order(30)
   void testSparseRowsRejectNegativeIndices() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION sparse_negative
 
 @ATTRIBUTE value NUMERIC
@@ -647,18 +648,18 @@ plain
 
 @DATA
 {-1 'oops'}
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent)
     }
 
-    assertTrue(exception.message.contains("out of bounds"))
+    assertTrue(exception.message.contains('out of bounds'))
   }
 
   @Test @Order(31)
   void testMixedDenseAndSparseRows() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION mixed_rows
 
 @ATTRIBUTE id INTEGER
@@ -670,67 +671,67 @@ plain
 {0 2,2 20.5}
 3,'dense again',?
 {1 'sparse only'}
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
 
     assertEquals(4, m.rowCount())
-    assertEquals(1, m[0, "id"])
-    assertEquals("dense", m[0, "note"])
-    assertEquals(new BigDecimal("10.5"), m[0, "score"])
+    assertEquals(1, m[0, 'id'])
+    assertEquals('dense', m[0, 'note'])
+    assertEquals(10.5, m[0, 'score'])
 
-    assertEquals(2, m[1, "id"])
-    assertNull(m[1, "note"])
-    assertEquals(new BigDecimal("20.5"), m[1, "score"])
+    assertEquals(2, m[1, 'id'])
+    assertNull(m[1, 'note'])
+    assertEquals(20.5, m[1, 'score'])
 
-    assertEquals(3, m[2, "id"])
-    assertEquals("dense again", m[2, "note"])
-    assertNull(m[2, "score"])
+    assertEquals(3, m[2, 'id'])
+    assertEquals('dense again', m[2, 'note'])
+    assertNull(m[2, 'score'])
 
-    assertNull(m[3, "id"])
-    assertEquals("sparse only", m[3, "note"])
-    assertNull(m[3, "score"])
+    assertNull(m[3, 'id'])
+    assertEquals('sparse only', m[3, 'note'])
+    assertNull(m[3, 'score'])
   }
 
   @Test @Order(32)
   void testWriteOptionsDisableNominalInference() {
-    Matrix m = Matrix.builder("schema_options")
-        .columnNames("category", "value")
+    Matrix m = Matrix.builder('schema_options')
+        .columnNames('category', 'value')
         .columns(
-            ["A", "B", "A", "C"] as List,
-            [1, 2, 3, 4] as List
+            ['A', 'B', 'A', 'C'],
+            [1, 2, 3, 4]
         )
         .types([String, Integer])
         .build()
 
     String arffContent = MatrixArffWriter.writeString(m, new ArffWriteOptions().inferNominals(false))
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+    assertTrue(arffContent.contains('@ATTRIBUTE category STRING'))
   }
 
   @Test @Order(33)
   void testWriteOptionsCustomNominalThreshold() {
-    Matrix m = Matrix.builder("nominal_threshold")
-        .columnNames("category", "value")
+    Matrix m = Matrix.builder('nominal_threshold')
+        .columnNames('category', 'value')
         .columns(
-            ["A", "B", "A", "B"] as List,
-            [1, 2, 3, 4] as List
+            ['A', 'B', 'A', 'B'],
+            [1, 2, 3, 4]
         )
         .types([String, Integer])
         .build()
 
     String arffContent = MatrixArffWriter.writeString(m, new ArffWriteOptions().nominalThreshold(1))
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+    assertTrue(arffContent.contains('@ATTRIBUTE category STRING'))
   }
 
   @Test @Order(34)
   void testWriteOptionsForceStringOutput() {
-    Matrix m = Matrix.builder("force_string")
-        .columnNames("category", "value")
+    Matrix m = Matrix.builder('force_string')
+        .columnNames('category', 'value')
         .columns(
-            ["A", "B", "A", "C"] as List,
-            [1, 2, 3, 4] as List
+            ['A', 'B', 'A', 'C'],
+            [1, 2, 3, 4]
         )
         .types([String, Integer])
         .build()
@@ -740,13 +741,13 @@ plain
         new ArffWriteOptions().attributeTypesByColumn([category: ArffTypeDecl.STRING])
     )
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+    assertTrue(arffContent.contains('@ATTRIBUTE category STRING'))
   }
 
   @Test @Order(35)
   void testWriteOptionsForceNominalOutput() {
     List<String> labels = (1..12).collect { int i -> "label$i" }
-    Matrix m = Matrix.builder("force_nominal")
+    Matrix m = Matrix.builder('force_nominal')
         .columns(label: labels)
         .types([String])
         .build()
@@ -756,53 +757,78 @@ plain
         new ArffWriteOptions().nominalColumns(['label'])
     )
 
-    assertTrue(arffContent.contains("@ATTRIBUTE label {"))
-    assertTrue(arffContent.contains("label1"))
-    assertTrue(arffContent.contains("label12"))
+    assertTrue(arffContent.contains('@ATTRIBUTE label {'))
+    assertTrue(arffContent.contains('label1'))
+    assertTrue(arffContent.contains('label12'))
   }
 
   @Test @Order(36)
   void testWriteOptionsPreserveExplicitNominalOrdering() {
-    Matrix m = Matrix.builder("nominal_order")
-        .columns(category: ["A", "B", "C"])
+    Matrix m = Matrix.builder('nominal_order')
+        .columns(category: ['A', 'B', 'C'])
         .types([String])
         .build()
 
     String arffContent = MatrixArffWriter.writeString(
         m,
-        new ArffWriteOptions().nominalMappings([category: ["B", "A", "C"]])
+        new ArffWriteOptions().nominalMappings([category: ['B', 'A', 'C']])
     )
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category {B,A,C}"))
+    assertTrue(arffContent.contains('@ATTRIBUTE category {B,A,C}'))
   }
 
   @Test @Order(37)
+  void testNominalSentinelValuesRoundTripAsLiterals() {
+    Matrix m = Matrix.builder('nominal_literals')
+        .columns(category: ['', '?', '%comment', 'normal'])
+        .types([String])
+        .build()
+
+    ArffWriteOptions options = new ArffWriteOptions().nominalMappings([
+        category: ['', '?', '%comment', 'normal']
+    ])
+    String arffContent = MatrixArffWriter.writeString(m, options)
+    Matrix result = MatrixArffReader.readString(arffContent)
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','%comment',normal}"))
+    assertTrue(arffContent.contains("''"))
+    assertTrue(arffContent.contains("'?'"))
+    assertTrue(arffContent.contains("'%comment'"))
+    assertEquals('', result[0, 'category'])
+    assertEquals('?', result[1, 'category'])
+    assertEquals('%comment', result[2, 'category'])
+    assertEquals('normal', result[3, 'category'])
+  }
+
+  @Test @Order(38)
   void testWriteOptionsGlobalDateFormat() {
-    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd")
-    Matrix m = Matrix.builder("date_format")
-        .columns(created: [inputFormat.parse("2026-03-17"), inputFormat.parse("2026-03-18")])
+    SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
+    Matrix m = Matrix.builder('date_format')
+        .columns(created: [inputFormat.parse('2026-03-17'), inputFormat.parse('2026-03-18')])
         .types([Date])
         .build()
 
     String arffContent = MatrixArffWriter.writeString(
         m,
-        new ArffWriteOptions().dateFormat("yyyy-MM-dd")
+        new ArffWriteOptions().dateFormat('yyyy-MM-dd')
     )
 
     assertTrue(arffContent.contains("@ATTRIBUTE created DATE 'yyyy-MM-dd'"))
     assertTrue(arffContent.contains("'2026-03-17'"))
   }
 
-  @Test @Order(38)
+  @Test @Order(39)
   void testWriteOptionsPerColumnDateFormats() {
-    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    Date created = inputFormat.parse("2026-03-17 11:12:13")
-    Date updated = inputFormat.parse("2026-03-18 14:15:16")
-    Matrix m = Matrix.builder("date_format_columns")
-        .columnNames("created", "updated")
+    SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
+    Date created = inputFormat.parse('2026-03-17 11:12:13')
+    Date updated = inputFormat.parse('2026-03-18 14:15:16')
+    Matrix m = Matrix.builder('date_format_columns')
+        .columnNames('created', 'updated')
         .columns(
-            [created] as List,
-            [updated] as List
+            [created],
+            [updated]
         )
         .types([Date, Date])
         .build()
@@ -810,8 +836,8 @@ plain
     String arffContent = MatrixArffWriter.writeString(
         m,
         new ArffWriteOptions()
-            .dateFormat("yyyy-MM-dd")
-            .dateFormatsByColumn([updated: "yyyy/MM/dd HH:mm"])
+            .dateFormat('yyyy-MM-dd')
+            .dateFormatsByColumn([updated: 'yyyy/MM/dd HH:mm'])
     )
 
     assertTrue(arffContent.contains("@ATTRIBUTE created DATE 'yyyy-MM-dd'"))
@@ -820,10 +846,44 @@ plain
     assertTrue(arffContent.contains("'2026/03/18 14:15'"))
   }
 
-  @Test @Order(39)
+  @Test @Order(40)
+  void testInvalidDateIsRejected() {
+    String arffContent = '''
+@RELATION invalid_date
+
+@ATTRIBUTE created DATE 'yyyy-MM-dd'
+
+@DATA
+'2026-02-31'
+'''.trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("Invalid DATE value '2026-02-31'"))
+    assertTrue(exception.message.contains('line 6'))
+  }
+
+  @Test @Order(41)
+  void testDateOutputUsesUtc() {
+    Matrix m = Matrix.builder('utc_dates')
+        .columns(created: [Instant.parse('2026-03-18T14:15:16Z')])
+        .types([Instant])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().dateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    )
+
+    assertTrue(arffContent.contains("'2026-03-18T14:15:16'"))
+  }
+
+  @Test @Order(42)
   void testWriteOptionsRejectConflictingTypeConfiguration() {
-    Matrix m = Matrix.builder("conflict")
-        .columns(category: ["A", "B"])
+    Matrix m = Matrix.builder('conflict')
+        .columns(category: ['A', 'B'])
         .types([String])
         .build()
 
@@ -831,23 +891,23 @@ plain
       MatrixArffWriter.writeString(
           m,
           new ArffWriteOptions()
-              .nominalMappings([category: ["B", "A"]])
+              .nominalMappings([category: ['B', 'A']])
               .attributeTypesByColumn([category: ArffTypeDecl.STRING])
       )
     }
 
-    assertTrue(exception.message.contains("nominal configuration"))
+    assertTrue(exception.message.contains('nominal configuration'))
   }
 
-  @Test @Order(40)
+  @Test @Order(43)
   void testTypedReadOverloadsUseArffReadOptions() {
-    String arffContent = """
+    String arffContent = '''
 @ATTRIBUTE id INTEGER
 @ATTRIBUTE label STRING
 @DATA
 1,'alpha'
 2,'beta'
-""".trim()
+'''.trim()
     File file = new File(tempDir, 'typed_read.arff')
     file.text = arffContent
     ArffReadOptions options = new ArffReadOptions().fallbackMatrixName('typed_fallback')
@@ -872,15 +932,16 @@ plain
     }
   }
 
-  @Test @Order(41)
+  @Test @Order(44)
   void testTypedWriteOverloadsProduceSameOutput() {
-    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    Matrix m = Matrix.builder("typed_write")
-        .columnNames("created", "category", "value")
+    SimpleDateFormat inputFormat = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss', Locale.US)
+    inputFormat.timeZone = TimeZone.getTimeZone('UTC')
+    Matrix m = Matrix.builder('typed_write')
+        .columnNames('created', 'category', 'value')
         .columns(
-            [inputFormat.parse("2026-03-18 09:10:11")] as List,
-            ['A'] as List,
-            [1] as List
+            [inputFormat.parse('2026-03-18 09:10:11')],
+            ['A'],
+            [1]
         )
         .types([Date, String, Integer])
         .build()
@@ -907,18 +968,18 @@ plain
 
     StringWriter sw = new StringWriter()
     MatrixArffWriter.write(m, sw, options)
-    assertEquals(expected, sw.toString())
+    assertEquals(expected, sw as String)
   }
 
-  @Test @Order(42)
+  @Test @Order(45)
   void testUnknownAttributeTypeDefaultsToString() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION unknown_type
 
 @ATTRIBUTE note CUSTOMTYPE
 @DATA
 hello
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
 
@@ -926,27 +987,27 @@ hello
     assertEquals('hello', m[0, 'note'])
   }
 
-  @Test @Order(43)
+  @Test @Order(46)
   void testStrictUnknownAttributeTypeFails() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION unknown_type_strict
 
 @ATTRIBUTE note CUSTOMTYPE
 @DATA
 hello
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent, 'unknown_type_strict', new ArffReadOptions().strict(true))
     }
 
-    assertTrue(exception.message.contains("Unknown @ATTRIBUTE type 'CUSTOMTYPE'"))
+    assertTrue(exception.message.contains('Unknown @ATTRIBUTE type \'CUSTOMTYPE\''))
     assertTrue(exception.message.contains('line 3'))
   }
 
-  @Test @Order(44)
+  @Test @Order(47)
   void testDenseRowsStayLenientByDefault() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION lenient_rows
 
 @ATTRIBUTE first STRING
@@ -955,7 +1016,7 @@ hello
 @DATA
 'only first'
 'first',2.5,99
-""".trim()
+'''.trim()
 
     Matrix m = MatrixArffReader.readString(arffContent)
 
@@ -963,12 +1024,12 @@ hello
     assertEquals('only first', m[0, 'first'])
     assertNull(m[0, 'second'])
     assertEquals('first', m[1, 'first'])
-    assertEquals(new BigDecimal('2.5'), m[1, 'second'])
+    assertEquals(2.5, m[1, 'second'])
   }
 
-  @Test @Order(45)
+  @Test @Order(48)
   void testStrictDenseRowsRejectMissingValues() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION strict_missing_row
 
 @ATTRIBUTE first STRING
@@ -976,7 +1037,7 @@ hello
 
 @DATA
 'only first'
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent, 'strict_missing_row', new ArffReadOptions().strict(true))
@@ -987,9 +1048,9 @@ hello
     assertTrue(exception.message.contains('line 7'))
   }
 
-  @Test @Order(46)
+  @Test @Order(49)
   void testStrictDenseRowsRejectExtraValues() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION strict_extra_row
 
 @ATTRIBUTE first STRING
@@ -997,7 +1058,7 @@ hello
 
 @DATA
 'first',2.5,99
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent, 'strict_extra_row', new ArffReadOptions().strict(true))
@@ -1008,16 +1069,16 @@ hello
     assertTrue(exception.message.contains('line 7'))
   }
 
-  @Test @Order(47)
+  @Test @Order(50)
   void testMalformedDenseRowReportsLineContext() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION malformed_dense
 
 @ATTRIBUTE note STRING
 
 @DATA
 'unterminated
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent)
@@ -1028,16 +1089,16 @@ hello
     assertTrue(exception.message.contains("'unterminated"))
   }
 
-  @Test @Order(48)
+  @Test @Order(51)
   void testMalformedSparseRowReportsLineContext() {
-    String arffContent = """
+    String arffContent = '''
 @RELATION malformed_sparse
 
 @ATTRIBUTE note STRING
 
 @DATA
 {0 'unterminated}
-""".trim()
+'''.trim()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       MatrixArffReader.readString(arffContent)
@@ -1047,4 +1108,5 @@ hello
     assertTrue(exception.message.contains('line 6'))
     assertTrue(exception.message.contains("{0 'unterminated}"))
   }
+
 }

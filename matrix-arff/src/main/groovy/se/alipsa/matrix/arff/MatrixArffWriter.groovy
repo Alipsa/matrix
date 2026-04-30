@@ -1,7 +1,5 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 import java.io.FileOutputStream
@@ -16,7 +14,6 @@ import java.time.LocalDateTime
 /**
  * Writes Matrix objects to ARFF (Attribute-Relation File Format) files.
  */
-@CompileStatic
 class MatrixArffWriter {
 
   private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
@@ -334,7 +331,7 @@ class MatrixArffWriter {
   }
 
   private static String formatDate(Object value, ArffAttributeInfo info) {
-    SimpleDateFormat sdf = new SimpleDateFormat(info.dateFormat ?: DEFAULT_DATE_FORMAT)
+    SimpleDateFormat sdf = ArffDateFormats.create(info.dateFormat ?: DEFAULT_DATE_FORMAT)
     if (value instanceof Date) {
       return "'${sdf.format((Date) value)}'"
     }
@@ -363,7 +360,8 @@ class MatrixArffWriter {
   }
 
   private static String escapeNominalValue(String value) {
-    if (value.contains(',') || value.contains(' ') || value.contains("'") ||
+    if (value.isEmpty() || value == '?' || value.startsWith('%') ||
+        value.contains(',') || value.contains(' ') || value.contains("'") ||
         value.contains('"') || value.contains('{') || value.contains('}')) {
       return "'${escapeQuotedContent(value)}'"
     }
@@ -417,7 +415,6 @@ class MatrixArffWriter {
   }
 }
 
-@CompileStatic
 class ArffAttributeInfo {
   ArffTypeDecl type
   String typeDeclaration

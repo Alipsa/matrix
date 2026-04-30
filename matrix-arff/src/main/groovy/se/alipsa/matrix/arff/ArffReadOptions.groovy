@@ -1,15 +1,16 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
  * Typed options for ARFF read operations via the SPI.
  */
-@CompileStatic
 class ArffReadOptions {
+
+  private static final String STRICT = 'strict'
+  private static final String FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE = 'failOnUnknownAttributeType'
+  private static final String FAIL_ON_ROW_LENGTH_MISMATCH = 'failOnRowLengthMismatch'
 
   private String fallbackMatrixName = null
   private boolean strict = false
@@ -61,14 +62,14 @@ class ArffReadOptions {
         result.fallbackMatrixName(fallbackMatrixName)
       }
     }
-    if (normalized.containsKey('strict')) {
-      result.strict(ArffOptionValues.booleanValue(normalized.strict, 'strict'))
+    if (normalized.containsKey(STRICT)) {
+      result.strict(ArffOptionValues.booleanValue(normalized.strict, STRICT))
     }
     if (normalized.containsKey('failonunknownattributetype')) {
-      result.failOnUnknownAttributeType(ArffOptionValues.booleanValue(normalized.failonunknownattributetype, 'failOnUnknownAttributeType'))
+      result.failOnUnknownAttributeType(ArffOptionValues.booleanValue(normalized.failonunknownattributetype, FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE))
     }
     if (normalized.containsKey('failonrowlengthmismatch')) {
-      result.failOnRowLengthMismatch(ArffOptionValues.booleanValue(normalized.failonrowlengthmismatch, 'failOnRowLengthMismatch'))
+      result.failOnRowLengthMismatch(ArffOptionValues.booleanValue(normalized.failonrowlengthmismatch, FAIL_ON_ROW_LENGTH_MISMATCH))
     }
     result
   }
@@ -97,9 +98,10 @@ class ArffReadOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('fallbackMatrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
-        new OptionDescriptor('strict', Boolean, false, 'Enable fail-fast validation for unknown attribute types and row length mismatches unless overridden by specific options'),
-        new OptionDescriptor('failOnUnknownAttributeType', Boolean, 'strict', 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
-        new OptionDescriptor('failOnRowLengthMismatch', Boolean, 'strict', 'Fail when a dense @DATA row has more or fewer values than the declared attributes')
+        new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types and row length mismatches unless overridden by specific options'),
+        new OptionDescriptor(FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE, Boolean, STRICT, 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
+        new OptionDescriptor(FAIL_ON_ROW_LENGTH_MISMATCH, Boolean, STRICT, 'Fail when a dense @DATA row has more or fewer values than the declared attributes')
     ]
   }
+
 }

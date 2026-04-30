@@ -26,7 +26,7 @@ To use the matrix-arff module, add it as a dependency to your project.
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
 implementation "se.alipsa.matrix:matrix-core:3.5.0"
-implementation "se.alipsa.matrix:matrix-arff:0.1.0"
+implementation "se.alipsa.matrix:matrix-arff:0.2.1"
 ```
 
 ### Maven Configuration
@@ -46,7 +46,7 @@ implementation "se.alipsa.matrix:matrix-arff:0.1.0"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-arff</artifactId>
-        <version>0.1.0</version>
+        <version>0.2.1</version>
     </dependency>
 </dependencies>
 ```

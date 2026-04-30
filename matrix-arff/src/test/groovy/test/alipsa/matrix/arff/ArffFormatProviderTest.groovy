@@ -241,4 +241,5 @@ value
     assertEquals('yyyy-MM-dd', roundTrip.dateFormat)
     assertEquals([createdAt: 'yyyy/MM/dd HH:mm'], roundTrip.dateFormatsByColumn)
   }
+
 }

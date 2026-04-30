@@ -1,7 +1,5 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.StandardCharsets
@@ -21,7 +19,6 @@ import java.util.regex.Pattern
  * - @DATA marks the start of data rows
  * - Data rows are comma-separated values
  */
-@CompileStatic
 class MatrixArffReader {
 
   private static final Pattern DATE_FORMAT_PATTERN = Pattern.compile(/(?i)date\s*(?:'([^']*)'|"([^"]*)")?/)
@@ -636,7 +633,7 @@ class MatrixArffReader {
 
   private static Date parseDate(String value, String format) throws ParseException {
     String resolvedFormat = format ?: "yyyy-MM-dd'T'HH:mm:ss"
-    SimpleDateFormat sdf = new SimpleDateFormat(resolvedFormat)
+    SimpleDateFormat sdf = ArffDateFormats.create(resolvedFormat)
     sdf.parse(value)
   }
 
@@ -756,7 +753,6 @@ class MatrixArffReader {
     new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}", cause)
   }
 
-  @CompileStatic
   private static final class ParsedToken {
     final String value
     final boolean quoted
@@ -778,7 +774,6 @@ enum ArffType {
 }
 
 /** Class representing an ARFF attribute definition. */
-@CompileStatic
 class ArffAttribute {
   String name
   ArffType type

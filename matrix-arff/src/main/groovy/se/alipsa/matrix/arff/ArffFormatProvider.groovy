@@ -1,7 +1,5 @@
 package se.alipsa.matrix.arff
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.spi.OptionDescriptor
 /**
  * SPI format provider for ARFF files.
  */
-@CompileStatic
 class ArffFormatProvider extends AbstractFormatProvider {
 
   private static final Set<String> EXTENSIONS = ['arff'] as Set<String>
@@ -67,4 +64,5 @@ class ArffFormatProvider extends AbstractFormatProvider {
   List<OptionDescriptor> writeOptionDescriptors() {
     ArffWriteOptions.descriptors()
   }
+
 }
