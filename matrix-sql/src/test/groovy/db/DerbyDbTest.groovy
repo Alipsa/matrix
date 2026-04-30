@@ -17,11 +17,11 @@ class DerbyDbTest {
     try (def derby = MatrixSqlFactory.createDerby(dbFile)) {
       def result
       if (derby.tableExists('test')) {
-        result = derby.executeQuery("drop table test")
+        result = derby.executeQuery('drop table test')
         assertEquals(0, result)
       }
 
-      result = derby.executeQuery("""
+      result = derby.executeQuery('''
         create table test (
           "place" INTEGER,
           "firstname" VARCHAR(8),
@@ -30,15 +30,15 @@ class DerbyDbTest {
           "theTime" TIME,
           "local date time" TIMESTAMP
         )
-        """)
+        ''')
       assertEquals(0, result)
 
-      result = derby.executeQuery("""
+      result = derby.executeQuery('''
       insert into test values (1, 'Per', '2025-02-27', X'DE', '11:24', '2025-01-12 12:14:32')
-      """)
+      ''')
       assertEquals(1, result)
 
-      result = derby.executeQuery("select * from test").withMatrixName("test")
+      result = derby.executeQuery('select * from test').withMatrixName('test')
       assertInstanceOf(Matrix, result)
       Matrix selected = result as Matrix
       assertEquals('test', selected.matrixName)
@@ -46,9 +46,10 @@ class DerbyDbTest {
       assertEquals(1, selected[0, 'place'])
       assertEquals('Per', selected[0, 'firstname'])
 
-      result = derby.executeQuery("drop table test")
+      result = derby.executeQuery('drop table test')
       assertEquals(0, result)
       assertFalse(derby.tableExists('test'))
     }
   }
+
 }

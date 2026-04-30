@@ -2,7 +2,6 @@ package it
 
 import se.alipsa.groovy.datautil.DataBaseProvider
 
-
 class Db2Test extends AbstractDbTest {
 
   Db2Test() {

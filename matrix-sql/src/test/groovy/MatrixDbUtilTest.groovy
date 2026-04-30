@@ -23,7 +23,7 @@ class MatrixDbUtilTest {
     ci.setUrl("jdbc:h2:mem:${dbName};DB_CLOSE_DELAY=-1;MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
     ci.setUser('sa')
     ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
+    ci.setDriver('org.h2.Driver')
     Matrix m = AbstractDbTest.getComplexData()
     def mapper = SqlTypeMapper.create(ci)
     def util = new MatrixDbUtil(mapper)
@@ -153,4 +153,5 @@ class MatrixDbUtilTest {
     assertEquals(MatrixDbUtil.DEFAULT_DECIMAL_PRECISION, mappings['amount'][DECIMAL_PRECISION])
     assertEquals(MatrixDbUtil.DEFAULT_DECIMAL_SCALE, mappings['amount'][DECIMAL_SCALE])
   }
+
 }

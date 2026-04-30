@@ -33,13 +33,13 @@ abstract class AbstractDbTest {
       .definition(['name': String, 'measurePoint': String, 'millis': Long])
       .build()
 
-  AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
+  protected AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
     if (db == DataBaseProvider.DERBY) {
       ci.setDependency('org.apache.derby:derby:10.17.1.0;org.apache.derby:derbytools:10.17.1.0;org.apache.derby:derbyshared:10.17.1.0')
       ci.setUrl("jdbc:derby:memory:$dbName;create=true")
-      ci.setDriver("org.apache.derby.jdbc.EmbeddedDriver")
-      //Grape.grab(ci.dependency) // does not work since junit is not running in a groovy class loader
+      ci.setDriver('org.apache.derby.jdbc.EmbeddedDriver')
+      // Grape.grab(ci.dependency) // does not work since junit is not running in a groovy class loader
     } else {
       ci.setDependency('com.h2database:h2:2.4.240')
       String uniqueName = "${dbName}_${System.nanoTime()}"
@@ -57,7 +57,7 @@ abstract class AbstractDbTest {
       ci.setUrl(url)
       ci.setUser('sa')
       ci.setPassword('123')
-      ci.setDriver("org.h2.Driver")
+      ci.setDriver('org.h2.Driver')
     }
     this.db = db
     matrixSql = new MatrixSql(ci, db)
@@ -80,23 +80,23 @@ abstract class AbstractDbTest {
     long start = System.currentTimeMillis()
     String tableName = matrixDbUtil.tableName(dataset)
     long ctm1 = System.currentTimeMillis()
-    dur + [dataset.matrixName, "1. table name", ctm1 - start]
+    dur + [dataset.matrixName, '1. table name', ctm1 - start]
     if (matrixDbUtil.tableExists(con, tableName)) {
       matrixDbUtil.dropTable(con, tableName)
     }
     long ctm2 = System.currentTimeMillis()
-    dur + [dataset.matrixName, "2. check and drop table", ctm2 - ctm1]
+    dur + [dataset.matrixName, '2. check and drop table', ctm2 - ctm1]
     if (scanNumRows.length > 0) {
       matrixDbUtil.create(con, dataset, scanNumRows[0])
     } else {
       matrixDbUtil.create(con, dataset)
     }
     long ctm3 = System.currentTimeMillis()
-    dur + [dataset.matrixName, "3. create table", ctm3 - ctm2]
+    dur + [dataset.matrixName, '3. create table', ctm3 - ctm2]
 
     Matrix m2 = matrixDbUtil.select(con, "select * from $tableName")
     long ctm4 = System.currentTimeMillis()
-    dur + [dataset.matrixName, "4. select *", ctm4 - ctm3]
+    dur + [dataset.matrixName, '4. select *', ctm4 - ctm3]
     dataset.eachWithIndex { Row row, int r ->
       row.eachWithIndex { Object expected, int c ->
         def actual = ValueConverter.convert(m2[r, c], dataset.type(c))
@@ -113,8 +113,8 @@ abstract class AbstractDbTest {
       }
     }
     long ctm5 = System.currentTimeMillis()
-    dur + [dataset.matrixName, "5. compare values", ctm5 - ctm4]
-    dur + [dataset.matrixName, "6. total round", System.currentTimeMillis() - start]
+    dur + [dataset.matrixName, '5. compare values', ctm5 - ctm4]
+    dur + [dataset.matrixName, '6. total round', System.currentTimeMillis() - start]
   }
 
   static Matrix getComplexData() {
@@ -131,4 +131,5 @@ abstract class AbstractDbTest {
         .matrixName('complexData')
         .build()
   }
+
 }

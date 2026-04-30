@@ -31,13 +31,13 @@ class MatrixResultSetTest {
       i++
     }
     rs.first()
-    rs.updateString(1, "Foo")
+    rs.updateString(1, 'Foo')
     rs.updateRow()
     Matrix m = rs.unwrap(Matrix)
-    assertEquals("Foo", m[0,0])
+    assertEquals('Foo', m[0, 0])
 
     def rsmd = rs.getMetaData()
-    assertEquals(String.class.getName(), rsmd.getColumnClassName(1), "First column should be String")
+    assertEquals(String.getName(), rsmd.getColumnClassName(1), 'First column should be String')
     assertEquals(mtcars.columnCount(), rsmd.columnCount)
     assertEquals('VARCHAR', rsmd.getColumnTypeName(1))
     assertEquals(Types.VARCHAR, rsmd.getColumnType(1))
@@ -279,4 +279,5 @@ class MatrixResultSetTest {
     assertNotNull(rsmd.unwrap(List))
     assertThrows(SQLException) { rsmd.unwrap(String) }
   }
+
 }

@@ -37,13 +37,11 @@ class MatrixSqlTest {
     return url
   }
 
-
   @Test
   void testH2TableCreation() {
     String url = h2MemUrl('h2testdb')
     Matrix airq = Dataset.airquality()
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
-
       String tableName = matrixSql.tableName(airq)
       if (matrixSql.tableExists(tableName)) {
         matrixSql.dropTable(tableName)
@@ -58,12 +56,12 @@ class MatrixSqlTest {
       // Explicitly call toString to force interpolation in a closure
       sql.query("select * from $tableName".toString()) { rs ->
         while (rs.next()) {
-          assertEquals(ps(airq[i, 0]), ps(rs.getBigDecimal("Ozone")), "ozone on row $i differs")
-          assertEquals(ps(airq[i, 1]), ps(rs.getBigDecimal("Solar.R")), "Solar.R on row $i differs")
-          assertEquals(ps(airq[i, 2]), ps(rs.getBigDecimal("Wind")), "Wind on row $i differs")
-          assertEquals(ps(airq[i, 3]), ps(rs.getBigDecimal("Temp")), "Temp on row $i differs")
-          assertEquals(airq[i, 4], rs.getShort("Month"), "Month on row $i differs")
-          assertEquals(airq[i, 5], rs.getShort("Day"), "Day on row $i differs")
+          assertEquals(ps(airq[i, 0]), ps(rs.getBigDecimal('Ozone')), "ozone on row $i differs")
+          assertEquals(ps(airq[i, 1]), ps(rs.getBigDecimal('Solar.R')), "Solar.R on row $i differs")
+          assertEquals(ps(airq[i, 2]), ps(rs.getBigDecimal('Wind')), "Wind on row $i differs")
+          assertEquals(ps(airq[i, 3]), ps(rs.getBigDecimal('Temp')), "Temp on row $i differs")
+          assertEquals(airq[i, 4], rs.getShort('Month'), "Month on row $i differs")
+          assertEquals(airq[i, 5], rs.getShort('Day'), "Day on row $i differs")
           i++
         }
       }
@@ -87,7 +85,6 @@ class MatrixSqlTest {
 
   @Test
   void testExample() {
-
     Matrix complexData = Matrix.builder('complexData').data([
         'place': [1, 20, 3],
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
@@ -99,9 +96,7 @@ class MatrixSqlTest {
     String url = h2MemUrl('testdb', 'MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE')
     // Test that deriving the dependency and driver from the url works
     try(MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123')) {
-
       String tableName = matrixSql.tableName(complexData)
-
       if (matrixSql.tableExists(complexData)) {
         matrixSql.dropTable(complexData)
       }
@@ -154,7 +149,7 @@ class MatrixSqlTest {
     .types(int, String)
     .build()
 
-    String props = "DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    String props = 'DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE'
     String url = h2MemUrl('update_testdb', props)
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       String tableName = matrixSql.tableName(data)
@@ -198,7 +193,7 @@ class MatrixSqlTest {
   @Test
   void testPrimaryKey() {
     Matrix pkdata = Matrix.builder('pkdata').data([
-        'id': [1,2,3],
+        'id': [1, 2, 3],
         'place': [1, 20, 3],
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
@@ -220,7 +215,7 @@ class MatrixSqlTest {
         assertTrue(rs.next(), 'No pk results found')
         assertEquals(
             'id',
-            rs.getString("COLUMN_NAME"),
+            rs.getString('COLUMN_NAME'),
             "Expected to find 'id' as the primary key"
         )
       }
@@ -229,9 +224,9 @@ class MatrixSqlTest {
 
   @Test
   void testDdl() {
-    String h2version = "2.4.240"
+    String h2version = '2.4.240'
     Matrix m = AbstractDbTest.getComplexData()
-    String props = "MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    String props = 'MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE'
     String url = h2MemUrl('ddltestdb', props)
 
     ConnectionInfo ci = new ConnectionInfo()
@@ -239,12 +234,12 @@ class MatrixSqlTest {
     ci.setUrl(url)
     ci.setUser('sa')
     ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
+    ci.setDriver('org.h2.Driver')
     String ddl1
     String ddl2
     try (MatrixSql sql = new MatrixSql(ci)) {
       ddl1 = sql.createDdl(m)
-      //check that DB detection works properly
+      // check that DB detection works properly
       assertTrue(ddl1.contains('"local date time" datetime2'), "Expected to find datetime2 but was $ddl1")
     }
 
@@ -255,9 +250,9 @@ class MatrixSqlTest {
       if (resolvedVersion != h2version) {
         log.warn("Using H2 version $h2version explicitly, but MatrixSqlFactory resolved version $resolvedVersion")
       }
-      //check that DB detection works properly
+      // check that DB detection works properly
       assertTrue(ddl2.contains('"local date time" datetime2'), "Expected to find datetime2 but was $ddl2")
-      assertEquals(ci.url, h2.connectionInfo.url, "Urls does not match")
+      assertEquals(ci.url, h2.connectionInfo.url, 'Urls does not match')
     }
     assertEquals(ddl1, ddl2)
   }
@@ -662,10 +657,12 @@ class MatrixSqlTest {
     ArtifactLookup original = MatrixSqlFactory.artifactLookup
     try {
       MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+
         @Override
         String fetchLatestVersion(String g, String a) throws Exception {
-          throw new IOException("Simulated network failure")
+          throw new IOException('Simulated network failure')
         }
+
       }
       try (MatrixSql ms = MatrixSqlFactory.createH2(url, 'sa', '123')) {
         assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
@@ -681,10 +678,12 @@ class MatrixSqlTest {
     ArtifactLookup original = MatrixSqlFactory.artifactLookup
     try {
       MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+
         @Override
         String fetchLatestVersion(String g, String a) throws Exception {
-          throw new IOException("Simulated network failure")
+          throw new IOException('Simulated network failure')
         }
+
       }
       try (MatrixSql ms = MatrixSqlFactory.createDerby("memory:fallback_derby_${System.nanoTime()}")) {
         assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.DERBY]),
@@ -701,10 +700,12 @@ class MatrixSqlTest {
     ArtifactLookup original = MatrixSqlFactory.artifactLookup
     try {
       MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+
         @Override
         String fetchLatestVersion(String g, String a) throws Exception {
-          throw new IOException("Simulated network failure")
+          throw new IOException('Simulated network failure')
         }
+
       }
       try (MatrixSql ms = MatrixSqlFactory.create(url, 'sa', '123')) {
         assertTrue(ms.connectionInfo.dependency.contains(MatrixSqlFactory.FALLBACK_VERSIONS[DataBaseProvider.H2]),
@@ -724,10 +725,12 @@ class MatrixSqlTest {
     ArtifactLookup original = MatrixSqlFactory.artifactLookup
     try {
       MatrixSqlFactory.artifactLookup = new ArtifactLookup() {
+
         @Override
         String fetchLatestVersion(String g, String a) throws Exception {
-          throw new IOException("Simulated network failure")
+          throw new IOException('Simulated network failure')
         }
+
       }
       RuntimeException ex = assertThrows(RuntimeException) {
         MatrixSqlFactory.create(pgUrl, 'user', 'pass')
@@ -762,4 +765,5 @@ class MatrixSqlTest {
       owner.close()
     }
   }
+
 }

@@ -58,4 +58,5 @@ class SqlIdentifierTest {
   void testRenderTableCanBeForcedUnquoted() {
     assertEquals('select', SqlIdentifier.renderTable('select', false))
   }
+
 }
