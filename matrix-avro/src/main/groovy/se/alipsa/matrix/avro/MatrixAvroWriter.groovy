@@ -1,7 +1,5 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
-
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
@@ -22,8 +20,6 @@ import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.sql.Time
 import java.time.*
-import java.util.Collections
-import java.util.WeakHashMap
 
 /**
  * Writes Matrix objects to Avro Object Container Files (OCF).
@@ -34,28 +30,35 @@ import java.util.WeakHashMap
  *
  * <p>Example usage:
  * <pre>{@code
- * Matrix m = Matrix.builder("data")
- *     .columnNames(["id", "name", "price"])
- *     .rows([[1, "Alice", 10.50], [2, "Bob", 20.75]])
+ * Matrix m = Matrix.builder('data')
+ *     .columnNames(['id', 'name', 'price'])
+ *     .rows([[1, 'Alice', 10.50], [2, 'Bob', 20.75]])
  *     .types(Integer, String, BigDecimal)
  *     .build()
  *
  * // Write to file
- * MatrixAvroWriter.write(m, new File("data.avro"))
+ * MatrixAvroWriter.write(m, new File('data.avro'))
  *
  * // Write with decimal precision inference
- * MatrixAvroWriter.write(m, new File("data.avro"), true)
+ * MatrixAvroWriter.write(m, new File('data.avro'), true)
  *
  * // Write to byte array
  * byte[] bytes = MatrixAvroWriter.writeBytes(m)
  * }</pre>
  */
-@CompileStatic
 class MatrixAvroWriter {
 
+  private static final String PATH_NULL_MESSAGE = 'Path cannot be null'
+  private static final String OUTPUT_STREAM_NULL_MESSAGE = 'OutputStream cannot be null'
+  private static final String OPTIONS_NULL_MESSAGE = 'Options cannot be null'
+  private static final String NULL_TYPE_NAME = 'null'
+  private static final Object NO_AVRO_VALUE = new Object()
+  private static final long MICROS_PER_SECOND = 1_000_000L
+  private static final long MILLIS_PER_SECOND = 1_000L
+  private static final int NANOS_PER_MICRO = 1_000
+  private static final int NANOS_PER_MILLI = 1_000_000
   private static final Map<Matrix, Map<SchemaCacheKey, Schema>> SCHEMA_CACHE =
       Collections.synchronizedMap(new WeakHashMap<Matrix, Map<SchemaCacheKey, Schema>>())
-
   /**
    * Write a Matrix to an Avro file.
    *
@@ -78,7 +81,6 @@ class MatrixAvroWriter {
       dfw.close()
     }
   }
-
   /**
    * Write a Matrix to an Avro file at the specified Path.
    *
@@ -92,12 +94,11 @@ class MatrixAvroWriter {
    */
   static void write(Matrix matrix, Path path, boolean inferPrecisionAndScale = false) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(PATH_NULL_MESSAGE)
     }
     validateMatrix(matrix)
     write(matrix, path.toFile(), inferPrecisionAndScale)
   }
-
   /**
    * Write a Matrix to an OutputStream in Avro format.
    *
@@ -113,7 +114,7 @@ class MatrixAvroWriter {
   static void write(Matrix matrix, OutputStream out, boolean inferPrecisionAndScale = false) {
     validateMatrix(matrix)
     if (out == null) {
-      throw new IllegalArgumentException("OutputStream cannot be null")
+      throw new IllegalArgumentException(OUTPUT_STREAM_NULL_MESSAGE)
     }
     Schema schema = buildSchema(matrix, inferPrecisionAndScale)
     DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
@@ -124,7 +125,6 @@ class MatrixAvroWriter {
       dfw.close()
     }
   }
-
   /**
    * Write a Matrix to a byte array in Avro format.
    *
@@ -147,11 +147,9 @@ class MatrixAvroWriter {
     }
     return baos.toByteArray()
   }
-
   // ----------------------------------------------------------------------
   // Methods accepting AvroWriteOptions
   // ----------------------------------------------------------------------
-
   /**
    * Write a Matrix to an Avro file with configurable options.
    *
@@ -166,7 +164,7 @@ class MatrixAvroWriter {
     validateMatrix(matrix)
     validateFile(file)
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
     Schema schema = buildSchema(matrix, options)
     DataFileWriter<GenericRecord> dfw = createDataFileWriter(schema, options)
@@ -177,7 +175,6 @@ class MatrixAvroWriter {
       dfw.close()
     }
   }
-
   /**
    * Write a Matrix to an Avro file at the specified Path with configurable options.
    *
@@ -190,11 +187,10 @@ class MatrixAvroWriter {
    */
   static void write(Matrix matrix, Path path, AvroWriteOptions options) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(PATH_NULL_MESSAGE)
     }
     write(matrix, path.toFile(), options)
   }
-
   /**
    * Write a Matrix to an OutputStream in Avro format with configurable options.
    *
@@ -210,10 +206,10 @@ class MatrixAvroWriter {
   static void write(Matrix matrix, OutputStream out, AvroWriteOptions options) {
     validateMatrix(matrix)
     if (out == null) {
-      throw new IllegalArgumentException("OutputStream cannot be null")
+      throw new IllegalArgumentException(OUTPUT_STREAM_NULL_MESSAGE)
     }
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
     Schema schema = buildSchema(matrix, options)
     DataFileWriter<GenericRecord> dfw = createDataFileWriter(schema, options)
@@ -224,7 +220,6 @@ class MatrixAvroWriter {
       dfw.close()
     }
   }
-
   /**
    * Write a Matrix to a byte array in Avro format with configurable options.
    *
@@ -237,7 +232,7 @@ class MatrixAvroWriter {
   static byte[] writeBytes(Matrix matrix, AvroWriteOptions options) {
     validateMatrix(matrix)
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     Schema schema = buildSchema(matrix, options)
@@ -250,7 +245,6 @@ class MatrixAvroWriter {
     }
     return baos.toByteArray()
   }
-
   /**
    * Creates a DataFileWriter configured with the specified options.
    */
@@ -262,7 +256,6 @@ class MatrixAvroWriter {
     }
     return dfw
   }
-
   /**
    * Validates that the matrix is not null and has at least one column.
    *
@@ -270,7 +263,7 @@ class MatrixAvroWriter {
    */
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {
-      throw AvroValidationException.nullParameter("matrix")
+      throw AvroValidationException.nullParameter('matrix')
     }
     if (matrix.columnCount() == 0) {
       throw AvroValidationException.emptyMatrix()
@@ -284,7 +277,6 @@ class MatrixAvroWriter {
       }
     }
   }
-
   /**
    * Validates the file parameter and ensures parent directory exists.
    *
@@ -293,26 +285,24 @@ class MatrixAvroWriter {
    */
   private static void validateFile(File file) {
     if (file == null) {
-      throw AvroValidationException.nullParameter("file")
+      throw AvroValidationException.nullParameter('file')
     }
     File parentDir = file.parentFile
     if (parentDir != null && !parentDir.exists()) {
       if (!parentDir.mkdirs()) {
         throw new IOException("Failed to create parent directory: ${parentDir.absolutePath}. " +
-            "Check that you have write permissions and the path is valid.")
+            'Check that you have write permissions and the path is valid.')
       }
     }
   }
-
   // ----------------------------------------------------------------------
   // Schema building
   // ----------------------------------------------------------------------
-
   /**
    * Builds an Avro schema for the given Matrix.
    *
    * <p>The schema is a record type with one field per Matrix column. Each field
-   * is wrapped in a nullable union ["null", T] to handle null values. The type
+   * is wrapped in a nullable union [NULL_TYPE_NAME, T] to handle null values. The type
    * mapping follows these rules:
    * <ul>
    *   <li>Primitive types map directly (String, Boolean, Integer, Long, Float, Double)</li>
@@ -335,7 +325,6 @@ class MatrixAvroWriter {
         [:]
     )
   }
-
   /**
    * Builds an Avro schema for the given Matrix using options.
    *
@@ -352,7 +341,6 @@ class MatrixAvroWriter {
         options.columnSchemas
     )
   }
-
   private static String resolveSchemaName(Matrix matrix, String configuredSchemaName) {
     if (configuredSchemaName != null && !configuredSchemaName.isBlank()) {
       return configuredSchemaName
@@ -361,9 +349,8 @@ class MatrixAvroWriter {
     if (matrixName != null && !matrixName.isBlank()) {
       return matrixName
     }
-    "MatrixSchema"
+    'MatrixSchema'
   }
-
   /**
    * Internal schema building with configurable name and namespace.
    */
@@ -385,12 +372,9 @@ class MatrixAvroWriter {
     if (cached != null) {
       return cached
     }
-
-    Schema record = Schema.createRecord(schemaName, "Generated by MatrixAvroWriter", namespace, false)
+    Schema record = Schema.createRecord(schemaName, 'Generated by MatrixAvroWriter', namespace, false)
     List<Schema.Field> fields = new ArrayList<>(matrix.columnCount())
-
     Map<String, ColumnProfile> profiles = analyzeColumns(matrix, inferPrecisionAndScale)
-
     for (String col : matrix.columnNames()) {
       AvroSchemaUtil.validateAvroFieldName(col, col)
       Schema fieldSchema
@@ -400,7 +384,6 @@ class MatrixAvroWriter {
       } else {
         ColumnProfile profile = profiles.get(col)
         Class<?> clazz = profile.effectiveType
-
         if (clazz == List) {
           Class<?> elemClass = profile.listElemClass ?: String
           Schema elemSchema = toFieldSchema(elemClass, null)
@@ -409,10 +392,10 @@ class MatrixAvroWriter {
         } else if (clazz == Map) {
           if (profile.recordLike) {
             Map first = profile.recordSample
-            def rec = Schema.createRecord(col + "_record", null, namespace, false)
-            List<Schema.Field> flds = new ArrayList<>()
+            def rec = Schema.createRecord(col + '_record', null, namespace, false)
+            List<Schema.Field> flds = []
             for (def k : first.keySet()) {
-              String fieldName = k.toString()
+              String fieldName = k
               AvroSchemaUtil.validateAvroFieldName(fieldName, "${col}.${fieldName}")
               def v = first.get(k)
               Class<?> vClazz = (v == null) ? String : v.getClass()
@@ -429,18 +412,17 @@ class MatrixAvroWriter {
             fieldSchema = Schema.createMap(nullableValue)
           }
         } else {
-          fieldSchema = toFieldSchema(clazz, profile.decimalMeta(inferPrecisionAndScale))
+          int[] decimalMeta = inferPrecisionAndScale && clazz == BigDecimal ? profile.decimalMeta() : null
+          fieldSchema = toFieldSchema(clazz, decimalMeta)
         }
       }
       Schema nullable = AvroSchemaUtil.nullableSchema(fieldSchema)
       fields.add(new Schema.Field(col, nullable, null as String, (Object) null))
     }
-
     record.setFields(fields)
     cacheSchema(matrix, cacheKey, record)
     return record
   }
-
   /**
    * Maps a Java class to the corresponding Avro field schema.
    *
@@ -471,15 +453,27 @@ class MatrixAvroWriter {
         return Schema.create(Schema.Type.DOUBLE) // fallback like Parquet writer
       }
     }
-
-    if (clazz == String) return Schema.create(Schema.Type.STRING)
-    if (clazz == Boolean || clazz == boolean.class) return Schema.create(Schema.Type.BOOLEAN)
-    if (clazz == Integer || clazz == int.class) return Schema.create(Schema.Type.INT)
-    if (clazz == Long || clazz == long.class || clazz == BigInteger) return Schema.create(Schema.Type.LONG)
-    if (clazz == Float || clazz == float.class) return Schema.create(Schema.Type.FLOAT)
-    if (clazz == Double || clazz == double.class) return Schema.create(Schema.Type.DOUBLE)
-    if (clazz == byte[].class) return Schema.create(Schema.Type.BYTES)
-
+    if (clazz == String) {
+      return Schema.create(Schema.Type.STRING)
+    }
+    if (clazz == Boolean || clazz == boolean.class) {
+      return Schema.create(Schema.Type.BOOLEAN)
+    }
+    if (clazz == Integer || clazz == int.class) {
+      return Schema.create(Schema.Type.INT)
+    }
+    if (clazz == Long || clazz == long.class || clazz == BigInteger) {
+      return Schema.create(Schema.Type.LONG)
+    }
+    if (clazz == Float || clazz == float.class) {
+      return Schema.create(Schema.Type.FLOAT)
+    }
+    if (clazz == Double || clazz == double.class) {
+      return Schema.create(Schema.Type.DOUBLE)
+    }
+    if (clazz == byte[].class) {
+      return Schema.create(Schema.Type.BYTES)
+    }
     if (clazz == LocalDate || clazz == java.sql.Date) {
       Schema s = Schema.create(Schema.Type.INT)
       LogicalTypes.date().addToSchema(s)
@@ -510,15 +504,12 @@ class MatrixAvroWriter {
       LogicalTypes.uuid().addToSchema(s)
       return s
     }
-
     // Fallback
     return Schema.create(Schema.Type.STRING)
   }
-
   // ----------------------------------------------------------------------
   // Row writing
   // ----------------------------------------------------------------------
-
   /**
    * Writes all Matrix rows to the Avro data file.
    *
@@ -533,9 +524,8 @@ class MatrixAvroWriter {
   private static void writeRows(Matrix matrix, DataFileWriter<GenericRecord> dfw, Schema schema) {
     GenericData.Record rec = new GenericData.Record(schema)
     Conversions.DecimalConversion decConv = new Conversions.DecimalConversion()
-
     // Unwrap nullable unions to actual field schema
-    Map<String, Schema> fieldSchemas = new LinkedHashMap<>()
+    Map<String, Schema> fieldSchemas = [:]
     for (Schema.Field f : schema.getFields()) {
       Schema s = f.schema()
       if (s.getType() == Schema.Type.UNION) {
@@ -547,10 +537,8 @@ class MatrixAvroWriter {
       }
       fieldSchemas.put(f.name(), s)
     }
-
     List<String> cols = matrix.columnNames()
     int rows = matrix.rowCount()
-
     for (int r = 0; r < rows; r++) {
       for (String col : cols) {
         Object v = matrix[r, col]
@@ -558,10 +546,10 @@ class MatrixAvroWriter {
         try {
           if (!isCompatible(fs, v)) {
             throw new AvroSchemaException(
-                "Value does not match schema type",
+                'Value does not match schema type',
                 col,
                 schemaTypeLabel(fs),
-                v?.getClass()?.simpleName ?: "null"
+                v?.getClass()?.simpleName ?: NULL_TYPE_NAME
             )
           }
           rec.put(col, toAvroValue(fs, v, decConv))
@@ -569,10 +557,10 @@ class MatrixAvroWriter {
           throw e
         } catch (Exception e) {
           throw new AvroConversionException(
-              "Failed to convert value to Avro format",
+              'Failed to convert value to Avro format',
               col,
               r,
-              v?.getClass()?.simpleName ?: "null",
+              v?.getClass()?.simpleName ?: NULL_TYPE_NAME,
               fs.getType().name(),
               v,
               e
@@ -583,7 +571,6 @@ class MatrixAvroWriter {
       rec = new GenericData.Record(schema) // fresh record per row
     }
   }
-
   /**
    * Converts a Java value to its Avro representation for writing.
    *
@@ -603,166 +590,156 @@ class MatrixAvroWriter {
    * @throws UnresolvedUnionException if value cannot be matched to any union branch
    */
   private static Object toAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv) {
-    if (v == null) return null
-
-    // Handle UNIONs (including nested unions for array items and map values)
+    if (v == null) {
+      return null
+    }
     if (fieldSchema.getType() == Schema.Type.UNION) {
-      List<Schema> types = fieldSchema.getTypes()
-
-      // Common case: ["null", T]
-      if (types.size() == 2 && (types[0].getType() == Schema.Type.NULL || types[1].getType() == Schema.Type.NULL)) {
-        Schema nonNull = (types[0].getType() == Schema.Type.NULL) ? types[1] : types[0]
-        return (v == null) ? null : toAvroValue(nonNull, v, decConv)
-      }
-
-      // More general unions: pick the first compatible branch and serialize with it
-      for (Schema branch : types) {
-        if (branch.getType() == Schema.Type.NULL && v == null) return null
-        if (branch.getType() == Schema.Type.NULL) continue
-        if (isCompatible(branch, v)) {
-          return toAvroValue(branch, v, decConv)
-        }
-      }
-
-      // Could not resolve union — let Avro complain in a predictable way
-      throw new UnresolvedUnionException(fieldSchema, v)
+      return toUnionAvroValue(fieldSchema, v, decConv)
     }
-
-    def lt = fieldSchema.getLogicalType()
-    if (lt != null) {
-      String name = lt.getName()
-      switch (name) {
-        case "date":
-          if (v instanceof java.sql.Date) v = ((java.sql.Date) v).toLocalDate()
-          if (v instanceof LocalDate) return (int) ((LocalDate) v).toEpochDay()
-          break
-
-        case "time-millis":
-          if (v instanceof Time) v = ((Time) v).toLocalTime()
-          if (v instanceof LocalTime) {
-            int nanosMs = ((LocalTime) v).getNano().intdiv(1_000_000) // nanos -> millis
-            long ms = ((LocalTime) v).toSecondOfDay() * 1000L + nanosMs
-            return (int) ms
-          }
-          break
-
-        case "local-timestamp-micros":
-          if (v instanceof LocalDateTime) {
-            int nanosUs = ((LocalDateTime) v).getNano().intdiv(1_000) // nanos -> micros
-            long micros = ((LocalDateTime) v).toEpochSecond(ZoneOffset.UTC) * 1_000_000L + nanosUs
-            return micros
-          }
-          break
-
-        case "timestamp-millis":
-          if (v instanceof Date) return ((Date) v).getTime()
-          if (v instanceof Instant) return ((Instant) v).toEpochMilli()
-          if (v instanceof LocalDateTime) {
-            long ms = ((LocalDateTime) v)
-                .toInstant(ZoneOffset.systemDefault().getRules().getOffset((LocalDateTime) v))
-                .toEpochMilli()
-            return ms
-          }
-          break
-
-        case "local-timestamp-millis":
-          if (v instanceof LocalDateTime) {
-            int nanosMs = ((LocalDateTime) v).getNano().intdiv(1_000_000) // nanos -> millis
-            long ms = ((LocalDateTime) v).toEpochSecond(ZoneOffset.UTC) * 1_000L + nanosMs
-            return ms
-          }
-          break
-
-        case "uuid":
-          return v.toString()
-
-        case "decimal":
-          if (v instanceof BigDecimal) {
-            LogicalTypes.Decimal dec = (LogicalTypes.Decimal) lt
-            return decConv.toBytes((BigDecimal) v, fieldSchema, dec)
-          } else if (v instanceof Double || v instanceof Float) {
-            LogicalTypes.Decimal dec = (LogicalTypes.Decimal) lt
-            BigDecimal bd = new BigDecimal(((Number) v).toString())
-                .setScale(dec.getScale(), RoundingMode.HALF_UP)
-            return decConv.toBytes(bd, fieldSchema, dec)
-          }
-          break
-      }
+    Object logicalValue = toLogicalAvroValue(fieldSchema, v, decConv)
+    if (!NO_AVRO_VALUE.is(logicalValue)) {
+      return logicalValue
     }
-
-    // Primitive fallback based on schema type
-    switch (fieldSchema.getType()) {
-      case Schema.Type.STRING:
-        return v.toString()
-      case Schema.Type.BOOLEAN:
-        return (Boolean) v
-      case Schema.Type.INT:
-        if (v instanceof Number) return ((Number) v).intValue()
-        break
-      case Schema.Type.LONG:
-        if (v instanceof BigInteger) return ((BigInteger) v).longValue()
-        if (v instanceof Number) return ((Number) v).longValue()
-        if (v instanceof Date) return ((Date) v).time
-        if (v instanceof Instant) return ((Instant) v).toEpochMilli()
-        break
-      case Schema.Type.FLOAT:
-        if (v instanceof Number) return ((Number) v).floatValue()
-        break
-      case Schema.Type.DOUBLE:
-        if (v instanceof BigDecimal) return ((BigDecimal) v).doubleValue()
-        if (v instanceof Number) return ((Number) v).doubleValue()
-        break
-      case Schema.Type.BYTES:
-        if (v instanceof byte[]) return ByteBuffer.wrap((byte[]) v)
-        if (v instanceof ByteBuffer) return v
-        if (v instanceof BigDecimal) {
-          // fallback: unscaled bytes (only if schema is plain BYTES w/o decimal)
-          return ByteBuffer.wrap(((BigDecimal) v).unscaledValue().toByteArray())
-        }
-        break
-      case Schema.Type.ARRAY:
-        Schema elem = fieldSchema.getElementType()
-        List input = (List) v
-        List out = new ArrayList( input == null ? 0 : input.size() )
-        if ( input != null ) {
-          for (def e: input ) out.add(toAvroValue(elem, e, decConv))
-        }
-        return out
-
-      case Schema.Type.MAP:
-        Schema vs = fieldSchema.getValueType()
-        Map inMap = (Map) v
-        Map<String, Object> outMap = new LinkedHashMap<>()
-        if (inMap != null) {
-          for (def e : inMap.entrySet()) {
-            outMap.put(e.key?.toString(), toAvroValue(vs, e.value, decConv))
-          }
-        }
-        return outMap
-
-      case Schema.Type.RECORD:
-        GenericData.Record gr = new GenericData.Record(fieldSchema)
-        Map inRec = (Map) v
-        for (Schema.Field f : fieldSchema.getFields()) {
-          def fv = (inRec == null) ? null : inRec.get(f.name())
-          // unwrap nullable union in field
-          Schema fs = f.schema()
-          if (fs.getType() == Schema.Type.UNION) {
-            for (Schema t : fs.getTypes()) {
-              if (t.getType() != Schema.Type.NULL) {
-                fs = t; break
-              }
-            }
-          }
-          gr.put(f.name(), toAvroValue(fs, fv, decConv))
-        }
-        return gr
-    }
-
-    // Last resort
-    return v.toString()
+    toPrimitiveAvroValue(fieldSchema, v, decConv)
   }
-
+  private static Object toUnionAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv) {
+    List<Schema> types = fieldSchema.getTypes()
+    if (types.size() == 2 && (types[0].getType() == Schema.Type.NULL || types[1].getType() == Schema.Type.NULL)) {
+      Schema nonNull = (types[0].getType() == Schema.Type.NULL) ? types[1] : types[0]
+      return toAvroValue(nonNull, v, decConv)
+    }
+    Schema branch = types.find { Schema candidate ->
+      candidate.getType() != Schema.Type.NULL && isCompatible(candidate, v)
+    }
+    if (branch != null) {
+      return toAvroValue(branch, v, decConv)
+    }
+    throw new UnresolvedUnionException(fieldSchema, v)
+  }
+  private static Object toLogicalAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv) {
+    def lt = fieldSchema.getLogicalType()
+    if (lt == null) {
+      return NO_AVRO_VALUE
+    }
+    switch (lt.getName()) {
+      case 'date' -> toDateAvroValue(v)
+      case 'time-millis' -> toTimeMillisAvroValue(v)
+      case 'local-timestamp-micros' -> toLocalTimestampMicrosAvroValue(v)
+      case 'timestamp-millis' -> toTimestampMillisAvroValue(v)
+      case 'local-timestamp-millis' -> toLocalTimestampMillisAvroValue(v)
+      case 'uuid' -> v.toString()
+      case 'decimal' -> toDecimalAvroValue(fieldSchema, v, (LogicalTypes.Decimal) lt, decConv)
+      default -> NO_AVRO_VALUE
+    }
+  }
+  private static Object toDateAvroValue(Object v) {
+    Object value = java.sql.Date.isInstance(v) ? ((java.sql.Date) v).toLocalDate() : v
+    LocalDate.isInstance(value) ? (int) ((LocalDate) value).toEpochDay() : NO_AVRO_VALUE
+  }
+  private static Object toTimeMillisAvroValue(Object v) {
+    Object value = Time.isInstance(v) ? ((Time) v).toLocalTime() : v
+    if (!LocalTime.isInstance(value)) {
+      return NO_AVRO_VALUE
+    }
+    int nanosMs = ((LocalTime) value).getNano().intdiv(NANOS_PER_MILLI)
+    (int) (((LocalTime) value).toSecondOfDay() * MILLIS_PER_SECOND + nanosMs)
+  }
+  private static Object toLocalTimestampMicrosAvroValue(Object v) {
+    if (!LocalDateTime.isInstance(v)) {
+      return NO_AVRO_VALUE
+    }
+    int nanosUs = ((LocalDateTime) v).getNano().intdiv(NANOS_PER_MICRO)
+    ((LocalDateTime) v).toEpochSecond(ZoneOffset.UTC) * MICROS_PER_SECOND + nanosUs
+  }
+  private static Object toTimestampMillisAvroValue(Object v) {
+    if (Date.isInstance(v)) {
+      return ((Date) v).getTime()
+    }
+    if (Instant.isInstance(v)) {
+      return ((Instant) v).toEpochMilli()
+    }
+    if (!LocalDateTime.isInstance(v)) {
+      return NO_AVRO_VALUE
+    }
+    ((LocalDateTime) v)
+        .toInstant(ZoneOffset.systemDefault().getRules().getOffset((LocalDateTime) v))
+        .toEpochMilli()
+  }
+  private static Object toLocalTimestampMillisAvroValue(Object v) {
+    if (!LocalDateTime.isInstance(v)) {
+      return NO_AVRO_VALUE
+    }
+    int nanosMs = ((LocalDateTime) v).getNano().intdiv(NANOS_PER_MILLI)
+    ((LocalDateTime) v).toEpochSecond(ZoneOffset.UTC) * MILLIS_PER_SECOND + nanosMs
+  }
+  private static Object toDecimalAvroValue(Schema fieldSchema, Object v, LogicalTypes.Decimal dec,
+                                           Conversions.DecimalConversion decConv) {
+    if (BigDecimal.isInstance(v)) {
+      return decConv.toBytes((BigDecimal) v, fieldSchema, dec)
+    }
+    if (Double.isInstance(v) || Float.isInstance(v)) {
+      BigDecimal bd = new BigDecimal(((Number) v).toString()).setScale(dec.getScale(), RoundingMode.HALF_UP)
+      return decConv.toBytes(bd, fieldSchema, dec)
+    }
+    NO_AVRO_VALUE
+  }
+  private static Object toPrimitiveAvroValue(Schema fieldSchema, Object v, Conversions.DecimalConversion decConv) {
+    switch (fieldSchema.getType()) {
+      case Schema.Type.STRING -> v.toString()
+      case Schema.Type.BOOLEAN -> (Boolean) v
+      case Schema.Type.INT -> Number.isInstance(v) ? ((Number) v).intValue() : v.toString()
+      case Schema.Type.LONG -> toLongAvroValue(v)
+      case Schema.Type.FLOAT -> Number.isInstance(v) ? ((Number) v).floatValue() : v.toString()
+      case Schema.Type.DOUBLE -> Number.isInstance(v) ? ((Number) v).doubleValue() : v.toString()
+      case Schema.Type.BYTES -> toBytesAvroValue(v)
+      case Schema.Type.ARRAY -> toArrayAvroValue(fieldSchema, (List) v, decConv)
+      case Schema.Type.MAP -> toMapAvroValue(fieldSchema, (Map) v, decConv)
+      case Schema.Type.RECORD -> toRecordAvroValue(fieldSchema, (Map) v, decConv)
+      default -> v.toString()
+    }
+  }
+  private static Object toLongAvroValue(Object v) {
+    if (BigInteger.isInstance(v)) {
+      return ((BigInteger) v).longValue()
+    }
+    if (Number.isInstance(v)) {
+      return ((Number) v).longValue()
+    }
+    if (Date.isInstance(v)) {
+      return ((Date) v).time
+    }
+    Instant.isInstance(v) ? ((Instant) v).toEpochMilli() : v.toString()
+  }
+  private static Object toBytesAvroValue(Object v) {
+    if (byte[].isInstance(v)) {
+      return ByteBuffer.wrap((byte[]) v)
+    }
+    if (ByteBuffer.isInstance(v)) {
+      return v
+    }
+    BigDecimal.isInstance(v) ? ByteBuffer.wrap(((BigDecimal) v).unscaledValue().toByteArray()) : v.toString()
+  }
+  private static List toArrayAvroValue(Schema fieldSchema, List input, Conversions.DecimalConversion decConv) {
+    Schema elem = fieldSchema.getElementType()
+    input?.collect { Object e -> toAvroValue(elem, e, decConv) } ?: []
+  }
+  private static Map<String, Object> toMapAvroValue(Schema fieldSchema, Map input, Conversions.DecimalConversion decConv) {
+    Schema vs = fieldSchema.getValueType()
+    Map<String, Object> outMap = [:]
+    input?.each { key, value ->
+      outMap[key?.toString()] = toAvroValue(vs, value, decConv)
+    }
+    outMap
+  }
+  private static GenericData.Record toRecordAvroValue(Schema fieldSchema, Map input,
+                                                      Conversions.DecimalConversion decConv) {
+    GenericData.Record record = new GenericData.Record(fieldSchema)
+    fieldSchema.getFields().each { Schema.Field field ->
+      def value = input == null ? null : input.get(field.name())
+      record.put(field.name(), toAvroValue(AvroSchemaUtil.nonNullSchema(field.schema()), value, decConv))
+    }
+    record
+  }
   /**
    * Returns a cached schema for the given matrix and cache key, if available.
    *
@@ -776,30 +753,26 @@ class MatrixAvroWriter {
       return perMatrix == null ? null : perMatrix.get(key)
     }
   }
-
   private static void cacheSchema(Matrix matrix, SchemaCacheKey key, Schema schema) {
     synchronized (SCHEMA_CACHE) {
       Map<SchemaCacheKey, Schema> perMatrix = SCHEMA_CACHE.get(matrix)
       if (perMatrix == null) {
-        perMatrix = new LinkedHashMap<>()
+        perMatrix = [:]
         SCHEMA_CACHE.put(matrix, perMatrix)
       }
       perMatrix.put(key, schema)
     }
   }
-
   private static Map<String, ColumnProfile> analyzeColumns(Matrix matrix, boolean inferPrecisionAndScale) {
-    Map<String, ColumnProfile> profiles = new LinkedHashMap<>()
+    Map<String, ColumnProfile> profiles = [:]
     for (String col : matrix.columnNames()) {
       profiles.put(col, analyzeColumn(matrix, col, inferPrecisionAndScale))
     }
     return profiles
   }
-
   private static ColumnProfile analyzeColumn(Matrix matrix, String col, boolean inferPrecisionAndScale) {
     Class<?> declared = normalizeType(matrix.type(col))
     ColumnProfile profile = new ColumnProfile(col, declared)
-
     if (declared != Object && declared != Number) {
       profile.effectiveType = declared
       if (declared == BigDecimal && inferPrecisionAndScale) {
@@ -811,49 +784,48 @@ class MatrixAvroWriter {
       }
       return profile
     }
-
     boolean sawBigDecimal = false
     boolean sawFloat = false
     boolean sawIntegral = false
     boolean needsLong = false
     boolean fixedType = false
-
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
       Object v = matrix[r, col]
-      if (v == null) continue
-
+      if (v == null) {
+        continue
+      }
       if (!fixedType) {
-        if (v instanceof BigDecimal) {
+        if (BigDecimal.isInstance(v)) {
           sawBigDecimal = true
           if (inferPrecisionAndScale) {
             updateDecimalMeta((BigDecimal) v, profile)
           }
           continue
         }
-        if (v instanceof Float || v instanceof Double) {
+        if (Float.isInstance(v) || Double.isInstance(v)) {
           sawFloat = true
           continue
         }
-        if (v instanceof Byte || v instanceof Short || v instanceof Integer
-            || v instanceof Long || v instanceof BigInteger) {
+        if (Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
+            || Long.isInstance(v) || BigInteger.isInstance(v)) {
           sawIntegral = true
-          long lv = (v instanceof BigInteger) ? ((BigInteger) v).longValue() : ((Number) v).longValue()
-          if (lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || v instanceof Long || v instanceof BigInteger) {
+          long lv = (BigInteger.isInstance(v)) ? ((BigInteger) v).longValue() : ((Number) v).longValue()
+          if (lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || Long.isInstance(v) || BigInteger.isInstance(v)) {
             needsLong = true
           }
           continue
         }
-        if (v instanceof String || v instanceof Boolean || v instanceof byte[]
-            || v instanceof java.sql.Date || v instanceof Time || v instanceof Date
-            || v instanceof LocalDate || v instanceof LocalTime
-            || v instanceof Instant || v instanceof LocalDateTime
-            || v instanceof UUID) {
+        if (String.isInstance(v) || Boolean.isInstance(v) || byte[].isInstance(v)
+            || java.sql.Date.isInstance(v) || Time.isInstance(v) || Date.isInstance(v)
+            || LocalDate.isInstance(v) || LocalTime.isInstance(v)
+            || Instant.isInstance(v) || LocalDateTime.isInstance(v)
+            || UUID.isInstance(v)) {
           profile.effectiveType = v.getClass()
           fixedType = true
           break
         }
-        if (v instanceof List) {
+        if (List.isInstance(v)) {
           profile.effectiveType = List
           fixedType = true
           scanListElementValue((List) v, profile)
@@ -862,7 +834,7 @@ class MatrixAvroWriter {
           }
           continue
         }
-        if (v instanceof Map) {
+        if (Map.isInstance(v)) {
           profile.effectiveType = Map
           fixedType = true
           scanMapValue((Map) v, profile)
@@ -872,11 +844,11 @@ class MatrixAvroWriter {
         fixedType = true
         break
       } else if (profile.effectiveType == Map) {
-        if (v instanceof Map) {
+        if (Map.isInstance(v)) {
           scanMapValue((Map) v, profile)
         }
       } else if (profile.effectiveType == List) {
-        if (v instanceof List && profile.listElemClass == null) {
+        if (List.isInstance(v) && profile.listElemClass == null) {
           scanListElementValue((List) v, profile)
           if (profile.listElemClass != null) {
             break
@@ -884,7 +856,6 @@ class MatrixAvroWriter {
         }
       }
     }
-
     if (!fixedType) {
       if (sawBigDecimal) {
         profile.effectiveType = BigDecimal
@@ -896,25 +867,22 @@ class MatrixAvroWriter {
         profile.effectiveType = String
       }
     }
-
     return profile
   }
-
   private static void scanDecimalPrecision(Matrix matrix, String col, ColumnProfile profile) {
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
       def v = matrix[r, col]
-      if (v instanceof BigDecimal) {
+      if (BigDecimal.isInstance(v)) {
         updateDecimalMeta((BigDecimal) v, profile)
       }
     }
   }
-
   private static void scanListElement(Matrix matrix, String col, ColumnProfile profile) {
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
       def v = matrix[r, col]
-      if (v instanceof List) {
+      if (List.isInstance(v)) {
         scanListElementValue((List) v, profile)
         if (profile.listElemClass != null) {
           return
@@ -922,17 +890,15 @@ class MatrixAvroWriter {
       }
     }
   }
-
   private static void scanMapDetails(Matrix matrix, String col, ColumnProfile profile) {
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
       def v = matrix[r, col]
-      if (v instanceof Map) {
+      if (Map.isInstance(v)) {
         scanMapValue((Map) v, profile)
       }
     }
   }
-
   private static void scanListElementValue(List list, ColumnProfile profile) {
     for (def e : list) {
       if (e != null) {
@@ -941,20 +907,18 @@ class MatrixAvroWriter {
       }
     }
   }
-
   private static void scanMapValue(Map map, ColumnProfile profile) {
     if (!profile.recordSeen) {
       profile.recordSeen = true
       profile.recordLike = true
       profile.recordSample = map
-      profile.recordKeys = new LinkedHashSet<>(map.keySet().collect { it?.toString() })
+      profile.recordKeys = new LinkedHashSet<>(map.keySet()*.toString())
     } else if (profile.recordLike) {
-      Set<String> keys = new LinkedHashSet<>(map.keySet().collect { it?.toString() })
-      if (!profile.recordKeys.equals(keys)) {
+      Set<String> keys = new LinkedHashSet<>(map.keySet()*.toString())
+      if (profile.recordKeys != keys) {
         profile.recordLike = false
       }
     }
-
     if (profile.mapValueClass == null) {
       for (def e : map.values()) {
         if (e != null) {
@@ -964,7 +928,6 @@ class MatrixAvroWriter {
       }
     }
   }
-
   private static void updateDecimalMeta(BigDecimal value, ColumnProfile profile) {
     profile.sawDecimal = true
     int scale = value.scale()
@@ -975,11 +938,9 @@ class MatrixAvroWriter {
     }
     profile.maxIntegerDigits = Math.max(profile.maxIntegerDigits, integerDigits)
   }
-
   private static Class<?> normalizeType(Class<?> clazz) {
     return clazz == BigInteger ? Long : clazz
   }
-
   private static void validateDeclaredColumnSchemas(Matrix matrix, Map<String, AvroSchemaDecl> declaredSchemas) {
     Set<String> matrixColumns = matrix.columnNames() as Set<String>
     declaredSchemas.keySet().each { String columnName ->
@@ -988,7 +949,6 @@ class MatrixAvroWriter {
       }
     }
   }
-
   private static Map<String, Map<String, ?>> schemaSignature(Map<String, AvroSchemaDecl> declaredSchemas) {
     Map<String, Map<String, ?>> signature = [:]
     declaredSchemas.each { String columnName, AvroSchemaDecl declaration ->
@@ -996,87 +956,6 @@ class MatrixAvroWriter {
     }
     signature.asImmutable()
   }
-
-  private static final class SchemaCacheKey {
-    private final String schemaName
-    private final String namespace
-    private final boolean inferPrecisionAndScale
-    private final int rowCount
-    private final List<String> columnNames
-    private final List<Class<?>> columnTypes
-    private final Map<String, Map<String, ?>> columnSchemas
-
-    private SchemaCacheKey(String schemaName, String namespace, boolean inferPrecisionAndScale,
-                           int rowCount, List<String> columnNames, List<Class<?>> columnTypes,
-                           Map<String, Map<String, ?>> columnSchemas) {
-      this.schemaName = schemaName
-      this.namespace = namespace
-      this.inferPrecisionAndScale = inferPrecisionAndScale
-      this.rowCount = rowCount
-      this.columnNames = Collections.unmodifiableList(new ArrayList<>(columnNames))
-      this.columnTypes = Collections.unmodifiableList(new ArrayList<>(columnTypes))
-      this.columnSchemas = columnSchemas
-    }
-
-    @Override
-    boolean equals(Object other) {
-      if (this.is(other)) return true
-      if (!(other instanceof SchemaCacheKey)) return false
-      SchemaCacheKey that = (SchemaCacheKey) other
-      return inferPrecisionAndScale == that.inferPrecisionAndScale &&
-          rowCount == that.rowCount &&
-          schemaName == that.schemaName &&
-          namespace == that.namespace &&
-          columnNames == that.columnNames &&
-          columnTypes == that.columnTypes &&
-          columnSchemas == that.columnSchemas
-    }
-
-    @Override
-    int hashCode() {
-      int result = schemaName.hashCode()
-      result = 31 * result + namespace.hashCode()
-      result = 31 * result + (inferPrecisionAndScale ? 1 : 0)
-      result = 31 * result + rowCount
-      result = 31 * result + columnNames.hashCode()
-      result = 31 * result + columnTypes.hashCode()
-      result = 31 * result + columnSchemas.hashCode()
-      return result
-    }
-  }
-
-  private static final class ColumnProfile {
-    final String name
-    final Class<?> declaredType
-    Class<?> effectiveType
-    Class<?> listElemClass
-    Class<?> mapValueClass
-    boolean recordLike = false
-    boolean recordSeen = false
-    Map recordSample
-    Set<String> recordKeys
-    boolean sawDecimal = false
-    int maxIntegerDigits = 0
-    int maxScale = 0
-
-    private ColumnProfile(String name, Class<?> declaredType) {
-      this.name = name
-      this.declaredType = declaredType
-    }
-
-    int[] decimalMeta(boolean inferPrecisionAndScale) {
-      if (!inferPrecisionAndScale || effectiveType != BigDecimal) {
-        return null
-      }
-      if (!sawDecimal) {
-        return [10, 0] as int[]
-      }
-      int scale = Math.max(0, maxScale)
-      int precision = Math.max(1, maxIntegerDigits + scale)
-      return [precision, scale] as int[]
-    }
-  }
-
   /**
    * Checks if a Java value is compatible with an Avro schema type.
    *
@@ -1089,80 +968,80 @@ class MatrixAvroWriter {
    * @return true if the value can be serialized under this schema
    */
   private static boolean isCompatible(Schema s, Object v) {
-    if (v == null) return true
+    if (v == null) {
+      return true
+    }
     if (s.getType() == Schema.Type.UNION) {
       for (Schema branch : s.getTypes()) {
-        if (isCompatible(branch, v)) return true
+        if (isCompatible(branch, v)) {
+          return true
+        }
       }
       return false
     }
     def logical = s.getLogicalType()
     if (logical != null) {
       String name = logical.getName()
-      switch (name) {
-        case "date":
-          return v instanceof LocalDate || v instanceof java.sql.Date || v instanceof Number
-        case "time-millis":
-        case "time-micros":
-          return v instanceof LocalTime || v instanceof Time || v instanceof Number
-        case "timestamp-millis":
-        case "timestamp-micros":
-          return v instanceof Instant || v instanceof Date || v instanceof Number
-        case "local-timestamp-millis":
-        case "local-timestamp-micros":
-          return v instanceof LocalDateTime || v instanceof Number
-        case "uuid":
-          return v instanceof UUID || v instanceof String
-        case "decimal":
-          return v instanceof BigDecimal || v instanceof Double || v instanceof Float ||
-              v instanceof byte[] || v instanceof ByteBuffer
+      return switch (name) {
+        case 'date' -> LocalDate.isInstance(v) || java.sql.Date.isInstance(v) || Number.isInstance(v)
+        case 'time-millis', 'time-micros' -> LocalTime.isInstance(v) || Time.isInstance(v) || Number.isInstance(v)
+        case 'timestamp-millis', 'timestamp-micros' -> Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
+        case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
+        case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
+        case 'decimal' -> BigDecimal.isInstance(v) || Double.isInstance(v) || Float.isInstance(v) ||
+            byte[].isInstance(v) || ByteBuffer.isInstance(v)
+        default -> false
       }
     }
-    switch (s.getType()) {
-      case Schema.Type.STRING: return true // we'll toString() later
-      case Schema.Type.BOOLEAN: return v instanceof Boolean
-      case Schema.Type.INT: return v instanceof Byte || v instanceof Short || v instanceof Integer
-      case Schema.Type.LONG: return v instanceof Number || v instanceof Date || v instanceof Instant
-      case Schema.Type.FLOAT: return v instanceof Number
-      case Schema.Type.DOUBLE: return v instanceof Number || v instanceof BigDecimal
-      case Schema.Type.BYTES: return (v instanceof byte[]) || (v instanceof ByteBuffer) || (v instanceof BigDecimal)
-      case Schema.Type.ARRAY:
-        if (!(v instanceof List)) return false
-        Schema elem = s.getElementType()
-        for (def e : (List) v) {
-          if (!isCompatible(elem, e)) return false
-        }
-        return true
-      case Schema.Type.MAP:
-        if (!(v instanceof Map)) return false
-        Schema vs = s.getValueType()
-        for (def e : ((Map) v).entrySet()) {
-          if (!isCompatible(vs, e.value)) return false
-        }
-        return true
-      case Schema.Type.RECORD:
-        if (v instanceof GenericRecord) return true
-        if (!(v instanceof Map)) return false
-        Map inRec = (Map) v
-        for (Schema.Field f : s.getFields()) {
-          if (!isCompatible(f.schema(), inRec.get(f.name()))) return false
-        }
-        return true
-      case Schema.Type.FIXED: return v instanceof GenericFixed
-      default: return false
+    return switch (s.getType()) {
+      case Schema.Type.STRING -> true // we'll toString() later
+      case Schema.Type.BOOLEAN -> Boolean.isInstance(v)
+      case Schema.Type.INT -> Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
+      case Schema.Type.LONG -> Number.isInstance(v) || Date.isInstance(v) || Instant.isInstance(v)
+      case Schema.Type.FLOAT -> Number.isInstance(v)
+      case Schema.Type.DOUBLE -> Number.isInstance(v) || BigDecimal.isInstance(v)
+      case Schema.Type.BYTES -> (byte[].isInstance(v)) || (ByteBuffer.isInstance(v)) || (BigDecimal.isInstance(v))
+      case Schema.Type.ARRAY -> isArrayCompatible(s, v)
+      case Schema.Type.MAP -> isMapCompatible(s, v)
+      case Schema.Type.RECORD -> isRecordCompatible(s, v)
+      case Schema.Type.FIXED -> GenericFixed.isInstance(v)
+      default -> false
     }
   }
-
+  private static boolean isArrayCompatible(Schema schema, Object value) {
+    if (!(List.isInstance(value))) {
+      return false
+    }
+    Schema elem = schema.getElementType()
+    ((List) value).every { Object item -> isCompatible(elem, item) }
+  }
+  private static boolean isMapCompatible(Schema schema, Object value) {
+    if (!(Map.isInstance(value))) {
+      return false
+    }
+    Schema valueSchema = schema.getValueType()
+    ((Map) value).entrySet().every { Map.Entry entry -> isCompatible(valueSchema, entry.value) }
+  }
+  private static boolean isRecordCompatible(Schema schema, Object value) {
+    if (GenericRecord.isInstance(value)) {
+      return true
+    }
+    if (!(Map.isInstance(value))) {
+      return false
+    }
+    Map input = (Map) value
+    schema.getFields().every { Schema.Field field -> isCompatible(field.schema(), input.get(field.name())) }
+  }
   /**
    * Produces a human-readable label for a schema type, preferring logical types.
    */
   private static String schemaTypeLabel(Schema schema) {
     if (schema.getType() == Schema.Type.UNION) {
-      List<String> parts = new ArrayList<>()
+      List<String> parts = []
       for (Schema branch : schema.getTypes()) {
         parts.add(schemaTypeLabel(branch))
       }
-      return "UNION[" + String.join(", ", parts) + "]"
+      return 'UNION[' + String.join(', ', parts) + ']'
     }
     def logical = schema.getLogicalType()
     if (logical != null) {
@@ -1170,4 +1049,5 @@ class MatrixAvroWriter {
     }
     return schema.getType().name()
   }
+
 }

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.avro.exceptions
 
-import groovy.transform.CompileStatic
-
 /**
  * Exception thrown when there is a problem with Avro schema generation or processing.
  *
@@ -18,25 +16,21 @@ import groovy.transform.CompileStatic
  * try {
  *     Matrix m = MatrixAvroReader.read(file)
  * } catch (AvroSchemaException e) {
- *     System.err.println("Schema error: " + e.getMessage())
+ *     System.err.println('Schema error: ' + e.getMessage())
  *     if (e.getColumnName() != null) {
- *         System.err.println("  Column: " + e.getColumnName())
+ *         System.err.println('  Column: ' + e.getColumnName())
  *     }
  * }
  * }</pre>
  */
-@CompileStatic
 class AvroSchemaException extends RuntimeException {
 
   /** The column name associated with this error, if applicable */
   private final String columnName
-
   /** The expected type, if applicable */
   private final String expectedType
-
   /** The actual type encountered, if applicable */
   private final String actualType
-
   /**
    * Creates a new AvroSchemaException with a message.
    *
@@ -48,7 +42,6 @@ class AvroSchemaException extends RuntimeException {
     this.expectedType = null
     this.actualType = null
   }
-
   /**
    * Creates a new AvroSchemaException with a message and cause.
    *
@@ -61,7 +54,6 @@ class AvroSchemaException extends RuntimeException {
     this.expectedType = null
     this.actualType = null
   }
-
   /**
    * Creates a new AvroSchemaException with contextual information.
    *
@@ -76,7 +68,6 @@ class AvroSchemaException extends RuntimeException {
     this.expectedType = expectedType
     this.actualType = actualType
   }
-
   /**
    * Creates a new AvroSchemaException with contextual information and a cause.
    *
@@ -92,40 +83,40 @@ class AvroSchemaException extends RuntimeException {
     this.expectedType = expectedType
     this.actualType = actualType
   }
-
   /**
    * @return the column name where the error occurred, or null if not applicable
    */
   String getColumnName() {
     return columnName
   }
-
   /**
    * @return the expected type, or null if not applicable
    */
   String getExpectedType() {
     return expectedType
   }
-
   /**
    * @return the actual type encountered, or null if not applicable
    */
   String getActualType() {
     return actualType
   }
-
   private static String buildMessage(String message, String columnName, String expectedType, String actualType) {
     StringBuilder sb = new StringBuilder(message)
     if (columnName != null) {
-      sb.append(" [column: ").append(columnName).append("]")
+      sb.append(' [column: ').append(columnName).append(']')
     }
-    if (expectedType != null && actualType != null) {
-      sb.append(" (expected: ").append(expectedType).append(", actual: ").append(actualType).append(")")
-    } else if (expectedType != null) {
-      sb.append(" (expected: ").append(expectedType).append(")")
-    } else if (actualType != null) {
-      sb.append(" (actual: ").append(actualType).append(")")
+    List<String> details = []
+    if (expectedType != null) {
+      details << 'expected: ' + expectedType
+    }
+    if (actualType != null) {
+      details << 'actual: ' + actualType
+    }
+    if (!details.isEmpty()) {
+      sb.append(' (').append(details.join(', ')).append(')')
     }
     return sb.toString()
   }
+
 }

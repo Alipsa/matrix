@@ -27,28 +27,30 @@ class MatrixAvroReaderTest {
 
   private static File avroFile
   private static Schema schema
-  private static LocalDate birth1 = LocalDate.of(1990, 1, 5)
-  private static LocalDate birth2 = LocalDate.of(1984, 7, 23)
-  private static Instant ts1 = Instant.parse("2024-03-01T12:34:56Z")
-  private static Instant ts2 = Instant.parse("2024-12-24T08:09:10Z")
+  private static final LocalDate BIRTH1 = LocalDate.of(1990, 1, 5)
+  private static final LocalDate BIRTH2 = LocalDate.of(1984, 7, 23)
+  private static final Instant TS1 = Instant.parse('2024-03-01T12:34:56Z')
+  private static final Instant TS2 = Instant.parse('2024-12-24T08:09:10Z')
 
   @BeforeAll
   static void createAvroFixture() {
     schema = buildSchema()
-    avroFile = Files.createTempFile("matrix-avro-reader-", ".avro").toFile()
+    avroFile = Files.createTempFile('matrix-avro-reader-', '.avro').toFile()
     writeSampleOcfi(avroFile, schema)
   }
 
   @AfterAll
   static void cleanup() {
-    if (avroFile != null) avroFile.delete()
+    if (avroFile != null) {
+      avroFile.delete()
+    }
   }
 
   @Test @Order(1)
   void readFile() {
     Matrix m = MatrixAvroReader.read(avroFile)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(2)
@@ -56,7 +58,7 @@ class MatrixAvroReaderTest {
     Path p = avroFile.toPath()
     Matrix m = MatrixAvroReader.read(p)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(3)
@@ -64,7 +66,7 @@ class MatrixAvroReaderTest {
     URL url = avroFile.toURI().toURL()
     Matrix m = MatrixAvroReader.read(url)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(4)
@@ -73,7 +75,7 @@ class MatrixAvroReaderTest {
     try {
       Matrix m = MatrixAvroReader.read(is)
       assertBasicShapeAndValues(m)
-      assertEquals("Person", m.matrixName)
+      assertEquals('Person', m.matrixName)
     } finally {
       is.close()
     }
@@ -84,15 +86,15 @@ class MatrixAvroReaderTest {
     byte[] content = Files.readAllBytes(avroFile.toPath())
     Matrix m = MatrixAvroReader.read(content)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(6)
   void readFromByteArrayWithExplicitName() {
     byte[] content = Files.readAllBytes(avroFile.toPath())
-    Matrix m = MatrixAvroReader.read(content, "FromBytes")
+    Matrix m = MatrixAvroReader.read(content, 'FromBytes')
     assertBasicShapeAndValues(m)
-    assertEquals("FromBytes", m.matrixName)
+    assertEquals('FromBytes', m.matrixName)
   }
 
   // ---------- convenience method tests ----------
@@ -101,14 +103,14 @@ class MatrixAvroReaderTest {
   void testReadFile() {
     Matrix m = MatrixAvroReader.readFile(avroFile.absolutePath)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(8)
   void testReadUrl() {
     Matrix m = MatrixAvroReader.readUrl(avroFile.toURI().toString())
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   // ---------- validation tests ----------
@@ -118,7 +120,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(AvroValidationException) {
       MatrixAvroReader.read((File) null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(11)
@@ -126,7 +128,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.read((Path) null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(12)
@@ -134,7 +136,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.read((URL) null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(13)
@@ -142,7 +144,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.read((InputStream) null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(14)
@@ -150,7 +152,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.read((byte[]) null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(15)
@@ -158,7 +160,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.readFile(null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(16)
@@ -166,25 +168,25 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.readUrl(null)
     }
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(17)
   void testValidationFileDoesNotExist() {
     def ex = assertThrows(AvroValidationException) {
-      MatrixAvroReader.read(new File("/non/existent/path/to/file.avro"))
+      MatrixAvroReader.read(new File('/non/existent/path/to/file.avro'))
     }
-    assertTrue(ex.message.contains("does not exist"))
+    assertTrue(ex.message.contains('does not exist'))
   }
 
   @Test @Order(18)
   void testValidationFileIsDirectory() {
-    File tempDir = Files.createTempDirectory("avro-test").toFile()
+    File tempDir = Files.createTempDirectory('avro-test').toFile()
     try {
       def ex = assertThrows(AvroValidationException) {
         MatrixAvroReader.read(tempDir)
       }
-      assertTrue(ex.message.contains("directory"))
+      assertTrue(ex.message.contains('directory'))
     } finally {
       tempDir.delete()
     }
@@ -193,9 +195,9 @@ class MatrixAvroReaderTest {
   @Test @Order(19)
   void testValidationInvalidUrlString() {
     def ex = assertThrows(IllegalArgumentException) {
-      MatrixAvroReader.readUrl("not a valid url")
+      MatrixAvroReader.readUrl('not a valid url')
     }
-    assertTrue(ex.message.contains("Invalid URL string"))
+    assertTrue(ex.message.contains('Invalid URL string'))
   }
 
   // ---------- AvroReadOptions tests ----------
@@ -203,54 +205,54 @@ class MatrixAvroReaderTest {
   @Test @Order(20)
   void testReadWithOptionsCustomName() {
     def options = new AvroReadOptions()
-        .matrixName("CustomName")
+        .matrixName('CustomName')
 
     Matrix m = MatrixAvroReader.read(avroFile, options)
     assertBasicShapeAndValues(m)
-    assertEquals("CustomName", m.matrixName)
+    assertEquals('CustomName', m.matrixName)
   }
 
   @Test @Order(21)
   void testReadFromPathWithOptions() {
     def options = new AvroReadOptions()
-        .matrixName("PathOptions")
+        .matrixName('PathOptions')
 
     Matrix m = MatrixAvroReader.read(avroFile.toPath(), options)
     assertBasicShapeAndValues(m)
-    assertEquals("PathOptions", m.matrixName)
+    assertEquals('PathOptions', m.matrixName)
   }
 
   @Test @Order(22)
   void testReadFromUrlWithOptions() {
     def options = new AvroReadOptions()
-        .matrixName("UrlOptions")
+        .matrixName('UrlOptions')
 
     Matrix m = MatrixAvroReader.read(avroFile.toURI().toURL(), options)
     assertBasicShapeAndValues(m)
-    assertEquals("UrlOptions", m.matrixName)
+    assertEquals('UrlOptions', m.matrixName)
   }
 
   @Test @Order(23)
   void testReadFromByteArrayWithOptions() {
     byte[] content = Files.readAllBytes(avroFile.toPath())
     def options = new AvroReadOptions()
-        .matrixName("ByteOptions")
+        .matrixName('ByteOptions')
 
     Matrix m = MatrixAvroReader.read(content, options)
     assertBasicShapeAndValues(m)
-    assertEquals("ByteOptions", m.matrixName)
+    assertEquals('ByteOptions', m.matrixName)
   }
 
   @Test @Order(24)
   void testReadFromInputStreamWithOptions() {
     def options = new AvroReadOptions()
-        .matrixName("StreamOptions")
+        .matrixName('StreamOptions')
 
     InputStream is = new FileInputStream(avroFile)
     try {
       Matrix m = MatrixAvroReader.read(is, options)
       assertBasicShapeAndValues(m)
-      assertEquals("StreamOptions", m.matrixName)
+      assertEquals('StreamOptions', m.matrixName)
     } finally {
       is.close()
     }
@@ -261,7 +263,7 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(IllegalArgumentException) {
       MatrixAvroReader.read(avroFile, (AvroReadOptions) null)
     }
-    assertEquals("Options cannot be null", ex.message)
+    assertEquals('Options cannot be null', ex.message)
   }
 
   @Test @Order(26)
@@ -271,12 +273,12 @@ class MatrixAvroReaderTest {
 
     Matrix m = MatrixAvroReader.read(avroFile, options)
     assertBasicShapeAndValues(m)
-    assertEquals("Person", m.matrixName)
+    assertEquals('Person', m.matrixName)
   }
 
   @Test @Order(27)
   void testReadWithReaderSchemaProjection() {
-    String readerSchemaJson = """
+    String readerSchemaJson = '''
     {
       "type": "record",
       "name": "Person",
@@ -286,20 +288,20 @@ class MatrixAvroReaderTest {
         {"name":"country", "type":["null","string"], "default": null}
       ]
     }
-    """.stripIndent()
+    '''.stripIndent()
     def options = new AvroReadOptions()
         .readerSchema(new Schema.Parser().parse(readerSchemaJson))
 
     Matrix m = MatrixAvroReader.read(avroFile, options)
 
-    assertEquals("Person", m.matrixName)
-    assertEquals(["name", "age", "country"], m.columnNames())
+    assertEquals('Person', m.matrixName)
+    assertEquals(['name', 'age', 'country'], m.columnNames())
     assertEquals(3, m.columnCount())
     assertEquals(2, m.rowCount())
-    assertEquals("Alice", m[0, "name"])
-    assertEquals(30L, m[0, "age"])
-    assertEquals(null, m[0, "country"])
-    assertTrue(m["age"][0] instanceof Long)
+    assertEquals('Alice', m[0, 'name'])
+    assertEquals(30L, m[0, 'age'])
+    assertEquals(null, m[0, 'country'])
+    assertTrue(m['age'][0] instanceof Long)
   }
 
   // ---------- custom exception tests ----------
@@ -309,31 +311,31 @@ class MatrixAvroReaderTest {
     def ex = assertThrows(AvroValidationException) {
       MatrixAvroReader.read((File) null)
     }
-    assertEquals("file", ex.parameterName)
+    assertEquals('file', ex.parameterName)
     assertNotNull(ex.suggestion)
-    assertTrue(ex.message.contains("cannot be null"))
+    assertTrue(ex.message.contains('cannot be null'))
   }
 
   @Test @Order(31)
   void testValidationExceptionForNonExistentFile() {
     def ex = assertThrows(AvroValidationException) {
-      MatrixAvroReader.read(new File("/non/existent/path.avro"))
+      MatrixAvroReader.read(new File('/non/existent/path.avro'))
     }
-    assertEquals("file", ex.parameterName)
+    assertEquals('file', ex.parameterName)
     assertNotNull(ex.suggestion)
-    assertTrue(ex.message.contains("does not exist"))
+    assertTrue(ex.message.contains('does not exist'))
   }
 
   @Test @Order(32)
   void testValidationExceptionForDirectory() {
-    File tempDir = Files.createTempDirectory("avro-test").toFile()
+    File tempDir = Files.createTempDirectory('avro-test').toFile()
     try {
       def ex = assertThrows(AvroValidationException) {
         MatrixAvroReader.read(tempDir)
       }
-      assertEquals("file", ex.parameterName)
+      assertEquals('file', ex.parameterName)
       assertNotNull(ex.suggestion)
-      assertTrue(ex.message.contains("directory"))
+      assertTrue(ex.message.contains('directory'))
     } finally {
       tempDir.delete()
     }
@@ -341,13 +343,13 @@ class MatrixAvroReaderTest {
 
   @Test @Order(33)
   void testValidationEmptyFileHandling() {
-    File emptyFile = Files.createTempFile("avro-empty-", ".avro").toFile()
+    File emptyFile = Files.createTempFile('avro-empty-', '.avro').toFile()
     try {
       def ex = assertThrows(AvroValidationException) {
         MatrixAvroReader.read(emptyFile)
       }
-      assertEquals("file", ex.parameterName)
-      assertTrue(ex.message.contains("empty"))
+      assertEquals('file', ex.parameterName)
+      assertTrue(ex.message.contains('empty'))
     } finally {
       emptyFile.delete()
     }
@@ -355,15 +357,15 @@ class MatrixAvroReaderTest {
 
   @Test @Order(34)
   void testValidationCorruptFileHandling() {
-    File corruptFile = Files.createTempFile("avro-corrupt-", ".avro").toFile()
-    Files.write(corruptFile.toPath(), "not avro data".bytes)
+    File corruptFile = Files.createTempFile('avro-corrupt-', '.avro').toFile()
+    Files.write(corruptFile.toPath(), 'not avro data'.bytes)
     try {
       def ex = assertThrows(AvroValidationException) {
         MatrixAvroReader.read(corruptFile)
       }
-      assertEquals("file", ex.parameterName)
+      assertEquals('file', ex.parameterName)
       assertNotNull(ex.cause)
-      assertTrue(ex.message.toLowerCase().contains("corrupt") || ex.message.toLowerCase().contains("invalid"))
+      assertTrue(ex.message.toLowerCase().contains('corrupt') || ex.message.toLowerCase().contains('invalid'))
     } finally {
       corruptFile.delete()
     }
@@ -373,7 +375,7 @@ class MatrixAvroReaderTest {
 
   private static Schema buildSchema() {
     // language=JSON
-    def schemaJson = """
+    def schemaJson = '''
     {
       "type": "record",
       "name": "Person",
@@ -385,7 +387,7 @@ class MatrixAvroReaderTest {
         {"name":"price",  "type":{"type":"bytes","logicalType":"decimal","precision":10,"scale":2}}
       ]
     }
-    """.stripIndent()
+    '''.stripIndent()
     new Schema.Parser().parse(schemaJson)
   }
 
@@ -394,9 +396,9 @@ class MatrixAvroReaderTest {
     writer.create(schema, outFile)
     try {
       writer.append(makeRecord(schema,
-          "Alice", 30, birth1, ts1, new BigDecimal("12.34")))
+          'Alice', 30, BIRTH1, TS1, 12.34))
       writer.append(makeRecord(schema,
-          "Bob", 43, birth2, ts2, new BigDecimal("56.78")))
+          'Bob', 43, BIRTH2, TS2, 56.78))
     } finally {
       writer.close()
     }
@@ -407,16 +409,16 @@ class MatrixAvroReaderTest {
                                           LocalDate birthday, Instant ts,
                                           BigDecimal price) {
     def rec = new GenericData.Record(schema)
-    rec.put("name", name)
-    rec.put("age", age)
-    rec.put("birthday", (int) birthday.toEpochDay())               // date: days since epoch
-    rec.put("ts", ts.toEpochMilli())                               // timestamp-millis
+    rec.put('name', name)
+    rec.put('age', age)
+    rec.put('birthday', (int) birthday.toEpochDay())               // date: days since epoch
+    rec.put('ts', ts.toEpochMilli())                               // timestamp-millis
 
     // decimal to bytes
-    Schema priceSchema = schema.getField("price").schema()
+    Schema priceSchema = schema.getField('price').schema()
     LogicalTypes.Decimal dec = (LogicalTypes.Decimal) priceSchema.getLogicalType()
     ByteBuffer bb = new Conversions.DecimalConversion().toBytes(price, priceSchema, dec)
-    rec.put("price", bb)
+    rec.put('price', bb)
     return rec
   }
 
@@ -427,21 +429,22 @@ class MatrixAvroReaderTest {
     assertEquals(5, m.columnCount())
 
     // values (Groovy indexing works even in JUnit tests written in Groovy)
-    assertEquals("Alice", m[0, "name"])
-    assertEquals(30, m[0, "age"])
-    assertEquals(birth1, m[0, "birthday"])
-    assertEquals(ts1, m[0, "ts"])
-    assertEquals(new BigDecimal("12.34"), m[0, "price"])
+    assertEquals('Alice', m[0, 'name'])
+    assertEquals(30, m[0, 'age'])
+    assertEquals(BIRTH1, m[0, 'birthday'])
+    assertEquals(TS1, m[0, 'ts'])
+    assertEquals(12.34, m[0, 'price'])
 
-    assertEquals("Bob", m[1, "name"])
-    assertEquals(43, m[1, "age"])
-    assertEquals(birth2, m[1, "birthday"])
-    assertEquals(ts2, m[1, "ts"])
-    assertEquals(new BigDecimal("56.78"), m[1, "price"])
+    assertEquals('Bob', m[1, 'name'])
+    assertEquals(43, m[1, 'age'])
+    assertEquals(BIRTH2, m[1, 'birthday'])
+    assertEquals(TS2, m[1, 'ts'])
+    assertEquals(56.78, m[1, 'price'])
 
     // Basic type checks to ensure logical conversions landed correctly
-    assertTrue(m["birthday"][0] instanceof LocalDate)
-    assertTrue(m["ts"][0] instanceof Instant)
-    assertTrue(m["price"][0] instanceof BigDecimal)
+    assertTrue(m['birthday'][0] instanceof LocalDate)
+    assertTrue(m['ts'][0] instanceof Instant)
+    assertTrue(m['price'][0] instanceof BigDecimal)
   }
+
 }

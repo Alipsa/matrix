@@ -1,7 +1,6 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
-
+import org.apache.avro.LogicalType
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 import org.apache.avro.file.DataFileStream
@@ -14,9 +13,6 @@ import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
-import java.net.MalformedURLException
-import java.net.URI
-import java.net.URISyntaxException
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.*
@@ -30,18 +26,31 @@ import java.time.*
  * <p>Example usage:
  * <pre>{@code
  * // Read from file
- * Matrix m = MatrixAvroReader.read(new File("data.avro"))
+ * Matrix m = MatrixAvroReader.read(new File('data.avro'))
  *
  * // Read from file path string
- * Matrix m = MatrixAvroReader.readFile("/path/to/data.avro")
+ * Matrix m = MatrixAvroReader.readFile('/path/to/data.avro')
  *
  * // Read from URL
- * Matrix m = MatrixAvroReader.readUrl("https://example.com/data.avro")
+ * Matrix m = MatrixAvroReader.readUrl('https://example.com/data.avro')
  * }</pre>
  */
-@CompileStatic
 class MatrixAvroReader {
 
+  private static final String DEFAULT_MATRIX_NAME = 'AvroMatrix'
+  private static final String FILE_PARAMETER = 'file'
+  private static final String OPTIONS_NULL_MESSAGE = 'Options cannot be null'
+  private static final String INVALID_URL_STRING_MESSAGE = 'Invalid URL string: '
+  private static final String INVALID_OCF_SUGGESTION = 'Ensure the file contains valid Avro OCF data'
+  private static final String PATH_NULL_MESSAGE = 'Path cannot be null'
+  private static final String URL_NULL_MESSAGE = 'URL cannot be null'
+  private static final String CONTENT_NULL_MESSAGE = 'Content cannot be null'
+  private static final String INPUT_STREAM_NULL_MESSAGE = 'InputStream cannot be null'
+  private static final String DOT = '.'
+  private static final String SLASH = '/'
+  private static final long MILLIS_PER_SECOND = 1_000L
+  private static final long NANOS_PER_MICRO = 1_000L
+  private static final long NANOS_PER_MILLI = 1_000_000L
   /**
    * Read an Avro file from a File object.
    *
@@ -62,15 +71,14 @@ class MatrixAvroReader {
     } catch (Exception e) {
       throw new AvroValidationException(
           "Invalid or corrupt Avro file: ${file.absolutePath}",
-          "file",
-          "Ensure the file contains valid Avro OCF data",
+          FILE_PARAMETER,
+          INVALID_OCF_SUGGESTION,
           e
       )
     } finally {
       is.close()
     }
   }
-
   /**
    * Read an Avro file from a Path.
    *
@@ -82,11 +90,10 @@ class MatrixAvroReader {
    */
   static Matrix read(Path path) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(PATH_NULL_MESSAGE)
     }
     return read(path.toFile())
   }
-
   /**
    * Read Avro data from a URL.
    *
@@ -98,7 +105,7 @@ class MatrixAvroReader {
    */
   static Matrix read(URL url, String name = null) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException(URL_NULL_MESSAGE)
     }
     InputStream is = url.openStream()
     try {
@@ -107,7 +114,6 @@ class MatrixAvroReader {
       is.close()
     }
   }
-
   /**
    * Read Avro data from a byte array.
    *
@@ -119,11 +125,10 @@ class MatrixAvroReader {
    */
   static Matrix read(byte[] content, String name = null) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(CONTENT_NULL_MESSAGE)
     }
-    return readInternal(new ByteArrayInputStream(content), name, "AvroMatrix", null)
+    return readInternal(new ByteArrayInputStream(content), name, DEFAULT_MATRIX_NAME, null)
   }
-
   /**
    * Read an Avro file from a file path string.
    *
@@ -136,11 +141,10 @@ class MatrixAvroReader {
    */
   static Matrix readFile(String filePath) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException('File path cannot be null')
     }
     return read(new File(filePath))
   }
-
   /**
    * Read Avro data from a URL string.
    *
@@ -152,15 +156,14 @@ class MatrixAvroReader {
    */
   static Matrix readUrl(String urlString) {
     if (urlString == null) {
-      throw new IllegalArgumentException("URL string cannot be null")
+      throw new IllegalArgumentException('URL string cannot be null')
     }
     try {
       return read(new URI(urlString).toURL())
     } catch (URISyntaxException | MalformedURLException e) {
-      throw new IllegalArgumentException("Invalid URL string: " + urlString, e)
+      throw new IllegalArgumentException(INVALID_URL_STRING_MESSAGE + urlString, e)
     }
   }
-
   /**
    * Read Avro data from an InputStream.
    *
@@ -174,15 +177,13 @@ class MatrixAvroReader {
    */
   static Matrix read(InputStream input, String name = null) {
     if (input == null) {
-      throw new IllegalArgumentException("InputStream cannot be null")
+      throw new IllegalArgumentException(INPUT_STREAM_NULL_MESSAGE)
     }
-    return readInternal(input, name, "AvroMatrix", null)
+    return readInternal(input, name, DEFAULT_MATRIX_NAME, null)
   }
-
   // ----------------------------------------------------------------------
   // Methods accepting AvroReadOptions
   // ----------------------------------------------------------------------
-
   /**
    * Read an Avro file from a File object with configurable options.
    *
@@ -197,7 +198,7 @@ class MatrixAvroReader {
   static Matrix read(File file, AvroReadOptions options) {
     validateFile(file)
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
     InputStream is = new FileInputStream(file)
     try {
@@ -207,15 +208,14 @@ class MatrixAvroReader {
     } catch (Exception e) {
       throw new AvroValidationException(
           "Invalid or corrupt Avro file: ${file.absolutePath}",
-          "file",
-          "Ensure the file contains valid Avro OCF data",
+          FILE_PARAMETER,
+          INVALID_OCF_SUGGESTION,
           e
       )
     } finally {
       is.close()
     }
   }
-
   /**
    * Read an Avro file from a Path with configurable options.
    *
@@ -229,11 +229,10 @@ class MatrixAvroReader {
    */
   static Matrix read(Path path, AvroReadOptions options) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(PATH_NULL_MESSAGE)
     }
     return read(path.toFile(), options)
   }
-
   /**
    * Read Avro data from a URL with configurable options.
    *
@@ -246,10 +245,10 @@ class MatrixAvroReader {
    */
   static Matrix read(URL url, AvroReadOptions options) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException(URL_NULL_MESSAGE)
     }
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
     InputStream is = url.openStream()
     try {
@@ -258,7 +257,6 @@ class MatrixAvroReader {
       is.close()
     }
   }
-
   /**
    * Read Avro data from a byte array with configurable options.
    *
@@ -271,14 +269,13 @@ class MatrixAvroReader {
    */
   static Matrix read(byte[] content, AvroReadOptions options) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(CONTENT_NULL_MESSAGE)
     }
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
-    return readInternal(new ByteArrayInputStream(content), options.matrixName, "AvroMatrix", options.readerSchema)
+    return readInternal(new ByteArrayInputStream(content), options.matrixName, DEFAULT_MATRIX_NAME, options.readerSchema)
   }
-
   /**
    * Read Avro data from an InputStream with configurable options.
    *
@@ -293,14 +290,13 @@ class MatrixAvroReader {
    */
   static Matrix read(InputStream input, AvroReadOptions options) {
     if (input == null) {
-      throw new IllegalArgumentException("InputStream cannot be null")
+      throw new IllegalArgumentException(INPUT_STREAM_NULL_MESSAGE)
     }
     if (options == null) {
-      throw new IllegalArgumentException("Options cannot be null")
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
-    return readInternal(input, options.matrixName, "AvroMatrix", options.readerSchema)
+    return readInternal(input, options.matrixName, DEFAULT_MATRIX_NAME, options.readerSchema)
   }
-
   /**
    * Internal read implementation supporting optional reader schema and name resolution.
    */
@@ -315,40 +311,42 @@ class MatrixAvroReader {
       Schema effectiveSchema = readerSchema ?: writerSchema
       List<Schema.Field> fields = effectiveSchema.fields
       String matrixName = resolveMatrixName(overrideName, writerSchema, fallbackName)
-
-      LinkedHashMap<String, List<Object>> columns = new LinkedHashMap<>()
+      Map<String, List<Object>> columns = [:]
       for (Schema.Field f : fields) {
-        columns.put(f.name(), new ArrayList<>())
+        columns.put(f.name(), [])
       }
-
       int rowNumber = 0
       for (GenericRecord rec : dfs) {
-        for (Schema.Field f : fields) {
-          Object raw = rec.get(f.name())
-          try {
-            Object val = convertValue(f.schema(), raw)
-            columns.get(f.name()).add(val)
-          } catch (Exception e) {
-            throw new AvroConversionException(
-                "Failed to convert value",
-                f.name(),
-                rowNumber,
-                raw?.getClass()?.simpleName ?: "null",
-                getTargetType(f.schema()),
-                raw,
-                e
-            )
-          }
-        }
+        appendRecordValues(rec, fields, columns, rowNumber)
         rowNumber++
       }
-
       return Matrix.builder(matrixName).columns(columns).build()
     } finally {
       dfs.close()
     }
   }
-
+  private static void appendRecordValues(GenericRecord rec, List<Schema.Field> fields,
+                                         Map<String, List<Object>> columns, int rowNumber) {
+    fields.each { Schema.Field f ->
+      Object raw = rec.get(f.name())
+      try {
+        columns.get(f.name()).add(convertValue(f.schema(), raw))
+      } catch (Exception e) {
+        throw conversionException(f, rowNumber, raw, e)
+      }
+    }
+  }
+  private static AvroConversionException conversionException(Schema.Field field, int rowNumber, Object raw, Exception e) {
+    new AvroConversionException(
+        'Failed to convert value',
+        field.name(),
+        rowNumber,
+        raw?.getClass()?.simpleName ?: 'null',
+        getTargetType(field.schema()),
+        raw,
+        e
+    )
+  }
   private static String resolveMatrixName(String overrideName, Schema writerSchema, String fallbackName) {
     if (overrideName != null && !overrideName.isBlank()) {
       return overrideName
@@ -357,9 +355,8 @@ class MatrixAvroReader {
     if (schemaName != null && !schemaName.isBlank()) {
       return schemaName
     }
-    fallbackName ?: "AvroMatrix"
+    fallbackName ?: DEFAULT_MATRIX_NAME
   }
-
   /**
    * Gets a human-readable target type name from an Avro schema.
    */
@@ -376,7 +373,6 @@ class MatrixAvroReader {
     }
     return schema.getType().name()
   }
-
   /**
    * Converts an Avro-typed value to a suitable Java value for Matrix storage.
    *
@@ -394,97 +390,71 @@ class MatrixAvroReader {
    * @return the converted Java value suitable for Matrix storage, or null if input is null
    */
   private static Object convertValue(Schema schema, Object v) {
-    if (v == null) return null
-
-    // Unwrap UNIONs (commonly ["null", T])
+    if (v == null) {
+      return null
+    }
     if (schema.getType() == Schema.Type.UNION) {
-      Schema nonNull = schema.getTypes().stream()
-          .filter(s -> s.getType() != Schema.Type.NULL)
-          .findFirst().orElse(schema)
-      return convertValue(nonNull, v)
+      return convertValue(AvroSchemaUtil.nonNullSchema(schema), v)
     }
-
-    // Logical types: switch on the NAME to avoid nested-class access issues
-    def lt = schema.getLogicalType()
+    LogicalType lt = schema.getLogicalType()
     if (lt != null) {
-      // decimal needs instanceof to read scale; the rest can switch on the name string
-      if (lt instanceof LogicalTypes.Decimal) {
-        return toBigDecimal((LogicalTypes.Decimal) lt, schema, v)
-      }
-
-      String name = lt.getName() // e.g. "date", "time-millis", "uuid", ...
-      switch (name) {
-        case "date":                    // int days since epoch
-          return toLocalDate(v)
-        case "time-millis":             // int millis since midnight
-          return toLocalTimeMillis(v)
-        case "time-micros":             // long micros since midnight
-          return toLocalTimeMicros(v)
-        case "timestamp-millis":        // long epoch millis UTC
-          return toInstantMillis(v)
-        case "timestamp-micros":        // long epoch micros UTC
-          return toInstantMicros(v)
-        case "local-timestamp-millis":  // long millis, no zone
-          return toLocalDateTimeMillis(v)
-        case "local-timestamp-micros":  // long micros, no zone
-          return toLocalDateTimeMicros(v)
-        case "uuid":
-          return v.toString()           // or UUID.fromString(v.toString())
-        default:
-          // fall through to primitive/complex handling
-          break
-      }
+      Object logicalValue = convertLogicalValue(lt, schema, v)
+      return logicalValue != null ? logicalValue : convertSchemaValue(schema, v)
     }
-
-    switch (schema.getType()) {
-      case Schema.Type.NULL:    return null
-      case Schema.Type.BOOLEAN: return (Boolean) v
-      case Schema.Type.INT:     return (Integer) v
-      case Schema.Type.LONG:    return (Long) v
-      case Schema.Type.FLOAT:   return (Float) v
-      case Schema.Type.DOUBLE:  return (Double) v
-
-      case Schema.Type.STRING:
-        return (v instanceof Utf8) ? v.toString() : (String) v
-
-      case Schema.Type.BYTES:
-        return byteBufferToArray((ByteBuffer) v)
-
-      case Schema.Type.FIXED:
-        return (v as GenericFixed).bytes().clone()
-
-      case Schema.Type.ENUM:
-        return v.toString()
-
-      case Schema.Type.ARRAY:
-        Schema elem = schema.getElementType()
-        List<?> list = (List<?>) v
-        List<Object> out = new ArrayList<>(list.size())
-        for (Object e : list) out.add(convertValue(elem, e))
-        return out
-
-      case Schema.Type.MAP:
-        Schema vs = schema.getValueType()
-        Map<Utf8, ?> m = (Map<Utf8, ?>) v
-        Map<String, Object> outMap = new LinkedHashMap<>(m.size())
-        for (Map.Entry<Utf8, ?> e : m.entrySet()) {
-          outMap.put(e.getKey().toString(), convertValue(vs, e.getValue()))
-        }
-        return outMap
-
-      case Schema.Type.RECORD:
-        GenericRecord gr = (GenericRecord) v
-        Map<String,Object> recMap = new LinkedHashMap<>(schema.getFields().size())
-        for (Schema.Field f : schema.getFields()) {
-          recMap.put(f.name(), convertValue(f.schema(), gr.get(f.name())))
-        }
-        return recMap
-
-      default:
-        return v
+    convertSchemaValue(schema, v)
+  }
+  private static Object convertLogicalValue(LogicalType lt, Schema schema, Object v) {
+    if (LogicalTypes.Decimal.isInstance(lt)) {
+      return toBigDecimal((LogicalTypes.Decimal) lt, schema, v)
+    }
+    switch (lt.name) {
+      case 'date' -> toLocalDate(v)
+      case 'time-millis' -> toLocalTimeMillis(v)
+      case 'time-micros' -> toLocalTimeMicros(v)
+      case 'timestamp-millis' -> toInstantMillis(v)
+      case 'timestamp-micros' -> toInstantMicros(v)
+      case 'local-timestamp-millis' -> toLocalDateTimeMillis(v)
+      case 'local-timestamp-micros' -> toLocalDateTimeMicros(v)
+      case 'uuid' -> v.toString()
+      default -> null
     }
   }
-
+  private static Object convertSchemaValue(Schema schema, Object v) {
+    switch (schema.getType()) {
+      case Schema.Type.NULL -> null
+      case Schema.Type.BOOLEAN -> (Boolean) v
+      case Schema.Type.INT -> (Integer) v
+      case Schema.Type.LONG -> (Long) v
+      case Schema.Type.FLOAT -> (Float) v
+      case Schema.Type.DOUBLE -> (Double) v
+      case Schema.Type.STRING -> (Utf8.isInstance(v)) ? v.toString() : (String) v
+      case Schema.Type.BYTES -> byteBufferToArray((ByteBuffer) v)
+      case Schema.Type.FIXED -> (v as GenericFixed).bytes().clone()
+      case Schema.Type.ENUM -> v.toString()
+      case Schema.Type.ARRAY -> convertArrayValue(schema, v)
+      case Schema.Type.MAP -> convertMapValue(schema, v)
+      case Schema.Type.RECORD -> convertRecordValue(schema, v)
+      default -> v
+    }
+  }
+  private static List<Object> convertArrayValue(Schema schema, Object v) {
+    Schema elem = schema.getElementType()
+    List<?> list = (List<?>) v
+    list.collect { Object e -> convertValue(elem, e) }
+  }
+  private static Map<String, Object> convertMapValue(Schema schema, Object v) {
+    Schema valueSchema = schema.getValueType()
+    Map<Utf8, ?> map = (Map<Utf8, ?>) v
+    map.collectEntries { Utf8 key, Object value ->
+      [(key.toString()): convertValue(valueSchema, value)]
+    } as Map<String, Object>
+  }
+  private static Map<String, Object> convertRecordValue(Schema schema, Object v) {
+    GenericRecord record = (GenericRecord) v
+    schema.getFields().collectEntries { Schema.Field field ->
+      [(field.name()): convertValue(field.schema(), record.get(field.name()))]
+    } as Map<String, Object>
+  }
   /**
    * Converts a ByteBuffer to a byte array, extracting only the remaining bytes.
    *
@@ -497,7 +467,6 @@ class MatrixAvroReader {
     slice.get(exact)
     return exact
   }
-
   /**
    * Converts an Avro date value (days since epoch) to a LocalDate.
    *
@@ -505,10 +474,9 @@ class MatrixAvroReader {
    * @return the corresponding LocalDate
    */
   private static LocalDate toLocalDate(Object v) {
-    int days = (v instanceof Integer) ? (Integer) v : ((Number) v).intValue()
+    int days = (Integer.isInstance(v)) ? (Integer) v : ((Number) v).intValue()
     return LocalDate.ofEpochDay(days)
   }
-
   /**
    * Converts an Avro time-millis value to a LocalTime.
    *
@@ -516,10 +484,9 @@ class MatrixAvroReader {
    * @return the corresponding LocalTime
    */
   private static LocalTime toLocalTimeMillis(Object v) {
-    long ms = (v instanceof Integer) ? ((Integer) v).longValue() : ((Number) v).longValue()
-    return LocalTime.ofNanoOfDay(ms * 1_000_000L)
+    long ms = (Integer.isInstance(v)) ? ((Integer) v).longValue() : ((Number) v).longValue()
+    return LocalTime.ofNanoOfDay(ms * NANOS_PER_MILLI)
   }
-
   /**
    * Converts an Avro time-micros value to a LocalTime.
    *
@@ -528,9 +495,8 @@ class MatrixAvroReader {
    */
   private static LocalTime toLocalTimeMicros(Object v) {
     long micros = ((Number) v).longValue()
-    return LocalTime.ofNanoOfDay(micros * 1_000L)
+    return LocalTime.ofNanoOfDay(micros * NANOS_PER_MICRO)
   }
-
   /**
    * Converts an Avro timestamp-millis value to an Instant.
    *
@@ -541,7 +507,6 @@ class MatrixAvroReader {
     long ms = ((Number) v).longValue()
     return Instant.ofEpochMilli(ms)
   }
-
   /**
    * Converts an Avro timestamp-micros value to an Instant.
    *
@@ -550,11 +515,10 @@ class MatrixAvroReader {
    */
   private static Instant toInstantMicros(Object v) {
     long micros = ((Number) v).longValue()
-    long seconds = Math.floorDiv(micros, 1_000_000L)
-    long nanos   = Math.floorMod(micros, 1_000_000L) * 1_000L
+    long seconds = Math.floorDiv(micros, NANOS_PER_MILLI)
+    long nanos   = Math.floorMod(micros, NANOS_PER_MILLI) * NANOS_PER_MICRO
     return Instant.ofEpochSecond(seconds, nanos)
   }
-
   /**
    * Converts an Avro local-timestamp-millis value to a LocalDateTime.
    *
@@ -566,12 +530,11 @@ class MatrixAvroReader {
   private static LocalDateTime toLocalDateTimeMillis(Object v) {
     long ms = ((Number) v).longValue()
     return LocalDateTime.ofEpochSecond(
-        Math.floorDiv(ms, 1000L),
-        (int)((ms % 1000L) * 1_000_000L),
+        Math.floorDiv(ms, MILLIS_PER_SECOND),
+        (int)((ms % MILLIS_PER_SECOND) * NANOS_PER_MILLI),
         ZoneOffset.UTC
     )
   }
-
   /**
    * Converts an Avro local-timestamp-micros value to a LocalDateTime.
    *
@@ -582,11 +545,10 @@ class MatrixAvroReader {
    */
   private static LocalDateTime toLocalDateTimeMicros(Object v) {
     long micros = ((Number) v).longValue()
-    long seconds = Math.floorDiv(micros, 1_000_000L)
-    int nanos    = (int) (Math.floorMod(micros, 1_000_000L) * 1_000L)
+    long seconds = Math.floorDiv(micros, NANOS_PER_MILLI)
+    int nanos    = (int) (Math.floorMod(micros, NANOS_PER_MILLI) * NANOS_PER_MICRO)
     return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC)
   }
-
   /**
    * Converts an Avro decimal logical type value to a BigDecimal.
    *
@@ -607,11 +569,10 @@ class MatrixAvroReader {
     } else if (schema.getType() == Schema.Type.FIXED) {
       bytes = ((GenericFixed) v).bytes()
     } else {
-      throw new IllegalArgumentException("Decimal logical type on non-bytes/fixed field")
+      throw new IllegalArgumentException('Decimal logical type on non-bytes/fixed field')
     }
     return new BigDecimal(new BigInteger(bytes), scale)
   }
-
   /**
    * Validates that the file exists and is not a directory.
    *
@@ -619,7 +580,7 @@ class MatrixAvroReader {
    */
   private static void validateFile(File file) {
     if (file == null) {
-      throw AvroValidationException.nullParameter("file")
+      throw AvroValidationException.nullParameter(FILE_PARAMETER)
     }
     if (!file.exists()) {
       throw AvroValidationException.fileNotFound(file.absolutePath)
@@ -630,23 +591,21 @@ class MatrixAvroReader {
     if (file.length() == 0) {
       throw new AvroValidationException(
           "Avro file is empty: ${file.absolutePath}",
-          "file",
-          "Ensure the file contains Avro OCF data"
+          FILE_PARAMETER,
+          'Ensure the file contains Avro OCF data'
       )
     }
   }
-
   /**
    * Extracts a default name from a file (file name without extension).
    */
   private static String defaultName(File file) {
     String name = file.name
-    if (name != null && name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name?.contains(DOT)) {
+      name = name.substring(0, name.lastIndexOf(DOT))
     }
-    return name ?: "AvroMatrix"
+    return name ?: DEFAULT_MATRIX_NAME
   }
-
   /**
    * Extracts a default name from a URL (file name without extension).
    */
@@ -656,14 +615,15 @@ class MatrixAvroReader {
       name = url.getFile()
     }
     if (name == null || name.isEmpty()) {
-      return "AvroMatrix"
+      return DEFAULT_MATRIX_NAME
     }
-    if (name.contains('/')) {
-      name = name.substring(name.lastIndexOf('/') + 1)
+    if (name.contains(SLASH)) {
+      name = name.substring(name.lastIndexOf(SLASH) + 1)
     }
-    if (name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name.contains(DOT)) {
+      name = name.substring(0, name.lastIndexOf(DOT))
     }
-    return name ?: "AvroMatrix"
+    return name ?: DEFAULT_MATRIX_NAME
   }
+
 }

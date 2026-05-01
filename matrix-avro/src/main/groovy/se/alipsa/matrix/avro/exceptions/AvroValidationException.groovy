@@ -1,7 +1,5 @@
 package se.alipsa.matrix.avro.exceptions
 
-import groovy.transform.CompileStatic
-
 /**
  * Exception thrown when input validation fails for Avro operations.
  *
@@ -18,25 +16,24 @@ import groovy.transform.CompileStatic
  * try {
  *     MatrixAvroWriter.write(matrix, file)
  * } catch (AvroValidationException e) {
- *     System.err.println("Validation error: " + e.getMessage())
+ *     System.err.println('Validation error: ' + e.getMessage())
  *     if (e.getSuggestion() != null) {
- *         System.err.println("  Suggestion: " + e.getSuggestion())
+ *         System.err.println('  Suggestion: ' + e.getSuggestion())
  *     }
  * }
  * }</pre>
  */
-@CompileStatic
 class AvroValidationException extends IllegalArgumentException {
 
+  private static final int NO_ROW = -1
+  private static final String MATRIX_PARAMETER = 'matrix'
+  private static final String FILE_PARAMETER = 'file'
   /** The parameter name that failed validation, if applicable */
   private final String parameterName
-
   /** A helpful suggestion for fixing the error */
   private final String suggestion
-
   /** The row number associated with this error, or -1 if not applicable */
   private final int rowNumber
-
   /**
    * Creates a new AvroValidationException with a message.
    *
@@ -46,9 +43,8 @@ class AvroValidationException extends IllegalArgumentException {
     super(message)
     this.parameterName = null
     this.suggestion = null
-    this.rowNumber = -1
+    this.rowNumber = NO_ROW
   }
-
   /**
    * Creates a new AvroValidationException with a message and cause.
    *
@@ -59,9 +55,8 @@ class AvroValidationException extends IllegalArgumentException {
     super(message, cause)
     this.parameterName = null
     this.suggestion = null
-    this.rowNumber = -1
+    this.rowNumber = NO_ROW
   }
-
   /**
    * Creates a new AvroValidationException with contextual information.
    *
@@ -70,12 +65,11 @@ class AvroValidationException extends IllegalArgumentException {
    * @param suggestion a helpful suggestion for fixing the error
    */
   AvroValidationException(String message, String parameterName, String suggestion) {
-    super(buildMessage(message, parameterName, -1, suggestion))
+    super(buildMessage(message, parameterName, NO_ROW, suggestion))
     this.parameterName = parameterName
     this.suggestion = suggestion
-    this.rowNumber = -1
+    this.rowNumber = NO_ROW
   }
-
   /**
    * Creates a new AvroValidationException with contextual information and a cause.
    *
@@ -85,12 +79,11 @@ class AvroValidationException extends IllegalArgumentException {
    * @param cause the underlying cause
    */
   AvroValidationException(String message, String parameterName, String suggestion, Throwable cause) {
-    super(buildMessage(message, parameterName, -1, suggestion), cause)
+    super(buildMessage(message, parameterName, NO_ROW, suggestion), cause)
     this.parameterName = parameterName
     this.suggestion = suggestion
-    this.rowNumber = -1
+    this.rowNumber = NO_ROW
   }
-
   /**
    * Creates a new AvroValidationException with contextual information and row number.
    *
@@ -105,46 +98,41 @@ class AvroValidationException extends IllegalArgumentException {
     this.suggestion = suggestion
     this.rowNumber = rowNumber
   }
-
   /**
    * @return the parameter name that failed validation, or null if not applicable
    */
   String getParameterName() {
     return parameterName
   }
-
   /**
    * @return a helpful suggestion for fixing the error, or null if none available
    */
   String getSuggestion() {
     return suggestion
   }
-
   /**
    * @return the row number where validation failed, or -1 if not applicable
    */
   int getRowNumber() {
     return rowNumber
   }
-
   private static String buildMessage(String message, String parameterName, int rowNumber, String suggestion) {
     StringBuilder sb = new StringBuilder(message)
-    List<String> context = new ArrayList<>()
+    List<String> context = []
     if (parameterName != null) {
-      context.add("parameter: " + parameterName)
+      context.add('parameter: ' + parameterName)
     }
     if (rowNumber >= 0) {
-      context.add("row: " + rowNumber)
+      context.add('row: ' + rowNumber)
     }
     if (!context.isEmpty()) {
-      sb.append(" [").append(String.join(", ", context)).append("]")
+      sb.append(' [').append(String.join(', ', context)).append(']')
     }
     if (suggestion != null) {
-      sb.append(". Suggestion: ").append(suggestion)
+      sb.append('. Suggestion: ').append(suggestion)
     }
     return sb.toString()
   }
-
   /**
    * Creates an exception for a null parameter.
    *
@@ -158,7 +146,6 @@ class AvroValidationException extends IllegalArgumentException {
         "Provide a non-null value for ${parameterName}"
     )
   }
-
   /**
    * Creates an exception for an empty Matrix.
    *
@@ -166,12 +153,11 @@ class AvroValidationException extends IllegalArgumentException {
    */
   static AvroValidationException emptyMatrix() {
     return new AvroValidationException(
-        "Matrix must have at least one column",
-        "matrix",
-        "Add at least one column to the Matrix before writing"
+        'Matrix must have at least one column',
+        MATRIX_PARAMETER,
+        'Add at least one column to the Matrix before writing'
     )
   }
-
   /**
    * Creates an exception for uneven column lengths.
    *
@@ -184,12 +170,11 @@ class AvroValidationException extends IllegalArgumentException {
   static AvroValidationException columnSizeMismatch(String columnName, int rowNumber, int columnSize, int rowCount) {
     return new AvroValidationException(
         "Column '${columnName}' size (${columnSize}) does not match matrix row count (${rowCount})",
-        "matrix",
+        MATRIX_PARAMETER,
         rowNumber,
-        "Ensure all columns have the same number of rows before writing"
+        'Ensure all columns have the same number of rows before writing'
     )
   }
-
   /**
    * Creates an exception for a file that doesn't exist.
    *
@@ -199,11 +184,10 @@ class AvroValidationException extends IllegalArgumentException {
   static AvroValidationException fileNotFound(String path) {
     return new AvroValidationException(
         "File does not exist: ${path}",
-        "file",
-        "Check that the file path is correct and the file exists"
+        FILE_PARAMETER,
+        'Check that the file path is correct and the file exists'
     )
   }
-
   /**
    * Creates an exception for a path that is a directory instead of a file.
    *
@@ -213,8 +197,9 @@ class AvroValidationException extends IllegalArgumentException {
   static AvroValidationException isDirectory(String path) {
     return new AvroValidationException(
         "Expected a file but got a directory: ${path}",
-        "file",
-        "Provide a path to a file, not a directory"
+        FILE_PARAMETER,
+        'Provide a path to a file, not a directory'
     )
   }
+
 }

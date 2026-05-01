@@ -18,23 +18,23 @@ class MatrixAvroEdgeCaseTest {
 
   @Test
   void testEmptyMatrixZeroRowsRoundTrip() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["id"] = []
-    cols["name"] = []
+    Map<String, List<?>> cols = [:]
+    cols['id'] = []
+    cols['name'] = []
 
-    Matrix m = Matrix.builder("EmptyRows")
+    Matrix m = Matrix.builder('EmptyRows')
         .columns(cols)
         .types(Integer, String)
         .build()
 
-    File tmp = Files.createTempFile("avro-empty-rows-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-empty-rows-', '.avro').toFile()
     try {
       MatrixAvroWriter.write(m, tmp)
       Matrix result = MatrixAvroReader.read(tmp)
 
       assertEquals(0, result.rowCount())
       assertEquals(2, result.columnCount())
-      assertEquals(["id", "name"], result.columnNames())
+      assertEquals(['id', 'name'], result.columnNames())
     } finally {
       tmp.delete()
     }
@@ -42,24 +42,24 @@ class MatrixAvroEdgeCaseTest {
 
   @Test
   void testSingleRowRoundTrip() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["id"] = [1]
-    cols["name"] = ["Alice"]
+    Map<String, List<?>> cols = [:]
+    cols['id'] = [1]
+    cols['name'] = ['Alice']
 
-    Matrix m = Matrix.builder("SingleRow")
+    Matrix m = Matrix.builder('SingleRow')
         .columns(cols)
         .types(Integer, String)
         .build()
 
-    File tmp = Files.createTempFile("avro-single-row-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-single-row-', '.avro').toFile()
     try {
       MatrixAvroWriter.write(m, tmp)
       Matrix result = MatrixAvroReader.read(tmp)
 
       assertEquals(1, result.rowCount())
       assertEquals(2, result.columnCount())
-      assertEquals(1, result[0, "id"])
-      assertEquals("Alice", result[0, "name"])
+      assertEquals(1, result[0, 'id'])
+      assertEquals('Alice', result[0, 'name'])
     } finally {
       tmp.delete()
     }
@@ -67,22 +67,22 @@ class MatrixAvroEdgeCaseTest {
 
   @Test
   void testSingleColumnRoundTrip() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["value"] = [1, 2, 3]
+    Map<String, List<?>> cols = [:]
+    cols['value'] = [1, 2, 3]
 
-    Matrix m = Matrix.builder("SingleColumn")
+    Matrix m = Matrix.builder('SingleColumn')
         .columns(cols)
         .types(Integer)
         .build()
 
-    File tmp = Files.createTempFile("avro-single-col-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-single-col-', '.avro').toFile()
     try {
       MatrixAvroWriter.write(m, tmp)
       Matrix result = MatrixAvroReader.read(tmp)
 
       assertEquals(3, result.rowCount())
       assertEquals(1, result.columnCount())
-      assertEquals([1, 2, 3], result["value"])
+      assertEquals([1, 2, 3], result['value'])
     } finally {
       tmp.delete()
     }
@@ -90,28 +90,28 @@ class MatrixAvroEdgeCaseTest {
 
   @Test
   void testSpecialCharactersInStringValuesRoundTrip() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["text"] = [
-        "line1\nline2",
-        "tab\tvalue",
-        "quote \"inside\"",
-        "backslash \\\\",
-        "comma, semicolon;"
+    Map<String, List<?>> cols = [:]
+    cols['text'] = [
+        'line1\nline2',
+        'tab\tvalue',
+        'quote "inside"',
+        'backslash \\\\',
+        'comma, semicolon;'
     ]
 
-    Matrix m = Matrix.builder("SpecialChars")
+    Matrix m = Matrix.builder('SpecialChars')
         .columns(cols)
         .types(String)
         .build()
 
-    File tmp = Files.createTempFile("avro-special-chars-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-special-chars-', '.avro').toFile()
     try {
       MatrixAvroWriter.write(m, tmp)
       Matrix result = MatrixAvroReader.read(tmp)
 
       assertEquals(5, result.rowCount())
-      assertNotNull(result["text"])
-      assertEquals(cols["text"], result["text"])
+      assertNotNull(result['text'])
+      assertEquals(cols['text'], result['text'])
     } finally {
       tmp.delete()
     }
@@ -119,21 +119,21 @@ class MatrixAvroEdgeCaseTest {
 
   @Test
   void testUnicodeColumnNameRejected() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["naïve"] = [1, 2]
+    Map<String, List<?>> cols = [:]
+    cols['naïve'] = [1, 2]
 
-    Matrix m = Matrix.builder("UnicodeColumns")
+    Matrix m = Matrix.builder('UnicodeColumns')
         .columns(cols)
         .types(Integer)
         .build()
 
-    File tmp = Files.createTempFile("avro-unicode-col-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-unicode-col-', '.avro').toFile()
     try {
       def ex = assertThrows(AvroSchemaException) {
         MatrixAvroWriter.write(m, tmp)
       }
-      assertEquals("naïve", ex.columnName)
-      assertTrue(ex.message.contains("Avro field name"))
+      assertEquals('naïve', ex.columnName)
+      assertTrue(ex.message.contains('Avro field name'))
     } finally {
       tmp.delete()
     }
@@ -142,26 +142,27 @@ class MatrixAvroEdgeCaseTest {
   @Test
   void testLargeFileRoundTrip() {
     int rows = 10_000
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["id"] = (1..rows).toList()
-    cols["value"] = (1..rows).collect { it * 2 }
-    cols["name"] = (1..rows).collect { "row${it}" }
+    Map<String, List<?>> cols = [:]
+    cols['id'] = (1..rows).toList()
+    cols['value'] = (1..rows).collect { it * 2 }
+    cols['name'] = (1..rows).collect { "row${it}" }
 
-    Matrix m = Matrix.builder("LargeFile")
+    Matrix m = Matrix.builder('LargeFile')
         .columns(cols)
         .types(Integer, Integer, String)
         .build()
 
-    File tmp = Files.createTempFile("avro-large-", ".avro").toFile()
+    File tmp = Files.createTempFile('avro-large-', '.avro').toFile()
     try {
       MatrixAvroWriter.write(m, tmp)
       Matrix result = MatrixAvroReader.read(tmp)
 
       assertEquals(rows, result.rowCount())
       assertEquals(3, result.columnCount())
-      assertEquals("row${rows}", result[rows - 1, "name"])
+      assertEquals("row${rows}", result[rows - 1, 'name'])
     } finally {
       tmp.delete()
     }
   }
+
 }

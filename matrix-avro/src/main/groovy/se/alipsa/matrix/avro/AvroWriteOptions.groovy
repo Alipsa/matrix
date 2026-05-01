@@ -1,7 +1,5 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
-
 import org.apache.avro.file.CodecFactory
 import org.apache.avro.file.DataFileConstants
 
@@ -28,8 +26,8 @@ import se.alipsa.matrix.core.spi.OptionMaps
  * // With all options
  * def options = new AvroWriteOptions()
  *     .inferPrecisionAndScale(true)
- *     .namespace("com.example.data")
- *     .schemaName("MyData")
+ *     .namespace('com.example.data')
+ *     .schemaName('MyData')
  *     .compression(AvroWriteOptions.Compression.SNAPPY)
  *     .syncInterval(64000)
  * MatrixAvroWriter.write(matrix, file, options)
@@ -37,7 +35,6 @@ import se.alipsa.matrix.core.spi.OptionMaps
  *
  * @see MatrixAvroWriter
  */
-@CompileStatic
 class AvroWriteOptions {
 
   static final String DEFAULT_NAMESPACE = 'se.alipsa.matrix.avro'
@@ -45,11 +42,11 @@ class AvroWriteOptions {
   static final int DEFAULT_SYNC_INTERVAL = 0
   static final int MIN_SYNC_INTERVAL = 32
   static final int MAX_SYNC_INTERVAL = 1 << 30
-
   /**
    * Supported compression codecs for Avro files.
    */
   enum Compression {
+
     /** No compression (default) */
     NULL,
     /** Deflate compression (zlib) - good balance of speed and compression ratio */
@@ -63,7 +60,6 @@ class AvroWriteOptions {
     /** Zstandard compression - excellent balance of speed and ratio (requires zstd library) */
     ZSTANDARD
   }
-
   private boolean inferPrecisionAndScale = false
   private String namespace = DEFAULT_NAMESPACE
   private String schemaName = null
@@ -71,13 +67,11 @@ class AvroWriteOptions {
   private int compressionLevel = DEFAULT_COMPRESSION_LEVEL
   private int syncInterval = DEFAULT_SYNC_INTERVAL
   private Map<String, AvroSchemaDecl> columnSchemas = [:]
-
   /**
    * Creates a new AvroWriteOptions with default settings.
    */
   AvroWriteOptions() {
   }
-
   /**
    * Sets whether to infer precision and scale for BigDecimal columns.
    *
@@ -92,34 +86,31 @@ class AvroWriteOptions {
     this.inferPrecisionAndScale = infer
     return this
   }
-
   /**
    * Sets the namespace for the generated Avro schema.
    *
-   * <p>The namespace is used in the Avro schema's "namespace" field and helps
+   * <p>The namespace is used in the Avro schema's 'namespace' field and helps
    * organize schemas when using schema registries.
    *
-   * @param namespace the schema namespace (e.g., "com.example.data")
+   * @param namespace the schema namespace (e.g., 'com.example.data')
    * @return this options instance for method chaining
    */
   AvroWriteOptions namespace(String namespace) {
     this.namespace = namespace
     return this
   }
-
   /**
    * Sets the name for the generated Avro record schema.
    *
-   * <p>This name appears in the Avro schema's "name" field.
+   * <p>This name appears in the Avro schema's 'name' field.
    *
-   * @param name the schema name (e.g., "UserData")
+   * @param name the schema name (e.g., 'UserData')
    * @return this options instance for method chaining
    */
   AvroWriteOptions schemaName(String name) {
     this.schemaName = name
     return this
   }
-
   /**
    * Sets the compression codec to use for the Avro file.
    *
@@ -136,7 +127,6 @@ class AvroWriteOptions {
     this.compression = effectiveCompression
     return this
   }
-
   /**
    * Sets the compression level for codecs that support it.
    *
@@ -153,7 +143,6 @@ class AvroWriteOptions {
     this.compressionLevel = level
     return this
   }
-
   /**
    * Sets the sync marker interval in bytes.
    *
@@ -169,7 +158,6 @@ class AvroWriteOptions {
     this.syncInterval = interval
     return this
   }
-
   /**
    * Sets explicit per-column Avro schema declarations.
    *
@@ -183,7 +171,6 @@ class AvroWriteOptions {
     this.columnSchemas = copyColumnSchemas(columnSchemas)
     return this
   }
-
   /**
    * Sets an explicit Avro schema declaration for a single column.
    *
@@ -197,58 +184,49 @@ class AvroWriteOptions {
     this.columnSchemas = updated
     return this
   }
-
   // Getters
-
   /**
    * @return true if precision and scale should be inferred for BigDecimal columns
    */
   boolean getInferPrecisionAndScale() {
     return inferPrecisionAndScale
   }
-
   /**
    * @return the schema namespace
    */
   String getNamespace() {
     return namespace
   }
-
   /**
    * @return the schema name
    */
   String getSchemaName() {
     return schemaName
   }
-
   /**
    * @return the compression codec
    */
   Compression getCompression() {
     return compression
   }
-
   /**
    * @return the compression level, or -1 for codec default
    */
   int getCompressionLevel() {
     return compressionLevel
   }
-
   /**
    * @return the sync interval in bytes, or 0 for default
    */
   int getSyncInterval() {
     return syncInterval
   }
-
   /**
    * @return explicit per-column schema declarations
    */
   Map<String, AvroSchemaDecl> getColumnSchemas() {
     columnSchemas.asImmutable()
   }
-
   /**
    * Creates the Avro CodecFactory based on the configured compression settings.
    *
@@ -270,7 +248,6 @@ class AvroWriteOptions {
         CodecFactory.nullCodec()
     }
   }
-
   /**
    * Converts this options object to an SPI-friendly map.
    *
@@ -296,7 +273,6 @@ class AvroWriteOptions {
     }
     options
   }
-
   /**
    * Creates {@link AvroWriteOptions} from a generic SPI options map.
    *
@@ -329,7 +305,7 @@ class AvroWriteOptions {
     }
     if (normalized.containsKey('compression')) {
       def value = normalized.compression
-      if (value instanceof Compression) {
+      if (Compression.isInstance(value)) {
         compression = value as Compression
       } else if (value != null) {
         compression = Compression.valueOf(String.valueOf(value).toUpperCase())
@@ -364,7 +340,6 @@ class AvroWriteOptions {
     }
     result
   }
-
   private static void validateCompressionLevel(Compression compression, int level) {
     Compression effectiveCompression = compression ?: Compression.NULL
     if (level == DEFAULT_COMPRESSION_LEVEL) {
@@ -391,7 +366,6 @@ class AvroWriteOptions {
       }
     }
   }
-
   private static void validateSyncInterval(int interval) {
     if (interval == DEFAULT_SYNC_INTERVAL) {
       return
@@ -402,7 +376,6 @@ class AvroWriteOptions {
       )
     }
   }
-
   /**
    * Returns a human-readable description of all supported write options.
    *
@@ -411,7 +384,6 @@ class AvroWriteOptions {
   static String describe() {
     OptionDescriptor.describe(descriptors())
   }
-
   /**
    * Returns descriptors for all supported write options.
    *
@@ -428,7 +400,6 @@ class AvroWriteOptions {
         new OptionDescriptor('columnSchemas', Map, null, 'Map of column names to explicit Avro schema declarations for decimal, array, map, or record overrides')
     ]
   }
-
   private static Map<String, AvroSchemaDecl> copyColumnSchemas(Map<String, AvroSchemaDecl> value) {
     if (value == null) {
       return [:]
@@ -440,7 +411,6 @@ class AvroWriteOptions {
     }
     result
   }
-
   private static String requireColumnName(String value) {
     String trimmed = value?.trim()
     if (trimmed == null || trimmed.isEmpty()) {
@@ -448,11 +418,11 @@ class AvroWriteOptions {
     }
     trimmed
   }
-
   private static AvroSchemaDecl requireDeclaration(String columnName, AvroSchemaDecl declaration) {
     if (declaration == null) {
       throw new IllegalArgumentException("columnSchemas['$columnName'] must not be null")
     }
     declaration
   }
+
 }

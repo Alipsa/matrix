@@ -1,6 +1,5 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import org.apache.avro.Schema
@@ -21,7 +20,6 @@ import java.util.Locale
  * Instances can be round-tripped through SPI option maps by calling {@link AvroSchemaDecl#toMap()}
  * and {@link AvroSchemaDecl#fromMap(java.util.Map)}.
  */
-@CompileStatic
 abstract class AvroSchemaDecl {
 
   private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
@@ -52,7 +50,6 @@ abstract class AvroSchemaDecl {
       (LocalDateTime) : AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS,
       (UUID)          : AvroScalarTypeDecl.UUID
   ].asImmutable()
-
   /**
    * Creates a scalar schema declaration.
    *
@@ -65,7 +62,6 @@ abstract class AvroSchemaDecl {
     }
     new ScalarAvroSchemaDecl(scalarType)
   }
-
   /**
    * Creates a scalar schema declaration from a supported Java type.
    *
@@ -90,7 +86,6 @@ abstract class AvroSchemaDecl {
     }
     scalar(toScalarType(javaType))
   }
-
   /**
    * Creates a fixed decimal schema declaration.
    *
@@ -102,7 +97,6 @@ abstract class AvroSchemaDecl {
     validateDecimal(precision, scale, 'decimal')
     new DecimalAvroSchemaDecl(precision, scale)
   }
-
   /**
    * Creates an array schema declaration.
    *
@@ -115,7 +109,6 @@ abstract class AvroSchemaDecl {
     }
     new ArrayAvroSchemaDecl(elementType)
   }
-
   /**
    * Creates a map schema declaration.
    *
@@ -128,7 +121,6 @@ abstract class AvroSchemaDecl {
     }
     new MapAvroSchemaDecl(valueType)
   }
-
   /**
    * Creates a record schema declaration using the default nested record name for the column.
    *
@@ -138,7 +130,6 @@ abstract class AvroSchemaDecl {
   static AvroSchemaDecl record(Map<String, AvroSchemaDecl> fields) {
     record(null, fields)
   }
-
   /**
    * Creates a record schema declaration.
    *
@@ -149,7 +140,6 @@ abstract class AvroSchemaDecl {
   static AvroSchemaDecl record(String recordName, Map<String, AvroSchemaDecl> fields) {
     new RecordAvroSchemaDecl(recordName, validateFields(fields))
   }
-
   /**
    * Parses a schema declaration from an SPI-friendly nested map.
    *
@@ -174,23 +164,20 @@ abstract class AvroSchemaDecl {
       default -> throw new IllegalArgumentException("Unsupported schema declaration kind '$kind'")
     }
   }
-
   /**
    * Converts this declaration to an SPI-friendly nested map.
    *
    * @return map representation of this schema declaration
    */
   abstract Map<String, ?> toMap()
-
   @PackageScope
   abstract Schema toAvroSchema(String defaultName, String namespace)
-
   /**
    * Parses the nested `columnSchemas` SPI option map used by {@link AvroWriteOptions}.
    */
   @PackageScope
   static Map<String, AvroSchemaDecl> columnSchemasValue(Object value, String optionName) {
-    if (!(value instanceof Map)) {
+    if (!(Map.isInstance(value))) {
       throw new IllegalArgumentException("$optionName must be a Map<String, AvroSchemaDecl> but was ${value?.class}")
     }
     Map<String, AvroSchemaDecl> result = [:]
@@ -200,7 +187,6 @@ abstract class AvroSchemaDecl {
     }
     result
   }
-
   /**
    * Serializes typed column schema declarations back to the SPI map shape used by {@link AvroWriteOptions}.
    */
@@ -212,7 +198,6 @@ abstract class AvroSchemaDecl {
     }
     result
   }
-
   private static AvroScalarTypeDecl toScalarType(Class<?> javaType) {
     AvroScalarTypeDecl scalarType = SCALAR_TYPE_BY_CLASS[javaType]
     if (scalarType != null) {
@@ -220,7 +205,6 @@ abstract class AvroSchemaDecl {
     }
     throw new IllegalArgumentException("Unsupported scalar Java type '${javaType.name}' for explicit Avro schema control")
   }
-
   private static Map<String, Object> normalizeNestedKeys(Map<String, ?> value) {
     Map<String, Object> normalized = [:]
     value.each { key, item ->
@@ -228,15 +212,14 @@ abstract class AvroSchemaDecl {
     }
     normalized
   }
-
   private static AvroSchemaDecl schemaDeclValue(Object value, String optionName) {
-    if (value instanceof AvroSchemaDecl) {
+    if (AvroSchemaDecl.isInstance(value)) {
       return value as AvroSchemaDecl
     }
-    if (value instanceof AvroScalarTypeDecl) {
+    if (AvroScalarTypeDecl.isInstance(value)) {
       return scalar(value as AvroScalarTypeDecl)
     }
-    if (value instanceof Map) {
+    if (Map.isInstance(value)) {
       return fromMap(value as Map<String, ?>)
     }
     if (value != null) {
@@ -251,9 +234,8 @@ abstract class AvroSchemaDecl {
         "$optionName must be an AvroSchemaDecl, AvroScalarTypeDecl, or declaration Map but was ${value?.class}"
     )
   }
-
   private static Map<String, AvroSchemaDecl> recordFieldsValue(Object value, String optionName) {
-    if (!(value instanceof Map)) {
+    if (!(Map.isInstance(value))) {
       throw new IllegalArgumentException("$optionName must be a Map<String, AvroSchemaDecl> but was ${value?.class}")
     }
     Map<String, AvroSchemaDecl> result = [:]
@@ -266,7 +248,6 @@ abstract class AvroSchemaDecl {
     }
     result
   }
-
   private static Map<String, AvroSchemaDecl> validateFields(Map<String, AvroSchemaDecl> fields) {
     if (fields == null || fields.isEmpty()) {
       throw new IllegalArgumentException('record fields must contain at least one field')
@@ -281,7 +262,6 @@ abstract class AvroSchemaDecl {
     }
     result
   }
-
   private static String requireName(String value, String optionName) {
     String trimmed = value?.trim()
     if (trimmed == null || trimmed.isEmpty()) {
@@ -289,9 +269,8 @@ abstract class AvroSchemaDecl {
     }
     trimmed
   }
-
   private static AvroScalarTypeDecl scalarTypeValue(Object value, String optionName) {
-    if (value instanceof AvroScalarTypeDecl) {
+    if (AvroScalarTypeDecl.isInstance(value)) {
       return value as AvroScalarTypeDecl
     }
     String text = OptionMaps.stringValueOrNull(value)
@@ -304,7 +283,6 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("Unsupported $optionName value '$text'", e)
     }
   }
-
   private static int intValue(Object value, String optionName) {
     try {
       return new BigDecimal(String.valueOf(value)).intValueExact()
@@ -312,7 +290,6 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("$optionName must be an integer but was $value", e)
     }
   }
-
   private static void validateDecimal(int precision, int scale, String optionName) {
     if (precision <= 0) {
       throw new IllegalArgumentException("$optionName precision must be > 0 but was $precision")
@@ -324,7 +301,6 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("$optionName scale must be <= precision but was $scale > $precision")
     }
   }
-
   private static void ensureOnlyKeys(Map<String, Object> value, String optionName, Set<String> allowedKeys) {
     List<String> unexpected = value.keySet().findAll { String key -> !allowedKeys.contains(key) }.sort()
     if (!unexpected.isEmpty()) {
@@ -333,30 +309,26 @@ abstract class AvroSchemaDecl {
       )
     }
   }
-
   private static AvroSchemaDecl parseScalarDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, 'scalar', ['kind', 'scalartype'] as Set<String>)
     scalar(scalarTypeValue(normalized.scalartype, 'scalar.scalarType'))
   }
-
   private static AvroSchemaDecl parseDecimalDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, 'decimal', ['kind', 'precision', 'scale'] as Set<String>)
     decimal(intValue(normalized.precision, 'decimal.precision'),
         intValue(normalized.scale, 'decimal.scale'))
   }
-
   private static AvroSchemaDecl parseArrayDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, 'array', ['kind', 'elementtype'] as Set<String>)
     array(schemaDeclValue(normalized.elementtype, 'array.elementType'))
   }
-
   private static AvroSchemaDecl parseMapDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, 'map', ['kind', 'valuetype'] as Set<String>)
     map(schemaDeclValue(normalized.valuetype, 'map.valueType'))
   }
-
   private static AvroSchemaDecl parseRecordDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, 'record', ['kind', 'recordname', 'fields'] as Set<String>)
     record(OptionMaps.stringValueOrNull(normalized.recordname), recordFieldsValue(normalized.fields, 'record.fields'))
   }
+
 }
