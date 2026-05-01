@@ -25,8 +25,6 @@ package se.alipsa.matrix.avro.exceptions
  */
 class AvroSchemaException extends RuntimeException {
 
-  private static final String EXPECTED_PREFIX = ' (expected: '
-  private static final String DETAILS_SUFFIX = ')'
   /** The column name associated with this error, if applicable */
   private final String columnName
   /** The expected type, if applicable */
@@ -108,12 +106,15 @@ class AvroSchemaException extends RuntimeException {
     if (columnName != null) {
       sb.append(' [column: ').append(columnName).append(']')
     }
-    if (expectedType != null && actualType != null) {
-      sb.append(EXPECTED_PREFIX).append(expectedType).append(', actual: ').append(actualType).append(DETAILS_SUFFIX)
-    } else if (expectedType != null) {
-      sb.append(EXPECTED_PREFIX).append(expectedType).append(DETAILS_SUFFIX)
-    } else if (actualType != null) {
-      sb.append(' (actual: ').append(actualType).append(DETAILS_SUFFIX)
+    List<String> details = []
+    if (expectedType != null) {
+      details << 'expected: ' + expectedType
+    }
+    if (actualType != null) {
+      details << 'actual: ' + actualType
+    }
+    if (!details.isEmpty()) {
+      sb.append(' (').append(details.join(', ')).append(')')
     }
     return sb.toString()
   }

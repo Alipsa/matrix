@@ -28,7 +28,7 @@ class AvroConversionException extends RuntimeException {
   private static final int NO_ROW = -1
   /** The column name associated with this error, if applicable */
   private final String columnName
-  /** The row number (0-based) where the error occurred, or NO_ROW if not applicable */
+  /** The row number (0-based) where the error occurred, or -1 if not applicable */
   private final int rowNumber
   /** The source type that could not be converted */
   private final String sourceType
@@ -68,7 +68,7 @@ class AvroConversionException extends RuntimeException {
    *
    * @param message the error message
    * @param columnName the column name where the error occurred
-   * @param rowNumber the row number (0-based) where the error occurred, or NO_ROW if not applicable
+   * @param rowNumber the row number (0-based) where the error occurred, or -1 if not applicable
    * @param sourceType the source type that could not be converted
    * @param targetType the target type for the conversion
    * @param value the value that could not be converted
@@ -87,7 +87,7 @@ class AvroConversionException extends RuntimeException {
    *
    * @param message the error message
    * @param columnName the column name where the error occurred
-   * @param rowNumber the row number (0-based) where the error occurred, or NO_ROW if not applicable
+   * @param rowNumber the row number (0-based) where the error occurred, or -1 if not applicable
    * @param sourceType the source type that could not be converted
    * @param targetType the target type for the conversion
    * @param value the value that could not be converted
@@ -109,7 +109,7 @@ class AvroConversionException extends RuntimeException {
     return columnName
   }
   /**
-   * @return the row number (0-based) where the error occurred, or NO_ROW if not applicable
+   * @return the row number (0-based) where the error occurred, or -1 if not applicable
    */
   int getRowNumber() {
     return rowNumber

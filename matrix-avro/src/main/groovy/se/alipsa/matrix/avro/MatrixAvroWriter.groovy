@@ -442,7 +442,6 @@ class MatrixAvroWriter {
    * @return the corresponding Avro schema
    */
   private static Schema toFieldSchema(Class<?> clazz, int[] decimalMeta) {
-
     if (clazz == BigDecimal) {
       if (decimalMeta != null) {
         int precision = decimalMeta[0] > 0 ? decimalMeta[0] : 10
@@ -464,7 +463,6 @@ class MatrixAvroWriter {
       return Schema.create(Schema.Type.INT)
     }
     if (clazz == Long || clazz == long.class || clazz == BigInteger) {
-
       return Schema.create(Schema.Type.LONG)
     }
     if (clazz == Float || clazz == float.class) {
@@ -738,15 +736,9 @@ class MatrixAvroWriter {
     GenericData.Record record = new GenericData.Record(fieldSchema)
     fieldSchema.getFields().each { Schema.Field field ->
       def value = input == null ? null : input.get(field.name())
-      record.put(field.name(), toAvroValue(nonNullSchema(field.schema()), value, decConv))
+      record.put(field.name(), toAvroValue(AvroSchemaUtil.nonNullSchema(field.schema()), value, decConv))
     }
     record
-  }
-  private static Schema nonNullSchema(Schema schema) {
-    if (schema.getType() != Schema.Type.UNION) {
-      return schema
-    }
-    schema.getTypes().find { Schema candidate -> candidate.getType() != Schema.Type.NULL } ?: schema
   }
   /**
    * Returns a cached schema for the given matrix and cache key, if available.

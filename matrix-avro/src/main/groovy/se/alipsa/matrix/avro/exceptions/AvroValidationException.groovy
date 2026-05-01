@@ -32,7 +32,7 @@ class AvroValidationException extends IllegalArgumentException {
   private final String parameterName
   /** A helpful suggestion for fixing the error */
   private final String suggestion
-  /** The row number associated with this error, or NO_ROW if not applicable */
+  /** The row number associated with this error, or -1 if not applicable */
   private final int rowNumber
   /**
    * Creates a new AvroValidationException with a message.
@@ -111,7 +111,7 @@ class AvroValidationException extends IllegalArgumentException {
     return suggestion
   }
   /**
-   * @return the row number where validation failed, or NO_ROW if not applicable
+   * @return the row number where validation failed, or -1 if not applicable
    */
   int getRowNumber() {
     return rowNumber

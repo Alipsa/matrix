@@ -15,6 +15,12 @@ final class AvroSchemaUtil {
   static Schema nullableSchema(Schema schema) {
     Schema.createUnion([Schema.create(Schema.Type.NULL), schema])
   }
+  static Schema nonNullSchema(Schema schema) {
+    if (schema.getType() != Schema.Type.UNION) {
+      return schema
+    }
+    schema.getTypes().find { Schema candidate -> candidate.getType() != Schema.Type.NULL } ?: schema
+  }
   static Schema scalarSchema(AvroScalarTypeDecl scalarType) {
     switch (scalarType) {
       case AvroScalarTypeDecl.STRING -> Schema.create(Schema.Type.STRING)

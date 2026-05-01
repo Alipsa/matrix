@@ -394,7 +394,7 @@ class MatrixAvroReader {
       return null
     }
     if (schema.getType() == Schema.Type.UNION) {
-      return convertValue(nonNullSchema(schema), v)
+      return convertValue(AvroSchemaUtil.nonNullSchema(schema), v)
     }
     LogicalType lt = schema.getLogicalType()
     if (lt != null) {
@@ -402,11 +402,6 @@ class MatrixAvroReader {
       return logicalValue != null ? logicalValue : convertSchemaValue(schema, v)
     }
     convertSchemaValue(schema, v)
-  }
-  private static Schema nonNullSchema(Schema schema) {
-    schema.getTypes().stream()
-        .filter(s -> s.getType() != Schema.Type.NULL)
-        .findFirst().orElse(schema)
   }
   private static Object convertLogicalValue(LogicalType lt, Schema schema, Object v) {
     if (LogicalTypes.Decimal.isInstance(lt)) {
