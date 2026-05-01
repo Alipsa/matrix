@@ -53,6 +53,15 @@ Matrix projected = MatrixAvroReader.read(
 )
 ```
 
+## Inspect a file schema without reading rows
+
+```groovy
+import org.apache.avro.Schema
+import se.alipsa.matrix.avro.MatrixAvroReader
+
+Schema writerSchema = MatrixAvroReader.schema(new File('people.avro'))
+```
+
 ## Write with the Matrix name as the default Avro schema name
 
 ```groovy
@@ -82,6 +91,13 @@ MatrixAvroWriter.write(orders, new File('orders-decimal.avro'), new AvroWriteOpt
 
 Without `inferPrecisionAndScale(true)`, `BigDecimal` columns fall back to Avro `double`.
 
+The same decimal-safe behavior is available through shortcuts:
+
+```groovy
+MatrixAvroWriter.write(orders, new File('orders-decimal.avro'), AvroWriteOptions.exactDecimals())
+MatrixAvroWriter.writeExactDecimals(orders, new File('orders-decimal.avro'))
+```
+
 ## Force a fixed decimal schema for one column
 
 ```groovy
@@ -90,7 +106,7 @@ import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroWriter
 
 MatrixAvroWriter.write(orders, new File('orders-fixed-decimal.avro'), new AvroWriteOptions()
-    .columnSchema('total', AvroSchemaDecl.decimal(12, 2))
+    .columnSchema('total', AvroSchemaDecl.decimalColumn(12, 2))
 )
 ```
 
@@ -120,7 +136,7 @@ Matrix nested = Matrix.builder('Nested')
     .build()
 
 MatrixAvroWriter.write(nested, new File('nested-map.avro'), new AvroWriteOptions()
-    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('props', AvroSchemaDecl.mapOf(Integer))
 )
 ```
 
@@ -161,7 +177,7 @@ Matrix data = Matrix.builder('TagData')
     .build()
 
 MatrixAvroWriter.write(data, new File('tags.avro'), new AvroWriteOptions()
-    .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
+    .columnSchema('tags', AvroSchemaDecl.arrayOf(Long))
 )
 ```
 
@@ -189,7 +205,7 @@ source.write([
 ## Common troubleshooting
 
 - UUID reads back as `String`: expected; Avro `uuid` is imported as `String`
-- `BigDecimal` reads back as `Double`: expected when `inferPrecisionAndScale` is left at its default `false`
+- `BigDecimal` reads back as `Double`: expected when `inferPrecisionAndScale` is left at its default `false`; use `AvroWriteOptions.exactDecimals()` or `writeExactDecimals(...)`
 - Nested type looks wrong: the default heuristic uses the first non-null sample for lists and map values
 - Map unexpectedly became a record: all non-null rows shared the same key set, so the writer treated it as record-like
 

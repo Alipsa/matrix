@@ -73,6 +73,22 @@ class AvroWriteOptions {
   AvroWriteOptions() {
   }
   /**
+   * Creates write options with the default settings.
+   *
+   * @return default write options
+   */
+  static AvroWriteOptions defaults() {
+    new AvroWriteOptions()
+  }
+  /**
+   * Creates write options that store BigDecimal columns as Avro decimal logical types.
+   *
+   * @return write options with decimal precision and scale inference enabled
+   */
+  static AvroWriteOptions exactDecimals() {
+    new AvroWriteOptions().inferPrecisionAndScale(true)
+  }
+  /**
    * Sets whether to infer precision and scale for BigDecimal columns.
    *
    * <p>When true, scans all BigDecimal values in each column to determine the

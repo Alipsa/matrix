@@ -179,7 +179,164 @@ class MatrixAvroReader {
     if (input == null) {
       throw new IllegalArgumentException(INPUT_STREAM_NULL_MESSAGE)
     }
-    return readInternal(input, name, DEFAULT_MATRIX_NAME, null)
+    return readInternal(new NonClosingInputStream(input), name, DEFAULT_MATRIX_NAME, null)
+  }
+  /**
+   * Read the writer schema from an Avro file.
+   *
+   * @param file the Avro file to inspect
+   * @return the Avro schema stored in the file
+   * @throws IllegalArgumentException if file is null or invalid
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(File file) {
+    schema(file, AvroReadOptions.defaults())
+  }
+  /**
+   * Read the effective schema from an Avro file.
+   *
+   * <p>If {@code options.readerSchema} is set, that schema is returned; otherwise the writer schema
+   * stored in the file is returned.
+   *
+   * @param file the Avro file to inspect
+   * @param options the read options
+   * @return the effective Avro schema
+   * @throws IllegalArgumentException if file or options is null or invalid
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(File file, AvroReadOptions options) {
+    validateFile(file)
+    if (options == null) {
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
+    }
+    InputStream is = new FileInputStream(file)
+    try {
+      return schemaInternal(is, options.readerSchema)
+    } finally {
+      is.close()
+    }
+  }
+  /**
+   * Read the writer schema from an Avro file path.
+   *
+   * @param path the Avro file path to inspect
+   * @return the Avro schema stored in the file
+   * @throws IllegalArgumentException if path is null or invalid
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(Path path) {
+    schema(path, AvroReadOptions.defaults())
+  }
+  /**
+   * Read the effective schema from an Avro file path.
+   *
+   * @param path the Avro file path to inspect
+   * @param options the read options
+   * @return the effective Avro schema
+   * @throws IllegalArgumentException if path or options is null or invalid
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(Path path, AvroReadOptions options) {
+    if (path == null) {
+      throw new IllegalArgumentException(PATH_NULL_MESSAGE)
+    }
+    schema(path.toFile(), options)
+  }
+  /**
+   * Read the writer schema from Avro data at a URL.
+   *
+   * @param url the URL to inspect
+   * @return the Avro schema stored in the data
+   * @throws IllegalArgumentException if url is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(URL url) {
+    schema(url, AvroReadOptions.defaults())
+  }
+  /**
+   * Read the effective schema from Avro data at a URL.
+   *
+   * @param url the URL to inspect
+   * @param options the read options
+   * @return the effective Avro schema
+   * @throws IllegalArgumentException if url or options is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(URL url, AvroReadOptions options) {
+    if (url == null) {
+      throw new IllegalArgumentException(URL_NULL_MESSAGE)
+    }
+    if (options == null) {
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
+    }
+    InputStream is = url.openStream()
+    try {
+      return schemaInternal(is, options.readerSchema)
+    } finally {
+      is.close()
+    }
+  }
+  /**
+   * Read the writer schema from Avro byte content.
+   *
+   * @param content the Avro content
+   * @return the Avro schema stored in the content
+   * @throws IllegalArgumentException if content is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(byte[] content) {
+    schema(content, AvroReadOptions.defaults())
+  }
+  /**
+   * Read the effective schema from Avro byte content.
+   *
+   * @param content the Avro content
+   * @param options the read options
+   * @return the effective Avro schema
+   * @throws IllegalArgumentException if content or options is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(byte[] content, AvroReadOptions options) {
+    if (content == null) {
+      throw new IllegalArgumentException(CONTENT_NULL_MESSAGE)
+    }
+    if (options == null) {
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
+    }
+    schemaInternal(new ByteArrayInputStream(content), options.readerSchema)
+  }
+  /**
+   * Read the writer schema from Avro data in an InputStream.
+   *
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param input the InputStream to inspect
+   * @return the Avro schema stored in the stream
+   * @throws IllegalArgumentException if input is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(InputStream input) {
+    schema(input, AvroReadOptions.defaults())
+  }
+  /**
+   * Read the effective schema from Avro data in an InputStream.
+   *
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param input the InputStream to inspect
+   * @param options the read options
+   * @return the effective Avro schema
+   * @throws IllegalArgumentException if input or options is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Schema schema(InputStream input, AvroReadOptions options) {
+    if (input == null) {
+      throw new IllegalArgumentException(INPUT_STREAM_NULL_MESSAGE)
+    }
+    if (options == null) {
+      throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
+    }
+    schemaInternal(new NonClosingInputStream(input), options.readerSchema)
   }
   // ----------------------------------------------------------------------
   // Methods accepting AvroReadOptions
@@ -295,7 +452,16 @@ class MatrixAvroReader {
     if (options == null) {
       throw new IllegalArgumentException(OPTIONS_NULL_MESSAGE)
     }
-    return readInternal(input, options.matrixName, DEFAULT_MATRIX_NAME, options.readerSchema)
+    return readInternal(new NonClosingInputStream(input), options.matrixName, DEFAULT_MATRIX_NAME, options.readerSchema)
+  }
+  private static Schema schemaInternal(InputStream input, Schema readerSchema) {
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()
+    DataFileStream<GenericRecord> dfs = new DataFileStream<>(input, datumReader)
+    try {
+      return readerSchema ?: dfs.schema
+    } finally {
+      dfs.close()
+    }
   }
   /**
    * Internal read implementation supporting optional reader schema and name resolution.
@@ -531,7 +697,7 @@ class MatrixAvroReader {
     long ms = ((Number) v).longValue()
     return LocalDateTime.ofEpochSecond(
         Math.floorDiv(ms, MILLIS_PER_SECOND),
-        (int)((ms % MILLIS_PER_SECOND) * NANOS_PER_MILLI),
+        (int)(Math.floorMod(ms, MILLIS_PER_SECOND) * NANOS_PER_MILLI),
         ZoneOffset.UTC
     )
   }
@@ -624,6 +790,18 @@ class MatrixAvroReader {
       name = name.substring(0, name.lastIndexOf(DOT))
     }
     return name ?: DEFAULT_MATRIX_NAME
+  }
+
+  private static final class NonClosingInputStream extends FilterInputStream {
+
+    private NonClosingInputStream(InputStream input) {
+      super(input)
+    }
+
+    @Override
+    void close() throws IOException {
+      // Caller owns the wrapped stream.
+    }
   }
 
 }

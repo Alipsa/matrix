@@ -35,6 +35,23 @@ class AvroReadOptions {
   private String matrixName = null
   private Schema readerSchema = null
   /**
+   * Creates read options with the default settings.
+   *
+   * @return default read options
+   */
+  static AvroReadOptions defaults() {
+    new AvroReadOptions()
+  }
+  /**
+   * Creates read options with a Matrix name override.
+   *
+   * @param name the Matrix name
+   * @return read options with the Matrix name configured
+   */
+  static AvroReadOptions named(String name) {
+    new AvroReadOptions().matrixName(name)
+  }
+  /**
    * Sets the name for the resulting Matrix.
    *
    * <p>If not set, the reader falls back to the Avro record name from the file schema and then

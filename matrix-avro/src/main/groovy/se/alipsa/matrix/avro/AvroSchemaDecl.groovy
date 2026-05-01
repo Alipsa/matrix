@@ -98,6 +98,16 @@ abstract class AvroSchemaDecl {
     new DecimalAvroSchemaDecl(precision, scale)
   }
   /**
+   * Creates a fixed decimal schema declaration for a Matrix column.
+   *
+   * @param precision the decimal precision
+   * @param scale the decimal scale
+   * @return a decimal schema declaration
+   */
+  static AvroSchemaDecl decimalColumn(int precision, int scale) {
+    decimal(precision, scale)
+  }
+  /**
    * Creates an array schema declaration.
    *
    * @param elementType the schema declaration for array elements
@@ -110,6 +120,24 @@ abstract class AvroSchemaDecl {
     new ArrayAvroSchemaDecl(elementType)
   }
   /**
+   * Creates an array schema declaration from a supported Java element type.
+   *
+   * @param elementType the Java element type
+   * @return an array schema declaration
+   */
+  static AvroSchemaDecl arrayOf(Class<?> elementType) {
+    array(type(elementType))
+  }
+  /**
+   * Creates an array schema declaration from an Avro scalar element type.
+   *
+   * @param elementType the Avro scalar element type
+   * @return an array schema declaration
+   */
+  static AvroSchemaDecl arrayOf(AvroScalarTypeDecl elementType) {
+    array(scalar(elementType))
+  }
+  /**
    * Creates a map schema declaration.
    *
    * @param valueType the schema declaration for map values
@@ -120,6 +148,24 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException('map valueType must not be null')
     }
     new MapAvroSchemaDecl(valueType)
+  }
+  /**
+   * Creates a map schema declaration from a supported Java value type.
+   *
+   * @param valueType the Java value type
+   * @return a map schema declaration
+   */
+  static AvroSchemaDecl mapOf(Class<?> valueType) {
+    map(type(valueType))
+  }
+  /**
+   * Creates a map schema declaration from an Avro scalar value type.
+   *
+   * @param valueType the Avro scalar value type
+   * @return a map schema declaration
+   */
+  static AvroSchemaDecl mapOf(AvroScalarTypeDecl valueType) {
+    map(scalar(valueType))
   }
   /**
    * Creates a record schema declaration using the default nested record name for the column.
