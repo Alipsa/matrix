@@ -3,10 +3,8 @@ package test.alipsa.matrix.avro
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertTrue
-
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-
 import se.alipsa.matrix.avro.AvroFormatProvider
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.AvroSchemaDecl
@@ -36,7 +34,7 @@ class AvroFormatProviderTest {
     Matrix source = Matrix.builder('orders')
         .columns(
             id: [1, 2],
-            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+            amount: [12.34, 56.78]
         )
         .types([Integer, BigDecimal])
         .build()
@@ -51,7 +49,7 @@ class AvroFormatProviderTest {
     Matrix matrix = Matrix.read([matrixName: 'loaded-orders'], file)
     assertEquals('loaded-orders', matrix.matrixName)
     assertEquals(source.columnNames(), matrix.columnNames())
-    assertEquals(new BigDecimal('12.34'), matrix[0, 'amount'])
+    assertEquals(12.34, matrix[0, 'amount'])
   }
 
   @Test
@@ -59,7 +57,7 @@ class AvroFormatProviderTest {
     Matrix source = Matrix.builder('orders')
         .columns(
             id: [1, 2],
-            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+            amount: [12.34, 56.78]
         )
         .types([Integer, BigDecimal])
         .build()
@@ -105,7 +103,7 @@ class AvroFormatProviderTest {
 
   @Test
   void testReadOptionsRoundTripFromMapToMap() {
-    String readerSchemaJson = """
+    String readerSchemaJson = '''
     {
       "type": "record",
       "name": "ProjectedOrders",
@@ -113,7 +111,7 @@ class AvroFormatProviderTest {
         {"name":"id", "type":"int"}
       ]
     }
-    """.stripIndent()
+    '''.stripIndent()
 
     AvroReadOptions options = AvroReadOptions.fromMap([
         matrixName  : 'OrdersView',
@@ -132,7 +130,7 @@ class AvroFormatProviderTest {
     Matrix source = Matrix.builder('orders')
         .columns(
             id: [1, 2],
-            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+            amount: [12.34, 56.78]
         )
         .types([Integer, BigDecimal])
         .build()
@@ -156,7 +154,7 @@ class AvroFormatProviderTest {
     Matrix source = Matrix.builder('orders')
         .columns(
             id: [1, 2],
-            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+            amount: [12.34, 56.78]
         )
         .types([Integer, BigDecimal])
         .build()
@@ -230,7 +228,7 @@ class AvroFormatProviderTest {
   void testTypedAndSpiColumnSchemasProduceSameSchema() {
     Matrix source = Matrix.builder('typedWrite')
         .columns(
-            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')],
+            amount: [12.34, 56.78],
             props: [[x: 1, y: 2], [y: 3, z: 4]],
             tags: [[1L, 2L], [3L, null]]
         )
@@ -281,4 +279,5 @@ class AvroFormatProviderTest {
     }
     assertTrue(ex.message.contains('decimal.scale'))
   }
+
 }

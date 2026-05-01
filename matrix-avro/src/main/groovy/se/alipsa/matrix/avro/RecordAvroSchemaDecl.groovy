@@ -1,25 +1,24 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.transform.ToString
-
 import org.apache.avro.Schema
 
+/**
+ * Avro schema declaration for record columns.
+ */
 @PackageScope
-@CompileStatic
 @EqualsAndHashCode
 @ToString(includeNames = true)
 class RecordAvroSchemaDecl extends AvroSchemaDecl {
+
   final String recordName
   final Map<String, AvroSchemaDecl> fields
-
   RecordAvroSchemaDecl(String recordName, Map<String, AvroSchemaDecl> fields) {
     this.recordName = recordName
     this.fields = fields.asImmutable()
   }
-
   @Override
   Map<String, ?> toMap() {
     Map<String, Object> result = [kind: 'record', fields: AvroSchemaDecl.columnSchemasToMap(fields)]
@@ -28,7 +27,6 @@ class RecordAvroSchemaDecl extends AvroSchemaDecl {
     }
     result
   }
-
   @Override
   @PackageScope
   Schema toAvroSchema(String defaultName, String namespace) {
@@ -44,4 +42,5 @@ class RecordAvroSchemaDecl extends AvroSchemaDecl {
     recordSchema.setFields(recordFields)
     recordSchema
   }
+
 }

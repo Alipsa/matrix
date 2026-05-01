@@ -1,10 +1,8 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
-
 import org.apache.avro.Schema
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
+
 import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
@@ -20,7 +18,7 @@ import se.alipsa.matrix.core.spi.OptionMaps
  *
  * // With custom matrix name override
  * def options = new AvroReadOptions()
- *     .matrixName("MyData")
+ *     .matrixName('MyData')
  * Matrix m = MatrixAvroReader.read(file, options)
  *
  * // With schema evolution (reader schema)
@@ -32,23 +30,15 @@ import se.alipsa.matrix.core.spi.OptionMaps
  *
  * @see MatrixAvroReader
  */
-@CompileStatic
 class AvroReadOptions {
 
   private String matrixName = null
   private Schema readerSchema = null
-
-  /**
-   * Creates a new AvroReadOptions with default settings.
-   */
-  AvroReadOptions() {
-  }
-
   /**
    * Sets the name for the resulting Matrix.
    *
    * <p>If not set, the reader falls back to the Avro record name from the file schema and then
-   * to a source-derived fallback such as the file name or "AvroMatrix".
+   * to a source-derived fallback such as the file name or 'AvroMatrix'.
    *
    * @param name the Matrix name
    * @return this options instance for method chaining
@@ -57,7 +47,6 @@ class AvroReadOptions {
     this.matrixName = name
     return this
   }
-
   /**
    * Sets a reader schema for schema evolution.
    *
@@ -77,23 +66,19 @@ class AvroReadOptions {
     this.readerSchema = schema
     return this
   }
-
   // Getters
-
   /**
    * @return the Matrix name, or null if not set
    */
   String getMatrixName() {
     return matrixName
   }
-
   /**
    * @return the reader schema, or null if not set
    */
   Schema getReaderSchema() {
     return readerSchema
   }
-
   /**
    * Converts this options object to an SPI-friendly map.
    *
@@ -109,7 +94,6 @@ class AvroReadOptions {
     }
     options
   }
-
   /**
    * Creates {@link AvroReadOptions} from a generic SPI options map.
    *
@@ -127,9 +111,9 @@ class AvroReadOptions {
     }
     if (normalized.containsKey('readerschema')) {
       def value = normalized.readerschema
-      if (value instanceof Schema) {
+      if (Schema.isInstance(value)) {
         result.readerSchema(value as Schema)
-      } else if (value instanceof CharSequence) {
+      } else if (CharSequence.isInstance(value)) {
         result.readerSchema(new Schema.Parser().parse(String.valueOf(value)))
       } else {
         throw new IllegalArgumentException("readerSchema must be a Schema or schema JSON string but was ${value?.class}")
@@ -137,7 +121,6 @@ class AvroReadOptions {
     }
     result
   }
-
   /**
    * Returns a human-readable description of all supported read options.
    *
@@ -146,7 +129,6 @@ class AvroReadOptions {
   static String describe() {
     OptionDescriptor.describe(descriptors())
   }
-
   /**
    * Returns descriptors for all supported read options.
    *
@@ -158,4 +140,5 @@ class AvroReadOptions {
         new OptionDescriptor('readerSchema', Schema, null, 'Reader schema or schema JSON for schema evolution')
     ]
   }
+
 }

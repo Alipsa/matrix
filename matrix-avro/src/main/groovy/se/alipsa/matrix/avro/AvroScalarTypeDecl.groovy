@@ -4,6 +4,7 @@ package se.alipsa.matrix.avro
  * Scalar Avro schema declarations supported by explicit per-column overrides.
  */
 enum AvroScalarTypeDecl {
+
   STRING,
   BOOLEAN,
   INT,
@@ -16,4 +17,5 @@ enum AvroScalarTypeDecl {
   TIMESTAMP_MILLIS,
   LOCAL_TIMESTAMP_MICROS,
   UUID
+
 }

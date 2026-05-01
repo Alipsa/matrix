@@ -1,25 +1,19 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.CompileStatic
-
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
-
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 
 /**
  * Shared helpers for translating explicit schema declarations to Avro types.
  */
-@CompileStatic
 final class AvroSchemaUtil {
 
   private AvroSchemaUtil() {
   }
-
   static Schema nullableSchema(Schema schema) {
     Schema.createUnion([Schema.create(Schema.Type.NULL), schema])
   }
-
   static Schema scalarSchema(AvroScalarTypeDecl scalarType) {
     switch (scalarType) {
       case AvroScalarTypeDecl.STRING -> Schema.create(Schema.Type.STRING)
@@ -37,7 +31,6 @@ final class AvroSchemaUtil {
       default -> throw new IllegalArgumentException("Unsupported Avro scalar type declaration $scalarType")
     }
   }
-
   static void validateAvroFieldName(String fieldName, String location) {
     if (!isValidAvroName(fieldName)) {
       throw new AvroSchemaException(
@@ -48,38 +41,33 @@ final class AvroSchemaUtil {
       )
     }
   }
-
   private static Schema createDateSchema() {
     Schema dateSchema = Schema.create(Schema.Type.INT)
     LogicalTypes.date().addToSchema(dateSchema)
     dateSchema
   }
-
   private static Schema createTimeMillisSchema() {
     Schema timeSchema = Schema.create(Schema.Type.INT)
     LogicalTypes.timeMillis().addToSchema(timeSchema)
     timeSchema
   }
-
   private static Schema createTimestampMillisSchema() {
     Schema timestampSchema = Schema.create(Schema.Type.LONG)
     LogicalTypes.timestampMillis().addToSchema(timestampSchema)
     timestampSchema
   }
-
   private static Schema createLocalTimestampMicrosSchema() {
     Schema localTimestampSchema = Schema.create(Schema.Type.LONG)
     LogicalTypes.localTimestampMicros().addToSchema(localTimestampSchema)
     localTimestampSchema
   }
-
   private static Schema createUuidSchema() {
     Schema uuidSchema = Schema.create(Schema.Type.STRING)
     LogicalTypes.uuid().addToSchema(uuidSchema)
     uuidSchema
   }
-
   private static boolean isValidAvroName(String name) {
     name != null && !name.isEmpty() && name ==~ /[A-Za-z_][A-Za-z0-9_]*/
   }
+
 }
