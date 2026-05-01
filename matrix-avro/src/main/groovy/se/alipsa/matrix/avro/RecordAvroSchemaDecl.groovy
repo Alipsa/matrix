@@ -3,6 +3,7 @@ package se.alipsa.matrix.avro
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.transform.ToString
+
 import org.apache.avro.Schema
 
 /**

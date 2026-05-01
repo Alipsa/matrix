@@ -1,13 +1,15 @@
 package se.alipsa.matrix.avro
 
 import groovy.transform.PackageScope
+
 import org.apache.avro.Schema
+
 import se.alipsa.matrix.core.spi.OptionMaps
+
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-
 import java.util.Locale
 
 /**

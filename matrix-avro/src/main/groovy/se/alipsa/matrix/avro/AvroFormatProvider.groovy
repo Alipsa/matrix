@@ -2,7 +2,6 @@ package se.alipsa.matrix.avro
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 
 /**

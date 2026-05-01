@@ -2,6 +2,7 @@ package se.alipsa.matrix.avro
 
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
+
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 
 /**

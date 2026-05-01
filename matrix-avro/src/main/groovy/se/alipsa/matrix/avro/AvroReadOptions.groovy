@@ -1,8 +1,8 @@
 package se.alipsa.matrix.avro
 
 import org.apache.avro.Schema
-import se.alipsa.matrix.core.spi.OptionDescriptor
 
+import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
 /**

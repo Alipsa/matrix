@@ -2,6 +2,7 @@ package se.alipsa.matrix.avro
 
 import org.apache.avro.file.CodecFactory
 import org.apache.avro.file.DataFileConstants
+
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 

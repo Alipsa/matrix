@@ -9,10 +9,12 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
+
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
+
 import java.math.RoundingMode
 import java.nio.ByteBuffer
 import java.nio.file.Path

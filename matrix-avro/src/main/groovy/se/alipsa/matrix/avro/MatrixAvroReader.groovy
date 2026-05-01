@@ -8,9 +8,11 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.util.Utf8
+
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
+
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.*

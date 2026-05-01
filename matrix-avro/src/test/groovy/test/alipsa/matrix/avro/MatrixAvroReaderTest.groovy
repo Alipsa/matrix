@@ -1,6 +1,7 @@
 package test.alipsa.matrix.avro
 
 import static org.junit.jupiter.api.Assertions.*
+
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
@@ -9,15 +10,16 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.*
+
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
+
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
-
 import java.time.LocalDate
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation)

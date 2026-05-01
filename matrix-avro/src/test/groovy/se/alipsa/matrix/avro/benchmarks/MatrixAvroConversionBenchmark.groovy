@@ -3,6 +3,7 @@ package se.alipsa.matrix.avro.benchmarks
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
+
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
