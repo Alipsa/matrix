@@ -54,7 +54,7 @@ v_jfinancials = "1.1.0"
 v_ben-manes-versions = "0.53.0"
 v_spotless-plugin = "8.4.0"
 v_alipsa-maven-module = "0.2.0"
-v_alipsa-nexus-release = "2.1.2"
+v_alipsa-nexus-release = "2.2.0"
 
 [libraries]
 groovy-bom = { module = "org.apache.groovy:groovy-bom", version.ref = "v_groovy" }
