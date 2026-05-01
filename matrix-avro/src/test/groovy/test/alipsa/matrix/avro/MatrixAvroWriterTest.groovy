@@ -18,9 +18,9 @@ import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
+import java.lang.reflect.Method
 import java.nio.file.Files
 import java.nio.file.Path
-import java.lang.reflect.Method
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset

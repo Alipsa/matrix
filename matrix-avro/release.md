@@ -1,7 +1,9 @@
 # Matrix-avro release history
 
-## v0.3.0 in progress
-
+## v0.3.0 2026-05-01
+- matrix-avro now compiles Groovy statically by default via config/groovy/compileStatic.groovy; explicit @CompileStatic annotations were removed.
+- CodeNarc is now enforced for the module with ignoreFailures = false, and warnings were fixed.
+- Schema inference was hardened/refactored through ColumnProfile, especially for mutable/object-typed columns, decimal metadata, lists, maps, and record-like maps.
 - fixed pre-epoch `local-timestamp-millis` reads by using floor modulo for nanosecond remainders
 - made explicit `timestamp-millis` writes of `LocalDateTime` timezone-stable by interpreting them at UTC
 - aligned stream ownership with the public docs
