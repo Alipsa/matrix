@@ -7,6 +7,7 @@ This page walks through the Avro module with the typed options APIs first, then 
 - use `AvroReadOptions` for naming and schema evolution
 - use `AvroWriteOptions` for schema naming, decimal behavior, compression, and explicit nested schema control
 - use `AvroSchemaDecl` when list or map sampling heuristics are not enough
+- inspect schemas with `MatrixAvroReader.schema(...)` without reading all rows
 - use `Matrix.listReadOptions('avro')`, `Matrix.listWriteOptions('avro')`, `AvroReadOptions.describe()`, and `AvroWriteOptions.describe()` to inspect the current option surface at runtime
 
 ## Discover the Available Options
@@ -48,6 +49,7 @@ AvroReadOptions options = new AvroReadOptions()
     .readerSchema(projection)
 
 Matrix people = MatrixAvroReader.read(new File('people.avro'), options)
+Schema effectiveSchema = MatrixAvroReader.schema(new File('people.avro'), options)
 ```
 
 Read naming precedence is:
@@ -124,6 +126,7 @@ The convenience overloads are still available when you want defaults without con
 MatrixAvroWriter.write(orders, new File('orders.avro'))
 MatrixAvroWriter.write(orders, new File('orders.avro'), true)
 byte[] bytes = MatrixAvroWriter.writeBytes(orders)
+MatrixAvroWriter.writeExactDecimals(orders, new File('orders-decimal.avro'))
 ```
 
 ## Schema Evolution with `readerSchema(...)`
@@ -170,9 +173,9 @@ Matrix nested = Matrix.builder("Nested")
     .build()
 
 MatrixAvroWriter.write(nested, new File("nested.avro"), new AvroWriteOptions()
-    .columnSchema('amount', AvroSchemaDecl.decimal(12, 3))
-    .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
-    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('amount', AvroSchemaDecl.decimalColumn(12, 3))
+    .columnSchema('tags', AvroSchemaDecl.arrayOf(Long))
+    .columnSchema('props', AvroSchemaDecl.mapOf(Integer))
     .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
         name: AvroSchemaDecl.type(String),
         age : AvroSchemaDecl.type(Integer)
@@ -218,7 +221,7 @@ The SPI maps are useful when you want format-agnostic entry points, but the type
 ## Troubleshooting
 
 - A UUID column reads back as `String`: this is the intended read behavior for Avro `uuid`
-- A `BigDecimal` column reads back as `Double`: enable `inferPrecisionAndScale(true)` or declare the column with `AvroSchemaDecl.decimal(...)`
+- A `BigDecimal` column reads back as `Double`: use `AvroWriteOptions.exactDecimals()`, `writeExactDecimals(...)`, or declare the column with `AvroSchemaDecl.decimalColumn(...)`
 - A map column became a record: that happens when the non-null rows share one key set; force map encoding with `AvroSchemaDecl.map(...)`
 - A list or map used the wrong nested type: the default inference uses the first non-null sample; use `columnSchema(...)` when the sample is misleading
 - Invalid `compressionLevel` or `syncInterval`: the writer validates these fail-fast when options are built or parsed from SPI maps

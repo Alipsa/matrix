@@ -8,6 +8,7 @@ This module reads and writes Avro Object Container Files (`.avro`) with support 
 ## At A Glance
 
 - read Avro from `File`, `Path`, `URL`, `InputStream`, and byte arrays
+- inspect Avro schemas from `File`, `Path`, `URL`, `InputStream`, and byte arrays without reading all rows
 - write Avro to `File`, `Path`, `OutputStream`, and byte arrays
 - control reads with `AvroReadOptions`
 - control writes with `AvroWriteOptions`
@@ -31,8 +32,10 @@ dependencies {
 Direct API entry points:
 
 - `MatrixAvroReader.read(...)` for `File`, `Path`, `URL`, `InputStream`, and `byte[]`
+- `MatrixAvroReader.schema(...)` for inspecting the writer schema, or the effective reader schema when `readerSchema(...)` is set
 - `MatrixAvroWriter.write(...)` for `File`, `Path`, and `OutputStream`
 - `MatrixAvroWriter.writeBytes(...)` for in-memory export
+- `MatrixAvroWriter.writeExactDecimals(...)` and `writeExactDecimalBytes(...)` for decimal-safe write shortcuts
 - `AvroReadOptions` for naming and schema evolution
 - `AvroWriteOptions` for schema naming, decimal behavior, compression, and explicit nested schema control
 - `AvroSchemaDecl` for per-column decimal, array, map, record, and scalar overrides
@@ -81,12 +84,16 @@ AvroReadOptions readOptions = new AvroReadOptions()
     .readerSchema(projection)
 
 Matrix users = MatrixAvroReader.read(new File('users.avro'), readOptions)
+
+Schema writerSchema = MatrixAvroReader.schema(new File('users.avro'))
+Schema effectiveSchema = MatrixAvroReader.schema(new File('users.avro'), readOptions)
 ```
 
 Useful read options:
 
 - `matrixName(...)` overrides the resulting Matrix name
 - `readerSchema(...)` supplies an Avro reader schema for schema evolution or projection
+- `AvroReadOptions.defaults()` and `AvroReadOptions.named(...)` are available when a factory reads better at the call site
 
 ### Convenience Shortcuts
 
@@ -133,6 +140,7 @@ Useful write options:
 - `schemaName(...)` overrides the generated record name
 - `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` tune the container file
 - `columnSchema(...)` and `columnSchemas(...)` override nested schema inference per column
+- `AvroWriteOptions.defaults()` and `AvroWriteOptions.exactDecimals()` are available as typed factories
 
 ### Convenience Shortcuts
 
@@ -141,6 +149,7 @@ Convenience overloads still exist for default behavior:
 ```groovy
 MatrixAvroWriter.write(matrix, new File('data.avro'))
 MatrixAvroWriter.write(matrix, new File('data.avro'), true)
+MatrixAvroWriter.writeExactDecimals(matrix, new File('decimal-data.avro'))
 byte[] bytes = MatrixAvroWriter.writeBytes(matrix)
 ```
 
@@ -155,9 +164,9 @@ import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
 
 AvroWriteOptions options = new AvroWriteOptions()
-    .columnSchema('amount', AvroSchemaDecl.decimal(12, 2))
-    .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
-    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('amount', AvroSchemaDecl.decimalColumn(12, 2))
+    .columnSchema('tags', AvroSchemaDecl.arrayOf(Long))
+    .columnSchema('props', AvroSchemaDecl.mapOf(Integer))
     .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
         name: AvroSchemaDecl.type(String),
         age : AvroSchemaDecl.type(Integer)
@@ -167,8 +176,11 @@ AvroWriteOptions options = new AvroWriteOptions()
 Supported declaration kinds:
 
 - `decimal(precision, scale)` for fixed decimal metadata
+- `decimalColumn(precision, scale)` as a column-oriented alias for fixed decimal metadata
 - `array(...)` for explicit array element types
+- `arrayOf(Class<?>)` and `arrayOf(AvroScalarTypeDecl)` as scalar array shortcuts
 - `map(...)` for explicit map value types
+- `mapOf(Class<?>)` and `mapOf(AvroScalarTypeDecl)` as scalar map shortcuts
 - `record(...)` for explicit nested record fields
 - `type(...)` or `scalar(...)` for direct scalar overrides
 
@@ -212,6 +224,7 @@ Read defaults:
 - Avro `uuid` values are read as `String`, not `UUID`
 - logical types such as `date`, `time-millis`, `timestamp-millis`, `local-timestamp-micros`, and `decimal` are converted to Java values during import
 - nested arrays read as `List<?>`, maps as `Map<String, ?>`, and records as `Map<String, Object>`
+- `InputStream` read and schema-inspection overloads leave the caller-owned stream open
 
 Write defaults:
 
@@ -219,6 +232,7 @@ Write defaults:
 - `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
 - `namespace` defaults to `se.alipsa.matrix.avro`
 - `compression` defaults to `NULL`, `compressionLevel` to `-1`, and `syncInterval` to `0`
+- `OutputStream` write overloads leave the caller-owned stream open
 
 Nested-type heuristics:
 
@@ -257,9 +271,11 @@ Matrix projected = MatrixAvroReader.read(
 MatrixAvroWriter.write(
     orders,
     new File('orders.avro'),
-    new AvroWriteOptions().inferPrecisionAndScale(true)
+    AvroWriteOptions.exactDecimals()
 )
 ```
+
+`MatrixAvroWriter.writeExactDecimals(...)` and `writeExactDecimalBytes(...)` are equivalent shortcuts.
 
 ### Custom Schema Naming
 

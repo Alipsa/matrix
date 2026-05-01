@@ -21,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation)
 class MatrixAvroReaderTest {
@@ -304,9 +305,70 @@ class MatrixAvroReaderTest {
     assertTrue(m['age'][0] instanceof Long)
   }
 
-  // ---------- custom exception tests ----------
+  @Test @Order(28)
+  void testSchemaInspectionMethods() {
+    byte[] content = Files.readAllBytes(avroFile.toPath())
+    def input = new TrackingInputStream(content)
+    Schema readerSchema = new Schema.Parser().parse('''
+    {
+      "type": "record",
+      "name": "Person",
+      "fields": [
+        {"name":"name", "type":"string"}
+      ]
+    }
+    '''.stripIndent())
+
+    assertEquals('Person', MatrixAvroReader.schema(avroFile).name)
+    assertEquals('Person', MatrixAvroReader.schema(avroFile.toPath()).name)
+    assertEquals('Person', MatrixAvroReader.schema(avroFile.toURI().toURL()).name)
+    assertEquals('Person', MatrixAvroReader.schema(content).name)
+    assertEquals('Person', MatrixAvroReader.schema(input).name)
+    assertFalse(input.closed)
+    assertEquals(readerSchema, MatrixAvroReader.schema(avroFile, AvroReadOptions.defaults().readerSchema(readerSchema)))
+  }
+
+  @Test @Order(29)
+  void testReadFactoriesAndInputStreamOwnership() {
+    byte[] content = Files.readAllBytes(avroFile.toPath())
+    def input = new TrackingInputStream(content)
+
+    Matrix m = MatrixAvroReader.read(input, AvroReadOptions.named('NamedFactory'))
+
+    assertBasicShapeAndValues(m)
+    assertEquals('NamedFactory', m.matrixName)
+    assertFalse(input.closed)
+  }
 
   @Test @Order(30)
+  void testNegativeLocalTimestampReads() {
+    Schema localSchema = new Schema.Parser().parse('''
+    {
+      "type": "record",
+      "name": "NegativeLocalTimestamp",
+      "fields": [
+        {"name":"millis", "type":{"type":"long","logicalType":"local-timestamp-millis"}},
+        {"name":"micros", "type":{"type":"long","logicalType":"local-timestamp-micros"}}
+      ]
+    }
+    '''.stripIndent())
+
+    File file = Files.createTempFile('matrix-avro-negative-local-', '.avro').toFile()
+    try {
+      writeSingleRecord(file, localSchema, [millis: -1L, micros: -1L])
+
+      Matrix m = MatrixAvroReader.read(file)
+
+      assertEquals(LocalDateTime.of(1969, 12, 31, 23, 59, 59, 999_000_000), m[0, 'millis'])
+      assertEquals(LocalDateTime.of(1969, 12, 31, 23, 59, 59, 999_999_000), m[0, 'micros'])
+    } finally {
+      file.delete()
+    }
+  }
+
+  // ---------- custom exception tests ----------
+
+  @Test @Order(40)
   void testValidationExceptionForNullFile() {
     def ex = assertThrows(AvroValidationException) {
       MatrixAvroReader.read((File) null)
@@ -316,7 +378,7 @@ class MatrixAvroReaderTest {
     assertTrue(ex.message.contains('cannot be null'))
   }
 
-  @Test @Order(31)
+  @Test @Order(41)
   void testValidationExceptionForNonExistentFile() {
     def ex = assertThrows(AvroValidationException) {
       MatrixAvroReader.read(new File('/non/existent/path.avro'))
@@ -326,7 +388,7 @@ class MatrixAvroReaderTest {
     assertTrue(ex.message.contains('does not exist'))
   }
 
-  @Test @Order(32)
+  @Test @Order(42)
   void testValidationExceptionForDirectory() {
     File tempDir = Files.createTempDirectory('avro-test').toFile()
     try {
@@ -341,7 +403,7 @@ class MatrixAvroReaderTest {
     }
   }
 
-  @Test @Order(33)
+  @Test @Order(43)
   void testValidationEmptyFileHandling() {
     File emptyFile = Files.createTempFile('avro-empty-', '.avro').toFile()
     try {
@@ -355,7 +417,7 @@ class MatrixAvroReaderTest {
     }
   }
 
-  @Test @Order(34)
+  @Test @Order(44)
   void testValidationCorruptFileHandling() {
     File corruptFile = Files.createTempFile('avro-corrupt-', '.avro').toFile()
     Files.write(corruptFile.toPath(), 'not avro data'.bytes)
@@ -404,6 +466,20 @@ class MatrixAvroReaderTest {
     }
   }
 
+  private static void writeSingleRecord(File outFile, Schema schema, Map<String, ?> values) {
+    def writer = new DataFileWriter<GenericRecord>(new GenericDatumWriter<>(schema))
+    writer.create(schema, outFile)
+    try {
+      def rec = new GenericData.Record(schema)
+      values.each { String key, Object value ->
+        rec.put(key, value)
+      }
+      writer.append(rec)
+    } finally {
+      writer.close()
+    }
+  }
+
   private static GenericRecord makeRecord(Schema schema,
                                           String name, int age,
                                           LocalDate birthday, Instant ts,
@@ -445,6 +521,22 @@ class MatrixAvroReaderTest {
     assertTrue(m['birthday'][0] instanceof LocalDate)
     assertTrue(m['ts'][0] instanceof Instant)
     assertTrue(m['price'][0] instanceof BigDecimal)
+  }
+
+  private static final class TrackingInputStream extends ByteArrayInputStream implements Closeable {
+
+    boolean closed
+
+    private TrackingInputStream(byte[] bytes) {
+      super(bytes)
+    }
+
+    @Override
+    void close() throws IOException {
+      closed = true
+      super.close()
+    }
+
   }
 
 }

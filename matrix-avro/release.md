@@ -1,5 +1,22 @@
 # Matrix-avro release history
 
+## v0.3.0 in progress
+
+- fixed pre-epoch `local-timestamp-millis` reads by using floor modulo for nanosecond remainders
+- made explicit `timestamp-millis` writes of `LocalDateTime` timezone-stable by interpreting them at UTC
+- aligned stream ownership with the public docs
+  - `InputStream` read/schema overloads leave caller-owned streams open
+  - `OutputStream` write overloads leave caller-owned streams open
+- removed the writer schema cache so mutated matrices cannot reuse stale schemas
+- added public schema inspection APIs through `MatrixAvroReader.schema(...)`
+- added convenience factories and shortcuts
+  - `AvroReadOptions.defaults()` and `AvroReadOptions.named(...)`
+  - `AvroWriteOptions.defaults()` and `AvroWriteOptions.exactDecimals()`
+  - `MatrixAvroWriter.writeExactDecimals(...)` and `writeExactDecimalBytes(...)`
+  - `AvroSchemaDecl.decimalColumn(...)`, `arrayOf(...)`, and `mapOf(...)`
+- tightened public validation for schema building and null options
+- refreshed README, tutorial, and cookbook examples for schema inspection and decimal-safe writes
+
 ## v0.2.0 2026-03-19
 
 - clarified reader option semantics and naming precedence

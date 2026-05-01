@@ -9,8 +9,10 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.avro.AvroScalarTypeDecl
 import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
@@ -20,6 +22,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 
 class MatrixAvroWriterTest {
 
@@ -107,7 +110,7 @@ class MatrixAvroWriterTest {
     byte[] avroBytes = MatrixAvroWriter.writeBytes(original, true)
 
     // Read it back
-    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(avroBytes, 'RoundTrip')
+    Matrix result = MatrixAvroReader.read(avroBytes, 'RoundTrip')
 
     assertEquals(original.rowCount(), result.rowCount())
     assertEquals(original.columnCount(), result.columnCount())
@@ -226,9 +229,24 @@ class MatrixAvroWriterTest {
     assertTrue(bytes.length > 0, 'Output stream should contain data')
 
     // Verify it can be read back
-    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(bytes, 'StreamTest')
+    Matrix result = MatrixAvroReader.read(bytes, 'StreamTest')
     assertEquals(3, result.rowCount())
     assertEquals(2, result.columnCount())
+  }
+
+  @Test
+  void testWriteToOutputStreamDoesNotCloseCallerStream() {
+    Matrix m = Matrix.builder('OpenStream')
+        .columns(id: [1, 2])
+        .types(Integer)
+        .build()
+
+    def out = new TrackingOutputStream()
+    MatrixAvroWriter.write(m, out, false)
+
+    assertFalse(out.closed)
+    out.write(1)
+    assertTrue(out.toByteArray().length > 0)
   }
 
   @Test
@@ -389,7 +407,7 @@ class MatrixAvroWriterTest {
           "Compressed file (${compressed.length()}) should be smaller than uncompressed (${uncompressed.length()})")
 
       // Verify data can still be read correctly
-      Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(compressed)
+      Matrix result = MatrixAvroReader.read(compressed)
       assertEquals(100, result.rowCount())
       assertEquals(2, result.columnCount())
     } finally {
@@ -454,9 +472,66 @@ class MatrixAvroWriterTest {
     assertTrue(bytes.length > 0)
 
     // Verify round-trip
-    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(bytes)
+    Matrix result = MatrixAvroReader.read(bytes)
     assertEquals(2, result.rowCount())
     assertEquals(123.45, result[0, 'value'])
+  }
+
+  @Test
+  void testFactoryOptionsWriteExactDecimals() {
+    Matrix m = Matrix.builder('ExactDecimals')
+        .columns(amount: [12.34, 56.789])
+        .types(BigDecimal)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeExactDecimalBytes(m)
+    Schema amountSchema = nonNullFieldSchema(MatrixAvroReader.schema(bytes), 'amount')
+
+    assertEquals(Schema.Type.BYTES, amountSchema.type)
+    assertEquals('decimal', amountSchema.logicalType.name)
+    assertTrue(AvroWriteOptions.exactDecimals().inferPrecisionAndScale)
+    assertFalse(AvroWriteOptions.defaults().inferPrecisionAndScale)
+  }
+
+  @Test
+  void testBuildSchemaDoesNotReturnStaleSchemaForMutatedMatrix() {
+    Matrix m = Matrix.builder('MutableSchema')
+        .columns(value: [1, 2])
+        .types(Object)
+        .build()
+
+    Schema intSchema = MatrixAvroWriter.buildSchema(m, false)
+    m[0, 'value'] = Integer.MAX_VALUE + 1L
+    Schema longSchema = MatrixAvroWriter.buildSchema(m, false)
+
+    assertNotSame(intSchema, longSchema)
+    assertEquals(Schema.Type.INT, nonNullFieldSchema(intSchema, 'value').type)
+    assertEquals(Schema.Type.LONG, nonNullFieldSchema(longSchema, 'value').type)
+  }
+
+  @Test
+  void testLocalDateTimeTimestampMillisWritesAsUtc() {
+    TimeZone original = TimeZone.default
+    try {
+      Matrix m = Matrix.builder('UtcTimestamp')
+          .columns(ts: [LocalDateTime.of(2024, 1, 2, 3, 4, 5)])
+          .types(LocalDateTime)
+          .build()
+
+      AvroWriteOptions options = AvroWriteOptions.defaults()
+          .columnSchema('ts', AvroSchemaDecl.scalar(AvroScalarTypeDecl.TIMESTAMP_MILLIS))
+
+      TimeZone.default = TimeZone.getTimeZone('America/New_York')
+      byte[] newYorkBytes = MatrixAvroWriter.writeBytes(m, options)
+      TimeZone.default = TimeZone.getTimeZone('Asia/Tokyo')
+      byte[] tokyoBytes = MatrixAvroWriter.writeBytes(m, options)
+
+      long expected = LocalDateTime.of(2024, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC).toEpochMilli()
+      assertEquals(expected, rawLongFor(newYorkBytes, 'ts'))
+      assertEquals(expected, rawLongFor(tokyoBytes, 'ts'))
+    } finally {
+      TimeZone.default = original
+    }
   }
 
   @Test
@@ -512,6 +587,28 @@ class MatrixAvroWriterTest {
     } finally {
       tmp.delete()
     }
+  }
+
+  @Test
+  void testColumnSchemaConvenienceAliases() {
+    Matrix m = Matrix.builder('Aliases')
+        .columns(amount: [12.30], tags: [[1L, 2L]], props: [[x: 1]])
+        .types(BigDecimal, List, Map)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeBytes(m, AvroWriteOptions.defaults()
+        .columnSchema('amount', AvroSchemaDecl.decimalColumn(8, 2))
+        .columnSchema('tags', AvroSchemaDecl.arrayOf(Long))
+        .columnSchema('props', AvroSchemaDecl.mapOf(Integer)))
+
+    Schema schema = MatrixAvroReader.schema(bytes)
+    assertEquals('decimal', nonNullFieldSchema(schema, 'amount').logicalType.name)
+    assertEquals(Schema.Type.LONG, nonNullFieldSchema(schema, 'tags').elementType.types.find { Schema it ->
+      it.type != Schema.Type.NULL
+    }.type)
+    assertEquals(Schema.Type.INT, nonNullFieldSchema(schema, 'props').valueType.types.find { Schema it ->
+      it.type != Schema.Type.NULL
+    }.type)
   }
 
   @Test
@@ -647,7 +744,7 @@ class MatrixAvroWriterTest {
     byte[] bytes = baos.toByteArray()
     assertTrue(bytes.length > 0)
 
-    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(bytes)
+    Matrix result = MatrixAvroReader.read(bytes)
     assertEquals(2, result.rowCount())
   }
 
@@ -759,6 +856,31 @@ class MatrixAvroWriterTest {
       fail("Union for field '$fieldName' had no non-null type")
     }
     return s
+  }
+
+  private static long rawLongFor(byte[] bytes, String fieldName) {
+    def reader = new DataFileReader<GenericRecord>(
+        new org.apache.avro.file.SeekableByteArrayInput(bytes),
+        new GenericDatumReader<>()
+    )
+    try {
+      GenericRecord record = reader.next()
+      return (Long) record.get(fieldName)
+    } finally {
+      reader.close()
+    }
+  }
+
+  private static final class TrackingOutputStream extends ByteArrayOutputStream implements Closeable {
+
+    boolean closed
+
+    @Override
+    void close() throws IOException {
+      closed = true
+      super.close()
+    }
+
   }
 
 }
