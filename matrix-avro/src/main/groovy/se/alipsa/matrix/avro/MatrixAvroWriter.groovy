@@ -983,8 +983,10 @@ class MatrixAvroWriter {
       return switch (name) {
         case 'date' -> LocalDate.isInstance(v) || java.sql.Date.isInstance(v) || Number.isInstance(v)
         case 'time-millis', 'time-micros' -> LocalTime.isInstance(v) || Time.isInstance(v) || Number.isInstance(v)
-        case 'timestamp-millis', 'timestamp-micros' ->
+        case 'timestamp-millis' ->
           Instant.isInstance(v) || Date.isInstance(v) || LocalDateTime.isInstance(v) || Number.isInstance(v)
+        case 'timestamp-micros' ->
+          Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
         case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
         case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
         case 'decimal' -> BigDecimal.isInstance(v) || Double.isInstance(v) || Float.isInstance(v) ||

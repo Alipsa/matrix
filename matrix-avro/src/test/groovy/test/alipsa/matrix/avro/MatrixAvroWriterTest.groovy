@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.lang.reflect.Method
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
@@ -521,6 +522,7 @@ class MatrixAvroWriterTest {
       AvroWriteOptions options = AvroWriteOptions.defaults()
           .columnSchema('ts', AvroSchemaDecl.scalar(AvroScalarTypeDecl.TIMESTAMP_MILLIS))
 
+      // This test mutates JVM-global timezone state and assumes sequential test execution.
       TimeZone.default = TimeZone.getTimeZone('America/New_York')
       byte[] newYorkBytes = MatrixAvroWriter.writeBytes(m, options)
       TimeZone.default = TimeZone.getTimeZone('Asia/Tokyo')
@@ -532,6 +534,18 @@ class MatrixAvroWriterTest {
     } finally {
       TimeZone.default = original
     }
+  }
+
+  @Test
+  void testLocalDateTimeCompatibilityOnlyForTimestampMillis() {
+    Schema timestampMillis = Schema.create(Schema.Type.LONG)
+    LogicalTypes.timestampMillis().addToSchema(timestampMillis)
+    Schema timestampMicros = Schema.create(Schema.Type.LONG)
+    LogicalTypes.timestampMicros().addToSchema(timestampMicros)
+    LocalDateTime value = LocalDateTime.of(2024, 1, 2, 3, 4, 5)
+
+    assertTrue(isCompatible(timestampMillis, value))
+    assertFalse(isCompatible(timestampMicros, value))
   }
 
   @Test
@@ -869,6 +883,12 @@ class MatrixAvroWriterTest {
     } finally {
       reader.close()
     }
+  }
+
+  private static boolean isCompatible(Schema schema, Object value) {
+    Method method = MatrixAvroWriter.getDeclaredMethod('isCompatible', Schema, Object)
+    method.accessible = true
+    method.invoke(null, schema, value) as boolean
   }
 
   private static final class TrackingOutputStream extends ByteArrayOutputStream implements Closeable {
