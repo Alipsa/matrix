@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw.gtable
 
-
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
@@ -60,9 +59,9 @@ class Gtable extends Table {
     return table
   }
 
-  static Gtable create(LinkedHashMap<String, List<?>> data, List<ColumnType> columnTypes) {
+  static Gtable create(Map<String, List<?>> data, List<ColumnType> columnTypes) {
     validateColumnLengths(data)
-    List<Column<?>> columns = new ArrayList<>()
+    List<Column<?>> columns = []
     int i = 0
     data.each {
       columns << TableUtil.createColumn(columnTypes.get(i++), it.key, it.value)
@@ -70,7 +69,7 @@ class Gtable extends Table {
     create(columns)
   }
 
-  static Gtable create(LinkedHashMap<String, List<?>> data) {
+  static Gtable create(Map<String, List<?>> data) {
     def inferredTypes = data.collect { entry ->
       def firstNonNull = entry.value.find { it != null }
       def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
@@ -83,7 +82,7 @@ class Gtable extends Table {
     create(data, inferredTypes)
   }
 
-  static Gtable create(LinkedHashMap<String, List<?>> data, LinkedHashMap<String, ColumnType> typeOverrides) {
+  static Gtable create(Map<String, List<?>> data, Map<String, ColumnType> typeOverrides) {
     def types = data.collect { entry ->
       typeOverrides.get(entry.key) ?: {
         def firstNonNull = entry.value.find { it != null }
@@ -98,11 +97,15 @@ class Gtable extends Table {
     create(data, types)
   }
 
-  private static void validateColumnLengths(LinkedHashMap<String, List<?>> data) {
-    if (data.isEmpty()) return
-    int expectedSize = -1
+  private static final int UNSET = -1
+
+  private static void validateColumnLengths(Map<String, List<?>> data) {
+    if (data.isEmpty()) {
+      return
+    }
+    int expectedSize = UNSET
     data.each { name, values ->
-      if (expectedSize == -1) {
+      if (expectedSize == UNSET) {
         expectedSize = values.size()
       } else if (values.size() != expectedSize) {
         throw new IllegalArgumentException(
@@ -237,17 +240,18 @@ class Gtable extends Table {
     def rowIndex = args[0] as Integer
     def col = args[1]
     Integer colIndex
-    if (col instanceof Number) {
-      colIndex = col.intValue()
+    if (col in Number) {
+      colIndex = (col as Number).intValue()
     } else {
       colIndex = columnIndex(String.valueOf(col))
     }
     putAt(rowIndex, colIndex, value)
   }
 
+  @SuppressWarnings('unchecked')
   void putAt(int rowIndex, int columnIndex, Object value) {
     def v = value.asType(asJavaClass(columnIndex))
-    column(columnIndex).set(rowIndex, v)
+    ((Column) column(columnIndex)).set(rowIndex, v)
   }
 
   static GdataFrameReader read() {
@@ -393,14 +397,17 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeMinMax(String columnName, String outputColumnName = null, int... decimals) {
-    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
-      switch (c) {
-        case DoubleColumn -> Normalizer.minMaxNorm((DoubleColumn) c, d)
-        case FloatColumn -> Normalizer.minMaxNorm((FloatColumn) c, d)
-        case BigDecimalColumn -> Normalizer.minMaxNorm((BigDecimalColumn) c, d)
-        default -> throw new IllegalArgumentException(
-            "Column '$columnName' has type ${c.type()} which does not support min-max normalization")
-      }
+    def col = column(columnName)
+    Column<?> normalized
+    if (col in DoubleColumn) {
+      normalized = Normalizer.minMaxNorm((DoubleColumn) col, decimals)
+    } else if (col in FloatColumn) {
+      normalized = Normalizer.minMaxNorm((FloatColumn) col, decimals)
+    } else if (col in BigDecimalColumn) {
+      normalized = Normalizer.minMaxNorm((BigDecimalColumn) col, decimals)
+    } else {
+      throw new IllegalArgumentException(
+          "Column '$columnName' has type ${col.type()} which does not support min-max normalization")
     }
     applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
@@ -415,14 +422,17 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeMean(String columnName, String outputColumnName = null, int... decimals) {
-    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
-      switch (c) {
-        case DoubleColumn -> Normalizer.meanNorm((DoubleColumn) c, d)
-        case FloatColumn -> Normalizer.meanNorm((FloatColumn) c, d)
-        case BigDecimalColumn -> Normalizer.meanNorm((BigDecimalColumn) c, d)
-        default -> throw new IllegalArgumentException(
-            "Column '$columnName' has type ${c.type()} which does not support mean normalization")
-      }
+    def col = column(columnName)
+    Column<?> normalized
+    if (col in DoubleColumn) {
+      normalized = Normalizer.meanNorm((DoubleColumn) col, decimals)
+    } else if (col in FloatColumn) {
+      normalized = Normalizer.meanNorm((FloatColumn) col, decimals)
+    } else if (col in BigDecimalColumn) {
+      normalized = Normalizer.meanNorm((BigDecimalColumn) col, decimals)
+    } else {
+      throw new IllegalArgumentException(
+          "Column '$columnName' has type ${col.type()} which does not support mean normalization")
     }
     applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
@@ -437,14 +447,17 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeStdScale(String columnName, String outputColumnName = null, int... decimals) {
-    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
-      switch (c) {
-        case DoubleColumn -> Normalizer.stdScaleNorm((DoubleColumn) c, d)
-        case FloatColumn -> Normalizer.stdScaleNorm((FloatColumn) c, d)
-        case BigDecimalColumn -> Normalizer.stdScaleNorm((BigDecimalColumn) c, d)
-        default -> throw new IllegalArgumentException(
-            "Column '$columnName' has type ${c.type()} which does not support standard-scale normalization")
-      }
+    def col = column(columnName)
+    Column<?> normalized
+    if (col in DoubleColumn) {
+      normalized = Normalizer.stdScaleNorm((DoubleColumn) col, decimals)
+    } else if (col in FloatColumn) {
+      normalized = Normalizer.stdScaleNorm((FloatColumn) col, decimals)
+    } else if (col in BigDecimalColumn) {
+      normalized = Normalizer.stdScaleNorm((BigDecimalColumn) col, decimals)
+    } else {
+      throw new IllegalArgumentException(
+          "Column '$columnName' has type ${col.type()} which does not support standard-scale normalization")
     }
     applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
@@ -459,14 +472,17 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeLog(String columnName, String outputColumnName = null, int... decimals) {
-    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
-      switch (c) {
-        case DoubleColumn -> Normalizer.logNorm((DoubleColumn) c, d)
-        case FloatColumn -> Normalizer.logNorm((FloatColumn) c, d)
-        case BigDecimalColumn -> Normalizer.logNorm((BigDecimalColumn) c, d)
-        default -> throw new IllegalArgumentException(
-            "Column '$columnName' has type ${c.type()} which does not support log normalization")
-      }
+    def col = column(columnName)
+    Column<?> normalized
+    if (col in DoubleColumn) {
+      normalized = Normalizer.logNorm((DoubleColumn) col, decimals)
+    } else if (col in FloatColumn) {
+      normalized = Normalizer.logNorm((FloatColumn) col, decimals)
+    } else if (col in BigDecimalColumn) {
+      normalized = Normalizer.logNorm((BigDecimalColumn) col, decimals)
+    } else {
+      throw new IllegalArgumentException(
+          "Column '$columnName' has type ${col.type()} which does not support log normalization")
     }
     applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
@@ -481,10 +497,6 @@ class Gtable extends Table {
       result.replaceColumn(columnName, normalized)
     }
     result
-  }
-
-  private static Column<?> normalizeColumn(Column<?> col, int[] decimals, Closure<Column<?>> normalizer) {
-    normalizer.call(col, decimals)
   }
 
   Gtable copy() {
@@ -531,4 +543,5 @@ class Gtable extends Table {
     }
     return Object
   }
+
 }

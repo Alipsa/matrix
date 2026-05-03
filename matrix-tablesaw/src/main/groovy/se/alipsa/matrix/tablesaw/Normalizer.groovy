@@ -22,7 +22,7 @@ class Normalizer {
    * @return a double column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static DoubleColumn logNorm(DoubleColumn column, int... decimals) {
-    def vals = []
+    List<Double> vals = []
     for (Double x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
@@ -38,7 +38,7 @@ class Normalizer {
    * @return a Float column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static FloatColumn logNorm(FloatColumn column, int... decimals) {
-    def vals = []
+    List<Float> vals = []
     for (Float x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
@@ -54,7 +54,7 @@ class Normalizer {
    * @return a BigDecimal column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static BigDecimalColumn logNorm(BigDecimalColumn column, int... decimals) {
-    def vals = []
+    List<BigDecimal> vals = []
     for (BigDecimal x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
@@ -72,7 +72,7 @@ class Normalizer {
     def min = column.min()
     def max = column.max()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
@@ -90,7 +90,7 @@ class Normalizer {
     def min = column.min() as float
     def max = column.max() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
@@ -108,7 +108,7 @@ class Normalizer {
     def min = column.min() as BigDecimal
     def max = column.max() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
@@ -127,7 +127,7 @@ class Normalizer {
     def max = column.max()
     def mean = column.mean()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
@@ -146,7 +146,7 @@ class Normalizer {
     def max = column.max() as float
     def mean = column.mean() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
@@ -165,7 +165,7 @@ class Normalizer {
     def max = column.max() as BigDecimal
     def mean = column.mean() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
@@ -185,7 +185,7 @@ class Normalizer {
     def mean = column.mean()
     def stdDev = column.standardDeviation()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
@@ -205,7 +205,7 @@ class Normalizer {
     def stdDev = column.standardDeviation() as float
     def mean = column.mean() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
@@ -225,7 +225,7 @@ class Normalizer {
     def stdDev = column.standardDeviation() as BigDecimal
     def mean = column.mean() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }

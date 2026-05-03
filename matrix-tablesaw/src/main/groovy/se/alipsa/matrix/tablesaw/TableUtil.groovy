@@ -162,20 +162,22 @@ class TableUtil {
     }
 
     if (column in BigDecimalColumn) {
-      column.setScale(numDecimals)
+      (column as BigDecimalColumn).setScale(numDecimals)
     }
 
     if (column in DoubleColumn) {
-      for (int i = 0; i < column.size(); i++) {
-        double val = column.getDouble(i)
-        column.set(i, round(val, numDecimals))
+      def dc = column as DoubleColumn
+      for (int i = 0; i < dc.size(); i++) {
+        double val = dc.getDouble(i)
+        dc.set(i, round(val, numDecimals))
       }
     }
 
     if (column in FloatColumn) {
-      for (int i = 0; i < column.size(); i++) {
-        float val = column.getFloat(i)
-        column.set(i, round(val, numDecimals))
+      def fc = column as FloatColumn
+      for (int i = 0; i < fc.size(); i++) {
+        float val = fc.getFloat(i)
+        fc.set(i, round(val, numDecimals))
       }
     }
     // everything else (IntColumn, ShortColumn, LongColumn cannot be rounded as they have no decimals
