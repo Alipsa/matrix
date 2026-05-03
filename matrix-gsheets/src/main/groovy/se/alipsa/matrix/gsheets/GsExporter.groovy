@@ -45,10 +45,10 @@ import java.time.LocalDateTime
  * <h3>Usage Examples</h3>
  * <pre>{@code
  * // Create a matrix
- * Matrix employees = Matrix.builder("Employee Data")
+ * Matrix employees = Matrix.builder('Employee Data')
  *     .data(
  *         emp_id: [1, 2, 3],
- *         name: ["Alice", "Bob", "Charlie"],
+ *         name: ['Alice', 'Bob', 'Charlie'],
  *         salary: [50000, 60000, 70000]
  *     )
  *     .types([Integer, String, BigDecimal])
@@ -59,7 +59,7 @@ import java.time.LocalDateTime
  * println "View at: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
  *
  * // Export with date conversion
- * Matrix withDates = Matrix.builder("Sales Data")
+ * Matrix withDates = Matrix.builder('Sales Data')
  *     .data(date: [LocalDate.now()], amount: [1000])
  *     .types([LocalDate, BigDecimal])
  *     .build()
@@ -98,15 +98,15 @@ class GsExporter {
    *
    * <p><strong>Example:</strong>
    * <pre>{@code
-   * Matrix data = Matrix.builder("Q1 Sales")
+   * Matrix data = Matrix.builder('Q1 Sales')
    *     .data(
-   *         month: ["Jan", "Feb", "Mar"],
+   *         month: ['Jan', 'Feb', 'Mar'],
    *         revenue: [10000, 12000, 15000]
    *     )
    *     .build()
    *
    * String id = GsExporter.exportSheet(data)
-   * // Creates spreadsheet titled "Q1 Sales" with sheet "Q1 Sales"
+   * // Creates spreadsheet titled 'Q1 Sales' with sheet 'Q1 Sales'
    * }</pre>
    *
    * @param matrix The Matrix to export (must not be null, must have at least one column and one row)

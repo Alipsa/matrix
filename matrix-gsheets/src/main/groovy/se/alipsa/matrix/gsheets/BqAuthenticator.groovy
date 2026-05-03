@@ -1,9 +1,5 @@
 package se.alipsa.matrix.gsheets
 
-/**
- * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
- * and delegates to the 'gcloud' SDK for an interactive login if needed.
- */
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 
@@ -18,24 +14,34 @@ import se.alipsa.matrix.core.util.Logger
 import java.security.GeneralSecurityException
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
+ * and delegates to the 'gcloud' SDK for an interactive login if needed.
+ */
 @CompileStatic
 class BqAuthenticator {
 
   private static final Logger log = Logger.getLogger(BqAuthenticator)
 
-  static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform"
+  static final String SCOPE_CLOUD_PLATFORM = 'https://www.googleapis.com/auth/cloud-platform'
   static final String SCOPE_SHEETS = SheetsScopes.SPREADSHEETS
   static final String SCOPE_SHEETS_READONLY = SheetsScopes.SPREADSHEETS_READONLY
-  static final String SCOPE_DRIVE_FILE = "https://www.googleapis.com/auth/drive.file"
-  static final String SCOPE_OPENID = "openid"
-  static final String SCOPE_USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email"
+  static final String SCOPE_DRIVE_FILE = 'https://www.googleapis.com/auth/drive.file'
+  static final String SCOPE_OPENID = 'openid'
+  static final String SCOPE_USERINFO_EMAIL = 'https://www.googleapis.com/auth/userinfo.email'
 
-  private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false);
+  private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false)
 
-  private BqAuthenticator() {}
+  private BqAuthenticator() { }
 
   // The location where gcloud stores Application Default Credentials
-  static final File ADC_FILE_PATH = new File(System.getProperty("user.home"), ".config/gcloud/application_default_credentials.json")
+  static final File ADC_FILE_PATH = new File(System.getProperty(PROP_USER_HOME), '.config/gcloud/application_default_credentials.json')
+
+  private static final String GCLOUD_CMD = 'gcloud'
+  private static final String GCLOUD_AUTH = 'auth'
+  private static final String GCLOUD_APP_DEFAULT = 'application-default'
+  private static final String ENV_GOOGLE_CLOUD_PROJECT = 'GOOGLE_CLOUD_PROJECT'
+  private static final String PROP_USER_HOME = 'user.home'
 
   static final List<String> SCOPES = [
       SCOPE_CLOUD_PLATFORM,
@@ -48,11 +54,13 @@ class BqAuthenticator {
   @CompileStatic
   static List<String> normalizeScopesForGcloud(List<String> scopes) {
     // Always add cloud-platform (gcloud insists on this when --scopes is used)
-    LinkedHashSet<String> s = new LinkedHashSet<>((scopes ?: Collections.<String> emptyList()))
+    Set<String> s = new LinkedHashSet<>((scopes ?: Collections.<String> emptyList()))
     s.add(SCOPE_CLOUD_PLATFORM)
     // Prefer write over readonly to avoid future “missing scope” churn
-    if (s.remove(SCOPE_SHEETS_READONLY)) s.add(SCOPE_SHEETS)
-    s.remove("email") // never ask for short OIDC email; use userinfo.email
+    if (s.remove(SCOPE_SHEETS_READONLY)) {
+      s.add(SCOPE_SHEETS)
+    }
+    s.remove('email') // never ask for short OIDC email; use userinfo.email
     return new ArrayList<>(s)
   }
 
@@ -62,13 +70,14 @@ class BqAuthenticator {
    * @return A GoogleCredentials object if they are valid or can be refreshed.
    *         Returns null if no credentials are found or if they require a new login.
    */
+  @SuppressWarnings('ReturnNullFromCatchBlock')
   static GoogleCredentials getCredentials(List<String> scopes = SCOPES, boolean verbose = false) {
     try {
       // Tries to find credentials in the environment (ADC)
       def credentials = GoogleCredentials.getApplicationDefault().createScoped(scopes)
 
       // Determine quota project: env var -> GOOGLE_CLOUD_PROJECT -> ADC file's quota_project_id
-      String qp = System.getenv('GOOGLE_CLOUD_QUOTA_PROJECT') ?: System.getenv('GOOGLE_CLOUD_PROJECT')
+      String qp = System.getenv('GOOGLE_CLOUD_QUOTA_PROJECT') ?: System.getenv(ENV_GOOGLE_CLOUD_PROJECT)
       if (!qp && ADC_FILE_PATH.exists()) {
         try {
           Map json = new JsonSlurper().parseText(ADC_FILE_PATH.getText('UTF-8')) as Map
@@ -78,7 +87,9 @@ class BqAuthenticator {
       }
       if (qp) {
         credentials = credentials.createWithQuotaProject(qp)
-        if (verbose) log.info("Using quota project: $qp")
+        if (verbose) {
+        log.info("Using quota project: $qp")
+      }
       }
 
       // The refreshIfExpired() method will handle checking if a refresh is needed.
@@ -89,7 +100,7 @@ class BqAuthenticator {
       // This can be thrown if ADC file is not found or if refresh token is invalid.
       if (verbose) {
         if (ADC_FILE_PATH.exists()) {
-          log.info "⚠️ Refresh token is invalid. A new login is required."
+          log.info '⚠️ Refresh token is invalid. A new login is required.'
         }
       }
       return null
@@ -102,30 +113,27 @@ class BqAuthenticator {
    *
    * @return True if the gcloud command succeeds, False otherwise.
    */
+  @SuppressWarnings('UnnecessaryGString')
   static boolean runGcloudLogin(List<String> requestedScopes) {
     List<String> scopes = normalizeScopesForGcloud(requestedScopes)
-    if (isCommandAvailable('gcloud')) {
+    if (isCommandAvailable(GCLOUD_CMD)) {
       try {
         // The command will run interactively in the user's terminal.
-        //def command = ["gcloud", "auth", "login", "--update-adc", "--enable-gdrive-access"]
-        def command = ["gcloud", "auth", "application-default", "login",
-                       "--scopes", scopes.join(",")]
+        //def command = ['gcloud', 'auth', 'login', '--update-adc', '--enable-gdrive-access']
+        def command = [GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'login',
+                       '--scopes', scopes.join(',')]
         def process = new ProcessBuilder(command)
             .inheritIO() // This connects the subprocess's I/O to the current terminal
             .start()
 
         def exitCode = process.waitFor()
 
-        if (exitCode != 0) {
-          // gcloud itself will have printed a specific error.
-          return false
-        }
-        return true
+        return exitCode == 0
       } catch (IOException e) {
         // This is often thrown if 'gcloud' command is not found.
-        if (e.message.contains("Cannot run program \"gcloud\"")) {
-          log.error "Error: gcloud SDK is not installed or not in your PATH."
-          log.error "Please install it to proceed with authentication."
+        if (e.message.contains('Cannot run program "' + GCLOUD_CMD + '"')) {
+          log.error 'Error: gcloud SDK is not installed or not in your PATH.'
+          log.error 'Please install it to proceed with authentication.'
         } else {
           log.error "Failed to execute gcloud command: ${e.message}"
         }
@@ -136,14 +144,14 @@ class BqAuthenticator {
         return false
       }
     } else {
-      log.warn "gcloud SDK not found. Attempting programmatic login instead."
-      return runProgrammaticLogin(scopes, System.getenv('GOOGLE_CLOUD_PROJECT'))
+      log.warn 'gcloud SDK not found. Attempting programmatic login instead.'
+      return runProgrammaticLogin(scopes, System.getenv(ENV_GOOGLE_CLOUD_PROJECT))
     }
   }
 
   private static boolean runProgrammaticLogin(List<String> scopes, String quotaProjectId = null) {
     try {
-      def home = System.getProperty("user.home")
+      def home = System.getProperty(PROP_USER_HOME)
       def clientSecretFile = new File("$home/client_secret_desktop.json")
 
       def credentials = BqAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, quotaProjectId)
@@ -162,13 +170,14 @@ class BqAuthenticator {
    * @param credentials The authenticated GoogleCredentials object.
    * @return The user's email address as a String.
    */
+  @SuppressWarnings('ReturnNullFromCatchBlock')
   static String getUserEmail(GoogleCredentials credentials) {
     try {
       def http = GoogleNetHttpTransport.newTrustedTransport()
       def json = GsonFactory.getDefaultInstance()
       def init = BqAuthUtils.noUserProjectInitializer(credentials)
       def oauth2 = new Oauth2.Builder(http, json, init)
-          .setApplicationName("Matrix GSheets")
+          .setApplicationName('Matrix GSheets')
           .build()
       return oauth2.userinfo().get().execute().getEmail()
     } catch (Exception e) {
@@ -196,10 +205,12 @@ class BqAuthenticator {
   static GoogleCredentials authenticate(List<String> requestedScopes = SCOPES, String quotaProjectId = null) {
     List<String> scopes = SCOPES
     if (requestedScopes) {
-      LinkedHashSet<String> effective = new LinkedHashSet<>(SCOPES)
+      Set<String> effective = new LinkedHashSet<>(SCOPES)
       effective.addAll(requestedScopes)
       // Upgrade readonly to read-write once to avoid future churn
-      if (effective.remove(SCOPE_SHEETS_READONLY)) effective.add(SCOPE_SHEETS)
+      if (effective.remove(SCOPE_SHEETS_READONLY)) {
+        effective.add(SCOPE_SHEETS)
+      }
       scopes = new ArrayList<>(effective)
     }
     def creds = getCredentials(new ArrayList<>(scopes))
@@ -207,16 +218,18 @@ class BqAuthenticator {
     if (creds == null || !BqAuthUtils.hasAllScopes(creds, scopes)) {
       // Do ONE interactive login (ADC or programmatic), then reload creds
       if (LOGIN_ATTEMPTED.compareAndSet(false, true)) {
-        boolean ok = isCommandAvailable('gcloud')
+        boolean ok = isCommandAvailable(GCLOUD_CMD)
             ? runGcloudLogin(scopes)
             : runProgrammaticLogin(scopes, quotaProjectId)
-        if (!ok && isCommandAvailable('gcloud')) {
+        if (!ok && isCommandAvailable(GCLOUD_CMD)) {
           // one fallback try
           ok = runProgrammaticLogin(scopes, quotaProjectId)
         }
-        if (!ok) return null
-        if (quotaProjectId && isCommandAvailable('gcloud')) {
-          new ProcessBuilder(["gcloud", "auth", "application-default", "set-quota-project", quotaProjectId])
+        if (!ok) {
+          return null
+        }
+        if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
+          new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
               .inheritIO().start().waitFor()
         }
         creds = getCredentials(scopes, true)
@@ -233,57 +246,57 @@ class BqAuthenticator {
         def email = getUserEmail(creds)
         log.info "Google Cloud is already authenticated with email: ${email}"
       } else {
-        log.info "Google Cloud is already authenticated."
+        log.info 'Google Cloud is already authenticated.'
       }
       return creds
-    } else {
-      log.info "Google Cloud is not authenticated. Initiating login flow..."
-      if (runGcloudLogin(scopes)) {
-        // After a successful login, we must get the newly created credentials
-        log.debug "Re-checking credentials after login..."
-
-        // There can be a small delay between gcloud exiting and the ADC file being
-        // fully written to disk. We will retry a few times to handle this race condition.
-        def newCreds = null
-        int maxRetries = 5
-        int retryDelayMs = 1000 // 1 second
-
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
-          // Call with verbose=false to avoid noisy output during retries
-          newCreds = getCredentials(scopes, false)
-          if (newCreds) {
-            break // Success, exit the loop
-          }
-          if (attempt < maxRetries) {
-            log.debug "Login successful, but credentials not yet available. Retrying in ${retryDelayMs}ms..."
-            Thread.currentThread().sleep(retryDelayMs)
-          }
-        }
-
-        if (newCreds) {
-          def email = getUserEmail(newCreds)
-          if (email) {
-            log.info "Authentication successful for user: ${email}"
-          } else {
-            log.info "Authentication successful after login."
-          }
-          return newCreds
-        } else {
-          log.error "Authentication failed. Could not validate credentials after login, even after retrying."
-          return null
-        }
-      } else {
-        return null
-      }
     }
+
+    log.info 'Google Cloud is not authenticated. Initiating login flow...'
+    if (runGcloudLogin(scopes)) {
+      // After a successful login, we must get the newly created credentials
+      log.debug 'Re-checking credentials after login...'
+
+      // There can be a small delay between gcloud exiting and the ADC file being
+      // fully written to disk. We will retry a few times to handle this race condition.
+      def newCreds = null
+      int maxRetries = 5
+      int retryDelayMs = 1000 // 1 second
+
+      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        // Call with verbose=false to avoid noisy output during retries
+        newCreds = getCredentials(scopes, false)
+        if (newCreds) {
+          break // Success, exit the loop
+        }
+        if (attempt < maxRetries) {
+          log.debug "Login successful, but credentials not yet available. Retrying in ${retryDelayMs}ms..."
+          Thread.currentThread().sleep(retryDelayMs)
+        }
+      }
+
+      if (newCreds) {
+        def email = getUserEmail(newCreds)
+        if (email) {
+          log.info "Authentication successful for user: ${email}"
+        } else {
+          log.info 'Authentication successful after login.'
+        }
+        return newCreds
+      }
+
+      log.error 'Authentication failed. Could not validate credentials after login, even after retrying.'
+      return null
+    }
+
+    return null
   }
 
   private static boolean isCommandAvailable(String command) {
     try {
-      def osName = System.getProperty("os.name").toLowerCase()
-      def processBuilder = osName.contains("win") ?
-          new ProcessBuilder("where", command) :
-          new ProcessBuilder("which", command)
+      def osName = System.getProperty('os.name').toLowerCase()
+      def processBuilder = osName.contains('win') ?
+          new ProcessBuilder('where', command) :
+          new ProcessBuilder('which', command)
       def process = processBuilder.start()
       return process.waitFor() == 0
     } catch (Exception e) {

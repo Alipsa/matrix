@@ -14,60 +14,60 @@ class GsImporterTest {
 
   @Test
   void testBuildHeaderWithAllValues() {
-    def firstRow = ["Name", "Age", "City"]
+    def firstRow = ['Name', 'Age', 'City']
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("Age", headers[1])
-    assertEquals("City", headers[2])
+    assertEquals('Name', headers[0])
+    assertEquals('Age', headers[1])
+    assertEquals('City', headers[2])
   }
 
   @Test
   void testBuildHeaderWithNullValues() {
-    def firstRow = ["Name", null, "City"]
+    def firstRow = ['Name', null, 'City']
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("c2", headers[1])  // Null should become "c2"
-    assertEquals("City", headers[2])
+    assertEquals('Name', headers[0])
+    assertEquals('c2', headers[1])  // Null should become 'c2'
+    assertEquals('City', headers[2])
   }
 
   @Test
   void testBuildHeaderWithEmptyStrings() {
-    def firstRow = ["Name", "", "City"]
+    def firstRow = ['Name', '', 'City']
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("c2", headers[1])  // Empty string should become "c2"
-    assertEquals("City", headers[2])
+    assertEquals('Name', headers[0])
+    assertEquals('c2', headers[1])  // Empty string should become 'c2'
+    assertEquals('City', headers[2])
   }
 
   @Test
   void testBuildHeaderWithWhitespaceOnly() {
-    def firstRow = ["Name", "   ", "City"]
+    def firstRow = ['Name', '   ', 'City']
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("c2", headers[1])  // Whitespace should become "c2"
-    assertEquals("City", headers[2])
+    assertEquals('Name', headers[0])
+    assertEquals('c2', headers[1])  // Whitespace should become 'c2'
+    assertEquals('City', headers[2])
   }
 
   @Test
   void testBuildHeaderWithMoreColumnsThanValues() {
     // When ncol > firstRow.size(), should generate column names
-    def firstRow = ["Name", "Age"]
+    def firstRow = ['Name', 'Age']
     def headers = GsUtil.buildHeader(5, firstRow)
 
     assertEquals(5, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("Age", headers[1])
-    assertEquals("c3", headers[2])  // Missing columns get generated names
-    assertEquals("c4", headers[3])
-    assertEquals("c5", headers[4])
+    assertEquals('Name', headers[0])
+    assertEquals('Age', headers[1])
+    assertEquals('c3', headers[2])  // Missing columns get generated names
+    assertEquals('c4', headers[3])
+    assertEquals('c5', headers[4])
   }
 
   @Test
@@ -76,21 +76,21 @@ class GsImporterTest {
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("c1", headers[0])
-    assertEquals("c2", headers[1])
-    assertEquals("c3", headers[2])
+    assertEquals('c1', headers[0])
+    assertEquals('c2', headers[1])
+    assertEquals('c3', headers[2])
   }
 
   @Test
   void testBuildHeaderWithFewerColumnsThanValues() {
     // When ncol < firstRow.size(), should only use ncol headers
-    def firstRow = ["Name", "Age", "City", "Country", "Zip"]
+    def firstRow = ['Name', 'Age', 'City', 'Country', 'Zip']
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("Name", headers[0])
-    assertEquals("Age", headers[1])
-    assertEquals("City", headers[2])
+    assertEquals('Name', headers[0])
+    assertEquals('Age', headers[1])
+    assertEquals('City', headers[2])
   }
 
   @Test
@@ -99,42 +99,42 @@ class GsImporterTest {
     def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
-    assertEquals("100", headers[0])
-    assertEquals("200", headers[1])
-    assertEquals("300", headers[2])
+    assertEquals('100', headers[0])
+    assertEquals('200', headers[1])
+    assertEquals('300', headers[2])
   }
 
   @Test
   void testFillListToSizeAlreadyCorrectSize() {
-    def list = ["A", "B", "C"]
+    def list = ['A', 'B', 'C']
     def result = GsUtil.fillListToSize(list, 3)
 
     assertEquals(3, result.size())
-    assertEquals("A", result[0])
-    assertEquals("B", result[1])
-    assertEquals("C", result[2])
+    assertEquals('A', result[0])
+    assertEquals('B', result[1])
+    assertEquals('C', result[2])
   }
 
   @Test
   void testFillListToSizeLargerThanDesired() {
     // If list is already larger than desired size, should return unchanged
-    def list = ["A", "B", "C", "D", "E"]
+    def list = ['A', 'B', 'C', 'D', 'E']
     def result = GsUtil.fillListToSize(list, 3)
 
     assertEquals(5, result.size())  // Should not truncate
-    assertEquals("A", result[0])
-    assertEquals("E", result[4])
+    assertEquals('A', result[0])
+    assertEquals('E', result[4])
   }
 
   @Test
   void testFillListToSizeSmallerThanDesired() {
     // Should pad with nulls
-    def list = ["A", "B"]
+    def list = ['A', 'B']
     def result = GsUtil.fillListToSize(list, 5)
 
     assertEquals(5, result.size())
-    assertEquals("A", result[0])
-    assertEquals("B", result[1])
+    assertEquals('A', result[0])
+    assertEquals('B', result[1])
     assertNull(result[2])
     assertNull(result[3])
     assertNull(result[4])
@@ -153,7 +153,7 @@ class GsImporterTest {
 
   @Test
   void testFillListToSizeWithZeroDesiredSize() {
-    def list = ["A", "B", "C"]
+    def list = ['A', 'B', 'C']
     def result = GsUtil.fillListToSize(list, 0)
 
     // Should return the list unchanged since it's already >= desired size
@@ -163,28 +163,29 @@ class GsImporterTest {
   @Test
   void testImportSheetWithNullSheetId() {
     assertThrows(IllegalArgumentException, () ->
-      GsImporter.importSheet(null, "Sheet1!A1:D10", true)
+      GsImporter.importSheet(null, 'Sheet1!A1:D10', true)
     )
   }
 
   @Test
   void testImportSheetWithEmptySheetId() {
     assertThrows(IllegalArgumentException, () ->
-      GsImporter.importSheet("", "Sheet1!A1:D10", true)
+      GsImporter.importSheet('', 'Sheet1!A1:D10', true)
     )
   }
 
   @Test
   void testImportSheetWithNullRange() {
     assertThrows(IllegalArgumentException, () ->
-      GsImporter.importSheet("some-sheet-id", null, true)
+      GsImporter.importSheet('some-sheet-id', null, true)
     )
   }
 
   @Test
   void testImportSheetWithEmptyRange() {
     assertThrows(IllegalArgumentException, () ->
-      GsImporter.importSheet("some-sheet-id", "", true)
+      GsImporter.importSheet('some-sheet-id', '', true)
     )
   }
+
 }

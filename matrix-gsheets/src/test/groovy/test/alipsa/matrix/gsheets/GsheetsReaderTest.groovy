@@ -18,52 +18,52 @@ class GsheetsReaderTest {
 
   @Test
   void testReadInvalidSpreadsheetIdThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.read(null, "Sheet1!A1:D10", true)
-    }, "Should throw on null spreadsheet ID")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.read(null, 'Sheet1!A1:D10', true)
+    }, 'Should throw on null spreadsheet ID')
 
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.read("", "Sheet1!A1:D10", true)
-    }, "Should throw on empty spreadsheet ID")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.read('', 'Sheet1!A1:D10', true)
+    }, 'Should throw on empty spreadsheet ID')
   }
 
   @Test
   void testReadInvalidRangeThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.read("some-id", null, true)
-    }, "Should throw on null range")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.read('some-id', null, true)
+    }, 'Should throw on null range')
 
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.read("some-id", "", true)
-    }, "Should throw on empty range")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.read('some-id', '', true)
+    }, 'Should throw on empty range')
   }
 
   @Test
   void testReadAsObjectInvalidSpreadsheetIdThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.readAsObject(null, "Sheet1!A1:D10", true)
-    }, "Should throw on null spreadsheet ID")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.readAsObject(null, 'Sheet1!A1:D10', true)
+    }, 'Should throw on null spreadsheet ID')
   }
 
   @Test
   void testReadAsObjectInvalidRangeThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.readAsObject("some-id", null, true)
-    }, "Should throw on null range")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.readAsObject('some-id', null, true)
+    }, 'Should throw on null range')
   }
 
   @Test
   void testReadAsStringsInvalidSpreadsheetIdThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.readAsStrings(null, "Sheet1!A1:D10", true)
-    }, "Should throw on null spreadsheet ID")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.readAsStrings(null, 'Sheet1!A1:D10', true)
+    }, 'Should throw on null spreadsheet ID')
   }
 
   @Test
   void testReadAsStringsInvalidRangeThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      GsheetsReader.readAsStrings("some-id", null, true)
-    }, "Should throw on null range")
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsReader.readAsStrings('some-id', null, true)
+    }, 'Should throw on null range')
   }
 
   @Test
@@ -72,24 +72,25 @@ class GsheetsReaderTest {
     // Actual functionality is tested in GsImporterTest since we delegate to it
 
     // Verify read method exists with correct parameter types
-    def readMethod = GsheetsReader.class.getDeclaredMethod(
-        "read", String, String, boolean, GoogleCredentials
+    def readMethod = GsheetsReader.getDeclaredMethod(
+        'read', String, String, boolean, GoogleCredentials
     )
     assertNotNull(readMethod)
     assertTrue(readMethod.returnType == Matrix)
 
     // Verify readAsObject method exists with correct parameter types
-    def readAsObjectMethod = GsheetsReader.class.getDeclaredMethod(
-        "readAsObject", String, String, boolean, GoogleCredentials, boolean
+    def readAsObjectMethod = GsheetsReader.getDeclaredMethod(
+        'readAsObject', String, String, boolean, GoogleCredentials, boolean
     )
     assertNotNull(readAsObjectMethod)
     assertTrue(readAsObjectMethod.returnType == Matrix)
 
     // Verify readAsStrings method exists with correct parameter types
-    def readAsStringsMethod = GsheetsReader.class.getDeclaredMethod(
-        "readAsStrings", String, String, boolean, GoogleCredentials
+    def readAsStringsMethod = GsheetsReader.getDeclaredMethod(
+        'readAsStrings', String, String, boolean, GoogleCredentials
     )
     assertNotNull(readAsStringsMethod)
     assertTrue(readAsStringsMethod.returnType == Matrix)
   }
+
 }

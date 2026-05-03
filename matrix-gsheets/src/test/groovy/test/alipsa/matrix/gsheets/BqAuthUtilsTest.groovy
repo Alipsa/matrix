@@ -21,8 +21,8 @@ class BqAuthUtilsTest {
 
   @Test
   void testCanonScopeWithEmail() {
-    // "email" should be canonicalized to the full userinfo.email scope
-    assertEquals(SCOPE_USERINFO_EMAIL, BqAuthUtils.canonScope("email"))
+    // 'email' should be canonicalized to the full userinfo.email scope
+    assertEquals(SCOPE_USERINFO_EMAIL, BqAuthUtils.canonScope('email'))
     assertEquals(SCOPE_USERINFO_EMAIL, BqAuthUtils.canonScope(SCOPE_USERINFO_EMAIL))
   }
 
@@ -32,7 +32,7 @@ class BqAuthUtilsTest {
     assertEquals(SCOPE_SHEETS, BqAuthUtils.canonScope(SCOPE_SHEETS))
     assertEquals(SCOPE_CLOUD_PLATFORM, BqAuthUtils.canonScope(SCOPE_CLOUD_PLATFORM))
     assertEquals(SCOPE_DRIVE_FILE, BqAuthUtils.canonScope(SCOPE_DRIVE_FILE))
-    assertEquals("custom-scope", BqAuthUtils.canonScope("custom-scope"))
+    assertEquals('custom-scope', BqAuthUtils.canonScope('custom-scope'))
   }
 
   @Test
@@ -42,5 +42,6 @@ class BqAuthUtilsTest {
 
   // Note: Testing hasAllScopes with real credentials requires network access
   // and valid OAuth2 tokens, so we only test the null case here.
-  // Full integration tests for authentication should be tagged as @Tag("external")
+  // Full integration tests for authentication should be tagged as @Tag('external')
+
 }

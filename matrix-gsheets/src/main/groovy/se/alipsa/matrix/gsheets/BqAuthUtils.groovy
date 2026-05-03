@@ -32,8 +32,8 @@ class BqAuthUtils {
   def creds = loginAndWriteAdc(
       new File("$HOME/client_secret_desktop.json"),
       [com.google.api.services.sheets.v4.SheetsScopes.SPREADSHEETS,
-       "https://www.googleapis.com/auth/drive.file",
-       "openid", "email"],
+       'https://www.googleapis.com/auth/drive.file',
+       'openid', 'email'],
       "$PROJECT_ID" // optional; mainly needed if you still call Google OAuth2 userinfo via googleapis.com
   )*/
   static GoogleCredentials loginAndWriteAdc(File clientSecretJson, List<String> scopes, String quotaProjectId = null) {
@@ -44,8 +44,8 @@ class BqAuthUtils {
       log.info("""
           1. Go to the Google Cloud Console (https://console.cloud.google.com/).
           2. Navigate to APIs & Services > Credentials.
-          3. Click "Create Credentials" and choose "OAuth 2.0 Client ID".
-          4. Select "Desktop App" as the application type.
+          3. Click 'Create Credentials' and choose 'OAuth 2.0 Client ID'.
+          4. Select 'Desktop App' as the application type.
           5. After creation, click the download icon to save the JSON file to $clientSecretJson.absolutePath.
         """)
       throw new IllegalStateException("Error: The 'client_secret_desktop.json' file was not found at $clientSecretJson.absolutePath")
@@ -53,21 +53,21 @@ class BqAuthUtils {
     GoogleClientSecrets secrets = GoogleClientSecrets.load(json, new FileReader(clientSecretJson))
 
     def flow = new GoogleAuthorizationCodeFlow.Builder(http, json, secrets, scopes)
-        .setAccessType("offline")
-        .setApprovalPrompt("force")
+        .setAccessType('offline')
+        .setApprovalPrompt('force')
         .build()
 
     def receiver = new LocalServerReceiver.Builder().setPort(0).build()
-    Credential cred = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user")
+    Credential cred = new AuthorizationCodeInstalledApp(flow, receiver).authorize('user')
 
     String refreshToken = cred.getRefreshToken()
     if (!refreshToken) {
-      throw new IllegalStateException("No refresh token received. Remove old consent/tokens and try again.")
+      throw new IllegalStateException('No refresh token received. Remove old consent/tokens and try again.')
     }
 
     // Build ADC JSON
     def adc = [
-        type           : "authorized_user",
+        type           : 'authorized_user',
         client_id      : secrets.details.clientId,
         client_secret  : secrets.details.clientSecret,
         refresh_token  : refreshToken
@@ -95,8 +95,8 @@ class BqAuthUtils {
       void initialize(HttpRequest req) throws IOException {
         base.initialize(req)
         // Strip quota project header for userinfo to avoid USER_PROJECT_DENIED
-        req.getHeaders().set("X-Goog-User-Project", (Object) null)
-        req.getHeaders().set("x-goog-user-project", (Object) null)
+        req.getHeaders().set('X-Goog-User-Project', (Object) null)
+        req.getHeaders().set('x-goog-user-project', (Object) null)
       }
     }
   }
@@ -114,7 +114,7 @@ class BqAuthUtils {
     //def url = new URI("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}").toURL() // old url
     def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token,'UTF-8')}").toURL()
     def json = new JsonSlurper().parse(url)
-    def granted = (json?.scope ?: "")
+    def granted = (json?.scope ?: '')
         .split("\\s+")
         .collect { canonScope(it) }
         .findAll { it } as Set<String>
@@ -130,7 +130,7 @@ class BqAuthUtils {
     if (granted.contains(r)) return true
     // Implications
     if (SCOPE_SHEETS_READONLY.equals(r) && granted.contains(SCOPE_SHEETS)) return true
-    if (SCOPE_DRIVE_FILE.equals(r) && granted.contains("https://www.googleapis.com/auth/drive")) return true
+    if (SCOPE_DRIVE_FILE.equals(r) && granted.contains('https://www.googleapis.com/auth/drive')) return true
     return false
   }
 
@@ -142,7 +142,7 @@ class BqAuthUtils {
   static String canonScope(String s) {
     if (s == null) return null
     switch (s) {
-      case "email", SCOPE_USERINFO_EMAIL -> SCOPE_USERINFO_EMAIL                // canonicalize to the short OIDC form
+      case 'email', SCOPE_USERINFO_EMAIL -> SCOPE_USERINFO_EMAIL                // canonicalize to the short OIDC form
       default -> s
     }
   }

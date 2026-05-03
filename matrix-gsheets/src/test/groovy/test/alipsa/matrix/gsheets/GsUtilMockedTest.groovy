@@ -28,9 +28,9 @@ class GsUtilMockedTest {
     def spreadsheet = mock(Spreadsheet)
 
     // Create mock sheets with properties
-    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle("Sheet1"))
-    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle("Sheet2"))
-    def sheet3 = new Sheet().setProperties(new SheetProperties().setTitle("Data"))
+    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle('Sheet1'))
+    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle('Sheet2'))
+    def sheet3 = new Sheet().setProperties(new SheetProperties().setTitle('Data'))
 
     // Setup mock behavior
     when(sheetsService.spreadsheets()).thenReturn(spreadsheets)
@@ -39,18 +39,18 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn([sheet1, sheet2, sheet3])
 
     // Test the method
-    List<String> sheetNames = getSheetNames("test-spreadsheet-id", sheetsService)
+    List<String> sheetNames = getSheetNames('test-spreadsheet-id', sheetsService)
 
     // Verify results
     assertNotNull(sheetNames)
     assertEquals(3, sheetNames.size())
-    assertEquals("Sheet1", sheetNames[0])
-    assertEquals("Sheet2", sheetNames[1])
-    assertEquals("Data", sheetNames[2])
+    assertEquals('Sheet1', sheetNames[0])
+    assertEquals('Sheet2', sheetNames[1])
+    assertEquals('Data', sheetNames[2])
 
     // Verify interactions
     verify(sheetsService).spreadsheets()
-    verify(spreadsheets).get("test-spreadsheet-id")
+    verify(spreadsheets).get('test-spreadsheet-id')
     verify(getRequest).execute()
   }
 
@@ -63,7 +63,7 @@ class GsUtilMockedTest {
     def spreadsheet = mock(Spreadsheet)
 
     // Single sheet
-    def sheet = new Sheet().setProperties(new SheetProperties().setTitle("Only Sheet"))
+    def sheet = new Sheet().setProperties(new SheetProperties().setTitle('Only Sheet'))
 
     // Setup mock behavior
     when(sheetsService.spreadsheets()).thenReturn(spreadsheets)
@@ -72,12 +72,12 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn([sheet])
 
     // Test the method
-    List<String> sheetNames = getSheetNames("single-sheet-id", sheetsService)
+    List<String> sheetNames = getSheetNames('single-sheet-id', sheetsService)
 
     // Verify results
     assertNotNull(sheetNames)
     assertEquals(1, sheetNames.size())
-    assertEquals("Only Sheet", sheetNames[0])
+    assertEquals('Only Sheet', sheetNames[0])
   }
 
   @Test
@@ -89,8 +89,8 @@ class GsUtilMockedTest {
     def spreadsheet = mock(Spreadsheet)
 
     // Sheets with special characters in names
-    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle("Data 2024"))
-    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle("Q1-Results"))
+    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle('Data 2024'))
+    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle('Q1-Results'))
     def sheet3 = new Sheet().setProperties(new SheetProperties().setTitle("Employee's Data"))
 
     // Setup mock behavior
@@ -100,12 +100,12 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn([sheet1, sheet2, sheet3])
 
     // Test the method
-    List<String> sheetNames = getSheetNames("test-id", sheetsService)
+    List<String> sheetNames = getSheetNames('test-id', sheetsService)
 
     // Verify results
     assertEquals(3, sheetNames.size())
-    assertEquals("Data 2024", sheetNames[0])
-    assertEquals("Q1-Results", sheetNames[1])
+    assertEquals('Data 2024', sheetNames[0])
+    assertEquals('Q1-Results', sheetNames[1])
     assertEquals("Employee's Data", sheetNames[2])
   }
 
@@ -124,7 +124,7 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn([])
 
     // Test the method
-    List<String> sheetNames = getSheetNames("empty-spreadsheet-id", sheetsService)
+    List<String> sheetNames = getSheetNames('empty-spreadsheet-id', sheetsService)
 
     // Verify results
     assertNotNull(sheetNames)
@@ -153,15 +153,15 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn(sheets)
 
     // Test the method
-    List<String> sheetNames = getSheetNames("test-id", sheetsService)
+    List<String> sheetNames = getSheetNames('test-id', sheetsService)
 
     // Verify order is preserved
     assertEquals(5, sheetNames.size())
-    assertEquals("Sheet1", sheetNames[0])
-    assertEquals("Sheet2", sheetNames[1])
-    assertEquals("Sheet3", sheetNames[2])
-    assertEquals("Sheet4", sheetNames[3])
-    assertEquals("Sheet5", sheetNames[4])
+    assertEquals('Sheet1', sheetNames[0])
+    assertEquals('Sheet2', sheetNames[1])
+    assertEquals('Sheet3', sheetNames[2])
+    assertEquals('Sheet4', sheetNames[3])
+    assertEquals('Sheet5', sheetNames[4])
   }
 
   @Test
@@ -173,9 +173,9 @@ class GsUtilMockedTest {
     def spreadsheet = mock(Spreadsheet)
 
     // Sheets with Unicode characters
-    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle("日本語シート"))
-    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle("Données françaises"))
-    def sheet3 = new Sheet().setProperties(new SheetProperties().setTitle("Datos españoles"))
+    def sheet1 = new Sheet().setProperties(new SheetProperties().setTitle('日本語シート'))
+    def sheet2 = new Sheet().setProperties(new SheetProperties().setTitle('Données françaises'))
+    def sheet3 = new Sheet().setProperties(new SheetProperties().setTitle('Datos españoles'))
 
     // Setup mock behavior
     when(sheetsService.spreadsheets()).thenReturn(spreadsheets)
@@ -184,13 +184,13 @@ class GsUtilMockedTest {
     when(spreadsheet.getSheets()).thenReturn([sheet1, sheet2, sheet3])
 
     // Test the method
-    List<String> sheetNames = getSheetNames("unicode-test-id", sheetsService)
+    List<String> sheetNames = getSheetNames('unicode-test-id', sheetsService)
 
     // Verify Unicode characters are preserved
     assertEquals(3, sheetNames.size())
-    assertEquals("日本語シート", sheetNames[0])
-    assertEquals("Données françaises", sheetNames[1])
-    assertEquals("Datos españoles", sheetNames[2])
+    assertEquals('日本語シート', sheetNames[0])
+    assertEquals('Données françaises', sheetNames[1])
+    assertEquals('Datos españoles', sheetNames[2])
   }
 
   @Test
@@ -206,11 +206,11 @@ class GsUtilMockedTest {
     doNothing().when(deleteRequest).execute()
 
     // Test the method - should not throw exception
-    assertDoesNotThrow({ deleteSheet("test-spreadsheet-id", driveService) } as org.junit.jupiter.api.function.Executable)
+    assertDoesNotThrow({ deleteSheet('test-spreadsheet-id', driveService) } as org.junit.jupiter.api.function.Executable)
 
     // Verify interactions
     verify(driveService).files()
-    verify(files).delete("test-spreadsheet-id")
+    verify(files).delete('test-spreadsheet-id')
     verify(deleteRequest).execute()
   }
 
@@ -224,26 +224,26 @@ class GsUtilMockedTest {
     // Setup mock to throw IOException
     when(driveService.files()).thenReturn(files)
     when(files.delete(anyString())).thenReturn(deleteRequest)
-    when(deleteRequest.execute()).thenThrow(new IOException("File not found"))
+    when(deleteRequest.execute()).thenThrow(new IOException('File not found'))
 
     // Test the method - should throw SheetOperationException
     def exception = assertThrows(se.alipsa.matrix.gsheets.SheetOperationException, () ->
-      deleteSheet("non-existent-id", driveService)
+      deleteSheet('non-existent-id', driveService)
     )
 
     // Verify exception details
-    assertEquals("delete", exception.operation)
-    assertEquals("non-existent-id", exception.spreadsheetId)
+    assertEquals('delete', exception.operation)
+    assertEquals('non-existent-id', exception.spreadsheetId)
 
     // Verify interactions
     verify(driveService).files()
-    verify(files).delete("non-existent-id")
+    verify(files).delete('non-existent-id')
     verify(deleteRequest).execute()
   }
 
   @Test
   void testDeleteSheetWithNullDriveService() {
-    assertThrows(IllegalArgumentException, () -> deleteSheet("some-id", (Drive)null))
+    assertThrows(IllegalArgumentException, () -> deleteSheet('some-id', (Drive)null))
   }
 
   @Test
@@ -255,7 +255,8 @@ class GsUtilMockedTest {
   @Test
   void testDeleteSheetWithEmptySpreadsheetIdAndDriveService() {
     def driveService = mock(Drive)
-    assertThrows(IllegalArgumentException, () -> deleteSheet("", driveService))
-    assertThrows(IllegalArgumentException, () -> deleteSheet("  ", driveService))
+    assertThrows(IllegalArgumentException, () -> deleteSheet('', driveService))
+    assertThrows(IllegalArgumentException, () -> deleteSheet('  ', driveService))
   }
+
 }

@@ -2,11 +2,7 @@ package se.alipsa.matrix.gsheets
 
 import groovy.transform.CompileStatic
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
-import com.google.api.services.sheets.v4.SheetsScopes
-import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 
 import se.alipsa.matrix.core.*
@@ -33,8 +29,8 @@ import se.alipsa.matrix.core.*
  * <pre>{@code
  * // Import formatted values (dates as strings, numbers as displayed)
  * Matrix data = GsImporter.importSheet(
- *     "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",  // spreadsheet ID
- *     "Sheet1!A1:D10",                                    // range in A1 notation
+ *     '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',  // spreadsheet ID
+ *     'Sheet1!A1:D10',                                    // range in A1 notation
  *     true                                                // use first row as column names
  * )
  *
@@ -73,14 +69,14 @@ class GsImporter {
    * <p><strong>Example:</strong>
    * <pre>{@code
    * Matrix data = GsImporter.importSheet(
-   *     "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-   *     "Sheet1!A1:D10",
+   *     '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+   *     'Sheet1!A1:D10',
    *     true  // first row contains column names
    * )
    * }</pre>
    *
    * @param sheetId The Google Sheets spreadsheet ID (from the URL between /d/ and /edit)
-   * @param range The range in A1 notation (e.g., "Sheet1!A1:D10" or "A1:D10")
+   * @param range The range in A1 notation (e.g., 'Sheet1!A1:D10' or 'A1:D10')
    * @param firstRowAsColumnNames If true, uses the first row as column names; otherwise generates c1, c2, etc.
    * @param credentials Google Cloud credentials, or null to use Application Default Credentials
    * @return A Matrix containing the imported data as strings
@@ -114,7 +110,7 @@ class GsImporter {
    * // Import raw values
    * Matrix raw = GsImporter.importSheetAsObject(
    *     sheetId,
-   *     "Data!A1:F100",
+   *     'Data!A1:F100',
    *     true,   // first row as column names
    *     null,   // use default credentials
    *     true    // convert empty strings to null
@@ -122,12 +118,12 @@ class GsImporter {
    *
    * // Convert date column from serial numbers to LocalDate
    * raw = raw.convert(
-   *     Converter.of("date_column", LocalDate, GsConverter.&asLocalDate)
+   *     Converter.of('date_column', LocalDate, GsConverter.&asLocalDate)
    * )
    * }</pre>
    *
    * @param sheetId The Google Sheets spreadsheet ID (from the URL between /d/ and /edit)
-   * @param range The range in A1 notation (e.g., "Sheet1!A1:D10")
+   * @param range The range in A1 notation (e.g., 'Sheet1!A1:D10')
    * @param firstRowAsColumnNames If true, uses first row as column names
    * @param credentials Google Cloud credentials, or null to use Application Default Credentials
    * @param convertEmptyToNull If true, converts empty string cells to null
@@ -150,4 +146,5 @@ class GsImporter {
   static Matrix importSheetAsStrings(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
     GsheetsReader.readAsStrings(sheetId, range, firstRowAsColumnNames, credentials)
   }
+
 }

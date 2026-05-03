@@ -19,7 +19,7 @@ class SheetOperationException extends RuntimeException {
   /**
    * Creates a new SheetOperationException.
    *
-   * @param operation The operation that failed (e.g., "export", "import", "delete")
+   * @param operation The operation that failed (e.g., 'export', 'import', 'delete')
    * @param spreadsheetId The spreadsheet ID where the operation failed (may be null for create operations)
    * @param cause The underlying exception that caused the failure
    */
@@ -64,4 +64,5 @@ class SheetOperationException extends RuntimeException {
     }
     return baseMessage
   }
+
 }

@@ -11,7 +11,7 @@ import se.alipsa.matrix.gsheets.BqAuthenticator
  * Unit tests for BqAuthenticator focusing on scope normalization and utility methods.
  *
  * Note: Full authentication flow testing requires external dependencies (gcloud, OAuth2, file system)
- * and should be done as integration tests tagged with @Tag("external").
+ * and should be done as integration tests tagged with @Tag('external').
  */
 class BqAuthenticatorTest {
 
@@ -21,7 +21,7 @@ class BqAuthenticatorTest {
     def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
 
     assertTrue(normalized.contains(SCOPE_CLOUD_PLATFORM),
-      "Normalized scopes should always include cloud-platform")
+      'Normalized scopes should always include cloud-platform')
     assertTrue(normalized.contains(SCOPE_SHEETS))
   }
 
@@ -31,17 +31,17 @@ class BqAuthenticatorTest {
     def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
 
     assertTrue(normalized.contains(SCOPE_SHEETS),
-      "Should upgrade readonly to full sheets scope")
+      'Should upgrade readonly to full sheets scope')
     assertFalse(normalized.contains(SCOPE_SHEETS_READONLY),
-      "Should remove readonly after upgrading")
+      'Should remove readonly after upgrading')
   }
 
   @Test
   void testNormalizeScopesForGcloudRemovesShortEmail() {
-    def scopes = [SCOPE_SHEETS, "email"]
+    def scopes = [SCOPE_SHEETS, 'email']
     def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
 
-    assertFalse(normalized.contains("email"),
+    assertFalse(normalized.contains('email'),
       "Should remove short 'email' scope in favor of userinfo.email")
   }
 
@@ -78,7 +78,7 @@ class BqAuthenticatorTest {
 
     // Should have no duplicates (LinkedHashSet removes them)
     assertEquals(3, normalized.size(),
-      "Should have 3 unique scopes: cloud-platform, sheets, drive.file")
+      'Should have 3 unique scopes: cloud-platform, sheets, drive.file')
   }
 
   @Test
@@ -92,9 +92,9 @@ class BqAuthenticatorTest {
     assertNotNull(SCOPE_USERINFO_EMAIL)
 
     // Verify they contain expected patterns
-    assertTrue(SCOPE_CLOUD_PLATFORM.contains("googleapis.com"))
-    assertTrue(SCOPE_SHEETS.contains("spreadsheets"))
-    assertTrue(SCOPE_DRIVE_FILE.contains("drive"))
+    assertTrue(SCOPE_CLOUD_PLATFORM.contains('googleapis.com'))
+    assertTrue(SCOPE_SHEETS.contains('spreadsheets'))
+    assertTrue(SCOPE_DRIVE_FILE.contains('drive'))
   }
 
   @Test
@@ -112,10 +112,11 @@ class BqAuthenticatorTest {
   void testAdcFilePath() {
     // Verify ADC_FILE_PATH is set to the correct location
     assertNotNull(ADC_FILE_PATH)
-    assertTrue(ADC_FILE_PATH.absolutePath.contains(".config/gcloud"))
-    assertTrue(ADC_FILE_PATH.absolutePath.contains("application_default_credentials.json"))
+    assertTrue(ADC_FILE_PATH.absolutePath.contains('.config/gcloud'))
+    assertTrue(ADC_FILE_PATH.absolutePath.contains('application_default_credentials.json'))
   }
 
   // Note: Testing actual authentication flows (runGcloudLogin, getCredentials, authenticate)
   // requires external dependencies and should be done as integration tests
+
 }

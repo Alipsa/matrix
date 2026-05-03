@@ -13,10 +13,11 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 class GsConverterTest {
+
   @Test
   void testConvertToLocalDate() {
     assertEquals(LocalDate.parse('2024-06-24'), asLocalDate(45467))
-    assertEquals(LocalDate.parse('2024-06-24'), asLocalDate("45467"))
+    assertEquals(LocalDate.parse('2024-06-24'), asLocalDate('45467'))
     assertEquals(LocalDate.parse('2024-06-24'), asLocalDate('2024-06-24'))
     assertEquals(LocalDate.parse('2025-06-01'), asLocalDate(45809))
     assertEquals(LocalDate.parse('2025-06-01'), asLocalDate('2025-06-01'))
@@ -25,22 +26,22 @@ class GsConverterTest {
   @Test
   void testConvertToLocalDateTime() {
     assertEquals(LocalDateTime.parse('2022-01-14T12:33:20'), asLocalDateTime(44575.5231481481))
-    assertEquals(LocalDateTime.parse('2022-01-14T12:33:20'), asLocalDateTime("44575.5231481481"))
+    assertEquals(LocalDateTime.parse('2022-01-14T12:33:20'), asLocalDateTime('44575.5231481481'))
     assertEquals(LocalDateTime.parse('1945-08-25T10:01:59'), asLocalDateTime(16674.4180439815))
     assertEquals(LocalDateTime.parse('1945-08-25T10:01:59'), asLocalDateTime('1945-08-25T10:01:59'))
   }
 
   @Test
   void testConvertLocalTime() {
-    assertEquals(LocalTime.parse("18:25:44"), asLocalTime(0.7678703704))
-    assertEquals(LocalTime.parse("18:25:44"), asLocalTime("0.7678703704"))
-    assertEquals(LocalTime.parse("06:20"), asLocalTime(0.263888888888889))
-    assertEquals(LocalTime.parse("06:20"), asLocalTime("06:20"))
+    assertEquals(LocalTime.parse('18:25:44'), asLocalTime(0.7678703704))
+    assertEquals(LocalTime.parse('18:25:44'), asLocalTime('0.7678703704'))
+    assertEquals(LocalTime.parse('06:20'), asLocalTime(0.263888888888889))
+    assertEquals(LocalTime.parse('06:20'), asLocalTime('06:20'))
   }
 
   @Test
   void testLocalTimeAsSerial() {
-    assertEquals(0.7678703704, asSerial(LocalTime.parse("18:25:44")))
+    assertEquals(0.7678703704, asSerial(LocalTime.parse('18:25:44')))
   }
 
   @Test
@@ -55,7 +56,7 @@ class GsConverterTest {
 
   @Test
   void testToLocalDates() {
-    def list = [45467, "2024-06-24", LocalDate.parse('2024-06-24'), '2024-06-24']
+    def list = [45467, '2024-06-24', LocalDate.parse('2024-06-24'), '2024-06-24']
     def dates = toLocalDates(list)
     assertEquals(4, dates.size())
     dates.each { assertEquals(LocalDate.parse('2024-06-24'), it)  }
@@ -63,7 +64,7 @@ class GsConverterTest {
 
   @Test
   void testToLocalDateTimes() {
-    def list = [44575.5231481481, "44575.5231481481", LocalDateTime.parse('2022-01-14T12:33:20'), '2022-01-14T12:33:20']
+    def list = [44575.5231481481, '44575.5231481481', LocalDateTime.parse('2022-01-14T12:33:20'), '2022-01-14T12:33:20']
     def dateTimes = []
     list.each { dateTimes.add(asLocalDateTime(it)) }
     assertEquals(4, dateTimes.size())
@@ -72,16 +73,16 @@ class GsConverterTest {
 
   @Test
   void testToLocalTimes() {
-    def list = [0.7678703704, "0.7678703704", LocalTime.parse("18:25:44"), '18:25:44']
+    def list = [0.7678703704, '0.7678703704', LocalTime.parse('18:25:44'), '18:25:44']
     def times = []
     list.each { times.add(asLocalTime(it)) }
     assertEquals(4, times.size())
-    times.each { assertEquals(LocalTime.parse("18:25:44"), it)  }
+    times.each { assertEquals(LocalTime.parse('18:25:44'), it)  }
   }
 
   @Test
   void testMatrixConversion() {
-    Matrix m = Matrix.builder('testDates').types([BigDecimal]*3)
+    Matrix m = Matrix.builder('testDates').types([BigDecimal] * 3)
         .rows([
             [45467, 44575.5231481481, 0.7678703704],
             [45809, 44682.2638888889, 0.263888888888889],
@@ -212,27 +213,28 @@ class GsConverterTest {
 
   @Test
   void testAsSerialWithInvalidObject() {
-    assertThrows(IllegalArgumentException, () -> asSerial("not a date object"))
+    assertThrows(IllegalArgumentException, () -> asSerial('not a date object'))
     assertThrows(IllegalArgumentException, () -> asSerial(123))
   }
 
   @Test
   void testToLocalDatesWithNull() {
-    assertNull(toLocalDates(null))
+    assertEquals([], toLocalDates(null))
   }
 
   @Test
   void testToLocalDateTimesWithNull() {
-    assertNull(GsConverter.toLocalDateTimes(null))
+    assertEquals([], GsConverter.toLocalDateTimes(null))
   }
 
   @Test
   void testToLocalTimesWithNull() {
-    assertNull(GsConverter.toLocalTimes(null))
+    assertEquals([], GsConverter.toLocalTimes(null))
   }
 
   @Test
   void testToSerialsWithNull() {
-    assertNull(GsConverter.toSerials(null))
+    assertEquals([], GsConverter.toSerials(null))
   }
+
 }

@@ -18,17 +18,17 @@ class GsheetsWriterTest {
 
   @Test
   void testWriteNullMatrixThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException, () -> {
       GsheetsWriter.write(null)
-    }, "Should throw on null matrix")
+    }, 'Should throw on null matrix')
   }
 
   @Test
   void testWriteEmptyMatrixThrows() {
     Matrix emptyColumns = Matrix.builder().build()
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException, () -> {
       GsheetsWriter.write(emptyColumns)
-    }, "Should throw on matrix with no columns")
+    }, 'Should throw on matrix with no columns')
   }
 
   @Test
@@ -37,9 +37,9 @@ class GsheetsWriterTest {
         .data(id: [], name: [])
         .build()
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(IllegalArgumentException, () -> {
       GsheetsWriter.write(noRows)
-    }, "Should throw on matrix with no rows")
+    }, 'Should throw on matrix with no rows')
   }
 
   @Test
@@ -48,10 +48,11 @@ class GsheetsWriterTest {
     // Actual functionality is tested in GsExporterTest since we delegate to it
 
     // Verify write method exists with correct parameter types
-    def writeMethod = GsheetsWriter.class.getDeclaredMethod(
-        "write", Matrix, GoogleCredentials, boolean, boolean
+    def writeMethod = GsheetsWriter.getDeclaredMethod(
+        'write', Matrix, GoogleCredentials, boolean, boolean
     )
     assertNotNull(writeMethod)
     assertTrue(writeMethod.returnType == String)
   }
+
 }

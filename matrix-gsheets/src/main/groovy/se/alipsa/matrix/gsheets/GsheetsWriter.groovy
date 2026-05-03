@@ -54,10 +54,10 @@ import java.time.LocalTime
  * <h3>Usage Examples</h3>
  * <pre>{@code
  * // Create a matrix
- * Matrix employees = Matrix.builder("Employee Data")
+ * Matrix employees = Matrix.builder('Employee Data')
  *     .data(
  *         emp_id: [1, 2, 3],
- *         name: ["Alice", "Bob", "Charlie"],
+ *         name: ['Alice', 'Bob', 'Charlie'],
  *         salary: [50000, 60000, 70000]
  *     )
  *     .types([Integer, String, BigDecimal])
@@ -68,7 +68,7 @@ import java.time.LocalTime
  * println "View at: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
  *
  * // Write with date conversion
- * Matrix withDates = Matrix.builder("Sales Data")
+ * Matrix withDates = Matrix.builder('Sales Data')
  *     .data(date: [LocalDate.now()], amount: [1000])
  *     .types([LocalDate, BigDecimal])
  *     .build()
@@ -95,6 +95,8 @@ import java.time.LocalTime
 @CompileStatic
 class GsheetsWriter {
 
+  private static final int MAX_SHEET_NAME_LENGTH = 100
+
   /**
    * Creates a new Google Spreadsheet and writes the Matrix data to it.
    *
@@ -104,15 +106,15 @@ class GsheetsWriter {
    *
    * <p><strong>Example:</strong>
    * <pre>{@code
-   * Matrix data = Matrix.builder("Q1 Sales")
+   * Matrix data = Matrix.builder('Q1 Sales')
    *     .data(
-   *         month: ["Jan", "Feb", "Mar"],
+   *         month: ['Jan', 'Feb', 'Mar'],
    *         revenue: [10000, 12000, 15000]
    *     )
    *     .build()
    *
    * String id = GsheetsWriter.write(data)
-   * // Creates spreadsheet titled "Q1 Sales" with sheet "Q1 Sales"
+   * // Creates spreadsheet titled 'Q1 Sales' with sheet 'Q1 Sales'
    * }</pre>
    *
    * @param matrix The Matrix to write (must not be null, must have at least one column and one row)
@@ -133,13 +135,13 @@ class GsheetsWriter {
 
   static String write(Matrix matrix, GoogleCredentials credentials, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
     if (matrix == null) {
-      throw new IllegalArgumentException("matrix must not be null")
+      throw new IllegalArgumentException('matrix must not be null')
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("matrix must have at least one column")
+      throw new IllegalArgumentException('matrix must have at least one column')
     }
     if (matrix.rowCount() == 0) {
-      throw new IllegalArgumentException("matrix must have at least one row")
+      throw new IllegalArgumentException('matrix must have at least one row')
     }
 
     def transport = GoogleNetHttpTransport.newTrustedTransport()
@@ -152,7 +154,7 @@ class GsheetsWriter {
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
 
     Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
-        .setApplicationName("Matrix GSheets")
+        .setApplicationName('Matrix GSheets')
         .build()
 
     String titleBase = matrix.matrixName ?: "Matrix ${LocalDateTime.now().toString().replace('T', '_')}"
@@ -170,17 +172,17 @@ class GsheetsWriter {
     try {
       created = sheets.spreadsheets()
           .create(requestBody)
-          .setFields("spreadsheetId") // we only need the id here
+          .setFields('spreadsheetId') // we only need the id here
           .execute()
     } catch (IOException e) {
-      throw new SheetOperationException("create spreadsheet", "Failed to create spreadsheet '${spreadsheetTitle}': ${e.message}")
+      throw new SheetOperationException('create spreadsheet', "Failed to create spreadsheet '${spreadsheetTitle}': ${e.message}")
     }
 
     String spreadsheetId = created.getSpreadsheetId()
 
     // 2) Build the data: header row + data rows
     List<String> headers = (List<String>) matrix.columnNames()
-    List<List<Object>> values = new ArrayList<>()
+    List<List<Object>> values = []
 
     // header row
     values.add(new ArrayList<Object>(headers))
@@ -197,16 +199,16 @@ class GsheetsWriter {
     // 3) Write all values starting at A1
     ValueRange vr = new ValueRange()
         .setRange("${sheetName}!A1")
-        .setMajorDimension("ROWS")
+        .setMajorDimension('ROWS')
         .setValues(values)
 
     try {
       sheets.spreadsheets().values()
           .update(spreadsheetId, "${sheetName}!A1", vr)
-          .setValueInputOption("RAW") // don't coerce; write exact values/strings
+          .setValueInputOption('RAW') // don't coerce; write exact values/strings
           .execute()
     } catch (IOException e) {
-      throw new SheetOperationException("write data", spreadsheetId, e)
+      throw new SheetOperationException('write data', spreadsheetId, e)
     }
 
     return spreadsheetId
@@ -216,21 +218,36 @@ class GsheetsWriter {
   static String sanitizeSheetName(String name) {
     // Google Sheets sheet names cannot contain: : \ / ? * [ ]
     String s = name.replaceAll('[:\\\\/?*\\[\\]]', ' ')
-    if (s.length() > 100) s = s.substring(0, 100)
-    return s.trim().isEmpty() ? "Sheet1" : s
+    if (s.length() > MAX_SHEET_NAME_LENGTH) {
+      s = s.substring(0, MAX_SHEET_NAME_LENGTH)
+    }
+    return s.trim().isEmpty() ? 'Sheet1' : s
   }
 
   @PackageScope
   static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
-    if (v == null) return convertNullsToEmptyString ? '' : null
-    if (v instanceof Number || v instanceof Boolean) return v
+    if (v == null) {
+      return convertNullsToEmptyString ? '' : null
+    }
+    if (v in Number || v in Boolean) {
+      return v
+    }
     // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
     if (convertDatesToSerial) {
-      if (v instanceof LocalDate) return GsConverter.asSerial(v as LocalDate)
-      if (v instanceof LocalDateTime) return GsConverter.asSerial(v as LocalDateTime)
-      if (v instanceof Date) return GsConverter.asSerial(v as Date)
-      if (v instanceof LocalTime) return GsConverter.asSerial(v as LocalTime)
+      if (v in LocalDate) {
+        return GsConverter.asSerial(v as LocalDate)
+      }
+      if (v in LocalDateTime) {
+        return GsConverter.asSerial(v as LocalDateTime)
+      }
+      if (v in Date) {
+        return GsConverter.asSerial(v as Date)
+      }
+      if (v in LocalTime) {
+        return GsConverter.asSerial(v as LocalTime)
+      }
     }
     return String.valueOf(v)
   }
+
 }

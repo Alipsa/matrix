@@ -1,7 +1,5 @@
 package se.alipsa.matrix.gsheets
 
-import groovy.transform.PackageScope
-
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
@@ -16,23 +14,32 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+/**
+ * Utility methods for working with Google Sheets.
+ */
 class GsUtil {
 
   private static final Logger log = Logger.getLogger(GsUtil)
 
+  private static final String SPREADSHEET_ID_ERROR = 'spreadsheetId must not be null or empty'
+  private static final String RANGE_ERROR = 'range must not be null or empty'
+  private static final String COLON = ':'
+  private static final String COLUMN_PATTERN = '^([A-Z]+)'
+  private static final int MAX_SHEET_NAME_LENGTH = 100
+
   static void deleteSheet(String spreadsheetId) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("spreadsheetId must not be null or empty")
+      throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
 
-    def scopes = ["https://www.googleapis.com/auth/drive"] + BqAuthenticator.SCOPES
+    def scopes = ['https://www.googleapis.com/auth/drive'] + BqAuthenticator.SCOPES
     def credentials = BqAuthenticator.authenticate(scopes)
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
 
     def driveService = new Drive.Builder(transport, gsonFactory, cred)
-        .setApplicationName("Matrix GSheets")
+        .setApplicationName('Matrix GSheets')
         .build()
 
     deleteSheet(spreadsheetId, driveService)
@@ -48,10 +55,10 @@ class GsUtil {
    */
   static void deleteSheet(String spreadsheetId, Drive driveService) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("spreadsheetId must not be null or empty")
+      throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
     if (driveService == null) {
-      throw new IllegalArgumentException("driveService must not be null")
+      throw new IllegalArgumentException('driveService must not be null')
     }
 
     try {
@@ -59,25 +66,25 @@ class GsUtil {
       driveService.files().delete(spreadsheetId).execute()
       log.info "Successfully deleted spreadsheet with ID: ${spreadsheetId}"
     } catch (IOException e) {
-      throw new SheetOperationException("delete", spreadsheetId, e)
+      throw new SheetOperationException('delete', spreadsheetId, e)
     }
   }
 
   /**
    * Calculates the number of columns in a given A1-style range string.
-   * @param range The range string, e.g., "Arkiv!B2:H100" or "A1:C10".
+   * @param range The range string, e.g., 'Arkiv!B2:H100' or 'A1:C10'.
    * @return The number of columns in the range.
    */
   static int columnCountForRange(String range) {
     if (range == null || range.trim().isEmpty()) {
-      throw new IllegalArgumentException("range must not be null or empty")
+      throw new IllegalArgumentException(RANGE_ERROR)
     }
 
     String[] parts = range.split('!')
     String cellRange = parts.size() > 1 ? parts[1] : parts[0]
 
     // Split the range into start and end cells
-    String[] cellParts = cellRange.split(':')
+    String[] cellParts = cellRange.split(COLON)
     if (cellParts.size() != 2) {
       throw new IllegalArgumentException(
         "Invalid range format: '${range}'. Expected A1 notation with a range like 'Sheet1!A1:D10' or 'A1:D10'"
@@ -88,8 +95,8 @@ class GsUtil {
     String endCell = cellParts[1]
 
     // Extract the column letters from the cell references
-    String startColumnLetters = (startCell =~ /^([A-Z]+)/)[0][1]
-    String endColumnLetters = (endCell =~ /^([A-Z]+)/)[0][1]
+    String startColumnLetters = (startCell =~ COLUMN_PATTERN)[0][1]
+    String endColumnLetters = (endCell =~ COLUMN_PATTERN)[0][1]
 
     // Convert column letters to numerical indices
     int startColIndex = asColumnNumber(startColumnLetters)
@@ -100,13 +107,13 @@ class GsUtil {
   }
 
   /**
-   * Converts a column letter string (e.g., "A", "Z", "AA") to its numerical index (1-based).
+   * Converts a column letter string (e.g., 'A', 'Z', 'AA') to its numerical index (1-based).
    * @param colLetters The column letter string.
    * @return The 1-based column index.
    */
   static int asColumnNumber(String name) {
     if (name == null || name.trim().isEmpty()) {
-      throw new IllegalArgumentException("Column name must not be null or empty")
+      throw new IllegalArgumentException('Column name must not be null or empty')
     }
     String colName = name.toUpperCase()
     // Validate that it only contains letters A-Z
@@ -122,7 +129,7 @@ class GsUtil {
 
   static List<String> getSheetNames(String spreadsheetId, GoogleCredentials credentials = null) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("spreadsheetId must not be null or empty")
+      throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
 
     def transport = GoogleNetHttpTransport.newTrustedTransport()
@@ -136,7 +143,7 @@ class GsUtil {
         transport,
         gsonFactory,
         new HttpCredentialsAdapter(credentials))
-        .setApplicationName("Groovy Sheets Reader")
+        .setApplicationName('Groovy Sheets Reader')
         .build()
 
     return getSheetNames(spreadsheetId, sheetsService)
@@ -152,10 +159,10 @@ class GsUtil {
    */
   static List<String> getSheetNames(String spreadsheetId, Sheets sheetsService) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("spreadsheetId must not be null or empty")
+      throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
     if (sheetsService == null) {
-      throw new IllegalArgumentException("sheetsService must not be null")
+      throw new IllegalArgumentException('sheetsService must not be null')
     }
 
     try {
@@ -177,29 +184,43 @@ class GsUtil {
   static String sanitizeSheetName(String name) {
     // Google Sheets sheet names cannot contain: : \ / ? * [ ]
     String s = name.replaceAll('[:\\\\/?*\\[\\]]', ' ')
-    if (s.length() > 100) s = s.substring(0, 100)
-    return s.trim().isEmpty() ? "Sheet1" : s
+    if (s.length() > MAX_SHEET_NAME_LENGTH) {
+      s = s.substring(0, MAX_SHEET_NAME_LENGTH)
+    }
+    return s.trim().isEmpty() ? 'Sheet1' : s
   }
 
   static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
-    if (v == null) return convertNullsToEmptyString ? '' : null
-    if (v instanceof Number || v instanceof Boolean) return v
+    if (v == null) {
+      return convertNullsToEmptyString ? '' : null
+    }
+    if (v in Number || v in Boolean) {
+      return v
+    }
     // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
     if (convertDatesToSerial) {
-      if (v instanceof LocalDate) return GsConverter.asSerial(v as LocalDate)
-      if (v instanceof LocalDateTime) return GsConverter.asSerial(v as LocalDateTime)
-      if (v instanceof Date) return GsConverter.asSerial(v as Date)
-      if (v instanceof LocalTime) return GsConverter.asSerial(v as LocalTime)
+      if (v in LocalDate) {
+        return GsConverter.asSerial(v as LocalDate)
+      }
+      if (v in LocalDateTime) {
+        return GsConverter.asSerial(v as LocalDateTime)
+      }
+      if (v in Date) {
+        return GsConverter.asSerial(v as Date)
+      }
+      if (v in LocalTime) {
+        return GsConverter.asSerial(v as LocalTime)
+      }
     }
     return String.valueOf(v)
   }
 
   static void validateRange(String range) {
     if (range == null || range.trim().isEmpty()) {
-      throw new IllegalArgumentException("range must not be null or empty")
+      throw new IllegalArgumentException(RANGE_ERROR)
     }
     // Basic A1 notation validation - should contain a colon for ranges or be a single cell
-    if (!range.contains(':') && !range.matches('.*!?[A-Z]+\\d+.*')) {
+    if (!range.contains(COLON) && !range.matches('.*!?[A-Z]+\\d+.*')) {
       throw new IllegalArgumentException(
           "Invalid range format: '${range}'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
       )
@@ -208,7 +229,7 @@ class GsUtil {
 
   static void validateSheetId(String sheetId) {
     if (sheetId == null || sheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("sheetId must not be null or empty")
+      throw new IllegalArgumentException('sheetId must not be null or empty')
     }
   }
 
@@ -239,4 +260,5 @@ class GsUtil {
     }
     headers
   }
+
 }

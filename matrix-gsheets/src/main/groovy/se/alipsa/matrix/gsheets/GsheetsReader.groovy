@@ -24,8 +24,8 @@ import se.alipsa.matrix.core.Matrix
  * <pre>{@code
  * // Read formatted values (dates as strings, numbers as displayed)
  * Matrix data = GsheetsReader.read(
- *     "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",  // spreadsheet ID
- *     "Sheet1!A1:D10",                                    // range in A1 notation
+ *     '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',  // spreadsheet ID
+ *     'Sheet1!A1:D10',                                    // range in A1 notation
  *     true                                                // use first row as column names
  * )
  *
@@ -51,6 +51,9 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class GsheetsReader {
 
+  private static final String APP_NAME = 'Groovy Sheets Reader'
+  private static final String SHEET_NAME_SEPARATOR = '!'
+
   /**
    * Reads data from a Google Sheets spreadsheet as formatted strings.
    *
@@ -61,14 +64,14 @@ class GsheetsReader {
    * <p><strong>Example:</strong>
    * <pre>{@code
    * Matrix data = GsheetsReader.read(
-   *     "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-   *     "Sheet1!A1:D10",
+   *     '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
+   *     'Sheet1!A1:D10',
    *     true  // first row contains column names
    * )
    * }</pre>
    *
    * @param spreadsheetId The Google Sheets spreadsheet ID (from the URL between /d/ and /edit)
-   * @param range The range in A1 notation (e.g., "Sheet1!A1:D10" or "A1:D10")
+   * @param range The range in A1 notation (e.g., 'Sheet1!A1:D10' or 'A1:D10')
    * @param firstRowAsColumnNames If true, uses the first row as column names; otherwise generates c1, c2, etc.
    * @param credentials Google Cloud credentials, or null to use Application Default Credentials
    * @return A Matrix containing the imported data as strings
@@ -99,7 +102,7 @@ class GsheetsReader {
    * // Read raw values
    * Matrix raw = GsheetsReader.readAsObject(
    *     spreadsheetId,
-   *     "Data!A1:F100",
+   *     'Data!A1:F100',
    *     true,   // first row as column names
    *     null,   // use default credentials
    *     true    // convert empty strings to null
@@ -107,12 +110,12 @@ class GsheetsReader {
    *
    * // Convert date column from serial numbers to LocalDate
    * raw = raw.convert(
-   *     Converter.of("date_column", LocalDate, GsConverter.&asLocalDate)
+   *     Converter.of('date_column', LocalDate, GsConverter.&asLocalDate)
    * )
    * }</pre>
    *
    * @param spreadsheetId The Google Sheets spreadsheet ID (from the URL between /d/ and /edit)
-   * @param range The range in A1 notation (e.g., "Sheet1!A1:D10")
+   * @param range The range in A1 notation (e.g., 'Sheet1!A1:D10')
    * @param firstRowAsColumnNames If true, uses first row as column names
    * @param credentials Google Cloud credentials, or null to use Application Default Credentials
    * @param convertEmptyToNull If true, converts empty string cells to null
@@ -135,7 +138,7 @@ class GsheetsReader {
         transport,
         gsonFactory,
         new HttpCredentialsAdapter(credentials))
-        .setApplicationName("Groovy Sheets Reader")
+        .setApplicationName(APP_NAME)
         .build()
 
     def response = sheetsService
@@ -159,17 +162,12 @@ class GsheetsReader {
     for (int r = 0; r < values.size(); r++) {
       List<Object> row = values.get(r)
       if (convertEmptyToNull) {
-        for (int c = 0; c < row.size(); c++) {
-          Object v = row.get(c)
-          if (v instanceof CharSequence && ((CharSequence) v).length() == 0) {
-            row.set(c, null)
-          }
-        }
+        GsheetsReader.convertEmptyToNull(row)
       }
       GsUtil.fillListToSize(row, ncol)
     }
 
-    def sheetName = range.split('!')[0]
+    def sheetName = range.split(SHEET_NAME_SEPARATOR)[0]
     Matrix.builder(sheetName)
         .rows(values)
         .columnNames(headers)
@@ -203,7 +201,7 @@ class GsheetsReader {
         transport,
         gsonFactory,
         new HttpCredentialsAdapter(credentials))
-        .setApplicationName("Groovy Sheets Reader")
+        .setApplicationName(APP_NAME)
         .build()
 
     def request = sheetsService
@@ -224,9 +222,9 @@ class GsheetsReader {
       headers = Matrix.anonymousHeader(ncol)
     }
 
-    def sheetName = range.split('!')[0]
+    def sheetName = range.split(SHEET_NAME_SEPARATOR)[0]
     List<List<String>> rows = []
-    values.each {valueRow ->
+    values.each { valueRow ->
       List<String> row = []
       for (int i = 0; i < ncol; i++) {
         if (i < valueRow.size()) {
@@ -249,4 +247,15 @@ class GsheetsReader {
         .types([String] * ncol)
         .build()
   }
+
+  @CompileStatic
+  private static void convertEmptyToNull(List<Object> row) {
+    for (int c = 0; c < row.size(); c++) {
+      Object v = row.get(c)
+      if (v in CharSequence && ((CharSequence) v).length() == 0) {
+        row.set(c, null)
+      }
+    }
+  }
+
 }

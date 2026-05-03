@@ -10,47 +10,55 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
+/**
+ * Converts between Google Sheets serial numbers and Java date/time types.
+ */
 class GsConverter {
 
   private static final Logger log = Logger.getLogger(GsConverter)
 
-  private static long secondsInDay = 24 * 60 * 60
-  private static LocalDateTime epochDateTime = LocalDateTime.of(1899, 12, 30, 0, 0, 0)
-  private static LocalDate epochDate = LocalDate.of(1899, 12, 30)
+  @SuppressWarnings('DuplicateNumberLiteral')
+  private static final long SECONDS_PER_DAY = 24 * 60 * 60
+  private static final int EPOCH_YEAR = 1899
+  private static final int EPOCH_MONTH = 12
+  private static final int EPOCH_DAY = 30
+  private static final String SPACE = ' '
+  private static final LocalDateTime EPOCH_DATE_TIME = LocalDateTime.of(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY, 0, 0, 0)
+  private static final LocalDate EPOCH_DATE = LocalDate.of(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY)
 
-  private GsConverter() {}
+  private GsConverter() { }
 
   static LocalDate asLocalDate(Object o, DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE) {
     if (o == null) {
       return null
     }
-    if (o instanceof LocalDate) {
+    if (o in LocalDate) {
       return (LocalDate) o
-    } else if (o instanceof Number) {
+    }
+    if (o in Number) {
       return asLocalDate((Number) o)
-    } else {
+    }
+    try {
+      return LocalDate.parse(o.toString(), formatter)
+    } catch (DateTimeParseException e) {
+      // Try parsing as a numeric serial value
+      log.debug("Failed to parse '$o' as date with formatter $formatter, attempting numeric conversion: ${e.message}")
       try {
-        return LocalDate.parse(o.toString(), formatter)
-      } catch (DateTimeParseException e) {
-        // Try parsing as a numeric serial value
-        log.debug("Failed to parse '$o' as date with formatter $formatter, attempting numeric conversion: ${e.message}")
-        try {
-          return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
-        } catch (NumberFormatException nfe) {
-          throw new IllegalArgumentException("Cannot convert '${o}' to LocalDate: not a valid date format or numeric value", nfe)
-        }
+        return asLocalDate(new BigDecimal(o.toString().replace(SPACE, '')))
+      } catch (NumberFormatException nfe) {
+        throw new IllegalArgumentException("Cannot convert '${o}' to LocalDate: not a valid date format or numeric value", nfe)
       }
     }
   }
 
   static LocalDate asLocalDate(Number val) {
     def daysSinceEpoch = val.intValue()
-    return epochDate.plusDays(daysSinceEpoch)
+    return EPOCH_DATE.plusDays(daysSinceEpoch)
   }
 
   static List<LocalDate> toLocalDates(List<Object> list) {
     if (list == null) {
-      return null
+      return []
     }
     List<LocalDate> dates = []
     for (Object o : list) {
@@ -63,21 +71,21 @@ class GsConverter {
     if (o == null) {
       return null
     }
-    if (o instanceof LocalDateTime) {
+    if (o in LocalDateTime) {
       return (LocalDateTime) o
-    } else if (o instanceof Number) {
+    }
+    if (o in Number) {
       return asLocalDateTime((Number) o)
-    } else {
+    }
+    try {
+      return LocalDateTime.parse(o.toString(), formatter)
+    } catch (DateTimeParseException e) {
+      // Try parsing as a numeric serial value
+      log.debug("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
       try {
-        return LocalDateTime.parse(o.toString(), formatter)
-      } catch (DateTimeParseException e) {
-        // Try parsing as a numeric serial value
-        log.debug("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
-        try {
-          return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
-        } catch (NumberFormatException nfe) {
-          throw new IllegalArgumentException("Cannot convert '${o}' to LocalDateTime: not a valid datetime format or numeric value", nfe)
-        }
+        return asLocalDateTime(new BigDecimal(o.toString().replace(SPACE, '')))
+      } catch (NumberFormatException nfe) {
+        throw new IllegalArgumentException("Cannot convert '${o}' to LocalDateTime: not a valid datetime format or numeric value", nfe)
       }
     }
   }
@@ -94,14 +102,14 @@ class GsConverter {
 
     // The fractional part is the time of day
     double fractionalPart = val.doubleValue() - days
-    long seconds = Math.round(fractionalPart * 24 * 60 * 60)
+    long seconds = Math.round(fractionalPart * SECONDS_PER_DAY)
 
-    return epochDateTime.plusDays(days).plusSeconds(seconds)
+    return EPOCH_DATE_TIME.plusDays(days).plusSeconds(seconds)
   }
 
   static List<LocalDateTime> toLocalDateTimes(List<Object> list) {
     if (list == null) {
-      return null
+      return []
     }
     List<LocalDateTime> dateTimes = []
     for (Object o : list) {
@@ -114,28 +122,28 @@ class GsConverter {
     if (o == null) {
       return null
     }
-    if (o instanceof LocalTime) {
+    if (o in LocalTime) {
       return (LocalTime) o
-    } else if(o instanceof Number) {
+    }
+    if (o in Number) {
       return asLocalTime((Number) o)
-    } else {
+    }
+    try {
+      return LocalTime.parse(o.toString())
+    } catch (DateTimeParseException e) {
+      // Try parsing as a numeric serial value
+      log.debug("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
       try {
-        return LocalTime.parse(o.toString())
-      } catch (DateTimeParseException e) {
-        // Try parsing as a numeric serial value
-        log.debug("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
-        try {
-          return asLocalTime(new BigDecimal(o.toString()))
-        } catch (NumberFormatException nfe) {
-          throw new IllegalArgumentException("Cannot convert '${o}' to LocalTime: not a valid time format or numeric value", nfe)
-        }
+        return asLocalTime(new BigDecimal(o.toString()))
+      } catch (NumberFormatException nfe) {
+        throw new IllegalArgumentException("Cannot convert '${o}' to LocalTime: not a valid time format or numeric value", nfe)
       }
     }
   }
 
   static LocalTime asLocalTime(Number val) {
     // The serial number is the fraction of a day
-    long totalSeconds = (val * secondsInDay).round() as long
+    long totalSeconds = (val * SECONDS_PER_DAY).round() as long
 
     // Create a LocalTime object from the total seconds
     return LocalTime.ofSecondOfDay(totalSeconds)
@@ -143,7 +151,7 @@ class GsConverter {
 
   static List<LocalTime> toLocalTimes(List<Object> list) {
     if (list == null) {
-      return null
+      return []
     }
     List<LocalTime> times = []
     for (Object o : list) {
@@ -154,56 +162,59 @@ class GsConverter {
 
   static BigDecimal asSerial(LocalDate date) {
     if (date == null) {
-      throw new IllegalArgumentException("Date cannot be null")
+      throw new IllegalArgumentException('Date cannot be null')
     }
 
     // Calculate the number of days since the epoch
-    long days = ChronoUnit.DAYS.between(epochDate, date)
+    long days = ChronoUnit.DAYS.between(EPOCH_DATE, date)
 
     return days
   }
 
   static BigDecimal asSerial(LocalDateTime dateTime) {
     if (dateTime == null) {
-      throw new IllegalArgumentException("DateTime cannot be null")
+      throw new IllegalArgumentException('DateTime cannot be null')
     }
 
     // Calculate the number of days since the epoch
-    def days = ChronoUnit.DAYS.between(epochDateTime, dateTime)
+    def days = ChronoUnit.DAYS.between(EPOCH_DATE_TIME, dateTime)
 
     // Calculate the fraction of the day for the time component
     def secondsSinceMidnight = dateTime.toLocalTime().toSecondOfDay()
-    def fraction = secondsSinceMidnight / (24.0 * 60.0 * 60.0)
+    def fraction = secondsSinceMidnight / (SECONDS_PER_DAY as BigDecimal)
 
     return days + fraction
   }
 
   static BigDecimal asSerial(LocalTime time) {
-    long totalSecondsInDay = 24 * 60 * 60
+    long totalSecondsInDay = SECONDS_PER_DAY
     long secondsSinceMidnight = time.toSecondOfDay()
     return secondsSinceMidnight / totalSecondsInDay
   }
 
   static asSerial(Date date) {
-    if (date == null) return null
+    if (date == null) {
+      return null
+    }
     return asSerial(new Timestamp(date.getTime()).toLocalDateTime())
   }
 
   static BigDecimal asSerial(Object o) {
-    if (o instanceof LocalDate) {
+    if (o in LocalDate) {
       return asSerial((LocalDate) o)
-    } else if (o instanceof LocalDateTime) {
-      return asSerial((LocalDateTime) o)
-    } else if (o instanceof LocalTime) {
-      return asSerial((LocalTime) o)
-    } else {
-      throw new IllegalArgumentException("Cannot convert object of type ${o?.getClass()} to serial number")
     }
+    if (o in LocalDateTime) {
+      return asSerial((LocalDateTime) o)
+    }
+    if (o in LocalTime) {
+      return asSerial((LocalTime) o)
+    }
+    throw new IllegalArgumentException("Cannot convert object of type ${o?.getClass()} to serial number")
   }
 
   static List<BigDecimal> toSerials(List<Object> list) {
     if (list == null) {
-      return null
+      return []
     }
     List<BigDecimal> serials = []
     for (Object o : list) {
@@ -211,4 +222,5 @@ class GsConverter {
     }
     return serials
   }
+
 }
