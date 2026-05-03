@@ -245,10 +245,18 @@ class TableUtil {
    * @return a Tablesaw Table with the same data and structure
    */
   static Table toTablesaw(Matrix matrix) {
+    toTablesaw(matrix, false)
+  }
+
+  static Table toTablesaw(Matrix matrix, boolean skipUnsupported) {
     List<Column<?>> columns = new ArrayList<>()
     for (int i = 0; i < matrix.columnCount(); i++) {
       ColumnType type = columnTypeForClass(matrix.type(i))
       if (type == ColumnType.SKIP) {
+        if (!skipUnsupported) {
+          throw new IllegalArgumentException(
+              "Unsupported column type for column '${matrix.columnNames().get(i)}': ${matrix.type(i).name}")
+        }
         continue
       }
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
@@ -422,30 +430,29 @@ class TableUtil {
    * @return the corresponding Java class, or {@link Object} for custom/unknown types
    */
   static Class<?> classForColumnType(ColumnType type) {
-    Class<?> typeClass = type.getClass()
-    if (StringColumn.class.isAssignableFrom(typeClass)) {
+    if (type == ColumnType.STRING) {
       return String
-    } else if (BooleanColumn.class.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.BOOLEAN) {
       return Boolean
-    } else if (DateColumn.class.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.LOCAL_DATE) {
       return LocalDate
-    } else if (DateTimeColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.LOCAL_DATE_TIME) {
       return LocalDateTime
-    } else if (InstantColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.INSTANT) {
       return Instant
-    } else if (TimeColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.LOCAL_TIME) {
       return LocalTime
-    } else if (BigDecimalColumn.isAssignableFrom(typeClass)) {
+    } else if (type == BigDecimalColumnType.instance()) {
       return BigDecimal
-    } else if (DoubleColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.DOUBLE) {
       return Double
-    } else if (FloatColumn.isAssignableFrom(typeClass)) {
-      return Float.class
-    } else if (IntColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.FLOAT) {
+      return Float
+    } else if (type == ColumnType.INTEGER) {
       return Integer
-    } else if (LongColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.LONG) {
       return Long
-    } else if (ShortColumn.isAssignableFrom(typeClass)) {
+    } else if (type == ColumnType.SHORT) {
       return Short
     } else {
       // it is some custom column type made outside the "official" tablesaw api

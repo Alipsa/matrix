@@ -1,6 +1,7 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static tech.tablesaw.api.ColumnType.*
 
@@ -31,6 +32,47 @@ class GtableTest {
     assertEquals(4, table.columnCount(), "number of columns")
     assertEquals("Gary", table[4, 1])
     assertEquals("Gary", table[4, "emp_name"])
+  }
+
+  @Test
+  void testCreateWithInferredTypes() {
+    def data = [
+        name: ['Alice', 'Bob'],
+        age: [25, 30],
+        salary: [50000.0, 60000.0]
+    ]
+    Gtable table = Gtable.create(data)
+    assertEquals(2, table.rowCount())
+    assertEquals(3, table.columnCount())
+    assertEquals(STRING, table.column('name').type())
+    assertEquals(INTEGER, table.column('age').type())
+    assertEquals(BigDecimalColumnType.instance(), table.column('salary').type())
+  }
+
+  @Test
+  void testCreateWithTypeOverrides() {
+    def data = [
+        name: ['Alice', 'Bob'],
+        age: [25, 30],
+        salary: [50000, 60000]
+    ]
+    Gtable table = Gtable.create(data, [salary: BigDecimalColumnType.instance()])
+    assertEquals(STRING, table.column('name').type())
+    assertEquals(INTEGER, table.column('age').type())
+    assertEquals(BigDecimalColumnType.instance(), table.column('salary').type())
+  }
+
+  @Test
+  void testCreateRejectsMismatchedColumnLengths() {
+    def data = [
+        name: ['Alice', 'Bob'],
+        age: [25, 30, 35]
+    ]
+    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException, { ->
+      Gtable.create(data)
+    })
+    assertTrue(ex.message.contains('age'))
+    assertTrue(ex.message.contains('3 rows'))
   }
 
   @Test
@@ -153,5 +195,39 @@ class GtableTest {
 
     println "\nConverted back to Matrix:"
     println newMatrix.content()
+  }
+
+  @Test
+  void testTableLevelNormalization() {
+    def matrix = Matrix.builder().data(
+        name: ["Alice", "Bob", "Charlie", "David", "Eve"],
+        salary: [50000, 60000, 70000, 80000, 90000]
+    ).types(String, BigDecimal).build()
+
+    def gTable = TableUtil.fromMatrix(matrix)
+
+    // Replace in place
+    def normalized = gTable.normalizeMinMax("salary", null, 8)
+    assertEquals(new BigDecimal("0.00000000"), normalized.getAt(0, "salary"))
+    assertEquals(new BigDecimal("1.00000000"), normalized.getAt(4, "salary"))
+
+    // Original gTable should be unchanged (non-destructive)
+    assertEquals(new BigDecimal("50000"), gTable.getAt(0, "salary"))
+
+    // Add as new column
+    def withNewCol = gTable.normalizeMinMax("salary", "salary_norm", 8)
+    assertTrue(withNewCol.columnNames().contains("salary_norm"))
+    assertTrue(withNewCol.columnNames().contains("salary"))
+    assertEquals(new BigDecimal("0.00000000"), withNewCol.getAt(0, "salary_norm"))
+  }
+
+  @Test
+  void testTableLevelNormalizationUnsupportedType() {
+    def table = Gtable.create([name: ['Alice', 'Bob']])
+    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException, { ->
+      table.normalizeMinMax("name")
+    })
+    assertTrue(ex.message.contains("name"))
+    assertTrue(ex.message.contains("STRING"))
   }
 }
