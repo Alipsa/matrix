@@ -73,7 +73,12 @@ class Gtable extends Table {
   static Gtable create(LinkedHashMap<String, List<?>> data) {
     def inferredTypes = data.collect { entry ->
       def firstNonNull = entry.value.find { it != null }
-      firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+      def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+      if (inferred == ColumnType.SKIP) {
+        throw new IllegalArgumentException(
+            "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
+      }
+      inferred
     }
     create(data, inferredTypes)
   }
@@ -82,7 +87,12 @@ class Gtable extends Table {
     def types = data.collect { entry ->
       typeOverrides.get(entry.key) ?: {
         def firstNonNull = entry.value.find { it != null }
-        firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+        def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+        if (inferred == ColumnType.SKIP) {
+          throw new IllegalArgumentException(
+              "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
+        }
+        inferred
       }()
     }
     create(data, types)
@@ -467,7 +477,7 @@ class Gtable extends Table {
   }
 
   /**
-   * Normalize a numeric column using log normalization.
+   * Normalize a numeric column using natural-log (ln) normalization.
    *
    * @param columnName the name of the column to normalize
    * @param outputColumnName the name for the normalized column; if null, replaces the source column
@@ -498,14 +508,11 @@ class Gtable extends Table {
   }
 
   private static Column<?> normalizeColumn(Column<?> col, int[] decimals, Closure<Column<?>> normalizer) {
-    if (decimals.length > 0) {
-      return normalizer.call(col, decimals)
-    }
-    return normalizer.call(col, new int[0])
+    normalizer.call(col, decimals)
   }
 
   Gtable copy() {
-    return create(this)
+    create(this)
   }
 
   Class asJavaClass(int columnIndex) {

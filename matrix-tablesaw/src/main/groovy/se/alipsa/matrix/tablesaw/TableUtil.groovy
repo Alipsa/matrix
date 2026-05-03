@@ -248,6 +248,14 @@ class TableUtil {
     toTablesaw(matrix, false)
   }
 
+  /**
+   * Convert a Matrix to a Tablesaw table with explicit control over unsupported columns.
+   *
+   * @param matrix the Matrix to convert
+   * @param skipUnsupported if {@code true}, columns whose types are not supported are silently omitted;
+   *                        if {@code false}, an {@link IllegalArgumentException} is thrown on the first unsupported column
+   * @return a Tablesaw Table with the same data and structure
+   */
   static Table toTablesaw(Matrix matrix, boolean skipUnsupported) {
     List<Column<?>> columns = new ArrayList<>()
     for (int i = 0; i < matrix.columnCount(); i++) {

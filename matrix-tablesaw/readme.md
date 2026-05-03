@@ -94,7 +94,7 @@ def minMax = table.normalizeMinMax('value', 'value_norm', 4)
 def zScore = table.normalizeStdScale('value', 'value_z')
 def meanNorm = table.normalizeMean('value')
 
-// Replace in place (omit output column name)
+// Replace the source column in the returned copy (non-destructive)
 def replaced = table.normalizeMinMax('value')
 ```
 

@@ -517,6 +517,10 @@ public class BigDecimalColumnTest {
     var original = obs.copy();
     var result = original.subtractBy(BigDecimalColumn.create("minus",
         bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(9, "1198.9", null, "3454.9", "11.0", "3455.3", "983.9", "1210.8", null, "11.0"),
+        result.asBigDecimalArray()
+    );
     assertSame(original, result, "subtractBy should return this column");
   }
 
@@ -538,6 +542,10 @@ public class BigDecimalColumnTest {
     var original = obs.copy();
     var result = original.multiplyBy(BigDecimalColumn.create("multiply",
         bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(10, "1320.0", null, "3801.6", "13.31", "3802.04", "1083.5", "1333.09", null, "13.31"),
+        result.asBigDecimalArray()
+    );
     assertSame(original, result, "multiplyBy should return this column");
   }
 
@@ -557,6 +565,10 @@ public class BigDecimalColumnTest {
   void testDivideInPlace() {
     var original = obs.copy();
     var result = original.divideBy(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(9, "1090.909090909", null, "3141.818181818", "11.000000000", "3142.181818182", "895.454545455", "1101.727272727", null, "11.000000000"),
+        result.asBigDecimalArray()
+    );
     assertSame(original, result, "divideBy should return this column");
   }
 
