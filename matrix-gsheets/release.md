@@ -1,6 +1,6 @@
 # Release history
 
-## 0.2.0, In progress
+## 0.2.0, 2026-05-03
 
 ### Breaking Changes
 - **Renamed authentication classes**: `BqAuthenticator` → `GsAuthenticator`, `BqAuthUtils` → `GsAuthUtils`
