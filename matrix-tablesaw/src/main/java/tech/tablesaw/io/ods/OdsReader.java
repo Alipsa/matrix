@@ -101,8 +101,12 @@ public class OdsReader implements DataReader<OdsReadOptions> {
         int nullCount = 0;
         for (int colNum = 0; colNum < lastColumn; colNum++) {
           Object val = sheet.getRange(rowNum, colNum).getValue();
-          if (val == null) nullCount++;
-          rowValues[colNum] = String.valueOf(val);
+          if (val == null) {
+            nullCount++;
+            rowValues[colNum] = null;
+          } else {
+            rowValues[colNum] = String.valueOf(val);
+          }
         }
         // Skip rows where all values are missing
         if (nullCount != lastColumn) {

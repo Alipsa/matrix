@@ -13,6 +13,7 @@ import tech.tablesaw.io.WriterRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
@@ -116,7 +117,8 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
             cell.setCellValue(row.getDate(colName));
             cell.setCellStyle(localDateStyle);
           } else if (ColumnType.LOCAL_DATE_TIME.equals(type)) {
-            cell.setCellValue(row.getDate(colName));
+            LocalDateTime ldt = row.getDateTime(colName);
+            cell.setCellValue(GregorianCalendar.from(ldt.atZone(ZoneId.systemDefault())));
             cell.setCellStyle(localDateTimeStyle);
           } else if (ColumnType.LOCAL_TIME.equals(type)) {
             double time = DateUtil.convertTime(row.getTime(colName).toString());

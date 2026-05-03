@@ -476,42 +476,128 @@ public class BigDecimalColumnTest {
 
   @Test
   void testAddition() {
+    var original = obs.copy();
+    var result = obs.add(BigDecimalColumn.create("plus",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
     assertArrayEquals(
         bdArr(9, "1201.1", null, "3457.1", "13.2", "3457.5", "986.1", "1213.0", null, "13.2"),
-        obs.add(BigDecimalColumn.create("plus",
-            bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1))).asBigDecimalArray()
+        result.asBigDecimalArray()
     );
+    // Original should be unchanged (non-mutating)
+    assertArrayEquals(original.asBigDecimalArray(), obs.asBigDecimalArray());
+  }
+
+  @Test
+  void testAdditionInPlace() {
+    var original = obs.copy();
+    var result = original.addTo(BigDecimalColumn.create("plus",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(9, "1201.1", null, "3457.1", "13.2", "3457.5", "986.1", "1213.0", null, "13.2"),
+        result.asBigDecimalArray()
+    );
+    assertSame(original, result, "addTo should return this column");
   }
 
   @Test
   void testSubtraction() {
+    var original = obs.copy();
+    var result = obs.subtract(BigDecimalColumn.create("minus",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
     assertArrayEquals(
         new double[]{1200-1.1, Double.NaN, 3456-1.1, 12.1-1.1, 3456.4-1.1, 985-1.1, 1211.9-1.1, Double.NaN, 12.1-1.1},
-        obs.subtract(BigDecimalColumn.create("minus",
-            bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1))).asDoubleArray(),
+        result.asDoubleArray(),
         0.00000001
     );
+    assertArrayEquals(original.asBigDecimalArray(), obs.asBigDecimalArray());
+  }
+
+  @Test
+  void testSubtractionInPlace() {
+    var original = obs.copy();
+    var result = original.subtractBy(BigDecimalColumn.create("minus",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(9, "1198.9", null, "3454.9", "11.0", "3455.3", "983.9", "1210.8", null, "11.0"),
+        result.asBigDecimalArray()
+    );
+    assertSame(original, result, "subtractBy should return this column");
   }
 
   @Test
   void testMultiply() {
+    var original = obs.copy();
+    var result = obs.multiply(BigDecimalColumn.create("multiply",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
     assertArrayEquals(
         new double[]{1200*1.1, Double.NaN, 3456*1.1, 12.1*1.1, 3456.4*1.1, 985*1.1, 1211.9*1.1, Double.NaN, 12.1*1.1},
-
-        obs.multiply(BigDecimalColumn.create("multiply",
-            bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1))).asDoubleArray(),
+        result.asDoubleArray(),
         0.00000001
     );
+    assertArrayEquals(original.asBigDecimalArray(), obs.asBigDecimalArray());
+  }
+
+  @Test
+  void testMultiplyInPlace() {
+    var original = obs.copy();
+    var result = original.multiplyBy(BigDecimalColumn.create("multiply",
+        bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(10, "1320.0", null, "3801.6", "13.31", "3802.04", "1083.5", "1333.09", null, "13.31"),
+        result.asBigDecimalArray()
+    );
+    assertSame(original, result, "multiplyBy should return this column");
   }
 
   @Test
   void testDivide() {
+    var original = obs.copy();
+    var result = obs.divide(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)))
+        .setScale(9);
     assertArrayEquals(
         bdArr(9, "1090.909090909", null, "3141.818181818", "11.000000000", "3142.181818182", "895.454545455", "1101.727272727", null, "11.000000000"),
-        obs.copy().divide(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)))
-            .setScale(9)
-            .asBigDecimalArray()
+        result.asBigDecimalArray()
     );
+    assertArrayEquals(original.asBigDecimalArray(), obs.asBigDecimalArray());
+  }
+
+  @Test
+  void testDivideInPlace() {
+    var original = obs.copy();
+    var result = original.divideBy(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    assertArrayEquals(
+        bdArr(9, "1090.909090909", null, "3141.818181818", "11.000000000", "3142.181818182", "895.454545455", "1101.727272727", null, "11.000000000"),
+        result.asBigDecimalArray()
+    );
+    assertSame(original, result, "divideBy should return this column");
+  }
+
+  @Test
+  void testDivideScaleUsesDividendScale() {
+    // BigDecimal.divide(divisor, RoundingMode) uses the dividend scale
+    var col = BigDecimalColumn.create("test",
+        new BigDecimal[]{new BigDecimal("10.000"), new BigDecimal("3.00")});
+    var result = col.divide(BigDecimalColumn.create("div",
+        new BigDecimal[]{new BigDecimal("3"), new BigDecimal("2")}));
+    // 10.000 / 3 = 3.333 (scale 3 from dividend)
+    assertEquals(new BigDecimal("3.333"), result.get(0));
+    // 3.00 / 2 = 1.50 (scale 2 from dividend)
+    assertEquals(new BigDecimal("1.50"), result.get(1));
+  }
+
+  @Test
+  void testArithmeticMismatchedLengths() {
+    var shortCol = BigDecimalColumn.create("short", new BigDecimal[]{BigDecimal.ONE, BigDecimal.TEN});
+    var longCol = BigDecimalColumn.create("long", new BigDecimal[]{BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO});
+
+    assertThrows(IllegalArgumentException.class, () -> obs.plus(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.subtract(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.multiply(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.divide(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.addTo(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.subtractBy(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.multiplyBy(longCol));
+    assertThrows(IllegalArgumentException.class, () -> obs.divideBy(longCol));
   }
 
   @Test

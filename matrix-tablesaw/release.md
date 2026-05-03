@@ -1,5 +1,43 @@
 # Matrix-Tablesaw Version history
 
+## v0.3.0, 2026-05-03
+
+### Breaking Changes
+- **BigDecimalColumn arithmetic is now non-mutating by default.**
+  - `plus()`, `subtract()`, `multiply()`, and `divide()` return **new** columns instead of mutating the receiver.
+  - Use the new `addTo()`, `subtractBy()`, `multiplyBy()`, and `divideBy()` methods for in-place mutation.
+  - This makes Groovy operator overloading (`+`, `-`, `*`, `/`) behave intuitively.
+
+### New Features
+- **Friendlier Gtable factory APIs**
+  - `Gtable.create(Map)` infers column types from the first non-null value in each list.
+  - `Gtable.create(Map, Map<String, ColumnType>)` allows named type overrides while inferring the rest.
+  - All map-based factories now validate that every list has the same length and throw a clear `IllegalArgumentException` on mismatch.
+- **Table-level normalization convenience**
+  - `Gtable.normalizeMinMax(columnName, outputColumnName?, decimals?)`
+  - `Gtable.normalizeMean(columnName, outputColumnName?, decimals?)`
+  - `Gtable.normalizeStdScale(columnName, outputColumnName?, decimals?)`
+  - `Gtable.normalizeLog(columnName, outputColumnName?, decimals?)`
+  - Supports `DoubleColumn`, `FloatColumn`, and `BigDecimalColumn`.
+  - Non-destructive by default (returns a new Gtable). Omit `outputColumnName` to replace the source column.
+- **Explicit unsupported-column handling in Matrix → Tablesaw conversion**
+  - `TableUtil.toTablesaw(Matrix)` now throws `IllegalArgumentException` for unsupported column types instead of silently skipping them.
+  - `TableUtil.toTablesaw(Matrix, boolean skipUnsupported)` provides an explicit opt-in to skip unsupported columns.
+
+### Bug Fixes
+- **Preserve Matrix type metadata during Tablesaw conversion**
+  - `TableUtil.classForColumnType` now compares against `ColumnType` constants and `BigDecimalColumnType.instance()` directly, fixing cases where type metadata was lost.
+- **Fix ODS missing cell handling**
+  - Null cells in ODS spreadsheets are now imported as missing values instead of the literal string `"null"`.
+- **Fix XLSX DateTime export**
+  - `LOCAL_DATE_TIME` columns now preserve both date and time components when written to XLSX.
+
+### Documentation
+- Updated `readme.md` with current dependency guidance (use `matrix-bom` or `matrix-all`), quick examples for conversion, Gtable factories, BigDecimal arithmetic, and normalization.
+
+### Testing
+- All 102 tests passing.
+
 ## v0.2.2, 2026-01-31
 - Dependency updates:
   - com.github.miachm.sods:SODS 1.8.1 -> 1.8.2

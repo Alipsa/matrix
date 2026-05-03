@@ -1070,133 +1070,212 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   /**
    * Alias for {@link #plus(BigDecimalColumn)}.
    *
+   * <p>Returns a <strong>new column</strong> and does not modify this column.
+   * Use {@link #addTo(BigDecimalColumn)} for in-place addition.
+   *
    * @param column the column to add
-   * @return this column
+   * @return a new column containing the sum of this and the given column
+   * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn add(BigDecimalColumn column) {
     return plus(column);
   }
 
   /**
-   * naming it plus() has the nice benefit of overloading the + operator in groovy
-   * so you can do column1 + column2
+   * Returns a new column with the element-wise sum of this column and the given column.
+   * <p>This overloads the {@code +} operator in Groovy ({@code column1 + column2}).
+   * <p>Returns a <strong>new column</strong> and does not modify this column.
+   * Use {@link #addTo(BigDecimalColumn)} for in-place addition.
+   *
+   * @param column the column to add
+   * @return a new column containing the sum
+   * @throws IllegalArgumentException if the columns have different sizes
+   */
+  public BigDecimalColumn plus(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    BigDecimalColumn result = emptyCopy();
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var addVal = column.getBigDecimal(i);
+      if (orgVal == null || addVal == null) {
+        result.appendMissing();
+      } else {
+        result.append(orgVal.add(addVal));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Adds the given column to this column in place, mutating this column.
    *
    * @param column the column to add
    * @return this column
+   * @throws IllegalArgumentException if the columns have different sizes
    */
-  public BigDecimalColumn plus(BigDecimalColumn column) {
-    if (size() > column.size()) {
-      for (int i = 0; i < column.size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.add(addVal));
-        }
-      }
-    } else {
-      for (int i = 0; i < size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.add(addVal));
-        }
+  public BigDecimalColumn addTo(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var addVal = column.getBigDecimal(i);
+      if (orgVal == null || addVal == null) {
+        setMissing(i);
+      } else {
+        set(i, orgVal.add(addVal));
       }
     }
     return this;
   }
 
   /**
-   * Subtracts values from the provided column row-by-row.
+   * Returns a new column with the element-wise difference of this column and the given column.
+   * <p>Returns a <strong>new column</strong> and does not modify this column.
+   * Use {@link #subtractBy(BigDecimalColumn)} for in-place subtraction.
+   *
+   * @param column the column to subtract
+   * @return a new column containing the difference
+   * @throws IllegalArgumentException if the columns have different sizes
+   */
+  public BigDecimalColumn subtract(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    BigDecimalColumn result = emptyCopy();
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var subVal = column.getBigDecimal(i);
+      if (orgVal == null || subVal == null) {
+        result.appendMissing();
+      } else {
+        result.append(orgVal.subtract(subVal));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Subtracts the given column from this column in place, mutating this column.
    *
    * @param column the column to subtract
    * @return this column
+   * @throws IllegalArgumentException if the columns have different sizes
    */
-  public BigDecimalColumn subtract(BigDecimalColumn column) {
-    if (size() > column.size()) {
-      for (int i = 0; i < column.size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.subtract(addVal));
-        }
-      }
-    } else {
-      for (int i = 0; i < size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.subtract(addVal));
-        }
+  public BigDecimalColumn subtractBy(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var subVal = column.getBigDecimal(i);
+      if (orgVal == null || subVal == null) {
+        setMissing(i);
+      } else {
+        set(i, orgVal.subtract(subVal));
       }
     }
     return this;
   }
 
   /**
-   * Multiplies values by the provided column row-by-row.
+   * Returns a new column with the element-wise product of this column and the given column.
+   * <p>Returns a <strong>new column</strong> and does not modify this column.
+   * Use {@link #multiplyBy(BigDecimalColumn)} for in-place multiplication.
+   *
+   * @param column the column to multiply by
+   * @return a new column containing the product
+   * @throws IllegalArgumentException if the columns have different sizes
+   */
+  public BigDecimalColumn multiply(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    BigDecimalColumn result = emptyCopy();
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var mulVal = column.getBigDecimal(i);
+      if (orgVal == null || mulVal == null) {
+        result.appendMissing();
+      } else {
+        result.append(orgVal.multiply(mulVal));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Multiplies this column by the given column in place, mutating this column.
    *
    * @param column the column to multiply by
    * @return this column
+   * @throws IllegalArgumentException if the columns have different sizes
    */
-  public BigDecimalColumn multiply(BigDecimalColumn column) {
-    if (size() > column.size()) {
-      for (int i = 0; i < column.size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.multiply(addVal));
-        }
-      }
-    } else {
-      for (int i = 0; i < size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.multiply(addVal));
-        }
+  public BigDecimalColumn multiplyBy(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var mulVal = column.getBigDecimal(i);
+      if (orgVal == null || mulVal == null) {
+        setMissing(i);
+      } else {
+        set(i, orgVal.multiply(mulVal));
       }
     }
     return this;
   }
 
   /**
-   * Divides values by the provided column row-by-row using {@link RoundingMode#HALF_EVEN}.
+   * Returns a new column with the element-wise quotient of this column and the given column.
+   * <p>Division uses {@link RoundingMode#HALF_EVEN} with the scale of the dividend
+   * (the value in this column). Returns a <strong>new column</strong> and does not modify
+   * this column. Use {@link #divideBy(BigDecimalColumn)} for in-place division.
+   *
+   * @param column the column to divide by
+   * @return a new column containing the quotient
+   * @throws IllegalArgumentException if the columns have different sizes
+   */
+  public BigDecimalColumn divide(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    BigDecimalColumn result = emptyCopy();
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var divVal = column.getBigDecimal(i);
+      if (orgVal == null || divVal == null) {
+        result.appendMissing();
+      } else {
+        result.append(orgVal.divide(divVal, RoundingMode.HALF_EVEN));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Divides this column by the given column in place, mutating this column.
+   * <p>Division uses {@link RoundingMode#HALF_EVEN} with the scale of the dividend
+   * (the value in this column).
    *
    * @param column the column to divide by
    * @return this column
+   * @throws IllegalArgumentException if the columns have different sizes
    */
-  public BigDecimalColumn divide(BigDecimalColumn column) {
-    if (size() > column.size()) {
-      for (int i = 0; i < column.size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.divide(addVal, RoundingMode.HALF_EVEN));
-        }
-      }
-    } else {
-      for (int i = 0; i < size(); i++) {
-        var orgVal = getBigDecimal(i);
-        var addVal = column.getBigDecimal(i);
-        if (orgVal == null || addVal == null) {
-          setMissing(i);
-        } else {
-          set(i, orgVal.divide(addVal, RoundingMode.HALF_EVEN));
-        }
+  public BigDecimalColumn divideBy(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+    for (int i = 0; i < size(); i++) {
+      var orgVal = getBigDecimal(i);
+      var divVal = column.getBigDecimal(i);
+      if (orgVal == null || divVal == null) {
+        setMissing(i);
+      } else {
+        set(i, orgVal.divide(divVal, RoundingMode.HALF_EVEN));
       }
     }
     return this;
