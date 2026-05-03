@@ -111,8 +111,7 @@ class GsExporter {
    * @param convertNullsToEmptyString If true, null values become empty strings; if false, remain null
    * @param convertDatesToSerial If true, date/time types are converted to Google Sheets serial numbers;
    *                             if false, they are written as ISO-8601 strings
-   * @return The spreadsheet ID of the created spreadsheet (use with
-   *         https://docs.google.com/spreadsheets/d/{spreadsheetId}/edit)
+   * @return The spreadsheet ID of the created spreadsheet (open with {@link GsheetsWriter#spreadsheetUrl(String)})
    * @throws IllegalArgumentException if matrix is null, has no columns, or has no rows
    * @throws SheetOperationException if spreadsheet creation or data writing fails
    * @see GsConverter#asSerial(LocalDate)
