@@ -16,7 +16,7 @@ import se.alipsa.matrix.core.Matrix
  *
  * <h3>Authentication</h3>
  * If no credentials are provided, the reader will attempt to use Application Default Credentials (ADC).
- * For interactive authentication, use {@link BqAuthenticator#authenticate()}.
+ * For interactive authentication, use {@link GsAuthenticator#authenticate()}.
  *
  * <h3>Usage Examples</h3>
  * <pre>{@code
@@ -50,6 +50,7 @@ class GsheetsReader {
 
   private static final String APP_NAME = 'Groovy Sheets Reader'
   private static final String SHEET_NAME_SEPARATOR = '!'
+  private static final int RANGE_SPLIT_LIMIT = 2
 
   /**
    * Reads data from a Google Sheets spreadsheet as formatted strings.
@@ -77,7 +78,7 @@ class GsheetsReader {
    * @see #readAsObject(String, String, boolean, GoogleCredentials, boolean)
    */
   static Matrix read(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
-    return readAsStrings(spreadsheetId, range, firstRowAsColumnNames, credentials)
+    readAsStrings(spreadsheetId, range, firstRowAsColumnNames, credentials)
   }
 
   /**
@@ -125,18 +126,7 @@ class GsheetsReader {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
 
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    if (credentials == null) {
-      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
-    }
-    def sheetsService = new Sheets.Builder(
-        transport,
-        gsonFactory,
-        new HttpCredentialsAdapter(credentials))
-        .setApplicationName(APP_NAME)
-        .build()
+    def sheetsService = buildSheetsService(credentials)
 
     def response = sheetsService
         .spreadsheets()
@@ -164,7 +154,8 @@ class GsheetsReader {
       GsUtil.fillListToSize(row, ncol)
     }
 
-    def sheetName = range.split(SHEET_NAME_SEPARATOR)[0]
+    def rangeParts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
+    def sheetName = rangeParts.size() > 1 ? rangeParts[0] : ''
     Matrix.builder(sheetName)
         .rows(values)
         .columnNames(headers)
@@ -188,18 +179,7 @@ class GsheetsReader {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
 
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    if (credentials == null) {
-      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
-    }
-    def sheetsService = new Sheets.Builder(
-        transport,
-        gsonFactory,
-        new HttpCredentialsAdapter(credentials))
-        .setApplicationName(APP_NAME)
-        .build()
+    def sheetsService = buildSheetsService(credentials)
 
     def request = sheetsService
         .spreadsheets()
@@ -219,7 +199,8 @@ class GsheetsReader {
       headers = Matrix.anonymousHeader(ncol)
     }
 
-    def sheetName = range.split(SHEET_NAME_SEPARATOR)[0]
+    def rangeParts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
+    def sheetName = rangeParts.size() > 1 ? rangeParts[0] : ''
     List<List<String>> rows = []
     values.each { valueRow ->
       List<String> row = []
@@ -242,6 +223,16 @@ class GsheetsReader {
         .rows(rows)
         .columnNames(headers)
         .types([String] * ncol)
+        .build()
+  }
+
+  private static Sheets buildSheetsService(GoogleCredentials credentials) {
+    def creds = credentials ?: GsAuthenticator.authenticate(GsAuthenticator.SCOPE_SHEETS_READONLY)
+    new Sheets.Builder(
+        GoogleNetHttpTransport.newTrustedTransport(),
+        GsonFactory.getDefaultInstance(),
+        new HttpCredentialsAdapter(creds))
+        .setApplicationName(APP_NAME)
         .build()
   }
 

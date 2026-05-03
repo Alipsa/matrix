@@ -22,7 +22,7 @@ import java.time.LocalDateTime
  *
  * <h3>Authentication</h3>
  * If no credentials are provided, the exporter will attempt to use Application Default Credentials (ADC).
- * For interactive authentication, use {@link BqAuthenticator#authenticate()}.
+ * For interactive authentication, use {@link GsAuthenticator#authenticate()}.
  *
  * <h3>Setup Requirements</h3>
  * Before using the exporter, ensure your Google Cloud project has the required APIs enabled:

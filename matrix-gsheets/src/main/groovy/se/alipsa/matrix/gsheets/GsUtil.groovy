@@ -34,8 +34,8 @@ class GsUtil {
       throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
 
-    def scopes = ['https://www.googleapis.com/auth/drive'] + BqAuthenticator.SCOPES
-    def credentials = BqAuthenticator.authenticate(scopes)
+    def scopes = ['https://www.googleapis.com/auth/drive'] + GsAuthenticator.SCOPES
+    def credentials = GsAuthenticator.authenticate(scopes)
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
@@ -106,7 +106,7 @@ class GsUtil {
     int endColIndex = asColumnNumber(endColumnLetters)
 
     // Calculate the number of columns
-    return endColIndex - startColIndex + 1
+    endColIndex - startColIndex + 1
   }
 
   /**
@@ -127,7 +127,7 @@ class GsUtil {
     for (int i = 0; i < colName.length(); i++) {
       number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
     }
-    return number
+    number
   }
 
   static List<String> getSheetNames(String spreadsheetId, GoogleCredentials credentials = null) {
@@ -139,7 +139,7 @@ class GsUtil {
     def gsonFactory = GsonFactory.getDefaultInstance()
 
     if (credentials == null) {
-      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+      credentials = GsAuthenticator.authenticate(GsAuthenticator.SCOPE_SHEETS_READONLY)
     }
 
     def sheetsService = new Sheets.Builder(
@@ -149,7 +149,7 @@ class GsUtil {
         .setApplicationName('Groovy Sheets Reader')
         .build()
 
-    return getSheetNames(spreadsheetId, sheetsService)
+    getSheetNames(spreadsheetId, sheetsService)
   }
 
   /**
@@ -160,7 +160,7 @@ class GsUtil {
    * @param sheetsService The Sheets service to use
    * @return List of sheet names
    */
-  static List<String> getSheetNames(String spreadsheetId, Sheets sheetsService) {
+  static List<String> getSheetNames(String spreadsheetId, Sheets sheetsService) throws IOException {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
       throw new IllegalArgumentException(SPREADSHEET_ID_ERROR)
     }
@@ -177,8 +177,8 @@ class GsUtil {
         names.add(sheet.getProperties().getTitle())
       }
 
-      return names
-    } catch (Exception e) {
+      names
+    } catch (IOException e) {
       log.error("Failed to retrieve sheet names for spreadsheetId '$spreadsheetId': ${e.message}", e)
       throw e
     }
@@ -190,7 +190,7 @@ class GsUtil {
     if (s.length() > MAX_SHEET_NAME_LENGTH) {
       s = s.substring(0, MAX_SHEET_NAME_LENGTH)
     }
-    return s.trim().isEmpty() ? 'Sheet1' : s
+    s.trim().isEmpty() ? 'Sheet1' : s
   }
 
   static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
@@ -215,7 +215,7 @@ class GsUtil {
         return GsConverter.asSerial(v as LocalTime)
       }
     }
-    return String.valueOf(v)
+    String.valueOf(v)
   }
 
   static void validateRange(String range) {

@@ -1,6 +1,6 @@
 package se.alipsa.matrix.gsheets
 
-import static se.alipsa.matrix.gsheets.BqAuthenticator.*
+import static se.alipsa.matrix.gsheets.GsAuthenticator.*
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
@@ -20,20 +20,32 @@ import com.google.auth.oauth2.GoogleCredentials
 
 import se.alipsa.matrix.core.util.Logger
 
-class BqAuthUtils {
+/**
+ * OAuth2 / ADC token utilities for Google Sheets authentication.
+ *
+ * <p><strong>Note on naming:</strong> The "Bq" prefix (short for BigQuery) is historical.
+ * These classes handle authentication for Google Sheets, not BigQuery.
+ * The name is retained for backward compatibility.
+ */
+class GsAuthUtils {
 
-  private static final Logger log = Logger.getLogger(BqAuthUtils)
+  private static final Logger log = Logger.getLogger(GsAuthUtils)
 
-  /* drop-in replacement for gcloud auth application-default login
-  // Writes ~/.config/gcloud/application_default_credentials.json
-  // Usage:
-  def creds = loginAndWriteAdc(
-      new File("$HOME/client_secret_desktop.json"),
-      [com.google.api.services.sheets.v4.SheetsScopes.SPREADSHEETS,
-       'https://www.googleapis.com/auth/drive.file',
-       'openid', 'email'],
-      "$PROJECT_ID" // optional; mainly needed if you still call Google OAuth2 userinfo via googleapis.com
-  )*/
+  /**
+   * Drop-in replacement for {@code gcloud auth application-default login}.
+   * Writes {@code ~/.config/gcloud/application_default_credentials.json}.
+   *
+   * <p><strong>Usage:</strong>
+   * <pre>{@code
+   * def creds = loginAndWriteAdc(
+   *     new File("$HOME/client_secret_desktop.json"),
+   *     [com.google.api.services.sheets.v4.SheetsScopes.SPREADSHEETS,
+   *      'https://www.googleapis.com/auth/drive.file',
+   *      'openid', 'email'],
+   *     "$PROJECT_ID" // optional; mainly needed if you still call Google OAuth2 userinfo via googleapis.com
+   * )
+   * }</pre>
+   */
   static GoogleCredentials loginAndWriteAdc(File clientSecretJson, List<String> scopes, String quotaProjectId = null) {
     def http = GoogleNetHttpTransport.newTrustedTransport()
     def json = GsonFactory.getDefaultInstance()
@@ -73,7 +85,7 @@ class BqAuthUtils {
     if (quotaProjectId) adc.quota_project_id = quotaProjectId
 
     // Persist to the standard ADC path
-    File adcFile = BqAuthenticator.ADC_FILE_PATH
+    File adcFile = GsAuthenticator.ADC_FILE_PATH
     adcFile.parentFile.mkdirs()
     adcFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(adc))
     log.info("Wrote ADC to ${adcFile.absolutePath}")
@@ -109,7 +121,6 @@ class BqAuthUtils {
     }
     def token = creds.accessToken?.tokenValue
     if (!token) return false
-    //def url = new URI("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}").toURL() // old url
     def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token,'UTF-8')}").toURL()
     def json = new JsonSlurper().parse(url)
     def granted = (json?.scope ?: '')

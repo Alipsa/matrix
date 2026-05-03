@@ -237,4 +237,44 @@ class GsConverterTest {
     assertEquals([], GsConverter.toSerials(null))
   }
 
+  @Test
+  void testToSerialsWithLocalDates() {
+    def dates = [LocalDate.parse('2024-06-24'), LocalDate.parse('2025-06-01')]
+    def serials = GsConverter.toSerials(dates)
+    assertEquals(2, serials.size())
+    assertEquals(new BigDecimal(45467), serials[0])
+    assertEquals(new BigDecimal(45809), serials[1])
+  }
+
+  @Test
+  void testToSerialsWithLocalDateTimes() {
+    def dateTimes = [LocalDateTime.parse('2022-01-14T12:33:20')]
+    def serials = GsConverter.toSerials(dateTimes)
+    assertEquals(1, serials.size())
+    assertEquals(44575.5231481481, serials[0])
+  }
+
+  @Test
+  void testToSerialsWithLocalTimes() {
+    def times = [LocalTime.parse('18:25:44')]
+    def serials = GsConverter.toSerials(times)
+    assertEquals(1, serials.size())
+    assertEquals(0.7678703704, serials[0])
+  }
+
+  @Test
+  void testToSerialsWithMixedDateTypes() {
+    def mixed = [LocalDate.parse('2024-06-24'), LocalDateTime.parse('2022-01-14T12:33:20')]
+    def serials = GsConverter.toSerials(mixed)
+    assertEquals(2, serials.size())
+    assertEquals(new BigDecimal(45467), serials[0])
+    assertEquals(44575.5231481481, serials[1])
+  }
+
+  @Test
+  void testToSerialsWithEmptyList() {
+    def serials = GsConverter.toSerials([])
+    assertEquals([], serials)
+  }
+
 }

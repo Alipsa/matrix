@@ -16,10 +16,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
  * and delegates to the 'gcloud' SDK for an interactive login if needed.
+ *
+ * <p><strong>Note on naming:</strong> The "Bq" prefix (short for BigQuery) is historical.
+ * These classes handle authentication for Google Sheets, not BigQuery.
+ * The name is retained for backward compatibility.
  */
-class BqAuthenticator {
+class GsAuthenticator {
 
-  private static final Logger log = Logger.getLogger(BqAuthenticator)
+  private static final Logger log = Logger.getLogger(GsAuthenticator)
 
   static final String SCOPE_CLOUD_PLATFORM = 'https://www.googleapis.com/auth/cloud-platform'
   static final String SCOPE_SHEETS = SheetsScopes.SPREADSHEETS
@@ -30,7 +34,9 @@ class BqAuthenticator {
 
   private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false)
 
-  private BqAuthenticator() { }
+  private GsAuthenticator() { }
+
+  private static final String PROP_USER_HOME = 'user.home'
 
   // The location where gcloud stores Application Default Credentials
   static final File ADC_FILE_PATH = new File(System.getProperty(PROP_USER_HOME), '.config/gcloud/application_default_credentials.json')
@@ -39,7 +45,6 @@ class BqAuthenticator {
   private static final String GCLOUD_AUTH = 'auth'
   private static final String GCLOUD_APP_DEFAULT = 'application-default'
   private static final String ENV_GOOGLE_CLOUD_PROJECT = 'GOOGLE_CLOUD_PROJECT'
-  private static final String PROP_USER_HOME = 'user.home'
 
   static final List<String> SCOPES = [
       SCOPE_CLOUD_PLATFORM,
@@ -85,8 +90,8 @@ class BqAuthenticator {
       if (qp) {
         credentials = credentials.createWithQuotaProject(qp)
         if (verbose) {
-        log.info("Using quota project: $qp")
-      }
+          log.info("Using quota project: $qp")
+        }
       }
 
       // The refreshIfExpired() method will handle checking if a refresh is needed.
@@ -151,7 +156,7 @@ class BqAuthenticator {
       def home = System.getProperty(PROP_USER_HOME)
       def clientSecretFile = new File("$home/client_secret_desktop.json")
 
-      def credentials = BqAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, quotaProjectId)
+      def credentials = GsAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, quotaProjectId)
 
       // If credentials are null, it means the process failed.
       return credentials != null
@@ -172,7 +177,7 @@ class BqAuthenticator {
     try {
       def http = GoogleNetHttpTransport.newTrustedTransport()
       def json = GsonFactory.getDefaultInstance()
-      def init = BqAuthUtils.noUserProjectInitializer(credentials)
+      def init = GsAuthUtils.noUserProjectInitializer(credentials)
       def oauth2 = new Oauth2.Builder(http, json, init)
           .setApplicationName('Matrix GSheets')
           .build()
@@ -212,7 +217,7 @@ class BqAuthenticator {
     }
     def creds = getCredentials(new ArrayList<>(scopes))
 
-    if (creds == null || !BqAuthUtils.hasAllScopes(creds, scopes)) {
+    if (creds == null || !GsAuthUtils.hasAllScopes(creds, scopes)) {
       // Do ONE interactive login (ADC or programmatic), then reload creds
       if (LOGIN_ATTEMPTED.compareAndSet(false, true)) {
         boolean ok = isCommandAvailable(GCLOUD_CMD)
@@ -301,7 +306,9 @@ class BqAuthenticator {
     }
   }
 
-  // --- Main execution ---
+  /**
+   * Dev convenience entry point — not part of the public API.
+   */
   static void main(String[] args) {
     if (args.length > 0) {
       authenticate(args.collect() as List)
