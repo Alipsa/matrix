@@ -3,7 +3,6 @@ package se.alipsa.matrix.gsheets
 import static se.alipsa.matrix.gsheets.BqAuthenticator.authenticate
 import static se.alipsa.matrix.gsheets.BqAuthenticator.getSCOPES
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
@@ -92,7 +91,6 @@ import java.time.LocalTime
  * @see GsheetsReader
  * @see GsConverter
  */
-@CompileStatic
 class GsheetsWriter {
 
   private static final int MAX_SHEET_NAME_LENGTH = 100

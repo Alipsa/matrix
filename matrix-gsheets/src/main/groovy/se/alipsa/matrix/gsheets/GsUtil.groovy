@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import groovy.transform.CompileDynamic
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
@@ -75,6 +77,7 @@ class GsUtil {
    * @param range The range string, e.g., 'Arkiv!B2:H100' or 'A1:C10'.
    * @return The number of columns in the range.
    */
+  @CompileDynamic
   static int columnCountForRange(String range) {
     if (range == null || range.trim().isEmpty()) {
       throw new IllegalArgumentException(RANGE_ERROR)

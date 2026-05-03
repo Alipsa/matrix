@@ -1,13 +1,10 @@
 package se.alipsa.matrix.gsheets
 
-import groovy.transform.CompileStatic
-
 /**
  * Exception thrown when an operation on a Google Sheets spreadsheet fails.
  * This exception provides context about the operation that failed and the
  * spreadsheet ID involved.
  */
-@CompileStatic
 class SheetOperationException extends RuntimeException {
 
   /** The spreadsheet ID where the operation failed */

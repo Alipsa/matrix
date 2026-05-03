@@ -1,7 +1,5 @@
 package se.alipsa.matrix.gsheets
 
-import groovy.transform.CompileStatic
-
 import com.google.api.services.sheets.v4.Sheets
 import com.google.auth.oauth2.GoogleCredentials
 
@@ -56,7 +54,6 @@ import se.alipsa.matrix.core.*
  * @since 0.1.0
  */
 @Deprecated
-@CompileStatic
 class GsImporter {
 
   /**

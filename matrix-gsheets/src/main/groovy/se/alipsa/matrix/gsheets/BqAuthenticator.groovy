@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gsheets
 
 import groovy.json.JsonSlurper
-import groovy.transform.CompileStatic
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -18,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
  * and delegates to the 'gcloud' SDK for an interactive login if needed.
  */
-@CompileStatic
 class BqAuthenticator {
 
   private static final Logger log = Logger.getLogger(BqAuthenticator)
@@ -51,7 +49,6 @@ class BqAuthenticator {
       SCOPE_USERINFO_EMAIL
   ]
 
-  @CompileStatic
   static List<String> normalizeScopesForGcloud(List<String> scopes) {
     // Always add cloud-platform (gcloud insists on this when --scopes is used)
     Set<String> s = new LinkedHashSet<>((scopes ?: Collections.<String> emptyList()))

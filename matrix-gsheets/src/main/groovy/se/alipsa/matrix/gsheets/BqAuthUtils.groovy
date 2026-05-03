@@ -5,7 +5,6 @@ import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
@@ -21,7 +20,6 @@ import com.google.auth.oauth2.GoogleCredentials
 
 import se.alipsa.matrix.core.util.Logger
 
-@CompileStatic
 class BqAuthUtils {
 
   private static final Logger log = Logger.getLogger(BqAuthUtils)
@@ -124,7 +122,6 @@ class BqAuthUtils {
     return true
   }
 
-  @CompileStatic
   private static boolean isSatisfied(Set<String> granted, String required) {
     String r = canonScope(required)
     if (granted.contains(r)) return true

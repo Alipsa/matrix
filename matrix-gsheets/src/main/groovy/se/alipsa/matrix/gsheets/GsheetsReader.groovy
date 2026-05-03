@@ -1,7 +1,5 @@
 package se.alipsa.matrix.gsheets
 
-import groovy.transform.CompileStatic
-
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
@@ -48,7 +46,6 @@ import se.alipsa.matrix.core.Matrix
  * @see GsheetsWriter
  * @see GsConverter
  */
-@CompileStatic
 class GsheetsReader {
 
   private static final String APP_NAME = 'Groovy Sheets Reader'
@@ -248,7 +245,6 @@ class GsheetsReader {
         .build()
   }
 
-  @CompileStatic
   private static void convertEmptyToNull(List<Object> row) {
     for (int c = 0; c < row.size(); c++) {
       Object v = row.get(c)

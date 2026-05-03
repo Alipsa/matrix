@@ -118,7 +118,7 @@ class GsConverter {
     return dateTimes
   }
 
-  static asLocalTime(Object o) {
+  static LocalTime asLocalTime(Object o) {
     if (o == null) {
       return null
     }
@@ -143,7 +143,7 @@ class GsConverter {
 
   static LocalTime asLocalTime(Number val) {
     // The serial number is the fraction of a day
-    long totalSeconds = (val * SECONDS_PER_DAY).round() as long
+    long totalSeconds = ((val as BigDecimal) * SECONDS_PER_DAY).round() as long
 
     // Create a LocalTime object from the total seconds
     return LocalTime.ofSecondOfDay(totalSeconds)
@@ -192,7 +192,7 @@ class GsConverter {
     return secondsSinceMidnight / totalSecondsInDay
   }
 
-  static asSerial(Date date) {
+  static BigDecimal asSerial(Date date) {
     if (date == null) {
       return null
     }

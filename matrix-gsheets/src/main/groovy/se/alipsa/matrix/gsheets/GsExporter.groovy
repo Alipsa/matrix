@@ -1,7 +1,5 @@
 package se.alipsa.matrix.gsheets
 
-import groovy.transform.CompileStatic
-
 import com.google.auth.oauth2.GoogleCredentials
 
 import se.alipsa.matrix.core.Matrix
@@ -86,7 +84,6 @@ import java.time.LocalDateTime
  * @since 0.1.0
  */
 @Deprecated
-@CompileStatic
 class GsExporter {
 
   /**
