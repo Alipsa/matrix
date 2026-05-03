@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Timestamp
@@ -52,8 +54,8 @@ class GsConverter {
   }
 
   static LocalDate asLocalDate(Number val) {
-    def daysSinceEpoch = val.intValue()
-    return EPOCH_DATE.plusDays(daysSinceEpoch)
+    def daysSinceEpoch = val.longValue()
+    EPOCH_DATE.plusDays(daysSinceEpoch)
   }
 
   static List<LocalDate> toLocalDates(List<Object> list) {
@@ -64,7 +66,7 @@ class GsConverter {
     for (Object o : list) {
       dates.add(asLocalDate(o))
     }
-    return dates
+    dates
   }
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME) {
@@ -78,7 +80,7 @@ class GsConverter {
       return asLocalDateTime((Number) o)
     }
     try {
-      return LocalDateTime.parse(o.toString(), formatter)
+      LocalDateTime.parse(o.toString(), formatter)
     } catch (DateTimeParseException e) {
       // Try parsing as a numeric serial value
       log.debug("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
@@ -115,9 +117,10 @@ class GsConverter {
     for (Object o : list) {
       dateTimes.add(asLocalDateTime(o))
     }
-    return dateTimes
+    dateTimes
   }
 
+  @CompileDynamic
   static LocalTime asLocalTime(Object o) {
     if (o == null) {
       return null
@@ -129,7 +132,7 @@ class GsConverter {
       return asLocalTime((Number) o)
     }
     try {
-      return LocalTime.parse(o.toString())
+      LocalTime.parse(o.toString())
     } catch (DateTimeParseException e) {
       // Try parsing as a numeric serial value
       log.debug("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
@@ -146,7 +149,7 @@ class GsConverter {
     long totalSeconds = ((val as BigDecimal) * SECONDS_PER_DAY).round() as long
 
     // Create a LocalTime object from the total seconds
-    return LocalTime.ofSecondOfDay(totalSeconds)
+    LocalTime.ofSecondOfDay(totalSeconds)
   }
 
   static List<LocalTime> toLocalTimes(List<Object> list) {
@@ -157,7 +160,7 @@ class GsConverter {
     for (Object o : list) {
       times.add(asLocalTime(o))
     }
-    return times
+    times
   }
 
   static BigDecimal asSerial(LocalDate date) {
@@ -168,7 +171,7 @@ class GsConverter {
     // Calculate the number of days since the epoch
     long days = ChronoUnit.DAYS.between(EPOCH_DATE, date)
 
-    return days
+    days
   }
 
   static BigDecimal asSerial(LocalDateTime dateTime) {
@@ -183,20 +186,20 @@ class GsConverter {
     def secondsSinceMidnight = dateTime.toLocalTime().toSecondOfDay()
     def fraction = secondsSinceMidnight / (SECONDS_PER_DAY as BigDecimal)
 
-    return days + fraction
+    days + fraction
   }
 
   static BigDecimal asSerial(LocalTime time) {
     long totalSecondsInDay = SECONDS_PER_DAY
     long secondsSinceMidnight = time.toSecondOfDay()
-    return secondsSinceMidnight / totalSecondsInDay
+    secondsSinceMidnight / totalSecondsInDay
   }
 
   static BigDecimal asSerial(Date date) {
     if (date == null) {
       return null
     }
-    return asSerial(new Timestamp(date.getTime()).toLocalDateTime())
+    asSerial(new Timestamp(date.getTime()).toLocalDateTime())
   }
 
   static BigDecimal asSerial(Object o) {
@@ -220,7 +223,7 @@ class GsConverter {
     for (Object o : list) {
       serials.add(asSerial(o))
     }
-    return serials
+    serials
   }
 
 }

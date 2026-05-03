@@ -2,7 +2,6 @@ package test.alipsa.matrix.gsheets
 
 import static org.junit.jupiter.api.Assertions.*
 
-import com.google.auth.oauth2.GoogleCredentials
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -11,8 +10,8 @@ import se.alipsa.matrix.gsheets.GsheetsWriter
 /**
  * Tests for GsheetsWriter class.
  *
- * These tests verify that GsheetsWriter properly delegates to GsExporter
- * and maintains backward compatibility.
+ * These tests verify input validation and method existence.
+ * Actual write operations are tested via external/integration tests.
  */
 class GsheetsWriterTest {
 
@@ -43,16 +42,43 @@ class GsheetsWriterTest {
   }
 
   @Test
-  void testMethodDelegatesToGsExporter() {
-    // This test verifies that the write method exists and has correct signature
-    // Actual functionality is tested in GsExporterTest since we delegate to it
+  void testUpdateNullSpreadsheetIdThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update(null, 'Sheet1!A1', Matrix.builder().data(id: [1]).build())
+    }, 'Should throw on null spreadsheetId')
+  }
 
-    // Verify write method exists with correct parameter types
-    def writeMethod = GsheetsWriter.getDeclaredMethod(
-        'write', Matrix, GoogleCredentials, boolean, boolean
-    )
-    assertNotNull(writeMethod)
-    assertTrue(writeMethod.returnType == String)
+  @Test
+  void testUpdateNullRangeThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', null, Matrix.builder().data(id: [1]).build())
+    }, 'Should throw on null range')
+  }
+
+  @Test
+  void testUpdateNullMatrixThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', null)
+    }, 'Should throw on null matrix')
+  }
+
+  @Test
+  void testUpdateEmptyMatrixThrows() {
+    Matrix emptyColumns = Matrix.builder().build()
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', emptyColumns)
+    }, 'Should throw on matrix with no columns')
+  }
+
+  @Test
+  void testUpdateMatrixWithNoRowsThrows() {
+    Matrix noRows = Matrix.builder()
+        .data(id: [], name: [])
+        .build()
+
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', noRows)
+    }, 'Should throw on matrix with no rows')
   }
 
 }

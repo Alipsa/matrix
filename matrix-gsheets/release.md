@@ -7,6 +7,7 @@
   - org.mockito:mockito-core 5.22.0 -> 5.23.0
   - org.mockito:mockito-junit-jupiter 5.22.0 -> 5.23.0
   - se.alipsa.nexus-release-plugin:se.alipsa.nexus-release-plugin.gradle.plugin 2.1.1 -> 2.1.2
+- rename BqAuthenticator to GsAuthenticator and BqAuthUtils to GsAuthUtils 
 
 ## 0.1.1, 2026-01-31
 Move actual implementation for GsheetsReader and GsheetsWriter and utility methods to GsUtil so that GsImporter and GsExporter are just empty wrappers.

@@ -2,17 +2,15 @@ package test.alipsa.matrix.gsheets
 
 import static org.junit.jupiter.api.Assertions.*
 
-import com.google.auth.oauth2.GoogleCredentials
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gsheets.GsheetsReader
 
 /**
  * Tests for GsheetsReader class.
  *
- * These tests verify that GsheetsReader properly delegates to GsImporter
- * and maintains backward compatibility.
+ * These tests verify input validation and method existence.
+ * Actual read operations are tested via external/integration tests.
  */
 class GsheetsReaderTest {
 
@@ -64,33 +62,6 @@ class GsheetsReaderTest {
     assertThrows(IllegalArgumentException, () -> {
       GsheetsReader.readAsStrings('some-id', null, true)
     }, 'Should throw on null range')
-  }
-
-  @Test
-  void testMethodsDelegateToGsImporter() {
-    // These tests verify that methods exist and have correct signatures
-    // Actual functionality is tested in GsImporterTest since we delegate to it
-
-    // Verify read method exists with correct parameter types
-    def readMethod = GsheetsReader.getDeclaredMethod(
-        'read', String, String, boolean, GoogleCredentials
-    )
-    assertNotNull(readMethod)
-    assertTrue(readMethod.returnType == Matrix)
-
-    // Verify readAsObject method exists with correct parameter types
-    def readAsObjectMethod = GsheetsReader.getDeclaredMethod(
-        'readAsObject', String, String, boolean, GoogleCredentials, boolean
-    )
-    assertNotNull(readAsObjectMethod)
-    assertTrue(readAsObjectMethod.returnType == Matrix)
-
-    // Verify readAsStrings method exists with correct parameter types
-    def readAsStringsMethod = GsheetsReader.getDeclaredMethod(
-        'readAsStrings', String, String, boolean, GoogleCredentials
-    )
-    assertNotNull(readAsStringsMethod)
-    assertTrue(readAsStringsMethod.returnType == Matrix)
   }
 
 }

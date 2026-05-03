@@ -1,24 +1,24 @@
 package test.alipsa.matrix.gsheets
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.gsheets.BqAuthenticator.*
+import static se.alipsa.matrix.gsheets.GsAuthenticator.*
 
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.gsheets.BqAuthenticator
+import se.alipsa.matrix.gsheets.GsAuthenticator
 
 /**
- * Unit tests for BqAuthenticator focusing on scope normalization and utility methods.
+ * Unit tests for GsAuthenticator focusing on scope normalization and utility methods.
  *
  * Note: Full authentication flow testing requires external dependencies (gcloud, OAuth2, file system)
  * and should be done as integration tests tagged with @Tag('external').
  */
-class BqAuthenticatorTest {
+class GsAuthenticatorTest {
 
   @Test
   void testNormalizeScopesForGcloudAddsCloudPlatform() {
     def scopes = [SCOPE_SHEETS]
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
     assertTrue(normalized.contains(SCOPE_CLOUD_PLATFORM),
       'Normalized scopes should always include cloud-platform')
@@ -28,7 +28,7 @@ class BqAuthenticatorTest {
   @Test
   void testNormalizeScopesForGcloudUpgradesReadonly() {
     def scopes = [SCOPE_SHEETS_READONLY]
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
     assertTrue(normalized.contains(SCOPE_SHEETS),
       'Should upgrade readonly to full sheets scope')
@@ -39,7 +39,7 @@ class BqAuthenticatorTest {
   @Test
   void testNormalizeScopesForGcloudRemovesShortEmail() {
     def scopes = [SCOPE_SHEETS, 'email']
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
     assertFalse(normalized.contains('email'),
       "Should remove short 'email' scope in favor of userinfo.email")
@@ -47,7 +47,7 @@ class BqAuthenticatorTest {
 
   @Test
   void testNormalizeScopesForGcloudHandlesNull() {
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(null)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(null)
 
     assertNotNull(normalized)
     assertTrue(normalized.contains(SCOPE_CLOUD_PLATFORM))
@@ -55,7 +55,7 @@ class BqAuthenticatorTest {
 
   @Test
   void testNormalizeScopesForGcloudHandlesEmpty() {
-    def normalized = BqAuthenticator.normalizeScopesForGcloud([])
+    def normalized = GsAuthenticator.normalizeScopesForGcloud([])
 
     assertNotNull(normalized)
     assertTrue(normalized.contains(SCOPE_CLOUD_PLATFORM))
@@ -64,7 +64,7 @@ class BqAuthenticatorTest {
   @Test
   void testNormalizeScopesForGcloudPreservesOrder() {
     def scopes = [SCOPE_DRIVE_FILE, SCOPE_OPENID, SCOPE_USERINFO_EMAIL]
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
     // Should preserve input scopes and add cloud-platform
     assertTrue(normalized.containsAll(scopes))
@@ -74,7 +74,7 @@ class BqAuthenticatorTest {
   @Test
   void testNormalizeScopesForGcloudRemovesDuplicates() {
     def scopes = [SCOPE_SHEETS, SCOPE_SHEETS, SCOPE_DRIVE_FILE, SCOPE_DRIVE_FILE]
-    def normalized = BqAuthenticator.normalizeScopesForGcloud(scopes)
+    def normalized = GsAuthenticator.normalizeScopesForGcloud(scopes)
 
     // Should have no duplicates (LinkedHashSet removes them)
     assertEquals(3, normalized.size(),

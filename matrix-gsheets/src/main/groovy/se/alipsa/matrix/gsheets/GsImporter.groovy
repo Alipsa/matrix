@@ -21,7 +21,7 @@ import se.alipsa.matrix.core.*
  *
  * <h3>Authentication</h3>
  * If no credentials are provided, the importer will attempt to use Application Default Credentials (ADC).
- * For interactive authentication, use {@link BqAuthenticator#authenticate()}.
+ * For interactive authentication, use {@link GsAuthenticator#authenticate()}.
  *
  * <h3>Usage Examples</h3>
  * <pre>{@code
