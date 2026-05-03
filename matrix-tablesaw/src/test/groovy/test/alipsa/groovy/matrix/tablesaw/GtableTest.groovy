@@ -206,7 +206,7 @@ class GtableTest {
 
     def gTable = TableUtil.fromMatrix(matrix)
 
-    // Replace in place
+    // Replace source column (non-destructive: returns new table)
     def normalized = gTable.normalizeMinMax("salary", null, 8)
     assertEquals(new BigDecimal("0.00000000"), normalized.getAt(0, "salary"))
     assertEquals(new BigDecimal("1.00000000"), normalized.getAt(4, "salary"))
