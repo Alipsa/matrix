@@ -1,13 +1,40 @@
 # Release history
 
 ## 0.2.0, In progress
-- Dependencies:
-  - com.google.apis:google-api-services-drive v3-rev20260220-2.0.0 -> v3-rev20260322-2.0.0
-  - com.google.apis:google-api-services-sheets v4-rev20251110-2.0.0 -> v4-rev20260213-2.0.0
-  - org.mockito:mockito-core 5.22.0 -> 5.23.0
-  - org.mockito:mockito-junit-jupiter 5.22.0 -> 5.23.0
-  - se.alipsa.nexus-release-plugin:se.alipsa.nexus-release-plugin.gradle.plugin 2.1.1 -> 2.1.2
-- rename BqAuthenticator to GsAuthenticator and BqAuthUtils to GsAuthUtils 
+
+### Breaking Changes
+- **Renamed authentication classes**: `BqAuthenticator` → `GsAuthenticator`, `BqAuthUtils` → `GsAuthUtils`
+  - See `docs/0.1-0.2-MIGRATION.md` for detailed migration guide with before/after examples
+
+### New Features
+- **`GsheetsWriter.update(String, String, Matrix, ...)`**: Write Matrix data to an existing spreadsheet and range
+- **`GsheetsWriter.spreadsheetUrl(String)`**: Convenience helper that returns the Google Sheets edit URL for a spreadsheet ID
+
+### Improvements
+- **Eliminated duplicated service-setup code**: Extracted `buildSheetsService()` helpers in both `GsheetsReader` and `GsheetsWriter`
+- **Eliminated duplicated utilities in `GsheetsWriter`**: Removed `sanitizeSheetName()`, `toCell()`, and `MAX_SHEET_NAME_LENGTH` — now delegates to `GsUtil`
+- **Fixed sheet-name extraction**: When a range has no `!` prefix (e.g., `A1:D10`), the matrix name defaults to `''` instead of the raw range string
+- **Narrowed exception handling**: `GsUtil.getSheetNames(String, Sheets)` now catches `IOException` specifically and declares `throws IOException`
+- **Improved numeric precision**: `GsConverter.asLocalDate(Number)` uses `longValue()` instead of `intValue()` for day counts
+- **Idiomatic Groovy cleanup**: Removed ~20 unnecessary `return` keywords from final expressions; replaced Java-style `new ArrayList<>()` + `.add()` with `[]` literals and `<<` / `collect`
+- **Code quality**: Removed commented-out tokeninfo URL from `GsAuthUtils`; converted inline usage docs to proper GroovyDoc
+- **Fixed `GsAuthenticator` log indentation**: `log.info` call is now correctly inside the `if (verbose)` block
+- **Fixed static field ordering**: Moved `PROP_USER_HOME` above `ADC_FILE_PATH` to eliminate initialization-order hazard
+- **Added missing return type declarations**: `GsConverter.asLocalTime(Object)` → `LocalTime`, `GsConverter.asSerial(Date)` → `BigDecimal`
+- **Added historical-naming GroovyDoc notes** to `GsAuthenticator` and `GsAuthUtils` explaining the `Bq` prefix
+
+### Test Changes
+- **Added 5 positive-case tests** for `GsConverter.toSerials` (LocalDates, LocalDateTimes, LocalTimes, mixed types, empty list)
+- **Added 5 validation tests** for `GsheetsWriter.update()` (null spreadsheetId, null range, null matrix, empty matrix, no rows)
+- **Moved 16 tests** (`sanitizeSheetName` and `toCell` coverage) from `GsExporterTest` to `GsUtilTest` where they belong
+- **Removed brittle reflection-based tests** from `GsheetsReaderTest` and `GsheetsWriterTest`
+
+### Dependency Updates
+- com.google.apis:google-api-services-drive v3-rev20260220-2.0.0 → v3-rev20260322-2.0.0
+- com.google.apis:google-api-services-sheets v4-rev20251110-2.0.0 → v4-rev20260213-2.0.0
+- org.mockito:mockito-core 5.22.0 → 5.23.0
+- org.mockito:mockito-junit-jupiter 5.22.0 → 5.23.0
+- se.alipsa.nexus-release-plugin:se.alipsa.nexus-release-plugin.gradle.plugin 2.1.1 → 2.1.2 
 
 ## 0.1.1, 2026-01-31
 Move actual implementation for GsheetsReader and GsheetsWriter and utility methods to GsUtil so that GsImporter and GsExporter are just empty wrappers.
