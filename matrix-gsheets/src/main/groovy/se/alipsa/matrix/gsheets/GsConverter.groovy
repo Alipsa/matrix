@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Timestamp
@@ -118,7 +120,7 @@ class GsConverter {
     dateTimes
   }
 
-  @groovy.transform.CompileDynamic
+  @CompileDynamic
   static LocalTime asLocalTime(Object o) {
     if (o == null) {
       return null

@@ -4,7 +4,6 @@ import static se.alipsa.matrix.gsheets.GsAuthenticator.authenticate
 import static se.alipsa.matrix.gsheets.GsAuthenticator.getSCOPES
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Sheet
@@ -142,18 +141,7 @@ class GsheetsWriter {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
 
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    // Need write scope for creating/updating spreadsheets
-    if (credentials == null) {
-      credentials = authenticate(SCOPES)
-    }
-    HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
-
-    Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
-        .setApplicationName(APP_NAME)
-        .build()
+    Sheets sheets = buildSheetsService(credentials)
 
     String titleBase = matrix.matrixName ?: "Matrix ${LocalDateTime.now().toString().replace('T', '_')}"
     String sheetName = GsUtil.sanitizeSheetName(titleBase)
@@ -244,17 +232,7 @@ class GsheetsWriter {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
 
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    if (credentials == null) {
-      credentials = authenticate(SCOPES)
-    }
-    HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
-
-    Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
-        .setApplicationName(APP_NAME)
-        .build()
+    Sheets sheets = buildSheetsService(credentials)
 
     // Build data: header row + data rows
     List<String> headers = (List<String>) matrix.columnNames()
@@ -279,6 +257,16 @@ class GsheetsWriter {
     }
 
     spreadsheetId
+  }
+
+  private static Sheets buildSheetsService(GoogleCredentials credentials) {
+    def creds = credentials ?: authenticate(SCOPES)
+    new Sheets.Builder(
+        GoogleNetHttpTransport.newTrustedTransport(),
+        GsonFactory.getDefaultInstance(),
+        new HttpCredentialsAdapter(creds))
+        .setApplicationName(APP_NAME)
+        .build()
   }
 
 }

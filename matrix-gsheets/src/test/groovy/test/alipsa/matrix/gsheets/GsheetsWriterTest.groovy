@@ -41,4 +41,44 @@ class GsheetsWriterTest {
     }, 'Should throw on matrix with no rows')
   }
 
+  @Test
+  void testUpdateNullSpreadsheetIdThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update(null, 'Sheet1!A1', Matrix.builder().data(id: [1]).build())
+    }, 'Should throw on null spreadsheetId')
+  }
+
+  @Test
+  void testUpdateNullRangeThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', null, Matrix.builder().data(id: [1]).build())
+    }, 'Should throw on null range')
+  }
+
+  @Test
+  void testUpdateNullMatrixThrows() {
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', null)
+    }, 'Should throw on null matrix')
+  }
+
+  @Test
+  void testUpdateEmptyMatrixThrows() {
+    Matrix emptyColumns = Matrix.builder().build()
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', emptyColumns)
+    }, 'Should throw on matrix with no columns')
+  }
+
+  @Test
+  void testUpdateMatrixWithNoRowsThrows() {
+    Matrix noRows = Matrix.builder()
+        .data(id: [], name: [])
+        .build()
+
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.update('some-id', 'Sheet1!A1', noRows)
+    }, 'Should throw on matrix with no rows')
+  }
+
 }
