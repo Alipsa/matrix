@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw
 
-
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
@@ -43,25 +42,30 @@ class TableUtil {
    * @param column the column to analyze
    * @return a frequency table sorted by descending frequency
    */
+  private static final String COL_VALUE = 'Value'
+  private static final String COL_FREQUENCY = 'Frequency'
+  private static final String COL_PERCENT = 'Percent'
+
   static Table frequency(Column<?> column) {
-    Map<Object, AtomicInteger> freq = new HashMap<>()
-    column.forEach(v -> {
-      freq.computeIfAbsent(v, k -> new AtomicInteger(0)).incrementAndGet()
-    })
+    Map<Object, AtomicInteger> freq = [:]
+    column.forEach { v ->
+      def counter = freq.computeIfAbsent(v) { k -> new AtomicInteger() }
+      counter.incrementAndGet()
+    }
     int size = column.size()
     def table = Table.create(column.name())
-    def valueCol = ColumnType.STRING.create("Value")
-    def freqCol = ColumnType.INTEGER.create("Frequency")
-    def percentCol = ColumnType.DOUBLE.create("Percent")
+    def valueCol = ColumnType.STRING.create(COL_VALUE)
+    def freqCol = ColumnType.INTEGER.create(COL_FREQUENCY)
+    def percentCol = ColumnType.DOUBLE.create(COL_PERCENT)
     table.addColumns(valueCol, freqCol, percentCol)
     for (Map.Entry<Object, AtomicInteger> entry : freq.entrySet()) {
       Row row = table.appendRow()
-      row.setString("Value", String.valueOf(entry.getKey()))
+      row.setString(COL_VALUE, String.valueOf(entry.getKey()))
       int numOccurrence = entry.getValue().intValue()
-      row.setInt("Frequency", numOccurrence)
-      row.setDouble("Percent", round(numOccurrence * 100.0 / size, 2))
+      row.setInt(COL_FREQUENCY, numOccurrence)
+      row.setDouble(COL_PERCENT, round(numOccurrence * 100.0 / size, 2))
     }
-    return table.sortDescendingOn("Frequency")
+    return table.sortDescendingOn(COL_FREQUENCY)
   }
 
   /**
@@ -86,8 +90,14 @@ class TableUtil {
    * @return the rounded value
    * @throws IllegalArgumentException if numDecimals is negative
    */
+  private static String numDecimalsError(int numDecimals) {
+    'numDecimals cannot be a negative number: was ' + numDecimals
+  }
+
   static double round(double value, int numDecimals) {
-    if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
+    if (numDecimals < 0) {
+      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+    }
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
@@ -105,7 +115,9 @@ class TableUtil {
    * @throws IllegalArgumentException if numDecimals is negative
    */
   static float round(float value, int numDecimals) {
-    if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
+    if (numDecimals < 0) {
+      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+    }
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
@@ -122,7 +134,7 @@ class TableUtil {
    * @return the rounded column (or original column if not numeric)
    */
   static Column<?> round(Column<?> column, int numDecimals) {
-    if (column instanceof NumberColumn) {
+    if (column in NumberColumn) {
       return round(column as NumberColumn, numDecimals)
     }
     return column
@@ -145,20 +157,22 @@ class TableUtil {
    * @throws IllegalArgumentException if numDecimals is negative
    */
   static NumberColumn round(NumberColumn column, int numDecimals) {
-    if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
+    if (numDecimals < 0) {
+      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+    }
 
-    if (column instanceof BigDecimalColumn) {
+    if (column in BigDecimalColumn) {
       column.setScale(numDecimals)
     }
 
-    if (column instanceof DoubleColumn) {
+    if (column in DoubleColumn) {
       for (int i = 0; i < column.size(); i++) {
         double val = column.getDouble(i)
         column.set(i, round(val, numDecimals))
       }
     }
 
-    if (column instanceof FloatColumn) {
+    if (column in FloatColumn) {
       for (int i = 0; i < column.size(); i++) {
         float val = column.getFloat(i)
         column.set(i, round(val, numDecimals))
@@ -177,16 +191,12 @@ class TableUtil {
    * @return a list of rows, where each row is a list of column values
    */
   static List<List<Object>> toRowList(Table table) {
-    List<List<Object>> rowList = new ArrayList<>(table.rowCount())
+    List<List<Object>> rowList = []
     int ncol = table.columnCount()
     for (Row row : table) {
-      List<Object> r = new ArrayList<>()
-      for (int i = 0; i < ncol; i++) {
-        r.add(row.getObject(i))
-      }
-      rowList.add(r)
+      rowList.add((0..<ncol).collect { i -> row.getObject(i) })
     }
-    return rowList
+    rowList
   }
 
   /**
@@ -194,14 +204,14 @@ class TableUtil {
    *
    * <p>Preserves the table name, column names, and all data. Column types are mapped
    * to their corresponding Java classes where supported; unknown or custom Tablesaw
-   * column types are represented as {@code Object.class} in the resulting Matrix.
+   * column types are represented as {@code Object} in the resulting Matrix.
    *
    * @param table the Tablesaw table to convert
    * @return a Matrix with the same data and structure
    */
   static Matrix fromTablesaw(Table table) {
     List<List<?>> rows = toRowList(table)
-    List<Class<?>> columnTypes = new ArrayList<>()
+    List<Class<?>> columnTypes = []
     for (ColumnType type : table.types()) {
       columnTypes.add(classForColumnType(type))
     }
@@ -257,7 +267,7 @@ class TableUtil {
    * @return a Tablesaw Table with the same data and structure
    */
   static Table toTablesaw(Matrix matrix, boolean skipUnsupported) {
-    List<Column<?>> columns = new ArrayList<>()
+    List<Column<?>> columns = []
     for (int i = 0; i < matrix.columnCount(); i++) {
       ColumnType type = columnTypeForClass(matrix.type(i))
       if (type == ColumnType.SKIP) {
@@ -300,7 +310,7 @@ class TableUtil {
    * @param <T> the type parameter
    * @return a column of the specified type, or null if type is not supported
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings('unchecked')
   static <T> Column<T> createColumn(T type, String name, List<?> values) {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
@@ -388,7 +398,6 @@ class TableUtil {
     }
 
     return null
-
   }
 
   /**
@@ -400,33 +409,32 @@ class TableUtil {
    * @return the corresponding ColumnType, or {@link ColumnType#SKIP} if not recognized
    */
   static ColumnType columnTypeForClass(Class<?> columnType) {
-    if (columnType == String.class) {
+    if (columnType == String) {
       return ColumnType.STRING
-    } else if (columnType == Boolean.class) {
+    } else if (columnType == Boolean) {
       return ColumnType.BOOLEAN
-    } else if (columnType == LocalDate.class) {
+    } else if (columnType == LocalDate) {
       return ColumnType.LOCAL_DATE
-    } else if (columnType == LocalDateTime.class) {
+    } else if (columnType == LocalDateTime) {
       return ColumnType.LOCAL_DATE_TIME
-    } else if (columnType == Instant.class) {
+    } else if (columnType == Instant) {
       return ColumnType.INSTANT
-    } else if (columnType == LocalTime.class) {
+    } else if (columnType == LocalTime) {
       return ColumnType.LOCAL_TIME
-    } else if (columnType == BigDecimal.class) {
+    } else if (columnType == BigDecimal) {
       return BigDecimalColumnType.instance()
-    } else if (columnType == Double.class) {
+    } else if (columnType == Double) {
       return ColumnType.DOUBLE
-    } else if (columnType == Float.class) {
+    } else if (columnType == Float) {
       return ColumnType.FLOAT
-    } else if (columnType == Integer.class) {
+    } else if (columnType == Integer) {
       return ColumnType.INTEGER
-    } else if (columnType == Long.class) {
+    } else if (columnType == Long) {
       return ColumnType.LONG
-    } else if (columnType == Short.class) {
+    } else if (columnType == Short) {
       return ColumnType.SHORT
-    } else {
-      return ColumnType.SKIP
     }
+    return ColumnType.SKIP
   }
 
   /**
@@ -462,9 +470,9 @@ class TableUtil {
       return Long
     } else if (type == ColumnType.SHORT) {
       return Short
-    } else {
-      // it is some custom column type made outside the "official" tablesaw api
-      return Object.class
     }
+    // it is some custom column type made outside the "official" tablesaw api
+    return Object
   }
+
 }

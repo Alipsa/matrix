@@ -23,15 +23,15 @@ class GtableTest {
   void testProgrammaticCreation() {
     def empData = [
         emp_id: 1..5,
-        emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-        salary: [623.3,515.2,611.0,729.0,843.25],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
         ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
-    assertEquals(5, table.rowCount(), "number of rows")
-    assertEquals(4, table.columnCount(), "number of columns")
-    assertEquals("Gary", table[4, 1])
-    assertEquals("Gary", table[4, "emp_name"])
+    assertEquals(5, table.rowCount(), 'number of rows')
+    assertEquals(4, table.columnCount(), 'number of columns')
+    assertEquals('Gary', table[4, 1])
+    assertEquals('Gary', table[4, 'emp_name'])
   }
 
   @Test
@@ -68,34 +68,34 @@ class GtableTest {
         name: ['Alice', 'Bob'],
         age: [25, 30, 35]
     ]
-    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException, { ->
+    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException) { ->
       Gtable.create(data)
-    })
+    }
     assertTrue(ex.message.contains('age'))
     assertTrue(ex.message.contains('3 rows'))
   }
 
   @Test
   void testCreateFromCsv() {
-    def csv = getClass().getResource("/glaciers.csv")
+    def csv = getClass().getResource('/glaciers.csv')
     CsvReadOptions.Builder builder = CsvReadOptions.builder(csv)
         .separator(',' as Character)
         .columnTypes([INTEGER, BigDecimalColumnType.instance(), INTEGER] as ColumnType[])
 
     Gtable glaciers = Gtable.read().usingOptions(builder.build())
 
-    assertEquals(1946, glaciers[1,0])
-    assertEquals(-3.19, glaciers[2,1])
-    assertEquals(1, glaciers[3,2])
+    assertEquals(1946, glaciers[1, 0])
+    assertEquals(-3.19, glaciers[2, 1])
+    assertEquals(1, glaciers[3, 2])
   }
 
   @Test
   void testExportToCsv() {
     def empData = [
         emp_id: 1..5,
-        emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-        salary: [623.3,515.2,611.0,729.0,843.25],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
 
@@ -112,26 +112,26 @@ class GtableTest {
   void testJoinAndConcat() {
     def empData = [
         emp_id: 1..5,
-        emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-        salary: [623.3,515.2,611.0,729.0,843.25],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
 
     Gtable table2 = Gtable.create([
-        employee_id: [1,2,3,4,null],
+        employee_id: [1, 2, 3, 4, null],
         performance: [0.76, 0.79, 0.68, 1.10, 0.91]
     ], [INTEGER, DOUBLE])
 
     // does not mutate the table
-    Gtable joined = table.joinOn("emp_id").inner(table2, 'employee_id')
-    //println joined
+    Gtable joined = table.joinOn('emp_id').inner(table2, 'employee_id')
+    // println joined
     assertEquals(4, joined.rowCount(), 'joined rowcount, inner join should have removed a row')
     assertEquals(5, joined.columnCount(), 'joined columnCount')
 
     // mutates the table!
     table.concat(table2)
-    //println(table)
+    // println(table)
     assertEquals(5, table.rowCount(), 'concat rowcount')
     assertEquals(6, table.columnCount(), 'concat columnCount')
   }
@@ -140,27 +140,27 @@ class GtableTest {
   void testShortHandPut() {
     def empData = [
         emp_id: 1..5,
-        emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-        salary: [623.3,515.2,611.0,729.0,843.25],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
-    assertEquals(5, table.rowCount(), "number of rows")
-    assertEquals(4, table.columnCount(), "number of columns")
-    table[4, 1] = "Sven"
-    assertEquals("Sven", table[4, 1])
-    table[4, "salary"] = 123.10
-    assertEquals(123.10, table[4, "salary"] as BigDecimal, 1e-9)
+    assertEquals(5, table.rowCount(), 'number of rows')
+    assertEquals(4, table.columnCount(), 'number of columns')
+    table[4, 1] = 'Sven'
+    assertEquals('Sven', table[4, 1])
+    table[4, 'salary'] = 123.10
+    assertEquals(123.10, table[4, 'salary'] as BigDecimal, 1e-9)
   }
 
   @Test
   void testTutorialExample() {
     // Create a Matrix with sample data
     def matrix = Matrix.builder().data(
-        name: ["Alice", "Bob", "Charlie", "David", "Eve"],
+        name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
         age: [25, 30, 35, 40, 45],
         salary: [50000, 60000, 70000, 80000, 90000],
-        department: ["HR", "IT", "Finance", "IT", "HR"]
+        department: ['HR', 'IT', 'Finance', 'IT', 'HR']
     ).types(String, Integer, BigDecimal, String)
         .build()
 
@@ -168,66 +168,70 @@ class GtableTest {
     def gTable = TableUtil.fromMatrix(matrix)
 
     // Calculate average salary by department
-    def deptSalary = gTable.summarize("salary", BigDecimalAggregateFunctions.mean)
-        .by("department")
+    def deptSalary = gTable.summarize('salary', BigDecimalAggregateFunctions.mean)
+        .by('department')
 
-    println "Average salary by department:"
+    println 'Average salary by department:'
     println deptSalary
 
     // Create a frequency table for the department column
-    def deptFreq = TableUtil.frequency(gTable, "department")
+    def deptFreq = TableUtil.frequency(gTable, 'department')
 
-    println "\nDepartment frequency:"
+    println ''
+    println 'Department frequency:'
     println deptFreq
 
     // Normalize the salary column
-    var salaryCol = gTable.column("salary") as BigDecimalColumn
+    var salaryCol = gTable.column('salary') as BigDecimalColumn
     def normalizedSalary = Normalizer.minMaxNorm(salaryCol)
 
     // Replace the original column with the normalized one
-    gTable.replaceColumn("salary", normalizedSalary)
+    gTable.replaceColumn('salary', normalizedSalary)
 
-    println "\nData with normalized salaries:"
+    println ''
+    println 'Data with normalized salaries:'
     println gTable
 
     // Convert back to Matrix for further analysis
     def newMatrix = TableUtil.toMatrix(gTable)
 
-    println "\nConverted back to Matrix:"
+    println ''
+    println 'Converted back to Matrix:'
     println newMatrix.content()
   }
 
   @Test
   void testTableLevelNormalization() {
     def matrix = Matrix.builder().data(
-        name: ["Alice", "Bob", "Charlie", "David", "Eve"],
+        name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
         salary: [50000, 60000, 70000, 80000, 90000]
     ).types(String, BigDecimal).build()
 
     def gTable = TableUtil.fromMatrix(matrix)
 
     // Replace source column (non-destructive: returns new table)
-    def normalized = gTable.normalizeMinMax("salary", null, 8)
-    assertEquals(new BigDecimal("0.00000000"), normalized.getAt(0, "salary"))
-    assertEquals(new BigDecimal("1.00000000"), normalized.getAt(4, "salary"))
+    def normalized = gTable.normalizeMinMax('salary', null, 8)
+    assertEquals(0.00000000, normalized.getAt(0, 'salary'))
+    assertEquals(1.00000000, normalized.getAt(4, 'salary'))
 
     // Original gTable should be unchanged (non-destructive)
-    assertEquals(new BigDecimal("50000"), gTable.getAt(0, "salary"))
+    assertEquals(50000, gTable.getAt(0, 'salary'))
 
     // Add as new column
-    def withNewCol = gTable.normalizeMinMax("salary", "salary_norm", 8)
-    assertTrue(withNewCol.columnNames().contains("salary_norm"))
-    assertTrue(withNewCol.columnNames().contains("salary"))
-    assertEquals(new BigDecimal("0.00000000"), withNewCol.getAt(0, "salary_norm"))
+    def withNewCol = gTable.normalizeMinMax('salary', 'salary_norm', 8)
+    assertTrue(withNewCol.columnNames().contains('salary_norm'))
+    assertTrue(withNewCol.columnNames().contains('salary'))
+    assertEquals(0.00000000, withNewCol.getAt(0, 'salary_norm'))
   }
 
   @Test
   void testTableLevelNormalizationUnsupportedType() {
     def table = Gtable.create([name: ['Alice', 'Bob']])
-    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException, { ->
-      table.normalizeMinMax("name")
-    })
-    assertTrue(ex.message.contains("name"))
-    assertTrue(ex.message.contains("STRING"))
+    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException) { ->
+      table.normalizeMinMax('name')
+    }
+    assertTrue(ex.message.contains('name'))
+    assertTrue(ex.message.contains('STRING'))
   }
+
 }

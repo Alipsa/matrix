@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw
 
-
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn
@@ -11,6 +10,8 @@ import se.alipsa.matrix.stats.Normalize
  * This class provides various ways to normalize a Tablesaw column.
  */
 class Normalizer {
+
+  private static final String NORM_PREFIX = 'norm_'
 
   /**
    * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
@@ -25,7 +26,7 @@ class Normalizer {
     for (Double x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals);
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals)
   }
 
   /**
@@ -41,7 +42,7 @@ class Normalizer {
     for (Float x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[]);
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -57,7 +58,7 @@ class Normalizer {
     for (BigDecimal x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[]);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
 
   /**
@@ -75,7 +76,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[]);
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -93,7 +94,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[]);
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -111,7 +112,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[]);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
 
  /**
@@ -130,7 +131,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[])
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -149,7 +150,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[])
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -168,7 +169,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals)
   }
 
   /**
@@ -188,7 +189,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[])
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -208,7 +209,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[])
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -228,6 +229,7 @@ class Normalizer {
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[])
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
+
 }

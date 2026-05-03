@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw.gtable
 
-
 import tech.tablesaw.api.Table
 import tech.tablesaw.joining.DataFrameJoiner
 
@@ -32,6 +31,7 @@ import tech.tablesaw.joining.DataFrameJoiner
  * @see Gtable
  */
 class GdataFrameJoiner extends DataFrameJoiner {
+
   /**
    * Constructs a joiner for the specified table and join columns.
    *
@@ -325,4 +325,5 @@ class GdataFrameJoiner extends DataFrameJoiner {
   Gtable rightOuter(Table table2, boolean allowDuplicateColumnNames, boolean keepAllJoinKeyColumns, String... col2Names) {
     return Gtable.create(super.rightOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
   }
+
 }
