@@ -393,8 +393,7 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeMinMax(String columnName, String outputColumnName = null, int... decimals) {
-    def col = column(columnName)
-    def normalized = normalizeColumn(col, decimals) { c, d ->
+    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
       switch (c) {
         case DoubleColumn -> Normalizer.minMaxNorm((DoubleColumn) c, d)
         case FloatColumn -> Normalizer.minMaxNorm((FloatColumn) c, d)
@@ -403,15 +402,7 @@ class Gtable extends Table {
             "Column '$columnName' has type ${c.type()} which does not support min-max normalization")
       }
     }
-    def result = copy()
-    if (outputColumnName != null) {
-      normalized.setName(outputColumnName)
-      result.addColumns(normalized)
-    } else {
-      normalized.setName(columnName)
-      result.replaceColumn(columnName, normalized)
-    }
-    return result
+    applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
 
   /**
@@ -424,8 +415,7 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeMean(String columnName, String outputColumnName = null, int... decimals) {
-    def col = column(columnName)
-    def normalized = normalizeColumn(col, decimals) { c, d ->
+    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
       switch (c) {
         case DoubleColumn -> Normalizer.meanNorm((DoubleColumn) c, d)
         case FloatColumn -> Normalizer.meanNorm((FloatColumn) c, d)
@@ -434,15 +424,7 @@ class Gtable extends Table {
             "Column '$columnName' has type ${c.type()} which does not support mean normalization")
       }
     }
-    def result = copy()
-    if (outputColumnName != null) {
-      normalized.setName(outputColumnName)
-      result.addColumns(normalized)
-    } else {
-      normalized.setName(columnName)
-      result.replaceColumn(columnName, normalized)
-    }
-    return result
+    applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
 
   /**
@@ -455,8 +437,7 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeStdScale(String columnName, String outputColumnName = null, int... decimals) {
-    def col = column(columnName)
-    def normalized = normalizeColumn(col, decimals) { c, d ->
+    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
       switch (c) {
         case DoubleColumn -> Normalizer.stdScaleNorm((DoubleColumn) c, d)
         case FloatColumn -> Normalizer.stdScaleNorm((FloatColumn) c, d)
@@ -465,15 +446,7 @@ class Gtable extends Table {
             "Column '$columnName' has type ${c.type()} which does not support standard-scale normalization")
       }
     }
-    def result = copy()
-    if (outputColumnName != null) {
-      normalized.setName(outputColumnName)
-      result.addColumns(normalized)
-    } else {
-      normalized.setName(columnName)
-      result.replaceColumn(columnName, normalized)
-    }
-    return result
+    applyNormalizedColumn(normalized, columnName, outputColumnName)
   }
 
   /**
@@ -486,8 +459,7 @@ class Gtable extends Table {
    * @throws IllegalArgumentException if the column is not a supported numeric type
    */
   Gtable normalizeLog(String columnName, String outputColumnName = null, int... decimals) {
-    def col = column(columnName)
-    def normalized = normalizeColumn(col, decimals) { c, d ->
+    def normalized = normalizeColumn(column(columnName), decimals) { c, d ->
       switch (c) {
         case DoubleColumn -> Normalizer.logNorm((DoubleColumn) c, d)
         case FloatColumn -> Normalizer.logNorm((FloatColumn) c, d)
@@ -496,6 +468,10 @@ class Gtable extends Table {
             "Column '$columnName' has type ${c.type()} which does not support log normalization")
       }
     }
+    applyNormalizedColumn(normalized, columnName, outputColumnName)
+  }
+
+  private Gtable applyNormalizedColumn(Column<?> normalized, String columnName, String outputColumnName) {
     def result = copy()
     if (outputColumnName != null) {
       normalized.setName(outputColumnName)
@@ -504,7 +480,7 @@ class Gtable extends Table {
       normalized.setName(columnName)
       result.replaceColumn(columnName, normalized)
     }
-    return result
+    result
   }
 
   private static Column<?> normalizeColumn(Column<?> col, int[] decimals, Closure<Column<?>> normalizer) {
