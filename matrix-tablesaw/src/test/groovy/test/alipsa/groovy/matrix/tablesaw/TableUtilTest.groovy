@@ -196,4 +196,21 @@ class TableUtilTest {
     assertEquals(10, table.get(0, 0))
   }
 
+  @Test
+  void testRoundDouble() {
+    assertEquals(3.14d, TableUtil.round(3.14159d, 2), 1e-9)
+    assertEquals(3.15d, TableUtil.round(3.145d, 2), 1e-9)
+  }
+
+  @Test
+  void testRoundFloat() {
+    assertEquals(3.14f, TableUtil.round(3.14159f, 2), 1e-6f)
+  }
+
+  @Test
+  void testRoundRejectsNegativeDecimals() {
+    assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0d, -1) }
+    assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0f, -1) }
+  }
+
 }

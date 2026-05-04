@@ -17,7 +17,7 @@ public class BigDecimalColumnType extends AbstractColumnType {
   /** Default parser used for BigDecimal values. */
   public static final BigDecimalParser DEFAULT_PARSER = new BigDecimalParser(BigDecimalColumnType.instance());
 
-  private static BigDecimalColumnType INSTANCE = new BigDecimalColumnType(BYTE_SIZE, "BIGDECIMAL", "BigDecimal");
+  private static final BigDecimalColumnType INSTANCE = new BigDecimalColumnType(BYTE_SIZE, "BIGDECIMAL", "BigDecimal");
 
   /**
    * Returns the singleton instance for this type.
@@ -25,9 +25,6 @@ public class BigDecimalColumnType extends AbstractColumnType {
    * @return the singleton {@code BigDecimalColumnType}
    */
   public static BigDecimalColumnType instance() {
-    if (INSTANCE == null) {
-      INSTANCE = new BigDecimalColumnType(BYTE_SIZE, "BIGDECIMAL", "BigDecimal");
-    }
     return INSTANCE;
   }
 

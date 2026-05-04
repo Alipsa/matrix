@@ -234,4 +234,33 @@ class GtableTest {
     assertTrue(ex.message.contains('STRING'))
   }
 
+  @Test
+  void testTableLevelMeanNorm() {
+    def gTable = Gtable.create([value: [10.0, 20.0, 30.0, 40.0]])
+    def normalized = gTable.normalizeMean('value', null, 7)
+    assertEquals(-0.5000000, normalized.getAt(0, 'value') as BigDecimal, 1e-7)
+  }
+
+  @Test
+  void testTableLevelStdScaleNorm() {
+    def gTable = Gtable.create([value: [10.0, 20.0, 30.0, 40.0]])
+    def normalized = gTable.normalizeStdScale('value', null, 7)
+    assertEquals(-1.1618950, normalized.getAt(0, 'value') as BigDecimal, 1e-7)
+  }
+
+  @Test
+  void testTableLevelLogNorm() {
+    def gTable = Gtable.create([value: [1.0, 2.0, 3.0, 4.0]])
+    def normalized = gTable.normalizeLog('value', null, 7)
+    assertEquals(0.0000000, normalized.getAt(0, 'value') as BigDecimal, 1e-7)
+  }
+
+  @Test
+  void testTableLevelNormalizationUnsupportedTypeForMean() {
+    def table = Gtable.create([name: ['Alice', 'Bob']])
+    def ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException) { -> table.normalizeMean('name') }
+    assertTrue(ex.message.contains('name'))
+    assertTrue(ex.message.contains('STRING'))
+  }
+
 }

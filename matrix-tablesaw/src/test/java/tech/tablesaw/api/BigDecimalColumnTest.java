@@ -659,6 +659,23 @@ public class BigDecimalColumnTest {
     return arr;
   }
 
+  @Test
+  public void testSetScale() {
+    var col = BigDecimalColumn.create("test",
+        new BigDecimal[]{new BigDecimal("1.23456"), new BigDecimal("9.87654")});
+    col.setScale(2);
+    assertEquals(new BigDecimal("1.23"), col.get(0));
+    assertEquals(new BigDecimal("9.88"), col.get(1));
+  }
+
+  @Test
+  public void testSetScaleWithRoundingMode() {
+    var col = BigDecimalColumn.create("test",
+        new BigDecimal[]{new BigDecimal("1.235")});
+    col.setScale(2, RoundingMode.UP);
+    assertEquals(new BigDecimal("1.24"), col.get(0));
+  }
+
   private BigDecimal[] bdArr(int numDecimals, String... numbers) {
     BigDecimal[] arr = new BigDecimal[numbers.length];
     for (int i = 0; i < numbers.length; i++) {

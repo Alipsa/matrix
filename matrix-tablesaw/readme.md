@@ -14,7 +14,7 @@ bring those in explicitly. The easiest way to get aligned versions is via the
 Matrix BOM:
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:3.7.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
@@ -22,7 +22,7 @@ implementation 'se.alipsa.matrix:matrix-tablesaw'
 Or use `matrix-all` if you want every Matrix module:
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-all:3.7.0'
+implementation 'se.alipsa.matrix:matrix-all:2.5.0'
 ```
 
 ## Quick examples

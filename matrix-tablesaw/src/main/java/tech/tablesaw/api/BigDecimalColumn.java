@@ -1077,6 +1077,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @return a new column containing the sum of this and the given column
    * @throws IllegalArgumentException if the columns have different sizes
    */
+  private void assertSameSize(BigDecimalColumn column) {
+    checkArgument(size() == column.size(),
+        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        name(), size(), column.name(), column.size());
+  }
+
   public BigDecimalColumn add(BigDecimalColumn column) {
     return plus(column);
   }
@@ -1092,9 +1098,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn plus(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     BigDecimalColumn result = emptyCopy();
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
@@ -1116,9 +1120,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn addTo(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
       var addVal = column.getBigDecimal(i);
@@ -1141,9 +1143,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn subtract(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     BigDecimalColumn result = emptyCopy();
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
@@ -1165,9 +1165,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn subtractBy(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
       var subVal = column.getBigDecimal(i);
@@ -1190,9 +1188,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn multiply(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     BigDecimalColumn result = emptyCopy();
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
@@ -1214,9 +1210,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn multiplyBy(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
       var mulVal = column.getBigDecimal(i);
@@ -1240,9 +1234,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn divide(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     BigDecimalColumn result = emptyCopy();
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
@@ -1266,9 +1258,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn divideBy(BigDecimalColumn column) {
-    checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
-        name(), size(), column.name(), column.size());
+    assertSameSize(column);
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
       var divVal = column.getBigDecimal(i);

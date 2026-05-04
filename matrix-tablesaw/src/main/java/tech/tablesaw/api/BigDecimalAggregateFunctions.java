@@ -57,7 +57,11 @@ public class BigDecimalAggregateFunctions {
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
           List<Double> nums = toDoubleList(column);
-          return Stat.variance(nums).sqrt(MathContext.DECIMAL64).divide(Stat.mean(nums), MathContext.DECIMAL64);
+          BigDecimal mean = Stat.mean(nums);
+          if (mean.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalArgumentException("Cannot compute CV: mean is zero");
+          }
+          return Stat.variance(nums).sqrt(MathContext.DECIMAL64).divide(mean, MathContext.DECIMAL64);
         }
       };
 

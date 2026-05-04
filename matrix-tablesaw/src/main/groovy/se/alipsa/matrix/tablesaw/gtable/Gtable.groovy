@@ -18,7 +18,7 @@ import java.util.stream.Collectors
 import java.util.stream.Stream
 
 /**
- * This is an extansion of a Tablesaw Table adding some "grooviness" to Table e.g.
+ * This is an extension of a Tablesaw Table adding some "grooviness" to Table e.g.
  * <ol>
  *   <li>Add a Map creation method to simplify programmatic creation of a Gtable</li>
  *   <li>add getAt method allowing the shorthand syntax table[0,1] and table[0, 'columnName'] to retrieve data.</li>
@@ -175,7 +175,7 @@ class Gtable extends Table {
   }
 
   /**
-   * Returns a new tgable with the given columns and given name
+   * Returns a new Gtable with the given columns and given name
    *
    * @param name the name for this table
    * @param columns one or more columns, all of the same @code{column.size()}
@@ -184,62 +184,149 @@ class Gtable extends Table {
     new Gtable(name, columns.collect(Collectors.toList()))
   }
 
+  /**
+   * Adds a new {@link StringColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addStringColumn(String name, List data) {
     addColumns(StringColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Adds a new {@link DoubleColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addDoubleColumn(String name, List data) {
     addColumns(DoubleColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Adds a new {@link BigDecimalColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addBigDecimalColumn(String name, List data) {
     addColumns(BigDecimalColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Adds a new {@link FloatColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addFloatColumn(String name, List data) {
     addColumns(FloatColumn.create(name, data as Float[])) as Gtable
   }
 
+  /**
+   * Adds a new {@link IntColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addIntColumn(String name, List data) {
     addColumns(IntColumn.create(name, data as Integer[])) as Gtable
   }
 
+  /**
+   * Adds a new {@link LongColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addLongColumn(String name, List data) {
     addColumns(LongColumn.create(name, data as long[])) as Gtable
   }
 
+  /**
+   * Adds a new {@link ShortColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addShortColumn(String name, List data) {
     addColumns(ShortColumn.create(name, data as short[])) as Gtable
   }
 
+  /**
+   * Adds a new {@link BooleanColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addBooleanColumn(String name, List data) {
     addColumns(BooleanColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Adds a new {@link DateColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addDateColumn(String name, List data) {
     addColumns(DateColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Adds a new {@link DateTimeColumn} with the given name and data.
+   * @param name the name
+   * @param data the data
+   * @return a new Gtable
+   */
   Gtable addDateTimeColumn(String name, List data) {
     addColumns(DateTimeColumn.create(name, data)) as Gtable
   }
 
+  /**
+   * Retrieves the value or column at the specified position.
+   * @param row the row
+   * @param column the column
+   * @return the value
+   */
   Object getAt(int row, int column) {
     get(row, column)
   }
 
+  /**
+   * Retrieves the value or column at the specified position.
+   * @param row the row
+   * @param columnName the columnName
+   * @return the value
+   */
   Object getAt(int row, String columnName) {
     column(columnName).get(row)
   }
 
+  /**
+   * Retrieves the value or column at the specified position.
+   * @param columnIndex the columnIndex
+   * @return the column
+   */
   Column<?> getAt(int columnIndex) {
     column(columnIndex)
   }
 
+  /**
+   * Retrieves the value or column at the specified position.
+   * @param name the name
+   * @return the column
+   */
   Column<?> getAt(String name) {
     column(name)
   }
 
+  /**
+   * Sets the value at the specified row and column.
+   * @param args the args
+   * @param value the value
+   */
   void putAt(List args, Object value) {
     def rowIndex = args[0] as Integer
     def col = args[1]
@@ -252,132 +339,293 @@ class Gtable extends Table {
     putAt(rowIndex, colIndex, value)
   }
 
+  /**
+   * Sets the value at the specified row and column.
+   * @param rowIndex the rowIndex
+   * @param columnIndex the columnIndex
+   * @param value the value
+   */
   @SuppressWarnings('unchecked')
   void putAt(int rowIndex, int columnIndex, Object value) {
     def v = value.asType(asJavaClass(columnIndex))
     ((Column) column(columnIndex)).set(rowIndex, v)
   }
 
+  /**
+   * Returns a {@link GdataFrameReader} for reading data into a Gtable.
+   * @return a {@link GdataFrameReader}
+   */
   static GdataFrameReader read() {
     new GdataFrameReader(defaultReaderRegistry)
   }
 
+  /**
+   * Returns a new table with duplicate rows removed.
+   * @return a new Gtable
+   */
   Gtable dropDuplicateRows() {
     create(super.dropDuplicateRows())
   }
 
+  /**
+   * Returns a new table with rows containing missing values removed.
+   * @return a new Gtable
+   */
   Gtable dropRowsWithMissingValues() {
     create(super.dropRowsWithMissingValues())
   }
 
+  /**
+   * Returns a new table containing only the specified columns.
+   * @param columns the columns
+   * @return a new Gtable
+   */
   Gtable selectColumns(Column<?>... columns) {
     create(super.selectColumns(columns))
   }
 
+  /**
+   * Returns a new table containing only the specified columns.
+   * @param columnNames the columnNames
+   * @return a new Gtable
+   */
   Gtable selectColumns(String... columnNames) {
     create(super.selectColumns(columnNames))
   }
 
+  /**
+   * Returns a new table with the specified columns removed.
+   * @param columnIndexes the columnIndexes
+   * @return a new Gtable
+   */
   Gtable rejectColumns(int... columnIndexes) {
     create(super.rejectColumns(columnIndexes))
   }
 
+  /**
+   * Returns a new table with the specified columns removed.
+   * @param columnNames the columnNames
+   * @return a new Gtable
+   */
   Gtable rejectColumns(String... columnNames) {
     create(super.rejectColumns(columnNames))
   }
 
+  /**
+   * Returns a new table with the specified columns removed.
+   * @param columns the columns
+   * @return a new Gtable
+   */
   Gtable rejectColumns(Column<?>... columns) {
     create(super.rejectColumns(columns))
   }
 
+  /**
+   * Returns a new table containing only the specified columns.
+   * @param columnIndexes the columnIndexes
+   * @return a new Gtable
+   */
   Gtable selectColumns(int... columnIndexes) {
     create(super.selectColumns(columnIndexes))
   }
 
+  /**
+   * Returns a new table with the specified columns removed.
+   * @param columns the columns
+   * @return a new Gtable
+   */
   Gtable removeColumns(Column<?>... columns) {
     create(super.removeColumns(columns))
   }
 
+  /**
+   * Returns a new table with columns containing missing values removed.
+   * @return a new Gtable
+   */
   Gtable removeColumnsWithMissingValues() {
     create(super.removeColumnsWithMissingValues())
   }
 
+  /**
+   * Returns a new table retaining only the specified columns.
+   * @param columns the columns
+   * @return a new Gtable
+   */
   Gtable retainColumns(Column<?>... columns) {
     create(super.retainColumns(columns))
   }
 
+  /**
+   * Returns a new table retaining only the specified columns.
+   * @param columnIndexes the columnIndexes
+   * @return a new Gtable
+   */
   Gtable retainColumns(int... columnIndexes) {
     create(super.retainColumns(columnIndexes))
   }
 
+  /**
+   * Returns a new table retaining only the specified columns.
+   * @param columnNames the columnNames
+   * @return a new Gtable
+   */
   Gtable retainColumns(String... columnNames) {
     create(super.retainColumns(columnNames))
   }
 
+  /**
+   * Appends the given table or row to this table.
+   * @param tableToAppend the tableToAppend
+   * @return a new Gtable
+   */
   Gtable append(Relation tableToAppend) {
     super.append(tableToAppend) as Gtable
   }
 
+  /**
+   * Appends the given table or row to this table.
+   * @param row the row
+   * @return a new Gtable
+   */
   Gtable append(Row row) {
     super.append(row) as Gtable
   }
 
+  /**
+   * Concatenates the given table to this table.
+   * @param tableToConcatenate the tableToConcatenate
+   * @return a new Gtable
+   */
   Gtable concat(Table tableToConcatenate) {
     super.concat(tableToConcatenate) as Gtable
   }
 
+  /**
+   * Returns a cross-tabulation count table.
+   * @param column1Name the column1Name
+   * @param column2Name the column2Name
+   * @return a new Gtable
+   */
   Gtable xTabCounts(String column1Name, String column2Name) {
     create(super.xTabCounts(column1Name, column2Name))
   }
 
+  /**
+   * Returns a cross-tabulation row percentage table.
+   * @param column1Name the column1Name
+   * @param column2Name the column2Name
+   * @return a new Gtable
+   */
   Gtable xTabRowPercents(String column1Name, String column2Name) {
     create(super.xTabRowPercents(column1Name, column2Name))
   }
 
+  /**
+   * Returns a cross-tabulation column percentage table.
+   * @param column1Name the column1Name
+   * @param column2Name the column2Name
+   * @return a new Gtable
+   */
   Gtable xTabColumnPercents(String column1Name, String column2Name) {
     create(super.xTabColumnPercents(column1Name, column2Name))
   }
 
+  /**
+   * Returns a cross-tabulation table percentage table.
+   * @param column1Name the column1Name
+   * @param column2Name the column2Name
+   * @return a new Gtable
+   */
   Gtable xTabTablePercents(String column1Name, String column2Name) {
     create(super.xTabTablePercents(column1Name, column2Name))
   }
 
+  /**
+   * Returns a cross-tabulation percentage table.
+   * @param column1Name the column1Name
+   * @return a new Gtable
+   */
   Gtable xTabPercents(String column1Name) {
     create(super.xTabPercents(column1Name))
   }
 
+  /**
+   * Returns a cross-tabulation count table.
+   * @param column1Name the column1Name
+   * @return a new Gtable
+   */
   Gtable xTabCounts(String column1Name) {
     create(super.xTabCounts(column1Name))
   }
 
+  /**
+   * Returns a count table grouped by the specified columns.
+   * @param groupingColumns the groupingColumns
+   * @return a new Gtable
+   */
   Gtable countBy(CategoricalColumn<?>... groupingColumns) {
     create(super.countBy(groupingColumns))
   }
 
+  /**
+   * Returns a count table grouped by the specified columns.
+   * @param categoricalColumnNames the categoricalColumnNames
+   * @return a new Gtable
+   */
   Gtable countBy(String... categoricalColumnNames) {
     create(super.countBy(categoricalColumnNames))
   }
 
+  /**
+   * Returns a table with the count of missing values per column.
+   * @return a new Gtable
+   */
   Gtable missingValueCounts() {
     create(super.missingValueCounts())
   }
 
+  /**
+   * Returns the transpose of this table.
+   * @return a new Gtable
+   */
   Gtable transpose() {
     create(super.transpose())
   }
 
+  /**
+   * Returns the transpose of this table.
+   * @param includeColumnHeadingsAsFirstColumn the includeColumnHeadingsAsFirstColumn
+   * @param useFirstColumnForHeadings the useFirstColumnForHeadings
+   * @return a new Gtable
+   */
   Gtable transpose(boolean includeColumnHeadingsAsFirstColumn, boolean useFirstColumnForHeadings) {
     create(super.transpose(includeColumnHeadingsAsFirstColumn, useFirstColumnForHeadings))
   }
 
+  /**
+   * Returns a melted (unpivoted) version of this table.
+   * @param idVariables the idVariables
+   * @param measuredVariables the measuredVariables
+   * @param dropMissing the dropMissing
+   * @return a new Gtable
+   */
   Gtable melt(List<String> idVariables, List<NumericColumn<? extends Number>> measuredVariables, Boolean dropMissing) {
     create(super.melt(idVariables, measuredVariables, dropMissing))
   }
 
+  /**
+   * Returns a casted (pivoted) version of this table.
+   * @return a new Gtable
+   */
   Gtable cast() {
     create(super.cast())
   }
 
+  /**
+   * Converts this table to the specified type.
+   * @param clazz the clazz
+   * @return the value
+   */
   Object asType(Class clazz) {
     if (clazz == Matrix) {
       return TableUtil.fromTablesaw(this)
@@ -387,6 +635,11 @@ class Gtable extends Table {
     super.asType(clazz)
   }
 
+  /**
+   * Returns a {@link GdataFrameJoiner} for joining this table on the specified columns.
+   * @param columnNames the columnNames
+   * @return a {@link GdataFrameJoiner}
+   */
   GdataFrameJoiner joinOn(String... columnNames) {
     new GdataFrameJoiner(this, columnNames)
   }
@@ -503,10 +756,19 @@ class Gtable extends Table {
     result
   }
 
+  /**
+   * Returns a copy of this table.
+   * @return a new Gtable
+   */
   Gtable copy() {
     create(this)
   }
 
+  /**
+   * Returns the Java class for the column at the specified index.
+   * @param columnIndex the columnIndex
+   * @return the Java class
+   */
   Class asJavaClass(int columnIndex) {
     def columnType = column(columnIndex).type()
     if (columnType == ColumnType.BOOLEAN) {

@@ -94,7 +94,7 @@ public class XmlReader implements DataReader<XmlReadOptions> {
     } catch (IOException e) {
       throw new RuntimeIOException(e);
     } catch (DocumentException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeIOException(new IOException("Failed to parse XML", e));
     }
     Element root = document.getRootElement();
     boolean isFirstRow = true;
