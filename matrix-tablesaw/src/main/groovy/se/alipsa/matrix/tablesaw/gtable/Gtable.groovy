@@ -761,7 +761,7 @@ class Gtable extends Table {
    * @return a new Gtable
    */
   Gtable copy() {
-    create(this)
+    create(name(), columns()*.copy())
   }
 
   /**

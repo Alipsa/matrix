@@ -33,12 +33,29 @@
   - Null cells in ODS spreadsheets are now imported as missing values instead of the literal string `"null"`.
 - **Fix XLSX DateTime export**
   - `LOCAL_DATE_TIME` columns now preserve both date and time components when written to XLSX.
+- **Gtable.copy() now deep-copies columns**
+  - Previously `copy()` reused the original column objects, allowing mutations to leak back to the source table. It now creates independent column copies.
+- **XmlReader now throws RuntimeIOException on parse failures**
+  - `DocumentException` from dom4j was previously wrapped in a raw `RuntimeException`; it is now consistently wrapped in `RuntimeIOException`.
+- **BigDecimalAggregateFunctions.cv guards against zero mean**
+  - Dividing by a zero mean now throws a clear `IllegalArgumentException` instead of an opaque `ArithmeticException`.
 
 ### Documentation
 - Updated `readme.md` with current dependency guidance (use `matrix-bom` or `matrix-all`), quick examples for conversion, Gtable factories, BigDecimal arithmetic, and normalization.
+- Fixed incorrect BOM version references in `readme.md` (was `3.7.0`, corrected to `2.5.0`).
+- Fixed GroovyDoc typos (`extansion` → `extension`, `tgble` → `Gtable`) and added missing method documentation to public API surface in `Gtable.groovy`.
+
+### Code Quality
+- `BigDecimalColumnType.INSTANCE` is now `final`.
+- Extracted `assertSameSize(BigDecimalColumn)` to eliminate duplicated size-check logic across `BigDecimalColumn` arithmetic methods.
+
+### Build & Publishing
+- Corrected POM `url` and added a module-local `LICENSE` file (Apache License 2.0).
+- Updated license metadata in published POM from MIT to Apache 2.0 to align with Tablesaw licensing.
 
 ### Testing
-- All 102 tests passing.
+- All 111 tests passing.
+- `:matrix-tablesaw:check` (including JaCoCo coverage verification) passes.
 
 ## v0.2.2, 2026-01-31
 - Dependency updates:

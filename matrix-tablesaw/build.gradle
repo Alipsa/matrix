@@ -186,13 +186,13 @@ publishing {
             pom {
                 name = 'Matrix-Tablesaw integration'
                 description = "${project.description}"
-                url = "https://github.com/Alipsa/matrix/main/matrix-tablesaw"
+                url = "https://github.com/Alipsa/matrix/tree/main/matrix-tablesaw"
                 properties = [
                     'maven.compiler.release': "${javaCompile.options.release.get()}"
                 ]
                 licenses {
                     license {
-                        name = 'MIT License'
+                        name = 'Apache License, Version 2.0'
                         url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-tablesaw/LICENSE'
                     }
                 }

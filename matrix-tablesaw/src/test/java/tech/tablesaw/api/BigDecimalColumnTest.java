@@ -6,6 +6,7 @@ import static tech.tablesaw.columns.numbers.fillers.DoubleRangeIterable.range;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleListIterator;
 import org.junit.jupiter.api.Test;
+import tech.tablesaw.api.BigDecimalAggregateFunctions;
 import tech.tablesaw.api.BigDecimalColumn;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.column.numbers.BigDecimalColumnFormatter;
@@ -674,6 +675,29 @@ public class BigDecimalColumnTest {
         new BigDecimal[]{new BigDecimal("1.235")});
     col.setScale(2, RoundingMode.UP);
     assertEquals(new BigDecimal("1.24"), col.get(0));
+  }
+
+  @Test
+  public void testAggregateFunctions() {
+    var col = BigDecimalColumn.create("test",
+        new BigDecimal[]{new BigDecimal("1"), new BigDecimal("2"), new BigDecimal("3"),
+                         new BigDecimal("4"), new BigDecimal("5")});
+    assertEquals(0, new BigDecimal("3.0").compareTo(BigDecimalAggregateFunctions.mean.summarize(col)));
+    assertEquals(0, new BigDecimal("3.0").compareTo(BigDecimalAggregateFunctions.median.summarize(col)));
+    assertEquals(0, new BigDecimal("15.0").compareTo(BigDecimalAggregateFunctions.sum.summarize(col)));
+    assertEquals(0, new BigDecimal("4.0").compareTo(BigDecimalAggregateFunctions.range.summarize(col)));
+    assertEquals(0, new BigDecimal("1.0").compareTo(BigDecimalAggregateFunctions.min.summarize(col)));
+    assertEquals(0, new BigDecimal("5.0").compareTo(BigDecimalAggregateFunctions.max.summarize(col)));
+    BigDecimal cv = BigDecimalAggregateFunctions.cv.summarize(col);
+    assertTrue(cv.compareTo(new BigDecimal("0.5")) > 0);
+    assertTrue(cv.compareTo(new BigDecimal("0.6")) < 0);
+  }
+
+  @Test
+  public void testCvZeroMean() {
+    var col = BigDecimalColumn.create("zero",
+        new BigDecimal[]{new BigDecimal("-1"), new BigDecimal("1")});
+    assertThrows(IllegalArgumentException.class, () -> BigDecimalAggregateFunctions.cv.summarize(col));
   }
 
   private BigDecimal[] bdArr(int numDecimals, String... numbers) {
