@@ -48,7 +48,7 @@ class Gtable extends Table {
   }
 
   static Gtable create(Table table) {
-    return new Gtable(table)
+    new Gtable(table)
   }
 
   static Gtable create(List<Column<?>> columns) {
@@ -56,7 +56,7 @@ class Gtable extends Table {
     for (final Column<?> column : columns) {
       table.addColumns(column)
     }
-    return table
+    table
   }
 
   @SuppressWarnings('ImplementationAsType')
@@ -119,12 +119,12 @@ class Gtable extends Table {
   }
 
   static Gtable create() {
-    return new Gtable()
+    new Gtable()
   }
 
   /** Returns a new, empty table (without rows or columns) with the given name */
   static Gtable create(String tableName) {
-    return new Gtable(tableName)
+    new Gtable(tableName)
   }
 
   /**
@@ -133,7 +133,7 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(Column<?>... columns) {
-    return new Gtable(null, columns)
+    new Gtable(null, columns)
   }
 
   /**
@@ -142,7 +142,7 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(Collection<Column<?>> columns) {
-    return new Gtable(null, columns)
+    new Gtable(null, columns)
   }
 
   /**
@@ -151,7 +151,7 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(Stream<Column<?>> columns) {
-    return new Gtable(null, columns.collect(Collectors.toList()))
+    new Gtable(null, columns.collect(Collectors.toList()))
   }
 
   /**
@@ -161,7 +161,7 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(String name, Column<?>... columns) {
-    return new Gtable(name, columns)
+    new Gtable(name, columns)
   }
 
   /**
@@ -171,7 +171,7 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(String name, Collection<Column<?>> columns) {
-    return new Gtable(name, columns)
+    new Gtable(name, columns)
   }
 
   /**
@@ -181,63 +181,63 @@ class Gtable extends Table {
    * @param columns one or more columns, all of the same @code{column.size()}
    */
   static Gtable create(String name, Stream<Column<?>> columns) {
-    return new Gtable(name, columns.collect(Collectors.toList()))
+    new Gtable(name, columns.collect(Collectors.toList()))
   }
 
   Gtable addStringColumn(String name, List data) {
-    return addColumns(StringColumn.create(name, data)) as Gtable
+    addColumns(StringColumn.create(name, data)) as Gtable
   }
 
   Gtable addDoubleColumn(String name, List data) {
-    return addColumns(DoubleColumn.create(name, data)) as Gtable
+    addColumns(DoubleColumn.create(name, data)) as Gtable
   }
 
   Gtable addBigDecimalColumn(String name, List data) {
-    return addColumns(BigDecimalColumn.create(name, data)) as Gtable
+    addColumns(BigDecimalColumn.create(name, data)) as Gtable
   }
 
   Gtable addFloatColumn(String name, List data) {
-    return addColumns(FloatColumn.create(name, data as Float[])) as Gtable
+    addColumns(FloatColumn.create(name, data as Float[])) as Gtable
   }
 
   Gtable addIntColumn(String name, List data) {
-    return addColumns(IntColumn.create(name, data as Integer[])) as Gtable
+    addColumns(IntColumn.create(name, data as Integer[])) as Gtable
   }
 
   Gtable addLongColumn(String name, List data) {
-    return addColumns(LongColumn.create(name, data as long[])) as Gtable
+    addColumns(LongColumn.create(name, data as long[])) as Gtable
   }
 
   Gtable addShortColumn(String name, List data) {
-    return addColumns(ShortColumn.create(name, data as short[])) as Gtable
+    addColumns(ShortColumn.create(name, data as short[])) as Gtable
   }
 
   Gtable addBooleanColumn(String name, List data) {
-    return addColumns(BooleanColumn.create(name, data)) as Gtable
+    addColumns(BooleanColumn.create(name, data)) as Gtable
   }
 
   Gtable addDateColumn(String name, List data) {
-    return addColumns(DateColumn.create(name, data)) as Gtable
+    addColumns(DateColumn.create(name, data)) as Gtable
   }
 
   Gtable addDateTimeColumn(String name, List data) {
-    return addColumns(DateTimeColumn.create(name, data)) as Gtable
+    addColumns(DateTimeColumn.create(name, data)) as Gtable
   }
 
   Object getAt(int row, int column) {
-    return get(row, column)
+    get(row, column)
   }
 
   Object getAt(int row, String columnName) {
-    return column(columnName).get(row)
+    column(columnName).get(row)
   }
 
   Column<?> getAt(int columnIndex) {
-    return column(columnIndex)
+    column(columnIndex)
   }
 
   Column<?> getAt(String name) {
-    return column(name)
+    column(name)
   }
 
   void putAt(List args, Object value) {
@@ -259,123 +259,123 @@ class Gtable extends Table {
   }
 
   static GdataFrameReader read() {
-    return new GdataFrameReader(defaultReaderRegistry)
+    new GdataFrameReader(defaultReaderRegistry)
   }
 
   Gtable dropDuplicateRows() {
-    return create(super.dropDuplicateRows())
+    create(super.dropDuplicateRows())
   }
 
   Gtable dropRowsWithMissingValues() {
-    return create(super.dropRowsWithMissingValues())
+    create(super.dropRowsWithMissingValues())
   }
 
   Gtable selectColumns(Column<?>... columns) {
-    return create(super.selectColumns(columns))
+    create(super.selectColumns(columns))
   }
 
   Gtable selectColumns(String... columnNames) {
-    return create(super.selectColumns(columnNames))
+    create(super.selectColumns(columnNames))
   }
 
   Gtable rejectColumns(int... columnIndexes) {
-    return create(super.rejectColumns(columnIndexes))
+    create(super.rejectColumns(columnIndexes))
   }
 
   Gtable rejectColumns(String... columnNames) {
-    return create(super.rejectColumns(columnNames))
+    create(super.rejectColumns(columnNames))
   }
 
   Gtable rejectColumns(Column<?>... columns) {
-    return create(super.rejectColumns(columns))
+    create(super.rejectColumns(columns))
   }
 
   Gtable selectColumns(int... columnIndexes) {
-    return create(super.selectColumns(columnIndexes))
+    create(super.selectColumns(columnIndexes))
   }
 
   Gtable removeColumns(Column<?>... columns) {
-    return create(super.removeColumns(columns))
+    create(super.removeColumns(columns))
   }
 
   Gtable removeColumnsWithMissingValues() {
-    return create(super.removeColumnsWithMissingValues())
+    create(super.removeColumnsWithMissingValues())
   }
 
   Gtable retainColumns(Column<?>... columns) {
-    return create(super.retainColumns(columns))
+    create(super.retainColumns(columns))
   }
 
   Gtable retainColumns(int... columnIndexes) {
-    return create(super.retainColumns(columnIndexes))
+    create(super.retainColumns(columnIndexes))
   }
 
   Gtable retainColumns(String... columnNames) {
-    return create(super.retainColumns(columnNames))
+    create(super.retainColumns(columnNames))
   }
 
   Gtable append(Relation tableToAppend) {
-    return super.append(tableToAppend) as Gtable
+    super.append(tableToAppend) as Gtable
   }
 
   Gtable append(Row row) {
-    return super.append(row) as Gtable
+    super.append(row) as Gtable
   }
 
   Gtable concat(Table tableToConcatenate) {
-    return super.concat(tableToConcatenate) as Gtable
+    super.concat(tableToConcatenate) as Gtable
   }
 
   Gtable xTabCounts(String column1Name, String column2Name) {
-    return create(super.xTabCounts(column1Name, column2Name))
+    create(super.xTabCounts(column1Name, column2Name))
   }
 
   Gtable xTabRowPercents(String column1Name, String column2Name) {
-    return create(super.xTabRowPercents(column1Name, column2Name))
+    create(super.xTabRowPercents(column1Name, column2Name))
   }
 
   Gtable xTabColumnPercents(String column1Name, String column2Name) {
-    return create(super.xTabColumnPercents(column1Name, column2Name))
+    create(super.xTabColumnPercents(column1Name, column2Name))
   }
 
   Gtable xTabTablePercents(String column1Name, String column2Name) {
-    return create(super.xTabTablePercents(column1Name, column2Name))
+    create(super.xTabTablePercents(column1Name, column2Name))
   }
 
   Gtable xTabPercents(String column1Name) {
-    return create(super.xTabPercents(column1Name))
+    create(super.xTabPercents(column1Name))
   }
 
   Gtable xTabCounts(String column1Name) {
-    return create(super.xTabCounts(column1Name))
+    create(super.xTabCounts(column1Name))
   }
 
   Gtable countBy(CategoricalColumn<?>... groupingColumns) {
-    return create(super.countBy(groupingColumns))
+    create(super.countBy(groupingColumns))
   }
 
   Gtable countBy(String... categoricalColumnNames) {
-    return create(super.countBy(categoricalColumnNames))
+    create(super.countBy(categoricalColumnNames))
   }
 
   Gtable missingValueCounts() {
-    return create(super.missingValueCounts())
+    create(super.missingValueCounts())
   }
 
   Gtable transpose() {
-    return create(super.transpose())
+    create(super.transpose())
   }
 
   Gtable transpose(boolean includeColumnHeadingsAsFirstColumn, boolean useFirstColumnForHeadings) {
-    return create(super.transpose(includeColumnHeadingsAsFirstColumn, useFirstColumnForHeadings))
+    create(super.transpose(includeColumnHeadingsAsFirstColumn, useFirstColumnForHeadings))
   }
 
   Gtable melt(List<String> idVariables, List<NumericColumn<? extends Number>> measuredVariables, Boolean dropMissing) {
-    return create(super.melt(idVariables, measuredVariables, dropMissing))
+    create(super.melt(idVariables, measuredVariables, dropMissing))
   }
 
   Gtable cast() {
-    return create(super.cast())
+    create(super.cast())
   }
 
   Object asType(Class clazz) {
@@ -388,7 +388,7 @@ class Gtable extends Table {
   }
 
   GdataFrameJoiner joinOn(String... columnNames) {
-    return new GdataFrameJoiner(this, columnNames)
+    new GdataFrameJoiner(this, columnNames)
   }
 
   /**
@@ -545,7 +545,7 @@ class Gtable extends Table {
     if (columnType == BigDecimalColumnType.instance()) {
       return BigDecimal
     }
-    return Object
+    Object
   }
 
 }

@@ -61,18 +61,6 @@ public class OdsReadOptions extends ReadOptions {
   }
 
   /**
-   * Creates a builder with a Reader source.
-   *
-   * @param reader the reader to read from
-   * @return a new builder
-   * @deprecated Using a Reader for binary content does not make sense.
-   */
-  @Deprecated
-  public static Builder	builder(Reader reader) {
-    return new Builder(reader);
-  }
-
-  /**
    * Creates a builder with a file name source.
    *
    * @param fileName the name of the file to read from
@@ -101,18 +89,6 @@ public class OdsReadOptions extends ReadOptions {
    */
   public static Builder	builder(Source source) {
     return new Builder(source);
-  }
-
-  /**
-   * Creates a builder that reads from a string containing ODS content.
-   *
-   * @param contents the ODS content as a string
-   * @return a new builder
-   * @deprecated Using a String for binary content does not make sense.
-   */
-  @Deprecated
-  public static Builder	builderFromString(String contents) {
-    return new Builder(new StringReader(contents));
   }
 
   /**
@@ -174,15 +150,6 @@ public class OdsReadOptions extends ReadOptions {
      */
     protected Builder(InputStream stream) {
       super(stream);
-    }
-
-    /**
-     * Constructs a builder with a Reader source.
-     *
-     * @param reader the reader to read from
-     */
-    protected Builder(Reader reader) {
-      super(reader);
     }
 
     /**

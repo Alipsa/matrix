@@ -66,7 +66,7 @@ class TableUtil {
       row.setInt(COL_FREQUENCY, numOccurrence)
       row.setDouble(COL_PERCENT, round(numOccurrence * 100.0 / size, 2))
     }
-    return table.sortDescendingOn(COL_FREQUENCY)
+    table.sortDescendingOn(COL_FREQUENCY)
   }
 
   /**
@@ -78,7 +78,7 @@ class TableUtil {
    * @see #frequency(Column)
    */
   static Table frequency(Table table, String columnName) {
-    return frequency(table.column(columnName))
+    frequency(table.column(columnName))
   }
 
   /**
@@ -98,7 +98,7 @@ class TableUtil {
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
-    return bd.doubleValue()
+    bd.doubleValue()
   }
 
   /**
@@ -118,7 +118,7 @@ class TableUtil {
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
-    return bd.floatValue()
+    bd.floatValue()
   }
 
   /**
@@ -134,7 +134,7 @@ class TableUtil {
     if (column in NumberColumn) {
       return round(column as NumberColumn, numDecimals)
     }
-    return column
+    column
   }
 
   /**
@@ -178,7 +178,7 @@ class TableUtil {
       }
     }
     // everything else (IntColumn, ShortColumn, LongColumn cannot be rounded as they have no decimals
-    return column
+    column
   }
 
   /**
@@ -240,7 +240,7 @@ class TableUtil {
    * @see #fromTablesaw(Table)
    */
   static Matrix toMatrix(Gtable gtable) {
-    return fromTablesaw(gtable)
+    fromTablesaw(gtable)
   }
 
   /**
@@ -281,7 +281,7 @@ class TableUtil {
         columns.add(col)
       }
     }
-    return Table.create(matrix.getMatrixName(), columns)
+    Table.create(matrix.getMatrixName(), columns)
   }
 
   /**
@@ -396,7 +396,7 @@ class TableUtil {
       return (Column<T>) col
     }
 
-    return null
+    null
   }
 
   /**
@@ -433,7 +433,7 @@ class TableUtil {
     } else if (columnType == Short) {
       return ColumnType.SHORT
     }
-    return ColumnType.SKIP
+    ColumnType.SKIP
   }
 
   /**
@@ -471,7 +471,7 @@ class TableUtil {
       return Short
     }
     // it is some custom column type made outside the "official" tablesaw api
-    return Object
+    Object
   }
 
 }

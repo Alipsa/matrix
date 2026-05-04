@@ -3,6 +3,8 @@
 ## v0.3.0, 2026-05-04
 
 ### Breaking Changes
+- **Removed previously deprecated `OdsReadOptions` factory methods**
+  - `OdsReadOptions.builder(Reader)` and `OdsReadOptions.builderFromString(String)` have been removed as promised in the v0.2.2 release notes.
 - **BigDecimalColumn arithmetic is now non-mutating by default.**
   - `plus()`, `subtract()`, `multiply()`, and `divide()` return **new** columns instead of mutating the receiver.
   - Use the new `addTo()`, `subtractBy()`, `multiplyBy()`, and `divideBy()` methods for in-place mutation.
@@ -85,8 +87,9 @@
 ### Deprecations
 - Deprecated `OdsReadOptions.builder(Reader reader)` - ODS is a binary format, not text-based
 - Deprecated `OdsReadOptions.builderFromString(String contents)` - ODS is a binary format, not text-based
-- Deprecated `OdsReadOptions.builderFromUrl(String url)` - ODS is a binary format, not text-based
 - Note: These deprecated methods will be removed in v0.3.0
+
+> **Correction (v0.3.0):** `OdsReadOptions.builderFromUrl(String url)` was incorrectly listed here as deprecated. It was never deprecated and remains part of the public API.
 
 ### Dependency Updates
 - com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
