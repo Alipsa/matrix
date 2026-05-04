@@ -347,8 +347,24 @@ class Gtable extends Table {
    */
   @SuppressWarnings('unchecked')
   void putAt(int rowIndex, int columnIndex, Object value) {
-    def v = value.asType(asJavaClass(columnIndex))
-    ((Column) column(columnIndex)).set(rowIndex, v)
+    Column col = (Column) column(columnIndex)
+    if (value == null) {
+      if (col instanceof StringColumn) {
+        // ByteDictionaryMap.set("") does not route through MISSING_VALUE unless that key is
+        // already registered in the dictionary (which append does, but set does not).
+        // Calling appendMissing() primes the dictionary so the subsequent setMissing() call
+        // stores the correct MISSING_VALUE key. We then drop the spurious appended row.
+        int origSize = col.size()
+        col.appendMissing()
+        col.setMissing(rowIndex)
+        replaceColumn(columnIndex, col.inRange(0, origSize))
+      } else {
+        col.setMissing(rowIndex)
+      }
+    } else {
+      def v = value.asType(asJavaClass(columnIndex))
+      col.set(rowIndex, v)
+    }
   }
 
   /**

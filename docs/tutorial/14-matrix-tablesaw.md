@@ -1,8 +1,8 @@
 # Matrix Tablesaw Module
 
-The Matrix Tablesaw module provides interoperability between the Matrix library and the Tablesaw library, along with various extensions to Tablesaw such as BigDecimalColumn, GTable (which makes Tablesaw Groovier), and complementary operations for working with Tablesaw data.
+The Matrix Tablesaw module provides interoperability between the Matrix library and the Tablesaw library, along with various extensions to Tablesaw such as BigDecimalColumn, Gtable (which makes Tablesaw Groovier), and complementary operations for working with Tablesaw data.
 
-> **Note**: As of the time of writing, this module is still a work in progress, and no release version has been published yet.
+> **Note**: This module is released on Maven Central as part of the Matrix project.
 
 ## What is Tablesaw?
 
@@ -16,7 +16,7 @@ To use the matrix-tablesaw module, you need to add it as a dependency to your pr
 
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
-implementation 'se.alipsa.matrix:core'
+implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
 
@@ -33,7 +33,7 @@ implementation 'se.alipsa.matrix:matrix-tablesaw'
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-bom</artifactId>
-      <version>2.2.0</version>
+      <version>2.5.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -57,7 +57,7 @@ implementation 'se.alipsa.matrix:matrix-tablesaw'
 The matrix-tablesaw module consists of several key components:
 
 1. **TableUtil**: Provides utility methods for working with Tablesaw tables
-2. **GTable**: A Groovy-friendly wrapper around Tablesaw's Table class
+2. **Gtable**: A Groovy-friendly wrapper around Tablesaw's Table class
 3. **Normalizer**: Utilities for normalizing Tablesaw columns
 4. **BigDecimalColumn**: Support for BigDecimal data type in Tablesaw
 
@@ -121,38 +121,38 @@ data.replaceColumn("Value", roundedColumn)
 println data
 ```
 
-## GTable
+## Gtable
 
-The `GTable` class is a Groovy-friendly wrapper around Tablesaw's `Table` class. It provides a more idiomatic Groovy API for working with tables, including operator overloading and simplified syntax.
+The `Gtable` class is a Groovy-friendly wrapper around Tablesaw's `Table` class. It provides a more idiomatic Groovy API for working with tables, including operator overloading and simplified syntax.
 
-### Creating a GTable
+### Creating a Gtable
 
-You can create a `GTable` from a Tablesaw `Table` or directly from data:
+You can create a `Gtable` from a Tablesaw `Table` or directly from data:
 
 ```groovy
-import se.alipsa.matrix.tablesaw.gtable.GTable
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.Table
 
-// Create a GTable from a Tablesaw Table
+// Create a Gtable from a Tablesaw Table
 def table = Table.create("Sample")
 // ... add columns to table
-def gTable = new GTable(table)
+def gTable = new Gtable(table)
 
-// Or create a GTable directly
-def directGTable = GTable.create("Sample")
+// Or create a Gtable directly
+def directGTable = Gtable.create("Sample")
     .addStringColumn("Name", ["Alice", "Bob", "Charlie"])
     .addDoubleColumn("Score", [85.5, 92.3, 78.9])
 ```
 
 ### Accessing Data with Groovy Syntax
 
-`GTable` allows you to access data using Groovy's subscript operator:
+`Gtable` allows you to access data using Groovy's subscript operator:
 
 ```groovy
-import se.alipsa.matrix.tablesaw.gtable.GTable
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 
-// Create a sample GTable
-def gTable = GTable.create("Students")
+// Create a sample Gtable
+def gTable = Gtable.create("Students")
     .addStringColumn("Name", ["Alice", "Bob", "Charlie"])
     .addDoubleColumn("Score", [85.5, 92.3, 78.9])
 
@@ -166,16 +166,16 @@ def bobScore = gTable[1, "Score"]  // 92.3
 gTable[2, "Score"] = 80.0  // Update Charlie's score
 ```
 
-### Converting Between GTable and Matrix
+### Converting Between Gtable and Matrix
 
-The `GTable` class provides methods for converting between `GTable` and `Matrix`:
+The `Gtable` class provides methods for converting between `Gtable` and `Matrix`:
 
 ```groovy
-import se.alipsa.matrix.tablesaw.gtable.GTable
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 import se.alipsa.matrix.core.Matrix
 
-// Create a sample GTable
-def gTable = GTable.create("Students")
+// Create a sample Gtable
+def gTable = Gtable.create("Students")
     .addStringColumn("Name", ["Alice", "Bob", "Charlie"])
     .addDoubleColumn("Score", [85.5, 92.3, 78.9])
 
@@ -242,7 +242,7 @@ println data
 The matrix-tablesaw module adds support for `BigDecimal` data type in Tablesaw through the `BigDecimalColumn` class. This is particularly useful for financial calculations where precision is important.
 
 ```groovy
-import se.alipsa.matrix.tablesaw.BigDecimalColumn
+import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.Table
 import java.math.BigDecimal
 
@@ -331,7 +331,7 @@ When working with the Matrix Tablesaw module, consider these best practices:
 
 ## Conclusion
 
-The Matrix Tablesaw module bridges the gap between the Matrix library and the Tablesaw library, providing a powerful combination for data manipulation and analysis in Groovy. While still in development, it offers valuable extensions to Tablesaw and seamless interoperability with Matrix.
+The Matrix Tablesaw module bridges the gap between the Matrix library and the Tablesaw library, providing a powerful combination for data manipulation and analysis in Groovy. It offers valuable extensions to Tablesaw and seamless interoperability with Matrix.
 
 By leveraging both libraries through this module, you can take advantage of Matrix's simplicity and Tablesaw's advanced data manipulation capabilities in a unified and Groovy-friendly way.
 

@@ -60,7 +60,6 @@ public class ExportDataTest {
 
     table.write().usingOptions(options);
     assertTrue(destFile.exists());
-    System.out.println("Wrote " + destFile + " deleting it now.");
     destFile.deleteOnExit();
   }
 
@@ -92,6 +91,36 @@ public class ExportDataTest {
       assertEquals(12, cal.get(java.util.Calendar.HOUR_OF_DAY));
       assertEquals(34, cal.get(java.util.Calendar.MINUTE));
       assertEquals(56, cal.get(java.util.Calendar.SECOND));
+    }
+
+    destFile.deleteOnExit();
+  }
+
+  @Test
+  public void testXlsxExportNullLocalDateTime() throws IOException {
+    var table = Table.create("datetime-null-test")
+        .addColumns(DateTimeColumn.create("dt",
+            new java.time.LocalDateTime[]{
+                LocalDateTime.parse("2024-06-24T12:34:56"),
+                null
+            }));
+
+    File destFile = File.createTempFile("datetime-null-test", ".xlsx");
+    try (FileOutputStream out = new FileOutputStream(destFile)) {
+      XlsxWriteOptions options = XlsxWriteOptions.builder(out).build();
+      table.write().usingOptions(options);
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(destFile))) {
+      XSSFSheet sheet = workbook.getSheetAt(0);
+      Row row1 = sheet.getRow(1);
+      Cell cell1 = row1.getCell(0);
+      assertEquals(CellType.NUMERIC, cell1.getCellType(), "First DateTime should be numeric");
+      assertTrue(cell1.getDateCellValue() != null);
+
+      Row row2 = sheet.getRow(2);
+      Cell cell2 = row2.getCell(0);
+      assertEquals(CellType.BLANK, cell2.getCellType(), "Null DateTime should be blank");
     }
 
     destFile.deleteOnExit();

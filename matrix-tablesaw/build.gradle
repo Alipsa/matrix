@@ -69,7 +69,7 @@ dependencies {
 
 test {
     dependsOn cleanTest
-    testLogging.showStandardStreams = true
+    testLogging.showStandardStreams = false
 
     useJUnitPlatform()
     testLogging {
@@ -77,7 +77,6 @@ test {
         events TestLogEvent.FAILED,
             //TestLogEvent.PASSED,
             TestLogEvent.SKIPPED,
-            TestLogEvent.STANDARD_OUT,
             TestLogEvent.STANDARD_ERROR
         exceptionFormat = TestExceptionFormat.FULL
         showExceptions = true

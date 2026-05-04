@@ -13,7 +13,10 @@ import tech.tablesaw.io.WriterRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
@@ -114,20 +117,31 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
           if (ColumnType.STRING.equals(type)) {
             cell.setCellValue(row.getString(colName));
           } else if (ColumnType.LOCAL_DATE.equals(type)) {
-            cell.setCellValue(row.getDate(colName));
-            cell.setCellStyle(localDateStyle);
+            LocalDate ld = row.getDate(colName);
+            if (ld != null) {
+              cell.setCellValue(ld);
+              cell.setCellStyle(localDateStyle);
+            }
           } else if (ColumnType.LOCAL_DATE_TIME.equals(type)) {
             LocalDateTime ldt = row.getDateTime(colName);
-            cell.setCellValue(GregorianCalendar.from(ldt.atZone(ZoneId.systemDefault())));
-            cell.setCellStyle(localDateTimeStyle);
+            if (ldt != null) {
+              cell.setCellValue(GregorianCalendar.from(ldt.atZone(ZoneId.systemDefault())));
+              cell.setCellStyle(localDateTimeStyle);
+            }
           } else if (ColumnType.LOCAL_TIME.equals(type)) {
-            double time = DateUtil.convertTime(row.getTime(colName).toString());
-            cell.setCellValue(time);
-            cell.setCellStyle(localTimeStyle);
+            LocalTime lt = row.getTime(colName);
+            if (lt != null) {
+              double time = DateUtil.convertTime(lt.toString());
+              cell.setCellValue(time);
+              cell.setCellStyle(localTimeStyle);
+            }
           } else if (ColumnType.INSTANT.equals(type)) {
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(row.getInstant(colName), ZoneId.systemDefault());
-            cell.setCellValue(GregorianCalendar.from(zdt));
-            cell.setCellStyle(localDateTimeStyle);
+            Instant instant = row.getInstant(colName);
+            if (instant != null) {
+              ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+              cell.setCellValue(GregorianCalendar.from(zdt));
+              cell.setCellStyle(localDateTimeStyle);
+            }
           } else if (ColumnType.SHORT.equals(type)) {
             cell.setCellValue(row.getShort(colName));
           } else if (ColumnType.INTEGER.equals(type)) {

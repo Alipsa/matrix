@@ -154,6 +154,16 @@ class GtableTest {
   }
 
   @Test
+  void testPutAtNullSetsMissing() {
+    def table = Gtable.create([name: ['Alice', 'Bob'], age: [25, 30]])
+    table[1, 'age'] = null
+    assertTrue(table.column('age').isMissing(1), "age column should be missing at row 1")
+    table[0, 'name'] = null
+    def nameCol = table.column('name')
+    assertTrue(nameCol.isMissing(0), "name column should be missing at row 0")
+  }
+
+  @Test
   void testTutorialExample() {
     // Create a Matrix with sample data
     def matrix = Matrix.builder().data(
@@ -171,15 +181,8 @@ class GtableTest {
     def deptSalary = gTable.summarize('salary', BigDecimalAggregateFunctions.mean)
         .by('department')
 
-    println 'Average salary by department:'
-    println deptSalary
-
     // Create a frequency table for the department column
     def deptFreq = TableUtil.frequency(gTable, 'department')
-
-    println ''
-    println 'Department frequency:'
-    println deptFreq
 
     // Normalize the salary column
     var salaryCol = gTable.column('salary') as BigDecimalColumn
@@ -188,16 +191,8 @@ class GtableTest {
     // Replace the original column with the normalized one
     gTable.replaceColumn('salary', normalizedSalary)
 
-    println ''
-    println 'Data with normalized salaries:'
-    println gTable
-
     // Convert back to Matrix for further analysis
     def newMatrix = TableUtil.toMatrix(gTable)
-
-    println ''
-    println 'Converted back to Matrix:'
-    println newMatrix.content()
   }
 
   @Test
