@@ -27,6 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class TableUtil {
 
+  private static final String COL_VALUE = 'Value'
+  private static final String COL_FREQUENCY = 'Frequency'
+  private static final String COL_PERCENT = 'Percent'
+  private static final String NUM_DECIMALS_ERROR = 'numDecimals cannot be a negative number: was '
+
   /**
    * Generate a frequency table for the given column.
    *
@@ -42,10 +47,6 @@ class TableUtil {
    * @param column the column to analyze
    * @return a frequency table sorted by descending frequency
    */
-  private static final String COL_VALUE = 'Value'
-  private static final String COL_FREQUENCY = 'Frequency'
-  private static final String COL_PERCENT = 'Percent'
-
   static Table frequency(Column<?> column) {
     Map<Object, AtomicInteger> freq = [:]
     column.forEach { v ->
@@ -90,13 +91,9 @@ class TableUtil {
    * @return the rounded value
    * @throws IllegalArgumentException if numDecimals is negative
    */
-  private static String numDecimalsError(int numDecimals) {
-    'numDecimals cannot be a negative number: was ' + numDecimals
-  }
-
   static double round(double value, int numDecimals) {
     if (numDecimals < 0) {
-      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+      throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
     BigDecimal bd = BigDecimal.valueOf(value)
@@ -116,7 +113,7 @@ class TableUtil {
    */
   static float round(float value, int numDecimals) {
     if (numDecimals < 0) {
-      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+      throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
     BigDecimal bd = BigDecimal.valueOf(value)
@@ -158,7 +155,7 @@ class TableUtil {
    */
   static NumberColumn round(NumberColumn column, int numDecimals) {
     if (numDecimals < 0) {
-      throw new IllegalArgumentException(numDecimalsError(numDecimals))
+      throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
     if (column in BigDecimalColumn) {

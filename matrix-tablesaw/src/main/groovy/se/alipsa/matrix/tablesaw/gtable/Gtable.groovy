@@ -59,7 +59,8 @@ class Gtable extends Table {
     return table
   }
 
-  static Gtable create(Map<String, List<?>> data, List<ColumnType> columnTypes) {
+  @SuppressWarnings('ImplementationAsType')
+  static Gtable create(LinkedHashMap<String, List<?>> data, List<ColumnType> columnTypes) {
     validateColumnLengths(data)
     List<Column<?>> columns = []
     int i = 0
@@ -69,7 +70,8 @@ class Gtable extends Table {
     create(columns)
   }
 
-  static Gtable create(Map<String, List<?>> data) {
+  @SuppressWarnings('ImplementationAsType')
+  static Gtable create(LinkedHashMap<String, List<?>> data) {
     def inferredTypes = data.collect { entry ->
       def firstNonNull = entry.value.find { it != null }
       def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
@@ -82,7 +84,8 @@ class Gtable extends Table {
     create(data, inferredTypes)
   }
 
-  static Gtable create(Map<String, List<?>> data, Map<String, ColumnType> typeOverrides) {
+  @SuppressWarnings('ImplementationAsType')
+  static Gtable create(LinkedHashMap<String, List<?>> data, LinkedHashMap<String, ColumnType> typeOverrides) {
     def types = data.collect { entry ->
       typeOverrides.get(entry.key) ?: {
         def firstNonNull = entry.value.find { it != null }
@@ -99,7 +102,8 @@ class Gtable extends Table {
 
   private static final int UNSET = -1
 
-  private static void validateColumnLengths(Map<String, List<?>> data) {
+  @SuppressWarnings('ImplementationAsType')
+  private static void validateColumnLengths(LinkedHashMap<String, List<?>> data) {
     if (data.isEmpty()) {
       return
     }
