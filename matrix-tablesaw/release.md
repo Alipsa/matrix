@@ -44,6 +44,7 @@
 - Updated `readme.md` with current dependency guidance (use `matrix-bom` or `matrix-all`), quick examples for conversion, Gtable factories, BigDecimal arithmetic, and normalization.
 - Fixed incorrect BOM version references in `readme.md` (was `3.7.0`, corrected to `2.5.0`).
 - Fixed GroovyDoc typos (`extansion` → `extension`, `tgble` → `Gtable`) and added missing method documentation to public API surface in `Gtable.groovy`.
+- Added missing Javadoc to `BigDecimalColumn.add(BigDecimalColumn)`.
 
 ### Code Quality
 - `BigDecimalColumnType.INSTANCE` is now `final`.
@@ -53,8 +54,11 @@
 - Corrected POM `url` and added a module-local `LICENSE` file (Apache License 2.0).
 - Updated license metadata in published POM from MIT to Apache 2.0 to align with Tablesaw licensing.
 
+### Dependency Updates
+- com.github.miachm.sods:SODS 1.8.2 -> 1.8.3
+
 ### Testing
-- All 111 tests passing.
+- All 112 tests passing.
 - `:matrix-tablesaw:check` (including JaCoCo coverage verification) passes.
 
 ## v0.2.2, 2026-01-31
@@ -108,9 +112,7 @@
 
 > **Correction (v0.3.0):** `OdsReadOptions.builderFromUrl(String url)` was incorrectly listed here as deprecated. It was never deprecated and remains part of the public API.
 
-### Dependency Updates
-- com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
-- org.apache.poi:poi-ooxml [5.4.1 -> 5.5.1]
+### Build Configuration Improvements
 
 ## v0.2.1, 2025-07-19
 - Upgrade dependencies

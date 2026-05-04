@@ -1083,6 +1083,16 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
         name(), size(), column.name(), column.size());
   }
 
+  /**
+   * Returns a new column with the element-wise sum of this column and the given column.
+   * <p>This is an alias for {@link #plus(BigDecimalColumn)} and overloads the {@code +}
+   * operator in Groovy.
+   * <p>Returns a <strong>new column</strong> and does not modify this column.
+   *
+   * @param column the column to add
+   * @return a new column containing the sum
+   * @throws IllegalArgumentException if the columns have different sizes
+   */
   public BigDecimalColumn add(BigDecimalColumn column) {
     return plus(column);
   }

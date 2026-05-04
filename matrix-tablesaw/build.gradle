@@ -57,6 +57,7 @@ dependencies {
 
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
+    testImplementation project(':matrix-logging')
     testImplementation libs.tablesaw.json
     testImplementation libs.junit.jupiter
     testImplementation libs.groovier.junit

@@ -27,12 +27,12 @@ public class BigDecimalColumnTest {
 
   BigDecimal[] values = bdArr(9, "1200", null, "3456", "12.1", "3456.4", "985", "1211.9", null, "12.1");
   BigDecimalColumn obs = BigDecimalColumn.create("values", values);
+
   @Test
   public void testGetString() {
     obs.setPrintFormatter(new BigDecimalColumnFormatter(NumberFormat.getNumberInstance(Locale.US)));
     assertEquals("12.1", obs.getString(3));
-
-    // TODO is this what we should expect?
+    assertNull(obs.getBigDecimal(1));
     assertEquals("", obs.getString(1));
   }
 
