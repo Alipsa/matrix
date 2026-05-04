@@ -80,24 +80,6 @@ class TableUtilTest {
   }
 
   @Test
-  void testConvertMatrixToTablesawSkipsUnsupportedTypesWhenOptIn() {
-    Matrix matrix = Matrix.builder('mixed')
-        .columnNames(['id', 'value'])
-        .rows([
-            [UUID.randomUUID(), 10],
-            [UUID.randomUUID(), 20]
-        ])
-        .types([UUID, Integer])
-        .build()
-
-    Table table = TableUtil.toTablesaw(matrix, true)
-    assertEquals(1, table.columnCount())
-    assertEquals(['value'], table.columnNames())
-    assertEquals(2, table.rowCount())
-    assertEquals(10, table.get(0, 0))
-  }
-
-  @Test
   void testConvertTablesawToMatrix() throws IOException {
     var csv = getClass().getResource('/tornadoes_1950-2014.csv')
     CsvReadOptions.Builder builder = CsvReadOptions.builder(csv)

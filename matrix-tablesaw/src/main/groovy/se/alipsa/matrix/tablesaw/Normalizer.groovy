@@ -101,8 +101,8 @@ class Normalizer {
    * Ranges the data values to be between 0 and 1, the formula is:
    * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
    *
-   * @param column the float column to scale
-   * @return a new float column of scaled values between 0 and 1
+   * @param column the BigDecimal column to scale
+   * @return a new BigDecimal column of scaled values between 0 and 1
    */
   static BigDecimalColumn minMaxNorm(BigDecimalColumn column, int... decimals) {
     def min = column.min() as BigDecimal
@@ -157,8 +157,8 @@ class Normalizer {
    * Scales the data values to be between (–1, 1), the formula is
    * X´ = ( X - μ ) / ( max(X) - min(X) )
    *
-   * @param column the float column to scale
-   * @return a new, normalized float column
+   * @param column the BigDecimal column to scale
+   * @return a new, normalized BigDecimal column
    */
   static BigDecimalColumn meanNorm(BigDecimalColumn column, int... decimals) {
     def min = column.min() as BigDecimal
@@ -217,8 +217,8 @@ class Normalizer {
    * will be 0 and standard deviation will be 1 (a.k.a Z-score).
    * Z = ( X<sub>i</sub> - μ ) / σ
    *
-   * @param column the float column to scale
-   * @return a scaled float column where the values are scaled so that the mean of the observed values
+   * @param column the BigDecimal column to scale
+   * @return a scaled BigDecimal column where the values are scaled so that the mean of the observed values
    * will be 0 and standard deviation will be 1
    */
   static BigDecimalColumn stdScaleNorm(BigDecimalColumn column, int... decimals) {

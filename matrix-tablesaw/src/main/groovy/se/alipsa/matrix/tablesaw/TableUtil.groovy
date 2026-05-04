@@ -159,7 +159,7 @@ class TableUtil {
     }
 
     if (column in BigDecimalColumn) {
-      (column as BigDecimalColumn).setScale(numDecimals)
+      return (column as BigDecimalColumn).setScale(numDecimals)
     }
 
     if (column in DoubleColumn) {
