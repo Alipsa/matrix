@@ -1,4 +1,5 @@
 package houseprice
+
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -35,6 +36,6 @@ chart.styler.with {
 
 JPanel chartPanel = new XChartPanel<Chart>(chart);
 io.display(chartPanel, "Price histogram")
-//new SwingWrapper(chart).displayChart()
+// new SwingWrapper(chart).displayChart()
 
  */

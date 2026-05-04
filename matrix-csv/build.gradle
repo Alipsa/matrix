@@ -13,6 +13,10 @@ group = 'se.alipsa.matrix'
 version = '2.3.0'
 description = "Groovy library for importing structured text into a matrix"
 
+codenarc {
+  ignoreFailures = true
+}
+
 ext.nexusReleaseUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"

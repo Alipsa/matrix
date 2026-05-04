@@ -10,7 +10,6 @@ plugins {
 
 codenarc {
     configFile = file('config/codenarc/ruleset.groovy')
-    ignoreFailures = false
 }
 
 group = 'se.alipsa.matrix'

@@ -27,7 +27,6 @@ compileGroovy {
 
 codenarc {
   configFile = file('config/codenarc/ruleset.groovy')
-  ignoreFailures = false
 }
 
 repositories {

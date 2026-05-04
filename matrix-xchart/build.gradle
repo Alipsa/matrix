@@ -10,6 +10,10 @@ group = 'se.alipsa.matrix'
 version = '0.2.4-SNAPSHOT'
 description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
 
+codenarc {
+    ignoreFailures = true
+}
+
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"

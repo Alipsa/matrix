@@ -40,5 +40,4 @@ chart.styler.with {
 }
 new SwingWrapper(chart).displayChart()
 
-
  */

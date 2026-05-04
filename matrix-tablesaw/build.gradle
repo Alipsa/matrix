@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.0-SNAPSHOT'
+version = '0.3.0'
 description = 'Allows conversion between Matrix and Tablesaw'
 
 repositories {
@@ -35,6 +35,7 @@ compileTestJava {
 compileGroovy {
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
+    groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
 java {

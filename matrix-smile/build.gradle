@@ -12,6 +12,10 @@ plugins {
 group = 'se.alipsa.matrix'
 version = '0.1.1-SNAPSHOT'
 
+codenarc {
+  ignoreFailures = true
+}
+
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true

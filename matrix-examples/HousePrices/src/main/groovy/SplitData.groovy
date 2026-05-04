@@ -20,11 +20,12 @@ println lines.size()
 
 def (trainLines, testLines) = lines.chop(lines.size() * 0.8 as int, -1)
 
+String newline = '\n'
 def train = new File(parent, 'house_train.csv')
-train.text = trainLines.join('\n')
+train.text = trainLines.join(newline)
 println train.readLines().size()
 
 def test = new File(parent, 'house_test.csv')
 test.delete()
-test << lines[0] << '\n' << testLines.join('\n')
+test << lines[0] << newline << testLines.join(newline)
 println test.readLines().size()

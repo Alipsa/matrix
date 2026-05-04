@@ -47,5 +47,4 @@ def testEvaluation = eval.evaluate(model, data)
 println "\n$testEvaluation"
 println testEvaluation.confusionString()
 
-
  */

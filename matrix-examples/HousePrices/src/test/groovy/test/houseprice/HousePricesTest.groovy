@@ -7,7 +7,8 @@ class HousePricesTest {
 
   @Test
   void testExplore() {
-    println "HousePricesTest.testExplore()"
+    println 'HousePricesTest.testExplore()'
     Explore.main()
   }
+
 }

@@ -10,10 +10,6 @@ group = 'se.alipsa.matrix'
 version = '0.2.1'
 description = 'Matrix ARFF import/export'
 
-codenarc {
-  ignoreFailures = false
-}
-
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true

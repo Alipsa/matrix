@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw
 
-
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn
@@ -12,6 +11,8 @@ import se.alipsa.matrix.stats.Normalize
  */
 class Normalizer {
 
+  private static final String NORM_PREFIX = 'norm_'
+
   /**
    * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
    * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
@@ -21,11 +22,11 @@ class Normalizer {
    * @return a double column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static DoubleColumn logNorm(DoubleColumn column, int... decimals) {
-    def vals = []
+    List<Double> vals = []
     for (Double x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals);
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals)
   }
 
   /**
@@ -37,11 +38,11 @@ class Normalizer {
    * @return a Float column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static FloatColumn logNorm(FloatColumn column, int... decimals) {
-    def vals = []
+    List<Float> vals = []
     for (Float x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[]);
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -53,11 +54,11 @@ class Normalizer {
    * @return a BigDecimal column where all values are transformed with the natural logarithm (base e) of the observations
    */
   static BigDecimalColumn logNorm(BigDecimalColumn column, int... decimals) {
-    def vals = []
+    List<BigDecimal> vals = []
     for (BigDecimal x : column) {
       vals.add(Normalize.logNorm(x, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[]);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
 
   /**
@@ -71,11 +72,11 @@ class Normalizer {
     def min = column.min()
     def max = column.max()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[]);
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -89,11 +90,11 @@ class Normalizer {
     def min = column.min() as float
     def max = column.max() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[]);
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -107,11 +108,11 @@ class Normalizer {
     def min = column.min() as BigDecimal
     def max = column.max() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.minMaxNorm(x, min, max, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[]);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
 
  /**
@@ -126,11 +127,11 @@ class Normalizer {
     def max = column.max()
     def mean = column.mean()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[])
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -145,11 +146,11 @@ class Normalizer {
     def max = column.max() as float
     def mean = column.mean() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[])
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -164,11 +165,11 @@ class Normalizer {
     def max = column.max() as BigDecimal
     def mean = column.mean() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals);
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals)
   }
 
   /**
@@ -184,11 +185,11 @@ class Normalizer {
     def mean = column.mean()
     def stdDev = column.standardDeviation()
 
-    def vals = []
+    List<Double> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return DoubleColumn.create("norm_" + column.name(), vals as Double[])
+    DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
 
   /**
@@ -204,11 +205,11 @@ class Normalizer {
     def stdDev = column.standardDeviation() as float
     def mean = column.mean() as float
 
-    def vals = []
+    List<Float> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return FloatColumn.create("norm_" + column.name(), vals as Float[])
+    FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
 
   /**
@@ -224,10 +225,11 @@ class Normalizer {
     def stdDev = column.standardDeviation() as BigDecimal
     def mean = column.mean() as BigDecimal
 
-    def vals = []
+    List<BigDecimal> vals = []
     for (def x : column) {
       vals.add(Normalize.stdScaleNorm(x, mean, stdDev, decimals))
     }
-    return BigDecimalColumn.create("norm_" + column.name(), vals as BigDecimal[])
+    BigDecimalColumn.create(NORM_PREFIX + column.name(), vals as BigDecimal[])
   }
+
 }

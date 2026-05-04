@@ -1,6 +1,5 @@
 package se.alipsa.matrix.tablesaw.gtable
 
-
 import tech.tablesaw.io.DataFrameReader
 import tech.tablesaw.io.ReadOptions
 import tech.tablesaw.io.ReaderRegistry
@@ -122,4 +121,5 @@ class GdataFrameReader extends DataFrameReader {
   Gtable db(ResultSet resultSet, String tableName) throws SQLException {
     Gtable.create(super.db(resultSet, tableName))
   }
+
 }

@@ -78,7 +78,6 @@ subprojects {
   //  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
   //}
   plugins.withId('groovy') {
-    apply plugin: 'codenarc'
     dependencies {
       compileOnly platform(libs.groovy.bom)
       implementation platform(libs.groovy.bom)
@@ -89,78 +88,82 @@ subprojects {
       testRuntimeOnly platform(libs.junit.bom)
     }
 
-    codenarc {
-      toolVersion = libs.versions.v.codenarc.get()
-      configFile = rootProject.file('config/codenarc/ruleset.groovy')
-      reportFormat = 'html'
-      ignoreFailures = true
-    }
+    if (!project.path.startsWith(':matrix-examples:')) {
+      apply plugin: 'codenarc'
 
-    // Regex matching Groovy 5 arrow switch expressions:
-    //   case 'foo' -> value
-    //   case SomeEnum.VALUE ->
-    //   default -> throw ...
-    def arrowSwitchPattern = /(?m)^\s*(?:case\b.+?|default)\s*->(?:\s|$)/
-
-    def collectArrowSwitchFiles = { File srcDir ->
-      if (!srcDir.exists()) {
-        return [] as Set<String>
+      codenarc {
+        toolVersion = libs.versions.v.codenarc.get()
+        configFile = rootProject.file('config/codenarc/ruleset.groovy')
+        reportFormat = 'html'
+        ignoreFailures = false
       }
-      def arrowSwitchFiles = [] as Set<String>
-      srcDir.eachFileRecurse { File f ->
-        if (f.name.endsWith('.groovy') && (f.text =~ arrowSwitchPattern)) {
-          arrowSwitchFiles << srcDir.toPath().relativize(f.toPath()).toString()
+
+      // Regex matching Groovy 5 arrow switch expressions:
+      //   case 'foo' -> value
+      //   case SomeEnum.VALUE ->
+      //   default -> throw ...
+      def arrowSwitchPattern = /(?m)^\s*(?:case\b.+?|default)\s*->(?:\s|$)/
+
+      def collectArrowSwitchFiles = { File srcDir ->
+        if (!srcDir.exists()) {
+          return [] as Set<String>
         }
-      }
-      arrowSwitchFiles
-    }
-
-    codenarcMain {
-      def mainSrcDir = file('src/main/groovy')
-      def projectPath = project.path
-
-      // Auto-exclude files with arrow switch syntax (CodeNarc 3.7 can't parse them)
-      // TODO: Remove this filter when upgrading to CodeNarc 4.0+
-      doFirst {
-        excludes = collectArrowSwitchFiles(mainSrcDir)
-        if (excludes) {
-          logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
+        def arrowSwitchFiles = [] as Set<String>
+        srcDir.eachFileRecurse { File f ->
+          if (f.name.endsWith('.groovy') && (f.text =~ arrowSwitchPattern)) {
+            arrowSwitchFiles << srcDir.toPath().relativize(f.toPath()).toString()
+          }
         }
+        arrowSwitchFiles
       }
 
-      // Warn about old-style switch syntax per AGENTS.md
-      // TODO: Change to hard failure once all files are migrated to arrow syntax
-      def enforcementDir = mainSrcDir
-      doLast {
-        if (enforcementDir.exists()) {
-          def oldStyleFiles = []
-          enforcementDir.eachFileRecurse { File f ->
-            if (f.name.endsWith('.groovy')) {
-              String content = f.text
-              // Match old-style case with colon (but not URLs like http:// or
-              // ternary/map colons). Pattern: line starts with case, ends with colon.
-              if (content =~ /(?m)^\s*case\s+.*[^-]:\s*$/) {
-                oldStyleFiles << f.path
+      codenarcMain {
+        def mainSrcDir = file('src/main/groovy')
+        def projectPath = project.path
+
+        // Auto-exclude files with arrow switch syntax (CodeNarc 3.7 can't parse them)
+        // TODO: Remove this filter when upgrading to CodeNarc 4.0+
+        doFirst {
+          excludes = collectArrowSwitchFiles(mainSrcDir)
+          if (excludes) {
+            logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
+          }
+        }
+
+        // Warn about old-style switch syntax per AGENTS.md
+        // TODO: Change to hard failure once all files are migrated to arrow syntax
+        def enforcementDir = mainSrcDir
+        doLast {
+          if (enforcementDir.exists()) {
+            def oldStyleFiles = []
+            enforcementDir.eachFileRecurse { File f ->
+              if (f.name.endsWith('.groovy')) {
+                String content = f.text
+                // Match old-style case with colon (but not URLs like http:// or
+                // ternary/map colons). Pattern: line starts with case, ends with colon.
+                if (content =~ /(?m)^\s*case\s+.*[^-]:\s*$/) {
+                  oldStyleFiles << f.path
+                }
               }
             }
-          }
-          if (oldStyleFiles) {
-            logger.warn("WARNING: ${oldStyleFiles.size()} file(s) use old-style switch syntax (case X:) — " +
-                "migrate to arrow syntax (case X ->) per AGENTS.md:")
-            oldStyleFiles.each { logger.warn("  - $it") }
+            if (oldStyleFiles) {
+              logger.warn("WARNING: ${oldStyleFiles.size()} file(s) use old-style switch syntax (case X:) — " +
+                  "migrate to arrow syntax (case X ->) per AGENTS.md:")
+              oldStyleFiles.each { logger.warn("  - $it") }
+            }
           }
         }
       }
-    }
 
-    codenarcTest {
-      def testSrcDir = file('src/test/groovy')
-      def projectPath = project.path
-      source = 'src/test/groovy'
-      doFirst {
-        excludes = collectArrowSwitchFiles(testSrcDir)
-        if (excludes) {
-          logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy test file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
+      codenarcTest {
+        def testSrcDir = file('src/test/groovy')
+        def projectPath = project.path
+        source = 'src/test/groovy'
+        doFirst {
+          excludes = collectArrowSwitchFiles(testSrcDir)
+          if (excludes) {
+            logger.lifecycle("CodeNarc: skipping ${excludes.size()} Groovy test file(s) with arrow switch syntax in ${projectPath} (parser limitation)")
+          }
         }
       }
     }

@@ -24,10 +24,6 @@ compileGroovy {
   groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
-codenarc {
-  ignoreFailures = false
-}
-
 repositories {
   if (version.toString().endsWith('SNAPSHOT')) {
     mavenLocal()

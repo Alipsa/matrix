@@ -1,6 +1,6 @@
 # Matrix-Tablesaw Version history
 
-## v0.3.0, 2026-05-03
+## v0.3.0, 2026-05-04
 
 ### Breaking Changes
 - **BigDecimalColumn arithmetic is now non-mutating by default.**
