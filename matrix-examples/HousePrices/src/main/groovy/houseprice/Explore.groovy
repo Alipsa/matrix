@@ -1,4 +1,5 @@
 package houseprice
+
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,28 +19,29 @@ import static se.alipsa.matrix.core.Stat.*
 
 import se.alipsa.matrix.core.*
 
-def file = this.getClass().getResource("/data/kc_house_data.csv")
+def file = this.getClass().getResource('/data/kc_house_data.csv')
 assert file != null
 
 Matrix rows = Matrix.builder().data(file).build()
 
-println "House data overview"
-println "-------------------"
+println 'House data overview'
+println '-------------------'
 
 println str(rows)
 
 println summary(rows.bedrooms)
 
-println "\nHouses with more than 10 bedrooms"
-println   "---------------------------------"
-println rows.subset("bedrooms") {
-  it as Integer > 10
+int minBedrooms = 10
+println '\nHouses with more than 10 bedrooms'
+println '---------------------------------'
+println rows.subset('bedrooms') {
+  it as Integer > minBedrooms
 }.content()
 
 // another way is to use ginq:
 def bigHouse = GQ {
   from r in rows
-  where r.bedrooms as Integer > 10
+  where r.bedrooms as Integer > minBedrooms
   select r
 }
 

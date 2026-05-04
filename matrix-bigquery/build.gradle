@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.api.plugins.quality.CodeNarc
 
 plugins {
   id 'groovy'
@@ -26,10 +25,6 @@ JavaCompile javaCompile = compileJava {
 
 compileGroovy {
   options.deprecation = true
-}
-
-tasks.withType(CodeNarc).configureEach {
-  ignoreFailures = false
 }
 
 repositories {

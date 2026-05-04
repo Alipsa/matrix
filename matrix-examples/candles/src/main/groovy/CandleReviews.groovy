@@ -16,8 +16,6 @@
  * Original code here: https://github.com/paulk-asert/groovy-data-science/blob/master/subprojects/Candles/src/main/groovy/CandleReviews.groovy
  * Slightly modified to behave nicely in Gade
  */
-
-
 import static java.lang.Math.sqrt
 import static java.time.Month.JANUARY
 import static tech.tablesaw.aggregate.AggregateFunctions.count
@@ -28,7 +26,6 @@ import static tech.tablesaw.api.StringColumn.create as sCol
 import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
 
 import tech.tablesaw.io.xlsx.XlsxReader
-import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.components.Figure
 import tech.tablesaw.plotly.components.Layout
 import tech.tablesaw.plotly.traces.BarTrace
@@ -37,34 +34,43 @@ import tech.tablesaw.plotly.traces.ScatterTrace
 import java.time.LocalDateTime
 import java.util.function.Function
 
+String colDate = 'Date'
+String colMonth = 'Month'
+String colNoscent = 'Noscent'
+String colCountNoscent = 'Count [Noscent]'
+String colNsprop = 'nsprop'
+String colBarLower = 'barLower'
+String colBarHigher = 'barHigher'
+double markerOpacity = 0.5
+
 var url = getClass().getResource('/data/Scented_all.xlsx')
 table = new XlsxReader().read(builder(url).build())
 start2020 = LocalDateTime.of(2020, JANUARY, 1, 0, 0)
-Function from2020 = r -> r.dateTimeColumn('Date').isAfter(start2020)
+Function from2020 = { r -> r.dateTimeColumn(colDate).isAfter(start2020) }
 
 candidates = ['[Nn]o scent', '[Nn]o smell', '[Dd]oes not smell like', "[Dd]oesn't smell like", "[Cc]an't smell",
                   '[Cc]annot smell', '[Ff]aint smell', '[Ff]aint scent', "[Dd]on't smell", '[Ll]ike nothing']
-monthNames = table.column('Date').collect { it.month.toString() }
+monthNames = table.column(colDate).collect { it.month.toString() }
 reviewFlags = table.column('Review').collect { review -> candidates.any { review =~ it } }
-table.addColumns(sCol('Month', monthNames), bCol('Noscent', reviewFlags))
+table.addColumns(sCol(colMonth, monthNames), bCol(colNoscent, reviewFlags))
 
-byMonth2020 = table.where(from2020).sortAscendingOn('Date')
-        .summarize('Noscent', countTrue, count).by('Month')
+byMonth2020 = table.where(from2020).sortAscendingOn(colDate)
+        .summarize(colNoscent, countTrue, count).by(colMonth)
 indices = 0..<byMonth2020.size()
-double[] nsprop = indices.collect { byMonth2020[it].with { it.getDouble('Number True [Noscent]') / it.getDouble('Count [Noscent]') } }
-double[] se = indices.collect { sqrt(nsprop[it] * (1 - nsprop[it]) / byMonth2020[it].getDouble('Count [Noscent]')) }
+double[] nsprop = indices.collect { byMonth2020[it].with { it.getDouble('Number True [Noscent]') / it.getDouble(colCountNoscent) } }
+double[] se = indices.collect { sqrt(nsprop[it] * (1 - nsprop[it]) / byMonth2020[it].getDouble(colCountNoscent)) }
 double[] barLower = indices.collect { nsprop[it] - se[it] }
 double[] barHigher = indices.collect { nsprop[it] + se[it] }
-byMonth2020.addColumns(dCol('nsprop', nsprop), dCol('barLower', barLower), dCol('barHigher', barHigher))
+byMonth2020.addColumns(dCol(colNsprop, nsprop), dCol(colBarLower, barLower), dCol(colBarHigher, barHigher))
 
 title = 'Proportion of top 5 scented candles on Amazon mentioning lack of scent by month 2020'
-layout = Layout.builder(title, 'Month', 'Proportion of reviews')
+layout = Layout.builder(title, colMonth, 'Proportion of reviews')
         .showLegend(false).width(1000).height(500).build()
-trace = BarTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCol('nsprop'))
-        .orientation(BarTrace.Orientation.VERTICAL).opacity(0.5).build()
-errors = ScatterTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCol('barLower'),
-        byMonth2020.nCol('barHigher'), byMonth2020.nCol('barLower'), byMonth2020.nCol('barHigher'))
-        .type("candlestick").opacity(0.5).build()
+trace = BarTrace.builder(byMonth2020.categoricalColumn(colMonth), byMonth2020.nCol(colNsprop))
+        .orientation(BarTrace.Orientation.VERTICAL).opacity(markerOpacity).build()
+errors = ScatterTrace.builder(byMonth2020.categoricalColumn(colMonth), byMonth2020.nCol(colBarLower),
+        byMonth2020.nCol(colBarHigher), byMonth2020.nCol(colBarLower), byMonth2020.nCol(colBarHigher))
+        .type('candlestick').opacity(markerOpacity).build()
 var chart = new Figure(layout, trace, errors)
 def helper = new TablesawHelper(url.file)
 helper.save(chart, 'ReviewBarchart.html')
