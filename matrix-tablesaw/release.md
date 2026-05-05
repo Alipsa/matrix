@@ -1,6 +1,6 @@
 # Matrix-Tablesaw Version history
 
-## v0.3.0, 2026-05-04
+## v0.3.0, 2026-05-05
 
 ### Breaking Changes
 - **Removed previously deprecated `OdsReadOptions` factory methods**
