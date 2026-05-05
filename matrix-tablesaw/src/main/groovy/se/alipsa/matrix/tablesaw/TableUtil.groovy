@@ -214,7 +214,7 @@ class TableUtil {
     for (ColumnType type : table.types()) {
       columnTypes.add(classForColumnType(type))
     }
-    return Matrix.builder(table.name())
+    Matrix.builder(table.name())
         .columnNames(table.columnNames())
         .rows(rows)
         .types(columnTypes)

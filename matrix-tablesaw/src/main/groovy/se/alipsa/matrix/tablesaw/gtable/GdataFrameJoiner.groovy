@@ -50,7 +50,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table... tables) {
-    return Gtable.create(super.inner(tables))
+    Gtable.create(super.inner(tables))
   }
 
   /**
@@ -62,7 +62,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(boolean allowDuplicateColumnNames, Table... tables) {
-    return Gtable.create(super.inner(allowDuplicateColumnNames, tables))
+    Gtable.create(super.inner(allowDuplicateColumnNames, tables))
   }
 
   /**
@@ -74,7 +74,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table table2, String col2Name) {
-    return Gtable.create(super.inner(table2, col2Name))
+    Gtable.create(super.inner(table2, col2Name))
   }
 
   /**
@@ -86,7 +86,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table table2, String[] col2Names) {
-    return Gtable.create(super.inner(table2, col2Names))
+    Gtable.create(super.inner(table2, col2Names))
   }
 
   /**
@@ -99,7 +99,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table table2, String col2Name, boolean allowDuplicateColumnNames) {
-    return Gtable.create(super.inner(table2, col2Name, allowDuplicateColumnNames))
+    Gtable.create(super.inner(table2, col2Name, allowDuplicateColumnNames))
   }
 
   /**
@@ -112,7 +112,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table table2, boolean allowDuplicateColumnNames, String... col2Names) {
-    return Gtable.create(super.inner(table2, allowDuplicateColumnNames, col2Names))
+    Gtable.create(super.inner(table2, allowDuplicateColumnNames, col2Names))
   }
 
   /**
@@ -126,7 +126,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable inner(Table table2, boolean allowDuplicateColumnNames, boolean keepAllJoinKeyColumns, String... col2Names) {
-    return Gtable.create(super.inner(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
+    Gtable.create(super.inner(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
   }
 
   /**
@@ -137,7 +137,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable fullOuter(Table... tables) {
-    return Gtable.create(super.fullOuter(tables))
+    Gtable.create(super.fullOuter(tables))
   }
 
   /**
@@ -149,7 +149,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable fullOuter(boolean allowDuplicateColumnNames, Table... tables) {
-    return Gtable.create(super.fullOuter(allowDuplicateColumnNames, tables))
+    Gtable.create(super.fullOuter(allowDuplicateColumnNames, tables))
   }
 
   /**
@@ -163,7 +163,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable fullOuter(Table table2, boolean allowDuplicateColumnNames, boolean keepAllJoinKeyColumns, String... col2Names) {
-    return Gtable.create(super.fullOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
+    Gtable.create(super.fullOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
   }
 
   /**
@@ -175,7 +175,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable fullOuter(Table table2, String col2Name) {
-    return Gtable.create(super.fullOuter(table2, col2Name))
+    Gtable.create(super.fullOuter(table2, col2Name))
   }
 
   /**
@@ -186,7 +186,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(Table... tables) {
-    return Gtable.create(super.leftOuter(tables))
+    Gtable.create(super.leftOuter(tables))
   }
 
   /**
@@ -198,7 +198,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(boolean allowDuplicateColumnNames, Table... tables) {
-    return Gtable.create(super.leftOuter(allowDuplicateColumnNames, tables))
+    Gtable.create(super.leftOuter(allowDuplicateColumnNames, tables))
   }
 
   /**
@@ -210,7 +210,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(Table table2, String[] col2Names) {
-    return Gtable.create(super.leftOuter(table2, col2Names))
+    Gtable.create(super.leftOuter(table2, col2Names))
   }
 
   /**
@@ -222,7 +222,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(Table table2, String col2Name) {
-    return Gtable.create(super.leftOuter(table2, col2Name))
+    Gtable.create(super.leftOuter(table2, col2Name))
   }
 
   /**
@@ -235,7 +235,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(Table table2, boolean allowDuplicateColumnNames, String... col2Names) {
-    return Gtable.create(super.leftOuter(table2, allowDuplicateColumnNames, col2Names))
+    Gtable.create(super.leftOuter(table2, allowDuplicateColumnNames, col2Names))
   }
 
   /**
@@ -249,7 +249,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable leftOuter(Table table2, boolean allowDuplicateColumnNames, boolean keepAllJoinKeyColumns, String... col2Names) {
-    return Gtable.create(super.leftOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
+    Gtable.create(super.leftOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
   }
 
   /**
@@ -260,7 +260,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(Table... tables) {
-    return Gtable.create(super.rightOuter(tables))
+    Gtable.create(super.rightOuter(tables))
   }
 
   /**
@@ -272,7 +272,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(boolean allowDuplicateColumnNames, Table... tables) {
-    return Gtable.create(super.rightOuter(allowDuplicateColumnNames, tables))
+    Gtable.create(super.rightOuter(allowDuplicateColumnNames, tables))
   }
 
   /**
@@ -284,7 +284,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(Table table2, String col2Name) {
-    return Gtable.create(super.rightOuter(table2, col2Name))
+    Gtable.create(super.rightOuter(table2, col2Name))
   }
 
   /**
@@ -296,7 +296,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(Table table2, String[] col2Names) {
-    return Gtable.create(super.rightOuter(table2, col2Names))
+    Gtable.create(super.rightOuter(table2, col2Names))
   }
 
   /**
@@ -309,7 +309,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(Table table2, boolean allowDuplicateColumnNames, String... col2Names) {
-    return Gtable.create(super.rightOuter(table2, allowDuplicateColumnNames, col2Names))
+    Gtable.create(super.rightOuter(table2, allowDuplicateColumnNames, col2Names))
   }
 
   /**
@@ -323,7 +323,7 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   @Override
   Gtable rightOuter(Table table2, boolean allowDuplicateColumnNames, boolean keepAllJoinKeyColumns, String... col2Names) {
-    return Gtable.create(super.rightOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
+    Gtable.create(super.rightOuter(table2, allowDuplicateColumnNames, keepAllJoinKeyColumns, col2Names))
   }
 
 }

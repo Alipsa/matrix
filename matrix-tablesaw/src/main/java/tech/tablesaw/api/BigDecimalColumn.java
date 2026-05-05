@@ -1067,16 +1067,6 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
-  /**
-   * Alias for {@link #plus(BigDecimalColumn)}.
-   *
-   * <p>Returns a <strong>new column</strong> and does not modify this column.
-   * Use {@link #addTo(BigDecimalColumn)} for in-place addition.
-   *
-   * @param column the column to add
-   * @return a new column containing the sum of this and the given column
-   * @throws IllegalArgumentException if the columns have different sizes
-   */
   private void assertSameSize(BigDecimalColumn column) {
     checkArgument(size() == column.size(),
         "Columns must have the same size: %s has %d rows, %s has %d rows",
