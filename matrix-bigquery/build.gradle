@@ -99,23 +99,6 @@ test {
     }
     info.events = debug.events
     info.exceptionFormat = debug.exceptionFormat
-
-    def totalDuration = 0
-    afterSuite { desc, result ->
-      def duration = result.endTime - result.startTime
-      //println "Duration of $desc: $duration ms"
-      totalDuration += duration
-      if (!desc.parent) { // will match the outermost suite
-        // Note: Using println here is the standard Gradle pattern for test listeners.
-        // Using logger.lifecycle causes configuration cache issues as it references
-        // a Gradle script object from a closure at execution time.
-        println "\nTotal test duration: ${totalDuration/1000} s"
-        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
-        def startItem = '|  ', endItem = '  |'
-        def repeatLength = startItem.length() + output.length() + endItem.length()
-        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
-      }
-    }
   }
 }
 

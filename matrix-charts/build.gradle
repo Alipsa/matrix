@@ -127,20 +127,6 @@ test {
     }
     info.events = debug.events
     info.exceptionFormat = debug.exceptionFormat
-
-    def totalDuration = 0
-    afterSuite { desc, result ->
-      def duration = result.endTime - result.startTime
-      //println "Duration of $desc: $duration ms"
-      totalDuration += duration
-      if (!desc.parent) { // will match the outermost suite
-        println "\nTotal test duration: ${totalDuration/1000} s"
-        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
-        def startItem = '|  ', endItem = '  |'
-        def repeatLength = startItem.length() + output.length() + endItem.length()
-        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
-      }
-    }
   }
 }
 

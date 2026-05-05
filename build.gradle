@@ -73,6 +73,28 @@ allprojects {
 }
 
 subprojects {
+  tasks.withType(Test).configureEach {
+    addTestListener(new TestListener() {
+      long totalDuration = 0
+
+      @Override void beforeSuite(TestDescriptor suite) {}
+      @Override void beforeTest(TestDescriptor test) {}
+      @Override void afterTest(TestDescriptor test, TestResult result) {}
+
+      @Override
+      void afterSuite(TestDescriptor desc, TestResult result) {
+        totalDuration += result.endTime - result.startTime
+        if (!desc.parent) {
+          println "\nTotal test duration: ${totalDuration / 1000} s"
+          def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+          def startItem = '|  ', endItem = '  |'
+          def repeatLength = startItem.length() + output.length() + endItem.length()
+          println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+        }
+      }
+    })
+  }
+
   // Compile all groovy code statically by default
   //tasks.withType(GroovyCompile).configureEach {
   //  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
