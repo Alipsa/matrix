@@ -135,7 +135,7 @@ class FExcelImporter implements Importer {
   @Override
   Matrix importSpreadsheet(String file, int sheet,
                             int startRow = 1, int endRow,
-                            String startColumn = 'A', String endColumn,
+                            String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     SpreadsheetUtil.ensureXlsx(file)
     return importSpreadsheet(
@@ -143,8 +143,8 @@ class FExcelImporter implements Importer {
         sheet,
         startRow,
         endRow,
-        SpreadsheetUtil.asColumnNumber(startColumn),
-        SpreadsheetUtil.asColumnNumber(endColumn),
+        SpreadsheetUtil.asColumnNumber(startCol),
+        SpreadsheetUtil.asColumnNumber(endCol),
         firstRowAsColNames
     )
   }
@@ -157,7 +157,9 @@ class FExcelImporter implements Importer {
     SpreadsheetUtil.ensureXlsx(file)
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
-      Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
+      Sheet sheet = workbook.findSheet(sheetName).orElseThrow {
+        new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
+      }
       boolean isDate1904 = workbook.isDate1904()
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
@@ -169,7 +171,9 @@ class FExcelImporter implements Importer {
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
     try (ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
-      Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
+      Sheet sheet = workbook.findSheet(sheetName).orElseThrow {
+        new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
+      }
       boolean isDate1904 = workbook.isDate1904()
       def m = importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
       return m

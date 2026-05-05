@@ -9,9 +9,9 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:2.3.0'
+implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-spreadsheet:2.4.0'
 ```
 or if you use maven:
 ```xml
@@ -19,17 +19,17 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.4</version>
+      <version>5.0.5</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.6.0</version>
+      <version>3.7.1</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>2.3.0</version>
+    <version>2.4.0</version>
   </dependency>
 </dependencies>
 ```
@@ -44,7 +44,7 @@ println(table.head(10))
 ```
 The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 - _file_ the filePath or the file object pointing to the Excel file
-- _sheetName_ the name of the sheet to import, default is 'Sheet1'
+- _sheetName_ the name of the sheet to import; when omitted, defaults to the first sheet (index 1)
 - _startRow_ the starting row for the import (as you would see the row number in Excel), defaults to 1
 - _endRow_ the last row to import
 - _startCol_ the starting column name (A, B etc.) or column number (1, 2 etc.)
@@ -210,6 +210,7 @@ The following table illustrates the version compatibility of the matrix-spreadsh
 
 | Matrix spreadsheet |    Matrix core |
 |-------------------:|---------------:|
+|              2.4.0 |          3.7.1 |
 |              2.3.0 |          3.4.1 |
 |              2.2.0 | 3.2.0 -> 3.3.0 |
 |              2.1.0 |          3.1.0 |
@@ -245,7 +246,5 @@ Used to define the data format i.e. the result from an import or the data to exp
 - URL: https://github.com/Alipsa/matrix
 - License: MIT
 
-### Log4j
-Used to handle logging
-- URL: https://logging.apache.org/log4j/2.x/
-- License: Apache 2.0
+### matrix-core Logger
+Uses the lightweight JDK System.Logger facade via matrix-core; no direct logging framework dependency.

@@ -55,7 +55,7 @@ interface Importer {
 
   Matrix importSpreadsheet(String file, int sheetNumber,
                            int startRow, int endRow,
-                           String startColumn, String endColumn,
+                           String startCol, String endCol,
                            boolean firstRowAsColNames)
 
   Matrix importSpreadsheet(String file, String sheetName,

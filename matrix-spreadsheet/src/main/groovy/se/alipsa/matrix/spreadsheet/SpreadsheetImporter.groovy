@@ -12,153 +12,182 @@ import java.text.NumberFormat
 class SpreadsheetImporter {
 
   /**
+   * Static facade for importing spreadsheet data into Matrix objects.
+   *
+   * <p>Auto-detects the file format (.ods vs .xlsx) and delegates to the
+   * appropriate importer ({@link FOdsImporter} or {@link FExcelImporter}).</p>
+   *
+   * <h3>Basic Usage</h3>
+   * <pre>
+   * // Import by sheet index (1-based)
+   * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", 1, 1, 100, 1, 5)
+   *
+   * // Import by sheet name
+   * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", "Sales", 1, 100, 1, 5)
+   *
+   * // Import using named parameters
+   * Matrix data = SpreadsheetImporter.importSpreadsheet(
+   *   file: "data.xlsx", sheet: 1, endRow: 100, endCol: 5)
+   * </pre>
+   *
+   * @see SpreadsheetWriter
+   * @see FExcelImporter
+   * @see FOdsImporter
+   */
+
+  /**
+   * Import a spreadsheet by file path and sheet index.
    *
    * @param file the ods or excel file to import
    * @param sheet the sheet index (index starting with 1)
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column to include (index starting with 1)
-   * @param endColumn the last column to include
+   * @param startCol the first column to include (index starting with 1)
+   * @param endCol the last column to include
    * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(String file, int sheet,
                                   int startRow = 1, int endRow,
-                                  int startColumn = 1, int endColumn,
+                                  int startCol = 1, int endCol,
                                   boolean firstRowAsColNames = true) {
     if (isOdsFile(file)) {
-      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
     SpreadsheetUtil.ensureXlsx(file)
     return excelImporter()
-        .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+        .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   /**
+   * Import an ODS spreadsheet from a URL by sheet index.
    *
-   * @param file the ods or excel file to import
+   * @param url the URL of the ods file to import
    * @param sheet the sheet index (index starting with 1)
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column to include (index starting with 1)
-   * @param endColumn the last column to include
+   * @param startCol the first column to include (index starting with 1)
+   * @param endCol the last column to include
    * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importOds(URL url, int sheet,
                           int startRow = 1, int endRow,
-                          int startColumn = 1, int endColumn,
+                          int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
 
-    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importOds(URL url, int sheet,
                           int startRow = 1, int endRow,
-                          String startColumn = 'A', String endColumn,
+                          String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
 
-    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   /**
+   * Import an ODS spreadsheet from a URL by sheet name.
    *
-   * @param file the ods or excel file to import
-   * @param sheet the sheet name, defaults to Sheet1
+   * @param url the URL of the ods file to import
+   * @param sheet the sheet name
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column to include (index starting with 1)
-   * @param endColumn the last column to include
+   * @param startCol the first column to include (index starting with 1)
+   * @param endCol the last column to include
    * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importOds(URL url, String sheet,
                           int startRow = 1, int endRow,
-                          int startColumn = 1, int endColumn,
+                          int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
-    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importOds(URL url, String sheet,
                           int startRow = 1, int endRow,
-                          String startColumn = 'A', String endColumn,
+                          String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
-    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, int sheet,
                             int startRow = 1, int endRow,
-                            int startColumn = 1, int endColumn,
+                            int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
     SpreadsheetUtil.ensureXlsx(url?.path)
-    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, String sheet,
                             int startRow = 1, int endRow,
-                            int startColumn = 1, int endColumn,
+                            int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
     SpreadsheetUtil.ensureXlsx(url?.path)
-    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, int sheet,
                             int startRow = 1, int endRow,
-                            String startColumn = 'A', String endColumn,
+                            String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     SpreadsheetUtil.ensureXlsx(url?.path)
-    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, String sheet,
                             int startRow = 1, int endRow,
-                            String startColumn = 'A', String endColumn,
+                            String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
 
     SpreadsheetUtil.ensureXlsx(url?.path)
-    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   /**
+   * Import a spreadsheet by file path and sheet index using column names.
    *
    * @param file the ods or excel file to import
    * @param sheet the sheet index (index starting with 1)
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column name to include (A is the first column name etc.)
-   * @param endColumn the last column name to include
-   * @param firstRowAsColNames whether to treat the first row as a header row for thecolumn names or not,
+   * @param startCol the first column name to include (A is the first column name etc.)
+   * @param endCol the last column name to include
+   * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(String file, int sheet,
                                   int startRow = 1, int endRow,
-                                  String startColumn = 'A', String endColumn,
+                                  String startCol = 'A', String endCol,
                                   boolean firstRowAsColNames = true) {
     if (isOdsFile(file)) {
-      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
     SpreadsheetUtil.ensureXlsx(file)
     return excelImporter()
-        .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+        .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
   /**
+   * Import a spreadsheet by file path and sheet name.
    *
    * @param file the ods or excel file to import
-   * @param sheet the sheet name, defaults to Sheet1
+   * @param sheet the sheet name
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column to include (index starting with 1)
-   * @param endColumn the last column to include
-   * @param firstRowAsColNames whether to treat the first row as a header row for thecolumn names or not,
+   * @param startCol the first column to include (index starting with 1)
+   * @param endCol the last column to include
+   * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
+  static Matrix importSpreadsheet(String file, String sheet,
                                   int startRow = 1, int endRow,
                                   int startCol = 1, int endCol,
                                   boolean firstRowAsColNames = true) {
@@ -171,18 +200,19 @@ class SpreadsheetImporter {
   }
 
   /**
+   * Import a spreadsheet by file path and sheet name using column names.
    *
    * @param file the ods or excel file to import
-   * @param sheet the sheet name, defaults to Sheet1
+   * @param sheet the sheet name
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
-   * @param startColumn the first column name to include (A is the first column name etc.)
-   * @param endColumn the last column name to include
-   * @param firstRowAsColNames whether to treat the first row as a header row for thecolumn names or not,
+   * @param startCol the first column name to include (A is the first column name etc.)
+   * @param endCol the last column name to include
+   * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
+  static Matrix importSpreadsheet(String file, String sheet,
                                   int startRow = 1, int endRow,
                                   String startCol = 'A', String endCol,
                                   boolean firstRowAsColNames = true) {
@@ -209,6 +239,90 @@ class SpreadsheetImporter {
    * firstRowAsColNames (a boolean)
    * @return A Matrix corresponding to the spreadsheet data.
    */
+  // --- File-based overloads ---
+
+  static Matrix importSpreadsheet(File file, int sheet,
+                                  int startRow = 1, int endRow,
+                                  int startCol = 1, int endCol,
+                                  boolean firstRowAsColNames = true) {
+    importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+  }
+
+  static Matrix importSpreadsheet(File file, String sheet,
+                                  int startRow = 1, int endRow,
+                                  int startCol = 1, int endCol,
+                                  boolean firstRowAsColNames = true) {
+    importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+  }
+
+  static Matrix importSpreadsheet(File file, int sheet,
+                                  int startRow = 1, int endRow,
+                                  String startCol = 'A', String endCol,
+                                  boolean firstRowAsColNames = true) {
+    importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+  }
+
+  static Matrix importSpreadsheet(File file, String sheet,
+                                  int startRow = 1, int endRow,
+                                  String startCol = 'A', String endCol,
+                                  boolean firstRowAsColNames = true) {
+    importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+  }
+
+  // --- Whole-sheet convenience imports (auto-detect dimensions) ---
+
+  /**
+   * Import an entire spreadsheet sheet using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file to import
+   * @param sheetNumber the sheet index (1-based), defaults to 1
+   * @param firstRowAsColNames whether to treat the first row as column names
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(File file, int sheetNumber = 1, boolean firstRowAsColNames = true) {
+    SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
+      int endRow = reader.findLastRow(sheetNumber)
+      int endCol = reader.findLastCol(sheetNumber)
+      return importSpreadsheet(file.absolutePath, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
+    }
+  }
+
+  /**
+   * Import an entire spreadsheet sheet using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file path to import
+   * @param sheetNumber the sheet index (1-based), defaults to 1
+   * @param firstRowAsColNames whether to treat the first row as column names
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(String file, int sheetNumber = 1, boolean firstRowAsColNames = true) {
+    File spreadsheetFile = FileUtil.checkFilePath(file)
+    SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
+      int endRow = reader.findLastRow(sheetNumber)
+      int endCol = reader.findLastCol(sheetNumber)
+      return importSpreadsheet(file, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
+    }
+  }
+
+  /**
+   * Import an entire spreadsheet sheet by name using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file path to import
+   * @param sheetName the sheet name
+   * @param firstRowAsColNames whether to treat the first row as column names
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(String file, String sheetName, boolean firstRowAsColNames = true) {
+    File spreadsheetFile = FileUtil.checkFilePath(file)
+    SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
+      int endRow = reader.findLastRow(sheetName)
+      int endCol = reader.findLastCol(sheetName)
+      return importSpreadsheet(file, sheetName, 1, endRow, 1, endCol, firstRowAsColNames)
+    }
+  }
+
+  // --- Map-based import ---
+
   static Matrix importSpreadsheet(Map params) {
     def fp = params['file']
     validateNotNull(fp, 'file')
@@ -263,6 +377,12 @@ class SpreadsheetImporter {
     )
   }
 
+  static Map<Object, Matrix> importSpreadsheets(File file,
+                                                List<Map> sheetParams,
+                                                NumberFormat... formatOpt) {
+    importSpreadsheets(file.absolutePath, sheetParams, formatOpt)
+  }
+
   static Map<Object, Matrix> importSpreadsheets(String fileName,
                                                 List<Map> sheetParams,
                                                 NumberFormat... formatOpt) {
@@ -288,7 +408,7 @@ class SpreadsheetImporter {
         .importSpreadsheets(url, sheetParams, formatOpt)
   }
 
-  static void validateNotNull(Object paramVal, String paramName) {
+  private static void validateNotNull(Object paramVal, String paramName) {
     if (paramVal == null) {
       throw new IllegalArgumentException("$paramName cannot be null")
     }

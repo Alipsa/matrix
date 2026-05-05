@@ -46,7 +46,7 @@
     <matrixLoggingVersion>0.1.0-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.5.0</matrixParquetVersion>
     <matrixSmileVersion>0.1.1-SNAPSHOT</matrixSmileVersion>
-    <matrixSpreadsheetVersion>2.3.1-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.4.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
     <matrixStatsVersion>2.4.0</matrixStatsVersion>
     <matrixTablesawVersion>0.3.0</matrixTablesawVersion>

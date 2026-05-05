@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 
 import org.dhatim.fastexcel.Workbook
 import org.dhatim.fastexcel.Worksheet
-import org.dhatim.fastexcel.reader.ReadableWorkbook
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
@@ -17,9 +16,12 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.Collections
 
-// Causes module access error (failed to access class org.dhatim.fastexcel.GenericStyleSetter)
-// so go with dynamic for now
-//@CompileStatic
+// @CompileStatic is intentionally omitted.
+// When enabled, Groovy generates direct bytecode for sheet.style(row, col).format(...).set()
+// which triggers an IllegalAccessError at runtime because GenericStyleSetter is
+// package-private inside org.dhatim.fastexcel. Dynamic dispatch uses reflection/
+// metaclass invocation which bypasses this restriction. Re-evaluate if fastexcel
+// ever makes GenericStyleSetter public.
 class FExcelExporter {
 
   static final Logger logger = Logger.getLogger(FExcelExporter)
@@ -27,9 +29,12 @@ class FExcelExporter {
   static final String VERSION = '02.1000' // must be in the format XX.YYYY
 
   /**
-   * Export to an Excel file. If the file does not exists, a new file will be created
-   * if the excel file exists and is not empty, a new sheet will be added to the excel
-   * The name of the sheet will correspond to the name of the Matrix
+   * Export a Matrix to a new Excel file.
+   *
+   * <p>If the file already exists and is not empty, an {@link IllegalArgumentException}
+   * is thrown. Use {@link FExcelAppender} or {@link SpreadsheetWriter} for append/replace
+   * operations.</p>
+   *
    * @param filePath the path to the file to export
    * @param data the Matrix data to export
    * @return the actual name of the sheet created (illegal characters replaced by space)
@@ -40,9 +45,12 @@ class FExcelExporter {
   }
 
   /**
-   * Export to an Excel file. If the file does not exists, a new file will be created
-   * if the excel file exists and is not empty, a new sheet will be added to the excel
-   * The name of the sheet will correspond to the name of the Matrix
+   * Export a Matrix to a new Excel file.
+   *
+   * <p>If the file already exists and is not empty, an {@link IllegalArgumentException}
+   * is thrown. Use {@link FExcelAppender} or {@link SpreadsheetWriter} for append/replace
+   * operations.</p>
+   *
    * @param file the file to export
    * @param data the Matrix data to export
    * @return the actual name of the sheet created (illegal characters replaced by space)
@@ -55,8 +63,11 @@ class FExcelExporter {
   }
 
   /**
-   * Export to an Excel file. If the file does not exists, a new file will be created
-   * if the excel file exists and is not empty, a new sheet will be added to the excel
+   * Export a Matrix to a new Excel file with a specific sheet name.
+   *
+   * <p>If the file already exists and is not empty, an {@link IllegalArgumentException}
+   * is thrown. Use {@link FExcelAppender} or {@link SpreadsheetWriter} for append/replace
+   * operations.</p>
    *
    * @param file the file to export
    * @param data the Matrix data to export
@@ -68,7 +79,11 @@ class FExcelExporter {
   }
 
   /**
-   * Export to an Excel file with a specific start position.
+   * Export a Matrix to a new Excel file with a specific start position.
+   *
+   * <p>If the file already exists and is not empty, an {@link IllegalArgumentException}
+   * is thrown. Use {@link FExcelAppender} or {@link SpreadsheetWriter} for append/replace
+   * operations.</p>
    *
    * @param file the file to export
    * @param data the Matrix data to export
@@ -81,26 +96,12 @@ class FExcelExporter {
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.exists() && file.length() > 0) {
-      try (FileInputStream fis = new FileInputStream(file)
-           ReadableWorkbook workbook = new ReadableWorkbook(fis, FExcelImporter.OPTIONS)) {
-        List<String> sheetNames = FExcelReader.getSheetNames(workbook)
-        if (sheetNames.contains(validSheetName)) {
-          int index = 1
-          while (true) {
-            validSheetName = SpreadsheetUtil.createValidSheetName(validSheetName + index++)
-            if (!sheetNames.contains(validSheetName)) {
-              break
-            }
-          }
-        }
-        throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
-      }
-    } else {
-      try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
-        Worksheet sheet = workbook.newWorksheet(validSheetName)
-        buildSheet(data, sheet, position)
-        workbook.finish()
-      }
+      throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
+    }
+    try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
+      Worksheet sheet = workbook.newWorksheet(validSheetName)
+      buildSheet(data, sheet, position)
+      workbook.finish()
     }
     return validSheetName
   }
