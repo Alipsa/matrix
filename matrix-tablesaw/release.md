@@ -58,7 +58,7 @@
 - com.github.miachm.sods:SODS 1.8.2 -> 1.8.3
 
 ### Testing
-- All 114 tests passing.
+- All 115 tests passing.
 - `:matrix-tablesaw:check` (including JaCoCo coverage verification) passes.
 
 ## v0.2.2, 2026-01-31
