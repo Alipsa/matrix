@@ -130,7 +130,7 @@ class Gtable extends Table {
   /**
    * Returns a new gtable with the given columns
    *
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(Column<?>... columns) {
     new Gtable(null, columns)
@@ -139,7 +139,7 @@ class Gtable extends Table {
   /**
    * Returns a new gtable with the given columns
    *
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(Collection<Column<?>> columns) {
     new Gtable(null, columns)
@@ -148,7 +148,7 @@ class Gtable extends Table {
   /**
    * Returns a new gtable with the given columns
    *
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(Stream<Column<?>> columns) {
     new Gtable(null, columns.collect(Collectors.toList()))
@@ -158,7 +158,7 @@ class Gtable extends Table {
    * Returns a new gtable with the given columns and given name
    *
    * @param name the name for this gtable
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(String name, Column<?>... columns) {
     new Gtable(name, columns)
@@ -168,7 +168,7 @@ class Gtable extends Table {
    * Returns a new gtable with the given columns and given name
    *
    * @param name the name for this table
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(String name, Collection<Column<?>> columns) {
     new Gtable(name, columns)
@@ -178,7 +178,7 @@ class Gtable extends Table {
    * Returns a new Gtable with the given columns and given name
    *
    * @param name the name for this table
-   * @param columns one or more columns, all of the same @code{column.size()}
+   * @param columns one or more columns, all of the same {@code column.size()}
    */
   static Gtable create(String name, Stream<Column<?>> columns) {
     new Gtable(name, columns.collect(Collectors.toList()))

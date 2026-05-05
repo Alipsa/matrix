@@ -84,7 +84,7 @@ class TableUtil {
   /**
    * Round a double value to the specified number of decimal places.
    *
-   * <p>Uses {@link RoundingMode#HALF_UP} for rounding.
+   * <p>Uses {@link RoundingMode#HALF_EVEN} for rounding.
    *
    * @param value the value to round
    * @param numDecimals the number of decimal places (must be non-negative)
@@ -97,14 +97,14 @@ class TableUtil {
     }
 
     BigDecimal bd = BigDecimal.valueOf(value)
-    bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
+    bd = bd.setScale(numDecimals, RoundingMode.HALF_EVEN)
     bd.doubleValue()
   }
 
   /**
    * Round a float value to the specified number of decimal places.
    *
-   * <p>Uses {@link RoundingMode#HALF_UP} for rounding.
+   * <p>Uses {@link RoundingMode#HALF_EVEN} for rounding.
    *
    * @param value the value to round
    * @param numDecimals the number of decimal places (must be non-negative)
@@ -117,7 +117,7 @@ class TableUtil {
     }
 
     BigDecimal bd = BigDecimal.valueOf(value)
-    bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
+    bd = bd.setScale(numDecimals, RoundingMode.HALF_EVEN)
     bd.floatValue()
   }
 

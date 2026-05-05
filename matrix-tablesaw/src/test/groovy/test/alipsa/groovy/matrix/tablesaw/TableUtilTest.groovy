@@ -181,7 +181,8 @@ class TableUtilTest {
   @Test
   void testRoundDouble() {
     assertEquals(3.14d, TableUtil.round(3.14159d, 2), 1e-9)
-    assertEquals(3.15d, TableUtil.round(3.145d, 2), 1e-9)
+    assertEquals(3.14d, TableUtil.round(3.145d, 2), 1e-9)
+    assertEquals(3.14d, TableUtil.round(3.135d, 2), 1e-9)
   }
 
   @Test
