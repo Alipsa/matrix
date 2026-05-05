@@ -8,32 +8,31 @@ import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 
 import java.text.NumberFormat
 
+/**
+ * Static facade for importing spreadsheet data into Matrix objects.
+ *
+ * <p>Auto-detects the file format (.ods vs .xlsx) and delegates to the
+ * appropriate importer ({@link FOdsImporter} or {@link FExcelImporter}).</p>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>
+ * // Import by sheet index (1-based)
+ * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", 1, 1, 100, 1, 5)
+ *
+ * // Import by sheet name
+ * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", "Sales", 1, 100, 1, 5)
+ *
+ * // Import using named parameters
+ * Matrix data = SpreadsheetImporter.importSpreadsheet(
+ *   file: "data.xlsx", sheet: 1, endRow: 100, endCol: 5)
+ * </pre>
+ *
+ * @see SpreadsheetWriter
+ * @see FExcelImporter
+ * @see FOdsImporter
+ */
 @CompileStatic
 class SpreadsheetImporter {
-
-  /**
-   * Static facade for importing spreadsheet data into Matrix objects.
-   *
-   * <p>Auto-detects the file format (.ods vs .xlsx) and delegates to the
-   * appropriate importer ({@link FOdsImporter} or {@link FExcelImporter}).</p>
-   *
-   * <h3>Basic Usage</h3>
-   * <pre>
-   * // Import by sheet index (1-based)
-   * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", 1, 1, 100, 1, 5)
-   *
-   * // Import by sheet name
-   * Matrix data = SpreadsheetImporter.importSpreadsheet("data.xlsx", "Sales", 1, 100, 1, 5)
-   *
-   * // Import using named parameters
-   * Matrix data = SpreadsheetImporter.importSpreadsheet(
-   *   file: "data.xlsx", sheet: 1, endRow: 100, endCol: 5)
-   * </pre>
-   *
-   * @see SpreadsheetWriter
-   * @see FExcelImporter
-   * @see FOdsImporter
-   */
 
   /**
    * Import a spreadsheet by file path and sheet index.
@@ -241,6 +240,10 @@ class SpreadsheetImporter {
    */
   // --- File-based overloads ---
 
+  /**
+   * Delegates to {@link #importSpreadsheet(String, int, int, int, int, int, boolean)}
+   * after resolving the absolute path.
+   */
   static Matrix importSpreadsheet(File file, int sheet,
                                   int startRow = 1, int endRow,
                                   int startCol = 1, int endCol,
@@ -248,6 +251,10 @@ class SpreadsheetImporter {
     importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
+  /**
+   * Delegates to {@link #importSpreadsheet(String, String, int, int, int, int, boolean)}
+   * after resolving the absolute path.
+   */
   static Matrix importSpreadsheet(File file, String sheet,
                                   int startRow = 1, int endRow,
                                   int startCol = 1, int endCol,
@@ -255,6 +262,10 @@ class SpreadsheetImporter {
     importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
+  /**
+   * Delegates to {@link #importSpreadsheet(String, int, int, int, String, String, boolean)}
+   * after resolving the absolute path.
+   */
   static Matrix importSpreadsheet(File file, int sheet,
                                   int startRow = 1, int endRow,
                                   String startCol = 'A', String endCol,
@@ -262,6 +273,10 @@ class SpreadsheetImporter {
     importSpreadsheet(file.absolutePath, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
+  /**
+   * Delegates to {@link #importSpreadsheet(String, String, int, int, String, String, boolean)}
+   * after resolving the absolute path.
+   */
   static Matrix importSpreadsheet(File file, String sheet,
                                   int startRow = 1, int endRow,
                                   String startCol = 'A', String endCol,

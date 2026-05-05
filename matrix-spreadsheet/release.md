@@ -26,8 +26,6 @@
 - add `@CompileStatic` to `ValueExtractor`
 - replace generic `Exception` throws in `FileUtil` with `SpreadsheetImportException`
 - document why `FExcelExporter` cannot use `@CompileStatic` (fastexcel internal `GenericStyleSetter` access)
-- fix malformed `@code{...}` inline tags in `Gtable.groovy` GroovyDoc
-- replace unbounded generic `<T>` in `TableUtil.createColumn` with concrete `ColumnType` parameter
 
 ### Test Coverage
 - 124 tests passing (up from 105 in v2.3.0)

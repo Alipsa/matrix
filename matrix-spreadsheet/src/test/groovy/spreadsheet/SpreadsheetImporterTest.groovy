@@ -16,6 +16,7 @@ import se.alipsa.matrix.spreadsheet.Importer
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 
+import java.io.File
 import java.io.InputStream
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -198,5 +199,18 @@ class SpreadsheetImporterTest {
     } finally {
       stream.close()
     }
+  }
+
+  @Test
+  void testAutoDetectXlsxByFile() throws Exception {
+    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
+    Matrix m = importSpreadsheet(file, 1, true)
+    book1ImportAssertions(m)
+  }
+
+  @Test
+  void testAutoDetectXlsxByName() {
+    Matrix m = importSpreadsheet("Book1.xlsx", "Sheet1", true)
+    book1ImportAssertions(m)
   }
 }
