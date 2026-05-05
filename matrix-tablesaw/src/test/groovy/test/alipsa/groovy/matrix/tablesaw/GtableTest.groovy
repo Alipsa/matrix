@@ -256,4 +256,14 @@ class GtableTest {
     assertTrue(ex.message.contains('STRING'))
   }
 
+  @Test
+  void testAddColumnHelpers() {
+    def table = Gtable.create()
+        .addStringColumn('s', ['a', 'b'])
+        .addIntColumn('i', [1, 2])
+        .addDoubleColumn('d', [1.1, 2.2])
+    assertEquals(2, table.rowCount())
+    assertEquals(['s', 'i', 'd'], table.columnNames())
+  }
+
 }

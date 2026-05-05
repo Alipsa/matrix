@@ -221,7 +221,7 @@ class Gtable extends Table {
    * @return a new Gtable
    */
   Gtable addFloatColumn(String name, List data) {
-    addColumns(FloatColumn.create(name, data as Float[])) as Gtable
+    addColumns(FloatColumn.create(name, data as float[])) as Gtable
   }
 
   /**
@@ -231,7 +231,7 @@ class Gtable extends Table {
    * @return a new Gtable
    */
   Gtable addIntColumn(String name, List data) {
-    addColumns(IntColumn.create(name, data as Integer[])) as Gtable
+    addColumns(IntColumn.create(name, data as int[])) as Gtable
   }
 
   /**

@@ -248,7 +248,7 @@ class TableUtil {
    *
    * <p>Preserves the matrix name, column names, column types, and all data for supported
    * column types. Columns whose Java types map to {@link ColumnType#SKIP} (or that cannot
-   * be created by {@link #createColumn(Object, String, List)}) cause an
+   * be created by {@link #createColumn(ColumnType, String, List)}) cause an
    * {@link IllegalArgumentException} to be thrown. Use {@link #toTablesaw(Matrix, boolean)}
    * with {@code skipUnsupported = true} to omit unsupported columns instead.
    *
@@ -311,91 +311,90 @@ class TableUtil {
    * @param <T> the type parameter
    * @return a column of the specified type, or null if type is not supported
    */
-  @SuppressWarnings('unchecked')
-  static <T> Column<T> createColumn(T type, String name, List<?> values) {
+  static Column<?> createColumn(ColumnType type, String name, List<?> values) {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
       for (Object val : values) {
         col.append((String) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.BOOLEAN) {
       var col = BooleanColumn.create(name)
       for (Object val : values) {
         col.append((Boolean) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.LOCAL_DATE) {
       var col = DateColumn.create(name)
       for (Object val : values) {
         col.append((LocalDate) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.LOCAL_DATE_TIME) {
       var col = DateTimeColumn.create(name)
       for (Object val : values) {
         col.append((LocalDateTime) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.INSTANT) {
       var col = InstantColumn.create(name)
       for (Object val : values) {
         col.append((Instant) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.LOCAL_TIME) {
       var col = TimeColumn.create(name)
       for (Object val : values) {
         col.append((LocalTime) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == BigDecimalColumnType.instance()) {
       var col = BigDecimalColumn.create(name)
       for (Object val : values) {
         col.append((BigDecimal) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.DOUBLE) {
       var col = DoubleColumn.create(name)
       for (Object val : values) {
         col.append((Double) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.FLOAT) {
       var col = FloatColumn.create(name)
       for (Object val : values) {
         col.append((Float) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.INTEGER) {
       var col = IntColumn.create(name)
       for (Object val : values) {
         col.append((Integer) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.LONG) {
       var col = LongColumn.create(name)
       for (Object val : values) {
         col.append((Long) val)
       }
-      return (Column<T>) col
+      return col
     }
     if (type == ColumnType.SHORT) {
       var col = ShortColumn.create(name)
       for (Object val : values) {
         col.append((Short) val)
       }
-      return (Column<T>) col
+      return col
     }
 
     null

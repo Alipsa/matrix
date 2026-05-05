@@ -81,8 +81,7 @@ public class XmlReader implements DataReader<XmlReadOptions> {
    *
    * @param options the read options specifying the source and parsing configuration
    * @return the table read from the XML file
-   * @throws RuntimeIOException if an I/O error occurs during reading
-   * @throws RuntimeException if the XML document cannot be parsed
+   * @throws RuntimeIOException if an I/O error occurs during reading or if the XML document cannot be parsed
    */
   @Override
   public Table read(XmlReadOptions options) {

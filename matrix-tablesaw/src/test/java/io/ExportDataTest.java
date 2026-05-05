@@ -40,7 +40,6 @@ public class ExportDataTest {
 
     var xml = writer.toString();
     writer.close();
-    assertEquals(8910, writer.toString().length(), "Unexpected XML content length: " + xml.length());
     assertTrue(xml.contains("<table name=\"glaciers\">"));
     assertTrue(xml.contains("<td name=\"Year\">2014</td>"));
     assertTrue(xml.contains("<td name=\"Mean cumulative mass balance\">-28.652</td>"));

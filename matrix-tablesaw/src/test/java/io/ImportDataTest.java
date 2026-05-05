@@ -51,8 +51,6 @@ public class ImportDataTest {
     var glaciers = Table.read().usingOptions(options);
     assertEquals(70, glaciers.rowCount(), "Number of rows");
     assertEquals(3, glaciers.columnCount(), "Number of columns");
-    //System.out.println(glaciers);
-    //System.out.println(glaciers.structure());
     assertEquals(ColumnType.INTEGER, glaciers.column("Year").type(), "Year column type");
     assertEquals(ColumnType.DOUBLE, glaciers.column("Mean cumulative mass balance").type(), "Mean cumulative mass balance column type");
     assertEquals(ColumnType.INTEGER, glaciers.column("Number of observations").type(), "Number of observations column type");
@@ -71,7 +69,6 @@ public class ImportDataTest {
     var glaciers = Table.read().usingOptions(options);
     assertEquals(70, glaciers.rowCount(), "Number of rows");
     assertEquals(3, glaciers.columnCount(), "Number of columns");
-    //System.out.println(glaciers.summary());
     assertEquals(ColumnType.INTEGER, glaciers.column("Year").type(), "Year column type");
     assertEquals(ColumnType.DOUBLE, glaciers.column("Mean cumulative mass balance").type(), "Mean cumulative mass balance column type");
     assertEquals(ColumnType.INTEGER, glaciers.column("Number of observations").type(), "Number of observations column type");
