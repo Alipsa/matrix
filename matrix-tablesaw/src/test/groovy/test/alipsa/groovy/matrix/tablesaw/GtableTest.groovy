@@ -157,10 +157,10 @@ class GtableTest {
   void testPutAtNullSetsMissing() {
     def table = Gtable.create([name: ['Alice', 'Bob'], age: [25, 30]])
     table[1, 'age'] = null
-    assertTrue(table.column('age').isMissing(1), "age column should be missing at row 1")
+    assertTrue(table.column('age').isMissing(1), 'age column should be missing at row 1')
     table[0, 'name'] = null
     def nameCol = table.column('name')
-    assertTrue(nameCol.isMissing(0), "name column should be missing at row 0")
+    assertTrue(nameCol.isMissing(0), 'name column should be missing at row 0')
   }
 
   @Test

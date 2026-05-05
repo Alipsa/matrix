@@ -345,7 +345,7 @@ class Gtable extends Table {
    * @param columnIndex the columnIndex
    * @param value the value
    */
-  @SuppressWarnings('unchecked')
+  @SuppressWarnings(['unchecked', 'Instanceof'])
   void putAt(int rowIndex, int columnIndex, Object value) {
     Column col = (Column) column(columnIndex)
     if (value == null) {
