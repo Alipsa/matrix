@@ -16,6 +16,7 @@ Matrix BOM:
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-stats'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
 

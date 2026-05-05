@@ -248,7 +248,9 @@ class TableUtil {
    *
    * <p>Preserves the matrix name, column names, column types, and all data for supported
    * column types. Columns whose Java types map to {@link ColumnType#SKIP} (or that cannot
-   * be created by {@link #createColumn(Object, String, List)}) are omitted from the result.
+   * be created by {@link #createColumn(Object, String, List)}) cause an
+   * {@link IllegalArgumentException} to be thrown. Use {@link #toTablesaw(Matrix, boolean)}
+   * with {@code skipUnsupported = true} to omit unsupported columns instead.
    *
    * @param matrix the Matrix to convert
    * @return a Tablesaw Table with the same data and structure

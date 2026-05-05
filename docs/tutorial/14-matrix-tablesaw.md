@@ -17,6 +17,7 @@ To use the matrix-tablesaw module, you need to add it as a dependency to your pr
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-stats'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
 
@@ -47,6 +48,10 @@ implementation 'se.alipsa.matrix:matrix-tablesaw'
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-stats</artifactId>
   </dependency>
 </dependencies>
 </project>
