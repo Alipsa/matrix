@@ -1,5 +1,34 @@
 # Release history
 
+## v2.4.0, 2026-05-05
+**Refactoring, code quality, and usability improvements**
+
+### Breaking Changes
+- `Sheet.name` field type tightened from `Object` to `String`
+- `Importer` interface: `startColumn`/`endColumn` parameters renamed to `startCol`/`endCol` for consistency
+
+### New Features
+- add whole-sheet convenience imports with auto-detected dimensions: `SpreadsheetImporter.importSpreadsheet(file, sheetNumber)` and `importSpreadsheet(file, sheetName)`
+- add `File`-accepting overloads to `SpreadsheetImporter` matching `SpreadsheetWriter`'s API shape
+
+### Bug Fixes
+- remove dead I/O and wasted workbook allocation in `FExcelExporter.exportExcel` when target file already exists
+- replace undeclared `commons-io` transitive dependency in `FOdsImporter` with Groovy's native `is.bytes`
+- improve error messages when a named sheet does not exist (names the missing sheet instead of generic "No value present")
+- standardise rounding mode in `TableUtil.round` to `HALF_EVEN` (banker's rounding) across all numeric column types
+
+### Code Quality
+- add class-level GroovyDoc and fix `@param` mismatches in `SpreadsheetImporter`
+- add GroovyDoc to `SpreadsheetWriter.writeSheets(Map)`
+- fix stale/misleading GroovyDoc on `FExcelExporter.exportExcel` overloads
+- make `SpreadsheetImporter.validateNotNull` private
+- add `@CompileStatic` to `ValueExtractor`
+- replace generic `Exception` throws in `FileUtil` with `SpreadsheetImportException`
+- document why `FExcelExporter` cannot use `@CompileStatic` (fastexcel internal `GenericStyleSetter` access)
+
+### Test Coverage
+- 124 tests passing (up from 105 in v2.3.0)
+
 ## v2.3.0, 2026-01-31
 **Major architectural refactoring with significant performance improvements**
 

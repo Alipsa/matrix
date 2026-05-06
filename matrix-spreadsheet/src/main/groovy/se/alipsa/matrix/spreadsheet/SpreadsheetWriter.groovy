@@ -204,7 +204,14 @@ class SpreadsheetWriter {
   /**
    * Write multiple Matrix objects using a parameter map.
    *
-   * @param params map with keys: 'file' (File), 'data' (List&lt;Matrix&gt;), 'sheetNames' (List&lt;String&gt;)
+   * <p>Valid keys in the params map:</p>
+   * <ul>
+   *   <li>{@code file} ({@link File}) — the target spreadsheet file (required)</li>
+   *   <li>{@code data} ({@code List<Matrix>}) — the matrices to write, one per sheet (required)</li>
+   *   <li>{@code sheetNames} ({@code List<String>}) — names for each sheet (required)</li>
+   * </ul>
+   *
+   * @param params map of write parameters
    * @return list of actual sheet names created
    */
   static List<String> writeSheets(Map params) {

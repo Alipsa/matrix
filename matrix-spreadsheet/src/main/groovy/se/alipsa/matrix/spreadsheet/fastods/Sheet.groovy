@@ -5,14 +5,14 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Sheet extends ArrayList<List<?>> {
 
-  Object name
+  String name
 
-  Object getName() {
+  String getName() {
     name
   }
 
   String getSheetName() {
-    String.valueOf(name)
+    name
   }
 
   void setName(String name) {
@@ -20,10 +20,10 @@ class Sheet extends ArrayList<List<?>> {
   }
 
   void setName(Integer name) {
-    this.name = name
+    this.name = String.valueOf(name)
   }
 
   void setName(Number name) {
-    this.name = name.intValue()
+    this.name = String.valueOf(name.intValue())
   }
 }

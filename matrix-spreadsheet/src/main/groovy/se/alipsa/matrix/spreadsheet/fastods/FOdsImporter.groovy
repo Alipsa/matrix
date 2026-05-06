@@ -2,8 +2,6 @@ package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
 
-import org.apache.commons.io.IOUtils
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -194,7 +192,7 @@ class FOdsImporter implements Importer {
 
   @Override
   Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
-    byte[] bytes = IOUtils.toByteArray(is)
+    byte[] bytes = is.bytes
     Map<Object, Matrix> result = [:]
     sheetParams.each {
       try (InputStream is2 = new ByteArrayInputStream(bytes)) {

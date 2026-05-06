@@ -1,8 +1,11 @@
 package se.alipsa.matrix.spreadsheet
 
+import groovy.transform.CompileStatic
+
 /**
  * A ValueExtractor is a helper class that makes it easier to get values from a spreadsheet.
  */
+@CompileStatic
 abstract class ValueExtractor {
 
    Double getDouble(Object val) {
