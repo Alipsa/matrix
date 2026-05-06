@@ -178,6 +178,29 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testWriteSheetsMapWithPositions() {
+    def file = File.createTempFile("matrix-writer-map-positions", ".xlsx")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([
+        file: file,
+        data: [table2, table3],
+        sheetNamesAndPositions: ['First': 'B2', 'Second': 'D4']
+    ])
+
+    assertNotNull(sheetNames)
+    assertEquals(['First', 'Second'], sheetNames)
+    assertTrue(file.exists())
+
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertEquals(2, reader.sheetNames.size())
+      assertEquals(['First', 'Second'], reader.sheetNames)
+    }
+  }
+
+  @Test
   void testWriteOds() {
     File odsFile = File.createTempFile("matrix-writer-ods", ".ods")
     if (odsFile.exists()) {

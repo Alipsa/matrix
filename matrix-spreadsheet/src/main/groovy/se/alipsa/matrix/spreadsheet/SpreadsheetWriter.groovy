@@ -208,7 +208,8 @@ class SpreadsheetWriter {
    * <ul>
    *   <li>{@code file} ({@link File}) — the target spreadsheet file (required)</li>
    *   <li>{@code data} ({@code List<Matrix>}) — the matrices to write, one per sheet (required)</li>
-   *   <li>{@code sheetNames} ({@code List<String>}) — names for each sheet (required)</li>
+   *   <li>{@code sheetNames} ({@code List<String>}) — names for each sheet (required unless sheetNamesAndPositions is provided)</li>
+   *   <li>{@code sheetNamesAndPositions} ({@code LinkedHashMap<String, String>}) — map of sheet name to start position, e.g. {@code ['Sheet1': 'B2']}</li>
    * </ul>
    *
    * @param params map of write parameters
@@ -217,6 +218,10 @@ class SpreadsheetWriter {
   static List<String> writeSheets(Map params) {
     def file = params.get("file") as File
     def data = (List<Matrix>) params.get("data")
+    def sheetNamesAndPositions = params.get("sheetNamesAndPositions") as LinkedHashMap<String, String>
+    if (sheetNamesAndPositions != null) {
+      return writeSheets(data, file, sheetNamesAndPositions)
+    }
     def sheetNames = params.get("sheetNames") as List<String>
     return writeSheets(data, file, sheetNames)
   }

@@ -219,6 +219,8 @@ If a Groovy test needs GString-to-String coercion for JUnit assertions to compil
 ## Commit & Pull Request Guidelines
 Commit messages in this repo are short, imperative summaries (e.g., “Fix …”, “Update …”, “Add …”), optionally mentioning the module. For pull requests, include a concise summary, list the modules touched, and record the tests you ran (with commands). Link relevant issues and add screenshots for visual/chart output changes.
 
+**CRITICAL:** Always confirm with the user before committing and pushing to the main branch. When committing review fixes or follow-up changes, create a separate branch (e.g., `feature-followup`) rather than pushing directly to `main`.
+
 ## Environment & Constraints
 JDK 21 is required. Some modules (parquet/avro, charts, smile) enforce a maximum JDK 21 due to upstream dependencies, so keep toolchains aligned with that constraint.
 
