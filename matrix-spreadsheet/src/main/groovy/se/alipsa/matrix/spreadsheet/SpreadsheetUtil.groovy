@@ -1,14 +1,11 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 /**
  * Common spreadsheet utilities
  */
-@CompileStatic
 class SpreadsheetUtil {
 
    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")

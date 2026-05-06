@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelAppender
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
@@ -41,7 +39,6 @@ import java.util.Collections
  * @see FExcelExporter
  * @see FOdsExporter
  */
-@CompileStatic
 class SpreadsheetWriter {
 
   private static final String DEFAULT_START_POSITION = "A1"

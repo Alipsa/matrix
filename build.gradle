@@ -96,9 +96,9 @@ subprojects {
   }
 
   // Compile all groovy code statically by default
-  //tasks.withType(GroovyCompile).configureEach {
-  //  groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
-  //}
+  tasks.withType(GroovyCompile).configureEach {
+    groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
+  }
   plugins.withId('groovy') {
     dependencies {
       compileOnly platform(libs.groovy.bom)

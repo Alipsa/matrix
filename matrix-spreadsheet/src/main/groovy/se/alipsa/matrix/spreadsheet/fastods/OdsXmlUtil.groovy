@@ -1,14 +1,11 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.events.StartElement
 import javax.xml.stream.events.XMLEvent
 
-@CompileStatic
 class OdsXmlUtil {
 
   static final String OPENDOCUMENT_MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet";

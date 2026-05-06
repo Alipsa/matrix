@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.CellType
 import org.dhatim.fastexcel.reader.Row
@@ -16,7 +14,6 @@ import java.time.LocalDateTime
 /**
  * A value extractor specialized in extracting info from an Excel file
  */
-@CompileStatic
 class FExcelValueExtractor extends ValueExtractor {
 
    private final Sheet sheet

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -9,7 +7,6 @@ import java.util.zip.ZipOutputStream
 /**
  * Shared zip helpers for spreadsheet appenders.
  */
-@CompileStatic
 final class ZipUtil {
 
   private ZipUtil() {

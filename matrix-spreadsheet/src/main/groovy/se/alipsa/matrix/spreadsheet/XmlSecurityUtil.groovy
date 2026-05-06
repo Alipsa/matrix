@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.Logger
 
 import javax.xml.parsers.DocumentBuilderFactory
@@ -10,7 +8,6 @@ import javax.xml.stream.XMLInputFactory
 /**
  * XML parser hardening utilities to reduce XXE exposure.
  */
-@CompileStatic
 final class XmlSecurityUtil {
 
   private static final Logger logger = Logger.getLogger(XmlSecurityUtil)

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -16,7 +14,6 @@ import java.text.NumberFormat
 /**
  * Import Calc (ods file)
  */
-@CompileStatic
 class FOdsImporter implements Importer {
 
   private static final Logger logger = Logger.getLogger(FOdsImporter)

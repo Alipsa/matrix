@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asDouble
 
+import groovy.transform.CompileDynamic
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -63,6 +65,7 @@ class FExcelImporterTest {
   }
 
   @Test
+  @CompileDynamic
   void testImportMultipleSheets() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.xlsx")) {
       Map<String, Matrix> sheets = FExcelImporter.create().importSpreadsheets(is,

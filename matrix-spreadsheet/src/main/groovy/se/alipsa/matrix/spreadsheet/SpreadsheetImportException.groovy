@@ -1,8 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
 class SpreadsheetImportException extends Exception {
   @Override
   Object invokeMethod(String name, Object args) {

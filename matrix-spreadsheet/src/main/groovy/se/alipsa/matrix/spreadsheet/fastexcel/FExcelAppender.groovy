@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -39,7 +37,6 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-@CompileStatic
 class FExcelAppender {
 
   private static final String WORKBOOK_PATH = "xl/workbook.xml"

@@ -1,6 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
+import groovy.transform.CompileDynamic
 
 import org.dhatim.fastexcel.Workbook
 import org.dhatim.fastexcel.Worksheet
@@ -16,12 +16,12 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.Collections
 
-// @CompileStatic is intentionally omitted.
-// When enabled, Groovy generates direct bytecode for sheet.style(row, col).format(...).set()
+// When compiled statically, Groovy generates direct bytecode for sheet.style(row, col).format(...).set()
 // which triggers an IllegalAccessError at runtime because GenericStyleSetter is
 // package-private inside org.dhatim.fastexcel. Dynamic dispatch uses reflection/
 // metaclass invocation which bypasses this restriction. Re-evaluate if fastexcel
 // ever makes GenericStyleSetter public.
+@CompileDynamic
 class FExcelExporter {
 
   static final Logger logger = Logger.getLogger(FExcelExporter)

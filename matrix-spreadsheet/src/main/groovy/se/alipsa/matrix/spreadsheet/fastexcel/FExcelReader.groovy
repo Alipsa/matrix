@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.ReadableWorkbook
 import org.dhatim.fastexcel.reader.Row
@@ -13,7 +11,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.util.stream.Stream
 
-@CompileStatic
 class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 

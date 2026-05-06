@@ -5,8 +5,6 @@ import static se.alipsa.matrix.core.ValueConverter.asInteger
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
 import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFactory.INSTANCE
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
@@ -40,7 +38,6 @@ import javax.xml.stream.XMLStreamReader
  * <p>If you have a valid use case requiring more than 1000 consecutive empty rows,
  * consider using explicit row ranges in your import call.</p>
  */
-@CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
   private static final Logger logger = Logger.getLogger(OdsStreamDataReader)
 
@@ -367,7 +364,6 @@ final class OdsStreamDataReader extends OdsDataReader {
    * Abstract base class for profiling statistics.
    * Uses Null Object pattern to avoid branching overhead in hot paths.
    */
-  @CompileStatic
   private static abstract class ProfileStats {
     abstract void reset()
     abstract void log(String sheetName)
@@ -399,7 +395,6 @@ final class OdsStreamDataReader extends OdsDataReader {
    * No-op implementation for production use (profiling disabled).
    * All methods are empty to eliminate overhead.
    */
-  @CompileStatic
   private static final class NoOpProfileStats extends ProfileStats {
     @Override void reset() {}
     @Override void log(String sheetName) {}
@@ -418,7 +413,6 @@ final class OdsStreamDataReader extends OdsDataReader {
    * Real implementation for profiling use.
    * Collects and logs detailed performance statistics.
    */
-  @CompileStatic
   private static final class RealProfileStats extends ProfileStats {
     long physicalRows = 0
     long logicalRows = 0

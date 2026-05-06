@@ -2,8 +2,6 @@ package se.alipsa.matrix.spreadsheet.fastods
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
@@ -21,7 +19,6 @@ import javax.xml.stream.XMLStreamReader
 /**
  * Extract various information from a Calc (ods) file using fastods streaming.
  */
-@CompileStatic
 class FOdsReader implements SpreadsheetReader {
 
   private final File odsFile
@@ -63,7 +60,7 @@ class FOdsReader implements SpreadsheetReader {
     return findRowNum(sheet, content)
   }
 
-  private static int findRowNum(Sheet sheet, String content) {
+  static int findRowNum(Sheet sheet, String content) {
     if (sheet == null) {
       return -1
     }
@@ -89,7 +86,7 @@ class FOdsReader implements SpreadsheetReader {
     return findColNum(sheet, content)
   }
 
-  private static int findColNum(Sheet sheet, String content) {
+  static int findColNum(Sheet sheet, String content) {
     if (sheet == null || sheet.isEmpty()) {
       return -1
     }
@@ -129,7 +126,7 @@ class FOdsReader implements SpreadsheetReader {
     return findLastCol(sheet)
   }
 
-  private static int findLastCol(Sheet sheet) {
+  static int findLastCol(Sheet sheet) {
     if (sheet == null || sheet.isEmpty()) {
       return 0
     }

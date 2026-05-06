@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor
@@ -11,7 +9,6 @@ import java.nio.file.Files
 /**
  * SPI format provider for spreadsheet files.
  */
-@CompileStatic
 class SpreadsheetFormatProvider extends AbstractFormatProvider {
 
   private static final Set<String> EXTENSIONS = ['xlsx', 'ods'] as Set<String>

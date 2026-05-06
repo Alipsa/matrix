@@ -1,7 +1,5 @@
 package spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
@@ -15,7 +13,6 @@ import java.time.Instant
 /**
  * Simple read/write benchmark runner for matrix-spreadsheet.
  */
-@CompileStatic
 class SpreadsheetBenchmark {
 
   /**

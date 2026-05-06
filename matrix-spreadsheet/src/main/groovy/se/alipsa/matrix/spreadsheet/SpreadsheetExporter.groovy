@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -18,7 +16,6 @@ import se.alipsa.matrix.core.Matrix
  * @see SpreadsheetWriter
  */
 @Deprecated
-@CompileStatic
 class SpreadsheetExporter {
 
   /**

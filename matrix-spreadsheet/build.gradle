@@ -23,9 +23,10 @@ ext.nexusUrl = version.contains("SNAPSHOT")
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 repositories {
-  if (version.contains('SNAPSHOT')) {
+  mavenLocal()
+  /*if (version.contains('SNAPSHOT')) {
     mavenLocal()
-  }
+  }*/
   mavenCentral()
 }
 

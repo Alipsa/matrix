@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.*
 
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.text.NumberFormat
 import java.util.stream.Stream
 
-@CompileStatic
 class FExcelImporter implements Importer {
 
   static final ReadingOptions OPTIONS = new ReadingOptions(true, true)

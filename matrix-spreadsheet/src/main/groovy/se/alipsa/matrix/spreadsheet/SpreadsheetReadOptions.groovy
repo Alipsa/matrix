@@ -1,14 +1,11 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
  * Typed options for spreadsheet read operations via the SPI.
  */
-@CompileStatic
 class SpreadsheetReadOptions {
 
   Integer sheetNumber = 1

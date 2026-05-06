@@ -1,8 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
 class FastOdsException extends RuntimeException {
 
   FastOdsException(String message) {

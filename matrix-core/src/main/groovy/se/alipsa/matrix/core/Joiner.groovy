@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
+
 /**
  * Join operations for combining matrices on one or more key columns.
  *
@@ -19,6 +21,7 @@ class Joiner {
      * @param all true for a left join, false for an inner join
      * @return a new matrix with the two ones joined
      */
+    @CompileDynamic
     static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false) {
         def xColIndex = x.columnIndex(by.x)
         def yColIndex = y.columnIndex(by.y)
