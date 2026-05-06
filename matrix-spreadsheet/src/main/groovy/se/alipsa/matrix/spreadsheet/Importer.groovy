@@ -4,6 +4,16 @@ import se.alipsa.matrix.core.Matrix
 
 import java.text.NumberFormat
 
+/**
+ * Contract for spreadsheet importers.
+ *
+ * <p>Implementations handle a specific file format (e.g. {@link se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter}
+ * for .xlsx, {@link se.alipsa.matrix.spreadsheet.fastods.FOdsImporter} for .ods).
+ * Callers typically use the static facade {@link SpreadsheetImporter} instead of
+ * working with this interface directly.</p>
+ *
+ * @see SpreadsheetImporter
+ */
 interface Importer {
 
   Matrix importSpreadsheet(URL url, String sheetName,

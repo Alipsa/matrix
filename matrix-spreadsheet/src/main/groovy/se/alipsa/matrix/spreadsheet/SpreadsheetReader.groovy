@@ -21,7 +21,7 @@ interface SpreadsheetReader extends Closeable {
       return new FExcelReader(file)
     }
 
-    static SpreadsheetReader create(String filePath) throws Exception {
+    static SpreadsheetReader create(String filePath) {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
@@ -34,16 +34,16 @@ interface SpreadsheetReader extends Closeable {
 
   }
 
-  int findRowNum(int sheetNumber, int colNumber, String content) throws Exception
-  int findRowNum(int sheetNumber, String colName, String content) throws Exception
-  int findRowNum(String sheetName, String colName, String content) throws Exception
-  int findRowNum(String sheetName, int colNumber, String content) throws Exception
-  int findColNum(int sheetNumber, int rowNumber, String content) throws Exception
-  int findColNum(String sheetName, int rowNumber, String content) throws Exception
+  int findRowNum(int sheetNumber, int colNumber, String content) throws IOException
+  int findRowNum(int sheetNumber, String colName, String content) throws IOException
+  int findRowNum(String sheetName, String colName, String content) throws IOException
+  int findRowNum(String sheetName, int colNumber, String content) throws IOException
+  int findColNum(int sheetNumber, int rowNumber, String content) throws IOException
+  int findColNum(String sheetName, int rowNumber, String content) throws IOException
   int findLastRow(int sheetNum)
   int findLastRow(String sheetName)
   int findLastCol(int sheetNum)
   int findLastCol(String sheetName)
-  List<String> getSheetNames() throws Exception
+  List<String> getSheetNames() throws IOException
 
 }

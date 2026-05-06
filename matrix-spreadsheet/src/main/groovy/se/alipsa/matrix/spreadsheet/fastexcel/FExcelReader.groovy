@@ -30,11 +30,11 @@ class FExcelReader implements SpreadsheetReader {
    * @return a List of the names of the sheets in the excel
    */
   @Override
-  List<String> getSheetNames() throws Exception {
+  List<String> getSheetNames() throws IOException {
     return getSheetNames(workbook)
   }
 
-  static List<String> getSheetNames(ReadableWorkbook workbook) throws Exception {
+  static List<String> getSheetNames(ReadableWorkbook workbook) throws IOException {
     workbook.sheets.collect { Sheet it -> it.name }
   }
 
@@ -44,7 +44,7 @@ class FExcelReader implements SpreadsheetReader {
    * @param colNumber the column number (1 indexed)
    * @param content the string to search for
    * @return the Row as seen in Excel (1 is first row)
-   * @throws Exception if something goes wrong
+   * @throws IOException if reading the workbook fails
    */
   @Override
   int findRowNum(int sheetNumber, int colNumber, String content) {
@@ -67,7 +67,7 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   @Override
-  int findRowNum(int sheetNumber, String colName, String content) throws Exception {
+  int findRowNum(int sheetNumber, String colName, String content) throws IOException {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
     return findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
