@@ -42,23 +42,23 @@ class FOdsReader implements SpreadsheetReader {
   }
 
   @Override
-  int findRowNum(int sheetNumber, int colNumber, String content) throws Exception {
+  int findRowNum(int sheetNumber, int colNumber, String content) throws IOException {
     Sheet sheet = readSheet(sheetNumber, 1, Integer.MAX_VALUE, colNumber, colNumber)
     return findRowNum(sheet, content)
   }
 
   @Override
-  int findRowNum(int sheetNumber, String colName, String content) throws Exception {
+  int findRowNum(int sheetNumber, String colName, String content) throws IOException {
     return findRowNum(sheetNumber, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
   @Override
-  int findRowNum(String sheetName, String colName, String content) throws Exception {
+  int findRowNum(String sheetName, String colName, String content) throws IOException {
     return findRowNum(sheetName, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
   @Override
-  int findRowNum(String sheetName, int colNumber, String content) throws Exception {
+  int findRowNum(String sheetName, int colNumber, String content) throws IOException {
     Sheet sheet = readSheet(sheetName, 1, Integer.MAX_VALUE, colNumber, colNumber)
     return findRowNum(sheet, content)
   }
@@ -78,13 +78,13 @@ class FOdsReader implements SpreadsheetReader {
   }
 
   @Override
-  int findColNum(int sheetNumber, int rowNumber, String content) throws Exception {
+  int findColNum(int sheetNumber, int rowNumber, String content) throws IOException {
     Sheet sheet = readSheet(sheetNumber, rowNumber, rowNumber, 1, Integer.MAX_VALUE)
     return findColNum(sheet, content)
   }
 
   @Override
-  int findColNum(String sheetName, int rowNumber, String content) throws Exception {
+  int findColNum(String sheetName, int rowNumber, String content) throws IOException {
     Sheet sheet = readSheet(sheetName, rowNumber, rowNumber, 1, Integer.MAX_VALUE)
     return findColNum(sheet, content)
   }
@@ -151,7 +151,7 @@ class FOdsReader implements SpreadsheetReader {
   }
 
   @Override
-  List<String> getSheetNames() throws Exception {
+  List<String> getSheetNames() throws IOException {
     if (sheetNamesCache == null) {
       sheetNamesCache = readSheetNames()
     }

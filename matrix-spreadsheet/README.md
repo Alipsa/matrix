@@ -42,7 +42,7 @@ import se.alipsa.matrix.core.Matrix
 Matrix table = SpreadsheetImporter.importSpreadsheet(file: "Book1.xlsx", endRow: 11, endCol: 4)
 println(table.head(10))
 ```
-The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
+The SpreadsheetImporter.importSpreadsheet method takes the following parameters:
 - _file_ the filePath or the file object pointing to the Excel file
 - _sheetName_ the name of the sheet to import, default is 'Sheet1'
 - _startRow_ the starting row for the import (as you would see the row number in Excel), defaults to 1
@@ -51,7 +51,7 @@ The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 - _endCol_ the end column name (K, L etc) or column number (11, 12 etc.)
 - _firstRowAsColNames_ whether the first row should be used for the names of each column, if false the column names will be v1, v2 etc. Defaults to true
 
-Note: there are seveal overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
+Note: there are several overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
 using column index instead of column name etc.
 
 ## Using Matrix.read() / matrix.write()
@@ -172,7 +172,7 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 }
 ```
 
-See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
+See [the tests](https://github.com/Alipsa/matrix/tree/main/matrix-spreadsheet/src/test/groovy/spreadsheet) for more usage examples!
 
 # Handling large files
 Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export by default to keep memory usage low. If you have Excel sheets with more than 150,000 rows you might still encounter out of memory errors; if increasing RAM is not an option, consider exporting the content to CSV and use matrix-csv to import the data instead. Note that the FastExcel backend only supports .xlsx (not legacy .xls). Appending/replacing sheets in existing .xlsx files is supported via SpreadsheetWriter/FExcelAppender, and appending/replacing sheets in existing .ods files is supported via SpreadsheetWriter/FOdsAppender.
