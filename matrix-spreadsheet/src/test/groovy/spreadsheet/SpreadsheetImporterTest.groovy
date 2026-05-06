@@ -16,8 +16,11 @@ import se.alipsa.matrix.spreadsheet.Importer
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 
+import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
+
 import java.io.File
 import java.io.InputStream
+import java.util.NoSuchElementException
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -212,5 +215,59 @@ class SpreadsheetImporterTest {
   void testAutoDetectXlsxByName() {
     Matrix m = importSpreadsheet("Book1.xlsx", "Sheet1", true)
     book1ImportAssertions(m)
+  }
+
+  @Test
+  void testAutoDetectOdsByFile() throws Exception {
+    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.ods").toURI())
+    Matrix m = importSpreadsheet(file, 1, true)
+    book1ImportAssertions(m)
+  }
+
+  @Test
+  void testAutoDetectOdsByName() {
+    Matrix m = importSpreadsheet("Book1.ods", "Sheet1", true)
+    book1ImportAssertions(m)
+  }
+
+  @Test
+  void testAutoDetectXlsxByFileAndSheetName() throws Exception {
+    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
+    Matrix m = importSpreadsheet(file, "Sheet1", true)
+    book1ImportAssertions(m)
+  }
+
+  @Test
+  void testFileBasedDelegationWithExplicitRange() throws Exception {
+    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
+    Matrix m = importSpreadsheet(file, 1, 1, 12, 1, 4, true)
+    book1ImportAssertions(m)
+  }
+
+  @Test
+  void testMissingSheetThrowsWithSheetName() {
+    assertThrows(NoSuchElementException.class, {
+      importSpreadsheet("Book1.xlsx", "NonExistentSheet", 1, 12, 1, 4, true)
+    })
+  }
+
+  @Test
+  void testMissingOdsSheetThrowsWithSheetName() {
+    assertThrows(FastOdsException.class, {
+      importSpreadsheet("Book1.ods", "NonExistentSheet", 1, 12, 1, 4, true)
+    })
+  }
+
+  @Test
+  void testImportSpreadsheetsWithFile() throws Exception {
+    File file = new File(SpreadsheetImporterTest.class.getResource("/Book2.xlsx").toURI())
+    Map<Object, Matrix> sheets = SpreadsheetImporter.importSpreadsheets(file,
+        [
+            [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
+            [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
+        ])
+    assertEquals(2, sheets.size())
+    assertNotNull(sheets.Sheet1)
+    assertNotNull(sheets.Sheet2)
   }
 }

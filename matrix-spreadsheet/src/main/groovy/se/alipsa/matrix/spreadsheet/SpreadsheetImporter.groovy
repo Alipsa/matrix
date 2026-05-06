@@ -177,7 +177,7 @@ class SpreadsheetImporter {
    * Import a spreadsheet by file path and sheet name.
    *
    * @param file the ods or excel file to import
-   * @param sheet the sheet name
+   * @param sheet the sheet name, defaults to 'Sheet1'
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
    * @param startCol the first column to include (index starting with 1)
@@ -186,7 +186,7 @@ class SpreadsheetImporter {
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, String sheet,
+  static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
                                   int startRow = 1, int endRow,
                                   int startCol = 1, int endCol,
                                   boolean firstRowAsColNames = true) {
@@ -202,7 +202,7 @@ class SpreadsheetImporter {
    * Import a spreadsheet by file path and sheet name using column names.
    *
    * @param file the ods or excel file to import
-   * @param sheet the sheet name
+   * @param sheet the sheet name, defaults to 'Sheet1'
    * @param startRow the first row to include (the first row is row 1)
    * @param endRow the last row to include
    * @param startCol the first column name to include (A is the first column name etc.)
@@ -211,7 +211,7 @@ class SpreadsheetImporter {
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, String sheet,
+  static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
                                   int startRow = 1, int endRow,
                                   String startCol = 'A', String endCol,
                                   boolean firstRowAsColNames = true) {
@@ -226,18 +226,6 @@ class SpreadsheetImporter {
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
-  /**
-   *
-   * @param params the named parameters i.e.
-   * file (a File or a String path),
-   * sheet (the sheet tab to import, an integer of String),
-   * startRow (an Integer),
-   * endRow (and integer),
-   * startCol (an Integer or String),
-   * endCol (an Integer or String),
-   * firstRowAsColNames (a boolean)
-   * @return A Matrix corresponding to the spreadsheet data.
-   */
   // --- File-based overloads ---
 
   /**
@@ -336,8 +324,32 @@ class SpreadsheetImporter {
     }
   }
 
+  /**
+   * Import an entire spreadsheet sheet by name using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file to import
+   * @param sheetName the sheet name
+   * @param firstRowAsColNames whether to treat the first row as column names
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(File file, String sheetName, boolean firstRowAsColNames = true) {
+    importSpreadsheet(file.absolutePath, sheetName, firstRowAsColNames)
+  }
+
   // --- Map-based import ---
 
+  /**
+   *
+   * @param params the named parameters i.e.
+   * file (a File or a String path),
+   * sheet (the sheet tab to import, an integer of String),
+   * startRow (an Integer),
+   * endRow (and integer),
+   * startCol (an Integer or String),
+   * endCol (an Integer or String),
+   * firstRowAsColNames (a boolean)
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
   static Matrix importSpreadsheet(Map params) {
     def fp = params['file']
     validateNotNull(fp, 'file')

@@ -73,7 +73,7 @@ class FOdsImporter implements Importer {
           sheetName, startRow, endRow, startCol, endCol)
     }
     if (sheet == null) {
-      throw new IllegalArgumentException("Sheet '${sheetName}' does not exist in the workbook")
+      throw new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
     }
     return buildMatrix(sheet, firstRowAsColNames)
   }
@@ -113,7 +113,7 @@ class FOdsImporter implements Importer {
                           boolean firstRowAsColNames = true) {
     def sheet = odsDataReader.readOds(is, sheetName, startRow, endRow, startCol, endCol)
     if (sheet == null) {
-      throw new IllegalArgumentException("Sheet '${sheetName}' does not exist in the workbook")
+      throw new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
     }
     return buildMatrix(sheet, firstRowAsColNames)
   }

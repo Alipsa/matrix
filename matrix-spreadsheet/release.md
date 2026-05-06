@@ -4,7 +4,6 @@
 **Refactoring, code quality, and usability improvements**
 
 ### Breaking Changes
-- removed `'Sheet1'` default from `String sheet` overloads in `SpreadsheetImporter`; callers relying on the implicit default should use the new whole-sheet convenience imports or pass an explicit sheet name
 - `Sheet.name` field type tightened from `Object` to `String`
 - `Importer` interface: `startColumn`/`endColumn` parameters renamed to `startCol`/`endCol` for consistency
 

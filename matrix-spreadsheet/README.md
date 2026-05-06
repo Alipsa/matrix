@@ -44,7 +44,7 @@ println(table.head(10))
 ```
 The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 - _file_ the filePath or the file object pointing to the Excel file
-- _sheetName_ the name of the sheet to import; when omitted, defaults to the first sheet (index 1)
+- _sheetName_ the name of the sheet to import, default is 'Sheet1'
 - _startRow_ the starting row for the import (as you would see the row number in Excel), defaults to 1
 - _endRow_ the last row to import
 - _startCol_ the starting column name (A, B etc.) or column number (1, 2 etc.)

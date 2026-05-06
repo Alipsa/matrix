@@ -24,15 +24,15 @@ class FileUtil {
       File excelFile
       URL url = getResourceUrl(filePath)
       if (url == null) {
-         throw new SpreadsheetImportException(filePath + " does not exist")
+         throw new SpreadsheetImportException("${filePath} does not exist")
       }
       try {
          excelFile = Paths.get(url.toURI()).toFile()
       } catch (URISyntaxException | RuntimeException e) {
-         throw new SpreadsheetImportException(filePath + " does not exist", e)
+         throw new SpreadsheetImportException("${filePath} does not exist", e)
       }
       if (!excelFile.exists()) {
-         throw new SpreadsheetImportException(filePath + " does not exist")
+         throw new SpreadsheetImportException("${filePath} does not exist")
       }
       return excelFile
    }
