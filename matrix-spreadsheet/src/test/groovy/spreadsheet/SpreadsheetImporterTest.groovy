@@ -252,7 +252,7 @@ class SpreadsheetImporterTest {
   }
 
   @Test
-  void testMissingOdsSheetThrowsWithSheetName() {
+  void testMissingOdsSheetThrowsFastOdsException() {
     assertThrows(FastOdsException.class, {
       importSpreadsheet("Book1.ods", "NonExistentSheet", 1, 12, 1, 4, true)
     })

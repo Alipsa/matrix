@@ -275,14 +275,24 @@ class SpreadsheetImporter {
   // --- Whole-sheet convenience imports (auto-detect dimensions) ---
 
   /**
+   * Import the first sheet of a spreadsheet file using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file to import
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(File file) {
+    importSpreadsheet(file, 1, true)
+  }
+
+  /**
    * Import an entire spreadsheet sheet using auto-detected dimensions.
    *
    * @param file the spreadsheet file to import
-   * @param sheetNumber the sheet index (1-based), defaults to 1
+   * @param sheetNumber the sheet index (1-based)
    * @param firstRowAsColNames whether to treat the first row as column names
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(File file, int sheetNumber = 1, boolean firstRowAsColNames = true) {
+  static Matrix importSpreadsheet(File file, int sheetNumber, boolean firstRowAsColNames = true) {
     SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetNumber)
       int endCol = reader.findLastCol(sheetNumber)
@@ -291,14 +301,24 @@ class SpreadsheetImporter {
   }
 
   /**
+   * Import the first sheet of a spreadsheet using auto-detected dimensions.
+   *
+   * @param file the spreadsheet file path to import
+   * @return A Matrix corresponding to the spreadsheet data.
+   */
+  static Matrix importSpreadsheet(String file) {
+    importSpreadsheet(file, 1, true)
+  }
+
+  /**
    * Import an entire spreadsheet sheet using auto-detected dimensions.
    *
    * @param file the spreadsheet file path to import
-   * @param sheetNumber the sheet index (1-based), defaults to 1
+   * @param sheetNumber the sheet index (1-based)
    * @param firstRowAsColNames whether to treat the first row as column names
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, int sheetNumber = 1, boolean firstRowAsColNames = true) {
+  static Matrix importSpreadsheet(String file, int sheetNumber, boolean firstRowAsColNames) {
     File spreadsheetFile = FileUtil.checkFilePath(file)
     SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetNumber)
@@ -310,12 +330,15 @@ class SpreadsheetImporter {
   /**
    * Import an entire spreadsheet sheet by name using auto-detected dimensions.
    *
+   * <p>For XLSX files, a missing sheet throws {@link NoSuchElementException}.
+   * For ODS files, a missing sheet throws {@link se.alipsa.matrix.spreadsheet.fastods.FastOdsException}.</p>
+   *
    * @param file the spreadsheet file path to import
    * @param sheetName the sheet name
    * @param firstRowAsColNames whether to treat the first row as column names
    * @return A Matrix corresponding to the spreadsheet data.
    */
-  static Matrix importSpreadsheet(String file, String sheetName, boolean firstRowAsColNames = true) {
+  static Matrix importSpreadsheet(String file, String sheetName, boolean firstRowAsColNames) {
     File spreadsheetFile = FileUtil.checkFilePath(file)
     SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetName)
