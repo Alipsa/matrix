@@ -14,7 +14,7 @@ interface SpreadsheetReader extends Closeable {
       if (file == null) {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
-      SpreadsheetUtil.ensureXlsx(file.getName())
+      SpreadsheetUtil.rejectLegacyXls(file.getName())
       if (file.getName().toLowerCase().endsWith(".ods")) {
         return new FOdsReader(file)
       }
@@ -25,7 +25,7 @@ interface SpreadsheetReader extends Closeable {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
-      SpreadsheetUtil.ensureXlsx(filePath)
+      SpreadsheetUtil.rejectLegacyXls(filePath)
       if (filePath.toLowerCase().endsWith(".ods")) {
         return new FOdsReader(filePath)
       }

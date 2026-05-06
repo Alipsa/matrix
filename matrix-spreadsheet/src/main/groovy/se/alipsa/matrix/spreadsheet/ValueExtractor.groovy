@@ -8,22 +8,22 @@ import groovy.transform.CompileStatic
 @CompileStatic
 abstract class ValueExtractor {
 
-   Double getDouble(Object val) {
+   BigDecimal getDouble(Object val) {
       if (val == null) {
          return null
       }
-      if (val instanceof Double) {
-         return (Double) val
+      if (val instanceof Number) {
+         return (val as Number) as BigDecimal
       }
       String strVal = val.toString().trim()
       try {
-         return Double.parseDouble(strVal)
+         return new BigDecimal(strVal)
       } catch (NumberFormatException e) {
          // Try parsing as percentage (e.g., "50%" -> 0.5)
          if (strVal.endsWith("%")) {
             try {
                String numPart = strVal.substring(0, strVal.length() - 1).trim()
-               return Double.parseDouble(numPart) / 100.0
+               return new BigDecimal(numPart) / 100.0
             } catch (NumberFormatException ignored) {
                // do nothing
             }
@@ -32,24 +32,24 @@ abstract class ValueExtractor {
       }
    }
 
-   Double getPercentage(Object val) {
+   BigDecimal getPercentage(Object val) {
       if (val == null) {
          return null
       }
-      if (val instanceof Double) {
-         return (Double) val
+      if (val instanceof Number) {
+         return (val as Number) as BigDecimal
       }
       String strVal = val.toString().trim()
       if (strVal.endsWith("%")) {
          try {
             String numPart = strVal.substring(0, strVal.length() - 1).trim()
-            return Double.parseDouble(numPart) / 100.0
+            return new BigDecimal(numPart) / 100.0
          } catch (NumberFormatException e) {
             return null
          }
       } else {
          try {
-            return Double.parseDouble(strVal)
+            return new BigDecimal(strVal)
          } catch (NumberFormatException e) {
             return null
          }
@@ -93,22 +93,15 @@ abstract class ValueExtractor {
          return num == 1
       } else {
          String strVal = String.valueOf(val).toLowerCase()
-         switch (strVal) {
-            case "j":
-            case "y":
-            case "ja":
-            case "yes":
-            case "1":
-            case "true":
-            case "on":
-               return true
-            default:
-               return false
-         }
+         final Map<String, Boolean> truthyValues = [
+             j: true, y: true, ja: true, yes: true,
+             '1': true, 'true': true, 'on': true
+         ]
+         truthyValues.getOrDefault(strVal, false)
       }
    }
 
    static String getString(Object val) {
-      return val == null ? null : String.valueOf(val)
+      val == null ? null : String.valueOf(val)
    }
 }

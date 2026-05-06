@@ -115,9 +115,8 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
   }
 
   private static int resolveLastColumn(SpreadsheetReader reader, SpreadsheetReadOptions options) {
-    int detectedLastColumn = options.hasSheetName()
+    options.hasSheetName()
         ? reader.findLastCol(options.sheetName)
         : reader.findLastCol(options.sheetNumber ?: 1)
-    detectedLastColumn
   }
 }

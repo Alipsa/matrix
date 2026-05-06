@@ -16,26 +16,26 @@ class ValueExtractorTest {
     def extractor = new TestValueExtractor()
 
     // Test percentage parsing (the bug that was fixed in 1.1)
-    Double result = extractor.getDouble("50%")
+    BigDecimal result = extractor.getDouble("50%")
     assertNotNull(result, "Percentage should be parsed successfully")
-    assertEquals(0.5, result, 0.0001, "50% should equal 0.5")
+    assertEquals(0.5G, result, "50% should equal 0.5")
 
     result = extractor.getDouble("100%")
     assertNotNull(result, "100% should be parsed successfully")
-    assertEquals(1.0, result, 0.0001, "100% should equal 1.0")
+    assertEquals(1.0G, result, "100% should equal 1.0")
 
     result = extractor.getDouble("25%")
     assertNotNull(result, "25% should be parsed successfully")
-    assertEquals(0.25, result, 0.0001, "25% should equal 0.25")
+    assertEquals(0.25G, result, "25% should equal 0.25")
   }
 
   @Test
   void testGetDoubleWithNumber() {
     def extractor = new TestValueExtractor()
 
-    assertEquals(42.0, extractor.getDouble(42.0))
-    assertEquals(3.14, extractor.getDouble("3.14"), 0.0001)
-    assertEquals(-10.5, extractor.getDouble("-10.5"), 0.0001)
+    assertEquals(42.0G, extractor.getDouble(42.0))
+    assertEquals(3.14G, extractor.getDouble("3.14"))
+    assertEquals(-10.5G, extractor.getDouble("-10.5"))
   }
 
   @Test
@@ -54,9 +54,9 @@ class ValueExtractorTest {
   void testGetPercentage() {
     def extractor = new TestValueExtractor()
 
-    assertEquals(0.5, extractor.getPercentage("50%"), 0.0001)
-    assertEquals(1.0, extractor.getPercentage("100%"), 0.0001)
-    assertEquals(0.75, extractor.getPercentage(0.75))  // Pass-through for doubles
+    assertEquals(0.5G, extractor.getPercentage("50%"))
+    assertEquals(1.0G, extractor.getPercentage("100%"))
+    assertEquals(0.75G, extractor.getPercentage(0.75))  // Pass-through for numbers
     assertNull(extractor.getPercentage(null))
   }
 

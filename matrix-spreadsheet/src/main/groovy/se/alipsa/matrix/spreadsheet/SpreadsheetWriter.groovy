@@ -72,11 +72,11 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOds(file, matrix)
     }
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName], [DEFAULT_START_POSITION])[0]
     }
-    return FExcelExporter.exportExcel(file, matrix)
+    FExcelExporter.exportExcel(file, matrix)
   }
 
   /**
@@ -108,11 +108,11 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOdsSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
-    return FExcelExporter.exportExcel(file, matrix, sheetName, startPosition)
+    FExcelExporter.exportExcel(file, matrix, sheetName, startPosition)
   }
 
   /**
@@ -194,11 +194,11 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOdsSheets(file, matrices, sheetNames, positions)
     }
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, matrices, sheetNames, positions)
     }
-    return FExcelExporter.exportExcelSheets(file, matrices, sheetNames, positions)
+    FExcelExporter.exportExcelSheets(file, matrices, sheetNames, positions)
   }
 
   /**

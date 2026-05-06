@@ -41,12 +41,12 @@ class SpreadsheetUtil {
     */
    static String asColumnName(int number) {
       StringBuilder sb = new StringBuilder()
-      while (number-- > 0) {
-        sb.append(('A' as char + (number % 26)) as char)
-         //number /= 26
-        number = (number / 26) as int
+      while (number > 0) {
+         number--
+         sb.append(('A' as char + (number % 26)) as char)
+         number = (number / 26) as int
       }
-      return sb.reverse().toString()
+      sb.reverse().toString()
    }
 
    static String createValidSheetName(String suggestion) {
@@ -97,23 +97,23 @@ class SpreadsheetUtil {
    }
 
    /**
-    * Ensure only .xlsx is used for Excel files.
+    * Reject legacy .xls Excel files; only .xlsx is supported.
     *
     * @param file the file to validate
     */
-   static void ensureXlsx(File file) {
+   static void rejectLegacyXls(File file) {
       if (file == null) {
          return
       }
-      ensureXlsx(file.getName())
+      rejectLegacyXls(file.getName())
    }
 
    /**
-    * Ensure only .xlsx is used for Excel files.
+    * Reject legacy .xls Excel files; only .xlsx is supported.
     *
     * @param fileName the file name or path to validate
     */
-   static void ensureXlsx(String fileName) {
+   static void rejectLegacyXls(String fileName) {
       if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
          throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
       }

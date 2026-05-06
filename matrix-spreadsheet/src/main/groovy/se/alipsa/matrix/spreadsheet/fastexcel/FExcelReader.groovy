@@ -18,7 +18,7 @@ class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 
   FExcelReader(File excelFile) {
-    SpreadsheetUtil.ensureXlsx(excelFile.name)
+    SpreadsheetUtil.rejectLegacyXls(excelFile.name)
     workbook = new ReadableWorkbook(excelFile, FExcelImporter.OPTIONS)
   }
 
@@ -31,7 +31,7 @@ class FExcelReader implements SpreadsheetReader {
    */
   @Override
   List<String> getSheetNames() throws IOException {
-    return getSheetNames(workbook)
+    getSheetNames(workbook)
   }
 
   static List<String> getSheetNames(ReadableWorkbook workbook) throws IOException {
@@ -50,7 +50,7 @@ class FExcelReader implements SpreadsheetReader {
   int findRowNum(int sheetNumber, int colNumber, String content) {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
-    return findRowNum(sheet, colNumber, content)
+    findRowNum(sheet, colNumber, content)
   }
 
   /**
@@ -63,14 +63,14 @@ class FExcelReader implements SpreadsheetReader {
   int findRowNum(String sheetName, int colNumber, String content) {
     Sheet sheet = workbook.findSheet(sheetName)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
-    return findRowNum(sheet, colNumber, content)
+    findRowNum(sheet, colNumber, content)
   }
 
   @Override
   int findRowNum(int sheetNumber, String colName, String content) throws IOException {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
-    return findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
+    findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
   /**
@@ -84,7 +84,7 @@ class FExcelReader implements SpreadsheetReader {
   int findRowNum(String sheetName, String colName, String content) {
     Sheet sheet = workbook.findSheet(sheetName)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
-    return findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
+    findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
   /**
@@ -107,7 +107,7 @@ class FExcelReader implements SpreadsheetReader {
         }
       }
     }
-    return rowNum
+    rowNum
   }
 
   /**
@@ -121,7 +121,7 @@ class FExcelReader implements SpreadsheetReader {
   int findColNum(int sheetNumber, int rowNumber, String content) {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
-    return findColNum(sheet, rowNumber, content)
+    findColNum(sheet, rowNumber, content)
   }
 
   /** return the column as seen in excel (e.g. using column(), 1 is the first column etc
@@ -133,7 +133,7 @@ class FExcelReader implements SpreadsheetReader {
   @Override
   int findColNum(String sheetName, int rowNumber, String content) {
     Sheet sheet = workbook.findSheet(sheetName).orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
-    return findColNum(sheet, rowNumber, content)
+    findColNum(sheet, rowNumber, content)
   }
 
   /**
@@ -154,7 +154,7 @@ class FExcelReader implements SpreadsheetReader {
         return colNum + 1
       }
     }
-    return -1
+    -1
   }
 
   @Override
@@ -171,7 +171,9 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static int findLastRow(Sheet sheet) {
-    return sheet.openStream().count() as int
+    try (Stream<Row> rows = sheet.openStream()) {
+      rows.count() as int
+    }
   }
 
   @Override
@@ -187,15 +189,14 @@ class FExcelReader implements SpreadsheetReader {
   static int findLastCol(Sheet sheet, int numRowsToScan = 10) {
     int maxColumn = -1
     try (Stream<Row> rows = sheet.openStream()) {
-      rows.eachWithIndex { Row row, int i ->
-        def nCol = row.size()
+      rows.limit(numRowsToScan + 1L).each { Row row ->
+        int nCol = row.size()
         if (nCol > maxColumn) {
           maxColumn = nCol
         }
-        if (i > numRowsToScan) return
       }
     }
-    return maxColumn
+    maxColumn
   }
 
   @Override

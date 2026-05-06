@@ -118,19 +118,19 @@ class SpreadSheetUtilTest {
     }
 
     @Test
-    void testEnsureXlsx() {
+    void testRejectLegacyXls() {
         // Should not throw for xlsx
-        SpreadsheetUtil.ensureXlsx('test.xlsx')
-        SpreadsheetUtil.ensureXlsx('TEST.XLSX')
-        SpreadsheetUtil.ensureXlsx((String) null)  // null is allowed
+        SpreadsheetUtil.rejectLegacyXls('test.xlsx')
+        SpreadsheetUtil.rejectLegacyXls('TEST.XLSX')
+        SpreadsheetUtil.rejectLegacyXls((String) null)  // null is allowed
 
         // Should throw for xls
         assertThrows(IllegalArgumentException.class, () -> {
-            SpreadsheetUtil.ensureXlsx('test.xls')
+            SpreadsheetUtil.rejectLegacyXls('test.xls')
         })
 
         assertThrows(IllegalArgumentException.class, () -> {
-            SpreadsheetUtil.ensureXlsx('TEST.XLS')
+            SpreadsheetUtil.rejectLegacyXls('TEST.XLS')
         })
     }
 }

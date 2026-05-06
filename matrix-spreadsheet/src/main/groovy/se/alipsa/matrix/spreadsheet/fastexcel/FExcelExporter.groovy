@@ -56,10 +56,10 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data) {
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
     exportExcel(file, data, sheetName, "A1")
-    return sheetName
+    sheetName
   }
 
   /**
@@ -92,7 +92,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data, String sheetName, String startPosition) {
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.exists() && file.length() > 0) {
@@ -103,7 +103,7 @@ class FExcelExporter {
       buildSheet(data, sheet, position)
       workbook.finish()
     }
-    return validSheetName
+    validSheetName
   }
 
   static List<String> exportExcelSheets(String filePath, List<Matrix> data, List<String> sheetNames) {
@@ -119,7 +119,7 @@ class FExcelExporter {
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions, boolean overwrite = false) throws IOException {
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     if (file.exists() && !overwrite && file.length() > 0) {
       throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
     }
@@ -139,7 +139,7 @@ class FExcelExporter {
         SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(positions.get(i))
         buildSheet(dataFrame, workbook.newWorksheet(sheetName), position)
       }
-      return uniqueSheetNames
+      uniqueSheetNames
     } catch (IOException e) {
       logger.error("Failed to create excel file ${file.absolutePath}", e)
       throw new IOException("Failed to create excel file ${file}", e)

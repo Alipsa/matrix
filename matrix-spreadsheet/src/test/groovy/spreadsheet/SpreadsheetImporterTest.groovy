@@ -204,6 +204,12 @@ class SpreadsheetImporterTest {
   }
 
   @Test
+  void testAutoDetectStringPathConvenienceForm() {
+    Matrix m = importSpreadsheet("Book1.xlsx")
+    book1ImportAssertions(m)
+  }
+
+  @Test
   void testAutoDetectXlsxByFile() throws Exception {
     File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
     Matrix m = importSpreadsheet(file, 1, true)
