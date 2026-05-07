@@ -11,6 +11,10 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.util.stream.Stream
 
+/**
+ * Provides read access to Excel (.xlsx) workbook metadata such as sheet names, row counts,
+ * and column counts using the FastExcel reader library.
+ */
 class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 

@@ -1,5 +1,8 @@
 package se.alipsa.matrix.spreadsheet
 
+/**
+ * Checked exception thrown when a spreadsheet import operation fails.
+ */
 class SpreadsheetImportException extends Exception {
   @Override
   Object invokeMethod(String name, Object args) {

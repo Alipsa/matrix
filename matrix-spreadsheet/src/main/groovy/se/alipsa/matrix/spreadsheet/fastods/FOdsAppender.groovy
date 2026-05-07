@@ -25,6 +25,9 @@ import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.XMLStreamWriter
 
+/**
+ * Appends Matrix data to an existing ODS workbook by rewriting its content.xml entry.
+ */
 class FOdsAppender {
 
   private static final Logger logger = Logger.getLogger(FOdsAppender)

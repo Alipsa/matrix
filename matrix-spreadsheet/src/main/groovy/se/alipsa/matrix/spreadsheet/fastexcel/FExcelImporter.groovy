@@ -11,6 +11,9 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.text.NumberFormat
 import java.util.stream.Stream
 
+/**
+ * Imports Excel (.xlsx) files into Matrix instances using the FastExcel reader library.
+ */
 class FExcelImporter implements Importer {
 
   static final ReadingOptions OPTIONS = new ReadingOptions(true, true)

@@ -21,6 +21,9 @@ import java.util.Collections
 // package-private inside org.dhatim.fastexcel. Dynamic dispatch uses reflection/
 // metaclass invocation which bypasses this restriction. Re-evaluate if fastexcel
 // ever makes GenericStyleSetter public.
+/**
+ * Exports Matrix data to Excel (.xlsx) files using the FastExcel library.
+ */
 @CompileDynamic
 class FExcelExporter {
 

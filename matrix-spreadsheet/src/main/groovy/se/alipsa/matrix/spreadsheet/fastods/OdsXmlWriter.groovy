@@ -22,6 +22,9 @@ import java.util.Collections
 import javax.xml.stream.XMLOutputFactory
 import javax.xml.stream.XMLStreamWriter
 
+/**
+ * Generates the content.xml markup for ODS files from Matrix data using StAX.
+ */
 class OdsXmlWriter {
 
   static String buildContentXml(List<Matrix> data, List<String> sheetNames) {

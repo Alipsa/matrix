@@ -94,6 +94,22 @@ class SpreadsheetUtil {
    }
 
    /**
+    * @deprecated Use {@link #rejectLegacyXls(File)} instead. Will be removed in v3.0.
+    */
+   @Deprecated
+   static void ensureXlsx(File file) {
+      rejectLegacyXls(file)
+   }
+
+   /**
+    * @deprecated Use {@link #rejectLegacyXls(String)} instead. Will be removed in v3.0.
+    */
+   @Deprecated
+   static void ensureXlsx(String fileName) {
+      rejectLegacyXls(fileName)
+   }
+
+   /**
     * Reject legacy .xls Excel files; only .xlsx is supported.
     *
     * @param file the file to validate

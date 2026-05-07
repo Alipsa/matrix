@@ -5,6 +5,9 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMET
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 
+/**
+ * Base class for reading sheet data from ODS files.
+ */
 abstract class OdsDataReader {
 
   /**

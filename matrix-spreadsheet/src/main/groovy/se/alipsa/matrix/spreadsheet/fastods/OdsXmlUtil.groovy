@@ -6,6 +6,9 @@ import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.events.StartElement
 import javax.xml.stream.events.XMLEvent
 
+/**
+ * Constants and helpers for working with OpenDocument XML namespaces and qualified names.
+ */
 class OdsXmlUtil {
 
   static final String OPENDOCUMENT_MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet";

@@ -9,6 +9,9 @@ import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+/**
+ * Exports Matrix data to OpenDocument Spreadsheet (.ods) files.
+ */
 class FOdsExporter {
 
   private static final Logger logger = Logger.getLogger(FOdsExporter)

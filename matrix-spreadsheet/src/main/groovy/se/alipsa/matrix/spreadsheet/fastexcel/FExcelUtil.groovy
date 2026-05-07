@@ -6,6 +6,9 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Utility methods for inspecting Excel (.xlsx) cell formatting and metadata.
+ */
 class FExcelUtil {
 
   private FExcelUtil() {
