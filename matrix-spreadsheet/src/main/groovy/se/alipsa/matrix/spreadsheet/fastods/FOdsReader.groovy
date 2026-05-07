@@ -60,7 +60,7 @@ class FOdsReader implements SpreadsheetReader {
     return findRowNum(sheet, content)
   }
 
-  static int findRowNum(Sheet sheet, String content) {
+  private static int findRowNum(Sheet sheet, String content) {
     if (sheet == null) {
       return -1
     }
@@ -86,7 +86,7 @@ class FOdsReader implements SpreadsheetReader {
     return findColNum(sheet, content)
   }
 
-  static int findColNum(Sheet sheet, String content) {
+  private static int findColNum(Sheet sheet, String content) {
     if (sheet == null || sheet.isEmpty()) {
       return -1
     }
@@ -126,7 +126,7 @@ class FOdsReader implements SpreadsheetReader {
     return findLastCol(sheet)
   }
 
-  static int findLastCol(Sheet sheet) {
+  private static int findLastCol(Sheet sheet) {
     if (sheet == null || sheet.isEmpty()) {
       return 0
     }
