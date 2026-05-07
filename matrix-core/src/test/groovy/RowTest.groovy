@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
-import groovy.transform.CompileDynamic
-
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
