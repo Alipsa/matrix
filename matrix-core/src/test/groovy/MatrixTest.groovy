@@ -879,7 +879,7 @@ class MatrixTest {
   void testDropColumnsExceptWithEmptyMatrix() {
     // Test dropExcept on empty matrix
     Matrix emptyMatrix = Matrix.builder().matrixName('Empty').build()
-    Matrix result = emptyMatrix.dropColumnsExcept()
+    Matrix result = emptyMatrix.dropExcept('')
     assertNotNull(result)
     assertEquals(0, result.columnCount())
     assertEquals(0, result.rowCount())
@@ -889,7 +889,7 @@ class MatrixTest {
         .columnNames(['col1', 'col2', 'col3'])
         .types([String, Integer, Double])
         .build()
-    result = noRowsMatrix.dropColumnsExcept('col1', 'col3')
+    result = noRowsMatrix.dropExcept('col1', 'col3')
     assertEquals(2, result.columnCount())
     assertEquals(0, result.rowCount())
     assertIterableEquals(['col1', 'col3'], result.columnNames())
@@ -928,7 +928,7 @@ class MatrixTest {
 
   @Test
   void testMatrixToGrid() {
-    def report = [
+    Map<String, List> report = [
         "Full Funding"    : [4563.153, 380.263, 4.938, 12.23],
         "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
         "Current Funding" : [2700, 225, 2.922, 1.871]

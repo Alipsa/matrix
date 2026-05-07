@@ -5,6 +5,7 @@ import static se.alipsa.matrix.core.ValueConverter.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
@@ -36,8 +37,8 @@ class StatTest {
     assertEquals(10 / 3, m[0])
     assertEquals(1.95g, m[1])
 
-    def table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
-    def m2 = means(table, ["v1", "v2"])
+    Matrix table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
+    List<BigDecimal> m2 = means(table, ["v1", "v2"])
     assertIterableEquals(m, m2)
 
     Grid<Number> bar = new Grid<>([
@@ -329,8 +330,8 @@ class StatTest {
         .types(int, String, String, Number, LocalDate)
         .build()
 
-    def sums = medianBy(empData, "salary", "department")
-    def salaries = empData["salary"]
+    Matrix sums = medianBy(empData, "salary", "department")
+    Column salaries = empData["salary"]
 
     assertEquals(salaries[0] as BigDecimal,
         sums.findFirstRow('department', "IT")[1],
@@ -581,7 +582,7 @@ class StatTest {
     assertNotNull(medianResults[3], "Median of numeric column should not be null")
     assertEquals(new BigDecimal(2), medianResults[3])
 
-    def rowList = [
+    List rowList = [
         [1, null, 10],
         [3, null, 14],
         [5, null, null]

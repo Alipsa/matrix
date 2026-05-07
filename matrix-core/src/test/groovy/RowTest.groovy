@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
+import groovy.transform.CompileDynamic
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -49,7 +51,8 @@ class RowTest {
 
     Row row = empData.row(1)
 
-    assertIterableEquals([2, 'Dan', 515.2], row[['emp_id', 'emp_name', 'salary']])
+    assertIterableEquals([2, 'Dan', 515.2], row.subList('emp_id', 'emp_name', 'salary'))
+    assertIterableEquals([2, 'Dan', 515.2], row['emp_id', 'emp_name', 'salary'])
   }
 
   @Test
