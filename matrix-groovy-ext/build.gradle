@@ -12,13 +12,6 @@ group = 'se.alipsa.matrix'
 version = '0.2.0' // remember to change Extension module info if changing version
 description = "Groovy extensions for the matrix library"
 
-repositories {
-  if (version.contains('SNAPSHOT')) {
-    mavenLocal()
-  }
-  mavenCentral()
-}
-
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true

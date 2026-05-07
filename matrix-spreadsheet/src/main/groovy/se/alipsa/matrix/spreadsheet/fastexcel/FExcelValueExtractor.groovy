@@ -37,22 +37,22 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
 
-   BigDecimal getDouble(int row, int column) {
-      getDouble(FExcelUtil.getRow(sheet, row), column)
+   BigDecimal getBigDecimal(int row, int column) {
+      getBigDecimal(FExcelUtil.getRow(sheet, row), column)
    }
 
-   BigDecimal getDouble(Row row, int column) {
-      row == null ? null : getDouble(getObject(row.getCell(column)))
+   BigDecimal getBigDecimal(Row row, int column) {
+      row == null ? null : getBigDecimal(getObject(row.getCell(column)))
    }
 
    Float getFloat(int row, int column) {
-      BigDecimal d = getDouble(FExcelUtil.getRow(sheet, row), column)
+      BigDecimal d = getBigDecimal(FExcelUtil.getRow(sheet, row), column)
       d == null ? null : d.floatValue()
    }
 
    Float getFloat(Row row, int column) {
       if (row == null) return null
-      BigDecimal d = getDouble(row, column)
+      BigDecimal d = getBigDecimal(row, column)
       d == null ? null : d.floatValue()
    }
 

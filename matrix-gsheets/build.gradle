@@ -13,13 +13,6 @@ group = 'se.alipsa.matrix'
 version = '0.2.0'
 description = 'Google Sheets import/export'
 
-repositories {
-  if (version.contains('SNAPSHOT')) {
-    mavenLocal()
-  }
-  mavenCentral()
-}
-
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true

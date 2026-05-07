@@ -34,7 +34,7 @@ mavenModules {
   }
 }
 
-allprojects {
+allprojects { Project p ->
   plugins.withType(MavenPublishPlugin).configureEach {
     project.afterEvaluate {project ->
       def projectName = project.name
@@ -72,7 +72,14 @@ allprojects {
   }
 }
 
-subprojects {
+subprojects { Project p ->
+  repositories {
+    if (p.version.contains('SNAPSHOT')) {
+      mavenLocal()
+    }
+    mavenCentral()
+  }
+
   tasks.withType(Test).configureEach {
     addTestListener(new TestListener() {
       long totalDuration = 0

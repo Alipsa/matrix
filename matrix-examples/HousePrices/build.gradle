@@ -2,10 +2,6 @@ plugins {
     id 'groovy'
 }
 
-repositories {
-    mavenCentral()
-}
-
 tasks.withType(JavaCompile) {
     options.deprecation = true
 }

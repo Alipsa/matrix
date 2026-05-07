@@ -16,15 +16,15 @@ class ValueExtractorTest {
     def extractor = new TestValueExtractor()
 
     // Test percentage parsing (the bug that was fixed in 1.1)
-    BigDecimal result = extractor.getDouble("50%")
+    BigDecimal result = extractor.getBigDecimal("50%")
     assertNotNull(result, "Percentage should be parsed successfully")
     assertEquals(0.5G, result, "50% should equal 0.5")
 
-    result = extractor.getDouble("100%")
+    result = extractor.getBigDecimal("100%")
     assertNotNull(result, "100% should be parsed successfully")
     assertEquals(1.0G, result, "100% should equal 1.0")
 
-    result = extractor.getDouble("25%")
+    result = extractor.getBigDecimal("25%")
     assertNotNull(result, "25% should be parsed successfully")
     assertEquals(0.25G, result, "25% should equal 0.25")
   }
@@ -33,21 +33,21 @@ class ValueExtractorTest {
   void testGetDoubleWithNumber() {
     def extractor = new TestValueExtractor()
 
-    assertEquals(42.0G, extractor.getDouble(42.0))
-    assertEquals(3.14G, extractor.getDouble("3.14"))
-    assertEquals(-10.5G, extractor.getDouble("-10.5"))
+    assertEquals(42.0G, extractor.getBigDecimal(42.0))
+    assertEquals(3.14G, extractor.getBigDecimal("3.14"))
+    assertEquals(-10.5G, extractor.getBigDecimal("-10.5"))
   }
 
   @Test
   void testGetDoubleWithNull() {
     def extractor = new TestValueExtractor()
-    assertNull(extractor.getDouble(null))
+    assertNull(extractor.getBigDecimal(null))
   }
 
   @Test
   void testGetDoubleWithInvalidString() {
     def extractor = new TestValueExtractor()
-    assertNull(extractor.getDouble("not a number"))
+    assertNull(extractor.getBigDecimal("not a number"))
   }
 
   @Test

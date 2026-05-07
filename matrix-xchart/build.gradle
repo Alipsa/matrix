@@ -18,13 +18,6 @@ ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
-repositories {
-    if (version.endsWith('SNAPSHOT')) {
-        mavenLocal()
-    }
-    mavenCentral()
-}
-
 JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true

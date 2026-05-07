@@ -21,10 +21,6 @@ compileGroovy {
   groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   compileOnly project(':matrix-core')
   compileOnly libs.groovy

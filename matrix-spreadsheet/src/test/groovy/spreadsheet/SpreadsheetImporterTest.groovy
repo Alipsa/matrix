@@ -1,14 +1,12 @@
 package spreadsheet
 
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
-import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
 import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -37,6 +35,7 @@ class SpreadsheetImporterTest {
   }
 
   @Test
+  @CompileStatic
   void testOdsImport() {
     Matrix m = importSpreadsheet("Book1.ods", 1, 1, 12, 1, 4, true)
     book1ImportAssertions(m)
@@ -44,38 +43,40 @@ class SpreadsheetImporterTest {
     book1ImportAssertions(m2)
     Matrix m3 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true)
       .withMatrixName('transactions')
-    Assertions.assertEquals('transactions', m3.matrixName)
-    Assertions.assertEquals(4, m3.columnCount())
+    assertEquals('transactions', m3.matrixName)
+    assertEquals(4, m3.columnCount())
   }
 
   static void book1ImportAssertions(Matrix table) {
 
     table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
     //println(table.content())
-    Assertions.assertEquals(3, table[2, 0])
-    Assertions.assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
-    Assertions.assertEquals(17.4, table['baz'][table.rowCount()-1])
-    Assertions.assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
+    assertEquals(3, table[2, 0])
+    assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
+    assertEquals(17.4, table['baz'][table.rowCount()-1])
+    assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
 
   @Test
+  @CompileStatic
   void TestImportWithColnames() {
     importWithColnamesAssertions()
   }
 
+  @CompileStatic
   static void importWithColnamesAssertions() {
-    def table = importSpreadsheet(
+    Matrix table = importSpreadsheet(
         "file": "Book1.xlsx",
         "endRow": 12,
         "startCol": 'A',
         "endCol": 'D'
     )
     //println(table.content())
-    def value = table[2, 0]
-    Assertions.assertEquals(3.0, value, "Attempt to compare BigDecimal with " + value.class.simpleName)
-    Assertions.assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
-    Assertions.assertEquals(17.4, table['baz'][table.rowCount()-1])
-    Assertions.assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
+    def value = table[2, 0, BigDecimal]
+    assertEquals(3.0, value, "Attempt to compare BigDecimal with " + value.class.simpleName)
+    assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
+    assertEquals(17.4, table['baz'][table.rowCount()-1])
+    assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
 
   @Test
@@ -92,28 +93,28 @@ class SpreadsheetImporterTest {
             ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
             ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
         ])
-    Assertions.assertEquals(4, sheets.size())
+    assertEquals(4, sheets.size())
     Matrix table2 = sheets.Sheet2
-    Assertions.assertEquals(3i, table2[2, 0, Integer])
+    assertEquals(3i, table2[2, 0, Integer])
     def date = table2[6, 2]
-    Assertions.assertEquals(LocalDate.parse("2023-05-06"), date)
-    Assertions.assertEquals(17.4, table2[table2.rowCount()-1, 'baz', BigDecimal].setScale(1, RoundingMode.HALF_UP))
-    Assertions.assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
+    assertEquals(LocalDate.parse("2023-05-06"), date)
+    assertEquals(17.4, table2[table2.rowCount()-1, 'baz', BigDecimal].setScale(1, RoundingMode.HALF_UP))
+    assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
     Matrix table1 = sheets.Sheet1
     //println(table1.content())
     //println(table1.types())
-    Assertions.assertEquals(710381i, table1[0,0, Integer])
-    Assertions.assertEquals(103599.04, table1[1,1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
-    Assertions.assertEquals(66952.95, table1[2,2])
-    Assertions.assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1))
-    Assertions.assertEquals(-0.00982d, table1[6, 'percentdiff'] as double, 0.00001)
+    assertEquals(710381i, table1[0,0, Integer])
+    assertEquals(103599.04, table1[1,1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
+    assertEquals(66952.95, table1[2,2])
+    assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1))
+    assertEquals(-0.00982d, table1[6, 'percentdiff'] as double, 0.00001)
 
     Matrix comp = sheets.comp.clone()
-    Assertions.assertEquals('Component', comp[0,0])
-    Assertions.assertEquals(5, comp.rowCount())
-    Assertions.assertEquals(32, comp.columnCount())
-    Assertions.assertEquals(31, comp[0,31, Integer])
+    assertEquals('Component', comp[0,0])
+    assertEquals(5, comp.rowCount())
+    assertEquals(32, comp.columnCount())
+    assertEquals(31, comp[0,31, Integer])
 
     def headerRow = comp.row(0)
     List<String> names = headerRow.collect{
@@ -123,12 +124,12 @@ class SpreadsheetImporterTest {
         String.valueOf(ValueConverter.asDouble(it).intValue())
       }
     }
-    Assertions.assertEquals(32, names.size())
+    assertEquals(32, names.size())
     comp.columnNames(names)
     comp.removeRows(0)
     comp = comp.convert([String] + [Integer]*31 as List<Class<?>>)
-    Assertions.assertEquals(2043, comp[0,1])
-    Assertions.assertEquals(2790, comp[3,31])
+    assertEquals(2043, comp[0,1])
+    assertEquals(2790, comp[3,31])
 
     Matrix comp2 = sheets.comp2
     assertIterableEquals(sheets.comp.typeNames(), comp2.typeNames(), "column types differ")
@@ -271,7 +272,7 @@ class SpreadsheetImporterTest {
             [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
             [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
         ])
-    Assertions.assertEquals(2, sheets.size())
+    assertEquals(2, sheets.size())
     assertNotNull(sheets.Sheet1)
     assertNotNull(sheets.Sheet2)
   }

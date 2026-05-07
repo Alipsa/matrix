@@ -5,7 +5,7 @@ package se.alipsa.matrix.spreadsheet
  */
 abstract class ValueExtractor {
 
-   BigDecimal getDouble(Object val) {
+   BigDecimal getBigDecimal(Object val) {
       if (val == null) {
          return null
       }

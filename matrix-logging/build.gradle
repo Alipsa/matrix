@@ -19,13 +19,6 @@ JavaCompile javaCompile = compileJava {
   options.compilerArgs << "-Xlint:unchecked"
 }
 
-repositories {
-  if (version.toString().endsWith('SNAPSHOT')) {
-    mavenLocal()
-  }
-  mavenCentral()
-}
-
 dependencies {
   runtimeOnly platform(libs.slf4j.bom)
 

@@ -5,13 +5,6 @@ plugins {
 group = 'se.alipsa.groovy'
 version = '1.0.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
-    if (version.contains('SNAPSHOT')) {
-        mavenLocal()
-    }
-}
-
 tasks.withType(JavaCompile) {
     options.deprecation = true
 }

@@ -32,13 +32,6 @@ compileGroovy {
   options.deprecation = true
 }
 
-repositories {
-  if (version.contains('SNAPSHOT')) {
-    mavenLocal()
-  }
-  mavenCentral()
-}
-
 dependencies {
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')

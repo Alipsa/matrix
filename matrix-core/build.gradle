@@ -30,13 +30,6 @@ compileGroovy {
   options.compilerArgs << "-Xlint:unchecked"
 }
 
-repositories {
-  mavenCentral()
-  if (version.endsWith('SNAPSHOT')) {
-    mavenLocal()
-  }
-}
-
 sourceSets {
   main {
     java { srcDirs = [] }    // no source dirs for the java compiler

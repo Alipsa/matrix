@@ -30,13 +30,6 @@ codenarc {
     configFile = file('config/codenarc/ruleset.groovy')
 }
 
-repositories {
-    mavenCentral()
-    if (version.endsWith('SNAPSHOT')) {
-        mavenLocal()
-    }
-}
-
 dependencies {
     compileOnly libs.groovy
     compileOnly project(':matrix-core')
