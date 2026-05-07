@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -70,6 +73,7 @@ class OdsImporterTest {
     }
   }
 
+  @CompileDynamic
   void testImportMultipleSheets(Map<Object, Matrix> sheets) {
     assertEquals(4, sheets.size())
     assertTrue(sheets.containsKey('Sheet1'))

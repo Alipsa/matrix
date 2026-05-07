@@ -1,14 +1,14 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.*
 
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.util.concurrent.atomic.AtomicInteger
 
-@CompileStatic
+/**
+ * Utility methods for inspecting Excel (.xlsx) cell formatting and metadata.
+ */
 class FExcelUtil {
 
   private FExcelUtil() {

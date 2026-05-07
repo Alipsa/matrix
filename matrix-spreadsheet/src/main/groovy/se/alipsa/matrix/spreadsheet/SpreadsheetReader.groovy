@@ -1,11 +1,12 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
 import se.alipsa.matrix.spreadsheet.fastods.FOdsReader
 
-@CompileStatic
+/**
+ * Read-only access to spreadsheet workbook metadata such as sheet names, row counts, and column counts.
+ * Use {@link Factory#create(File)} to obtain a format-appropriate implementation.
+ */
 interface SpreadsheetReader extends Closeable {
 
   // Groovy does not support static methods in interfaces so we create an inner class for those
@@ -14,7 +15,7 @@ interface SpreadsheetReader extends Closeable {
       if (file == null) {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
-      SpreadsheetUtil.ensureXlsx(file.getName())
+      SpreadsheetUtil.rejectLegacyXls(file.getName())
       if (file.getName().toLowerCase().endsWith(".ods")) {
         return new FOdsReader(file)
       }
@@ -25,7 +26,7 @@ interface SpreadsheetReader extends Closeable {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
-      SpreadsheetUtil.ensureXlsx(filePath)
+      SpreadsheetUtil.rejectLegacyXls(filePath)
       if (filePath.toLowerCase().endsWith(".ods")) {
         return new FOdsReader(filePath)
       }

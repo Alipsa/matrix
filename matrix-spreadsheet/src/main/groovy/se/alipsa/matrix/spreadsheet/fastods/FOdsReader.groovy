@@ -2,8 +2,6 @@ package se.alipsa.matrix.spreadsheet.fastods
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
@@ -21,7 +19,6 @@ import javax.xml.stream.XMLStreamReader
 /**
  * Extract various information from a Calc (ods) file using fastods streaming.
  */
-@CompileStatic
 class FOdsReader implements SpreadsheetReader {
 
   private final File odsFile

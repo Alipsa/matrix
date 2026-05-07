@@ -1,8 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
+/**
+ * Runtime exception thrown when an error occurs during ODS file processing.
+ */
 class FastOdsException extends RuntimeException {
 
   FastOdsException(String message) {

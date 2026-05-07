@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
@@ -31,7 +29,6 @@ import java.text.NumberFormat
  * @see FExcelImporter
  * @see FOdsImporter
  */
-@CompileStatic
 class SpreadsheetImporter {
 
   /**
@@ -54,8 +51,8 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    SpreadsheetUtil.ensureXlsx(file)
-    return excelImporter()
+    SpreadsheetUtil.rejectLegacyXls(file)
+    excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -119,7 +116,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -127,7 +124,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -135,7 +132,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -144,7 +141,7 @@ class SpreadsheetImporter {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
 
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -168,8 +165,8 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    SpreadsheetUtil.ensureXlsx(file)
-    return excelImporter()
+    SpreadsheetUtil.rejectLegacyXls(file)
+    excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -193,7 +190,7 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
@@ -221,7 +218,7 @@ class SpreadsheetImporter {
       return odsImporter()
           .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
@@ -296,7 +293,7 @@ class SpreadsheetImporter {
     SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetNumber)
       int endCol = reader.findLastCol(sheetNumber)
-      return importSpreadsheet(file.absolutePath, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
+      importSpreadsheet(file.absolutePath, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
     }
   }
 
@@ -323,7 +320,7 @@ class SpreadsheetImporter {
     SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetNumber)
       int endCol = reader.findLastCol(sheetNumber)
-      return importSpreadsheet(file, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
+      importSpreadsheet(file, sheetNumber, 1, endRow, 1, endCol, firstRowAsColNames)
     }
   }
 
@@ -343,7 +340,7 @@ class SpreadsheetImporter {
     SpreadsheetReader.Factory.create(spreadsheetFile).withCloseable { SpreadsheetReader reader ->
       int endRow = reader.findLastRow(sheetName)
       int endCol = reader.findLastCol(sheetName)
-      return importSpreadsheet(file, sheetName, 1, endRow, 1, endCol, firstRowAsColNames)
+      importSpreadsheet(file, sheetName, 1, endRow, 1, endCol, firstRowAsColNames)
     }
   }
 
@@ -416,7 +413,7 @@ class SpreadsheetImporter {
           endCol as int,
           firstRowAsColNames as boolean)
     }
-    return importSpreadsheet(
+    importSpreadsheet(
         file,
         sheet as String,
         startRow as int,
@@ -440,15 +437,22 @@ class SpreadsheetImporter {
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
       return odsImporter().importSpreadsheets(fileName, sheetParams, format)
     }
-    SpreadsheetUtil.ensureXlsx(fileName)
-    return excelImporter().importSpreadsheets(fileName, sheetParams, formatOpt)
+    SpreadsheetUtil.rejectLegacyXls(fileName)
+    excelImporter().importSpreadsheets(fileName, sheetParams, formatOpt)
   }
 
   static Map<Object, Matrix> importOdsSheets(URL url,
                                                 List<Map> sheetParams,
                                                 NumberFormat... formatOpt) {
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
-      return odsImporter().importSpreadsheets(url, sheetParams, format)
+      odsImporter().importSpreadsheets(url, sheetParams, format)
+  }
+
+  static Map<Object, Matrix> importOdsSheets(File file,
+                                             List<Map> sheetParams,
+                                             NumberFormat... formatOpt) {
+    NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
+    odsImporter().importSpreadsheets(file.toURI().toURL(), sheetParams, format)
   }
 
   static Map<Object, Matrix> importExcelSheets(URL url,
@@ -456,6 +460,13 @@ class SpreadsheetImporter {
                                                 NumberFormat... formatOpt) {
     excelImporter()
         .importSpreadsheets(url, sheetParams, formatOpt)
+  }
+
+  static Map<Object, Matrix> importExcelSheets(File file,
+                                               List<Map> sheetParams,
+                                               NumberFormat... formatOpt) {
+    excelImporter()
+        .importSpreadsheets(file.toURI().toURL(), sheetParams, formatOpt)
   }
 
   private static void validateNotNull(Object paramVal, String paramName) {

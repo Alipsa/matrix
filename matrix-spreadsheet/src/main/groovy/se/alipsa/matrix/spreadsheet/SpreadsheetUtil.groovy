@@ -1,14 +1,11 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 /**
  * Common spreadsheet utilities
  */
-@CompileStatic
 class SpreadsheetUtil {
 
    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
@@ -41,12 +38,12 @@ class SpreadsheetUtil {
     */
    static String asColumnName(int number) {
       StringBuilder sb = new StringBuilder()
-      while (number-- > 0) {
-        sb.append(('A' as char + (number % 26)) as char)
-         //number /= 26
-        number = (number / 26) as int
+      while (number > 0) {
+         number--
+         sb.append(('A' as char + (number % 26)) as char)
+         number = (number / 26) as int
       }
-      return sb.reverse().toString()
+      sb.reverse().toString()
    }
 
    static String createValidSheetName(String suggestion) {
@@ -97,23 +94,39 @@ class SpreadsheetUtil {
    }
 
    /**
-    * Ensure only .xlsx is used for Excel files.
-    *
-    * @param file the file to validate
+    * @deprecated Use {@link #rejectLegacyXls(File)} instead. Will be removed in v3.0.
     */
+   @Deprecated
    static void ensureXlsx(File file) {
-      if (file == null) {
-         return
-      }
-      ensureXlsx(file.getName())
+      rejectLegacyXls(file)
    }
 
    /**
-    * Ensure only .xlsx is used for Excel files.
+    * @deprecated Use {@link #rejectLegacyXls(String)} instead. Will be removed in v3.0.
+    */
+   @Deprecated
+   static void ensureXlsx(String fileName) {
+      rejectLegacyXls(fileName)
+   }
+
+   /**
+    * Reject legacy .xls Excel files; only .xlsx is supported.
+    *
+    * @param file the file to validate
+    */
+   static void rejectLegacyXls(File file) {
+      if (file == null) {
+         return
+      }
+      rejectLegacyXls(file.getName())
+   }
+
+   /**
+    * Reject legacy .xls Excel files; only .xlsx is supported.
     *
     * @param fileName the file name or path to validate
     */
-   static void ensureXlsx(String fileName) {
+   static void rejectLegacyXls(String fileName) {
       if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
          throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
       }

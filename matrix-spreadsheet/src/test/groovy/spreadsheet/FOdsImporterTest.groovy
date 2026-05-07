@@ -2,6 +2,8 @@ package spreadsheet
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileDynamic
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -94,6 +96,7 @@ class FOdsImporterTest {
   }
 
   @Test
+  @CompileDynamic
   void testImportMultipleSheets() {
     URL url = this.getClass().getResource("/Book2.ods")
     Map<Object, Matrix> sheets = FOdsImporter.create().importSpreadsheets(url,

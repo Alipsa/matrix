@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -16,7 +14,6 @@ import java.text.NumberFormat
 /**
  * Import Calc (ods file)
  */
-@CompileStatic
 class FOdsImporter implements Importer {
 
   private static final Logger logger = Logger.getLogger(FOdsImporter)
@@ -35,7 +32,7 @@ class FOdsImporter implements Importer {
                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
-    return importSpreadsheet(
+    importSpreadsheet(
         file,
         sheetNumber as int,
         startRow as int,
@@ -57,7 +54,7 @@ class FOdsImporter implements Importer {
       sheet = odsDataReader.readOds(fis,
           sheetNumber, startRow, endRow, startCol, endCol)
     }
-    return buildMatrix(sheet, firstRowAsColNames)
+    buildMatrix(sheet, firstRowAsColNames)
   }
 
 
@@ -72,7 +69,7 @@ class FOdsImporter implements Importer {
       sheet = odsDataReader.readOds(fis,
           sheetName, startRow, endRow, startCol, endCol)
     }
-    return buildMatrix(sheet, firstRowAsColNames)
+    buildMatrix(sheet, firstRowAsColNames)
   }
 
   @Override
@@ -92,7 +89,7 @@ class FOdsImporter implements Importer {
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
 
-    return importSpreadsheet(
+    importSpreadsheet(
         is,
         sheetName,
         startRow as int,
@@ -109,7 +106,7 @@ class FOdsImporter implements Importer {
                            int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
     def sheet = odsDataReader.readOds(is, sheetName, startRow, endRow, startCol, endCol)
-    return buildMatrix(sheet, firstRowAsColNames)
+    buildMatrix(sheet, firstRowAsColNames)
   }
 
   @Override
@@ -118,7 +115,7 @@ class FOdsImporter implements Importer {
                            int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
     def sheet = odsDataReader.readOds(is, sheetNum, startRow, endRow, startCol, endCol)
-    return buildMatrix(sheet, firstRowAsColNames)
+    buildMatrix(sheet, firstRowAsColNames)
   }
 
   @Override
@@ -140,7 +137,7 @@ class FOdsImporter implements Importer {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
       def sheet = odsDataReader.readOds(is, sheetNum, startRow, endRow, startColNum, endColNum)
-      return buildMatrix(sheet, firstRowAsColNames)
+      buildMatrix(sheet, firstRowAsColNames)
     }
   }
 
@@ -243,7 +240,7 @@ class FOdsImporter implements Importer {
     if (firstRowHasColumnNames) {
       return ListConverter.toStrings(sheet.remove(0))
     } else {
-      return SpreadsheetUtil.createColumnNames(sheet.first().size())
+      SpreadsheetUtil.createColumnNames(sheet.first().size())
     }
   }
 }

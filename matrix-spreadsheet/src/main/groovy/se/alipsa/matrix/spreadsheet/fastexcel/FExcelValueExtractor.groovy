@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.CellType
 import org.dhatim.fastexcel.reader.Row
@@ -16,7 +14,6 @@ import java.time.LocalDateTime
 /**
  * A value extractor specialized in extracting info from an Excel file
  */
-@CompileStatic
 class FExcelValueExtractor extends ValueExtractor {
 
    private final Sheet sheet
@@ -40,23 +37,23 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
 
-   Double getDouble(int row, int column) {
-      return getDouble(FExcelUtil.getRow(sheet, row), column)
+   BigDecimal getDouble(int row, int column) {
+      getDouble(FExcelUtil.getRow(sheet, row), column)
    }
 
-   Double getDouble(Row row, int column) {
-      return row == null ? null : getDouble(getObject(row.getCell(column)))
+   BigDecimal getDouble(Row row, int column) {
+      row == null ? null : getDouble(getObject(row.getCell(column)))
    }
 
    Float getFloat(int row, int column) {
-      Double d = getDouble(FExcelUtil.getRow(sheet, row), column)
-      return d == null ? null : d.floatValue()
+      BigDecimal d = getDouble(FExcelUtil.getRow(sheet, row), column)
+      d == null ? null : d.floatValue()
    }
 
    Float getFloat(Row row, int column) {
       if (row == null) return null
-      Double d = getDouble(row, column)
-      return d == null ? null : d.floatValue()
+      BigDecimal d = getDouble(row, column)
+      d == null ? null : d.floatValue()
    }
 
    Integer getInteger(int row, int column) {

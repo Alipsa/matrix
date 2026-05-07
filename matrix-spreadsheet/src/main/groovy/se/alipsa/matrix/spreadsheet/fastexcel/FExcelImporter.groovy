@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
-import groovy.transform.CompileStatic
-
 import org.dhatim.fastexcel.reader.*
 
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,9 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.text.NumberFormat
 import java.util.stream.Stream
 
-@CompileStatic
+/**
+ * Imports Excel (.xlsx) files into Matrix instances using the FastExcel reader library.
+ */
 class FExcelImporter implements Importer {
 
   static final ReadingOptions OPTIONS = new ReadingOptions(true, true)
@@ -28,7 +28,7 @@ class FExcelImporter implements Importer {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
 
-    return importSpreadsheet(
+    importSpreadsheet(
         is,
         sheetName,
         startRow as int,
@@ -48,7 +48,7 @@ class FExcelImporter implements Importer {
     if (sheetNumber < 1) {
       throw new IllegalArgumentException("Sheet number must be 1 or greater")
     }
-    SpreadsheetUtil.ensureXlsx(url.path)
+    SpreadsheetUtil.rejectLegacyXls(url.path)
     try(InputStream is = url.openStream(); ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
       int sheetIndex = sheetNumber - 1
       Sheet sheet = workbook.getSheet(sheetIndex)
@@ -56,7 +56,7 @@ class FExcelImporter implements Importer {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
       boolean isDate1904 = workbook.isDate1904()
-      return importExcelSheet(sheet, startRow, endRow, startColNum, endColNum, firstRowAsColNames, isDate1904)
+      importExcelSheet(sheet, startRow, endRow, startColNum, endColNum, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -65,7 +65,7 @@ class FExcelImporter implements Importer {
                             int startRow, int endRow,
                             int startCol, int endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -76,7 +76,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -88,8 +88,8 @@ class FExcelImporter implements Importer {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
 
-    SpreadsheetUtil.ensureXlsx(file)
-    return importSpreadsheet(
+    SpreadsheetUtil.rejectLegacyXls(file)
+    importSpreadsheet(
         file,
         sheetName,
         startRow as int,
@@ -118,7 +118,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       if (sheetNumber < 1) {
@@ -128,7 +128,7 @@ class FExcelImporter implements Importer {
       Sheet sheet = workbook.getSheet(sheetIndex)
           .orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNumber does not exist"))
       boolean isDate1904 = workbook.isDate1904()
-      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
+      importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -137,8 +137,8 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(file)
-    return importSpreadsheet(
+    SpreadsheetUtil.rejectLegacyXls(file)
+    importSpreadsheet(
         file,
         sheet,
         startRow,
@@ -154,14 +154,14 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    SpreadsheetUtil.ensureXlsx(file)
+    SpreadsheetUtil.rejectLegacyXls(file)
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       Sheet sheet = workbook.findSheet(sheetName).orElseThrow {
         new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
       }
       boolean isDate1904 = workbook.isDate1904()
-      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
+      importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -175,8 +175,7 @@ class FExcelImporter implements Importer {
         new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
       }
       boolean isDate1904 = workbook.isDate1904()
-      def m = importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
-      return m
+      importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -203,13 +202,13 @@ class FExcelImporter implements Importer {
       Sheet sheet = workbook.getSheet(sheetIndex)
           .orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNum does not exist"))
       boolean isDate1904 = workbook.isDate1904()
-      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
+      importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
   @Override
   Matrix importSpreadsheet(URL url, int sheetNumber, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     try (InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetNumber, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -242,13 +241,13 @@ class FExcelImporter implements Importer {
         matrix.setMatrixName(key)
         result.put(key, matrix)
       }
-      return result
+      result
     }
   }
 
   @Override
   Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt) {
-    SpreadsheetUtil.ensureXlsx(url?.path)
+    SpreadsheetUtil.rejectLegacyXls(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheets(is, sheetParams, formatOpt)
     }
@@ -256,7 +255,7 @@ class FExcelImporter implements Importer {
 
   @Override
   Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
-    SpreadsheetUtil.ensureXlsx(fileName)
+    SpreadsheetUtil.rejectLegacyXls(fileName)
     File file = FileUtil.checkFilePath(fileName)
     try (FileInputStream fis = new FileInputStream(file)) {
       importSpreadsheets(fis, sheetParams, formatOpt)

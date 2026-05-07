@@ -1,8 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
+/**
+ * Represents a single sheet in an ODS workbook as a named list of rows.
+ */
 class Sheet extends ArrayList<List<?>> {
 
   String name

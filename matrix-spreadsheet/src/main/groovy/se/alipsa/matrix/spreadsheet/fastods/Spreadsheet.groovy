@@ -1,8 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
+/**
+ * Represents an ODS workbook as an ordered map of sheet identifiers to {@link Sheet} instances.
+ */
 class Spreadsheet extends LinkedHashMap<Object, Sheet> {
   void add(String sheetName, Sheet sheet) {
     put(sheetName, sheet)

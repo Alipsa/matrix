@@ -1,18 +1,17 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.nio.charset.StandardCharsets
-import java.util.Collections
 import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-@CompileStatic
+/**
+ * Exports Matrix data to OpenDocument Spreadsheet (.ods) files.
+ */
 class FOdsExporter {
 
   private static final Logger logger = Logger.getLogger(FOdsExporter)

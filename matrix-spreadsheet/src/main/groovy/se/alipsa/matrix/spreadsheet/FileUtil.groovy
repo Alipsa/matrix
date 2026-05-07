@@ -1,13 +1,10 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
 import java.nio.file.Paths
 
 /**
  * Common file utilities
  */
-@CompileStatic
 class FileUtil {
 
    private FileUtil() {

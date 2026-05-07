@@ -1,8 +1,8 @@
 package se.alipsa.matrix.spreadsheet
 
-import groovy.transform.CompileStatic
-
-@CompileStatic
+/**
+ * Checked exception thrown when a spreadsheet import operation fails.
+ */
 class SpreadsheetImportException extends Exception {
   @Override
   Object invokeMethod(String name, Object args) {

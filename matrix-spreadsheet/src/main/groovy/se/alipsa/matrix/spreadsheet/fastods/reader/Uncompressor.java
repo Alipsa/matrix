@@ -1,6 +1,5 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader;
 
-import groovy.transform.CompileStatic;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +10,6 @@ import java.util.zip.ZipInputStream;
  * Reads the zip content of an ods stream.
  * Based on com.github.miachm.sods.Uncompressor
  */
-@CompileStatic
 public class Uncompressor implements Closeable {
   private final ZipInputStream zip;
 
