@@ -14,8 +14,10 @@ import java.util.zip.ZipOutputStream
  */
 class FOdsExporter {
 
-  private static final Logger logger = Logger.getLogger(FOdsExporter)
-  private static final String MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet"
+  private static final Logger log = Logger.getLogger(FOdsExporter)
+  private static final String MIMETYPE = 'application/vnd.oasis.opendocument.spreadsheet'
+  private static final String DEFAULT_START = 'A1'
+  private static final List<String> DEFAULT_START_LIST = [DEFAULT_START]
 
   static String exportOds(String filePath, Matrix dataFrame) {
     return exportOds(new File(filePath), dataFrame)
@@ -23,15 +25,15 @@ class FOdsExporter {
 
   static String exportOds(File file, Matrix dataFrame) {
     String sheetName = SpreadsheetUtil.createValidSheetName(dataFrame.matrixName)
-    return exportOdsSheets(file, [dataFrame], [sheetName], ["A1"])[0]
+    return exportOdsSheets(file, [dataFrame], [sheetName], DEFAULT_START_LIST)[0]
   }
 
   static String exportOds(File file, Matrix dataFrame, String sheetName) {
-    return exportOdsSheets(file, [dataFrame], [sheetName], ["A1"])[0]
+    return exportOdsSheets(file, [dataFrame], [sheetName], DEFAULT_START_LIST)[0]
   }
 
   static String exportOds(String filePath, Matrix dataFrame, String sheetName) {
-    return exportOdsSheets(new File(filePath), [dataFrame], [sheetName], ["A1"])[0]
+    return exportOdsSheets(new File(filePath), [dataFrame], [sheetName], DEFAULT_START_LIST)[0]
   }
 
   static List<String> exportOdsSheets(String filePath, List<Matrix> data, List<String> sheetNames) {
@@ -44,14 +46,14 @@ class FOdsExporter {
 
   static List<String> exportOdsSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
     if (file.exists() && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an existing ODS file is not supported by FOdsExporter. Use FOdsAppender or SpreadsheetWriter for append/replace operations.")
+      throw new IllegalArgumentException('Appending to an existing ODS file is not supported by FOdsExporter. Use FOdsAppender or SpreadsheetWriter for append/replace operations.')
     }
     if (data.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException('Matrices and sheet names lists must have the same size')
     }
-    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), DEFAULT_START)
     if (positions.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+      throw new IllegalArgumentException('Sheet names and start positions lists must have the same size')
     }
     List<String> actualSheetNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
     String contentXml = buildContentXml(data, actualSheetNames, positions)
@@ -63,13 +65,13 @@ class FOdsExporter {
   }
 
   private static void writeOds(File file, String contentXml, String stylesXml, String metaXml, String manifestXml) {
-    logger.info("Writing spreadsheet to ${file.absolutePath}")
+    log.info("Writing spreadsheet to ${file.absolutePath}")
     try (FileOutputStream fos = new FileOutputStream(file); ZipOutputStream zos = new ZipOutputStream(fos)) {
       writeMimetype(zos)
-      writeEntry(zos, "content.xml", contentXml)
-      writeEntry(zos, "styles.xml", stylesXml)
-      writeEntry(zos, "meta.xml", metaXml)
-      writeEntry(zos, "META-INF/manifest.xml", manifestXml)
+      writeEntry(zos, 'content.xml', contentXml)
+      writeEntry(zos, 'styles.xml', stylesXml)
+      writeEntry(zos, 'meta.xml', metaXml)
+      writeEntry(zos, 'META-INF/manifest.xml', manifestXml)
     }
   }
 
@@ -77,7 +79,7 @@ class FOdsExporter {
     byte[] bytes = MIMETYPE.getBytes(StandardCharsets.UTF_8)
     CRC32 crc = new CRC32()
     crc.update(bytes)
-    ZipEntry entry = new ZipEntry("mimetype")
+    ZipEntry entry = new ZipEntry('mimetype')
     entry.method = ZipEntry.STORED
     entry.size = bytes.length
     entry.compressedSize = bytes.length

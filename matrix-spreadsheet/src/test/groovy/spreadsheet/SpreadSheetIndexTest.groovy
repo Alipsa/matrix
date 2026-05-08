@@ -21,19 +21,19 @@ class SpreadSheetIndexTest {
 
   @Test
   void importSpreadsheetFilePathIntIndicesAreOneBased() {
-    assertFilePathImportIndicesAreOneBased("Book1.xlsx")
-    assertFilePathImportIndicesAreOneBased("Book1.ods")
+    assertFilePathImportIndicesAreOneBased('Book1.xlsx')
+    assertFilePathImportIndicesAreOneBased('Book1.ods')
   }
 
   @Test
   void importSpreadsheetFilePathWithStringColumnsStillHonoursOneBasedIntIndices() {
-    assertFilePathImportWithStringColumns("Book1.xlsx")
-    assertFilePathImportWithStringColumns("Book1.ods")
+    assertFilePathImportWithStringColumns('Book1.xlsx')
+    assertFilePathImportWithStringColumns('Book1.ods')
   }
 
   @Test
   void importOdsUrlIntIndicesAreOneBased() {
-    URL url = resourceUrl("Book1.ods")
+    URL url = resourceUrl('Book1.ods')
     Matrix header = SpreadsheetImporter.importOds(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertHeaderCell(header)
@@ -48,14 +48,14 @@ class SpreadSheetIndexTest {
 
     Matrix sheetByNumber = SpreadsheetImporter.importOds(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
-    Matrix sheetByName = SpreadsheetImporter.importOds(url, "Sheet1", HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix sheetByName = SpreadsheetImporter.importOds(url, 'Sheet1', HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     MatrixAssertions.assertEquals(sheetByName, sheetByNumber)
   }
 
   @Test
   void importOdsUrlStringColumnsStillHonoursOneBasedIntIndices() {
-    URL url = resourceUrl("Book1.ods")
+    URL url = resourceUrl('Book1.ods')
     Matrix header = SpreadsheetImporter.importOds(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         'A', 'A', false)
     assertHeaderCell(header)
@@ -64,34 +64,34 @@ class SpreadSheetIndexTest {
         'A', 'A', false)
     assertFirstDataCell(firstDataRow)
 
-    Matrix stringSheetHeader = SpreadsheetImporter.importOds(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    Matrix stringSheetHeader = SpreadsheetImporter.importOds(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         'A', 'A', false)
     assertHeaderCell(stringSheetHeader)
 
-    Matrix stringSheetFirstRow = SpreadsheetImporter.importOds(url, "Sheet1", FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix stringSheetFirstRow = SpreadsheetImporter.importOds(url, 'Sheet1', FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         'A', 'A', false)
     assertFirstDataCell(stringSheetFirstRow)
   }
 
   @Test
   void importOdsUrlStringSheetIntColumnsAreOneBased() {
-    URL url = resourceUrl("Book1.ods")
-    Matrix header = SpreadsheetImporter.importOds(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    URL url = resourceUrl('Book1.ods')
+    Matrix header = SpreadsheetImporter.importOds(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertHeaderCell(header)
 
-    Matrix firstDataRow = SpreadsheetImporter.importOds(url, "Sheet1", FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix firstDataRow = SpreadsheetImporter.importOds(url, 'Sheet1', FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertFirstDataCell(firstDataRow)
 
-    Matrix secondColumnHeader = SpreadsheetImporter.importOds(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    Matrix secondColumnHeader = SpreadsheetImporter.importOds(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         SECOND_COLUMN_INDEX, SECOND_COLUMN_INDEX, false)
     assertSecondColumnHeader(secondColumnHeader)
   }
 
   @Test
   void importExcelUrlIntIndicesAreOneBased() {
-    URL url = resourceUrl("Book1.xlsx")
+    URL url = resourceUrl('Book1.xlsx')
     Matrix header = SpreadsheetImporter.importExcel(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertHeaderCell(header)
@@ -106,14 +106,14 @@ class SpreadSheetIndexTest {
 
     Matrix sheetByNumber = SpreadsheetImporter.importExcel(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
-    Matrix sheetByName = SpreadsheetImporter.importExcel(url, "Sheet1", HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix sheetByName = SpreadsheetImporter.importExcel(url, 'Sheet1', HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     MatrixAssertions.assertEquals(sheetByName, sheetByNumber)
   }
 
   @Test
   void importExcelUrlStringColumnsStillHonoursOneBasedIntIndices() {
-    URL url = resourceUrl("Book1.xlsx")
+    URL url = resourceUrl('Book1.xlsx')
     Matrix header = SpreadsheetImporter.importExcel(url, HEADER_ROW_INDEX, HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         'A', 'A', false)
     assertHeaderCell(header)
@@ -122,51 +122,51 @@ class SpreadSheetIndexTest {
         'A', 'A', false)
     assertFirstDataCell(firstDataRow)
 
-    Matrix stringSheetHeader = SpreadsheetImporter.importExcel(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    Matrix stringSheetHeader = SpreadsheetImporter.importExcel(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         'A', 'A', false)
     assertHeaderCell(stringSheetHeader)
 
-    Matrix stringSheetFirstRow = SpreadsheetImporter.importExcel(url, "Sheet1", FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix stringSheetFirstRow = SpreadsheetImporter.importExcel(url, 'Sheet1', FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         'A', 'A', false)
     assertFirstDataCell(stringSheetFirstRow)
   }
 
   @Test
   void importExcelUrlStringSheetIntColumnsAreOneBased() {
-    URL url = resourceUrl("Book1.xlsx")
-    Matrix header = SpreadsheetImporter.importExcel(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    URL url = resourceUrl('Book1.xlsx')
+    Matrix header = SpreadsheetImporter.importExcel(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertHeaderCell(header)
 
-    Matrix firstDataRow = SpreadsheetImporter.importExcel(url, "Sheet1", FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix firstDataRow = SpreadsheetImporter.importExcel(url, 'Sheet1', FIRST_DATA_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     assertFirstDataCell(firstDataRow)
 
-    Matrix secondColumnHeader = SpreadsheetImporter.importExcel(url, "Sheet1", HEADER_ROW_INDEX, HEADER_ROW_INDEX,
+    Matrix secondColumnHeader = SpreadsheetImporter.importExcel(url, 'Sheet1', HEADER_ROW_INDEX, HEADER_ROW_INDEX,
         SECOND_COLUMN_INDEX, SECOND_COLUMN_INDEX, false)
     assertSecondColumnHeader(secondColumnHeader)
   }
 
   @Test
   void spreadsheetReaderIntIndicesAreOneBasedForExcelAndOds() {
-    assertReaderIndicesAreOneBased("Book1.xlsx")
-    assertReaderIndicesAreOneBased("Book1.ods")
+    assertReaderIndicesAreOneBased('Book1.xlsx')
+    assertReaderIndicesAreOneBased('Book1.ods')
   }
 
   @Test
   void exporterProducesSheetsReadableWithOneBasedIndices() {
-    Matrix sheet1 = SpreadsheetImporter.importSpreadsheet(resourcePath("Book1.xlsx"), HEADER_ROW_INDEX,
+    Matrix sheet1 = SpreadsheetImporter.importSpreadsheet(resourcePath('Book1.xlsx'), HEADER_ROW_INDEX,
         HEADER_ROW_INDEX, HEADER_ROW_INDEX + 11, FIRST_COLUMN_INDEX, SECOND_COLUMN_INDEX + 2, true)
-    Matrix sheet2 = SpreadsheetImporter.importSpreadsheet(resourcePath("Book1.xlsx"), HEADER_ROW_INDEX,
+    Matrix sheet2 = SpreadsheetImporter.importSpreadsheet(resourcePath('Book1.xlsx'), HEADER_ROW_INDEX,
         HEADER_ROW_INDEX, HEADER_ROW_INDEX + 11, FIRST_COLUMN_INDEX, SECOND_COLUMN_INDEX + 2, true)
 
-    File tempFile = File.createTempFile("spreadsheet-index", ".xlsx")
+    File tempFile = File.createTempFile('spreadsheet-index', '.xlsx')
     tempFile.deleteOnExit()
-    SpreadsheetWriter.writeSheets([sheet1, sheet2], tempFile, ["First", "Second"])
+    SpreadsheetWriter.writeSheets([sheet1, sheet2], tempFile, ['First', 'Second'])
 
     try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(tempFile)) {
       assertEquals(2, reader.sheetNames.size())
-      assertEquals("First", reader.sheetNames.get(0))
+      assertEquals('First', reader.sheetNames.get(0))
       assertTrue(reader.findLastRow(HEADER_ROW_INDEX) >= sheet1.rowCount())
       assertTrue(reader.findLastRow(HEADER_ROW_INDEX + 1) >= sheet2.rowCount())
     } finally {
@@ -190,7 +190,7 @@ class SpreadSheetIndexTest {
 
     Matrix sheetByNumber = SpreadsheetImporter.importSpreadsheet(path, HEADER_ROW_INDEX, HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
-    Matrix sheetByName = SpreadsheetImporter.importSpreadsheet(path, "Sheet1", HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
+    Matrix sheetByName = SpreadsheetImporter.importSpreadsheet(path, 'Sheet1', HEADER_ROW_INDEX, FIRST_DATA_ROW_INDEX,
         FIRST_COLUMN_INDEX, FIRST_COLUMN_INDEX, false)
     MatrixAssertions.assertEquals(sheetByName, sheetByNumber)
   }
@@ -224,7 +224,7 @@ class SpreadSheetIndexTest {
 
   private static void assertFirstDataCell(Matrix matrix) {
     Object value = matrix[0, 0]
-    assertTrue(value instanceof Number, 'Expected a numeric value for the first data cell')
+    assertTrue(Number.isInstance(value), 'Expected a numeric value for the first data cell')
     assertEquals(1, ((Number) value).intValue())
   }
 
@@ -238,6 +238,7 @@ class SpreadSheetIndexTest {
   }
 
   private static URL resourceUrl(String resource) {
-    return Objects.requireNonNull(SpreadSheetIndexTest.class.getResource("/${resource}"), "Missing resource ${resource}")
+    return Objects.requireNonNull(SpreadSheetIndexTest.getResource("/${ resource }"), "Missing resource ${ resource }")
   }
+
 }

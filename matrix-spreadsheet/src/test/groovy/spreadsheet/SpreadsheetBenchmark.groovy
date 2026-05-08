@@ -13,8 +13,10 @@ import java.time.Instant
 /**
  * Simple read/write benchmark runner for matrix-spreadsheet.
  */
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class SpreadsheetBenchmark {
 
+  private static final List<String> READ_MODES = ['read', 'readwrite']
   /**
    * Run the benchmark.
    * args: [format=all|xlsx|ods, rows=50000, cols=12, warmups=1, runs=3, mode=readwrite|read|write]
@@ -31,17 +33,17 @@ class SpreadsheetBenchmark {
     Matrix matrix = createMatrix(rows, cols)
 
     formats.each { fmt ->
-      println "\n=== ${fmt.toUpperCase()} benchmark (rows=${rows}, cols=${cols}, warmups=${warmups}, runs=${runs}, mode=${mode}) ==="
+      println "\n=== ${ fmt.toUpperCase() } benchmark (rows=${ rows }, cols=${ cols }, warmups=${ warmups }, runs=${ runs }, mode=${ mode }) ==="
       runBenchmark(fmt, matrix, warmups, runs, mode)
     }
   }
 
   private static void runBenchmark(String format, Matrix matrix, int warmups, int runs, String mode) {
-    File file = File.createTempFile("matrix-benchmark-", ".${format}")
+    File file = File.createTempFile('matrix-benchmark-', ".${ format }")
     file.deleteOnExit()
     String endColumn = SpreadsheetUtil.asColumnName(matrix.columnCount())
 
-    if (mode in ['read', 'readwrite']) {
+    if (mode in READ_MODES) {
       SpreadsheetWriter.write(matrix, file, 'Data')
     }
 
@@ -58,7 +60,7 @@ class SpreadsheetBenchmark {
       printStats('WRITE', writeTimes)
     }
 
-    if (mode in ['read', 'readwrite']) {
+    if (mode in READ_MODES) {
       warmups.times {
         SpreadsheetImporter.importSpreadsheet(file.path, 1, 1, Integer.MAX_VALUE, 'A', endColumn, true)
       }
@@ -84,25 +86,30 @@ class SpreadsheetBenchmark {
     long max = timings.max()
     long total = timings.sum() as long
     BigDecimal avg = (total as BigDecimal) / (timings.size() as BigDecimal)
-    println "${label}: avg=${avg.setScale(2, RoundingMode.HALF_UP)} ms, min=${min} ms, max=${max} ms"
+    println "${ label }: avg=${ avg.setScale(2, RoundingMode.HALF_UP) } ms, min=${ min } ms, max=${ max } ms"
   }
 
   private static Matrix createMatrix(int rows, int cols) {
     List<String> columnNames = new ArrayList<>(cols)
     for (int col = 1; col <= cols; col++) {
-      columnNames.add("C${col}".toString())
+      columnNames.add("C${ col }".toString())
     }
     List<List> columns = new ArrayList<>(cols)
     for (int colIdx = 0; colIdx < cols; colIdx++) {
-      List<Integer> values = new ArrayList<>(rows)
-      for (int row = 0; row < rows; row++) {
-        values.add(row + colIdx)
-      }
-      columns.add(values)
+      columns.add(createColumn(rows, colIdx))
     }
     MatrixBuilder builder = Matrix.builder()
     builder.columnNames(columnNames)
     builder.columns(columns)
     builder.build()
   }
+
+  private static List<Integer> createColumn(int rows, int colIdx) {
+    List<Integer> values = new ArrayList<>(rows)
+    for (int row = 0; row < rows; row++) {
+      values.add(row + colIdx)
+    }
+    values
+  }
+
 }

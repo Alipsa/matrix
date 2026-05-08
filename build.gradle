@@ -127,6 +127,7 @@ subprojects { Project p ->
         configFile = rootProject.file('config/codenarc/ruleset.groovy')
         reportFormat = 'html'
         ignoreFailures = false
+        maxPriority3Violations = 0
       }
 
       // Regex matching Groovy 5 arrow switch expressions:

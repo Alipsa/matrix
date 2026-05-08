@@ -31,6 +31,14 @@ import java.text.NumberFormat
  */
 class SpreadsheetImporter {
 
+  private static final String PARAM_FILE = 'file'
+  private static final String PARAM_SHEET = 'sheet'
+  private static final String PARAM_START_ROW = 'startRow'
+  private static final String PARAM_END_ROW = 'endRow'
+  private static final String PARAM_START_COL = 'startCol'
+  private static final String PARAM_END_COL = 'endCol'
+  private static final String PARAM_FIRST_ROW_AS_COL_NAMES = 'firstRowAsColNames'
+
   /**
    * Import a spreadsheet by file path and sheet index.
    *
@@ -359,7 +367,6 @@ class SpreadsheetImporter {
   // --- Map-based import ---
 
   /**
-   *
    * @param params the named parameters i.e.
    * file (a File or a String path),
    * sheet (the sheet tab to import, an integer of String),
@@ -371,40 +378,40 @@ class SpreadsheetImporter {
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(Map params) {
-    def fp = params['file']
-    validateNotNull(fp, 'file')
+    def fp = params[PARAM_FILE]
+    validateNotNull(fp, PARAM_FILE)
     String file
-    if (fp instanceof File) {
-      file = fp.getAbsolutePath()
+    if (File.isInstance(fp)) {
+      file = ((File) fp).getAbsolutePath()
     } else {
       file = String.valueOf(fp)
     }
-    Object sheet = params.get("sheet")
+    Object sheet = params.get(PARAM_SHEET)
     if (sheet == null) {
-      sheet = params.get("sheetNumber")
+      sheet = params.get('sheetNumber')
       if (sheet == null) {
         sheet = params['sheetName'] ?: 1
       }
     }
-    validateNotNull(sheet, 'sheet')
-    Integer startRow = params['startRow'] as Integer ?: 1
-    validateNotNull(startRow, 'startRow')
-    Integer endRow = params['endRow'] as Integer
-    validateNotNull(endRow, 'endRow')
-    def startCol = params['startCol'] ?: 1
-    if (startCol instanceof String) {
-      startCol = SpreadsheetUtil.asColumnNumber(startCol)
+    validateNotNull(sheet, PARAM_SHEET)
+    Integer startRow = params[PARAM_START_ROW] as Integer ?: 1
+    validateNotNull(startRow, PARAM_START_ROW)
+    Integer endRow = params[PARAM_END_ROW] as Integer
+    validateNotNull(endRow, PARAM_END_ROW)
+    def startCol = params[PARAM_START_COL] ?: 1
+    if (String.isInstance(startCol)) {
+      startCol = SpreadsheetUtil.asColumnNumber((String) startCol)
     }
-    validateNotNull(startCol, 'startCol')
-    def endCol = params.get('endCol')
-    if (endCol instanceof String) {
-      endCol = SpreadsheetUtil.asColumnNumber(endCol)
+    validateNotNull(startCol, PARAM_START_COL)
+    def endCol = params.get(PARAM_END_COL)
+    if (String.isInstance(endCol)) {
+      endCol = SpreadsheetUtil.asColumnNumber((String) endCol)
     }
-    validateNotNull(endCol, 'endCol')
-    Boolean firstRowAsColNames = params.getOrDefault('firstRowAsColNames', true) as Boolean
-    validateNotNull(firstRowAsColNames, 'firstRowAsColNames')
+    validateNotNull(endCol, PARAM_END_COL)
+    Boolean firstRowAsColNames = params.getOrDefault(PARAM_FIRST_ROW_AS_COL_NAMES, true) as Boolean
+    validateNotNull(firstRowAsColNames, PARAM_FIRST_ROW_AS_COL_NAMES)
 
-    if (sheet instanceof Number) {
+    if (Number.isInstance(sheet)) {
       return importSpreadsheet(file,
           sheet as int,
           startRow as int,
@@ -484,7 +491,7 @@ class SpreadsheetImporter {
   }
 
   private static boolean isOdsFile(String fileName) {
-    return fileName?.toLowerCase()?.endsWith(".ods") ?: false
+    return fileName?.toLowerCase()?.endsWith('.ods') ?: false
   }
 
 }

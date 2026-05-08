@@ -18,25 +18,25 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@Tag("slow")
+@Tag('slow')
 class LargeFileImportTest {
 
   int nrows = 360131 // including header row
 
-  static final String datePattern = 'MM/dd/yyyy'
-  DateTimeFormatter dtf = DateTimeFormatter.ofPattern(datePattern)
+  static final String DATE_PATTERN = 'MM/dd/yyyy'
+  DateTimeFormatter dtf = DateTimeFormatter.ofPattern(DATE_PATTERN)
 
-  List<String> colNames = ['DR_NO', 'Date Rptd',	'DATE OCC',	'TIME OCC',	'AREA',	'AREA NAME',
-                           'Rpt Dist No',	'Part 1-2',	'Crm Cd',	'Crm Cd Desc', 'Mocodes',	'Vict Age',
-                           'Vict Sex',	'Vict Descent',	'Premis Cd',	'Premis Desc',	'Weapon Used Cd',
-                           'Weapon Desc',	'Status',	'Status Desc',	'Crm Cd 1',	'Crm Cd 2',	'Crm Cd 3',
+  List<String> colNames = ['DR_NO', 'Date Rptd', 	'DATE OCC', 	'TIME OCC', 	'AREA', 	'AREA NAME',
+                           'Rpt Dist No', 	'Part 1-2', 	'Crm Cd', 	'Crm Cd Desc', 'Mocodes', 	'Vict Age',
+                           'Vict Sex', 	'Vict Descent', 	'Premis Cd', 	'Premis Desc', 	'Weapon Used Cd',
+                           'Weapon Desc', 	'Status', 	'Status Desc', 	'Crm Cd 1', 	'Crm Cd 2', 	'Crm Cd 3',
                            'Crm Cd 4', 'LOCATION', 'Cross Street', 'LAT', 'LON']
 
-  List lastRow = [250504051,	asLocalDate('01/14/2025', dtf),
-                  asLocalDate('01/14/2025', dtf),	1250,	5,	'Harbor',	509,	1,
-                  210,	'ROBBERY',	asBigDecimal(1822_0344_1259),	15,	'F', 'H',	721,	'HIGH SCHOOL', 400,
-                  'STRONG-ARM (HANDS, FIST, FEET OR BODILY FORCE)',	'IC',	'Invest Cont', 210,
-                  null, null, null, '24300    WESTERN                      AV', null,	33.8046, -118.3074]
+  List lastRow = [250504051, 	asLocalDate('01/14/2025', dtf),
+                  asLocalDate('01/14/2025', dtf), 	1250, 	5, 	'Harbor', 	509, 	1,
+                  210, 	'ROBBERY', 	asBigDecimal(1822_0344_1259), 	15, 	'F', 'H', 	721, 	'HIGH SCHOOL', 400,
+                  'STRONG-ARM (HANDS, FIST, FEET OR BODILY FORCE)', 	'IC', 	'Invest Cont', 210,
+                  null, null, null, '24300    WESTERN                      AV', null, 	33.8046, -118.3074]
 
   // streaming reader is the default and fastest option for large files
   @Test
@@ -48,8 +48,8 @@ class LargeFileImportTest {
     def matrix = FOdsImporter.create(OdsDataReader.create())
         .importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
-    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
-    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
+    println "total memory: ${ (Runtime.getRuntime().totalMemory() / 1024 / 1024).setScale(2, RoundingMode.HALF_UP) } MB, free: ${ (Runtime.getRuntime().freeMemory() / 1024 / 1024).setScale(2, RoundingMode.HALF_UP) } MB"
+    println "Parsing time: ${ formatDuration(Duration.between(start, finish)) }"
     checkAssertions(matrix, "yyyy-MM-dd'T'HH:mm")
   }
 
@@ -61,38 +61,38 @@ class LargeFileImportTest {
     Instant start = Instant.now()
     def matrix = FExcelImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
-    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
-    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
+    println "total memory: ${ (Runtime.getRuntime().totalMemory() / 1024 / 1024).setScale(2, RoundingMode.HALF_UP) } MB, free: ${ (Runtime.getRuntime().freeMemory() / 1024 / 1024).setScale(2, RoundingMode.HALF_UP) } MB"
+    println "Parsing time: ${ formatDuration(Duration.between(start, finish)) }"
     checkAssertions(matrix)
   }
 
   // Legacy implementations removed; FastOds/FastExcel are the supported large-file paths.
 
   private static String formatDuration(Duration duration) {
-    List<String> parts = new ArrayList<>()
+    List<String> parts = []
     long days = duration.toDaysPart()
     if (days > 0) {
-      parts.add(plural(days, "day"))
+      parts.add(plural(days, 'day'))
     }
     int hours = duration.toHoursPart()
     if (hours > 0 || !parts.isEmpty()) {
-      parts.add(plural(hours, "hour"))
+      parts.add(plural(hours, 'hour'))
     }
     int minutes = duration.toMinutesPart()
     if (minutes > 0 || !parts.isEmpty()) {
-      parts.add(plural(minutes, "minute"))
+      parts.add(plural(minutes, 'minute'))
     }
     int seconds = duration.toSecondsPart()
-    parts.add(plural(seconds, "second"))
-    return String.join(", ", parts)
+    parts.add(plural(seconds, 'second'))
+    return String.join(', ', parts)
   }
 
   private static String plural(long num, String unit) {
-    return num + " " + unit + (num == 1 ? "" : "s")
+    return num + ' ' + unit + (num == 1 ? '' : 's')
   }
 
-  void checkAssertions(Matrix matrix, String datePattern = LargeFileImportTest.datePattern) {
-    println "Converting datatypes"
+  void checkAssertions(Matrix matrix, String datePattern = LargeFileImportTest.DATE_PATTERN) {
+    println 'Converting datatypes'
     matrix.convert(
         'DR_NO': Integer,
         'Date Rptd': LocalDate,
@@ -111,19 +111,20 @@ class LargeFileImportTest {
         datePattern
     )
 
-    assert matrix.rowCount() == nrows -1
+    assert matrix.rowCount() == nrows - 1
     assert matrix.columnNames() == colNames
 
     Row mRow = matrix.row(matrix.lastRowIndex())
-    //println mRow
-    mRow.eachWithIndex {it, idx ->
+    // println mRow
+    mRow.eachWithIndex { it, idx ->
       def expected = lastRow[idx]
-      //println "expected $expected ${expected?.class} got $it ${it?.class}"
-      if (expected instanceof BigDecimal || it instanceof BigDecimal) {
+      // println "expected $expected ${ expected?.class } got $it ${ it?.class }"
+      if (BigDecimal.isInstance(expected) || BigDecimal.isInstance(it)) {
         assertEquals(expected as Double, it as Double, 0.00001, "diff on column $idx")
       } else {
         assertEquals(lastRow[idx], it, "diff on column $idx")
       }
     }
   }
+
 }

@@ -1,6 +1,7 @@
-package se.alipsa.matrix.spreadsheet.fastods.reader;
+package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
+
 /**
  * The file provided is not an ODS file
  * Based on com.github.miachm.sods.NotAnOdsException

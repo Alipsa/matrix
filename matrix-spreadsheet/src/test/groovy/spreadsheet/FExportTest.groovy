@@ -26,7 +26,7 @@ class FExportTest {
         id     : [null, 2, 3, 4, -5],
         name   : ['foo', 'bar', 'baz', 'bla', null],
         start  : toLocalDates('2021-01-04', null, '2023-03-13', '2024-04-15', '2025-05-20'),
-        end    : toLocalDateTimes(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"), '2021-02-04 12:01:22', '2022-03-12 13:14:15', '2023-04-13 15:16:17', null, '2025-06-20 17:18:19'),
+        end    : toLocalDateTimes(DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'), '2021-02-04 12:01:22', '2022-03-12 13:14:15', '2023-04-13 15:16:17', null, '2025-06-20 17:18:19'),
         measure: [12.45, null, 14.11, 15.23, 10.99],
         active : [true, false, null, true, false]
     ]
@@ -45,24 +45,24 @@ class FExportTest {
 
   @Test
   void exportExcelTest() {
-
-    //println(table.content())
-    def file = File.createTempFile("matrix", ".xlsx")
+    // println(table.content())
+    def file = File.createTempFile('matrix', '.xlsx')
     FExcelExporter.exportExcel(file, table)
     println("FExportTest.exportExcelTest: Wrote to $file")
 
-    def file2 = File.createTempFile("matrix2", ".xlsx")
+    def file2 = File.createTempFile('matrix2', '.xlsx')
     FExcelExporter.exportExcelSheets(file2, [table, table2])
     println("FExportTest.exportExcelTest: Wrote 2 sheets to $file2")
     try (def reader = new FExcelReader(file2)) {
-      assertEquals(2, reader.sheetNames.size(), "number of sheets")
+      assertEquals(2, reader.sheetNames.size(), 'number of sheets')
     }
   }
 
   @Test
   void testValidSheetNames() {
-    assertEquals("abl rac adabra ", SpreadsheetUtil.createValidSheetName("abl\\rac[adabra]"))
-    assertEquals(" Det var en gång ", SpreadsheetUtil.createValidSheetName("'Det var en gång'"))
-    assertEquals("Det var en gång", SpreadsheetUtil.createValidSheetName("Det var en gång"))
+    assertEquals('abl rac adabra ', SpreadsheetUtil.createValidSheetName('abl\\rac[adabra]'))
+    assertEquals(' Det var en gång ', SpreadsheetUtil.createValidSheetName("'Det var en gång'"))
+    assertEquals('Det var en gång', SpreadsheetUtil.createValidSheetName('Det var en gång'))
   }
+
 }

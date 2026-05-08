@@ -16,17 +16,17 @@ import java.time.LocalDateTime
  */
 class FExcelValueExtractor extends ValueExtractor {
 
+   private static final String HOUR_MARKER = 'hh'
    private final Sheet sheet
    private final boolean isDate1904
 
    FExcelValueExtractor(Sheet sheet, boolean isDate1904) {
       if (sheet == null) {
-         throw new IllegalArgumentException("Sheet is null, will not be able to extract any values")
+         throw new IllegalArgumentException('Sheet is null, will not be able to extract any values')
       }
       this.sheet = sheet
       this.isDate1904 = isDate1904
    }
-
 
    BigDecimal getBigDecimal(int row, int column) {
       getBigDecimal(FExcelUtil.getRow(sheet, row), column)
@@ -42,7 +42,9 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Float getFloat(Row row, int column) {
-      if (row == null) return null
+      if (row == null) {
+        return null
+      }
       BigDecimal d = getBigDecimal(row, column)
       d == null ? null : d.floatValue()
    }
@@ -60,7 +62,9 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    String getString(Row row, int column) {
-      if (row == null) return null
+      if (row == null) {
+        return null
+      }
       Object val = getObject(row.getCell(column))
       return val == null ? null : String.valueOf(val)
    }
@@ -81,6 +85,7 @@ class FExcelValueExtractor extends ValueExtractor {
       return getBoolean(FExcelUtil.getRow(sheet, row), column)
    }
 
+   @SuppressWarnings('BooleanMethodReturnsNull')
    Boolean getBoolean(Row row, int column) {
       return row == null ? null : getBoolean(getObject(row.getCell(column)))
    }
@@ -91,7 +96,9 @@ class FExcelValueExtractor extends ValueExtractor {
 
    LocalDateTime getLocalDateTime(Cell cell) {
       Object value = getObject(cell)
-      if (value == null) return null
+      if (value == null) {
+        return null
+      }
       return LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.dateTimeFormatter)
    }
 
@@ -112,14 +119,12 @@ class FExcelValueExtractor extends ValueExtractor {
          case CellType.NUMBER:
             if (FDateUtil.isADateFormat(formatId, formatString)) {
                def date = cell.asDate()
-               if (!formatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+               if (!formatString.toLowerCase().contains(HOUR_MARKER) && date.hour == 0 && date.minute == 0) {
                   return date.toLocalDate()
-               } else {
-                  return date
                }
-            } else {
-               return cell.asNumber()
+               return date
             }
+            return cell.asNumber()
          case CellType.BOOLEAN:
             return cell.asBoolean()
          case CellType.STRING:
@@ -137,15 +142,15 @@ class FExcelValueExtractor extends ValueExtractor {
       String dateFormatString = cell.dataFormatString
       if (FDateUtil.isADateFormat(dataFormatId, dateFormatString)) {
          def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
-         if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+         if (!dateFormatString.toLowerCase().contains(HOUR_MARKER) && date.hour == 0 && date.minute == 0) {
             return date.toLocalDate()
-         } else {
-            return date
          }
-      } else if (ValueConverter.isNumeric(rawValue)){
-         return ValueConverter.asNumber(rawValue)
-      } else {
-         return rawValue
+         return date
       }
+      if (ValueConverter.isNumeric(rawValue)) {
+         return ValueConverter.asNumber(rawValue)
+      }
+      return rawValue
    }
+
 }

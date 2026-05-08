@@ -6,8 +6,6 @@ import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
 import se.alipsa.matrix.spreadsheet.fastods.FOdsAppender
 import se.alipsa.matrix.spreadsheet.fastods.FOdsExporter
 
-import java.util.Collections
-
 /**
  * Writes Matrix data to spreadsheet files (Excel, ODS).
  *
@@ -41,7 +39,13 @@ import java.util.Collections
  */
 class SpreadsheetWriter {
 
-  private static final String DEFAULT_START_POSITION = "A1"
+  private static final String DEFAULT_START_POSITION = 'A1'
+  private static final String ODS_EXT = '.ods'
+  private static final String ERR_MATRIX_NULL = 'Matrix cannot be null'
+  private static final String ERR_FILE_NULL = 'File cannot be null'
+  private static final String ERR_MIN_ONE_COL = 'Matrix must have at least one column'
+  private static final String ERR_MATRICES_NULL = 'Matrices list cannot be null'
+  private static final String ERR_SIZE_MISMATCH = 'Matrices and sheet names lists must have the same size'
 
   /**
    * Write a Matrix to a spreadsheet file.
@@ -55,15 +59,15 @@ class SpreadsheetWriter {
    */
   static String write(Matrix matrix, File file) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException(ERR_MATRIX_NULL)
     }
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_NULL)
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
+      throw new IllegalArgumentException(ERR_MIN_ONE_COL)
     }
-    if (file.getName().toLowerCase().endsWith(".ods")) {
+    if (file.getName().toLowerCase().endsWith(ODS_EXT)) {
       if (file.exists() && file.length() > 0) {
         return FOdsAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName], [DEFAULT_START_POSITION])[0]
       }
@@ -87,19 +91,19 @@ class SpreadsheetWriter {
    */
   static String write(Matrix matrix, File file, String sheetName, String startPosition = DEFAULT_START_POSITION) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException(ERR_MATRIX_NULL)
     }
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_NULL)
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
+      throw new IllegalArgumentException(ERR_MIN_ONE_COL)
     }
     if (sheetName == null) {
-      throw new IllegalArgumentException("Sheet name cannot be null")
+      throw new IllegalArgumentException('Sheet name cannot be null')
     }
     SpreadsheetUtil.parseCellPosition(startPosition)
-    if (file.getName().toLowerCase().endsWith(".ods")) {
+    if (file.getName().toLowerCase().endsWith(ODS_EXT)) {
       if (file.exists() && file.length() > 0) {
         return FOdsAppender.appendOrReplaceSheets(file, [matrix], [sheetName], [startPosition])[0]
       }
@@ -121,7 +125,7 @@ class SpreadsheetWriter {
    * @return list of actual sheet names created (illegal characters replaced by space)
    */
   static List<String> writeSheets(List<Matrix> matrices, File file, List<String> sheetNames) {
-    return writeSheetsInternal(matrices, file, sheetNames, null)
+    writeSheetsInternal(matrices, file, sheetNames, null)
   }
 
   /**
@@ -132,20 +136,19 @@ class SpreadsheetWriter {
    * @param sheetNamesAndPositions map of sheet name -> start position (LinkedHashMap order is preserved)
    * @return list of actual sheet names created (illegal characters replaced by space)
    */
-  static List<String> writeSheets(List<Matrix> matrices, File file, LinkedHashMap<String, String> sheetNamesAndPositions = null) {
+  static List<String> writeSheets(List<Matrix> matrices, File file, Map<String, String> sheetNamesAndPositions = null) {
     if (sheetNamesAndPositions == null) {
       if (matrices == null) {
-        throw new IllegalArgumentException("Matrices list cannot be null")
+        throw new IllegalArgumentException(ERR_MATRICES_NULL)
       }
-      List<String> sheetNames = matrices.collect { it.matrixName }
+      List<String> sheetNames = matrices*.matrixName
       return writeSheetsInternal(matrices, file, sheetNames, null)
     }
     if (matrices == null) {
-      throw new IllegalArgumentException("Matrices list cannot be null")
+      throw new IllegalArgumentException(ERR_MATRICES_NULL)
     }
-    // LinkedHashMap preserves insertion order and cannot contain duplicate keys.
     if (sheetNamesAndPositions.size() != matrices.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException(ERR_SIZE_MISMATCH)
     }
     List<String> sheetNames = []
     List<String> startPositions = []
@@ -153,30 +156,29 @@ class SpreadsheetWriter {
       sheetNames.add(name)
       startPositions.add(position ?: DEFAULT_START_POSITION)
     }
-    return writeSheetsInternal(matrices, file, sheetNames, startPositions)
+    writeSheetsInternal(matrices, file, sheetNames, startPositions)
   }
 
   private static List<String> writeSheetsInternal(List<Matrix> matrices, File file, List<String> sheetNames, List<String> startPositions) {
     if (matrices == null) {
-      throw new IllegalArgumentException("Matrices list cannot be null")
+      throw new IllegalArgumentException(ERR_MATRICES_NULL)
     }
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_NULL)
     }
     if (sheetNames == null) {
-      throw new IllegalArgumentException("Sheet names list cannot be null")
+      throw new IllegalArgumentException('Sheet names list cannot be null')
     }
     if (matrices.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException(ERR_SIZE_MISMATCH)
     }
     List<String> positions = startPositions ?: Collections.nCopies(matrices.size(), DEFAULT_START_POSITION)
     if (positions.size() != matrices.size()) {
-      throw new IllegalArgumentException("Matrices and start positions lists must have the same size")
+      throw new IllegalArgumentException('Matrices and start positions lists must have the same size')
     }
     positions.each { String position ->
       SpreadsheetUtil.parseCellPosition(position)
     }
-    // Validate each matrix has columns
     matrices.eachWithIndex { matrix, idx ->
       if (matrix == null) {
         throw new IllegalArgumentException("Matrix at index ${idx} is null")
@@ -185,7 +187,7 @@ class SpreadsheetWriter {
         throw new IllegalArgumentException("Matrix at index ${idx} must have at least one column")
       }
     }
-    if (file.getName().toLowerCase().endsWith(".ods")) {
+    if (file.getName().toLowerCase().endsWith(ODS_EXT)) {
       if (file.exists() && file.length() > 0) {
         return FOdsAppender.appendOrReplaceSheets(file, matrices, sheetNames, positions)
       }
@@ -213,14 +215,14 @@ class SpreadsheetWriter {
    * @return list of actual sheet names created
    */
   static List<String> writeSheets(Map params) {
-    def file = params.get("file") as File
-    def data = (List<Matrix>) params.get("data")
-    def sheetNamesAndPositions = params.get("sheetNamesAndPositions") as LinkedHashMap<String, String>
+    def file = params.get('file') as File
+    def data = (List<Matrix>) params.get('data')
+    def sheetNamesAndPositions = params.get('sheetNamesAndPositions') as Map<String, String>
     if (sheetNamesAndPositions != null) {
       return writeSheets(data, file, sheetNamesAndPositions)
     }
-    def sheetNames = params.get("sheetNames") as List<String>
-    return writeSheets(data, file, sheetNames)
+    def sheetNames = params.get('sheetNames') as List<String>
+    writeSheets(data, file, sheetNames)
   }
 
 }

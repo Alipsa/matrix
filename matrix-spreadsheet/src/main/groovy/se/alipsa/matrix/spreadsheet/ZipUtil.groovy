@@ -23,7 +23,10 @@ final class ZipUtil {
   static void copyEntry(ZipFile zip, ZipEntry entry, ZipOutputStream zos) {
     ZipEntry out = new ZipEntry(entry.name)
     zos.putNextEntry(out)
-    zos.write(zip.getInputStream(entry).bytes)
+    zip.getInputStream(entry).withCloseable { InputStream is ->
+      zos.write(is.bytes)
+    }
     zos.closeEntry()
   }
+
 }

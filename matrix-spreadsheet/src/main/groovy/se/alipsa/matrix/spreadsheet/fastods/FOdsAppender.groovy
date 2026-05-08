@@ -30,8 +30,8 @@ import javax.xml.stream.XMLStreamWriter
  */
 class FOdsAppender {
 
-  private static final Logger logger = Logger.getLogger(FOdsAppender)
-  private static final String MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet"
+  private static final Logger log = Logger.getLogger(FOdsAppender)
+  private static final String MIMETYPE = 'application/vnd.oasis.opendocument.spreadsheet'
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
     return appendOrReplaceSheets(file, data, sheetNames, null)
@@ -42,11 +42,11 @@ class FOdsAppender {
       return FOdsExporter.exportOdsSheets(file, data, sheetNames, startPositions)
     }
     if (data.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException('Matrices and sheet names lists must have the same size')
     }
     Map<String, Matrix> requested = SpreadsheetWriteUtil.buildRequestedMap(data, sheetNames)
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
-    File tmp = File.createTempFile("matrix-ods", ".ods", file.parentFile)
+    File tmp = File.createTempFile('matrix-ods', '.ods', file.parentFile)
     boolean moved = false
     try {
       try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
@@ -56,10 +56,10 @@ class FOdsAppender {
         while (entries.hasMoreElements()) {
           ZipEntry entry = entries.nextElement()
           String name = entry.name
-          if (name == "mimetype") {
+          if (name == 'mimetype') {
             continue
           }
-          if (name == "content.xml") {
+          if (name == 'content.xml') {
             writeContentXml(zip.getInputStream(entry), zos, requested, positions)
             contentWritten = true
             continue
@@ -81,14 +81,14 @@ class FOdsAppender {
   }
 
   private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
-    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), 'A1')
     if (sheetNames.size() != positions.size()) {
-      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+      throw new IllegalArgumentException('Sheet names and start positions lists must have the same size')
     }
     List<String> uniqueNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
-    Map<String, String> result = new LinkedHashMap<>()
+    Map<String, String> result = [:]
     for (int i = 0; i < uniqueNames.size(); i++) {
-      result.put(uniqueNames.get(i), positions.get(i) ?: "A1")
+      result.put(uniqueNames.get(i), positions.get(i) ?: 'A1')
     }
     result
   }
@@ -97,7 +97,7 @@ class FOdsAppender {
     byte[] bytes = readMimetype(zip)
     CRC32 crc = new CRC32()
     crc.update(bytes)
-    ZipEntry entry = new ZipEntry("mimetype")
+    ZipEntry entry = new ZipEntry('mimetype')
     entry.method = ZipEntry.STORED
     entry.size = bytes.length
     entry.compressedSize = bytes.length
@@ -108,25 +108,25 @@ class FOdsAppender {
   }
 
   private static byte[] readMimetype(ZipFile zip) {
-    ZipEntry entry = zip.getEntry("mimetype")
+    ZipEntry entry = zip.getEntry('mimetype')
     if (entry == null) {
       return MIMETYPE.getBytes(StandardCharsets.UTF_8)
     }
-    byte[] bytes = zip.getInputStream(entry).bytes
+    byte[] bytes = zip.getInputStream(entry).withCloseable { InputStream is -> is.bytes }
     String mime = new String(bytes, StandardCharsets.UTF_8).trim()
     if (mime != MIMETYPE) {
-      logger.warn("Unexpected ODS mimetype '$mime', rewriting as '$MIMETYPE'.")
+      log.warn("Unexpected ODS mimetype '$mime', rewriting as '$MIMETYPE'.")
       return MIMETYPE.getBytes(StandardCharsets.UTF_8)
     }
     return bytes
   }
 
   private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
-    ZipEntry out = new ZipEntry("content.xml")
+    ZipEntry out = new ZipEntry('content.xml')
     zos.putNextEntry(out)
     if (input == null) {
       List<String> names = requested.keySet().toList()
-      List<String> startPositions = names.collect { positions.get(it) ?: "A1" }
+      List<String> startPositions = names.collect { positions.get(it) ?: 'A1' }
       String content = OdsXmlWriter.buildContentXml(requested.values().toList(), names, startPositions)
       zos.write(content.getBytes(StandardCharsets.UTF_8))
       zos.closeEntry()
@@ -138,10 +138,10 @@ class FOdsAppender {
     XMLStreamWriter writer = null
     try {
       reader = inFactory.createXMLStreamReader(input)
-      writer = outFactory.createXMLStreamWriter(zos, "UTF-8")
-      writer.writeStartDocument("UTF-8", "1.0")
+      writer = outFactory.createXMLStreamWriter(zos, 'UTF-8')
+      writer.writeStartDocument('UTF-8', '1.0')
 
-      Set<String> replaced = new HashSet<>()
+      Set<String> replaced = [] as Set
       OdsXmlWriter.TableTemplate baseTemplate = null
       boolean capturingBase = false
       boolean capturingColumns = false
@@ -150,8 +150,8 @@ class FOdsAppender {
       List<OdsXmlWriter.TableColumn> baseColumns = null
       while (reader.hasNext()) {
         int event = reader.next()
-        if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table") {
-          String name = reader.getAttributeValue(tableUrn, "name")
+        if (event == XMLStreamConstants.START_ELEMENT && reader.localName == 'table') {
+          String name = reader.getAttributeValue(tableUrn, 'name')
           List<OdsXmlWriter.TableAttribute> tableAttributes = readAttributes(reader)
           if (baseTemplate == null && tableAttributes != null && !tableAttributes.isEmpty()) {
             capturingBase = true
@@ -168,7 +168,7 @@ class FOdsAppender {
             capturingBase = false
             capturingColumns = false
             baseDepth = 0
-            String startPosition = positions.get(name) ?: "A1"
+            String startPosition = positions.get(name) ?: 'A1'
             OdsXmlWriter.writeTable(writer, requested.get(name), name, template, startPosition)
             replaced.add(name)
             continue
@@ -176,14 +176,14 @@ class FOdsAppender {
         }
         if (capturingBase) {
           if (event == XMLStreamConstants.START_ELEMENT) {
-            if (reader.localName == "table") {
+            if (reader.localName == 'table') {
               baseDepth++
-            } else if (reader.localName == "table-column" && capturingColumns && baseDepth == 1) {
+            } else if (reader.localName == 'table-column' && capturingColumns && baseDepth == 1) {
               baseColumns.add(new OdsXmlWriter.TableColumn(readAttributes(reader)))
-            } else if (reader.localName == "table-row" && baseDepth == 1) {
+            } else if (reader.localName == 'table-row' && baseDepth == 1) {
               capturingColumns = false
             }
-          } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == "table") {
+          } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == 'table') {
             baseDepth--
             if (baseDepth == 0) {
               baseTemplate = new OdsXmlWriter.TableTemplate(baseAttributes, baseColumns)
@@ -192,10 +192,10 @@ class FOdsAppender {
             }
           }
         }
-        if (event == XMLStreamConstants.END_ELEMENT && reader.localName == "spreadsheet" && officeUrn == reader.namespaceURI) {
+        if (event == XMLStreamConstants.END_ELEMENT && reader.localName == 'spreadsheet' && officeUrn == reader.namespaceURI) {
           requested.each { String name, Matrix matrix ->
             if (!replaced.contains(name)) {
-              String startPosition = positions.get(name) ?: "A1"
+              String startPosition = positions.get(name) ?: 'A1'
               OdsXmlWriter.writeTable(writer, matrix, name, baseTemplate, startPosition)
             }
           }
@@ -249,13 +249,13 @@ class FOdsAppender {
     int depth = 1
     while (reader.hasNext() && depth > 0) {
       int event = reader.next()
-      if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table") {
+      if (event == XMLStreamConstants.START_ELEMENT && reader.localName == 'table') {
         depth++
-      } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table-column" && capturingColumns && depth == 1) {
+      } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == 'table-column' && capturingColumns && depth == 1) {
         columns.add(new OdsXmlWriter.TableColumn(readAttributes(reader)))
-      } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table-row" && depth == 1) {
+      } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == 'table-row' && depth == 1) {
         capturingColumns = false
-      } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == "table") {
+      } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == 'table') {
         depth--
       }
     }
@@ -265,12 +265,12 @@ class FOdsAppender {
   private static void copyEvent(XMLStreamReader reader, XMLStreamWriter writer, int event) {
     switch (event) {
       case XMLStreamConstants.START_ELEMENT -> {
-        String prefix = reader.prefix ?: ""
-        String namespace = reader.namespaceURI ?: ""
-        writer.writeStartElement(prefix ?: "", reader.localName, namespace ?: "")
+        String prefix = reader.prefix ?: ''
+        String namespace = reader.namespaceURI ?: ''
+        writer.writeStartElement(prefix ?: '', reader.localName, namespace ?: '')
         for (int i = 0; i < reader.namespaceCount; i++) {
-          String nsPrefix = reader.getNamespacePrefix(i) ?: ""
-          String nsUri = reader.getNamespaceURI(i) ?: ""
+          String nsPrefix = reader.getNamespacePrefix(i) ?: ''
+          String nsUri = reader.getNamespaceURI(i) ?: ''
           writer.writeNamespace(nsPrefix, nsUri)
         }
         for (int i = 0; i < reader.attributeCount; i++) {
@@ -279,7 +279,7 @@ class FOdsAppender {
           String attrLocal = reader.getAttributeLocalName(i)
           String attrValue = reader.getAttributeValue(i)
           if (attrNamespace) {
-            writer.writeAttribute(attrPrefix ?: "", attrNamespace, attrLocal, attrValue)
+            writer.writeAttribute(attrPrefix ?: '', attrNamespace, attrLocal, attrValue)
           } else {
             writer.writeAttribute(attrLocal, attrValue)
           }
@@ -296,4 +296,5 @@ class FOdsAppender {
       default -> {}
     }
   }
+
 }

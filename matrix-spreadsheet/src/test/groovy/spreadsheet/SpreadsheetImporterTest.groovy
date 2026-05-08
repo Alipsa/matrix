@@ -26,9 +26,9 @@ class SpreadsheetImporterTest {
   @Test
   void testExcelImport() {
     book1ImportAssertions(
-      importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true)
+      importSpreadsheet(file: 'Book1.xlsx', endRow: 12, endCol: 4, firstRowAsColNames: true)
     )
-    URL url = getClass().getResource("/Book1.xlsx")
+    URL url = getClass().getResource('/Book1.xlsx')
     book1ImportAssertions(
       importExcel(url, 1, 1, 12, 1, 4, true)
     )
@@ -37,45 +37,44 @@ class SpreadsheetImporterTest {
   @Test
   @CompileStatic
   void testOdsImport() {
-    Matrix m = importSpreadsheet("Book1.ods", 1, 1, 12, 1, 4, true)
+    Matrix m = importSpreadsheet('Book1.ods', 1, 1, 12, 1, 4, true)
     book1ImportAssertions(m)
-    Matrix m2 = importSpreadsheet("Book1.ods", 1, 1, 12, 'A', 'D', true)
+    Matrix m2 = importSpreadsheet('Book1.ods', 1, 1, 12, 'A', 'D', true)
     book1ImportAssertions(m2)
-    Matrix m3 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true)
+    Matrix m3 = importSpreadsheet('transactions.ods', 1, 1, 100, 'A', 'D', true)
       .withMatrixName('transactions')
     assertEquals('transactions', m3.matrixName)
     assertEquals(4, m3.columnCount())
   }
 
   static void book1ImportAssertions(Matrix table) {
-
     table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
-    //println(table.content())
+    // println(table.content())
     assertEquals(3, table[2, 0])
-    assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
-    assertEquals(17.4, table['baz'][table.rowCount()-1])
+    assertEquals(LocalDate.parse('2023-05-06'), table[6, 2])
+    assertEquals(17.4, table['baz'][table.rowCount() - 1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
 
   @Test
   @CompileStatic
-  void TestImportWithColnames() {
+  void testImportWithColnames() {
     importWithColnamesAssertions()
   }
 
   @CompileStatic
   static void importWithColnamesAssertions() {
     Matrix table = importSpreadsheet(
-        "file": "Book1.xlsx",
-        "endRow": 12,
-        "startCol": 'A',
-        "endCol": 'D'
+        'file': 'Book1.xlsx',
+        'endRow': 12,
+        'startCol': 'A',
+        'endCol': 'D'
     )
-    //println(table.content())
+    // println(table.content())
     def value = table[2, 0, BigDecimal]
-    assertEquals(3.0, value, "Attempt to compare BigDecimal with " + value.class.simpleName)
-    assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
-    assertEquals(17.4, table['baz'][table.rowCount()-1])
+    assertEquals(3.0, value, 'Attempt to compare BigDecimal with ' + value.class.simpleName)
+    assertEquals(LocalDate.parse('2023-05-06'), table[6, 2])
+    assertEquals(17.4, table['baz'][table.rowCount() - 1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
 
@@ -86,7 +85,7 @@ class SpreadsheetImporterTest {
 
   @CompileDynamic
   void importMultipleSheetsAssertions() {
-    Map<String, Matrix> sheets = SpreadsheetImporter.importSpreadsheets("Book2.xlsx",
+    Map<String, Matrix> sheets = SpreadsheetImporter.importSpreadsheets('Book2.xlsx',
         [
             [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
             [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
@@ -97,28 +96,28 @@ class SpreadsheetImporterTest {
     Matrix table2 = sheets.Sheet2
     assertEquals(3i, table2[2, 0, Integer])
     def date = table2[6, 2]
-    assertEquals(LocalDate.parse("2023-05-06"), date)
-    assertEquals(17.4, table2[table2.rowCount()-1, 'baz', BigDecimal].setScale(1, RoundingMode.HALF_UP))
+    assertEquals(LocalDate.parse('2023-05-06'), date)
+    assertEquals(17.4, table2[table2.rowCount() - 1, 'baz', BigDecimal].setScale(1, RoundingMode.HALF_UP))
     assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
     Matrix table1 = sheets.Sheet1
-    //println(table1.content())
-    //println(table1.types())
-    assertEquals(710381i, table1[0,0, Integer])
-    assertEquals(103599.04, table1[1,1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
-    assertEquals(66952.95, table1[2,2])
-    assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1))
+    // println(table1.content())
+    // println(table1.types())
+    assertEquals(710381i, table1[0, 0, Integer])
+    assertEquals(103599.04, table1[1, 1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
+    assertEquals(66952.95, table1[2, 2])
+    assertEquals(0.0G, table1[3, 3, BigDecimal].setScale(1))
     assertEquals(-0.00982d, table1[6, 'percentdiff'] as double, 0.00001)
 
     Matrix comp = sheets.comp.clone()
-    assertEquals('Component', comp[0,0])
+    assertEquals('Component', comp[0, 0])
     assertEquals(5, comp.rowCount())
     assertEquals(32, comp.columnCount())
-    assertEquals(31, comp[0,31, Integer])
+    assertEquals(31, comp[0, 31, Integer])
 
     def headerRow = comp.row(0)
-    List<String> names = headerRow.collect{
-      if (it == "Component") {
+    List<String> names = headerRow.collect {
+      if (it == 'Component') {
         String.valueOf(it)
       } else {
         String.valueOf(ValueConverter.asDouble(it).intValue())
@@ -127,22 +126,22 @@ class SpreadsheetImporterTest {
     assertEquals(32, names.size())
     comp.columnNames(names)
     comp.removeRows(0)
-    comp = comp.convert([String] + [Integer]*31 as List<Class<?>>)
-    assertEquals(2043, comp[0,1])
-    assertEquals(2790, comp[3,31])
+    comp = comp.convert([String] + [Integer] * 31 as List<Class<?>>)
+    assertEquals(2043, comp[0, 1])
+    assertEquals(2790, comp[3, 31])
 
     Matrix comp2 = sheets.comp2
-    assertIterableEquals(sheets.comp.typeNames(), comp2.typeNames(), "column types differ")
-    comp2.columnNames(comp2.columnNames().collect{
-      if (it == "Component") {
+    assertIterableEquals(sheets.comp.typeNames(), comp2.typeNames(), 'column types differ')
+    comp2.columnNames(comp2.columnNames().collect {
+      if (it == 'Component') {
         String.valueOf(it)
       } else {
         String.valueOf(ValueConverter.asDouble(it).intValue())
       }
     })
-    assertIterableEquals(comp.columnNames(), comp2.columnNames(), "column names differ")
-    comp2 = comp2.convert([String] + [Integer]*31 as List<Class<?>>)
-    assertIterableEquals(comp.typeNames(), comp2.typeNames(), "column types differ after column name setting")
+    assertIterableEquals(comp.columnNames(), comp2.columnNames(), 'column names differ')
+    comp2 = comp2.convert([String] + [Integer] * 31 as List<Class<?>>)
+    assertIterableEquals(comp.typeNames(), comp2.typeNames(), 'column types differ after column name setting')
   }
 
   @Test
@@ -157,35 +156,35 @@ class SpreadsheetImporterTest {
 
   @Test
   void testImportXlsThrows() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      SpreadsheetImporter.importSpreadsheet("Book1.xls", 1, 1, 2, 1, 2, true)
+    assertThrows(IllegalArgumentException, () -> {
+      SpreadsheetImporter.importSpreadsheet('Book1.xls', 1, 1, 2, 1, 2, true)
     })
   }
 
   private static void assertSheetNumberIsOneIndexedForFile(Importer importer) {
-    Matrix book1Sheet1ByName = importer.importSpreadsheet("Book1.xlsx", "Sheet1", 1, 12, 1, 4, true)
-    Matrix book1Sheet1ByNumber = importer.importSpreadsheet("Book1.xlsx", 1, 1, 12, 1, 4, true)
+    Matrix book1Sheet1ByName = importer.importSpreadsheet('Book1.xlsx', 'Sheet1', 1, 12, 1, 4, true)
+    Matrix book1Sheet1ByNumber = importer.importSpreadsheet('Book1.xlsx', 1, 1, 12, 1, 4, true)
     MatrixAssertions.assertEquals(book1Sheet1ByName, book1Sheet1ByNumber)
 
-    Matrix book2Sheet2ByName = importer.importSpreadsheet("Book2.xlsx", "Sheet2", 1, 12, 1, 4, true)
-    Matrix book2Sheet2ByNumber = importer.importSpreadsheet("Book2.xlsx", 2, 1, 12, 1, 4, true)
+    Matrix book2Sheet2ByName = importer.importSpreadsheet('Book2.xlsx', 'Sheet2', 1, 12, 1, 4, true)
+    Matrix book2Sheet2ByNumber = importer.importSpreadsheet('Book2.xlsx', 2, 1, 12, 1, 4, true)
     MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
   }
 
   private static void assertSheetNumberIsOneIndexedForStream(Importer importer) {
-    Matrix book1Sheet1ByName = importFromStream(importer, "Book1.xlsx", "Sheet1", 1, 12, 1, 4)
-    Matrix book1Sheet1ByNumber = importFromStream(importer, "Book1.xlsx", 1, 1, 12, 1, 4)
+    Matrix book1Sheet1ByName = importFromStream(importer, 'Book1.xlsx', 'Sheet1', 1, 12, 1, 4)
+    Matrix book1Sheet1ByNumber = importFromStream(importer, 'Book1.xlsx', 1, 1, 12, 1, 4)
     MatrixAssertions.assertEquals(book1Sheet1ByName, book1Sheet1ByNumber)
 
-    Matrix book2Sheet2ByName = importFromStream(importer, "Book2.xlsx", "Sheet2", 1, 12, 1, 4)
-    Matrix book2Sheet2ByNumber = importFromStream(importer, "Book2.xlsx", 2, 1, 12, 1, 4)
+    Matrix book2Sheet2ByName = importFromStream(importer, 'Book2.xlsx', 'Sheet2', 1, 12, 1, 4)
+    Matrix book2Sheet2ByNumber = importFromStream(importer, 'Book2.xlsx', 2, 1, 12, 1, 4)
     MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
   }
 
   private static Matrix importFromStream(Importer importer, String fileName, String sheetName,
                                          int startRow, int endRow, int startCol, int endCol) {
-    InputStream stream = SpreadsheetImporterTest.class.getResourceAsStream("/${fileName}")
-    assertNotNull(stream, "Missing test resource ${fileName}")
+    InputStream stream = SpreadsheetImporterTest.getResourceAsStream("/${ fileName }")
+    assertNotNull(stream, "Missing test resource ${ fileName }")
     try {
       return importer.importSpreadsheet(stream, sheetName, startRow, endRow, startCol, endCol, true)
     } finally {
@@ -195,8 +194,8 @@ class SpreadsheetImporterTest {
 
   private static Matrix importFromStream(Importer importer, String fileName, int sheetNumber,
                                          int startRow, int endRow, int startCol, int endCol) {
-    InputStream stream = SpreadsheetImporterTest.class.getResourceAsStream("/${fileName}")
-    assertNotNull(stream, "Missing test resource ${fileName}")
+    InputStream stream = SpreadsheetImporterTest.getResourceAsStream("/${ fileName }")
+    assertNotNull(stream, "Missing test resource ${ fileName }")
     try {
       return importer.importSpreadsheet(stream, sheetNumber, startRow, endRow, startCol, endCol, true)
     } finally {
@@ -206,67 +205,67 @@ class SpreadsheetImporterTest {
 
   @Test
   void testAutoDetectStringPathConvenienceForm() {
-    Matrix m = importSpreadsheet("Book1.xlsx")
+    Matrix m = importSpreadsheet('Book1.xlsx')
     book1ImportAssertions(m)
   }
 
   @Test
   void testAutoDetectXlsxByFile() throws Exception {
-    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
+    File file = new File(SpreadsheetImporterTest.getResource('/Book1.xlsx').toURI())
     Matrix m = importSpreadsheet(file, 1, true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testAutoDetectXlsxByName() {
-    Matrix m = importSpreadsheet("Book1.xlsx", "Sheet1", true)
+    Matrix m = importSpreadsheet('Book1.xlsx', 'Sheet1', true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testAutoDetectOdsByFile() throws Exception {
-    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.ods").toURI())
+    File file = new File(SpreadsheetImporterTest.getResource('/Book1.ods').toURI())
     Matrix m = importSpreadsheet(file, 1, true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testAutoDetectOdsByName() {
-    Matrix m = importSpreadsheet("Book1.ods", "Sheet1", true)
+    Matrix m = importSpreadsheet('Book1.ods', 'Sheet1', true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testAutoDetectXlsxByFileAndSheetName() throws Exception {
-    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
-    Matrix m = importSpreadsheet(file, "Sheet1", true)
+    File file = new File(SpreadsheetImporterTest.getResource('/Book1.xlsx').toURI())
+    Matrix m = importSpreadsheet(file, 'Sheet1', true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testFileBasedDelegationWithExplicitRange() throws Exception {
-    File file = new File(SpreadsheetImporterTest.class.getResource("/Book1.xlsx").toURI())
+    File file = new File(SpreadsheetImporterTest.getResource('/Book1.xlsx').toURI())
     Matrix m = importSpreadsheet(file, 1, 1, 12, 1, 4, true)
     book1ImportAssertions(m)
   }
 
   @Test
   void testMissingSheetThrowsWithSheetName() {
-    assertThrows(NoSuchElementException.class, {
-      importSpreadsheet("Book1.xlsx", "NonExistentSheet", 1, 12, 1, 4, true)
-    })
+    assertThrows(NoSuchElementException) {
+      importSpreadsheet('Book1.xlsx', 'NonExistentSheet', 1, 12, 1, 4, true)
+    }
   }
 
   @Test
   void testMissingOdsSheetThrowsFastOdsException() {
-    assertThrows(FastOdsException.class, {
-      importSpreadsheet("Book1.ods", "NonExistentSheet", 1, 12, 1, 4, true)
-    })
+    assertThrows(FastOdsException) {
+      importSpreadsheet('Book1.ods', 'NonExistentSheet', 1, 12, 1, 4, true)
+    }
   }
 
   @Test
   void testImportSpreadsheetsWithFile() throws Exception {
-    File file = new File(SpreadsheetImporterTest.class.getResource("/Book2.xlsx").toURI())
+    File file = new File(SpreadsheetImporterTest.getResource('/Book2.xlsx').toURI())
     Map<Object, Matrix> sheets = SpreadsheetImporter.importSpreadsheets(file,
         [
             [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
@@ -276,4 +275,5 @@ class SpreadsheetImporterTest {
     assertNotNull(sheets.Sheet1)
     assertNotNull(sheets.Sheet2)
   }
+
 }

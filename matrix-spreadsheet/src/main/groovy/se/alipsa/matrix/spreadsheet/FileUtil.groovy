@@ -17,6 +17,7 @@ class FileUtil {
     * @return a File of found
     * @throws SpreadsheetImportException if the filePath cannot be found
     */
+   @SuppressWarnings('CatchRuntimeException')
    static File checkFilePath(String filePath) throws SpreadsheetImportException {
       File excelFile
       URL url = getResourceUrl(filePath)
@@ -41,10 +42,11 @@ class FileUtil {
     * @param resource the resource to search for
     * @return an url to the resource or null if not found
     */
+   @SuppressWarnings('ReturnNullFromCatchBlock')
    static URL getResourceUrl(String resource) {
-      final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>()
+      final List<ClassLoader> classLoaders = []
       classLoaders.add(Thread.currentThread().getContextClassLoader())
-      classLoaders.add(FileUtil.class.getClassLoader())
+      classLoaders.add(FileUtil.getClassLoader())
 
       for (ClassLoader classLoader : classLoaders) {
          final URL url = getResourceWith(classLoader, resource)
@@ -56,12 +58,11 @@ class FileUtil {
       final URL systemResource = ClassLoader.getSystemResource(resource)
       if (systemResource != null) {
          return systemResource
-      } else {
-         try {
-            return new File(resource).toURI().toURL()
-         } catch (MalformedURLException ignored) {
-            return null
-         }
+      }
+      try {
+         return new File(resource).toURI().toURL()
+      } catch (MalformedURLException ignored) {
+         return null
       }
    }
 
@@ -71,4 +72,5 @@ class FileUtil {
       }
       return null
    }
+
 }

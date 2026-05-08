@@ -69,7 +69,7 @@ class SpreadSheetUtilTest {
         // Test mixed collision scenarios
         def mixed = SpreadsheetUtil.createUniqueSheetNames(['Sheet1', 'Sheet/1', 'Sheet2'])
         assertEquals(3, mixed.size())
-        assertTrue(mixed[0] != mixed[1], "Sanitized names should be unique")
+        assertTrue(mixed[0] != mixed[1], 'Sanitized names should be unique')
     }
 
     @Test
@@ -78,9 +78,9 @@ class SpreadSheetUtilTest {
         String longName = 'A' * 31  // Max length name
         def names = SpreadsheetUtil.createUniqueSheetNames([longName, longName])
         assertEquals(2, names.size())
-        assertTrue(names[0].length() <= 31, "First name should be max 31 chars")
-        assertTrue(names[1].length() <= 31, "Suffixed name should be max 31 chars")
-        assertNotEquals(names[0], names[1], "Names should be unique")
+        assertTrue(names[0].length() <= 31, 'First name should be max 31 chars')
+        assertTrue(names[1].length() <= 31, 'Suffixed name should be max 31 chars')
+        assertNotEquals(names[0], names[1], 'Names should be unique')
     }
 
     @Test
@@ -100,19 +100,19 @@ class SpreadSheetUtilTest {
 
     @Test
     void testParseCellPositionInvalid() {
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.parseCellPosition(null)
         })
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.parseCellPosition('')
         })
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.parseCellPosition('1A')  // Wrong order
         })
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.parseCellPosition('ABC')  // Missing row
         })
     }
@@ -125,12 +125,13 @@ class SpreadSheetUtilTest {
         SpreadsheetUtil.rejectLegacyXls((String) null)  // null is allowed
 
         // Should throw for xls
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.rejectLegacyXls('test.xls')
         })
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(IllegalArgumentException, () -> {
             SpreadsheetUtil.rejectLegacyXls('TEST.XLS')
         })
     }
+
 }

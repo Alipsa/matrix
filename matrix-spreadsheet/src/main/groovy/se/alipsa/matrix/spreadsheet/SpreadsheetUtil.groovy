@@ -60,7 +60,7 @@ class SpreadsheetUtil {
     */
    static List<String> createUniqueSheetNames(List<String> names) {
       List<String> result = []
-      Set<String> usedNames = new HashSet<>()
+      Set<String> usedNames = [] as Set
       for (String name : names) {
          String safeName = createValidSheetName(name)
          String uniqueName = safeName
@@ -127,8 +127,8 @@ class SpreadsheetUtil {
     * @param fileName the file name or path to validate
     */
    static void rejectLegacyXls(String fileName) {
-      if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
-         throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
+      if (fileName != null && fileName.toLowerCase().endsWith('.xls')) {
+         throw new IllegalArgumentException('Unsupported Excel format .xls. Only .xlsx is supported.')
       }
    }
 
@@ -140,7 +140,7 @@ class SpreadsheetUtil {
     */
    static CellPosition parseCellPosition(String position) {
       if (position == null) {
-         throw new IllegalArgumentException("Start position cannot be null")
+         throw new IllegalArgumentException('Start position cannot be null')
       }
       String trimmed = position.trim()
       Pattern pattern = ~/^([A-Z]+)(\d+)$/
@@ -160,6 +160,7 @@ class SpreadsheetUtil {
     * Represents a parsed cell position (1-indexed).
     */
    static class CellPosition {
+
       final int row
       final int column
 
@@ -167,14 +168,15 @@ class SpreadsheetUtil {
          this.row = row
          this.column = column
       }
+
    }
 
-   private final static String createSafeSheetName(final String nameProposal, char replaceChar = ' ' as char) {
+   private static String createSafeSheetName(final String nameProposal, char replaceChar = ' ' as char) {
       if (nameProposal == null) {
-         return "null"
+         return 'null'
       }
       if (nameProposal.length() < 1) {
-         return "empty"
+         return 'empty'
       }
       final int length = Math.min(31, nameProposal.length())
       final String shortname = nameProposal.substring(0, length)
@@ -186,11 +188,12 @@ class SpreadsheetUtil {
                result.setCharAt(i, replaceChar)
             case '\'' ->
                if (i==0 || i==length-1) {
-                  result.setCharAt(i, replaceChar);
+                  result.setCharAt(i, replaceChar)
                }
             default -> result.setCharAt(i, ch)
          }
       }
       return result.toString()
    }
+
 }

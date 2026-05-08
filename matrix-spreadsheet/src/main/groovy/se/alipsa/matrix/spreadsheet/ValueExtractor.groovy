@@ -3,13 +3,17 @@ package se.alipsa.matrix.spreadsheet
 /**
  * A ValueExtractor is a helper class that makes it easier to get values from a spreadsheet.
  */
+@SuppressWarnings('ReturnNullFromCatchBlock')
 abstract class ValueExtractor {
+
+   private static final String PERCENT = '%'
+   private static final BigDecimal HUNDRED = 100.0
 
    BigDecimal getBigDecimal(Object val) {
       if (val == null) {
          return null
       }
-      if (val instanceof Number) {
+      if (Number.isInstance(val)) {
          return (val as Number) as BigDecimal
       }
       String strVal = val.toString().trim()
@@ -17,10 +21,10 @@ abstract class ValueExtractor {
          return new BigDecimal(strVal)
       } catch (NumberFormatException e) {
          // Try parsing as percentage (e.g., "50%" -> 0.5)
-         if (strVal.endsWith("%")) {
+         if (strVal.endsWith(PERCENT)) {
             try {
                String numPart = strVal.substring(0, strVal.length() - 1).trim()
-               return new BigDecimal(numPart) / 100.0
+               return new BigDecimal(numPart) / HUNDRED
             } catch (NumberFormatException ignored) {
                // do nothing
             }
@@ -33,23 +37,22 @@ abstract class ValueExtractor {
       if (val == null) {
          return null
       }
-      if (val instanceof Number) {
+      if (Number.isInstance(val)) {
          return (val as Number) as BigDecimal
       }
       String strVal = val.toString().trim()
-      if (strVal.endsWith("%")) {
+      if (strVal.endsWith(PERCENT)) {
          try {
             String numPart = strVal.substring(0, strVal.length() - 1).trim()
-            return new BigDecimal(numPart) / 100.0
+            return new BigDecimal(numPart) / HUNDRED
          } catch (NumberFormatException e) {
             return null
          }
-      } else {
-         try {
-            return new BigDecimal(strVal)
-         } catch (NumberFormatException e) {
-            return null
-         }
+      }
+      try {
+         return new BigDecimal(strVal)
+      } catch (NumberFormatException e) {
+         return null
       }
    }
 
@@ -57,10 +60,10 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (objVal instanceof Double) {
+      if (Double.isInstance(objVal)) {
          return (int)(Math.round((Double) objVal))
       }
-      if (objVal instanceof Boolean) {
+      if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1 : 0
       }
       return Integer.parseInt(objVal.toString())
@@ -70,35 +73,37 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (objVal instanceof Double) {
+      if (Double.isInstance(objVal)) {
          return (Math.round((Double) objVal))
       }
-      if (objVal instanceof Boolean) {
+      if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1L : 0L
       }
       return Long.parseLong(objVal.toString())
    }
 
+   @SuppressWarnings('BooleanMethodReturnsNull')
    Boolean getBoolean(Object val) {
-      if (val == null || "" == val) {
+      if (val == null || '' == val) {
          return null
       }
-      if (val instanceof Boolean) {
+      if (Boolean.isInstance(val)) {
          return (Boolean) val
-      } else if (val instanceof Number) {
+      }
+      if (Number.isInstance(val)) {
          int num = (int)Math.round(((Number)val).doubleValue())
          return num == 1
-      } else {
-         String strVal = String.valueOf(val).toLowerCase()
-         final Map<String, Boolean> truthyValues = [
-             j: true, y: true, ja: true, yes: true,
-             '1': true, 'true': true, 'on': true
-         ]
-         truthyValues.getOrDefault(strVal, false)
       }
+      String strVal = String.valueOf(val).toLowerCase()
+      final Map<String, Boolean> truthyValues = [
+          j: true, y: true, ja: true, yes: true,
+          '1': true, 'true': true, 'on': true
+      ]
+      truthyValues.getOrDefault(strVal, false)
    }
 
    static String getString(Object val) {
       val == null ? null : String.valueOf(val)
    }
+
 }

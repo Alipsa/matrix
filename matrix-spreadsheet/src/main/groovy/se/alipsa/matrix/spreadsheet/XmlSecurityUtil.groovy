@@ -10,7 +10,7 @@ import javax.xml.stream.XMLInputFactory
  */
 final class XmlSecurityUtil {
 
-  private static final Logger logger = Logger.getLogger(XmlSecurityUtil)
+  private static final Logger log = Logger.getLogger(XmlSecurityUtil)
 
   private XmlSecurityUtil() {
     // utility class
@@ -38,17 +38,18 @@ final class XmlSecurityUtil {
    * Unsupported features are logged and ignored to keep parsing functional.
    */
   static void configureDocumentBuilderFactory(DocumentBuilderFactory factory) {
-    setFeatureSafe(factory, "http://apache.org/xml/features/disallow-doctype-decl", true)
-    setFeatureSafe(factory, "http://xml.org/sax/features/external-general-entities", false)
-    setFeatureSafe(factory, "http://xml.org/sax/features/external-parameter-entities", false)
-    setFeatureSafe(factory, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+    setFeatureSafe(factory, 'http://apache.org/xml/features/disallow-doctype-decl', true)
+    setFeatureSafe(factory, 'http://xml.org/sax/features/external-general-entities', false)
+    setFeatureSafe(factory, 'http://xml.org/sax/features/external-parameter-entities', false)
+    setFeatureSafe(factory, 'http://apache.org/xml/features/nonvalidating/load-external-dtd', false)
   }
 
   private static void setFeatureSafe(DocumentBuilderFactory factory, String feature, boolean value) {
     try {
       factory.setFeature(feature, value)
     } catch (Exception ex) {
-      logger.warn("Failed to set XML parser feature $feature to $value. Continuing without it.", ex)
+      log.warn("Failed to set XML parser feature $feature to $value. Continuing without it.", ex)
     }
   }
+
 }

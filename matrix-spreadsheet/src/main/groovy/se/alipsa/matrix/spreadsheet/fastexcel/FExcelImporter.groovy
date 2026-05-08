@@ -14,8 +14,10 @@ import java.util.stream.Stream
 /**
  * Imports Excel (.xlsx) files into Matrix instances using the FastExcel reader library.
  */
+@SuppressWarnings('UnusedObject')
 class FExcelImporter implements Importer {
 
+  private static final String SHEET_NUM_ERROR = 'Sheet number must be 1 or greater'
   static final ReadingOptions OPTIONS = new ReadingOptions(true, true)
 
   static FExcelImporter create() {
@@ -44,9 +46,11 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
-    if (url == null) throw new IllegalArgumentException("url cannot be null")
+    if (url == null) {
+      throw new IllegalArgumentException('url cannot be null')
+    }
     if (sheetNumber < 1) {
-      throw new IllegalArgumentException("Sheet number must be 1 or greater")
+      throw new IllegalArgumentException(SHEET_NUM_ERROR)
     }
     SpreadsheetUtil.rejectLegacyXls(url.path)
     try(InputStream is = url.openStream(); ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
@@ -122,7 +126,7 @@ class FExcelImporter implements Importer {
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       if (sheetNumber < 1) {
-        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+        throw new IllegalArgumentException(SHEET_NUM_ERROR)
       }
       int sheetIndex = sheetNumber - 1
       Sheet sheet = workbook.getSheet(sheetIndex)
@@ -196,7 +200,7 @@ class FExcelImporter implements Importer {
   Matrix importSpreadsheet(InputStream is, int sheetNum, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
     try (ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
       if (sheetNum < 1) {
-        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+        throw new IllegalArgumentException(SHEET_NUM_ERROR)
       }
       int sheetIndex = sheetNum - 1
       Sheet sheet = workbook.getSheet(sheetIndex)
@@ -237,7 +241,7 @@ class FExcelImporter implements Importer {
         }
         boolean isDate1904 = workbook.isDate1904()
         Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, it.firstRowAsColNames as Boolean, isDate1904)
-        String key = it["key"] ?: sheetName
+        String key = it['key'] ?: sheetName
         matrix.setMatrixName(key)
         result.put(key, matrix)
       }
@@ -262,6 +266,7 @@ class FExcelImporter implements Importer {
     }
   }
 
+  @SuppressWarnings('NestedBlockDepth')
   private static Matrix importExcelSheet(Sheet sheet, int startRowNum, int endRowNum, int startColNum, int endColNum, boolean firstRowAsColNames, boolean isDate1904) {
     FExcelValueExtractor ext = new FExcelValueExtractor(sheet, isDate1904)
     int startColNumZI = startColNum - 1
@@ -283,9 +288,8 @@ class FExcelImporter implements Importer {
                 }
               }
               return
-            } else {
-              colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
             }
+            colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
           }
           list.eachWithIndex { cell, cIdx ->
             if (cIdx >= startColNumZI && cIdx <= endColNumZI) {
@@ -315,4 +319,5 @@ class FExcelImporter implements Importer {
     m.metaData.isDate1904 = isDate1904
     m
   }
+
 }

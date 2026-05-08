@@ -241,6 +241,7 @@ class SpreadsheetFormatProviderTest {
     method.invoke(null, reader, options) as int
   }
 
+  @SuppressWarnings('CloseWithoutCloseable')
   private static class StubSpreadsheetReader implements SpreadsheetReader {
 
     private final int lastRow
@@ -309,5 +310,7 @@ class SpreadsheetFormatProviderTest {
     @Override
     void close() {
     }
+
   }
+
 }

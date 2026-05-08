@@ -39,7 +39,7 @@ import javax.xml.stream.XMLStreamReader
  * consider using explicit row ranges in your import call.</p>
  */
 final class OdsStreamDataReader extends OdsDataReader {
-  private static final Logger logger = Logger.getLogger(OdsStreamDataReader)
+  private static final Logger log = Logger.getLogger(OdsStreamDataReader)
 
   /**
    * Profiling statistics collector. Uses Null Object pattern to avoid branch overhead.
@@ -71,7 +71,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     Integer sheetCount = 1
     final XMLStreamReader reader = INSTANCE.createXMLStreamReader(is)
     if (sheet == null) {
-      throw new FastOdsException("Sheet name or number must be provided but was null")
+      throw new FastOdsException('Sheet name or number must be provided but was null')
     }
     PROFILE_STATS.reset()
     try {
@@ -297,7 +297,9 @@ final class OdsStreamDataReader extends OdsDataReader {
    */
   private static Object extractDateValue(final XMLStreamReader reader, final String officeUrn) {
     String v = reader.getAttributeValue(officeUrn, 'date-value')
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
     // Date format: YYYY-MM-DD (10 chars) vs DateTime: YYYY-MM-DDTHH:MM:SS
     return v.length() == 10 ? LocalDate.parse(v) : LocalDateTime.parse(v)
   }
@@ -359,6 +361,7 @@ final class OdsStreamDataReader extends OdsDataReader {
    * Uses Null Object pattern to avoid branching overhead in hot paths.
    */
   private static abstract class ProfileStats {
+
     abstract void reset()
     abstract void log(String sheetName)
     abstract void incrementPhysicalRows()
@@ -383,6 +386,7 @@ final class OdsStreamDataReader extends OdsDataReader {
 
     // Support ++ operator
     ProfileStats next() { return this }
+
   }
 
   /**
@@ -390,6 +394,7 @@ final class OdsStreamDataReader extends OdsDataReader {
    * All methods are empty to eliminate overhead.
    */
   private static final class NoOpProfileStats extends ProfileStats {
+
     @Override void reset() {}
     @Override void log(String sheetName) {}
     @Override void incrementPhysicalRows() {}
@@ -401,6 +406,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     @Override void addExtractValueTime(long nanos) {}
     @Override void addProcessRowTime(long nanos) {}
     @Override void addProcessSheetTime(long nanos) {}
+
   }
 
   /**
@@ -408,6 +414,7 @@ final class OdsStreamDataReader extends OdsDataReader {
    * Collects and logs detailed performance statistics.
    */
   private static final class RealProfileStats extends ProfileStats {
+
     long physicalRows = 0
     long logicalRows = 0
     long cellsAdded = 0
@@ -438,7 +445,7 @@ final class OdsStreamDataReader extends OdsDataReader {
       String message = "ODS profile ${sheetName}: sheet=${sheetMs} ms, rows(physical/logical)=${physicalRows}/${logicalRows}, " +
           "cells(added/skipped)=${cellsAdded}/${cellsSkipped}, extractValue=${extractMs} ms (calls=${extractValueCalls}, avg=${avgExtract} ms), " +
           "processRow=${rowMs} ms"
-      logger.info(message)
+      log.info(message)
     }
 
     @Override void incrementPhysicalRows() { physicalRows++ }
@@ -467,5 +474,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     private static long nanosToMillis(long nanos) {
       return (nanos / 1_000_000L) as long
     }
+
   }
+
 }

@@ -14,7 +14,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
-import java.util.Collections
 
 // When compiled statically, Groovy generates direct bytecode for sheet.style(row, col).format(...).set()
 // which triggers an IllegalAccessError at runtime because GenericStyleSetter is
@@ -27,7 +26,10 @@ import java.util.Collections
 @CompileDynamic
 class FExcelExporter {
 
-  static final Logger logger = Logger.getLogger(FExcelExporter)
+  private static final Logger log = Logger.getLogger(FExcelExporter)
+  private static final String DEFAULT_START = 'A1'
+  private static final String DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss.SSS'
+  private static final String APPEND_NOT_SUPPORTED = 'Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.'
   static final String APP_NAME = 'matrix-spreadsheet'
   static final String VERSION = '02.1000' // must be in the format XX.YYYY
 
@@ -61,7 +63,7 @@ class FExcelExporter {
   static String exportExcel(File file, Matrix data) {
     SpreadsheetUtil.rejectLegacyXls(file)
     String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
-    exportExcel(file, data, sheetName, "A1")
+    exportExcel(file, data, sheetName, DEFAULT_START)
     sheetName
   }
 
@@ -78,7 +80,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data, String sheetName) {
-    exportExcel(file, data, sheetName, "A1")
+    exportExcel(file, data, sheetName, DEFAULT_START)
   }
 
   /**
@@ -99,7 +101,7 @@ class FExcelExporter {
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.exists() && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
+      throw new IllegalArgumentException(APPEND_NOT_SUPPORTED)
     }
     try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
       Worksheet sheet = workbook.newWorksheet(validSheetName)
@@ -114,7 +116,7 @@ class FExcelExporter {
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data) {
-    exportExcelSheets(file, data, data.collect{it.matrixName})
+    exportExcelSheets(file, data, data*.matrixName)
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, boolean overwrite = false) throws IOException {
@@ -124,14 +126,14 @@ class FExcelExporter {
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions, boolean overwrite = false) throws IOException {
     SpreadsheetUtil.rejectLegacyXls(file)
     if (file.exists() && !overwrite && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
+      throw new IllegalArgumentException(APPEND_NOT_SUPPORTED)
     }
     if (data.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException('Matrices and sheet names lists must have the same size')
     }
-    List<String> positions = startPositions ?: Collections.nCopies(data.size(), "A1")
+    List<String> positions = startPositions ?: Collections.nCopies(data.size(), DEFAULT_START)
     if (data.size() != positions.size()) {
-      throw new IllegalArgumentException("Matrices and start positions lists must have the same size")
+      throw new IllegalArgumentException('Matrices and start positions lists must have the same size')
     }
     List<String> uniqueSheetNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
 
@@ -144,7 +146,7 @@ class FExcelExporter {
       }
       uniqueSheetNames
     } catch (IOException e) {
-      logger.error("Failed to create excel file ${file.absolutePath}", e)
+      log.error("Failed to create excel file ${file.absolutePath}", e)
       throw new IOException("Failed to create excel file ${file}", e)
     }
   }
@@ -172,16 +174,16 @@ class FExcelExporter {
           sheet.value(row, col, ValueConverter.asBoolean(entry))
         } else if (LocalDate == type) {
           sheet.value(row, col, ValueConverter.asLocalDate(entry))
-          sheet.style(row, col).format("yyyy-MM-dd").set()
+          sheet.style(row, col).format('yyyy-MM-dd').set()
         } else if (LocalDateTime == type) {
           sheet.value(row, col, ValueConverter.asLocalDateTime(entry))
-          sheet.style(row, col).format("yyyy-MM-dd HH:mm:ss.SSS").set()
+          sheet.style(row, col).format(DATETIME_FORMAT).set()
         } else if (ZonedDateTime == type) {
           sheet.value(row, col, entry as ZonedDateTime)
-          sheet.style(row, col).format("yyyy-MM-dd HH:mm:ss.SSS Z").set()
+          sheet.style(row, col).format('yyyy-MM-dd HH:mm:ss.SSS Z').set()
         } else if (Date == type) {
           sheet.value(row, col, ValueConverter.asDate(entry))
-          sheet.style(row, col).format("yyyy-MM-dd HH:mm:ss.SSS").set()
+          sheet.style(row, col).format(DATETIME_FORMAT).set()
         } else {
           sheet.value(row, col, String.valueOf(entry))
         }

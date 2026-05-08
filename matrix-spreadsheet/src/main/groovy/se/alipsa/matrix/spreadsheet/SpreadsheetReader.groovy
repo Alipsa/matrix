@@ -11,26 +11,29 @@ interface SpreadsheetReader extends Closeable {
 
   // Groovy does not support static methods in interfaces so we create an inner class for those
   class Factory {
+
+    private static final String ODS_EXT = '.ods'
+
     static SpreadsheetReader create(File file) {
       if (file == null) {
-        throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
+        throw new IllegalArgumentException('File is null, cannot create SpreadsheetReader')
       }
       SpreadsheetUtil.rejectLegacyXls(file.getName())
-      if (file.getName().toLowerCase().endsWith(".ods")) {
+      if (file.getName().toLowerCase().endsWith(ODS_EXT)) {
         return new FOdsReader(file)
       }
-      return new FExcelReader(file)
+      new FExcelReader(file)
     }
 
     static SpreadsheetReader create(String filePath) {
       if (filePath == null) {
-        throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
+        throw new IllegalArgumentException('filePath is null, cannot create SpreadsheetReader')
       }
       SpreadsheetUtil.rejectLegacyXls(filePath)
-      if (filePath.toLowerCase().endsWith(".ods")) {
+      if (filePath.toLowerCase().endsWith(ODS_EXT)) {
         return new FOdsReader(filePath)
       }
-      return new FExcelReader(filePath)
+      new FExcelReader(filePath)
     }
 
   }

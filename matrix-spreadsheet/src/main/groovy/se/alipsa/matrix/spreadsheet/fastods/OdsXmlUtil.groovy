@@ -11,7 +11,7 @@ import javax.xml.stream.events.XMLEvent
  */
 class OdsXmlUtil {
 
-  static final String OPENDOCUMENT_MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet";
+  static final String OPENDOCUMENT_MIMETYPE = 'application/vnd.oasis.opendocument.spreadsheet'
   static final String tableUrn = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0'
   static final String officeUrn = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
   static final String textUrn = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
@@ -43,13 +43,14 @@ class OdsXmlUtil {
   // Useful for debugging
   static String attributes(XMLStreamReader reader) {
     StringBuilder sb = new StringBuilder()
-    if (reader.isStartElement())
+    if (reader.isStartElement()) {
       for (int i = 0; i < reader.getAttributeCount(); i++) {
         sb.append(reader.getAttributeLocalName(i))
             .append('=')
             .append(reader.getAttributeValue(i))
             .append(' ')
       }
+    }
     sb.toString()
   }
 

@@ -94,13 +94,16 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
     readOptions
   }
 
+  private static final String KEY_START_COLUMN = 'startColumn'
+  private static final String KEY_END_COLUMN = 'endColumn'
+
   private static Map<String, Object> importerParams(File file, SpreadsheetReadOptions readOptions) {
     Map<String, Object> params = [:]
     params.putAll(readOptions.toMap())
     params.file = file
-    params.startCol = params.remove('startColumn')
-    if (params.containsKey('endColumn')) {
-      params.endCol = params.remove('endColumn')
+    params.startCol = params.remove(KEY_START_COLUMN)
+    if (params.containsKey(KEY_END_COLUMN)) {
+      params.endCol = params.remove(KEY_END_COLUMN)
     }
     params
   }
@@ -116,4 +119,5 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
         ? reader.findLastCol(options.sheetName)
         : reader.findLastCol(options.sheetNumber ?: 1)
   }
+
 }

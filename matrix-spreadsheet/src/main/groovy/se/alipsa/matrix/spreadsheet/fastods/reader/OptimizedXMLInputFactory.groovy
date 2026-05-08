@@ -39,4 +39,5 @@ final class OptimizedXMLInputFactory {
         // Utility class - prevent instantiation
         throw new AssertionError('Utility class should not be instantiated')
     }
+
 }

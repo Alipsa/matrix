@@ -8,6 +8,17 @@ import se.alipsa.matrix.core.spi.OptionMaps
  */
 class SpreadsheetReadOptions {
 
+  private static final String OPT_SHEET = 'sheet'
+  private static final String OPT_START_COLUMN = 'startColumn'
+  private static final String OPT_END_COLUMN = 'endColumn'
+  private static final String OPT_SHEET_NAME = 'sheetName'
+  private static final String OPT_SHEET_NUMBER = 'sheetNumber'
+  private static final String OPT_START_ROW = 'startRow'
+  private static final String OPT_END_ROW = 'endRow'
+  private static final String DEFAULT_ONE = '1'
+  private static final String DEFAULT_AUTO = 'auto-detect'
+  private static final String DEFAULT_TRUE = 'true'
+
   Integer sheetNumber = 1
   String sheetName = null
   int startRow = 1
@@ -27,7 +38,7 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions sheetNumber(int value) {
-    requireAtLeastOne(value, 'sheetNumber')
+    requireAtLeastOne(value, OPT_SHEET_NUMBER)
     this.sheetNumber = value
     this.sheetName = null
     this
@@ -37,26 +48,26 @@ class SpreadsheetReadOptions {
     if (value == null) {
       return this
     }
-    requireText(value, 'sheetName')
+    requireText(value, OPT_SHEET_NAME)
     this.sheetName = value
     this.sheetNumber = null
     this
   }
 
   SpreadsheetReadOptions startRow(int value) {
-    requireAtLeastOne(value, 'startRow')
+    requireAtLeastOne(value, OPT_START_ROW)
     this.startRow = value
     this
   }
 
   SpreadsheetReadOptions endRow(int value) {
-    requireAtLeastOne(value, 'endRow')
+    requireAtLeastOne(value, OPT_END_ROW)
     this.endRow = value
     this
   }
 
   SpreadsheetReadOptions startColumn(int value) {
-    requireAtLeastOne(value, 'startColumn')
+    requireAtLeastOne(value, OPT_START_COLUMN)
     this.startColumnNumber = value
     this.startColumnName = null
     this
@@ -66,14 +77,14 @@ class SpreadsheetReadOptions {
     if (value == null) {
       return this
     }
-    requireText(value, 'startColumn')
+    requireText(value, OPT_START_COLUMN)
     this.startColumnName = value
     this.startColumnNumber = null
     this
   }
 
   SpreadsheetReadOptions endColumn(int value) {
-    requireAtLeastOne(value, 'endColumn')
+    requireAtLeastOne(value, OPT_END_COLUMN)
     this.endColumnNumber = value
     this.endColumnName = null
     this
@@ -83,7 +94,7 @@ class SpreadsheetReadOptions {
     if (value == null) {
       return this
     }
-    requireText(value, 'endColumn')
+    requireText(value, OPT_END_COLUMN)
     this.endColumnName = value
     this.endColumnNumber = null
     this
@@ -138,9 +149,9 @@ class SpreadsheetReadOptions {
       if (sheetNumber != null) {
         result.sheetNumber((sheetNumber as Number).intValue())
       }
-    } else if (normalized.containsKey('sheet')) {
+    } else if (normalized.containsKey(OPT_SHEET)) {
       def sheet = normalized.sheet
-      if (sheet instanceof Number) {
+      if (Number.isInstance(sheet)) {
         result.sheetNumber((sheet as Number).intValue())
       } else if (sheet != null) {
         result.sheetName(String.valueOf(sheet))
@@ -161,14 +172,14 @@ class SpreadsheetReadOptions {
     }
 
     Object startColumn = normalized.containsKey('startcolumn') ? normalized.startcolumn : normalized.startcol
-    if (startColumn instanceof Number) {
+    if (Number.isInstance(startColumn)) {
       result.startColumn((startColumn as Number).intValue())
     } else if (startColumn != null) {
       result.startColumn(String.valueOf(startColumn))
     }
 
     Object endColumn = normalized.containsKey('endcolumn') ? normalized.endcolumn : normalized.endcol
-    if (endColumn instanceof Number) {
+    if (Number.isInstance(endColumn)) {
       result.endColumn((endColumn as Number).intValue())
     } else if (endColumn != null) {
       result.endColumn(String.valueOf(endColumn))
@@ -189,14 +200,14 @@ class SpreadsheetReadOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('sheet', Object, null, 'Sheet selector as a name or a 1-based sheet number'),
-        new OptionDescriptor('sheetName', String, null, 'Sheet name to read instead of a sheet number'),
-        new OptionDescriptor('sheetNumber', Integer, '1', '1-based sheet number to read'),
-        new OptionDescriptor('startRow', Integer, '1', '1-based first row to read'),
-        new OptionDescriptor('endRow', Integer, 'auto-detect', '1-based last row to read'),
-        new OptionDescriptor('startColumn', Object, '1', 'Column to start from, as a name like A or a 1-based column number'),
-        new OptionDescriptor('endColumn', Object, 'auto-detect', 'Column to stop at, as a name like D or a 1-based column number'),
-        new OptionDescriptor('firstRowAsColNames', Boolean, 'true', 'Whether the first selected row contains column names')
+        new OptionDescriptor(OPT_SHEET, Object, null, 'Sheet selector as a name or a 1-based sheet number'),
+        new OptionDescriptor(OPT_SHEET_NAME, String, null, 'Sheet name to read instead of a sheet number'),
+        new OptionDescriptor(OPT_SHEET_NUMBER, Integer, DEFAULT_ONE, '1-based sheet number to read'),
+        new OptionDescriptor(OPT_START_ROW, Integer, DEFAULT_ONE, '1-based first row to read'),
+        new OptionDescriptor(OPT_END_ROW, Integer, DEFAULT_AUTO, '1-based last row to read'),
+        new OptionDescriptor(OPT_START_COLUMN, Object, DEFAULT_ONE, 'Column to start from, as a name like A or a 1-based column number'),
+        new OptionDescriptor(OPT_END_COLUMN, Object, DEFAULT_AUTO, 'Column to stop at, as a name like D or a 1-based column number'),
+        new OptionDescriptor('firstRowAsColNames', Boolean, DEFAULT_TRUE, 'Whether the first selected row contains column names')
     ]
   }
 
@@ -211,4 +222,5 @@ class SpreadsheetReadOptions {
       throw new IllegalArgumentException("$name must not be blank")
     }
   }
+
 }

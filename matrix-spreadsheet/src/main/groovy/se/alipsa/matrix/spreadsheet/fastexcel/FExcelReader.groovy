@@ -15,7 +15,11 @@ import java.util.stream.Stream
  * Provides read access to Excel (.xlsx) workbook metadata such as sheet names, row counts,
  * and column counts using the FastExcel reader library.
  */
+@SuppressWarnings(['UnusedObject', 'CloseWithoutCloseable'])
 class FExcelReader implements SpreadsheetReader {
+
+  private static final int NOT_FOUND = -1
+
   private ReadableWorkbook workbook
 
   FExcelReader(File excelFile) {
@@ -36,7 +40,7 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static List<String> getSheetNames(ReadableWorkbook workbook) throws IOException {
-    workbook.sheets.collect { Sheet it -> it.name }
+    workbook.sheets*.name
   }
 
   /**
@@ -89,16 +93,17 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   /**
-   *
    * @param sheet the sheet to search in
    * @param colNumber the column number (1 indexed)
    * @param content the string to search for
    * @return the Row as seen in Excel (1 is first row) or -1 if not found or sheet is null
    */
   static int findRowNum(Sheet sheet, int colNumber, String content) {
-    if (sheet == null) return -1
+    if (sheet == null) {
+      return NOT_FOUND
+    }
     int poiColNum = colNumber - 1
-    int rowNum = -1
+    int rowNum = NOT_FOUND
     try (Stream<Row> rows = sheet.openStream()) {
       rows.each { Row row ->
         Cell cell = row.getCell(poiColNum)
@@ -145,17 +150,21 @@ class FExcelReader implements SpreadsheetReader {
    * @return return the column as seen in excel (e.g. using column(), 1 is the first column etc
    */
   int findColNum(Sheet sheet, int rowNumber, String content) {
-    if (content == null) return -1
+    if (content == null) {
+      return NOT_FOUND
+    }
     FExcelValueExtractor ext = new FExcelValueExtractor(sheet, workbook.isDate1904())
     Row row = FExcelUtil.getRow(sheet, rowNumber - 1)
-    if (row == null) return -1
+    if (row == null) {
+      return NOT_FOUND
+    }
     for (int colNum = 0; colNum < row.cellCount; colNum++) {
       Cell cell = row.getCell(colNum)
       if (content == ext.getString(cell)) {
         return colNum + 1
       }
     }
-    -1
+    NOT_FOUND
   }
 
   @Override
@@ -188,7 +197,7 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static int findLastCol(Sheet sheet, int numRowsToScan = 10) {
-    int maxColumn = -1
+    int maxColumn = NOT_FOUND
     try (Stream<Row> rows = sheet.openStream()) {
       rows.limit(numRowsToScan + 1L).each { Row row ->
         int nCol = row.size()
@@ -207,4 +216,5 @@ class FExcelReader implements SpreadsheetReader {
       workbook = null
     }
   }
+
 }

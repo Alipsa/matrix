@@ -16,7 +16,8 @@ import java.text.NumberFormat
  */
 class FOdsImporter implements Importer {
 
-  private static final Logger logger = Logger.getLogger(FOdsImporter)
+  private static final Logger log = Logger.getLogger(FOdsImporter)
+  private static final String KEY_PARAM = 'key'
   OdsDataReader odsDataReader
 
   static FOdsImporter create(OdsDataReader odsDataReader = OdsDataReader.create()) {
@@ -56,7 +57,6 @@ class FOdsImporter implements Importer {
     }
     buildMatrix(sheet, firstRowAsColNames)
   }
-
 
   @Override
   Matrix importSpreadsheet(String file, String sheetName = 'Sheet1',
@@ -154,7 +154,7 @@ class FOdsImporter implements Importer {
       sheet = params.sheetNumber
     }
     if (sheet == null) {
-      throw new IllegalArgumentException("Sheet name or number must be provided but was null")
+      throw new IllegalArgumentException('Sheet name or number must be provided but was null')
     }
     Integer startRow = params.startRow as Integer
     Integer endRow = params.endRow as Integer
@@ -175,7 +175,7 @@ class FOdsImporter implements Importer {
     Sheet ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
 
     Matrix matrix = buildMatrix(ss, firstRowAsColNames)
-    def key = params["key"] ?: sheet
+    def key = params[KEY_PARAM] ?: sheet
     matrix.setMatrixName(String.valueOf(key))
     matrix
   }
@@ -195,7 +195,7 @@ class FOdsImporter implements Importer {
       try (InputStream is2 = new ByteArrayInputStream(bytes)) {
         Matrix matrix = importSpreadsheet(is2, it, formatOpt)
         def sheet = it.sheetName ?: it.sheetNumber
-        def key = it["key"] ?: sheet
+        def key = it[KEY_PARAM] ?: sheet
         result.put(key, matrix)
       }
     }
@@ -217,10 +217,10 @@ class FOdsImporter implements Importer {
 
   static Matrix buildMatrix(Sheet sheet, boolean firstRowAsColNames) {
     if (sheet == null) {
-      throw new IllegalArgumentException("sheet is null, impossible to build a Matrix from that")
+      throw new IllegalArgumentException('sheet is null, impossible to build a Matrix from that')
     }
     if (sheet.size() == 0) {
-      logger.debug("Sheet '${sheet?.sheetName}' is empty, returning empty Matrix")
+      log.debug("Sheet '${sheet?.sheetName}' is empty, returning empty Matrix")
       return Matrix.builder()
           .matrixName(sheet.sheetName)
           .columnNames([])
@@ -235,12 +235,11 @@ class FOdsImporter implements Importer {
     .build()
   }
 
-
   private static List<String> buildHeaderRow(Sheet sheet, boolean firstRowHasColumnNames) {
     if (firstRowHasColumnNames) {
       return ListConverter.toStrings(sheet.remove(0))
-    } else {
-      SpreadsheetUtil.createColumnNames(sheet.first().size())
     }
+    SpreadsheetUtil.createColumnNames(sheet.first().size())
   }
+
 }

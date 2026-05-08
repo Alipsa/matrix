@@ -8,7 +8,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 
 class SpreadsheetReaderTest {
 
-  private static final List<String> BOOK1_FILES = ["Book1.xlsx", "Book1.ods"]
+  private static final List<String> BOOK1_FILES = ['Book1.xlsx', 'Book1.ods']
 
   @Test
   void testFindBySheetNumber() {
@@ -84,7 +84,7 @@ class SpreadsheetReaderTest {
     withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
       int result = reader.findColNum(1, 9999, 'anything')
       assertEquals(-1, result,
-          "$spreadsheetName: findColNum on non-existent row should return -1")
+          "$spreadsheetName: findColNum on non-existent row should return - 1")
     }
   }
 
@@ -94,7 +94,7 @@ class SpreadsheetReaderTest {
     withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
       int result = reader.findRowNum(1, 'A', 'this-content-does-not-exist')
       assertEquals(-1, result,
-          "$spreadsheetName: findRowNum for non-existent content should return -1")
+          "$spreadsheetName: findRowNum for non-existent content should return - 1")
     }
   }
 
@@ -104,7 +104,7 @@ class SpreadsheetReaderTest {
     withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
       int result = reader.findColNum(1, 1, 'this-content-does-not-exist')
       assertEquals(-1, result,
-          "$spreadsheetName: findColNum for non-existent content should return -1")
+          "$spreadsheetName: findColNum for non-existent content should return - 1")
     }
   }
 
@@ -115,4 +115,5 @@ class SpreadsheetReaderTest {
       }
     }
   }
+
 }

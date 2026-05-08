@@ -14,7 +14,6 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.ZipUtil
 
-import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -24,7 +23,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Collections
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -42,66 +40,56 @@ import javax.xml.transform.stream.StreamResult
  */
 class FExcelAppender {
 
-  private static final String WORKBOOK_PATH = "xl/workbook.xml"
-  private static final String RELS_PATH = "xl/_rels/workbook.xml.rels"
-  private static final String CONTENT_TYPES = "[Content_Types].xml"
-  private static final String APP_PATH = "docProps/app.xml"
-  private static final String WORKSHEET_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
-  private static final String WORKSHEET_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
+  private static final String WORKBOOK_PATH = 'xl/workbook.xml'
+  private static final String RELS_PATH = 'xl/_rels/workbook.xml.rels'
+  private static final String CONTENT_TYPES = '[Content_Types].xml'
+  private static final String APP_PATH = 'docProps/app.xml'
+  private static final String WORKSHEET_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'
+  private static final String WORKSHEET_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'
+  private static final String DEFAULT_START = 'A1'
+  private static final String RELATIONSHIP_TAG = 'Relationship'
+  private static final String ATTR_ID = 'Id'
+  private static final String ATTR_NAME = 'name'
+  private static final String ATTR_SHEET_ID = 'sheetId'
+  private static final String TAG_SHEETS = 'sheets'
+  private static final String TAG_SHEET = 'sheet'
+  private static final String ATTR_R_ID = 'r:id'
+  private static final String ATTR_TARGET = 'Target'
+  private static final String TAG_VECTOR = 'vector'
+  private static final String RID_PREFIX = 'rId'
+  private static final String PROP_NO = 'no'
+  private static final String EMPTY_CELL = '<c/>'
+  private static final String ROW_START = '<row r="'
+  private static final String ROW_END = '"/>'
+  private static final String DATE_CELL_START = '<c t="d"><v>'
+  private static final String VALUE_CELL_END = '</v></c>'
+  private static final String INLINE_STR_END = '</t></is></c>'
+  private static final String COLON = ':'
+  private static final String SPACE = ' '
+  private static final String DOUBLE_QUOTE = '"'
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
     return appendOrReplaceSheets(file, data, sheetNames, null)
   }
 
+  @SuppressWarnings('NestedBlockDepth')
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
     if (!file.exists() || file.length() == 0) {
       return FExcelExporter.exportExcelSheets(file, data, sheetNames, startPositions)
     }
     if (data.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+      throw new IllegalArgumentException('Matrices and sheet names lists must have the same size')
     }
     Map<String, Matrix> requested = SpreadsheetWriteUtil.buildRequestedMap(data, sheetNames)
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
-    File tmp = File.createTempFile("matrix-xlsx", ".xlsx", file.parentFile)
+    File tmp = File.createTempFile('matrix-xlsx', '.xlsx', file.parentFile)
     boolean moved = false
     try {
       try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
         WorkbookState state = readWorkbookState(zip)
         WorkbookPlan plan = buildPlan(state, requested, positions)
 
-        Enumeration<? extends ZipEntry> entries = zip.entries()
-        Set<String> written = new HashSet<>()
-        while (entries.hasMoreElements()) {
-          ZipEntry entry = entries.nextElement()
-          String name = entry.name
-          if (name == WORKBOOK_PATH) {
-            writeEntry(zos, WORKBOOK_PATH, plan.workbookXml)
-            written.add(WORKBOOK_PATH)
-            continue
-          }
-          if (name == RELS_PATH) {
-            writeEntry(zos, RELS_PATH, plan.relsXml)
-            written.add(RELS_PATH)
-            continue
-          }
-          if (name == CONTENT_TYPES) {
-            writeEntry(zos, CONTENT_TYPES, plan.contentTypesXml)
-            written.add(CONTENT_TYPES)
-            continue
-          }
-          if (name == APP_PATH) {
-            writeEntry(zos, APP_PATH, plan.appXml)
-            written.add(APP_PATH)
-            continue
-          }
-          if (plan.replacements.containsKey(name)) {
-            writeEntry(zos, name, plan.replacements.get(name))
-            written.add(name)
-            continue
-          }
-        ZipUtil.copyEntry(zip, entry, zos)
-          written.add(name)
-        }
+        Set<String> written = writeModifiedEntries(zip, zos, plan)
         plan.additions.each { String path, String xml ->
           if (!written.contains(path)) {
             writeEntry(zos, path, xml)
@@ -119,16 +107,39 @@ class FExcelAppender {
   }
 
   private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
-    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), DEFAULT_START)
     if (sheetNames.size() != positions.size()) {
-      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+      throw new IllegalArgumentException('Sheet names and start positions lists must have the same size')
     }
     List<String> uniqueNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
-    Map<String, String> result = new LinkedHashMap<>()
+    Map<String, String> result = [:]
     for (int i = 0; i < uniqueNames.size(); i++) {
-      result.put(uniqueNames.get(i), positions.get(i) ?: "A1")
+      result.put(uniqueNames.get(i), positions.get(i) ?: DEFAULT_START)
     }
     result
+  }
+
+  private static Set<String> writeModifiedEntries(ZipFile zip, ZipOutputStream zos, WorkbookPlan plan) {
+    Map<String, String> entryOverrides = [
+        (WORKBOOK_PATH): plan.workbookXml,
+        (RELS_PATH)    : plan.relsXml,
+        (CONTENT_TYPES): plan.contentTypesXml,
+        (APP_PATH)     : plan.appXml,
+    ]
+    Set<String> written = [] as Set
+    Enumeration<? extends ZipEntry> entries = zip.entries()
+    while (entries.hasMoreElements()) {
+      ZipEntry entry = entries.nextElement()
+      String name = entry.name
+      String override = entryOverrides[name] ?: plan.replacements[name]
+      if (override != null) {
+        writeEntry(zos, name, override)
+      } else {
+        ZipUtil.copyEntry(zip, entry, zos)
+      }
+      written.add(name)
+    }
+    written
   }
 
   private static WorkbookState readWorkbookState(ZipFile zip) {
@@ -146,20 +157,20 @@ class FExcelAppender {
     Document app = state.appXml ? parseXml(state.appXml) : null
 
     Map<String, SheetInfo> existing = readSheets(workbook, rels)
-    List<Integer> sheetIds = existing.values().collect { it.sheetId } as List<Integer>
-    List<Integer> sheetIndexes = existing.values().collect { it.sheetIndex } as List<Integer>
+    List<Integer> sheetIds = existing.values()*.sheetId
+    List<Integer> sheetIndexes = existing.values()*.sheetIndex
     int nextSheetId = nextValue(sheetIds, 1)
     int nextRelId = maxRelId(rels) + 1
     int nextSheetIndex = nextValue(sheetIndexes, 1)
 
-    Map<String, String> replacements = new LinkedHashMap<>()
-    Map<String, String> additions = new LinkedHashMap<>()
+    Map<String, String> replacements = [:]
+    Map<String, String> additions = [:]
     Map<String, SheetTemplate> templateCache = [:]
     SheetTemplate baseTemplate = readBaseTemplate(state.zip, existing)
     baseTemplate = mergeTemplate(state.zip, existing, baseTemplate)
 
     requested.each { String name, Matrix matrix ->
-      String startPosition = positions.get(name) ?: "A1"
+      String startPosition = positions.get(name) ?: DEFAULT_START
       SheetInfo info = existing.get(name)
       if (info != null) {
         SheetTemplate template = templateForPath(state.zip, templateCache, info.path) ?: baseTemplate
@@ -186,21 +197,21 @@ class FExcelAppender {
 
   private static Map<String, SheetInfo> readSheets(Document workbook, Document rels) {
     Map<String, String> relTargets = [:]
-    NodeList relNodes = rels.getElementsByTagName("Relationship")
+    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
-      relTargets[rel.getAttribute("Id")] = rel.getAttribute("Target")
+      relTargets[rel.getAttribute(ATTR_ID)] = rel.getAttribute(ATTR_TARGET)
     }
 
     Map<String, SheetInfo> sheets = [:]
-    Element sheetsNode = firstElementByTag(workbook, "sheets")
+    Element sheetsNode = firstElementByTag(workbook, TAG_SHEETS)
     if (sheetsNode != null) {
-      NodeList sheetNodes = sheetsNode.getElementsByTagName("sheet")
+      NodeList sheetNodes = sheetsNode.getElementsByTagName(TAG_SHEET)
       for (int i = 0; i < sheetNodes.length; i++) {
         Element sheet = (Element) sheetNodes.item(i)
-        String name = sheet.getAttribute("name")
-        int sheetId = Integer.parseInt(sheet.getAttribute("sheetId"))
-        String relId = sheet.getAttribute("r:id")
+        String name = sheet.getAttribute(ATTR_NAME)
+        int sheetId = Integer.parseInt(sheet.getAttribute(ATTR_SHEET_ID))
+        String relId = sheet.getAttribute(ATTR_R_ID)
         String target = relTargets[relId]
         String path = target ? "xl/${target}" : null
         int sheetIndex = sheetNumberFromPath(path)
@@ -212,11 +223,11 @@ class FExcelAppender {
 
   private static int maxRelId(Document rels) {
     int maxId = 0
-    NodeList relNodes = rels.getElementsByTagName("Relationship")
+    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
-      String id = rel.getAttribute("Id")
-      if (id?.startsWith("rId")) {
+      String id = rel.getAttribute(ATTR_ID)
+      if (id?.startsWith(RID_PREFIX)) {
         try {
           int num = Integer.parseInt(id.substring(3))
           maxId = Math.max(maxId, num)
@@ -229,46 +240,46 @@ class FExcelAppender {
   }
 
   private static void addSheet(Document workbook, String name, int sheetId, String relId) {
-    Element sheetsNode = firstElementByTag(workbook, "sheets")
-    Element sheet = workbook.createElement("sheet")
-    sheet.setAttribute("name", name)
-    sheet.setAttribute("sheetId", String.valueOf(sheetId))
-    sheet.setAttribute("r:id", relId)
+    Element sheetsNode = firstElementByTag(workbook, TAG_SHEETS)
+    Element sheet = workbook.createElement(TAG_SHEET)
+    sheet.setAttribute(ATTR_NAME, name)
+    sheet.setAttribute(ATTR_SHEET_ID, String.valueOf(sheetId))
+    sheet.setAttribute(ATTR_R_ID, relId)
     sheetsNode.appendChild(sheet)
   }
 
   private static void addRelationship(Document rels, String relId, String sheetPath) {
-    Element rel = rels.createElement("Relationship")
-    rel.setAttribute("Id", relId)
-    rel.setAttribute("Type", WORKSHEET_REL_TYPE)
-    rel.setAttribute("Target", sheetPath.replaceFirst("^xl/", ""))
+    Element rel = rels.createElement(RELATIONSHIP_TAG)
+    rel.setAttribute(ATTR_ID, relId)
+    rel.setAttribute('Type', WORKSHEET_REL_TYPE)
+    rel.setAttribute(ATTR_TARGET, sheetPath.replaceFirst('^xl/', ''))
     rels.documentElement.appendChild(rel)
   }
 
   private static void addContentType(Document types, String sheetPath) {
-    Element override = types.createElement("Override")
-    override.setAttribute("PartName", "/" + sheetPath)
-    override.setAttribute("ContentType", WORKSHEET_CONTENT_TYPE)
+    Element override = types.createElement('Override')
+    override.setAttribute('PartName', '/' + sheetPath)
+    override.setAttribute('ContentType', WORKSHEET_CONTENT_TYPE)
     types.documentElement.appendChild(override)
   }
 
   private static String updateAppXml(Document app, List<String> sheetNames) {
-    Element titles = firstChildElementBySuffix(app.documentElement, "TitlesOfParts")
-    Element titlesVector = titles ? firstChildElementBySuffix(titles, "vector") : null
+    Element titles = firstChildElementBySuffix(app.documentElement, 'TitlesOfParts')
+    Element titlesVector = titles ? firstChildElementBySuffix(titles, TAG_VECTOR) : null
     if (titlesVector != null) {
-      titlesVector.setAttribute("size", String.valueOf(sheetNames.size()))
+      titlesVector.setAttribute('size', String.valueOf(sheetNames.size()))
       removeAllChildElements(titlesVector)
-      String lpstrTag = tagWithSamePrefix(titlesVector, "lpstr")
+      String lpstrTag = tagWithSamePrefix(titlesVector, 'lpstr')
       sheetNames.each { String name ->
         Element lpstr = app.createElement(lpstrTag)
         lpstr.setTextContent(name)
         titlesVector.appendChild(lpstr)
       }
     }
-    Element headingPairs = firstChildElementBySuffix(app.documentElement, "HeadingPairs")
-    Element headingVector = headingPairs ? firstChildElementBySuffix(headingPairs, "vector") : null
+    Element headingPairs = firstChildElementBySuffix(app.documentElement, 'HeadingPairs')
+    Element headingVector = headingPairs ? firstChildElementBySuffix(headingPairs, TAG_VECTOR) : null
     if (headingVector != null) {
-      Element countNode = firstChildElementBySuffix(headingVector, "i4")
+      Element countNode = firstChildElementBySuffix(headingVector, 'i4')
       if (countNode != null) {
         countNode.setTextContent(String.valueOf(sheetNames.size()))
       }
@@ -285,7 +296,7 @@ class FExcelAppender {
     NodeList nodes = parent.getChildNodes()
     for (int i = 0; i < nodes.length; i++) {
       Node node = nodes.item(i)
-      if (node instanceof Element) {
+      if (Element.isInstance(node)) {
         String tag = ((Element) node).getTagName()
         if (tag.endsWith(suffix)) {
           return (Element) node
@@ -297,7 +308,7 @@ class FExcelAppender {
 
   private static String tagWithSamePrefix(Element template, String localName) {
     String tag = template.getTagName()
-    int idx = tag.indexOf(':')
+    int idx = tag.indexOf(COLON)
     return idx > 0 ? tag.substring(0, idx + 1) + localName : localName
   }
 
@@ -310,12 +321,16 @@ class FExcelAppender {
   }
 
   private static int relIdNumber(String relId) {
-    if (relId == null) return 0
-    return relId.replace("rId", "").toInteger()
+    if (relId == null) {
+      return 0
+    }
+    return relId.replace(RID_PREFIX, '').toInteger()
   }
 
   private static int sheetNumberFromPath(String path) {
-    if (path == null) return 0
+    if (path == null) {
+      return 0
+    }
     def m = path =~ /sheet(\d+)\.xml/
     if (m.find()) {
       return Integer.parseInt(m.group(1))
@@ -328,7 +343,9 @@ class FExcelAppender {
     if (entry == null) {
       throw new IllegalArgumentException("Missing entry $name in xlsx file")
     }
-    new String(zip.getInputStream(entry).bytes, StandardCharsets.UTF_8)
+    zip.getInputStream(entry).withCloseable { InputStream is ->
+      new String(is.bytes, StandardCharsets.UTF_8)
+    }
   }
 
   private static void writeEntry(ZipOutputStream zos, String name, String content) {
@@ -349,9 +366,9 @@ class FExcelAppender {
   private static String serialize(Document doc) {
     TransformerFactory tf = TransformerFactory.newInstance()
     Transformer transformer = tf.newTransformer()
-    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
-    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
-    transformer.setOutputProperty(OutputKeys.INDENT, "no")
+    transformer.setOutputProperty(OutputKeys.ENCODING, 'UTF-8')
+    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, PROP_NO)
+    transformer.setOutputProperty(OutputKeys.INDENT, PROP_NO)
     StringWriter out = new StringWriter()
     transformer.transform(new DOMSource(doc), new StreamResult(out))
     out.toString()
@@ -363,13 +380,13 @@ class FExcelAppender {
     sb.append('<?xml version="1.0" encoding="UTF-8"?>')
     sb.append('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ')
       .append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">')
-    sb.append('<dimension ref="').append(sheetDimension(matrix, position)).append('"/>')
+    sb.append('<dimension ref="').append(sheetDimension(matrix, position)).append(ROW_END)
     if (template?.sheetFormatXml) {
       sb.append(template.sheetFormatXml)
     } else if (template?.sheetFormatAttributes && !template.sheetFormatAttributes.isEmpty()) {
       sb.append('<sheetFormatPr')
       template.sheetFormatAttributes.each { String key, String value ->
-        sb.append(' ').append(key).append('="').append(escapeXml(value)).append('"')
+        sb.append(SPACE).append(key).append('="').append(escapeXml(value)).append(DOUBLE_QUOTE)
       }
       sb.append('/>')
     }
@@ -383,10 +400,7 @@ class FExcelAppender {
     int rowCount = matrix.rowCount()
     int colCount = columns.size()
     for (int r = 0; r < rowCount; r++) {
-      List<Object> row = new ArrayList<>(colCount)
-      for (int c = 0; c < colCount; c++) {
-        row.add(columns.get(c).get(r))
-      }
+      List<Object> row = collectRow(columns, colCount, r)
       writeRow(sb, position.row + r + 1, row, position.column)
     }
     sb.append('</sheetData>')
@@ -395,6 +409,14 @@ class FExcelAppender {
     }
     sb.append('</worksheet>')
     sb.toString()
+  }
+
+  private static List<Object> collectRow(List<Column> columns, int colCount, int rowIndex) {
+    List<Object> row = new ArrayList<>(colCount)
+    for (int c = 0; c < colCount; c++) {
+      row.add(columns.get(c).get(rowIndex))
+    }
+    row
   }
 
   private static String sheetDimension(Matrix matrix, SpreadsheetUtil.CellPosition position) {
@@ -411,7 +433,7 @@ class FExcelAppender {
   }
 
   private static void writeRow(StringBuilder sb, int rowNum, List<?> values, int startCol) {
-    sb.append('<row r="').append(rowNum).append('">')
+    sb.append(ROW_START).append(rowNum).append('">')
     appendEmptyCells(sb, startCol - 1)
     values.each { Object value ->
       appendCell(sb, value)
@@ -421,64 +443,42 @@ class FExcelAppender {
 
   private static void writeEmptyRows(StringBuilder sb, int count) {
     for (int i = 1; i <= count; i++) {
-      sb.append('<row r="').append(i).append('"/>')
+      sb.append(ROW_START).append(i).append(ROW_END)
     }
   }
 
   private static void appendEmptyCells(StringBuilder sb, int count) {
     for (int i = 0; i < count; i++) {
-      sb.append('<c/>')
+      sb.append(EMPTY_CELL)
     }
   }
 
   private static void appendCell(StringBuilder sb, Object value) {
     if (value == null) {
-      sb.append('<c/>')
+      sb.append(EMPTY_CELL)
       return
     }
-    if (value instanceof Boolean) {
-      sb.append('<c t="b"><v>').append(((Boolean) value) ? '1' : '0').append('</v></c>')
-      return
+    switch (value) {
+      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? '1' : '0').append(VALUE_CELL_END)
+      case Number -> {
+        String v = ValueConverter.asBigDecimal(value).toPlainString()
+        sb.append('<c t="n"><v>').append(v).append(VALUE_CELL_END)
+      }
+      case LocalDate -> sb.append(DATE_CELL_START).append(((LocalDate) value).format(DateTimeFormatter.ISO_LOCAL_DATE)).append(VALUE_CELL_END)
+      case LocalDateTime -> sb.append(DATE_CELL_START).append(((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)).append(VALUE_CELL_END)
+      case ZonedDateTime -> sb.append(DATE_CELL_START).append(((ZonedDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
+      case OffsetDateTime -> sb.append(DATE_CELL_START).append(((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
+      case Date -> sb.append(DATE_CELL_START).append(((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
+      default -> appendInlineString(sb, String.valueOf(value))
     }
-    if (value instanceof Number) {
-      String v = ValueConverter.asBigDecimal(value).toPlainString()
-      sb.append('<c t="n"><v>').append(v).append('</v></c>')
-      return
-    }
-    if (value instanceof LocalDate) {
-      String v = ((LocalDate) value).format(DateTimeFormatter.ISO_LOCAL_DATE)
-      sb.append('<c t="d"><v>').append(v).append('</v></c>')
-      return
-    }
-    if (value instanceof LocalDateTime) {
-      String v = ((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-      sb.append('<c t="d"><v>').append(v).append('</v></c>')
-      return
-    }
-    if (value instanceof ZonedDateTime) {
-      String v = ((ZonedDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-      sb.append('<c t="d"><v>').append(v).append('</v></c>')
-      return
-    }
-    if (value instanceof OffsetDateTime) {
-      String v = ((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-      sb.append('<c t="d"><v>').append(v).append('</v></c>')
-      return
-    }
-    if (value instanceof Date) {
-      String v = ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-      sb.append('<c t="d"><v>').append(v).append('</v></c>')
-      return
-    }
-    appendInlineString(sb, String.valueOf(value))
   }
 
   private static void appendInlineString(StringBuilder sb, String value) {
     String text = escapeXml(value)
-    if (text.startsWith(' ') || text.endsWith(' ')) {
-      sb.append('<c t="inlineStr"><is><t xml:space="preserve">').append(text).append('</t></is></c>')
+    if (text.startsWith(SPACE) || text.endsWith(SPACE)) {
+      sb.append('<c t="inlineStr"><is><t xml:space="preserve">').append(text).append(INLINE_STR_END)
     } else {
-      sb.append('<c t="inlineStr"><is><t>').append(text).append('</t></is></c>')
+      sb.append('<c t="inlineStr"><is><t>').append(text).append(INLINE_STR_END)
     }
   }
 
@@ -487,11 +487,11 @@ class FExcelAppender {
       return ''
     }
     return value
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&apos;")
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace(DOUBLE_QUOTE, '&quot;')
+        .replace("'", '&apos;')
   }
 
   private static int nextValue(List<Integer> values, int defaultValue) {
@@ -553,86 +553,14 @@ class FExcelAppender {
       return null
     }
     String sheetXml = readEntry(zip, sheetPath)
-    String sheetFormatXml = extractElementXml(sheetXml, "sheetFormatPr")
+    String sheetFormatXml = extractElementXml(sheetXml, 'sheetFormatPr')
     Map<String, String> sheetFormatAttributes = sheetFormatXml ? readSheetFormatAttributesFallback(sheetXml) : null
-    String colsXml = extractElementXml(sheetXml, "cols")
-    String pageMarginsXml = extractElementXml(sheetXml, "pageMargins")
+    String colsXml = extractElementXml(sheetXml, 'cols')
+    String pageMarginsXml = extractElementXml(sheetXml, 'pageMargins')
     if ((sheetFormatAttributes == null || sheetFormatAttributes.isEmpty()) && sheetFormatXml == null && colsXml == null && pageMarginsXml == null) {
       return null
     }
     return new SheetTemplate(sheetFormatAttributes, sheetFormatXml, colsXml, pageMarginsXml)
-  }
-
-  private static Map<String, String> readAttributes(Element sheet, String nodeName) {
-    Element node = firstChildElementByTag(sheet, nodeName)
-    if (node == null) {
-      return null
-    }
-    Map<String, String> attrs = new LinkedHashMap<>()
-    def attributes = node.getAttributes()
-    for (int i = 0; i < attributes.length; i++) {
-      def attr = attributes.item(i)
-      String name = attr.nodeName
-      if (!name.contains(":")) {
-        attrs.put(name, attr.nodeValue)
-      }
-    }
-    return attrs
-  }
-
-  private static String buildSimpleElementXml(Element sheet, String nodeName) {
-    Element node = firstChildElementByTag(sheet, nodeName)
-    if (node == null) {
-      return null
-    }
-    StringBuilder sb = new StringBuilder()
-    sb.append('<').append(nodeName)
-    def attributes = node.getAttributes()
-    for (int i = 0; i < attributes.length; i++) {
-      def attr = attributes.item(i)
-      String name = attr.nodeName
-      if (!name.contains(":")) {
-        sb.append(' ').append(name).append('="').append(escapeXml(attr.nodeValue)).append('"')
-      }
-    }
-    sb.append('/>')
-    sb.toString()
-  }
-
-  private static String buildColsXml(Element sheet) {
-    Element cols = firstChildElementByTag(sheet, "cols")
-    if (cols == null) {
-      return null
-    }
-    StringBuilder sb = new StringBuilder()
-    sb.append('<cols>')
-    NodeList colNodes = cols.getElementsByTagName("col")
-    for (int i = 0; i < colNodes.length; i++) {
-      Element col = (Element) colNodes.item(i)
-      sb.append('<col')
-      def attributes = col.getAttributes()
-      for (int j = 0; j < attributes.length; j++) {
-        def attr = attributes.item(j)
-        String name = attr.nodeName
-        if (!name.contains(":")) {
-          sb.append(' ').append(name).append('="').append(escapeXml(attr.nodeValue)).append('"')
-        }
-      }
-      sb.append('/>')
-    }
-    sb.append('</cols>')
-    sb.toString()
-  }
-
-  private static Element firstChildElementByTag(Element parent, String tagName) {
-    NodeList nodes = parent.getChildNodes()
-    for (int i = 0; i < nodes.length; i++) {
-      Node node = nodes.item(i)
-      if (node instanceof Element && ((Element) node).getTagName() == tagName) {
-        return (Element) node
-      }
-    }
-    return null
   }
 
   /**
@@ -652,20 +580,20 @@ class FExcelAppender {
    * @param sheetXml the raw XML content of the worksheet
    * @return a map of attribute names to values, or null if sheetFormatPr is not found
    */
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static Map<String, String> readSheetFormatAttributesFallback(String sheetXml) {
-    Pattern pattern = Pattern.compile("<sheetFormatPr\\b([^>]*)/?>")
+    Pattern pattern = Pattern.compile('<sheetFormatPr\\b([^>]*)/?>')
     def matcher = pattern.matcher(sheetXml)
     if (!matcher.find()) {
       return null
     }
     String attrs = matcher.group(1)
-    Map<String, String> result = new LinkedHashMap<>()
-    // Allow namespace prefixes and standard XML name characters.
-    Pattern attrPattern = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_.:-]*)=\"([^\"]*)\"")
+    Map<String, String> result = [:]
+    Pattern attrPattern = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
     def attrMatcher = attrPattern.matcher(attrs)
     while (attrMatcher.find()) {
       String name = attrMatcher.group(1)
-      if (!name.contains(":")) {
+      if (!name.contains(COLON)) {
         result.put(name, attrMatcher.group(2))
       }
     }
@@ -705,7 +633,7 @@ class FExcelAppender {
     Enumeration<? extends ZipEntry> entries = zip.entries()
     while (entries.hasMoreElements()) {
       ZipEntry entry = entries.nextElement()
-      if (entry.name.startsWith("xl/worksheets/") && entry.name.endsWith(".xml")) {
+      if (entry.name.startsWith('xl/worksheets/') && entry.name.endsWith('.xml')) {
         candidates.add(entry.name)
       }
     }
@@ -717,6 +645,7 @@ class FExcelAppender {
   }
 
   private static class WorkbookState {
+
     final String workbookXml
     final String relsXml
     final String contentTypesXml
@@ -730,9 +659,11 @@ class FExcelAppender {
       this.appXml = appXml
       this.zip = zip
     }
+
   }
 
   private static class WorkbookPlan {
+
     final String workbookXml
     final String relsXml
     final String contentTypesXml
@@ -749,9 +680,11 @@ class FExcelAppender {
       this.replacements = replacements
       this.additions = additions
     }
+
   }
 
   private static class SheetInfo {
+
     final String name
     final int sheetId
     final String relId
@@ -769,9 +702,11 @@ class FExcelAppender {
       this.relIdNum = relIdNum
       this.sheetIndex = sheetIndex
     }
+
   }
 
   private static class SheetTemplate {
+
     final Map<String, String> sheetFormatAttributes
     final String sheetFormatXml
     final String colsXml
@@ -783,5 +718,7 @@ class FExcelAppender {
       this.colsXml = colsXml
       this.pageMarginsXml = pageMarginsXml
     }
+
   }
+
 }

@@ -9,18 +9,16 @@ import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 import se.alipsa.matrix.spreadsheet.fastods.reader.Uncompressor
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
-
 import javax.xml.stream.XMLStreamReader
 
 /**
  * Extract various information from a Calc (ods) file using fastods streaming.
  */
+@SuppressWarnings('CloseWithoutCloseable')
 class FOdsReader implements SpreadsheetReader {
 
+  private static final int NOT_FOUND = -1
+  private static final int ROWS_TO_SCAN = 10
   private final File odsFile
   private final OdsDataReader reader
   private List<String> sheetNamesCache
@@ -62,7 +60,7 @@ class FOdsReader implements SpreadsheetReader {
 
   private static int findRowNum(Sheet sheet, String content) {
     if (sheet == null) {
-      return -1
+      return NOT_FOUND
     }
     for (int rowIdx = 0; rowIdx < sheet.size(); rowIdx++) {
       List<?> row = sheet.get(rowIdx)
@@ -71,7 +69,7 @@ class FOdsReader implements SpreadsheetReader {
         return rowIdx + 1
       }
     }
-    return -1
+    return NOT_FOUND
   }
 
   @Override
@@ -88,18 +86,18 @@ class FOdsReader implements SpreadsheetReader {
 
   private static int findColNum(Sheet sheet, String content) {
     if (sheet == null || sheet.isEmpty()) {
-      return -1
+      return NOT_FOUND
     }
     List<?> row = sheet.get(0)
     if (row == null) {
-      return -1
+      return NOT_FOUND
     }
     for (int colIdx = 0; colIdx < row.size(); colIdx++) {
       if (content == asString(row.get(colIdx))) {
         return colIdx + 1
       }
     }
-    return -1
+    return NOT_FOUND
   }
 
   @Override
@@ -116,13 +114,13 @@ class FOdsReader implements SpreadsheetReader {
 
   @Override
   int findLastCol(int sheetNum) {
-    Sheet sheet = readSheet(sheetNum, 1, 10, 1, Integer.MAX_VALUE)
+    Sheet sheet = readSheet(sheetNum, 1, ROWS_TO_SCAN, 1, Integer.MAX_VALUE)
     return findLastCol(sheet)
   }
 
   @Override
   int findLastCol(String sheetName) {
-    Sheet sheet = readSheet(sheetName, 1, 10, 1, Integer.MAX_VALUE)
+    Sheet sheet = readSheet(sheetName, 1, ROWS_TO_SCAN, 1, Integer.MAX_VALUE)
     return findLastCol(sheet)
   }
 
@@ -130,21 +128,25 @@ class FOdsReader implements SpreadsheetReader {
     if (sheet == null || sheet.isEmpty()) {
       return 0
     }
-    int rowsToScan = Math.min(10, sheet.size())
+    int rowsToScan = Math.min(ROWS_TO_SCAN, sheet.size())
     int maxCol = 0
     for (int rowIdx = 0; rowIdx < rowsToScan; rowIdx++) {
       List<?> row = sheet.get(rowIdx)
       if (row == null || row.isEmpty()) {
         continue
       }
-      for (int colIdx = row.size() - 1; colIdx >= 0; colIdx--) {
-        if (row.get(colIdx) != null) {
-          maxCol = Math.max(maxCol, colIdx + 1)
-          break
-        }
-      }
+      maxCol = Math.max(maxCol, lastNonNullIndex(row))
     }
     return maxCol
+  }
+
+  private static int lastNonNullIndex(List<?> row) {
+    for (int colIdx = row.size() - 1; colIdx >= 0; colIdx--) {
+      if (row.get(colIdx) != null) {
+        return colIdx + 1
+      }
+    }
+    return 0
   }
 
   @Override
@@ -155,6 +157,7 @@ class FOdsReader implements SpreadsheetReader {
     return new ArrayList<>(sheetNamesCache)
   }
 
+  @SuppressWarnings('NestedBlockDepth')
   private List<String> readSheetNames() {
     List<String> names = []
     XMLStreamReader xmlReader = null
@@ -198,4 +201,5 @@ class FOdsReader implements SpreadsheetReader {
   void close() throws IOException {
     sheetNamesCache = null
   }
+
 }

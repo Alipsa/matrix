@@ -103,10 +103,10 @@ interface Importer {
                                          List<Map> sheetParams,
                                          NumberFormat... formatOpt)
 
-
   Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt)
 
   Map<Object, Matrix> importSpreadsheets(String fileName,
                                          List<Map> sheetParams,
                                          NumberFormat... formatOpt)
+
 }

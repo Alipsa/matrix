@@ -21,13 +21,14 @@ final class SpreadsheetWriteUtil {
    */
   static Map<String, Matrix> buildRequestedMap(List<Matrix> data, List<String> sheetNames) {
     if (data.size() != sheetNames.size()) {
-      throw new IllegalArgumentException("Data and sheetNames lists must have the same size")
+      throw new IllegalArgumentException('Data and sheetNames lists must have the same size')
     }
     List<String> uniqueNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
-    Map<String, Matrix> requested = new LinkedHashMap<>()
+    Map<String, Matrix> requested = [:]
     for (int i = 0; i < data.size(); i++) {
       requested.put(uniqueNames.get(i), data.get(i))
     }
     requested
   }
+
 }

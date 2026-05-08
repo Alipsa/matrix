@@ -8,14 +8,18 @@ import se.alipsa.matrix.core.spi.OptionMaps
  */
 class SpreadsheetWriteOptions {
 
+  private static final String DEFAULT_START = 'A1'
+  private static final String OPT_SHEET_NAME = 'sheetName'
+  private static final String OPT_START_POSITION = 'startPosition'
+
   String sheetName = null
-  String startPosition = 'A1'
+  String startPosition = DEFAULT_START
 
   SpreadsheetWriteOptions sheetName(String value) {
     if (value == null) {
       return this
     }
-    requireText(value, 'sheetName')
+    requireText(value, OPT_SHEET_NAME)
     this.sheetName = value
     this
   }
@@ -24,7 +28,7 @@ class SpreadsheetWriteOptions {
     if (value == null) {
       return this
     }
-    requireText(value, 'startPosition')
+    requireText(value, OPT_START_POSITION)
     this.startPosition = value
     this
   }
@@ -61,8 +65,8 @@ class SpreadsheetWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('sheetName', String, null, 'Sheet name to write to'),
-        new OptionDescriptor('startPosition', String, 'A1', 'Top-left cell for the header row, e.g. B3')
+        new OptionDescriptor(OPT_SHEET_NAME, String, null, 'Sheet name to write to'),
+        new OptionDescriptor(OPT_START_POSITION, String, DEFAULT_START, 'Top-left cell for the header row, e.g. B3')
     ]
   }
 
@@ -71,4 +75,5 @@ class SpreadsheetWriteOptions {
       throw new IllegalArgumentException("$name must not be blank")
     }
   }
+
 }
