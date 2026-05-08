@@ -66,7 +66,7 @@ abstract class ValueExtractor {
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1 : 0
       }
-      return Integer.parseInt(objVal.toString())
+      Integer.parseInt(objVal.toString())
    }
 
    Long getLong(Object objVal) {
@@ -79,7 +79,7 @@ abstract class ValueExtractor {
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1L : 0L
       }
-      return Long.parseLong(objVal.toString())
+      Long.parseLong(objVal.toString())
    }
 
    @SuppressWarnings('BooleanMethodReturnsNull')

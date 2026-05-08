@@ -112,7 +112,7 @@ class FExcelExporter {
   }
 
   static List<String> exportExcelSheets(String filePath, List<Matrix> data, List<String> sheetNames) {
-    return exportExcelSheets(new File(filePath), data, sheetNames)
+    exportExcelSheets(new File(filePath), data, sheetNames)
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data) {

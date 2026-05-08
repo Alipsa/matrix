@@ -483,15 +483,15 @@ class SpreadsheetImporter {
   }
 
   private static Importer odsImporter() {
-    return FOdsImporter.create()
+    FOdsImporter.create()
   }
 
   private static Importer excelImporter() {
-    return FExcelImporter.create()
+    FExcelImporter.create()
   }
 
   private static boolean isOdsFile(String fileName) {
-    return fileName?.toLowerCase()?.endsWith('.ods') ?: false
+    fileName?.toLowerCase()?.endsWith('.ods') ?: false
   }
 
 }

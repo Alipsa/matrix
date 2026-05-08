@@ -32,7 +32,7 @@ class FileUtil {
       if (!excelFile.exists()) {
          throw new SpreadsheetImportException("'${filePath}' does not exist")
       }
-      return excelFile
+      excelFile
    }
 
    /**
