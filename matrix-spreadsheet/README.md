@@ -93,7 +93,7 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
   Matrix table = FExcelImporter.create().importSpreadsheet(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )
-  assert 3.0d == table[2, 0]
+  assert 3.0 == table[2, 0]
 }
 
 // importing an open document spreadsheet

@@ -427,7 +427,7 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 ## Code Style
 
-- Static compilation is not enabled repo-wide. `matrix-stats` production Groovy compilation is wired through `config/groovy/compileStatic.groovy` in `matrix-stats/build.gradle`, while other modules may still rely on explicit annotations or local conventions. Follow the touched module’s existing pattern, and use `@CompileDynamic` on classes or methods that require dynamic Groovy features.
+- Static compilation is enabled globally for production code via `config/groovy/compileStatic.groovy` (applied in the root `build.gradle`). Test code is compiled dynamically by default. Use `@CompileDynamic` on production classes or methods that require dynamic Groovy features, and `@CompileStatic` on test classes or methods that need static compilation.
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
 - MIT License

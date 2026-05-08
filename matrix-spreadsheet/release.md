@@ -3,6 +3,9 @@
 ## v2.4.0, 2026-05-05
 **Refactoring, code quality, and usability improvements**
 
+### Breaking Changes
+- rename `ValueExtractor.getDouble()` to `getBigDecimal()` and update all subclasses (`FExcelValueExtractor`) accordingly
+
 ### New Features
 - add whole-sheet convenience imports with auto-detected dimensions: `SpreadsheetImporter.importSpreadsheet(file, sheetNumber)` and `importSpreadsheet(file, sheetName)`
 - add `File`-accepting overloads to `SpreadsheetImporter` matching `SpreadsheetWriter`'s API shape
@@ -23,7 +26,7 @@
 - document why `FExcelExporter` cannot use `@CompileStatic` (fastexcel internal `GenericStyleSetter` access)
 
 ### Test Coverage
-- 134 tests passing (up from 105 in v2.3.0)
+- 135 tests passing (up from 105 in v2.3.0)
 
 ## v2.3.0, 2026-01-31
 **Major architectural refactoring with significant performance improvements**

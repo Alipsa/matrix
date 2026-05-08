@@ -18,8 +18,6 @@ class FExcelValueExtractor extends ValueExtractor {
 
    private final Sheet sheet
    private final boolean isDate1904
-   //private final FormulaEvaluator evaluator
-   //private final DataFormatter dataFormatter
 
    FExcelValueExtractor(Sheet sheet, boolean isDate1904) {
       if (sheet == null) {
@@ -27,13 +25,6 @@ class FExcelValueExtractor extends ValueExtractor {
       }
       this.sheet = sheet
       this.isDate1904 = isDate1904
-      /*
-      evaluator = sheet.getWorkbook().getCreationHelper().createFormulaEvaluator()
-      if (dataFormatterOpt.length > 0) {
-         dataFormatter = dataFormatterOpt[0]
-      } else {
-         dataFormatter = new DataFormatter()
-      }*/
    }
 
 

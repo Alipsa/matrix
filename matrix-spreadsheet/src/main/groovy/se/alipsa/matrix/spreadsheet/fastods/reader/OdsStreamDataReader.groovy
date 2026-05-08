@@ -334,21 +334,15 @@ final class OdsStreamDataReader extends OdsDataReader {
       if (eventType == XMLStreamReader.START_ELEMENT) {
         String localName = reader.localName  // Cache to avoid repeated calls
         switch (localName) {
-          case 'p':
-            // Separate multiple <text:p> blocks with newline
-            if (text.length() > 0) text.append('\n')
-            break
-          case 's':
+          // Separate multiple <text:p> blocks with newline
+          case 'p' -> if (text.length() > 0) text.append('\n')
+          case 's' -> {
             // <text:s c="N"/> ⇒ N spaces (default 1)
             int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
             text.append(' '.repeat(numSpaces))
-            break
-          case 'line-break':
-            text.append('\n')
-            break
-          case 'tab':
-            text.append('\t')
-            break
+          }
+          case 'line-break' -> text.append('\n')
+          case 'tab' -> text.append('\t')
         }
       } else if (eventType == XMLStreamReader.END_ELEMENT && reader.localName == 'table-cell') {
         // Stop at end of cell (covers empty/self-closing cells)

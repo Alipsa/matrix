@@ -32,7 +32,7 @@ class SpreadsheetUtil {
    }
 
    /**
-    * Convert a column number to ite equivalent name
+    * Convert a column number to its equivalent name
     * @param number the 1 indexed number to convert
     * @return the corresponding name of the index (1 == A, 14 == N etc.)
     */
