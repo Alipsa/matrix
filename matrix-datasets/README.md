@@ -8,10 +8,10 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.4'
-implementation 'org.apache.groovy:groovy-ginq:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-datasets:2.1.2'
+implementation 'org.apache.groovy:groovy:5.0.6'
+implementation 'org.apache.groovy:groovy-ginq:5.0.6'
+implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-datasets:2.2.0'
 ```
 Maven:
 ```xml
@@ -19,22 +19,22 @@ Maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.4</version>
+      <version>5.0.6</version>
   </dependency>
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-ginq</artifactId>
-      <version>5.0.4</version>
+      <version>5.0.6</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.6.0</version>
+      <version>3.7.1</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>2.1.2</version>
+      <version>2.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -88,5 +88,6 @@ The following table illustrates the version compatibility of the matrix datasets
 |  2.0.0 -> 2.1.0 |          3.0.0 |
 |           2.1.1 | 3.1.0 -> 3.5.0 |
 |           2.1.2 | 3.5.0 -> 3.6.0 |
+|           2.2.0 | 3.7.0 -> 3.7.1 |
 
 
