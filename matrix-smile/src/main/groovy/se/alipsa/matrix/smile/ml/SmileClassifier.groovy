@@ -41,6 +41,9 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier randomForest(Matrix matrix, String targetColumn, int ntrees = 100) {
+    if (ntrees <= 0) {
+      throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
+    }
     // Get feature columns (all except target)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 

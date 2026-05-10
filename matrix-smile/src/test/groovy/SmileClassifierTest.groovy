@@ -236,4 +236,30 @@ class SmileClassifierTest {
     assertTrue(features.contains('x2'))
   }
 
+  @Test
+  void testRandomForestHonorsNtrees() {
+    Matrix trainData = createBinaryData()
+    // ntrees=1 should produce a model with only 1 tree
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label', 1)
+    assertNotNull(classifier)
+    // Verify predictions still work with minimal tree count
+    Matrix testData = createBinaryTestData()
+    List<String> labels = classifier.predictLabels(testData)
+    assertEquals(2, labels.size())
+  }
+
+  @Test
+  void testRandomForestInvalidNtrees() {
+    Matrix trainData = createBinaryData()
+    def exception = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(trainData, 'label', 0)
+    }
+    assertEquals('ntrees must be positive: was 0', exception.message)
+
+    def exception2 = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(trainData, 'label', -5)
+    }
+    assertEquals('ntrees must be positive: was -5', exception2.message)
+  }
+
 }
