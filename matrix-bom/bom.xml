@@ -38,7 +38,7 @@
     <matrixChartsVersion>0.5.0-SNAPSHOT</matrixChartsVersion>
     <matrixCoreVersion>3.7.1</matrixCoreVersion>
     <matrixCsvVersion>2.3.0</matrixCsvVersion>
-    <matrixDatasetsVersion>2.1.3-SNAPSHOT</matrixDatasetsVersion>
+    <matrixDatasetsVersion>2.2.0</matrixDatasetsVersion>
     <matrixGgplotVersion>0.5.0-SNAPSHOT</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.2.0</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.2.0</matrixGsheetsVersion>
