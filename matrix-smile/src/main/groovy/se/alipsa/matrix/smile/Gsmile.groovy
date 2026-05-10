@@ -231,10 +231,11 @@ class Gsmile {
    * @param self the DataFrame
    * @return a string describing the DataFrame structure
    */
+  @SuppressWarnings('UnnecessaryGString')
   static String structure(DataFrame self) {
     StringBuilder sb = new StringBuilder()
     sb.append("DataFrame: ${self.nrow()} rows x ${self.ncol()} columns\n")
-    sb.append('Columns:\n')
+    sb.append("Columns:\n")
     for (int i = 0; i < self.ncol(); i++) {
       def col = self.column(i)
       sb.append("  ${col.name()}: ${col.dtype()}\n")
