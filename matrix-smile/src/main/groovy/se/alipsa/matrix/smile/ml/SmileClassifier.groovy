@@ -275,6 +275,13 @@ class SmileClassifier {
     return targetColumn
   }
 
+  /**
+   * Get the underlying Smile model.
+   */
+  DataFrameClassifier getModel() {
+    return model
+  }
+
   // Helper methods
 
   private static String[] extractClassLabels(Matrix matrix, String targetColumn) {

@@ -242,6 +242,7 @@ class SmileClassifierTest {
     // ntrees=1 should produce a model with only 1 tree
     SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label', 1)
     assertNotNull(classifier)
+    assertEquals(1, classifier.model.size(), 'model should have exactly 1 tree')
     // Verify predictions still work with minimal tree count
     Matrix testData = createBinaryTestData()
     List<String> labels = classifier.predictLabels(testData)
