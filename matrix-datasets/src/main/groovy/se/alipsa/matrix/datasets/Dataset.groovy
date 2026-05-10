@@ -44,14 +44,13 @@ class Dataset {
 
   private static final String COMMA = ','
   private static final String QUOTE = '"'
-  private static final String EMPTY = ''
   private static final String ORDER = 'order'
   private static final String GROUP = 'group'
 
   static Matrix airquality() {
     Matrix.builder()
         .matrixName('airquality')
-        .data(url('/data/airquality.csv'), COMMA, EMPTY, true)
+        .data(url('/data/airquality.csv'), COMMA, '', true)
         .build()
         .convert(
             'Ozone': BigDecimal,

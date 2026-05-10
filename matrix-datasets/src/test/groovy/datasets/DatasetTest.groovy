@@ -226,6 +226,7 @@ class DatasetTest {
         }
         assertTrue(exception.message.contains("no map data exists for 'invalid_map_xyz'"))
         assertTrue(exception.message.contains('Valid names:'))
+        assertTrue(exception.message.contains('world'))
     }
 
     @Test
@@ -298,16 +299,6 @@ class DatasetTest {
         assertTrue(regions.contains('Sweden'))
         assertTrue(regions.contains('Canada'))
         assertTrue(regions.size() > 50)
-    }
-
-    @Test
-    void testMapDataImprovedErrorMessage() {
-        def exception = assertThrows(IllegalArgumentException) {
-            Dataset.mapData('invalid_map_xyz')
-        }
-        assertTrue(exception.message.contains("no map data exists for 'invalid_map_xyz'"))
-        assertTrue(exception.message.contains('Valid names:'))
-        assertTrue(exception.message.contains('world'))
     }
 
     @Test

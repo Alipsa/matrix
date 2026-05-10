@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.util.Logger
 
 import java.io.IOException
 import java.io.UncheckedIOException
+import java.util.Locale
 
 /**
  * Convenience wrapper for accessing datasets from the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/).
@@ -162,12 +163,12 @@ class Rdatasets {
     if (text == null || text.isBlank()) {
       throw new IllegalArgumentException('search text cannot be null or blank')
     }
-    def searchText = text.toLowerCase()
+    def searchText = text.toLowerCase(Locale.ROOT)
     def ov = overview()
     def rowIndices = []
     ov.rowCount().times { int i ->
-      def item = ov[i, 'Item']?.toString()?.toLowerCase()
-      def title = ov[i, 'Title']?.toString()?.toLowerCase()
+      def item = ov[i, 'Item']?.toString()?.toLowerCase(Locale.ROOT)
+      def title = ov[i, 'Title']?.toString()?.toLowerCase(Locale.ROOT)
       if (item?.contains(searchText) || title?.contains(searchText)) {
         rowIndices << i
       }
