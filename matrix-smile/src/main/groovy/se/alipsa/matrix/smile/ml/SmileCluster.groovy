@@ -157,11 +157,12 @@ class SmileCluster {
    *
    * @return the cluster centroids or null if not available
    */
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyArray')
   double[][] getCentroids() {
     if (centroidModel != null) {
       return centroidModel.centers()
     }
-    return new double[0][]
+    return null
   }
 
   /**

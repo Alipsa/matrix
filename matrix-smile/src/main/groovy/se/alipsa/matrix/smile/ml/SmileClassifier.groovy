@@ -40,7 +40,6 @@ class SmileClassifier {
    * @param ntrees number of trees (default 100)
    * @return a trained SmileClassifier
    */
-  @SuppressWarnings('UnusedMethodParameter')
   static SmileClassifier randomForest(Matrix matrix, String targetColumn, int ntrees = 100) {
     // Get feature columns (all except target)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
@@ -52,7 +51,7 @@ class SmileClassifier {
     DataFrame df = DataframeConverter.convert(encodedMatrix)
     Formula formula = Formula.lhs(targetColumn)
 
-    RandomForest rf = RandomForest.fit(formula, df)
+    RandomForest rf = RandomForest.fit(formula, df, new RandomForest.Options(ntrees))
 
     return new SmileClassifier(rf, formula, targetColumn, featureColumns, classLabels)
   }
