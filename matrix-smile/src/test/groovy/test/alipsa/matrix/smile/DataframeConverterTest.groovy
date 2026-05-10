@@ -294,7 +294,7 @@ class DataframeConverterTest {
   void testMatrixToDataFrameWithBigDecimal() {
     def matrix = Matrix.builder()
         .data(
-            amount: [new BigDecimal('100.50'), new BigDecimal('200.75'), new BigDecimal('300.25')]
+            amount: [100.50G, 200.75G, 300.25G]
         )
         .types(BigDecimal)
         .build()
@@ -302,7 +302,7 @@ class DataframeConverterTest {
     DataFrame df = DataframeConverter.convert(matrix)
 
     assertEquals(3, df.nrow())
-    assertEquals(new BigDecimal('100.50'), df.get(0).get('amount'))
+    assertEquals(100.50G, df.get(0).get('amount'))
   }
 
   @Test
@@ -728,4 +728,5 @@ class DataframeConverterTest {
     assertEquals(1000, roundTrip[999, 'id'])
     assertEquals('Name500', roundTrip[499, 'name'])
   }
+
 }

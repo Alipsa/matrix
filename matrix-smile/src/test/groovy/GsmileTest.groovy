@@ -322,4 +322,5 @@ class GsmileTest {
     DataFrame rangeOnly = Gsmile.getAt(df, 1..3)
     assertEquals(3, rangeOnly.nrow())
   }
+
 }

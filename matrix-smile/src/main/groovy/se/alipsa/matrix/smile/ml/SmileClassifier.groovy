@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 
 import smile.classification.*
 import smile.data.DataFrame
-import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.validation.metric.Accuracy
 import smile.validation.metric.ConfusionMatrix
@@ -42,6 +41,9 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier randomForest(Matrix matrix, String targetColumn, int ntrees = 100) {
+    if (ntrees <= 0) {
+      throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
+    }
     // Get feature columns (all except target)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 
@@ -52,7 +54,7 @@ class SmileClassifier {
     DataFrame df = DataframeConverter.convert(encodedMatrix)
     Formula formula = Formula.lhs(targetColumn)
 
-    RandomForest rf = RandomForest.fit(formula, df)
+    RandomForest rf = RandomForest.fit(formula, df, new RandomForest.Options(ntrees))
 
     return new SmileClassifier(rf, formula, targetColumn, featureColumns, classLabels)
   }
@@ -89,7 +91,7 @@ class SmileClassifier {
     List<String> predLabels = predictLabels(matrix)
 
     // Create result matrix with predictions
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     for (String col : matrix.columnNames()) {
       data.put(col, matrix.column(col))
     }
@@ -152,6 +154,7 @@ class SmileClassifier {
    * @param testMatrix the test data with actual labels
    * @return a Matrix representing the confusion matrix
    */
+  @SuppressWarnings('NestedForLoop')
   Matrix confusionMatrix(Matrix testMatrix) {
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
@@ -160,18 +163,18 @@ class SmileClassifier {
     int[][] matrix = cm.matrix()
 
     // Build result matrix
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     data.put('actual', classLabels.toList())
 
     for (int j = 0; j < classLabels.length; j++) {
-      List<Integer> col = new ArrayList<>()
+      List<Integer> col = []
       for (int i = 0; i < classLabels.length; i++) {
         col.add(matrix[i][j])
       }
       data.put("pred_${classLabels[j]}" as String, col)
     }
 
-    List<Class<?>> types = new ArrayList<>()
+    List<Class<?>> types = []
     types.add(String)
     for (int i = 0; i < classLabels.length; i++) {
       types.add(Integer)
@@ -189,6 +192,7 @@ class SmileClassifier {
    * @param testMatrix the test data with actual labels
    * @return a Matrix with precision, recall, f1 for each class
    */
+  @SuppressWarnings('NestedForLoop')
   Matrix evaluate(Matrix testMatrix) {
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
@@ -197,11 +201,11 @@ class SmileClassifier {
     int[][] matrix = cm.matrix()
     int numClasses = classLabels.length
 
-    List<String> classes = new ArrayList<>()
-    List<Double> precisions = new ArrayList<>()
-    List<Double> recalls = new ArrayList<>()
-    List<Double> f1Scores = new ArrayList<>()
-    List<Integer> supports = new ArrayList<>()
+    List<String> classes = []
+    List<Double> precisions = []
+    List<Double> recalls = []
+    List<Double> f1Scores = []
+    List<Integer> supports = []
 
     for (int i = 0; i < numClasses; i++) {
       classes.add(classLabels[i])
@@ -244,8 +248,10 @@ class SmileClassifier {
         .build()
   }
 
+  private static final double ROUND_PRECISION = 10000.0d
+
   private static double roundTo4(double value) {
-    return Math.round(value * 10000.0d) / 10000.0d
+    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
 
   /**
@@ -269,6 +275,13 @@ class SmileClassifier {
     return targetColumn
   }
 
+  /**
+   * Get the underlying Smile model.
+   */
+  DataFrameClassifier getModel() {
+    return model
+  }
+
   // Helper methods
 
   private static String[] extractClassLabels(Matrix matrix, String targetColumn) {
@@ -282,11 +295,12 @@ class SmileClassifier {
     return uniqueLabels.toArray(new String[0])
   }
 
+  @SuppressWarnings('UnnecessaryToString')
   private static int[] extractTargetAsInt(Matrix matrix, String targetColumn, String[] classLabels) {
     List<?> values = matrix.column(targetColumn)
     int[] result = new int[values.size()]
 
-    Map<String, Integer> labelToIndex = new HashMap<>()
+    Map<String, Integer> labelToIndex = [:]
     for (int i = 0; i < classLabels.length; i++) {
       labelToIndex.put(classLabels[i], Integer.valueOf(i))
     }
@@ -303,8 +317,9 @@ class SmileClassifier {
   /**
    * Encode string target column as integers for Smile.
    */
+  @SuppressWarnings('UnnecessaryToString')
   private static Matrix encodeTarget(Matrix matrix, String targetColumn, String[] classLabels) {
-    Map<String, Integer> labelToIndex = new HashMap<>()
+    Map<String, Integer> labelToIndex = [:]
     for (int i = 0; i < classLabels.length; i++) {
       labelToIndex.put(classLabels[i], Integer.valueOf(i))
     }
@@ -318,8 +333,8 @@ class SmileClassifier {
     }
 
     // Create new matrix with encoded target column
-    Map<String, List<?>> data = new LinkedHashMap<>()
-    List<Class<?>> types = new ArrayList<>()
+    Map<String, List<?>> data = [:]
+    List<Class<?>> types = []
 
     for (int i = 0; i < matrix.columnCount(); i++) {
       String colName = matrix.columnName(i)
@@ -337,4 +352,5 @@ class SmileClassifier {
         .types(types)
         .build()
   }
+
 }

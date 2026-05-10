@@ -570,4 +570,5 @@ class SmileFeaturesTest {
     // id should still be first column
     assertEquals('id', encoded.columnName(0))
   }
+
 }

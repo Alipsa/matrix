@@ -264,4 +264,5 @@ class SmileClusterTest {
     assertTrue(features.contains('x'))
     assertTrue(features.contains('y'))
   }
+
 }

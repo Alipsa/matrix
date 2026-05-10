@@ -11,6 +11,9 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class SmileFeatures {
 
+  private static final int HALF_DIVISOR = 2
+  private static final double ZERO = 0.0d
+
   /**
    * Standardize columns to have zero mean and unit variance (z-score normalization).
    * Formula: z = (x - mean) / std
@@ -98,13 +101,14 @@ class SmileFeatures {
    * @param dropOriginal whether to drop the original column (default true)
    * @return a new Matrix with one-hot encoded columns
    */
+  @SuppressWarnings('NestedForLoop')
   static Matrix oneHotEncode(Matrix matrix, String column, boolean dropOriginal) {
     List<?> originalColumn = matrix.column(column)
     Set<Object> uniqueValues = new LinkedHashSet<>(originalColumn.findAll { it != null })
     List<Object> sortedValues = uniqueValues.toList().sort { it.toString() }
 
     // Build the new data structure
-    Map<String, List<?>> newData = new LinkedHashMap<>()
+    Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
 
     // Copy columns before the encoded column
@@ -118,7 +122,7 @@ class SmileFeatures {
         }
         // Add one-hot columns
         for (Object value : sortedValues) {
-          String newColName = "${column}_${value}".toString()
+          String newColName = "${column}_${value}"
           List<Integer> binaryCol = originalColumn.collect { it == value ? 1 : 0 }
           newData.put(newColName, binaryCol)
           newTypes.add(Integer)
@@ -255,7 +259,7 @@ class SmileFeatures {
     double binWidth = (max - min) / bins
 
     List<Integer> binLabels = numericCol.collect { v ->
-      if (v == null) return null
+      if (v == null) { return null }
       int binNum = (int) ((v - min) / binWidth)
       return Math.min(binNum, bins - 1) // Handle edge case where v == max
     }
@@ -274,14 +278,14 @@ class SmileFeatures {
    */
   static Matrix binning(Matrix matrix, String column, List<Double> edges, List<String> labels = null) {
     if (labels != null && labels.size() != edges.size() - 1) {
-      throw new IllegalArgumentException("Number of labels must be one less than number of edges")
+      throw new IllegalArgumentException('Number of labels must be one less than number of edges')
     }
 
     List<?> col = matrix.column(column)
     List<Double> numericCol = col.collect { it != null ? it as double : null }
 
     List<?> binLabels = numericCol.collect { v ->
-      if (v == null) return null
+      if (v == null) { return null }
       for (int i = 0; i < edges.size() - 1; i++) {
         if (v >= edges[i] && v < edges[i + 1]) {
           return labels != null ? labels[i] : i
@@ -289,7 +293,7 @@ class SmileFeatures {
       }
       // Handle values at the maximum edge
       if (v == edges.last()) {
-        return labels != null ? labels.last() : edges.size() - 2
+        return labels != null ? labels.last() : edges.size() - HALF_DIVISOR
       }
       return null
     }
@@ -338,11 +342,11 @@ class SmileFeatures {
     List<Double> sortedCol = col.findAll { it != null }.collect { it as double }.sort() as List<Double>
     double median
     int size = sortedCol.size()
-    if (size % 2 == 0) {
-      int midIndex = size.intdiv(2) as int
+    if (size % HALF_DIVISOR == 0) {
+      int midIndex = size.intdiv(HALF_DIVISOR) as int
       median = (sortedCol[midIndex - 1] + sortedCol[midIndex]) / 2.0d
     } else {
-      median = sortedCol[size.intdiv(2) as int]
+      median = sortedCol[size.intdiv(HALF_DIVISOR) as int]
     }
     return fillna(matrix, column, median)
   }
@@ -451,7 +455,7 @@ class SmileFeatures {
   }
 
   private static Matrix transformColumns(Matrix matrix, List<String> columns, Closure<List<?>> transformer) {
-    Map<String, List<?>> newData = new LinkedHashMap<>()
+    Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
 
     for (int i = 0; i < matrix.columnCount(); i++) {
@@ -476,7 +480,7 @@ class SmileFeatures {
   }
 
   private static Matrix replaceColumn(Matrix matrix, String column, List<?> newValues, Class<?> newType) {
-    Map<String, List<?>> newData = new LinkedHashMap<>()
+    Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
 
     for (int i = 0; i < matrix.columnCount(); i++) {
@@ -499,14 +503,14 @@ class SmileFeatures {
 
   private static List<Double> standardizeValues(List<Double> values) {
     List<Double> nonNull = values.findAll { it != null } as List<Double>
-    if (nonNull.isEmpty()) return values
+    if (nonNull.isEmpty()) { return values }
 
     double mean = sumDoubles(nonNull) / nonNull.size()
     double variance = sumDoubles(nonNull.collect { Double v -> (v - mean) * (v - mean) }) / nonNull.size()
     double std = Math.sqrt(variance)
 
-    if (std == 0.0d) {
-      return values.collect { Double v -> v != null ? 0.0d : (Double) null } as List<Double>
+    if (std == ZERO) {
+      return values.collect { Double v -> v != null ? ZERO : (Double) null } as List<Double>
     }
 
     return values.collect { Double v -> v != null ? (v - mean) / std : (Double) null } as List<Double>
@@ -514,13 +518,13 @@ class SmileFeatures {
 
   private static List<Double> normalizeMinMax(List<Double> values) {
     List<Double> nonNull = values.findAll { it != null } as List<Double>
-    if (nonNull.isEmpty()) return values
+    if (nonNull.isEmpty()) { return values }
 
     double min = nonNull.min()
     double max = nonNull.max()
     double range = max - min
 
-    if (range == 0.0d) {
+    if (range == ZERO) {
       return values.collect { Double v -> v != null ? 0.0d : (Double) null } as List<Double>
     }
 
@@ -529,14 +533,14 @@ class SmileFeatures {
 
   private static List<Double> normalizeToRange(List<Double> values, double targetMin, double targetMax) {
     List<Double> nonNull = values.findAll { it != null } as List<Double>
-    if (nonNull.isEmpty()) return values
+    if (nonNull.isEmpty()) { return values }
 
     double min = nonNull.min()
     double max = nonNull.max()
     double range = max - min
     double targetRange = targetMax - targetMin
 
-    if (range == 0.0d) {
+    if (range == ZERO) {
       return values.collect { Double v -> v != null ? targetMin : (Double) null } as List<Double>
     }
 
@@ -544,7 +548,7 @@ class SmileFeatures {
   }
 
   private static double sumDoubles(List<Double> values) {
-    double sum = 0.0d
+    double sum = ZERO
     for (Double v : values) {
       if (v != null) {
         sum += v
@@ -560,8 +564,9 @@ class SmileFeatures {
    */
   @CompileStatic
   static class StandardScaler {
-    private Map<String, Double> means = [:]
-    private Map<String, Double> stds = [:]
+
+    private final Map<String, Double> means = [:]
+    private final Map<String, Double> stds = [:]
     private boolean fitted = false
 
     /**
@@ -589,7 +594,7 @@ class SmileFeatures {
         double std = Math.sqrt(variance)
 
         means[col] = mean
-        stds[col] = std == 0.0d ? 1.0d : std
+        stds[col] = std == ZERO ? 1.0d : std
       }
 
       fitted = true
@@ -606,10 +611,10 @@ class SmileFeatures {
      */
     Matrix transform(Matrix matrix) {
       if (!fitted) {
-        throw new IllegalStateException("Scaler must be fitted before transforming")
+        throw new IllegalStateException('Scaler must be fitted before transforming')
       }
 
-      Map<String, List<?>> newData = new LinkedHashMap<>()
+      Map<String, List<?>> newData = [:]
       List<Class<?>> newTypes = []
 
       for (int i = 0; i < matrix.columnCount(); i++) {
@@ -646,7 +651,7 @@ class SmileFeatures {
     Matrix fitTransform(Matrix matrix, List<String> columns = null) {
       fit(matrix, columns)
 
-      Map<String, List<?>> newData = new LinkedHashMap<>()
+      Map<String, List<?>> newData = [:]
       List<Class<?>> newTypes = []
 
       for (int i = 0; i < matrix.columnCount(); i++) {
@@ -686,6 +691,7 @@ class SmileFeatures {
     Map<String, Double> getStds() {
       return Collections.unmodifiableMap(stds)
     }
+
   }
 
   /**
@@ -693,8 +699,9 @@ class SmileFeatures {
    */
   @CompileStatic
   static class MinMaxScaler {
-    private Map<String, Double> mins = [:]
-    private Map<String, Double> maxs = [:]
+
+    private final Map<String, Double> mins = [:]
+    private final Map<String, Double> maxs = [:]
     private boolean fitted = false
 
     /**
@@ -735,7 +742,7 @@ class SmileFeatures {
     Matrix fitTransform(Matrix matrix, List<String> columns = null) {
       fit(matrix, columns)
 
-      Map<String, List<?>> newData = new LinkedHashMap<>()
+      Map<String, List<?>> newData = [:]
       List<Class<?>> newTypes = []
 
       for (int i = 0; i < matrix.columnCount(); i++) {
@@ -747,8 +754,8 @@ class SmileFeatures {
           double range = max - min
 
           List<Double> transformed = col.collect { v ->
-            if (v == null) return null
-            if (range == 0.0d) return 0.0d
+            if (v == null) { return null }
+            if (range == ZERO) { return ZERO }
             ((v as double) - min) / range
           }
           newData.put(colName, transformed)
@@ -779,5 +786,7 @@ class SmileFeatures {
     Map<String, Double> getMaxs() {
       return Collections.unmodifiableMap(maxs)
     }
+
   }
+
 }

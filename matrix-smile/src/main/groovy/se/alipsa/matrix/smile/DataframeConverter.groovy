@@ -152,8 +152,7 @@ class DataframeConverter {
         case Enum -> columns.add(ValueVector.nominal(colName, columnData as Enum[]))
         default -> {
           // Handle other types or default to StringVector
-          log.warn("Warning: Unhandled data type " + dataType.getSimpleName() +
-              " for column " + colName + ". Defaulting to StringVector.")
+          log.warn("Warning: Unhandled data type ${dataType.getSimpleName()} for column ${colName}. Defaulting to StringVector.")
           List<String> values = ListConverter.convert(columnData, String)
           columns.add(ValueVector.of(colName, values as String[]))
         }
@@ -281,7 +280,7 @@ class DataframeConverter {
       case DateType -> LocalDate
       case TimeType -> LocalTime
       default -> {
-        log.warn("Warning: Unhandled Smile DataType " + dataType + ". Defaulting to Object.class")
+        log.warn("Warning: Unhandled Smile DataType ${dataType}. Defaulting to Object.class")
         Object.class
       }
     }

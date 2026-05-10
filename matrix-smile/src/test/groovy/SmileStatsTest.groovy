@@ -1,10 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
-import smile.stat.distribution.BinomialDistribution
-import smile.stat.distribution.ExponentialDistribution
-import smile.stat.distribution.GaussianDistribution
-import smile.stat.distribution.PoissonDistribution
 import smile.stat.hypothesis.CorTest
 import smile.stat.hypothesis.FTest
 import smile.stat.hypothesis.KSTest
@@ -586,4 +582,5 @@ class SmileStatsTest {
     assertNotNull(dist)
     assertEquals(3.0, dist.mean(), 0.0001) // Mean of [1, 3, 5]
   }
+
 }

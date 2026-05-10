@@ -81,7 +81,7 @@ class SmileDimensionalityTest {
     assertTrue(variance.length > 0)
     // Variances should be positive
     for (double v : variance) {
-      assertTrue(v >= 0, "Variance should be non-negative")
+      assertTrue(v >= 0, 'Variance should be non-negative')
     }
   }
 
@@ -97,7 +97,7 @@ class SmileDimensionalityTest {
     double sum = 0
     for (double p : proportion) {
       sum += p
-      assertTrue(p >= 0 && p <= 1, "Proportion should be between 0 and 1")
+      assertTrue(p >= 0 && p <= 1, 'Proportion should be between 0 and 1')
     }
     assertEquals(1.0, sum, 0.01)
   }
@@ -111,7 +111,7 @@ class SmileDimensionalityTest {
 
     assertNotNull(cumulative)
     // Last cumulative should be 1.0
-    assertEquals(1.0, cumulative[cumulative.length - 1], 0.01)
+    assertEquals(1.0, cumulative.last(), 0.01)
     // Should be monotonically increasing
     for (int i = 1; i < cumulative.length; i++) {
       assertTrue(cumulative[i] >= cumulative[i - 1])
@@ -253,4 +253,5 @@ class SmileDimensionalityTest {
     assertEquals(2, transformed.columnCount())
     assertEquals(data.rowCount(), transformed.rowCount())
   }
+
 }

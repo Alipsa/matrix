@@ -150,10 +150,11 @@ class SmileDimensionality {
    *
    * @return a Matrix with loadings (features x components)
    */
+  @SuppressWarnings('NestedForLoop')
   Matrix getLoadingsMatrix() {
     double[][] loadings = getLoadings()
 
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     data.put('feature', featureColumns.toList())
 
     for (int j = 0; j < loadings[0].length; j++) {
@@ -164,7 +165,7 @@ class SmileDimensionality {
       data.put("PC${j + 1}" as String, col)
     }
 
-    List<Class<?>> types = new ArrayList<>()
+    List<Class<?>> types = []
     types.add(String)
     for (int i = 0; i < loadings[0].length; i++) {
       types.add(Double)
@@ -186,10 +187,10 @@ class SmileDimensionality {
     double[] proportion = getVarianceProportion()
     double[] cumulative = getCumulativeVarianceProportion()
 
-    List<String> components = new ArrayList<>()
-    List<Double> variances = new ArrayList<>()
-    List<Double> proportions = new ArrayList<>()
-    List<Double> cumulatives = new ArrayList<>()
+    List<String> components = []
+    List<Double> variances = []
+    List<Double> proportions = []
+    List<Double> cumulatives = []
 
     for (int i = 0; i < variance.length; i++) {
       components.add("PC${i + 1}" as String)
@@ -234,6 +235,7 @@ class SmileDimensionality {
 
   // Helper methods
 
+  @SuppressWarnings('NestedForLoop')
   private static double[][] matrixToArray(Matrix matrix) {
     int rows = matrix.rowCount()
     int cols = matrix.columnCount()
@@ -250,9 +252,10 @@ class SmileDimensionality {
     return result
   }
 
+  @SuppressWarnings('NestedForLoop')
   private static Matrix arrayToMatrix(double[][] data, int numComponents) {
-    Map<String, List<?>> result = new LinkedHashMap<>()
-    List<Class<?>> types = new ArrayList<>()
+    Map<String, List<?>> result = [:]
+    List<Class<?>> types = []
 
     for (int j = 0; j < numComponents; j++) {
       List<Double> col = new ArrayList<>(data.length)
@@ -269,7 +272,10 @@ class SmileDimensionality {
         .build()
   }
 
+  private static final double ROUND_PRECISION = 10000.0d
+
   private static double roundTo4(double value) {
-    return Math.round(value * 10000.0d) / 10000.0d
+    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
+
 }

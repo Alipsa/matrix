@@ -207,7 +207,7 @@ class SmileRegressionTest {
     assertEquals(3, predictions.length)
     // Predictions should be reasonable
     for (double pred : predictions) {
-      assertTrue(pred > 0, "Prediction should be positive")
+      assertTrue(pred > 0, 'Prediction should be positive')
     }
   }
 
@@ -256,7 +256,7 @@ class SmileRegressionTest {
 
     assertEquals(3, predictions.length)
     for (double pred : predictions) {
-      assertTrue(pred > 0, "Prediction should be positive")
+      assertTrue(pred > 0, 'Prediction should be positive')
     }
   }
 
@@ -305,7 +305,7 @@ class SmileRegressionTest {
 
     assertEquals(3, predictions.length)
     for (double pred : predictions) {
-      assertTrue(pred > 0, "Prediction should be positive")
+      assertTrue(pred > 0, 'Prediction should be positive')
     }
   }
 
@@ -342,7 +342,7 @@ class SmileRegressionTest {
 
     assertNotNull(regression)
     double r2 = regression.rSquared(trainData)
-    assertTrue(r2 > 0, "R² should be positive")
+    assertTrue(r2 > 0, 'R² should be positive')
   }
 
   @Test
@@ -354,7 +354,7 @@ class SmileRegressionTest {
 
     assertNotNull(regression)
     double r2 = regression.rSquared(trainData)
-    assertTrue(r2 > 0, "R² should be positive")
+    assertTrue(r2 > 0, 'R² should be positive')
   }
 
   @Test
@@ -366,7 +366,7 @@ class SmileRegressionTest {
 
     assertNotNull(regression)
     double r2 = regression.rSquared(trainData)
-    assertTrue(r2 > 0, "R² should be positive")
+    assertTrue(r2 > 0, 'R² should be positive')
   }
 
   // Edge Cases
@@ -391,4 +391,5 @@ class SmileRegressionTest {
 
     assertEquals('y', regression.targetColumn)
   }
+
 }
