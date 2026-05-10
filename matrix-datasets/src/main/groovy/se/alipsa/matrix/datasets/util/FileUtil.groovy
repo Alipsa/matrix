@@ -64,10 +64,13 @@ class FileUtil {
     if (systemResource != null) {
       return systemResource
     }
-    try {
-      return new File(resource).toURI().toURL()
-    } catch (MalformedURLException ignored) {
-      // fall through to return null
+    File file = new File(resource)
+    if (file.exists()) {
+      try {
+        return file.toURI().toURL()
+      } catch (MalformedURLException ignored) {
+        // fall through to return null
+      }
     }
     return null
   }

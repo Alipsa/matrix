@@ -73,6 +73,7 @@ class RdatasetsTest {
   }
 
   @Test
+  @Tag('external')
   void testFetchDataWithNonExistentDataset() {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchData('datasets', 'nonexistent_dataset_xyz_123')
@@ -113,6 +114,7 @@ class RdatasetsTest {
   }
 
   @Test
+  @Tag('external')
   void testFetchInfoWithNonExistentDataset() {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchInfo('datasets', 'nonexistent_dataset_xyz_123')
