@@ -1,7 +1,33 @@
 # Matrix-smile release history
 
+## v0.1.1, 2026-05-10
+Bug fixes, DRY cleanups, and API improvements.
+
+### Bug Fixes
+- **tTestTwoSample**: `equalVariance` parameter is now properly wired to Smile's pooled-variance t-test instead of being ignored
+- **MinMaxScaler**: Added missing `transform()` method for fit-then-transform workflows
+
+### DRY / Refactoring
+- Extracted duplicated `roundTo4()` helpers into `SmileUtil.round(value, 4)`
+- Extracted duplicated `matrixToArray()` into `SmileUtil.matrixToArray()`
+- Extracted duplicated `getNumericColumnNames()` into `SmileUtil.getNumericColumnNames()`
+- `correlationMatrix()` and `pValueMatrix()` now delegate to `correlationWithSignificance()`
+- `StandardScaler.fitTransform()` and `MinMaxScaler.fitTransform()` now reuse `fit()` + `transform()`
+
+### API Improvements
+- **CorrelationMethod enum**: Added `PEARSON`, `SPEARMAN`, `KENDALL` enum for type-safe correlation method selection
+- **String overloads**: Correlation methods retain backward-compatible `String` overloads that parse into the enum
+- **powerTransform**: Parameter changed from `double` to `Number` for better Groovy ergonomics
+- **SmileUtil.round()**: Added proper GroovyDoc
+
+### Documentation
+- **README**: Updated dependency versions (groovy 5.0.6, matrix-core 3.7.1, matrix-smile 0.1.1)
+- **release.md**: Corrected v0.1.0 feature list to reflect only shipped functionality
+
+---
+
 ## v0.1.0, 2026-01-31
-Initial release providing comprehensive integration between Matrix and Smile (Statistical Machine Intelligence and Learning Engine).
+Initial release providing integration between Matrix and Smile (Statistical Machine Intelligence and Learning Engine).
 
 ### Core Features
 - **DataframeConverter**: Bidirectional conversion between Matrix and Smile DataFrame with support for 18 data types
@@ -16,27 +42,24 @@ Initial release providing comprehensive integration between Matrix and Smile (St
 
 ### Machine Learning Wrappers
 - **SmileClassifier**: Wrappers for classification algorithms
-  - Logistic Regression, Decision Trees, Random Forest, Gradient Boosted Trees
-  - Support Vector Machines, K-Nearest Neighbors, Naive Bayes, AdaBoost
+  - Decision Trees, Random Forest
   - Model training, prediction, and evaluation with confusion matrices
 - **SmileRegression**: Wrappers for regression algorithms
-  - Linear Regression, Ridge Regression, LASSO, Elastic Net
-  - Regression Trees, Gradient Boosted Trees, Random Forest
-  - Model fitting, prediction, and RMSE calculation
+  - Linear Regression (OLS), Ridge Regression, LASSO, Elastic Net
+  - Model fitting, prediction, and evaluation metrics (R², MSE, RMSE, MAE)
 - **SmileCluster**: Wrappers for clustering algorithms
-  - K-Means, Hierarchical Clustering, DBSCAN, DENCLUE, CLARANS
+  - K-Means, DBSCAN
   - Cluster assignment and centroids calculation
 - **SmileDimensionality**: Dimensionality reduction techniques
-  - PCA (Principal Component Analysis), MDS (Multidimensional Scaling)
-  - t-SNE (t-Distributed Stochastic Neighbor Embedding)
+  - PCA (Principal Component Analysis)
 
 ### Statistical Analysis (SmileStats)
 - **Probability Distributions**:
-  - Discrete: Binomial, Geometric, Poisson, Hypergeometric
-  - Continuous: Normal, Exponential, Gamma, Beta, Chi-Squared, T, F, Weibull
+  - Discrete: Binomial, Geometric, Poisson
+  - Continuous: Normal, Exponential, Gamma, Beta, Chi-Squared, T, F, Log-Normal, Weibull
   - PDF, CDF, quantile, and random sample generation
 - **Hypothesis Testing**:
-  - t-tests (one-sample, two-sample, paired)
+  - t-tests (one-sample, two-sample with pooled or Welch's variance, paired)
   - Chi-squared test, F-test, Kolmogorov-Smirnov test
   - Correlation tests (Pearson, Spearman, Kendall) with significance testing
 - **Correlation Analysis**:
@@ -45,24 +68,22 @@ Initial release providing comprehensive integration between Matrix and Smile (St
 - **Random Sampling**: Generate random samples from various distributions
 
 ### Feature Engineering (SmileFeatures)
-- **Data Loading**: Load datasets from Smile's built-in data repository
 - **Feature Scaling**:
   - StandardScaler (z-score normalization with fit/transform workflow)
-  - MinMaxScaler (range normalization)
-  - MaxAbsScaler (maximum absolute value scaling)
-  - RobustScaler (median and IQR-based scaling)
+  - MinMaxScaler (range normalization with fit/transform workflow)
 - **Feature Encoding**:
   - One-hot encoding for categorical variables
   - Label encoding for ordinal variables
-- **Feature Selection**:
-  - Sum, difference, product, ratio feature creation
-- **Imputation**: Missing value handling with mean, median, mode, or constant strategies
+- **Transformations**: Log, square root, and power transformations
+- **Binning**: Equal-width and custom edge binning
+- **Imputation**: Missing value handling with mean, median, or constant strategies
+- **Data Cleaning**: dropna for null-containing rows
 
 ### Code Quality
 - Comprehensive @CompileStatic annotation throughout for type safety and performance
 - Modern Groovy 5.0+ switch expression syntax (arrow operators)
-- Extensive GroovyDoc documentation (207 JavaDoc blocks)
-- Comprehensive test coverage (274 tests across 10 test files, 100% test file coverage)
+- Extensive GroovyDoc documentation
+- Comprehensive test coverage (274+ tests across 10 test files)
 - Idiomatic Groovy code (as double instead of .doubleValue(), NumberExtension usage)
 
 ### Dependencies

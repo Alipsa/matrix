@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import smile.feature.extraction.PCA
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Wrapper for Smile dimensionality reduction algorithms providing a Matrix-friendly API.
@@ -34,7 +35,7 @@ class SmileDimensionality {
    */
   static SmileDimensionality pca(Matrix matrix, int k) {
     String[] featureColumns = matrix.columnNames() as String[]
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     PCA pcaModel = PCA.fit(data)
     PCA proj = pcaModel.getProjection(k)
@@ -55,7 +56,7 @@ class SmileDimensionality {
     }
 
     String[] featureColumns = matrix.columnNames() as String[]
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     PCA pcaModel = PCA.fit(data)
     PCA proj = pcaModel.getProjection(varianceFraction)
@@ -77,7 +78,7 @@ class SmileDimensionality {
    */
   static SmileDimensionality pcaCorrelation(Matrix matrix, int k) {
     String[] featureColumns = matrix.columnNames() as String[]
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     PCA pcaModel = PCA.cor(data)
     PCA proj = pcaModel.getProjection(k)
@@ -92,7 +93,7 @@ class SmileDimensionality {
    * @return a Matrix with transformed data (k columns for k components)
    */
   Matrix transform(Matrix matrix) {
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
     double[][] transformed = projectionPca.apply(data)
 
     return arrayToMatrix(transformed, numComponents)
@@ -105,7 +106,7 @@ class SmileDimensionality {
    * @return 2D array of transformed values
    */
   double[][] transformValues(Matrix matrix) {
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
     return projectionPca.apply(data)
   }
 
@@ -194,9 +195,9 @@ class SmileDimensionality {
 
     for (int i = 0; i < variance.length; i++) {
       components.add("PC${i + 1}" as String)
-      variances.add(roundTo4(variance[i]))
-      proportions.add(roundTo4(proportion[i]))
-      cumulatives.add(roundTo4(cumulative[i]))
+      variances.add(SmileUtil.round(variance[i], SmileUtil.ROUND_DECIMALS))
+      proportions.add(SmileUtil.round(proportion[i], SmileUtil.ROUND_DECIMALS))
+      cumulatives.add(SmileUtil.round(cumulative[i], SmileUtil.ROUND_DECIMALS))
     }
 
     return Matrix.builder()
@@ -236,23 +237,6 @@ class SmileDimensionality {
   // Helper methods
 
   @SuppressWarnings('NestedForLoop')
-  private static double[][] matrixToArray(Matrix matrix) {
-    int rows = matrix.rowCount()
-    int cols = matrix.columnCount()
-    double[][] result = new double[rows][cols]
-
-    for (int j = 0; j < cols; j++) {
-      List<?> column = matrix.column(j)
-      for (int i = 0; i < rows; i++) {
-        Object val = column.get(i)
-        result[i][j] = val != null ? val as double : 0.0d
-      }
-    }
-
-    return result
-  }
-
-  @SuppressWarnings('NestedForLoop')
   private static Matrix arrayToMatrix(double[][] data, int numComponents) {
     Map<String, List<?>> result = [:]
     List<Class<?>> types = []
@@ -270,12 +254,6 @@ class SmileDimensionality {
         .data(result)
         .types(types)
         .build()
-  }
-
-  private static final double ROUND_PRECISION = 10000.0d
-
-  private static double roundTo4(double value) {
-    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
 
 }

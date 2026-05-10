@@ -17,7 +17,7 @@ import java.math.RoundingMode
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'
-  private static final int ROUND_DECIMALS = 4
+  static final int ROUND_DECIMALS = 4
   private static final double PERCENT = 100.0
 
   /**
@@ -134,7 +134,55 @@ class SmileUtil {
   }
 
   /**
+   * Get the names of numeric columns in a Matrix.
+   *
+   * @param matrix the Matrix to analyze
+   * @return list of column names that contain numeric data
+   */
+  static List<String> getNumericColumnNames(Matrix matrix) {
+    List<Class<?>> numericTypes = [
+        Integer, int, Long, long, Double, double, Float, float,
+        Short, short, Byte, byte, BigDecimal, BigInteger, Number
+    ]
+    List<String> result = []
+    for (int i = 0; i < matrix.columnCount(); i++) {
+      if (numericTypes.contains(matrix.type(i))) {
+        result << matrix.columnName(i)
+      }
+    }
+    return result
+  }
+
+  /**
+   * Convert a Matrix to a 2D double array.
+   * Null values are converted to 0.0.
+   *
+   * @param matrix the Matrix to convert
+   * @return 2D array of double values
+   */
+  @SuppressWarnings('NestedForLoop')
+  static double[][] matrixToArray(Matrix matrix) {
+    int rows = matrix.rowCount()
+    int cols = matrix.columnCount()
+    double[][] result = new double[rows][cols]
+
+    for (int j = 0; j < cols; j++) {
+      List<?> column = matrix.column(j)
+      for (int i = 0; i < rows; i++) {
+        Object val = column.get(i)
+        result[i][j] = val != null ? val as double : 0.0d
+      }
+    }
+
+    return result
+  }
+
+  /**
    * Round a double value to specified decimal places.
+   *
+   * @param value the value to round
+   * @param numDecimals the number of decimal places
+   * @return the rounded value
    */
   static double round(double value, int numDecimals) {
     if (Double.isNaN(value) || Double.isInfinite(value)) { return value }

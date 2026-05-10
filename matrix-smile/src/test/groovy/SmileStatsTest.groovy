@@ -7,6 +7,7 @@ import smile.stat.hypothesis.KSTest
 import smile.stat.hypothesis.TTest
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.stats.CorrelationMethod
 import se.alipsa.matrix.smile.stats.SmileStats
 
 class SmileStatsTest {
@@ -403,10 +404,42 @@ class SmileStatsTest {
         .types([Double, Double])
         .build()
 
+    Matrix corMatrix = SmileStats.correlationMatrix(matrix, null, CorrelationMethod.SPEARMAN)
+
+    assertNotNull(corMatrix)
+    assertEquals(1.0, corMatrix[0, 'y'] as double, 0.0001)
+  }
+
+  @Test
+  void testCorrelationMatrixStringMethod() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    // String overload for backward compatibility
     Matrix corMatrix = SmileStats.correlationMatrix(matrix, null, 'spearman')
 
     assertNotNull(corMatrix)
     assertEquals(1.0, corMatrix[0, 'y'] as double, 0.0001)
+  }
+
+  @Test
+  void testCorrelationMatrixInvalidStringMethod() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    assertThrows(IllegalArgumentException) {
+      SmileStats.correlationMatrix(matrix, null, 'invalid')
+    }
   }
 
   @Test

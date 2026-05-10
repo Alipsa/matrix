@@ -513,6 +513,55 @@ class SmileFeaturesTest {
     assertEquals(1.0d, xCol.max(), 0.0001d)
   }
 
+  @Test
+  void testMinMaxScalerSeparateFitAndTransform() {
+    Matrix trainData = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [10.0, 20.0, 30.0, 40.0, 50.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Matrix testData = Matrix.builder()
+        .data(
+            x: [2.0, 4.0, 6.0],
+            y: [15.0, 25.0, 35.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    SmileFeatures.MinMaxScaler scaler = SmileFeatures.minMaxScaler()
+    scaler.fit(trainData, ['x', 'y'])
+
+    assertEquals(1.0d, scaler.mins['x'], 0.0001d)
+    assertEquals(5.0d, scaler.maxs['x'], 0.0001d)
+    assertEquals(10.0d, scaler.mins['y'], 0.0001d)
+    assertEquals(50.0d, scaler.maxs['y'], 0.0001d)
+
+    Matrix scaled = scaler.transform(testData)
+
+    assertEquals(3, scaled.rowCount())
+    assertEquals(2, scaled.columnCount())
+
+    List<Double> xCol = scaled.column('x') as List<Double>
+    // x=2 -> (2-1)/(5-1) = 0.25
+    assertEquals(0.25d, xCol[0], 0.0001d)
+    // x=4 -> (4-1)/(5-1) = 0.75
+    assertEquals(0.75d, xCol[1], 0.0001d)
+    // x=6 -> (6-1)/(5-1) = 1.25 (can exceed [0,1] for test data)
+    assertEquals(1.25d, xCol[2], 0.0001d)
+  }
+
+  @Test
+  void testMinMaxScalerNotFitted() {
+    SmileFeatures.MinMaxScaler scaler = SmileFeatures.minMaxScaler()
+
+    assertThrows(IllegalStateException) {
+      scaler.transform(createNumericMatrix())
+    }
+  }
+
   // ============ Null Handling Tests ============
 
   @Test

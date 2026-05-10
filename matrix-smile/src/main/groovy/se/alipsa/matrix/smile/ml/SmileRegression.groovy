@@ -12,6 +12,7 @@ import smile.regression.RidgeRegression
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.DataframeConverter
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Wrapper for Smile regression algorithms providing a Matrix-friendly API.
@@ -21,7 +22,6 @@ import se.alipsa.matrix.smile.DataframeConverter
 class SmileRegression {
 
   private static final double ZERO = 0.0d
-  private static final double ROUND_PRECISION = 10000.0d
 
   private final LinearModel model
   private final Formula formula
@@ -221,7 +221,7 @@ class SmileRegression {
     return Matrix.builder()
         .data(
             metric: ['R²', 'MSE', 'RMSE', 'MAE'],
-            value: [roundTo4(r2), roundTo4(mseVal), roundTo4(rmseVal), roundTo4(maeVal)]
+            value: [SmileUtil.round(r2, SmileUtil.ROUND_DECIMALS), SmileUtil.round(mseVal, SmileUtil.ROUND_DECIMALS), SmileUtil.round(rmseVal, SmileUtil.ROUND_DECIMALS), SmileUtil.round(maeVal, SmileUtil.ROUND_DECIMALS)]
         )
         .types([String, Double])
         .build()
@@ -306,10 +306,6 @@ class SmileRegression {
       sum += Math.abs(actual[i] - predicted[i])
     }
     return sum / actual.length
-  }
-
-  private static double roundTo4(double value) {
-    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
 
 }

@@ -3,6 +3,7 @@ package se.alipsa.matrix.smile.data
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Feature engineering utilities for machine learning preprocessing.
@@ -23,7 +24,7 @@ class SmileFeatures {
    * @return a new Matrix with standardized columns
    */
   static Matrix standardize(Matrix matrix, List<String> columns = null) {
-    List<String> targetColumns = columns ?: getNumericColumnNames(matrix)
+    List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
     return transformColumns(matrix, targetColumns) { List<Double> values ->
       standardizeValues(values)
     }
@@ -49,7 +50,7 @@ class SmileFeatures {
    * @return a new Matrix with normalized columns
    */
   static Matrix normalize(Matrix matrix, List<String> columns = null) {
-    List<String> targetColumns = columns ?: getNumericColumnNames(matrix)
+    List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
     return transformColumns(matrix, targetColumns) { List<Double> values ->
       normalizeMinMax(values)
     }
@@ -236,9 +237,10 @@ class SmileFeatures {
    * @param power the power to apply
    * @return a new Matrix with power-transformed columns
    */
-  static Matrix powerTransform(Matrix matrix, List<String> columns, double power) {
+  static Matrix powerTransform(Matrix matrix, List<String> columns, Number power) {
+    double p = power as double
     return transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? v ** power : null }
+      values.collect { v -> v != null ? v ** p : null }
     }
   }
 
@@ -440,20 +442,6 @@ class SmileFeatures {
 
   // ============ Helper Methods ============
 
-  private static List<String> getNumericColumnNames(Matrix matrix) {
-    List<Class<?>> numericTypes = [
-        Integer, int, Long, long, Double, double, Float, float,
-        Short, short, Byte, byte, BigDecimal, BigInteger, Number
-    ]
-    List<String> result = []
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      if (numericTypes.contains(matrix.type(i))) {
-        result << matrix.columnName(i)
-      }
-    }
-    return result
-  }
-
   private static Matrix transformColumns(Matrix matrix, List<String> columns, Closure<List<?>> transformer) {
     Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
@@ -577,7 +565,7 @@ class SmileFeatures {
      * @return this scaler
      */
     StandardScaler fit(Matrix matrix, List<String> columns = null) {
-      List<String> targetColumns = columns ?: getNumericColumnNames(matrix)
+      List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
@@ -650,32 +638,7 @@ class SmileFeatures {
      */
     Matrix fitTransform(Matrix matrix, List<String> columns = null) {
       fit(matrix, columns)
-
-      Map<String, List<?>> newData = [:]
-      List<Class<?>> newTypes = []
-
-      for (int i = 0; i < matrix.columnCount(); i++) {
-        String colName = matrix.columnName(i)
-        if (means.containsKey(colName)) {
-          List<?> col = matrix.column(i)
-          double mean = means[colName]
-          double std = stds[colName]
-          List<Double> transformed = col.collect { v ->
-            v != null ? ((v as double) - mean) / std : null
-          }
-          newData.put(colName, transformed)
-          newTypes.add(Double)
-        } else {
-          newData.put(colName, matrix.column(i))
-          newTypes.add(matrix.type(i))
-        }
-      }
-
-      return Matrix.builder()
-          .data(newData)
-          .types(newTypes)
-          .matrixName(matrix.matrixName)
-          .build()
+      return transform(matrix)
     }
 
     /**
@@ -712,7 +675,7 @@ class SmileFeatures {
      * @return this scaler
      */
     MinMaxScaler fit(Matrix matrix, List<String> columns = null) {
-      List<String> targetColumns = columns ?: getNumericColumnNames(matrix)
+      List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
@@ -733,14 +696,17 @@ class SmileFeatures {
     }
 
     /**
-     * Fit and transform in one step.
+     * Transform data using the fitted parameters.
+     * The scaler must be fitted (using fit()) before calling this method.
      *
-     * @param matrix the data to fit and transform
-     * @param columns the columns to process
+     * @param matrix the data to transform
      * @return a new Matrix with normalized columns
+     * @throws IllegalStateException if the scaler has not been fitted
      */
-    Matrix fitTransform(Matrix matrix, List<String> columns = null) {
-      fit(matrix, columns)
+    Matrix transform(Matrix matrix) {
+      if (!fitted) {
+        throw new IllegalStateException('Scaler must be fitted before transforming')
+      }
 
       Map<String, List<?>> newData = [:]
       List<Class<?>> newTypes = []
@@ -771,6 +737,18 @@ class SmileFeatures {
           .types(newTypes)
           .matrixName(matrix.matrixName)
           .build()
+    }
+
+    /**
+     * Fit and transform in one step.
+     *
+     * @param matrix the data to fit and transform
+     * @param columns the columns to process
+     * @return a new Matrix with normalized columns
+     */
+    Matrix fitTransform(Matrix matrix, List<String> columns = null) {
+      fit(matrix, columns)
+      return transform(matrix)
     }
 
     /**
