@@ -28,7 +28,7 @@ class FileUtil {
     }
     try {
       excelFile = Paths.get(url.toURI()).toFile()
-    } catch (URISyntaxException | RuntimeException e) {
+    } catch (URISyntaxException | IllegalArgumentException | UnsupportedOperationException e) {
       throw new FileNotFoundException("$filePath does not exist").initCause(e)
     }
     if (!excelFile.exists()) {
@@ -45,9 +45,9 @@ class FileUtil {
    * @return an url to the resource or null if not found
    */
   static URL getResourceUrl(String resource) {
-    final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>()
+    final List<ClassLoader> classLoaders = []
     classLoaders.add(Thread.currentThread().getContextClassLoader())
-    classLoaders.add(FileUtil.class.getClassLoader())
+    classLoaders.add(FileUtil.getClassLoader())
 
     URL url = FileUtil.getResource(resource)
     if (url != null) {
@@ -63,13 +63,16 @@ class FileUtil {
     final URL systemResource = ClassLoader.getSystemResource(resource)
     if (systemResource != null) {
       return systemResource
-    } else {
+    }
+    File file = new File(resource)
+    if (file.exists()) {
       try {
-        return new File(resource).toURI().toURL()
+        return file.toURI().toURL()
       } catch (MalformedURLException ignored) {
-        return null
+        // fall through to return null
       }
     }
+    return null
   }
 
   private static URL getResourceWith(ClassLoader classLoader, String resource) {
@@ -101,8 +104,12 @@ class FileUtil {
   }
 
   static String getResourcePath(String name, String... encodingOpt) throws UnsupportedEncodingException {
-    String encoding = encodingOpt.length > 0 ? encodingOpt[0] : "UTF-8"
+    String encoding = encodingOpt.length > 0 ? encodingOpt[0] : 'UTF-8'
     URL url = getResourceUrl(name)
+    if (url == null) {
+      throw new FileNotFoundException("Resource not found: $name")
+    }
     return URLDecoder.decode(url.getFile(), encoding)
   }
+
 }

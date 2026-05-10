@@ -39,10 +39,16 @@ class Dataset {
       us: 'usa'
   ]
 
+  private static final String COMMA = ','
+  private static final String QUOTE = '"'
+  private static final String ORDER = 'order'
+  private static final String GROUP = 'group'
+  private static final String REGION = 'region'
+
   static Matrix airquality() {
     Matrix.builder()
         .matrixName('airquality')
-        .data(url('/data/airquality.csv'), ',', '', true)
+        .data(url('/data/airquality.csv'), COMMA, '', true)
         .build()
         .convert(
             'Ozone': BigDecimal,
@@ -57,7 +63,7 @@ class Dataset {
   static Matrix cars() {
     Matrix.builder()
         .matrixName('cars')
-        .data(url('/data/cars.csv'), ',', '"')
+        .data(url('/data/cars.csv'), COMMA, QUOTE)
         .build()
         .convert(
             speed: BigDecimal,
@@ -75,7 +81,6 @@ class Dataset {
         .data(url('/data/iris.csv'))
         .build()
         .convert(
-            Id: Integer,
             'Sepal Length': BigDecimal,
             'Sepal Width': BigDecimal,
             'Petal Length': BigDecimal,
@@ -116,7 +121,7 @@ class Dataset {
   static Matrix plantGrowth() {
     Matrix.builder()
         .matrixName('PlantGrowth')
-        .data(url('/data/PlantGrowth.csv'), ',', '"')
+        .data(url('/data/PlantGrowth.csv'), COMMA, QUOTE)
         .build()
         .convert(
             id: Integer,
@@ -131,7 +136,7 @@ class Dataset {
   static Matrix toothGrowth() {
     Matrix.builder()
         .matrixName('ToothGrowth')
-        .data(url('/data/ToothGrowth.csv'), ',', '"')
+        .data(url('/data/ToothGrowth.csv'), COMMA, QUOTE)
         .build()
         .convert(
             id: Integer,
@@ -147,13 +152,13 @@ class Dataset {
   static Matrix usArrests() {
     Matrix.builder()
         .matrixName('USArrests')
-        .data(url('/data/USArrests.csv'), ',', '"')
+        .data(url('/data/USArrests.csv'), COMMA, QUOTE)
         .build()
         .convert(
-            "Murder": BigDecimal,
-            "Assault": Integer,
-            "UrbanPop": Integer,
-            "Rape": BigDecimal
+            'Murder': BigDecimal,
+            'Assault': Integer,
+            'UrbanPop': Integer,
+            'Rape': BigDecimal
         )
   }
 
@@ -162,41 +167,41 @@ class Dataset {
    * collected by the US Environmental Protection Agency, http://fueleconomy.gov.
    */
   static Matrix mpg() {
-    return Matrix.builder()
+    Matrix.builder()
         .matrixName('mpg')
-        .data(url('/data/mpg.csv'), ',', '"')
+        .data(url('/data/mpg.csv'), COMMA, QUOTE)
         .build()
         .convert(
-            "manufacturer": String,
-            "model": String,
-            "displ": BigDecimal,
-            "year": Integer,
-            "cyl": Integer,
-            "trans": String,
-            "drv": String,
-            "cty": Integer,
-            "hwy": Integer,
-            "fl": String,
-            "class": String
+            'manufacturer': String,
+            'model': String,
+            'displ': BigDecimal,
+            'year': Integer,
+            'cyl': Integer,
+            'trans': String,
+            'drv': String,
+            'cty': Integer,
+            'hwy': Integer,
+            'fl': String,
+            'class': String
         )
   }
 
   static Matrix diamonds() {
-    return Matrix.builder()
+    Matrix.builder()
         .matrixName('diamonds')
-        .data(url('/data/diamonds.csv'), ',', '"')
+        .data(url('/data/diamonds.csv'), COMMA, QUOTE)
         .build()
         .convert(
-            "carat": BigDecimal,
-            "cut": String,
-            "color": String,
-            "clarity": String,
-            "depth": BigDecimal,
-            "table": BigDecimal,
-            "price": Integer,
-            "x": BigDecimal,
-            "y": BigDecimal,
-            "z": BigDecimal
+            'carat': BigDecimal,
+            'cut': String,
+            'color': String,
+            'clarity': String,
+            'depth': BigDecimal,
+            'table': BigDecimal,
+            'price': Integer,
+            'x': BigDecimal,
+            'y': BigDecimal,
+            'z': BigDecimal
         )
   }
 
@@ -217,18 +222,18 @@ class Dataset {
    */
   static Matrix mapData(String datasetName, String region = null, boolean exact = false) {
     if (datasetName == null) {
-      throw new IllegalArgumentException("dataset name cannot be null")
+      throw new IllegalArgumentException('dataset name cannot be null')
     }
-    String name = datasetName.toLowerCase()
+    String name = datasetName.trim().toLowerCase(Locale.ROOT)
     String filePath = resolveMapDataFile(name, exact)
 
     if (filePath == null) {
       log.debug("Map dataset not found: $datasetName (exact=$exact)")
-      throw new IllegalArgumentException("no map data exists for $datasetName")
+      throw new IllegalArgumentException("no map data exists for '$datasetName'. Valid names: ${mapNames().join(', ')}")
     }
 
-    log.debug("Loading map data from $filePath" + (region ? " for region: $region" : ""))
-    return mapDataSet(filePath, region)
+    log.debug("Loading map data from $filePath" + (region ? " for region: $region" : ''))
+    mapDataSet(filePath, region)
   }
 
   /**
@@ -260,33 +265,46 @@ class Dataset {
   @CompileDynamic
   static Matrix mapDataSet(String filePath, String region = null) {
     Matrix ds = Matrix.builder()
-        .data(url(filePath), ',', '"')
+        .data(url(filePath), COMMA, QUOTE)
         .build()
-        .convert(
-            "long": BigDecimal,
-            "lat": BigDecimal,
-            "group": Integer,
-            "order": Integer,
-            "region": String,
-            "subregion": String
-        )
+        .convert([
+            'long': BigDecimal,
+            'lat': BigDecimal,
+            'group': Integer,
+            'order': Integer,
+            (REGION): String,
+            'subregion': String
+        ])
     if (region == null) {
       log.debug("Loaded ${ds.rowCount()} rows from $filePath")
       return ds
     }
-    Matrix sub = ds.subset("region", { it == region })
+    Matrix sub = ds.subset(REGION) { it == region }
     if (sub.rowCount() == 0) {
       log.warn("Region not found in dataset: $region")
       throw new IllegalArgumentException("Region not found: $region")
     }
     log.debug("Filtered to ${sub.rowCount()} rows for region: $region")
-    def minOrder = Stat.min(sub['order']) - 1
-    def minGroup = Stat.min(sub['group']) - 1
-    return sub.apply(
-        'order', { it - minOrder }
-    ).apply(
-        'group', { it - minGroup }
-    ).orderBy('order')
+    def minOrder = Stat.min(sub[ORDER]) - 1
+    def minGroup = Stat.min(sub[GROUP]) - 1
+    sub.apply(ORDER) { it - minOrder }
+        .apply(GROUP) { it - minGroup }
+        .orderBy(ORDER)
+  }
+
+  /**
+   * Loads the specified map dataset and returns a sorted list of distinct region values.
+   * <p>
+   * <b>Performance note:</b> This loads the full map CSV into memory to extract regions.
+   *
+   * @param datasetName the name of the map dataset
+   * @return a sorted list of distinct region values
+   * @throws IllegalArgumentException if the dataset name is null or not found
+   */
+  static List<String> mapRegions(String datasetName) {
+    def data = mapData(datasetName)
+    def regions = data[REGION] as List<String>
+    regions.unique().sort()
   }
 
   private static URL url(String path) {
@@ -309,19 +327,67 @@ class Dataset {
    * @param tableName the name of the dataset to describe
    * @return a String describing the content of the dataset
    */
+  private static final Map<String, Closure<String>> DESCRIBERS = [
+      airquality : { descAirquality() },
+      cars       : { descCars() },
+      mtcars     : { descMtcars() },
+      iris       : { descIris() },
+      plantgrowth: { descPlantGrowth() },
+      toothgrowth: { descToothGrowth() },
+      usarrests  : { descUsArrests() },
+      mpg        : { descMpg() },
+      diamonds   : { descDiamonds() },
+      mapdata    : { descMapData() },
+      map_data   : { descMapData() }
+  ]
+
   static String describe(String tableName) {
-    def name = tableName.toLowerCase()
-    if (name == 'airquality') return descAirquality()
-    if (name == 'cars') return descCars()
-    if (name == 'mtcars') return descMtcars()
-    if (name == 'iris') return descIris()
-    if (name == 'plantgrowth') return descPlantGrowth()
-    if (name == 'toothgrowth') return descToothGrowth()
-    if (name == 'usarrests') return descUsArrests()
-    if (name == 'mpg') return descMpg()
-    if (name == 'diamonds') return descDiamonds()
-    if (name == 'mapdata' || name == 'map_data') return descMapData()
-    return "Unknown table: ${tableName}"
+    DESCRIBERS.get(tableName.toLowerCase(Locale.ROOT))?.call() ?: "Unknown table: ${tableName}"
+  }
+
+  private static final Map<String, Closure<Matrix>> DATASET_LOADERS = [
+      airquality : { airquality() },
+      cars       : { cars() },
+      mtcars     : { mtcars() },
+      iris       : { iris() },
+      plantgrowth: { plantGrowth() },
+      toothgrowth: { toothGrowth() },
+      usarrests  : { usArrests() },
+      mpg        : { mpg() },
+      diamonds   : { diamonds() }
+  ]
+
+  /**
+   * Returns a sorted list of built-in dataset names.
+   *
+   * @return a sorted list of dataset names
+   */
+  static List<String> names() {
+    DATASET_LOADERS.keySet().sort()
+  }
+
+  /**
+   * Returns a sorted list of valid map dataset names.
+   *
+   * @return a sorted list of map dataset names
+   */
+  static List<String> mapNames() {
+    MAP_DATA_FILES.keySet().sort()
+  }
+
+  /**
+   * Loads a built-in dataset by name.
+   *
+   * @param name the name of the dataset to load
+   * @return a Matrix containing the dataset
+   * @throws IllegalArgumentException if the dataset name is unknown
+   */
+  static Matrix load(String name) {
+    def loader = DATASET_LOADERS.get(name.toLowerCase(Locale.ROOT))
+    if (loader == null) {
+      throw new IllegalArgumentException("Unknown dataset: ${name}")
+    }
+    loader.call()
   }
 
   static String descAirquality() {
@@ -351,7 +417,7 @@ class Dataset {
   }
 
   static String descMtcars() {
-    return '''
+    '''
         The mtcars (Motor Trend Car Road Tests) dataset was extracted from the 1974 Motor Trend US magazine,
         and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles
         (1973–1974 models)
@@ -371,15 +437,13 @@ class Dataset {
         '''.stripIndent()
   }
 
-
   static String descIris() {
-    return '''
+    '''
         The iris dataset gives the measurements in centimeters of the variables sepal length, sepal width,
         petal length and petal width, respectively, for 50 flowers from each of 3 species of iris.
         The species are Iris setosa, versicolor, and virginica.
 
         Variables:
-        Id: an integer corresponding to a unique observation,
         Sepal Length: length of the sepal in cm,
         Sepal Width: width of the sepal in cm,
         Petal Length: length of the petal in cm,
@@ -389,7 +453,7 @@ class Dataset {
   }
 
   static String descPlantGrowth() {
-    return '''
+    '''
         The plant growth dataset contains results obtained from an experiment to compare yields
         (as measured by dried weight of plants)
         obtained under a control and two different treatment conditions.
@@ -402,7 +466,7 @@ class Dataset {
   }
 
   static String descToothGrowth() {
-    return '''
+    '''
         The ToothGrowth data set contains the result from an experiment studying the effect of
         vitamin C on tooth growth in 60 Guinea pigs. Each animal received one of three dose levels of
         vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods,
@@ -417,7 +481,7 @@ class Dataset {
   }
 
   static String descUsArrests() {
-    return '''
+    '''
         The US arrests data set contains statistics in arrests per 100,000 residents for assault, murder, and rape
         in each of the 50 US states in 1973.
 
@@ -431,7 +495,7 @@ class Dataset {
   }
 
   static String descMpg() {
-    return '''
+    '''
         The mpg (miles per gallon) dataset includes information about the fuel economy of popular car models in 1999 and 2008,
         collected by the US Environmental Protection Agency, http://fueleconomy.gov.
 
@@ -453,7 +517,7 @@ class Dataset {
   }
 
   static String descDiamonds() {
-    return '''
+    '''
         Diamond price and quality information for ~54,000 diamonds obtained from AwesomeGems.com on July 28, 2005
 
         Variables:
@@ -462,6 +526,8 @@ class Dataset {
         cut: quality of the cut (Fair, Good, Very Good, Premium, Ideal)
         color: diamond colour, from J (worst) to D (best)
         clarity: a measurement of how clear the diamond is (I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best))
+        depth: total depth percentage = z / mean(x, y)
+        table: width of top of diamond relative to widest point
         x: length in mm (0--10.74)
         y: width in mm (0--58.9)
         z: depth in mm (0--31.8)
@@ -469,7 +535,7 @@ class Dataset {
   }
 
   static String descMapData() {
-    return '''
+    '''
         Map dataset names:
         county: This database produces a map of the counties of the United States mainland generated from
         the US Department of the Census data
@@ -501,4 +567,5 @@ class Dataset {
         subregion: String, a part of the region
         '''.stripIndent()
   }
+
 }

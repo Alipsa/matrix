@@ -1,5 +1,16 @@
 # Release history
 
+## v2.2.0, 2026-05-10
+- Convert `Rdatasets` to lazy loading with `refresh()` to avoid network I/O on class loading
+- Add `Rdatasets.fetchData(String packageSlashItem)` single-argument overload
+- Add `Rdatasets.search(String text)` for quick dataset lookup
+- Gate external network tests behind `RUN_EXTERNAL_TESTS` / `-PrunExternalTests=true`
+- Remove phantom `Id: Integer` conversion from `Dataset.iris()` and `descIris()`
+- Remove explicit `return` statements from `Dataset.mpg()`, `Dataset.diamonds()`, and `descIris()`
+- Add `Dataset.names()`, `Dataset.mapNames()`, and `Dataset.load(String)` discoverability helpers
+- Improve `Dataset.mapData()` error messages to include valid names and trim whitespace input
+- Add `Dataset.mapRegions(String)` to list distinct region values for map datasets
+
 ## v2.1.2, 2026-01-31
 - fix critical bug: Rdatasets methods now handle missing datasets correctly (no more IndexOutOfBoundsException)
 - fix null parameter validation in Rdatasets (now checks both packageName and itemName for null)
@@ -12,7 +23,7 @@
 - refactor mapData() to use Map lookup for improved performance
 - upgrade dependencies
   - org.jsoup:jsoup [1.21.1 -> 1.22.1]
-  
+
 ## v2.1.1, 2025-07-19
 - Upgrade dependencies
   - org.jsoup:jsoup [1.20.1 -> 1.21.1]
