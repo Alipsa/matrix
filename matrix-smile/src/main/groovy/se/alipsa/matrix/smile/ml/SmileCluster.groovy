@@ -13,6 +13,9 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class SmileCluster {
 
+  private static final int MIN_CLUSTERS = 2
+  private static final double ZERO = 0.0d
+
   private final CentroidClustering<double[], double[]> centroidModel
   private final int[] clusterLabels
   private final String[] featureColumns
@@ -111,7 +114,7 @@ class SmileCluster {
   Matrix addClusterColumn(Matrix matrix) {
     List<Integer> labels = getLabelsList()
 
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     for (String col : matrix.columnNames()) {
       data.put(col, matrix.column(col))
     }
@@ -135,7 +138,7 @@ class SmileCluster {
    */
   int[] predict(Matrix matrix) {
     if (centroidModel == null) {
-      throw new UnsupportedOperationException("Prediction is not supported for this clustering algorithm")
+      throw new UnsupportedOperationException('Prediction is not supported for this clustering algorithm')
     }
 
     double[][] data = matrixToArray(matrix)
@@ -158,7 +161,7 @@ class SmileCluster {
     if (centroidModel != null) {
       return centroidModel.centers()
     }
-    return null
+    return new double[0][]
   }
 
   /**
@@ -167,13 +170,14 @@ class SmileCluster {
    *
    * @return a Matrix containing the cluster centroids
    */
+  @SuppressWarnings('NestedForLoop')
   Matrix getCentroidsMatrix() {
     double[][] centroids = getCentroids()
     if (centroids == null) {
       return null
     }
 
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     for (int j = 0; j < featureColumns.length; j++) {
       List<Double> col = new ArrayList<>(centroids.length)
       for (int i = 0; i < centroids.length; i++) {
@@ -182,7 +186,7 @@ class SmileCluster {
       data.put(featureColumns[j], col)
     }
 
-    List<Class<?>> types = new ArrayList<>()
+    List<Class<?>> types = []
     for (int i = 0; i < featureColumns.length; i++) {
       types.add(Double)
     }
@@ -199,7 +203,7 @@ class SmileCluster {
    * @return a Matrix with cluster counts
    */
   Matrix clusterCounts() {
-    Map<Integer, Integer> counts = new LinkedHashMap<>()
+    Map<Integer, Integer> counts = [:]
 
     for (int label : clusterLabels) {
       counts.merge(label, 1) { old, v -> old + v }
@@ -208,7 +212,7 @@ class SmileCluster {
     List<Integer> clusters = new ArrayList<>(counts.keySet())
     clusters.sort()
 
-    List<Integer> countList = new ArrayList<>()
+    List<Integer> countList = []
     for (int cluster : clusters) {
       countList.add(counts.get(cluster))
     }
@@ -245,6 +249,7 @@ class SmileCluster {
 
   // Helper methods
 
+  @SuppressWarnings('NestedForLoop')
   private static double[][] matrixToArray(Matrix matrix) {
     int rows = matrix.rowCount()
     int cols = matrix.columnCount()
@@ -261,27 +266,28 @@ class SmileCluster {
     return result
   }
 
+  @SuppressWarnings('NestedForLoop')
   private static double calculateSilhouette(double[][] data, int[] labels) {
     int n = data.length
-    if (n < 2) return 0.0d
+    if (n < MIN_CLUSTERS) { return ZERO }
 
     // Find unique clusters (excluding outliers which may be MAX_VALUE)
-    Set<Integer> uniqueClusters = new HashSet<>()
+    Set<Integer> uniqueClusters = [] as Set
     for (int label : labels) {
       if (label >= 0 && label < Integer.MAX_VALUE) {
         uniqueClusters.add(label)
       }
     }
 
-    if (uniqueClusters.size() < 2) return 0.0d
+    if (uniqueClusters.size() < MIN_CLUSTERS) { return ZERO }
 
-    double totalSilhouette = 0.0d
+    double totalSilhouette = ZERO
     int validPoints = 0
 
     for (int i = 0; i < n; i++) {
       int clusterI = labels[i]
       // Skip outliers
-      if (clusterI < 0 || clusterI >= Integer.MAX_VALUE) continue
+      if (clusterI < 0 || clusterI >= Integer.MAX_VALUE) { continue }
 
       // Calculate mean intra-cluster distance (a)
       double a = meanDistanceToCluster(data, labels, i, clusterI)
@@ -308,8 +314,9 @@ class SmileCluster {
     return validPoints > 0 ? totalSilhouette / validPoints : 0.0d
   }
 
+  @SuppressWarnings('NestedForLoop')
   private static double meanDistanceToCluster(double[][] data, int[] labels, int pointIndex, int cluster) {
-    double sumDist = 0.0d
+    double sumDist = ZERO
     int count = 0
 
     for (int i = 0; i < data.length; i++) {
@@ -323,11 +330,12 @@ class SmileCluster {
   }
 
   private static double euclideanDistance(double[] a, double[] b) {
-    double sum = 0.0d
+    double sum = ZERO
     for (int i = 0; i < a.length; i++) {
       double diff = a[i] - b[i]
       sum += diff * diff
     }
     return Math.sqrt(sum)
   }
+
 }

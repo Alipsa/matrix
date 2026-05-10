@@ -235,4 +235,5 @@ class SmileClassifierTest {
     assertTrue(features.contains('x1'))
     assertTrue(features.contains('x2'))
   }
+
 }

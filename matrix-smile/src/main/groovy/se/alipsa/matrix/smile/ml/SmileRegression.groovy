@@ -20,6 +20,9 @@ import se.alipsa.matrix.smile.DataframeConverter
 @CompileStatic
 class SmileRegression {
 
+  private static final double ZERO = 0.0d
+  private static final double ROUND_PRECISION = 10000.0d
+
   private final LinearModel model
   private final Formula formula
   private final String targetColumn
@@ -115,7 +118,7 @@ class SmileRegression {
     double[] predictions = predictValues(matrix)
 
     // Create result matrix with predictions
-    Map<String, List<?>> data = new LinkedHashMap<>()
+    Map<String, List<?>> data = [:]
     for (String col : matrix.columnNames()) {
       data.put(col, matrix.column(col))
     }
@@ -271,14 +274,14 @@ class SmileRegression {
   }
 
   private static double calculateRSquared(double[] actual, double[] predicted) {
-    double meanActual = 0.0d
+    double meanActual = ZERO
     for (double a : actual) {
       meanActual += a
     }
     meanActual /= actual.length
 
-    double ssTot = 0.0d
-    double ssRes = 0.0d
+    double ssTot = ZERO
+    double ssRes = ZERO
 
     for (int i = 0; i < actual.length; i++) {
       ssTot += (actual[i] - meanActual) * (actual[i] - meanActual)
@@ -289,7 +292,7 @@ class SmileRegression {
   }
 
   private static double calculateMSE(double[] actual, double[] predicted) {
-    double sum = 0.0d
+    double sum = ZERO
     for (int i = 0; i < actual.length; i++) {
       double diff = actual[i] - predicted[i]
       sum += diff * diff
@@ -298,7 +301,7 @@ class SmileRegression {
   }
 
   private static double calculateMAE(double[] actual, double[] predicted) {
-    double sum = 0.0d
+    double sum = ZERO
     for (int i = 0; i < actual.length; i++) {
       sum += Math.abs(actual[i] - predicted[i])
     }
@@ -306,6 +309,7 @@ class SmileRegression {
   }
 
   private static double roundTo4(double value) {
-    return Math.round(value * 10000.0d) / 10000.0d
+    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
+
 }

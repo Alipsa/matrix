@@ -3,7 +3,6 @@ package se.alipsa.matrix.smile
 import groovy.transform.CompileStatic
 
 import smile.data.DataFrame
-import smile.data.vector.ValueVector
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
@@ -16,6 +15,10 @@ import java.math.RoundingMode
  */
 @CompileStatic
 class SmileUtil {
+
+  private static final String STATISTIC = 'statistic'
+  private static final int ROUND_DECIMALS = 4
+  private static final double PERCENT = 100.0
 
   /**
    * Convert a Smile DataFrame to a Matrix.
@@ -59,14 +62,14 @@ class SmileUtil {
 
     if (numericColumns.isEmpty()) {
       return Matrix.builder()
-          .columnNames(['statistic'])
+          .columnNames([STATISTIC])
           .types([String])
           .build()
     }
 
     List<String> stats = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
-    Map<String, List<Object>> data = new LinkedHashMap<>()
-    data.put('statistic', stats as List<Object>)
+    Map<String, List<Object>> data = [:]
+    data.put(STATISTIC, stats as List<Object>)
 
     for (String colName : numericColumns) {
       List<?> column = matrix[colName] as List<?>
@@ -74,7 +77,7 @@ class SmileUtil {
           .collect { it as double }
 
       if (numericValues.isEmpty()) {
-        data.put(colName, [0, null, null, null, null, null, null, null] as List<Object>)
+        data.put(colName, [0, null, null, null, null, null, null, null])
         continue
       }
 
@@ -92,14 +95,14 @@ class SmileUtil {
 
       data.put(colName, [
           count,
-          round(mean, 4),
-          round(std, 4),
-          round(min, 4),
-          round(q25, 4),
-          round(q50, 4),
-          round(q75, 4),
-          round(max, 4)
-      ] as List<Object>)
+          round(mean, ROUND_DECIMALS),
+          round(std, ROUND_DECIMALS),
+          round(min, ROUND_DECIMALS),
+          round(q25, ROUND_DECIMALS),
+          round(q50, ROUND_DECIMALS),
+          round(q75, ROUND_DECIMALS),
+          round(max, ROUND_DECIMALS)
+      ])
     }
 
     List<Class<?>> types = [String]
@@ -115,10 +118,10 @@ class SmileUtil {
    * Calculate percentile value from a sorted list.
    */
   private static double percentile(List<Double> sortedValues, double percentile) {
-    if (sortedValues.isEmpty()) return Double.NaN
-    if (sortedValues.size() == 1) return sortedValues[0]
+    if (sortedValues.isEmpty()) { return Double.NaN }
+    if (sortedValues.size() == 1) { return sortedValues[0] }
 
-    double index = (percentile / 100.0) * (sortedValues.size() - 1)
+    double index = (percentile / PERCENT) * (sortedValues.size() - 1)
     int lower = (int) Math.floor(index)
     int upper = (int) Math.ceil(index)
 
@@ -134,8 +137,8 @@ class SmileUtil {
    * Round a double value to specified decimal places.
    */
   static double round(double value, int numDecimals) {
-    if (Double.isNaN(value) || Double.isInfinite(value)) return value
-    if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be negative: was $numDecimals")
+    if (Double.isNaN(value) || Double.isInfinite(value)) { return value }
+    if (numDecimals < 0) { throw new IllegalArgumentException("numDecimals cannot be negative: was $numDecimals") }
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
@@ -311,7 +314,7 @@ class SmileUtil {
    */
   static Matrix frequency(Matrix matrix, String columnName) {
     List<?> column = matrix[columnName] as List<?>
-    Map<Object, Integer> freq = new LinkedHashMap<>()
+    Map<Object, Integer> freq = [:]
 
     for (Object val : column) {
       freq.merge(val, 1) { old, v -> old + v }
@@ -328,7 +331,7 @@ class SmileUtil {
         .each { entry ->
           values << (entry.key == null ? 'null' : entry.key.toString())
           frequencies << entry.value
-          percentages << round(entry.value * 100.0 / total, 2)
+          percentages << round(entry.value * PERCENT / total, 2)
         }
 
     return Matrix.builder()
@@ -340,4 +343,5 @@ class SmileUtil {
         .types([String, Integer, Double])
         .build()
   }
+
 }

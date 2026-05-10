@@ -92,7 +92,7 @@ class Gsmile {
    * @return a Map with column names as keys and row values as values
    */
   static Map<String, Object> getAt(DataFrame self, int rowIndex) {
-    Map<String, Object> row = new LinkedHashMap<>()
+    Map<String, Object> row = [:]
     for (int i = 0; i < self.ncol(); i++) {
       String colName = self.column(i).name()
       row.put(colName, self.get(rowIndex, i))
@@ -143,6 +143,7 @@ class Gsmile {
    * @param args the slicing arguments (first is row range, rest are column names)
    * @return a new DataFrame with the selected subset
    */
+  @SuppressWarnings('Instanceof')
   static DataFrame getAt(DataFrame self, Collection args) {
     if (args.isEmpty()) {
       return self
@@ -175,7 +176,7 @@ class Gsmile {
 
     // If first argument is String, it's column selection
     if (first instanceof String) {
-      List<String> columnNames = args.collect { it.toString() }
+      List<String> columnNames = args*.toString()
       return self.select(columnNames as String[])
     }
 
@@ -233,7 +234,7 @@ class Gsmile {
   static String structure(DataFrame self) {
     StringBuilder sb = new StringBuilder()
     sb.append("DataFrame: ${self.nrow()} rows x ${self.ncol()} columns\n")
-    sb.append("Columns:\n")
+    sb.append('Columns:\n')
     for (int i = 0; i < self.ncol(); i++) {
       def col = self.column(i)
       sb.append("  ${col.name()}: ${col.dtype()}\n")
@@ -367,4 +368,5 @@ class Gsmile {
     }
     return df.get(mask)
   }
+
 }

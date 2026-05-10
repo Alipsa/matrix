@@ -11,6 +11,12 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class SmileData {
 
+  private static final int MIN_PARTITION = 2
+  private static final double MIN_RATIO = 0.0d
+  private static final double MAX_RATIO = 1.0d
+  private static final String SHUFFLE = 'shuffle'
+  private static final String SEED = 'seed'
+
   /**
    * Split a matrix into training and test sets.
    *
@@ -46,13 +52,13 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> trainTestSplit(Matrix matrix, double testRatio, boolean shuffle, Random random) {
-    if (testRatio <= 0.0 || testRatio >= 1.0) {
+    if (testRatio <= MIN_RATIO || testRatio >= MAX_RATIO) {
       throw new IllegalArgumentException("testRatio must be between 0 and 1 (exclusive): was $testRatio")
     }
 
     int rowCount = matrix.rowCount()
-    if (rowCount < 2) {
-      throw new IllegalArgumentException("Matrix must have at least 2 rows for splitting")
+    if (rowCount < MIN_PARTITION) {
+      throw new IllegalArgumentException('Matrix must have at least 2 rows for splitting')
     }
 
     List<Integer> indices = (0..<rowCount).toList()
@@ -81,10 +87,10 @@ class SmileData {
    */
   static List<Matrix> trainTestSplit(Map<String, Object> params, Matrix matrix) {
     double testRatio = params.containsKey('testRatio') ? params.testRatio as double : 0.2d
-    boolean shuffle = params.containsKey('shuffle') ? (params.shuffle as boolean) : true
+    boolean shuffle = params.containsKey(SHUFFLE) ? (params[SHUFFLE] as boolean) : true
 
-    if (params.containsKey('seed')) {
-      return trainTestSplit(matrix, testRatio, shuffle, params.seed as long)
+    if (params.containsKey(SEED)) {
+      return trainTestSplit(matrix, testRatio, shuffle, params[SEED] as long)
     }
     return trainTestSplit(matrix, testRatio, shuffle)
   }
@@ -135,7 +141,7 @@ class SmileData {
    * @return a list of k Fold objects, each containing training and validation sets
    */
   static List<Fold> kFold(Matrix matrix, int k, boolean shuffle, Random random) {
-    if (k < 2) {
+    if (k < MIN_PARTITION) {
       throw new IllegalArgumentException("k must be at least 2: was $k")
     }
 
@@ -188,10 +194,10 @@ class SmileData {
       throw new IllegalArgumentException("Parameter 'k' is required")
     }
     int k = params.k as int
-    boolean shuffle = params.containsKey('shuffle') ? (params.shuffle as boolean) : true
+    boolean shuffle = params.containsKey(SHUFFLE) ? (params[SHUFFLE] as boolean) : true
 
-    if (params.containsKey('seed')) {
-      return kFold(matrix, k, shuffle, params.seed as long)
+    if (params.containsKey(SEED)) {
+      return kFold(matrix, k, shuffle, params[SEED] as long)
     }
     return kFold(matrix, k, shuffle)
   }
@@ -231,17 +237,17 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> stratifiedSplit(Matrix matrix, String targetColumn, double testRatio, Random random) {
-    if (testRatio <= 0.0 || testRatio >= 1.0) {
+    if (testRatio <= MIN_RATIO || testRatio >= MAX_RATIO) {
       throw new IllegalArgumentException("testRatio must be between 0 and 1 (exclusive): was $testRatio")
     }
 
     List<?> targetValues = matrix.column(targetColumn)
 
     // Group indices by class
-    Map<Object, List<Integer>> classSamples = new LinkedHashMap<>()
+    Map<Object, List<Integer>> classSamples = [:]
     for (int i = 0; i < targetValues.size(); i++) {
       Object classValue = targetValues[i]
-      classSamples.computeIfAbsent(classValue) { [] as List<Integer> }.add(i)
+      classSamples.computeIfAbsent(classValue) { [] }.add(i)
     }
 
     List<Integer> trainIndices = []
@@ -302,6 +308,7 @@ class SmileData {
    * @param random the Random instance to use
    * @return a list of n bootstrap sample matrices
    */
+  @SuppressWarnings('NestedForLoop')
   static List<Matrix> bootstrap(Matrix matrix, int n, int sampleSize, Random random) {
     if (n < 1) {
       throw new IllegalArgumentException("n must be at least 1: was $n")
@@ -346,6 +353,7 @@ class SmileData {
    */
   @CompileStatic
   static class Fold {
+
     final int index
     final Matrix train
     final Matrix validation
@@ -360,5 +368,7 @@ class SmileData {
     String toString() {
       return "Fold[index=$index, trainSize=${train.rowCount()}, validationSize=${validation.rowCount()}]"
     }
+
   }
+
 }

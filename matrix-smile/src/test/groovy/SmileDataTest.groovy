@@ -150,7 +150,7 @@ class SmileDataTest {
     List<SmileData.Fold> folds = SmileData.kFold(data, 5)
 
     // Each fold should have unique index
-    Set<Integer> indices = folds.collect { it.index }.toSet()
+    Set<Integer> indices = folds*.index.toSet()
     assertEquals([0, 1, 2, 3, 4] as Set, indices)
   }
 
@@ -168,6 +168,7 @@ class SmileDataTest {
     assertEquals(2.0d, firstFold.validation.row(1)[0])
   }
 
+  @SuppressWarnings('NestedForLoop')
   @Test
   void testKFoldWithSeed() {
     Matrix data = createTestMatrix()
@@ -217,6 +218,7 @@ class SmileDataTest {
     }
   }
 
+  @SuppressWarnings('NestedForLoop')
   @Test
   void testKFoldCoverageComplete() {
     Matrix data = createTestMatrix()
@@ -241,7 +243,7 @@ class SmileDataTest {
     List<SmileData.Fold> folds = SmileData.kFold(data, 5)
     SmileData.Fold fold = folds[0]
 
-    String str = fold.toString()
+    String str = fold
     assertTrue(str.contains('index=0'))
     assertTrue(str.contains('trainSize=8'))
     assertTrue(str.contains('validationSize=2'))
@@ -320,6 +322,7 @@ class SmileDataTest {
     }
   }
 
+  @SuppressWarnings('NestedForLoop')
   @Test
   void testBootstrapWithSeed() {
     Matrix data = createTestMatrix()
@@ -361,4 +364,5 @@ class SmileDataTest {
       assertTrue(val == 1.0d || val == 2.0d)
     }
   }
+
 }
