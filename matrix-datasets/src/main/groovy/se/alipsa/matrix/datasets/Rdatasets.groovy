@@ -8,10 +8,6 @@ import org.jsoup.Jsoup
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
-import java.io.IOException
-import java.io.UncheckedIOException
-import java.util.Locale
-
 /**
  * Convenience wrapper for accessing datasets from the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/).
  * Rdatasets is a collection of 2536 datasets which were originally distributed alongside the
@@ -25,6 +21,7 @@ class Rdatasets {
   private static final String COMMA = ','
   private static final String QUOTE = '"'
   private static final String NULL_OR_EMPTY_MSG = 'Package name and item name cannot be null or empty'
+  private static final int SLASH_PARTS = 2
 
   private static volatile Matrix cachedOverview = null
 
@@ -37,20 +34,23 @@ class Rdatasets {
    * @throws UncheckedIOException if the remote data cannot be fetched
    */
   static Matrix overview() {
-    if (cachedOverview == null) {
+    Matrix result = cachedOverview
+    if (result == null) {
       synchronized(Rdatasets) {
-        if (cachedOverview == null) {
+        result = cachedOverview
+        if (result == null) {
           try {
-            cachedOverview = Matrix.builder()
+            result = Matrix.builder()
                 .data('https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/datasets.csv', COMMA, QUOTE, true)
                 .build()
+            cachedOverview = result
           } catch (IOException e) {
             throw new UncheckedIOException("Failed to fetch Rdatasets overview: ${e.message}", e)
           }
         }
       }
     }
-    return cachedOverview
+    return result
   }
 
   /**
@@ -137,10 +137,10 @@ class Rdatasets {
       throw new IllegalArgumentException('packageSlashItem cannot be null or blank')
     }
     def parts = packageSlashItem.split('/', -1)
-    if (parts.length < 2) {
+    if (parts.length < SLASH_PARTS) {
       throw new IllegalArgumentException("packageSlashItem must contain a slash: '$packageSlashItem'")
     }
-    if (parts.length > 2) {
+    if (parts.length > SLASH_PARTS) {
       throw new IllegalArgumentException("packageSlashItem must contain exactly one slash: '$packageSlashItem'")
     }
     String packageName = parts[0]

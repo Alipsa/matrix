@@ -8,7 +8,6 @@ import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.util.FileUtil
 
-import java.util.Locale
 import java.util.function.Supplier
 
 /**
@@ -46,6 +45,7 @@ class Dataset {
   private static final String QUOTE = '"'
   private static final String ORDER = 'order'
   private static final String GROUP = 'group'
+  private static final String REGION = 'region'
 
   static Matrix airquality() {
     Matrix.builder()
@@ -269,19 +269,19 @@ class Dataset {
     Matrix ds = Matrix.builder()
         .data(url(filePath), COMMA, QUOTE)
         .build()
-        .convert(
+        .convert([
             'long': BigDecimal,
             'lat': BigDecimal,
             'group': Integer,
             'order': Integer,
-            'region': String,
+            (REGION): String,
             'subregion': String
-        )
+        ])
     if (region == null) {
       log.debug("Loaded ${ds.rowCount()} rows from $filePath")
       return ds
     }
-    Matrix sub = ds.subset('region') { it == region }
+    Matrix sub = ds.subset(REGION) { it == region }
     if (sub.rowCount() == 0) {
       log.warn("Region not found in dataset: $region")
       throw new IllegalArgumentException("Region not found: $region")
@@ -305,7 +305,7 @@ class Dataset {
    */
   static List<String> mapRegions(String datasetName) {
     def data = mapData(datasetName)
-    def regions = data['region'] as List<String>
+    def regions = data[REGION] as List<String>
     regions.unique().sort()
   }
 
