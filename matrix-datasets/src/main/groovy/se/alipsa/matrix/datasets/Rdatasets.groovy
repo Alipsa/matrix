@@ -21,7 +21,7 @@ class Rdatasets {
   private static final String COMMA = ','
   private static final String QUOTE = '"'
   private static final String NULL_OR_EMPTY_MSG = 'Package name and item name cannot be null or empty'
-  private static final int SLASH_PARTS = 2
+  private static final int EXPECTED_PARTS = 2
 
   private static volatile Matrix cachedOverview = null
 
@@ -50,7 +50,7 @@ class Rdatasets {
         }
       }
     }
-    return result
+    result
   }
 
   /**
@@ -137,10 +137,10 @@ class Rdatasets {
       throw new IllegalArgumentException('packageSlashItem cannot be null or blank')
     }
     def parts = packageSlashItem.split('/', -1)
-    if (parts.length < SLASH_PARTS) {
+    if (parts.length < EXPECTED_PARTS) {
       throw new IllegalArgumentException("packageSlashItem must contain a slash: '$packageSlashItem'")
     }
-    if (parts.length > SLASH_PARTS) {
+    if (parts.length > EXPECTED_PARTS) {
       throw new IllegalArgumentException("packageSlashItem must contain exactly one slash: '$packageSlashItem'")
     }
     String packageName = parts[0]
@@ -164,21 +164,20 @@ class Rdatasets {
       throw new IllegalArgumentException('search text cannot be null or blank')
     }
     def searchText = text.toLowerCase(Locale.ROOT)
-    def ov = overview()
-    def rowIndices = []
-    ov.rowCount().times { int i ->
-      def item = ov[i, 'Item']?.toString()?.toLowerCase(Locale.ROOT)
-      def title = ov[i, 'Title']?.toString()?.toLowerCase(Locale.ROOT)
-      if (item?.contains(searchText) || title?.contains(searchText)) {
-        rowIndices << i
-      }
+    def result = GQ {
+      from d in overview()
+      where d.Item.toLowerCase(Locale.ROOT).contains(searchText) || d.Title.toLowerCase(Locale.ROOT).contains(searchText)
+      select d
     }
-    if (rowIndices.isEmpty()) {
+    def rows = result.toList()
+    if (rows.isEmpty()) {
       return Matrix.builder()
-          .columnNames(ov.columnNames())
+          .columnNames(overview().columnNames())
           .build()
     }
-    ov.subset(rowIndices)
+    Matrix.builder()
+        .data(rows)
+        .build()
   }
 
 }

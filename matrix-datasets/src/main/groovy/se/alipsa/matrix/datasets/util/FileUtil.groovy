@@ -28,7 +28,7 @@ class FileUtil {
     }
     try {
       excelFile = Paths.get(url.toURI()).toFile()
-    } catch (URISyntaxException | IllegalArgumentException e) {
+    } catch (URISyntaxException | IllegalArgumentException | UnsupportedOperationException e) {
       throw new FileNotFoundException("$filePath does not exist").initCause(e)
     }
     if (!excelFile.exists()) {

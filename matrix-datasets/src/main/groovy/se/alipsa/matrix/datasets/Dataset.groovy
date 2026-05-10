@@ -8,8 +8,6 @@ import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.util.FileUtil
 
-import java.util.function.Supplier
-
 /**
  * Provides access to common datasets in Matrix format.
  * Includes statistical datasets (mtcars, iris, diamonds, etc.) and geographical map data.
@@ -329,34 +327,34 @@ class Dataset {
    * @param tableName the name of the dataset to describe
    * @return a String describing the content of the dataset
    */
-  private static final Map<String, Supplier<String>> DESCRIBERS = [
-      airquality : ({ descAirquality() } as Supplier<String>),
-      cars       : ({ descCars() }       as Supplier<String>),
-      mtcars     : ({ descMtcars() }     as Supplier<String>),
-      iris       : ({ descIris() }       as Supplier<String>),
-      plantgrowth: ({ descPlantGrowth() } as Supplier<String>),
-      toothgrowth: ({ descToothGrowth() } as Supplier<String>),
-      usarrests  : ({ descUsArrests() }  as Supplier<String>),
-      mpg        : ({ descMpg() }        as Supplier<String>),
-      diamonds   : ({ descDiamonds() }   as Supplier<String>),
-      mapdata    : ({ descMapData() }    as Supplier<String>),
-      map_data   : ({ descMapData() }    as Supplier<String>)
+  private static final Map<String, Closure<String>> DESCRIBERS = [
+      airquality : { descAirquality() },
+      cars       : { descCars() },
+      mtcars     : { descMtcars() },
+      iris       : { descIris() },
+      plantgrowth: { descPlantGrowth() },
+      toothgrowth: { descToothGrowth() },
+      usarrests  : { descUsArrests() },
+      mpg        : { descMpg() },
+      diamonds   : { descDiamonds() },
+      mapdata    : { descMapData() },
+      map_data   : { descMapData() }
   ]
 
   static String describe(String tableName) {
-    DESCRIBERS.get(tableName.toLowerCase(Locale.ROOT))?.get() ?: "Unknown table: ${tableName}"
+    DESCRIBERS.get(tableName.toLowerCase(Locale.ROOT))?.call() ?: "Unknown table: ${tableName}"
   }
 
-  private static final Map<String, Supplier<Matrix>> DATASET_LOADERS = [
-      airquality : ({ airquality() } as Supplier<Matrix>),
-      cars       : ({ cars() }        as Supplier<Matrix>),
-      mtcars     : ({ mtcars() }      as Supplier<Matrix>),
-      iris       : ({ iris() }        as Supplier<Matrix>),
-      plantgrowth: ({ plantGrowth() } as Supplier<Matrix>),
-      toothgrowth: ({ toothGrowth() } as Supplier<Matrix>),
-      usarrests  : ({ usArrests() }   as Supplier<Matrix>),
-      mpg        : ({ mpg() }         as Supplier<Matrix>),
-      diamonds   : ({ diamonds() }    as Supplier<Matrix>)
+  private static final Map<String, Closure<Matrix>> DATASET_LOADERS = [
+      airquality : { airquality() },
+      cars       : { cars() },
+      mtcars     : { mtcars() },
+      iris       : { iris() },
+      plantgrowth: { plantGrowth() },
+      toothgrowth: { toothGrowth() },
+      usarrests  : { usArrests() },
+      mpg        : { mpg() },
+      diamonds   : { diamonds() }
   ]
 
   /**
@@ -389,7 +387,7 @@ class Dataset {
     if (loader == null) {
       throw new IllegalArgumentException("Unknown dataset: ${name}")
     }
-    loader.get()
+    loader.call()
   }
 
   static String descAirquality() {
