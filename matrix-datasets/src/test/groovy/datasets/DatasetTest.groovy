@@ -2,6 +2,7 @@ package datasets
 
 import static org.junit.jupiter.api.Assertions.*
 
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.*
@@ -14,8 +15,8 @@ class DatasetTest {
     @Test
     void testAirquality() {
        Matrix airQuality = Dataset.airquality()
-       //println Stat.str(airQuality)
-       //println airQuality.content()
+       // println Stat.str(airQuality)
+       // println airQuality.content()
         assertEquals(153, airQuality.rowCount(), 'number of rows')
         assertEquals(6, airQuality.columnCount(), 'number of columns')
         def sums = ListConverter.toDoubles(Stat.sum(airQuality))
@@ -27,7 +28,7 @@ class DatasetTest {
         Matrix cars = Dataset.cars()
         assertEquals(50, cars.rowCount(), 'number of rows')
         assertEquals(2, cars.columnCount(), 'number of columns')
-        //println Stat.str(cars)
+        // println Stat.str(cars)
         assertEquals(770 as BigDecimal, Stat.sum(cars['speed']))
         assertEquals(2149 as BigDecimal, Stat.sum(cars['dist']))
         assertEquals(Dataset.descCars(), Dataset.describe(cars))
@@ -42,8 +43,8 @@ class DatasetTest {
         assertEquals(876.5, Stat.sum(iris['Sepal Length']))
         assertEquals(Dataset.descIris(), Dataset.describe(iris))
         assertEquals(Dataset.descIris(), Dataset.describe('iris'))
-        assertEquals(['Sepal Length','Sepal Width','Petal Length','Petal Width','Species'], iris.columnNames())
-        def speciesIdx = iris.columnIndex("Species")
+        assertEquals(['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width', 'Species'], iris.columnNames())
+        def speciesIdx = iris.columnIndex('Species')
         def setosa = iris.subset {
             it[speciesIdx] == 'setosa'
         }
@@ -54,7 +55,6 @@ class DatasetTest {
         assertEquals(5.552, Stat.mean(virginica['Petal Length'], 3))
     }
 
-
     @Test
     void testMtcars() {
         def mtcars = Dataset.mtcars()
@@ -62,7 +62,7 @@ class DatasetTest {
         assertEquals(12, mtcars.columnCount(), 'number of columns')
         assertEquals(642.9, Stat.sum(mtcars['mpg']), 'sum of mpg')
         assertIterableEquals(
-            ['Volvo 142E','21.4','4','121','109','4.11','2.78','18.6','1','1','4','2'],
+            ['Volvo 142E', '21.4', '4', '121', '109', '4.11', '2.78', '18.6', '1', '1', '4', '2'],
             ListConverter.toStrings(mtcars.row(31))
         )
         assertEquals(Dataset.descMtcars(), Dataset.describe(mtcars))
@@ -122,85 +122,85 @@ class DatasetTest {
     @Test
     void testMapDataCounty() {
         def michigan = Dataset.mapData('county', 'michigan')
-        assertEquals(1471, michigan.rowCount(), "county, michigan num rows")
+        assertEquals(1471, michigan.rowCount(), 'county, michigan num rows')
         assertEquals(65938.658821106,
             Stat.sum(michigan['lat']).setScale(9, RoundingMode.HALF_EVEN),
-            "county, michigan, sum of lat"
+            'county, michigan, sum of lat'
         )
     }
 
     @Test
     void testMapDataFrance() {
         def france = Dataset.mapData('france')
-        assertEquals(13353, france.rowCount(), "france number of rows")
+        assertEquals(13353, france.rowCount(), 'france number of rows')
         assertEquals(32828.4454960893,
-            Stat.sum(france["long"]).setScale(10, RoundingMode.HALF_EVEN),
-            "france, sum of long"
+            Stat.sum(france['long']).setScale(10, RoundingMode.HALF_EVEN),
+            'france, sum of long'
         )
     }
 
     @Test
     void testMapDataItaly() {
         def italy = Dataset.mapData('italy')
-        assertEquals(10284, italy.rowCount(), "italy number of rows")
+        assertEquals(10284, italy.rowCount(), 'italy number of rows')
         assertEquals(123984.6834597588,
-            Stat.sum(italy["long"]).setScale(10, RoundingMode.HALF_EVEN),
-            "italy, sum of long")
+            Stat.sum(italy['long']).setScale(10, RoundingMode.HALF_EVEN),
+            'italy, sum of long')
     }
 
     @Test
     void testMapDataNz() {
         def nz = Dataset.mapData('nz')
-        assertEquals(1552, nz.rowCount(), "nz, number of rows")
+        assertEquals(1552, nz.rowCount(), 'nz, number of rows')
         def nzArapawa = Dataset.mapData('nz', 'Arapawa.Island')
-        assertEquals(11, nzArapawa.rowCount(), "nzArapawa number of rows")
+        assertEquals(11, nzArapawa.rowCount(), 'nzArapawa number of rows')
         assertEquals(-453.1090660095,
-            Stat.sum(nzArapawa["lat"]).setScale(10, RoundingMode.HALF_EVEN),
-            "nzArapawa, sum of lat")
+            Stat.sum(nzArapawa['lat']).setScale(10, RoundingMode.HALF_EVEN),
+            'nzArapawa, sum of lat')
     }
 
     @Test
     void testMapDataState() {
         def state = Dataset.mapData('state')
-        assertEquals(15537, state.rowCount(), "state, number of rows")
+        assertEquals(15537, state.rowCount(), 'state, number of rows')
         def oregon = Dataset.mapData('state', 'oregon')
-        assertEquals(236, oregon.rowCount(), "Oregon number of rows")
+        assertEquals(236, oregon.rowCount(), 'Oregon number of rows')
         assertEquals(10591.1076698303,
-            Stat.sum(oregon["lat"]).setScale(10, RoundingMode.HALF_EVEN),
-            "oregon, sum of lat")
+            Stat.sum(oregon['lat']).setScale(10, RoundingMode.HALF_EVEN),
+            'oregon, sum of lat')
     }
 
     @Test
     void testMapDataUsa() {
         def us = Dataset.mapData('usa')
-        assertEquals(7243, us.rowCount(), "usa, number of rows")
+        assertEquals(7243, us.rowCount(), 'usa, number of rows')
         def manhattan = Dataset.mapData('usa', 'manhattan')
-        assertEquals(16, manhattan.rowCount(), "Manhattan number of rows")
+        assertEquals(16, manhattan.rowCount(), 'Manhattan number of rows')
         assertEquals(652.4327774048,
-            Stat.sum(manhattan["lat"]).setScale(10, RoundingMode.HALF_EVEN),
-            "manhattan, sum of lat")
+            Stat.sum(manhattan['lat']).setScale(10, RoundingMode.HALF_EVEN),
+            'manhattan, sum of lat')
     }
 
     @Test
     void testMapDataWorld() {
         def world = Dataset.mapData('world')
-        assertEquals(99338, world.rowCount(), "world, number of rows")
+        assertEquals(99338, world.rowCount(), 'world, number of rows')
         def sweden = Dataset.mapData('world', 'Sweden')
-        assertEquals(593, sweden.rowCount(), "Sweden number of rows")
+        assertEquals(593, sweden.rowCount(), 'Sweden number of rows')
         assertEquals(36704.2741737366,
-            Stat.sum(sweden["lat"]).setScale(10, RoundingMode.HALF_EVEN),
-            "Sweden, sum of lat")
+            Stat.sum(sweden['lat']).setScale(10, RoundingMode.HALF_EVEN),
+            'Sweden, sum of lat')
     }
 
     @Test
     void testMapDataWorld2() {
         def world2 = Dataset.mapData('world2')
-        assertEquals(99385, world2.rowCount(), "world2, number of rows")
+        assertEquals(99385, world2.rowCount(), 'world2, number of rows')
         def sweden = Dataset.mapData('world2', 'Sweden')
-        assertEquals(593, sweden.rowCount(), "Sweden number of rows")
+        assertEquals(593, sweden.rowCount(), 'Sweden number of rows')
         assertEquals(36704.2741737366,
-            Stat.sum(sweden["lat"]).setScale(10, RoundingMode.HALF_EVEN),
-            "Sweden, sum of lat")
+            Stat.sum(sweden['lat']).setScale(10, RoundingMode.HALF_EVEN),
+            'Sweden, sum of lat')
     }
 
     @Test
@@ -224,7 +224,8 @@ class DatasetTest {
         def exception = assertThrows(IllegalArgumentException) {
             Dataset.mapData('invalid_map_xyz')
         }
-        assertEquals('no map data exists for invalid_map_xyz', exception.message)
+        assertTrue(exception.message.contains("no map data exists for 'invalid_map_xyz'"))
+        assertTrue(exception.message.contains('Valid names:'))
     }
 
     @Test
@@ -234,6 +235,7 @@ class DatasetTest {
     }
 
     @Test
+    @Tag('external')
     void testFromUrl() {
         // Use the same mtcars URL that Rdatasets uses
         def mtcars = Dataset.fromUrl(
@@ -245,4 +247,73 @@ class DatasetTest {
         assertEquals(32, mtcars.rowCount(), 'mtcars should have 32 rows')
         assertTrue(mtcars.columnCount() >= 11, 'mtcars should have at least 11 columns')
     }
+
+    @Test
+    void testNames() {
+        def names = Dataset.names()
+        assertTrue(names.contains('airquality'))
+        assertTrue(names.contains('cars'))
+        assertTrue(names.contains('diamonds'))
+        assertTrue(names.contains('iris'))
+        assertTrue(names.contains('mpg'))
+        assertTrue(names.contains('mtcars'))
+        assertTrue(names.contains('plantgrowth'))
+        assertTrue(names.contains('toothgrowth'))
+        assertTrue(names.contains('usarrests'))
+        assertEquals(9, names.size())
+    }
+
+    @Test
+    void testMapNames() {
+        def mapNames = Dataset.mapNames()
+        assertTrue(mapNames.contains('county'))
+        assertTrue(mapNames.contains('france'))
+        assertTrue(mapNames.contains('italy'))
+        assertTrue(mapNames.contains('nz'))
+        assertTrue(mapNames.contains('state'))
+        assertTrue(mapNames.contains('usa'))
+        assertTrue(mapNames.contains('world'))
+        assertTrue(mapNames.contains('world2'))
+        assertEquals(8, mapNames.size())
+    }
+
+    @Test
+    void testLoadKnownDataset() {
+        def iris = Dataset.load('iris')
+        assertEquals(150, iris.rowCount())
+        assertEquals(5, iris.columnCount())
+    }
+
+    @Test
+    void testLoadUnknownDataset() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.load('unknown_xyz')
+        }
+        assertEquals('Unknown dataset: unknown_xyz', exception.message)
+    }
+
+    @Test
+    void testMapRegions() {
+        def regions = Dataset.mapRegions('world')
+        assertTrue(regions.contains('Sweden'))
+        assertTrue(regions.contains('Canada'))
+        assertTrue(regions.size() > 50)
+    }
+
+    @Test
+    void testMapDataImprovedErrorMessage() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData('invalid_map_xyz')
+        }
+        assertTrue(exception.message.contains("no map data exists for 'invalid_map_xyz'"))
+        assertTrue(exception.message.contains('Valid names:'))
+        assertTrue(exception.message.contains('world'))
+    }
+
+    @Test
+    void testMapDataWithWhitespace() {
+        def world = Dataset.mapData(' world ')
+        assertEquals(99338, world.rowCount())
+    }
+
 }
