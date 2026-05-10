@@ -1,15 +1,15 @@
 # Release history
 
 ## v2.2.0, 2026-05-10
-- Convert `Rdatasets` to lazy loading with `refresh()` to avoid network I/O on class loading
-- Add `Rdatasets.fetchData(String packageSlashItem)` single-argument overload
-- Add `Rdatasets.search(String text)` for quick dataset lookup
-- Gate external network tests behind `RUN_EXTERNAL_TESTS` / `-PrunExternalTests=true`
-- Remove phantom `Id: Integer` conversion from `Dataset.iris()` and `descIris()`
-- Remove explicit `return` statements from `Dataset.mpg()`, `Dataset.diamonds()`, and `descIris()`
+- `Rdatasets.overview()` is now lazy — no network I/O on class loading; added `Rdatasets.refresh()` to clear the cache
+- Add `Rdatasets.fetchData(String packageSlashItem)` single-argument overload (e.g. `fetchData('datasets/iris')`)
+- Add `Rdatasets.search(String text)` to filter the overview by Item or Title (case-insensitive)
 - Add `Dataset.names()`, `Dataset.mapNames()`, and `Dataset.load(String)` discoverability helpers
-- Improve `Dataset.mapData()` error messages to include valid names and trim whitespace input
-- Add `Dataset.mapRegions(String)` to list distinct region values for map datasets
+- Add `Dataset.mapRegions(String)` to list distinct region values for a map dataset
+- Fix: `Dataset.iris()` no longer applies a phantom `Id: Integer` conversion (the column does not exist in the CSV)
+- Fix: `FileUtil.getResourcePath()` now throws `FileNotFoundException` instead of `NullPointerException` when a resource is not found
+- `Dataset.mapData()` now trims whitespace from the dataset name and includes valid names in the error message
+- Upgrade dependencies: Groovy 5.0.5 → 5.0.6, jsoup 1.22.1 → 1.22.2
 
 ## v2.1.2, 2026-01-31
 - fix critical bug: Rdatasets methods now handle missing datasets correctly (no more IndexOutOfBoundsException)

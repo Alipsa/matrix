@@ -70,12 +70,47 @@ The following datasets are included in the matrix-datasets module through the Da
 | mpg         | The mpg (miles per gallon) dataset includes information about the fuel economy of popular car models in 1999 and 2008 | Dataset.mpg()                       |
 | mapdata     | Geographical data in 6 variables for various regions                                                                  | mapData(datasetName, region, exact) |
 
+### Discoverability helpers
+Use these when you want to list or load datasets by name, e.g. in a REPL or scripting context:
+
+```groovy
+// List all built-in dataset names (sorted)
+List<String> names = Dataset.names()
+
+// Load a dataset by name (case-insensitive)
+Matrix iris = Dataset.load('iris')
+
+// List valid map dataset names
+List<String> mapNames = Dataset.mapNames()
+
+// List distinct region values for a map dataset
+List<String> regions = Dataset.mapRegions('world')
+```
+
+`Dataset.describe(String name)` returns a human-readable description for any dataset name.
+
 ### The Rdatasets
 Matrix-datasets provides easy access to the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/). Rdatasets is a collection of 2536 datasets which were originally distributed alongside the statistical software environment R and some of its add-on packages.
 
-You can get a Matrix of all the dataset by doing `Rdatasets.overview()`
-To view the description for the dataset use `Rdatasets.fetchInfo(packageName, itemName, htmlOrPLainText)` where package names and item names can be seen in the overview Matrix.
-To get a specific dataset as a Matrix, use `Rdatasets.fetchData(packageName, itemName)`. For example, to get the iris dataset, you can do `Rdatasets.fetchData('datasets', 'iris')`. Note that the format of these datasets are all strings, so you may need to convert the columns to the appropriate types using the `Matrix.convert()` method.
+`Rdatasets.overview()` returns a Matrix of all available datasets. The overview is fetched lazily on first call and cached; call `Rdatasets.refresh()` to clear the cache and re-fetch.
+
+To search the overview by dataset name or title (case-insensitive):
+```groovy
+Matrix matches = Rdatasets.search('iris')
+```
+
+To view the HTML or plain-text description for a dataset:
+```groovy
+String info = Rdatasets.fetchInfo('AER', 'BankWages', true)  // true = plain text
+```
+
+To fetch a dataset as a Matrix, use either form:
+```groovy
+Matrix mtcars = Rdatasets.fetchData('datasets', 'mtcars')
+Matrix iris   = Rdatasets.fetchData('datasets/iris')   // convenience single-arg overload
+```
+
+Note that Rdatasets columns are all `String` — use `Matrix.convert()` to cast to the appropriate types.
 
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix datasets and matrix core
