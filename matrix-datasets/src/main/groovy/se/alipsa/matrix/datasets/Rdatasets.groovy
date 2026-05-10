@@ -169,14 +169,8 @@ class Rdatasets {
       where d.Item.toLowerCase(Locale.ROOT).contains(searchText) || d.Title.toLowerCase(Locale.ROOT).contains(searchText)
       select d
     }
-    def rows = result.toList()
-    if (rows.isEmpty()) {
-      return Matrix.builder()
-          .columnNames(overview().columnNames())
-          .build()
-    }
     Matrix.builder()
-        .data(rows)
+        .ginqResult(result)
         .build()
   }
 
