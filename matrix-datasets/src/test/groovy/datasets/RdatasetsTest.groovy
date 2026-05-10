@@ -188,6 +188,14 @@ class RdatasetsTest {
 
   @Test
   @Tag('external')
+  void testSearchWithNoResults() {
+    def result = Rdatasets.search('zzz_no_match_xyz')
+    assertNotNull(result, 'search result should not be null')
+    assertEquals(0, result.rowCount(), 'search should return zero rows')
+  }
+
+  @Test
+  @Tag('external')
   void testRefresh() {
     def overview1 = Rdatasets.overview()
     assertNotNull(overview1)
