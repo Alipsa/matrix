@@ -522,6 +522,11 @@ class SmileStats {
    * Compute a correlation matrix with significance for all numeric columns.
    * Returns a Matrix containing the correlation coefficients.
    *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code correlationMatrix(matrix, (List<String>) null)}.</p>
+   *
    * @param matrix the input Matrix
    * @param method correlation method
    * @return a Matrix with correlation coefficients (column names as row/col headers)
@@ -559,6 +564,11 @@ class SmileStats {
   /**
    * Compute a p-value matrix for correlations.
    * Returns a Matrix containing the p-values for each pair of variables.
+   *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code pValueMatrix(matrix, (List<String>) null)}.</p>
    *
    * @param matrix the input Matrix
    * @param method correlation method
@@ -626,6 +636,11 @@ class SmileStats {
   /**
    * Compute both correlation matrix and p-value matrix.
    * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
+   *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code correlationWithSignificance(matrix, (List<String>) null)}.</p>
    *
    * @param matrix the input Matrix
    * @param method correlation method

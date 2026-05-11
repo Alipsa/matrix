@@ -169,6 +169,7 @@ class SmileUtil {
 
   /**
    * Round a double value to the default number of decimal places (4).
+   * Internal utility; not part of the public API.
    *
    * @param value the value to round
    * @return the rounded value
@@ -179,6 +180,7 @@ class SmileUtil {
 
   /**
    * Round a double value to specified decimal places.
+   * Internal utility; not part of the public API.
    *
    * @param value the value to round
    * @param numDecimals the number of decimal places
