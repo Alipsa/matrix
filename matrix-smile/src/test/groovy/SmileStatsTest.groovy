@@ -236,6 +236,23 @@ class SmileStatsTest {
   }
 
   @Test
+  void testTTestTwoSampleMatrixEqualVariance() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            narrow: [9.8, 10.0, 10.1, 9.9, 10.2],
+            wide: [2.0, 8.0, 14.0, 18.0, 20.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    TTest welch = SmileStats.tTestTwoSample(matrix, 'narrow', 'wide', false)
+    TTest student = SmileStats.tTestTwoSample(matrix, 'narrow', 'wide', true)
+
+    assertNotEquals(welch.df(), student.df(), 0.01,
+        'equalVariance=true should produce different degrees of freedom than equalVariance=false')
+  }
+
+  @Test
   void testTTestPaired() {
     double[] before = [85.0, 90.0, 78.0, 92.0, 88.0] as double[]
     double[] after = [88.0, 92.0, 82.0, 95.0, 90.0] as double[]
@@ -518,6 +535,23 @@ class SmileStatsTest {
   }
 
   @Test
+  void testPValueMatrixStringMethod() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Matrix pMatrix = SmileStats.pValueMatrix(matrix, null, 'spearman')
+
+    assertNotNull(pMatrix)
+    assertEquals(2, pMatrix.rowCount())
+    assertTrue((pMatrix[0, 'y'] as double) < 0.01)
+  }
+
+  @Test
   void testCorrelationWithSignificance() {
     Matrix matrix = Matrix.builder()
         .data(
@@ -566,6 +600,24 @@ class SmileStatsTest {
     Matrix corMatrix = result['correlation']
     assertEquals(2, corMatrix.rowCount())
     assertEquals(1.0, corMatrix[0, 'y'] as double, 0.0001)
+  }
+
+  @Test
+  void testCorrelationWithSignificanceStringMethod() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Map<String, Matrix> result = SmileStats.correlationWithSignificance(matrix, null, 'spearman')
+
+    assertNotNull(result)
+    assertTrue(result.containsKey('correlation'))
+    assertTrue(result.containsKey('pvalue'))
+    assertEquals(1.0, result['correlation'][0, 'y'] as double, 0.0001)
   }
 
   // ==================== Random Sample Generation Tests ====================

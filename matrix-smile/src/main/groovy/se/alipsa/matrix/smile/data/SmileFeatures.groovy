@@ -238,6 +238,9 @@ class SmileFeatures {
    * @return a new Matrix with power-transformed columns
    */
   static Matrix powerTransform(Matrix matrix, List<String> columns, Number power) {
+    if (power == null) {
+      throw new IllegalArgumentException('power cannot be null')
+    }
     double p = power as double
     return transformColumns(matrix, columns) { List<Double> values ->
       values.collect { v -> v != null ? v ** p : null }

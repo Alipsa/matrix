@@ -1,6 +1,7 @@
 package se.alipsa.matrix.smile.stats
 
 import groovy.transform.CompileStatic
+
 import smile.stat.hypothesis.CorTest
 
 /**

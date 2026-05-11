@@ -316,8 +316,8 @@ class SmileStats {
    * @param column2 second column name
    * @return a TTest result
    */
-  static TTest tTestTwoSample(Matrix matrix, String column1, String column2) {
-    return tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+  static TTest tTestTwoSample(Matrix matrix, String column1, String column2, boolean equalVariance = false) {
+    return tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2), equalVariance)
   }
 
   /**
@@ -653,9 +653,9 @@ class SmileStats {
       return CorrelationMethod.PEARSON
     }
     try {
-      CorrelationMethod.valueOf(method.toUpperCase())
+      return CorrelationMethod.valueOf(method.toUpperCase())
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall")
+      throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall", e)
     }
   }
 
