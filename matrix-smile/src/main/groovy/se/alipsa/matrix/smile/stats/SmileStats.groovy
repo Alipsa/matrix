@@ -539,7 +539,7 @@ class SmileStats {
    * @param method correlation method name: "pearson", "spearman", or "kendall"
    * @return a Matrix with correlation coefficients (column names as row/col headers)
    */
-  static Matrix correlationMatrix(Matrix matrix, List<String> columns = null, String method) {
+  static Matrix correlationMatrix(Matrix matrix, List<String> columns, String method) {
     return correlationMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
@@ -577,7 +577,7 @@ class SmileStats {
    * @param method correlation method name: "pearson", "spearman", or "kendall"
    * @return a Matrix with p-values
    */
-  static Matrix pValueMatrix(Matrix matrix, List<String> columns = null, String method) {
+  static Matrix pValueMatrix(Matrix matrix, List<String> columns, String method) {
     return pValueMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
@@ -644,7 +644,7 @@ class SmileStats {
    * @param method correlation method name: "pearson", "spearman", or "kendall"
    * @return a Map with "correlation" and "pvalue" matrices
    */
-  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, String method) {
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns, String method) {
     correlationWithSignificance(matrix, columns, parseCorrelationMethod(method))
   }
 
