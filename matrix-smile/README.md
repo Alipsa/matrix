@@ -224,7 +224,6 @@ The converter supports the following data types:
 | `tail(Matrix matrix, int n)`              | Last n rows (default 5)                   |
 | `hasNulls(List values)`                   | Check if list contains nulls              |
 | `countNulls(List values)`                 | Count null values in list                 |
-| `round(double value, int decimals)`       | Round to specified decimals               |
 
 ## License
 

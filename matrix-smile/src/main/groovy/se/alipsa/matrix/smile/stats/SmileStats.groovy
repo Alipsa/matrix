@@ -523,6 +523,18 @@ class SmileStats {
    * Returns a Matrix containing the correlation coefficients.
    *
    * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Matrix with correlation coefficients (column names as row/col headers)
+   */
+  static Matrix correlationMatrix(Matrix matrix, CorrelationMethod method) {
+    return correlationMatrix(matrix, null, method)
+  }
+
+  /**
+   * Compute a correlation matrix with significance for all numeric columns.
+   * Returns a Matrix containing the correlation coefficients.
+   *
+   * @param matrix the input Matrix
    * @param columns optional list of column names to include (all numeric if not specified)
    * @param method correlation method name: "pearson", "spearman", or "kendall"
    * @return a Matrix with correlation coefficients (column names as row/col headers)
@@ -542,6 +554,18 @@ class SmileStats {
    */
   static Matrix pValueMatrix(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
     return correlationWithSignificance(matrix, columns, method)['pvalue']
+  }
+
+  /**
+   * Compute a p-value matrix for correlations.
+   * Returns a Matrix containing the p-values for each pair of variables.
+   *
+   * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Matrix with p-values
+   */
+  static Matrix pValueMatrix(Matrix matrix, CorrelationMethod method) {
+    return pValueMatrix(matrix, null, method)
   }
 
   /**
@@ -597,6 +621,18 @@ class SmileStats {
         correlation: matrixFromCorrelation(numericCols, corMatrix),
         pvalue     : matrixFromCorrelation(numericCols, pMatrix)
     ]
+  }
+
+  /**
+   * Compute both correlation matrix and p-value matrix.
+   * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
+   *
+   * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Map with "correlation" and "pvalue" matrices
+   */
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, CorrelationMethod method) {
+    correlationWithSignificance(matrix, null, method)
   }
 
   /**

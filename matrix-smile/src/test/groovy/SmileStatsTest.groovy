@@ -427,6 +427,23 @@ class SmileStatsTest {
   }
 
   @Test
+  void testCorrelationMatrixWithMethodOnly() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Matrix corMatrix = SmileStats.correlationMatrix(matrix, CorrelationMethod.SPEARMAN)
+
+    assertNotNull(corMatrix)
+    assertEquals(2, corMatrix.rowCount())
+    assertEquals(1.0, corMatrix[0, 'y'] as double, 0.0001)
+  }
+
+  @Test
   void testCorrelationMatrixStringMethod() {
     Matrix matrix = Matrix.builder()
         .data(
@@ -482,6 +499,25 @@ class SmileStatsTest {
   }
 
   @Test
+  void testPValueMatrixWithMethodOnly() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Matrix pMatrix = SmileStats.pValueMatrix(matrix, CorrelationMethod.SPEARMAN)
+
+    assertNotNull(pMatrix)
+    assertEquals(2, pMatrix.rowCount())
+
+    // Perfect correlation should have very low p-value
+    assertTrue((pMatrix[0, 'y'] as double) < 0.01)
+  }
+
+  @Test
   void testCorrelationWithSignificance() {
     Matrix matrix = Matrix.builder()
         .data(
@@ -509,6 +545,27 @@ class SmileStatsTest {
 
     // x and z should be negatively correlated
     assertEquals(-1.0, corMatrix[0, 'z'] as double, 0.0001)
+  }
+
+  @Test
+  void testCorrelationWithSignificanceWithMethodOnly() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    Map<String, Matrix> result = SmileStats.correlationWithSignificance(matrix, CorrelationMethod.SPEARMAN)
+
+    assertNotNull(result)
+    assertTrue(result.containsKey('correlation'))
+    assertTrue(result.containsKey('pvalue'))
+
+    Matrix corMatrix = result['correlation']
+    assertEquals(2, corMatrix.rowCount())
+    assertEquals(1.0, corMatrix[0, 'y'] as double, 0.0001)
   }
 
   // ==================== Random Sample Generation Tests ====================
