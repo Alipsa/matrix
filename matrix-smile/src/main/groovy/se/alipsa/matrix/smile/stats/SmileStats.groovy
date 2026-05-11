@@ -627,7 +627,7 @@ class SmileStats {
       }
     }
 
-    return [
+    [
         correlation: matrixFromCorrelation(numericCols, corMatrix),
         pvalue     : matrixFromCorrelation(numericCols, pMatrix)
     ]
