@@ -305,7 +305,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestTwoSample(double[] x, double[] y, boolean equalVariance = false) {
-    return TTest.test(x, y, equalVariance)
+    TTest.test(x, y, equalVariance)
   }
 
   /**
@@ -317,7 +317,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestTwoSample(Matrix matrix, String column1, String column2, boolean equalVariance = false) {
-    return tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2), equalVariance)
+    tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2), equalVariance)
   }
 
   /**
@@ -515,7 +515,7 @@ class SmileStats {
    * @return a Matrix with correlation coefficients (column names as row/col headers)
    */
   static Matrix correlationMatrix(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
-    return correlationWithSignificance(matrix, columns, method)['correlation']
+    correlationWithSignificance(matrix, columns, method)['correlation']
   }
 
   /**
@@ -532,7 +532,7 @@ class SmileStats {
    * @return a Matrix with correlation coefficients (column names as row/col headers)
    */
   static Matrix correlationMatrix(Matrix matrix, CorrelationMethod method) {
-    return correlationMatrix(matrix, null, method)
+    correlationMatrix(matrix, null, method)
   }
 
   /**
@@ -545,7 +545,7 @@ class SmileStats {
    * @return a Matrix with correlation coefficients (column names as row/col headers)
    */
   static Matrix correlationMatrix(Matrix matrix, List<String> columns, String method) {
-    return correlationMatrix(matrix, columns, parseCorrelationMethod(method))
+    correlationMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
   /**
@@ -558,7 +558,7 @@ class SmileStats {
    * @return a Matrix with p-values
    */
   static Matrix pValueMatrix(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
-    return correlationWithSignificance(matrix, columns, method)['pvalue']
+    correlationWithSignificance(matrix, columns, method)['pvalue']
   }
 
   /**
@@ -575,7 +575,7 @@ class SmileStats {
    * @return a Matrix with p-values
    */
   static Matrix pValueMatrix(Matrix matrix, CorrelationMethod method) {
-    return pValueMatrix(matrix, null, method)
+    pValueMatrix(matrix, null, method)
   }
 
   /**
@@ -588,7 +588,7 @@ class SmileStats {
    * @return a Matrix with p-values
    */
   static Matrix pValueMatrix(Matrix matrix, List<String> columns, String method) {
-    return pValueMatrix(matrix, columns, parseCorrelationMethod(method))
+    pValueMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
   /**

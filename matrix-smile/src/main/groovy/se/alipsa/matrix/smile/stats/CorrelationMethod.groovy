@@ -24,9 +24,9 @@ enum CorrelationMethod {
    */
   CorTest correlate(double[] x, double[] y) {
     switch (this) {
+      case PEARSON -> CorTest.pearson(x, y)
       case SPEARMAN -> CorTest.spearman(x, y)
       case KENDALL -> CorTest.kendall(x, y)
-      default -> CorTest.pearson(x, y)
     }
   }
 }

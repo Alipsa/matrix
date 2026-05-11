@@ -140,7 +140,7 @@ class SmileUtil {
         result << matrix.columnName(i)
       }
     }
-    return result
+    result
   }
 
   /**
@@ -164,12 +164,12 @@ class SmileUtil {
       }
     }
 
-    return result
+    result
   }
 
   /**
    * Round a double value to the default number of decimal places (4).
-   * Internal utility; not part of the public API.
+   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
    *
    * @param value the value to round
    * @return the rounded value
@@ -180,7 +180,7 @@ class SmileUtil {
 
   /**
    * Round a double value to specified decimal places.
-   * Internal utility; not part of the public API.
+   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
    *
    * @param value the value to round
    * @param numDecimals the number of decimal places

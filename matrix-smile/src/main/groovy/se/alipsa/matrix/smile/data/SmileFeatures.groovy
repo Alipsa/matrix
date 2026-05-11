@@ -242,7 +242,7 @@ class SmileFeatures {
       throw new IllegalArgumentException('power cannot be null')
     }
     double p = power as double
-    return transformColumns(matrix, columns) { List<Double> values ->
+    transformColumns(matrix, columns) { List<Double> values ->
       values.collect { v -> v != null ? v ** p : null }
     }
   }
@@ -641,7 +641,7 @@ class SmileFeatures {
      */
     Matrix fitTransform(Matrix matrix, List<String> columns = null) {
       fit(matrix, columns)
-      return transform(matrix)
+      transform(matrix)
     }
 
     /**
@@ -751,7 +751,7 @@ class SmileFeatures {
      */
     Matrix fitTransform(Matrix matrix, List<String> columns = null) {
       fit(matrix, columns)
-      return transform(matrix)
+      transform(matrix)
     }
 
     /**
