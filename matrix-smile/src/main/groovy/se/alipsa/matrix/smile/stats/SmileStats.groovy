@@ -22,6 +22,7 @@ import smile.stat.hypothesis.KSTest
 import smile.stat.hypothesis.TTest
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Statistical utilities leveraging Smile's statistics library.
@@ -304,11 +305,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestTwoSample(double[] x, double[] y, boolean equalVariance = false) {
-    if (equalVariance) {
-      return TTest.test(x, y)
-    } else {
-      return TTest.test(x, y) // Smile uses Welch's by default
-    }
+    TTest.test(x, y, equalVariance)
   }
 
   /**
@@ -319,8 +316,8 @@ class SmileStats {
    * @param column2 second column name
    * @return a TTest result
    */
-  static TTest tTestTwoSample(Matrix matrix, String column1, String column2) {
-    return tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+  static TTest tTestTwoSample(Matrix matrix, String column1, String column2, boolean equalVariance = false) {
+    tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2), equalVariance)
   }
 
   /**
@@ -514,37 +511,41 @@ class SmileStats {
    *
    * @param matrix the input Matrix
    * @param columns optional list of column names to include (all numeric if not specified)
-   * @param method correlation method: "pearson", "spearman", or "kendall"
+   * @param method correlation method
    * @return a Matrix with correlation coefficients (column names as row/col headers)
    */
-  static Matrix correlationMatrix(Matrix matrix, List<String> columns = null, String method = "pearson") {
-    List<String> numericCols = columns ?: getNumericColumnNames(matrix)
-    int n = numericCols.size()
+  static Matrix correlationMatrix(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
+    correlationWithSignificance(matrix, columns, method)['correlation']
+  }
 
-    double[][] corMatrix = new double[n][n]
-    double[][] data = new double[n][]
+  /**
+   * Compute a correlation matrix with significance for all numeric columns.
+   * Returns a Matrix containing the correlation coefficients.
+   *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code correlationMatrix(matrix, (List<String>) null)}.</p>
+   *
+   * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Matrix with correlation coefficients (column names as row/col headers)
+   */
+  static Matrix correlationMatrix(Matrix matrix, CorrelationMethod method) {
+    correlationMatrix(matrix, null, method)
+  }
 
-    // Extract data arrays
-    for (int i = 0; i < n; i++) {
-      data[i] = toDoubleArray(matrix, numericCols[i])
-    }
-
-    // Compute correlations
-    for (int i = 0; i < n; i++) {
-      corMatrix[i][i] = 1.0
-      for (int j = i + 1; j < n; j++) {
-        CorTest result
-        switch (method.toLowerCase()) {
-          case "spearman" -> result = CorTest.spearman(data[i], data[j])
-          case "kendall" -> result = CorTest.kendall(data[i], data[j])
-          default -> result = CorTest.pearson(data[i], data[j])
-        }
-        corMatrix[i][j] = result.cor()
-        corMatrix[j][i] = result.cor()
-      }
-    }
-
-    return matrixFromCorrelation(numericCols, corMatrix)
+  /**
+   * Compute a correlation matrix with significance for all numeric columns.
+   * Returns a Matrix containing the correlation coefficients.
+   *
+   * @param matrix the input Matrix
+   * @param columns optional list of column names to include (all numeric if not specified)
+   * @param method correlation method name: "pearson", "spearman", or "kendall"
+   * @return a Matrix with correlation coefficients (column names as row/col headers)
+   */
+  static Matrix correlationMatrix(Matrix matrix, List<String> columns, String method) {
+    correlationMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
   /**
@@ -553,37 +554,41 @@ class SmileStats {
    *
    * @param matrix the input Matrix
    * @param columns optional list of column names to include
-   * @param method correlation method: "pearson", "spearman", or "kendall"
+   * @param method correlation method
    * @return a Matrix with p-values
    */
-  static Matrix pValueMatrix(Matrix matrix, List<String> columns = null, String method = "pearson") {
-    List<String> numericCols = columns ?: getNumericColumnNames(matrix)
-    int n = numericCols.size()
+  static Matrix pValueMatrix(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
+    correlationWithSignificance(matrix, columns, method)['pvalue']
+  }
 
-    double[][] pMatrix = new double[n][n]
-    double[][] data = new double[n][]
+  /**
+   * Compute a p-value matrix for correlations.
+   * Returns a Matrix containing the p-values for each pair of variables.
+   *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code pValueMatrix(matrix, (List<String>) null)}.</p>
+   *
+   * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Matrix with p-values
+   */
+  static Matrix pValueMatrix(Matrix matrix, CorrelationMethod method) {
+    pValueMatrix(matrix, null, method)
+  }
 
-    // Extract data arrays
-    for (int i = 0; i < n; i++) {
-      data[i] = toDoubleArray(matrix, numericCols[i])
-    }
-
-    // Compute p-values
-    for (int i = 0; i < n; i++) {
-      pMatrix[i][i] = 0.0  // Perfect correlation with itself
-      for (int j = i + 1; j < n; j++) {
-        CorTest result
-        switch (method.toLowerCase()) {
-          case "spearman" -> result = CorTest.spearman(data[i], data[j])
-          case "kendall" -> result = CorTest.kendall(data[i], data[j])
-          default -> result = CorTest.pearson(data[i], data[j])
-        }
-        pMatrix[i][j] = result.pvalue()
-        pMatrix[j][i] = result.pvalue()
-      }
-    }
-
-    return matrixFromCorrelation(numericCols, pMatrix)
+  /**
+   * Compute a p-value matrix for correlations.
+   * Returns a Matrix containing the p-values for each pair of variables.
+   *
+   * @param matrix the input Matrix
+   * @param columns optional list of column names to include
+   * @param method correlation method name: "pearson", "spearman", or "kendall"
+   * @return a Matrix with p-values
+   */
+  static Matrix pValueMatrix(Matrix matrix, List<String> columns, String method) {
+    pValueMatrix(matrix, columns, parseCorrelationMethod(method))
   }
 
   /**
@@ -592,11 +597,12 @@ class SmileStats {
    *
    * @param matrix the input Matrix
    * @param columns optional list of column names to include
-   * @param method correlation method: "pearson", "spearman", or "kendall"
+   * @param method correlation method
    * @return a Map with "correlation" and "pvalue" matrices
    */
-  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, String method = "pearson") {
-    List<String> numericCols = columns ?: getNumericColumnNames(matrix)
+  @SuppressWarnings('NestedForLoop')
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
+    List<String> numericCols = columns ?: SmileUtil.getNumericColumnNames(matrix)
     int n = numericCols.size()
 
     double[][] corMatrix = new double[n][n]
@@ -613,12 +619,7 @@ class SmileStats {
       corMatrix[i][i] = 1.0
       pMatrix[i][i] = 0.0
       for (int j = i + 1; j < n; j++) {
-        CorTest result
-        switch (method.toLowerCase()) {
-          case "spearman" -> result = CorTest.spearman(data[i], data[j])
-          case "kendall" -> result = CorTest.kendall(data[i], data[j])
-          default -> result = CorTest.pearson(data[i], data[j])
-        }
+        CorTest result = method.correlate(data[i], data[j])
         corMatrix[i][j] = result.cor()
         corMatrix[j][i] = result.cor()
         pMatrix[i][j] = result.pvalue()
@@ -626,10 +627,51 @@ class SmileStats {
       }
     }
 
-    return [
+    [
         correlation: matrixFromCorrelation(numericCols, corMatrix),
         pvalue     : matrixFromCorrelation(numericCols, pMatrix)
-    ] as Map<String, Matrix>
+    ]
+  }
+
+  /**
+   * Compute both correlation matrix and p-value matrix.
+   * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
+   *
+   * <p><b>Note for {@code @CompileStatic} callers:</b> passing {@code null} as the
+   * second argument is ambiguous between {@code List<String>} and
+   * {@code CorrelationMethod}. Cast explicitly, e.g.
+   * {@code correlationWithSignificance(matrix, (List<String>) null)}.</p>
+   *
+   * @param matrix the input Matrix
+   * @param method correlation method
+   * @return a Map with "correlation" and "pvalue" matrices
+   */
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, CorrelationMethod method) {
+    correlationWithSignificance(matrix, null, method)
+  }
+
+  /**
+   * Compute both correlation matrix and p-value matrix.
+   * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
+   *
+   * @param matrix the input Matrix
+   * @param columns optional list of column names to include
+   * @param method correlation method name: "pearson", "spearman", or "kendall"
+   * @return a Map with "correlation" and "pvalue" matrices
+   */
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns, String method) {
+    correlationWithSignificance(matrix, columns, parseCorrelationMethod(method))
+  }
+
+  private static CorrelationMethod parseCorrelationMethod(String method) {
+    if (method == null) {
+      return CorrelationMethod.PEARSON
+    }
+    try {
+      return CorrelationMethod.valueOf(method.toUpperCase())
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall", e)
+    }
   }
 
   // ==================== Distribution Utilities ====================
@@ -755,25 +797,12 @@ class SmileStats {
     return result
   }
 
-  private static List<String> getNumericColumnNames(Matrix matrix) {
-    List<Class<?>> numericTypes = [
-        Integer, int, Long, long, Double, double, Float, float,
-        Short, short, Byte, byte, BigDecimal, BigInteger, Number
-    ]
-    List<String> result = []
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      if (numericTypes.contains(matrix.type(i))) {
-        result << matrix.columnName(i)
-      }
-    }
-    return result
-  }
-
+  @SuppressWarnings('NestedForLoop')
   private static Matrix matrixFromCorrelation(List<String> columnNames, double[][] data) {
-    Map<String, List<?>> matrixData = new LinkedHashMap<>()
+    Map<String, List<?>> matrixData = [:]
 
     // First column: row names
-    matrixData.put("", columnNames as List<?>)
+    matrixData.put('', columnNames as List<?>)
 
     // Remaining columns: correlation values
     for (int j = 0; j < columnNames.size(); j++) {
@@ -786,7 +815,8 @@ class SmileStats {
 
     return Matrix.builder()
         .data(matrixData)
-        .matrixName("Correlation Matrix")
+        .matrixName('Correlation Matrix')
         .build()
   }
+
 }

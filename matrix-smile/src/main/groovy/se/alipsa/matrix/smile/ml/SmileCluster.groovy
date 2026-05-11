@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import smile.clustering.*
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Wrapper for Smile clustering algorithms providing a Matrix-friendly API.
@@ -49,7 +50,7 @@ class SmileCluster {
    */
   static SmileCluster kmeans(Matrix matrix, int k, int maxIter) {
     String[] featureColumns = matrix.columnNames() as String[]
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     CentroidClustering<double[], double[]> model = KMeans.fit(data, k, maxIter)
 
@@ -66,7 +67,7 @@ class SmileCluster {
    */
   static SmileCluster dbscan(Matrix matrix, int minPts, double radius) {
     String[] featureColumns = matrix.columnNames() as String[]
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     DBSCAN<double[]> model = DBSCAN.fit(data, minPts, radius)
     int[] labels = model.group()
@@ -141,7 +142,7 @@ class SmileCluster {
       throw new UnsupportedOperationException('Prediction is not supported for this clustering algorithm')
     }
 
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
     int[] predictions = new int[data.length]
 
     for (int i = 0; i < data.length; i++) {
@@ -242,30 +243,13 @@ class SmileCluster {
    * @return the silhouette coefficient (-1 to 1)
    */
   double silhouette(Matrix matrix) {
-    double[][] data = matrixToArray(matrix)
+    double[][] data = SmileUtil.matrixToArray(matrix)
 
     // Simple silhouette calculation
     return calculateSilhouette(data, clusterLabels)
   }
 
   // Helper methods
-
-  @SuppressWarnings('NestedForLoop')
-  private static double[][] matrixToArray(Matrix matrix) {
-    int rows = matrix.rowCount()
-    int cols = matrix.columnCount()
-    double[][] result = new double[rows][cols]
-
-    for (int j = 0; j < cols; j++) {
-      List<?> column = matrix.column(j)
-      for (int i = 0; i < rows; i++) {
-        Object val = column.get(i)
-        result[i][j] = val != null ? val as double : 0.0d
-      }
-    }
-
-    return result
-  }
 
   @SuppressWarnings('NestedForLoop')
   private static double calculateSilhouette(double[][] data, int[] labels) {

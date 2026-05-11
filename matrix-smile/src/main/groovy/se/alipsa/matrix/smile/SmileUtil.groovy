@@ -48,17 +48,7 @@ class SmileUtil {
    * @return a Matrix with statistical summary
    */
   static Matrix describe(Matrix matrix) {
-    List<String> numericColumns = []
-    List<Class<?>> numericTypes = [
-        Integer, int, Long, long, Double, double, Float, float,
-        Short, short, Byte, byte, BigDecimal, BigInteger, Number
-    ]
-
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      if (numericTypes.contains(matrix.type(i))) {
-        numericColumns << matrix.columnName(i)
-      }
-    }
+    List<String> numericColumns = getNumericColumnNames(matrix)
 
     if (numericColumns.isEmpty()) {
       return Matrix.builder()
@@ -95,13 +85,13 @@ class SmileUtil {
 
       data.put(colName, [
           count,
-          round(mean, ROUND_DECIMALS),
-          round(std, ROUND_DECIMALS),
-          round(min, ROUND_DECIMALS),
-          round(q25, ROUND_DECIMALS),
-          round(q50, ROUND_DECIMALS),
-          round(q75, ROUND_DECIMALS),
-          round(max, ROUND_DECIMALS)
+          round(mean),
+          round(std),
+          round(min),
+          round(q25),
+          round(q50),
+          round(q75),
+          round(max)
       ])
     }
 
@@ -134,7 +124,67 @@ class SmileUtil {
   }
 
   /**
+   * Get the names of numeric columns in a Matrix.
+   *
+   * @param matrix the Matrix to analyze
+   * @return list of column names that contain numeric data
+   */
+  static List<String> getNumericColumnNames(Matrix matrix) {
+    List<Class<?>> numericTypes = [
+        Integer, int, Long, long, Double, double, Float, float,
+        Short, short, Byte, byte, BigDecimal, BigInteger, Number
+    ]
+    List<String> result = []
+    for (int i = 0; i < matrix.columnCount(); i++) {
+      if (numericTypes.contains(matrix.type(i))) {
+        result << matrix.columnName(i)
+      }
+    }
+    result
+  }
+
+  /**
+   * Convert a Matrix to a 2D double array.
+   * Null values are converted to 0.0.
+   *
+   * @param matrix the Matrix to convert
+   * @return 2D array of double values
+   */
+  @SuppressWarnings('NestedForLoop')
+  static double[][] matrixToArray(Matrix matrix) {
+    int rows = matrix.rowCount()
+    int cols = matrix.columnCount()
+    double[][] result = new double[rows][cols]
+
+    for (int j = 0; j < cols; j++) {
+      List<?> column = matrix.column(j)
+      for (int i = 0; i < rows; i++) {
+        Object val = column.get(i)
+        result[i][j] = val != null ? val as double : 0.0d
+      }
+    }
+
+    result
+  }
+
+  /**
+   * Round a double value to the default number of decimal places (4).
+   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
+   *
+   * @param value the value to round
+   * @return the rounded value
+   */
+  static double round(double value) {
+    round(value, ROUND_DECIMALS)
+  }
+
+  /**
    * Round a double value to specified decimal places.
+   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
+   *
+   * @param value the value to round
+   * @param numDecimals the number of decimal places
+   * @return the rounded value
    */
   static double round(double value, int numDecimals) {
     if (Double.isNaN(value) || Double.isInfinite(value)) { return value }

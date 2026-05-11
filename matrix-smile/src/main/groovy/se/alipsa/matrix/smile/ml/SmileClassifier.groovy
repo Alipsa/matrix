@@ -10,6 +10,7 @@ import smile.validation.metric.ConfusionMatrix
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.DataframeConverter
+import se.alipsa.matrix.smile.SmileUtil
 
 /**
  * Wrapper for Smile classification algorithms providing a Matrix-friendly API.
@@ -231,9 +232,9 @@ class SmileClassifier {
       double recall = (tp + fn) > 0 ? ((double) tp) / ((double) (tp + fn)) : 0.0d
       double f1 = (precision + recall) > 0 ? 2.0d * precision * recall / (precision + recall) : 0.0d
 
-      precisions.add(roundTo4(precision))
-      recalls.add(roundTo4(recall))
-      f1Scores.add(roundTo4(f1))
+      precisions.add(SmileUtil.round(precision))
+      recalls.add(SmileUtil.round(recall))
+      f1Scores.add(SmileUtil.round(f1))
     }
 
     return Matrix.builder()
@@ -246,12 +247,6 @@ class SmileClassifier {
         )
         .types([String, Double, Double, Double, Integer])
         .build()
-  }
-
-  private static final double ROUND_PRECISION = 10000.0d
-
-  private static double roundTo4(double value) {
-    return Math.round(value * ROUND_PRECISION) / ROUND_PRECISION
   }
 
   /**
