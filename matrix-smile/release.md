@@ -1,29 +1,24 @@
 # Matrix-smile release history
 
 ## v0.2.0, In progress
-
-## v0.1.1, 2026-05-10
-Bug fixes, DRY cleanups, and API improvements.
+Bug fixes and API improvements.
 
 ### Bug Fixes
 - **tTestTwoSample**: `equalVariance` parameter is now properly wired to Smile's pooled-variance t-test instead of being ignored
-- **MinMaxScaler**: Added missing `transform()` method for fit-then-transform workflows
-
-### DRY / Refactoring
-- Extracted duplicated `roundTo4()` helpers into `SmileUtil.round(value, 4)`
-- Extracted duplicated `matrixToArray()` into `SmileUtil.matrixToArray()`
-- Extracted duplicated `getNumericColumnNames()` into `SmileUtil.getNumericColumnNames()`
-- `correlationMatrix()` and `pValueMatrix()` now delegate to `correlationWithSignificance()`
-- `StandardScaler.fitTransform()` and `MinMaxScaler.fitTransform()` now reuse `fit()` + `transform()`
+- **tTestTwoSample(Matrix, ...)**: `equalVariance` parameter was missing from the Matrix overload; it now accepts `equalVariance` (default `false`) matching the array overload
+- **MinMaxScaler**: Added missing `transform()` method for fit-then-transform workflows; calling `transform()` before `fit()` now throws `IllegalStateException`
+- **SmileClassifier.randomForest**: `ntrees` parameter was silently ignored — the model always used Smile's defaults; now correctly passed via `RandomForest.Options(ntrees)`
+- **SmileClassifier.randomForest**: `ntrees <= 0` now throws `IllegalArgumentException` instead of silently producing an invalid model
 
 ### API Improvements
 - **CorrelationMethod enum**: Added `PEARSON`, `SPEARMAN`, `KENDALL` enum for type-safe correlation method selection
-- **String overloads**: Correlation methods retain backward-compatible `String` overloads that parse into the enum
-- **powerTransform**: Parameter changed from `double` to `Number` for better Groovy ergonomics
-- **SmileUtil.round()**: Added proper GroovyDoc
+- **Correlation convenience overloads**: `correlationMatrix(matrix, CorrelationMethod)`, `pValueMatrix(matrix, CorrelationMethod)`, and `correlationWithSignificance(matrix, CorrelationMethod)` — no need to pass `null` for columns when selecting a method
+- **String overloads**: `correlationMatrix`, `pValueMatrix`, and `correlationWithSignificance` retain backward-compatible `String` overloads (`"pearson"`, `"spearman"`, `"kendall"`) that delegate to the enum
+- **powerTransform**: Parameter changed from `double` to `Number` for better Groovy ergonomics; passing `null` now throws `IllegalArgumentException`
+- **SmileClassifier.getModel()**: New getter exposes the underlying Smile `DataFrameClassifier` model
 
 ### Documentation
-- **README**: Updated dependency versions (groovy 5.0.6, matrix-core 3.7.1, matrix-smile 0.1.1)
+- **README**: Updated dependency versions (groovy 5.0.6, matrix-core 3.7.1, matrix-smile 0.2.0)
 - **release.md**: Corrected v0.1.0 feature list to reflect only shipped functionality
 
 ---
