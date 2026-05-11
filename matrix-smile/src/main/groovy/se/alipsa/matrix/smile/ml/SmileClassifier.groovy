@@ -232,9 +232,9 @@ class SmileClassifier {
       double recall = (tp + fn) > 0 ? ((double) tp) / ((double) (tp + fn)) : 0.0d
       double f1 = (precision + recall) > 0 ? 2.0d * precision * recall / (precision + recall) : 0.0d
 
-      precisions.add(SmileUtil.round(precision, SmileUtil.ROUND_DECIMALS))
-      recalls.add(SmileUtil.round(recall, SmileUtil.ROUND_DECIMALS))
-      f1Scores.add(SmileUtil.round(f1, SmileUtil.ROUND_DECIMALS))
+      precisions.add(SmileUtil.round(precision))
+      recalls.add(SmileUtil.round(recall))
+      f1Scores.add(SmileUtil.round(f1))
     }
 
     return Matrix.builder()

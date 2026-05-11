@@ -599,6 +599,30 @@ class SmileStats {
     ]
   }
 
+  /**
+   * Compute both correlation matrix and p-value matrix.
+   * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
+   *
+   * @param matrix the input Matrix
+   * @param columns optional list of column names to include
+   * @param method correlation method name: "pearson", "spearman", or "kendall"
+   * @return a Map with "correlation" and "pvalue" matrices
+   */
+  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, String method) {
+    correlationWithSignificance(matrix, columns, parseCorrelationMethod(method))
+  }
+
+  private static CorrelationMethod parseCorrelationMethod(String method) {
+    if (method == null) {
+      return CorrelationMethod.PEARSON
+    }
+    try {
+      CorrelationMethod.valueOf(method.toUpperCase())
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall")
+    }
+  }
+
   // ==================== Distribution Utilities ====================
 
   /**
@@ -720,30 +744,6 @@ class SmileStats {
       return trimmed
     }
     return result
-  }
-
-  /**
-   * Compute both correlation matrix and p-value matrix.
-   * Returns a Map with keys "correlation" and "pvalue", each containing a Matrix.
-   *
-   * @param matrix the input Matrix
-   * @param columns optional list of column names to include
-   * @param method correlation method name: "pearson", "spearman", or "kendall"
-   * @return a Map with "correlation" and "pvalue" matrices
-   */
-  static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, String method) {
-    return correlationWithSignificance(matrix, columns, parseCorrelationMethod(method))
-  }
-
-  private static CorrelationMethod parseCorrelationMethod(String method) {
-    if (method == null) {
-      return CorrelationMethod.PEARSON
-    }
-    try {
-      return CorrelationMethod.valueOf(method.toUpperCase())
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall")
-    }
   }
 
   @SuppressWarnings('NestedForLoop')

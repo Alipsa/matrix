@@ -195,9 +195,9 @@ class SmileDimensionality {
 
     for (int i = 0; i < variance.length; i++) {
       components.add("PC${i + 1}" as String)
-      variances.add(SmileUtil.round(variance[i], SmileUtil.ROUND_DECIMALS))
-      proportions.add(SmileUtil.round(proportion[i], SmileUtil.ROUND_DECIMALS))
-      cumulatives.add(SmileUtil.round(cumulative[i], SmileUtil.ROUND_DECIMALS))
+      variances.add(SmileUtil.round(variance[i]))
+      proportions.add(SmileUtil.round(proportion[i]))
+      cumulatives.add(SmileUtil.round(cumulative[i]))
     }
 
     return Matrix.builder()

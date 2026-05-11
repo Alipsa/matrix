@@ -17,7 +17,7 @@ import java.math.RoundingMode
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'
-  static final int ROUND_DECIMALS = 4
+  private static final int ROUND_DECIMALS = 4
   private static final double PERCENT = 100.0
 
   /**
@@ -48,17 +48,7 @@ class SmileUtil {
    * @return a Matrix with statistical summary
    */
   static Matrix describe(Matrix matrix) {
-    List<String> numericColumns = []
-    List<Class<?>> numericTypes = [
-        Integer, int, Long, long, Double, double, Float, float,
-        Short, short, Byte, byte, BigDecimal, BigInteger, Number
-    ]
-
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      if (numericTypes.contains(matrix.type(i))) {
-        numericColumns << matrix.columnName(i)
-      }
-    }
+    List<String> numericColumns = getNumericColumnNames(matrix)
 
     if (numericColumns.isEmpty()) {
       return Matrix.builder()
@@ -95,13 +85,13 @@ class SmileUtil {
 
       data.put(colName, [
           count,
-          round(mean, ROUND_DECIMALS),
-          round(std, ROUND_DECIMALS),
-          round(min, ROUND_DECIMALS),
-          round(q25, ROUND_DECIMALS),
-          round(q50, ROUND_DECIMALS),
-          round(q75, ROUND_DECIMALS),
-          round(max, ROUND_DECIMALS)
+          round(mean),
+          round(std),
+          round(min),
+          round(q25),
+          round(q50),
+          round(q75),
+          round(max)
       ])
     }
 
@@ -175,6 +165,16 @@ class SmileUtil {
     }
 
     return result
+  }
+
+  /**
+   * Round a double value to the default number of decimal places (4).
+   *
+   * @param value the value to round
+   * @return the rounded value
+   */
+  static double round(double value) {
+    round(value, ROUND_DECIMALS)
   }
 
   /**

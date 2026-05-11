@@ -221,7 +221,12 @@ class SmileRegression {
     return Matrix.builder()
         .data(
             metric: ['R²', 'MSE', 'RMSE', 'MAE'],
-            value: [SmileUtil.round(r2, SmileUtil.ROUND_DECIMALS), SmileUtil.round(mseVal, SmileUtil.ROUND_DECIMALS), SmileUtil.round(rmseVal, SmileUtil.ROUND_DECIMALS), SmileUtil.round(maeVal, SmileUtil.ROUND_DECIMALS)]
+            value: [
+                SmileUtil.round(r2),
+                SmileUtil.round(mseVal),
+                SmileUtil.round(rmseVal),
+                SmileUtil.round(maeVal)
+            ]
         )
         .types([String, Double])
         .build()

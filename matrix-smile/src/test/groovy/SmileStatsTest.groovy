@@ -220,6 +220,22 @@ class SmileStatsTest {
   }
 
   @Test
+  void testTTestTwoSampleEqualVariance() {
+    // Narrow-variance group centred at ~10, wide-variance group centred at ~12
+    double[] narrow = [9.8, 10.0, 10.1, 9.9, 10.2] as double[]
+    double[] wide = [2.0, 8.0, 14.0, 18.0, 20.0] as double[]
+
+    TTest welch = SmileStats.tTestTwoSample(narrow, wide, false)
+    TTest student = SmileStats.tTestTwoSample(narrow, wide, true)
+
+    assertNotNull(welch)
+    assertNotNull(student)
+    // Welch and Student t-tests pool variance differently, giving different df and p-values
+    assertNotEquals(welch.df(), student.df(), 0.01,
+        'equalVariance=true should produce different degrees of freedom than equalVariance=false')
+  }
+
+  @Test
   void testTTestPaired() {
     double[] before = [85.0, 90.0, 78.0, 92.0, 88.0] as double[]
     double[] after = [88.0, 92.0, 82.0, 95.0, 90.0] as double[]
