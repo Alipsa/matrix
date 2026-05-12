@@ -53,7 +53,7 @@ class DataframeConverter {
         data.get(colName).add(row.get(colName))
       }
     }
-    return Matrix.builder().data(data).types(types).build()
+    Matrix.builder().data(data).types(types).build()
   }
 
   static DataFrame convert(Matrix matrix) {
@@ -160,7 +160,7 @@ class DataframeConverter {
     }
 
     // Create the Smile DataFrame from the ValueVectors
-    return new DataFrame(columns as ValueVector[])
+    new DataFrame(columns as ValueVector[])
   }
 
   /**
@@ -172,7 +172,7 @@ class DataframeConverter {
         return true
       }
     }
-    return false
+    false
   }
 
   /**
@@ -183,7 +183,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = ((Number) list.get(i)).floatValue()
     }
-    return result
+    result
   }
 
   /**
@@ -194,7 +194,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = list.get(i) as double
     }
-    return result
+    result
   }
 
   /**
@@ -205,7 +205,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = ((Number) list.get(i)).intValue()
     }
-    return result
+    result
   }
 
   /**
@@ -216,7 +216,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = ((Number) list.get(i)).longValue()
     }
-    return result
+    result
   }
 
   /**
@@ -227,7 +227,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = ((Number) list.get(i)).shortValue()
     }
-    return result
+    result
   }
 
   /**
@@ -238,7 +238,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = ((Number) list.get(i)).byteValue()
     }
-    return result
+    result
   }
 
   /**
@@ -249,7 +249,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = (Boolean) list.get(i)
     }
-    return result
+    result
   }
 
   /**
@@ -260,7 +260,7 @@ class DataframeConverter {
     for (int i = 0; i < list.size(); i++) {
       result[i] = (Character) list.get(i)
     }
-    return result
+    result
   }
 
   static Class getType(DataType dataType) {

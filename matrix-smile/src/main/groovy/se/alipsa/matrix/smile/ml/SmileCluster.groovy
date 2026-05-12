@@ -37,7 +37,7 @@ class SmileCluster {
    * @return a SmileCluster with the clustering result
    */
   static SmileCluster kmeans(Matrix matrix, int k) {
-    return kmeans(matrix, k, 100)
+    kmeans(matrix, k, 100)
   }
 
   /**
@@ -54,7 +54,7 @@ class SmileCluster {
 
     CentroidClustering<double[], double[]> model = KMeans.fit(data, k, maxIter)
 
-    return new SmileCluster(model, model.group(), featureColumns, k)
+    new SmileCluster(model, model.group(), featureColumns, k)
   }
 
   /**
@@ -72,7 +72,7 @@ class SmileCluster {
     DBSCAN<double[]> model = DBSCAN.fit(data, minPts, radius)
     int[] labels = model.group()
 
-    return new SmileCluster(null, labels, featureColumns, model.k())
+    new SmileCluster(null, labels, featureColumns, model.k())
   }
 
   /**
@@ -81,7 +81,7 @@ class SmileCluster {
    * @return array of cluster labels (0-based, outliers may be -1 or MAX_VALUE for DBSCAN)
    */
   int[] getLabels() {
-    return clusterLabels
+    clusterLabels
   }
 
   /**
@@ -90,7 +90,7 @@ class SmileCluster {
    * @return the number of clusters
    */
   int getNumClusters() {
-    return numClusters
+    numClusters
   }
 
   /**
@@ -103,7 +103,7 @@ class SmileCluster {
     for (int label : clusterLabels) {
       result.add(label)
     }
-    return result
+    result
   }
 
   /**
@@ -124,7 +124,7 @@ class SmileCluster {
     List<Class<?>> types = new ArrayList<>(matrix.types())
     types.add(Integer)
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -149,7 +149,7 @@ class SmileCluster {
       predictions[i] = centroidModel.predict(data[i])
     }
 
-    return predictions
+    predictions
   }
 
   /**
@@ -163,7 +163,7 @@ class SmileCluster {
     if (centroidModel != null) {
       return centroidModel.centers()
     }
-    return null
+    null
   }
 
   /**
@@ -193,7 +193,7 @@ class SmileCluster {
       types.add(Double)
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -219,7 +219,7 @@ class SmileCluster {
       countList.add(counts.get(cluster))
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             cluster: clusters,
             count: countList
@@ -232,7 +232,7 @@ class SmileCluster {
    * Get the feature column names.
    */
   String[] getFeatureColumns() {
-    return featureColumns
+    featureColumns
   }
 
   /**
@@ -246,7 +246,7 @@ class SmileCluster {
     double[][] data = SmileUtil.matrixToArray(matrix)
 
     // Simple silhouette calculation
-    return calculateSilhouette(data, clusterLabels)
+    calculateSilhouette(data, clusterLabels)
   }
 
   // Helper methods
@@ -296,7 +296,7 @@ class SmileCluster {
       }
     }
 
-    return validPoints > 0 ? totalSilhouette / validPoints : 0.0d
+    validPoints > 0 ? totalSilhouette / validPoints : 0.0d
   }
 
   @SuppressWarnings('NestedForLoop')
@@ -311,7 +311,7 @@ class SmileCluster {
       }
     }
 
-    return count > 0 ? sumDist / count : 0.0d
+    count > 0 ? sumDist / count : 0.0d
   }
 
   private static double euclideanDistance(double[] a, double[] b) {
@@ -320,7 +320,7 @@ class SmileCluster {
       double diff = a[i] - b[i]
       sum += diff * diff
     }
-    return Math.sqrt(sum)
+    Math.sqrt(sum)
   }
 
 }

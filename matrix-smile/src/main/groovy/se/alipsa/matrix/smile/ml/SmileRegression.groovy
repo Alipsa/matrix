@@ -49,7 +49,7 @@ class SmileRegression {
 
     LinearModel model = OLS.fit(formula, df)
 
-    return new SmileRegression(model, formula, targetColumn, featureColumns)
+    new SmileRegression(model, formula, targetColumn, featureColumns)
   }
 
   /**
@@ -67,7 +67,7 @@ class SmileRegression {
 
     LinearModel model = RidgeRegression.fit(formula, df, lambda)
 
-    return new SmileRegression(model, formula, targetColumn, featureColumns)
+    new SmileRegression(model, formula, targetColumn, featureColumns)
   }
 
   /**
@@ -86,7 +86,7 @@ class SmileRegression {
     LASSO.Options options = new LASSO.Options(lambda)
     LinearModel model = LASSO.fit(formula, df, options)
 
-    return new SmileRegression(model, formula, targetColumn, featureColumns)
+    new SmileRegression(model, formula, targetColumn, featureColumns)
   }
 
   /**
@@ -105,7 +105,7 @@ class SmileRegression {
 
     LinearModel model = ElasticNet.fit(formula, df, lambda1, lambda2)
 
-    return new SmileRegression(model, formula, targetColumn, featureColumns)
+    new SmileRegression(model, formula, targetColumn, featureColumns)
   }
 
   /**
@@ -132,7 +132,7 @@ class SmileRegression {
     List<Class<?>> types = new ArrayList<>(matrix.types())
     types.add(Double)
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -151,7 +151,7 @@ class SmileRegression {
     for (int i = 0; i < nrows; i++) {
       predictions[i] = model.predict(df.get(i))
     }
-    return predictions
+    predictions
   }
 
   /**
@@ -164,7 +164,7 @@ class SmileRegression {
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
-    return calculateRSquared(actual, predicted)
+    calculateRSquared(actual, predicted)
   }
 
   /**
@@ -177,7 +177,7 @@ class SmileRegression {
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
-    return calculateMSE(actual, predicted)
+    calculateMSE(actual, predicted)
   }
 
   /**
@@ -187,7 +187,7 @@ class SmileRegression {
    * @return the root mean squared error
    */
   double rmse(Matrix testMatrix) {
-    return Math.sqrt(mse(testMatrix))
+    Math.sqrt(mse(testMatrix))
   }
 
   /**
@@ -200,7 +200,7 @@ class SmileRegression {
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
-    return calculateMAE(actual, predicted)
+    calculateMAE(actual, predicted)
   }
 
   /**
@@ -218,7 +218,7 @@ class SmileRegression {
     double rmseVal = Math.sqrt(mseVal)
     double maeVal = calculateMAE(actual, predicted)
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             metric: ['R²', 'MSE', 'RMSE', 'MAE'],
             value: [
@@ -238,7 +238,7 @@ class SmileRegression {
    * @return array of coefficients
    */
   double[] getCoefficients() {
-    return model.coefficients()
+    model.coefficients()
   }
 
   /**
@@ -247,21 +247,21 @@ class SmileRegression {
    * @return the intercept value
    */
   double getIntercept() {
-    return model.intercept()
+    model.intercept()
   }
 
   /**
    * Get the feature column names.
    */
   String[] getFeatureColumns() {
-    return featureColumns
+    featureColumns
   }
 
   /**
    * Get the target column name.
    */
   String getTargetColumn() {
-    return targetColumn
+    targetColumn
   }
 
   // Helper methods
@@ -275,7 +275,7 @@ class SmileRegression {
       result[i] = val != null ? val as double : 0.0d
     }
 
-    return result
+    result
   }
 
   private static double calculateRSquared(double[] actual, double[] predicted) {
@@ -293,7 +293,7 @@ class SmileRegression {
       ssRes += (actual[i] - predicted[i]) * (actual[i] - predicted[i])
     }
 
-    return ssTot > 0 ? 1.0d - (ssRes / ssTot) : 0.0d
+    ssTot > 0 ? 1.0d - (ssRes / ssTot) : 0.0d
   }
 
   private static double calculateMSE(double[] actual, double[] predicted) {
@@ -302,7 +302,7 @@ class SmileRegression {
       double diff = actual[i] - predicted[i]
       sum += diff * diff
     }
-    return sum / actual.length
+    sum / actual.length
   }
 
   private static double calculateMAE(double[] actual, double[] predicted) {
@@ -310,7 +310,7 @@ class SmileRegression {
     for (int i = 0; i < actual.length; i++) {
       sum += Math.abs(actual[i] - predicted[i])
     }
-    return sum / actual.length
+    sum / actual.length
   }
 
 }

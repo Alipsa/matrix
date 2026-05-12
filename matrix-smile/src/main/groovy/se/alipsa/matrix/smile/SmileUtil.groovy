@@ -27,7 +27,7 @@ class SmileUtil {
    * @return a Matrix containing the same data
    */
   static Matrix toMatrix(DataFrame dataFrame) {
-    return DataframeConverter.convert(dataFrame)
+    DataframeConverter.convert(dataFrame)
   }
 
   /**
@@ -37,7 +37,7 @@ class SmileUtil {
    * @return a Smile DataFrame containing the same data
    */
   static DataFrame toDataFrame(Matrix matrix) {
-    return DataframeConverter.convert(matrix)
+    DataframeConverter.convert(matrix)
   }
 
   /**
@@ -98,7 +98,7 @@ class SmileUtil {
     List<Class<?>> types = [String]
     types.addAll(Collections.nCopies(numericColumns.size(), Object))
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -120,7 +120,7 @@ class SmileUtil {
     }
 
     double fraction = index - lower
-    return sortedValues[lower] * (1 - fraction) + sortedValues[upper] * fraction
+    sortedValues[lower] * (1 - fraction) + sortedValues[upper] * fraction
   }
 
   /**
@@ -192,7 +192,7 @@ class SmileUtil {
 
     BigDecimal bd = BigDecimal.valueOf(value)
     bd = bd.setScale(numDecimals, RoundingMode.HALF_UP)
-    return bd as double
+    bd as double
   }
 
   /**
@@ -203,7 +203,7 @@ class SmileUtil {
    * @return a new Matrix containing the sampled rows
    */
   static Matrix sample(Matrix matrix, int n) {
-    return sample(matrix, n, new Random())
+    sample(matrix, n, new Random())
   }
 
   /**
@@ -226,7 +226,7 @@ class SmileUtil {
     Collections.shuffle(indices, random)
     List<Integer> sampleIndices = indices.take(n).sort()
 
-    return Matrix.builder()
+    Matrix.builder()
         .rows(matrix.rows(sampleIndices) as List<List>)
         .matrixName(matrix.matrixName)
         .columnNames(matrix.columnNames() as List<String>)
@@ -242,7 +242,7 @@ class SmileUtil {
    * @return a new Matrix containing the sampled rows
    */
   static Matrix sample(Matrix matrix, double fraction) {
-    return sample(matrix, fraction, new Random())
+    sample(matrix, fraction, new Random())
   }
 
   /**
@@ -258,7 +258,7 @@ class SmileUtil {
       throw new IllegalArgumentException("Fraction must be between 0 and 1 (exclusive of 0): was $fraction")
     }
     int n = Math.max(1, (int) Math.round(matrix.rowCount() * fraction))
-    return sample(matrix, n, random)
+    sample(matrix, n, random)
   }
 
   /**
@@ -271,7 +271,7 @@ class SmileUtil {
   static Matrix head(Matrix matrix, int n = 5) {
     int take = Math.min(n, matrix.rowCount())
     List<Integer> indices = (0..<take).toList()
-    return Matrix.builder()
+    Matrix.builder()
         .rows(matrix.rows(indices) as List<List>)
         .matrixName(matrix.matrixName)
         .columnNames(matrix.columnNames() as List<String>)
@@ -290,7 +290,7 @@ class SmileUtil {
     int rowCount = matrix.rowCount()
     int start = Math.max(0, rowCount - n)
     List<Integer> indices = (start..<rowCount).toList()
-    return Matrix.builder()
+    Matrix.builder()
         .rows(matrix.rows(indices) as List<List>)
         .matrixName(matrix.matrixName)
         .columnNames(matrix.columnNames() as List<String>)
@@ -305,7 +305,7 @@ class SmileUtil {
    * @return true if any value is null
    */
   static boolean hasNulls(List<?> values) {
-    return values.any { it == null }
+    values.any { it == null }
   }
 
   /**
@@ -315,7 +315,7 @@ class SmileUtil {
    * @return the count of null values
    */
   static int countNulls(List<?> values) {
-    return values.count { it == null } as int
+    values.count { it == null } as int
   }
 
   /**
@@ -343,7 +343,7 @@ class SmileUtil {
       uniqueCounts << column.findAll { it != null }.toSet().size()
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             column: columnNames,
             type: types,
@@ -384,7 +384,7 @@ class SmileUtil {
           percentages << round(entry.value * PERCENT / total, 2)
         }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             value: values,
             frequency: frequencies,

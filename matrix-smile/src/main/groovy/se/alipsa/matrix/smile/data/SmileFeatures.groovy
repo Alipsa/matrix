@@ -25,7 +25,7 @@ class SmileFeatures {
    */
   static Matrix standardize(Matrix matrix, List<String> columns = null) {
     List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
-    return transformColumns(matrix, targetColumns) { List<Double> values ->
+    transformColumns(matrix, targetColumns) { List<Double> values ->
       standardizeValues(values)
     }
   }
@@ -38,7 +38,7 @@ class SmileFeatures {
    * @return a new Matrix with the standardized column
    */
   static Matrix standardize(Matrix matrix, String column) {
-    return standardize(matrix, [column])
+    standardize(matrix, [column])
   }
 
   /**
@@ -51,7 +51,7 @@ class SmileFeatures {
    */
   static Matrix normalize(Matrix matrix, List<String> columns = null) {
     List<String> targetColumns = columns ?: SmileUtil.getNumericColumnNames(matrix)
-    return transformColumns(matrix, targetColumns) { List<Double> values ->
+    transformColumns(matrix, targetColumns) { List<Double> values ->
       normalizeMinMax(values)
     }
   }
@@ -64,7 +64,7 @@ class SmileFeatures {
    * @return a new Matrix with the normalized column
    */
   static Matrix normalize(Matrix matrix, String column) {
-    return normalize(matrix, [column])
+    normalize(matrix, [column])
   }
 
   /**
@@ -77,7 +77,7 @@ class SmileFeatures {
    * @return a new Matrix with normalized columns
    */
   static Matrix normalize(Matrix matrix, List<String> columns, double min, double max) {
-    return transformColumns(matrix, columns) { List<Double> values ->
+    transformColumns(matrix, columns) { List<Double> values ->
       normalizeToRange(values, min, max)
     }
   }
@@ -91,7 +91,7 @@ class SmileFeatures {
    * @return a new Matrix with the original column replaced by one-hot encoded columns
    */
   static Matrix oneHotEncode(Matrix matrix, String column) {
-    return oneHotEncode(matrix, column, true)
+    oneHotEncode(matrix, column, true)
   }
 
   /**
@@ -134,7 +134,7 @@ class SmileFeatures {
       }
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(newData)
         .types(newTypes)
         .matrixName(matrix.matrixName)
@@ -153,7 +153,7 @@ class SmileFeatures {
     for (String column : columns) {
       result = oneHotEncode(result, column)
     }
-    return result
+    result
   }
 
   /**
@@ -173,7 +173,7 @@ class SmileFeatures {
 
     List<Integer> encodedColumn = originalColumn.collect { it != null ? labelMap[it] : null }
 
-    return replaceColumn(matrix, column, encodedColumn, Integer)
+    replaceColumn(matrix, column, encodedColumn, Integer)
   }
 
   /**
@@ -188,7 +188,7 @@ class SmileFeatures {
     for (String column : columns) {
       result = labelEncode(result, column)
     }
-    return result
+    result
   }
 
   /**
@@ -200,7 +200,7 @@ class SmileFeatures {
    * @return a new Matrix with log-transformed columns
    */
   static Matrix logTransform(Matrix matrix, List<String> columns) {
-    return transformColumns(matrix, columns) { List<Double> values ->
+    transformColumns(matrix, columns) { List<Double> values ->
       values.collect { v -> v != null ? Math.log1p(v) : null }
     }
   }
@@ -213,7 +213,7 @@ class SmileFeatures {
    * @return a new Matrix with the log-transformed column
    */
   static Matrix logTransform(Matrix matrix, String column) {
-    return logTransform(matrix, [column])
+    logTransform(matrix, [column])
   }
 
   /**
@@ -224,7 +224,7 @@ class SmileFeatures {
    * @return a new Matrix with sqrt-transformed columns
    */
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
-    return transformColumns(matrix, columns) { List<Double> values ->
+    transformColumns(matrix, columns) { List<Double> values ->
       values.collect { v -> v != null ? v.sqrt() : null }
     }
   }
@@ -269,7 +269,7 @@ class SmileFeatures {
       return Math.min(binNum, bins - 1) // Handle edge case where v == max
     }
 
-    return replaceColumn(matrix, column, binLabels, Integer)
+    replaceColumn(matrix, column, binLabels, Integer)
   }
 
   /**
@@ -304,7 +304,7 @@ class SmileFeatures {
     }
 
     Class<?> newType = labels != null ? String : Integer
-    return replaceColumn(matrix, column, binLabels, newType)
+    replaceColumn(matrix, column, binLabels, newType)
   }
 
   /**
@@ -318,7 +318,7 @@ class SmileFeatures {
   static Matrix fillna(Matrix matrix, String column, Object value) {
     List<?> col = matrix.column(column)
     List<?> filledCol = col.collect { it != null ? it : value }
-    return replaceColumn(matrix, column, filledCol, matrix.type(matrix.columnNames().indexOf(column)))
+    replaceColumn(matrix, column, filledCol, matrix.type(matrix.columnNames().indexOf(column)))
   }
 
   /**
@@ -332,7 +332,7 @@ class SmileFeatures {
     List<?> col = matrix.column(column)
     List<Double> numericCol = col.findAll { it != null }.collect { it as double }
     double mean = sumDoubles(numericCol) / numericCol.size()
-    return fillna(matrix, column, mean)
+    fillna(matrix, column, mean)
   }
 
   /**
@@ -353,7 +353,7 @@ class SmileFeatures {
     } else {
       median = sortedCol[size.intdiv(HALF_DIVISOR) as int]
     }
-    return fillna(matrix, column, median)
+    fillna(matrix, column, median)
   }
 
   /**
@@ -379,7 +379,7 @@ class SmileFeatures {
           .build()
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .rows(matrix.rows(validIndices) as List<List>)
         .columnNames(matrix.columnNames() as List<String>)
         .types(matrix.types())
@@ -414,7 +414,7 @@ class SmileFeatures {
           .build()
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .rows(matrix.rows(validIndices) as List<List>)
         .columnNames(matrix.columnNames() as List<String>)
         .types(matrix.types())
@@ -431,7 +431,7 @@ class SmileFeatures {
    * @return a new StandardScaler instance
    */
   static StandardScaler standardScaler() {
-    return new StandardScaler()
+    new StandardScaler()
   }
 
   /**
@@ -440,7 +440,7 @@ class SmileFeatures {
    * @return a new MinMaxScaler instance
    */
   static MinMaxScaler minMaxScaler() {
-    return new MinMaxScaler()
+    new MinMaxScaler()
   }
 
   // ============ Helper Methods ============
@@ -463,7 +463,7 @@ class SmileFeatures {
       }
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(newData)
         .types(newTypes)
         .matrixName(matrix.matrixName)
@@ -485,7 +485,7 @@ class SmileFeatures {
       }
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(newData)
         .types(newTypes)
         .matrixName(matrix.matrixName)
@@ -504,7 +504,7 @@ class SmileFeatures {
       return values.collect { Double v -> v != null ? ZERO : (Double) null } as List<Double>
     }
 
-    return values.collect { Double v -> v != null ? (v - mean) / std : (Double) null } as List<Double>
+    values.collect { Double v -> v != null ? (v - mean) / std : (Double) null } as List<Double>
   }
 
   private static List<Double> normalizeMinMax(List<Double> values) {
@@ -519,7 +519,7 @@ class SmileFeatures {
       return values.collect { Double v -> v != null ? 0.0d : (Double) null } as List<Double>
     }
 
-    return values.collect { Double v -> v != null ? (v - min) / range : (Double) null } as List<Double>
+    values.collect { Double v -> v != null ? (v - min) / range : (Double) null } as List<Double>
   }
 
   private static List<Double> normalizeToRange(List<Double> values, double targetMin, double targetMax) {
@@ -535,7 +535,7 @@ class SmileFeatures {
       return values.collect { Double v -> v != null ? targetMin : (Double) null } as List<Double>
     }
 
-    return values.collect { Double v -> v != null ? ((v - min) / range) * targetRange + targetMin : (Double) null } as List<Double>
+    values.collect { Double v -> v != null ? ((v - min) / range) * targetRange + targetMin : (Double) null } as List<Double>
   }
 
   private static double sumDoubles(List<Double> values) {
@@ -545,7 +545,7 @@ class SmileFeatures {
         sum += v
       }
     }
-    return sum
+    sum
   }
 
   // ============ Scaler Classes ============
@@ -589,7 +589,7 @@ class SmileFeatures {
       }
 
       fitted = true
-      return this
+      this
     }
 
     /**
@@ -625,7 +625,7 @@ class SmileFeatures {
         }
       }
 
-      return Matrix.builder()
+      Matrix.builder()
           .data(newData)
           .types(newTypes)
           .matrixName(matrix.matrixName)
@@ -648,14 +648,14 @@ class SmileFeatures {
      * Get the fitted means.
      */
     Map<String, Double> getMeans() {
-      return Collections.unmodifiableMap(means)
+      Collections.unmodifiableMap(means)
     }
 
     /**
      * Get the fitted standard deviations.
      */
     Map<String, Double> getStds() {
-      return Collections.unmodifiableMap(stds)
+      Collections.unmodifiableMap(stds)
     }
 
   }
@@ -695,7 +695,7 @@ class SmileFeatures {
       }
 
       fitted = true
-      return this
+      this
     }
 
     /**
@@ -735,7 +735,7 @@ class SmileFeatures {
         }
       }
 
-      return Matrix.builder()
+      Matrix.builder()
           .data(newData)
           .types(newTypes)
           .matrixName(matrix.matrixName)
@@ -758,14 +758,14 @@ class SmileFeatures {
      * Get the fitted minimums.
      */
     Map<String, Double> getMins() {
-      return Collections.unmodifiableMap(mins)
+      Collections.unmodifiableMap(mins)
     }
 
     /**
      * Get the fitted maximums.
      */
     Map<String, Double> getMaxs() {
-      return Collections.unmodifiableMap(maxs)
+      Collections.unmodifiableMap(maxs)
     }
 
   }

@@ -57,7 +57,7 @@ class SmileClassifier {
 
     RandomForest rf = RandomForest.fit(formula, df, new RandomForest.Options(ntrees))
 
-    return new SmileClassifier(rf, formula, targetColumn, featureColumns, classLabels)
+    new SmileClassifier(rf, formula, targetColumn, featureColumns, classLabels)
   }
 
   /**
@@ -79,7 +79,7 @@ class SmileClassifier {
 
     DecisionTree tree = DecisionTree.fit(formula, df)
 
-    return new SmileClassifier(tree, formula, targetColumn, featureColumns, classLabels)
+    new SmileClassifier(tree, formula, targetColumn, featureColumns, classLabels)
   }
 
   /**
@@ -101,7 +101,7 @@ class SmileClassifier {
     List<Class<?>> types = new ArrayList<>(matrix.types())
     types.add(String)
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -122,7 +122,7 @@ class SmileClassifier {
       labels.add(classLabels[pred])
     }
 
-    return labels
+    labels
   }
 
   /**
@@ -133,7 +133,7 @@ class SmileClassifier {
    */
   int[] predictClasses(Matrix matrix) {
     DataFrame df = DataframeConverter.convert(matrix)
-    return model.predict(df)
+    model.predict(df)
   }
 
   /**
@@ -146,7 +146,7 @@ class SmileClassifier {
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
-    return Accuracy.of(actual, predicted)
+    Accuracy.of(actual, predicted)
   }
 
   /**
@@ -181,7 +181,7 @@ class SmileClassifier {
       types.add(Integer)
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -237,7 +237,7 @@ class SmileClassifier {
       f1Scores.add(SmileUtil.round(f1))
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             'class': classes,
             precision: precisions,
@@ -253,28 +253,28 @@ class SmileClassifier {
    * Get the class labels used by this classifier.
    */
   String[] getClassLabels() {
-    return classLabels
+    classLabels
   }
 
   /**
    * Get the feature column names.
    */
   String[] getFeatureColumns() {
-    return featureColumns
+    featureColumns
   }
 
   /**
    * Get the target column name.
    */
   String getTargetColumn() {
-    return targetColumn
+    targetColumn
   }
 
   /**
    * Get the underlying Smile model.
    */
   DataFrameClassifier getModel() {
-    return model
+    model
   }
 
   // Helper methods
@@ -287,7 +287,7 @@ class SmileClassifier {
         uniqueLabels.add(val.toString())
       }
     }
-    return uniqueLabels.toArray(new String[0])
+    uniqueLabels.toArray(new String[0])
   }
 
   @SuppressWarnings('UnnecessaryToString')
@@ -306,7 +306,7 @@ class SmileClassifier {
       result[i] = index != null ? index.intValue() : 0
     }
 
-    return result
+    result
   }
 
   /**
@@ -342,7 +342,7 @@ class SmileClassifier {
       }
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()

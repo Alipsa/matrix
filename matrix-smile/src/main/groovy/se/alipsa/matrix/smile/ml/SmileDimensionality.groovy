@@ -40,7 +40,7 @@ class SmileDimensionality {
     PCA pcaModel = PCA.fit(data)
     PCA proj = pcaModel.getProjection(k)
 
-    return new SmileDimensionality(pcaModel, proj, featureColumns, k)
+    new SmileDimensionality(pcaModel, proj, featureColumns, k)
   }
 
   /**
@@ -65,7 +65,7 @@ class SmileDimensionality {
     double[] transformed = proj.apply(data[0])
     int k = transformed.length
 
-    return new SmileDimensionality(pcaModel, proj, featureColumns, k)
+    new SmileDimensionality(pcaModel, proj, featureColumns, k)
   }
 
   /**
@@ -83,7 +83,7 @@ class SmileDimensionality {
     PCA pcaModel = PCA.cor(data)
     PCA proj = pcaModel.getProjection(k)
 
-    return new SmileDimensionality(pcaModel, proj, featureColumns, k)
+    new SmileDimensionality(pcaModel, proj, featureColumns, k)
   }
 
   /**
@@ -96,7 +96,7 @@ class SmileDimensionality {
     double[][] data = SmileUtil.matrixToArray(matrix)
     double[][] transformed = projectionPca.apply(data)
 
-    return arrayToMatrix(transformed, numComponents)
+    arrayToMatrix(transformed, numComponents)
   }
 
   /**
@@ -107,7 +107,7 @@ class SmileDimensionality {
    */
   double[][] transformValues(Matrix matrix) {
     double[][] data = SmileUtil.matrixToArray(matrix)
-    return projectionPca.apply(data)
+    projectionPca.apply(data)
   }
 
   /**
@@ -116,7 +116,7 @@ class SmileDimensionality {
    * @return array of variances (eigenvalues)
    */
   double[] getVariance() {
-    return fullPca.variance()
+    fullPca.variance()
   }
 
   /**
@@ -125,7 +125,7 @@ class SmileDimensionality {
    * @return array of variance proportions
    */
   double[] getVarianceProportion() {
-    return fullPca.varianceProportion()
+    fullPca.varianceProportion()
   }
 
   /**
@@ -134,7 +134,7 @@ class SmileDimensionality {
    * @return array of cumulative variance proportions
    */
   double[] getCumulativeVarianceProportion() {
-    return fullPca.cumulativeVarianceProportion()
+    fullPca.cumulativeVarianceProportion()
   }
 
   /**
@@ -143,7 +143,7 @@ class SmileDimensionality {
    * @return 2D array of loadings
    */
   double[][] getLoadings() {
-    return fullPca.loadings().toArray()
+    fullPca.loadings().toArray()
   }
 
   /**
@@ -172,7 +172,7 @@ class SmileDimensionality {
       types.add(Double)
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(data)
         .types(types)
         .build()
@@ -200,7 +200,7 @@ class SmileDimensionality {
       cumulatives.add(SmileUtil.round(cumulative[i]))
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(
             component: components,
             variance: variances,
@@ -215,14 +215,14 @@ class SmileDimensionality {
    * Get the number of principal components.
    */
   int getNumComponents() {
-    return numComponents
+    numComponents
   }
 
   /**
    * Get the original feature column names.
    */
   String[] getFeatureColumns() {
-    return featureColumns
+    featureColumns
   }
 
   /**
@@ -231,7 +231,7 @@ class SmileDimensionality {
    * @return array of means for each feature
    */
   double[] getCenter() {
-    return fullPca.center()
+    fullPca.center()
   }
 
   // Helper methods
@@ -250,7 +250,7 @@ class SmileDimensionality {
       types.add(Double)
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(result)
         .types(types)
         .build()

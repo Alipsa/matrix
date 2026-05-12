@@ -37,7 +37,7 @@ class Gsmile {
    * @return a Smile DataFrame containing the same data
    */
   static DataFrame toSmileDataFrame(Matrix self) {
-    return SmileUtil.toDataFrame(self)
+    SmileUtil.toDataFrame(self)
   }
 
   /**
@@ -47,7 +47,7 @@ class Gsmile {
    * @return a Matrix with statistical summary (count, mean, std, min, quartiles, max)
    */
   static Matrix smileDescribe(Matrix self) {
-    return SmileUtil.describe(self)
+    SmileUtil.describe(self)
   }
 
   /**
@@ -58,7 +58,7 @@ class Gsmile {
    * @return a new Matrix with randomly selected rows
    */
   static Matrix smileSample(Matrix self, int n) {
-    return SmileUtil.sample(self, n)
+    SmileUtil.sample(self, n)
   }
 
   // ==================== DataFrame Extensions ====================
@@ -70,7 +70,7 @@ class Gsmile {
    * @return a Matrix containing the same data
    */
   static Matrix toMatrix(DataFrame self) {
-    return SmileUtil.toMatrix(self)
+    SmileUtil.toMatrix(self)
   }
 
   /**
@@ -81,7 +81,7 @@ class Gsmile {
    * @return a Matrix containing the same data
    */
   static Matrix toMatrix(DataFrame self, String name) {
-    return SmileUtil.toMatrix(self).withMatrixName(name)
+    SmileUtil.toMatrix(self).withMatrixName(name)
   }
 
   /**
@@ -97,7 +97,7 @@ class Gsmile {
       String colName = self.column(i).name()
       row.put(colName, self.get(rowIndex, i))
     }
-    return row
+    row
   }
 
   /**
@@ -108,7 +108,7 @@ class Gsmile {
    * @return the column as a ValueVector
    */
   static ValueVector getAt(DataFrame self, String columnName) {
-    return self.column(columnName)
+    self.column(columnName)
   }
 
   /**
@@ -120,7 +120,7 @@ class Gsmile {
    * @return a new DataFrame with the selected rows
    */
   static DataFrame getAt(DataFrame self, IntRange range) {
-    return sliceRows(self, range.getFromInt(), range.getToInt() + 1)
+    sliceRows(self, range.getFromInt(), range.getToInt() + 1)
   }
 
   /**
@@ -132,7 +132,7 @@ class Gsmile {
    * @return a new DataFrame with only the selected columns
    */
   static DataFrame getAt(DataFrame self, List<String> columnNames) {
-    return self.select(columnNames as String[])
+    self.select(columnNames as String[])
   }
 
   /**
@@ -197,7 +197,7 @@ class Gsmile {
    * @return the number of rows
    */
   static int rowCount(DataFrame self) {
-    return self.nrow()
+    self.nrow()
   }
 
   /**
@@ -208,7 +208,7 @@ class Gsmile {
    * @return the number of columns
    */
   static int columnCount(DataFrame self) {
-    return self.ncol()
+    self.ncol()
   }
 
   /**
@@ -222,7 +222,7 @@ class Gsmile {
     for (int i = 0; i < self.ncol(); i++) {
       names << self.column(i).name()
     }
-    return names
+    names
   }
 
   /**
@@ -240,7 +240,7 @@ class Gsmile {
       def col = self.column(i)
       sb.append("  ${col.name()}: ${col.dtype()}\n")
     }
-    return sb.toString()
+    sb.toString()
   }
 
   /**
@@ -252,7 +252,7 @@ class Gsmile {
    */
   static DataFrame head(DataFrame self, int n = 5) {
     int rows = Math.min(n, self.nrow())
-    return sliceRows(self, 0, rows)
+    sliceRows(self, 0, rows)
   }
 
   /**
@@ -265,7 +265,7 @@ class Gsmile {
   static DataFrame tail(DataFrame self, int n = 5) {
     int rows = Math.min(n, self.nrow())
     int start = self.nrow() - rows
-    return sliceRows(self, start, self.nrow())
+    sliceRows(self, start, self.nrow())
   }
 
   /**
@@ -299,7 +299,7 @@ class Gsmile {
         .columnNames(matrix.columnNames() as List<String>)
         .types(matrix.types())
         .build()
-    return SmileUtil.toDataFrame(filtered)
+    SmileUtil.toDataFrame(filtered)
   }
 
   /**
@@ -333,7 +333,7 @@ class Gsmile {
       Map<String, Object> row = getAt(self, i)
       result << transform.call(row)
     }
-    return result
+    result
   }
 
   // ==================== Private Helper Methods ====================
@@ -367,7 +367,7 @@ class Gsmile {
     for (int i = start; i < end; i++) {
       mask[i] = true
     }
-    return df.get(mask)
+    df.get(mask)
   }
 
 }

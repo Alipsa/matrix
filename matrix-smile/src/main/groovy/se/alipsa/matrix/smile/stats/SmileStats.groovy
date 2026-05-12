@@ -44,7 +44,7 @@ class SmileStats {
    * @return a GaussianDistribution
    */
   static GaussianDistribution normal(double mean = 0.0, double sd = 1.0) {
-    return new GaussianDistribution(mean, sd)
+    new GaussianDistribution(mean, sd)
   }
 
   /**
@@ -54,7 +54,7 @@ class SmileStats {
    * @return a fitted GaussianDistribution
    */
   static GaussianDistribution normalFit(double[] data) {
-    return GaussianDistribution.fit(data)
+    GaussianDistribution.fit(data)
   }
 
   /**
@@ -65,7 +65,7 @@ class SmileStats {
    * @return a fitted GaussianDistribution
    */
   static GaussianDistribution normalFit(Matrix matrix, String column) {
-    return normalFit(toDoubleArray(matrix, column))
+    normalFit(toDoubleArray(matrix, column))
   }
 
   /**
@@ -75,7 +75,7 @@ class SmileStats {
    * @return a PoissonDistribution
    */
   static PoissonDistribution poisson(double lambda) {
-    return new PoissonDistribution(lambda)
+    new PoissonDistribution(lambda)
   }
 
   /**
@@ -85,7 +85,7 @@ class SmileStats {
    * @return a fitted PoissonDistribution
    */
   static PoissonDistribution poissonFit(int[] data) {
-    return PoissonDistribution.fit(data)
+    PoissonDistribution.fit(data)
   }
 
   /**
@@ -96,7 +96,7 @@ class SmileStats {
    * @return a fitted PoissonDistribution
    */
   static PoissonDistribution poissonFit(Matrix matrix, String column) {
-    return poissonFit(toIntArray(matrix, column))
+    poissonFit(toIntArray(matrix, column))
   }
 
   /**
@@ -107,7 +107,7 @@ class SmileStats {
    * @return a BinomialDistribution
    */
   static BinomialDistribution binomial(int n, double p) {
-    return new BinomialDistribution(n, p)
+    new BinomialDistribution(n, p)
   }
 
   /**
@@ -117,7 +117,7 @@ class SmileStats {
    * @return an ExponentialDistribution
    */
   static ExponentialDistribution exponential(double lambda) {
-    return new ExponentialDistribution(lambda)
+    new ExponentialDistribution(lambda)
   }
 
   /**
@@ -127,7 +127,7 @@ class SmileStats {
    * @return a fitted ExponentialDistribution
    */
   static ExponentialDistribution exponentialFit(double[] data) {
-    return ExponentialDistribution.fit(data)
+    ExponentialDistribution.fit(data)
   }
 
   /**
@@ -138,7 +138,7 @@ class SmileStats {
    * @return a GammaDistribution
    */
   static GammaDistribution gamma(double shape, double scale) {
-    return new GammaDistribution(shape, scale)
+    new GammaDistribution(shape, scale)
   }
 
   /**
@@ -148,7 +148,7 @@ class SmileStats {
    * @return a fitted GammaDistribution
    */
   static GammaDistribution gammaFit(double[] data) {
-    return GammaDistribution.fit(data)
+    GammaDistribution.fit(data)
   }
 
   /**
@@ -159,7 +159,7 @@ class SmileStats {
    * @return a BetaDistribution
    */
   static BetaDistribution beta(double alpha, double beta) {
-    return new BetaDistribution(alpha, beta)
+    new BetaDistribution(alpha, beta)
   }
 
   /**
@@ -169,7 +169,7 @@ class SmileStats {
    * @return a fitted BetaDistribution
    */
   static BetaDistribution betaFit(double[] data) {
-    return BetaDistribution.fit(data)
+    BetaDistribution.fit(data)
   }
 
   /**
@@ -179,7 +179,7 @@ class SmileStats {
    * @return a ChiSquareDistribution
    */
   static ChiSquareDistribution chiSquare(int df) {
-    return new ChiSquareDistribution(df)
+    new ChiSquareDistribution(df)
   }
 
   /**
@@ -189,7 +189,7 @@ class SmileStats {
    * @return a TDistribution
    */
   static TDistribution studentT(int df) {
-    return new TDistribution(df)
+    new TDistribution(df)
   }
 
   /**
@@ -200,7 +200,7 @@ class SmileStats {
    * @return an FDistribution
    */
   static FDistribution fDistribution(int df1, int df2) {
-    return new FDistribution(df1, df2)
+    new FDistribution(df1, df2)
   }
 
   /**
@@ -213,7 +213,7 @@ class SmileStats {
    */
   static double uniformRandom(double min, double max) {
     Random random = new Random()
-    return min + random.nextDouble() * (max - min)
+    min + random.nextDouble() * (max - min)
   }
 
   /**
@@ -224,7 +224,7 @@ class SmileStats {
    * @return a LogNormalDistribution
    */
   static LogNormalDistribution logNormal(double mu, double sigma) {
-    return new LogNormalDistribution(mu, sigma)
+    new LogNormalDistribution(mu, sigma)
   }
 
   /**
@@ -234,7 +234,7 @@ class SmileStats {
    * @return a fitted LogNormalDistribution
    */
   static LogNormalDistribution logNormalFit(double[] data) {
-    return LogNormalDistribution.fit(data)
+    LogNormalDistribution.fit(data)
   }
 
   /**
@@ -245,7 +245,7 @@ class SmileStats {
    * @return a WeibullDistribution
    */
   static WeibullDistribution weibull(double shape, double scale) {
-    return new WeibullDistribution(shape, scale)
+    new WeibullDistribution(shape, scale)
   }
 
   // Note: WeibullDistribution.fit() is not available in Smile 4.x
@@ -258,7 +258,7 @@ class SmileStats {
    * @return a BernoulliDistribution
    */
   static BernoulliDistribution bernoulli(double p) {
-    return new BernoulliDistribution(p)
+    new BernoulliDistribution(p)
   }
 
   /**
@@ -268,7 +268,7 @@ class SmileStats {
    * @return a GeometricDistribution
    */
   static GeometricDistribution geometric(double p) {
-    return new GeometricDistribution(p)
+    new GeometricDistribution(p)
   }
 
   // ==================== Hypothesis Tests ====================
@@ -281,7 +281,7 @@ class SmileStats {
    * @return a TTest result containing t-statistic, degrees of freedom, and p-value
    */
   static TTest tTestOneSample(double[] data, double mu) {
-    return TTest.test(data, mu)
+    TTest.test(data, mu)
   }
 
   /**
@@ -293,7 +293,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestOneSample(Matrix matrix, String column, double mu) {
-    return tTestOneSample(toDoubleArray(matrix, column), mu)
+    tTestOneSample(toDoubleArray(matrix, column), mu)
   }
 
   /**
@@ -328,7 +328,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestPaired(double[] x, double[] y) {
-    return TTest.testPaired(x, y)
+    TTest.testPaired(x, y)
   }
 
   /**
@@ -340,7 +340,7 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestPaired(Matrix matrix, String column1, String column2) {
-    return tTestPaired(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    tTestPaired(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -351,7 +351,7 @@ class SmileStats {
    * @return an FTest result containing F-statistic and p-value
    */
   static FTest fTest(double[] x, double[] y) {
-    return FTest.test(x, y)
+    FTest.test(x, y)
   }
 
   /**
@@ -363,7 +363,7 @@ class SmileStats {
    * @return an FTest result
    */
   static FTest fTest(Matrix matrix, String column1, String column2) {
-    return fTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    fTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -375,7 +375,7 @@ class SmileStats {
    */
   static KSTest ksTestNormality(double[] data) {
     GaussianDistribution fitted = GaussianDistribution.fit(data)
-    return KSTest.test(data, fitted)
+    KSTest.test(data, fitted)
   }
 
   /**
@@ -386,7 +386,7 @@ class SmileStats {
    * @return a KSTest result
    */
   static KSTest ksTestNormality(Matrix matrix, String column) {
-    return ksTestNormality(toDoubleArray(matrix, column))
+    ksTestNormality(toDoubleArray(matrix, column))
   }
 
   /**
@@ -398,7 +398,7 @@ class SmileStats {
    * @return a KSTest result
    */
   static KSTest ksTestTwoSample(double[] x, double[] y) {
-    return KSTest.test(x, y)
+    KSTest.test(x, y)
   }
 
   /**
@@ -410,7 +410,7 @@ class SmileStats {
    * @return a KSTest result
    */
   static KSTest ksTestTwoSample(Matrix matrix, String column1, String column2) {
-    return ksTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    ksTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -421,7 +421,7 @@ class SmileStats {
    * @return a ChiSqTest result containing chi-square statistic and p-value
    */
   static ChiSqTest chiSquareTest(int[] observed, double[] expected) {
-    return ChiSqTest.test(observed, expected)
+    ChiSqTest.test(observed, expected)
   }
 
   /**
@@ -431,7 +431,7 @@ class SmileStats {
    * @return a ChiSqTest result
    */
   static ChiSqTest chiSquareTestIndependence(int[][] contingencyTable) {
-    return ChiSqTest.test(contingencyTable)
+    ChiSqTest.test(contingencyTable)
   }
 
   // ==================== Correlation with Significance ====================
@@ -444,7 +444,7 @@ class SmileStats {
    * @return a CorTest result containing correlation coefficient, t-statistic, and p-value
    */
   static CorTest correlationTest(double[] x, double[] y) {
-    return CorTest.pearson(x, y)
+    CorTest.pearson(x, y)
   }
 
   /**
@@ -456,7 +456,7 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest correlationTest(Matrix matrix, String column1, String column2) {
-    return correlationTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    correlationTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -467,7 +467,7 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest spearmanTest(double[] x, double[] y) {
-    return CorTest.spearman(x, y)
+    CorTest.spearman(x, y)
   }
 
   /**
@@ -479,7 +479,7 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest spearmanTest(Matrix matrix, String column1, String column2) {
-    return spearmanTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    spearmanTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -490,7 +490,7 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest kendallTest(double[] x, double[] y) {
-    return CorTest.kendall(x, y)
+    CorTest.kendall(x, y)
   }
 
   /**
@@ -502,7 +502,7 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest kendallTest(Matrix matrix, String column1, String column2) {
-    return kendallTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    kendallTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
   }
 
   /**
@@ -668,7 +668,7 @@ class SmileStats {
       return CorrelationMethod.PEARSON
     }
     try {
-      return CorrelationMethod.valueOf(method.toUpperCase())
+      CorrelationMethod.valueOf(method.toUpperCase())
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Unknown correlation method: '$method'. Supported: pearson, spearman, kendall", e)
     }
@@ -690,7 +690,7 @@ class SmileStats {
     for (int i = 0; i < n; i++) {
       samples[i] = dist.rand()
     }
-    return samples
+    samples
   }
 
   /**
@@ -706,7 +706,7 @@ class SmileStats {
     for (int i = 0; i < n; i++) {
       samples[i] = (int) dist.rand()
     }
-    return samples
+    samples
   }
 
   /**
@@ -723,7 +723,7 @@ class SmileStats {
     for (int i = 0; i < sampleCount; i++) {
       samples[i] = (int) dist.rand()
     }
-    return samples
+    samples
   }
 
   /**
@@ -741,7 +741,7 @@ class SmileStats {
     for (int i = 0; i < n; i++) {
       samples[i] = min + random.nextDouble() * range
     }
-    return samples
+    samples
   }
 
   /**
@@ -757,7 +757,7 @@ class SmileStats {
     for (int i = 0; i < n; i++) {
       samples[i] = dist.rand()
     }
-    return samples
+    samples
   }
 
   // ==================== Helper Methods ====================
@@ -777,7 +777,7 @@ class SmileStats {
       System.arraycopy(result, 0, trimmed, 0, idx)
       return trimmed
     }
-    return result
+    result
   }
 
   private static int[] toIntArray(Matrix matrix, String column) {
@@ -794,7 +794,7 @@ class SmileStats {
       System.arraycopy(result, 0, trimmed, 0, idx)
       return trimmed
     }
-    return result
+    result
   }
 
   @SuppressWarnings('NestedForLoop')
@@ -813,7 +813,7 @@ class SmileStats {
       matrixData.put(columnNames[j], colData as List<?>)
     }
 
-    return Matrix.builder()
+    Matrix.builder()
         .data(matrixData)
         .matrixName('Correlation Matrix')
         .build()

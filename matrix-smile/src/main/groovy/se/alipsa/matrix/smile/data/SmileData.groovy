@@ -26,7 +26,7 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> trainTestSplit(Matrix matrix, double testRatio = 0.2, boolean shuffle = true) {
-    return trainTestSplit(matrix, testRatio, shuffle, new Random())
+    trainTestSplit(matrix, testRatio, shuffle, new Random())
   }
 
   /**
@@ -39,7 +39,7 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> trainTestSplit(Matrix matrix, double testRatio, boolean shuffle, long seed) {
-    return trainTestSplit(matrix, testRatio, shuffle, new Random(seed))
+    trainTestSplit(matrix, testRatio, shuffle, new Random(seed))
   }
 
   /**
@@ -75,7 +75,7 @@ class SmileData {
     Matrix trainMatrix = createSubMatrix(matrix, trainIndices)
     Matrix testMatrix = createSubMatrix(matrix, testIndices)
 
-    return [trainMatrix, testMatrix]
+    [trainMatrix, testMatrix]
   }
 
   /**
@@ -92,7 +92,7 @@ class SmileData {
     if (params.containsKey(SEED)) {
       return trainTestSplit(matrix, testRatio, shuffle, params[SEED] as long)
     }
-    return trainTestSplit(matrix, testRatio, shuffle)
+    trainTestSplit(matrix, testRatio, shuffle)
   }
 
   /**
@@ -103,7 +103,7 @@ class SmileData {
    * @return a list of k Fold objects, each containing training and validation sets
    */
   static List<Fold> kFold(Matrix matrix, int k) {
-    return kFold(matrix, k, true, new Random())
+    kFold(matrix, k, true, new Random())
   }
 
   /**
@@ -115,7 +115,7 @@ class SmileData {
    * @return a list of k Fold objects, each containing training and validation sets
    */
   static List<Fold> kFold(Matrix matrix, int k, boolean shuffle) {
-    return kFold(matrix, k, shuffle, new Random())
+    kFold(matrix, k, shuffle, new Random())
   }
 
   /**
@@ -128,7 +128,7 @@ class SmileData {
    * @return a list of k Fold objects, each containing training and validation sets
    */
   static List<Fold> kFold(Matrix matrix, int k, boolean shuffle, long seed) {
-    return kFold(matrix, k, shuffle, new Random(seed))
+    kFold(matrix, k, shuffle, new Random(seed))
   }
 
   /**
@@ -179,7 +179,7 @@ class SmileData {
       start = end
     }
 
-    return folds
+    folds
   }
 
   /**
@@ -199,7 +199,7 @@ class SmileData {
     if (params.containsKey(SEED)) {
       return kFold(matrix, k, shuffle, params[SEED] as long)
     }
-    return kFold(matrix, k, shuffle)
+    kFold(matrix, k, shuffle)
   }
 
   /**
@@ -211,7 +211,7 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> stratifiedSplit(Matrix matrix, String targetColumn, double testRatio = 0.2) {
-    return stratifiedSplit(matrix, targetColumn, testRatio, new Random())
+    stratifiedSplit(matrix, targetColumn, testRatio, new Random())
   }
 
   /**
@@ -224,7 +224,7 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> stratifiedSplit(Matrix matrix, String targetColumn, double testRatio, long seed) {
-    return stratifiedSplit(matrix, targetColumn, testRatio, new Random(seed))
+    stratifiedSplit(matrix, targetColumn, testRatio, new Random(seed))
   }
 
   /**
@@ -271,7 +271,7 @@ class SmileData {
     Matrix trainMatrix = createSubMatrix(matrix, trainIndices)
     Matrix testMatrix = createSubMatrix(matrix, testIndices)
 
-    return [trainMatrix, testMatrix]
+    [trainMatrix, testMatrix]
   }
 
   /**
@@ -283,7 +283,7 @@ class SmileData {
    * @return a list of n bootstrap sample matrices
    */
   static List<Matrix> bootstrap(Matrix matrix, int n, int sampleSize = -1) {
-    return bootstrap(matrix, n, sampleSize, new Random())
+    bootstrap(matrix, n, sampleSize, new Random())
   }
 
   /**
@@ -296,7 +296,7 @@ class SmileData {
    * @return a list of n bootstrap sample matrices
    */
   static List<Matrix> bootstrap(Matrix matrix, int n, int sampleSize, long seed) {
-    return bootstrap(matrix, n, sampleSize, new Random(seed))
+    bootstrap(matrix, n, sampleSize, new Random(seed))
   }
 
   /**
@@ -326,7 +326,7 @@ class SmileData {
       samples << createSubMatrix(matrix, indices)
     }
 
-    return samples
+    samples
   }
 
   // Helper method to create a sub-matrix from row indices
@@ -340,7 +340,7 @@ class SmileData {
     }
 
     List<List<?>> rows = matrix.rows(indices) as List<List<?>>
-    return Matrix.builder()
+    Matrix.builder()
         .rows(rows as List<List>)
         .columnNames(matrix.columnNames() as List<String>)
         .types(matrix.types())
@@ -366,7 +366,7 @@ class SmileData {
 
     @Override
     String toString() {
-      return "Fold[index=$index, trainSize=${train.rowCount()}, validationSize=${validation.rowCount()}]"
+      "Fold[index=$index, trainSize=${train.rowCount()}, validationSize=${validation.rowCount()}]"
     }
 
   }
