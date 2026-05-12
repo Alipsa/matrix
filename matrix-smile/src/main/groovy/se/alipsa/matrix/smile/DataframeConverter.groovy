@@ -149,6 +149,13 @@ class DataframeConverter {
         case LocalDate -> columns.add(ValueVector.of(colName, columnData as LocalDate[]))
         case LocalTime -> columns.add(ValueVector.of(colName, columnData as LocalTime[]))
         case OffsetTime -> columns.add(ValueVector.of(colName, columnData as OffsetTime[]))
+        case Number -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData.collect { it != null ? it as Double : null } as Double[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveDoubleArray(columnData)))
+          }
+        }
         case Enum -> columns.add(ValueVector.nominal(colName, columnData as Enum[]))
         default -> {
           // Handle other types or default to StringVector
@@ -264,8 +271,7 @@ class DataframeConverter {
   }
 
   static Class getType(DataType dataType) {
-
-    return switch (dataType) {
+    switch (dataType) {
       case FloatType -> Float
       case DoubleType -> Double
       case IntType -> Integer
