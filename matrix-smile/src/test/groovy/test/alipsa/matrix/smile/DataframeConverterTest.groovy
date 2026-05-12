@@ -729,4 +729,37 @@ class DataframeConverterTest {
     assertEquals('Name500', roundTrip[499, 'name'])
   }
 
+  @Test
+  void testMatrixToDataFrameWithNumberType() {
+    def matrix = Matrix.builder()
+        .data(
+            value: [1.5, 2.5, 3.5]
+        )
+        .types(Number)
+        .build()
+
+    DataFrame df = DataframeConverter.convert(matrix)
+
+    assertEquals(3, df.nrow())
+    assertEquals(1.5, df.get(0).get('value') as double, 0.001)
+    assertEquals(3.5, df.get(2).get('value') as double, 0.001)
+  }
+
+  @Test
+  void testMatrixToDataFrameWithNullableNumberType() {
+    def matrix = Matrix.builder()
+        .data(
+            value: [1.5, null, 3.5]
+        )
+        .types(Number)
+        .build()
+
+    DataFrame df = DataframeConverter.convert(matrix)
+
+    assertEquals(3, df.nrow())
+    assertEquals(1.5, df.get(0).get('value') as double, 0.001)
+    assertNull(df.get(1).get('value'))
+    assertEquals(3.5, df.get(2).get('value') as double, 0.001)
+  }
+
 }
