@@ -72,4 +72,5 @@ class CompileStaticCorrelationTest {
     assertTrue(result.containsKey('correlation'))
     assertTrue(result.containsKey('pvalue'))
   }
+
 }
