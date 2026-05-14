@@ -1,7 +1,12 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This is a Gradle multi-module Groovy/Java project. Each module lives in a `matrix-*` directory (for example `matrix-core`, `matrix-stats`, `matrix-csv`, `matrix-charts`, `matrix-sql`). Source code is primarily in `matrix-*/src/main/groovy` (with some `src/main/java`), and tests live in `matrix-*/src/test/groovy` or `matrix-*/src/test/java`. Shared docs are under `docs/` (tutorial and cookbook), while runnable examples live in `matrix-examples/`. Root build configuration is in `build.gradle`, `settings.gradle`, and `dependencies.gradle`.
+This is a Gradle multi-module Groovy/Java project. Each module lives in a `matrix-*` directory (for example `matrix-core`, `matrix-stats`, `matrix-csv`, `matrix-charts`, `matrix-sql`). Source code is primarily in `matrix-*/src/main/groovy` (with some `src/main/java`), and tests live in `matrix-*/src/test/groovy` or `matrix-*/src/test/java`. Shared docs are under `docs/` (tutorial and cookbook), while runnable examples live in `matrix-examples/`.
+
+Authoritative project metadata:
+- Module list: `settings.gradle`
+- Shared build behavior: root `build.gradle`
+- Dependency versions: `gradle/libs.versions.toml`
 
 ## Build, Test, and Development Commands
 - `./gradlew build`: build all modules.
@@ -16,7 +21,7 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 - `./gradlew dependencyUpdates`: report newer dependency versions.
 
 ## Coding Style & Naming Conventions
-Use Groovy 5.0.5 and target Java 21. 
+Use Groovy 5.0.6 and target Java 21.
 Follow the existing 2-space indentation and import style in each file. 
 Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. 
 Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. 
@@ -51,7 +56,7 @@ Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Gr
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.
- - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Stringly prefer BigDecimal over double/float unless performance is critical. 
+ - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Strongly prefer BigDecimal over double/float unless performance is critical.
 
 ## Numeric types
 - Use Number in method parameters and use BigDecimal when returning numeric values
@@ -80,7 +85,7 @@ data.each { String key, List<? extends Number> values ->
 
 ## Logging Guidelines
 
-**CRITICAL:** Always use the matrix-core Logger utility instead of System.out, System.err, println, log4j, or SLF4J direct usage.
+**CRITICAL:** In production library code under non-example `src/main`, use the matrix-core Logger utility instead of System.out, System.err, println, log4j, or SLF4J direct usage. Console output is acceptable in examples, command-line demos, benchmarks, tests that explicitly inspect output, and Gradle task hooks where the output is the user-facing behavior.
 
 ### Use the Logger Class
 
@@ -117,7 +122,7 @@ log.info("Table %s.%s created successfully", datasetName, tableName)
 
 ### Replace Existing Logging
 
-When implementing features or modifying code, **always replace** any of the following with Logger:
+When implementing features or modifying production library code, **always replace** any of the following with Logger unless the file is an example, benchmark, test, or build script where console output is intentional:
 
 **Replace System.out/System.err:**
 ```groovy
@@ -200,7 +205,7 @@ try {
 **Example**: If you're implementing HCL color conversion and find similar code already exists in `ScaleColorManual`, don't copy it—extract it to a `ColorSpaceUtil` class that both can use.
 
 ## Testing Guidelines
-JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
+JUnit Jupiter is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
 
 ### Groovy + JUnit Assertions
 **CRITICAL:** Groovy test modules must include the `se.alipsa.groovy:groovier-junit` test dependency so Groovy-friendly JUnit assertions work correctly under static compilation.
@@ -240,7 +245,7 @@ This file provides guidance to Claude Code (claude.ai/code) and github copilot w
 
 ## Project Overview
 
-Matrix is a Groovy library for working with tabular (2D) data. It provides Matrix and Grid classes along with specialized modules for statistics, visualization, and data I/O formats. The project targets **JDK 21** and uses **Groovy 5.0.5**.
+Matrix is a Groovy library for working with tabular (2D) data. It provides Matrix and Grid classes along with specialized modules for statistics, visualization, and data I/O formats. The project targets **JDK 21** and uses **Groovy 5.0.6**.
 
 ## Build Commands
 
@@ -286,9 +291,13 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 ./gradlew :matrix-ggplot:test -Pheadless=true
 
 # Fast unit tests only (no chart rendering) — use for quick dev-cycle feedback
+./gradlew :matrix-charts:testFast
 ./gradlew :matrix-ggplot:testFast
 
 # Full test suite (always run before merge)
+./gradlew test
+
+# Full chart rendering suites in headless mode
 ./gradlew :matrix-charts:test -Pheadless=true
 ./gradlew :matrix-ggplot:test -Pheadless=true
 ```
@@ -297,12 +306,12 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 
 ### Testing SVG Chart Output (matrix-charts)
 
-**IMPORTANT:** When testing chart rendering in matrix-charts, you MUST use `svg.toXml()` or `SvgWriter.toXml()` to convert SVG objects to strings for assertions. **DO NOT use `svg.toString()`** - it returns the Java object representation (`"se.alipsa.groovy.svg.Svg@hashcode"`), not the SVG XML content.
+**IMPORTANT:** Prefer direct SVG object access (`svg.descendants()`, children, element attributes) for structural chart assertions. Use `svg.toXml()` or `SvgWriter.toXml()` when the test specifically needs serialized XML, CSS, exact text snippets, or parser-level assertions. **DO NOT use `svg.toString()`** - it returns the Java object representation (`"se.alipsa.groovy.svg.Svg@hashcode"`), not the SVG XML content.
 
 #### Correct Pattern
 
 ```groovy
-import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.groovy.svg.Path
 import se.alipsa.matrix.core.Matrix
 import static se.alipsa.matrix.gg.GgPlot.*
 
@@ -316,11 +325,9 @@ void testChartRendering() {
   def chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
   def svg = chart.render()
 
-  // Correct - Use SvgWriter.toXml() to get SVG XML content
-  String svgContent = SvgWriter.toXml(svg)
-  assertTrue(svgContent.contains('<svg'))
-  assertTrue(svgContent.contains('</svg>'))
-  assertTrue(svgContent.contains('<line'))
+  // Correct - use direct object access for structural assertions
+  def paths = svg.descendants().findAll { it instanceof Path }
+  assertTrue(paths.size() > 0)
 }
 ```
 
@@ -337,23 +344,27 @@ void testChartRendering() {
 }
 ```
 
-#### Why Not Navigate the SVG Object Model?
+#### When to Serialize SVG
 
-While it's theoretically possible to navigate the SVG object model directly (accessing children, elements, attributes), **string-based assertions are preferred** for these reasons:
+Use `svg.toXml()` or `SvgWriter.toXml()` when testing serialized output, for example CSS attributes, exact labels, generated XML snippets, or XML parser behavior:
 
-1. **Simplicity**: String assertions are straightforward and easy to read
-2. **Completeness**: Testing the XML ensures the entire rendering pipeline works end-to-end
-3. **Regression detection**: String content catches formatting and structure changes
-4. **Real-world validation**: Tests verify what would actually be output to users
-5. **Library independence**: Tests don't depend on gsvg's internal object structure
+```groovy
+String svgContent = SvgWriter.toXml(svg)
+assertTrue(svgContent.contains('stroke-dasharray'))
+```
 
-However, if you need to test specific SVG elements or attributes programmatically, you can use `SvgReader.fromXml()` to parse the XML and navigate the resulting object model.
+If you need to test specific SVG elements or attributes programmatically after serialization, use `SvgReader.fromXml()` to parse the XML and navigate the resulting object model.
 
 #### Required Imports for Chart Tests
 
 ```groovy
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.io.SvgWriter  // <- Always include for chart tests
+import se.alipsa.groovy.svg.Circle
+import se.alipsa.groovy.svg.Line
+import se.alipsa.groovy.svg.Path
+import se.alipsa.groovy.svg.Rect
+import se.alipsa.groovy.svg.Text
+import se.alipsa.groovy.svg.io.SvgWriter  // Include when serialization is needed
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 
@@ -363,21 +374,31 @@ import static se.alipsa.matrix.gg.GgPlot.*
 
 ## Module Structure
 
-| Module                 | Purpose                                                                   |
-|------------------------|---------------------------------------------------------------------------|
-| **matrix-core**        | Core Matrix/Grid classes, basic statistics, data conversion               |
-| **matrix-stats**       | Statistical tests (t-test, correlation, regression) using Smile ML        |
-| **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                            |
-| **matrix-charts**      | Charm rendering engine and chart-type-first API with SVG output           |
-| **matrix-ggplot**    | GGPlot2-style charting API, delegates to Charm in matrix-charts           |
-| **matrix-csv**         | Advanced CSV import/export via commons-csv                                |
-| **matrix-groovy-ext**  | Groovy extensions to Number and BigDecimal enabling more ideomatic groovy |
-| **matrix-json**        | JSON import/export via Jackson                                            |
-| **matrix-spreadsheet** | Excel/OpenOffice import/export via Apache POI                             |
-| **matrix-sql**         | Database interaction via JDBC                                             |
-| **matrix-parquet**     | Parquet format support                                                    |
-| **matrix-smile**       | Smile ML library integration                                              |
-| **matrix-bom**         | Bill of Materials for dependency management                               |
+`settings.gradle` is the authoritative module list. Current published and example modules include:
+
+| Module                 | Purpose                                                                  |
+|------------------------|--------------------------------------------------------------------------|
+| **matrix-core**        | Core Matrix/Grid classes, basic statistics, data conversion              |
+| **matrix-stats**       | Statistical tests, regression, clustering, time series, and related math |
+| **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                           |
+| **matrix-charts**      | Charm rendering engine and chart-type-first API with SVG output          |
+| **matrix-ggplot**      | GGPlot2-style charting API, delegates to Charm in matrix-charts          |
+| **matrix-xchart**      | XChart integration                                                       |
+| **matrix-csv**         | Advanced CSV import/export via commons-csv                               |
+| **matrix-json**        | JSON import/export via Jackson                                           |
+| **matrix-spreadsheet** | Excel/OpenOffice import/export via Apache POI and SODS                  |
+| **matrix-sql**         | Database interaction via JDBC                                            |
+| **matrix-gsheets**     | Google Sheets import/export                                              |
+| **matrix-bigquery**    | Google BigQuery integration                                              |
+| **matrix-parquet**     | Parquet format support                                                   |
+| **matrix-avro**        | Avro format support                                                      |
+| **matrix-tablesaw**    | Tablesaw interoperability                                                |
+| **matrix-arff**        | ARFF import/export                                                       |
+| **matrix-smile**       | Smile ML library integration                                             |
+| **matrix-groovy-ext**  | Groovy extensions to Number and BigDecimal enabling more idiomatic Groovy |
+| **matrix-logging**     | Logging integration helpers                                              |
+| **matrix-bom**         | Bill of Materials for dependency management                              |
+| **matrix-examples**    | Runnable example subprojects                                             |
 
 ## Architecture
 
@@ -421,17 +442,18 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 | Module(s)                   | Max JDK | Reason                                                                  |
 |-----------------------------|---------|-------------------------------------------------------------------------|
-| matrix-parquet, matrix-avro | 21      | Hadoop 3.4.x incompatible with JDK 22+                                  |
+| matrix-parquet, matrix-avro | 21      | Hadoop 3.5.x incompatible with JDK 22+                                  |
 | matrix-charts               | 21      | JavaFX 23.x requires JDK 21; 24+ requires JDK 22+                       |
-| matrix-smile                | 21      | Smile 4.x used requires a minimum of java 21; Smile 5+ requires Java 25 |
+| matrix-smile                | 21      | Smile 4.x used requires a minimum of Java 21; Smile 5+ requires Java 25 |
 
 ## Code Style
 
 - Static compilation is enabled globally for production code via `config/groovy/compileStatic.groovy` (applied in the root `build.gradle`). Test code is compiled dynamically by default. Use `@CompileDynamic` on production classes or methods that require dynamic Groovy features, and `@CompileStatic` on test classes or methods that need static compilation.
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
+- CodeNarc 3.7 cannot parse Groovy 5 arrow switch syntax, so the root `build.gradle` auto-excludes arrow-switch files from CodeNarc and warns about old-style switch syntax. Do not assume CodeNarc fully checks files containing arrow switch expressions until the project upgrades to CodeNarc 4+.
 - MIT License
-- **Always create or modify tests when adding or changing features** - tests go in `src/test/groovy/` using JUnit 5
+- **Always create or modify tests when adding or changing features** - tests go in `src/test/groovy/` using JUnit Jupiter
 
 ## Idiomatic Groovy Patterns
 
@@ -859,7 +881,7 @@ Use the `return` keyword only when we need to return early, otherwise use implic
 
 ### Modern Switch Expressions (JDK 14+ / Groovy 5+)
 
-**IMPORTANT:** With Groovy 5.0.5 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
+**IMPORTANT:** With Groovy 5.0.6 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
 
 **Use modern switch expressions:**
 ```groovy
@@ -952,7 +974,7 @@ The goal is beautiful Groovy code, not BigDecimal everywhere.
 
 ## Testing SVG Visualizations with Direct Object Access
 
-**Performance Best Practice:** When testing SVG chart rendering, use direct object access instead of serialization for assertions. This is significantly faster and more reliable.
+**Performance Best Practice:** When testing SVG chart rendering, use direct object access for structural assertions. It is faster and clearer for element-count, element-type, parent/child, and attribute checks. Use serialization only when the test specifically needs XML text, CSS snippets, exact labels, or parser-level behavior.
 
 ### Pattern
 
@@ -970,13 +992,13 @@ void testChartRendering() {
     Svg svg = chart.render()
     assertNotNull(svg)
 
-    // ✅ GOOD: Direct object access (1.3x faster, no serialization)
+    // GOOD: Direct object access for structural assertions
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() > 0, "Should render points")
 
-    // ❌ BAD: Serialization-based (slower, unnecessary I/O)
+    // Use serialization only for XML/text/CSS assertions
     // String svgContent = SvgWriter.toXml(svg)
-    // assertTrue(svgContent.contains('<circle'))
+    // assertTrue(svgContent.contains('stroke-dasharray'))
 }
 ```
 
@@ -1043,9 +1065,9 @@ void testComplexVisualization() {
 ### Performance Impact
 
 Direct object access vs serialization:
-- **Speed**: 1.3x faster
+- **Speed**: 1.3x faster for structural checks
 - **Memory**: No string allocation for large SVGs
-- **Reliability**: Type-safe, no string parsing
+- **Reliability**: Type-safe, no string parsing for element structure
 
 **Benchmark Results:**
 ```
@@ -1058,8 +1080,8 @@ For a test suite with 200+ tests, this optimization saves ~30 seconds per run.
 
 ## Key Dependencies
 
-- **Groovy**: 5.0.5 (groovy, groovy-sql, groovy-ginq)
-- **Testing**: JUnit Jupiter 6.0.1
-- **Charting**: gsvg 0.4.0, JFreeChart 1.5.6, JavaFX 23.0.2
+- **Groovy**: 5.0.6 (groovy, groovy-sql, groovy-ginq)
+- **Testing**: JUnit Jupiter 6.0.3
+- **Charting**: gsvg 1.1.0, XChart 3.8.8, JavaFX 23.0.2
 - **Statistics**: Smile 4.4.2, commons-math3
 - **Data formats**: Jackson, Apache POI, commons-csv
