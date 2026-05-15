@@ -2960,6 +2960,18 @@ class MatrixTest {
     def sampled = m.sample(0.25, new Random(42))
     assertEquals(5, sampled.rowCount())
     sampled['a'].each { assert it in (1..20) }
+
+    // 0.3 * 10 = 3.0, but 0.3 * 10 with double is 2.999... — verify rounding
+    def m10 = Matrix.builder()
+        .data(a: (1..10) as List)
+        .types(Integer)
+        .build()
+    def sampled10 = m10.sample(0.3, new Random(42))
+    assertEquals(3, sampled10.rowCount())
+
+    // boundary: fraction = 1.0 returns all rows
+    def sampledAll = m10.sample(1.0, new Random(42))
+    assertEquals(10, sampledAll.rowCount())
   }
 
   @Test
@@ -2974,5 +2986,7 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(4) }
     assertThrows(IllegalArgumentException) { m.sample(0.0) }
     assertThrows(IllegalArgumentException) { m.sample(1.1) }
+    // fraction = 1.0 is valid (returns all rows)
+    assertEquals(3, m.sample(1.0, new Random(42)).rowCount())
   }
 }
