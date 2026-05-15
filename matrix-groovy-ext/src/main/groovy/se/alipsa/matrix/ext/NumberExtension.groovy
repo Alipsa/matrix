@@ -287,7 +287,7 @@ class NumberExtension {
     if (self <= -1) {
       throw new IllegalArgumentException("log1p is undefined for values <= -1 (ln(1+x) requires x > -1): ${self}")
     }
-    if (self.abs() < 0.0000000001) {
+    if (self.abs() < 1e-10) {
       Math.log1p(self as double) as BigDecimal
     } else {
       log(self + 1)
