@@ -4426,10 +4426,11 @@ class Matrix implements Iterable<Row>, Cloneable {
     List<Integer> nullCounts = []
     List<Integer> uniqueCounts = []
 
+    List<Class> columnTypes = types()
     for (int i = 0; i < columnCount(); i++) {
       Column col = column(i)
       colNames << col.name
-      colTypes << (types()[i]?.simpleName ?: 'Object')
+      colTypes << (columnTypes[i]?.simpleName ?: 'Object')
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
@@ -4480,7 +4481,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (fraction <= 0.0 || fraction > 1.0) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
-    int n = Math.max(1, (int) (rowCount() * fraction))
+    int n = (rowCount() * fraction).max(1) as int
     sample(n, random)
   }
 
