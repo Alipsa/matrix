@@ -4387,7 +4387,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix top(Number n = 5) {
-    int count = Math.min(n as int, rowCount())
+    int count = (n as int).min(rowCount()) as int
     if (count <= 0) {
       return builder().columnNames(columnNames()).types(types()).build()
     }
@@ -4402,11 +4402,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix bottom(Number n = 5) {
-    int count = Math.min(n as int, rowCount())
+    int count = (n as int).min(rowCount()) as int
     if (count <= 0) {
       return builder().columnNames(columnNames()).types(types()).build()
     }
-    int start = Math.max(0, rowCount() - count)
+    int start = 0.max(rowCount() - count) as int
     subset(start..(rowCount() - 1))
   }
 
