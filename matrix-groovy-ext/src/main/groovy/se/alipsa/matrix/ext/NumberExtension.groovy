@@ -266,7 +266,7 @@ class NumberExtension {
   /**
    * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
    *
-   * <p>For values very close to zero (abs &lt; 1e-10G), this method delegates to
+   * <p>For values very close to zero (abs &lt; 1e-10), this method delegates to
    * {@code Math.log1p(double)} to avoid catastrophic cancellation. For larger values
    * it computes {@code log(self + 1)} using the BigDecimal series.
    *
@@ -287,7 +287,7 @@ class NumberExtension {
     if (self <= -1) {
       throw new IllegalArgumentException("log1p is undefined for values <= -1 (ln(1+x) requires x > -1): ${self}")
     }
-    if (self.abs() < new BigDecimal('1e-10')) {
+    if (self.abs() < 1e-10) {
       Math.log1p(self as double) as BigDecimal
     } else {
       log(self + 1)
