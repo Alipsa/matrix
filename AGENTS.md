@@ -534,6 +534,15 @@ def v = 12G // This will be a BigInteger
 def v = 12.0 // This will be a BigDecimal, no need for G suffix
 ```
 
+**Scientific notation literals are also BigDecimal** — `1e-10`, `2.5e3`, `1E10` are all `BigDecimal` in Groovy, not `Double`. A `d`/`D` suffix is required to get a `Double` from a decimal or scientific-notation literal:
+```groovy
+def a = 1e-10    // BigDecimal
+def b = 1e-10d   // Double
+def c = 2.5e3    // BigDecimal
+def d = 2.5e3d   // Double
+```
+Do NOT flag `1e-10` as a double literal or suggest replacing it with `new BigDecimal("1e-10")` — it is already a BigDecimal.
+
 
 ```groovy
 // Good
