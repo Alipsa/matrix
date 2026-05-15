@@ -744,6 +744,32 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testLog1p() {
+    // log1p(0) = ln(1) = 0
+    assertEquals(0.0, (0.0).log1p().doubleValue(), 1e-10)
+
+    // log1p(e - 1) = ln(e) = 1
+    BigDecimal eMinusOne = Math.E - 1 as BigDecimal
+    assertEquals(1.0, eMinusOne.log1p().doubleValue(), 1e-10)
+
+    // log1p(-1) throws
+    def exception = assertThrows(IllegalArgumentException) {
+      (-1.0).log1p()
+    }
+    assertTrue(exception.message.contains('log1p is undefined'))
+
+    // log1p(-2) throws
+    exception = assertThrows(IllegalArgumentException) {
+      (-2.0).log1p()
+    }
+    assertTrue(exception.message.contains('log1p is undefined'))
+
+    // Number overload
+    assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)
+    assertEquals(1.0, NumberExtension.log1p(Math.E - 1).doubleValue(), 1e-10)
+  }
+
+  @Test
   void testAsin() {
     // Test asin(0) = 0
     assertEquals(0.0, (0.0).asin().doubleValue(), 1e-10)

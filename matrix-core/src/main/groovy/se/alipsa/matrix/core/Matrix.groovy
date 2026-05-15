@@ -4379,4 +4379,109 @@ class Matrix implements Iterable<Row>, Cloneable {
     Stat.groupBy(this, columnNames)
   }
 
+  /**
+   * Return a new Matrix containing the first {@code n} rows.
+   * If {@code n} exceeds the row count, all rows are returned.
+   *
+   * @param n the number of rows to include (default 5)
+   * @return a new Matrix with at most {@code n} rows
+   */
+  Matrix top(Number n = 5) {
+    int count = Math.min(n as int, rowCount())
+    if (count <= 0) {
+      return builder().columnNames(columnNames()).types(types()).build()
+    }
+    subset(0..(count - 1))
+  }
+
+  /**
+   * Return a new Matrix containing the last {@code n} rows.
+   * If {@code n} exceeds the row count, all rows are returned.
+   *
+   * @param n the number of rows to include (default 5)
+   * @return a new Matrix with at most {@code n} rows
+   */
+  Matrix bottom(Number n = 5) {
+    int count = Math.min(n as int, rowCount())
+    if (count <= 0) {
+      return builder().columnNames(columnNames()).types(types()).build()
+    }
+    int start = Math.max(0, rowCount() - count)
+    subset(start..(rowCount() - 1))
+  }
+
+  /**
+   * Return a metadata Matrix describing each column: name, type, non-null count,
+   * null count, and count of distinct non-null values.
+   *
+   * <p>The returned Matrix has columns: {@code column} (String), {@code type} (String),
+   * {@code nonNull} (Integer), {@code nullCount} (Integer), {@code unique} (Integer).
+   *
+   * @return a Matrix with one row per column containing metadata
+   */
+  Matrix info() {
+    List<String> colNames = []
+    List<String> colTypes = []
+    List<Integer> nonNullCounts = []
+    List<Integer> nullCounts = []
+    List<Integer> uniqueCounts = []
+
+    for (int i = 0; i < columnCount(); i++) {
+      Column col = column(i)
+      colNames << col.name
+      colTypes << (types()[i]?.simpleName ?: 'Object')
+      int nullCount = col.countNulls()
+      nonNullCounts << (col.size() - nullCount)
+      nullCounts << nullCount
+      uniqueCounts << (col.findAll { it != null }.toSet().size())
+    }
+
+    builder()
+        .data(
+            column: colNames as List<Object>,
+            type: colTypes as List<Object>,
+            nonNull: nonNullCounts as List<Object>,
+            nullCount: nullCounts as List<Object>,
+            unique: uniqueCounts as List<Object>
+        )
+        .types([String, String, Integer, Integer, Integer])
+        .build()
+  }
+
+  /**
+   * Return a random sample of {@code n} rows without replacement.
+   *
+   * @param n the number of rows to sample
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with {@code n} randomly selected rows
+   * @throws IllegalArgumentException if n &lt;= 0 or n &gt; rowCount()
+   */
+  Matrix sample(int n, Random random = new Random()) {
+    if (n <= 0) {
+      throw new IllegalArgumentException("Sample size must be positive: was $n")
+    }
+    if (n > rowCount()) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count (${rowCount()})")
+    }
+    List<Integer> indices = new ArrayList<Integer>((0..<rowCount()) as List<Integer>)
+    Collections.shuffle(indices, random)
+    subset(indices.subList(0, n))
+  }
+
+  /**
+   * Return a random sample of rows as a fraction of the total row count, without replacement.
+   *
+   * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with the sampled rows
+   * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
+   */
+  Matrix sample(double fraction, Random random = new Random()) {
+    if (fraction <= 0.0 || fraction > 1.0) {
+      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
+    }
+    int n = Math.max(1, (int) (rowCount() * fraction))
+    sample(n, random)
+  }
+
 }

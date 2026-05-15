@@ -622,6 +622,11 @@ value.log()  // -> 2.302585...
 BigDecimal value2 = 100.0
 value2.log10()  // -> 2.0
 
+// Natural logarithm of (1 + x)
+BigDecimal small = 0.001
+small.log1p()  // -> 0.0009995...
+(0.0).log1p()  // -> 0.0
+
 // Exponential function (e^x)
 BigDecimal x = 1.0
 x.exp()  // -> 2.718281828... (E)

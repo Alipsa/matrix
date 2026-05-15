@@ -811,4 +811,21 @@ class ColumnTest {
     assert result.size() == 5
   }
 
+  @Test
+  void testHasNulls() {
+    assert new Column([1, null, 3]).hasNulls()
+    assert !new Column([1, 2, 3]).hasNulls()
+    assert !new Column([]).hasNulls()
+    assert new Column([null]).hasNulls()
+  }
+
+  @Test
+  void testCountNulls() {
+    assertEquals(0, new Column([1, 2, 3]).countNulls())
+    assertEquals(1, new Column([1, null, 3]).countNulls())
+    assertEquals(2, new Column([null, 2, null]).countNulls())
+    assertEquals(0, new Column([]).countNulls())
+    assertEquals(3, new Column([null, null, null]).countNulls())
+  }
+
 }

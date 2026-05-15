@@ -2836,4 +2836,137 @@ class MatrixTest {
     assertEquals(3, result)
     assertTrue(result instanceof Integer)
   }
+
+  @Test
+  void testTop() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .types(Integer)
+        .build()
+
+    // default 5
+    def top = m.top()
+    assertEquals(5, top.rowCount())
+    assertEquals([1, 2, 3, 4, 5], top['a'] as List)
+
+    // custom count
+    top = m.top(3)
+    assertEquals(3, top.rowCount())
+    assertEquals([1, 2, 3], top['a'] as List)
+
+    // exceeds row count — returns all
+    top = m.top(20)
+    assertEquals(10, top.rowCount())
+
+    // zero returns empty
+    top = m.top(0)
+    assertEquals(0, top.rowCount())
+  }
+
+  @Test
+  void testBottom() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .types(Integer)
+        .build()
+
+    // default 5
+    def bottom = m.bottom()
+    assertEquals(5, bottom.rowCount())
+    assertEquals([6, 7, 8, 9, 10], bottom['a'] as List)
+
+    // custom count
+    bottom = m.bottom(3)
+    assertEquals(3, bottom.rowCount())
+    assertEquals([8, 9, 10], bottom['a'] as List)
+
+    // exceeds row count — returns all
+    bottom = m.bottom(20)
+    assertEquals(10, bottom.rowCount())
+
+    // zero returns empty
+    bottom = m.bottom(0)
+    assertEquals(0, bottom.rowCount())
+  }
+
+  @Test
+  void testHeadStillReturnsString() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+    def result = m.head(2)
+    assertTrue(result instanceof String)
+  }
+
+  @Test
+  void testTailStillReturnsString() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+    def result = m.tail(2)
+    assertTrue(result instanceof String)
+  }
+
+  @Test
+  void testInfo() {
+    def m = Matrix.builder()
+        .data(
+            name: ['Alice', 'Bob', null, 'Alice'],
+            age: [30, null, 25, 30],
+            score: [95.0, 87.5, null, 95.0]
+        )
+        .types([String, Integer, BigDecimal])
+        .build()
+
+    def info = m.info()
+    assertEquals(3, info.rowCount())
+    assertEquals(['name', 'age', 'score'], info['column'] as List)
+    assertEquals(['String', 'Integer', 'BigDecimal'], info['type'] as List)
+    assertEquals([3, 3, 3], info['nonNull'] as List)
+    assertEquals([1, 1, 1], info['nullCount'] as List)
+    assertEquals([2, 2, 2], info['unique'] as List)
+  }
+
+  @Test
+  void testSampleInt() {
+    def m = Matrix.builder()
+        .data(a: (1..20) as List)
+        .types(Integer)
+        .build()
+
+    def sampled = m.sample(5, new Random(42))
+    assertEquals(5, sampled.rowCount())
+    // all sampled values should exist in the original
+    sampled['a'].each { assert it in (1..20) }
+    // no duplicates (without replacement)
+    assertEquals(5, (sampled['a'] as Set).size())
+  }
+
+  @Test
+  void testSampleFraction() {
+    def m = Matrix.builder()
+        .data(a: (1..20) as List)
+        .types(Integer)
+        .build()
+
+    def sampled = m.sample(0.25, new Random(42))
+    assertEquals(5, sampled.rowCount())
+    sampled['a'].each { assert it in (1..20) }
+  }
+
+  @Test
+  void testSampleValidation() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertThrows(IllegalArgumentException) { m.sample(0) }
+    assertThrows(IllegalArgumentException) { m.sample(-1) }
+    assertThrows(IllegalArgumentException) { m.sample(4) }
+    assertThrows(IllegalArgumentException) { m.sample(0.0 as double) }
+    assertThrows(IllegalArgumentException) { m.sample(1.1 as double) }
+  }
 }
