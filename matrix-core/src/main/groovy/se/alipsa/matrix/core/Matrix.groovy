@@ -4387,6 +4387,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix top(Number n = 5) {
+    if (n < 0) {
+      throw new IllegalArgumentException("n must be non-negative: was $n")
+    }
     int count = (n as int).min(rowCount()) as int
     if (count <= 0) {
       return builder().columnNames(columnNames()).types(types()).build()
@@ -4402,6 +4405,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix bottom(Number n = 5) {
+    if (n < 0) {
+      throw new IllegalArgumentException("n must be non-negative: was $n")
+    }
     int count = (n as int).min(rowCount()) as int
     if (count <= 0) {
       return builder().columnNames(columnNames()).types(types()).build()
@@ -4427,9 +4433,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     List<Integer> uniqueCounts = []
 
     List<Class> columnTypes = types()
-    for (int i = 0; i < columnCount(); i++) {
-      Column col = column(i)
-      colNames << col.name
+    columnNames().eachWithIndex { name, i ->
+      Column col = column(name)
+      colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
@@ -4464,7 +4470,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n > rowCount()) {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count (${rowCount()})")
     }
-    List<Integer> indices = new ArrayList<Integer>((0..<rowCount()) as List<Integer>)
+    List<Integer> indices = (0..<rowCount()).toList()
     Collections.shuffle(indices, random)
     subset(indices.subList(0, n))
   }
@@ -4477,11 +4483,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the sampled rows
    * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
    */
-  Matrix sample(double fraction, Random random = new Random()) {
-    if (fraction <= 0.0 || fraction > 1.0) {
+  Matrix sample(Number fraction, Random random = new Random()) {
+    double f = fraction as double
+    if (f <= 0.0 || f > 1.0) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
-    int n = (rowCount() * fraction).max(1) as int
+    int n = (rowCount() * f).max(1) as int
     sample(n, random)
   }
 

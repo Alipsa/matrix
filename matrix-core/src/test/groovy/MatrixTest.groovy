@@ -2861,6 +2861,9 @@ class MatrixTest {
     // zero returns empty
     top = m.top(0)
     assertEquals(0, top.rowCount())
+
+    // negative throws
+    assertThrows(IllegalArgumentException) { m.top(-1) }
   }
 
   @Test
@@ -2887,6 +2890,9 @@ class MatrixTest {
     // zero returns empty
     bottom = m.bottom(0)
     assertEquals(0, bottom.rowCount())
+
+    // negative throws
+    assertThrows(IllegalArgumentException) { m.bottom(-1) }
   }
 
   @Test
@@ -2966,7 +2972,7 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(0) }
     assertThrows(IllegalArgumentException) { m.sample(-1) }
     assertThrows(IllegalArgumentException) { m.sample(4) }
-    assertThrows(IllegalArgumentException) { m.sample(0.0 as double) }
-    assertThrows(IllegalArgumentException) { m.sample(1.1 as double) }
+    assertThrows(IllegalArgumentException) { m.sample(0.0) }
+    assertThrows(IllegalArgumentException) { m.sample(1.1) }
   }
 }

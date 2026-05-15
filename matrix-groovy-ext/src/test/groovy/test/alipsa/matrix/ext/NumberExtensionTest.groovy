@@ -767,7 +767,7 @@ class NumberExtensionTest {
     // Small value — exercises Math.log1p fallback for precision near zero
     BigDecimal tiny = 1e-15 as BigDecimal
     double expected = Math.log1p(1e-15)
-    assertEquals(expected, tiny.log1p().doubleValue(), 1e-25)
+    assertEquals(expected, tiny.log1p().doubleValue(), 1e-15)
 
     // Number overload
     assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)

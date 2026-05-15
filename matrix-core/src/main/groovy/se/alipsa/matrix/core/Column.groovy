@@ -258,8 +258,9 @@ class Column extends ArrayList {
    *
    * @return the count of null elements
    */
+  @CompileDynamic
   int countNulls() {
-    this.count { it == null } as int
+    this.count { it == null }
   }
 
   List removeNulls() {
