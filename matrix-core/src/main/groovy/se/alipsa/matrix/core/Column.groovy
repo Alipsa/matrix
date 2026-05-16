@@ -250,7 +250,7 @@ class Column extends ArrayList {
    * @return true if any element is null
    */
   boolean hasNulls() {
-    this.any { it == null }
+    contains(null)
   }
 
   /**

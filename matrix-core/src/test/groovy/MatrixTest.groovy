@@ -2876,6 +2876,7 @@ class MatrixTest {
 
     def top = m.top(0)
     assertEquals('sample', top.matrixName)
+    assertEquals([Integer, String], top.types())
     assertEquals(['id'], top.indexedColumns())
     assertTrue(top.hasIndex())
     assertEquals(0, top.lookup(1).rowCount())
@@ -2920,6 +2921,7 @@ class MatrixTest {
 
     def bottom = m.bottom(0)
     assertEquals('sample', bottom.matrixName)
+    assertEquals([Integer, String], bottom.types())
     assertEquals(['id'], bottom.indexedColumns())
     assertTrue(bottom.hasIndex())
     assertEquals(0, bottom.lookup(1).rowCount())
@@ -2947,22 +2949,25 @@ class MatrixTest {
 
   @Test
   void testInfo() {
-    def m = Matrix.builder()
+    def m = Matrix.builder('people')
         .data(
             name: ['Alice', 'Bob', null, 'Alice'],
             age: [30, null, 25, 30],
-            score: [95.0, 87.5, null, 95.0]
+            score: [95.0, 87.5, null, 95.0],
+            allNull: [null, null, null, null],
+            code: ['a', 'b', 'c', 'd']
         )
-        .types([String, Integer, BigDecimal])
+        .types([String, Integer, BigDecimal, String, String])
         .build()
 
     def info = m.info()
-    assertEquals(3, info.rowCount())
-    assertEquals(['name', 'age', 'score'], info['column'] as List)
-    assertEquals(['String', 'Integer', 'BigDecimal'], info['type'] as List)
-    assertEquals([3, 3, 3], info['nonNull'] as List)
-    assertEquals([1, 1, 1], info['nullCount'] as List)
-    assertEquals([2, 2, 2], info['unique'] as List)
+    assertEquals('people.info', info.matrixName)
+    assertEquals(5, info.rowCount())
+    assertEquals(['name', 'age', 'score', 'allNull', 'code'], info['column'] as List)
+    assertEquals(['String', 'Integer', 'BigDecimal', 'String', 'String'], info['type'] as List)
+    assertEquals([3, 3, 3, 0, 4], info['nonNull'] as List)
+    assertEquals([1, 1, 1, 4, 0], info['nullCount'] as List)
+    assertEquals([2, 2, 2, 0, 4], info['unique'] as List)
   }
 
   @Test
@@ -2991,7 +2996,7 @@ class MatrixTest {
     assertEquals(5, sampled.rowCount())
     sampled['a'].each { assert it in (1..20) }
 
-    // 0.3 * 10 = 3.0, but 0.3 * 10 with double is 2.999... — verify rounding
+    // 0.3 * 10 = 3.0, verify decimal rounding without double arithmetic
     def m10 = Matrix.builder()
         .data(a: (1..10) as List)
         .types(Integer)
@@ -3002,6 +3007,16 @@ class MatrixTest {
     // boundary: fraction = 1.0 returns all rows
     def sampledAll = m10.sample(1.0, new Random(42))
     assertEquals(10, sampledAll.rowCount())
+  }
+
+  @Test
+  void testInfoDefaultName() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertEquals('info', m.info().matrixName)
   }
 
   @Test

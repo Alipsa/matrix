@@ -83,6 +83,8 @@ class NumberExtension {
   private static final BigDecimal LN2 = 0.69314718055994530941723212145818
   /** Natural logarithm of 10 to 32 significant digits */
   private static final BigDecimal LN10 = 2.30258509299404568401799145468436
+  /** Threshold for terminating the {@code log1p} small-value Taylor series. */
+  private static final BigDecimal LOG1P_THRESHOLD = 1e-34
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -269,6 +271,7 @@ class NumberExtension {
    * <p>For values very close to zero (abs &lt; 1e-10), this method uses the
    * {@code ln(1+x)} Taylor series directly to avoid catastrophic cancellation.
    * For larger values it computes {@code log(self + 1)} using the BigDecimal series.
+   * Both paths return values rounded to {@link MathContext#DECIMAL64}.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -280,7 +283,7 @@ class NumberExtension {
    * }</pre>
    *
    * @param self the BigDecimal value (must be greater than -1)
-   * @return a BigDecimal representing ln(1 + self)
+   * @return a BigDecimal representing ln(1 + self), rounded to DECIMAL64 precision
    * @throws IllegalArgumentException if self &lt;= -1 (ln(1+x) requires x &gt; -1)
    */
   static BigDecimal log1p(BigDecimal self) {
@@ -305,12 +308,11 @@ class NumberExtension {
     MathContext mc = MathContext.DECIMAL128
     BigDecimal term = value
     BigDecimal result = value
-    BigDecimal threshold = new BigDecimal("1e-${mc.precision}")
     int n = 2
     while (true) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(new BigDecimal(n), mc)
-      if (step.abs() < threshold) {
+      if (step.abs() < LOG1P_THRESHOLD) {
         break
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)

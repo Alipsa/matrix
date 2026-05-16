@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
 
+import java.math.RoundingMode
 import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -4382,8 +4383,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Return a new Matrix containing the first {@code n} rows.
    * If {@code n} exceeds the row count, all rows are returned.
+   * Non-integer values are truncated before selecting rows.
    *
-   * @param n the number of rows to include (default 5)
+   * @param n the number of rows to include (default 5), truncated to an integer
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix top(Number n = 5) {
@@ -4406,8 +4408,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Return a new Matrix containing the last {@code n} rows.
    * If {@code n} exceeds the row count, all rows are returned.
+   * Non-integer values are truncated before selecting rows.
    *
-   * @param n the number of rows to include (default 5)
+   * @param n the number of rows to include (default 5), truncated to an integer
    * @return a new Matrix with at most {@code n} rows
    */
   Matrix bottom(Number n = 5) {
@@ -4435,7 +4438,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * <p>The returned Matrix has columns: {@code column} (String), {@code type} (String),
    * {@code nonNull} (Integer), {@code nullCount} (Integer), {@code unique} (Integer).
    *
-   * @return a Matrix with one row per column containing metadata
+   * @return a Matrix named {@code <matrixName>.info} or {@code info}, with one row per column containing metadata
    */
   Matrix info() {
     List<String> colNames = []
@@ -4457,7 +4460,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       uniqueCounts << seen.size()
     }
 
-    builder()
+    String infoName = mName ? "${mName}.info" : 'info'
+    builder(infoName)
         .data(
             column: colNames as List<Object>,
             type: colTypes as List<Object>,
@@ -4498,11 +4502,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
    */
   Matrix sample(Number fraction, Random random = new Random()) {
-    double f = fraction as double
-    if (f <= 0.0 || f > 1.0) {
+    BigDecimal f = fraction as BigDecimal
+    if (f <= 0 || f > 1) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
-    int n = Math.round(rowCount() * f).max(1) as int
+    int n = (f * rowCount()).setScale(0, RoundingMode.HALF_UP).intValue().max(1) as int
     sample(n, random)
   }
 
