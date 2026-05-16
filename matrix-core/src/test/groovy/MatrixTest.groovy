@@ -2867,6 +2867,21 @@ class MatrixTest {
   }
 
   @Test
+  void testTopZeroPreservesMatrixNameAndIndex() {
+    def m = Matrix.builder('sample')
+        .data(id: [1, 2, 3], value: ['a', 'b', 'c'])
+        .types(Integer, String)
+        .build()
+        .createIndex('id')
+
+    def top = m.top(0)
+    assertEquals('sample', top.matrixName)
+    assertEquals(['id'], top.indexedColumns())
+    assertTrue(top.hasIndex())
+    assertEquals(0, top.lookup(1).rowCount())
+  }
+
+  @Test
   void testBottom() {
     def m = Matrix.builder()
         .data(a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -2893,6 +2908,21 @@ class MatrixTest {
 
     // negative throws
     assertThrows(IllegalArgumentException) { m.bottom(-1) }
+  }
+
+  @Test
+  void testBottomZeroPreservesMatrixNameAndIndex() {
+    def m = Matrix.builder('sample')
+        .data(id: [1, 2, 3], value: ['a', 'b', 'c'])
+        .types(Integer, String)
+        .build()
+        .createIndex('id')
+
+    def bottom = m.bottom(0)
+    assertEquals('sample', bottom.matrixName)
+    assertEquals(['id'], bottom.indexedColumns())
+    assertTrue(bottom.hasIndex())
+    assertEquals(0, bottom.lookup(1).rowCount())
   }
 
   @Test

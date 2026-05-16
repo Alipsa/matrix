@@ -266,9 +266,9 @@ class NumberExtension {
   /**
    * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
    *
-   * <p>For values very close to zero (abs &lt; 1e-10), this method delegates to
-   * {@code Math.log1p(double)} to avoid catastrophic cancellation. For larger values
-   * it computes {@code log(self + 1)} using the BigDecimal series.
+   * <p>For values very close to zero (abs &lt; 1e-10), this method uses the
+   * {@code ln(1+x)} Taylor series directly to avoid catastrophic cancellation.
+   * For larger values it computes {@code log(self + 1)} using the BigDecimal series.
    *
    * <h3>Usage Example</h3>
    * <pre>{@code
@@ -288,10 +288,35 @@ class NumberExtension {
       throw new IllegalArgumentException("log1p is undefined for values <= -1 (ln(1+x) requires x > -1): ${self}")
     }
     if (self.abs() < 1e-10) {
-      Math.log1p(self as double) as BigDecimal
+      log1pSmall(self).round(MathContext.DECIMAL64)
     } else {
       log(self + 1)
     }
+  }
+
+  /**
+   * Computes ln(1+x) for very small x using the Taylor series
+   * x - x^2/2 + x^3/3 - ...
+   */
+  private static BigDecimal log1pSmall(BigDecimal value) {
+    if (value == BigDecimal.ZERO) {
+      return BigDecimal.ZERO
+    }
+    MathContext mc = MathContext.DECIMAL128
+    BigDecimal term = value
+    BigDecimal result = value
+    BigDecimal threshold = new BigDecimal("1e-${mc.precision}")
+    int n = 2
+    while (true) {
+      term = term.multiply(value, mc)
+      BigDecimal step = term.divide(new BigDecimal(n), mc)
+      if (step.abs() < threshold) {
+        break
+      }
+      result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
+      n++
+    }
+    result
   }
 
   /**

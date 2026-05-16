@@ -764,10 +764,17 @@ class NumberExtensionTest {
     }
     assertTrue(exception.message.contains('log1p is undefined'))
 
-    // Small value — exercises Math.log1p fallback for precision near zero
-    BigDecimal tiny = 1e-15 as BigDecimal
+    // Small value - exercises the BigDecimal series for precision near zero
+    BigDecimal tiny = 1e-15
     double expected = Math.log1p(1e-15)
     assertEquals(expected, tiny.log1p().doubleValue(), 1e-15)
+
+    // Values too small for double must not underflow to zero
+    BigDecimal underDoubleMin = 1e-400
+    assertEquals(underDoubleMin, underDoubleMin.log1p())
+
+    BigDecimal negativeUnderDoubleMin = -1e-400
+    assertEquals(negativeUnderDoubleMin, negativeUnderDoubleMin.log1p())
 
     // Number overload
     assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)
