@@ -2885,6 +2885,14 @@ class MatrixTest {
     assertEquals(['id'], top.indexedColumns())
     assertTrue(top.hasIndex())
     assertEquals(0, top.lookup(1).rowCount())
+
+    def nonEmptyTop = m.top(2)
+    assertEquals('sample', nonEmptyTop.matrixName)
+    assertEquals([Integer, String], nonEmptyTop.types())
+    assertEquals(['id'], nonEmptyTop.indexedColumns())
+    assertTrue(nonEmptyTop.hasIndex())
+    assertEquals([1, 2], nonEmptyTop['id'] as List)
+    assertEquals(['a'], nonEmptyTop.lookup(1)['value'] as List)
   }
 
   @Test
@@ -2935,6 +2943,14 @@ class MatrixTest {
     assertEquals(['id'], bottom.indexedColumns())
     assertTrue(bottom.hasIndex())
     assertEquals(0, bottom.lookup(1).rowCount())
+
+    def nonEmptyBottom = m.bottom(2)
+    assertEquals('sample', nonEmptyBottom.matrixName)
+    assertEquals([Integer, String], nonEmptyBottom.types())
+    assertEquals(['id'], nonEmptyBottom.indexedColumns())
+    assertTrue(nonEmptyBottom.hasIndex())
+    assertEquals([2, 3], nonEmptyBottom['id'] as List)
+    assertEquals(['c'], nonEmptyBottom.lookup(3)['value'] as List)
   }
 
   @Test
@@ -3031,6 +3047,17 @@ class MatrixTest {
   }
 
   @Test
+  void testInfoUsesObjectForNullColumnType() {
+    def m = Matrix.builder('untyped')
+        .data(a: [1, 2, 3])
+        .types([null])
+        .build()
+
+    def info = m.info()
+    assertEquals(['Object'], info['type'] as List)
+  }
+
+  @Test
   void testSampleValidation() {
     def m = Matrix.builder()
         .data(a: [1, 2, 3])
@@ -3042,6 +3069,8 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(4) }
     assertThrows(IllegalArgumentException) { m.sample(0.0) }
     assertThrows(IllegalArgumentException) { m.sample(1.1) }
+    def longException = assertThrows(IllegalArgumentException) { m.sample(5L) }
+    assertTrue(longException.message.contains('Did you mean sample(n as int, random)?'))
     // int boundary: n == rowCount() is valid
     assertEquals(3, m.sample(3, new Random(42)).rowCount())
     // fraction = 1.0 is valid (returns all rows)

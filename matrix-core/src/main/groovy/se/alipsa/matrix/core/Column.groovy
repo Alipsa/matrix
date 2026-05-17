@@ -250,6 +250,7 @@ class Column extends ArrayList {
    * @return true if any element is null
    */
   boolean hasNulls() {
+    // contains(null) short-circuits; countNulls() must scan the whole column.
     contains(null)
   }
 
@@ -259,7 +260,9 @@ class Column extends ArrayList {
    * @return the count of null elements
    */
   int countNulls() {
-    this.count { it == null } as int
+    int nullCount = 0
+    each { if (it == null) nullCount++ }
+    nullCount
   }
 
   List removeNulls() {

@@ -311,7 +311,7 @@ class NumberExtension {
     int n = 2
     while (true) {
       term = term.multiply(value, mc)
-      BigDecimal step = term.divide(new BigDecimal(n), mc)
+      BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
         break
       }

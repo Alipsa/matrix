@@ -4510,8 +4510,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix sample(Number fraction, Random random = new Random()) {
     BigDecimal f = fraction as BigDecimal
-    if (f <= 0 || f > 1) {
+    if (f <= 0) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
+    }
+    if (f > 1) {
+      String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Long ||
+          fraction instanceof BigInteger ? ' Did you mean sample(n as int, random)?' : ''
+      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction.$rowCountHint")
     }
     int n = ((f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int).max(1) as int
     sample(n, random)
