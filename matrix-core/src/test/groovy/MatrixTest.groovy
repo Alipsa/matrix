@@ -3035,6 +3035,9 @@ class MatrixTest {
     def sampled10 = m10.sample(0.3, new Random(42))
     assertEquals(3, sampled10.rowCount())
 
+    def sampledMinimum = m10.sample(0.01, new Random(42))
+    assertEquals(1, sampledMinimum.rowCount())
+
     // boundary: fraction = 1.0 returns all rows
     def sampledAll = m10.sample(1.0, new Random(42))
     assertEquals(10, sampledAll.rowCount())

@@ -269,7 +269,8 @@ class NumberExtension {
    * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
    *
    * <p>For values very close to zero (abs &lt; 1e-10), this method uses the Taylor series to avoid catastrophic
-   * cancellation. The series terminates when a term's magnitude drops below 1e-34.
+   * cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted term is smaller
+   * than that threshold before DECIMAL64 rounding.
    * For larger values it computes {@code log(self + 1)} using the BigDecimal series.
    * Both paths return values rounded to {@link MathContext#DECIMAL64}.
    *

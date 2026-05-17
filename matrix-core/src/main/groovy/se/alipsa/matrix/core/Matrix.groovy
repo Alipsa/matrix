@@ -4392,7 +4392,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    int count = (n as int).min(rowCount()) as int
+    int requested = n as int
+    int count = requested < rowCount() ? requested : rowCount()
     if (count <= 0) {
       Matrix empty = builder()
           .matrixName(mName)
@@ -4417,7 +4418,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    int count = (n as int).min(rowCount()) as int
+    int requested = n as int
+    int count = requested < rowCount() ? requested : rowCount()
     if (count <= 0) {
       Matrix empty = builder()
           .matrixName(mName)
@@ -4452,8 +4454,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(name)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      int nullCount = col.findAll { it == null }.size()
-      Set seen = col.findAll { it != null }.toSet()
+      int nullCount = col.countNulls()
+      Set seen = col.removeNulls().toSet()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
       uniqueCounts << seen.size()
@@ -4517,7 +4519,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (f > 1) {
       String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Long ||
           fraction instanceof BigInteger ? ' Did you mean sample(n as int, random)?' : ''
-      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction.$rowCountHint")
+      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction${rowCountHint ? ".$rowCountHint" : ''}")
     }
     int n = ((f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int).max(1) as int
     sample(n, random)
