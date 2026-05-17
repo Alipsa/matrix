@@ -298,10 +298,7 @@ class NumberExtension {
     }
   }
 
-  /**
-   * Computes ln(1+x) for very small x using the Taylor series
-   * x - x^2/2 + x^3/3 - ...
-   */
+  /* Computes ln(1+x) for very small x using the Taylor series x - x^2/2 + x^3/3 - ... */
   private static BigDecimal log1pSmall(BigDecimal value) {
     if (value == BigDecimal.ZERO) {
       return BigDecimal.ZERO

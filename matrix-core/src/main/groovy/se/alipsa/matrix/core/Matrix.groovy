@@ -4455,7 +4455,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
       int nullCount = col.countNulls()
-      Set seen = col.removeNulls().toSet()
+      Set seen = new HashSet()
+      col.each { if (it != null) seen.add(it) }
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
       uniqueCounts << seen.size()
@@ -4518,8 +4519,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     if (f > 1) {
       String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Long ||
-          fraction instanceof BigInteger ? ' Did you mean sample(n as int, random)?' : ''
-      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction${rowCountHint ? ".$rowCountHint" : ''}")
+          fraction instanceof BigInteger ? '. Did you mean sample(n as int, random)?' : ''
+      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
     int n = ((f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int).max(1) as int
     sample(n, random)
