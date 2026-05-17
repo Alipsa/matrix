@@ -3027,7 +3027,6 @@ class MatrixTest {
     sampled['a'].each { assert it in (1..20) }
     assertEquals(5, (sampled['a'] as Set).size())
 
-    // 0.3 * 10 = 3.0, verify decimal rounding without double arithmetic
     def m10 = Matrix.builder()
         .data(a: (1..10) as List)
         .types(Integer)
@@ -3038,7 +3037,6 @@ class MatrixTest {
     def sampledMinimum = m10.sample(0.01, new Random(42))
     assertEquals(1, sampledMinimum.rowCount())
 
-    // boundary: fraction = 1.0 returns all rows
     def sampledAll = m10.sample(1.0, new Random(42))
     assertEquals(10, sampledAll.rowCount())
   }

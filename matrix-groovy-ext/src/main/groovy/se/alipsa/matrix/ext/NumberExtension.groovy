@@ -279,7 +279,7 @@ class NumberExtension {
    * BigDecimal zero = 0.0
    * zero.log1p()  // → 0.0
    *
-   * BigDecimal eMinusOne = Math.E - 1 as BigDecimal
+   * BigDecimal eMinusOne = NumberExtension.E - 1
    * eMinusOne.log1p()  // → 1.0
    * }</pre>
    *

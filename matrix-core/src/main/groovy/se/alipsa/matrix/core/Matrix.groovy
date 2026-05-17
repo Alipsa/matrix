@@ -4454,12 +4454,11 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(name)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      int nullCount = col.countNulls()
-      Set seen = new HashSet()
-      col.each { if (it != null) seen.add(it) }
+      Map<Boolean, List> byNull = col.groupBy { it == null }
+      int nullCount = byNull[true]?.size() ?: 0
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << seen.size()
+      uniqueCounts << (byNull[false] ?: []).toSet().size()
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4522,7 +4521,8 @@ class Matrix implements Iterable<Row>, Cloneable {
           fraction instanceof BigInteger ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
-    int n = ((f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int).max(1) as int
+    int rounded = (f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int
+    int n = rounded < 1 ? 1 : rounded
     sample(n, random)
   }
 

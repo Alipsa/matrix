@@ -749,7 +749,7 @@ class NumberExtensionTest {
     assertEquals(0.0, (0.0).log1p().doubleValue(), 1e-10)
 
     // log1p(e - 1) = ln(e) = 1
-    BigDecimal eMinusOne = Math.E - 1 as BigDecimal
+    BigDecimal eMinusOne = NumberExtension.E - 1
     assertEquals(1.0, eMinusOne.log1p().doubleValue(), 1e-10)
 
     // log1p(-1) throws
@@ -771,14 +771,14 @@ class NumberExtensionTest {
 
     // Values too small for double must not underflow to zero
     BigDecimal underDoubleMin = 1e-400
-    assertEquals(underDoubleMin, underDoubleMin.log1p())
+    assertEquals(0, underDoubleMin.compareTo(underDoubleMin.log1p()))
 
     BigDecimal negativeUnderDoubleMin = -1e-400
-    assertEquals(negativeUnderDoubleMin, negativeUnderDoubleMin.log1p())
+    assertEquals(0, negativeUnderDoubleMin.compareTo(negativeUnderDoubleMin.log1p()))
 
     // Number overload
     assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)
-    assertEquals(1.0, NumberExtension.log1p(Math.E - 1).doubleValue(), 1e-10)
+    assertEquals(1.0, NumberExtension.log1p(NumberExtension.E - 1).doubleValue(), 1e-10)
   }
 
   @Test
