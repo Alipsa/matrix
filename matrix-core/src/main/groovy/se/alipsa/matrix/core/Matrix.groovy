@@ -4427,7 +4427,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       copyIndexTo(empty)
       return empty
     }
-    int start = 0.max(rowCount() - count) as int
+    int start = rowCount() - count
     subset(start..(rowCount() - 1))
   }
 
@@ -4452,9 +4452,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(name)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      int nullCount = 0
-      Set seen = []
-      col.each { it == null ? nullCount++ : seen << it }
+      int nullCount = col.findAll { it == null }.size()
+      Set seen = col.findAll { it != null }.toSet()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
       uniqueCounts << seen.size()
@@ -4490,9 +4489,11 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
     List<Integer> indices = (0..<rows).toList()
-    for (int i = 0; i < n; i++) {
+    (0..<n).each { int i ->
       int j = i + random.nextInt(rows - i)
-      Collections.swap(indices, i, j)
+      int swap = indices[i]
+      indices[i] = indices[j]
+      indices[j] = swap
     }
     subset(indices.subList(0, n))
   }

@@ -2998,12 +2998,14 @@ class MatrixTest {
 
   @Test
   void testSampleInt() {
-    def m = Matrix.builder()
+    def m = Matrix.builder('sample')
         .data(a: (1..20) as List)
         .types(Integer)
         .build()
 
     def sampled = m.sample(5, new Random(42))
+    assertEquals('sample', sampled.matrixName)
+    assertEquals([Integer], sampled.types())
     assertEquals(5, sampled.rowCount())
     // all sampled values should exist in the original
     sampled['a'].each { assert it in (1..20) }
@@ -3013,12 +3015,14 @@ class MatrixTest {
 
   @Test
   void testSampleFraction() {
-    def m = Matrix.builder()
+    def m = Matrix.builder('sample')
         .data(a: (1..20) as List)
         .types(Integer)
         .build()
 
     def sampled = m.sample(0.25, new Random(42))
+    assertEquals('sample', sampled.matrixName)
+    assertEquals([Integer], sampled.types())
     assertEquals(5, sampled.rowCount())
     sampled['a'].each { assert it in (1..20) }
     assertEquals(5, (sampled['a'] as Set).size())
