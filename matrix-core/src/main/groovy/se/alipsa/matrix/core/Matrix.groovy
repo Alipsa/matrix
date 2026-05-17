@@ -4513,7 +4513,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (f <= 0 || f > 1) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
-    int n = (f * rowCount()).setScale(0, RoundingMode.HALF_UP).intValue().max(1) as int
+    int n = ((f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int).max(1) as int
     sample(n, random)
   }
 
