@@ -2854,6 +2854,11 @@ class MatrixTest {
     assertEquals(3, top.rowCount())
     assertEquals([1, 2, 3], top['a'] as List)
 
+    // fractional values are truncated
+    top = m.top(2.7)
+    assertEquals(2, top.rowCount())
+    assertEquals([1, 2], top['a'] as List)
+
     // exceeds row count — returns all
     top = m.top(20)
     assertEquals(10, top.rowCount())
@@ -2898,6 +2903,11 @@ class MatrixTest {
     bottom = m.bottom(3)
     assertEquals(3, bottom.rowCount())
     assertEquals([8, 9, 10], bottom['a'] as List)
+
+    // fractional values are truncated
+    bottom = m.bottom(1.1)
+    assertEquals(1, bottom.rowCount())
+    assertEquals([10], bottom['a'] as List)
 
     // exceeds row count — returns all
     bottom = m.bottom(20)
@@ -3031,6 +3041,8 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(4) }
     assertThrows(IllegalArgumentException) { m.sample(0.0) }
     assertThrows(IllegalArgumentException) { m.sample(1.1) }
+    // int boundary: n == rowCount() is valid
+    assertEquals(3, m.sample(3, new Random(42)).rowCount())
     // fraction = 1.0 is valid (returns all rows)
     assertEquals(3, m.sample(1.0, new Random(42)).rowCount())
   }

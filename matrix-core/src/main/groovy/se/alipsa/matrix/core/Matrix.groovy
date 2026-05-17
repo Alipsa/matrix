@@ -4485,16 +4485,23 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n <= 0) {
       throw new IllegalArgumentException("Sample size must be positive: was $n")
     }
-    if (n > rowCount()) {
-      throw new IllegalArgumentException("Sample size ($n) exceeds row count (${rowCount()})")
+    int rows = rowCount()
+    if (n > rows) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
-    List<Integer> indices = (0..<rowCount()).toList()
-    Collections.shuffle(indices, random)
+    List<Integer> indices = (0..<rows).toList()
+    for (int i = 0; i < n; i++) {
+      int j = i + random.nextInt(rows - i)
+      Collections.swap(indices, i, j)
+    }
     subset(indices.subList(0, n))
   }
 
   /**
    * Return a random sample of rows as a fraction of the total row count, without replacement.
+   *
+   * <p>Note: integer types other than {@code int} (for example {@code Long} or {@code BigInteger}) are treated as a
+   * fraction, not a row count. Use an explicit {@code int} cast to select by row count.</p>
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
