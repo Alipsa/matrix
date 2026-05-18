@@ -4429,7 +4429,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         .matrixName(mName)
         .columnNames(columnNames())
         .types(types())
-        .build()
+        .build()  // no rows → zero-row matrix
     copyIndexTo(empty)
     empty
   }
@@ -4439,7 +4439,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * null count, and count of distinct non-null values.
    *
    * <p>The returned Matrix has columns: {@code column} (String), {@code type} (String),
-   * {@code nonNull} (Integer), {@code nullCount} (Integer), {@code unique} (Integer).
+   * {@code nonNullCount} (Integer), {@code nullCount} (Integer), {@code unique} (Integer).
    *
    * @return a Matrix named {@code <matrixName>.info} or {@code info}, with one row per column containing metadata
    */
@@ -4458,7 +4458,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << (col.toSet() - [null]).size()
+      uniqueCounts << col.countBy { it }.size() - (col.hasNulls() ? 1 : 0)
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4466,7 +4466,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         .data(
             column: colNames as List<Object>,
             type: colTypes as List<Object>,
-            nonNull: nonNullCounts as List<Object>,
+            nonNullCount: nonNullCounts as List<Object>,
             nullCount: nullCounts as List<Object>,
             unique: uniqueCounts as List<Object>
         )
@@ -4487,6 +4487,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Sample size must be positive: was $n")
     }
     int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
     if (n > rows) {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
@@ -4521,8 +4524,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
     if (f > 1) {
-      String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Long ||
-          fraction instanceof BigInteger || fraction instanceof Float || fraction instanceof Double
+      String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Integer ||
+          fraction instanceof Long || fraction instanceof BigInteger ||
+          fraction instanceof Float || fraction instanceof Double
           ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }

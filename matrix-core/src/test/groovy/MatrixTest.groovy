@@ -2997,7 +2997,7 @@ class MatrixTest {
     assertEquals(5, info.rowCount())
     assertEquals(['name', 'age', 'score', 'allNull', 'code'], info['column'] as List)
     assertEquals(['String', 'Integer', 'BigDecimal', 'String', 'String'], info['type'] as List)
-    assertEquals([3, 3, 3, 0, 4], info['nonNull'] as List)
+    assertEquals([3, 3, 3, 0, 4], info['nonNullCount'] as List)
     assertEquals([1, 1, 1, 4, 0], info['nullCount'] as List)
     assertEquals([2, 2, 2, 0, 4], info['unique'] as List)
   }
@@ -3091,9 +3091,11 @@ class MatrixTest {
     // 1L is treated as fraction 1.0 (documented edge case) — samples all rows
     assertEquals(3, m.sample(1L, new Random(42)).rowCount())
 
-    // empty matrix throws for both overloads
+    // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
-    assertThrows(IllegalArgumentException) { empty.sample(1) }
-    assertThrows(IllegalArgumentException) { empty.sample(0.5) }
+    def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }
+    assertTrue(emptyIntEx.message.contains('Cannot sample from an empty matrix'))
+    def emptyFracEx = assertThrows(IllegalArgumentException) { empty.sample(0.5) }
+    assertTrue(emptyFracEx.message.contains('Cannot sample from an empty matrix'))
   }
 }

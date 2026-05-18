@@ -304,17 +304,19 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
-    while (n <= 201) {
+    while (n <= 41) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
-        break  // term is negligible; omitting it introduces < 1e-34 error
+        // By the alternating-series estimation theorem the error is bounded by
+        // the absolute value of the first omitted term, which is < LOG1P_THRESHOLD.
+        break
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++
     }
-    if (n > 201) {
-      throw new ArithmeticException("log1pSmall did not converge within 200 iterations for input: $value")
+    if (n > 41) {
+      throw new ArithmeticException("log1pSmall did not converge within 40 iterations for input: $value")
     }
     result
   }
