@@ -3017,6 +3017,8 @@ class MatrixTest {
     sampled['a'].each { assert it in (1..20) }
     // no duplicates (without replacement)
     assertEquals(5, (sampled['a'] as Set).size())
+    // same seed produces identical results (no global-state mutation in the shuffle)
+    assertEquals(m.sample(5, new Random(99))['a'], m.sample(5, new Random(99))['a'])
   }
 
   @Test

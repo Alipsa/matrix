@@ -4458,7 +4458,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << col.findAll { it != null }.toSet().size()
+      uniqueCounts << (col.toSet() - [null]).size()
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4503,10 +4503,12 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Return a random sample of rows as a fraction of the total row count, without replacement.
    *
-   * <p>Note: integer types other than {@code int} (for example {@code Byte}, {@code Short}, {@code Long}, or
-   * {@code BigInteger}) are treated as a fraction, not a row count. Use an explicit {@code int} cast to select by
-   * row count. In particular, {@code 1L} is a valid fraction equal to 1.0 and will sample all rows — pass
-   * {@code 1 as int} to sample exactly one row.</p>
+   * <p>Note: non-{@code int} numeric types (for example {@code Byte}, {@code Short}, {@code Long},
+   * {@code BigInteger}, {@code Float}, and {@code Double}) are treated as a fraction, not a row count.
+   * Use an explicit {@code int} cast to select by row count. In particular, {@code 1L} is a valid fraction
+   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Values of
+   * {@code Float} or {@code Double} greater than 1.0 produce the same "Did you mean sample(n as int, random)?"
+   * hint in the error message as integer types.</p>
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
@@ -4520,7 +4522,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     if (f > 1) {
       String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Long ||
-          fraction instanceof BigInteger ? '. Did you mean sample(n as int, random)?' : ''
+          fraction instanceof BigInteger || fraction instanceof Float || fraction instanceof Double
+          ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
     int rows = rowCount()
