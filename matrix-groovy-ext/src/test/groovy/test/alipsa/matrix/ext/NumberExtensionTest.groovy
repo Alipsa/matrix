@@ -776,6 +776,12 @@ class NumberExtensionTest {
     BigDecimal negativeUnderDoubleMin = -1e-400
     assertEquals(0, negativeUnderDoubleMin.compareTo(negativeUnderDoubleMin.log1p()))
 
+    // Boundary at |x| == 1e-10: routes to log(self+1), not the Taylor series
+    BigDecimal boundary = 1e-10
+    assertEquals(Math.log1p(1e-10), boundary.log1p().doubleValue(), 1e-20)
+    BigDecimal negBoundary = -1e-10
+    assertEquals(Math.log1p(-1e-10), negBoundary.log1p().doubleValue(), 1e-20)
+
     // Number overload
     assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)
     assertEquals(1.0, NumberExtension.log1p(NumberExtension.E - 1).doubleValue(), 1e-10)

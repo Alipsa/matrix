@@ -4396,16 +4396,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    int requested = n as int
-    int count = requested < rowCount() ? requested : rowCount()
+    int count = Math.min(n as int, rowCount())
     if (count <= 0) {
-      Matrix empty = builder()
-          .matrixName(mName)
-          .columnNames(columnNames())
-          .types(types())
-          .build()
-      copyIndexTo(empty)
-      return empty
+      return buildEmptyLike()
     }
     subset(0..(count - 1))
   }
@@ -4426,19 +4419,21 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    int requested = n as int
-    int count = requested < rowCount() ? requested : rowCount()
+    int count = Math.min(n as int, rowCount())
     if (count <= 0) {
-      Matrix empty = builder()
-          .matrixName(mName)
-          .columnNames(columnNames())
-          .types(types())
-          .build()
-      copyIndexTo(empty)
-      return empty
+      return buildEmptyLike()
     }
-    int start = rowCount() - count
-    subset(start..(rowCount() - 1))
+    subset((rowCount() - count)..(rowCount() - 1))
+  }
+
+  private Matrix buildEmptyLike() {
+    Matrix empty = builder()
+        .matrixName(mName)
+        .columnNames(columnNames())
+        .types(types())
+        .build()
+    copyIndexTo(empty)
+    empty
   }
 
   /**
@@ -4465,7 +4460,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << col.findAll { it != null }.toSet().size()
+      uniqueCounts << col.inject(new HashSet<>()) { Set s, v -> if (v != null) s.add(v); s }.size()
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
