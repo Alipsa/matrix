@@ -298,7 +298,9 @@ class NumberExtension {
     }
   }
 
-  /* Computes ln(1+x) for very small x using the Taylor series x - x^2/2 + x^3/3 - ... */
+  /* Computes ln(1+x) for very small x using the Taylor series x - x^2/2 + x^3/3 - ...
+   * For |x| < 1e-10 the series converges in ≤4 iterations (term 4 ≈ x^4/4 ≈ 2.5e-41 < LOG1P_THRESHOLD);
+   * the 40-iteration cap is a safety net that is effectively unreachable at this threshold. */
   private static BigDecimal log1pSmall(BigDecimal value) {
     MathContext mc = MathContext.DECIMAL128
     BigDecimal term = value

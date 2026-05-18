@@ -4411,7 +4411,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (count <= 0) {
       return buildEmptyLike()
     }
-    subset((rowCount() - count)..(rowCount() - 1))
+    int rows = rowCount()
+    subset((rows - count)..(rows - 1))
   }
 
   private int clampedCount(Number n) {
@@ -4455,10 +4456,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(name)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      int nullCount = col.countNulls()
+      Map groups = col.countBy { it }
+      boolean hasNull = groups.containsKey(null)
+      int nullCount = hasNull ? groups[null] as int : 0
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << col.countBy { it }.size() - (col.hasNulls() ? 1 : 0)
+      uniqueCounts << (groups.size() - (hasNull ? 1 : 0))
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4480,7 +4483,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param n the number of rows to sample
    * @param random the random number generator to use (default new Random())
    * @return a new Matrix with {@code n} randomly selected rows
-   * @throws IllegalArgumentException if n &lt;= 0 or n &gt; rowCount()
+   * @throws IllegalArgumentException if n &lt;= 0, the matrix is empty, or n &gt; rowCount()
    */
   Matrix sample(int n, Random random = new Random()) {
     if (n <= 0) {
@@ -4509,9 +4512,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * <p>Note: non-{@code int} numeric types (for example {@code Byte}, {@code Short}, {@code Long},
    * {@code BigInteger}, {@code Float}, and {@code Double}) are treated as a fraction, not a row count.
    * Use an explicit {@code int} cast to select by row count. In particular, {@code 1L} is a valid fraction
-   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Values of
-   * {@code Float} or {@code Double} greater than 1.0 produce the same "Did you mean sample(n as int, random)?"
-   * hint in the error message as integer types.</p>
+   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Integer-like
+   * types ({@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code BigInteger}) greater than 1.0
+   * include a "Did you mean sample(n as int, random)?" hint in the error message.</p>
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
@@ -4525,8 +4528,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     if (f > 1) {
       String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Integer ||
-          fraction instanceof Long || fraction instanceof BigInteger ||
-          fraction instanceof Float || fraction instanceof Double
+          fraction instanceof Long || fraction instanceof BigInteger
           ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
