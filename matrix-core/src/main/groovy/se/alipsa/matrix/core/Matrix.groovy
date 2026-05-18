@@ -4390,7 +4390,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #head(int) head — returns a formatted String preview
    */
   Matrix top(Number n = 5) {
-    int count = clampedCount(n)
+    int rows = rowCount()
+    int count = clampedCount(n, rows)
     if (count <= 0) {
       return buildEmptyLike()
     }
@@ -4407,22 +4408,22 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #tail(int) tail — returns a formatted String preview
    */
   Matrix bottom(Number n = 5) {
-    int count = clampedCount(n)
+    int rows = rowCount()
+    int count = clampedCount(n, rows)
     if (count <= 0) {
       return buildEmptyLike()
     }
-    int rows = rowCount()
     subset((rows - count)..(rows - 1))
   }
 
-  private int clampedCount(Number n) {
+  private int clampedCount(Number n, int rows) {
     if (n == null) {
       throw new IllegalArgumentException("n must not be null")
     }
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    Math.min(n as int, rowCount())
+    Math.min(n.longValue(), (long) rows) as int
   }
 
   private Matrix buildEmptyLike() {
@@ -4430,7 +4431,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         .matrixName(mName)
         .columnNames(columnNames())
         .types(types())
-        .build()  // no rows → zero-row matrix
+        .build()
     copyIndexTo(empty)
     empty
   }

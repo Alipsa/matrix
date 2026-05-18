@@ -310,8 +310,8 @@ class NumberExtension {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
-        // By the alternating-series estimation theorem the error is bounded by
-        // the absolute value of the first omitted term, which is < LOG1P_THRESHOLD.
+        // Remaining terms form a geometric series with ratio |value| < 1e-10;
+        // their sum is bounded by step / (1 - |value|) ≈ step < LOG1P_THRESHOLD.
         break
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
