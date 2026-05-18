@@ -4387,8 +4387,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param n the number of rows to include (default 5), truncated to an integer
    * @return a new Matrix with at most {@code n} rows
+   * @see #head(int) head — returns a formatted String preview
    */
   Matrix top(Number n = 5) {
+    if (n == null) {
+      throw new IllegalArgumentException("n must not be null")
+    }
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
@@ -4413,8 +4417,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param n the number of rows to include (default 5), truncated to an integer
    * @return a new Matrix with at most {@code n} rows
+   * @see #tail(int) tail — returns a formatted String preview
    */
   Matrix bottom(Number n = 5) {
+    if (n == null) {
+      throw new IllegalArgumentException("n must not be null")
+    }
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
@@ -4454,11 +4462,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(name)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      Map<Boolean, List> byNull = col.groupBy { it == null }
-      int nullCount = byNull[true]?.size() ?: 0
+      int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << (byNull[false] ?: []).toSet().size()
+      uniqueCounts << col.findAll { it != null }.toSet().size()
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4503,8 +4510,10 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Return a random sample of rows as a fraction of the total row count, without replacement.
    *
-   * <p>Note: integer types other than {@code int} (for example {@code Long} or {@code BigInteger}) are treated as a
-   * fraction, not a row count. Use an explicit {@code int} cast to select by row count.</p>
+   * <p>Note: integer types other than {@code int} (for example {@code Byte}, {@code Short}, {@code Long}, or
+   * {@code BigInteger}) are treated as a fraction, not a row count. Use an explicit {@code int} cast to select by
+   * row count. In particular, {@code 1L} is a valid fraction equal to 1.0 and will sample all rows — pass
+   * {@code 1 as int} to sample exactly one row.</p>
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())

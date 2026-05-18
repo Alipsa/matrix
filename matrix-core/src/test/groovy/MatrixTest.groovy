@@ -2869,6 +2869,9 @@ class MatrixTest {
 
     // negative throws
     assertThrows(IllegalArgumentException) { m.top(-1) }
+
+    // null throws
+    assertThrows(IllegalArgumentException) { m.top(null) }
   }
 
   @Test
@@ -2927,6 +2930,9 @@ class MatrixTest {
 
     // negative throws
     assertThrows(IllegalArgumentException) { m.bottom(-1) }
+
+    // null throws
+    assertThrows(IllegalArgumentException) { m.bottom(null) }
   }
 
   @Test
@@ -3023,7 +3029,7 @@ class MatrixTest {
     def sampled = m.sample(0.25, new Random(42))
     assertEquals('sample', sampled.matrixName)
     assertEquals([Integer], sampled.types())
-    assertEquals(5, sampled.rowCount())
+    assertEquals(5, sampled.rowCount()) // 0.25 * 20 = 5.0 → 5 rows
     sampled['a'].each { assert it in (1..20) }
     assertEquals(5, (sampled['a'] as Set).size())
 

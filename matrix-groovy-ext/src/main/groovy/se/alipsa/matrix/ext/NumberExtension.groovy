@@ -83,7 +83,7 @@ class NumberExtension {
   private static final BigDecimal LN2 = 0.69314718055994530941723212145818
   /** Natural logarithm of 10 to 32 significant digits */
   private static final BigDecimal LN10 = 2.30258509299404568401799145468436
-  /** Threshold for terminating the {@code log1p} small-value Taylor series. */
+  /** Threshold for terminating the {@code log1p} small-value Taylor series; below DECIMAL64 resolution (~1e-16). */
   private static final BigDecimal LOG1P_THRESHOLD = 1e-34
 
   /**
