@@ -312,6 +312,7 @@ class NumberExtension {
       if (step.abs() < LOG1P_THRESHOLD) {
         // Remaining terms form a geometric series with ratio |value| < 1e-10;
         // their sum is bounded by step / (1 - |value|) ≈ step < LOG1P_THRESHOLD.
+        // The current term is omitted because it is already inside that bound.
         break
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)

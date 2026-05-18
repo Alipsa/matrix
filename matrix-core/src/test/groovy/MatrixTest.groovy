@@ -2859,6 +2859,10 @@ class MatrixTest {
     assertEquals(2, top.rowCount())
     assertEquals([1, 2], top['a'] as List)
 
+    // sub-unit fractional values truncate to zero
+    top = m.top(0.9)
+    assertEquals(0, top.rowCount())
+
     // exceeds row count — returns all
     top = m.top(20)
     assertEquals(10, top.rowCount())
@@ -2923,6 +2927,10 @@ class MatrixTest {
     bottom = m.bottom(1.1)
     assertEquals(1, bottom.rowCount())
     assertEquals([10], bottom['a'] as List)
+
+    // sub-unit fractional values truncate to zero
+    bottom = m.bottom(0.5)
+    assertEquals(0, bottom.rowCount())
 
     // exceeds row count — returns all
     bottom = m.bottom(20)

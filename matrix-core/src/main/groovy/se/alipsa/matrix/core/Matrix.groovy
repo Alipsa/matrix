@@ -4423,7 +4423,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n.doubleValue() < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    Math.min(n.longValue(), (long) rows) as int
+    [n.longValue(), (long) rows].min() as int
   }
 
   private Matrix buildEmptyLike() {
@@ -4525,7 +4525,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
    */
   Matrix sample(Number fraction, Random random = new Random()) {
-    BigDecimal f = fraction as BigDecimal
+    BigDecimal f = fraction instanceof BigDecimal ? fraction : new BigDecimal(fraction.toString())
     if (f <= 0) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }

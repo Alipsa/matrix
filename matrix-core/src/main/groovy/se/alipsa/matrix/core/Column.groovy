@@ -259,7 +259,7 @@ class Column extends ArrayList {
    * @return the count of null elements
    */
   int countNulls() {
-    count { it == null }.intValue()
+    count { it == null } as int
   }
 
   List removeNulls() {
