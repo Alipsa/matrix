@@ -776,7 +776,8 @@ class NumberExtensionTest {
     BigDecimal negativeUnderDoubleMin = -1e-400
     assertEquals(0, negativeUnderDoubleMin.compareTo(negativeUnderDoubleMin.log1p()))
 
-    // Boundary at |x| == 1e-10: routes to log(self+1), not the Taylor series
+    // Boundary at |x| == 1e-10: routes to log(self+1), not the Taylor series.
+    // Tolerance 1e-20 is absolute (result ≈ ±1e-10, so this is ~1e-10 relative — well within double precision).
     BigDecimal boundary = 1e-10
     assertEquals(Math.log1p(1e-10), boundary.log1p().doubleValue(), 1e-20)
     BigDecimal negBoundary = -1e-10

@@ -318,7 +318,9 @@ class NumberExtension {
       n++
     }
     // unreachable for |value| < 1e-10 (see block comment above); guard exists for future threshold changes
-    assert n <= 41 : "log1pSmall did not converge within 40 iterations for input: $value"
+    if (n > 41) {
+      throw new IllegalStateException("log1pSmall did not converge within 40 iterations for input: $value")
+    }
     result
   }
 

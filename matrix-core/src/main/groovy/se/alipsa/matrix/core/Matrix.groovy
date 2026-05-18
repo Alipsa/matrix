@@ -4420,7 +4420,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n == null) {
       throw new IllegalArgumentException("n must not be null")
     }
-    if (n < 0) {
+    if (n.doubleValue() < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
     Math.min(n.longValue(), (long) rows) as int
@@ -4513,9 +4513,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * <p>Note: non-{@code int} numeric types (for example {@code Byte}, {@code Short}, {@code Long},
    * {@code BigInteger}, {@code Float}, and {@code Double}) are treated as a fraction, not a row count.
    * Use an explicit {@code int} cast to select by row count. In particular, {@code 1L} is a valid fraction
-   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Integer-like
-   * types ({@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code BigInteger}) greater than 1.0
-   * include a "Did you mean sample(n as int, random)?" hint in the error message.</p>
+   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Note that
+   * {@code Integer} still dispatches to {@code sample(int, Random)} via Groovy's unboxing preference,
+   * but a variable declared as {@code Number} will route here even if its runtime value is an integer.
+   * Integer-like types ({@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code BigInteger})
+   * greater than 1 include a "Did you mean sample(n as int, random)?" hint in the error message.</p>
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
@@ -4528,6 +4530,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
     if (f > 1) {
+      // Integer included for dynamic callers (e.g. Number n = 5; m.sample(n)) — static int literals dispatch to sample(int)
       String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Integer ||
           fraction instanceof Long || fraction instanceof BigInteger
           ? '. Did you mean sample(n as int, random)?' : ''

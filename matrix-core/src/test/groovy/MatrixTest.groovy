@@ -3068,6 +3068,21 @@ class MatrixTest {
   }
 
   @Test
+  void testInfoOnEmptyMatrix() {
+    def m = Matrix.builder()
+        .data(a: [], b: [])
+        .types(Integer, String)
+        .build()
+
+    def info = m.info()
+    assertEquals(2, info.rowCount())
+    assertEquals(['a', 'b'], info['column'] as List)
+    assertEquals([0, 0], info['nonNullCount'] as List)
+    assertEquals([0, 0], info['nullCount'] as List)
+    assertEquals([0, 0], info['unique'] as List)
+  }
+
+  @Test
   void testInfoUsesObjectForNullColumnType() {
     def m = Matrix.builder('untyped')
         .data(a: [1, 2, 3])
@@ -3098,6 +3113,11 @@ class MatrixTest {
     assertEquals(3, m.sample(1.0, new Random(42)).rowCount())
     // 1L is treated as fraction 1.0 (documented edge case) — samples all rows
     assertEquals(3, m.sample(1L, new Random(42)).rowCount())
+    // Integer dispatches to sample(int) via unboxing preference — samples 1 row, not all rows
+    assertEquals(1, m.sample(1 as Integer, new Random(42)).rowCount())
+    // Number variable with Long runtime type dispatches to sample(Number) — the dynamic-dispatch footgun
+    Number nAsNumber = 1L
+    assertEquals(3, m.sample(nAsNumber, new Random(42)).rowCount())
 
     // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
