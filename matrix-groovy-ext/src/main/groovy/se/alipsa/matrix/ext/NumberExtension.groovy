@@ -307,7 +307,7 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
-    while (n <= 200) {
+    while (n <= 201) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
@@ -316,7 +316,7 @@ class NumberExtension {
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++
     }
-    if (n > 200) {
+    if (n > 201) {
       throw new ArithmeticException("log1pSmall did not converge within 200 iterations for input: $value")
     }
     result
