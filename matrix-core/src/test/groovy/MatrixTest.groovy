@@ -3086,5 +3086,7 @@ class MatrixTest {
     assertEquals(3, m.sample(3, new Random(42)).rowCount())
     // fraction = 1.0 is valid (returns all rows)
     assertEquals(3, m.sample(1.0, new Random(42)).rowCount())
+    // 1L is treated as fraction 1.0 (documented edge case) — samples all rows
+    assertEquals(3, m.sample(1L, new Random(42)).rowCount())
   }
 }

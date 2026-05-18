@@ -83,7 +83,7 @@ class NumberExtension {
   private static final BigDecimal LN2 = 0.69314718055994530941723212145818
   /** Natural logarithm of 10 to 32 significant digits */
   private static final BigDecimal LN10 = 2.30258509299404568401799145468436
-  /** Threshold for terminating the {@code log1p} small-value Taylor series; below DECIMAL64 resolution (~1e-16). */
+  /** Threshold for terminating the {@code log1p} Taylor series; conservatively below DECIMAL64 precision for |x| < 1e-10. */
   private static final BigDecimal LOG1P_THRESHOLD = 1e-34
 
   /**
@@ -307,7 +307,7 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
-    while (true) {
+    while (n <= 200) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
@@ -315,6 +315,9 @@ class NumberExtension {
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++
+    }
+    if (n > 200) {
+      throw new ArithmeticException("log1pSmall did not converge within 200 iterations for input: $value")
     }
     result
   }
