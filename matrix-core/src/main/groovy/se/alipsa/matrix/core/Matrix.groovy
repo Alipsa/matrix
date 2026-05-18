@@ -4420,10 +4420,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n == null) {
       throw new IllegalArgumentException("n must not be null")
     }
-    if (n.doubleValue() < 0) {
+    if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    [n.longValue(), (long) rows].min() as int
+    [n as long, rows as long].min() as int
   }
 
   private Matrix buildEmptyLike() {
@@ -4459,7 +4459,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
       Map<Object, Integer> groups = col.countBy { it } as Map<Object, Integer>
       boolean hasNull = groups.containsKey(null)
-      int nullCount = hasNull ? groups[null] as int : 0
+      int nullCount = hasNull ? groups.get(null) : 0
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
       uniqueCounts << (groups.size() - (hasNull ? 1 : 0))
@@ -4508,36 +4508,50 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Return a random sample of rows as a fraction of the total row count, without replacement.
+   * Return a random sample of {@code n} rows without replacement.
    *
-   * <p>Note: non-{@code int} numeric types (for example {@code Byte}, {@code Short}, {@code Long},
-   * {@code BigInteger}, {@code Float}, and {@code Double}) are treated as a fraction, not a row count.
-   * Use an explicit {@code int} cast to select by row count. In particular, {@code 1L} is a valid fraction
-   * equal to 1.0 and will sample all rows — pass {@code 1 as int} to sample exactly one row. Note that
-   * {@code Integer} still dispatches to {@code sample(int, Random)} via Groovy's unboxing preference,
-   * but a variable declared as {@code Number} will route here even if its runtime value is an integer.
-   * Integer-like types ({@code Byte}, {@code Short}, {@code Integer}, {@code Long}, {@code BigInteger})
-   * greater than 1 include a "Did you mean sample(n as int, random)?" hint in the error message.</p>
+   * @param n the number of rows to sample, truncated to an integer
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with {@code n} randomly selected rows
+   * @throws IllegalArgumentException if n &lt;= 0, the matrix is empty, or n &gt; rowCount()
+   */
+  Matrix sample(Number n, Random random = new Random()) {
+    if (n == null) {
+      throw new IllegalArgumentException("Sample size must not be null")
+    }
+    BigDecimal count = n instanceof BigDecimal ? n : new BigDecimal(n.toString())
+    if (count <= 0) {
+      throw new IllegalArgumentException("Sample size must be positive: was $n")
+    }
+    int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
+    if (count > rows) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
+    }
+    sample(count as int, random)
+  }
+
+  /**
+   * Return a random sample of rows as a fraction of the total row count, without replacement.
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
    * @return a new Matrix with the sampled rows; the row count is {@code round(fraction * rowCount())}, minimum 1
    * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
    */
-  Matrix sample(Number fraction, Random random = new Random()) {
+  Matrix sampleFraction(Number fraction, Random random = new Random()) {
+    if (fraction == null) {
+      throw new IllegalArgumentException("Fraction must not be null")
+    }
     BigDecimal f = fraction instanceof BigDecimal ? fraction : new BigDecimal(fraction.toString())
     if (f <= 0) {
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
     if (f > 1) {
-      // Integer included for dynamic callers (e.g. Number n = 5; m.sample(n)) — static int literals dispatch to sample(int)
-      String rowCountHint = fraction instanceof Byte || fraction instanceof Short || fraction instanceof Integer ||
-          fraction instanceof Long || fraction instanceof BigInteger
-          ? '. Did you mean sample(n as int, random)?' : ''
-      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
+      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
     }
-    // 1L and other integer-like types equal to exactly 1 pass here as fraction 1.0 (all rows).
-    // This is documented behaviour: use sample(1 as int, random) to sample exactly one row.
     int rows = rowCount()
     if (rows == 0) {
       throw new IllegalArgumentException("Cannot sample from an empty matrix")

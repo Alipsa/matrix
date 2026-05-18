@@ -3044,7 +3044,7 @@ class MatrixTest {
         .types(Integer)
         .build()
 
-    def sampled = m.sample(0.25, new Random(42))
+    def sampled = m.sampleFraction(0.25, new Random(42))
     assertEquals('sample', sampled.matrixName)
     assertEquals([Integer], sampled.types())
     assertEquals(5, sampled.rowCount()) // 0.25 * 20 = 5.0 → 5 rows
@@ -3055,13 +3055,13 @@ class MatrixTest {
         .data(a: (1..10) as List)
         .types(Integer)
         .build()
-    def sampled10 = m10.sample(0.3, new Random(42))
+    def sampled10 = m10.sampleFraction(0.3, new Random(42))
     assertEquals(3, sampled10.rowCount())
 
-    def sampledMinimum = m10.sample(0.01, new Random(42))
+    def sampledMinimum = m10.sampleFraction(0.01, new Random(42))
     assertEquals(1, sampledMinimum.rowCount())
 
-    def sampledAll = m10.sample(1.0, new Random(42))
+    def sampledAll = m10.sampleFraction(1.0, new Random(42))
     assertEquals(10, sampledAll.rowCount())
   }
 
@@ -3112,26 +3112,25 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(-1) }
     assertThrows(IllegalArgumentException) { m.sample(4) }
     assertThrows(IllegalArgumentException) { m.sample(0.0) }
-    assertThrows(IllegalArgumentException) { m.sample(1.1) }
-    def longException = assertThrows(IllegalArgumentException) { m.sample(5L) }
-    assertTrue(longException.message.contains('Did you mean sample(n as int, random)?'))
+    assertThrows(IllegalArgumentException) { m.sample(4L) }
+    assertThrows(IllegalArgumentException) { m.sampleFraction(0.0) }
+    assertThrows(IllegalArgumentException) { m.sampleFraction(1.1) }
     // int boundary: n == rowCount() is valid
     assertEquals(3, m.sample(3, new Random(42)).rowCount())
-    // fraction = 1.0 is valid (returns all rows)
-    assertEquals(3, m.sample(1.0, new Random(42)).rowCount())
-    // 1L is treated as fraction 1.0 (documented edge case) — samples all rows
-    assertEquals(3, m.sample(1L, new Random(42)).rowCount())
+    // non-int numeric values use row-count semantics
+    assertEquals(1, m.sample(1.0, new Random(42)).rowCount())
+    assertEquals(1, m.sample(1L, new Random(42)).rowCount())
     // Integer dispatches to sample(int) via unboxing preference — samples 1 row, not all rows
     assertEquals(1, m.sample(1 as Integer, new Random(42)).rowCount())
-    // Number variable with Long runtime type dispatches to sample(Number) — the dynamic-dispatch footgun
+    // Number variables keep row-count semantics
     Number nAsNumber = 1L
-    assertEquals(3, m.sample(nAsNumber, new Random(42)).rowCount())
+    assertEquals(1, m.sample(nAsNumber, new Random(42)).rowCount())
 
     // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
     def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }
     assertTrue(emptyIntEx.message.contains('Cannot sample from an empty matrix'))
-    def emptyFracEx = assertThrows(IllegalArgumentException) { empty.sample(0.5) }
+    def emptyFracEx = assertThrows(IllegalArgumentException) { empty.sampleFraction(0.5) }
     assertTrue(emptyFracEx.message.contains('Cannot sample from an empty matrix'))
   }
 }

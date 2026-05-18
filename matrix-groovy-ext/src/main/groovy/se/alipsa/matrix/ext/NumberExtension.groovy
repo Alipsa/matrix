@@ -318,7 +318,7 @@ class NumberExtension {
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++
     }
-    // unreachable for |value| < 1e-10 (see block comment above); guard exists for future threshold changes
+    // Safety net for future threshold changes that no longer guarantee early termination.
     if (n > 41) {
       throw new IllegalStateException("log1pSmall did not converge within 40 iterations for input: $value")
     }
