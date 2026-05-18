@@ -4508,7 +4508,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
-   * @return a new Matrix with the sampled rows
+   * @return a new Matrix with the sampled rows; the row count is {@code round(fraction * rowCount())}, minimum 1
    * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
    */
   Matrix sample(Number fraction, Random random = new Random()) {
