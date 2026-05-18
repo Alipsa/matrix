@@ -4454,10 +4454,10 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     List<Class> columnTypes = types()
     columnNames().eachWithIndex { name, i ->
-      Column col = column(name)
+      Column col = column(i)
       colNames << name
       colTypes << (columnTypes[i]?.simpleName ?: 'Object')
-      Map groups = col.countBy { it }
+      Map<Object, Integer> groups = col.countBy { it } as Map<Object, Integer>
       boolean hasNull = groups.containsKey(null)
       int nullCount = hasNull ? groups[null] as int : 0
       nonNullCounts << (col.size() - nullCount)
@@ -4533,6 +4533,8 @@ class Matrix implements Iterable<Row>, Cloneable {
           ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
+    // 1L and other integer-like types equal to exactly 1 pass here as fraction 1.0 (all rows).
+    // This is documented behaviour: use sample(1 as int, random) to sample exactly one row.
     int rows = rowCount()
     if (rows == 0) {
       throw new IllegalArgumentException("Cannot sample from an empty matrix")

@@ -2872,6 +2872,10 @@ class MatrixTest {
 
     // null throws
     assertThrows(IllegalArgumentException) { m.top(null) }
+
+    // n > 0 on empty matrix returns empty (clampedCount clamps to 0 rows)
+    def emptyM = Matrix.builder().data(a: []).types(Integer).build()
+    assertEquals(0, emptyM.top(3).rowCount())
   }
 
   @Test
@@ -2933,6 +2937,10 @@ class MatrixTest {
 
     // null throws
     assertThrows(IllegalArgumentException) { m.bottom(null) }
+
+    // n > 0 on empty matrix returns empty (clampedCount clamps to 0 rows)
+    def emptyM = Matrix.builder().data(a: []).types(Integer).build()
+    assertEquals(0, emptyM.bottom(3).rowCount())
   }
 
   @Test

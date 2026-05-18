@@ -268,10 +268,10 @@ class NumberExtension {
   /**
    * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
    *
-   * <p>For values very close to zero (abs &lt; 1e-10), this method uses the Taylor series to avoid catastrophic
-   * cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted term is smaller
-   * than that threshold before DECIMAL64 rounding.
-   * For larger values it computes {@code log(self + 1)} using the BigDecimal series.
+   * <p>For values where {@code abs &lt; 1e-10} (strictly less than), this method uses the Taylor series to avoid
+   * catastrophic cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted
+   * term is smaller than that threshold before DECIMAL64 rounding.
+   * For {@code abs &gt;= 1e-10} it computes {@code log(self + 1)} using the BigDecimal series.
    * Both paths return values rounded to {@link MathContext#DECIMAL64}.
    *
    * <h3>Usage Example</h3>
@@ -317,9 +317,8 @@ class NumberExtension {
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++
     }
-    if (n > 41) {
-      throw new ArithmeticException("log1pSmall did not converge within 40 iterations for input: $value")
-    }
+    // unreachable for |value| < 1e-10 (see block comment above); guard exists for future threshold changes
+    assert n <= 41 : "log1pSmall did not converge within 40 iterations for input: $value"
     result
   }
 
