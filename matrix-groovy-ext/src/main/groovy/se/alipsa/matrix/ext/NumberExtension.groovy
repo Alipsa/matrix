@@ -311,7 +311,7 @@ class NumberExtension {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
-        break
+        break  // term is negligible; omitting it introduces < 1e-34 error
       }
       result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
       n++

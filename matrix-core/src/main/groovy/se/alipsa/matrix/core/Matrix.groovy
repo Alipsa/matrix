@@ -4390,13 +4390,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #head(int) head — returns a formatted String preview
    */
   Matrix top(Number n = 5) {
-    if (n == null) {
-      throw new IllegalArgumentException("n must not be null")
-    }
-    if (n < 0) {
-      throw new IllegalArgumentException("n must be non-negative: was $n")
-    }
-    int count = Math.min(n as int, rowCount())
+    int count = clampedCount(n)
     if (count <= 0) {
       return buildEmptyLike()
     }
@@ -4413,17 +4407,21 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #tail(int) tail — returns a formatted String preview
    */
   Matrix bottom(Number n = 5) {
+    int count = clampedCount(n)
+    if (count <= 0) {
+      return buildEmptyLike()
+    }
+    subset((rowCount() - count)..(rowCount() - 1))
+  }
+
+  private int clampedCount(Number n) {
     if (n == null) {
       throw new IllegalArgumentException("n must not be null")
     }
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    int count = Math.min(n as int, rowCount())
-    if (count <= 0) {
-      return buildEmptyLike()
-    }
-    subset((rowCount() - count)..(rowCount() - 1))
+    Math.min(n as int, rowCount())
   }
 
   private Matrix buildEmptyLike() {
@@ -4460,7 +4458,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       int nullCount = col.countNulls()
       nonNullCounts << (col.size() - nullCount)
       nullCounts << nullCount
-      uniqueCounts << col.inject(new HashSet<>()) { Set s, v -> if (v != null) s.add(v); s }.size()
+      uniqueCounts << col.findAll { it != null }.toSet().size()
     }
 
     String infoName = mName ? "${mName}.info" : 'info'
@@ -4525,7 +4523,11 @@ class Matrix implements Iterable<Row>, Cloneable {
           fraction instanceof BigInteger ? '. Did you mean sample(n as int, random)?' : ''
       throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction$rowCountHint")
     }
-    int rounded = (f * rowCount()).setScale(0, RoundingMode.HALF_UP) as int
+    int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
+    int rounded = (f * rows).setScale(0, RoundingMode.HALF_UP) as int
     int n = rounded < 1 ? 1 : rounded
     sample(n, random)
   }
