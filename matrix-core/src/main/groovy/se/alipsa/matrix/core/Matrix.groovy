@@ -4423,7 +4423,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
-    [n as long, rows as long].min() as int
+    BigDecimal bd = n instanceof BigDecimal ? (BigDecimal) n : new BigDecimal(n.toString())
+    long longN = bd.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) >= 0 ? Long.MAX_VALUE : bd.longValue()
+    [longN, (long) rows].min() as int
   }
 
   private Matrix buildEmptyLike() {
@@ -4547,10 +4549,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     BigDecimal f = fraction instanceof BigDecimal ? fraction : new BigDecimal(fraction.toString())
     if (f <= 0) {
-      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
+      throw new IllegalArgumentException("Fraction must be positive: was $fraction")
     }
     if (f > 1) {
-      throw new IllegalArgumentException("Fraction must be in (0, 1]: was $fraction")
+      throw new IllegalArgumentException("Fraction must not exceed 1.0: was $fraction")
     }
     int rows = rowCount()
     if (rows == 0) {

@@ -2880,6 +2880,10 @@ class MatrixTest {
     // n > 0 on empty matrix returns empty (clampedCount clamps to 0 rows)
     def emptyM = Matrix.builder().data(a: []).types(Integer).build()
     assertEquals(0, emptyM.top(3).rowCount())
+
+    // n just above Long.MAX_VALUE wraps to Long.MIN_VALUE as long, which must clamp to row count
+    def justAboveLongMax = new BigDecimal("9223372036854775808") // Long.MAX_VALUE + 1
+    assertEquals(10, m.top(justAboveLongMax).rowCount())
   }
 
   @Test
@@ -3113,8 +3117,10 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { m.sample(4) }
     assertThrows(IllegalArgumentException) { m.sample(0.0) }
     assertThrows(IllegalArgumentException) { m.sample(4L) }
-    assertThrows(IllegalArgumentException) { m.sampleFraction(0.0) }
-    assertThrows(IllegalArgumentException) { m.sampleFraction(1.1) }
+    def fracZeroEx = assertThrows(IllegalArgumentException) { m.sampleFraction(0.0) }
+    assertTrue(fracZeroEx.message.contains('positive'), "Expected 'positive' in: ${fracZeroEx.message}")
+    def fracOverEx = assertThrows(IllegalArgumentException) { m.sampleFraction(1.1) }
+    assertTrue(fracOverEx.message.contains('exceed') || fracOverEx.message.contains('1.0'), "Expected 'exceed' or '1.0' in: ${fracOverEx.message}")
     // int boundary: n == rowCount() is valid
     assertEquals(3, m.sample(3, new Random(42)).rowCount())
     // non-int numeric values use row-count semantics

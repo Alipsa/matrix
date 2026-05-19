@@ -85,6 +85,7 @@ class NumberExtension {
   private static final BigDecimal LN10 = 2.30258509299404568401799145468436
   /** Threshold for terminating the {@code log1p} Taylor series; conservatively below DECIMAL64 precision for |x| < 1e-10. */
   private static final BigDecimal LOG1P_THRESHOLD = 1e-34
+  private static final int LOG1P_MAX_ITERATIONS = 40
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -306,7 +307,7 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
-    while (n <= 41) {
+    while (n <= LOG1P_MAX_ITERATIONS + 1) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
       if (step.abs() < LOG1P_THRESHOLD) {
@@ -319,8 +320,8 @@ class NumberExtension {
       n++
     }
     // Safety net for future threshold changes that no longer guarantee early termination.
-    if (n > 41) {
-      throw new IllegalStateException("log1pSmall did not converge within 40 iterations for input: $value")
+    if (n > LOG1P_MAX_ITERATIONS + 1) {
+      throw new IllegalStateException("log1pSmall did not converge within $LOG1P_MAX_ITERATIONS iterations for input: $value")
     }
     result
   }
