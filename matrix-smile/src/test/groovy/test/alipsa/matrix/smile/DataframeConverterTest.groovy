@@ -412,12 +412,12 @@ class DataframeConverterTest {
   void testTemporalRoundTripLossyTypes() {
     // Smile collapses Timestamp, Instant, ZonedDateTime → DateTimeType → LocalDateTime
     // and OffsetTime → TimeType → LocalTime. This is a lossy conversion.
-    def ts = java.sql.Timestamp.valueOf('2023-01-15 10:30:00')
+    def ts = Timestamp.valueOf('2023-01-15 10:30:00')
     def inst = Instant.parse('2023-01-15T10:30:00Z')
-    def zdt = ZonedDateTime.of(2023, 1, 15, 10, 30, 0, 0, java.time.ZoneId.of('UTC'))
-    def ot = OffsetTime.of(10, 30, 0, 0, java.time.ZoneOffset.UTC)
+    def zdt = ZonedDateTime.of(2023, 1, 15, 10, 30, 0, 0, ZoneId.of('UTC'))
+    def ot = OffsetTime.of(10, 30, 0, 0, ZoneOffset.UTC)
 
-    def tsMatrix = Matrix.builder().data(c: [ts]).types(java.sql.Timestamp).build()
+    def tsMatrix = Matrix.builder().data(c: [ts]).types(Timestamp).build()
     Matrix tsRound = DataframeConverter.convert(DataframeConverter.convert(tsMatrix))
     assertEquals(LocalDateTime, tsRound.type(0), 'Timestamp round-trips as LocalDateTime')
 
