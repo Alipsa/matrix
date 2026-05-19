@@ -45,11 +45,7 @@ class SmileClassifier {
     if (ntrees <= 0) {
       throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
     }
-    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
-      throw new IllegalArgumentException(
-          "Target column '${targetColumn}' contains null labels. " +
-          "Use SmileFeatures.dropna() or fillna() before training.")
-    }
+    requireNonNullLabels(matrix, targetColumn)
     // Get feature columns (all except target)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 
@@ -73,11 +69,7 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier decisionTree(Matrix matrix, String targetColumn) {
-    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
-      throw new IllegalArgumentException(
-          "Target column '${targetColumn}' contains null labels. " +
-          "Use SmileFeatures.dropna() or fillna() before training.")
-    }
+    requireNonNullLabels(matrix, targetColumn)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 
     // Extract class labels and encode target as integers
@@ -288,6 +280,14 @@ class SmileClassifier {
   }
 
   // Helper methods
+
+  private static void requireNonNullLabels(Matrix matrix, String targetColumn) {
+    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' contains null labels. " +
+          "Use SmileFeatures.dropna() or fillna() before training.")
+    }
+  }
 
   private static String[] extractClassLabels(Matrix matrix, String targetColumn) {
     List<?> values = matrix.column(targetColumn)

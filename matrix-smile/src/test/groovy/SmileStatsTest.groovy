@@ -775,6 +775,7 @@ class SmileStatsTest {
       SmileStats.tTestPaired(matrix, 'x', 'y')
     }
     assertTrue(ex.message.contains('complete pair'), "Expected 'complete pair' in: ${ex.message}")
+    assertTrue(ex.message.contains('tTestPaired'), "Expected 'tTestPaired' in: ${ex.message}")
   }
 
   @Test
@@ -838,6 +839,7 @@ class SmileStatsTest {
       SmileStats.correlationWithSignificance(matrix)
     }
     assertTrue(ex.message.contains('complete pair'), "Expected 'complete pair' in: ${ex.message}")
+    assertTrue(ex.message.contains('correlation'), "Expected 'correlation' in: ${ex.message}")
   }
 
   // Regression tests: clean data produces correct results after compaction/pairwise rewrite

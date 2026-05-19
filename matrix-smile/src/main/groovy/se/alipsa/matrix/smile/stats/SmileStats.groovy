@@ -24,8 +24,6 @@ import smile.stat.hypothesis.TTest
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.SmileUtil
 
-import java.util.Arrays
-
 /**
  * Statistical utilities leveraging Smile's statistics library.
  * Complements matrix-stats with ML-focused statistics including:
@@ -809,7 +807,8 @@ class SmileStats {
     for (double v : data) {
       if (!Double.isNaN(v)) { buf[idx++] = v }
     }
-    idx < data.length ? Arrays.copyOf(buf, idx) : data
+    if (idx == data.length) { return data }
+    Arrays.copyOf(buf, idx)
   }
 
   private static double[][] toPairwiseComplete(double[] x, double[] y) {
@@ -834,8 +833,7 @@ class SmileStats {
   private static void requireMinimumPairs(double[][] pair, int minimum, String context) {
     if (pair[0].length < minimum) {
       throw new IllegalArgumentException(
-          "Fewer than $minimum complete pairs remain after removing rows with nulls " +
-          "(${pair[0].length} complete pair(s) found). " +
+          "$context requires at least $minimum complete pairs, but found ${pair[0].length}. " +
           "Use SmileFeatures.dropna() or fillna() before computing paired statistics.")
     }
   }
