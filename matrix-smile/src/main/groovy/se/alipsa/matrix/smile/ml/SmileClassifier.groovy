@@ -45,6 +45,11 @@ class SmileClassifier {
     if (ntrees <= 0) {
       throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
     }
+    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' contains null labels. " +
+          "Use SmileFeatures.dropna() or fillna() before training.")
+    }
     // Get feature columns (all except target)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 
@@ -68,6 +73,11 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier decisionTree(Matrix matrix, String targetColumn) {
+    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' contains null labels. " +
+          "Use SmileFeatures.dropna() or fillna() before training.")
+    }
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
 
     // Extract class labels and encode target as integers
@@ -303,7 +313,12 @@ class SmileClassifier {
     for (int i = 0; i < values.size(); i++) {
       String label = values.get(i)?.toString()
       Integer index = labelToIndex.get(label)
-      result[i] = index != null ? index.intValue() : 0
+      if (index == null) {
+        throw new IllegalArgumentException(
+            "Label '${label ?: '<null>'}' at row ${i} was not seen during training. " +
+            "Known labels: ${labelToIndex.keySet()}")
+      }
+      result[i] = index.intValue()
     }
 
     result
@@ -321,10 +336,16 @@ class SmileClassifier {
 
     List<?> originalValues = matrix.column(targetColumn)
     List<Integer> encodedValues = new ArrayList<>(originalValues.size())
-    for (Object val : originalValues) {
+    for (int i = 0; i < originalValues.size(); i++) {
+      Object val = originalValues.get(i)
       String label = val?.toString()
       Integer index = labelToIndex.get(label)
-      encodedValues.add(index != null ? index : 0)
+      if (index == null) {
+        throw new IllegalArgumentException(
+            "Label '${label ?: '<null>'}' at row ${i} was not seen during training. " +
+            "Known labels: ${labelToIndex.keySet()}")
+      }
+      encodedValues.add(index)
     }
 
     // Create new matrix with encoded target column

@@ -263,4 +263,42 @@ class SmileClassifierTest {
     assertEquals('ntrees must be positive: was -5', exception2.message)
   }
 
+  @Test
+  void testTrainingWithNullLabelThrows() {
+    Matrix trainData = Matrix.builder()
+        .data(
+            x1: [1.0, 1.2, 1.5, 8.0, 8.2, 8.5],
+            x2: [1.1, 0.9, 1.3, 8.1, 7.9, 8.3],
+            label: ['A', null, 'A', 'B', 'B', 'B']
+        )
+        .types([Double, Double, String])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(trainData, 'label')
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('label'), "Expected 'label' in: ${ex.message}")
+  }
+
+  @Test
+  void testEvaluateWithUnknownLabelThrows() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .data(
+            x1: [1.3, 8.3],
+            x2: [1.4, 8.4],
+            label: ['A', 'C']
+        )
+        .types([Double, Double, String])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.accuracy(testData)
+    }
+    assertTrue(ex.message.contains('C'), "Expected 'C' in: ${ex.message}")
+  }
+
 }

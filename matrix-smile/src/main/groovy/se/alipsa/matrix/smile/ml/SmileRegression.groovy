@@ -272,7 +272,12 @@ class SmileRegression {
 
     for (int i = 0; i < values.size(); i++) {
       Object val = values.get(i)
-      result[i] = val != null ? val as double : 0.0d
+      if (val == null) {
+        throw new IllegalArgumentException(
+            "Target column '${targetColumn}' contains a null at row ${i}. " +
+            "Use SmileFeatures.dropna() or fillna() to handle missing values before training.")
+      }
+      result[i] = val as double
     }
 
     result

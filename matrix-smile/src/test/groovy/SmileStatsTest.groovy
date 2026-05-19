@@ -741,4 +741,161 @@ class SmileStatsTest {
     assertEquals(3.0, dist.mean(), 0.0001) // Mean of [1, 3, 5]
   }
 
+  @Test
+  void testTTestPairedWithNullsInDifferentPositions() {
+    // 5 rows; row 1 null in col1, row 3 null in col2 → 3 complete pairs
+    Matrix matrix = Matrix.builder()
+        .data(
+            before: [85.0, null, 78.0, 92.0, 88.0],
+            after:  [88.0, 92.0, 82.0, null, 90.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    TTest result = SmileStats.tTestPaired(matrix, 'before', 'after')
+
+    assertNotNull(result)
+    assertNotNull(result.pvalue())
+    // df = n-1 = 2 for 3 complete pairs
+    assertEquals(2.0, result.df(), 0.0001)
+  }
+
+  @Test
+  void testTTestPairedAllNullPairsThrowsDescriptive() {
+    // Every row has a null in at least one column → 0 complete pairs
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [null, 2.0, null, 4.0],
+            y: [1.0, null, 3.0, null]
+        )
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileStats.tTestPaired(matrix, 'x', 'y')
+    }
+    assertTrue(ex.message.contains('complete pair'), "Expected 'complete pair' in: ${ex.message}")
+  }
+
+  @Test
+  void testNormalFitAllNullsThrowsDescriptive() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [null, null, null])
+        .types([Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileStats.normalFit(matrix, 'values')
+    }
+    assertTrue(ex.message.contains('non-null'), "Expected 'non-null' in: ${ex.message}")
+  }
+
+  @Test
+  void testTTestTwoSampleWithNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            group1: [10.1, null, 9.9, 10.0, 10.3, 9.8, 10.1],
+            group2: [9.8, 9.7, null, 9.9, 9.6, 10.0, 9.5]
+        )
+        .types([Double, Double])
+        .build()
+
+    TTest result = SmileStats.tTestTwoSample(matrix, 'group1', 'group2')
+
+    assertNotNull(result)
+    assertNotNull(result.pvalue())
+    assertFalse(Double.isNaN(result.pvalue()), "p-value should not be NaN")
+  }
+
+  @Test
+  void testCorrelationWithMisalignedNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, null, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, null, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    CorTest result = SmileStats.correlationTest(matrix, 'x', 'y')
+
+    assertNotNull(result)
+    assertFalse(Double.isNaN(result.cor()), "Correlation should not be NaN")
+  }
+
+  @Test
+  void testCorrelationWithSignificanceAllNullColumn() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            a: [1.0, 2.0, 3.0, 4.0, 5.0],
+            b: [null, null, null, null, null],
+            c: [5.0, 4.0, 3.0, 2.0, 1.0]
+        )
+        .types([Double, Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileStats.correlationWithSignificance(matrix)
+    }
+    assertTrue(ex.message.contains('complete pair'), "Expected 'complete pair' in: ${ex.message}")
+  }
+
+  // Regression tests: clean data produces correct results after compaction/pairwise rewrite
+
+  @Test
+  void testNormalFitCleanDataRegression() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
+        .types([Double])
+        .build()
+
+    def dist = SmileStats.normalFit(matrix, 'values')
+
+    assertEquals(5.5, dist.mean(), 0.0001)
+  }
+
+  @Test
+  void testTTestOneSampleCleanDataRegression() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [10.2, 9.8, 10.1, 9.9, 10.0, 10.3, 9.7, 10.1, 10.0, 9.9])
+        .types([Double])
+        .build()
+
+    TTest result = SmileStats.tTestOneSample(matrix, 'values', 10.0)
+
+    assertNotNull(result)
+    assertTrue(result.pvalue() > 0.05)
+  }
+
+  @Test
+  void testCorrelationTestCleanDataRegression() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [2.0, 4.0, 6.0, 8.0, 10.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    CorTest result = SmileStats.correlationTest(matrix, 'x', 'y')
+
+    assertEquals(1.0, result.cor(), 0.0001)
+  }
+
+  @Test
+  void testTTestPairedCleanDataRegression() {
+    Matrix matrix = Matrix.builder()
+        .data(
+            before: [85.0, 90.0, 78.0, 92.0, 88.0],
+            after:  [88.0, 92.0, 82.0, 95.0, 90.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    TTest result = SmileStats.tTestPaired(matrix, 'before', 'after')
+
+    assertNotNull(result)
+    assertEquals(4.0, result.df(), 0.0001)
+  }
+
 }

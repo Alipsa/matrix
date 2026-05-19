@@ -24,6 +24,8 @@ import smile.stat.hypothesis.TTest
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.SmileUtil
 
+import java.util.Arrays
+
 /**
  * Statistical utilities leveraging Smile's statistics library.
  * Complements matrix-stats with ML-focused statistics including:
@@ -65,7 +67,9 @@ class SmileStats {
    * @return a fitted GaussianDistribution
    */
   static GaussianDistribution normalFit(Matrix matrix, String column) {
-    normalFit(toDoubleArray(matrix, column))
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, 2, "normalFit on column '$column'")
+    normalFit(compacted)
   }
 
   /**
@@ -293,7 +297,9 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestOneSample(Matrix matrix, String column, double mu) {
-    tTestOneSample(toDoubleArray(matrix, column), mu)
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, 2, "tTestOneSample on column '$column'")
+    tTestOneSample(compacted, mu)
   }
 
   /**
@@ -317,7 +323,11 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestTwoSample(Matrix matrix, String column1, String column2, boolean equalVariance = false) {
-    tTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2), equalVariance)
+    double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
+    double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
+    requireMinimumSamples(x, 2, "tTestTwoSample on column '$column1'")
+    requireMinimumSamples(y, 2, "tTestTwoSample on column '$column2'")
+    tTestTwoSample(x, y, equalVariance)
   }
 
   /**
@@ -340,7 +350,9 @@ class SmileStats {
    * @return a TTest result
    */
   static TTest tTestPaired(Matrix matrix, String column1, String column2) {
-    tTestPaired(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    requireMinimumPairs(pair, 2, "tTestPaired on columns '$column1' and '$column2'")
+    tTestPaired(pair[0], pair[1])
   }
 
   /**
@@ -363,7 +375,11 @@ class SmileStats {
    * @return an FTest result
    */
   static FTest fTest(Matrix matrix, String column1, String column2) {
-    fTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
+    double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
+    requireMinimumSamples(x, 2, "fTest on column '$column1'")
+    requireMinimumSamples(y, 2, "fTest on column '$column2'")
+    fTest(x, y)
   }
 
   /**
@@ -386,7 +402,9 @@ class SmileStats {
    * @return a KSTest result
    */
   static KSTest ksTestNormality(Matrix matrix, String column) {
-    ksTestNormality(toDoubleArray(matrix, column))
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, 2, "ksTestNormality on column '$column'")
+    ksTestNormality(compacted)
   }
 
   /**
@@ -410,7 +428,11 @@ class SmileStats {
    * @return a KSTest result
    */
   static KSTest ksTestTwoSample(Matrix matrix, String column1, String column2) {
-    ksTestTwoSample(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
+    double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
+    requireMinimumSamples(x, 2, "ksTestTwoSample on column '$column1'")
+    requireMinimumSamples(y, 2, "ksTestTwoSample on column '$column2'")
+    ksTestTwoSample(x, y)
   }
 
   /**
@@ -456,7 +478,9 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest correlationTest(Matrix matrix, String column1, String column2) {
-    correlationTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    requireMinimumPairs(pair, 2, "correlationTest on columns '$column1' and '$column2'")
+    correlationTest(pair[0], pair[1])
   }
 
   /**
@@ -479,7 +503,9 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest spearmanTest(Matrix matrix, String column1, String column2) {
-    spearmanTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    requireMinimumPairs(pair, 2, "spearmanTest on columns '$column1' and '$column2'")
+    spearmanTest(pair[0], pair[1])
   }
 
   /**
@@ -502,7 +528,9 @@ class SmileStats {
    * @return a CorTest result
    */
   static CorTest kendallTest(Matrix matrix, String column1, String column2) {
-    kendallTest(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
+    requireMinimumPairs(pair, 2, "kendallTest on columns '$column1' and '$column2'")
+    kendallTest(pair[0], pair[1])
   }
 
   /**
@@ -619,7 +647,10 @@ class SmileStats {
       corMatrix[i][i] = 1.0
       pMatrix[i][i] = 0.0
       for (int j = i + 1; j < n; j++) {
-        CorTest result = method.correlate(data[i], data[j])
+        double[][] pair = toPairwiseComplete(data[i], data[j])
+        requireMinimumPairs(pair, 2,
+            "correlation between '${numericCols[i]}' and '${numericCols[j]}'")
+        CorTest result = method.correlate(pair[0], pair[1])
         corMatrix[i][j] = result.cor()
         corMatrix[j][i] = result.cor()
         pMatrix[i][j] = result.pvalue()
@@ -765,36 +796,66 @@ class SmileStats {
   private static double[] toDoubleArray(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
     double[] result = new double[col.size()]
-    int idx = 0
-    for (Object val : col) {
-      if (val != null) {
-        result[idx++] = val as double
-      }
-    }
-    // Trim to actual size if there were nulls
-    if (idx < col.size()) {
-      double[] trimmed = new double[idx]
-      System.arraycopy(result, 0, trimmed, 0, idx)
-      return trimmed
+    for (int i = 0; i < col.size(); i++) {
+      Object val = col.get(i)
+      result[i] = val != null ? val as double : Double.NaN
     }
     result
   }
 
-  private static int[] toIntArray(Matrix matrix, String column) {
-    List<?> col = matrix.column(column)
-    int[] result = new int[col.size()]
+  private static double[] compactDoubleArray(double[] data) {
+    double[] buf = new double[data.length]
     int idx = 0
-    for (Object val : col) {
-      if (val != null) {
-        result[idx++] = ((Number) val).intValue()
+    for (double v : data) {
+      if (!Double.isNaN(v)) { buf[idx++] = v }
+    }
+    idx < data.length ? Arrays.copyOf(buf, idx) : data
+  }
+
+  private static double[][] toPairwiseComplete(double[] x, double[] y) {
+    int n = Math.min(x.length, y.length)
+    double[] xBuf = new double[n]
+    double[] yBuf = new double[n]
+    int idx = 0
+    for (int i = 0; i < n; i++) {
+      if (!Double.isNaN(x[i]) && !Double.isNaN(y[i])) {
+        xBuf[idx] = x[i]
+        yBuf[idx] = y[i]
+        idx++
       }
     }
-    if (idx < col.size()) {
-      int[] trimmed = new int[idx]
-      System.arraycopy(result, 0, trimmed, 0, idx)
-      return trimmed
+    if (idx < n) {
+      xBuf = Arrays.copyOf(xBuf, idx)
+      yBuf = Arrays.copyOf(yBuf, idx)
     }
-    result
+    [xBuf, yBuf] as double[][]
+  }
+
+  private static void requireMinimumPairs(double[][] pair, int minimum, String context) {
+    if (pair[0].length < minimum) {
+      throw new IllegalArgumentException(
+          "Fewer than $minimum complete pairs remain after removing rows with nulls " +
+          "(${pair[0].length} complete pair(s) found). " +
+          "Use SmileFeatures.dropna() or fillna() before computing paired statistics.")
+    }
+  }
+
+  private static void requireMinimumSamples(double[] data, int minimum, String context) {
+    if (data.length < minimum) {
+      throw new IllegalArgumentException(
+          "$context requires at least $minimum non-null values, but found ${data.length}. " +
+          "Use SmileFeatures.dropna() or fillna() before computing statistics.")
+    }
+  }
+
+  private static int[] toIntArray(Matrix matrix, String column) {
+    List<?> col = matrix.column(column)
+    int[] buf = new int[col.size()]
+    int idx = 0
+    for (Object val : col) {
+      if (val != null) { buf[idx++] = val as int }
+    }
+    idx < col.size() ? Arrays.copyOf(buf, idx) : buf
   }
 
   @SuppressWarnings('NestedForLoop')
