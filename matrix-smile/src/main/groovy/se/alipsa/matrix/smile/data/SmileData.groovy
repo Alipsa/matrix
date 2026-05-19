@@ -3,6 +3,7 @@ package se.alipsa.matrix.smile.data
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Utility class for data splitting operations commonly used in machine learning workflows.
@@ -11,6 +12,7 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class SmileData {
 
+  private static final Logger log = Logger.getLogger(SmileData)
   private static final int MIN_PARTITION = 2
   private static final double MIN_RATIO = 0.0d
   private static final double MAX_RATIO = 1.0d
@@ -255,6 +257,11 @@ class SmileData {
 
     // Split each class proportionally
     for (Map.Entry<Object, List<Integer>> entry : classSamples.entrySet()) {
+      if (entry.value.size() < 2) {
+        log.warn("Class '${entry.key}' has fewer than 2 samples and will " +
+            "appear only in the training set. Consider removing rare classes or using " +
+            "non-stratified splitting if test-set coverage for all classes is required.")
+      }
       List<Integer> classIndices = new ArrayList<>(entry.value)
       Collections.shuffle(classIndices, random)
 

@@ -388,6 +388,53 @@ class DataframeConverterTest {
   }
 
   @Test
+  void testTemporalRoundTrip() {
+    def ldt = LocalDateTime.of(2023, 1, 15, 10, 30, 0)
+    def ld = LocalDate.of(2023, 1, 15)
+    def lt = LocalTime.of(10, 30, 0)
+
+    def matrix = Matrix.builder()
+        .data(ldt_col: [ldt], ld_col: [ld], lt_col: [lt])
+        .types(LocalDateTime, LocalDate, LocalTime)
+        .build()
+
+    Matrix roundTripped = DataframeConverter.convert(DataframeConverter.convert(matrix))
+
+    assertEquals(LocalDateTime, roundTripped.type(0))
+    assertEquals(LocalDate, roundTripped.type(1))
+    assertEquals(LocalTime, roundTripped.type(2))
+    assertEquals(ldt, roundTripped[0, 0])
+    assertEquals(ld, roundTripped[0, 1])
+    assertEquals(lt, roundTripped[0, 2])
+  }
+
+  @Test
+  void testTemporalRoundTripLossyTypes() {
+    // Smile collapses Timestamp, Instant, ZonedDateTime → DateTimeType → LocalDateTime
+    // and OffsetTime → TimeType → LocalTime. This is a lossy conversion.
+    def ts = Timestamp.valueOf('2023-01-15 10:30:00')
+    def inst = Instant.parse('2023-01-15T10:30:00Z')
+    def zdt = ZonedDateTime.of(2023, 1, 15, 10, 30, 0, 0, ZoneId.of('UTC'))
+    def ot = OffsetTime.of(10, 30, 0, 0, ZoneOffset.UTC)
+
+    def tsMatrix = Matrix.builder().data(c: [ts]).types(Timestamp).build()
+    Matrix tsRound = DataframeConverter.convert(DataframeConverter.convert(tsMatrix))
+    assertEquals(LocalDateTime, tsRound.type(0), 'Timestamp round-trips as LocalDateTime')
+
+    def instMatrix = Matrix.builder().data(c: [inst]).types(Instant).build()
+    Matrix instRound = DataframeConverter.convert(DataframeConverter.convert(instMatrix))
+    assertEquals(LocalDateTime, instRound.type(0), 'Instant round-trips as LocalDateTime')
+
+    def zdtMatrix = Matrix.builder().data(c: [zdt]).types(ZonedDateTime).build()
+    Matrix zdtRound = DataframeConverter.convert(DataframeConverter.convert(zdtMatrix))
+    assertEquals(LocalDateTime, zdtRound.type(0), 'ZonedDateTime round-trips as LocalDateTime')
+
+    def otMatrix = Matrix.builder().data(c: [ot]).types(OffsetTime).build()
+    Matrix otRound = DataframeConverter.convert(DataframeConverter.convert(otMatrix))
+    assertEquals(LocalTime, otRound.type(0), 'OffsetTime round-trips as LocalTime')
+  }
+
+  @Test
   void testMatrixToDataFrameWithMixedTypes() {
     def matrix = Matrix.builder()
         .data(

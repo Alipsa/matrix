@@ -154,30 +154,29 @@ class SmileCluster {
 
   /**
    * Get cluster centroids.
-   * Note: Only available for centroid-based clustering (KMeans).
+   * Only available for centroid-based clustering (KMeans).
    *
-   * @return the cluster centroids or null if not available
+   * @return the cluster centroids
+   * @throws UnsupportedOperationException if the algorithm does not produce centroids
    */
-  @SuppressWarnings('ReturnsNullInsteadOfEmptyArray')
   double[][] getCentroids() {
-    if (centroidModel != null) {
-      return centroidModel.centers()
+    if (centroidModel == null) {
+      throw new UnsupportedOperationException(
+          'Centroids are not available for this clustering algorithm — only centroid-based methods (e.g. KMeans) support this')
     }
-    null
+    centroidModel.centers()
   }
 
   /**
    * Get cluster centroids as a Matrix.
-   * Note: Only available for centroid-based clustering (KMeans).
+   * Only available for centroid-based clustering (KMeans).
    *
    * @return a Matrix containing the cluster centroids
+   * @throws UnsupportedOperationException if the algorithm does not produce centroids
    */
   @SuppressWarnings('NestedForLoop')
   Matrix getCentroidsMatrix() {
     double[][] centroids = getCentroids()
-    if (centroids == null) {
-      return null
-    }
 
     Map<String, List<?>> data = [:]
     for (int j = 0; j < featureColumns.length; j++) {

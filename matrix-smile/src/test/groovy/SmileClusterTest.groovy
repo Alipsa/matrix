@@ -224,6 +224,22 @@ class SmileClusterTest {
   }
 
   @Test
+  void testDBSCANCentroidsThrows() {
+    Matrix data = createDBSCANData()
+    SmileCluster cluster = SmileCluster.dbscan(data, 2, 0.5)
+
+    def ex1 = assertThrows(UnsupportedOperationException) {
+      cluster.centroids
+    }
+    assertTrue(ex1.message.contains('centroid'), "Expected 'centroid' in: ${ex1.message}")
+
+    def ex2 = assertThrows(UnsupportedOperationException) {
+      cluster.centroidsMatrix
+    }
+    assertTrue(ex2.message.contains('centroid'), "Expected 'centroid' in: ${ex2.message}")
+  }
+
+  @Test
   void testDBSCANClusterCounts() {
     Matrix data = createDBSCANData()
 
