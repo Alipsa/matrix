@@ -791,6 +791,13 @@ class SmileStats {
 
   // ==================== Helper Methods ====================
 
+  /**
+   * Convert a Matrix column to a double array, mapping null to {@code Double.NaN}.
+   * Pre-existing NaN values in the source data are preserved as-is, so downstream
+   * helpers ({@code compactDoubleArray}, {@code toPairwiseComplete}) treat both
+   * null-originated and pre-existing NaN identically — both are excluded from
+   * statistical computations.
+   */
   private static double[] toDoubleArray(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
     double[] result = new double[col.size()]
