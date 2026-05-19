@@ -3132,6 +3132,12 @@ class MatrixTest {
     Number nAsNumber = 1L
     assertEquals(1, m.sample(nAsNumber, new Random(42)).rowCount())
 
+    // sub-unit fractions truncate to 0 and must report the original value, not 0
+    def truncEx = assertThrows(IllegalArgumentException) { m.sample(0.5) }
+    assertTrue(truncEx.message.contains('0.5'), "Expected '0.5' in: ${truncEx.message}")
+    def truncEx2 = assertThrows(IllegalArgumentException) { m.sample(0.9) }
+    assertTrue(truncEx2.message.contains('0.9'), "Expected '0.9' in: ${truncEx2.message}")
+
     // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
     def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }

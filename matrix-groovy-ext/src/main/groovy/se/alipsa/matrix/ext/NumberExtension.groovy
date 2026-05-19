@@ -307,6 +307,7 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
+    boolean subtractTerm = true  // n=2 term is -x²/2 (even-indexed terms subtract)
     while (n <= LOG1P_MAX_ITERATIONS + 1) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
@@ -316,7 +317,8 @@ class NumberExtension {
         // The current term is omitted because it is already inside that bound.
         break
       }
-      result = n % 2 == 0 ? result.subtract(step, mc) : result.add(step, mc)
+      result = subtractTerm ? result.subtract(step, mc) : result.add(step, mc)
+      subtractTerm = !subtractTerm
       n++
     }
     // Safety net for future threshold changes that no longer guarantee early termination.

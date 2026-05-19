@@ -4532,7 +4532,11 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (count > rows) {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
-    sample(count as int, random)
+    int intCount = count as int
+    if (intCount <= 0) {
+      throw new IllegalArgumentException("Sample size truncates to zero for value: $n")
+    }
+    sample(intCount, random)
   }
 
   /**
