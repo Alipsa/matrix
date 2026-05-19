@@ -145,10 +145,12 @@ class SmileUtil {
 
   /**
    * Convert a Matrix to a 2D double array.
-   * Null values are converted to 0.0.
+   * Null values are not permitted; throws {@code IllegalArgumentException} directing
+   * the caller to {@code SmileFeatures.dropna()} or {@code fillna()}.
    *
    * @param matrix the Matrix to convert
    * @return 2D array of double values
+   * @throws IllegalArgumentException if any column contains a null value
    */
   @SuppressWarnings('NestedForLoop')
   static double[][] matrixToArray(Matrix matrix) {
@@ -160,7 +162,12 @@ class SmileUtil {
       List<?> column = matrix.column(j)
       for (int i = 0; i < rows; i++) {
         Object val = column.get(i)
-        result[i][j] = val != null ? val as double : 0.0d
+        if (val == null) {
+          throw new IllegalArgumentException(
+              "Column '${matrix.columnName(j)}' contains a null at row ${i}. " +
+              "Use SmileFeatures.dropna() or fillna() before calling ML algorithms.")
+        }
+        result[i][j] = val as double
       }
     }
 

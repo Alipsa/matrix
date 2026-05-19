@@ -327,6 +327,20 @@ class SmileUtilTest {
   }
 
   @Test
+  void testMatrixToArrayThrowsOnNull() {
+    def matrix = Matrix.builder()
+        .data(a: [1.0, null, 3.0], b: [4.0, 5.0, 6.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileUtil.matrixToArray(matrix)
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('a'), "Expected column name 'a' in: ${ex.message}")
+  }
+
+  @Test
   void testRound() {
     assertEquals(3.14, SmileUtil.round(3.14159, 2), 0.001)
     assertEquals(3.1416, SmileUtil.round(3.14159, 4), 0.00001)

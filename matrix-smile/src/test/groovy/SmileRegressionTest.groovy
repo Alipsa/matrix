@@ -392,4 +392,25 @@ class SmileRegressionTest {
     assertEquals('y', regression.targetColumn)
   }
 
+  @Test
+  void testExtractTargetThrowsOnNullInTarget() {
+    Matrix trainData = createLinearData()
+    SmileRegression regression = SmileRegression.ols(trainData, 'y')
+
+    Matrix testData = Matrix.builder()
+        .data(
+            x1: [1.0, 2.0, 3.0],
+            x2: [2.0, 3.0, 4.0],
+            y: [9.0, null, 14.0]
+        )
+        .types([Double, Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      regression.rSquared(testData)
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('y'), "Expected column name 'y' in: ${ex.message}")
+  }
+
 }
