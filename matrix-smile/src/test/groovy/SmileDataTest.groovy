@@ -295,6 +295,26 @@ class SmileDataTest {
     assertEquals(test1.rowCount(), test2.rowCount())
   }
 
+  @Test
+  void testStratifiedSplitSingleSampleClassGoesToTrainOnly() {
+    Matrix data = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            label: ['A', 'A', 'A', 'B', 'B', 'B', 'C']
+        )
+        .types([Double, String])
+        .build()
+
+    def (Matrix train, Matrix test) = SmileData.stratifiedSplit(data, 'label', 0.3, 42L)
+
+    List<String> trainLabels = train.column('label') as List<String>
+    List<String> testLabels = test.column('label') as List<String>
+
+    assertTrue(trainLabels.contains('C'), 'Single-sample class C should appear in training set')
+    assertFalse(testLabels.contains('C'), 'Single-sample class C should not appear in test set')
+    assertEquals(7, train.rowCount() + test.rowCount())
+  }
+
   // ============ bootstrap Tests ============
 
   @Test
