@@ -3138,11 +3138,42 @@ class MatrixTest {
     def truncEx2 = assertThrows(IllegalArgumentException) { m.sample(0.9) }
     assertTrue(truncEx2.message.contains('0.9'), "Expected '0.9' in: ${truncEx2.message}")
 
+    // 3.5 on a 3-row matrix must truncate to 3 and succeed (consistent with top()/bottom())
+    assertEquals(3, m.sample(3.5, new Random(42)).rowCount())
+
+    // NaN and Infinity must throw IllegalArgumentException, not NumberFormatException
+    def nanEx = assertThrows(IllegalArgumentException) { m.sample(Double.NaN) }
+    assertTrue(nanEx.message.toLowerCase().contains('finite') || nanEx.message.contains('NaN'),
+        "Expected 'finite' or 'NaN' in: ${nanEx.message}")
+    assertThrows(IllegalArgumentException) { m.sample(Double.POSITIVE_INFINITY) }
+
     // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
     def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }
     assertTrue(emptyIntEx.message.contains('Cannot sample from an empty matrix'))
     def emptyFracEx = assertThrows(IllegalArgumentException) { empty.sampleFraction(0.5) }
     assertTrue(emptyFracEx.message.contains('Cannot sample from an empty matrix'))
+  }
+
+  @Test
+  void testSamplePreservesColumnAlignment() {
+    def m = Matrix.builder()
+        .data(id: [1, 2, 3, 4, 5], name: ['a', 'b', 'c', 'd', 'e'], score: [10, 20, 30, 40, 50])
+        .types(Integer, String, Integer)
+        .build()
+
+    def sampled = m.sample(3, new Random(42))
+    assertEquals(3, sampled.rowCount())
+    assertEquals(3, sampled.columnCount())
+    // verify row alignment: score == id * 10 for every sampled row
+    sampled.each { row ->
+      assertEquals(row['id'] * 10, row['score'])
+    }
+
+    def fracSampled = m.sampleFraction(0.4, new Random(42))
+    assertEquals(2, fracSampled.rowCount())
+    fracSampled.each { row ->
+      assertEquals(row['id'] * 10, row['score'])
+    }
   }
 }

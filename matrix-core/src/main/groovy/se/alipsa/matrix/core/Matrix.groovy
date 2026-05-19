@@ -4416,10 +4416,25 @@ class Matrix implements Iterable<Row>, Cloneable {
     subset((rows - count)..(rows - 1))
   }
 
+  private static void requireFiniteNumber(Number n, String label) {
+    if (n instanceof Double) {
+      double d = (double) n
+      if (Double.isNaN(d) || Double.isInfinite(d)) {
+        throw new IllegalArgumentException("$label must be finite: was $n")
+      }
+    } else if (n instanceof Float) {
+      float f = (float) n
+      if (Float.isNaN(f) || Float.isInfinite(f)) {
+        throw new IllegalArgumentException("$label must be finite: was $n")
+      }
+    }
+  }
+
   private int clampedCount(Number n, int rows) {
     if (n == null) {
       throw new IllegalArgumentException("n must not be null")
     }
+    requireFiniteNumber(n, "n")
     if (n < 0) {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
@@ -4521,7 +4536,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n == null) {
       throw new IllegalArgumentException("Sample size must not be null")
     }
-    BigDecimal count = n instanceof BigDecimal ? n : new BigDecimal(n.toString())
+    requireFiniteNumber(n, "Sample size")
+    BigDecimal count = n instanceof BigDecimal ? (BigDecimal) n : new BigDecimal(n.toString())
     if (count <= 0) {
       throw new IllegalArgumentException("Sample size must be positive: was $n")
     }
@@ -4529,18 +4545,21 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == 0) {
       throw new IllegalArgumentException("Cannot sample from an empty matrix")
     }
-    if (count > rows) {
-      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
-    }
     int intCount = count as int
     if (intCount <= 0) {
       throw new IllegalArgumentException("Sample size truncates to zero for value: $n")
+    }
+    if (intCount > rows) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
     sample(intCount, random)
   }
 
   /**
    * Return a random sample of rows as a fraction of the total row count, without replacement.
+   *
+   * <p>The computed row count is {@code round(fraction * rowCount())}, with a minimum floor of 1,
+   * so very small fractions (e.g. 0.001 on a 10-row matrix) always return at least one row.
    *
    * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
    * @param random the random number generator to use (default new Random())
@@ -4551,7 +4570,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (fraction == null) {
       throw new IllegalArgumentException("Fraction must not be null")
     }
-    BigDecimal f = fraction instanceof BigDecimal ? fraction : new BigDecimal(fraction.toString())
+    requireFiniteNumber(fraction, "Fraction")
+    BigDecimal f = fraction instanceof BigDecimal ? (BigDecimal) fraction : new BigDecimal(fraction.toString())
     if (f <= 0) {
       throw new IllegalArgumentException("Fraction must be positive: was $fraction")
     }

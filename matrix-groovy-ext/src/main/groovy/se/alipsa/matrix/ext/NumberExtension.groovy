@@ -307,7 +307,7 @@ class NumberExtension {
     BigDecimal term = value
     BigDecimal result = value
     int n = 2
-    boolean subtractTerm = true  // n=2 term is -x²/2 (even-indexed terms subtract)
+    boolean subtractTerm = true  // first loop term (n=2) subtracts its step from result
     while (n <= LOG1P_MAX_ITERATIONS + 1) {
       term = term.multiply(value, mc)
       BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
