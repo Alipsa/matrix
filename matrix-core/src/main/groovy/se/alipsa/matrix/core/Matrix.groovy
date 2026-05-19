@@ -4514,6 +4514,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (n > rows) {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
     }
+    if (n < rows / 2) {
+      Set<Integer> selected = new LinkedHashSet<>(n)
+      while (selected.size() < n) {
+        selected.add(random.nextInt(rows))
+      }
+      return subset(selected.toList())
+    }
     List<Integer> indices = (0..<rows).toList()
     (0..<n).each { int i ->
       int j = i + random.nextInt(rows - i)
@@ -4545,7 +4552,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == 0) {
       throw new IllegalArgumentException("Cannot sample from an empty matrix")
     }
-    int intCount = count as int
+    int intCount = count.compareTo(BigDecimal.valueOf(Integer.MAX_VALUE)) >= 0
+        ? Integer.MAX_VALUE
+        : count as int
     if (intCount <= 0) {
       throw new IllegalArgumentException("Sample size truncates to zero for value: $n")
     }

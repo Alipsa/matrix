@@ -3147,6 +3147,10 @@ class MatrixTest {
         "Expected 'finite' or 'NaN' in: ${nanEx.message}")
     assertThrows(IllegalArgumentException) { m.sample(Double.POSITIVE_INFINITY) }
 
+    // BigDecimal values that wrap via intValue() to a valid-looking positive int must still throw
+    // 2^32 + 2 == 4294967298, intValue() wraps to 2, which is <= rows (3) — must throw, not sample 2 rows
+    assertThrows(IllegalArgumentException) { m.sample(new BigDecimal("4294967298")) }
+
     // empty matrix throws consistent message for both overloads
     def empty = Matrix.builder().data(a: []).types(Integer).build()
     def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }
