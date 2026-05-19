@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
 
+import java.math.RoundingMode
 import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -4377,6 +4378,222 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   GroupedMatrix groupBy(List<String> columnNames) {
     Stat.groupBy(this, columnNames)
+  }
+
+  /**
+   * Return a new Matrix containing the first {@code n} rows.
+   * If {@code n} exceeds the row count, all rows are returned.
+   * Non-integer values are truncated before selecting rows.
+   *
+   * @param n the number of rows to include (default 5), truncated to an integer
+   * @return a new Matrix with at most {@code n} rows
+   * @see #head(int) head — returns a formatted String preview
+   */
+  Matrix top(Number n = 5) {
+    int rows = rowCount()
+    int count = clampedCount(n, rows)
+    if (count <= 0) {
+      return buildEmptyLike()
+    }
+    subset(0..(count - 1))
+  }
+
+  /**
+   * Return a new Matrix containing the last {@code n} rows.
+   * If {@code n} exceeds the row count, all rows are returned.
+   * Non-integer values are truncated before selecting rows.
+   *
+   * @param n the number of rows to include (default 5), truncated to an integer
+   * @return a new Matrix with at most {@code n} rows
+   * @see #tail(int) tail — returns a formatted String preview
+   */
+  Matrix bottom(Number n = 5) {
+    int rows = rowCount()
+    int count = clampedCount(n, rows)
+    if (count <= 0) {
+      return buildEmptyLike()
+    }
+    subset((rows - count)..(rows - 1))
+  }
+
+  private static void requireFiniteNumber(Number n, String label) {
+    if (n instanceof Double) {
+      double d = (double) n
+      if (Double.isNaN(d) || Double.isInfinite(d)) {
+        throw new IllegalArgumentException("$label must be finite: was $n")
+      }
+    } else if (n instanceof Float) {
+      float f = (float) n
+      if (Float.isNaN(f) || Float.isInfinite(f)) {
+        throw new IllegalArgumentException("$label must be finite: was $n")
+      }
+    }
+  }
+
+  private int clampedCount(Number n, int rows) {
+    if (n == null) {
+      throw new IllegalArgumentException("n must not be null")
+    }
+    requireFiniteNumber(n, "n")
+    if (n < 0) {
+      throw new IllegalArgumentException("n must be non-negative: was $n")
+    }
+    BigDecimal bd = n instanceof BigDecimal ? (BigDecimal) n : new BigDecimal(n.toString())
+    long longN = bd.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) >= 0 ? Long.MAX_VALUE : bd.longValue()
+    [longN, (long) rows].min() as int
+  }
+
+  private Matrix buildEmptyLike() {
+    Matrix empty = builder()
+        .matrixName(mName)
+        .columnNames(columnNames())
+        .types(types())
+        .build()
+    copyIndexTo(empty)
+    empty
+  }
+
+  /**
+   * Return a metadata Matrix describing each column: name, type, non-null count,
+   * null count, and count of distinct non-null values.
+   *
+   * <p>The returned Matrix has columns: {@code column} (String), {@code type} (String),
+   * {@code nonNullCount} (Integer), {@code nullCount} (Integer), {@code unique} (Integer).
+   *
+   * @return a Matrix named {@code <matrixName>.info} or {@code info}, with one row per column containing metadata
+   */
+  Matrix info() {
+    List<String> colNames = []
+    List<String> colTypes = []
+    List<Integer> nonNullCounts = []
+    List<Integer> nullCounts = []
+    List<Integer> uniqueCounts = []
+
+    List<Class> columnTypes = types()
+    columnNames().eachWithIndex { name, i ->
+      Column col = column(i)
+      colNames << name
+      colTypes << (columnTypes[i]?.simpleName ?: 'Object')
+      Map<Object, Integer> groups = col.countBy { it } as Map<Object, Integer>
+      boolean hasNull = groups.containsKey(null)
+      int nullCount = hasNull ? groups.get(null) : 0
+      nonNullCounts << (col.size() - nullCount)
+      nullCounts << nullCount
+      uniqueCounts << (groups.size() - (hasNull ? 1 : 0))
+    }
+
+    String infoName = mName ? "${mName}.info" : 'info'
+    builder(infoName)
+        .data(
+            column: colNames as List<Object>,
+            type: colTypes as List<Object>,
+            nonNullCount: nonNullCounts as List<Object>,
+            nullCount: nullCounts as List<Object>,
+            unique: uniqueCounts as List<Object>
+        )
+        .types([String, String, Integer, Integer, Integer])
+        .build()
+  }
+
+  /**
+   * Return a random sample of {@code n} rows without replacement.
+   *
+   * @param n the number of rows to sample
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with {@code n} randomly selected rows
+   * @throws IllegalArgumentException if n &lt;= 0, the matrix is empty, or n &gt; rowCount()
+   */
+  Matrix sample(int n, Random random = new Random()) {
+    if (n <= 0) {
+      throw new IllegalArgumentException("Sample size must be positive: was $n")
+    }
+    int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
+    if (n > rows) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
+    }
+    if (n < rows / 2) {
+      Set<Integer> selected = new LinkedHashSet<>(n)
+      while (selected.size() < n) {
+        selected.add(random.nextInt(rows))
+      }
+      return subset(selected.toList())
+    }
+    List<Integer> indices = (0..<rows).toList()
+    (0..<n).each { int i ->
+      int j = i + random.nextInt(rows - i)
+      int swap = indices[i]
+      indices[i] = indices[j]
+      indices[j] = swap
+    }
+    subset(indices.subList(0, n))
+  }
+
+  /**
+   * Return a random sample of {@code n} rows without replacement.
+   *
+   * @param n the number of rows to sample, truncated to an integer
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with {@code n} randomly selected rows
+   * @throws IllegalArgumentException if n &lt;= 0, the matrix is empty, or n &gt; rowCount()
+   */
+  Matrix sample(Number n, Random random = new Random()) {
+    if (n == null) {
+      throw new IllegalArgumentException("Sample size must not be null")
+    }
+    requireFiniteNumber(n, "Sample size")
+    BigDecimal count = n instanceof BigDecimal ? (BigDecimal) n : new BigDecimal(n.toString())
+    if (count <= 0) {
+      throw new IllegalArgumentException("Sample size must be positive: was $n")
+    }
+    int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
+    int intCount = count.compareTo(BigDecimal.valueOf(Integer.MAX_VALUE)) >= 0
+        ? Integer.MAX_VALUE
+        : count as int
+    if (intCount <= 0) {
+      throw new IllegalArgumentException("Sample size truncates to zero for value: $n")
+    }
+    if (intCount > rows) {
+      throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
+    }
+    sample(intCount, random)
+  }
+
+  /**
+   * Return a random sample of rows as a fraction of the total row count, without replacement.
+   *
+   * <p>The computed row count is {@code round(fraction * rowCount())}, with a minimum floor of 1,
+   * so very small fractions (e.g. 0.001 on a 10-row matrix) always return at least one row.
+   *
+   * @param fraction the fraction of rows to sample (0 &lt; fraction &lt;= 1.0)
+   * @param random the random number generator to use (default new Random())
+   * @return a new Matrix with the sampled rows; the row count is {@code round(fraction * rowCount())}, minimum 1
+   * @throws IllegalArgumentException if fraction &lt;= 0 or fraction &gt; 1.0
+   */
+  Matrix sampleFraction(Number fraction, Random random = new Random()) {
+    if (fraction == null) {
+      throw new IllegalArgumentException("Fraction must not be null")
+    }
+    requireFiniteNumber(fraction, "Fraction")
+    BigDecimal f = fraction instanceof BigDecimal ? (BigDecimal) fraction : new BigDecimal(fraction.toString())
+    if (f <= 0) {
+      throw new IllegalArgumentException("Fraction must be positive: was $fraction")
+    }
+    if (f > 1) {
+      throw new IllegalArgumentException("Fraction must not exceed 1.0: was $fraction")
+    }
+    int rows = rowCount()
+    if (rows == 0) {
+      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+    }
+    int rounded = (f * rows).setScale(0, RoundingMode.HALF_UP) as int
+    int n = rounded < 1 ? 1 : rounded
+    sample(n, random)
   }
 
 }

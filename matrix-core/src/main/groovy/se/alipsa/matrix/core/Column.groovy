@@ -244,6 +244,24 @@ class Column extends ArrayList {
     transform.call(this)
   }
 
+  /**
+   * Returns true if this column contains at least one null value.
+   *
+   * @return true if any element is null
+   */
+  boolean hasNulls() {
+    contains(null)
+  }
+
+  /**
+   * Returns the number of null values in this column.
+   *
+   * @return the count of null elements
+   */
+  int countNulls() {
+    Collections.frequency(this, null)
+  }
+
   List removeNulls() {
     this.findAll { it != null } as Column
   }

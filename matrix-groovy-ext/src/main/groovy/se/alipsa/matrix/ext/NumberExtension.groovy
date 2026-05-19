@@ -16,7 +16,7 @@ import java.math.RoundingMode
  * <h3>Available Operations</h3>
  * <ul>
  *   <li><b>Rounding:</b> floor(), ceil() - Round to integer values as BigDecimal</li>
- *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log(base) - Custom-base logarithm, log10() - Base-10 logarithm</li>
+ *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log(base) - Custom-base logarithm, log10() - Base-10 logarithm, log1p() - Natural logarithm of (1 + x)</li>
  *   <li><b>Exponential:</b> exp() - Natural exponential function (e^x)</li>
  *   <li><b>Square Root:</b> sqrt() - Square root with default DECIMAL64 precision</li>
  *   <li><b>Trigonometry:</b> sin(), cos(), tan() - Trigonometric functions for angles in radians</li>
@@ -83,6 +83,9 @@ class NumberExtension {
   private static final BigDecimal LN2 = 0.69314718055994530941723212145818
   /** Natural logarithm of 10 to 32 significant digits */
   private static final BigDecimal LN10 = 2.30258509299404568401799145468436
+  /** Threshold for terminating the {@code log1p} Taylor series; conservatively below DECIMAL64 precision for |x| < 1e-10. */
+  private static final BigDecimal LOG1P_THRESHOLD = 1e-34
+  private static final int LOG1P_MAX_ITERATIONS = 40
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -261,6 +264,79 @@ class NumberExtension {
    */
   static BigDecimal log(Number self, Number base) {
     log(self as BigDecimal, base)
+  }
+
+  /**
+   * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
+   *
+   * <p>For values where {@code abs &lt; 1e-10} (strictly less than), this method uses the Taylor series to avoid
+   * catastrophic cancellation. The series terminates when a term's magnitude drops below 1e-34, so the omitted
+   * term is smaller than that threshold before DECIMAL64 rounding.
+   * For {@code abs &gt;= 1e-10} it computes {@code log(self + 1)} using the BigDecimal series.
+   * Both paths return values rounded to {@link MathContext#DECIMAL64}.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal zero = 0.0
+   * zero.log1p()  // → 0.0
+   *
+   * BigDecimal eMinusOne = NumberExtension.E - 1
+   * eMinusOne.log1p()  // → 1.0
+   * }</pre>
+   *
+   * @param self the BigDecimal value (must be greater than -1)
+   * @return a BigDecimal representing ln(1 + self), rounded to DECIMAL64 precision
+   * @throws IllegalArgumentException if self &lt;= -1 (ln(1+x) requires x &gt; -1)
+   */
+  static BigDecimal log1p(BigDecimal self) {
+    if (self <= -1) {
+      throw new IllegalArgumentException("log1p is undefined for values <= -1 (ln(1+x) requires x > -1): ${self}")
+    }
+    if (self.abs() < 1e-10) {
+      log1pSmall(self).round(MathContext.DECIMAL64)
+    } else {
+      log(self + 1)
+    }
+  }
+
+  /* Computes ln(1+x) for very small x using the Taylor series x - x^2/2 + x^3/3 - ...
+   * For |x| < 1e-10 the series converges in ≤4 iterations (term 4 ≈ x^4/4 ≈ 2.5e-41 < LOG1P_THRESHOLD);
+   * the 40-iteration cap is a safety net that is effectively unreachable at this threshold. */
+  private static BigDecimal log1pSmall(BigDecimal value) {
+    MathContext mc = MathContext.DECIMAL128
+    BigDecimal term = value
+    BigDecimal result = value
+    int n = 2
+    boolean subtractTerm = true  // first loop term (n=2) subtracts its step from result
+    while (n <= LOG1P_MAX_ITERATIONS + 1) {
+      term = term.multiply(value, mc)
+      BigDecimal step = term.divide(BigDecimal.valueOf(n), mc)
+      if (step.abs() < LOG1P_THRESHOLD) {
+        // Remaining terms form a geometric series with ratio |value| < 1e-10;
+        // their sum is bounded by step / (1 - |value|) ≈ step < LOG1P_THRESHOLD.
+        // The current term is omitted because it is already inside that bound.
+        break
+      }
+      result = subtractTerm ? result.subtract(step, mc) : result.add(step, mc)
+      subtractTerm = !subtractTerm
+      n++
+    }
+    // Safety net for future threshold changes that no longer guarantee early termination.
+    if (n > LOG1P_MAX_ITERATIONS + 1) {
+      throw new IllegalStateException("log1pSmall did not converge within $LOG1P_MAX_ITERATIONS iterations for input: $value")
+    }
+    result
+  }
+
+  /**
+   * Returns the natural logarithm of (1 + x), i.e. ln(1 + self).
+   *
+   * @param self the Number value (must be greater than -1)
+   * @return a BigDecimal representing ln(1 + self)
+   * @see #log1p(BigDecimal)
+   */
+  static BigDecimal log1p(Number self) {
+    log1p(self as BigDecimal)
   }
 
   /**

@@ -2836,4 +2836,348 @@ class MatrixTest {
     assertEquals(3, result)
     assertTrue(result instanceof Integer)
   }
+
+  @Test
+  void testTop() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .types(Integer)
+        .build()
+
+    // default 5
+    def top = m.top()
+    assertEquals(5, top.rowCount())
+    assertEquals([1, 2, 3, 4, 5], top['a'] as List)
+
+    // custom count
+    top = m.top(3)
+    assertEquals(3, top.rowCount())
+    assertEquals([1, 2, 3], top['a'] as List)
+
+    // fractional values are truncated
+    top = m.top(2.7)
+    assertEquals(2, top.rowCount())
+    assertEquals([1, 2], top['a'] as List)
+
+    // sub-unit fractional values truncate to zero
+    top = m.top(0.9)
+    assertEquals(0, top.rowCount())
+
+    // exceeds row count — returns all
+    top = m.top(20)
+    assertEquals(10, top.rowCount())
+
+    // zero returns empty
+    top = m.top(0)
+    assertEquals(0, top.rowCount())
+
+    // negative throws
+    assertThrows(IllegalArgumentException) { m.top(-1) }
+
+    // null throws
+    assertThrows(IllegalArgumentException) { m.top(null) }
+
+    // n > 0 on empty matrix returns empty (clampedCount clamps to 0 rows)
+    def emptyM = Matrix.builder().data(a: []).types(Integer).build()
+    assertEquals(0, emptyM.top(3).rowCount())
+
+    // n just above Long.MAX_VALUE wraps to Long.MIN_VALUE as long, which must clamp to row count
+    def justAboveLongMax = new BigDecimal("9223372036854775808") // Long.MAX_VALUE + 1
+    assertEquals(10, m.top(justAboveLongMax).rowCount())
+  }
+
+  @Test
+  void testTopZeroPreservesMatrixNameAndIndex() {
+    def m = Matrix.builder('sample')
+        .data(id: [1, 2, 3], value: ['a', 'b', 'c'])
+        .types(Integer, String)
+        .build()
+        .createIndex('id')
+
+    def top = m.top(0)
+    assertEquals('sample', top.matrixName)
+    assertEquals([Integer, String], top.types())
+    assertEquals(['id'], top.indexedColumns())
+    assertTrue(top.hasIndex())
+    assertEquals(0, top.lookup(1).rowCount())
+
+    def nonEmptyTop = m.top(2)
+    assertEquals('sample', nonEmptyTop.matrixName)
+    assertEquals([Integer, String], nonEmptyTop.types())
+    assertEquals(['id'], nonEmptyTop.indexedColumns())
+    assertTrue(nonEmptyTop.hasIndex())
+    assertEquals([1, 2], nonEmptyTop['id'] as List)
+    assertEquals(['a'], nonEmptyTop.lookup(1)['value'] as List)
+  }
+
+  @Test
+  void testBottom() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        .types(Integer)
+        .build()
+
+    // default 5
+    def bottom = m.bottom()
+    assertEquals(5, bottom.rowCount())
+    assertEquals([6, 7, 8, 9, 10], bottom['a'] as List)
+
+    // custom count
+    bottom = m.bottom(3)
+    assertEquals(3, bottom.rowCount())
+    assertEquals([8, 9, 10], bottom['a'] as List)
+
+    // fractional values are truncated
+    bottom = m.bottom(1.1)
+    assertEquals(1, bottom.rowCount())
+    assertEquals([10], bottom['a'] as List)
+
+    // sub-unit fractional values truncate to zero
+    bottom = m.bottom(0.5)
+    assertEquals(0, bottom.rowCount())
+
+    // exceeds row count — returns all
+    bottom = m.bottom(20)
+    assertEquals(10, bottom.rowCount())
+
+    // zero returns empty
+    bottom = m.bottom(0)
+    assertEquals(0, bottom.rowCount())
+
+    // negative throws
+    assertThrows(IllegalArgumentException) { m.bottom(-1) }
+
+    // null throws
+    assertThrows(IllegalArgumentException) { m.bottom(null) }
+
+    // n > 0 on empty matrix returns empty (clampedCount clamps to 0 rows)
+    def emptyM = Matrix.builder().data(a: []).types(Integer).build()
+    assertEquals(0, emptyM.bottom(3).rowCount())
+  }
+
+  @Test
+  void testBottomZeroPreservesMatrixNameAndIndex() {
+    def m = Matrix.builder('sample')
+        .data(id: [1, 2, 3], value: ['a', 'b', 'c'])
+        .types(Integer, String)
+        .build()
+        .createIndex('id')
+
+    def bottom = m.bottom(0)
+    assertEquals('sample', bottom.matrixName)
+    assertEquals([Integer, String], bottom.types())
+    assertEquals(['id'], bottom.indexedColumns())
+    assertTrue(bottom.hasIndex())
+    assertEquals(0, bottom.lookup(1).rowCount())
+
+    def nonEmptyBottom = m.bottom(2)
+    assertEquals('sample', nonEmptyBottom.matrixName)
+    assertEquals([Integer, String], nonEmptyBottom.types())
+    assertEquals(['id'], nonEmptyBottom.indexedColumns())
+    assertTrue(nonEmptyBottom.hasIndex())
+    assertEquals([2, 3], nonEmptyBottom['id'] as List)
+    assertEquals(['c'], nonEmptyBottom.lookup(3)['value'] as List)
+  }
+
+  @Test
+  void testHeadStillReturnsString() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+    def result = m.head(2)
+    assertTrue(result instanceof String)
+  }
+
+  @Test
+  void testTailStillReturnsString() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+    def result = m.tail(2)
+    assertTrue(result instanceof String)
+  }
+
+  @Test
+  void testInfo() {
+    def m = Matrix.builder('people')
+        .data(
+            name: ['Alice', 'Bob', null, 'Alice'],
+            age: [30, null, 25, 30],
+            score: [95.0, 87.5, null, 95.0],
+            allNull: [null, null, null, null],
+            code: ['a', 'b', 'c', 'd']
+        )
+        .types([String, Integer, BigDecimal, String, String])
+        .build()
+
+    def info = m.info()
+    assertEquals('people.info', info.matrixName)
+    assertEquals(5, info.rowCount())
+    assertEquals(['name', 'age', 'score', 'allNull', 'code'], info['column'] as List)
+    assertEquals(['String', 'Integer', 'BigDecimal', 'String', 'String'], info['type'] as List)
+    assertEquals([3, 3, 3, 0, 4], info['nonNullCount'] as List)
+    assertEquals([1, 1, 1, 4, 0], info['nullCount'] as List)
+    assertEquals([2, 2, 2, 0, 4], info['unique'] as List)
+  }
+
+  @Test
+  void testSampleInt() {
+    def m = Matrix.builder('sample')
+        .data(a: (1..20) as List)
+        .types(Integer)
+        .build()
+
+    def sampled = m.sample(5, new Random(42))
+    assertEquals('sample', sampled.matrixName)
+    assertEquals([Integer], sampled.types())
+    assertEquals(5, sampled.rowCount())
+    // all sampled values should exist in the original
+    sampled['a'].each { assert it in (1..20) }
+    // no duplicates (without replacement)
+    assertEquals(5, (sampled['a'] as Set).size())
+    // same seed produces identical results (no global-state mutation in the shuffle)
+    assertEquals(m.sample(5, new Random(99))['a'], m.sample(5, new Random(99))['a'])
+  }
+
+  @Test
+  void testSampleFraction() {
+    def m = Matrix.builder('sample')
+        .data(a: (1..20) as List)
+        .types(Integer)
+        .build()
+
+    def sampled = m.sampleFraction(0.25, new Random(42))
+    assertEquals('sample', sampled.matrixName)
+    assertEquals([Integer], sampled.types())
+    assertEquals(5, sampled.rowCount()) // 0.25 * 20 = 5.0 → 5 rows
+    sampled['a'].each { assert it in (1..20) }
+    assertEquals(5, (sampled['a'] as Set).size())
+
+    def m10 = Matrix.builder()
+        .data(a: (1..10) as List)
+        .types(Integer)
+        .build()
+    def sampled10 = m10.sampleFraction(0.3, new Random(42))
+    assertEquals(3, sampled10.rowCount())
+
+    def sampledMinimum = m10.sampleFraction(0.01, new Random(42))
+    assertEquals(1, sampledMinimum.rowCount())
+
+    def sampledAll = m10.sampleFraction(1.0, new Random(42))
+    assertEquals(10, sampledAll.rowCount())
+  }
+
+  @Test
+  void testInfoDefaultName() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertEquals('info', m.info().matrixName)
+  }
+
+  @Test
+  void testInfoOnEmptyMatrix() {
+    def m = Matrix.builder()
+        .data(a: [], b: [])
+        .types(Integer, String)
+        .build()
+
+    def info = m.info()
+    assertEquals(2, info.rowCount())
+    assertEquals(['a', 'b'], info['column'] as List)
+    assertEquals([0, 0], info['nonNullCount'] as List)
+    assertEquals([0, 0], info['nullCount'] as List)
+    assertEquals([0, 0], info['unique'] as List)
+  }
+
+  @Test
+  void testInfoUsesObjectForNullColumnType() {
+    def m = Matrix.builder('untyped')
+        .data(a: [1, 2, 3])
+        .types([null])
+        .build()
+
+    def info = m.info()
+    assertEquals(['Object'], info['type'] as List)
+  }
+
+  @Test
+  void testSampleValidation() {
+    def m = Matrix.builder()
+        .data(a: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertThrows(IllegalArgumentException) { m.sample(0) }
+    assertThrows(IllegalArgumentException) { m.sample(-1) }
+    assertThrows(IllegalArgumentException) { m.sample(4) }
+    assertThrows(IllegalArgumentException) { m.sample(0.0) }
+    assertThrows(IllegalArgumentException) { m.sample(4L) }
+    def fracZeroEx = assertThrows(IllegalArgumentException) { m.sampleFraction(0.0) }
+    assertTrue(fracZeroEx.message.contains('positive'), "Expected 'positive' in: ${fracZeroEx.message}")
+    def fracOverEx = assertThrows(IllegalArgumentException) { m.sampleFraction(1.1) }
+    assertTrue(fracOverEx.message.contains('exceed') || fracOverEx.message.contains('1.0'), "Expected 'exceed' or '1.0' in: ${fracOverEx.message}")
+    // int boundary: n == rowCount() is valid
+    assertEquals(3, m.sample(3, new Random(42)).rowCount())
+    // non-int numeric values use row-count semantics
+    assertEquals(1, m.sample(1.0, new Random(42)).rowCount())
+    assertEquals(1, m.sample(1L, new Random(42)).rowCount())
+    // Integer dispatches to sample(int) via unboxing preference — samples 1 row, not all rows
+    assertEquals(1, m.sample(1 as Integer, new Random(42)).rowCount())
+    // Number variables keep row-count semantics
+    Number nAsNumber = 1L
+    assertEquals(1, m.sample(nAsNumber, new Random(42)).rowCount())
+
+    // sub-unit fractions truncate to 0 and must report the original value, not 0
+    def truncEx = assertThrows(IllegalArgumentException) { m.sample(0.5) }
+    assertTrue(truncEx.message.contains('0.5'), "Expected '0.5' in: ${truncEx.message}")
+    def truncEx2 = assertThrows(IllegalArgumentException) { m.sample(0.9) }
+    assertTrue(truncEx2.message.contains('0.9'), "Expected '0.9' in: ${truncEx2.message}")
+
+    // 3.5 on a 3-row matrix must truncate to 3 and succeed (consistent with top()/bottom())
+    assertEquals(3, m.sample(3.5, new Random(42)).rowCount())
+
+    // NaN and Infinity must throw IllegalArgumentException, not NumberFormatException
+    def nanEx = assertThrows(IllegalArgumentException) { m.sample(Double.NaN) }
+    assertTrue(nanEx.message.toLowerCase().contains('finite') || nanEx.message.contains('NaN'),
+        "Expected 'finite' or 'NaN' in: ${nanEx.message}")
+    assertThrows(IllegalArgumentException) { m.sample(Double.POSITIVE_INFINITY) }
+
+    // BigDecimal values that wrap via intValue() to a valid-looking positive int must still throw
+    // 2^32 + 2 == 4294967298, intValue() wraps to 2, which is <= rows (3) — must throw, not sample 2 rows
+    assertThrows(IllegalArgumentException) { m.sample(new BigDecimal("4294967298")) }
+
+    // empty matrix throws consistent message for both overloads
+    def empty = Matrix.builder().data(a: []).types(Integer).build()
+    def emptyIntEx = assertThrows(IllegalArgumentException) { empty.sample(1) }
+    assertTrue(emptyIntEx.message.contains('Cannot sample from an empty matrix'))
+    def emptyFracEx = assertThrows(IllegalArgumentException) { empty.sampleFraction(0.5) }
+    assertTrue(emptyFracEx.message.contains('Cannot sample from an empty matrix'))
+  }
+
+  @Test
+  void testSamplePreservesColumnAlignment() {
+    def m = Matrix.builder()
+        .data(id: [1, 2, 3, 4, 5], name: ['a', 'b', 'c', 'd', 'e'], score: [10, 20, 30, 40, 50])
+        .types(Integer, String, Integer)
+        .build()
+
+    def sampled = m.sample(3, new Random(42))
+    assertEquals(3, sampled.rowCount())
+    assertEquals(3, sampled.columnCount())
+    // verify row alignment: score == id * 10 for every sampled row
+    sampled.each { row ->
+      assertEquals(row['id'] * 10, row['score'])
+    }
+
+    def fracSampled = m.sampleFraction(0.4, new Random(42))
+    assertEquals(2, fracSampled.rowCount())
+    fracSampled.each { row ->
+      assertEquals(row['id'] * 10, row['score'])
+    }
+  }
 }

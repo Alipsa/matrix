@@ -744,6 +744,51 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testLog1p() {
+    // log1p(0) = ln(1) = 0
+    assertEquals(0.0, (0.0).log1p().doubleValue(), 1e-10)
+
+    // log1p(e - 1) = ln(e) = 1
+    BigDecimal eMinusOne = NumberExtension.E - 1
+    assertEquals(1.0, eMinusOne.log1p().doubleValue(), 1e-10)
+
+    // log1p(-1) throws
+    def exception = assertThrows(IllegalArgumentException) {
+      (-1.0).log1p()
+    }
+    assertTrue(exception.message.contains('log1p is undefined'))
+
+    // log1p(-2) throws
+    exception = assertThrows(IllegalArgumentException) {
+      (-2.0).log1p()
+    }
+    assertTrue(exception.message.contains('log1p is undefined'))
+
+    // Small value - exercises the BigDecimal series for precision near zero
+    BigDecimal tiny = 1e-15
+    double expected = Math.log1p(1e-15)
+    assertEquals(expected, tiny.log1p().doubleValue(), 1e-15)
+
+    // Values too small for double must not underflow to zero
+    BigDecimal underDoubleMin = 1e-400
+    assertEquals(0, underDoubleMin.compareTo(underDoubleMin.log1p()))
+
+    BigDecimal negativeUnderDoubleMin = -1e-400
+    assertEquals(0, negativeUnderDoubleMin.compareTo(negativeUnderDoubleMin.log1p()))
+
+    // Boundary at |x| == 1e-10: routes to log(self+1), not the Taylor series.
+    // Tolerance 1e-20 is absolute (result ≈ ±1e-10, so this is ~1e-10 relative — well within double precision).
+    BigDecimal boundary = 1e-10
+    assertEquals(Math.log1p(1e-10), boundary.log1p().doubleValue(), 1e-20)
+    BigDecimal negBoundary = -1e-10
+    assertEquals(Math.log1p(-1e-10), negBoundary.log1p().doubleValue(), 1e-20)
+
+    // Number overload
+    assertEquals(0.0, NumberExtension.log1p(0).doubleValue(), 1e-10)
+    assertEquals(1.0, NumberExtension.log1p(NumberExtension.E - 1).doubleValue(), 1e-10)
+  }
+
+  @Test
   void testAsin() {
     // Test asin(0) = 0
     assertEquals(0.0, (0.0).asin().doubleValue(), 1e-10)
