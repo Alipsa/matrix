@@ -17,7 +17,9 @@ import java.math.RoundingMode
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'
-  private static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  // Internal: shared by SmileRegression and SmileClassifier for consistent error messages
+  static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  static final String DROPNA_HINT_TRAINING = 'Use SmileFeatures.dropna() or fillna() before training.'
   private static final int ROUND_DECIMALS = 4
   private static final double PERCENT = 100.0
 

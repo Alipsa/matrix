@@ -20,7 +20,6 @@ import se.alipsa.matrix.smile.SmileUtil
 class SmileClassifier {
 
   private static final String NULL_LABEL = '<null>'
-  private static final String DROPNA_HINT_TRAINING = 'Use SmileFeatures.dropna() or fillna() before training.'
 
   private final DataFrameClassifier model
   private final Formula formula
@@ -304,7 +303,7 @@ class SmileClassifier {
     if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
       throw new IllegalArgumentException(
           "Target column '${targetColumn}' contains null labels. " +
-          DROPNA_HINT_TRAINING)
+          SmileUtil.DROPNA_HINT_TRAINING)
     }
   }
 
