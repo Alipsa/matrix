@@ -201,7 +201,7 @@ class SmileFeatures {
    */
   static Matrix logTransform(Matrix matrix, List<String> columns) {
     transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? Math.log1p(v) : null }
+      values.collect { v -> v != null ? v.log1p() as double : null }
     }
   }
 
@@ -225,7 +225,7 @@ class SmileFeatures {
    */
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
     transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? v.sqrt() : null }
+      values.collect { v -> v != null ? v.sqrt() as double : null }
     }
   }
 

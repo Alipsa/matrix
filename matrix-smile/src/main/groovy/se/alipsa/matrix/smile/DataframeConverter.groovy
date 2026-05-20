@@ -70,7 +70,7 @@ class DataframeConverter {
       List<Object> columnData = matrix.column(j)
 
       // Check if column contains nulls - use optimized primitive arrays when no nulls
-      boolean hasNulls = containsNull(columnData)
+      boolean hasNulls = SmileUtil.hasNulls(columnData)
 
       // Create the appropriate Smile ValueVector based on the type
       // Use of() variants (primitive arrays) when no nulls for better performance
@@ -159,7 +159,7 @@ class DataframeConverter {
         case Enum -> columns.add(ValueVector.nominal(colName, columnData as Enum[]))
         default -> {
           // Handle other types or default to StringVector
-          log.warn("Warning: Unhandled data type ${dataType.getSimpleName()} for column ${colName}. Defaulting to StringVector.")
+          log.warn("Unhandled data type ${dataType.getSimpleName()} for column ${colName}; defaulting to String")
           List<String> values = ListConverter.convert(columnData, String)
           columns.add(ValueVector.of(colName, values as String[]))
         }
@@ -171,24 +171,12 @@ class DataframeConverter {
   }
 
   /**
-   * Check if a list contains any null values.
-   */
-  private static boolean containsNull(List<?> list) {
-    for (Object item : list) {
-      if (item == null) {
-        return true
-      }
-    }
-    false
-  }
-
-  /**
    * Convert List to primitive float array.
    */
   private static float[] toPrimitiveFloatArray(List<?> list) {
     float[] result = new float[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).floatValue()
+      result[i] = list.get(i) as float
     }
     result
   }
@@ -210,7 +198,7 @@ class DataframeConverter {
   private static int[] toPrimitiveIntArray(List<?> list) {
     int[] result = new int[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).intValue()
+      result[i] = list.get(i) as int
     }
     result
   }
@@ -221,7 +209,7 @@ class DataframeConverter {
   private static long[] toPrimitiveLongArray(List<?> list) {
     long[] result = new long[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).longValue()
+      result[i] = list.get(i) as long
     }
     result
   }
@@ -232,7 +220,7 @@ class DataframeConverter {
   private static short[] toPrimitiveShortArray(List<?> list) {
     short[] result = new short[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).shortValue()
+      result[i] = list.get(i) as short
     }
     result
   }
@@ -243,7 +231,7 @@ class DataframeConverter {
   private static byte[] toPrimitiveByteArray(List<?> list) {
     byte[] result = new byte[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).byteValue()
+      result[i] = list.get(i) as byte
     }
     result
   }
@@ -286,7 +274,7 @@ class DataframeConverter {
       case DateType -> LocalDate
       case TimeType -> LocalTime
       default -> {
-        log.warn("Warning: Unhandled Smile DataType ${dataType}. Defaulting to Object.class")
+        log.warn("Unhandled Smile DataType ${dataType}; defaulting to Object")
         Object.class
       }
     }
