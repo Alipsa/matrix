@@ -154,15 +154,15 @@ Matrix stats = Gsmile.smileDescribe(iris)
 // Random sample
 Matrix sample = Gsmile.smileSample(iris, 50)
 
-// Head and tail (returns Matrix)
+// Head and tail — convenience aliases that delegate to Matrix.top()/bottom()
 Matrix first5 = Gsmile.smileHead(iris)       // default 5 rows
 Matrix last3 = Gsmile.smileTail(iris, 3)
 
-// Column metadata
+// Column metadata — delegates to Matrix.info()
 Matrix info = Gsmile.smileInfo(iris)
 println info.content()
 
-// Frequency table
+// Frequency table — delegates to Stat.frequency()
 Matrix freq = Gsmile.smileFrequency(iris, 'Species')
 println freq.content()
 ```

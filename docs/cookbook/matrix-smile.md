@@ -22,6 +22,8 @@ Matrix back = SmileUtil.toMatrix(df)
 
 ## Exploratory Data Analysis
 
+> **Note:** Except for `SmileUtil.describe()`, the methods in this section are provided by matrix-core and work without the matrix-smile dependency.
+
 ### Statistical summary
 
 ```groovy

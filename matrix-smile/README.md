@@ -207,6 +207,8 @@ import se.alipsa.matrix.smile.Gsmile
 // Matrix extensions
 DataFrame df = Gsmile.toSmileDataFrame(matrix)
 Matrix stats = Gsmile.smileDescribe(matrix)
+// The following are convenience aliases that delegate to the matrix-core methods
+// (Matrix.top, Matrix.bottom, Matrix.info, Stat.frequency, Matrix.sample)
 Matrix head = Gsmile.smileHead(matrix, 3)
 Matrix tail = Gsmile.smileTail(matrix, 3)
 Matrix info = Gsmile.smileInfo(matrix)
