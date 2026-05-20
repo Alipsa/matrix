@@ -264,6 +264,38 @@ def highPlaces = table.filter { it.place > 1 }
 assert table.rows(1..2) == highPlaces.grid().rowList
 ```
 
+### Data Exploration
+
+Matrix provides methods for quick data exploration that return new Matrix objects (as opposed to `head(int)`/`tail(int)` which return formatted strings):
+
+```groovy
+// First and last rows as Matrix
+Matrix first5 = table.top()        // default 5 rows
+Matrix first10 = table.top(10)
+Matrix last3 = table.bottom(3)
+
+// Column metadata: name, type, non-null count, null count, unique count
+Matrix info = table.info()
+println info.content()
+
+// Random sampling without replacement
+Matrix sample = table.sample(3)                    // 3 random rows
+Matrix frac = table.sampleFraction(0.2)            // 20% of rows
+Matrix reproducible = table.sample(3, new Random(42))  // seeded for reproducibility
+```
+
+### Column Null Checks
+
+The `Column` class provides methods for checking null values:
+
+```groovy
+// Check if a column contains any null values
+boolean hasNulls = table['age'].hasNulls()
+
+// Count null values
+int nullCount = table['age'].countNulls()
+```
+
 ## Performing Calculations
 
 ### Using the Apply Method

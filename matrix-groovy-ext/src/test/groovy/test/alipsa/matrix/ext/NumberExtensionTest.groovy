@@ -771,10 +771,10 @@ class NumberExtensionTest {
 
     // Values too small for double must not underflow to zero
     BigDecimal underDoubleMin = 1e-400
-    assertEquals(0, underDoubleMin.compareTo(underDoubleMin.log1p()))
+    assertEquals(0, underDoubleMin <=> underDoubleMin.log1p())
 
     BigDecimal negativeUnderDoubleMin = -1e-400
-    assertEquals(0, negativeUnderDoubleMin.compareTo(negativeUnderDoubleMin.log1p()))
+    assertEquals(0, negativeUnderDoubleMin <=> negativeUnderDoubleMin.log1p())
 
     // Boundary at |x| == 1e-10: routes to log(self+1), not the Taylor series.
     // Tolerance 1e-20 is absolute (result ≈ ±1e-10, so this is ~1e-10 relative — well within double precision).

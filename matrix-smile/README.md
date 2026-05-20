@@ -174,6 +174,67 @@ boolean hasNulls = SmileUtil.hasNulls(matrix.column('age'))
 int nullCount = SmileUtil.countNulls(matrix.column('age'))
 ```
 
+### Feature Engineering with SmileFeatures
+
+```groovy
+import se.alipsa.matrix.smile.data.SmileFeatures
+
+// Standardization and normalization
+Matrix standardized = SmileFeatures.standardize(features)
+Matrix normalized = SmileFeatures.normalize(features)
+
+// Categorical encoding (throws on null values)
+Matrix oneHot = SmileFeatures.oneHotEncode(matrix, 'category')
+Matrix labeled = SmileFeatures.labelEncode(matrix, 'category')
+
+// Stateful encoders: fit on train, apply to test
+def le = SmileFeatures.labelEncoder()
+le.fit(train, 'color')
+Matrix trainEncoded = le.transform(train, 'color')
+Matrix testEncoded = le.transform(test, 'color')
+String original = le.inverse(0)  // reverse lookup
+
+def ohe = SmileFeatures.oneHotEncoder()
+Matrix result = ohe.fitTransform(data, 'color')
+// Columns: color_blue, color_green, color_red
+```
+
+### Groovy Extensions with Gsmile
+
+```groovy
+import se.alipsa.matrix.smile.Gsmile
+
+// Matrix extensions
+DataFrame df = Gsmile.toSmileDataFrame(matrix)
+Matrix stats = Gsmile.smileDescribe(matrix)
+// The following are convenience aliases that delegate to the matrix-core methods
+// (Matrix.top, Matrix.bottom, Matrix.info, Stat.frequency, Matrix.sample)
+Matrix head = Gsmile.smileHead(matrix, 3)
+Matrix tail = Gsmile.smileTail(matrix, 3)
+Matrix info = Gsmile.smileInfo(matrix)
+Matrix freq = Gsmile.smileFrequency(matrix, 'category')
+Matrix sample = Gsmile.smileSample(matrix, 10)
+
+// DataFrame extensions
+Matrix converted = Gsmile.toMatrix(df)
+DataFrame filtered = Gsmile.filter(df) { row -> (row['age'] as Integer) > 30 }
+```
+
+### Statistical Analysis with SmileStats
+
+```groovy
+import se.alipsa.matrix.smile.stats.SmileStats
+
+// Fit distributions from double[], List<Number>, or Matrix column
+def dist = SmileStats.normalFit([1.2, 2.3, 1.8, 2.1, 1.9] as double[])
+def dist2 = SmileStats.normalFit([1.2, null, 1.8, 2.1])  // nulls excluded
+def dist3 = SmileStats.normalFit(matrix, 'values')         // from column
+
+// Hypothesis tests
+def tTest = SmileStats.tTestOneSample(data, 0.0)
+def corr = SmileStats.correlation(x, y, CorrelationMethod.PEARSON)
+```
+
 ## Supported Data Types
 
 The converter supports the following data types:
@@ -215,15 +276,47 @@ The converter supports the following data types:
 |-------------------------------------------|-------------------------------------------|
 | `toMatrix(DataFrame df)`                  | Convert Smile DataFrame to Matrix         |
 | `toDataFrame(Matrix matrix)`              | Convert Matrix to Smile DataFrame         |
-| `describe(Matrix matrix)`                 | Statistical summary of numeric columns    |
-| `info(Matrix matrix)`                     | Column information (type, nulls, uniques) |
-| `frequency(Matrix matrix, String column)` | Frequency table for a column              |
-| `sample(Matrix matrix, int n)`            | Random sample of n rows                   |
-| `sample(Matrix matrix, double fraction)`  | Random sample by fraction                 |
-| `head(Matrix matrix, int n)`              | First n rows (default 5)                  |
-| `tail(Matrix matrix, int n)`              | Last n rows (default 5)                   |
-| `hasNulls(List values)`                   | Check if list contains nulls              |
-| `countNulls(List values)`                 | Count null values in list                 |
+| `describe(Matrix matrix)`                 | Statistical summary of numeric columns              |
+| `info(Matrix matrix)`                     | *(deprecated)* Use `Matrix.info()` instead           |
+| `frequency(Matrix matrix, String column)` | *(deprecated)* Use `Stat.frequency()` instead        |
+| `sample(Matrix matrix, int n)`            | *(deprecated)* Use `Matrix.sample()` instead         |
+| `sample(Matrix matrix, double fraction)`  | *(deprecated)* Use `Matrix.sampleFraction()` instead |
+| `head(Matrix matrix, int n)`              | *(deprecated)* Use `Matrix.top()` instead            |
+| `tail(Matrix matrix, int n)`              | *(deprecated)* Use `Matrix.bottom()` instead         |
+| `hasNulls(List values)`                   | Check if list contains nulls                         |
+| `countNulls(List values)`                 | Count null values in list                            |
+
+### SmileFeatures
+
+| Method / Class | Description |
+|----------------|-------------|
+| `standardize(Matrix, List<String>)` | Z-score standardization (mean=0, std=1) |
+| `normalize(Matrix, List<String>, min, max)` | Min-max normalization |
+| `oneHotEncode(Matrix, String, boolean)` | One-hot encoding (throws on null) |
+| `labelEncode(Matrix, String)` | Label encoding (throws on null) |
+| `standardScaler()` | Create a reusable StandardScaler |
+| `minMaxScaler()` | Create a reusable MinMaxScaler |
+| `labelEncoder()` | Create a stateful LabelEncoder |
+| `oneHotEncoder()` | Create a stateful OneHotEncoder |
+
+### LabelEncoder
+
+| Method | Description |
+|--------|-------------|
+| `fit(Matrix, String)` | Learn label mapping from column |
+| `transform(Matrix, String)` | Apply mapping (throws on null/unseen) |
+| `fitTransform(Matrix, String)` | Fit and transform in one step |
+| `getLabels()` | Ordered list of labels |
+| `inverse(int)` | Reverse lookup: index to label |
+
+### OneHotEncoder
+
+| Method | Description |
+|--------|-------------|
+| `fit(Matrix, String)` | Learn categories from column |
+| `transform(Matrix, String, boolean)` | Produce binary columns (throws on null/unseen) |
+| `fitTransform(Matrix, String, boolean)` | Fit and transform in one step |
+| `getCategories()` | Ordered list of categories |
 
 ## License
 

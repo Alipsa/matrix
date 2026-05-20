@@ -67,12 +67,15 @@ import java.time.LocalDateTime
     'SpaceAfterComma',
     'UnnecessaryElseStatement',
     'SpaceAfterCommentDelimiter',
-    'DuplicateListLiteral'
+    'DuplicateListLiteral',
+    'DuplicateNumberLiteral',
+    'MethodCount'
 ])
 class Matrix implements Iterable<Row>, Cloneable {
   private static final String ANONYMOUS_COLUMN_PREFIX = 'c'
   private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
   private static final String PATH_CANNOT_BE_NULL = 'path cannot be null'
+  private static final String CANNOT_SAMPLE_EMPTY = 'Cannot sample from an empty matrix'
   private static final String ROW_CANNOT_BE_NULL = 'Row cannot be null'
   private static final String COMMA = ','
   private static final String COMMA_SPACE = ', '
@@ -4439,7 +4442,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("n must be non-negative: was $n")
     }
     BigDecimal bd = n instanceof BigDecimal ? (BigDecimal) n : new BigDecimal(n.toString())
-    long longN = bd.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) >= 0 ? Long.MAX_VALUE : bd.longValue()
+    long longN = bd >= BigDecimal.valueOf(Long.MAX_VALUE) ? Long.MAX_VALUE : bd.longValue()
     [longN, (long) rows].min() as int
   }
 
@@ -4509,7 +4512,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     int rows = rowCount()
     if (rows == 0) {
-      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+      throw new IllegalArgumentException(CANNOT_SAMPLE_EMPTY)
     }
     if (n > rows) {
       throw new IllegalArgumentException("Sample size ($n) exceeds row count ($rows)")
@@ -4550,9 +4553,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     int rows = rowCount()
     if (rows == 0) {
-      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+      throw new IllegalArgumentException(CANNOT_SAMPLE_EMPTY)
     }
-    int intCount = count.compareTo(BigDecimal.valueOf(Integer.MAX_VALUE)) >= 0
+    int intCount = count >= BigDecimal.valueOf(Integer.MAX_VALUE)
         ? Integer.MAX_VALUE
         : count as int
     if (intCount <= 0) {
@@ -4589,7 +4592,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     int rows = rowCount()
     if (rows == 0) {
-      throw new IllegalArgumentException("Cannot sample from an empty matrix")
+      throw new IllegalArgumentException(CANNOT_SAMPLE_EMPTY)
     }
     int rounded = (f * rows).setScale(0, RoundingMode.HALF_UP) as int
     int n = rounded < 1 ? 1 : rounded

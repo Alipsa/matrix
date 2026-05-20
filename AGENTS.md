@@ -403,7 +403,8 @@ import static se.alipsa.matrix.gg.GgPlot.*
 ## Architecture
 
 ### matrix-core
-- `Matrix`: Primary tabular data structure with typed columns
+- `Matrix`: Primary tabular data structure with typed columns. Includes `top(n)`/`bottom(n)` (return Matrix slices), `info()` (column metadata Matrix), `sample(n)`/`sampleFraction(fraction)` (random sampling without replacement)
+- `Column`: Typed list with `hasNulls()`, `countNulls()`, rolling/cumulative/shift helpers
 - `Grid`: 2D array-like structure for homogeneous data
 - `Stat`: Basic statistics (sum, mean, median, sd, frequency, groupBy)
 - `ListConverter`: Type conversion utilities
@@ -437,6 +438,18 @@ gg/export/        -> GgExport convenience wrapper for chart export
 
 ### Extension Modules
 Modules like matrix-smile use Groovy extension methods registered via `META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule` to add methods like `matrix.toSmileDataFrame()`.
+
+### matrix-smile
+Integration with the Smile ML library. Key classes:
+- `SmileUtil` — Conversions (`toDataFrame`, `toMatrix`, `describe`). Methods `head`/`tail`/`info`/`frequency`/`sample` are deprecated; use `Matrix.top`/`bottom`/`info`, `Stat.frequency`, `Matrix.sample` instead
+- `Gsmile` — Groovy extensions for Matrix (`toSmileDataFrame`, `smileDescribe`, `smileSample`, `smileHead`, `smileTail`, `smileInfo`, `smileFrequency`) and DataFrame (`toMatrix`, `getAt`, `head`, `tail`, `filter`, `eachRow`, `collectRows`, `rowCount`, `columnCount`, `columnNames`, `structure`)
+- `SmileStats` — Distribution constructors and fitting (`normalFit`, `exponentialFit`, `gammaFit`, `betaFit`, `logNormalFit` with `double[]`, `List<Number>`, and `Matrix+column` overloads), hypothesis tests, correlation with significance
+- `SmileFeatures` — Feature engineering: `standardize`, `normalize`, `oneHotEncode`, `labelEncode`, `logTransform`, `sqrtTransform`, `powerTransform`, `binning`, `fillna`/`fillnaMean`/`fillnaMedian`, `dropna`. Stateful scalers/encoders: `StandardScaler`, `MinMaxScaler`, `LabelEncoder`, `OneHotEncoder` (all follow fit/transform/fitTransform pattern)
+- `SmileClassifier` — Random forest, decision tree, SVM, logistic regression, etc.
+- `SmileRegression` — OLS, ridge, LASSO, elastic net
+- `SmileCluster` — K-means, DBSCAN, hierarchical clustering
+- `SmileDimensionality` — PCA with variance analysis
+- `SmileData` — Train/test split, stratified split, k-fold cross-validation, bootstrap sampling
 
 ## JDK Constraints
 
