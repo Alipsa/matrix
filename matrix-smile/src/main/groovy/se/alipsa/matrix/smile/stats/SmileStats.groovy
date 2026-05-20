@@ -34,6 +34,8 @@ import se.alipsa.matrix.smile.SmileUtil
 @CompileStatic
 class SmileStats {
 
+  private static final int MINIMUM_SAMPLES = 2
+
   // ==================== Probability Distributions ====================
 
   /**
@@ -66,7 +68,7 @@ class SmileStats {
    */
   static GaussianDistribution normalFit(Matrix matrix, String column) {
     double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
-    requireMinimumSamples(compacted, 2, "normalFit on column '$column'")
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "normalFit on column '$column'")
     normalFit(compacted)
   }
 
@@ -296,7 +298,7 @@ class SmileStats {
    */
   static TTest tTestOneSample(Matrix matrix, String column, double mu) {
     double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
-    requireMinimumSamples(compacted, 2, "tTestOneSample on column '$column'")
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "tTestOneSample on column '$column'")
     tTestOneSample(compacted, mu)
   }
 
@@ -323,8 +325,8 @@ class SmileStats {
   static TTest tTestTwoSample(Matrix matrix, String column1, String column2, boolean equalVariance = false) {
     double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
     double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
-    requireMinimumSamples(x, 2, "tTestTwoSample on column '$column1'")
-    requireMinimumSamples(y, 2, "tTestTwoSample on column '$column2'")
+    requireMinimumSamples(x, MINIMUM_SAMPLES, "tTestTwoSample on column '$column1'")
+    requireMinimumSamples(y, MINIMUM_SAMPLES, "tTestTwoSample on column '$column2'")
     tTestTwoSample(x, y, equalVariance)
   }
 
@@ -349,7 +351,7 @@ class SmileStats {
    */
   static TTest tTestPaired(Matrix matrix, String column1, String column2) {
     double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
-    requireMinimumPairs(pair, 2, "tTestPaired on columns '$column1' and '$column2'")
+    requireMinimumPairs(pair, MINIMUM_SAMPLES, "tTestPaired on columns '$column1' and '$column2'")
     tTestPaired(pair[0], pair[1])
   }
 
@@ -375,8 +377,8 @@ class SmileStats {
   static FTest fTest(Matrix matrix, String column1, String column2) {
     double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
     double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
-    requireMinimumSamples(x, 2, "fTest on column '$column1'")
-    requireMinimumSamples(y, 2, "fTest on column '$column2'")
+    requireMinimumSamples(x, MINIMUM_SAMPLES, "fTest on column '$column1'")
+    requireMinimumSamples(y, MINIMUM_SAMPLES, "fTest on column '$column2'")
     fTest(x, y)
   }
 
@@ -401,7 +403,7 @@ class SmileStats {
    */
   static KSTest ksTestNormality(Matrix matrix, String column) {
     double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
-    requireMinimumSamples(compacted, 2, "ksTestNormality on column '$column'")
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "ksTestNormality on column '$column'")
     ksTestNormality(compacted)
   }
 
@@ -428,8 +430,8 @@ class SmileStats {
   static KSTest ksTestTwoSample(Matrix matrix, String column1, String column2) {
     double[] x = compactDoubleArray(toDoubleArray(matrix, column1))
     double[] y = compactDoubleArray(toDoubleArray(matrix, column2))
-    requireMinimumSamples(x, 2, "ksTestTwoSample on column '$column1'")
-    requireMinimumSamples(y, 2, "ksTestTwoSample on column '$column2'")
+    requireMinimumSamples(x, MINIMUM_SAMPLES, "ksTestTwoSample on column '$column1'")
+    requireMinimumSamples(y, MINIMUM_SAMPLES, "ksTestTwoSample on column '$column2'")
     ksTestTwoSample(x, y)
   }
 
@@ -477,7 +479,7 @@ class SmileStats {
    */
   static CorTest correlationTest(Matrix matrix, String column1, String column2) {
     double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
-    requireMinimumPairs(pair, 2, "correlationTest on columns '$column1' and '$column2'")
+    requireMinimumPairs(pair, MINIMUM_SAMPLES, "correlationTest on columns '$column1' and '$column2'")
     correlationTest(pair[0], pair[1])
   }
 
@@ -502,7 +504,7 @@ class SmileStats {
    */
   static CorTest spearmanTest(Matrix matrix, String column1, String column2) {
     double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
-    requireMinimumPairs(pair, 2, "spearmanTest on columns '$column1' and '$column2'")
+    requireMinimumPairs(pair, MINIMUM_SAMPLES, "spearmanTest on columns '$column1' and '$column2'")
     spearmanTest(pair[0], pair[1])
   }
 
@@ -527,7 +529,7 @@ class SmileStats {
    */
   static CorTest kendallTest(Matrix matrix, String column1, String column2) {
     double[][] pair = toPairwiseComplete(toDoubleArray(matrix, column1), toDoubleArray(matrix, column2))
-    requireMinimumPairs(pair, 2, "kendallTest on columns '$column1' and '$column2'")
+    requireMinimumPairs(pair, MINIMUM_SAMPLES, "kendallTest on columns '$column1' and '$column2'")
     kendallTest(pair[0], pair[1])
   }
 
@@ -646,7 +648,7 @@ class SmileStats {
       pMatrix[i][i] = 0.0
       for (int j = i + 1; j < n; j++) {
         double[][] pair = toPairwiseComplete(data[i], data[j])
-        requireMinimumPairs(pair, 2,
+        requireMinimumPairs(pair, MINIMUM_SAMPLES,
             "correlation between '${numericCols[i]}' and '${numericCols[j]}'")
         CorTest result = method.correlate(pair[0], pair[1])
         corMatrix[i][j] = result.cor()
@@ -841,7 +843,7 @@ class SmileStats {
     if (pair[0].length < minimum) {
       throw new IllegalArgumentException(
           "$context requires at least $minimum complete pairs, but found ${pair[0].length}. " +
-          "Use SmileFeatures.dropna() or fillna() before computing paired statistics.")
+          'Use SmileFeatures.dropna() or fillna() before computing paired statistics.')
     }
   }
 
@@ -849,7 +851,7 @@ class SmileStats {
     if (data.length < minimum) {
       throw new IllegalArgumentException(
           "$context requires at least $minimum non-null values, but found ${data.length}. " +
-          "Use SmileFeatures.dropna() or fillna() before computing statistics.")
+          'Use SmileFeatures.dropna() or fillna() before computing statistics.')
     }
   }
 

@@ -355,4 +355,52 @@ class SmileUtilTest {
     }
   }
 
+  @Test
+  void testValidateFeatureColumnsPass() {
+    def matrix = Matrix.builder()
+        .data(a: [1.0], b: [2.0], c: [3.0])
+        .types([Double, Double, Double])
+        .build()
+
+    SmileUtil.validateFeatureColumns(matrix, ['a', 'b'] as String[])
+  }
+
+  @Test
+  void testValidateFeatureColumnsMissing() {
+    def matrix = Matrix.builder()
+        .data(a: [1.0], b: [2.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileUtil.validateFeatureColumns(matrix, ['a', 'c'] as String[])
+    }
+    assertTrue(ex.message.contains('c'), "Expected 'c' in: ${ex.message}")
+    assertTrue(ex.message.contains('Missing feature column'), "Expected 'Missing feature column' in: ${ex.message}")
+  }
+
+  @Test
+  void testValidateNoNullFeatureColumnsPass() {
+    def matrix = Matrix.builder()
+        .data(a: [1.0, 2.0], b: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    SmileUtil.validateNoNullFeatureColumns(matrix, ['a', 'b'] as String[])
+  }
+
+  @Test
+  void testValidateNoNullFeatureColumnsWithNull() {
+    def matrix = Matrix.builder()
+        .data(a: [1.0, null], b: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileUtil.validateNoNullFeatureColumns(matrix, ['a', 'b'] as String[])
+    }
+    assertTrue(ex.message.contains('a'), "Expected 'a' in: ${ex.message}")
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+  }
+
 }

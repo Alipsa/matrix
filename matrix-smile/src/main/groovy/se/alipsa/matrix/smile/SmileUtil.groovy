@@ -17,6 +17,9 @@ import java.math.RoundingMode
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'
+  // Internal: shared by SmileRegression and SmileClassifier for consistent error messages
+  static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  static final String DROPNA_HINT_TRAINING = 'Use SmileFeatures.dropna() or fillna() before training.'
   private static final int ROUND_DECIMALS = 4
   private static final double PERCENT = 100.0
 
@@ -165,7 +168,7 @@ class SmileUtil {
         if (val == null) {
           throw new IllegalArgumentException(
               "Column '${matrix.columnName(j)}' contains a null at row ${i}. " +
-              "Use SmileFeatures.dropna() or fillna() before calling ML algorithms.")
+              DROPNA_HINT)
         }
         result[i][j] = val as double
       }
@@ -360,6 +363,76 @@ class SmileUtil {
         )
         .types([String, String, Integer, Integer, Integer])
         .build()
+  }
+
+  /**
+   * Validate that all expected feature columns exist in the matrix.
+   *
+   * @param matrix the Matrix to check
+   * @param expected the expected feature column names
+   * @throws IllegalArgumentException if any expected column is missing
+   */
+  static void validateFeatureColumns(Matrix matrix, String[] expected) {
+    List<String> columns = matrix.columnNames()
+    for (String col : expected) {
+      if (!columns.contains(col)) {
+        throw new IllegalArgumentException(
+            "Missing feature column '${col}'. " +
+            "Expected: ${expected.toList()}")
+      }
+    }
+  }
+
+  /**
+   * Extract feature column names by excluding the target column.
+   *
+   * @param matrix the Matrix to extract from
+   * @param targetColumn the target column to exclude
+   * @return the feature column names
+   * @throws IllegalArgumentException if no feature columns remain
+   */
+  static String[] extractFeatureColumns(Matrix matrix, String targetColumn) {
+    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    if (featureColumns.length == 0) {
+      throw new IllegalArgumentException(
+          "No feature columns remain after excluding target '${targetColumn}'")
+    }
+    featureColumns
+  }
+
+  /**
+   * Validate that none of the expected feature columns contain null values.
+   *
+   * @param matrix the Matrix to check
+   * @param expected the feature column names to check for nulls
+   * @throws IllegalArgumentException if any feature column contains null values
+   */
+  static void validateNoNullFeatureColumns(Matrix matrix, String[] expected) {
+    for (String col : expected) {
+      if (hasNulls(matrix.column(col))) {
+        throw new IllegalArgumentException(
+            "Feature column '${col}' contains null values. " +
+            DROPNA_HINT)
+      }
+    }
+  }
+
+  /**
+   * Validate that the target column exists and the matrix is non-empty.
+   *
+   * @param matrix the Matrix to validate
+   * @param targetColumn the expected target column name
+   * @throws IllegalArgumentException if the target is missing or the matrix is empty
+   */
+  static void validateTestMatrix(Matrix matrix, String targetColumn) {
+    if (!matrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found in test matrix. Available: ${matrix.columnNames()}")
+    }
+    if (matrix.rowCount() == 0) {
+      throw new IllegalArgumentException(
+          'Test matrix is empty (0 rows)')
+    }
   }
 
   /**

@@ -413,4 +413,167 @@ class SmileRegressionTest {
     assertTrue(ex.message.contains('y'), "Expected column name 'y' in: ${ex.message}")
   }
 
+  // === Phase 4: Model input validation tests ===
+
+  @Test
+  void testOLSTrainingMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.ols(data, 'nonexistent')
+    }
+    assertTrue(ex.message.contains('nonexistent'), "Expected column name in: ${ex.message}")
+    assertTrue(ex.message.contains('not found'), "Expected 'not found' in: ${ex.message}")
+  }
+
+  @Test
+  void testRidgeTrainingMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.ridge(data, 'nonexistent')
+    }
+    assertTrue(ex.message.contains('not found'))
+  }
+
+  @Test
+  void testLassoTrainingMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.lasso(data, 'missing')
+    }
+    assertTrue(ex.message.contains('not found'))
+  }
+
+  @Test
+  void testElasticNetTrainingMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.elasticNet(data, 'missing')
+    }
+    assertTrue(ex.message.contains('not found'))
+  }
+
+  @Test
+  void testTrainingNoFeatureColumns() {
+    Matrix data = Matrix.builder()
+        .data(y: [1.0, 2.0, 3.0])
+        .types([Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.ols(data, 'y')
+    }
+    assertTrue(ex.message.contains('No feature columns'), "Expected 'No feature columns' in: ${ex.message}")
+  }
+
+  @Test
+  void testTrainingNullTargetInOLS() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0, 3.0], y: [1.0, null, 3.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.ols(data, 'y')
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('y'), "Expected 'y' in: ${ex.message}")
+  }
+
+  @Test
+  void testTrainingNullFeatureInOLS() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, null, 3.0], x2: [4.0, 5.0, 6.0], y: [1.0, 2.0, 3.0])
+        .types([Double, Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileRegression.ols(data, 'y')
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('x1'), "Expected 'x1' in: ${ex.message}")
+  }
+
+  @Test
+  void testPredictionMissingFeatureColumn() {
+    Matrix trainData = createLinearData()
+    SmileRegression regression = SmileRegression.ols(trainData, 'y')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.0, 2.0])
+        .types([Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      regression.predictValues(testData)
+    }
+    assertTrue(ex.message.contains('x2'), "Expected 'x2' in: ${ex.message}")
+    assertTrue(ex.message.contains('Missing feature column'), "Expected 'Missing feature column' in: ${ex.message}")
+  }
+
+  @Test
+  void testPredictionNullFeatureColumn() {
+    Matrix trainData = createLinearData()
+    SmileRegression regression = SmileRegression.ols(trainData, 'y')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.0, null], x2: [3.0, 4.0], y: [9.0, 14.0])
+        .types([Double, Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      regression.predictValues(testData)
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('x1'), "Expected 'x1' in: ${ex.message}")
+  }
+
+  @Test
+  void testEvaluationMissingTargetColumn() {
+    Matrix trainData = createLinearData()
+    SmileRegression regression = SmileRegression.ols(trainData, 'y')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      regression.rSquared(testData)
+    }
+    assertTrue(ex.message.contains('y'), "Expected 'y' in: ${ex.message}")
+    assertTrue(ex.message.contains('not found'), "Expected 'not found' in: ${ex.message}")
+  }
+
+  @Test
+  void testEvaluationEmptyMatrix() {
+    Matrix trainData = createLinearData()
+    SmileRegression regression = SmileRegression.ols(trainData, 'y')
+
+    Matrix testData = Matrix.builder()
+        .columnNames(['x1', 'x2', 'y'])
+        .types([Double, Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      regression.evaluate(testData)
+    }
+    assertTrue(ex.message.contains('empty'), "Expected 'empty' in: ${ex.message}")
+  }
+
 }
