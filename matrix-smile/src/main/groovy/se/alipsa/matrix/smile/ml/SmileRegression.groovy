@@ -171,7 +171,7 @@ class SmileRegression {
    * @return R-squared value between 0 and 1 (can be negative for poor fits)
    */
   double rSquared(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -185,7 +185,7 @@ class SmileRegression {
    * @return the mean squared error
    */
   double mse(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -209,7 +209,7 @@ class SmileRegression {
    * @return the mean absolute error
    */
   double mae(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -223,7 +223,7 @@ class SmileRegression {
    * @return a Matrix with R², MSE, RMSE, MAE metrics
    */
   Matrix evaluate(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -289,7 +289,7 @@ class SmileRegression {
       if (val == null) {
         throw new IllegalArgumentException(
             "Target column '${targetColumn}' contains a null at row ${i}. " +
-            'Use SmileFeatures.dropna() or fillna() to handle missing values before training.')
+            'Use SmileFeatures.dropna() or fillna() to handle missing values.')
       }
       result[i] = val as double
     }
@@ -330,17 +330,6 @@ class SmileRegression {
       sum += Math.abs(actual[i] - predicted[i])
     }
     sum / actual.length
-  }
-
-  private void validateTestMatrix(Matrix testMatrix) {
-    if (!testMatrix.columnNames().contains(targetColumn)) {
-      throw new IllegalArgumentException(
-          "Target column '${targetColumn}' not found in test matrix. Available: ${testMatrix.columnNames()}")
-    }
-    if (testMatrix.rowCount() == 0) {
-      throw new IllegalArgumentException(
-          'Test matrix is empty (0 rows)')
-    }
   }
 
   private static void validateTrainingInput(Matrix matrix, String targetColumn) {

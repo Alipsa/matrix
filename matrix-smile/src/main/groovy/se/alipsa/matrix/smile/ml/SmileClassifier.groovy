@@ -47,16 +47,8 @@ class SmileClassifier {
     if (ntrees <= 0) {
       throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
     }
-    if (!matrix.columnNames().contains(targetColumn)) {
-      throw new IllegalArgumentException(
-          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
-    }
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    if (featureColumns.length == 0) {
-      throw new IllegalArgumentException(
-          "No feature columns remain after excluding target '${targetColumn}'")
-    }
-    requireNonNullLabels(matrix, targetColumn)
+    validateTrainingInput(matrix, targetColumn)
+    String[] featureColumns = extractFeatureColumns(matrix, targetColumn)
     SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
@@ -79,16 +71,8 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier decisionTree(Matrix matrix, String targetColumn) {
-    if (!matrix.columnNames().contains(targetColumn)) {
-      throw new IllegalArgumentException(
-          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
-    }
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    if (featureColumns.length == 0) {
-      throw new IllegalArgumentException(
-          "No feature columns remain after excluding target '${targetColumn}'")
-    }
-    requireNonNullLabels(matrix, targetColumn)
+    validateTrainingInput(matrix, targetColumn)
+    String[] featureColumns = extractFeatureColumns(matrix, targetColumn)
     SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
@@ -168,7 +152,7 @@ class SmileClassifier {
    * @return accuracy as a value between 0 and 1
    */
   double accuracy(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -183,7 +167,7 @@ class SmileClassifier {
    */
   @SuppressWarnings('NestedForLoop')
   Matrix confusionMatrix(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -222,7 +206,7 @@ class SmileClassifier {
    */
   @SuppressWarnings('NestedForLoop')
   Matrix evaluate(Matrix testMatrix) {
-    validateTestMatrix(testMatrix)
+    SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -307,15 +291,21 @@ class SmileClassifier {
 
   // Helper methods
 
-  private void validateTestMatrix(Matrix testMatrix) {
-    if (!testMatrix.columnNames().contains(targetColumn)) {
+  private static void validateTrainingInput(Matrix matrix, String targetColumn) {
+    if (!matrix.columnNames().contains(targetColumn)) {
       throw new IllegalArgumentException(
-          "Target column '${targetColumn}' not found in test matrix. Available: ${testMatrix.columnNames()}")
+          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
     }
-    if (testMatrix.rowCount() == 0) {
+    requireNonNullLabels(matrix, targetColumn)
+  }
+
+  private static String[] extractFeatureColumns(Matrix matrix, String targetColumn) {
+    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    if (featureColumns.length == 0) {
       throw new IllegalArgumentException(
-          'Test matrix is empty (0 rows)')
+          "No feature columns remain after excluding target '${targetColumn}'")
     }
+    featureColumns
   }
 
   private static void requireNonNullLabels(Matrix matrix, String targetColumn) {
