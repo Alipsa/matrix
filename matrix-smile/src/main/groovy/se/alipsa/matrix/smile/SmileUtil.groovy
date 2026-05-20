@@ -179,22 +179,24 @@ class SmileUtil {
 
   /**
    * Round a double value to the default number of decimal places (4).
-   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
+   * Returns NaN and Infinite values unchanged.
    *
    * @param value the value to round
-   * @return the rounded value
+   * @return the rounded value, or the original if NaN/Infinite
    */
   static double round(double value) {
     round(value, ROUND_DECIMALS)
   }
 
   /**
-   * Round a double value to specified decimal places.
-   * Low-level utility method; prefer calling higher-level SmileStats/SmileFeatures methods.
+   * Round a double value to specified decimal places using HALF_UP rounding.
+   * Returns NaN and Infinite values unchanged. Returns {@code double} rather
+   * than {@code BigDecimal} because callers store results in double-typed columns.
    *
    * @param value the value to round
-   * @param numDecimals the number of decimal places
-   * @return the rounded value
+   * @param numDecimals the number of decimal places (must be non-negative)
+   * @return the rounded value, or the original if NaN/Infinite
+   * @throws IllegalArgumentException if numDecimals is negative
    */
   static double round(double value, int numDecimals) {
     if (Double.isNaN(value) || Double.isInfinite(value)) { return value }
