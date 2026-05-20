@@ -103,43 +103,8 @@ class SmileFeatures {
    * @param dropOriginal whether to drop the original column (default true)
    * @return a new Matrix with one-hot encoded columns
    */
-  @SuppressWarnings('NestedForLoop')
   static Matrix oneHotEncode(Matrix matrix, String column, boolean dropOriginal) {
-    List<?> originalColumn = matrix.column(column)
-    Set<Object> uniqueValues = new LinkedHashSet<>(originalColumn.findAll { it != null })
-    List<Object> sortedValues = uniqueValues.toList().sort { it.toString() }
-
-    // Build the new data structure
-    Map<String, List<?>> newData = [:]
-    List<Class<?>> newTypes = []
-
-    // Copy columns before the encoded column
-    int colIndex = matrix.columnNames().indexOf(column)
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      String colName = matrix.columnName(i)
-      if (i == colIndex) {
-        if (!dropOriginal) {
-          newData.put(colName, matrix.column(i))
-          newTypes.add(matrix.type(i))
-        }
-        // Add one-hot columns
-        for (Object value : sortedValues) {
-          String newColName = "${column}_${value}"
-          List<Integer> binaryCol = originalColumn.collect { it == value ? 1 : 0 }
-          newData.put(newColName, binaryCol)
-          newTypes.add(Integer)
-        }
-      } else {
-        newData.put(colName, matrix.column(i))
-        newTypes.add(matrix.type(i))
-      }
-    }
-
-    Matrix.builder()
-        .data(newData)
-        .types(newTypes)
-        .matrixName(matrix.matrixName)
-        .build()
+    oneHotEncoder().fitTransform(matrix, column, dropOriginal)
   }
 
   /**
@@ -166,8 +131,7 @@ class SmileFeatures {
    */
   static Matrix labelEncode(Matrix matrix, String column) {
     List<?> originalColumn = matrix.column(column)
-    Set<Object> uniqueValues = new LinkedHashSet<>(originalColumn.findAll { it != null })
-    List<Object> sortedValues = uniqueValues.toList().sort { it.toString() }
+    List<Object> sortedValues = extractSortedUniqueValues(originalColumn, column, 'labels')
 
     Map<Object, Integer> labelMap = [:]
     sortedValues.eachWithIndex { val, idx -> labelMap[val] = idx }
@@ -487,6 +451,14 @@ class SmileFeatures {
         .types(newTypes)
         .matrixName(matrix.matrixName)
         .build()
+  }
+
+  private static List<Object> extractSortedUniqueValues(List<?> col, String column, String entityName) {
+    Set<Object> unique = new LinkedHashSet<>(col.findAll { it != null })
+    if (unique.isEmpty()) {
+      throw new IllegalArgumentException("No non-null ${entityName} found for column '${column}'")
+    }
+    unique.toList().sort { it.toString() }
   }
 
   private static Matrix replaceColumn(Matrix matrix, String column, List<?> newValues, Class<?> newType) {
@@ -820,12 +792,7 @@ class SmileFeatures {
      * @throws IllegalArgumentException if no non-null labels are found
      */
     LabelEncoder fit(Matrix matrix, String column) {
-      List<?> col = matrix.column(column)
-      Set<Object> unique = new LinkedHashSet<>(col.findAll { it != null })
-      if (unique.isEmpty()) {
-        throw new IllegalArgumentException("No non-null labels found for column '${column}'")
-      }
-      labels = unique.toList().sort { it.toString() }
+      labels = extractSortedUniqueValues(matrix.column(column), column, 'labels')
       labelMap = [:]
       labels.eachWithIndex { Object val, int idx -> labelMap[val] = idx }
       fitted = true
@@ -932,12 +899,7 @@ class SmileFeatures {
      * @throws IllegalArgumentException if no non-null categories are found
      */
     OneHotEncoder fit(Matrix matrix, String column) {
-      List<?> col = matrix.column(column)
-      Set<Object> unique = new LinkedHashSet<>(col.findAll { it != null })
-      if (unique.isEmpty()) {
-        throw new IllegalArgumentException("No non-null categories found for column '${column}'")
-      }
-      categories = unique.toList().sort { it.toString() }
+      categories = extractSortedUniqueValues(matrix.column(column), column, 'categories')
       fitted = true
       this
     }
@@ -987,12 +949,13 @@ class SmileFeatures {
 
       // Validate all values exist in categories
       List<?> colData = matrix.column(column)
+      Set<Object> categorySet = categories.toSet()
       for (int i = 0; i < colData.size(); i++) {
         Object val = colData.get(i)
         if (val == null) {
           throw new IllegalArgumentException("Null value at row ${i} in column '${column}'")
         }
-        if (!categories.contains(val)) {
+        if (!categorySet.contains(val)) {
           throw new IllegalArgumentException(
               "Unseen category '${val}' at row ${i} in column '${column}'. " +
               "Known categories: ${categories}")
