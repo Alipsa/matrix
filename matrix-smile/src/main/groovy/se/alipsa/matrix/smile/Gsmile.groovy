@@ -6,6 +6,7 @@ import smile.data.DataFrame
 import smile.data.vector.ValueVector
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
 
 /**
  * Groovy extension class that adds convenience methods to Matrix and Smile DataFrame.
@@ -51,14 +52,92 @@ class Gsmile {
   }
 
   /**
-   * Take a random sample from the Matrix.
+   * Take a random sample of rows from the Matrix.
    *
    * @param self the Matrix to sample from
    * @param n the number of rows to sample
    * @return a new Matrix with randomly selected rows
    */
   static Matrix smileSample(Matrix self, int n) {
-    SmileUtil.sample(self, n)
+    self.sample(n)
+  }
+
+  /**
+   * Take a random sample of a fraction of rows from the Matrix.
+   *
+   * @param self the Matrix to sample from
+   * @param fraction the fraction of rows to sample (0.0 to 1.0)
+   * @return a new Matrix with randomly selected rows
+   */
+  static Matrix smileSample(Matrix self, double fraction) {
+    self.sampleFraction(fraction)
+  }
+
+  /**
+   * Take a random sample of rows from the Matrix with a specific Random.
+   *
+   * @param self the Matrix to sample from
+   * @param n the number of rows to sample
+   * @param random the Random instance to use
+   * @return a new Matrix with randomly selected rows
+   */
+  static Matrix smileSample(Matrix self, int n, Random random) {
+    self.sample(n, random)
+  }
+
+  /**
+   * Take a random sample of a fraction of rows from the Matrix with a specific Random.
+   *
+   * @param self the Matrix to sample from
+   * @param fraction the fraction of rows to sample (0.0 to 1.0)
+   * @param random the Random instance to use
+   * @return a new Matrix with randomly selected rows
+   */
+  static Matrix smileSample(Matrix self, double fraction, Random random) {
+    self.sampleFraction(fraction, random)
+  }
+
+  /**
+   * Get the first n rows of the Matrix as a new Matrix.
+   *
+   * @param self the Matrix
+   * @param n the number of rows (default 5)
+   * @return a new Matrix with the first n rows
+   */
+  static Matrix smileHead(Matrix self, int n = 5) {
+    self.top(n)
+  }
+
+  /**
+   * Get the last n rows of the Matrix as a new Matrix.
+   *
+   * @param self the Matrix
+   * @param n the number of rows (default 5)
+   * @return a new Matrix with the last n rows
+   */
+  static Matrix smileTail(Matrix self, int n = 5) {
+    self.bottom(n)
+  }
+
+  /**
+   * Get column metadata for the Matrix (name, type, null counts, unique count).
+   *
+   * @param self the Matrix to analyze
+   * @return a Matrix with column information
+   */
+  static Matrix smileInfo(Matrix self) {
+    self.info()
+  }
+
+  /**
+   * Create a frequency table for a column.
+   *
+   * @param self the Matrix containing the column
+   * @param column the name of the column to analyze
+   * @return a Matrix with Value, Frequency, and Percent columns
+   */
+  static Matrix smileFrequency(Matrix self, String column) {
+    Stat.frequency(self, column)
   }
 
   // ==================== DataFrame Extensions ====================

@@ -274,6 +274,121 @@ class GsmileTest {
     assertEquals([25, 30, 35, 28, 42], ages)
   }
 
+  // ==================== New Matrix Extension Tests ====================
+
+  @Test
+  void testSmileHead() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix head = Gsmile.smileHead(matrix, 3)
+
+    assertEquals(3, head.rowCount())
+    assertEquals(matrix.columnCount(), head.columnCount())
+    assertEquals('Alice', head[0, 'name'])
+    assertEquals('Charlie', head[2, 'name'])
+  }
+
+  @Test
+  void testSmileHeadDefault() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix head = Gsmile.smileHead(matrix)
+
+    assertEquals(5, head.rowCount())
+  }
+
+  @Test
+  void testSmileHeadClamped() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix head = Gsmile.smileHead(matrix, 100)
+
+    assertEquals(5, head.rowCount())
+  }
+
+  @Test
+  void testSmileTail() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix tail = Gsmile.smileTail(matrix, 2)
+
+    assertEquals(2, tail.rowCount())
+    assertEquals('Diana', tail[0, 'name'])
+    assertEquals('Eve', tail[1, 'name'])
+  }
+
+  @Test
+  void testSmileTailDefault() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix tail = Gsmile.smileTail(matrix)
+
+    assertEquals(5, tail.rowCount())
+  }
+
+  @Test
+  void testSmileInfo() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix info = Gsmile.smileInfo(matrix)
+
+    assertNotNull(info)
+    assertEquals(4, info.rowCount())
+    assertTrue(info.columnNames().contains('column'))
+    assertTrue(info.columnNames().contains('type'))
+    assertTrue(info.columnNames().contains('nonNullCount'))
+    assertTrue(info.columnNames().contains('nullCount'))
+    assertTrue(info.columnNames().contains('unique'))
+  }
+
+  @Test
+  void testSmileFrequency() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix freq = Gsmile.smileFrequency(matrix, 'active')
+
+    assertNotNull(freq)
+    assertTrue(freq.rowCount() > 0)
+    assertTrue(freq.columnNames().contains('Value'))
+    assertTrue(freq.columnNames().contains('Frequency'))
+    assertTrue(freq.columnNames().contains('Percent'))
+  }
+
+  @Test
+  void testSmileSampleFraction() {
+    Matrix matrix = createTestMatrix()
+
+    Matrix sample = Gsmile.smileSample(matrix, 0.6)
+
+    assertNotNull(sample)
+    assertTrue(sample.rowCount() > 0)
+    assertTrue(sample.rowCount() <= matrix.rowCount())
+    assertEquals(matrix.columnCount(), sample.columnCount())
+  }
+
+  @Test
+  void testSmileSampleWithRandom() {
+    Matrix matrix = createTestMatrix()
+    Random random = new Random(42)
+
+    Matrix sample = Gsmile.smileSample(matrix, 3, random)
+
+    assertEquals(3, sample.rowCount())
+    assertEquals(matrix.columnCount(), sample.columnCount())
+  }
+
+  @Test
+  void testSmileSampleFractionWithRandom() {
+    Matrix matrix = createTestMatrix()
+    Random random = new Random(42)
+
+    Matrix sample = Gsmile.smileSample(matrix, 0.6, random)
+
+    assertNotNull(sample)
+    assertTrue(sample.rowCount() > 0)
+    assertTrue(sample.rowCount() <= matrix.rowCount())
+  }
+
   // ==================== Integration Tests ====================
 
   @Test

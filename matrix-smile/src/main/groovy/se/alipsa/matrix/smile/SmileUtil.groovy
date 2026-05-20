@@ -208,106 +208,51 @@ class SmileUtil {
   }
 
   /**
-   * Take a random sample of rows from a Matrix.
-   *
-   * @param matrix the Matrix to sample from
-   * @param n the number of rows to sample
-   * @return a new Matrix containing the sampled rows
+   * @deprecated Use {@link Matrix#sample(int, Random)} instead.
    */
+  @Deprecated
   static Matrix sample(Matrix matrix, int n) {
-    sample(matrix, n, new Random())
+    matrix.sample(n)
   }
 
   /**
-   * Take a random sample of rows from a Matrix with a specific random seed.
-   *
-   * @param matrix the Matrix to sample from
-   * @param n the number of rows to sample
-   * @param random the Random instance to use
-   * @return a new Matrix containing the sampled rows
+   * @deprecated Use {@link Matrix#sample(int, Random)} instead.
    */
+  @Deprecated
   static Matrix sample(Matrix matrix, int n, Random random) {
-    if (n <= 0) {
-      throw new IllegalArgumentException("Sample size must be positive: was $n")
-    }
-    if (n > matrix.rowCount()) {
-      throw new IllegalArgumentException("Sample size ($n) cannot exceed matrix row count (${matrix.rowCount()})")
-    }
-
-    List<Integer> indices = (0..<matrix.rowCount()).toList()
-    Collections.shuffle(indices, random)
-    List<Integer> sampleIndices = indices.take(n).sort()
-
-    Matrix.builder()
-        .rows(matrix.rows(sampleIndices) as List<List>)
-        .matrixName(matrix.matrixName)
-        .columnNames(matrix.columnNames() as List<String>)
-        .types(matrix.types())
-        .build()
+    matrix.sample(n, random)
   }
 
   /**
-   * Take a random sample of a fraction of rows from a Matrix.
-   *
-   * @param matrix the Matrix to sample from
-   * @param fraction the fraction of rows to sample (0.0 to 1.0)
-   * @return a new Matrix containing the sampled rows
+   * @deprecated Use {@link Matrix#sampleFraction(Number, Random)} instead.
    */
+  @Deprecated
   static Matrix sample(Matrix matrix, double fraction) {
-    sample(matrix, fraction, new Random())
+    matrix.sampleFraction(fraction)
   }
 
   /**
-   * Take a random sample of a fraction of rows from a Matrix with a specific random seed.
-   *
-   * @param matrix the Matrix to sample from
-   * @param fraction the fraction of rows to sample (0.0 to 1.0)
-   * @param random the Random instance to use
-   * @return a new Matrix containing the sampled rows
+   * @deprecated Use {@link Matrix#sampleFraction(Number, Random)} instead.
    */
+  @Deprecated
   static Matrix sample(Matrix matrix, double fraction, Random random) {
-    if (fraction <= 0.0 || fraction > 1.0) {
-      throw new IllegalArgumentException("Fraction must be between 0 and 1 (exclusive of 0): was $fraction")
-    }
-    int n = Math.max(1, (int) Math.round(matrix.rowCount() * fraction))
-    sample(matrix, n, random)
+    matrix.sampleFraction(fraction, random)
   }
 
   /**
-   * Get the first n rows of a Matrix (convenience method).
-   *
-   * @param matrix the Matrix
-   * @param n the number of rows
-   * @return a new Matrix with the first n rows
+   * @deprecated Use {@link Matrix#top(Number)} instead.
    */
+  @Deprecated
   static Matrix head(Matrix matrix, int n = 5) {
-    int take = Math.min(n, matrix.rowCount())
-    List<Integer> indices = (0..<take).toList()
-    Matrix.builder()
-        .rows(matrix.rows(indices) as List<List>)
-        .matrixName(matrix.matrixName)
-        .columnNames(matrix.columnNames() as List<String>)
-        .types(matrix.types())
-        .build()
+    matrix.top(n)
   }
 
   /**
-   * Get the last n rows of a Matrix (convenience method).
-   *
-   * @param matrix the Matrix
-   * @param n the number of rows
-   * @return a new Matrix with the last n rows
+   * @deprecated Use {@link Matrix#bottom(Number)} instead.
    */
+  @Deprecated
   static Matrix tail(Matrix matrix, int n = 5) {
-    int rowCount = matrix.rowCount()
-    int start = Math.max(0, rowCount - n)
-    List<Integer> indices = (start..<rowCount).toList()
-    Matrix.builder()
-        .rows(matrix.rows(indices) as List<List>)
-        .matrixName(matrix.matrixName)
-        .columnNames(matrix.columnNames() as List<String>)
-        .types(matrix.types())
-        .build()
+    matrix.bottom(n)
   }
 
   /**
@@ -331,37 +276,20 @@ class SmileUtil {
   }
 
   /**
-   * Get column information including type, null count, and unique count.
-   *
-   * @param matrix the Matrix to analyze
-   * @return a Matrix with column information
+   * @deprecated Use {@link Matrix#info()} instead. Note: the matrix-core version uses
+   * column names {@code nonNullCount} and {@code nullCount} instead of {@code non-null}
+   * and {@code null}.
    */
+  @Deprecated
   static Matrix info(Matrix matrix) {
-    List<String> columnNames = []
-    List<String> types = []
-    List<Integer> nonNullCounts = []
-    List<Integer> nullCounts = []
-    List<Integer> uniqueCounts = []
-
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      String colName = matrix.columnName(i)
-      List<?> column = matrix.column(i)
-
-      columnNames << colName
-      types << matrix.type(i).simpleName
-      int nullCount = countNulls(column)
-      nullCounts << nullCount
-      nonNullCounts << (column.size() - nullCount)
-      uniqueCounts << column.findAll { it != null }.toSet().size()
-    }
-
+    Matrix result = matrix.info()
     Matrix.builder()
         .data(
-            column: columnNames,
-            type: types,
-            'non-null': nonNullCounts,
-            'null': nullCounts,
-            unique: uniqueCounts
+            column: result.column('column') as List<Object>,
+            type: result.column('type') as List<Object>,
+            'non-null': result.column('nonNullCount') as List<Object>,
+            'null': result.column('nullCount') as List<Object>,
+            unique: result.column('unique') as List<Object>
         )
         .types([String, String, Integer, Integer, Integer])
         .build()
@@ -438,39 +366,20 @@ class SmileUtil {
   }
 
   /**
-   * Create a frequency table for a column.
-   *
-   * @param matrix the Matrix containing the column
-   * @param columnName the name of the column to analyze
-   * @return a Matrix with value, frequency, and percentage
+   * @deprecated Use {@link Stat#frequency(Matrix, String)} instead. Note: the matrix-core
+   * version uses uppercase column names ({@code Value}, {@code Frequency}, {@code Percent})
+   * and {@code BigDecimal} percent. This wrapper preserves the v0.1.0 lowercase names and
+   * {@code Double} percent type.
    */
+  @Deprecated
   static Matrix frequency(Matrix matrix, String columnName) {
-    List<?> column = matrix[columnName] as List<?>
-    Map<Object, Integer> freq = [:]
-
-    for (Object val : column) {
-      freq.merge(val, 1) { old, v -> old + v }
-    }
-
-    int total = column.size()
-    List<Object> values = []
-    List<Integer> frequencies = []
-    List<Double> percentages = []
-
-    // Sort by frequency descending
-    freq.entrySet()
-        .sort { -it.value }
-        .each { entry ->
-          values << (entry.key == null ? 'null' : entry.key.toString())
-          frequencies << entry.value
-          percentages << round(entry.value * PERCENT / total, 2)
-        }
-
+    Matrix result = Stat.frequency(matrix, columnName)
+    List<Double> percentAsDouble = result[Stat.FREQUENCY_PERCENT].collect { it as double }
     Matrix.builder()
         .data(
-            value: values,
-            frequency: frequencies,
-            percent: percentages
+            value: result[Stat.FREQUENCY_VALUE] as List<Object>,
+            frequency: result[Stat.FREQUENCY_FREQUENCY] as List<Object>,
+            percent: percentAsDouble as List<Object>
         )
         .types([String, Integer, Double])
         .build()
