@@ -100,10 +100,13 @@ class Joiner {
     int yRowCount = y.rowCount()
     List<List<Object>> resultRows = new ArrayList<>(xRowCount * yRowCount)
 
+    List<List<Object>> xCols = (0..<xColCount).collect { x.column(it) as List<Object> }
+    List<List<Object>> yCols = (0..<yColCount).collect { y.column(it) as List<Object> }
+
     for (int xr = 0; xr < xRowCount; xr++) {
-      List<Object> xRow = extractRow(x, xr, xColCount)
+      List<Object> xRow = extractFromCols(xCols, xr)
       for (int yr = 0; yr < yRowCount; yr++) {
-        resultRows.add(xRow + extractRow(y, yr, yColCount))
+        resultRows.add(xRow + extractFromCols(yCols, yr))
       }
     }
 
@@ -119,6 +122,9 @@ class Joiner {
   private static Matrix doMerge(Matrix x, Matrix y,
                                 List<String> xKeyNames, List<String> yKeyNames,
                                 JoinType joinType) {
+    if (joinType == JoinType.CROSS) {
+      throw new IllegalArgumentException('Use Joiner.crossJoin(x, y) for cross joins')
+    }
     List<Integer> xKeyIndices = resolveIndices(x, xKeyNames)
     List<Integer> yKeyIndices = resolveIndices(y, yKeyNames)
 
@@ -141,9 +147,12 @@ class Joiner {
     int yNonKeyCount = yNonKeyIndices.size()
     List<Object> nullYRow = Collections.nCopies(yNonKeyCount, null)
 
+    List<List<Object>> xKeyCols = xKeyIndices.collect { x.column(it) as List<Object> }
+    List<List<Object>> xAllCols = (0..<xColCount).collect { x.column(it) as List<Object> }
+
     for (int r = 0; r < x.rowCount(); r++) {
-      List<Object> key = extractKey(x, r, xKeyIndices)
-      List<Object> xRow = extractRow(x, r, xColCount)
+      List<Object> key = extractFromCols(xKeyCols, r)
+      List<Object> xRow = extractFromCols(xAllCols, r)
 
       List<List<Object>> yMatches = yIndex.get(key)
       if (yMatches != null) {
@@ -164,7 +173,7 @@ class Joiner {
 
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
       appendUnmatchedYRows(resultRows, yIndex, matchedYKeys,
-          xColCount, xKeyIndices, yKeyNames.size(), joinType)
+          xColCount, xKeyIndices, yKeyNames.size())
     }
 
     Matrix.builder()
@@ -179,13 +188,10 @@ class Joiner {
                                            Map<List<Object>, List<List<Object>>> yIndex,
                                            Set<List<Object>> matchedYKeys,
                                            int xColCount, List<Integer> xKeyIndices,
-                                           int keyCount, JoinType joinType) {
+                                           int keyCount) {
     for (Map.Entry<List<Object>, List<List<Object>>> entry : yIndex.entrySet()) {
       List<Object> yKey = entry.key
-      if (joinType == JoinType.FULL && matchedYKeys.contains(yKey)) {
-        continue
-      }
-      if (joinType == JoinType.RIGHT && matchedYKeys.contains(yKey)) {
+      if (matchedYKeys.contains(yKey)) {
         continue
       }
       for (List<Object> yVals : entry.value) {
@@ -199,7 +205,7 @@ class Joiner {
   }
 
   private static List<Integer> resolveIndices(Matrix m, List<String> colNames) {
-    List<Integer> indices = new ArrayList<>(colNames.size())
+    List<Integer> indices = []
     for (String name : colNames) {
       int idx = m.columnIndex(name)
       if (idx < 0) {
@@ -230,34 +236,31 @@ class Joiner {
       Matrix m, List<Integer> keyIndices, List<Integer> valueIndices) {
     Map<List<Object>, List<List<Object>>> index = [:]
     int rowCount = m.rowCount()
+    List<List<Object>> keyCols = keyIndices.collect { m.column(it) as List<Object> }
+    List<List<Object>> valCols = valueIndices.collect { m.column(it) as List<Object> }
     for (int r = 0; r < rowCount; r++) {
-      List<Object> key = extractKey(m, r, keyIndices)
+      List<Object> key = new ArrayList<>(keyIndices.size())
+      for (List<Object> col : keyCols) {
+        key.add(col[r])
+      }
       List<List<Object>> bucket = index.get(key)
       if (bucket == null) {
         bucket = []
         index.put(key, bucket)
       }
       List<Object> vals = new ArrayList<>(valueIndices.size())
-      for (int vi : valueIndices) {
-        vals.add(m.column(vi)[r])
+      for (List<Object> col : valCols) {
+        vals.add(col[r])
       }
       bucket.add(vals)
     }
     index
   }
 
-  private static List<Object> extractKey(Matrix m, int row, List<Integer> keyIndices) {
-    List<Object> key = new ArrayList<>(keyIndices.size())
-    for (int ki : keyIndices) {
-      key.add(m.column(ki)[row])
-    }
-    key
-  }
-
-  private static List<Object> extractRow(Matrix m, int row, int colCount) {
-    List<Object> vals = new ArrayList<>(colCount)
-    for (int c = 0; c < colCount; c++) {
-      vals.add(m.column(c)[row])
+  private static List<Object> extractFromCols(List<List<Object>> cols, int row) {
+    List<Object> vals = new ArrayList<>(cols.size())
+    for (List<Object> col : cols) {
+      vals.add(col[row])
     }
     vals
   }
@@ -269,8 +272,8 @@ class Joiner {
     List<String> xColNames = x.columnNames()
     List<Class> xColTypes = x.types()
 
-    List<String> yNonKeyNames = new ArrayList<>(yNonKeyIndices.size())
-    List<Class> yNonKeyTypes = new ArrayList<>(yNonKeyIndices.size())
+    List<String> yNonKeyNames = []
+    List<Class> yNonKeyTypes = []
     List<String> yColNames = y.columnNames()
     List<Class> yColTypes = y.types()
     for (int i : yNonKeyIndices) {
@@ -284,7 +287,7 @@ class Joiner {
     Set<String> duplicates = new LinkedHashSet<>(xNonKeyNames)
     duplicates.retainAll(yNonKeyNameSet)
 
-    List<String> resultNames = new ArrayList<>(xColNames.size() + yNonKeyNames.size())
+    List<String> resultNames = []
     for (String n : xColNames) {
       resultNames.add(duplicates.contains(n) && !xKeyNameSet.contains(n) ? "${n}_x" as String : n)
     }

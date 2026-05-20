@@ -373,6 +373,16 @@ class JoinerTest {
   }
 
   @Test
+  void testCrossJoinTypeThroughMergeThrows() {
+    def x = Matrix.builder('x').data([id: [1]]).build()
+    def y = Matrix.builder('y').data([id: [1]]).build()
+
+    assertThrows(IllegalArgumentException) {
+      Joiner.merge(x, y, 'id', JoinType.CROSS)
+    }
+  }
+
+  @Test
   void testCrossJoin() {
     def x = Matrix.builder('x').data([
         color: ['red', 'blue']
