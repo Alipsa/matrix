@@ -15,8 +15,9 @@
 - `countNulls()` — returns the count of null elements in the column
 
 ### Joiner rewrite
-- Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`
-- `Joiner.merge()` now supports all four SQL join types via `JoinType` parameter
+- Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`
+- `Joiner.merge()` now supports all four key-based SQL join types via `JoinType` parameter
+- `Joiner.crossJoin(x, y)` — Cartesian product of two matrices (every x row paired with every y row, no key column needed)
 - Multi-column (composite) join keys: `merge(x, y, [x: ['dept', 'id'], y: ['department', 'empId']], JoinType.INNER)`
 - Same-name multi-key shorthand: `merge(x, y, ['dept', 'empId'], JoinType.INNER)`
 - One-to-many joins: multiple y matches per key now produce separate result rows (previously only the first match was kept)

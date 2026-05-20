@@ -3,8 +3,8 @@ package se.alipsa.matrix.core
 /**
  * Join operations for combining matrices on one or more key columns.
  *
- * <p>Supports inner, left, right, and full outer joins with single or composite
- * (multi-column) keys. When both matrices contain non-key columns with the same
+ * <p>Supports inner, left, right, full outer, and cross joins with single or
+ * composite (multi-column) keys. When both matrices contain columns with the same
  * name, the result columns are suffixed {@code _x} and {@code _y}.</p>
  *
  * <p>One-to-many joins are fully supported: if a key in y has multiple matching
@@ -79,6 +79,40 @@ class Joiner {
    */
   static Matrix merge(Matrix x, Matrix y, List<String> by, JoinType joinType) {
     doMerge(x, y, by, by, joinType)
+  }
+
+  /**
+   * Produces the Cartesian product of two matrices (cross join). Every row from x
+   * is paired with every row from y, producing {@code x.rowCount() * y.rowCount()} rows.
+   * No key column is required. Columns with the same name are suffixed {@code _x} / {@code _y}.
+   *
+   * @param x the left Matrix
+   * @param y the right Matrix
+   * @return a new Matrix with all column combinations and {@code x.rowCount() * y.rowCount()} rows
+   */
+  static Matrix crossJoin(Matrix x, Matrix y) {
+    List<Integer> allYIndices = (0..<y.columnCount()) as List<Integer>
+    ResultColumns rc = computeResultColumns(x, y, [], allYIndices)
+
+    int xColCount = x.columnCount()
+    int yColCount = y.columnCount()
+    int xRowCount = x.rowCount()
+    int yRowCount = y.rowCount()
+    List<List<Object>> resultRows = new ArrayList<>(xRowCount * yRowCount)
+
+    for (int xr = 0; xr < xRowCount; xr++) {
+      List<Object> xRow = extractRow(x, xr, xColCount)
+      for (int yr = 0; yr < yRowCount; yr++) {
+        resultRows.add(xRow + extractRow(y, yr, yColCount))
+      }
+    }
+
+    Matrix.builder()
+        .matrixName(x.matrixName)
+        .columnNames(rc.names)
+        .rows(resultRows)
+        .types(rc.types)
+        .build()
   }
 
   @SuppressWarnings('ParameterCount')

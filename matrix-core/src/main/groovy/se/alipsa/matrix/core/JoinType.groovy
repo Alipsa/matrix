@@ -8,6 +8,7 @@ enum JoinType {
   INNER,
   LEFT,
   RIGHT,
-  FULL
+  FULL,
+  CROSS
 
 }

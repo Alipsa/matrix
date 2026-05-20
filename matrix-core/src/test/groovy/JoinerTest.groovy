@@ -372,4 +372,53 @@ class JoinerTest {
     }
   }
 
+  @Test
+  void testCrossJoin() {
+    def x = Matrix.builder('x').data([
+        color: ['red', 'blue']
+    ]).types([String]).build()
+
+    def y = Matrix.builder('y').data([
+        size: ['S', 'M', 'L']
+    ]).types([String]).build()
+
+    def result = Joiner.crossJoin(x, y)
+    assertEquals(6, result.rowCount())
+    assertEquals(['color', 'size'], result.columnNames())
+    assertEquals(['red', 'red', 'red', 'blue', 'blue', 'blue'], result.column('color') as List)
+    assertEquals(['S', 'M', 'L', 'S', 'M', 'L'], result.column('size') as List)
+    assertEquals([String, String], result.types())
+  }
+
+  @Test
+  void testCrossJoinDuplicateColumnNames() {
+    def x = Matrix.builder('x').data([
+        id: [1, 2], name: ['A', 'B']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id: [10, 20], name: ['X', 'Y']
+    ]).types([Integer, String]).build()
+
+    def result = Joiner.crossJoin(x, y)
+    assertEquals(4, result.rowCount())
+    assertEquals(['id_x', 'name_x', 'id_y', 'name_y'], result.columnNames())
+    assertEquals([1, 1, 2, 2], result.column('id_x') as List)
+    assertEquals([10, 20, 10, 20], result.column('id_y') as List)
+  }
+
+  @Test
+  void testCrossJoinWithEmptyMatrix() {
+    def x = Matrix.builder('x').data([a: [1, 2]]).types([Integer]).build()
+    def y = Matrix.builder('y')
+        .columnNames(['b'])
+        .types([Integer])
+        .rows([])
+        .build()
+
+    def result = Joiner.crossJoin(x, y)
+    assertEquals(0, result.rowCount())
+    assertEquals(['a', 'b'], result.columnNames())
+  }
+
 }
