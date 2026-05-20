@@ -1,5 +1,27 @@
 # Matrix Core Release History
 
+## 3.8.0, in progress
+
+### New Matrix methods
+- `top(Number n = 5)` — return first n rows as a new Matrix (unlike `head()` which returns a formatted String)
+- `bottom(Number n = 5)` — return last n rows as a new Matrix (unlike `tail()` which returns a formatted String)
+- `info()` — return a metadata Matrix with columns: column, type, nonNullCount, nullCount, unique
+- `sample(int n, Random random = new Random())` — random sample of n rows without replacement; uses rejection sampling for small n, Fisher–Yates shuffle otherwise
+- `sample(Number n, Random random = new Random())` — same as above but accepts any Number (truncated to int, with overflow protection)
+- `sampleFraction(Number fraction, Random random = new Random())` — random sample by fraction of total rows (0 < fraction <= 1.0), minimum 1 row
+
+### New Column methods
+- `hasNulls()` — returns true if the column contains at least one null value
+- `countNulls()` — returns the count of null elements in the column
+
+### Fixes
+- `Joiner.merge()` — added `@CompileDynamic` to fix static compilation issue
+
+### Build changes
+- Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
+- Removed deprecated `afterSuite` closure from test configuration (replaced by `addTestListener` in root project)
+- Additional CodeNarc `@SuppressWarnings` for `DuplicateNumberLiteral` and `MethodCount` in `Matrix.groovy`
+
 ### 3.7.1, 2026-04-22
 - Preserve row count for zero-column matrices created from empty-row input so
   downstream consumers can retain observation alignment even when a design
