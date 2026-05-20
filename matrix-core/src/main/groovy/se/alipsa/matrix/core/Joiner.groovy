@@ -101,7 +101,8 @@ class Joiner {
     int yColCount = y.columnCount()
     int xRowCount = x.rowCount()
     int yRowCount = y.rowCount()
-    List<List<Object>> resultRows = []
+    ArrayList<List<Object>> resultRows = [] as ArrayList<List<Object>>
+    resultRows.ensureCapacity(xRowCount * yRowCount)
 
     List<List<Object>> xCols = (0..<xColCount).collect { x.column(it) as List<Object> }
     List<List<Object>> yCols = (0..<yColCount).collect { y.column(it) as List<Object> }
@@ -244,10 +245,10 @@ class Joiner {
     List<List<Object>> valCols = valueIndices.collect { m.column(it) as List<Object> }
     (0..<rowCount).each { int r ->
       List<Object> key = extractFromCols(keyCols, r)
-      List<List<Object>> bucket = index.get(key)
+      List<List<Object>> bucket = index[key]
       if (bucket == null) {
         bucket = []
-        index.put(key, bucket)
+        index[key] = bucket
       }
       bucket << extractFromCols(valCols, r)
     }
@@ -274,8 +275,8 @@ class Joiner {
       yNonKeyTypes << yColTypes[i]
     }
 
-    Set<String> yNonKeyNameSet = new LinkedHashSet<>(yNonKeyNames)
-    Set<String> duplicates = new LinkedHashSet<>(xColNames)
+    Set<String> yNonKeyNameSet = yNonKeyNames as Set<String>
+    Set<String> duplicates = xColNames as Set<String>
     duplicates.retainAll(yNonKeyNameSet)
 
     List<String> resultNames = xColNames.collect { String n ->
