@@ -805,7 +805,7 @@ class SmileFeatures {
         throw new IllegalStateException('Encoder must be fitted before transforming')
       }
       List<?> col = matrix.column(column)
-      List<Integer> encoded = new ArrayList<>(col.size())
+      List<Integer> encoded = []
       for (int i = 0; i < col.size(); i++) {
         Object val = col.get(i)
         if (val == null) {

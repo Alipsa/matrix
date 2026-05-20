@@ -875,6 +875,56 @@ class SmileFeaturesTest {
   }
 
   @Test
+  void testOneHotEncoderNullValueThrows() {
+    Matrix train = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(color: ['red', null, 'blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.oneHotEncoder().fit(train, 'color')
+
+    assertThrows(IllegalArgumentException) {
+      encoder.transform(test, 'color')
+    }
+  }
+
+  @Test
+  void testLabelEncoderWithIntegerCategories() {
+    Matrix data = Matrix.builder()
+        .data(grade: [3, 1, 2, 1, 3])
+        .types([Integer])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder().fit(data, 'grade')
+    Matrix result = encoder.transform(data, 'grade')
+
+    // Sorted by toString(): "1"=0, "2"=1, "3"=2
+    assertEquals([2, 0, 1, 0, 2], result.column('grade'))
+    assertEquals(1, encoder.inverse(0))
+    assertEquals(3, encoder.inverse(2))
+  }
+
+  @Test
+  void testOneHotEncoderWithIntegerCategories() {
+    Matrix data = Matrix.builder()
+        .data(grade: [1, 2, 3])
+        .types([Integer])
+        .build()
+
+    Matrix result = SmileFeatures.oneHotEncoder().fitTransform(data, 'grade')
+
+    assertTrue(result.columnNames().contains('grade_1'))
+    assertTrue(result.columnNames().contains('grade_2'))
+    assertTrue(result.columnNames().contains('grade_3'))
+    assertEquals(1, result[0, 'grade_1'])
+    assertEquals(0, result[0, 'grade_2'])
+  }
+
+  @Test
   void testOneHotEncoderPreservesColumnOrder() {
     Matrix data = Matrix.builder()
         .data(
