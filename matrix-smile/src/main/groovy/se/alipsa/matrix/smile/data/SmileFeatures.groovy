@@ -10,6 +10,7 @@ import se.alipsa.matrix.smile.SmileUtil
  * Provides standardization, normalization, and encoding transformations.
  */
 @CompileStatic
+@SuppressWarnings('ClassSize')
 class SmileFeatures {
 
   private static final int HALF_DIVISOR = 2
@@ -102,43 +103,8 @@ class SmileFeatures {
    * @param dropOriginal whether to drop the original column (default true)
    * @return a new Matrix with one-hot encoded columns
    */
-  @SuppressWarnings('NestedForLoop')
   static Matrix oneHotEncode(Matrix matrix, String column, boolean dropOriginal) {
-    List<?> originalColumn = matrix.column(column)
-    Set<Object> uniqueValues = new LinkedHashSet<>(originalColumn.findAll { it != null })
-    List<Object> sortedValues = uniqueValues.toList().sort { it.toString() }
-
-    // Build the new data structure
-    Map<String, List<?>> newData = [:]
-    List<Class<?>> newTypes = []
-
-    // Copy columns before the encoded column
-    int colIndex = matrix.columnNames().indexOf(column)
-    for (int i = 0; i < matrix.columnCount(); i++) {
-      String colName = matrix.columnName(i)
-      if (i == colIndex) {
-        if (!dropOriginal) {
-          newData.put(colName, matrix.column(i))
-          newTypes.add(matrix.type(i))
-        }
-        // Add one-hot columns
-        for (Object value : sortedValues) {
-          String newColName = "${column}_${value}"
-          List<Integer> binaryCol = originalColumn.collect { it == value ? 1 : 0 }
-          newData.put(newColName, binaryCol)
-          newTypes.add(Integer)
-        }
-      } else {
-        newData.put(colName, matrix.column(i))
-        newTypes.add(matrix.type(i))
-      }
-    }
-
-    Matrix.builder()
-        .data(newData)
-        .types(newTypes)
-        .matrixName(matrix.matrixName)
-        .build()
+    oneHotEncoder().fitTransform(matrix, column, dropOriginal)
   }
 
   /**
@@ -164,16 +130,7 @@ class SmileFeatures {
    * @return a new Matrix with the column replaced by integer labels
    */
   static Matrix labelEncode(Matrix matrix, String column) {
-    List<?> originalColumn = matrix.column(column)
-    Set<Object> uniqueValues = new LinkedHashSet<>(originalColumn.findAll { it != null })
-    List<Object> sortedValues = uniqueValues.toList().sort { it.toString() }
-
-    Map<Object, Integer> labelMap = [:]
-    sortedValues.eachWithIndex { val, idx -> labelMap[val] = idx }
-
-    List<Integer> encodedColumn = originalColumn.collect { it != null ? labelMap[it] : null }
-
-    replaceColumn(matrix, column, encodedColumn, Integer)
+    labelEncoder().fitTransform(matrix, column)
   }
 
   /**
@@ -443,6 +400,24 @@ class SmileFeatures {
     new MinMaxScaler()
   }
 
+  /**
+   * Create a LabelEncoder that can be fitted on training data and applied to new data.
+   *
+   * @return a new LabelEncoder instance
+   */
+  static LabelEncoder labelEncoder() {
+    new LabelEncoder()
+  }
+
+  /**
+   * Create a OneHotEncoder that can be fitted on training data and applied to new data.
+   *
+   * @return a new OneHotEncoder instance
+   */
+  static OneHotEncoder oneHotEncoder() {
+    new OneHotEncoder()
+  }
+
   // ============ Helper Methods ============
 
   private static Matrix transformColumns(Matrix matrix, List<String> columns, Closure<List<?>> transformer) {
@@ -468,6 +443,14 @@ class SmileFeatures {
         .types(newTypes)
         .matrixName(matrix.matrixName)
         .build()
+  }
+
+  private static List<Object> extractSortedUniqueValues(List<?> col, String column, String entityName) {
+    Set<Object> unique = col.findAll { it != null } as Set
+    if (unique.isEmpty()) {
+      throw new IllegalArgumentException("No non-null ${entityName} found for column '${column}'")
+    }
+    unique.toList().sort { it.toString() }
   }
 
   private static Matrix replaceColumn(Matrix matrix, String column, List<?> newValues, Class<?> newType) {
@@ -766,6 +749,267 @@ class SmileFeatures {
      */
     Map<String, Double> getMaxs() {
       Collections.unmodifiableMap(maxs)
+    }
+
+  }
+
+  // ============ Encoder Classes ============
+
+  /**
+   * Stateful label encoder that maps categorical values to integer indices.
+   * Fit on training data, then apply the same mapping to test/production data.
+   *
+   * <p>For one-shot encoding without a reusable mapping, use the stateless
+   * {@link #labelEncode(Matrix, String)} method instead.
+   *
+   * <p><b>Identity model:</b> This encoder uses {@code Object.equals()} for label identity.
+   * Note that {@code SmileClassifier} uses {@code toString()} identity — {@code 1} (Integer)
+   * and {@code "1"} (String) are the same class in {@code SmileClassifier} but distinct labels
+   * in this encoder. Ensure your column types are consistent if using both APIs on the same data.
+   */
+  @CompileStatic
+  static class LabelEncoder {
+
+    private List<Object> labels
+    private Map<Object, Integer> labelMap
+    private boolean fitted = false
+
+    /**
+     * Fit the encoder on training data.
+     * Collects unique non-null values and sorts them by {@code toString()} for deterministic ordering.
+     *
+     * @param matrix the training data
+     * @param column the column to encode
+     * @return this encoder
+     * @throws IllegalArgumentException if no non-null labels are found
+     */
+    LabelEncoder fit(Matrix matrix, String column) {
+      labels = extractSortedUniqueValues(matrix.column(column), column, 'labels')
+      labelMap = [:]
+      labels.eachWithIndex { Object val, int idx -> labelMap[val] = idx }
+      fitted = true
+      this
+    }
+
+    /**
+     * Transform data using the fitted mapping.
+     *
+     * @param matrix the data to transform
+     * @param column the column to encode
+     * @return a new Matrix with the column replaced by integer labels
+     * @throws IllegalStateException if the encoder has not been fitted
+     * @throws IllegalArgumentException if a value is null or was not seen during fitting
+     */
+    Matrix transform(Matrix matrix, String column) {
+      if (!fitted) {
+        throw new IllegalStateException('Encoder must be fitted before transforming')
+      }
+      List<?> col = matrix.column(column)
+      List<Integer> encoded = []
+      for (int i = 0; i < col.size(); i++) {
+        Object val = col.get(i)
+        if (val == null) {
+          throw new IllegalArgumentException("Null value at row ${i} in column '${column}'")
+        }
+        Integer idx = labelMap.get(val)
+        if (idx == null) {
+          throw new IllegalArgumentException(
+              "Unseen label '${val}' at row ${i} in column '${column}'. Known labels: ${labels}")
+        }
+        encoded.add(idx)
+      }
+      replaceColumn(matrix, column, encoded, Integer)
+    }
+
+    /**
+     * Fit and transform in one step.
+     *
+     * @param matrix the data to fit and transform
+     * @param column the column to encode
+     * @return a new Matrix with the column replaced by integer labels
+     */
+    Matrix fitTransform(Matrix matrix, String column) {
+      fit(matrix, column)
+      transform(matrix, column)
+    }
+
+    /**
+     * Get the ordered list of labels.
+     *
+     * @return an unmodifiable list of labels in index order
+     * @throws IllegalStateException if the encoder has not been fitted
+     */
+    List<Object> getLabels() {
+      if (!fitted) {
+        throw new IllegalStateException('Encoder must be fitted before accessing labels')
+      }
+      Collections.unmodifiableList(labels)
+    }
+
+    /**
+     * Get the original label for a given integer index.
+     *
+     * @param index the integer index
+     * @return the original label value
+     * @throws IllegalStateException if the encoder has not been fitted
+     */
+    Object inverse(int index) {
+      if (!fitted) {
+        throw new IllegalStateException('Encoder must be fitted before inverse lookup')
+      }
+      labels.get(index)
+    }
+
+  }
+
+  /**
+   * Stateful one-hot encoder that creates binary columns for each category.
+   * Fit on training data, then apply the same mapping to test/production data.
+   *
+   * <p>For one-shot encoding without a reusable mapping, use the stateless
+   * {@link #oneHotEncode(Matrix, String)} method instead.
+   *
+   * <p><b>Identity model:</b> This encoder uses {@code Object.equals()} for category identity.
+   * Note that {@code SmileClassifier} uses {@code toString()} identity — {@code 1} (Integer)
+   * and {@code "1"} (String) are the same class in {@code SmileClassifier} but distinct
+   * categories in this encoder. Ensure your column types are consistent if using both APIs
+   * on the same data.
+   */
+  @CompileStatic
+  static class OneHotEncoder {
+
+    private List<Object> categories
+    private Set<Object> categorySet
+    private boolean fitted = false
+
+    /**
+     * Fit the encoder on training data.
+     * Collects unique non-null values and sorts them by {@code toString()} for deterministic ordering.
+     *
+     * @param matrix the training data
+     * @param column the column to encode
+     * @return this encoder
+     * @throws IllegalArgumentException if no non-null categories are found
+     */
+    OneHotEncoder fit(Matrix matrix, String column) {
+      categories = extractSortedUniqueValues(matrix.column(column), column, 'categories')
+      categorySet = categories.toSet()
+      fitted = true
+      this
+    }
+
+    /**
+     * Transform data using the fitted categories.
+     * Produces one binary Integer column per category named {@code "${column}_${category}"}.
+     *
+     * @param matrix the data to transform
+     * @param column the column to encode
+     * @param dropOriginal whether to drop the original column (default true)
+     * @return a new Matrix with one-hot encoded columns
+     * @throws IllegalStateException if the encoder has not been fitted
+     * @throws IllegalArgumentException if a value is unseen or null, or if generated column names collide
+     */
+    @SuppressWarnings('NestedForLoop')
+    Matrix transform(Matrix matrix, String column, boolean dropOriginal = true) {
+      if (!fitted) {
+        throw new IllegalStateException('Encoder must be fitted before transforming')
+      }
+
+      List<String> generatedNames = categories.collect { "${column}_${it}" as String }
+
+      // Check for duplicate generated names
+      Set<String> seen = [] as Set
+      for (String name : generatedNames) {
+        if (!seen.add(name)) {
+          throw new IllegalArgumentException(
+              "Duplicate generated column name '${name}'. Distinct categories produce the same " +
+              'string representation. Pre-convert the column to a consistent type.')
+        }
+      }
+
+      // Check for collisions with existing retained columns
+      Set<String> retained = [] as Set
+      for (String col : matrix.columnNames()) {
+        if (col == column && dropOriginal) { continue }
+        retained.add(col)
+      }
+      for (String name : generatedNames) {
+        if (retained.contains(name)) {
+          throw new IllegalArgumentException(
+              "Generated column name '${name}' collides with an existing column. " +
+              'Rename the existing column before encoding.')
+        }
+      }
+
+      // Validate all values exist in categories
+      List<?> colData = matrix.column(column)
+      for (int i = 0; i < colData.size(); i++) {
+        Object val = colData.get(i)
+        if (val == null) {
+          throw new IllegalArgumentException("Null value at row ${i} in column '${column}'")
+        }
+        if (!categorySet.contains(val)) {
+          throw new IllegalArgumentException(
+              "Unseen category '${val}' at row ${i} in column '${column}'. " +
+              "Known categories: ${categories}")
+        }
+      }
+
+      // Build output
+      Map<String, List<?>> newData = [:]
+      List<Class<?>> newTypes = []
+      int colIndex = matrix.columnNames().indexOf(column)
+
+      for (int i = 0; i < matrix.columnCount(); i++) {
+        String colName = matrix.columnName(i)
+        if (i == colIndex) {
+          if (!dropOriginal) {
+            newData.put(colName, matrix.column(i))
+            newTypes.add(matrix.type(i))
+          }
+          for (int c = 0; c < categories.size(); c++) {
+            Object cat = categories.get(c)
+            List<Integer> binaryCol = colData.collect { it == cat ? 1 : 0 }
+            newData.put(generatedNames.get(c), binaryCol)
+            newTypes.add(Integer)
+          }
+        } else {
+          newData.put(colName, matrix.column(i))
+          newTypes.add(matrix.type(i))
+        }
+      }
+
+      Matrix.builder()
+          .data(newData)
+          .types(newTypes)
+          .matrixName(matrix.matrixName)
+          .build()
+    }
+
+    /**
+     * Fit and transform in one step.
+     *
+     * @param matrix the data to fit and transform
+     * @param column the column to encode
+     * @param dropOriginal whether to drop the original column (default true)
+     * @return a new Matrix with one-hot encoded columns
+     */
+    Matrix fitTransform(Matrix matrix, String column, boolean dropOriginal = true) {
+      fit(matrix, column)
+      transform(matrix, column, dropOriginal)
+    }
+
+    /**
+     * Get the ordered list of categories.
+     *
+     * @return an unmodifiable list of categories in index order
+     * @throws IllegalStateException if the encoder has not been fitted
+     */
+    List<Object> getCategories() {
+      if (!fitted) {
+        throw new IllegalStateException('Encoder must be fitted before accessing categories')
+      }
+      Collections.unmodifiableList(categories)
     }
 
   }
