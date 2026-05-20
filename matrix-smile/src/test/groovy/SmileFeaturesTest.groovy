@@ -620,4 +620,276 @@ class SmileFeaturesTest {
     assertEquals('id', encoded.columnName(0))
   }
 
+  // ============ LabelEncoder Tests ============
+
+  @Test
+  void testLabelEncoderFitTransform() {
+    Matrix train = Matrix.builder()
+        .data(color: ['red', 'green', 'blue', 'red'])
+        .types([String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(color: ['blue', 'red', 'green'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder()
+    encoder.fit(train, 'color')
+    Matrix result = encoder.transform(test, 'color')
+
+    assertEquals(Integer, result.type(0))
+    // Sorted: blue=0, green=1, red=2
+    assertEquals(0, result[0, 'color'])
+    assertEquals(2, result[1, 'color'])
+    assertEquals(1, result[2, 'color'])
+  }
+
+  @Test
+  void testLabelEncoderFitTransformOneStep() {
+    Matrix data = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+
+    Matrix result = SmileFeatures.labelEncoder().fitTransform(data, 'color')
+
+    assertEquals(Integer, result.type(0))
+    assertEquals(3, result.rowCount())
+  }
+
+  @Test
+  void testLabelEncoderUnseenLabelThrows() {
+    Matrix train = Matrix.builder()
+        .data(color: ['red', 'green'])
+        .types([String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(color: ['blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder().fit(train, 'color')
+
+    assertThrows(IllegalArgumentException) {
+      encoder.transform(test, 'color')
+    }
+  }
+
+  @Test
+  void testLabelEncoderNullValueThrows() {
+    Matrix train = Matrix.builder()
+        .data(color: ['red', 'green'])
+        .types([String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(color: ['red', null])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder().fit(train, 'color')
+
+    assertThrows(IllegalArgumentException) {
+      encoder.transform(test, 'color')
+    }
+  }
+
+  @Test
+  void testLabelEncoderInverseLookup() {
+    Matrix data = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder().fit(data, 'color')
+
+    // Sorted: blue=0, green=1, red=2
+    assertEquals('blue', encoder.inverse(0))
+    assertEquals('green', encoder.inverse(1))
+    assertEquals('red', encoder.inverse(2))
+  }
+
+  @Test
+  void testLabelEncoderNotFittedThrows() {
+    def encoder = SmileFeatures.labelEncoder()
+    Matrix data = Matrix.builder()
+        .data(color: ['red'])
+        .types([String])
+        .build()
+
+    assertThrows(IllegalStateException) { encoder.transform(data, 'color') }
+    assertThrows(IllegalStateException) { encoder.getLabels() }
+    assertThrows(IllegalStateException) { encoder.inverse(0) }
+  }
+
+  @Test
+  void testLabelEncoderAllNullThrows() {
+    Matrix data = Matrix.builder()
+        .data(color: [null, null, null])
+        .types([String])
+        .build()
+
+    assertThrows(IllegalArgumentException) {
+      SmileFeatures.labelEncoder().fit(data, 'color')
+    }
+  }
+
+  @Test
+  void testLabelEncoderRoundTrip() {
+    Matrix data = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.labelEncoder().fit(data, 'color')
+    Matrix encoded = encoder.transform(data, 'color')
+
+    List<String> recovered = encoded.column('color').collect { encoder.inverse(it as int).toString() }
+    assertEquals(['red', 'green', 'blue'], recovered)
+  }
+
+  // ============ OneHotEncoder Tests ============
+
+  @Test
+  void testOneHotEncoderFitTransform() {
+    Matrix train = Matrix.builder()
+        .data(
+            id: [1, 2, 3],
+            color: ['red', 'green', 'blue']
+        )
+        .types([Integer, String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(
+            id: [4, 5],
+            color: ['blue', 'red']
+        )
+        .types([Integer, String])
+        .build()
+
+    def encoder = SmileFeatures.oneHotEncoder().fit(train, 'color')
+    Matrix result = encoder.transform(test, 'color')
+
+    // Original column dropped, replaced by blue, green, red columns
+    assertFalse(result.columnNames().contains('color'))
+    assertTrue(result.columnNames().contains('color_blue'))
+    assertTrue(result.columnNames().contains('color_green'))
+    assertTrue(result.columnNames().contains('color_red'))
+
+    // Row 0 is 'blue'
+    assertEquals(1, result[0, 'color_blue'])
+    assertEquals(0, result[0, 'color_green'])
+    assertEquals(0, result[0, 'color_red'])
+
+    // Row 1 is 'red'
+    assertEquals(0, result[1, 'color_blue'])
+    assertEquals(0, result[1, 'color_green'])
+    assertEquals(1, result[1, 'color_red'])
+  }
+
+  @Test
+  void testOneHotEncoderDropOriginalFalse() {
+    Matrix data = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.oneHotEncoder().fit(data, 'color')
+    Matrix result = encoder.transform(data, 'color', false)
+
+    assertTrue(result.columnNames().contains('color'))
+    assertTrue(result.columnNames().contains('color_blue'))
+    assertEquals('color', result.columnName(0))
+    assertEquals('color_blue', result.columnName(1))
+  }
+
+  @Test
+  void testOneHotEncoderUnseenCategoryThrows() {
+    Matrix train = Matrix.builder()
+        .data(color: ['red', 'green'])
+        .types([String])
+        .build()
+    Matrix test = Matrix.builder()
+        .data(color: ['blue'])
+        .types([String])
+        .build()
+
+    def encoder = SmileFeatures.oneHotEncoder().fit(train, 'color')
+
+    assertThrows(IllegalArgumentException) {
+      encoder.transform(test, 'color')
+    }
+  }
+
+  @Test
+  void testOneHotEncoderNotFittedThrows() {
+    def encoder = SmileFeatures.oneHotEncoder()
+    Matrix data = Matrix.builder()
+        .data(color: ['red'])
+        .types([String])
+        .build()
+
+    assertThrows(IllegalStateException) { encoder.transform(data, 'color') }
+    assertThrows(IllegalStateException) { encoder.getCategories() }
+  }
+
+  @Test
+  void testOneHotEncoderAllNullThrows() {
+    Matrix data = Matrix.builder()
+        .data(color: [null, null])
+        .types([String])
+        .build()
+
+    assertThrows(IllegalArgumentException) {
+      SmileFeatures.oneHotEncoder().fit(data, 'color')
+    }
+  }
+
+  @Test
+  void testOneHotEncoderColumnCollisionThrows() {
+    Matrix data = Matrix.builder()
+        .data(
+            color: ['A', 'B'],
+            color_A: [0, 0]
+        )
+        .types([String, Integer])
+        .build()
+
+    def encoder = SmileFeatures.oneHotEncoder().fit(data, 'color')
+
+    assertThrows(IllegalArgumentException) {
+      encoder.transform(data, 'color')
+    }
+  }
+
+  @Test
+  void testOneHotEncoderFitTransformOneStep() {
+    Matrix data = Matrix.builder()
+        .data(color: ['red', 'green', 'blue'])
+        .types([String])
+        .build()
+
+    Matrix result = SmileFeatures.oneHotEncoder().fitTransform(data, 'color')
+
+    assertEquals(3, result.columnCount())
+    assertTrue(result.columnNames().contains('color_blue'))
+  }
+
+  @Test
+  void testOneHotEncoderPreservesColumnOrder() {
+    Matrix data = Matrix.builder()
+        .data(
+            id: [1, 2, 3],
+            color: ['red', 'green', 'blue'],
+            value: [10.0, 20.0, 30.0]
+        )
+        .types([Integer, String, Double])
+        .build()
+
+    Matrix result = SmileFeatures.oneHotEncoder().fitTransform(data, 'color')
+
+    // id first, then one-hot columns, then value
+    assertEquals('id', result.columnName(0))
+    assertEquals('value', result.columnNames().last())
+  }
+
 }

@@ -1,6 +1,11 @@
 import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
+import smile.stat.distribution.BetaDistribution
+import smile.stat.distribution.ExponentialDistribution
+import smile.stat.distribution.GammaDistribution
+import smile.stat.distribution.GaussianDistribution
+import smile.stat.distribution.LogNormalDistribution
 import smile.stat.hypothesis.CorTest
 import smile.stat.hypothesis.FTest
 import smile.stat.hypothesis.KSTest
@@ -10,6 +15,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.stats.CorrelationMethod
 import se.alipsa.matrix.smile.stats.SmileStats
 
+@SuppressWarnings('ClassSize')
 class SmileStatsTest {
 
   // ==================== Probability Distribution Tests ====================
@@ -898,6 +904,204 @@ class SmileStatsTest {
 
     assertNotNull(result)
     assertEquals(4.0, result.df(), 0.0001)
+  }
+
+  // ==================== List Overload Tests ====================
+
+  @Test
+  void testNormalFitFromList() {
+    List<Double> data = [1.0, 2.0, 3.0, 4.0, 5.0]
+    GaussianDistribution dist = SmileStats.normalFit(data)
+    assertNotNull(dist)
+    assertEquals(3.0, dist.mean(), 0.0001)
+  }
+
+  @Test
+  void testNormalFitFromListWithNulls() {
+    List<Double> data = [1.0, null, 3.0, null, 5.0]
+    GaussianDistribution dist = SmileStats.normalFit(data)
+    assertNotNull(dist)
+    assertEquals(3.0, dist.mean(), 0.0001)
+  }
+
+  @Test
+  void testNormalFitFromListAllNullsThrows() {
+    List<Double> data = [null, null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.normalFit(data)
+    }
+  }
+
+  @Test
+  void testExponentialFitFromList() {
+    List<Double> data = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+    ExponentialDistribution dist = SmileStats.exponentialFit(data)
+    assertNotNull(dist)
+    assertTrue(dist.mean() > 0)
+  }
+
+  @Test
+  void testExponentialFitFromListWithNulls() {
+    List<Double> data = [0.5, null, 1.5, 2.0, null, 3.0]
+    ExponentialDistribution dist = SmileStats.exponentialFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testExponentialFitFromListAllNullsThrows() {
+    List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.exponentialFit(data)
+    }
+  }
+
+  @Test
+  void testGammaFitFromList() {
+    List<Double> data = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    GammaDistribution dist = SmileStats.gammaFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testGammaFitFromListWithNulls() {
+    List<Double> data = [1.0, null, 3.0, 4.0, null, 6.0]
+    GammaDistribution dist = SmileStats.gammaFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testGammaFitFromListAllNullsThrows() {
+    List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.gammaFit(data)
+    }
+  }
+
+  @Test
+  void testBetaFitFromList() {
+    List<Double> data = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
+    BetaDistribution dist = SmileStats.betaFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testBetaFitFromListWithNulls() {
+    List<Double> data = [0.1, null, 0.3, 0.5, null, 0.9]
+    BetaDistribution dist = SmileStats.betaFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testBetaFitFromListAllNullsThrows() {
+    List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.betaFit(data)
+    }
+  }
+
+  @Test
+  void testLogNormalFitFromList() {
+    List<Double> data = [1.0, 2.0, 3.0, 5.0, 8.0, 13.0]
+    LogNormalDistribution dist = SmileStats.logNormalFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testLogNormalFitFromListWithNulls() {
+    List<Double> data = [1.0, null, 3.0, 5.0, null, 13.0]
+    LogNormalDistribution dist = SmileStats.logNormalFit(data)
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testLogNormalFitFromListAllNullsThrows() {
+    List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.logNormalFit(data)
+    }
+  }
+
+  // ==================== Matrix+Column Overload Tests ====================
+
+  @Test
+  void testExponentialFitFromMatrix() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+        .types([Double])
+        .build()
+    ExponentialDistribution dist = SmileStats.exponentialFit(matrix, 'values')
+    assertNotNull(dist)
+    assertTrue(dist.mean() > 0)
+  }
+
+  @Test
+  void testExponentialFitFromMatrixWithNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [0.5, null, 1.5, 2.0, null, 3.0])
+        .types([Double])
+        .build()
+    ExponentialDistribution dist = SmileStats.exponentialFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testGammaFitFromMatrix() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        .types([Double])
+        .build()
+    GammaDistribution dist = SmileStats.gammaFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testGammaFitFromMatrixWithNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1.0, null, 3.0, 4.0, null, 6.0])
+        .types([Double])
+        .build()
+    GammaDistribution dist = SmileStats.gammaFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testBetaFitFromMatrix() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [0.1, 0.2, 0.3, 0.5, 0.7, 0.9])
+        .types([Double])
+        .build()
+    BetaDistribution dist = SmileStats.betaFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testBetaFitFromMatrixWithNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [0.1, null, 0.3, 0.5, null, 0.9])
+        .types([Double])
+        .build()
+    BetaDistribution dist = SmileStats.betaFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testLogNormalFitFromMatrix() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1.0, 2.0, 3.0, 5.0, 8.0, 13.0])
+        .types([Double])
+        .build()
+    LogNormalDistribution dist = SmileStats.logNormalFit(matrix, 'values')
+    assertNotNull(dist)
+  }
+
+  @Test
+  void testLogNormalFitFromMatrixWithNulls() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1.0, null, 3.0, 5.0, null, 13.0])
+        .types([Double])
+        .build()
+    LogNormalDistribution dist = SmileStats.logNormalFit(matrix, 'values')
+    assertNotNull(dist)
   }
 
 }

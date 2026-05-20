@@ -1,6 +1,7 @@
 package se.alipsa.matrix.smile.stats
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 
 import smile.stat.distribution.BernoulliDistribution
 import smile.stat.distribution.BetaDistribution
@@ -73,6 +74,19 @@ class SmileStats {
   }
 
   /**
+   * Fit a Normal distribution to a list of numbers.
+   * Null elements are excluded before fitting.
+   *
+   * @param data the data to fit
+   * @return a fitted GaussianDistribution
+   */
+  static GaussianDistribution normalFit(List<? extends Number> data) {
+    double[] compacted = compactDoubleArray(toDoubleArrayFromList(data))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, 'normalFit on List data')
+    normalFit(compacted)
+  }
+
+  /**
    * Create a Poisson distribution.
    *
    * @param lambda the rate parameter (mean)
@@ -135,6 +149,33 @@ class SmileStats {
   }
 
   /**
+   * Fit an Exponential distribution to a Matrix column.
+   * Null values are excluded before fitting.
+   *
+   * @param matrix the Matrix containing the data
+   * @param column the column name
+   * @return a fitted ExponentialDistribution
+   */
+  static ExponentialDistribution exponentialFit(Matrix matrix, String column) {
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "exponentialFit on column '$column'")
+    exponentialFit(compacted)
+  }
+
+  /**
+   * Fit an Exponential distribution to a list of numbers.
+   * Null elements are excluded before fitting.
+   *
+   * @param data the data to fit
+   * @return a fitted ExponentialDistribution
+   */
+  static ExponentialDistribution exponentialFit(List<? extends Number> data) {
+    double[] compacted = compactDoubleArray(toDoubleArrayFromList(data))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, 'exponentialFit on List data')
+    exponentialFit(compacted)
+  }
+
+  /**
    * Create a Gamma distribution.
    *
    * @param shape the shape parameter (k or alpha)
@@ -156,6 +197,33 @@ class SmileStats {
   }
 
   /**
+   * Fit a Gamma distribution to a Matrix column.
+   * Null values are excluded before fitting.
+   *
+   * @param matrix the Matrix containing the data
+   * @param column the column name
+   * @return a fitted GammaDistribution
+   */
+  static GammaDistribution gammaFit(Matrix matrix, String column) {
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "gammaFit on column '$column'")
+    gammaFit(compacted)
+  }
+
+  /**
+   * Fit a Gamma distribution to a list of numbers.
+   * Null elements are excluded before fitting.
+   *
+   * @param data the data to fit
+   * @return a fitted GammaDistribution
+   */
+  static GammaDistribution gammaFit(List<? extends Number> data) {
+    double[] compacted = compactDoubleArray(toDoubleArrayFromList(data))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, 'gammaFit on List data')
+    gammaFit(compacted)
+  }
+
+  /**
    * Create a Beta distribution.
    *
    * @param alpha first shape parameter
@@ -174,6 +242,33 @@ class SmileStats {
    */
   static BetaDistribution betaFit(double[] data) {
     BetaDistribution.fit(data)
+  }
+
+  /**
+   * Fit a Beta distribution to a Matrix column.
+   * Null values are excluded before fitting. Values must be in [0,1].
+   *
+   * @param matrix the Matrix containing the data
+   * @param column the column name
+   * @return a fitted BetaDistribution
+   */
+  static BetaDistribution betaFit(Matrix matrix, String column) {
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "betaFit on column '$column'")
+    betaFit(compacted)
+  }
+
+  /**
+   * Fit a Beta distribution to a list of numbers.
+   * Null elements are excluded before fitting. Values must be in [0,1].
+   *
+   * @param data the data to fit
+   * @return a fitted BetaDistribution
+   */
+  static BetaDistribution betaFit(List<? extends Number> data) {
+    double[] compacted = compactDoubleArray(toDoubleArrayFromList(data))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, 'betaFit on List data')
+    betaFit(compacted)
   }
 
   /**
@@ -239,6 +334,33 @@ class SmileStats {
    */
   static LogNormalDistribution logNormalFit(double[] data) {
     LogNormalDistribution.fit(data)
+  }
+
+  /**
+   * Fit a Log-Normal distribution to a Matrix column.
+   * Null values are excluded before fitting.
+   *
+   * @param matrix the Matrix containing the data
+   * @param column the column name
+   * @return a fitted LogNormalDistribution
+   */
+  static LogNormalDistribution logNormalFit(Matrix matrix, String column) {
+    double[] compacted = compactDoubleArray(toDoubleArray(matrix, column))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, "logNormalFit on column '$column'")
+    logNormalFit(compacted)
+  }
+
+  /**
+   * Fit a Log-Normal distribution to a list of numbers.
+   * Null elements are excluded before fitting.
+   *
+   * @param data the data to fit
+   * @return a fitted LogNormalDistribution
+   */
+  static LogNormalDistribution logNormalFit(List<? extends Number> data) {
+    double[] compacted = compactDoubleArray(toDoubleArrayFromList(data))
+    requireMinimumSamples(compacted, MINIMUM_SAMPLES, 'logNormalFit on List data')
+    logNormalFit(compacted)
   }
 
   /**
@@ -863,6 +985,16 @@ class SmileStats {
       if (val != null) { buf[idx++] = val as int }
     }
     idx < col.size() ? Arrays.copyOf(buf, idx) : buf
+  }
+
+  @PackageScope
+  static double[] toDoubleArrayFromList(List<? extends Number> data) {
+    double[] buf = new double[data.size()]
+    int idx = 0
+    for (Number val : data) {
+      buf[idx++] = val != null ? val as double : Double.NaN
+    }
+    buf
   }
 
   @SuppressWarnings('NestedForLoop')
