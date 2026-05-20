@@ -122,10 +122,16 @@ class Joiner {
     List<Integer> xKeyIndices = resolveIndices(x, xKeyNames)
     List<Integer> yKeyIndices = resolveIndices(y, yKeyNames)
 
-    Set<Integer> yKeyIndexSet = yKeyIndices as Set<Integer>
-    List<Integer> yNonKeyIndices = (0..<y.columnCount()).findAll { int i -> !yKeyIndexSet.contains(i) }
+    boolean filterOnly = joinType == JoinType.SEMI || joinType == JoinType.ANTI
 
-    ResultColumns rc = computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
+    Set<Integer> yKeyIndexSet = yKeyIndices as Set<Integer>
+    List<Integer> yNonKeyIndices = filterOnly
+        ? []
+        : (0..<y.columnCount()).findAll { int i -> !yKeyIndexSet.contains(i) }
+
+    ResultColumns rc = filterOnly
+        ? new ResultColumns(names: x.columnNames(), types: x.types())
+        : computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
 
     Map<List<Object>, List<List<Object>>> yIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
 
@@ -141,10 +147,16 @@ class Joiner {
 
       List<List<Object>> yMatches = yIndex.get(key)
       if (yMatches != null) {
-        matchedYKeys.add(key)
-        for (List<Object> yVals : yMatches) {
-          resultRows.add(xRow + yVals)
+        if (joinType == JoinType.SEMI) {
+          resultRows.add(xRow)
+        } else if (joinType != JoinType.ANTI) {
+          matchedYKeys.add(key)
+          for (List<Object> yVals : yMatches) {
+            resultRows.add(xRow + yVals)
+          }
         }
+      } else if (joinType == JoinType.ANTI) {
+        resultRows.add(xRow)
       } else if (joinType == JoinType.LEFT || joinType == JoinType.FULL) {
         resultRows.add(xRow + nullYRow)
       }

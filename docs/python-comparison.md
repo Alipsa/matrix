@@ -50,7 +50,7 @@ Matrix filtered = Matrix.builder().ginqResult(result).build()
 | **Filtering** | `subset { it.x > 5 }`             | `df[df.x > 5]`                        | Matrix uses closures, pandas uses boolean indexing |
 | **Sorting**   | `orderBy('col', DESC)`            | `sort_values('col', ascending=False)` | Similar                                            |
 | **Grouping**  | `Stat.sumBy(t, 'val', 'grp')`     | `df.groupby('grp')['val'].sum()`      | Pandas more flexible with agg()                    |
-| **Joins**     | `Joiner.merge(a, b, 'key', JoinType.LEFT)` | `pd.merge(a, b, on='key', how='left')` | Both support inner/left/right/full, multi-key, one-to-many, `_x`/`_y` suffix |
+| **Joins**     | `Joiner.merge(a, b, 'key', JoinType.LEFT)` | `pd.merge(a, b, on='key', how='left')` | Both support inner/left/right/full, multi-key, one-to-many, `_x`/`_y` suffix. Matrix also: SEMI, ANTI, cross join |
 | **Pivot**     | `table.pivot('id', 'var', 'val')` | `df.pivot(index, columns, values)`    | Similar                                            |
 | **Apply**     | `table.apply('col') { it * 2 }`   | `df['col'].apply(lambda x: x * 2)`    | Similar                                            |
 

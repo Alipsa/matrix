@@ -458,6 +458,74 @@ Matrix detail = Joiner.merge(orders2, items, 'orderId')
 println detail.rowCount()  // 4
 ```
 
+### Cross Join
+
+A cross join produces the Cartesian product of two matrices — every row from the left is paired with every row from the right. No key column is required:
+
+```groovy
+Matrix colors = Matrix.builder('colors')
+    .data(color: ['Red', 'Blue'])
+    .types([String]).build()
+
+Matrix sizes = Matrix.builder('sizes')
+    .data(size: ['S', 'M', 'L'])
+    .types([String]).build()
+
+Matrix combinations = Joiner.crossJoin(colors, sizes)
+println combinations  // 6 rows: every color × every size
+```
+
+### Semi Join
+
+A semi join returns rows from the left matrix that have at least one match in the right matrix. Only the left columns are included in the result (no columns from the right are appended):
+
+```groovy
+Matrix allEmployees = Matrix.builder('employees')
+    .data(
+        empId: [1, 2, 3, 4],
+        name: ['Alice', 'Bob', 'Charlie', 'Diana']
+    )
+    .types([Integer, String]).build()
+
+Matrix activeProjects = Matrix.builder('projects')
+    .data(empId: [1, 3], project: ['Alpha', 'Beta'])
+    .types([Integer, String]).build()
+
+// Employees who have at least one project
+Matrix withProjects = Joiner.merge(allEmployees, activeProjects, 'empId', JoinType.SEMI)
+println withProjects  // Alice and Charlie only, no project column
+```
+
+### Anti Join
+
+An anti join is the complement of a semi join — it returns rows from the left matrix that have *no* match in the right matrix. Only the left columns are included:
+
+```groovy
+// Employees who have NO projects (opposite of semi join)
+Matrix noProjects = Joiner.merge(allEmployees, activeProjects, 'empId', JoinType.ANTI)
+println noProjects  // Bob and Diana only
+```
+
+### Self Join
+
+A self join joins a matrix with itself. This is a usage pattern, not a separate join type — simply pass the same matrix as both arguments:
+
+```groovy
+Matrix people = Matrix.builder('people')
+    .data(
+        name: ['Alice', 'Bob', 'Charlie'],
+        managerId: [null, 1, 1],
+        empId: [1, 2, 3]
+    )
+    .types([String, Integer, Integer]).build()
+
+// Find each employee's manager name
+Matrix withManager = Joiner.merge(people, people,
+    [x: 'managerId', y: 'empId'],
+    JoinType.LEFT)
+// Result includes name_x (employee) and name_y (manager)
+```
+
 ### Combining Multiple Matrices Vertically
 
 ```groovy
@@ -1075,7 +1143,7 @@ This chapter covered advanced Matrix operations including:
 
 - **Complex filtering** with multiple conditions, null handling, and dynamic columns
 - **Advanced transformations** using apply(), applyRows(), and derived columns
-- **Joining matrices** with inner and left joins
+- **Joining matrices** with inner, left, right, full, cross, semi, and anti joins
 - **Grouping and aggregation** for summary statistics
 - **Time series operations** including date extraction, filtering, and rolling calculations
 - **Matrix reshaping** with pivot and melt operations

@@ -9,6 +9,8 @@ enum JoinType {
   LEFT,
   RIGHT,
   FULL,
-  CROSS
+  CROSS,
+  SEMI,
+  ANTI
 
 }

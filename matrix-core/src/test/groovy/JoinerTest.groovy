@@ -421,4 +421,104 @@ class JoinerTest {
     assertEquals(['a', 'b'], result.columnNames())
   }
 
+  @Test
+  void testSemiJoin() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 2, 3, 4],
+        name: ['A', 'B', 'C', 'D']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [2, 3, 5],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.SEMI)
+    assertEquals(2, result.rowCount())
+    assertEquals(['id', 'name'], result.columnNames())
+    assertEquals([2, 3], result.column('id') as List)
+    assertEquals(['B', 'C'], result.column('name') as List)
+  }
+
+  @Test
+  void testSemiJoinNoDuplicateRows() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 2],
+        name: ['A', 'B']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [1, 1, 1],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.SEMI)
+    assertEquals(1, result.rowCount())
+    assertEquals([1], result.column('id') as List)
+  }
+
+  @Test
+  void testAntiJoin() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 2, 3, 4],
+        name: ['A', 'B', 'C', 'D']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [2, 3, 5],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.ANTI)
+    assertEquals(2, result.rowCount())
+    assertEquals(['id', 'name'], result.columnNames())
+    assertEquals([1, 4], result.column('id') as List)
+    assertEquals(['A', 'D'], result.column('name') as List)
+  }
+
+  @Test
+  void testAntiJoinNoMatches() {
+    def x = Matrix.builder('x').data([
+        id: [1, 2]
+    ]).types([Integer]).build()
+
+    def y = Matrix.builder('y').data([
+        id: [3, 4]
+    ]).types([Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.ANTI)
+    assertEquals(2, result.rowCount())
+    assertEquals([1, 2], result.column('id') as List)
+  }
+
+  @Test
+  void testAntiJoinAllMatch() {
+    def x = Matrix.builder('x').data([
+        id: [1, 2]
+    ]).types([Integer]).build()
+
+    def y = Matrix.builder('y').data([
+        id: [1, 2]
+    ]).types([Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.ANTI)
+    assertEquals(0, result.rowCount())
+  }
+
+  @Test
+  void testSelfJoin() {
+    def employees = Matrix.builder('employees').data([
+        id       : [1, 2, 3],
+        name     : ['Alice', 'Bob', 'Carol'],
+        managerId: [null, 1, 1]
+    ]).types([Integer, String, Integer]).build()
+
+    def result = Joiner.merge(employees, employees,
+        [x: 'managerId', y: 'id'], JoinType.INNER)
+    assertEquals(2, result.rowCount())
+    assertEquals([1, 1], result.column('managerId') as List)
+    assertEquals(['Bob', 'Carol'], result.column('name_x') as List)
+    assertEquals(['Alice', 'Alice'], result.column('name_y') as List)
+  }
+
 }
