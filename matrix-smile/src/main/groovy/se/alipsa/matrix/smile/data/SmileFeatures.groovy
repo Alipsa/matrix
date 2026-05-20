@@ -130,15 +130,7 @@ class SmileFeatures {
    * @return a new Matrix with the column replaced by integer labels
    */
   static Matrix labelEncode(Matrix matrix, String column) {
-    List<?> originalColumn = matrix.column(column)
-    List<Object> sortedValues = extractSortedUniqueValues(originalColumn, column, 'labels')
-
-    Map<Object, Integer> labelMap = [:]
-    sortedValues.eachWithIndex { val, idx -> labelMap[val] = idx }
-
-    List<Integer> encodedColumn = originalColumn.collect { it != null ? labelMap[it] : null }
-
-    replaceColumn(matrix, column, encodedColumn, Integer)
+    labelEncoder().fitTransform(matrix, column)
   }
 
   /**
@@ -887,6 +879,7 @@ class SmileFeatures {
   static class OneHotEncoder {
 
     private List<Object> categories
+    private Set<Object> categorySet
     private boolean fitted = false
 
     /**
@@ -900,6 +893,7 @@ class SmileFeatures {
      */
     OneHotEncoder fit(Matrix matrix, String column) {
       categories = extractSortedUniqueValues(matrix.column(column), column, 'categories')
+      categorySet = categories.toSet()
       fitted = true
       this
     }
@@ -949,7 +943,6 @@ class SmileFeatures {
 
       // Validate all values exist in categories
       List<?> colData = matrix.column(column)
-      Set<Object> categorySet = categories.toSet()
       for (int i = 0; i < colData.size(); i++) {
         Object val = colData.get(i)
         if (val == null) {
