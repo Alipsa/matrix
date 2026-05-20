@@ -125,9 +125,15 @@ subprojects { Project p ->
       codenarc {
         toolVersion = libs.versions.v.codenarc.get()
         configFile = rootProject.file('config/codenarc/ruleset.groovy')
-        reportFormat = 'html'
         ignoreFailures = false
         maxPriority3Violations = 0
+      }
+
+      tasks.withType(CodeNarc) {
+        reports {
+          html.required = true
+          xml.required = true
+        }
       }
 
       // Regex matching Groovy 5 arrow switch expressions:

@@ -405,6 +405,34 @@ Table will now contain:
 | 3 | Bar |
 
 
+## Column Null Checks and Data Exploration
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+
+def table = Matrix.builder().data(
+    name: ['Alice', 'Bob', null, 'Diana'],
+    age: [25, null, 35, 40]
+).types([String, Integer]).build()
+
+// Column null checks
+assert table.age.hasNulls()        // true
+assert table.age.countNulls() == 1
+
+// Data exploration — returns Matrix slices (not formatted strings)
+Matrix first3 = table.top(3)       // first 3 rows
+Matrix last2 = table.bottom(2)     // last 2 rows
+
+// Column metadata
+Matrix info = table.info()         // column, type, nonNullCount, nullCount, unique
+println info.content()
+
+// Random sampling (without replacement)
+Matrix sample = table.sample(2)              // 2 random rows
+Matrix frac = table.sampleFraction(0.5)      // 50% of rows
+Matrix reproducible = table.sample(2, new Random(42))  // seeded
+```
+
 ## Modifying data
 - void putAt(Integer column, List<?> values)
   e.g. `myMatrix[1] = [42, 12, 10]`

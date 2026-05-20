@@ -11,3 +11,5 @@
    Decimal-safe writes, schema evolution, explicit nested schema control, and SPI recipes
 9. [Matrix BigQuery](matrix-bigquery.md)
    Querying, dataset/table setup, overwrite vs append, and emulator-oriented recipes
+10. [Matrix Smile](matrix-smile.md)
+    Smile ML integration: data conversion, feature engineering, statistical analysis, and machine learning

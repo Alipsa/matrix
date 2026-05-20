@@ -52,6 +52,8 @@ implementation "se.alipsa.matrix:matrix-smile:0.1.0"
 
 The `SmileUtil` class provides conversion between Matrix and Smile DataFrame, along with utility methods for data exploration.
 
+> **Deprecation note:** The `SmileUtil` methods `head`, `tail`, `info`, `frequency`, and `sample` are deprecated. Use the matrix-core equivalents instead: `Matrix.top()`, `Matrix.bottom()`, `Matrix.info()`, `Stat.frequency()`, and `Matrix.sample()`/`Matrix.sampleFraction()`.
+
 ### Converting Between Matrix and DataFrame
 
 ```groovy
@@ -151,6 +153,18 @@ Matrix stats = Gsmile.smileDescribe(iris)
 
 // Random sample
 Matrix sample = Gsmile.smileSample(iris, 50)
+
+// Head and tail (returns Matrix)
+Matrix first5 = Gsmile.smileHead(iris)       // default 5 rows
+Matrix last3 = Gsmile.smileTail(iris, 3)
+
+// Column metadata
+Matrix info = Gsmile.smileInfo(iris)
+println info.content()
+
+// Frequency table
+Matrix freq = Gsmile.smileFrequency(iris, 'Species')
+println freq.content()
 ```
 
 ### DataFrame Extensions
@@ -228,14 +242,20 @@ println "PDF at 0: ${normal.p(0.0)}"
 println "CDF at 1.96: ${normal.cdf(1.96)}"
 println "Random sample: ${normal.rand()}"
 
-// Fit distribution to data
+// Fit distribution to data — from double[]
 double[] data = [1.2, 2.3, 1.8, 2.1, 1.9, 2.5, 1.7]
 def fitted = SmileStats.normalFit(data)
 println "Fitted mean: ${fitted.mean()}, sd: ${fitted.sd()}"
 
-// From Matrix column
+// From List<Number> (null elements are excluded before fitting)
+def fittedFromList = SmileStats.normalFit([1.2, null, 1.8, 2.1, null, 2.5, 1.7])
+
+// From Matrix column (nulls excluded automatically)
 Matrix matrix = Matrix.builder().data(values: data).types([Double]).build()
 def fittedFromMatrix = SmileStats.normalFit(matrix, 'values')
+
+// All five continuous distributions support double[], List, and Matrix+column overloads:
+// normalFit, exponentialFit, gammaFit, betaFit, logNormalFit
 ```
 
 ### Available Distributions
@@ -759,6 +779,41 @@ Matrix multiHot = SmileFeatures.oneHotEncode(iris, ['Species'])
 Matrix labeled = SmileFeatures.labelEncode(iris, 'Species')
 println labeled.head(5)
 ```
+
+> **Note:** The stateless `oneHotEncode` and `labelEncode` methods throw `IllegalArgumentException` on null values. Use `SmileFeatures.fillna` or `SmileFeatures.dropna` to handle nulls before encoding.
+
+### Stateful Encoders
+
+For train/test workflows, use the stateful `LabelEncoder` and `OneHotEncoder` classes. They learn the encoding from training data and apply the same mapping to test data:
+
+```groovy
+import se.alipsa.matrix.smile.data.SmileFeatures
+
+// LabelEncoder: fit on train, transform both train and test
+def le = SmileFeatures.labelEncoder()
+le.fit(train, 'Species')
+Matrix trainEncoded = le.transform(train, 'Species')
+Matrix testEncoded = le.transform(test, 'Species')
+
+// Look up labels
+println "Labels: ${le.getLabels()}"         // [setosa, versicolor, virginica]
+println "Index 0 = ${le.inverse(0)}"        // setosa
+
+// One-step shortcut
+Matrix encoded = SmileFeatures.labelEncoder().fitTransform(data, 'Species')
+
+// OneHotEncoder: produces binary columns named "${column}_${category}"
+def ohe = SmileFeatures.oneHotEncoder()
+ohe.fit(train, 'Species')
+Matrix trainOH = ohe.transform(train, 'Species')
+Matrix testOH = ohe.transform(test, 'Species')
+// Columns: Species_setosa, Species_versicolor, Species_virginica
+
+// Keep the original column alongside one-hot columns
+Matrix withOriginal = ohe.transform(test, 'Species', false)
+```
+
+Both encoders throw `IllegalArgumentException` for null or unseen values during `transform()`, and `IllegalStateException` if `transform()` is called before `fit()`.
 
 ### Transformations
 
