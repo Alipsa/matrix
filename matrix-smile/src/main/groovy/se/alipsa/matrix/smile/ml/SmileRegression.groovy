@@ -22,6 +22,8 @@ import se.alipsa.matrix.smile.SmileUtil
 class SmileRegression {
 
   private static final double ZERO = 0.0d
+  private static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  private static final String DROPNA_HINT_TRAINING = 'Use SmileFeatures.dropna() or fillna() before training.'
 
   private final LinearModel model
   private final Formula formula
@@ -289,7 +291,7 @@ class SmileRegression {
       if (val == null) {
         throw new IllegalArgumentException(
             "Target column '${targetColumn}' contains a null at row ${i}. " +
-            SmileUtil.DROPNA_HINT)
+            DROPNA_HINT)
       }
       result[i] = val as double
     }
@@ -340,7 +342,7 @@ class SmileRegression {
     if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
       throw new IllegalArgumentException(
           "Target column '${targetColumn}' contains null values. " +
-          SmileUtil.DROPNA_HINT_TRAINING)
+          DROPNA_HINT_TRAINING)
     }
   }
 
