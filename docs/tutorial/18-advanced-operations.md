@@ -265,12 +265,13 @@ data.apply('status') { status ->
 
 ## Joining and Merging Matrices
 
-The `Joiner` class provides SQL-like join operations.
+The `Joiner` class provides SQL-like join operations with support for inner, left, right, and full outer joins. It handles one-to-many relationships, composite (multi-column) keys, and automatically resolves duplicate column names with `_x`/`_y` suffixes.
 
 ### Inner Join
 
 ```groovy
 import se.alipsa.matrix.core.Joiner
+import se.alipsa.matrix.core.JoinType
 
 Matrix employees = Matrix.builder('employees')
     .data(
@@ -289,8 +290,10 @@ Matrix departments = Matrix.builder('departments')
     .types([Integer, String])
     .build()
 
-// Inner join - only matching rows
+// Inner join - only matching rows (default)
 Matrix joined = Joiner.merge(employees, departments, 'deptId')
+// Equivalent using explicit JoinType:
+// Matrix joined = Joiner.merge(employees, departments, 'deptId', JoinType.INNER)
 println "Inner Join:"
 println joined
 ```
@@ -351,6 +354,108 @@ Matrix ordersWithCustomers = Joiner.merge(
     [x: 'customerId', y: 'id']
 )
 println ordersWithCustomers
+```
+
+### Right Join
+
+```groovy
+// Right join - all rows from right table, nulls for non-matching left rows
+Matrix rightJoined = Joiner.merge(employees, departments, 'deptId', JoinType.RIGHT)
+println rightJoined
+```
+
+Output:
+```
+Matrix (employees, 3 x 4)
+empId	name   	deptId	deptName
+1    	Alice  	101   	Engineering
+2    	Bob    	102   	Sales
+null 	null   	104   	Marketing
+```
+
+### Full Outer Join
+
+```groovy
+// Full outer join - all rows from both tables
+Matrix fullJoined = Joiner.merge(employees, departments, 'deptId', JoinType.FULL)
+println fullJoined
+```
+
+Output:
+```
+Matrix (employees, 5 x 4)
+empId	name   	deptId	deptName
+1    	Alice  	101   	Engineering
+2    	Bob    	102   	Sales
+3    	Charlie	101   	Engineering
+4    	Diana  	103   	null
+null 	null   	104   	Marketing
+```
+
+### Multi-Column (Composite) Join Keys
+
+```groovy
+Matrix sales = Matrix.builder('sales')
+    .data(
+        dept: ['Sales', 'Sales', 'Eng'],
+        empId: [1, 2, 1],
+        revenue: [5000, 3000, 8000]
+    )
+    .types([String, Integer, Integer])
+    .build()
+
+Matrix ratings = Matrix.builder('ratings')
+    .data(
+        department: ['Sales', 'Eng', 'Sales'],
+        employeeId: [1, 1, 2],
+        rating: [5, 4, 3]
+    )
+    .types([String, Integer, Integer])
+    .build()
+
+// Join on multiple columns with different names
+Matrix result = Joiner.merge(sales, ratings,
+    [x: ['dept', 'empId'], y: ['department', 'employeeId']],
+    JoinType.INNER)
+
+// When key column names are the same in both matrices, use a list:
+// Joiner.merge(x, y, ['dept', 'empId'], JoinType.INNER)
+```
+
+### Duplicate Column Names
+
+When both matrices have non-key columns with the same name, the result columns are automatically suffixed `_x` and `_y`:
+
+```groovy
+Matrix q1 = Matrix.builder('q1').data(
+    id: [1, 2], revenue: [1000, 2000]
+).types([Integer, Integer]).build()
+
+Matrix q2 = Matrix.builder('q2').data(
+    id: [1, 2], revenue: [1500, 2500]
+).types([Integer, Integer]).build()
+
+Matrix compared = Joiner.merge(q1, q2, 'id')
+// Result columns: id, revenue_x, revenue_y
+println compared.columnNames()  // [id, revenue_x, revenue_y]
+```
+
+### One-to-Many Joins
+
+When a key in the right matrix has multiple matching rows, each match produces a separate result row:
+
+```groovy
+Matrix orders2 = Matrix.builder('orders')
+    .data(orderId: [1, 2], customer: ['Alice', 'Bob'])
+    .types([Integer, String]).build()
+
+Matrix items = Matrix.builder('items')
+    .data(orderId: [1, 1, 1, 2], product: ['Pen', 'Paper', 'Ink', 'Tape'])
+    .types([Integer, String]).build()
+
+Matrix detail = Joiner.merge(orders2, items, 'orderId')
+// 4 result rows: order 1 expanded to 3 rows (one per item), order 2 to 1
+println detail.rowCount()  // 4
 ```
 
 ### Combining Multiple Matrices Vertically

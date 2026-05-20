@@ -100,7 +100,7 @@ This is similar to R's native vectorized math but with explicit method calls tha
 | **Sorting**      | `orderBy('col', DESC)`            | `arrange(df, desc(col))`                  |
 | **Grouping**     | `Stat.groupBy(t, 'grp')`          | `group_by(df, grp)`                       |
 | **Aggregation**  | `Stat.sumBy(t, 'val', 'grp')`     | `summarise(df, sum(val))`                 |
-| **Joins**        | `Joiner.merge(a, b, 'key')`       | `left_join(a, b, by='key')`               |
+| **Joins**        | `Joiner.merge(a, b, 'key', JoinType.LEFT)` | `left_join(a, b, by='key')`          |
 | **Pivot wider**  | `table.pivot('id', 'var', 'val')` | `pivot_wider(names_from, values_from)`    |
 | **Pivot longer** | `table.unPivot(...)`              | `pivot_longer(cols, names_to, values_to)` |
 | **Mutate**       | `table.apply('col') { it * 2 }`   | `mutate(df, col = col * 2)`               |
@@ -532,7 +532,10 @@ For R users transitioning to Matrix, here's a quick reference:
 | `df %>% arrange(desc(x))`               | `df.orderBy('x', Matrix.DESC)`                 |
 | `df %>% mutate(y = x * 2)`              | `df.apply('x') { it * 2 }`                     |
 | `df %>% group_by(g) %>% summarise(...)` | `Stat.sumBy(df, 'val', 'g')`                   |
-| `left_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', true)`              |
+| `inner_join(a, b, by='key')`            | `Joiner.merge(a, b, 'key', JoinType.INNER)`    |
+| `left_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', JoinType.LEFT)`     |
+| `right_join(a, b, by='key')`            | `Joiner.merge(a, b, 'key', JoinType.RIGHT)`    |
+| `full_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', JoinType.FULL)`     |
 | `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes('x', 'y')) + geom_point()`     |
 | `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes { x = 'x'; y = 'y' }) + geom_point()` |
 | `qplot(x, y, data=df)`                  | `qplot(data: df, x: 'x', y: 'y')`              |

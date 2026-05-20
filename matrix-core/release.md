@@ -14,8 +14,19 @@
 - `hasNulls()` — returns true if the column contains at least one null value
 - `countNulls()` — returns the count of null elements in the column
 
+### Joiner rewrite
+- Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`
+- `Joiner.merge()` now supports all four SQL join types via `JoinType` parameter
+- Multi-column (composite) join keys: `merge(x, y, [x: ['dept', 'id'], y: ['department', 'empId']], JoinType.INNER)`
+- Same-name multi-key shorthand: `merge(x, y, ['dept', 'empId'], JoinType.INNER)`
+- One-to-many joins: multiple y matches per key now produce separate result rows (previously only the first match was kept)
+- Type preservation: result Matrix now carries column types from both source matrices
+- Duplicate non-key column names are automatically suffixed `_x` / `_y`
+- Right join and full outer join key values are preserved from y for unmatched rows
+- Joiner is now fully `@CompileStatic` (removed `@CompileDynamic` workaround)
+- Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
+
 ### Fixes
-- `Joiner.merge()` — added `@CompileDynamic` to fix static compilation issue
 
 ### Build changes
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
