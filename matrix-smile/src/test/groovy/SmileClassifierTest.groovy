@@ -301,4 +301,151 @@ class SmileClassifierTest {
     assertTrue(ex.message.contains('C'), "Expected 'C' in: ${ex.message}")
   }
 
+  // === Phase 4: Model input validation tests ===
+
+  @Test
+  void testRandomForestMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(data, 'nonexistent')
+    }
+    assertTrue(ex.message.contains('nonexistent'), "Expected column name in: ${ex.message}")
+    assertTrue(ex.message.contains('not found'), "Expected 'not found' in: ${ex.message}")
+  }
+
+  @Test
+  void testDecisionTreeMissingTargetColumn() {
+    Matrix data = Matrix.builder()
+        .data(x1: [1.0, 2.0], x2: [3.0, 4.0])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileClassifier.decisionTree(data, 'missing')
+    }
+    assertTrue(ex.message.contains('not found'))
+  }
+
+  @Test
+  void testTrainingNoFeatureColumns() {
+    Matrix data = Matrix.builder()
+        .data(label: ['A', 'B', 'A', 'B', 'A', 'B'])
+        .types([String])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(data, 'label')
+    }
+    assertTrue(ex.message.contains('No feature columns'), "Expected 'No feature columns' in: ${ex.message}")
+  }
+
+  @Test
+  void testTrainingNullFeatureInRandomForest() {
+    Matrix data = Matrix.builder()
+        .data(
+            x1: [1.0, null, 1.5, 8.0, 8.2, 8.5],
+            x2: [1.1, 0.9, 1.3, 8.1, 7.9, 8.3],
+            label: ['A', 'A', 'A', 'B', 'B', 'B']
+        )
+        .types([Double, Double, String])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileClassifier.randomForest(data, 'label')
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('x1'), "Expected 'x1' in: ${ex.message}")
+  }
+
+  @Test
+  void testPredictionMissingFeatureColumn() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.3, 8.3])
+        .types([Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.predictLabels(testData)
+    }
+    assertTrue(ex.message.contains('x2'), "Expected 'x2' in: ${ex.message}")
+    assertTrue(ex.message.contains('Missing feature column'), "Expected 'Missing feature column' in: ${ex.message}")
+  }
+
+  @Test
+  void testPredictionNullFeatureColumn() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .data(
+            x1: [1.3, null],
+            x2: [1.4, 8.4]
+        )
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.predictClasses(testData)
+    }
+    assertTrue(ex.message.contains('null'), "Expected 'null' in: ${ex.message}")
+    assertTrue(ex.message.contains('x1'), "Expected 'x1' in: ${ex.message}")
+  }
+
+  @Test
+  void testEvaluationMissingTargetColumn() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.3, 8.3], x2: [1.4, 8.4])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.accuracy(testData)
+    }
+    assertTrue(ex.message.contains('label'), "Expected 'label' in: ${ex.message}")
+    assertTrue(ex.message.contains('not found'), "Expected 'not found' in: ${ex.message}")
+  }
+
+  @Test
+  void testEvaluationEmptyMatrix() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .columnNames(['x1', 'x2', 'label'])
+        .types([Double, Double, String])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.evaluate(testData)
+    }
+    assertTrue(ex.message.contains('empty'), "Expected 'empty' in: ${ex.message}")
+  }
+
+  @Test
+  void testConfusionMatrixMissingTargetColumn() {
+    Matrix trainData = createBinaryData()
+    SmileClassifier classifier = SmileClassifier.randomForest(trainData, 'label')
+
+    Matrix testData = Matrix.builder()
+        .data(x1: [1.3, 8.3], x2: [1.4, 8.4])
+        .types([Double, Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      classifier.confusionMatrix(testData)
+    }
+    assertTrue(ex.message.contains('label'))
+    assertTrue(ex.message.contains('not found'))
+  }
+
 }

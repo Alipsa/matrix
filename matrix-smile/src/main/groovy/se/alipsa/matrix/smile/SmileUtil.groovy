@@ -165,7 +165,7 @@ class SmileUtil {
         if (val == null) {
           throw new IllegalArgumentException(
               "Column '${matrix.columnName(j)}' contains a null at row ${i}. " +
-              "Use SmileFeatures.dropna() or fillna() before calling ML algorithms.")
+              'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.')
         }
         result[i][j] = val as double
       }
@@ -360,6 +360,40 @@ class SmileUtil {
         )
         .types([String, String, Integer, Integer, Integer])
         .build()
+  }
+
+  /**
+   * Validate that all expected feature columns exist in the matrix.
+   *
+   * @param matrix the Matrix to check
+   * @param expected the expected feature column names
+   * @throws IllegalArgumentException if any expected column is missing
+   */
+  static void validateFeatureColumns(Matrix matrix, String[] expected) {
+    for (String col : expected) {
+      if (!matrix.columnNames().contains(col)) {
+        throw new IllegalArgumentException(
+            "Missing feature column '${col}' in prediction matrix. " +
+            "Expected: ${expected.toList()}")
+      }
+    }
+  }
+
+  /**
+   * Validate that none of the expected feature columns contain null values.
+   *
+   * @param matrix the Matrix to check
+   * @param expected the feature column names to check for nulls
+   * @throws IllegalArgumentException if any feature column contains null values
+   */
+  static void validateNoNullFeatureColumns(Matrix matrix, String[] expected) {
+    for (String col : expected) {
+      if (hasNulls(matrix.column(col))) {
+        throw new IllegalArgumentException(
+            "Feature column '${col}' contains null values. " +
+            'Use SmileFeatures.dropna() or fillna() before prediction.')
+      }
+    }
   }
 
   /**

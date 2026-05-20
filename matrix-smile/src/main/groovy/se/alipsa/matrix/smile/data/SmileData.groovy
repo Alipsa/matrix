@@ -257,10 +257,10 @@ class SmileData {
 
     // Split each class proportionally
     for (Map.Entry<Object, List<Integer>> entry : classSamples.entrySet()) {
-      if (entry.value.size() < 2) {
-        log.warn("Class '${entry.key}' has fewer than 2 samples and will " +
-            "appear only in the training set. Consider removing rare classes or using " +
-            "non-stratified splitting if test-set coverage for all classes is required.")
+      if (entry.value.size() < MIN_PARTITION) {
+        log.warn("Class '${entry.key}' has fewer than $MIN_PARTITION samples and will " +
+            'appear only in the training set. Consider removing rare classes or using ' +
+            'non-stratified splitting if test-set coverage for all classes is required.')
       }
       List<Integer> classIndices = new ArrayList<>(entry.value)
       Collections.shuffle(classIndices, random)

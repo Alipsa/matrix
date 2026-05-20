@@ -43,7 +43,9 @@ class SmileRegression {
    * @return a trained SmileRegression
    */
   static SmileRegression ols(Matrix matrix, String targetColumn) {
+    validateTrainingInput(matrix, targetColumn)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    validateFeatures(matrix, featureColumns, targetColumn)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -61,7 +63,9 @@ class SmileRegression {
    * @return a trained SmileRegression
    */
   static SmileRegression ridge(Matrix matrix, String targetColumn, double lambda = 1.0) {
+    validateTrainingInput(matrix, targetColumn)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    validateFeatures(matrix, featureColumns, targetColumn)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -79,7 +83,9 @@ class SmileRegression {
    * @return a trained SmileRegression
    */
   static SmileRegression lasso(Matrix matrix, String targetColumn, double lambda = 1.0) {
+    validateTrainingInput(matrix, targetColumn)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    validateFeatures(matrix, featureColumns, targetColumn)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -99,7 +105,9 @@ class SmileRegression {
    * @return a trained SmileRegression
    */
   static SmileRegression elasticNet(Matrix matrix, String targetColumn, double lambda1 = 0.5, double lambda2 = 0.5) {
+    validateTrainingInput(matrix, targetColumn)
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    validateFeatures(matrix, featureColumns, targetColumn)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -145,6 +153,8 @@ class SmileRegression {
    * @return array of predicted values
    */
   double[] predictValues(Matrix matrix) {
+    SmileUtil.validateFeatureColumns(matrix, featureColumns)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     int nrows = df.nrow()
     double[] predictions = new double[nrows]
@@ -161,6 +171,7 @@ class SmileRegression {
    * @return R-squared value between 0 and 1 (can be negative for poor fits)
    */
   double rSquared(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -174,6 +185,7 @@ class SmileRegression {
    * @return the mean squared error
    */
   double mse(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -197,6 +209,7 @@ class SmileRegression {
    * @return the mean absolute error
    */
   double mae(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -210,6 +223,7 @@ class SmileRegression {
    * @return a Matrix with R², MSE, RMSE, MAE metrics
    */
   Matrix evaluate(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     double[] actual = extractTarget(testMatrix, targetColumn)
     double[] predicted = predictValues(testMatrix)
 
@@ -275,7 +289,7 @@ class SmileRegression {
       if (val == null) {
         throw new IllegalArgumentException(
             "Target column '${targetColumn}' contains a null at row ${i}. " +
-            "Use SmileFeatures.dropna() or fillna() to handle missing values before training.")
+            'Use SmileFeatures.dropna() or fillna() to handle missing values before training.')
       }
       result[i] = val as double
     }
@@ -316,6 +330,37 @@ class SmileRegression {
       sum += Math.abs(actual[i] - predicted[i])
     }
     sum / actual.length
+  }
+
+  private void validateTestMatrix(Matrix testMatrix) {
+    if (!testMatrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found in test matrix. Available: ${testMatrix.columnNames()}")
+    }
+    if (testMatrix.rowCount() == 0) {
+      throw new IllegalArgumentException(
+          'Test matrix is empty (0 rows)')
+    }
+  }
+
+  private static void validateTrainingInput(Matrix matrix, String targetColumn) {
+    if (!matrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
+    }
+    if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' contains null values. " +
+          'Use SmileFeatures.dropna() or fillna() before training.')
+    }
+  }
+
+  private static void validateFeatures(Matrix matrix, String[] featureColumns, String targetColumn) {
+    if (featureColumns.length == 0) {
+      throw new IllegalArgumentException(
+          "No feature columns remain after excluding target '${targetColumn}'")
+    }
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
   }
 
 }

@@ -805,7 +805,7 @@ class SmileStatsTest {
 
     assertNotNull(result)
     assertNotNull(result.pvalue())
-    assertFalse(Double.isNaN(result.pvalue()), "p-value should not be NaN")
+    assertFalse(Double.isNaN(result.pvalue()), 'p-value should not be NaN')
   }
 
   @Test
@@ -821,7 +821,7 @@ class SmileStatsTest {
     CorTest result = SmileStats.correlationTest(matrix, 'x', 'y')
 
     assertNotNull(result)
-    assertFalse(Double.isNaN(result.cor()), "Correlation should not be NaN")
+    assertFalse(Double.isNaN(result.cor()), 'Correlation should not be NaN')
   }
 
   @Test

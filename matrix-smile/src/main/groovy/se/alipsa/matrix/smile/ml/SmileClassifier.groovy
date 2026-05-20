@@ -19,6 +19,8 @@ import se.alipsa.matrix.smile.SmileUtil
 @CompileStatic
 class SmileClassifier {
 
+  private static final String NULL_LABEL = '<null>'
+
   private final DataFrameClassifier model
   private final Formula formula
   private final String targetColumn
@@ -45,9 +47,17 @@ class SmileClassifier {
     if (ntrees <= 0) {
       throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
     }
-    requireNonNullLabels(matrix, targetColumn)
-    // Get feature columns (all except target)
+    if (!matrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
+    }
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    if (featureColumns.length == 0) {
+      throw new IllegalArgumentException(
+          "No feature columns remain after excluding target '${targetColumn}'")
+    }
+    requireNonNullLabels(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
     String[] classLabels = extractClassLabels(matrix, targetColumn)
@@ -69,8 +79,17 @@ class SmileClassifier {
    * @return a trained SmileClassifier
    */
   static SmileClassifier decisionTree(Matrix matrix, String targetColumn) {
-    requireNonNullLabels(matrix, targetColumn)
+    if (!matrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found. Available: ${matrix.columnNames()}")
+    }
     String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    if (featureColumns.length == 0) {
+      throw new IllegalArgumentException(
+          "No feature columns remain after excluding target '${targetColumn}'")
+    }
+    requireNonNullLabels(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
     String[] classLabels = extractClassLabels(matrix, targetColumn)
@@ -116,6 +135,8 @@ class SmileClassifier {
    * @return list of predicted class labels
    */
   List<String> predictLabels(Matrix matrix) {
+    SmileUtil.validateFeatureColumns(matrix, featureColumns)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     int[] predictions = model.predict(df)
 
@@ -134,6 +155,8 @@ class SmileClassifier {
    * @return array of predicted class indices
    */
   int[] predictClasses(Matrix matrix) {
+    SmileUtil.validateFeatureColumns(matrix, featureColumns)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     model.predict(df)
   }
@@ -145,6 +168,7 @@ class SmileClassifier {
    * @return accuracy as a value between 0 and 1
    */
   double accuracy(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -159,6 +183,7 @@ class SmileClassifier {
    */
   @SuppressWarnings('NestedForLoop')
   Matrix confusionMatrix(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -197,6 +222,7 @@ class SmileClassifier {
    */
   @SuppressWarnings('NestedForLoop')
   Matrix evaluate(Matrix testMatrix) {
+    validateTestMatrix(testMatrix)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
     int[] predicted = predictClasses(testMatrix)
 
@@ -281,11 +307,22 @@ class SmileClassifier {
 
   // Helper methods
 
+  private void validateTestMatrix(Matrix testMatrix) {
+    if (!testMatrix.columnNames().contains(targetColumn)) {
+      throw new IllegalArgumentException(
+          "Target column '${targetColumn}' not found in test matrix. Available: ${testMatrix.columnNames()}")
+    }
+    if (testMatrix.rowCount() == 0) {
+      throw new IllegalArgumentException(
+          'Test matrix is empty (0 rows)')
+    }
+  }
+
   private static void requireNonNullLabels(Matrix matrix, String targetColumn) {
     if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
       throw new IllegalArgumentException(
           "Target column '${targetColumn}' contains null labels. " +
-          "Use SmileFeatures.dropna() or fillna() before training.")
+          'Use SmileFeatures.dropna() or fillna() before training.')
     }
   }
 
@@ -315,7 +352,7 @@ class SmileClassifier {
       Integer index = labelToIndex.get(label)
       if (index == null) {
         throw new IllegalArgumentException(
-            "Label '${label ?: '<null>'}' at row ${i} was not seen during training. " +
+            "Label '${label ?: NULL_LABEL}' at row ${i} was not seen during training. " +
             "Known labels: ${labelToIndex.keySet()}")
       }
       result[i] = index.intValue()
@@ -342,7 +379,7 @@ class SmileClassifier {
       Integer index = labelToIndex.get(label)
       if (index == null) {
         throw new IllegalArgumentException(
-            "Label '${label ?: '<null>'}' at row ${i} was not seen during training. " +
+            "Label '${label ?: NULL_LABEL}' at row ${i} was not seen during training. " +
             "Known labels: ${labelToIndex.keySet()}")
       }
       encodedValues.add(index)
