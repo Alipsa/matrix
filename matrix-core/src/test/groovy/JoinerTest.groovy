@@ -373,13 +373,16 @@ class JoinerTest {
   }
 
   @Test
-  void testCrossJoinTypeThroughMergeThrows() {
-    def x = Matrix.builder('x').data([id: [1]]).build()
-    def y = Matrix.builder('y').data([id: [1]]).build()
+  void testCrossJoinTypeThroughMergeDelegatesToCrossJoin() {
+    def x = Matrix.builder('x').data([id: [1, 2]]).build()
+    def y = Matrix.builder('y').data([id: [10, 20]]).build()
 
-    assertThrows(IllegalArgumentException) {
-      Joiner.merge(x, y, 'id', JoinType.CROSS)
-    }
+    def result = Joiner.merge(x, y, 'id', JoinType.CROSS)
+
+    assertEquals(4, result.rowCount())
+    assertEquals(['id_x', 'id_y'], result.columnNames())
+    assertEquals([1, 1, 2, 2], result.column('id_x') as List)
+    assertEquals([10, 20, 10, 20], result.column('id_y') as List)
   }
 
   @Test
@@ -526,7 +529,9 @@ class JoinerTest {
     def result = Joiner.merge(employees, employees,
         [x: 'managerId', y: 'id'], JoinType.INNER)
     assertEquals(2, result.rowCount())
+    assertEquals(['id', 'name_x', 'managerId', 'name_y', 'managerId_y'], result.columnNames())
     assertEquals([1, 1], result.column('managerId') as List)
+    assertEquals([null, null], result.column('managerId_y') as List)
     assertEquals(['Bob', 'Carol'], result.column('name_x') as List)
     assertEquals(['Alice', 'Alice'], result.column('name_y') as List)
   }

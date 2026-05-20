@@ -26,7 +26,10 @@
 - One-to-many joins: multiple y matches per key now produce separate result rows (previously only the first match was kept)
 - Type preservation: result Matrix now carries column types from both source matrices
 - Duplicate non-key column names are automatically suffixed `_x` / `_y`
+- Duplicate y non-key column names are also suffixed when they conflict with x key columns, preserving unique result column names for self joins
+- Null join keys match other null join keys, following common data-analysis merge behavior rather than SQL `NULL` semantics
 - Right join and full outer join key values are preserved from y for unmatched rows
+- `merge(..., JoinType.CROSS)` now delegates to `crossJoin(x, y)`
 - Joiner is now fully `@CompileStatic` (removed `@CompileDynamic` workaround)
 - Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
 
