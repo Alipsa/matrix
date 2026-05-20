@@ -44,8 +44,8 @@ class SmileRegression {
    */
   static SmileRegression ols(Matrix matrix, String targetColumn) {
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    validateFeatures(matrix, featureColumns, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -64,8 +64,8 @@ class SmileRegression {
    */
   static SmileRegression ridge(Matrix matrix, String targetColumn, double lambda = 1.0) {
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    validateFeatures(matrix, featureColumns, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -84,8 +84,8 @@ class SmileRegression {
    */
   static SmileRegression lasso(Matrix matrix, String targetColumn, double lambda = 1.0) {
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    validateFeatures(matrix, featureColumns, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -106,8 +106,8 @@ class SmileRegression {
    */
   static SmileRegression elasticNet(Matrix matrix, String targetColumn, double lambda1 = 0.5, double lambda2 = 0.5) {
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    validateFeatures(matrix, featureColumns, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
+    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
     DataFrame df = DataframeConverter.convert(matrix)
     Formula formula = Formula.lhs(targetColumn)
 
@@ -289,7 +289,7 @@ class SmileRegression {
       if (val == null) {
         throw new IllegalArgumentException(
             "Target column '${targetColumn}' contains a null at row ${i}. " +
-            'Use SmileFeatures.dropna() or fillna() to handle missing values.')
+            SmileUtil.DROPNA_HINT)
       }
       result[i] = val as double
     }
@@ -340,16 +340,8 @@ class SmileRegression {
     if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
       throw new IllegalArgumentException(
           "Target column '${targetColumn}' contains null values. " +
-          'Use SmileFeatures.dropna() or fillna() before training.')
+          SmileUtil.DROPNA_HINT_TRAINING)
     }
-  }
-
-  private static void validateFeatures(Matrix matrix, String[] featureColumns, String targetColumn) {
-    if (featureColumns.length == 0) {
-      throw new IllegalArgumentException(
-          "No feature columns remain after excluding target '${targetColumn}'")
-    }
-    SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
   }
 
 }

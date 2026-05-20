@@ -17,7 +17,8 @@ import java.math.RoundingMode
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'
-  private static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  static final String DROPNA_HINT = 'Use SmileFeatures.dropna() or fillna() before calling ML algorithms.'
+  static final String DROPNA_HINT_TRAINING = 'Use SmileFeatures.dropna() or fillna() before training.'
   private static final int ROUND_DECIMALS = 4
   private static final double PERCENT = 100.0
 
@@ -379,6 +380,23 @@ class SmileUtil {
             "Expected: ${expected.toList()}")
       }
     }
+  }
+
+  /**
+   * Extract feature column names by excluding the target column.
+   *
+   * @param matrix the Matrix to extract from
+   * @param targetColumn the target column to exclude
+   * @return the feature column names
+   * @throws IllegalArgumentException if no feature columns remain
+   */
+  static String[] extractFeatureColumns(Matrix matrix, String targetColumn) {
+    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
+    if (featureColumns.length == 0) {
+      throw new IllegalArgumentException(
+          "No feature columns remain after excluding target '${targetColumn}'")
+    }
+    featureColumns
   }
 
   /**

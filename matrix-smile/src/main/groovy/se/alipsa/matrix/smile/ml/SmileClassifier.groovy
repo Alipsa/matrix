@@ -48,7 +48,7 @@ class SmileClassifier {
       throw new IllegalArgumentException("ntrees must be positive: was $ntrees")
     }
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = extractFeatureColumns(matrix, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
     SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
@@ -72,7 +72,7 @@ class SmileClassifier {
    */
   static SmileClassifier decisionTree(Matrix matrix, String targetColumn) {
     validateTrainingInput(matrix, targetColumn)
-    String[] featureColumns = extractFeatureColumns(matrix, targetColumn)
+    String[] featureColumns = SmileUtil.extractFeatureColumns(matrix, targetColumn)
     SmileUtil.validateNoNullFeatureColumns(matrix, featureColumns)
 
     // Extract class labels and encode target as integers
@@ -299,20 +299,11 @@ class SmileClassifier {
     requireNonNullLabels(matrix, targetColumn)
   }
 
-  private static String[] extractFeatureColumns(Matrix matrix, String targetColumn) {
-    String[] featureColumns = matrix.columnNames().findAll { it != targetColumn } as String[]
-    if (featureColumns.length == 0) {
-      throw new IllegalArgumentException(
-          "No feature columns remain after excluding target '${targetColumn}'")
-    }
-    featureColumns
-  }
-
   private static void requireNonNullLabels(Matrix matrix, String targetColumn) {
     if (SmileUtil.hasNulls(matrix.column(targetColumn))) {
       throw new IllegalArgumentException(
           "Target column '${targetColumn}' contains null labels. " +
-          'Use SmileFeatures.dropna() or fillna() before training.')
+          SmileUtil.DROPNA_HINT_TRAINING)
     }
   }
 
