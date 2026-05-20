@@ -1,7 +1,6 @@
 package se.alipsa.matrix.smile.stats
 
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 
 import smile.stat.distribution.BernoulliDistribution
 import smile.stat.distribution.BetaDistribution
@@ -987,8 +986,7 @@ class SmileStats {
     idx < col.size() ? Arrays.copyOf(buf, idx) : buf
   }
 
-  @PackageScope
-  static double[] toDoubleArrayFromList(List<? extends Number> data) {
+  private static double[] toDoubleArrayFromList(List<? extends Number> data) {
     double[] buf = new double[data.size()]
     int idx = 0
     for (Number val : data) {

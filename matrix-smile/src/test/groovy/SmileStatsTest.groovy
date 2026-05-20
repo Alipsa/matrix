@@ -933,6 +933,14 @@ class SmileStatsTest {
   }
 
   @Test
+  void testNormalFitFromEmptyListThrows() {
+    List<Double> data = []
+    assertThrows(IllegalArgumentException) {
+      SmileStats.normalFit(data)
+    }
+  }
+
+  @Test
   void testExponentialFitFromList() {
     List<Double> data = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
     ExponentialDistribution dist = SmileStats.exponentialFit(data)
@@ -950,6 +958,14 @@ class SmileStatsTest {
   @Test
   void testExponentialFitFromListAllNullsThrows() {
     List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.exponentialFit(data)
+    }
+  }
+
+  @Test
+  void testExponentialFitFromEmptyListThrows() {
+    List<Double> data = []
     assertThrows(IllegalArgumentException) {
       SmileStats.exponentialFit(data)
     }
@@ -978,6 +994,14 @@ class SmileStatsTest {
   }
 
   @Test
+  void testGammaFitFromEmptyListThrows() {
+    List<Double> data = []
+    assertThrows(IllegalArgumentException) {
+      SmileStats.gammaFit(data)
+    }
+  }
+
+  @Test
   void testBetaFitFromList() {
     List<Double> data = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9]
     BetaDistribution dist = SmileStats.betaFit(data)
@@ -1000,6 +1024,14 @@ class SmileStatsTest {
   }
 
   @Test
+  void testBetaFitFromEmptyListThrows() {
+    List<Double> data = []
+    assertThrows(IllegalArgumentException) {
+      SmileStats.betaFit(data)
+    }
+  }
+
+  @Test
   void testLogNormalFitFromList() {
     List<Double> data = [1.0, 2.0, 3.0, 5.0, 8.0, 13.0]
     LogNormalDistribution dist = SmileStats.logNormalFit(data)
@@ -1016,6 +1048,14 @@ class SmileStatsTest {
   @Test
   void testLogNormalFitFromListAllNullsThrows() {
     List<Double> data = [null, null]
+    assertThrows(IllegalArgumentException) {
+      SmileStats.logNormalFit(data)
+    }
+  }
+
+  @Test
+  void testLogNormalFitFromEmptyListThrows() {
+    List<Double> data = []
     assertThrows(IllegalArgumentException) {
       SmileStats.logNormalFit(data)
     }

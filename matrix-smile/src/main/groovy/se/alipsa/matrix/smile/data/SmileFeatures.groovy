@@ -454,7 +454,7 @@ class SmileFeatures {
   }
 
   private static List<Object> extractSortedUniqueValues(List<?> col, String column, String entityName) {
-    Set<Object> unique = new LinkedHashSet<>(col.findAll { it != null })
+    Set<Object> unique = col.findAll { it != null } as Set
     if (unique.isEmpty()) {
       throw new IllegalArgumentException("No non-null ${entityName} found for column '${column}'")
     }
