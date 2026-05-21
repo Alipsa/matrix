@@ -38,9 +38,16 @@
 - `Column.removeNulls()` now correctly returns `Column` instead of `List`.
 - `Matrix.diff()` and `Matrix.equals()` / `Matrix.checkValues()` now use `BigDecimal` arithmetic for numeric tolerance comparisons, eliminating `double`/`Double.NaN` imprecision. The `allowedDiff` parameter type changed from `double`/`Double` to `BigDecimal` — Groovy call sites are unaffected; Java callers that pass a `double` literal need a cast or `BigDecimal` literal.
 - `Matrix.equals()` — a `null` value in the compared matrix is now correctly reported as differing from a numeric value (was silently masked by `NaN` comparison semantics).
+- `Matrix.equals()` now checks row counts before comparing values, so matrices with matching prefixes but different numbers of rows no longer compare equal.
+- `Matrix.equals(..., ignoreTypes: true)` preserves numeric/string comparison behavior after the row-count fix.
+- Matrix's Groovy version guard now accepts qualified version strings such as `6.0.0-alpha-1` instead of failing during class initialization.
 - `Stat.sd(Matrix, List<String>)` was incorrectly collecting `Double` values via `.doubleValue()`; it now delegates to the existing `sd(List<?>, boolean)` overload, giving consistent BigDecimal-precision results.
+- `Stat.medians(List<List<?>>, List<Integer>)` now returns `null` for columns with no numeric values instead of throwing a null pointer exception.
 - `Stat.mean()` no longer applies `setScale` to every summand before adding; scale is applied only at the final divide, producing more accurate intermediate sums.
 - `Stat.min(Matrix, List<String>)`, `Stat.max(Matrix, List<String>)`, and `Stat.max(Matrix, String)` now use direct columnar access instead of building a full row list, matching the columnar-access pattern used elsewhere in `Stat`.
+- `ValueConverter.convert(..., LocalDate, ..., Locale)` now honors the supplied locale for patterned date parsing.
+- `ValueConverter.asLong(String)` now avoids `Double` conversion so large integer strings do not lose precision.
+- Typed `Grid` mutators now reject values that do not match the grid element type, matching typed constructor validation.
 - `MatrixAssertions` tolerance constants changed from `double` to `BigDecimal` to match the updated `equals()` signature.
 
 ### Build changes
