@@ -634,4 +634,111 @@ class JoinerTest {
     assertEquals([80, 90], result.column('score') as List)
   }
 
+  @Test
+  void testMultiColumnKeyFullJoin() {
+    def x = Matrix.builder('x').data([
+        dept : ['Sales', 'Eng'],
+        empId: [1, 2],
+        name : ['Alice', 'Bob']
+    ]).types([String, Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        dept : ['Sales', 'HR'],
+        empId: [1, 3],
+        score: [95, 80]
+    ]).types([String, Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, ['dept', 'empId'], JoinType.FULL)
+    assertEquals(3, result.rowCount())
+    assertEquals(['Sales', 'Eng', 'HR'], result.column('dept') as List)
+    assertEquals([1, 2, 3], result.column('empId') as List)
+    assertEquals(['Alice', 'Bob', null], result.column('name') as List)
+    assertEquals([95, null, 80], result.column('score') as List)
+  }
+
+  @Test
+  void testSemiJoinCompositeKey() {
+    def x = Matrix.builder('x').data([
+        a: ['X', 'X', 'Y'],
+        b: [1, 2, 1],
+        val: [10, 20, 30]
+    ]).build()
+
+    def y = Matrix.builder('y').data([
+        a: ['X', 'Y'],
+        b: [1, 1],
+        score: [99, 88]
+    ]).build()
+
+    def result = Joiner.merge(x, y, ['a', 'b'], JoinType.SEMI)
+    assertEquals(2, result.rowCount())
+    assertEquals(['a', 'b', 'val'], result.columnNames())
+    assertEquals(['X', 'Y'], result.column('a') as List)
+    assertEquals([1, 1], result.column('b') as List)
+    assertEquals([10, 30], result.column('val') as List)
+  }
+
+  @Test
+  void testAntiJoinCompositeKey() {
+    def x = Matrix.builder('x').data([
+        a: ['X', 'X', 'Y'],
+        b: [1, 2, 1],
+        val: [10, 20, 30]
+    ]).build()
+
+    def y = Matrix.builder('y').data([
+        a: ['X', 'Y'],
+        b: [1, 1],
+        score: [99, 88]
+    ]).build()
+
+    def result = Joiner.merge(x, y, ['a', 'b'], JoinType.ANTI)
+    assertEquals(1, result.rowCount())
+    assertEquals(['X'], result.column('a') as List)
+    assertEquals([2], result.column('b') as List)
+    assertEquals([20], result.column('val') as List)
+  }
+
+  @Test
+  void testDuplicateColumnNamesWithRightJoin() {
+    def x = Matrix.builder('x').data([
+        id   : [1, 2],
+        value: [10, 20]
+    ]).types([Integer, Integer]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [2, 3],
+        value: [200, 300]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.RIGHT)
+    assertEquals(2, result.rowCount())
+    assertTrue(result.columnNames().contains('value_x'))
+    assertTrue(result.columnNames().contains('value_y'))
+    assertEquals([2, 3], result.column('id') as List)
+    assertEquals([20, null], result.column('value_x') as List)
+    assertEquals([200, 300], result.column('value_y') as List)
+  }
+
+  @Test
+  void testCrossJoinOverflowGuard() {
+    // Verify the overflow guard produces a clear error, not NegativeArraySizeException
+    def x = Matrix.builder('x')
+        .columnNames(['a'])
+        .types([Integer])
+        .rows((1..50000).collect { [it] })
+        .build()
+
+    def y = Matrix.builder('y')
+        .columnNames(['b'])
+        .types([Integer])
+        .rows((1..50000).collect { [it] })
+        .build()
+
+    def error = assertThrows(IllegalArgumentException) {
+      Joiner.crossJoin(x, y)
+    }
+    assertTrue(error.message.contains('exceeding maximum'))
+  }
+
 }

@@ -12,6 +12,10 @@ package se.alipsa.matrix.core
  *
  * <p>Null key values compare equal to other null key values, matching common data
  * analysis merge behavior rather than SQL {@code NULL} semantics.</p>
+ *
+ * <p><b>Column name collisions:</b> if x already contains a column whose name ends
+ * with {@code _y} (or {@code _x}) and a suffix is needed, the result may contain
+ * duplicate column names. This matches pandas behavior.</p>
  */
 @SuppressWarnings('JavadocEmptyFirstLine')
 class Joiner {
@@ -104,8 +108,13 @@ class Joiner {
     int yColCount = y.columnCount()
     int xRowCount = x.rowCount()
     int yRowCount = y.rowCount()
+    long resultSize = (long) xRowCount * yRowCount
+    if (resultSize > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException(
+          "Cross join would produce ${resultSize} rows, exceeding maximum list size")
+    }
     ArrayList<List<Object>> resultRows = [] as ArrayList<List<Object>>
-    resultRows.ensureCapacity(xRowCount * yRowCount)
+    resultRows.ensureCapacity((int) resultSize)
 
     List<List<Object>> xCols = (0..<xColCount).collect { x.column(it) as List<Object> }
     List<List<Object>> yCols = (0..<yColCount).collect { y.column(it) as List<Object> }
