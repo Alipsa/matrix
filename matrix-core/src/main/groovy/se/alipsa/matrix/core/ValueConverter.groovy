@@ -55,7 +55,7 @@ class ValueConverter {
     }
     return switch (type) {
       case String -> (E) asString(o, dateTimeFormatter(dateTimePattern, locale), numberFormat)
-      case LocalDate -> (E) asLocalDate(o, dateTimePattern)
+      case LocalDate -> (E) asLocalDate(o, dateTimePattern, null, locale)
       case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
@@ -435,7 +435,7 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.longValue()
     }
-    Double.valueOf(String.valueOf(o)).longValue()
+    new BigDecimal(String.valueOf(o)).longValue()
   }
 
   static java.util.Date asDate(java.util.Date o, java.util.Date valueIfNull = null) {

@@ -1214,6 +1214,44 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsRejectsDifferentRowCounts() {
+    Matrix shortMatrix = Matrix.builder()
+        .data(id: [1], name: ['Rick'])
+        .types(Integer, String)
+        .build()
+    Matrix longMatrix = Matrix.builder()
+        .data(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    assertNotEquals(shortMatrix, longMatrix)
+    assertNotEquals(longMatrix, shortMatrix)
+  }
+
+  @Test
+  void testEqualsCanIgnoreNumericStringTypeDifferences() {
+    Matrix numeric = Matrix.builder()
+        .data(id: [1], name: ['Rick'])
+        .types(Integer, String)
+        .build()
+    Matrix stringy = Matrix.builder()
+        .data(id: ['1'], name: ['Rick'])
+        .types(String, String)
+        .build()
+
+    assertTrue(numeric.equals(stringy, false, true, true))
+  }
+
+  @Test
+  void testParseGroovyMajorVersionAllowsQualifiedVersions() {
+    def method = Matrix.getDeclaredMethod('parseGroovyMajorVersion', String)
+    method.accessible = true
+
+    assertEquals(5, method.invoke(null, '5.0.6'))
+    assertEquals(6, method.invoke(null, '6.0.0-alpha-1'))
+  }
+
+  @Test
   void testDiff() {
     def empData = Matrix.builder().data(
         emp_id: [1, 2],

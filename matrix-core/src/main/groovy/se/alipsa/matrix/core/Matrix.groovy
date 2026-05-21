@@ -110,9 +110,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private boolean indexDirty = false
 
   static {
-    // Splits "5.0.1" into [5, 0, 1]
-    def versionParts = GroovySystem.version.tokenize('.')*.toInteger()
-    def majorVersion = versionParts[0]
+    int majorVersion = parseGroovyMajorVersion(GroovySystem.version)
 
     if (majorVersion < 5) {
       throw new IllegalStateException(
@@ -124,6 +122,10 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   static MatrixBuilder builder() {
     new MatrixBuilder()
+  }
+
+  private static int parseGroovyMajorVersion(String version) {
+    version.tokenize('.').first().toInteger()
   }
 
   static MatrixBuilder builder(String matrixName) {
@@ -1940,6 +1942,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       ComparisonHelper.handleError("$message - Matrix.equals: number of columns differ", throwException)
       return false
     }
+    if (rowCount() != matrix.rowCount()) {
+      ComparisonHelper.handleError("$message - Matrix.equals: number of rows differ", throwException)
+      return false
+    }
     if (!ignoreColumnNames && columnNames() != matrix.columnNames()) {
       ComparisonHelper.handleError("$message - Matrix.equals: column names differ", throwException)
       return false
@@ -1969,6 +1975,10 @@ class Matrix implements Iterable<Row>, Cloneable {
         if (entry instanceof Number) {
           if (thatVal instanceof Number) {
             if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
+              return [r, i, entry, thatVal]
+            }
+          } else if (ignoreTypes) {
+            if (String.valueOf(entry) != String.valueOf(thatVal)) {
               return [r, i, entry, thatVal]
             }
           } else {

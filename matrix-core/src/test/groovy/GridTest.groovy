@@ -275,6 +275,21 @@ class GridTest {
     }
 
     @Test
+    void testTypedGridMutatorsMaintainElementType() {
+        Grid<Number> grid = new Grid<Number>([[1, 2], [3, 4]], Number)
+
+        def rowError = assertThrows(IllegalArgumentException) {
+            grid.add([5, '6'] as List<Number>)
+        }
+        assertTrue(rowError.message.contains('expected Number'))
+
+        def columnError = assertThrows(IllegalArgumentException) {
+            grid.replaceColumn(0, [7, '8'] as List<Number>)
+        }
+        assertTrue(columnError.message.contains('expected Number'))
+    }
+
+    @Test
     void testIteration() {
         Grid foo = new Grid()
         foo.addAll([

@@ -46,6 +46,17 @@ class ValueConverterTest {
     assertEquals(2001251L, ValueConverter.convert('2001251.0', Long))
     assertEquals(2001251L, ValueConverter.convert(2001251, Long))
     assertEquals(2001251L, ValueConverter.convert(2001251.9, Long))
+    assertEquals(9007199254740993L, ValueConverter.asLong('9007199254740993'))
+  }
+
+  @Test
+  void testConvertLocalDateUsesLocale() {
+    Locale swedish = Locale.of('sv', 'SE')
+
+    assertEquals(
+        LocalDate.of(2024, 10, 27),
+        ValueConverter.convert('27 oktober 2024', LocalDate, 'd MMMM yyyy', null, null, swedish)
+    )
   }
 
   @Test

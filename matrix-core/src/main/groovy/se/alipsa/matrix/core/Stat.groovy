@@ -545,7 +545,8 @@ class Stat {
         }
         List<BigDecimal> medians = new ArrayList<BigDecimal>(colNums.size())
         for (Integer colNum in colNums) {
-            List<Number> list = (List<Number>) valueList[String.valueOf(colNum)].sort()
+            List<Number> list = valueList[String.valueOf(colNum)]
+            list = list == null ? [] : list.sort() as List<Number>
             BigDecimal m = median(list)
             medians.add(m)
         }

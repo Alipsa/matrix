@@ -19,12 +19,15 @@ import java.text.NumberFormat
 class Grid<T> implements Iterable<List<T>> {
 
   List<List<T>> data
+  private final Class<?> elementType
 
   Grid() {
     data = []
+    elementType = Object
   }
 
   Grid(List<List<T>> data) {
+    elementType = Object
     if (isValid(data)) {
       this.data = data
     } else if (data instanceof List) {
@@ -43,21 +46,24 @@ class Grid<T> implements Iterable<List<T>> {
    * @throws IllegalArgumentException if the row structure is invalid or contains incompatible values
    */
   Grid(List<List<T>> data, Class<T> elementType) {
-    if (isValid(data, elementType)) {
+    this.elementType = safeElementType(elementType)
+    if (isValid(data, this.elementType)) {
       this.data = data
-    } else if (data instanceof List && isValid([data], elementType)) {
+    } else if (data instanceof List && isValid([data], this.elementType)) {
       this.data = [data]
     } else {
-      throw new IllegalArgumentException("data is invalid for element type ${safeElementType(elementType).simpleName}")
+      throw new IllegalArgumentException("data is invalid for element type ${this.elementType.simpleName}")
     }
   }
 
   Grid(int nrow) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = Object
   }
 
   Grid(int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = Object
     nrow.times {
       data << ([null] * ncol) as List<T>
     }
@@ -65,6 +71,7 @@ class Grid<T> implements Iterable<List<T>> {
 
   Grid(T value, int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = value == null ? Object : safeElementType(value.class)
     nrow.times {
       data << ([value] * ncol) as List<T>
     }
@@ -83,10 +90,12 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   def leftShift(List<T> row) {
+    validateNewRow(row)
     data << row
   }
 
   boolean add(List<T> row) {
+    validateNewRow(row)
     data.add(row)
   }
 
@@ -97,10 +106,12 @@ class Grid<T> implements Iterable<List<T>> {
    * @param row the row data
    */
   void add(int position, List<T> row) {
+    validateNewRow(row)
     data.add(position, row)
   }
 
   boolean addAll(List<List<T>> grid) {
+    grid.each { List<T> row -> validateNewRow(row) }
     data.addAll(grid)
   }
 
@@ -161,7 +172,9 @@ class Grid<T> implements Iterable<List<T>> {
     if (rowIdx < data.size()) {
       replaceRow(rowIdx, values.collect())
     } else if (rowIdx == data.size()) {
-      data << values.collect()
+      List<T> row = values.collect() as List<T>
+      validateNewRow(row)
+      data << row
     } else {
       throw new IndexOutOfBoundsException("Index $rowIdx cannot be greater than ${data.size()}")
     }
@@ -205,6 +218,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid replaceRow(int index, List<T> row) {
+    validateNewRow(row)
     def r = data.get(index)
     r.clear()
     r.addAll(row)
@@ -212,6 +226,15 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid replaceColumn(int column, List<T> values) {
+    if (values == null) {
+      throw new IllegalArgumentException('Column values cannot be null')
+    }
+    if (values.size() != data.size()) {
+      throw new IllegalArgumentException("Column values size (${values.size()}) must match row count (${data.size()})")
+    }
+    values.eachWithIndex { T value, int i ->
+      validateValue(value, "Value at row $i")
+    }
     data.eachWithIndex { List row, int i ->
       row[column] = values[i]
     }
@@ -394,6 +417,21 @@ class Grid<T> implements Iterable<List<T>> {
 
   private static Class<?> safeElementType(Class<?> elementType) {
     ClassUtils.convertPrimitiveToWrapper(elementType) ?: Object
+  }
+
+  private void validateNewRow(List<T> row) {
+    if (row == null) {
+      throw new IllegalArgumentException('Row cannot be null')
+    }
+    row.eachWithIndex { T value, int i ->
+      validateValue(value, "Value at column $i")
+    }
+  }
+
+  private void validateValue(T value, String context) {
+    if (value != null && elementType != Object && !elementType.isInstance(value)) {
+      throw new IllegalArgumentException("${context} is ${value.class.simpleName} but expected ${elementType.simpleName}")
+    }
   }
 
 }

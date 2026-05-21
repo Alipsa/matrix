@@ -588,5 +588,6 @@ class StatTest {
         [5, null, null]
     ]
     assertIterableEquals([3.0g, null, 12.0g], means(rowList, [0, 1, 2]))
+    assertIterableEquals([3 as BigDecimal, null, 12 as BigDecimal], medians(rowList, [0, 1, 2]))
   }
 }
