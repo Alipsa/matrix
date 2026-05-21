@@ -531,9 +531,9 @@ Output:
 ```
 Matrix (people, 3 x 5)
 name_x 	managerId	empId	name_y	managerId_y
-Alice  	null     	null 	null  	null
-Bob    	1        	1    	Alice 	null
-Charlie	1        	1    	Alice 	null
+Alice  	null     	1    	null  	null
+Bob    	1        	2    	Alice 	null
+Charlie	1        	3    	Alice 	null
 ```
 
 ### Combining Multiple Matrices Vertically

@@ -146,7 +146,8 @@ class Joiner {
     Map<List<Object>, List<List<Object>>> yIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
 
     List<List<Object>> resultRows = []
-    Set<List<Object>> matchedYKeys = [] as Set<List<Object>>
+    boolean needsMatchTracking = joinType == JoinType.RIGHT || joinType == JoinType.FULL
+    Set<List<Object>> matchedYKeys = needsMatchTracking ? ([] as Set<List<Object>>) : null
     int xColCount = x.columnCount()
     int yNonKeyCount = yNonKeyIndices.size()
     List<Object> nullYRow = Collections.nCopies(yNonKeyCount, null)
@@ -164,7 +165,7 @@ class Joiner {
         if (joinType == JoinType.SEMI) {
           resultRows.add(xRow)
         } else if (joinType != JoinType.ANTI) {
-          if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
+          if (needsMatchTracking) {
             matchedYKeys.add(key)
           }
           yMatches.each { List<Object> yVals ->
@@ -225,10 +226,13 @@ class Joiner {
 
   @SuppressWarnings('Instanceof')
   private static List<List<String>> normalizeKeys(Map<String, Object> by) {
+    if (!by.containsKey('x') || !by.containsKey('y')) {
+      throw new IllegalArgumentException("Join key map must contain both 'x' and 'y' entries")
+    }
     Object xVal = by.get('x')
     Object yVal = by.get('y')
     if (xVal == null || yVal == null) {
-      throw new IllegalArgumentException("Join key map must contain both 'x' and 'y' entries")
+      throw new IllegalArgumentException("Join key values for 'x' and 'y' must not be null")
     }
     List<String> xKeys = xVal instanceof List ? (xVal as List<String>) : [xVal as String]
     List<String> yKeys = yVal instanceof List ? (yVal as List<String>) : [yVal as String]

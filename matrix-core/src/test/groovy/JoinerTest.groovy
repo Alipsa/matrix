@@ -519,6 +519,25 @@ class JoinerTest {
   }
 
   @Test
+  void testManyToManyJoin() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 1, 2],
+        name: ['A1', 'A2', 'B']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [1, 1, 2],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id')
+    assertEquals(5, result.rowCount())
+    assertEquals([1, 1, 1, 1, 2], result.column('id') as List)
+    assertEquals(['A1', 'A1', 'A2', 'A2', 'B'], result.column('name') as List)
+    assertEquals([80, 90, 80, 90, 70], result.column('score') as List)
+  }
+
+  @Test
   void testSelfJoin() {
     def employees = Matrix.builder('employees').data([
         id       : [1, 2, 3],
