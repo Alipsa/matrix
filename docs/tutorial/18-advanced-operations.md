@@ -265,12 +265,13 @@ data.apply('status') { status ->
 
 ## Joining and Merging Matrices
 
-The `Joiner` class provides SQL-like join operations.
+The `Joiner` class provides SQL-like join operations with support for inner, left, right, and full outer joins. It handles one-to-many relationships, composite (multi-column) keys, and automatically resolves duplicate column names with `_x`/`_y` suffixes.
 
 ### Inner Join
 
 ```groovy
 import se.alipsa.matrix.core.Joiner
+import se.alipsa.matrix.core.JoinType
 
 Matrix employees = Matrix.builder('employees')
     .data(
@@ -289,8 +290,10 @@ Matrix departments = Matrix.builder('departments')
     .types([Integer, String])
     .build()
 
-// Inner join - only matching rows
+// Inner join - only matching rows (default)
 Matrix joined = Joiner.merge(employees, departments, 'deptId')
+// Equivalent using explicit JoinType:
+// Matrix joined = Joiner.merge(employees, departments, 'deptId', JoinType.INNER)
 println "Inner Join:"
 println joined
 ```
@@ -351,6 +354,188 @@ Matrix ordersWithCustomers = Joiner.merge(
     [x: 'customerId', y: 'id']
 )
 println ordersWithCustomers
+```
+
+### Right Join
+
+```groovy
+// Right join - all rows from right table, nulls for non-matching left rows
+Matrix rightJoined = Joiner.merge(employees, departments, 'deptId', JoinType.RIGHT)
+println rightJoined
+```
+
+Output:
+```
+Matrix (employees, 3 x 4)
+empId	name   	deptId	deptName
+1    	Alice  	101   	Engineering
+2    	Bob    	102   	Sales
+null 	null   	104   	Marketing
+```
+
+### Full Outer Join
+
+```groovy
+// Full outer join - all rows from both tables
+Matrix fullJoined = Joiner.merge(employees, departments, 'deptId', JoinType.FULL)
+println fullJoined
+```
+
+Output:
+```
+Matrix (employees, 5 x 4)
+empId	name   	deptId	deptName
+1    	Alice  	101   	Engineering
+2    	Bob    	102   	Sales
+3    	Charlie	101   	Engineering
+4    	Diana  	103   	null
+null 	null   	104   	Marketing
+```
+
+### Multi-Column (Composite) Join Keys
+
+```groovy
+Matrix sales = Matrix.builder('sales')
+    .data(
+        dept: ['Sales', 'Sales', 'Eng'],
+        empId: [1, 2, 1],
+        revenue: [5000, 3000, 8000]
+    )
+    .types([String, Integer, Integer])
+    .build()
+
+Matrix ratings = Matrix.builder('ratings')
+    .data(
+        department: ['Sales', 'Eng', 'Sales'],
+        employeeId: [1, 1, 2],
+        rating: [5, 4, 3]
+    )
+    .types([String, Integer, Integer])
+    .build()
+
+// Join on multiple columns with different names
+Matrix result = Joiner.merge(sales, ratings,
+    [x: ['dept', 'empId'], y: ['department', 'employeeId']],
+    JoinType.INNER)
+
+// When key column names are the same in both matrices, use a list:
+// Joiner.merge(x, y, ['dept', 'empId'], JoinType.INNER)
+```
+
+### Duplicate Column Names
+
+When both matrices have non-key columns with the same name, the result columns are automatically suffixed `_x` and `_y`:
+
+```groovy
+Matrix q1 = Matrix.builder('q1').data(
+    id: [1, 2], revenue: [1000, 2000]
+).types([Integer, Integer]).build()
+
+Matrix q2 = Matrix.builder('q2').data(
+    id: [1, 2], revenue: [1500, 2500]
+).types([Integer, Integer]).build()
+
+Matrix compared = Joiner.merge(q1, q2, 'id')
+// Result columns: id, revenue_x, revenue_y
+println compared.columnNames()  // [id, revenue_x, revenue_y]
+```
+
+### One-to-Many Joins
+
+When a key in the right matrix has multiple matching rows, each match produces a separate result row:
+
+```groovy
+Matrix orders2 = Matrix.builder('orders')
+    .data(orderId: [1, 2], customer: ['Alice', 'Bob'])
+    .types([Integer, String]).build()
+
+Matrix items = Matrix.builder('items')
+    .data(orderId: [1, 1, 1, 2], product: ['Pen', 'Paper', 'Ink', 'Tape'])
+    .types([Integer, String]).build()
+
+Matrix detail = Joiner.merge(orders2, items, 'orderId')
+// 4 result rows: order 1 expanded to 3 rows (one per item), order 2 to 1
+println detail.rowCount()  // 4
+```
+
+### Cross Join
+
+A cross join produces the Cartesian product of two matrices — every row from the left is paired with every row from the right. No key column is required:
+
+```groovy
+Matrix colors = Matrix.builder('colors')
+    .data(color: ['Red', 'Blue'])
+    .types([String]).build()
+
+Matrix sizes = Matrix.builder('sizes')
+    .data(size: ['S', 'M', 'L'])
+    .types([String]).build()
+
+Matrix combinations = Joiner.crossJoin(colors, sizes)
+println combinations  // 6 rows: every color × every size
+```
+
+### Semi Join
+
+A semi join returns rows from the left matrix that have at least one match in the right matrix. Only the left columns are included in the result (no columns from the right are appended):
+
+```groovy
+Matrix allEmployees = Matrix.builder('employees')
+    .data(
+        empId: [1, 2, 3, 4],
+        name: ['Alice', 'Bob', 'Charlie', 'Diana']
+    )
+    .types([Integer, String]).build()
+
+Matrix activeProjects = Matrix.builder('projects')
+    .data(empId: [1, 3], project: ['Alpha', 'Beta'])
+    .types([Integer, String]).build()
+
+// Employees who have at least one project
+Matrix withProjects = Joiner.merge(allEmployees, activeProjects, 'empId', JoinType.SEMI)
+println withProjects  // Alice and Charlie only, no project column
+```
+
+### Anti Join
+
+An anti join is the complement of a semi join — it returns rows from the left matrix that have *no* match in the right matrix. Only the left columns are included:
+
+```groovy
+// Employees who have NO projects (opposite of semi join)
+Matrix noProjects = Joiner.merge(allEmployees, activeProjects, 'empId', JoinType.ANTI)
+println noProjects  // Bob and Diana only
+```
+
+### Self Join
+
+A self join joins a matrix with itself. This is a usage pattern, not a separate join type — simply pass the same matrix as both arguments:
+
+```groovy
+Matrix people = Matrix.builder('people')
+    .data(
+        name: ['Alice', 'Bob', 'Charlie'],
+        managerId: [null, 1, 1],
+        empId: [1, 2, 3]
+    )
+    .types([String, Integer, Integer]).build()
+
+// Find each employee's manager name
+Matrix withManager = Joiner.merge(people, people,
+    [x: 'managerId', y: 'empId'],
+    JoinType.LEFT)
+// Result includes name_x (employee) and name_y (manager)
+println withManager
+```
+
+Note: columns from the left matrix appear in their original order, so `empId` (an x column) appears before the y-side columns.
+
+Output:
+```
+Matrix (people, 3 x 5)
+name_x 	managerId	empId	name_y	managerId_y
+Alice  	null     	1    	null  	null
+Bob    	1        	2    	Alice 	null
+Charlie	1        	3    	Alice 	null
 ```
 
 ### Combining Multiple Matrices Vertically
@@ -970,7 +1155,7 @@ This chapter covered advanced Matrix operations including:
 
 - **Complex filtering** with multiple conditions, null handling, and dynamic columns
 - **Advanced transformations** using apply(), applyRows(), and derived columns
-- **Joining matrices** with inner and left joins
+- **Joining matrices** with inner, left, right, full, cross, semi, and anti joins
 - **Grouping and aggregation** for summary statistics
 - **Time series operations** including date extraction, filtering, and rolling calculations
 - **Matrix reshaping** with pivot and melt operations

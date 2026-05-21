@@ -546,8 +546,22 @@ Stat methods
 - Grid<Object> grid()
 - Matrix clone()
 
-## Joining (merging) Matrices 
-- static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false)
+## Joining (merging) Matrices
+
+The `Joiner` class provides SQL-like join operations. `JoinType` values: `INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`, `SEMI`, `ANTI`.
+
+- static Matrix merge(Matrix x, Matrix y, String by, boolean all = false)
+- static Matrix merge(Matrix x, Matrix y, Map by, boolean all = false)
+- static Matrix merge(Matrix x, Matrix y, String by, JoinType joinType)
+- static Matrix merge(Matrix x, Matrix y, Map by, JoinType joinType)
+- static Matrix merge(Matrix x, Matrix y, List\<String\> by, JoinType joinType)
+- static Matrix crossJoin(Matrix x, Matrix y)
+
+Multi-column keys use a map: `[x: ['dept', 'id'], y: ['department', 'empId']]`.
+Same-named multi-keys use a list: `['dept', 'id']`.
+Duplicate non-key column names are suffixed `_x` / `_y`.
+Semi and anti joins return only left-side columns.
+Self join: pass the same matrix as both arguments.
 
 ## Comparing data
 - boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)

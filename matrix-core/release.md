@@ -14,8 +14,26 @@
 - `hasNulls()` — returns true if the column contains at least one null value
 - `countNulls()` — returns the count of null elements in the column
 
+### Joiner rewrite
+- Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`, `SEMI`, `ANTI`
+- `Joiner.merge()` now supports all key-based SQL join types via `JoinType` parameter
+- `Joiner.crossJoin(x, y)` — Cartesian product of two matrices (every x row paired with every y row, no key column needed)
+- Semi join (`JoinType.SEMI`) — returns x rows where the key exists in y (no y columns appended, no duplicate rows)
+- Anti join (`JoinType.ANTI`) — returns x rows where the key does *not* exist in y
+- Self join — documented as a usage pattern: `merge(m, m, [x: 'managerId', y: 'id'], JoinType.INNER)`
+- Multi-column (composite) join keys: `merge(x, y, [x: ['dept', 'id'], y: ['department', 'empId']], JoinType.INNER)`
+- Same-name multi-key shorthand: `merge(x, y, ['dept', 'empId'], JoinType.INNER)`
+- One-to-many joins: multiple y matches per key now produce separate result rows (previously only the first match was kept)
+- Type preservation: result Matrix now carries column types from both source matrices
+- Duplicate non-key column names are automatically suffixed `_x` / `_y`
+- Duplicate y non-key column names are also suffixed when they conflict with x key columns, preserving unique result column names for self joins
+- Null join keys match other null join keys, following common data-analysis merge behavior rather than SQL `NULL` semantics
+- Right join and full outer join key values are preserved from y for unmatched rows
+- `merge(..., JoinType.CROSS)` now delegates to `crossJoin(x, y)`
+- Joiner is now fully `@CompileStatic` (removed `@CompileDynamic` workaround)
+- Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
+
 ### Fixes
-- `Joiner.merge()` — added `@CompileDynamic` to fix static compilation issue
 
 ### Build changes
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
