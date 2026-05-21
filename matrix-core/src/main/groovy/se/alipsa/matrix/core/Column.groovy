@@ -91,23 +91,12 @@ class Column extends ArrayList {
     if (list == null) {
       throw new IllegalArgumentException('Cannot add a null list to a column')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it + (val as Number))
-      } else if (it instanceof Character) {
-        result.add(it + (val as Character))
-      } else if (it instanceof String) {
-        result.add(it + (val as String))
-      } else {
-        result.add(it + val)
-      }
+    applyListOp(list) { a, b ->
+      if (a instanceof Number) return a + (b as Number)
+      if (a instanceof Character) return a + (b as Character)
+      if (a instanceof String) return a + (b as String)
+      a + b
     }
-    result
   }
 
   @CompileDynamic
@@ -123,23 +112,12 @@ class Column extends ArrayList {
     if (list == null) {
       throw new IllegalArgumentException('Cannot subtract a null list from a column')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it - (val as Number))
-      } else if (it instanceof Character) {
-        result.add(it - (val as Character))
-      } else if (it instanceof String) {
-        result.add(it - (val as String))
-      } else {
-        result.add(it - val)
-      }
+    applyListOp(list) { a, b ->
+      if (a instanceof Number) return a - (b as Number)
+      if (a instanceof Character) return a - (b as Character)
+      if (a instanceof String) return a - (b as String)
+      a - b
     }
-    result
   }
 
   @CompileDynamic
@@ -155,19 +133,7 @@ class Column extends ArrayList {
     if (list == null) {
       throw new IllegalArgumentException('Cannot multiply a column by a null list')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it * (val as Number))
-      } else {
-        result.add(it * val)
-      }
-    }
-    result
+    applyListOp(list) { a, b -> a instanceof Number ? a * (b as Number) : a * b }
   }
 
   @CompileDynamic
@@ -183,19 +149,7 @@ class Column extends ArrayList {
     if (list == null) {
       throw new IllegalArgumentException('Cannot divide a column by a null list')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it / (val as Number))
-      } else {
-        result.add(it / val)
-      }
-    }
-    result
+    applyListOp(list) { a, b -> a instanceof Number ? a / (b as Number) : a / b }
   }
 
   @CompileDynamic
@@ -211,16 +165,19 @@ class Column extends ArrayList {
     if (list == null) {
       throw new IllegalArgumentException('Cannot raise a column to the power of a null list')
     }
+    applyListOp(list) { a, b -> a instanceof Number ? a ** (b as Number) : a ** b }
+  }
+
+  @CompileDynamic
+  private List applyListOp(List list, Closure<Object> op) {
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it ** (val as Number))
       } else {
-        result.add(it ** val)
+        result.add(op(it, val))
       }
     }
     result
@@ -262,7 +219,7 @@ class Column extends ArrayList {
     Collections.frequency(this, null)
   }
 
-  List removeNulls() {
+  Column removeNulls() {
     this.findAll { it != null } as Column
   }
 
@@ -311,12 +268,14 @@ class Column extends ArrayList {
   /**
    * Change the default behavior of the unique method to not mutate
    * (otherwise the rest of the column values will be filled with null).
-   * Returns a new Column with unique values from this column.
+   * Returns a new Column with unique values from this column, preserving name and type.
    *
    * @return a new Column with unique values
    */
-  List unique() {
-    unique(false)
+  Column unique() {
+    Column result = new Column(name, type)
+    result.addAll(new LinkedHashSet(this))
+    result
   }
 
   @CompileDynamic
@@ -472,7 +431,7 @@ class Column extends ArrayList {
   }
 
   List getValues() {
-    this.collect { it }
+    new ArrayList(this)
   }
 
 }

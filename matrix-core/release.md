@@ -34,6 +34,14 @@
 - Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
 
 ### Fixes
+- `Column.unique()` now preserves the column's `name` and `type` on the returned copy (previously both were lost).
+- `Column.removeNulls()` now correctly returns `Column` instead of `List`.
+- `Matrix.diff()` and `Matrix.equals()` / `Matrix.checkValues()` now use `BigDecimal` arithmetic for numeric tolerance comparisons, eliminating `double`/`Double.NaN` imprecision. The `allowedDiff` parameter type changed from `double`/`Double` to `BigDecimal` — Groovy call sites are unaffected; Java callers that pass a `double` literal need a cast or `BigDecimal` literal.
+- `Matrix.equals()` — a `null` value in the compared matrix is now correctly reported as differing from a numeric value (was silently masked by `NaN` comparison semantics).
+- `Stat.sd(Matrix, List<String>)` was incorrectly collecting `Double` values via `.doubleValue()`; it now delegates to the existing `sd(List<?>, boolean)` overload, giving consistent BigDecimal-precision results.
+- `Stat.mean()` no longer applies `setScale` to every summand before adding; scale is applied only at the final divide, producing more accurate intermediate sums.
+- `Stat.min(Matrix, List<String>)`, `Stat.max(Matrix, List<String>)`, and `Stat.max(Matrix, String)` now use direct columnar access instead of building a full row list, matching the columnar-access pattern used elsewhere in `Stat`.
+- `MatrixAssertions` tolerance constants changed from `double` to `BigDecimal` to match the updated `equals()` signature.
 
 ### Build changes
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)

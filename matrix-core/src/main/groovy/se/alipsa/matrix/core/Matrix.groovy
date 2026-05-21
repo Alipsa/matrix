@@ -639,10 +639,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, Closure function) {
-    if (!columnNames().contains(columnName)) {
+    int idx = columnIndex(columnName)
+    if (idx < 0) {
       throw new IllegalArgumentException("There is no column called $columnName in this matrix")
     }
-    return apply(columnIndex(columnName), function)
+    return apply(idx, function)
   }
 
   /**
@@ -698,10 +699,11 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnNumber < 0 || columnNumber > lastColIdx) {
       throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
     }
+    Set<Integer> rowSet = rows as Set<Integer>
     def col = new Column()
     Class updatedClass = null
     column(columnNumber).eachWithIndex { it, idx ->
-      if (idx in rows) {
+      if (rowSet.contains(idx)) {
         def val = function(it)
         if (updatedClass == null && val != null) {
           updatedClass = val.class
@@ -976,7 +978,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the column name
    */
   String columnName(int index) {
-    return columnNames()[index]
+    mColumns[index].name
   }
 
   /**
@@ -1655,7 +1657,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a diff string describing any differences, or an empty string if equal
    */
   @SuppressWarnings(['DuplicateStringLiteral', 'DuplicateNumberLiteral'])
-  String diff(Matrix other, boolean forceRowComparing = false, double allowedDiff = 0.0001) {
+  String diff(Matrix other, boolean forceRowComparing = false, BigDecimal allowedDiff = 0.0001) {
     StringBuilder sb = new StringBuilder()
     if (this.matrixName != other.matrixName) {
       sb.append("Names differ: \n\tthis: ${matrixName} \n\tthat: ${other.matrixName}\n")
@@ -1681,9 +1683,12 @@ class Matrix implements Iterable<Row>, Cloneable {
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
           if (entry instanceof Number) {
-            def thatVal = (thatRow[c] != null ? thatRow[c] : Double.NaN) as double
-            double thisVal = entry as double
-            if (Math.abs(thisVal - thatVal as double) > allowedDiff) {
+            def thatVal = thatRow[c]
+            if (thatVal instanceof Number) {
+              if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
+                valueDiff = true
+              }
+            } else {
               valueDiff = true
             }
           } else if (entry != thatRow[c]) {
@@ -1900,7 +1905,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   boolean equals(Object o) {
-    equals(o, true, true, false, 0.0001d, false)
+    equals(o, true, true, false, 0.0001, false)
   }
 
 
@@ -1918,7 +1923,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   @SuppressWarnings('EqualsOverloaded')
   boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
-                 Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
+                 BigDecimal allowedDiff = 0.0001, boolean throwException = false, String message = '') {
     if (this.is(o)) {
       return true
     }
@@ -1943,7 +1948,6 @@ class Matrix implements Iterable<Row>, Cloneable {
       ComparisonHelper.handleError("$message - Matrix.equals: column types differ", throwException)
       return false
     }
-    //if (mColumns != matrix.mColumns) return false
     List valueDiff = checkValues(matrix, allowedDiff, ignoreTypes)
     if (valueDiff.size() > 0) {
       ComparisonHelper.handleError("$message - Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}", throwException)
@@ -1954,7 +1958,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
 
-  private List checkValues(Matrix matrix, Double allowedDiff, boolean ignoreTypes = false) {
+  private List checkValues(Matrix matrix, BigDecimal allowedDiff, boolean ignoreTypes = false) {
     List valueDiff = []
     int i = 0
     for (List column in mColumns) {
@@ -1963,8 +1967,11 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (entry in column) {
         def thatVal = thatCol[r]
         if (entry instanceof Number) {
-          def diff = Math.abs((entry as double) - ((thatVal != null ? thatVal : Double.NaN) as double))
-          if (diff > allowedDiff) {
+          if (thatVal instanceof Number) {
+            if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
+              return [r, i, entry, thatVal]
+            }
+          } else {
             return [r, i, entry, thatVal]
           }
         } else {
@@ -2273,7 +2280,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matching Column, or the default property value if not a column name
    */
   Object getProperty(String name) {
-    if (columnNames().contains(name)) {
+    if (columnIndex(name) >= 0) {
       return column(name)
     }
     return getProperties().get(name)
@@ -3055,16 +3062,16 @@ class Matrix implements Iterable<Row>, Cloneable {
       return Collections.emptyList()
     }
     int nRows = mColumns[0].size()
-    Map<Integer, Row> r = [:]
-    for (Integer i = 0; i < nRows; i++) {
-      r[i] = new Row(i, this)
+    List<Row> r = new ArrayList<>(nRows)
+    for (int i = 0; i < nRows; i++) {
+      r.add(new Row(i, this))
     }
     mColumns.eachWithIndex { List column, int col ->
-      for (Integer row = 0; row < nRows; row++) {
+      for (int row = 0; row < nRows; row++) {
         r.get(row).addElement(column[row])
       }
     }
-    return r.values() as List
+    r
   }
 
 
@@ -3311,14 +3318,14 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     List<Matrix> chunks = []
     int startRow = 0
+    List<Row> allRows = rows()
 
     for (int i = 0; i < numChunks; i++) {
       // First 'remainder' chunks get an extra row
       int chunkSize = (i < remainder) ? baseSize + 1 : baseSize
       int endRow = startRow + chunkSize
 
-      def rowsForChunk = rows().subList(startRow, endRow)
-      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + i).rowList(rowsForChunk).build()
+      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + i).rowList(allRows.subList(startRow, endRow)).build()
 
       startRow = endRow
     }
@@ -3346,8 +3353,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     List<Integer> r = column(columnName).findIndexValues(condition) as List<Integer>
+    buildSubset(this.rows(r) as List<List>)
+  }
+
+  private Matrix buildSubset(List<List> rowData) {
     Matrix result = builder()
-        .rows(this.rows(r) as List<List>)
+        .rows(rowData)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
@@ -3371,14 +3382,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
-    Matrix result = builder()
-        .rows(rows(criteria) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(rows(criteria) as List<List>)
   }
 
   /**
@@ -3402,14 +3406,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(IntRange rows) {
-    Matrix result = builder()
-        .rows(this.rows(rows) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows) as List<List>)
   }
 
   /**
@@ -3419,14 +3416,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(List<Integer> rows) {
-    Matrix result = builder()
-        .rows(this.rows(rows) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows) as List<List>)
   }
 
   /**
@@ -3439,14 +3429,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == null || rows.length == 0) {
       return this.clone()
     }
-    Matrix result = builder()
-        .rows(this.rows(rows as List) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows as List) as List<List>)
   }
 
   /**
@@ -3752,24 +3735,25 @@ class Matrix implements Iterable<Row>, Cloneable {
       sb.append('  <thead>\n')
       sb.append('    <tr>\n')
 
-      columnNames().eachWithIndex { it, idx ->
-        String colName = columnName(idx)
+      columnNames().eachWithIndex { String colName, int idx ->
         sb.append("      <th class='$colName ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
           sb.append(" style='text-align: ${alignment[colName]}'")
         }
-        sb.append('>').append(it).append('</th>\n')
+        sb.append('>').append(colName).append('</th>\n')
       }
       sb.append('    </tr>\n  </thead>\n')
     }
+    List<String> colNames = columnNames()
+    List<String> typeNames = colNames.collect { typeName(columnIndex(it)) }
     StringBuilder rowBuilder = new StringBuilder()
     sb.append('  <tbody>\n')
     for (row in rows) {
       rowBuilder.setLength(0)
       sb.append('    <tr>\n')
       row.eachWithIndex { Object val, int i ->
-        rowBuilder.append("      <td class='${columnName(i)} ${typeName(i)}'")
-        String colName = columnName(i)
+        String colName = colNames[i]
+        rowBuilder.append("      <td class='${colName} ${typeNames[i]}'")
         if (alignment.containsKey(colName)) {
           rowBuilder.append(" style='text-align: ${alignment[colName]}'")
         }

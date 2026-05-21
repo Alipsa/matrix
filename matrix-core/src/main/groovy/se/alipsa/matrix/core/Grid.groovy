@@ -171,11 +171,11 @@ class Grid<T> implements Iterable<List<T>> {
    * @return a Map<String, Integer> of the number of observations (rows) and the number of
    * variables (columns) in the Grid with the keys 'observations' and 'variables'
    */
-  @SuppressWarnings('UnnecessaryCollectCall')
   Map<String, Integer> dimensions() {
-    ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.collect { it.size() }.max()]
+    ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.max { it.size() }.size()]
   }
 
+  @Override
   String toString() {
     StringBuilder sb = new StringBuilder('[\n')
     data.each { sb.append('  ').append(String.valueOf(it)).append('\n') }

@@ -36,6 +36,9 @@ class ValueConverter {
   private static final char C_E = 'E'
   private static final char C_e = 'e'
 
+  // Threshold below which a Number is treated as yyyyMMdd date integer rather than epoch millis
+  private static final long MAX_COMPACT_DATE_INT = 22991231L
+
   static ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
   static ConcurrentHashMap<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
 
@@ -318,18 +321,18 @@ class ValueConverter {
     }
     String val = asDecimalNumber(strVal)
     if (val.isBlank()) return null
-    return Double.parseDouble(val).intValue()
+    return new BigDecimal(val).intValue()
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
     if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
-      return Math.round(o.doubleValue()).intValue()
+      return o.toBigDecimal().setScale(0, java.math.RoundingMode.HALF_UP).intValue()
     }
 
     String val = asDecimalNumber(String.valueOf(o))
     if (val.isBlank()) return null
-    return Math.round(Double.parseDouble(val)).intValue()
+    return new BigDecimal(val).setScale(0, java.math.RoundingMode.HALF_UP).intValue()
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
@@ -366,11 +369,14 @@ class ValueConverter {
   static String asDecimalNumber(String txt, char decimalSeparator = '.', String valueIfNull = null) {
     if (txt == null) return valueIfNull
     StringBuilder result = new StringBuilder()
-    txt.chars().mapToObj(i -> i as char)
-        .filter(c -> c.isDigit() || decimalSeparator == c || C_MINUS == c || C_HYPHEN == c
-            || C_PLUS == c || C_e == c || C_E == c)
-        .forEach(c -> result.append(c))
-    return result.toString()
+    for (int i = 0; i < txt.length(); i++) {
+      char c = txt.charAt(i)
+      if (Character.isDigit(c) || c == decimalSeparator || c == C_MINUS || c == C_HYPHEN
+          || c == C_PLUS || c == C_e || c == C_E) {
+        result.append(c)
+      }
+    }
+    result.toString()
   }
 
   static YearMonth asYearMonth(Object o, YearMonth valueIfNull = null) {
@@ -439,7 +445,7 @@ class ValueConverter {
 
   static java.util.Date asDate(Number o, java.util.Date valueIfNull = null) {
     if (o == null || '' == o) return valueIfNull
-    if (o < 22991231) {
+    if (o < MAX_COMPACT_DATE_INT) {
       return new Date(simpleDateFormatCache('yyyyMMdd').parse(String.valueOf(o.longValue())).getTime())
     }
     // assume millis since 1970-01-01
@@ -537,7 +543,7 @@ class ValueConverter {
       return Date.valueOf(o)
     }
     if (o instanceof Number) {
-      if (o < 22991231) {
+      if (o < MAX_COMPACT_DATE_INT) {
         return new Date(simpleDateFormatCache('yyyyMMdd').parse(String.valueOf(o.longValue())).getTime())
       }
       // assume millis since 1970-01-01

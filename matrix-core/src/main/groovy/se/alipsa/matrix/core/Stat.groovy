@@ -204,7 +204,6 @@ class Stat {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    // s.set(idx, s.get(colNum) + value)
                     s[idx] = s[idx] + value as T
                 }
                 idx++
@@ -221,22 +220,20 @@ class Stat {
      * @return a list (a column) with the sum of the rows for the columns specified
      */
     static <T extends Number> List<T> sumRows(Matrix m, List<Integer> colNums) {
-        List<T> means = []
+        List<T> sums = []
         m.each { Row row ->
-            means << (sum(row[colNums]) as T)
+            sums << (sum(row[colNums]) as T)
         }
-        means
+        sums
     }
 
     static <T extends Number> List<T> sumRows(Matrix m, String... colNames) {
-        List<T> means = []
-        if (colNames.length == 0) {
-            colNames = m.columnNames()
-        }
+        List<T> sums = []
+        String[] cols = resolveColumns(m, colNames) as String[]
         m.each { row ->
-            means << (sum(row.subList(colNames)) as T)
+            sums << (sum(row.subList(cols)) as T)
         }
-        means
+        sums
     }
 
     /**
@@ -478,11 +475,9 @@ class Stat {
      */
     static List<BigDecimal> meanRows(Matrix m, String... colNames) {
         List<BigDecimal> means = []
-        if (colNames.length == 0) {
-            colNames = m.columnNames()
-        }
+        String[] cols = resolveColumns(m, colNames) as String[]
         m.each { row ->
-            means << mean(row.subList(colNames))
+            means << mean(row.subList(cols))
         }
         means
     }
@@ -508,11 +503,11 @@ class Stat {
         if (list == null || list.isEmpty()) {
             return null
         }
-        BigDecimal sum = BigDecimal.ZERO.setScale(scale, RoundingMode.HALF_UP)
+        BigDecimal sum = BigDecimal.ZERO
         int nVals = 0
         for (value in list) {
             if (value != null && value instanceof Number) {
-                sum += (value as BigDecimal).setScale(scale, RoundingMode.HALF_UP)
+                sum += value as BigDecimal
                 nVals++
             }
         }
@@ -522,7 +517,7 @@ class Stat {
         if (sum == 0) {
             return BigDecimal.ZERO.setScale(scale, RoundingMode.HALF_UP)
         }
-        return sum.divide((nVals as BigDecimal), scale, RoundingMode.HALF_UP)
+        return sum.divide(nVals as BigDecimal, scale, RoundingMode.HALF_UP)
     }
 
     static BigDecimal mean(Matrix table, String colName) {
@@ -559,15 +554,10 @@ class Stat {
     }
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
-        // Optimized: use columnar access instead of row iteration
-        List<BigDecimal> results = []
-        colNames.each { colName ->
-            List<?> columnData = table.column(colName)
-            List<Number> numericValues = columnData.findAll { it != null && it instanceof Number } as List<Number>
-            // median() handles sorting internally, no need to pre-sort
-            results << median(numericValues)
+        colNames.collect { colName ->
+            List<Number> numericValues = table.column(colName).findAll { it != null && it instanceof Number } as List<Number>
+            median(numericValues)
         }
-        return results
     }
 
     /**
@@ -578,27 +568,25 @@ class Stat {
      * @return a list (a column) with the mean of the rows for the columns specified
      */
     static List<BigDecimal> medianRows(Matrix table, List<Integer> columns) {
-        List<BigDecimal> means = []
+        List<BigDecimal> medians = []
         table.each { row ->
-            means << median(row.subList(columns) as List<? extends Number>)
+            medians << median(row.subList(columns) as List<? extends Number>)
         }
-        means
+        medians
     }
 
     /**
      * @param m the matrix containing the data
      * @param colNames the names of the columns to include, if omitted, all columns will be included
-     * @return a list of the row sums
+     * @return a list of the row medians
      */
     static List<BigDecimal> medianRows(Matrix m, String... colNames) {
-        List<BigDecimal> means = []
-        if (colNames.length == 0) {
-            colNames = m.columnNames()
-        }
+        List<BigDecimal> medians = []
+        String[] cols = resolveColumns(m, colNames) as String[]
         m.each { row ->
-            means << median(row.subList(colNames) as List<? extends Number>)
+            medians << median(row.subList(cols) as List<? extends Number>)
         }
-        means
+        medians
     }
 
     /**
@@ -714,7 +702,7 @@ class Stat {
     }
 
     static <T extends Comparable> List<T> min(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return min(table.rows() as List<List<T>>, table.columnIndices(colNames), ignoreNonNumerics)
+        colNames.collect { colName -> min(table.column(colName) as List<T>, ignoreNonNumerics) }
     }
 
     static <T> T max(List<T> list, boolean ignoreNonNumerics = false) {
@@ -763,11 +751,11 @@ class Stat {
     }
 
     static <T extends Comparable> List<T> max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return max(table.rows() as List<List<T>>, table.columnIndices(colNames), ignoreNonNumerics)
+        colNames.collect { colName -> max(table.column(colName) as List<T>, ignoreNonNumerics) }
     }
 
     static <T extends Comparable> T max(Matrix table, String colName) {
-        max(table.rows() as List<List<T>>, table.columnIndex(colName))
+        max(table.column(colName) as List<T>)
     }
     static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
@@ -786,7 +774,6 @@ class Stat {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    // numberMap[String.valueOf(colNum)].add(value.doubleValue())
                     numberMap[String.valueOf(colNum)].add(value)
                 }
             }
@@ -803,19 +790,7 @@ class Stat {
     }
 
     static List<BigDecimal> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
-        // Optimized: use columnar access instead of row iteration
-        List<BigDecimal> results = []
-        columnNames.each { colName ->
-            List<?> columnData = table.column(colName)
-            List<Double> numericValues = []
-            columnData.each { value ->
-                if (value instanceof Number) {
-                    numericValues.add(value.doubleValue())
-                }
-            }
-            results << sd(numericValues, isBiasCorrected)
-        }
-        return results
+        columnNames.collect { colName -> sd(table.column(colName), isBiasCorrected) }
     }
 
     static BigDecimal variance(BigDecimal[] values, BigDecimal mean) {
@@ -979,6 +954,10 @@ class Stat {
             }
         }
         return null
+    }
+
+    private static List<String> resolveColumns(Matrix m, String[] colNames) {
+        colNames.length == 0 ? m.columnNames() : colNames as List<String>
     }
 
 }

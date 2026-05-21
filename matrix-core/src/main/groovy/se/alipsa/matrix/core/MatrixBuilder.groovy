@@ -393,11 +393,7 @@ class MatrixBuilder {
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      int endIdx = file.name.length()
-      if (file.name.contains('.')) {
-        endIdx = file.name.lastIndexOf('.')
-      }
-      matrixName(file.name.substring(0, endIdx))
+      matrixName(stripExtension(file.name))
     }
     this
   }
@@ -415,12 +411,7 @@ class MatrixBuilder {
   MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      String fileName = file.getFileName().toString()
-      int endIdx = fileName.length()
-      if (fileName.contains('.')) {
-        endIdx = fileName.lastIndexOf('.')
-      }
-      matrixName(fileName.substring(0, endIdx))
+      matrixName(stripExtension(file.getFileName().toString()))
     }
     this
   }
@@ -924,5 +915,10 @@ class MatrixBuilder {
       case Types.STRUCT -> Map
       default -> Object
     }
+  }
+
+  private static String stripExtension(String fileName) {
+    int dot = fileName.lastIndexOf('.')
+    dot > 0 ? fileName.substring(0, dot) : fileName
   }
 }
