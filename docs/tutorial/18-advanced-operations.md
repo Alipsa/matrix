@@ -524,6 +524,16 @@ Matrix withManager = Joiner.merge(people, people,
     [x: 'managerId', y: 'empId'],
     JoinType.LEFT)
 // Result includes name_x (employee) and name_y (manager)
+println withManager
+```
+
+Output:
+```
+Matrix (people, 3 x 5)
+name_x 	managerId	empId	name_y	managerId_y
+Alice  	null     	null 	null  	null
+Bob    	1        	1    	Alice 	null
+Charlie	1        	1    	Alice 	null
 ```
 
 ### Combining Multiple Matrices Vertically

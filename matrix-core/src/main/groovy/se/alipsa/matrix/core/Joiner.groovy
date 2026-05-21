@@ -164,7 +164,9 @@ class Joiner {
         if (joinType == JoinType.SEMI) {
           resultRows.add(xRow)
         } else if (joinType != JoinType.ANTI) {
-          matchedYKeys.add(key)
+          if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
+            matchedYKeys.add(key)
+          }
           yMatches.each { List<Object> yVals ->
             resultRows << xRow + yVals
           }
@@ -245,12 +247,7 @@ class Joiner {
     List<List<Object>> valCols = valueIndices.collect { m.column(it) as List<Object> }
     (0..<rowCount).each { int r ->
       List<Object> key = extractFromCols(keyCols, r)
-      List<List<Object>> bucket = index[key]
-      if (bucket == null) {
-        bucket = []
-        index[key] = bucket
-      }
-      bucket << extractFromCols(valCols, r)
+      index.computeIfAbsent(key) { [] } << extractFromCols(valCols, r)
     }
     index
   }
