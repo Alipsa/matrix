@@ -116,8 +116,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid plus(List<T> row) {
-    def grid = new Grid()
-    grid.addAll(data)
+    def grid = new Grid<T>(copyRows(), elementType as Class<T>)
     grid.add(row)
     grid
   }
@@ -246,11 +245,12 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid<T> transpose() {
-    new Grid<T>(transpose(this.data))
+    new Grid<T>(transpose(this.data), elementType as Class<T>)
   }
 
   static <N> Grid<N> convert(Grid grid, Integer colNum, Class<N> type, NumberFormat format = null) {
-    new Grid(convert(grid.data, [colNum], type, format))
+    List<List<N>> converted = convert(grid.data, colNum, type, format)
+    coversAllColumns(grid.data, [colNum]) ? new Grid<N>(converted, type) : new Grid<N>(converted)
   }
 
   // Null in means "no single target column was supplied", so preserve the legacy null result.
@@ -272,7 +272,8 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   static <N> Grid<N> convert(Grid grid, List<Integer> colNums, Class<N> type, NumberFormat format = null) {
-    new Grid(convert(grid.data, colNums, type, format))
+    List<List<?>> converted = convert(grid.data, colNums, type, format)
+    coversAllColumns(grid.data, colNums) ? new Grid<N>(converted as List<List<N>>, type) : new Grid<N>(converted as List<List<N>>)
   }
 
   @CompileDynamic
@@ -417,6 +418,18 @@ class Grid<T> implements Iterable<List<T>> {
 
   private static Class<?> safeElementType(Class<?> elementType) {
     ClassUtils.convertPrimitiveToWrapper(elementType) ?: Object
+  }
+
+  private static boolean coversAllColumns(List<List<?>> rowList, List<Integer> colNums) {
+    if (rowList == null || rowList.isEmpty()) {
+      return true
+    }
+    Set<Integer> columns = colNums as Set<Integer>
+    columns == (0..<rowList[0].size()) as Set<Integer>
+  }
+
+  private List<List<T>> copyRows() {
+    data.collect { List<T> row -> row.collect() as List<T> }
   }
 
   private void validateNewRow(List<T> row) {

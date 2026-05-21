@@ -70,7 +70,7 @@ class ValueConverter {
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
-      case java.util.Date -> (E) asDate(o, dateTimePattern)
+      case java.util.Date -> (E) asDate(o, dateTimePattern, null, locale)
       case Number -> (E) asNumber(o)
       case ZonedDateTime -> (E) asZonedDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       default -> try {

@@ -57,6 +57,35 @@ class GridTest {
     }
 
     @Test
+    void testPlusCopiesExistingRows() {
+        Grid<Integer> grid = new Grid<Integer>([[1, 2]], Integer)
+
+        Grid<Integer> result = grid + [3, 4]
+        result[0][0] = 99
+
+        assertEquals(1, grid[0, 0])
+        assertEquals(99, result[0, 0])
+        assertEquals(2, result.dimensions().observations)
+    }
+
+    @Test
+    void testTypedGridResultsPreserveElementType() {
+        Grid<Integer> grid = new Grid<Integer>([[1, 2]], Integer)
+
+        Grid<Integer> transposed = grid.transpose()
+        IllegalArgumentException transposeError = assertThrows(IllegalArgumentException) {
+            transposed.add(['x'])
+        }
+        assertTrue(transposeError.message.contains('expected Integer'))
+
+        Grid<BigDecimal> converted = Grid.convert(grid, [0, 1], BigDecimal)
+        IllegalArgumentException convertError = assertThrows(IllegalArgumentException) {
+            converted.add(['x', 3.0])
+        }
+        assertTrue(convertError.message.contains('expected BigDecimal'))
+    }
+
+    @Test
     void testGridCreationWithDimensionsInitializesNullCells() {
         Grid<String> grid = new Grid<String>(3, 4)
 

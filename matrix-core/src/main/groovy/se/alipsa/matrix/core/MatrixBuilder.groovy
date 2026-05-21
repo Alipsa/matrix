@@ -246,13 +246,17 @@ class MatrixBuilder {
       return this
     }
     Map<String, ?> row = rows.first()
-    columnNames(row.keySet())
+    List keys = row.keySet() as List
+    List<String> headers = keys.collect { String.valueOf(it) }
+    columnNames(headers)
     List<Class> t = []
     row.each {
       t << it.value?.class ?: Object
     }
     types(t)
-    def r = rows.collect { it.values() as List}
+    def r = rows.collect { Map values ->
+      keys.collect { key -> values[key] }
+    }
     this.rows(r)
   }
 

@@ -60,6 +60,18 @@ class ValueConverterTest {
   }
 
   @Test
+  void testConvertJavaUtilDateUsesLocale() {
+    Locale swedish = Locale.of('sv', 'SE')
+
+    assertEquals(
+        '2024-10-27',
+        new SimpleDateFormat('yyyy-MM-dd').format(
+            ValueConverter.convert('27 oktober 2024', java.util.Date, 'd MMMM yyyy', null, null, swedish)
+        )
+    )
+  }
+
+  @Test
   void testAsDate() {
     assertEquals(new Date(1728667826640), ValueConverter.asDate(1728667826640))
     assertEquals(java.sql.Date.valueOf('2024-10-11'), ValueConverter.asDate(20241011))

@@ -117,6 +117,18 @@ class MatrixBuilderTest {
   }
 
   @Test
+  void testMapListAlignsValuesByFirstRowKeys() {
+    Matrix matrix = Matrix.builder().mapList([
+        [a: 1, b: 2],
+        [b: 20, a: 10]
+    ]).build()
+
+    assertEquals(['a', 'b'], matrix.columnNames())
+    assertEquals([1, 2], matrix.row(0))
+    assertEquals([10, 20], matrix.row(1))
+  }
+
+  @Test
   void testDataTypesOnly() {
     Matrix m4 = Matrix.builder()
         .types([int, String, Number, LocalDate]).build()
