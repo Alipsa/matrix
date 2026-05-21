@@ -527,6 +527,8 @@ Matrix withManager = Joiner.merge(people, people,
 println withManager
 ```
 
+Note: columns from the left matrix appear in their original order, so `empId` (an x column) appears before the y-side columns.
+
 Output:
 ```
 Matrix (people, 3 x 5)

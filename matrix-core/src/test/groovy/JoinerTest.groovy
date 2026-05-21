@@ -555,4 +555,83 @@ class JoinerTest {
     assertEquals(['Alice', 'Alice'], result.column('name_y') as List)
   }
 
+  @Test
+  void testRightJoinDuplicateYKeys() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 2],
+        name: ['A', 'B']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [1, 1, 3],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.RIGHT)
+    assertEquals(3, result.rowCount())
+    assertEquals([1, 1, 3], result.column('id') as List)
+    assertEquals(['A', 'A', null], result.column('name') as List)
+    assertEquals([80, 90, 70], result.column('score') as List)
+  }
+
+  @Test
+  void testFullOuterJoinBothSidesNullKey() {
+    def x = Matrix.builder('x').data([
+        id  : [1, null],
+        name: ['A', 'B']
+    ]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [null, 2],
+        score: [90, 70]
+    ]).build()
+
+    def result = Joiner.merge(x, y, 'id', JoinType.FULL)
+    assertEquals(3, result.rowCount())
+    assertEquals([1, null, 2], result.column('id') as List)
+    assertEquals(['A', 'B', null], result.column('name') as List)
+    assertEquals([null, 90, 70], result.column('score') as List)
+  }
+
+  @Test
+  void testThreeColumnCompositeKey() {
+    def x = Matrix.builder('x').data([
+        a: ['X', 'X', 'Y'],
+        b: [1, 1, 2],
+        c: ['p', 'q', 'p'],
+        val: [10, 20, 30]
+    ]).build()
+
+    def y = Matrix.builder('y').data([
+        a: ['X', 'Y'],
+        b: [1, 2],
+        c: ['p', 'p'],
+        score: [99, 88]
+    ]).build()
+
+    def result = Joiner.merge(x, y, ['a', 'b', 'c'], JoinType.INNER)
+    assertEquals(2, result.rowCount())
+    assertEquals([10, 30], result.column('val') as List)
+    assertEquals([99, 88], result.column('score') as List)
+  }
+
+  @Test
+  void testDefaultJoinTypeIsInner() {
+    def x = Matrix.builder('x').data([
+        id  : [1, 2, 3],
+        name: ['A', 'B', 'C']
+    ]).types([Integer, String]).build()
+
+    def y = Matrix.builder('y').data([
+        id   : [2, 3, 4],
+        score: [80, 90, 70]
+    ]).types([Integer, Integer]).build()
+
+    def result = Joiner.merge(x, y, 'id')
+    assertEquals(2, result.rowCount())
+    assertEquals([2, 3], result.column('id') as List)
+    assertEquals(['B', 'C'], result.column('name') as List)
+    assertEquals([80, 90], result.column('score') as List)
+  }
+
 }

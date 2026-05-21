@@ -22,6 +22,9 @@ class Joiner {
    * @param x the left Matrix
    * @param y the right Matrix
    * @param by a map with keys 'x' and 'y' whose values are column name(s).
+   *           Values are typed as Object because they can be either String (single key)
+   *           or List&lt;String&gt; (composite key); Groovy type erasure prevents separate
+   *           Map&lt;String, String&gt; and Map&lt;String, List&lt;String&gt;&gt; overloads.
    *           Single key: {@code [x: 'id', y: 'guid']}.
    *           Multi-key: {@code [x: ['dept', 'id'], y: ['department', 'empId']]}
    * @param all false for inner join, true for left join (backward compatible)
@@ -257,7 +260,9 @@ class Joiner {
   }
 
   private static List<Object> extractFromCols(List<List<Object>> cols, int row) {
-    cols.collect { List<Object> col -> col[row] }
+    List<Object> result = new ArrayList<>(cols.size())
+    cols.each { List<Object> col -> result.add(col[row]) }
+    result
   }
 
   private static ResultColumns computeResultColumns(Matrix x, Matrix y,
