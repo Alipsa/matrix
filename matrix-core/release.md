@@ -39,6 +39,11 @@
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
 - Removed deprecated `afterSuite` closure from test configuration (replaced by `addTestListener` in root project)
 - Additional CodeNarc `@SuppressWarnings` for `DuplicateNumberLiteral` and `MethodCount` in `Matrix.groovy`
+- MatrixBuilder
+  - rows(...) now rejects ragged row data instead of silently losing values during transpose().
+  - addRow(...) now enforces a stable row width. If column names exist and no rows have been added yet, their count is used as the initial width.
+  - columns(Map) / data(Map) now replace pending builder data consistently.
+  - csvString(...) now treats delimiters literally and respects quoted delimiters, including round-tripping values like "C,k".
 
 ### 3.7.1, 2026-04-22
 - Preserve row count for zero-column matrices created from empty-row input so
