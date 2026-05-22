@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -16,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap
  * log.warn("Failed to process item", exception)
  * </pre>
  */
-@CompileStatic
 class Logger {
 
   private static final String PLATFORM_NEWLINE_FORMAT = '%n'
@@ -180,7 +177,6 @@ class Logger {
 /**
  * Log levels supported by the Logger
  */
-@CompileStatic
 enum LogLevel {
   DEBUG,
   INFO,

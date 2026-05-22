@@ -1,12 +1,9 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileStatic
-
 /**
  * A Structure contains meta data about a Matrix
  * In essence it is a Map of the variable followed by a list of the type, and some sample values
  */
-@CompileStatic
 class Structure {
 
     Map<String, List<String>> data = [:]

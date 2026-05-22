@@ -1,7 +1,6 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.util.CumulativeHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
@@ -21,7 +20,6 @@ import se.alipsa.matrix.core.util.ShiftHelper
  *       preserved from the source.</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class Column extends ArrayList {
 

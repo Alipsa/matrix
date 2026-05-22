@@ -2,8 +2,6 @@ package se.alipsa.matrix.core.util
 
 import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ValueConverter
 
 import java.time.LocalDate
@@ -12,7 +10,6 @@ import java.time.LocalDateTime
 /**
  * Internal helper for CSV formatting operations.
  */
-@CompileStatic
 class CsvHelper {
 
   static String buildCsvRow(List<?> values, String quoteString, String delimiter, String rowDelimiter, List<Class> types, boolean customQuoteString) {

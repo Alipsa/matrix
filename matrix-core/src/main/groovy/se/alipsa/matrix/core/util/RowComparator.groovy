@@ -2,15 +2,12 @@ package se.alipsa.matrix.core.util
 
 import static se.alipsa.matrix.core.Matrix.*
 
-import groovy.transform.CompileStatic
-
 /**
  * Comparator for Matrix rows based on one or more column indices.
  *
  * Null values sort before non-null values in ascending order and after non-null values
  * in descending order.
  */
-@CompileStatic
 class RowComparator<T> implements Comparator<List<T>> {
 
   @SuppressWarnings('ImplementationAsType')

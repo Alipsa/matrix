@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Column
 
 /**
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.Column
  * <p>Boundary positions are padded with null. Null elements in the source are
  * repositioned as-is for shift/lag/lead, and produce null in diff results.</p>
  */
-@CompileStatic
 class ShiftHelper {
 
   private static final String SHIFT_OPERATION = 'shift'

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 /**
  * Utility methods for working with Java and Groovy types used by matrix columns.
  *
  * <p>This class centralizes primitive-wrapper conversion and common-supertype
  * resolution so callers can keep column type handling consistent.</p>
  */
-@CompileStatic
 class ClassUtils {
 
   static Class primitiveWrapper(Class it) {

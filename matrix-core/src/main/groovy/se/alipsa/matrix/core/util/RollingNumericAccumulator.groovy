@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ValueConverter
 
 import java.math.RoundingMode
@@ -9,7 +7,6 @@ import java.math.RoundingMode
 /**
  * Internal sliding-window accumulator for numeric rolling operations.
  */
-@CompileStatic
 class RollingNumericAccumulator {
 
   private static final int MEAN_SCALE = 16

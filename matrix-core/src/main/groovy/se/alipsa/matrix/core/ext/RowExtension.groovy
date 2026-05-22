@@ -1,14 +1,11 @@
 package se.alipsa.matrix.core.ext
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Row
 
 /**
  * Overrides DefaultGroovyMethods so we can define our own getAt and putAt
  * see resources/META-INF.groovy
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class RowExtension {
 

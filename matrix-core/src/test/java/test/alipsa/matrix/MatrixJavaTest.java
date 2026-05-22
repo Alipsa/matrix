@@ -786,7 +786,7 @@ class MatrixJavaTest {
         m("Current Funding", toBigDecimals(2700, 225, 2.922, 1.871))
     );
     Matrix table = Matrix.builder().data(report).types(cr(BigDecimal.class, 3)).build()
-        .selectColumns("Baseline Funding", "Full Funding");
+        .select("Baseline Funding", "Full Funding");
 
     assertEquals(asBigDecimal(3385.593), table.getAt(0, 0));
     assertEquals(asBigDecimal(12.23), table.getAt(3, 1));

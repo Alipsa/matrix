@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.Matrix
  * <p>The output is intended for human inspection in logs, tests, consoles, and
  * REPL sessions rather than for stable machine-readable serialization.</p>
  */
-@CompileStatic
 class MatrixPrinter {
 
   /**

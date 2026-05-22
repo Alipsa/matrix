@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.ValueConverter
 
@@ -12,7 +10,6 @@ import se.alipsa.matrix.core.ValueConverter
  * accumulator is unchanged. An all-null prefix yields null results until the first
  * non-null element.</p>
  */
-@CompileStatic
 class CumulativeHelper {
 
   private static final String CUMSUM_OPERATION = 'cumsum'

@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-## 3.8.0, in progress
+## 3.8.0, 2026-05-22
 
 ### New Matrix methods
 - `top(Number n = 5)` — return first n rows as a new Matrix (unlike `head()` which returns a formatted String)

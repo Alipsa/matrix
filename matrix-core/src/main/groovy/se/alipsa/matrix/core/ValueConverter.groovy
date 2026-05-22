@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileStatic
-
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
@@ -24,7 +22,6 @@ import java.time.temporal.Temporal
 import java.time.temporal.TemporalAccessor
 import java.util.concurrent.ConcurrentHashMap
 
-@CompileStatic
 class ValueConverter {
 
   private static final char C_HYPHEN = '\u002D'

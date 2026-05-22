@@ -1,14 +1,11 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Internal helpers shared by rolling window wrappers.
  */
-@CompileStatic
 class RollingWindowHelper {
 
   private static final Set<String> NUMERIC_PRIMITIVES = ['byte', 'short', 'int', 'long', 'float', 'double'] as Set<String>
