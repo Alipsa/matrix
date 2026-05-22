@@ -965,13 +965,13 @@ class MatrixTest {
     ]
     Matrix table = Matrix.builder().data(report).types([BigDecimal] * 3).build()
 
-    Matrix m = table.selectColumns("Base Funding", "Full Funding")
+    Matrix m = table.select("Base Funding", "Full Funding")
 
     assertEquals(3385.593, m[0, 0])
     assertEquals(12.23, m[3, 1])
 
     m.moveColumn("Base Funding", 1)
-    Matrix m2 = table.selectColumns(0..1)
+    Matrix m2 = table.select(0..1)
     assertEquals(m, m2, m.diff(m2))
   }
 
@@ -2698,12 +2698,12 @@ class MatrixTest {
     m.createIndex('country')
 
     // Select includes indexed column — index preserved
-    Matrix sel = m.selectColumns('country', 'sales')
+    Matrix sel = m.select('country', 'sales')
     assertTrue(sel.hasIndex())
     assertEquals(1, sel.lookup('USA').rowCount())
 
     // Select excludes indexed column — index dropped
-    Matrix sel2 = m.selectColumns('quarter', 'sales')
+    Matrix sel2 = m.select('quarter', 'sales')
     assertFalse(sel2.hasIndex())
   }
 
@@ -2828,7 +2828,7 @@ class MatrixTest {
         b: [4, 5, 6]
     ).types(Integer, Integer).build()
 
-    def result = m.pipe { it.selectColumns('a') }
+    def result = m.pipe { it.select('a') }
     assertEquals(['a'], result.columnNames())
     assertEquals(3, result.rowCount())
   }
@@ -2840,7 +2840,7 @@ class MatrixTest {
         b: [6, 4, 5]
     ).types(Integer, Integer).build()
 
-    def result = m.pipe { it.selectColumns('a') }
+    def result = m.pipe { it.select('a') }
                   .pipe { it.orderBy('a') }
     assertEquals(['a'], result.columnNames())
     assertEquals([1, 2, 3], result.column('a') as List)
@@ -2864,7 +2864,7 @@ class MatrixTest {
         b: [6, 4, 5]
     ).types(Integer, Integer).build()
 
-    def result = m | { it.selectColumns('a') } | { it.orderBy('a') }
+    def result = m | { it.select('a') } | { it.orderBy('a') }
     assertEquals(['a'], result.columnNames())
     assertEquals([1, 2, 3], result.column('a') as List)
   }
