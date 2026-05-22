@@ -228,8 +228,10 @@ class Grid<T> implements Iterable<List<T>> {
     if (values == null) {
       throw new IllegalArgumentException('Column values cannot be null')
     }
-    if (values.size() != data.size()) {
-      throw new IllegalArgumentException("Column values size (${values.size()}) must match row count (${data.size()})")
+    int valSize = values.size()
+    int rowCount = data.size()
+    if (valSize != rowCount) {
+      throw new IllegalArgumentException("Column values size ($valSize) must match row count ($rowCount)")
     }
     values.eachWithIndex { T value, int i ->
       validateValue(value, "Value at row $i")

@@ -65,8 +65,8 @@ class ValueConverterTest {
 
     assertEquals(
         '2024-10-27',
-        new SimpleDateFormat('yyyy-MM-dd').format(
-            ValueConverter.convert('27 oktober 2024', java.util.Date, 'd MMMM yyyy', null, null, swedish)
+        new SimpleDateFormat('yyyy-MM-dd', Locale.US).format(
+            ValueConverter.convert('27 oktober 2024', Date, 'd MMMM yyyy', null, null, swedish)
         )
     )
   }

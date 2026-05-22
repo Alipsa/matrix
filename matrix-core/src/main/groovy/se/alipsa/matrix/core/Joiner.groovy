@@ -113,8 +113,7 @@ class Joiner {
       throw new IllegalArgumentException(
           "Cross join would produce ${resultSize} rows, exceeding maximum list size")
     }
-    ArrayList<List<Object>> resultRows = [] as ArrayList<List<Object>>
-    resultRows.ensureCapacity((int) resultSize)
+    List<List<Object>> resultRows = new ArrayList<>((int) resultSize)
 
     List<List<Object>> xCols = (0..<xColCount).collect { x.column(it) as List<Object> }
     List<List<Object>> yCols = (0..<yColCount).collect { y.column(it) as List<Object> }
@@ -236,7 +235,7 @@ class Joiner {
     indices
   }
 
-  @SuppressWarnings('Instanceof')
+  @SuppressWarnings(['Instanceof', 'DuplicateStringLiteral'])
   private static List<List<String>> normalizeKeys(Map<String, Object> by) {
     if (!by.containsKey('x') || !by.containsKey('y')) {
       throw new IllegalArgumentException("Join key map must contain both 'x' and 'y' entries")

@@ -1607,22 +1607,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     builder(mName).columnNames(headers).types(types).build()
   }
 
-  private List<Class> createTypeListWithNewValue(int columnNumber, Class updatedClass, boolean findCommonGround) {
-    List<Class> types = []
-    for (int i = 0; i < mColumns.size(); i++) {
-      if (i == columnNumber) {
-        if (findCommonGround) {
-          types.add(findClosestCommonSuper(updatedClass, type(columnNumber)))
-        } else {
-          types.add(updatedClass)
-        }
-      } else {
-        types.add(type(i))
-      }
-    }
-    return types
-  }
-
 
   /**
    * Compare this matrix with another and return a human-readable diff.
@@ -1658,16 +1642,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         thatRow = other.row(i)
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
-          if (entry instanceof Number) {
-            def thatVal = thatRow[c]
-            if (thatVal instanceof Number) {
-              if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
-                valueDiff = true
-              }
-            } else {
-              valueDiff = true
-            }
-          } else if (entry != thatRow[c]) {
+          if (valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
             valueDiff = true
           }
         }
@@ -1681,6 +1656,17 @@ class Matrix implements Iterable<Row>, Cloneable {
     } else {
       return 'No differences between the two matrices detected!'
     }
+  }
+
+  @SuppressWarnings('Instanceof')
+  private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
+    if (entry instanceof Number) {
+      if (thatVal instanceof Number) {
+        return ((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff
+      }
+      return true
+    }
+    entry != thatVal
   }
 
   /**

@@ -101,9 +101,9 @@ class Column extends ArrayList {
       throw new IllegalArgumentException('Cannot add a null list to a column')
     }
     applyListOp(list) { a, b ->
-      if (a instanceof Number) return a + (b as Number)
-      if (a instanceof Character) return a + (b as Character)
-      if (a instanceof String) return a + (b as String)
+      if (a instanceof Number) { return a + (b as Number) }
+      if (a instanceof Character) { return a + (b as Character) }
+      if (a instanceof String) { return a + (b as String) }
       a + b
     }
   }
@@ -122,9 +122,9 @@ class Column extends ArrayList {
       throw new IllegalArgumentException('Cannot subtract a null list from a column')
     }
     applyListOp(list) { a, b ->
-      if (a instanceof Number) return a - (b as Number)
-      if (a instanceof Character) return a - (b as Character)
-      if (a instanceof String) return a - (b as String)
+      if (a instanceof Number) { return a - (b as Number) }
+      if (a instanceof Character) { return a - (b as Character) }
+      if (a instanceof String) { return a - (b as String) }
       a - b
     }
   }

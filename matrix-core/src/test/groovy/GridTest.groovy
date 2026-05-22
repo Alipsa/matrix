@@ -308,12 +308,12 @@ class GridTest {
         Grid<Number> grid = new Grid<Number>([[1, 2], [3, 4]], Number)
 
         def rowError = assertThrows(IllegalArgumentException) {
-            grid.add([5, '6'] as List<Number>)
+            grid.add([5, '6'])
         }
         assertTrue(rowError.message.contains('expected Number'))
 
         def columnError = assertThrows(IllegalArgumentException) {
-            grid.replaceColumn(0, [7, '8'] as List<Number>)
+            grid.replaceColumn(0, [7, '8'])
         }
         assertTrue(columnError.message.contains('expected Number'))
     }
