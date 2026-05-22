@@ -828,4 +828,70 @@ class ColumnTest {
     assertEquals(3, new Column([null, null, null]).countNulls())
   }
 
+  @Test
+  void testArithmeticPreservesNameAndType() {
+    Column c = new Column('salary', [100, 200, 300], Integer)
+
+    Column plusScalar = c + 10
+    assert plusScalar instanceof Column
+    assertEquals('salary', plusScalar.name)
+    assertEquals(Integer, plusScalar.type)
+    assert [110, 210, 310] == plusScalar
+
+    Column plusList = c + [1, 2, 3]
+    assert plusList instanceof Column
+    assertEquals('salary', plusList.name)
+
+    Column minusScalar = c - 50
+    assert minusScalar instanceof Column
+    assertEquals('salary', minusScalar.name)
+
+    Column minusList = c - [10, 20, 30]
+    assert minusList instanceof Column
+    assertEquals('salary', minusList.name)
+
+    Column mul = c * 2
+    assert mul instanceof Column
+    assertEquals('salary', mul.name)
+
+    Column mulList = c * [1, 2, 3]
+    assert mulList instanceof Column
+    assertEquals('salary', mulList.name)
+
+    Column divided = c / 10
+    assert divided instanceof Column
+    assertEquals('salary', divided.name)
+
+    Column divList = c / [10, 20, 30]
+    assert divList instanceof Column
+    assertEquals('salary', divList.name)
+
+    Column pow = c ** 2
+    assert pow instanceof Column
+    assertEquals('salary', pow.name)
+
+    Column powList = c ** [1, 2, 3]
+    assert powList instanceof Column
+    assertEquals('salary', powList.name)
+  }
+
+  @Test
+  void testArithmeticChainingReturnsColumn() {
+    Column c = new Column('val', [10, 20, 30], Integer)
+    Column result = (c + 1) - 1
+    assert result instanceof Column
+    assertEquals('val', result.name)
+    assert [10, 20, 30] == result
+  }
+
+  @Test
+  void testRemoveNullsPreservesNameAndType() {
+    Column c = new Column('score', [1, null, 3, null, 5], Integer)
+    Column noNulls = c.removeNulls()
+    assert [1, 3, 5] == noNulls
+    assertEquals('score', noNulls.name)
+    assertEquals(Integer, noNulls.type)
+    assert [1, null, 3, null, 5] == c
+  }
+
 }

@@ -701,23 +701,18 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnNumber < 0 || columnNumber > lastColIdx) {
       throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
     }
-    Set<Integer> rowSet = rows as Set<Integer>
-    def col = new Column()
+    Column col = mColumns[columnNumber]
     Class updatedClass = null
-    column(columnNumber).eachWithIndex { it, idx ->
-      if (rowSet.contains(idx)) {
-        def val = function(it)
-        if (updatedClass == null && val != null) {
-          updatedClass = val.class
-        }
-        col.add(val)
-      } else {
-        col.add(it)
+    for (int idx : rows) {
+      def val = function(col.get(idx))
+      if (updatedClass == null && val != null) {
+        updatedClass = val.class
       }
+      col.set(idx, val)
     }
-    col.type = updatedClass ?: type(columnNumber) ?: Object
-    col.name = columnName(columnNumber)
-    mColumns[columnNumber] = col
+    if (updatedClass != null) {
+      col.type = updatedClass
+    }
     invalidateIndex()
     this
   }
@@ -743,41 +738,20 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
-    List<List> updatedRows = []
+    Column col = mColumns[columnNumber]
     Class updatedClass = null
-    Class originalType = type(columnNumber) ?: Object
-    def orgVal
-    rows().each { it ->
-      def row = it as List
-      if (criteria.call(row)) {
-        def r = []
-        for (int i = 0; i < columnCount(); i++) {
-          orgVal = row[i]
-          if (columnNumber == i) {
-            def val = function.call(orgVal)
-            if (updatedClass == null && val != null) {
-              updatedClass = val.class
-            }
-            r.add(val)
-          } else {
-            r.add(orgVal)
-          }
+    rows().eachWithIndex { row, idx ->
+      if (criteria.call(row as List)) {
+        def val = function.call(col.get(idx))
+        if (updatedClass == null && val != null) {
+          updatedClass = val.class
         }
-        updatedRows.add(r)
-      } else {
-        updatedRows.add(row)
+        col.set(idx, val)
       }
     }
-
-    Class targetType = updatedClass ?: originalType
-    List<Class> dataTypes = targetType != originalType
-        ? createTypeListWithNewValue(columnNumber, targetType, true)
-        : types()
-    List<Column> cols = []
-    Grid.transpose(updatedRows).eachWithIndex { it, idx ->
-      cols << new Column(columnName(idx), it as List, dataTypes[idx])
+    if (updatedClass != null) {
+      col.type = updatedClass
     }
-    mColumns = cols
     invalidateIndex()
     this
   }
@@ -2849,6 +2823,19 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Renames multiple columns at once.
+   *
+   * @param nameMapping a map from existing column names to new column names
+   * @return this matrix (mutated) to allow for method chaining
+   */
+  Matrix rename(Map<String, String> nameMapping) {
+    nameMapping.each { String before, String after ->
+      rename(before, after)
+    }
+    this
+  }
+
+  /**
    * Replace all values in the entire matrix that matches the value
    *
    * @param from the value to search for
@@ -4375,6 +4362,56 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   GroupedMatrix groupBy(List<String> columnNames) {
     Stat.groupBy(this, columnNames)
+  }
+
+  /**
+   * Merge this matrix with another on a single column present in both.
+   *
+   * @param y the right-hand matrix
+   * @param by the column name present in both matrices
+   * @param joinType the type of join (default {@link JoinType#INNER})
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, String, JoinType)
+   */
+  Matrix merge(Matrix y, String by, JoinType joinType = JoinType.INNER) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Merge this matrix with another using a key map or composite keys.
+   *
+   * @param y the right-hand matrix
+   * @param by a map with keys {@code 'x'} and {@code 'y'} whose values are column name(s)
+   * @param joinType the type of join (default {@link JoinType#INNER})
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, Map, JoinType)
+   */
+  Matrix merge(Matrix y, Map<String, Object> by, JoinType joinType = JoinType.INNER) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Merge this matrix with another on multiple columns with the same names.
+   *
+   * @param y the right-hand matrix
+   * @param by the column names present in both matrices
+   * @param joinType the type of join
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, List, JoinType)
+   */
+  Matrix merge(Matrix y, List<String> by, JoinType joinType) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Produce the Cartesian product of this matrix with another.
+   *
+   * @param y the right-hand matrix
+   * @return a new Matrix with {@code this.rowCount() * y.rowCount()} rows
+   * @see Joiner#crossJoin(Matrix, Matrix)
+   */
+  Matrix crossJoin(Matrix y) {
+    Joiner.crossJoin(this, y)
   }
 
   /**

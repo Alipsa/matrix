@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Converter
 import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.JoinType
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
@@ -990,6 +991,22 @@ class MatrixTest {
     assertEquals('id', empData.columnNames()[0])
     assertEquals('name', empData.columnNames()[1])
 
+  }
+
+  @Test
+  void testBulkRename() {
+    def table = Matrix.builder().data(
+        emp_id: 1..3,
+        emp_name: ['Rick', 'Dan', 'Michelle'],
+        start_date: toLocalDates('2013-01-01', '2012-03-27', '2013-09-23')
+    ).types(int, String, LocalDate).build()
+
+    table.rename(emp_id: 'id', emp_name: 'name', start_date: 'started')
+
+    assertIterableEquals(['id', 'name', 'started'], table.columnNames())
+    assertEquals(3, table.rowCount())
+    assertEquals(1, table[0, 0])
+    assertEquals('Rick', table[0, 1])
   }
 
   @Test
@@ -3217,5 +3234,56 @@ class MatrixTest {
     fracSampled.each { row ->
       assertEquals(row['id'] * 10, row['score'])
     }
+  }
+
+  @Test
+  void testMergeInstanceMethod() {
+    Matrix x = Matrix.builder('left').data(
+        id: [1, 2, 3],
+        name: ['Alice', 'Bob', 'Carol']
+    ).types(int, String).build()
+
+    Matrix y = Matrix.builder('right').data(
+        id: [2, 3, 4],
+        salary: [100, 200, 300]
+    ).types(int, int).build()
+
+    Matrix inner = x.merge(y, 'id')
+    assertEquals(2, inner.rowCount())
+    assertIterableEquals(['id', 'name', 'salary'], inner.columnNames())
+    assertEquals('Bob', inner[0, 'name'])
+    assertEquals(100, inner[0, 'salary'])
+
+    Matrix left = x.merge(y, 'id', JoinType.LEFT)
+    assertEquals(3, left.rowCount())
+    assertEquals('Alice', left[0, 'name'])
+    assertNull(left[0, 'salary'])
+  }
+
+  @Test
+  void testMergeInstanceMethodWithMap() {
+    Matrix x = Matrix.builder().data(
+        emp_id: [1, 2],
+        name: ['Alice', 'Bob']
+    ).types(int, String).build()
+
+    Matrix y = Matrix.builder().data(
+        person_id: [1, 2],
+        dept: ['HR', 'Eng']
+    ).types(int, String).build()
+
+    Matrix result = x.merge(y, [x: 'emp_id', y: 'person_id'])
+    assertEquals(2, result.rowCount())
+    assertIterableEquals(['emp_id', 'name', 'dept'], result.columnNames())
+  }
+
+  @Test
+  void testCrossJoinInstanceMethod() {
+    Matrix x = Matrix.builder().data(color: ['red', 'blue']).types(String).build()
+    Matrix y = Matrix.builder().data(size: ['S', 'M']).types(String).build()
+
+    Matrix result = x.crossJoin(y)
+    assertEquals(4, result.rowCount())
+    assertIterableEquals(['color', 'size'], result.columnNames())
   }
 }
