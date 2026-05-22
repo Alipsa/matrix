@@ -19,6 +19,14 @@ Authoritative project metadata:
 - `./gradlew spotlessApply`: auto-format all source files.
 - `./gradlew spotlessCheck`: verify formatting without modifying files (runs as part of `build`).
 - `./gradlew dependencyUpdates`: report newer dependency versions.
+- `./gradlew :matrix-core:codenarcMain`: run CodeNarc static analysis on main sources for a single module.
+- `./gradlew :matrix-core:codenarcTest`: run CodeNarc static analysis on test sources for a single module.
+
+### Verification order
+Before an implementation can be considered done, run these checks in order:
+1. `./gradlew :<module>:codenarcMain` — fix any static analysis violations first.
+2. `./gradlew :<module>:spotlessCheck` — verify formatting (or run `spotlessApply` to auto-fix).
+3. `./gradlew :<module>:test` — ensure all tests pass.
 
 ## Coding Style & Naming Conventions
 Use Groovy 5.0.6 and target Java 21.

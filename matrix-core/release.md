@@ -10,9 +10,20 @@
 - `sample(Number n, Random random = new Random())` — same as above but accepts any Number (truncated to int, with overflow protection)
 - `sampleFraction(Number fraction, Random random = new Random())` — random sample by fraction of total rows (0 < fraction <= 1.0), minimum 1 row
 
+### New Matrix methods (continued)
+- `merge(Matrix y, String by, JoinType joinType = JoinType.INNER)` — instance method for joining on a single same-name column, delegating to `Joiner.merge`
+- `merge(Matrix y, Map<String, Object> by, JoinType joinType = JoinType.INNER)` — instance method for joining with a key map (single or composite keys)
+- `merge(Matrix y, List<String> by, JoinType joinType)` — instance method for multi-column same-name joins
+- `crossJoin(Matrix y)` — instance method for Cartesian product, delegating to `Joiner.crossJoin`
+- `rename(Map<String, String> nameMapping)` — bulk rename of columns in a single call
+
 ### New Column methods
 - `hasNulls()` — returns true if the column contains at least one null value
 - `countNulls()` — returns the count of null elements in the column
+
+### Column improvements
+- Arithmetic operators (`+`, `-`, `*`, `/`, `**`) now return `Column` instead of `List`, preserving `name` and `type` from the source column. This enables fluent chaining such as `(column + 1) - 2` without losing the Column identity.
+- `removeNulls()` now preserves the column's `name` and `type` on the returned copy.
 
 ### Joiner rewrite
 - Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`, `SEMI`, `ANTI`
@@ -32,6 +43,9 @@
 - `merge(..., JoinType.CROSS)` now delegates to `crossJoin(x, y)`
 - Joiner is now fully `@CompileStatic` (removed `@CompileDynamic` workaround)
 - Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
+
+### Performance
+- `Matrix.apply(int, List<Integer>, Closure)` and `Matrix.apply(int, Closure<Boolean>, Closure)` now mutate the target column in place instead of rebuilding the entire column (or transposing all rows). This is significantly more efficient when applying to a small subset of rows.
 
 ### Fixes
 - `Column.unique()` now preserves the column's `name` and `type` on the returned copy (previously both were lost).
