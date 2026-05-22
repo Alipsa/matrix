@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.spi
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
@@ -22,7 +20,6 @@ import java.nio.file.Path
  *
  * @see MatrixFormatProvider
  */
-@CompileStatic
 abstract class AbstractFormatProvider implements MatrixFormatProvider {
 
   @Override

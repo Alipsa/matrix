@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.spi
 
-import groovy.transform.CompileStatic
-
 /**
  * Describes a single configuration option for a format provider.
  *
@@ -18,7 +16,6 @@ import groovy.transform.CompileStatic
  *
  * @see MatrixFormatProvider
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class OptionDescriptor {
 

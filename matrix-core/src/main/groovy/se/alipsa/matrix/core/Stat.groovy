@@ -2,8 +2,6 @@ package se.alipsa.matrix.core
 
 import static ValueConverter.asBigDecimal
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
@@ -16,7 +14,6 @@ import java.math.RoundingMode
  * For statistical test functions, see the matrix-stat-tests library
  *
  */
-@CompileStatic
 @SuppressWarnings([
     'JavadocEmptyLastLine',
     'MissingBlankLineBeforeAnnotatedField',

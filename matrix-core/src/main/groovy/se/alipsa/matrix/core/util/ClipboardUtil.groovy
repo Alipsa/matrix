@@ -1,6 +1,5 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import java.awt.HeadlessException
@@ -13,7 +12,6 @@ import java.awt.datatransfer.UnsupportedFlavorException
 /**
  * Clipboard utilities for reading and writing plain text.
  */
-@CompileStatic
 final class ClipboardUtil {
 
   private static final String HEADLESS_CLIPBOARD_MESSAGE = 'Clipboard is not available in a headless environment'

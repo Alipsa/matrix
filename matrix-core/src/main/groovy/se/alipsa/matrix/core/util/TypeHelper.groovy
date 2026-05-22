@@ -2,12 +2,9 @@ package se.alipsa.matrix.core.util
 
 import static se.alipsa.matrix.core.util.ClassUtils.convertPrimitivesToWrapper
 
-import groovy.transform.CompileStatic
-
 /**
  * Internal helper for type management operations.
  */
-@CompileStatic
 class TypeHelper {
 
   private static final Logger log = Logger.getLogger(TypeHelper)

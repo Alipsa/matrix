@@ -1,8 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
-import groovy.transform.CompileStatic
-
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -11,7 +9,6 @@ import java.time.LocalDate
 
 class PutAtTest {
 
-  @CompileStatic
   @Test
   void testList() {
     // These all work
@@ -26,18 +23,13 @@ class PutAtTest {
     assert list[0] == null
   }
 
-  // Does not work with compile static
-  // @CompileStatic
   @Test
   void testListShortNotation() {
     def list = ['a', 'b', 'c']
-    // This Fails when @CompileStatic is enabled
     list[1] = null
     assert list[1] == null : 'Short notation not working when assigning null'
   }
 
-  // Works both with compile static and without
-  @CompileStatic
   @Test
   void testMap() {
     // These all work
@@ -55,17 +47,13 @@ class PutAtTest {
     assert map['b'] == null  : 'Short notation not working when assigning null'
   }
 
-  // Does not work with compile static
-  // @CompileStatic
   @Test
   void testMapShortNotation() {
     def map = [a: 'foo', b: 'bar', c: 'baz']
-    // This Fails when @CompileStatic is enabled
     map['b'] = null
     assert map['b'] == null  : 'Short notation not working when assigning null'
   }
 
-  @CompileStatic
   class TwoD {
 
     List<List<?>> rows = []
@@ -102,7 +90,6 @@ class PutAtTest {
 
   }
 
-  @CompileStatic
   @Test
   void testOverride() {
     def d = new TwoD([[1, 2, 3], ['a', 'b', 'c']])
@@ -113,7 +100,6 @@ class PutAtTest {
     assert d[1, 2] == 'c'
   }
 
-  @CompileStatic
   @Test
   void testAssignNullToMatrixElement() {
     def empData = Matrix.builder()

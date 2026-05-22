@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core.ext
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.GroupedMatrix
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,6 @@ import se.alipsa.matrix.core.Matrix
  *
  * <p>Registered in {@code META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule}.</p>
  */
-@CompileStatic
 class PipeExtension {
 
   /**

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileStatic
-
 /**
  * Container for per-column summary statistics and descriptive metadata.
  *
  * <p>The summary is keyed by column name and stores a map of metric names to
  * values, with convenience accessors and a text representation for inspection.</p>
  */
-@CompileStatic
 class Summary {
 
   private final Map<String, Map<String, ?>> data = [:]

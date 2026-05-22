@@ -1,6 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import java.sql.Date as SqlDate
@@ -18,7 +17,6 @@ import java.time.format.DateTimeFormatter
  * <p>These methods convert lists and arrays to common matrix-friendly types while
  * preserving element order and reporting the failing index on conversion errors.</p>
  */
-@CompileStatic
 class ListConverter {
 
   private static final String ISO_LOCAL_DATE_FORMAT = 'yyyy-MM-dd'

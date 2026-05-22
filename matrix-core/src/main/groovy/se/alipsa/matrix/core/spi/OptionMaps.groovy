@@ -1,11 +1,8 @@
 package se.alipsa.matrix.core.spi
 
-import groovy.transform.CompileStatic
-
 /**
  * Shared helpers for normalizing SPI option maps.
  */
-@CompileStatic
 class OptionMaps {
 
   private OptionMaps() {

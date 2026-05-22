@@ -1,7 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.util.RollingNumericAccumulator
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.util.RollingWindowOptions
 /**
  * Rolling window operations for a single {@link Column}.
  */
-@CompileStatic
 class RollingColumn {
 
   private final Column source

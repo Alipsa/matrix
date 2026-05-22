@@ -1,11 +1,8 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 /**
  * Internal helper for matrix comparison and validation operations.
  */
-@CompileStatic
 class ComparisonHelper {
 
   private static final Logger log = Logger.getLogger(ComparisonHelper)

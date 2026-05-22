@@ -1,7 +1,6 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Represents the result of a {@code groupBy} operation on a {@link Matrix}.
@@ -17,7 +16,6 @@ import groovy.transform.CompileStatic
  * grouped.agg(sales: { Stat.sum(it) })
  * }</pre>
  */
-@CompileStatic
 class GroupedMatrix {
 
   private final Matrix source

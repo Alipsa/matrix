@@ -1,7 +1,6 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.util.ClassUtils
 
@@ -14,7 +13,6 @@ import java.text.NumberFormat
  *
  * @param <T> the grid element type
  */
-@CompileStatic
 @SuppressWarnings(['Instanceof', 'NestedForLoop'])
 class Grid<T> implements Iterable<List<T>> {
 

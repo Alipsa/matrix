@@ -1,11 +1,8 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 /**
  * Internal configuration for rolling window operations.
  */
-@CompileStatic
 class RollingWindowOptions {
 
   private static final String WINDOW_OPTION = 'window'

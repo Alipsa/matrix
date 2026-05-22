@@ -1,11 +1,8 @@
 package se.alipsa.matrix.core.util
 
-import groovy.transform.CompileStatic
-
 /**
  * Helper methods for compound list keys used in grouped and indexed lookups.
  */
-@CompileStatic
 class CompoundKeyUtil {
 
   /**
