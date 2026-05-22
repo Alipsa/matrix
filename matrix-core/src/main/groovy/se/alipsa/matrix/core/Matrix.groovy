@@ -617,7 +617,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * <p>Useful for building readable left-to-right pipelines:</p>
    * <pre>
-   * matrix.pipe { it.selectColumns('a', 'b') }
+   * matrix.pipe { it.select('a', 'b') }
    *       .pipe { it.orderBy('a') }
    * </pre>
    *

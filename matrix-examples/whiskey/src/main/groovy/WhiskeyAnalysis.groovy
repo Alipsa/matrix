@@ -67,7 +67,7 @@ println result
 println Matrix.builder('Cluster allocation').ginqResult(result).build().content()
 
 //assert m.rows().countBy{ it.Cluster } == [0:51, 1:23, 2:12]
-data = m.selectColumns(features) as double[][]
+data = m.select(features) as double[][]
 pca = PCA.fit(data)
 projected = pca.getProjection(2).apply(data)
 m['X'] = projected*.getAt(0)
