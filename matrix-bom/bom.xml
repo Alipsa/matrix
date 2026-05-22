@@ -36,7 +36,7 @@
     <matrixAvroVersion>0.3.0</matrixAvroVersion>
     <matrixBigQueryVersion>0.6.1</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.0-SNAPSHOT</matrixChartsVersion>
-    <matrixCoreVersion>3.8.0-SNAPSHOT</matrixCoreVersion>
+    <matrixCoreVersion>3.8.0</matrixCoreVersion>
     <matrixCsvVersion>2.3.0</matrixCsvVersion>
     <matrixDatasetsVersion>2.2.0</matrixDatasetsVersion>
     <matrixGgplotVersion>0.5.0-SNAPSHOT</matrixGgplotVersion>
