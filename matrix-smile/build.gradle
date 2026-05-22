@@ -103,7 +103,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-smile/tree/main'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-smile'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
