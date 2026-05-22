@@ -1,6 +1,6 @@
 # Matrix-smile release history
 
-## v0.2.0, In progress
+## v0.2.0, 2026-05-23
 Bug fixes and API improvements.
 
 ### Bug Fixes

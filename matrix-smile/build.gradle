@@ -86,14 +86,14 @@ publishing {
       pom {
         name = 'Matrix smile support'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-smile"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-smile"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/LICENSE'
           }
         }
         developers {
@@ -103,7 +103,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-smile/tree/master'
+          url = 'https://github.com/Alipsa/matrix/matrix-smile/tree/main'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
