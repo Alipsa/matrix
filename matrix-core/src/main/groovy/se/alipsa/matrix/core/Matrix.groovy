@@ -3965,7 +3965,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the names of the columns to include
    * @param operation the closure operation doing the calculation
-   * @return a Column with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
   Column withColumns(List<String> columnNames, Closure operation) {
     Column result = new Column()
@@ -3979,7 +3979,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a Column with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
   Column withColumns(Number[] colIndices, Closure operation) {
     withColumns(colIndices as int[], operation)
@@ -3989,7 +3989,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a Column with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
   Column withColumns(int[] colIndices, Closure operation) {
     Column result = new Column()
@@ -4003,7 +4003,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column index range to include
    * @param operation the closure operation doing the calculation
-   * @return a Column with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
   Column withColumns(IntRange colIndices, Closure operation) {
     withColumns(colIndices as int[], operation)

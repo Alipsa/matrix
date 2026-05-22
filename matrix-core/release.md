@@ -45,7 +45,7 @@
 - Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
 
 ### Performance
-- `Matrix.apply(int, List<Integer>, Closure)` and `Matrix.apply(int, Closure<Boolean>, Closure)` now mutate the target column in place instead of rebuilding the entire column (or transposing all rows). This is significantly more efficient when applying to a small subset of rows.
+- `Matrix.apply(int, List<Integer>, Closure)` and `Matrix.apply(int, Closure<Boolean>, Closure)` now mutate the target column in place instead of rebuilding the entire column (or transposing all rows). This is significantly more efficient when applying to a small subset of rows. **Note:** code that holds a direct reference to a column object before calling `apply` will now observe the mutation in place, whereas the old implementation created fresh `Column` objects via `Grid.transpose()`.
 
 ### Fixes
 - `Column.unique()` now preserves the column's `name` and `type` on the returned copy (previously both were lost).
@@ -66,10 +66,10 @@
 
 ### API changes
 - `withColumn(String, Closure)` and `withColumn(int, Closure)` now return `Column` instead of `List`, preserving the source column's name and type. This enables fluent chaining with Column's arithmetic and cumulative methods.
-- `withColumns(List<String>, Closure)` and index-based `withColumns` variants now return `Column` instead of `List`.
+- `withColumns(List<String>, Closure)` and index-based `withColumns` variants now return `Column` instead of `List`. Because the operation spans multiple source columns, the returned Column has no name or type set (unlike `withColumn` which preserves the single source column's identity).
 - Added `select(String...)`, `select(List<String>)`, and `select(IntRange)` as shorter aliases for `selectColumns(...)`. The `selectColumns` methods are now deprecated in favor of `select`.
 - Added `dropExcept(List<String>)` overload so callers with a `List<String>` variable no longer need to cast to `String[]`.
-- `toHtml()` now escapes HTML special characters (`<`, `>`, `&`, `'`, `"`) in column names and cell values, preventing malformed or injectable HTML output.
+- `toHtml()` now escapes HTML special characters (`<`, `>`, `&`, `'`, `"`) in column names and cell values, preventing malformed or injectable HTML output. Escaped names are also used in CSS class attributes; browsers parse these back to the original form, so CSS selectors should match the unescaped column name.
 - `diff()` now returns an empty string when two matrices are equal, matching its GroovyDoc contract (previously returned `'No differences between the two matrices detected!'`).
 - Removed redundant `@CompileStatic` annotation from `Matrix.groovy` (static compilation is already enabled globally via compiler config).
 

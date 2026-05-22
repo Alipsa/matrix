@@ -671,6 +671,11 @@ class MatrixBuilder {
     }
   }
 
+  /**
+   * Splits a delimited line respecting quoted fields.
+   * An unclosed quote (odd number of quote characters) causes the rest of the line
+   * to be treated as part of the current field — a warning is logged in that case.
+   */
   private static List<String> splitDelimitedLine(String line, String delimiter, String quoteString) {
     if (quoteString == null || quoteString.isEmpty()) {
       return line.split(Pattern.quote(delimiter), -1) as List<String>
@@ -698,6 +703,9 @@ class MatrixBuilder {
         current.append(line.charAt(i))
         i++
       }
+    }
+    if (inQuotes) {
+      log.warn("Unclosed quote in CSV line — remainder treated as part of current field: ${line}")
     }
     values << current.toString()
     values
