@@ -86,7 +86,7 @@ class KMeansTest {
     def m = Matrix.builder()
         .data('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
         .build()
-        .dropColumns('RowID')
+        .drop('RowID')
 
     List<String> features = m.columnNames() - 'Distillery'
     features.each {

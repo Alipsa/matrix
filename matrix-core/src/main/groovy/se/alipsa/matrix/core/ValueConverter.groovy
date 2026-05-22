@@ -36,6 +36,9 @@ class ValueConverter {
   private static final char C_E = 'E'
   private static final char C_e = 'e'
 
+  // Threshold below which a Number is treated as yyyyMMdd date integer rather than epoch millis
+  private static final long MAX_COMPACT_DATE_INT = 22991231L
+
   static ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
   static ConcurrentHashMap<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
 
@@ -52,7 +55,7 @@ class ValueConverter {
     }
     return switch (type) {
       case String -> (E) asString(o, dateTimeFormatter(dateTimePattern, locale), numberFormat)
-      case LocalDate -> (E) asLocalDate(o, dateTimePattern)
+      case LocalDate -> (E) asLocalDate(o, dateTimePattern, null, locale)
       case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
@@ -67,7 +70,7 @@ class ValueConverter {
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
-      case java.util.Date -> (E) asDate(o, dateTimePattern)
+      case java.util.Date -> (E) asDate(o, dateTimePattern, null, locale)
       case Number -> (E) asNumber(o)
       case ZonedDateTime -> (E) asZonedDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       default -> try {
@@ -318,18 +321,18 @@ class ValueConverter {
     }
     String val = asDecimalNumber(strVal)
     if (val.isBlank()) return null
-    return Double.parseDouble(val).intValue()
+    return new BigDecimal(val).intValue()
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
     if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
-      return Math.round(o.doubleValue()).intValue()
+      return o.toBigDecimal().setScale(0, java.math.RoundingMode.HALF_UP).intValue()
     }
 
     String val = asDecimalNumber(String.valueOf(o))
     if (val.isBlank()) return null
-    return Math.round(Double.parseDouble(val)).intValue()
+    return new BigDecimal(val).setScale(0, java.math.RoundingMode.HALF_UP).intValue()
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
@@ -366,11 +369,14 @@ class ValueConverter {
   static String asDecimalNumber(String txt, char decimalSeparator = '.', String valueIfNull = null) {
     if (txt == null) return valueIfNull
     StringBuilder result = new StringBuilder()
-    txt.chars().mapToObj(i -> i as char)
-        .filter(c -> c.isDigit() || decimalSeparator == c || C_MINUS == c || C_HYPHEN == c
-            || C_PLUS == c || C_e == c || C_E == c)
-        .forEach(c -> result.append(c))
-    return result.toString()
+    for (int i = 0; i < txt.length(); i++) {
+      char c = txt.charAt(i)
+      if (Character.isDigit(c) || c == decimalSeparator || c == C_MINUS || c == C_HYPHEN
+          || c == C_PLUS || c == C_e || c == C_E) {
+        result.append(c)
+      }
+    }
+    result.toString()
   }
 
   static YearMonth asYearMonth(Object o, YearMonth valueIfNull = null) {
@@ -429,7 +435,7 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.longValue()
     }
-    Double.valueOf(String.valueOf(o)).longValue()
+    new BigDecimal(String.valueOf(o)).longValue()
   }
 
   static java.util.Date asDate(java.util.Date o, java.util.Date valueIfNull = null) {
@@ -439,7 +445,7 @@ class ValueConverter {
 
   static java.util.Date asDate(Number o, java.util.Date valueIfNull = null) {
     if (o == null || '' == o) return valueIfNull
-    if (o < 22991231) {
+    if (o < MAX_COMPACT_DATE_INT) {
       return new Date(simpleDateFormatCache('yyyyMMdd').parse(String.valueOf(o.longValue())).getTime())
     }
     // assume millis since 1970-01-01
@@ -537,7 +543,7 @@ class ValueConverter {
       return Date.valueOf(o)
     }
     if (o instanceof Number) {
-      if (o < 22991231) {
+      if (o < MAX_COMPACT_DATE_INT) {
         return new Date(simpleDateFormatCache('yyyyMMdd').parse(String.valueOf(o.longValue())).getTime())
       }
       // assume millis since 1970-01-01
@@ -583,14 +589,6 @@ class ValueConverter {
       return Time.valueOf(o)
     }
     return Time.valueOf(String.valueOf(o))
-  }
-
-  /**
-   * @deprecated use asSqlTime(Object, Time) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  static Time asSqlTIme(Object o, Time valueIfNull = null) {
-    asSqlTime(o, valueIfNull)
   }
 
   static LocalTime asLocalTime(Object o, LocalTime valueIfNull = null) {

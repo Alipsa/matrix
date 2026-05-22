@@ -117,6 +117,18 @@ class MatrixBuilderTest {
   }
 
   @Test
+  void testMapListAlignsValuesByFirstRowKeys() {
+    Matrix matrix = Matrix.builder().mapList([
+        [a: 1, b: 2],
+        [b: 20, a: 10]
+    ]).build()
+
+    assertEquals(['a', 'b'], matrix.columnNames())
+    assertEquals([1, 2], matrix.row(0))
+    assertEquals([10, 20], matrix.row(1))
+  }
+
+  @Test
   void testDataTypesOnly() {
     Matrix m4 = Matrix.builder()
         .types([int, String, Number, LocalDate]).build()
@@ -172,7 +184,7 @@ class MatrixBuilderTest {
     r7.addColumn('c4', int, [7,8,9])
     r7.content()
     assertNotEquals(m7, r7, m7.diff(r7))
-    r7.dropColumns('c4')
+    r7.drop('c4')
     assertEquals(m7, r7, m7.diff(r7))
   }
 
@@ -192,6 +204,69 @@ class MatrixBuilderTest {
         .rowList(table.rows())
         .build()
     assertEquals(table, t2)
+  }
+
+  @Test
+  void testRowsRejectsRaggedData() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      Matrix.builder()
+          .rows([
+              [1, 'Lorena'],
+              [2]
+          ])
+    }
+
+    assertTrue(ex.message.contains('all rows must have the same size'))
+  }
+
+  @Test
+  void testAddRowUsesColumnNamesAsInitialWidth() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['id', 'name'])
+        .addRow([1, 'Lorena'])
+        .addRow([2, 'Marianne'])
+        .build()
+
+    assertEquals(['id', 'name'], matrix.columnNames())
+    assertEquals(2, matrix.rowCount())
+    assertEquals([1, 'Lorena'], matrix.row(0) as List)
+    assertEquals([2, 'Marianne'], matrix.row(1) as List)
+  }
+
+  @Test
+  void testAddRowRejectsMismatchedRowWidth() {
+    MatrixBuilder builder = Matrix.builder()
+        .columnNames(['id', 'name'])
+
+    IllegalArgumentException firstRowEx = assertThrows(IllegalArgumentException) {
+      builder.addRow([1])
+    }
+    assertTrue(firstRowEx.message.contains('does not match the number of columns'))
+
+    MatrixBuilder rowsBuilder = Matrix.builder()
+        .addRow([1, 'Lorena'])
+
+    IllegalArgumentException secondRowEx = assertThrows(IllegalArgumentException) {
+      rowsBuilder.addRow([2])
+    }
+    assertTrue(secondRowEx.message.contains('does not match the number of columns'))
+  }
+
+  @Test
+  void testMapDataReplacesExistingBuilderData() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['old'])
+        .columns([[99]])
+        .data([
+            id: [1, 2],
+            name: ['Lorena', 'Marianne']
+        ])
+        .build()
+
+    assertEquals(['id', 'name'], matrix.columnNames())
+    assertEquals(2, matrix.rowCount())
+    assertEquals([1, 'Lorena'], matrix.row(0) as List)
+    assertEquals([2, 'Marianne'], matrix.row(1) as List)
   }
 
   @Test
@@ -245,6 +320,24 @@ class MatrixBuilderTest {
     assertEquals(1, m[0, 1])
     assertEquals('B', m[1, 0])
     assertEquals(2, m[1, 1])
+  }
+
+  @Test
+  void testCsvStringParsesRegexCharactersAsLiteralDelimiters() {
+    Matrix pipeDelimited = Matrix.builder()
+        .csvString('name|value\nA|1\nB|2', [delimiter: '|'])
+        .build()
+
+    assertEquals(['name', 'value'], pipeDelimited.columnNames())
+    assertEquals(['A', '1'], pipeDelimited.row(0) as List)
+    assertEquals(['B', '2'], pipeDelimited.row(1) as List)
+
+    Matrix dotDelimited = Matrix.builder()
+        .csvString('name.value\nA.1', [delimiter: '.'])
+        .build()
+
+    assertEquals(['name', 'value'], dotDelimited.columnNames())
+    assertEquals(['A', '1'], dotDelimited.row(0) as List)
   }
 
   @SuppressWarnings('SqlNoDataSourceInspection')

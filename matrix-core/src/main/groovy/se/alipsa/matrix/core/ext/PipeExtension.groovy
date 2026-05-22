@@ -21,7 +21,7 @@ class PipeExtension {
    * {@link Matrix#pipe(Closure)}.
    *
    * <pre>
-   * matrix | { it.selectColumns('a') } | { it.orderBy('a') }
+   * matrix | { it.select('a') } | { it.orderBy('a') }
    * </pre>
    *
    * @param self the matrix instance

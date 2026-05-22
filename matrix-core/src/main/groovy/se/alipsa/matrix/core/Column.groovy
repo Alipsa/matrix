@@ -11,6 +11,15 @@ import se.alipsa.matrix.core.util.ShiftHelper
  * A column is a list with some arithmetic operations changed compared to how lists normally behaves in Groovy.
  * the multiply, div, plus, minus, and power applies to each element in the list instead of on the list itself. E.g.
  * new Column([1,2,3]) * 2 == [2,4,6] instead of [2,4,6,2,4,6] which the default result would on a list i Groovy.
+ *
+ * <h3>Mutability convention</h3>
+ * <ul>
+ *   <li><b>Size-preserving</b> operations ({@link #replace}, {@link #replaceNulls}) mutate this column
+ *       in place and return {@code this}.</li>
+ *   <li><b>Size-changing</b> operations ({@link #removeNulls}, {@link #unique}) and <b>transformations</b>
+ *       (arithmetic, cumulative, shift/lag/lead/diff) return a new {@code Column} with name and type
+ *       preserved from the source.</li>
+ * </ul>
  */
 @CompileStatic
 @SuppressWarnings('Instanceof')
@@ -66,8 +75,8 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  private List applyOperation(Object val, Closure operation) {
-    List result = new Column()
+  private Column applyOperation(Object val, Closure operation) {
+    Column result = newLike()
     this.each {
       if (it == null) {
         result.add(null)
@@ -79,7 +88,7 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List plus(Object val) {
+  Column plus(Object val) {
     if (val == null) {
       throw new IllegalArgumentException('Cannot add null to a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before adding')
     }
@@ -87,31 +96,20 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List plus(List list) {
+  Column plus(List list) {
     if (list == null) {
       throw new IllegalArgumentException('Cannot add a null list to a column')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it + (val as Number))
-      } else if (it instanceof Character) {
-        result.add(it + (val as Character))
-      } else if (it instanceof String) {
-        result.add(it + (val as String))
-      } else {
-        result.add(it + val)
-      }
+    applyListOp(list) { a, b ->
+      if (a instanceof Number) { return a + (b as Number) }
+      if (a instanceof Character) { return a + (b as Character) }
+      if (a instanceof String) { return a + (b as String) }
+      a + b
     }
-    result
   }
 
   @CompileDynamic
-  List minus(Object val) {
+  Column minus(Object val) {
     if (val == null) {
       throw new IllegalArgumentException('Cannot subtract null from a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before subtracting')
     }
@@ -119,31 +117,20 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List minus(List list) {
+  Column minus(List list) {
     if (list == null) {
       throw new IllegalArgumentException('Cannot subtract a null list from a column')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it - (val as Number))
-      } else if (it instanceof Character) {
-        result.add(it - (val as Character))
-      } else if (it instanceof String) {
-        result.add(it - (val as String))
-      } else {
-        result.add(it - val)
-      }
+    applyListOp(list) { a, b ->
+      if (a instanceof Number) { return a - (b as Number) }
+      if (a instanceof Character) { return a - (b as Character) }
+      if (a instanceof String) { return a - (b as String) }
+      a - b
     }
-    result
   }
 
   @CompileDynamic
-  List multiply(Number val) {
+  Column multiply(Number val) {
     if (val == null) {
       throw new IllegalArgumentException('Cannot multiply null with a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before multiplying')
     }
@@ -151,27 +138,15 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List multiply(List list) {
+  Column multiply(List list) {
     if (list == null) {
       throw new IllegalArgumentException('Cannot multiply a column by a null list')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it * (val as Number))
-      } else {
-        result.add(it * val)
-      }
-    }
-    result
+    applyListOp(list) { a, b -> a instanceof Number ? a * (b as Number) : a * b }
   }
 
   @CompileDynamic
-  List div(Number val) {
+  Column div(Number val) {
     if (val == null) {
       throw new IllegalArgumentException('Cannot divide a column by null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before dividing')
     }
@@ -179,27 +154,15 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List div(List list) {
+  Column div(List list) {
     if (list == null) {
       throw new IllegalArgumentException('Cannot divide a column by a null list')
     }
-    List result = new Column()
-    def that = fill(list)
-    this.eachWithIndex { it, idx ->
-      def val = that[idx]
-      if (it == null || val == null) {
-        result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it / (val as Number))
-      } else {
-        result.add(it / val)
-      }
-    }
-    result
+    applyListOp(list) { a, b -> a instanceof Number ? a / (b as Number) : a / b }
   }
 
   @CompileDynamic
-  List power(Number val) {
+  Column power(Number val) {
     if (val == null) {
       throw new IllegalArgumentException('Cannot raise a column to the power of null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before exponentiating')
     }
@@ -207,20 +170,23 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List power(List list) {
+  Column power(List list) {
     if (list == null) {
       throw new IllegalArgumentException('Cannot raise a column to the power of a null list')
     }
-    List result = new Column()
+    applyListOp(list) { a, b -> a instanceof Number ? a ** (b as Number) : a ** b }
+  }
+
+  @CompileDynamic
+  private Column applyListOp(List list, Closure<Object> op) {
+    Column result = newLike()
     def that = fill(list)
     this.eachWithIndex { it, idx ->
       def val = that[idx]
       if (it == null || val == null) {
         result.add(null)
-      } else if (it instanceof Number) {
-        result.add(it ** (val as Number))
       } else {
-        result.add(it ** val)
+        result.add(op(it, val))
       }
     }
     result
@@ -262,8 +228,10 @@ class Column extends ArrayList {
     Collections.frequency(this, null)
   }
 
-  List removeNulls() {
-    this.findAll { it != null } as Column
+  Column removeNulls() {
+    Column result = newLike()
+    result.addAll(this.findAll { it != null })
+    result
   }
 
   /**
@@ -294,6 +262,12 @@ class Column extends ArrayList {
     this
   }
 
+  private Column newLike() {
+    Column col = new Column(this.type)
+    col.name = this.name
+    col
+  }
+
   private Column fill(List list) {
     def that = new Column(list)
     int listSize = list.size()
@@ -311,12 +285,14 @@ class Column extends ArrayList {
   /**
    * Change the default behavior of the unique method to not mutate
    * (otherwise the rest of the column values will be filled with null).
-   * Returns a new Column with unique values from this column.
+   * Returns a new Column with unique values from this column, preserving name and type.
    *
    * @return a new Column with unique values
    */
-  List unique() {
-    unique(false)
+  Column unique() {
+    Column result = new Column(name, type)
+    result.addAll(new LinkedHashSet(this))
+    result
   }
 
   @CompileDynamic
@@ -472,7 +448,7 @@ class Column extends ArrayList {
   }
 
   List getValues() {
-    this.collect { it }
+    new ArrayList(this)
   }
 
 }

@@ -34,6 +34,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.util.regex.Pattern
 
 @CompileStatic
 class MatrixBuilder {
@@ -142,12 +143,8 @@ class MatrixBuilder {
       headers << String.valueOf(k)
       cols << v.collect()
     }
-    if (noColumnNames()) {
-      columnNames(headers)
-    }
-    if (noColumns()) {
-      columns(cols)
-    }
+    columnNames(headers)
+    columns(cols)
     this
   }
 
@@ -169,6 +166,7 @@ class MatrixBuilder {
       this.explicitRowCount = rows.size()
       return this
     }
+    validateRowWidths(rows)
     this.explicitRowCount = 0
     this.columns = rows.transpose()
     this
@@ -182,8 +180,17 @@ class MatrixBuilder {
    */
   MatrixBuilder addRow(List row) {
     clearPendingIndexColumns()
+    if (row == null) {
+      throw new IllegalArgumentException('Row cannot be null')
+    }
     if (columns == null) {
       columns = []
+    }
+    int expectedSize = columns.isEmpty() && !noColumnNames() ? headerList.size() : columns.size()
+    if (expectedSize > 0 && row.size() != expectedSize) {
+      throw new IllegalArgumentException(
+          "The number of elements in the row (${row.size()}) does not match the number of columns (${expectedSize})"
+      )
     }
     row.eachWithIndex { it, idx ->
       if (columns.size() <= idx) {
@@ -239,13 +246,17 @@ class MatrixBuilder {
       return this
     }
     Map<String, ?> row = rows.first()
-    columnNames(row.keySet())
+    List keys = row.keySet() as List
+    List<String> headers = keys.collect { String.valueOf(it) }
+    columnNames(headers)
     List<Class> t = []
     row.each {
       t << it.value?.class ?: Object
     }
     types(t)
-    def r = rows.collect { it.values() as List}
+    def r = rows.collect { Map values ->
+      keys.collect { key -> values[key] }
+    }
     this.rows(r)
   }
 
@@ -386,11 +397,7 @@ class MatrixBuilder {
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      int endIdx = file.name.length()
-      if (file.name.contains('.')) {
-        endIdx = file.name.lastIndexOf('.')
-      }
-      matrixName(file.name.substring(0, endIdx))
+      matrixName(stripExtension(file.name))
     }
     this
   }
@@ -408,12 +415,7 @@ class MatrixBuilder {
   MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      String fileName = file.getFileName().toString()
-      int endIdx = fileName.length()
-      if (fileName.contains('.')) {
-        endIdx = fileName.lastIndexOf('.')
-      }
-      matrixName(fileName.substring(0, endIdx))
+      matrixName(stripExtension(file.getFileName().toString()))
     }
     this
   }
@@ -560,7 +562,6 @@ class MatrixBuilder {
     // Parsing a new CSV input should not inherit index metadata from a previous parse on the same builder.
     indexColumns = null
     List<List> data = []
-    final boolean stripQuotes = stringQuote != ''
     int maxCols = 0
     List<Class> parsedTypes = null
     String parsedName = null
@@ -600,15 +601,10 @@ class MatrixBuilder {
       }
       List row = []
       // if there are empty columns in the end, split does not take those into account unless we set the limit to -1
-      def values = line.split(delimiter, -1)
-      maxCols = Math.max(maxCols, values.length)
+      List<String> values = splitDelimitedLine(line, delimiter, stringQuote)
+      maxCols = Math.max(maxCols, values.size())
       for (String val in values) {
-        String value
-        if (stripQuotes) {
-          value = (val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
-        } else {
-          value = val.trim()
-        }
+        String value = val.trim()
         if (nullStrings.contains(value)) {
           value = null
         }
@@ -657,6 +653,62 @@ class MatrixBuilder {
       indexColumns = parsedIndex
     }
     this
+  }
+
+  private static void validateRowWidths(List<List> rows) {
+    int expectedSize = -1
+    rows.eachWithIndex { List row, int index ->
+      if (row == null) {
+        throw new IllegalArgumentException("Row ${index} cannot be null")
+      }
+      if (expectedSize < 0) {
+        expectedSize = row.size()
+      } else if (row.size() != expectedSize) {
+        throw new IllegalArgumentException(
+            "Row ${index} has ${row.size()} elements but expected ${expectedSize}; all rows must have the same size"
+        )
+      }
+    }
+  }
+
+  /**
+   * Splits a delimited line respecting quoted fields.
+   * An unclosed quote (odd number of quote characters) causes the rest of the line
+   * to be treated as part of the current field — a warning is logged in that case.
+   */
+  private static List<String> splitDelimitedLine(String line, String delimiter, String quoteString) {
+    if (quoteString == null || quoteString.isEmpty()) {
+      return line.split(Pattern.quote(delimiter), -1) as List<String>
+    }
+
+    List<String> values = []
+    StringBuilder current = new StringBuilder()
+    boolean inQuotes = false
+    int i = 0
+    while (i < line.length()) {
+      if (line.startsWith(quoteString, i)) {
+        int nextQuoteIndex = i + quoteString.length()
+        if (inQuotes && line.startsWith(quoteString, nextQuoteIndex)) {
+          current.append(quoteString)
+          i += quoteString.length() * 2
+        } else {
+          inQuotes = !inQuotes
+          i += quoteString.length()
+        }
+      } else if (!inQuotes && line.startsWith(delimiter, i)) {
+        values << current.toString()
+        current.setLength(0)
+        i += delimiter.length()
+      } else {
+        current.append(line.charAt(i))
+        i++
+      }
+    }
+    if (inQuotes) {
+      log.warn("Unclosed quote in CSV line — remainder treated as part of current field: ${line}")
+    }
+    values << current.toString()
+    values
   }
 
   private static Class resolveTypeName(String rawName) {
@@ -875,5 +927,10 @@ class MatrixBuilder {
       case Types.STRUCT -> Map
       default -> Object
     }
+  }
+
+  private static String stripExtension(String fileName) {
+    int dot = fileName.lastIndexOf('.')
+    dot > 0 ? fileName.substring(0, dot) : fileName
   }
 }

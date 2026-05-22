@@ -220,43 +220,23 @@ class ListConverter {
   }
 
   static List<BigDecimal> toBigDecimals(List<?> numbers) {
-    List<BigDecimal> list = []
-    numbers.each {
-      list.add(ValueConverter.asBigDecimal(it))
-    }
-    return list
+    numbers.collect { ValueConverter.asBigDecimal(it) }
   }
 
   static List<BigDecimal> toBigDecimals(Object... numbers) {
-    List<BigDecimal> list = []
-    numbers.each {
-      list.add(ValueConverter.asBigDecimal(it))
-    }
-    return list
+    numbers.collect { ValueConverter.asBigDecimal(it) }
   }
 
   static List<Short> toShorts(Object... numbers) {
-    List<Short> list = []
-    numbers.each {
-      list.add(ValueConverter.asShort(it))
-    }
-    return list
+    numbers.collect { ValueConverter.asShort(it) }
   }
 
   static List<LocalTime> toLocalTimes(Object... times) {
-    List<LocalTime> list = []
-    times.each {
-      list.add(ValueConverter.asLocalTime(it))
-    }
-    return list
+    times.collect { ValueConverter.asLocalTime(it) }
   }
 
-  static List<Byte> toBytes(Object ... bytes) {
-    List<Byte> list = []
-    bytes.each {
-      list.add(ValueConverter.asByte(it))
-    }
-    return list
+  static List<Byte> toBytes(Object... bytes) {
+    bytes.collect { ValueConverter.asByte(it) }
   }
 
 }

@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+## Code Review Standards
+When reviewing PRs, report ONLY issues and suggestions. Do NOT report observations, praise, or summaries. Before flagging an issue, verify it doesn't already exist in the codebase and confirm the code is actually wrong — avoid false positives. For Java/Groovy code, be aware of `@CompileStatic` semantics, Groovy constructor dispatch with null values, and type boxing differences (e.g., `int` vs `Integer`).
+
 ## Project Structure & Module Organization
 This is a Gradle multi-module Groovy/Java project. Each module lives in a `matrix-*` directory (for example `matrix-core`, `matrix-stats`, `matrix-csv`, `matrix-charts`, `matrix-sql`). Source code is primarily in `matrix-*/src/main/groovy` (with some `src/main/java`), and tests live in `matrix-*/src/test/groovy` or `matrix-*/src/test/java`. Shared docs are under `docs/` (tutorial and cookbook), while runnable examples live in `matrix-examples/`.
 
@@ -19,15 +22,24 @@ Authoritative project metadata:
 - `./gradlew spotlessApply`: auto-format all source files.
 - `./gradlew spotlessCheck`: verify formatting without modifying files (runs as part of `build`).
 - `./gradlew dependencyUpdates`: report newer dependency versions.
+- `./gradlew :matrix-core:codenarcMain`: run CodeNarc static analysis on main sources for a single module.
+- `./gradlew :matrix-core:codenarcTest`: run CodeNarc static analysis on test sources for a single module.
+
+### Verification order
+Before an implementation can be considered done, run these checks in order:
+1. `./gradlew :<module>:codenarcMain` — fix any static analysis violations first.
+2. `./gradlew :<module>:spotlessCheck` — verify formatting (or run `spotlessApply` to auto-fix).
+3. `./gradlew :<module>:test` — ensure all tests pass.
 
 ## Coding Style & Naming Conventions
-Use Groovy 5.0.6 and target Java 21.
-Follow the existing 2-space indentation and import style in each file. 
-Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. 
-Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. 
-Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. 
-Always add GroovyDoc for public classes and public methods. 
-Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format).
+- Use Groovy 5.0.6 and target Java 21.
+- Follow the existing 2-space indentation and import style in each file.
+- Prefer `@CompileStatic` (enable by default through build script config) and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted.
+- Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`.
+- Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories.
+- Always add GroovyDoc for public classes and public methods.
+- Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format).
+- Understand Groovy constructor dispatch ambiguity (especially with null arguments), `@CompileStatic` type requirements (e.g., explicit casts that look redundant but are required), and `int` vs `Integer` behavioral differences (e.g., `sample(int)` vs `sample(Integer)`).
 
 ### Avoid `Object` Parameters — Use Typed Overloads
 **CRITICAL:** Never use `Object` as a method parameter or field type when specific types are known. `Object` parameters are not type-safe and provide no IDE assistance. Instead, use method overloads with concrete types:
@@ -1104,6 +1116,14 @@ File I/O:         15ms+ per test
 ```
 
 For a test suite with 200+ tests, this optimization saves ~30 seconds per run.
+
+## Documentation
+When generating documentation, always include:
+- concrete usage examples
+- all parameter descriptions with defaults
+- complete end-to-end instructions on first attempt.
+
+Do not produce minimal stubs that require multiple rounds of refinement.
 
 ## Key Dependencies
 

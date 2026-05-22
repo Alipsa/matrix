@@ -10,9 +10,20 @@
 - `sample(Number n, Random random = new Random())` — same as above but accepts any Number (truncated to int, with overflow protection)
 - `sampleFraction(Number fraction, Random random = new Random())` — random sample by fraction of total rows (0 < fraction <= 1.0), minimum 1 row
 
+### New Matrix methods (continued)
+- `merge(Matrix y, String by, JoinType joinType = JoinType.INNER)` — instance method for joining on a single same-name column, delegating to `Joiner.merge`
+- `merge(Matrix y, Map<String, Object> by, JoinType joinType = JoinType.INNER)` — instance method for joining with a key map (single or composite keys)
+- `merge(Matrix y, List<String> by, JoinType joinType)` — instance method for multi-column same-name joins
+- `crossJoin(Matrix y)` — instance method for Cartesian product, delegating to `Joiner.crossJoin`
+- `rename(Map<String, String> nameMapping)` — bulk rename of columns in a single call
+
 ### New Column methods
 - `hasNulls()` — returns true if the column contains at least one null value
 - `countNulls()` — returns the count of null elements in the column
+
+### Column improvements
+- Arithmetic operators (`+`, `-`, `*`, `/`, `**`) now return `Column` instead of `List`, preserving `name` and `type` from the source column. This enables fluent chaining such as `(column + 1) - 2` without losing the Column identity.
+- `removeNulls()` now preserves the column's `name` and `type` on the returned copy.
 
 ### Joiner rewrite
 - Added `JoinType` enum with `INNER`, `LEFT`, `RIGHT`, `FULL`, `CROSS`, `SEMI`, `ANTI`
@@ -33,12 +44,55 @@
 - Joiner is now fully `@CompileStatic` (removed `@CompileDynamic` workaround)
 - Backward compatible: existing `merge(x, y, by, boolean)` signatures continue to work
 
+### Performance
+- `Matrix.apply(int, List<Integer>, Closure)` and `Matrix.apply(int, Closure<Boolean>, Closure)` now mutate the target column in place instead of rebuilding the entire column (or transposing all rows). This is significantly more efficient when applying to a small subset of rows. **Note:** code that holds a direct reference to a column object before calling `apply` will now observe the mutation in place, whereas the old implementation created fresh `Column` objects via `Grid.transpose()`.
+
 ### Fixes
+- `Column.unique()` now preserves the column's `name` and `type` on the returned copy (previously both were lost).
+- `Column.removeNulls()` now correctly returns `Column` instead of `List`.
+- `Matrix.diff()` and `Matrix.equals()` / `Matrix.checkValues()` now use `BigDecimal` arithmetic for numeric tolerance comparisons, eliminating `double`/`Double.NaN` imprecision. The `allowedDiff` parameter type changed from `double`/`Double` to `BigDecimal` — Groovy call sites are unaffected; Java callers that pass a `double` literal need a cast or `BigDecimal` literal.
+- `Matrix.equals()` — a `null` value in the compared matrix is now correctly reported as differing from a numeric value (was silently masked by `NaN` comparison semantics).
+- `Matrix.equals()` now checks row counts before comparing values, so matrices with matching prefixes but different numbers of rows no longer compare equal.
+- `Matrix.equals(..., ignoreTypes: true)` preserves numeric/string comparison behavior after the row-count fix.
+- Matrix's Groovy version guard now accepts qualified version strings such as `6.0.0-alpha-1` instead of failing during class initialization.
+- `Stat.sd(Matrix, List<String>)` was incorrectly collecting `Double` values via `.doubleValue()`; it now delegates to the existing `sd(List<?>, boolean)` overload, giving consistent BigDecimal-precision results.
+- `Stat.medians(List<List<?>>, List<Integer>)` now returns `null` for columns with no numeric values instead of throwing a null pointer exception.
+- `Stat.mean()` no longer applies `setScale` to every summand before adding; scale is applied only at the final divide, producing more accurate intermediate sums.
+- `Stat.min(Matrix, List<String>)`, `Stat.max(Matrix, List<String>)`, and `Stat.max(Matrix, String)` now use direct columnar access instead of building a full row list, matching the columnar-access pattern used elsewhere in `Stat`.
+- `ValueConverter.convert(..., LocalDate, ..., Locale)` now honors the supplied locale for patterned date parsing.
+- `ValueConverter.asLong(String)` now avoids `Double` conversion so large integer strings do not lose precision.
+- Typed `Grid` mutators now reject values that do not match the grid element type, matching typed constructor validation.
+- `MatrixAssertions` tolerance constants changed from `double` to `BigDecimal` to match the updated `equals()` signature.
+
+### API changes
+- `withColumn(String, Closure)` and `withColumn(int, Closure)` now return `Column` instead of `List`, preserving the source column's name and type. This enables fluent chaining with Column's arithmetic and cumulative methods.
+- `withColumns(List<String>, Closure)` and index-based `withColumns` variants now return `Column` instead of `List`. Because the operation spans multiple source columns, the returned Column has no name or type set (unlike `withColumn` which preserves the single source column's identity).
+- Added `select(String...)`, `select(List<String>)`, and `select(IntRange)` as shorter aliases for `selectColumns(...)`. The `selectColumns` methods are now deprecated in favor of `select`.
+- Added `dropExcept(List<String>)` overload so callers with a `List<String>` variable no longer need to cast to `String[]`.
+- `toHtml()` now escapes HTML special characters (`<`, `>`, `&`, `'`, `"`) in column names and cell values, preventing malformed or injectable HTML output. Escaped names are also used in CSS class attributes; browsers parse these back to the original form, so CSS selectors should match the unescaped column name.
+- `diff()` now returns an empty string when two matrices are equal, matching its GroovyDoc contract (previously returned `'No differences between the two matrices detected!'`).
+- Removed redundant `@CompileStatic` annotation from `Matrix.groovy` (static compilation is already enabled globally via compiler config).
+
+### Removed deprecated methods
+The following methods deprecated since 3.7.0 have been removed:
+- `Matrix.dropColumnsExcept(String...)` — use `dropExcept(String...)`
+- `Matrix.dropColumnsExcept(int...)` — use `dropExcept(int...)`
+- `Matrix.dropColumns(String...)` — use `drop(String...)`
+- `Matrix.dropColumns(IntRange)` — use `drop(IntRange)`
+- `Matrix.dropColumns(List<Integer>)` — use `drop(List<Integer>)`
+- `Matrix.dropColumns(int...)` — use `drop(int...)`
+- `Matrix.removeEmptyColumns()` — use `dropEmptyColumns()`
+- `ValueConverter.asSqlTIme(Object, Time)` — use `asSqlTime(Object, Time)` (typo fix)
 
 ### Build changes
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
 - Removed deprecated `afterSuite` closure from test configuration (replaced by `addTestListener` in root project)
 - Additional CodeNarc `@SuppressWarnings` for `DuplicateNumberLiteral` and `MethodCount` in `Matrix.groovy`
+- MatrixBuilder
+  - rows(...) now rejects ragged row data instead of silently losing values during transpose().
+  - addRow(...) now enforces a stable row width. If column names exist and no rows have been added yet, their count is used as the initial width.
+  - columns(Map) / data(Map) now replace pending builder data consistently.
+  - csvString(...) now treats delimiters literally and respects quoted delimiters, including round-tripping values like "C,k".
 
 ### 3.7.1, 2026-04-22
 - Preserve row count for zero-column matrices created from empty-row input so

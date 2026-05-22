@@ -46,6 +46,29 @@ class ValueConverterTest {
     assertEquals(2001251L, ValueConverter.convert('2001251.0', Long))
     assertEquals(2001251L, ValueConverter.convert(2001251, Long))
     assertEquals(2001251L, ValueConverter.convert(2001251.9, Long))
+    assertEquals(9007199254740993L, ValueConverter.asLong('9007199254740993'))
+  }
+
+  @Test
+  void testConvertLocalDateUsesLocale() {
+    Locale swedish = Locale.of('sv', 'SE')
+
+    assertEquals(
+        LocalDate.of(2024, 10, 27),
+        ValueConverter.convert('27 oktober 2024', LocalDate, 'd MMMM yyyy', null, null, swedish)
+    )
+  }
+
+  @Test
+  void testConvertJavaUtilDateUsesLocale() {
+    Locale swedish = Locale.of('sv', 'SE')
+
+    assertEquals(
+        '2024-10-27',
+        new SimpleDateFormat('yyyy-MM-dd', Locale.US).format(
+            ValueConverter.convert('27 oktober 2024', Date, 'd MMMM yyyy', null, null, swedish)
+        )
+    )
   }
 
   @Test
@@ -180,7 +203,7 @@ class ValueConverterTest {
     assertEquals(Time.valueOf('12:34:56'), ValueConverter.asSqlTime('12:34:56'))
     assertEquals(Time.valueOf('00:00:00'), ValueConverter.asSqlTime('00:00:00'))
     assertNull(ValueConverter.asSqlTime(null))
-    assertEquals(Time.valueOf('12:34:56'), ValueConverter.asSqlTIme('12:34:56'))
+    assertEquals(Time.valueOf('12:34:56'), ValueConverter.asSqlTime('12:34:56'))
   }
 
   @Test

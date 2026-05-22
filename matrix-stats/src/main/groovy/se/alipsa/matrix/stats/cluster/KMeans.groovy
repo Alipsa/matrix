@@ -122,7 +122,7 @@ class KMeans {
       throw new IllegalArgumentException("The following columns does not exist in the matrix: ${missingItems.join(', ')}")
     }
 
-    Matrix m = matrix.selectColumns(columnNames)
+    Matrix m = matrix.select(columnNames)
     double[][] points = new double[m.rowCount()][m.columnCount()]
     m.eachWithIndex { row, i ->
       points[i] = ListConverter.toDoubleArray(row as List<? extends Number>)

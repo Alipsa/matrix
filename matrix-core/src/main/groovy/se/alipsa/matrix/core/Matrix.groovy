@@ -3,7 +3,6 @@ package se.alipsa.matrix.core
 import static se.alipsa.matrix.core.util.ClassUtils.*
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
@@ -45,7 +44,6 @@ import java.time.LocalDateTime
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
  *
  */
-@CompileStatic
 @SuppressWarnings([
     'JavadocEmptyLastLine',
     'ClassSize',
@@ -110,9 +108,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private boolean indexDirty = false
 
   static {
-    // Splits "5.0.1" into [5, 0, 1]
-    def versionParts = GroovySystem.version.tokenize('.')*.toInteger()
-    def majorVersion = versionParts[0]
+    int majorVersion = parseGroovyMajorVersion(GroovySystem.version)
 
     if (majorVersion < 5) {
       throw new IllegalStateException(
@@ -124,6 +120,10 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   static MatrixBuilder builder() {
     new MatrixBuilder()
+  }
+
+  private static int parseGroovyMajorVersion(String version) {
+    version.tokenize('.').first().toInteger()
   }
 
   static MatrixBuilder builder(String matrixName) {
@@ -317,7 +317,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
 
-    if (columns != null && headerList == null) {
+    if (headerList == null) {
       if (columns.isEmpty()) {
         headerList = []
       } else {
@@ -450,7 +450,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow method chaining
    */
   Matrix addColumns(Matrix table, List<Integer> columns) {
-    List<String> names
     columns.each {
       addColumn(
           table.columnName(it),
@@ -618,7 +617,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * <p>Useful for building readable left-to-right pipelines:</p>
    * <pre>
-   * matrix.pipe { it.selectColumns('a', 'b') }
+   * matrix.pipe { it.select('a', 'b') }
    *       .pipe { it.orderBy('a') }
    * </pre>
    *
@@ -639,10 +638,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, Closure function) {
-    if (!columnNames().contains(columnName)) {
+    int idx = columnIndex(columnName)
+    if (idx < 0) {
       throw new IllegalArgumentException("There is no column called $columnName in this matrix")
     }
-    return apply(columnIndex(columnName), function)
+    return apply(idx, function)
   }
 
   /**
@@ -698,22 +698,18 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnNumber < 0 || columnNumber > lastColIdx) {
       throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
     }
-    def col = new Column()
+    Column col = mColumns[columnNumber]
     Class updatedClass = null
-    column(columnNumber).eachWithIndex { it, idx ->
-      if (idx in rows) {
-        def val = function(it)
-        if (updatedClass == null && val != null) {
-          updatedClass = val.class
-        }
-        col.add(val)
-      } else {
-        col.add(it)
+    for (int idx : rows) {
+      def val = function(col.get(idx))
+      if (updatedClass == null && val != null) {
+        updatedClass = val.class
       }
+      col.set(idx, val)
     }
-    col.type = updatedClass ?: type(columnNumber) ?: Object
-    col.name = columnName(columnNumber)
-    mColumns[columnNumber] = col
+    if (updatedClass != null) {
+      col.type = updatedClass
+    }
     invalidateIndex()
     this
   }
@@ -739,41 +735,20 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
-    List<List> updatedRows = []
+    Column col = mColumns[columnNumber]
     Class updatedClass = null
-    Class originalType = type(columnNumber) ?: Object
-    def orgVal
-    rows().each { it ->
-      def row = it as List
-      if (criteria.call(row)) {
-        def r = []
-        for (int i = 0; i < columnCount(); i++) {
-          orgVal = row[i]
-          if (columnNumber == i) {
-            def val = function.call(orgVal)
-            if (updatedClass == null && val != null) {
-              updatedClass = val.class
-            }
-            r.add(val)
-          } else {
-            r.add(orgVal)
-          }
+    rows().eachWithIndex { row, idx ->
+      if (criteria.call(row as List)) {
+        def val = function.call(col.get(idx))
+        if (updatedClass == null && val != null) {
+          updatedClass = val.class
         }
-        updatedRows.add(r)
-      } else {
-        updatedRows.add(row)
+        col.set(idx, val)
       }
     }
-
-    Class targetType = updatedClass ?: originalType
-    List<Class> dataTypes = targetType != originalType
-        ? createTypeListWithNewValue(columnNumber, targetType, true)
-        : types()
-    List<Column> cols = []
-    Grid.transpose(updatedRows).eachWithIndex { it, idx ->
-      cols << new Column(columnName(idx), it as List, dataTypes[idx])
+    if (updatedClass != null) {
+      col.type = updatedClass
     }
-    mColumns = cols
     invalidateIndex()
     this
   }
@@ -976,7 +951,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the column name
    */
   String columnName(int index) {
-    return columnNames()[index]
+    mColumns[index].name
   }
 
   /**
@@ -1629,22 +1604,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     builder(mName).columnNames(headers).types(types).build()
   }
 
-  private List<Class> createTypeListWithNewValue(int columnNumber, Class updatedClass, boolean findCommonGround) {
-    List<Class> types = []
-    for (int i = 0; i < mColumns.size(); i++) {
-      if (i == columnNumber) {
-        if (findCommonGround) {
-          types.add(findClosestCommonSuper(updatedClass, type(columnNumber)))
-        } else {
-          types.add(updatedClass)
-        }
-      } else {
-        types.add(type(i))
-      }
-    }
-    return types
-  }
-
 
   /**
    * Compare this matrix with another and return a human-readable diff.
@@ -1655,7 +1614,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a diff string describing any differences, or an empty string if equal
    */
   @SuppressWarnings(['DuplicateStringLiteral', 'DuplicateNumberLiteral'])
-  String diff(Matrix other, boolean forceRowComparing = false, double allowedDiff = 0.0001) {
+  String diff(Matrix other, boolean forceRowComparing = false, BigDecimal allowedDiff = 0.0001) {
     StringBuilder sb = new StringBuilder()
     if (this.matrixName != other.matrixName) {
       sb.append("Names differ: \n\tthis: ${matrixName} \n\tthat: ${other.matrixName}\n")
@@ -1680,13 +1639,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         thatRow = other.row(i)
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
-          if (entry instanceof Number) {
-            def thatVal = (thatRow[c] != null ? thatRow[c] : Double.NaN) as double
-            double thisVal = entry as double
-            if (Math.abs(thisVal - thatVal as double) > allowedDiff) {
-              valueDiff = true
-            }
-          } else if (entry != thatRow[c]) {
+          if (valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
             valueDiff = true
           }
         }
@@ -1698,28 +1651,36 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (sb.length() > 0) {
       return sb.toString()
     } else {
-      return 'No differences between the two matrices detected!'
+      return ''
     }
   }
 
-  /**
-   *
-   * @param columnNames
-   * @return this modified matrix
-   * @deprecated use dropExcept(String...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumnsExcept(String... columnNames) {
-    dropExcept(columnNames)
+  @SuppressWarnings('Instanceof')
+  private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
+    if (entry instanceof Number) {
+      if (thatVal instanceof Number) {
+        return ((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff
+      }
+      return true
+    }
+    entry != thatVal
   }
-
-
 
   /**
    * Drop all columns except the specified ones.
    *
    * @param columnNames the column names to keep
-   * @return a matrix with only the specified columns
+   * @return this modified matrix with only the specified columns
+   */
+  Matrix dropExcept(List<String> columnNames) {
+    dropExcept(columnNames as String[])
+  }
+
+  /**
+   * Drop all columns except the specified ones.
+   *
+   * @param columnNames the column names to keep
+   * @return this modified matrix with only the specified columns
    */
   Matrix dropExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
@@ -1740,18 +1701,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     return this
   }
-
-  /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use dropExcept(int...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumnsExcept(int ... columnIndices) {
-    dropExcept(columnIndices)
-  }
-
 
   /**
    * Drop all columns except the specified indices.
@@ -1777,18 +1726,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @param columnNames
-   * @return
-   * @deprecated use drop(String...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(String... columnNames) {
-    drop(columnNames)
-  }
-
-
-  /**
    * Drop the specified columns by name.
    *
    * @param columnNames the column names to remove
@@ -1808,17 +1745,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(IntRange columnIndices) {
-    drop(columnIndices)
-  }
-
-  /**
    * Drop the range of columns specified.
    *
    * @param columnIndices the range of columns to drop
@@ -1826,17 +1752,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix drop(IntRange columnIndices) {
     drop(columnIndices.toList())
-  }
-
-  /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(List<Integer> columnIndices) {
-    drop(columnIndices)
   }
 
   /**
@@ -1877,17 +1792,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(int ... columnIndices) {
-    drop(columnIndices)
-  }
-
-  /**
    * Drop the columns for the indices specified.
    *
    * @param columnIndices the columns indices to drop
@@ -1900,7 +1804,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   boolean equals(Object o) {
-    equals(o, true, true, false, 0.0001d, false)
+    equals(o, true, true, false, 0.0001, false)
   }
 
 
@@ -1918,7 +1822,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   @SuppressWarnings('EqualsOverloaded')
   boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
-                 Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
+                 BigDecimal allowedDiff = 0.0001, boolean throwException = false, String message = '') {
     if (this.is(o)) {
       return true
     }
@@ -1935,6 +1839,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       ComparisonHelper.handleError("$message - Matrix.equals: number of columns differ", throwException)
       return false
     }
+    if (rowCount() != matrix.rowCount()) {
+      ComparisonHelper.handleError("$message - Matrix.equals: number of rows differ", throwException)
+      return false
+    }
     if (!ignoreColumnNames && columnNames() != matrix.columnNames()) {
       ComparisonHelper.handleError("$message - Matrix.equals: column names differ", throwException)
       return false
@@ -1943,7 +1851,6 @@ class Matrix implements Iterable<Row>, Cloneable {
       ComparisonHelper.handleError("$message - Matrix.equals: column types differ", throwException)
       return false
     }
-    //if (mColumns != matrix.mColumns) return false
     List valueDiff = checkValues(matrix, allowedDiff, ignoreTypes)
     if (valueDiff.size() > 0) {
       ComparisonHelper.handleError("$message - Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}", throwException)
@@ -1954,7 +1861,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
 
-  private List checkValues(Matrix matrix, Double allowedDiff, boolean ignoreTypes = false) {
+  private List checkValues(Matrix matrix, BigDecimal allowedDiff, boolean ignoreTypes = false) {
     List valueDiff = []
     int i = 0
     for (List column in mColumns) {
@@ -1963,8 +1870,15 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (entry in column) {
         def thatVal = thatCol[r]
         if (entry instanceof Number) {
-          def diff = Math.abs((entry as double) - ((thatVal != null ? thatVal : Double.NaN) as double))
-          if (diff > allowedDiff) {
+          if (thatVal instanceof Number) {
+            if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
+              return [r, i, entry, thatVal]
+            }
+          } else if (ignoreTypes) {
+            if (String.valueOf(entry) != String.valueOf(thatVal)) {
+              return [r, i, entry, thatVal]
+            }
+          } else {
             return [r, i, entry, thatVal]
           }
         } else {
@@ -2273,7 +2187,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matching Column, or the default property value if not a column name
    */
   Object getProperty(String name) {
-    if (columnNames().contains(name)) {
+    if (columnIndex(name) >= 0) {
       return column(name)
     }
     return getProperties().get(name)
@@ -2832,6 +2746,19 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Renames multiple columns at once.
+   *
+   * @param nameMapping a map from existing column names to new column names
+   * @return this matrix (mutated) to allow for method chaining
+   */
+  Matrix rename(Map<String, String> nameMapping) {
+    nameMapping.each { String before, String after ->
+      rename(before, after)
+    }
+    this
+  }
+
+  /**
    * Replace all values in the entire matrix that matches the value
    *
    * @param from the value to search for
@@ -2955,17 +2882,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @return this matrix without the empty columns
-   * @deprecated Use dropEmptyColumns() instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix removeEmptyColumns() {
-    dropEmptyColumns()
-  }
-
-
-  /**
    * Get the row at the specified index
    *
    * @param index the index of the row
@@ -3055,16 +2971,16 @@ class Matrix implements Iterable<Row>, Cloneable {
       return Collections.emptyList()
     }
     int nRows = mColumns[0].size()
-    Map<Integer, Row> r = [:]
-    for (Integer i = 0; i < nRows; i++) {
-      r[i] = new Row(i, this)
+    List<Row> r = new ArrayList<>(nRows)
+    for (int i = 0; i < nRows; i++) {
+      r.add(new Row(i, this))
     }
     mColumns.eachWithIndex { List column, int col ->
-      for (Integer row = 0; row < nRows; row++) {
+      for (int row = 0; row < nRows; row++) {
         r.get(row).addElement(column[row])
       }
     }
-    return r.values() as List
+    r
   }
 
 
@@ -3074,9 +2990,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the column names to include
    * @return a new Matrix with the selected columns
+   * @deprecated use select(List) instead
    */
+  @Deprecated(forRemoval = true, since = "3.8.0")
   Matrix selectColumns(List<String> columnNames) {
-    selectColumns(columnNames as String[])
+    select(columnNames as String[])
   }
 
 
@@ -3085,8 +3003,43 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the column names to include
    * @return a matrix with the selected columns
+   * @deprecated use select(String...) instead
    */
+  @Deprecated(forRemoval = true, since = "3.8.0")
   Matrix selectColumns(String... columnNames) {
+    select(columnNames)
+  }
+
+
+  /**
+   * Return a new matrix containing the columns in the specified index range.
+   *
+   * @param range the column index range to include
+   * @return a matrix with the selected columns
+   * @deprecated use select(IntRange) instead
+   */
+  @Deprecated(forRemoval = true, since = "3.8.0")
+  Matrix selectColumns(IntRange range) {
+    select(columnNames(range) as String[])
+  }
+
+  /**
+   * Select columns by name and return a new Matrix containing only those columns.
+   *
+   * @param columnNames the column names to include
+   * @return a new Matrix with the selected columns
+   */
+  Matrix select(List<String> columnNames) {
+    select(columnNames as String[])
+  }
+
+  /**
+   * Return a new matrix containing only the specified columns.
+   *
+   * @param columnNames the column names to include
+   * @return a matrix with the selected columns
+   */
+  Matrix select(String... columnNames) {
     List<List> cols = []
     List<String> colNames = []
     List<Class> dataTypes = []
@@ -3110,15 +3063,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     result
   }
 
-
   /**
    * Return a new matrix containing the columns in the specified index range.
    *
    * @param range the column index range to include
    * @return a matrix with the selected columns
    */
-  Matrix selectColumns(IntRange range) {
-    selectColumns(columnNames(range) as String[])
+  Matrix select(IntRange range) {
+    select(columnNames(range) as String[])
   }
 
   /**
@@ -3311,14 +3263,14 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     List<Matrix> chunks = []
     int startRow = 0
+    List<Row> allRows = rows()
 
     for (int i = 0; i < numChunks; i++) {
       // First 'remainder' chunks get an extra row
       int chunkSize = (i < remainder) ? baseSize + 1 : baseSize
       int endRow = startRow + chunkSize
 
-      def rowsForChunk = rows().subList(startRow, endRow)
-      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + i).rowList(rowsForChunk).build()
+      chunks << builder(matrixName + MATRIX_NAME_SEPARATOR + i).rowList(allRows.subList(startRow, endRow)).build()
 
       startRow = endRow
     }
@@ -3346,8 +3298,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     List<Integer> r = column(columnName).findIndexValues(condition) as List<Integer>
+    buildSubset(this.rows(r) as List<List>)
+  }
+
+  private Matrix buildSubset(List<List> rowData) {
     Matrix result = builder()
-        .rows(this.rows(r) as List<List>)
+        .rows(rowData)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
@@ -3371,14 +3327,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
-    Matrix result = builder()
-        .rows(rows(criteria) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(rows(criteria) as List<List>)
   }
 
   /**
@@ -3402,14 +3351,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(IntRange rows) {
-    Matrix result = builder()
-        .rows(this.rows(rows) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows) as List<List>)
   }
 
   /**
@@ -3419,14 +3361,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(List<Integer> rows) {
-    Matrix result = builder()
-        .rows(this.rows(rows) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows) as List<List>)
   }
 
   /**
@@ -3439,14 +3374,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == null || rows.length == 0) {
       return this.clone()
     }
-    Matrix result = builder()
-        .rows(this.rows(rows as List) as List<List>)
-        .matrixName(this.matrixName)
-        .columnNames(this.columnNames())
-        .types(this.types())
-        .build()
-    copyIndexTo(result)
-    result
+    buildSubset(this.rows(rows as List) as List<List>)
   }
 
   /**
@@ -3752,28 +3680,30 @@ class Matrix implements Iterable<Row>, Cloneable {
       sb.append('  <thead>\n')
       sb.append('    <tr>\n')
 
-      columnNames().eachWithIndex { it, idx ->
-        String colName = columnName(idx)
-        sb.append("      <th class='$colName ${typeName(idx)}'")
+      columnNames().eachWithIndex { String colName, int idx ->
+        String escaped = escapeHtml(colName)
+        sb.append("      <th class='${escaped} ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
           sb.append(" style='text-align: ${alignment[colName]}'")
         }
-        sb.append('>').append(it).append('</th>\n')
+        sb.append('>').append(escaped).append('</th>\n')
       }
       sb.append('    </tr>\n  </thead>\n')
     }
+    List<String> colNames = columnNames()
+    List<String> typeNames = colNames.collect { typeName(columnIndex(it)) }
     StringBuilder rowBuilder = new StringBuilder()
     sb.append('  <tbody>\n')
     for (row in rows) {
       rowBuilder.setLength(0)
       sb.append('    <tr>\n')
       row.eachWithIndex { Object val, int i ->
-        rowBuilder.append("      <td class='${columnName(i)} ${typeName(i)}'")
-        String colName = columnName(i)
-        if (alignment.containsKey(colName)) {
-          rowBuilder.append(" style='text-align: ${alignment[colName]}'")
+        String escapedName = escapeHtml(colNames[i])
+        rowBuilder.append("      <td class='${escapedName} ${typeNames[i]}'")
+        if (alignment.containsKey(colNames[i])) {
+          rowBuilder.append(" style='text-align: ${alignment[colNames[i]]}'")
         }
-        rowBuilder.append('>').append(ValueConverter.asString(val)).append('</td>\n')
+        rowBuilder.append('>').append(escapeHtml(ValueConverter.asString(val))).append('</td>\n')
       }
       sb.append(rowBuilder).append('    </tr>\n')
     }
@@ -3985,28 +3915,29 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Apply a closure to each value in the specified column and return the resulting list.
+   * Apply a closure to each value in the specified column and return the resulting Column.
    *
    * @param columnName the column to apply the operation to
    * @param operation the closure to apply to each value
-   * @return a list containing the transformed values
+   * @return a Column containing the transformed values, preserving the source column's name and type
    */
-  List withColumn(String columnName, Closure operation) {
-    def result = []
-    column(columnName).each {
+  Column withColumn(String columnName, Closure operation) {
+    Column src = column(columnName)
+    Column result = new Column(src.name, [], src.type)
+    src.each {
       result << operation.call(it)
     }
     result
   }
 
   /**
-   * Apply a closure to each value in the specified column and return the resulting list.
+   * Apply a closure to each value in the specified column and return the resulting Column.
    *
    * @param columnIndex the column to apply the operation to
    * @param operation the closure to apply to each value
-   * @return a list containing the transformed values
+   * @return a Column containing the transformed values, preserving the source column's name and type
    */
-  List withColumn(int columnIndex, Closure operation) {
+  Column withColumn(int columnIndex, Closure operation) {
     withColumn(columnName(columnIndex), operation)
   }
 
@@ -4034,47 +3965,47 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the names of the columns to include
    * @param operation the closure operation doing the calculation
-   * @return a list with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
-  List withColumns(List<String> columnNames, Closure operation) {
-    def result = []
+  Column withColumns(List<String> columnNames, Closure operation) {
+    Column result = new Column()
     columns(columnNames).transpose().each {
       result << operation.call(it)
     }
-    return result
+    result
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a list with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
-  List withColumns(Number[] colIndices, Closure operation) {
-    return withColumns(colIndices as int[], operation)
+  Column withColumns(Number[] colIndices, Closure operation) {
+    withColumns(colIndices as int[], operation)
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a list (a new column) with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
-  List withColumns(int[] colIndices, Closure operation) {
-    def result = []
+  Column withColumns(int[] colIndices, Closure operation) {
+    Column result = new Column()
     columns(colIndices as Integer[]).transpose().each {
       result << operation.call(it)
     }
-    return result
+    result
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column index range to include
    * @param operation the closure operation doing the calculation
-   * @return a list (a new column) with the result of the operations
+   * @return a Column (without name or type) with the result of the operations
    */
-  List withColumns(IntRange colIndices, Closure operation) {
+  Column withColumns(IntRange colIndices, Closure operation) {
     withColumns(colIndices as int[], operation)
   }
 
@@ -4384,6 +4315,56 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Merge this matrix with another on a single column present in both.
+   *
+   * @param y the right-hand matrix
+   * @param by the column name present in both matrices
+   * @param joinType the type of join (default {@link JoinType#INNER})
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, String, JoinType)
+   */
+  Matrix merge(Matrix y, String by, JoinType joinType = JoinType.INNER) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Merge this matrix with another using a key map or composite keys.
+   *
+   * @param y the right-hand matrix
+   * @param by a map with keys {@code 'x'} and {@code 'y'} whose values are column name(s)
+   * @param joinType the type of join (default {@link JoinType#INNER})
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, Map, JoinType)
+   */
+  Matrix merge(Matrix y, Map<String, Object> by, JoinType joinType = JoinType.INNER) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Merge this matrix with another on multiple columns with the same names.
+   *
+   * @param y the right-hand matrix
+   * @param by the column names present in both matrices
+   * @param joinType the type of join
+   * @return a new Matrix with the joined rows
+   * @see Joiner#merge(Matrix, Matrix, List, JoinType)
+   */
+  Matrix merge(Matrix y, List<String> by, JoinType joinType) {
+    Joiner.merge(this, y, by, joinType)
+  }
+
+  /**
+   * Produce the Cartesian product of this matrix with another.
+   *
+   * @param y the right-hand matrix
+   * @return a new Matrix with {@code this.rowCount() * y.rowCount()} rows
+   * @see Joiner#crossJoin(Matrix, Matrix)
+   */
+  Matrix crossJoin(Matrix y) {
+    Joiner.crossJoin(this, y)
+  }
+
+  /**
    * Return a new Matrix containing the first {@code n} rows.
    * If {@code n} exceeds the row count, all rows are returned.
    * Non-integer values are truncated before selecting rows.
@@ -4417,6 +4398,18 @@ class Matrix implements Iterable<Row>, Cloneable {
       return buildEmptyLike()
     }
     subset((rows - count)..(rows - 1))
+  }
+
+  @SuppressWarnings('DuplicateStringLiteral')
+  private static String escapeHtml(String text) {
+    if (text == null) {
+      return ''
+    }
+    text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace("'", '&#39;')
+        .replace('"', '&quot;')
   }
 
   private static void requireFiniteNumber(Number n, String label) {

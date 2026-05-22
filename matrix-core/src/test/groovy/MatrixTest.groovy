@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Converter
 import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.JoinType
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
@@ -840,19 +841,19 @@ class MatrixTest {
         start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11"))
         .types(int, String, Number, LocalDate)
         .build()
-    def noId = empData.clone().dropColumns('emp_id')
+    def noId = empData.clone().drop('emp_id')
     assertEquals(3, noId.columnCount())
     assertIterableEquals(['emp_name', 'salary', 'start_date'], noId.columnNames())
     assertIterableEquals([String, Number, LocalDate], noId.types())
 
-    def empList = empData.clone().dropColumns("salary", "start_date")
+    def empList = empData.clone().drop("salary", "start_date")
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop")
     assertEquals(5, empList.rowCount(), "Number of rows after drop")
     assertIterableEquals(["emp_id", "emp_name"], empList.columnNames(), "column names after drop")
     assertIterableEquals([Integer, String], empList.types(), "Column types after drop")
 
-    def empRange = empData.clone().dropColumns(2..3)
+    def empRange = empData.clone().drop(2..3)
     assertEquals(empList, empRange, empList.diff(empRange))
   }
 
@@ -867,7 +868,7 @@ class MatrixTest {
         )
         .types(int, String, Number, LocalDate)
         .build()
-    def empList = empData.dropColumnsExcept("emp_id", "start_date")
+    def empList = empData.dropExcept("emp_id", "start_date")
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop")
     assertEquals(5, empList.rowCount(), "Number of rows after drop")
@@ -990,6 +991,22 @@ class MatrixTest {
     assertEquals('id', empData.columnNames()[0])
     assertEquals('name', empData.columnNames()[1])
 
+  }
+
+  @Test
+  void testBulkRename() {
+    def table = Matrix.builder().data(
+        emp_id: 1..3,
+        emp_name: ['Rick', 'Dan', 'Michelle'],
+        start_date: toLocalDates('2013-01-01', '2012-03-27', '2013-09-23')
+    ).types(int, String, LocalDate).build()
+
+    table.rename(emp_id: 'id', emp_name: 'name', start_date: 'started')
+
+    assertIterableEquals(['id', 'name', 'started'], table.columnNames())
+    assertEquals(3, table.rowCount())
+    assertEquals(1, table[0, 0])
+    assertEquals('Rick', table[0, 1])
   }
 
   @Test
@@ -1214,6 +1231,44 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsRejectsDifferentRowCounts() {
+    Matrix shortMatrix = Matrix.builder()
+        .data(id: [1], name: ['Rick'])
+        .types(Integer, String)
+        .build()
+    Matrix longMatrix = Matrix.builder()
+        .data(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    assertNotEquals(shortMatrix, longMatrix)
+    assertNotEquals(longMatrix, shortMatrix)
+  }
+
+  @Test
+  void testEqualsCanIgnoreNumericStringTypeDifferences() {
+    Matrix numeric = Matrix.builder()
+        .data(id: [1], name: ['Rick'])
+        .types(Integer, String)
+        .build()
+    Matrix stringy = Matrix.builder()
+        .data(id: ['1'], name: ['Rick'])
+        .types(String, String)
+        .build()
+
+    assertTrue(numeric.equals(stringy, false, true, true))
+  }
+
+  @Test
+  void testParseGroovyMajorVersionAllowsQualifiedVersions() {
+    def method = Matrix.getDeclaredMethod('parseGroovyMajorVersion', String)
+    method.accessible = true
+
+    assertEquals(5, method.invoke(null, '5.0.6'))
+    assertEquals(6, method.invoke(null, '6.0.0-alpha-1'))
+  }
+
+  @Test
   void testDiff() {
     def empData = Matrix.builder().data(
         emp_id: [1, 2],
@@ -1350,7 +1405,7 @@ class MatrixTest {
     assertNull(m[0, 3])
     assertIterableEquals([0, 1, 2], m.row(2)[0..2])
     assertNull(m[2, 3])
-    m.removeEmptyColumns()
+    m.dropEmptyColumns()
     assertEquals(3, m.rowCount())
     assertEquals(3, m.columnCount())
   }
@@ -1367,7 +1422,7 @@ class MatrixTest {
         .types(int, String, Number, LocalDate, String)
         .build()
     assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
-    empData.removeEmptyColumns()
+    empData.dropEmptyColumns()
     assertEquals(2, empData.columnCount())
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }
@@ -1384,7 +1439,7 @@ class MatrixTest {
         .types(int, String, Number, String, String)
         .build()
     assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
-    empData.removeEmptyColumns()
+    empData.dropEmptyColumns()
     assertEquals(2, empData.columnCount())
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }
@@ -3179,5 +3234,56 @@ class MatrixTest {
     fracSampled.each { row ->
       assertEquals(row['id'] * 10, row['score'])
     }
+  }
+
+  @Test
+  void testMergeInstanceMethod() {
+    Matrix x = Matrix.builder('left').data(
+        id: [1, 2, 3],
+        name: ['Alice', 'Bob', 'Carol']
+    ).types(int, String).build()
+
+    Matrix y = Matrix.builder('right').data(
+        id: [2, 3, 4],
+        salary: [100, 200, 300]
+    ).types(int, int).build()
+
+    Matrix inner = x.merge(y, 'id')
+    assertEquals(2, inner.rowCount())
+    assertIterableEquals(['id', 'name', 'salary'], inner.columnNames())
+    assertEquals('Bob', inner[0, 'name'])
+    assertEquals(100, inner[0, 'salary'])
+
+    Matrix left = x.merge(y, 'id', JoinType.LEFT)
+    assertEquals(3, left.rowCount())
+    assertEquals('Alice', left[0, 'name'])
+    assertNull(left[0, 'salary'])
+  }
+
+  @Test
+  void testMergeInstanceMethodWithMap() {
+    Matrix x = Matrix.builder().data(
+        emp_id: [1, 2],
+        name: ['Alice', 'Bob']
+    ).types(int, String).build()
+
+    Matrix y = Matrix.builder().data(
+        person_id: [1, 2],
+        dept: ['HR', 'Eng']
+    ).types(int, String).build()
+
+    Matrix result = x.merge(y, [x: 'emp_id', y: 'person_id'])
+    assertEquals(2, result.rowCount())
+    assertIterableEquals(['emp_id', 'name', 'dept'], result.columnNames())
+  }
+
+  @Test
+  void testCrossJoinInstanceMethod() {
+    Matrix x = Matrix.builder().data(color: ['red', 'blue']).types(String).build()
+    Matrix y = Matrix.builder().data(size: ['S', 'M']).types(String).build()
+
+    Matrix result = x.crossJoin(y)
+    assertEquals(4, result.rowCount())
+    assertIterableEquals(['color', 'size'], result.columnNames())
   }
 }

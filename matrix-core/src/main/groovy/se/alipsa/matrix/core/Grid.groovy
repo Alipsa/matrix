@@ -19,12 +19,15 @@ import java.text.NumberFormat
 class Grid<T> implements Iterable<List<T>> {
 
   List<List<T>> data
+  private final Class<?> elementType
 
   Grid() {
     data = []
+    elementType = Object
   }
 
   Grid(List<List<T>> data) {
+    elementType = Object
     if (isValid(data)) {
       this.data = data
     } else if (data instanceof List) {
@@ -43,21 +46,24 @@ class Grid<T> implements Iterable<List<T>> {
    * @throws IllegalArgumentException if the row structure is invalid or contains incompatible values
    */
   Grid(List<List<T>> data, Class<T> elementType) {
-    if (isValid(data, elementType)) {
+    this.elementType = safeElementType(elementType)
+    if (isValid(data, this.elementType)) {
       this.data = data
-    } else if (data instanceof List && isValid([data], elementType)) {
+    } else if (data instanceof List && isValid([data], this.elementType)) {
       this.data = [data]
     } else {
-      throw new IllegalArgumentException("data is invalid for element type ${safeElementType(elementType).simpleName}")
+      throw new IllegalArgumentException("data is invalid for element type ${this.elementType.simpleName}")
     }
   }
 
   Grid(int nrow) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = Object
   }
 
   Grid(int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = Object
     nrow.times {
       data << ([null] * ncol) as List<T>
     }
@@ -65,6 +71,7 @@ class Grid<T> implements Iterable<List<T>> {
 
   Grid(T value, int nrow, int ncol) {
     data = new ArrayList<List<T>>(nrow)
+    elementType = value == null ? Object : safeElementType(value.class)
     nrow.times {
       data << ([value] * ncol) as List<T>
     }
@@ -83,10 +90,12 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   def leftShift(List<T> row) {
+    validateNewRow(row)
     data << row
   }
 
   boolean add(List<T> row) {
+    validateNewRow(row)
     data.add(row)
   }
 
@@ -97,16 +106,17 @@ class Grid<T> implements Iterable<List<T>> {
    * @param row the row data
    */
   void add(int position, List<T> row) {
+    validateNewRow(row)
     data.add(position, row)
   }
 
   boolean addAll(List<List<T>> grid) {
+    grid.each { List<T> row -> validateNewRow(row) }
     data.addAll(grid)
   }
 
   Grid plus(List<T> row) {
-    def grid = new Grid()
-    grid.addAll(data)
+    def grid = new Grid<T>(copyRows(), elementType as Class<T>)
     grid.add(row)
     grid
   }
@@ -161,7 +171,9 @@ class Grid<T> implements Iterable<List<T>> {
     if (rowIdx < data.size()) {
       replaceRow(rowIdx, values.collect())
     } else if (rowIdx == data.size()) {
-      data << values.collect()
+      List<T> row = values.collect() as List<T>
+      validateNewRow(row)
+      data << row
     } else {
       throw new IndexOutOfBoundsException("Index $rowIdx cannot be greater than ${data.size()}")
     }
@@ -171,11 +183,11 @@ class Grid<T> implements Iterable<List<T>> {
    * @return a Map<String, Integer> of the number of observations (rows) and the number of
    * variables (columns) in the Grid with the keys 'observations' and 'variables'
    */
-  @SuppressWarnings('UnnecessaryCollectCall')
   Map<String, Integer> dimensions() {
-    ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.collect { it.size() }.max()]
+    ['observations': data.size(), 'variables': data.isEmpty() ? 0 : data.max { it.size() }.size()]
   }
 
+  @Override
   String toString() {
     StringBuilder sb = new StringBuilder('[\n')
     data.each { sb.append('  ').append(String.valueOf(it)).append('\n') }
@@ -205,6 +217,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid replaceRow(int index, List<T> row) {
+    validateNewRow(row)
     def r = data.get(index)
     r.clear()
     r.addAll(row)
@@ -212,6 +225,17 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid replaceColumn(int column, List<T> values) {
+    if (values == null) {
+      throw new IllegalArgumentException('Column values cannot be null')
+    }
+    int valSize = values.size()
+    int rowCount = data.size()
+    if (valSize != rowCount) {
+      throw new IllegalArgumentException("Column values size ($valSize) must match row count ($rowCount)")
+    }
+    values.eachWithIndex { T value, int i ->
+      validateValue(value, "Value at row $i")
+    }
     data.eachWithIndex { List row, int i ->
       row[column] = values[i]
     }
@@ -223,11 +247,12 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Grid<T> transpose() {
-    new Grid<T>(transpose(this.data))
+    new Grid<T>(transpose(this.data), elementType as Class<T>)
   }
 
   static <N> Grid<N> convert(Grid grid, Integer colNum, Class<N> type, NumberFormat format = null) {
-    new Grid(convert(grid.data, [colNum], type, format))
+    List<List<N>> converted = convert(grid.data, colNum, type, format)
+    coversAllColumns(grid.data, [colNum]) ? new Grid<N>(converted, type) : new Grid<N>(converted)
   }
 
   // Null in means "no single target column was supplied", so preserve the legacy null result.
@@ -249,7 +274,8 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   static <N> Grid<N> convert(Grid grid, List<Integer> colNums, Class<N> type, NumberFormat format = null) {
-    new Grid(convert(grid.data, colNums, type, format))
+    List<List<?>> converted = convert(grid.data, colNums, type, format)
+    coversAllColumns(grid.data, colNums) ? new Grid<N>(converted as List<List<N>>, type) : new Grid<N>(converted as List<List<N>>)
   }
 
   @CompileDynamic
@@ -394,6 +420,33 @@ class Grid<T> implements Iterable<List<T>> {
 
   private static Class<?> safeElementType(Class<?> elementType) {
     ClassUtils.convertPrimitiveToWrapper(elementType) ?: Object
+  }
+
+  private static boolean coversAllColumns(List<List<?>> rowList, List<Integer> colNums) {
+    if (rowList == null || rowList.isEmpty()) {
+      return true
+    }
+    Set<Integer> columns = colNums as Set<Integer>
+    columns == (0..<rowList[0].size()) as Set<Integer>
+  }
+
+  private List<List<T>> copyRows() {
+    data.collect { List<T> row -> row.collect() as List<T> }
+  }
+
+  private void validateNewRow(List<T> row) {
+    if (row == null) {
+      throw new IllegalArgumentException('Row cannot be null')
+    }
+    row.eachWithIndex { T value, int i ->
+      validateValue(value, "Value at column $i")
+    }
+  }
+
+  private void validateValue(T value, String context) {
+    if (value != null && elementType != Object && !elementType.isInstance(value)) {
+      throw new IllegalArgumentException("${context} is ${value.class.simpleName} but expected ${elementType.simpleName}")
+    }
   }
 
 }

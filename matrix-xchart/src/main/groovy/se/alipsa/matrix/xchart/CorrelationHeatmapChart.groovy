@@ -56,7 +56,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     if (columnNames.isEmpty()) {
       throw new IllegalArgumentException("At least one column name must be provided for the correlation heatmap series.")
     }
-    Matrix data = matrix.selectColumns(columnNames)
+    Matrix data = matrix.select(columnNames)
     int size = columnNames.size()
     List<BigDecimal> corr = ((size - 1)..0).collectMany { int i ->
       (0..<size).collect { int j ->

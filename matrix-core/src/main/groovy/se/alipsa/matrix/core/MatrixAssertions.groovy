@@ -8,8 +8,8 @@ package se.alipsa.matrix.core
  */
 class MatrixAssertions {
 
-  private static final double STRUCTURE_TOLERANCE = 0.0001d
-  private static final double CONTENT_TOLERANCE = 0.00001d
+  private static final BigDecimal STRUCTURE_TOLERANCE = 0.0001
+  private static final BigDecimal CONTENT_TOLERANCE = 0.00001
 
   static void assertEquals(Matrix expected, Matrix actual, String message = '') {
     expected.equals(actual, true, true, false, STRUCTURE_TOLERANCE, true, message)

@@ -19,7 +19,7 @@ import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.*
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
-    .dropColumns('RowID')
+    .drop('RowID')
 println m.dimensions()
 
 features = m.columnNames() - 'Distillery'
@@ -67,7 +67,7 @@ println result
 println Matrix.builder('Cluster allocation').ginqResult(result).build().content()
 
 //assert m.rows().countBy{ it.Cluster } == [0:51, 1:23, 2:12]
-data = m.selectColumns(features) as double[][]
+data = m.select(features) as double[][]
 pca = PCA.fit(data)
 projected = pca.getProjection(2).apply(data)
 m['X'] = projected*.getAt(0)
