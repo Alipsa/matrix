@@ -3,7 +3,6 @@ package se.alipsa.matrix.core
 import static se.alipsa.matrix.core.util.ClassUtils.*
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
@@ -45,7 +44,6 @@ import java.time.LocalDateTime
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
  *
  */
-@CompileStatic
 @SuppressWarnings([
     'JavadocEmptyLastLine',
     'ClassSize',
@@ -319,7 +317,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
 
-    if (columns != null && headerList == null) {
+    if (headerList == null) {
       if (columns.isEmpty()) {
         headerList = []
       } else {
@@ -452,7 +450,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow method chaining
    */
   Matrix addColumns(Matrix table, List<Integer> columns) {
-    List<String> names
     columns.each {
       addColumn(
           table.columnName(it),
@@ -1654,7 +1651,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (sb.length() > 0) {
       return sb.toString()
     } else {
-      return 'No differences between the two matrices detected!'
+      return ''
     }
   }
 
@@ -1670,23 +1667,20 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Drop all columns except the specified ones.
    *
-   * @param columnNames
-   * @return this modified matrix
-   * @deprecated use dropExcept(String...) instead
+   * @param columnNames the column names to keep
+   * @return this modified matrix with only the specified columns
    */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumnsExcept(String... columnNames) {
-    dropExcept(columnNames)
+  Matrix dropExcept(List<String> columnNames) {
+    dropExcept(columnNames as String[])
   }
-
-
 
   /**
    * Drop all columns except the specified ones.
    *
    * @param columnNames the column names to keep
-   * @return a matrix with only the specified columns
+   * @return this modified matrix with only the specified columns
    */
   Matrix dropExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
@@ -1707,18 +1701,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     return this
   }
-
-  /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use dropExcept(int...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumnsExcept(int ... columnIndices) {
-    dropExcept(columnIndices)
-  }
-
 
   /**
    * Drop all columns except the specified indices.
@@ -1744,18 +1726,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @param columnNames
-   * @return
-   * @deprecated use drop(String...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(String... columnNames) {
-    drop(columnNames)
-  }
-
-
-  /**
    * Drop the specified columns by name.
    *
    * @param columnNames the column names to remove
@@ -1775,17 +1745,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(IntRange columnIndices) {
-    drop(columnIndices)
-  }
-
-  /**
    * Drop the range of columns specified.
    *
    * @param columnIndices the range of columns to drop
@@ -1793,17 +1752,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix drop(IntRange columnIndices) {
     drop(columnIndices.toList())
-  }
-
-  /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(List<Integer> columnIndices) {
-    drop(columnIndices)
   }
 
   /**
@@ -1841,17 +1789,6 @@ class Matrix implements Iterable<Row>, Cloneable {
       mColumns.remove(colIdx - idx)
     }
     return this
-  }
-
-  /**
-   *
-   * @param columnIndices
-   * @return
-   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix dropColumns(int ... columnIndices) {
-    drop(columnIndices)
   }
 
   /**
@@ -2945,17 +2882,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   *
-   * @return this matrix without the empty columns
-   * @deprecated Use dropEmptyColumns() instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix removeEmptyColumns() {
-    dropEmptyColumns()
-  }
-
-
-  /**
    * Get the row at the specified index
    *
    * @param index the index of the row
@@ -3064,9 +2990,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the column names to include
    * @return a new Matrix with the selected columns
+   * @deprecated use select(List) instead
    */
+  @Deprecated(forRemoval = true, since = "3.8.0")
   Matrix selectColumns(List<String> columnNames) {
-    selectColumns(columnNames as String[])
+    select(columnNames as String[])
   }
 
 
@@ -3075,8 +3003,43 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the column names to include
    * @return a matrix with the selected columns
+   * @deprecated use select(String...) instead
    */
+  @Deprecated(forRemoval = true, since = "3.8.0")
   Matrix selectColumns(String... columnNames) {
+    select(columnNames)
+  }
+
+
+  /**
+   * Return a new matrix containing the columns in the specified index range.
+   *
+   * @param range the column index range to include
+   * @return a matrix with the selected columns
+   * @deprecated use select(IntRange) instead
+   */
+  @Deprecated(forRemoval = true, since = "3.8.0")
+  Matrix selectColumns(IntRange range) {
+    select(columnNames(range) as String[])
+  }
+
+  /**
+   * Select columns by name and return a new Matrix containing only those columns.
+   *
+   * @param columnNames the column names to include
+   * @return a new Matrix with the selected columns
+   */
+  Matrix select(List<String> columnNames) {
+    select(columnNames as String[])
+  }
+
+  /**
+   * Return a new matrix containing only the specified columns.
+   *
+   * @param columnNames the column names to include
+   * @return a matrix with the selected columns
+   */
+  Matrix select(String... columnNames) {
     List<List> cols = []
     List<String> colNames = []
     List<Class> dataTypes = []
@@ -3100,15 +3063,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     result
   }
 
-
   /**
    * Return a new matrix containing the columns in the specified index range.
    *
    * @param range the column index range to include
    * @return a matrix with the selected columns
    */
-  Matrix selectColumns(IntRange range) {
-    selectColumns(columnNames(range) as String[])
+  Matrix select(IntRange range) {
+    select(columnNames(range) as String[])
   }
 
   /**
@@ -3719,11 +3681,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       sb.append('    <tr>\n')
 
       columnNames().eachWithIndex { String colName, int idx ->
-        sb.append("      <th class='$colName ${typeName(idx)}'")
+        String escaped = escapeHtml(colName)
+        sb.append("      <th class='${escaped} ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
           sb.append(" style='text-align: ${alignment[colName]}'")
         }
-        sb.append('>').append(colName).append('</th>\n')
+        sb.append('>').append(escaped).append('</th>\n')
       }
       sb.append('    </tr>\n  </thead>\n')
     }
@@ -3735,12 +3698,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       rowBuilder.setLength(0)
       sb.append('    <tr>\n')
       row.eachWithIndex { Object val, int i ->
-        String colName = colNames[i]
-        rowBuilder.append("      <td class='${colName} ${typeNames[i]}'")
-        if (alignment.containsKey(colName)) {
-          rowBuilder.append(" style='text-align: ${alignment[colName]}'")
+        String escapedName = escapeHtml(colNames[i])
+        rowBuilder.append("      <td class='${escapedName} ${typeNames[i]}'")
+        if (alignment.containsKey(colNames[i])) {
+          rowBuilder.append(" style='text-align: ${alignment[colNames[i]]}'")
         }
-        rowBuilder.append('>').append(ValueConverter.asString(val)).append('</td>\n')
+        rowBuilder.append('>').append(escapeHtml(ValueConverter.asString(val))).append('</td>\n')
       }
       sb.append(rowBuilder).append('    </tr>\n')
     }
@@ -3952,28 +3915,29 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Apply a closure to each value in the specified column and return the resulting list.
+   * Apply a closure to each value in the specified column and return the resulting Column.
    *
    * @param columnName the column to apply the operation to
    * @param operation the closure to apply to each value
-   * @return a list containing the transformed values
+   * @return a Column containing the transformed values, preserving the source column's name and type
    */
-  List withColumn(String columnName, Closure operation) {
-    def result = []
-    column(columnName).each {
+  Column withColumn(String columnName, Closure operation) {
+    Column src = column(columnName)
+    Column result = new Column(src.name, [], src.type)
+    src.each {
       result << operation.call(it)
     }
     result
   }
 
   /**
-   * Apply a closure to each value in the specified column and return the resulting list.
+   * Apply a closure to each value in the specified column and return the resulting Column.
    *
    * @param columnIndex the column to apply the operation to
    * @param operation the closure to apply to each value
-   * @return a list containing the transformed values
+   * @return a Column containing the transformed values, preserving the source column's name and type
    */
-  List withColumn(int columnIndex, Closure operation) {
+  Column withColumn(int columnIndex, Closure operation) {
     withColumn(columnName(columnIndex), operation)
   }
 
@@ -4001,47 +3965,47 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param columnNames the names of the columns to include
    * @param operation the closure operation doing the calculation
-   * @return a list with the result of the operations
+   * @return a Column with the result of the operations
    */
-  List withColumns(List<String> columnNames, Closure operation) {
-    def result = []
+  Column withColumns(List<String> columnNames, Closure operation) {
+    Column result = new Column()
     columns(columnNames).transpose().each {
       result << operation.call(it)
     }
-    return result
+    result
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a list with the result of the operations
+   * @return a Column with the result of the operations
    */
-  List withColumns(Number[] colIndices, Closure operation) {
-    return withColumns(colIndices as int[], operation)
+  Column withColumns(Number[] colIndices, Closure operation) {
+    withColumns(colIndices as int[], operation)
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a list (a new column) with the result of the operations
+   * @return a Column with the result of the operations
    */
-  List withColumns(int[] colIndices, Closure operation) {
-    def result = []
+  Column withColumns(int[] colIndices, Closure operation) {
+    Column result = new Column()
     columns(colIndices as Integer[]).transpose().each {
       result << operation.call(it)
     }
-    return result
+    result
   }
 
   /**
    * @see #withColumns(List < String >, Closure)
    * @param colIndices the column index range to include
    * @param operation the closure operation doing the calculation
-   * @return a list (a new column) with the result of the operations
+   * @return a Column with the result of the operations
    */
-  List withColumns(IntRange colIndices, Closure operation) {
+  Column withColumns(IntRange colIndices, Closure operation) {
     withColumns(colIndices as int[], operation)
   }
 
@@ -4434,6 +4398,18 @@ class Matrix implements Iterable<Row>, Cloneable {
       return buildEmptyLike()
     }
     subset((rows - count)..(rows - 1))
+  }
+
+  @SuppressWarnings('DuplicateStringLiteral')
+  private static String escapeHtml(String text) {
+    if (text == null) {
+      return ''
+    }
+    text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace("'", '&#39;')
+        .replace('"', '&quot;')
   }
 
   private static void requireFiniteNumber(Number n, String label) {

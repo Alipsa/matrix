@@ -64,6 +64,26 @@
 - Typed `Grid` mutators now reject values that do not match the grid element type, matching typed constructor validation.
 - `MatrixAssertions` tolerance constants changed from `double` to `BigDecimal` to match the updated `equals()` signature.
 
+### API changes
+- `withColumn(String, Closure)` and `withColumn(int, Closure)` now return `Column` instead of `List`, preserving the source column's name and type. This enables fluent chaining with Column's arithmetic and cumulative methods.
+- `withColumns(List<String>, Closure)` and index-based `withColumns` variants now return `Column` instead of `List`.
+- Added `select(String...)`, `select(List<String>)`, and `select(IntRange)` as shorter aliases for `selectColumns(...)`. The `selectColumns` methods are now deprecated in favor of `select`.
+- Added `dropExcept(List<String>)` overload so callers with a `List<String>` variable no longer need to cast to `String[]`.
+- `toHtml()` now escapes HTML special characters (`<`, `>`, `&`, `'`, `"`) in column names and cell values, preventing malformed or injectable HTML output.
+- `diff()` now returns an empty string when two matrices are equal, matching its GroovyDoc contract (previously returned `'No differences between the two matrices detected!'`).
+- Removed redundant `@CompileStatic` annotation from `Matrix.groovy` (static compilation is already enabled globally via compiler config).
+
+### Removed deprecated methods
+The following methods deprecated since 3.7.0 have been removed:
+- `Matrix.dropColumnsExcept(String...)` — use `dropExcept(String...)`
+- `Matrix.dropColumnsExcept(int...)` — use `dropExcept(int...)`
+- `Matrix.dropColumns(String...)` — use `drop(String...)`
+- `Matrix.dropColumns(IntRange)` — use `drop(IntRange)`
+- `Matrix.dropColumns(List<Integer>)` — use `drop(List<Integer>)`
+- `Matrix.dropColumns(int...)` — use `drop(int...)`
+- `Matrix.removeEmptyColumns()` — use `dropEmptyColumns()`
+- `ValueConverter.asSqlTIme(Object, Time)` — use `asSqlTime(Object, Time)` (typo fix)
+
 ### Build changes
 - Removed redundant `CodeNarc` and `repositories` blocks from matrix-core `build.gradle` (now handled by root project)
 - Removed deprecated `afterSuite` closure from test configuration (replaced by `addTestListener` in root project)

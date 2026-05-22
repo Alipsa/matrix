@@ -19,7 +19,7 @@ import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.*
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
-    .dropColumns('RowID')
+    .drop('RowID')
 println m.dimensions()
 
 features = m.columnNames() - 'Distillery'

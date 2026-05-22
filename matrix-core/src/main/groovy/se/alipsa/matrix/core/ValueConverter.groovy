@@ -591,14 +591,6 @@ class ValueConverter {
     return Time.valueOf(String.valueOf(o))
   }
 
-  /**
-   * @deprecated use asSqlTime(Object, Time) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  static Time asSqlTIme(Object o, Time valueIfNull = null) {
-    asSqlTime(o, valueIfNull)
-  }
-
   static LocalTime asLocalTime(Object o, LocalTime valueIfNull = null) {
     if (o == null || '' == o) {
       return valueIfNull

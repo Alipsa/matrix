@@ -841,19 +841,19 @@ class MatrixTest {
         start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11"))
         .types(int, String, Number, LocalDate)
         .build()
-    def noId = empData.clone().dropColumns('emp_id')
+    def noId = empData.clone().drop('emp_id')
     assertEquals(3, noId.columnCount())
     assertIterableEquals(['emp_name', 'salary', 'start_date'], noId.columnNames())
     assertIterableEquals([String, Number, LocalDate], noId.types())
 
-    def empList = empData.clone().dropColumns("salary", "start_date")
+    def empList = empData.clone().drop("salary", "start_date")
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop")
     assertEquals(5, empList.rowCount(), "Number of rows after drop")
     assertIterableEquals(["emp_id", "emp_name"], empList.columnNames(), "column names after drop")
     assertIterableEquals([Integer, String], empList.types(), "Column types after drop")
 
-    def empRange = empData.clone().dropColumns(2..3)
+    def empRange = empData.clone().drop(2..3)
     assertEquals(empList, empRange, empList.diff(empRange))
   }
 
@@ -868,7 +868,7 @@ class MatrixTest {
         )
         .types(int, String, Number, LocalDate)
         .build()
-    def empList = empData.dropColumnsExcept("emp_id", "start_date")
+    def empList = empData.dropExcept("emp_id", "start_date")
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop")
     assertEquals(5, empList.rowCount(), "Number of rows after drop")
@@ -1405,7 +1405,7 @@ class MatrixTest {
     assertNull(m[0, 3])
     assertIterableEquals([0, 1, 2], m.row(2)[0..2])
     assertNull(m[2, 3])
-    m.removeEmptyColumns()
+    m.dropEmptyColumns()
     assertEquals(3, m.rowCount())
     assertEquals(3, m.columnCount())
   }
@@ -1422,7 +1422,7 @@ class MatrixTest {
         .types(int, String, Number, LocalDate, String)
         .build()
     assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
-    empData.removeEmptyColumns()
+    empData.dropEmptyColumns()
     assertEquals(2, empData.columnCount())
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }
@@ -1439,7 +1439,7 @@ class MatrixTest {
         .types(int, String, Number, String, String)
         .build()
     assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
-    empData.removeEmptyColumns()
+    empData.dropEmptyColumns()
     assertEquals(2, empData.columnCount())
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }

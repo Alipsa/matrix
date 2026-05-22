@@ -184,7 +184,7 @@ class MatrixBuilderTest {
     r7.addColumn('c4', int, [7,8,9])
     r7.content()
     assertNotEquals(m7, r7, m7.diff(r7))
-    r7.dropColumns('c4')
+    r7.drop('c4')
     assertEquals(m7, r7, m7.diff(r7))
   }
 
