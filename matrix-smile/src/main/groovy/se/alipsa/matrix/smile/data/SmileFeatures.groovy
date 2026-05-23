@@ -78,6 +78,9 @@ class SmileFeatures {
    * @return a new Matrix with normalized columns
    */
   static Matrix normalize(Matrix matrix, List<String> columns, double min, double max) {
+    if (min >= max) {
+      throw new IllegalArgumentException("min must be less than max: min=${min}, max=${max}")
+    }
     transformColumns(matrix, columns) { List<Double> values ->
       normalizeToRange(values, min, max)
     }
@@ -156,10 +159,35 @@ class SmileFeatures {
    * @param columns the column names to transform
    * @return a new Matrix with log-transformed columns
    */
+  @SuppressWarnings('NestedForLoop')
   static Matrix logTransform(Matrix matrix, List<String> columns) {
-    transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? v.log1p() as double : null }
+    Map<String, List<?>> newData = [:]
+    List<Class<?>> newTypes = []
+    for (int i = 0; i < matrix.columnCount(); i++) {
+      String colName = matrix.columnName(i)
+      if (columns.contains(colName)) {
+        List<?> col = matrix.column(i)
+        List<Double> numericCol = col.collect { it != null ? it as double : null }
+        List<Double> transformed = []
+        for (int j = 0; j < numericCol.size(); j++) {
+          Double v = numericCol.get(j)
+          if (v == null) {
+            transformed.add(null)
+          } else if (v <= -1.0d) {
+            throw new IllegalArgumentException(
+                "logTransform: value ${v} at row ${j} in column '${colName}' is <= -1 (log1p undefined)")
+          } else {
+            transformed.add(v.log1p() as double)
+          }
+        }
+        newData.put(colName, transformed)
+        newTypes.add(Double)
+      } else {
+        newData.put(colName, matrix.column(i))
+        newTypes.add(matrix.type(i))
+      }
     }
+    Matrix.builder().data(newData).types(newTypes).matrixName(matrix.matrixName).build()
   }
 
   /**
@@ -180,10 +208,35 @@ class SmileFeatures {
    * @param columns the column names to transform
    * @return a new Matrix with sqrt-transformed columns
    */
+  @SuppressWarnings('NestedForLoop')
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
-    transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? v.sqrt() as double : null }
+    Map<String, List<?>> newData = [:]
+    List<Class<?>> newTypes = []
+    for (int i = 0; i < matrix.columnCount(); i++) {
+      String colName = matrix.columnName(i)
+      if (columns.contains(colName)) {
+        List<?> col = matrix.column(i)
+        List<Double> numericCol = col.collect { it != null ? it as double : null }
+        List<Double> transformed = []
+        for (int j = 0; j < numericCol.size(); j++) {
+          Double v = numericCol.get(j)
+          if (v == null) {
+            transformed.add(null)
+          } else if (v < ZERO) {
+            throw new IllegalArgumentException(
+                "sqrtTransform: negative value ${v} at row ${j} in column '${colName}'")
+          } else {
+            transformed.add(v.sqrt() as double)
+          }
+        }
+        newData.put(colName, transformed)
+        newTypes.add(Double)
+      } else {
+        newData.put(colName, matrix.column(i))
+        newTypes.add(matrix.type(i))
+      }
     }
+    Matrix.builder().data(newData).types(newTypes).matrixName(matrix.matrixName).build()
   }
 
   /**
@@ -257,7 +310,8 @@ class SmileFeatures {
       if (v == edges.last()) {
         return labels != null ? labels.last() : edges.size() - HALF_DIVISOR
       }
-      return null
+      throw new IllegalArgumentException(
+          "Value ${v} in column '${column}' is outside the edge range [${edges[0]}, ${edges.last()}]")
     }
 
     Class<?> newType = labels != null ? String : Integer
@@ -288,6 +342,10 @@ class SmileFeatures {
   static Matrix fillnaMean(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
     List<Double> numericCol = col.findAll { it != null }.collect { it as double }
+    if (numericCol.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot compute mean for column '${column}': no non-null values found")
+    }
     double mean = sumDoubles(numericCol) / numericCol.size()
     fillna(matrix, column, mean)
   }
@@ -352,7 +410,14 @@ class SmileFeatures {
    * @return a new Matrix without null-containing rows
    */
   static Matrix dropna(Matrix matrix, List<String> columns) {
-    List<Integer> colIndices = columns.collect { matrix.columnNames().indexOf(it) }
+    List<String> knownColumns = matrix.columnNames()
+    for (String col : columns) {
+      if (!knownColumns.contains(col)) {
+        throw new IllegalArgumentException(
+            "Column '${col}' not found in matrix. Available: ${knownColumns}")
+      }
+    }
+    List<Integer> colIndices = columns.collect { knownColumns.indexOf(it) }
 
     List<Integer> validIndices = []
     for (int i = 0; i < matrix.rowCount(); i++) {
