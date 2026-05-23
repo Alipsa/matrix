@@ -320,6 +320,10 @@ class SmileData {
     if (n < 1) {
       throw new IllegalArgumentException("n must be at least 1: was $n")
     }
+    if (sampleSize == 0 || sampleSize < -1) {
+      throw new IllegalArgumentException(
+          "sampleSize must be a positive integer or -1 (full matrix size): was $sampleSize")
+    }
 
     int actualSampleSize = sampleSize > 0 ? sampleSize : matrix.rowCount()
     int rowCount = matrix.rowCount()
