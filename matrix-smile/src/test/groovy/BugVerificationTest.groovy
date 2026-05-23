@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.DataframeConverter
-import se.alipsa.matrix.smile.SmileUtil
 import se.alipsa.matrix.smile.data.SmileData
 import se.alipsa.matrix.smile.data.SmileFeatures
 import se.alipsa.matrix.smile.ml.SmileCluster
@@ -70,6 +69,20 @@ class BugVerificationTest {
       SmileData.bootstrap(data, 3, 0)
     }
     assertTrue(ex.message.toLowerCase().contains('sample') || ex.message.contains('0'),
+        "Expected message to mention invalid sampleSize, got: ${ex.message}")
+  }
+
+  @Test
+  void testBootstrapNegativeSampleSizeThrows() {
+    Matrix data = Matrix.builder()
+        .data(x: [1.0, 2.0, 3.0, 4.0, 5.0])
+        .types([Double])
+        .build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      SmileData.bootstrap(data, 3, -2)
+    }
+    assertTrue(ex.message.toLowerCase().contains('sample') || ex.message.contains('-2'),
         "Expected message to mention invalid sampleSize, got: ${ex.message}")
   }
 
@@ -199,7 +212,7 @@ class BugVerificationTest {
   @Test
   void testDataframeConverterBigDecimalRoundTripPreservesValues() {
     Matrix matrix = Matrix.builder()
-        .data(price: [new BigDecimal('1.5'), new BigDecimal('2.5'), new BigDecimal('3.5')])
+        .data(price: [1.5G, 2.5G, 3.5G])
         .types([BigDecimal])
         .build()
 
