@@ -9,6 +9,13 @@ Bug fixes and API improvements.
 - **MinMaxScaler**: Added missing `transform()` method for fit-then-transform workflows; calling `transform()` before `fit()` now throws `IllegalStateException`
 - **SmileClassifier.randomForest**: `ntrees` parameter was silently ignored — the model always used Smile's defaults; now correctly passed via `RandomForest.Options(ntrees)`
 - **SmileClassifier.randomForest**: `ntrees <= 0` now throws `IllegalArgumentException` instead of silently producing an invalid model
+- **SmileFeatures.dropna(columns)**: Unknown column names now throw `IllegalArgumentException` naming the bad column instead of `IndexOutOfBoundsException`
+- **SmileFeatures.fillnaMean**: All-null column no longer silently fills with `NaN`; throws `IllegalArgumentException`
+- **SmileFeatures.binning(edges)**: Values outside the edge range now throw `IllegalArgumentException` instead of silently producing `null` entries
+- **SmileFeatures.normalize(columns, min, max)**: `min >= max` now throws `IllegalArgumentException` instead of producing nonsensical output
+- **SmileFeatures.logTransform**: Values ≤ −1 now throw `IllegalArgumentException` with the column name and row index for easier diagnosis
+- **SmileFeatures.sqrtTransform**: Negative values now throw `IllegalArgumentException` with the column name and row index instead of a context-free `ArithmeticException`
+- **SmileData.bootstrap**: `sampleSize` values that are neither `−1` (full size) nor a positive integer (e.g. `0`, `−2`) now throw `IllegalArgumentException`
 
 ### API Improvements
 - **CorrelationMethod enum**: Added `PEARSON`, `SPEARMAN`, `KENDALL` enum for type-safe correlation method selection
