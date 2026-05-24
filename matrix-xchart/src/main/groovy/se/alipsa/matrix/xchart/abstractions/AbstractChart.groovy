@@ -3,7 +3,6 @@ package se.alipsa.matrix.xchart.abstractions
 import groovy.transform.CompileStatic
 
 import org.knowm.xchart.BitmapEncoder
-import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.internal.chartpart.Chart
@@ -40,6 +39,8 @@ import javax.swing.WindowConstants
  */
 @CompileStatic
 abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart<C> {
+
+  private static final String DISPLAY_ERROR = 'Error displaying chart'
 
   protected C xchart
   protected Matrix matrix
@@ -204,7 +205,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
       colors = colorList as Color[]
     }
     Color color = colors[numSeries]
-    //s.lineColor = color.darker()
+    // s.lineColor = color.darker()
     s.fillColor = new Color(color.red, color.green, color.blue, transparency)
   }
 
@@ -215,7 +216,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    */
   @Override
   void display() {
-    String windowTitle = xchart.title ?: matrix.getMatrixName() ?: "Matrix XChart"
+    String windowTitle = xchart.title ?: matrix.getMatrixName() ?: 'Matrix XChart'
 
     runOnEventDispatchThread(() -> {
       JFrame frame = new JFrame(windowTitle)
@@ -234,7 +235,8 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     try {
       SwingUtilities.invokeAndWait(action)
     } catch (InterruptedException | InvocationTargetException e) {
-      throw new RuntimeException('Error displaying chart', e)
+      throw new IllegalStateException(DISPLAY_ERROR, e)
     }
   }
+
 }

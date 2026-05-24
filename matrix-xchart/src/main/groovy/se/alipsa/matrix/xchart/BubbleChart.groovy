@@ -10,8 +10,6 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
-import java.awt.Color
-
 /**
  * A bubble chart is a type of chart that displays three dimensions of data. Each entity with its triplet
  * (v<sub>1</sub>, v<sub>2</sub>, v<sub>3</sub>) is represented as a bubble in the chart where
@@ -59,25 +57,26 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
     new BubbleChart(matrix, width, height)
   }
 
-  BubbleChart addSeries(String xCol, String yCol,String valueCol, Integer transparency = 185) {
-    addSeries(matrix.column(xCol), matrix.column(yCol),matrix.column(valueCol), transparency)
+  BubbleChart addSeries(String xCol, String yCol, String valueCol, Integer transparency = 185) {
+    addSeries(matrix.column(xCol), matrix.column(yCol), matrix.column(valueCol), transparency)
   }
 
-  BubbleChart addSeries(String seriesName, String xCol, String yCol,String valueCol, Integer transparency = 185) {
-    addSeries(seriesName, matrix.column(xCol), matrix.column(yCol),matrix.column(valueCol), transparency)
+  BubbleChart addSeries(String seriesName, String xCol, String yCol, String valueCol, Integer transparency = 185) {
+    addSeries(seriesName, matrix.column(xCol), matrix.column(yCol), matrix.column(valueCol), transparency)
   }
 
-  BubbleChart addSeries(Column xCol, Column yCol,Column valueCol, Integer transparency = 185) {
+  BubbleChart addSeries(Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
     addSeries(valueCol.name, xCol, yCol, valueCol, transparency)
   }
 
   BubbleChart addSeries(String seriesName, Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
     if (valueCol == null) {
-      throw new IllegalArgumentException("The valueCol is null, cannot add series")
+      throw new IllegalArgumentException('The valueCol is null, cannot add series')
     }
     def s = xchart.addSeries(seriesName, xCol, yCol, valueCol)
     makeFillTransparent(s, numSeries, transparency)
     numSeries++
     this
   }
+
 }

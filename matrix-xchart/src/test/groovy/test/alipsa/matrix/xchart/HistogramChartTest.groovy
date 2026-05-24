@@ -67,10 +67,10 @@ class HistogramChartTest {
    * Equivalent to the following R code
    * <code><pre>
    * hist(airquality$Temp,
-   *   main="Maximum daily temperature at La Guardia Airport",
-   *   xlab="Temperature in degrees Fahrenheit",
+   *   main='Maximum daily temperature at La Guardia Airport',
+   *   xlab='Temperature in degrees Fahrenheit',
    *   xlim=c(50,100),
-   *   col="darkmagenta",
+   *   col='darkmagenta',
    *   freq=FALSE
    * )
    * </pre></code>
@@ -79,14 +79,14 @@ class HistogramChartTest {
   void testDensityHistogram() {
     def airquality = Dataset.airquality()
     def hc = HistogramChart.create(airquality, 800, 600)
-    hc.setTitle("Maximum daily temperature at La Guardia Airport")
-    hc.setXLabel("Temperature in degrees Fahrenheit")
+    hc.setTitle('Maximum daily temperature at La Guardia Airport')
+    hc.setXLabel('Temperature in degrees Fahrenheit')
 
     // Use Scott's rule for optimal bin width
     def bins = HistogramChart.scottsRule(airquality['Temp']).round() as int
     hc.addSeries('Temp', bins)
 
-    File file = new File("build/testDensityHistogram.png")
+    File file = new File('build/testDensityHistogram.png')
     hc.exportPng(file)
     assertTrue(file.exists())
   }
@@ -94,14 +94,14 @@ class HistogramChartTest {
   /**
    * Equivalent to the following R code
    * <code><pre>
-   * hist(airquality$Temp, breaks=9, main="With breaks=9")
+   * hist(airquality$Temp, breaks=9, main='With breaks=9')
    * </pre></code>
    */
   @Test
   void testFrequencyHistogram() {
     def hc = HistogramChart.create(Dataset.airquality())
     hc.addSeries('Temp', 9)
-    File file = new File("build/testFrequencyHistogram.png")
+    File file = new File('build/testFrequencyHistogram.png')
     hc.exportPng(file)
     assertTrue(file.exists())
   }
@@ -127,11 +127,10 @@ class HistogramChartTest {
     // which doesn't expose yAxisMin/yAxisMax for category charts
     // The histogram is created with automatic scaling
 
-    File file = new File("build/testFrequencyHistogramCustom.png")
+    File file = new File('build/testFrequencyHistogramCustom.png')
     hc.exportPng(file)
     assertTrue(file.exists())
   }
-
 
   /**
    * Equivalent to the following R code:
@@ -144,7 +143,7 @@ class HistogramChartTest {
   }
 
   @Test
-  void TestFreedmanDiaconisRule() {
+  void testFreedmanDiaconisRule() {
     def fd = HistogramChart.freedmanDiaconisRule(Dataset.airquality()['Temp'])
     assert 4.86119308 == fd.setScale(8, RoundingMode.HALF_EVEN)
   }

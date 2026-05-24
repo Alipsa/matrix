@@ -21,13 +21,12 @@ import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
  * def bc = BarChart.create(matrix, 800, 600)
  *   .addSeries(matrix['name'], matrix['score'])
  *
- * File file = new File("build/testBarChart.png")
+ * File file = new File('build/testBarChart.png')
  * bc.exportPng(file)
  * </code></pre>
  */
 @CompileStatic
 class BarChart extends AbstractCategoryChart<BarChart> {
-
 
   private BarChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle type) {
     super(matrix, width, height, type)
@@ -42,4 +41,5 @@ class BarChart extends AbstractCategoryChart<BarChart> {
     bc.style.setStacked(true)
     bc
   }
+
 }

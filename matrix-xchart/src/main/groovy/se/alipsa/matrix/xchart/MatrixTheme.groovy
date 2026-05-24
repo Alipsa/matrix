@@ -18,9 +18,18 @@ import java.awt.Font
  * A chart Theme based on the Matlab theme
  */
 @CompileStatic
+@SuppressWarnings('GetterMethodCouldBeProperty')
 class MatrixTheme extends AbstractBaseTheme {
 
   static final Color TEXT_COLOR = ChartColor.DARK_GREY.getColor().darker().darker()
+  private static final float HALF_POINT = 0.5f
+  private static final float DASH_PHASE = 0.0f
+  private static final float DASH_WIDTH = 1.0f
+  private static final float DASH_GAP = 3.0f
+  private static final float MITER_LIMIT = 10.0f
+  private static final int TOOLTIP_COLOR_RED = 255
+  private static final int TOOLTIP_COLOR_GREEN = 255
+  private static final int TOOLTIP_COLOR_BLUE = 220
   static final List MARKERS = [SeriesMarkers.CIRCLE, SeriesMarkers.CROSS, SeriesMarkers.DIAMOND,
                          SeriesMarkers.SQUARE, SeriesMarkers.TRIANGLE_UP]
   // Chart Style ///////////////////////////////
@@ -79,7 +88,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   BasicStroke getAxisTickMarksStroke() {
-    return new BasicStroke(.5f)
+    return new BasicStroke(HALF_POINT)
   }
 
   @Override
@@ -112,7 +121,13 @@ class MatrixTheme extends AbstractBaseTheme {
   @Override
   BasicStroke getPlotGridLinesStroke() {
     return new BasicStroke(
-        .5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, new float[]{1f, 3.0f}, 0.0f)
+        HALF_POINT,
+        BasicStroke.CAP_BUTT,
+        BasicStroke.JOIN_ROUND,
+        MITER_LIMIT,
+        new float[]{DASH_WIDTH, DASH_GAP},
+        DASH_PHASE
+    )
   }
 
   @Override
@@ -124,7 +139,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getToolTipBackgroundColor() {
-    return new Color(255, 255, 220)
+    return new Color(TOOLTIP_COLOR_RED, TOOLTIP_COLOR_GREEN, TOOLTIP_COLOR_BLUE)
   }
 
   @Override
@@ -151,4 +166,5 @@ class MatrixTheme extends AbstractBaseTheme {
   // Error Bars ///////////////////////////////
 
   // Chart Annotations ///////////////////////////////
+
 }

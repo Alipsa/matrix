@@ -55,4 +55,5 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
     }
     chart
   }
+
 }

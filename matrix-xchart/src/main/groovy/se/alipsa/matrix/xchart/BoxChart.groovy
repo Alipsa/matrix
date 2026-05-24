@@ -21,7 +21,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  *   'ccc': [50, -20, 10, 5, 1]
  *    )
  *   .types([Number]*3)
- *   .matrixName("Box chart")
+ *   .matrixName('Box chart')
  *   .build()
  *
  * def bc = BoxChart.create(matrix)
@@ -71,9 +71,10 @@ class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxSty
 
   BoxChart addSeries(String seriesName, Column valueCol) {
     if (valueCol == null) {
-      throw new IllegalArgumentException("The valueCol is null, cannot add series")
+      throw new IllegalArgumentException('The valueCol is null, cannot add series')
     }
     xchart.addSeries(seriesName, valueCol)
     this
   }
+
 }

@@ -25,7 +25,7 @@ class PieChartTest {
         'Metal ratio',
     ).build()
 
-    File file = new File("build/testPieChart.png")
+    File file = new File('build/testPieChart.png')
     def pc = PieChart.create(matrix)
         .addSeries(matrix.metal, matrix.ratio)
 
@@ -35,7 +35,7 @@ class PieChartTest {
 
   @Test
   void testPieChart() {
-    File file = new File("build/testPieChart.png")
+    File file = new File('build/testPieChart.png')
     def pc = PieChart.create(matrix)
         .addSeries(matrix.metal, matrix.ratio)
 
@@ -47,8 +47,9 @@ class PieChartTest {
   void testDonutChart() {
     def dc = PieChart.createDonut(matrix)
         .addSeries(matrix['metal'], matrix['ratio'])
-    File file = new File("build/testDonutChart.png")
+    File file = new File('build/testDonutChart.png')
     dc.exportPng(file)
     assertTrue(file.exists())
   }
+
 }

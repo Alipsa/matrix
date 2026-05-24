@@ -41,7 +41,7 @@ class EdgeCaseTest {
     assertNotNull(chart.xchart)
     assertEquals(1, chart.series.size())
 
-    File file = new File("build/edgeCase_singlePoint_line.png")
+    File file = new File('build/edgeCase_singlePoint_line.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -59,7 +59,7 @@ class EdgeCaseTest {
         .addSeries('Category', 'Value')
 
     assertNotNull(chart)
-    File file = new File("build/edgeCase_singlePoint_bar.png")
+    File file = new File('build/edgeCase_singlePoint_bar.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -77,7 +77,7 @@ class EdgeCaseTest {
         .addSeries('Category', 'Value')
 
     assertNotNull(chart)
-    File file = new File("build/edgeCase_singlePoint_pie.png")
+    File file = new File('build/edgeCase_singlePoint_pie.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -100,7 +100,7 @@ class EdgeCaseTest {
     assertNotNull(chart)
     assertEquals('Two Data Points', chart.xchart.title)
 
-    File file = new File("build/edgeCase_twoPoints_line.png")
+    File file = new File('build/edgeCase_twoPoints_line.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -119,7 +119,7 @@ class EdgeCaseTest {
             X: xValues,
             Y: yValues
         ).types([Double, Double])
-        .matrixName("Large Dataset Performance Test")
+        .matrixName('Large Dataset Performance Test')
         .build()
 
     LineChart chart = LineChart.create(matrix, 800, 600)
@@ -129,11 +129,11 @@ class EdgeCaseTest {
     assertNotNull(chart.xchart)
     assertEquals(1, chart.series.size())
 
-    File file = new File("build/edgeCase_largeDataset_line.png")
+    File file = new File('build/edgeCase_largeDataset_line.png')
     chart.exportPng(file)
 
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "Exported file should not be empty")
+    assertTrue(file.length() > 0, 'Exported file should not be empty')
   }
 
   @Test
@@ -158,10 +158,10 @@ class EdgeCaseTest {
     assertNotNull(chart.xchart)
     assertEquals(1, chart.series.size())
 
-    File file = new File("build/edgeCase_largeDataset_scatter.png")
+    File file = new File('build/edgeCase_largeDataset_scatter.png')
     chart.exportPng(file)
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "Exported file should not be empty")
+    assertTrue(file.length() > 0, 'Exported file should not be empty')
   }
 
   // ========== Theme Variation Tests ==========
@@ -182,7 +182,7 @@ class EdgeCaseTest {
     assertNotNull(chart.style.theme)
     assertTrue(chart.style.theme instanceof MatrixTheme)
 
-    File file = new File("build/edgeCase_theme_matrix.png")
+    File file = new File('build/edgeCase_theme_matrix.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -202,7 +202,7 @@ class EdgeCaseTest {
     // Change to XChart default theme
     chart.style.theme = new XChartTheme()
 
-    File file = new File("build/edgeCase_theme_xchart.png")
+    File file = new File('build/edgeCase_theme_xchart.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -222,7 +222,7 @@ class EdgeCaseTest {
     // Change to GGPlot2 theme
     chart.style.theme = new GGPlot2Theme()
 
-    File file = new File("build/edgeCase_theme_ggplot2.png")
+    File file = new File('build/edgeCase_theme_ggplot2.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -242,7 +242,7 @@ class EdgeCaseTest {
     // Change to Matlab theme
     chart.style.theme = new MatlabTheme()
 
-    File file = new File("build/edgeCase_theme_matlab.png")
+    File file = new File('build/edgeCase_theme_matlab.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -268,7 +268,7 @@ class EdgeCaseTest {
     assertNotNull(chart)
     assertEquals(3, chart.series.size())
 
-    File file = new File("build/edgeCase_multipleSeries_area.png")
+    File file = new File('build/edgeCase_multipleSeries_area.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -301,7 +301,7 @@ class EdgeCaseTest {
     assertEquals('X Axis Label', chart.XLabel)
     assertEquals('Y Axis Label', chart.YLabel)
 
-    File file = new File("build/edgeCase_customized.png")
+    File file = new File('build/edgeCase_customized.png')
     chart.exportPng(file)
     assertTrue(file.exists())
   }
@@ -320,10 +320,10 @@ class EdgeCaseTest {
     LineChart chart = LineChart.create(matrix, 600, 400)
         .addSeries('X', 'Y')
 
-    File svgFile = new File("build/edgeCase_export.svg")
+    File svgFile = new File('build/edgeCase_export.svg')
     chart.exportSvg(svgFile)
     assertTrue(svgFile.exists())
-    assertTrue(svgFile.length() > 0, "SVG file should not be empty")
+    assertTrue(svgFile.length() > 0, 'SVG file should not be empty')
   }
 
   @Test
@@ -341,8 +341,8 @@ class EdgeCaseTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     chart.exportPng(baos)
 
-    assertTrue(baos.size() > 0, "PNG stream should not be empty")
-    assertTrue(baos.size() > 1000, "PNG should have reasonable size")
+    assertTrue(baos.size() > 0, 'PNG stream should not be empty')
+    assertTrue(baos.size() > 1000, 'PNG should have reasonable size')
   }
 
   // ========== Matrix Data Access Tests ==========
@@ -354,14 +354,14 @@ class EdgeCaseTest {
             X: [0.0, 1.0, 2.0],
             Y: [1.0, 2.0, 1.5]
         ).types([Double, Double])
-        .matrixName("Test Matrix")
+        .matrixName('Test Matrix')
         .build()
 
     LineChart chart = LineChart.create(matrix, 600, 400)
         .addSeries('X', 'Y')
 
     assertNotNull(chart.matrix)
-    assertEquals("Test Matrix", chart.matrix.matrixName)
+    assertEquals('Test Matrix', chart.matrix.matrixName)
     assertEquals(2, chart.matrix.columnCount())
     assertEquals(3, chart.matrix.rowCount())
   }
@@ -405,4 +405,5 @@ class EdgeCaseTest {
     assertTrue(allSeries.containsKey('Series 1'))
     assertTrue(allSeries.containsKey('Series 2'))
   }
+
 }

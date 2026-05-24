@@ -15,7 +15,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
  * Matrix matrix = Matrix.builder().data(
  *   'Time': [1, 2, 3, 4, 5],
  *   'Value': [10, 20, 15, 25, 30]
- * ).types([Number]*2).matrixName("Line Chart").build()
+ * ).types([Number]*2).matrixName('Line Chart').build()
  *
  * def lineChart = LineChart.create(matrix, 800, 600)
  *   .addSeries('Value', 'Time', 'Value')
