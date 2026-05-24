@@ -216,9 +216,9 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
   @Override
   void display() {
     String windowTitle = xchart.title ?: matrix.getMatrixName() ?: "Matrix XChart"
-    final JFrame frame = new JFrame(windowTitle)
 
     runOnEventDispatchThread(() -> {
+      JFrame frame = new JFrame(windowTitle)
       frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
       frame.add(exportSwing())
       frame.pack()
