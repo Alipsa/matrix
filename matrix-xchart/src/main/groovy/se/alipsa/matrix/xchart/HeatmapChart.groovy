@@ -52,7 +52,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
   }
 
-  static create(Matrix matrix, Integer width = null, Integer height = null) {
+  static HeatmapChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new HeatmapChart(matrix, width, height)
   }
 
