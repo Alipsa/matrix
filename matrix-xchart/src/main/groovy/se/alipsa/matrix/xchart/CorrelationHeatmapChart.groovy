@@ -28,6 +28,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   private static final int CORRELATION_SCALE = 2
+  private static final int CORR_MATRIX_COLUMNS = 2
   final Number[] numberArray = new Number[]{}
 
   private CorrelationHeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -68,7 +69,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       }
     }
     def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
-        .types([Number] * CORRELATION_SCALE)
+        .types([Number] * CORR_MATRIX_COLUMNS)
         .matrixName('Heatmap')
         .build()
     addSeries(
