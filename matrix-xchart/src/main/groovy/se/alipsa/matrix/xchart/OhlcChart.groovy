@@ -68,11 +68,33 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
   }
 
   OhlcChart addSeries(String name, String xData, String open, String high, String low, String close) {
-    addSeries(name, matrix[xData], matrix[open], matrix[high], matrix[low], matrix[close])
+    addSeries(name, matrix[xData] as List<Date>, matrix[open] as List<Number>, matrix[high] as List<Number>, matrix[low] as List<Number>, matrix[close] as List<Number>)
   }
 
-  OhlcChart addSeries(String name, List<Number> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
+  OhlcChart addSeries(String name, List<Date> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
+    validateEqualLengths(xData, open, high, low, close)
     xchart.addSeries(name, xData, open, high, low, close)
     this
+  }
+
+  private static void validateEqualLengths(List<Date> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
+    Map<String, List> data = [
+        xData: xData,
+        open: open,
+        high: high,
+        low: low,
+        close: close
+    ]
+    data.each { String columnName, List values ->
+      if (values == null) {
+        throw new IllegalArgumentException("OHLC $columnName data must not be null")
+      }
+    }
+    int expectedSize = xData.size()
+    data.each { String columnName, List values ->
+      if (values.size() != expectedSize) {
+        throw new IllegalArgumentException("OHLC series lists must have equal lengths; expected $expectedSize values but $columnName has ${values.size()}")
+      }
+    }
   }
 }
