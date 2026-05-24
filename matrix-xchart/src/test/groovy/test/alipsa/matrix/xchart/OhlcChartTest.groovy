@@ -1,6 +1,6 @@
 package test.alipsa.matrix.xchart
 
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.*
 
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
@@ -12,9 +12,6 @@ import org.knowm.xchart.OHLCSeries
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.xchart.OhlcChart
-
-import java.awt.Color
-import java.time.LocalDate
 
 class OhlcChartTest {
 
@@ -43,5 +40,24 @@ class OhlcChartTest {
     def file2 = new File("build/testXChartOhlcChart2.png")
     ohlcChart.exportPng(file2)
     assertTrue(file2.exists())
+    assertNotNull(ohlcChart.getSeries("GSPC"))
+  }
+
+  @Test
+  void testOhlcChartRejectsMismatchedListLengths() {
+    Matrix matrix = Matrix.builder().data(Date: [new Date(), new Date()]).types(Date).build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      OhlcChart.create(matrix).addSeries(
+          'Mismatch',
+          matrix.Date,
+          [1, 2],
+          [2, 3],
+          [0],
+          [1, 2]
+      )
+    }
+
+    assertTrue(exception.message.contains('equal lengths'))
   }
 }

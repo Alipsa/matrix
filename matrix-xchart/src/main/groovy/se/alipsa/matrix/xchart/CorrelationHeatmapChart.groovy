@@ -56,6 +56,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     if (columnNames.isEmpty()) {
       throw new IllegalArgumentException("At least one column name must be provided for the correlation heatmap series.")
     }
+    validateColumns(columnNames)
     Matrix data = matrix.select(columnNames)
     int size = columnNames.size()
     List<BigDecimal> corr = ((size - 1)..0).collectMany { int i ->
@@ -93,5 +94,17 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     }
     xchart.addSeries(seriesName, rowLabels, columnLabels, heatData)
     this
+  }
+
+  private void validateColumns(List<String> columnNames) {
+    columnNames.each { String columnName ->
+      if (matrix.columnIndex(columnName) == -1) {
+        throw new IllegalArgumentException("Correlation heatmap column '$columnName' does not exist")
+      }
+      Class columnType = matrix.type(columnName)
+      if (columnType == null || !Number.isAssignableFrom(columnType)) {
+        throw new IllegalArgumentException("Correlation heatmap column '$columnName' must be numeric, got ${columnType?.simpleName ?: 'null'}")
+      }
+    }
   }
 }
