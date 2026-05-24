@@ -137,7 +137,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     if (col == null || col.isEmpty()) {
       throw new IllegalArgumentException('Heatmap column must contain at least one value')
     }
-    int nCols = columns == null ? col.size().sqrt() as int : columns
+    int nCols = columns == null ? autoColumnCount(col) : columns
     if (nCols <= 0) {
       throw new IllegalArgumentException("Heatmap column count must be positive, got $nCols")
     }
@@ -151,14 +151,24 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     if (columns == null || columns.isEmpty()) {
       throw new IllegalArgumentException('Heatmap column list must contain at least one column')
     }
-    int expectedSize = columns[0].size()
     columns.each { Column column ->
       if (column == null) {
         throw new IllegalArgumentException('Heatmap column list must not contain null columns')
       }
+    }
+    int expectedSize = columns[0].size()
+    columns.each { Column column ->
       if (column.size() != expectedSize) {
         throw new IllegalArgumentException("Heatmap columns must have equal lengths; expected $expectedSize values but column '${column.name}' has ${column.size()}")
       }
     }
+  }
+
+  private static int autoColumnCount(Column col) {
+    int nCols = col.size().sqrt() as int
+    if (nCols * nCols != col.size()) {
+      throw new IllegalArgumentException("Heatmap column '${col.name}' with ${col.size()} values has no integer square root; pass an explicit column count instead of relying on auto-detection")
+    }
+    nCols
   }
 }

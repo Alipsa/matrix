@@ -122,6 +122,20 @@ class HeatmapChartTest {
   }
 
   @Test
+  void testVectorHeatmapRejectsAutoDetectionWithoutSquareInput() {
+    Matrix matrix = Matrix.builder()
+        .data(c: [1, 2, 3, 4, 5])
+        .types(Number)
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Auto', 'c')
+    }
+
+    assertTrue(exception.message.contains('no integer square root'))
+  }
+
+  @Test
   void testHeatmapRejectsEmptyColumnLists() {
     Matrix matrix = Matrix.builder().data(c: [1, 2]).types(Number).build()
 
@@ -131,6 +145,10 @@ class HeatmapChartTest {
 
     assertThrows(IllegalArgumentException) {
       HeatmapChart.create(matrix).addSeries('Empty', [], [], [])
+    }
+
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Null', [null, matrix['c']])
     }
   }
 

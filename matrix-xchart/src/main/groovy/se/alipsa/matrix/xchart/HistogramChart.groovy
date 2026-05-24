@@ -52,7 +52,8 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   HistogramChart addSeries(String columnName) {
     Column c = matrix.column(columnName)
     List<Number> values = validatedValues(c)
-    addSeries(c.name, values, bucketCount(values, scottsRule(values)))
+    BigDecimal range = validateRange(values)
+    addSeries(c.name, values, bucketCount(range, scottsRule(values)), false)
   }
 
   HistogramChart addSeries(String columnName, int numBuckets) {
@@ -63,11 +64,13 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
     addSeries(column.name, validatedValues(column), numBuckets)
   }
 
-  private HistogramChart addSeries(String seriesName, List<Number> values, int numBuckets) {
+  private HistogramChart addSeries(String seriesName, List<Number> values, int numBuckets, boolean validateDataRange = true) {
     if (numBuckets <= 0) {
       throw new IllegalArgumentException("Histogram bucket count must be positive, got $numBuckets")
     }
-    validateRange(values)
+    if (validateDataRange) {
+      validateRange(values)
+    }
     Histogram h = new Histogram(values, numBuckets)
     xchart.addSeries(seriesName, h.xAxisData, h.yAxisData)
     this
@@ -86,11 +89,10 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
     3.49 * s / n**(1/3)
   }
 
-  private static int bucketCount(List<Number> values, BigDecimal binWidth) {
+  private static int bucketCount(BigDecimal range, BigDecimal binWidth) {
     if (binWidth == null || binWidth <= 0) {
       throw new IllegalArgumentException("Histogram bin width must be positive, got $binWidth")
     }
-    BigDecimal range = validateRange(values)
     (range / binWidth).ceil() as int
   }
 
