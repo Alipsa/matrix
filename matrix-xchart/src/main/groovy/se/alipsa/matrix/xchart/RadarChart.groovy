@@ -68,5 +68,4 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     this
   }
 
-
 }

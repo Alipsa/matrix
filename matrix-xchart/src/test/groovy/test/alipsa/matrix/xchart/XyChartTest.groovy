@@ -61,7 +61,7 @@ class XyChartTest {
             X2: [1.8, 1.5, 0.5],
             Y2: [0.0, 1.0, 1.5],
         ).types([Double] * 4)
-        .matrixName("Lines")
+        .matrixName('Lines')
         .build()
 
     LineChart chart = LineChart.create(matrix, 600, 500)
@@ -70,12 +70,12 @@ class XyChartTest {
         // add a series by specifying the column names
         .addSeries('X2', 'Y2')
     // Write to a png file
-    File file = new File("./build/testLineChart.png")
+    File file = new File('./build/testLineChart.png')
     chart.exportPng(file)
     assertTrue(file.exists())
 
     // Write it to an output stream
-    File file2 = new File("./build/testLineChart2.png")
+    File file2 = new File('./build/testLineChart2.png')
     try (FileOutputStream fos = new FileOutputStream(file2)) {
       // add an additional series to the chart with an optional series name
       // instead of specifying the column name, we provide the columns themselves
@@ -84,10 +84,10 @@ class XyChartTest {
     assertTrue(file2.exists())
 
     VectorGraphicsEncoder.saveVectorGraphic(chart.xchart,
-        "./build/testLineChart3.pdf",
+        './build/testLineChart3.pdf',
         VectorGraphicsEncoder.VectorGraphicsFormat.PDF)
 
-    chart.exportSvg(new File("./build/testLineChart4.svg"))
+    chart.exportSvg(new File('./build/testLineChart4.svg'))
   }
 
   @Test
@@ -101,7 +101,7 @@ class XyChartTest {
             cx: [0, 1, 3, 8, 9],
             cy: [-2, -1, 1, 0, 1]
         ).types([Double] * 6)
-        .matrixName("Areas")
+        .matrixName('Areas')
         .build()
 
     def ac = AreaChart.create(matrix, 800, 600)
@@ -110,7 +110,7 @@ class XyChartTest {
     .addSeries('c', 'cx', 'cy')
     ac.style.legendPosition = Styler.LegendPosition.InsideNE
     ac.style.axisTitlesVisible = false
-    File file = new File("build/testAreaChart.png")
+    File file = new File('build/testAreaChart.png')
     ac.exportPng(file)
     assertTrue(file.exists())
   }
@@ -146,14 +146,14 @@ class XyChartTest {
                              809330, 783318, 739751, 696201, 638242, 565197, 496959, 421280,
                              358113, 276518, 195571, 109514, 13876, 29, 0, 0, 0, 0]
         ).types([Double] * 5)
-        .matrixName("Area and Lines")
+        .matrixName('Area and Lines')
         .build()
 
     def ac = AreaChart.create(matrix, 800, 600)
-        .addSeries("ages", "liability")
-        .addSeries("75th Percentile", "ages", "percentile75th", Line)
-        .addSeries("50th Percentile", "ages", "percentile50th", Line)
-        .addSeries("25th Percentile", "ages", "percentile25th", Line)
+        .addSeries('ages', 'liability')
+        .addSeries('75th Percentile', 'ages', 'percentile75th', Line)
+        .addSeries('50th Percentile', 'ages', 'percentile50th', Line)
+        .addSeries('25th Percentile', 'ages', 'percentile25th', Line)
 
     ac.style.setLegendPosition(Styler.LegendPosition.InsideNW)
     ac.style.setYAxisLabelAlignment(AxesChartStyler.TextAlignment.Right)
@@ -163,7 +163,7 @@ class XyChartTest {
 
     ac.series.ages.setMarker(SeriesMarkers.DIAMOND)
 
-    File file = new File("build/testAreaAndLineCombo.svg")
+    File file = new File('build/testAreaAndLineCombo.svg')
     ac.exportSvg(file)
     assertTrue(file.exists())
   }
@@ -184,10 +184,10 @@ class XyChartTest {
     ).types(Number, Number)
     .build()
     def sc = ScatterChart.create(matrix)
-      .addSeries("Gaussian blob", "xData", "yData")
+      .addSeries('Gaussian blob', 'xData', 'yData')
     sc.style.setMarkerSize(14)
     sc.style.setLegendPosition(Styler.LegendPosition.InsideSW)
-    File file = new File("build/testScatterChart.svg")
+    File file = new File('build/testScatterChart.svg')
     try(FileOutputStream fos = new FileOutputStream(file)) {
       sc.exportSvg(fos)
     }
@@ -202,10 +202,10 @@ class XyChartTest {
     def random = new Random()
     int numBlobs = 3
     int size = 300
-    for (i in 0..<numBlobs) {
+    (0..<numBlobs).each { int i ->
       def centreX = random.nextGaussian() * 3
       def centreY = random.nextGaussian() * 2
-      for (j in 0..<size) {
+      (0..<size).each {
         xData << centreX + random.nextGaussian()
         yData << centreY + random.nextGaussian()
         blob << i
@@ -214,13 +214,13 @@ class XyChartTest {
     Matrix matrix = Matrix.builder().data(xData: xData, yData: yData, blob: blob)
             .types([Number] * 3)
             .build()
-    def sc = ScatterChart.create("Gaussian blobs", matrix, "xData", "yData", "blob")
+    def sc = ScatterChart.create('Gaussian blobs', matrix, 'xData', 'yData', 'blob')
     sc.style.with {
       markerSize = 12
       legendPosition = Styler.LegendPosition.InsideSW
       plotContentSize = .9
     }
-    def file = new File("build/testScatterMultiSeriesChart.svg")
+    def file = new File('build/testScatterMultiSeriesChart.svg')
     file.withOutputStream { fos ->
       sc.exportSvg(fos)
     }
@@ -242,16 +242,16 @@ class XyChartTest {
         xData: xData,
         yData: yData,
         error: errorBars
-    ).types([Number]*3)
+    ).types([Number] * 3)
         .build()
     def sc = ScatterChart.create(matrix)
-        .addSeries("10^(-x)", "xData", "yData", "error")
+        .addSeries('10^(-x)', 'xData', 'yData', 'error')
 
     sc.getSeries('10^(-x)')
         .setMarkerColor(Color.RED)
         .setMarker(SeriesMarkers.SQUARE)
     sc.style.setLegendPosition(Styler.LegendPosition.InsideSW)
-    File file = new File("build/testScatterChartWithErrorBars.png")
+    File file = new File('build/testScatterChartWithErrorBars.png')
     try(FileOutputStream fos = new FileOutputStream(file)) {
       sc.exportPng(fos)
     }
@@ -263,5 +263,7 @@ class XyChartTest {
     static void run(Runnable action) {
       runOnEventDispatchThread(action)
     }
+
   }
+
 }

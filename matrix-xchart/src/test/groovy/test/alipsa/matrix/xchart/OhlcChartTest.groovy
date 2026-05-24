@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.OHLCChart
 import org.knowm.xchart.OHLCChartBuilder
-import org.knowm.xchart.OHLCSeries
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.csv.CsvImporter
@@ -29,18 +28,18 @@ class OhlcChartTest {
         Volume: Number,
         Adjusted: Number,
     ])
-    OHLCChart chart = new OHLCChartBuilder().width(800).height(600).title("GSPC Oct 2020").build()
-    chart.addSeries("GSPC", gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
-    def file = new File("build/testXChartOhlcChart.png")
+    OHLCChart chart = new OHLCChartBuilder().width(800).height(600).title('GSPC Oct 2020').build()
+    chart.addSeries('GSPC', gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
+    def file = new File('build/testXChartOhlcChart.png')
     BitmapEncoder.saveBitmap(chart, file.absolutePath, BitmapEncoder.BitmapFormat.PNG)
     assertTrue(file.exists())
 
     def ohlcChart = OhlcChart.create(gspc)
-     .addSeries("GSPC", gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
-    def file2 = new File("build/testXChartOhlcChart2.png")
+     .addSeries('GSPC', gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
+    def file2 = new File('build/testXChartOhlcChart2.png')
     ohlcChart.exportPng(file2)
     assertTrue(file2.exists())
-    assertNotNull(ohlcChart.getSeries("GSPC"))
+    assertNotNull(ohlcChart.getSeries('GSPC'))
   }
 
   @Test
@@ -60,4 +59,5 @@ class OhlcChartTest {
 
     assertTrue(exception.message.contains('equal lengths'))
   }
+
 }

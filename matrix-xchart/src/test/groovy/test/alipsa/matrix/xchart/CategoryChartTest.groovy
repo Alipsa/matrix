@@ -21,14 +21,14 @@ class CategoryChartTest {
     .build()
 
     def sc = StickChart.create(matrix, 800, 600)
-        .setTitle("Stick")
-        .addSeries("data", matrix["xData"], matrix["yData"])
+        .setTitle('Stick')
+        .addSeries('data', matrix['xData'], matrix['yData'])
 
-    sc.getSeries("data").marker = SeriesMarkers.CIRCLE
-    //sc.style.seriesMarkers = [SeriesMarkers.CIRCLE] // another way to do the same thing
+    sc.getSeries('data').marker = SeriesMarkers.CIRCLE
+    // sc.style.seriesMarkers = [SeriesMarkers.CIRCLE] // another way to do the same thing
     sc.style.setLegendPosition(Styler.LegendPosition.InsideNW)
 
-    File file = new File("build/testStickChart.svg")
+    File file = new File('build/testStickChart.svg')
     sc.exportSvg(file)
     assertTrue(file.exists())
   }
@@ -43,7 +43,7 @@ class CategoryChartTest {
     def bc = BarChart.create(matrix, 800, 600)
       .addSeries(matrix['name'], matrix['score'])
 
-    File file = new File("build/testBarChart.png")
+    File file = new File('build/testBarChart.png')
     bc.exportPng(file)
     assertTrue(file.exists())
   }
@@ -60,8 +60,9 @@ class CategoryChartTest {
         .addSeries(matrix['name'], matrix['score'])
         .addSeries(matrix['name'], matrix['addon'])
 
-    File file = new File("build/testBarChartStacked.png")
+    File file = new File('build/testBarChartStacked.png')
     bc.exportPng(file)
     assertTrue(file.exists())
   }
+
 }

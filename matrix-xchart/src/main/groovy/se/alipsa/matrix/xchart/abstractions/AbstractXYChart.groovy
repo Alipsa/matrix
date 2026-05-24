@@ -29,8 +29,8 @@ import se.alipsa.matrix.xchart.MatrixTheme
 @CompileStatic
 abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T, XYChart, XYStyler, XYSeries> {
 
-  AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,
-                  XYSeries.XYSeriesRenderStyle chartType) {
+  protected AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,
+                            XYSeries.XYSeriesRenderStyle chartType) {
     this.matrix = matrix
     XYChartBuilder builder = new XYChartBuilder()
     if (width != null) {
@@ -151,4 +151,5 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     }
     this as T
   }
+
 }

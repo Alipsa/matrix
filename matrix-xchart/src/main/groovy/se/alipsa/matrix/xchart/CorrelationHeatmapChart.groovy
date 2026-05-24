@@ -19,14 +19,15 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * <pre><code>
  * Matrix whisky = Matrix.builder().data(this.class.getResource('/ScotchWhisky01.csv')).build()
  * def chart = CorrelationHeatmapChart.create(whisky, 800, 600)
- *   .setTitle("Correlation Heatmap of Scotch Whisky Data")
- *   .addSeries("Correlation", whisky.columnNames() - 'Distillery' as List<String>) // only numeric columns allowed
- * chart.exportSvg(new File("build/correlationHeatmap.svg")
+ *   .setTitle('Correlation Heatmap of Scotch Whisky Data')
+ *   .addSeries('Correlation', whisky.columnNames() - 'Distillery' as List<String>) // only numeric columns allowed
+ * chart.exportSvg(new File('build/correlationHeatmap.svg')
  * </code></pre>
  */
 @CompileStatic
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
+  private static final int CORRELATION_SCALE = 2
   final Number[] numberArray = new Number[]{}
 
   private CorrelationHeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -54,7 +55,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
 
   CorrelationHeatmapChart addSeries(String title, List<String> columnNames) {
     if (columnNames.isEmpty()) {
-      throw new IllegalArgumentException("At least one column name must be provided for the correlation heatmap series.")
+      throw new IllegalArgumentException('At least one column name must be provided for the correlation heatmap series.')
     }
     validateColumns(columnNames)
     Matrix data = matrix.select(columnNames)
@@ -63,11 +64,11 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       (0..<size).collect { int j ->
         List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
         List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
-        Correlation.cor(xValues, yValues).round(2)
+        Correlation.cor(xValues, yValues).round(CORRELATION_SCALE)
       }
     }
     def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
-        .types([Number] * 2)
+        .types([Number] * CORRELATION_SCALE)
         .matrixName('Heatmap')
         .build()
     addSeries(
@@ -84,9 +85,9 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     List<Number[]> heatData = []
 
     def tmpRows = []
-    for (int r = 0; r < nRows; r++) {
+    (0..<nRows).each { int r ->
       def tmpRow = []
-      for (int c = 0; c < nCols; c++) {
+      (0..<nCols).each { int c ->
         heatData << [c, r, columns[c][r]].toArray(numberArray)
         tmpRow << columns[c][r]
       }
@@ -107,4 +108,5 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       }
     }
   }
+
 }

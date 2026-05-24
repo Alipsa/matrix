@@ -1,4 +1,5 @@
 package se.alipsa.matrix.xchart.abstractions
+
 import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.internal.chartpart.Chart
 
@@ -65,4 +66,5 @@ interface MatrixXChart<C extends Chart> {
    * @return the XChart chart object
    */
   C getXChart()
+
 }

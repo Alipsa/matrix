@@ -21,9 +21,9 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * Matrix matrix = Matrix.builder().data( 'c': data ).types(Number).build()
  * def hc = HeatmapChart.create(matrix, 1000, 600)
  *   .setTitle(getClass().getSimpleName())
- *   .addSeries("Basic HeatMap",'c', 4)
+ *   .addSeries('Basic HeatMap','c', 4)
  *
- * File file = new File("build/testHeatmap.png")
+ * File file = new File('build/testHeatmap.png')
  * hc.exportPng(file)
  * </code></pre>
  */
@@ -67,9 +67,9 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     Number[] numberArray = new Number[]{}
     List<List> tmpRows = []
     int idx = 0
-    for (int r = 0; r < nRows; r++) {
+    (0..<nRows).each { int r ->
       def tmpRow = []
-      for (int c = 0; c < nCols; c++) {
+      (0..<nCols).each { int c ->
         heatData << [c, r, col[idx]].toArray(numberArray)
         tmpRow << col[idx]
         idx++
@@ -95,9 +95,9 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     List<Number[]> heatData = []
 
     List<List> tmpRows = []
-    for (int r = 0; r < nRows; r++) {
+    (0..<nRows).each { int r ->
       List tmpRow = []
-      for (int c = 0; c < nCols; c++) {
+      (0..<nCols).each { int c ->
         heatData << [c, r, columns[c][r]].toArray(numberArray)
         tmpRow << columns[c][r]
       }
@@ -170,4 +170,5 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
     nCols
   }
+
 }

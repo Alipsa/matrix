@@ -20,12 +20,16 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * <pre><code>
  * def hc = HistogramChart.create(Dataset.airquality())
  *   hc.addSeries('Temp', 9) // 9 is the number of bins
- * File file = new File("exampleHistogram.png")
+ * File file = new File('exampleHistogram.png')
  * hc.exportPng(file)
  * </code></pre>
  */
 @CompileStatic
 class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, CategoryStyler, CategorySeries> {
+
+  private static final BigDecimal SCOTT_FACTOR = 3.49
+  private static final int CUBE_ROOT_DENOMINATOR = 3
+  private static final int FREEDMAN_DIACONIS_FACTOR = 2
 
   private HistogramChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle type) {
     this.matrix = matrix
@@ -86,7 +90,7 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   static BigDecimal scottsRule(List data) {
     def s = Stat.sd(data)
     def n = data.size()
-    3.49 * s / n**(1/3)
+    SCOTT_FACTOR * s / n ** (1 / CUBE_ROOT_DENOMINATOR)
   }
 
   private static int bucketCount(BigDecimal range, BigDecimal binWidth) {
@@ -101,11 +105,7 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
       throw new IllegalArgumentException('Histogram column must contain at least one value')
     }
     List<Number> values = []
-    column.each { value ->
-      if (value instanceof Number) {
-        values << value
-      }
-    }
+    values.addAll(column.findAll { Number.isInstance(it) } as List<Number>)
     if (values.isEmpty()) {
       throw new IllegalArgumentException("Histogram column '$column.name' must contain at least one non-null numeric value")
     }
@@ -137,14 +137,13 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
    * <code>2 * IQR / n^(1/3)</code>
    * where IQR is a measure of the spread of the data (1st quartile - 3:rd quartile)
    * and n is the number of data points.
-   * @param data
-   * @return
+   * @param data the data values to inspect
+   * @return the suggested bin width as per the Freedman-Diaconis rule
    */
   static BigDecimal freedmanDiaconisRule(List data) {
     def iqr = Stat.iqr(data)
-    BigDecimal r = (2 * iqr / data.size()**(1/3))
+    BigDecimal r = (FREEDMAN_DIACONIS_FACTOR * iqr / data.size() ** (1 / CUBE_ROOT_DENOMINATOR))
     r.abs()
   }
-
 
 }

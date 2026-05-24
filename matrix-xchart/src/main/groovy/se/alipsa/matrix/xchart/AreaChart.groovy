@@ -16,7 +16,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
  *   .addSeries('a', matrix.ax, matrix.ay) // columns can be directly added to a series
  *   .addSeries('b', matrix['bx'], matrix['by']) // alternative column notation
  *   .addSeries('c', 'cx', 'cy') // Columns can also be referenced by name only
- * File file = new File("build/testAreaChart.png")
+ * File file = new File('build/testAreaChart.png')
  * ac.exportPng(file)
  * </code></pre>
  */

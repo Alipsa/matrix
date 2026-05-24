@@ -19,7 +19,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
  *
  * def stickChart = StickChart.create(matrix)
  *   .addSeries('Category', 'Value')
- * sc.getSeries("Value").marker = SeriesMarkers.CIRCLE
+ * sc.getSeries('Value').marker = SeriesMarkers.CIRCLE
  * sc.style.setLegendPosition(Styler.LegendPosition.InsideNW)
  *
  * File file = new File('stickChart.png')
@@ -36,4 +36,5 @@ class StickChart extends AbstractCategoryChart<StickChart> {
   static StickChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new StickChart(matrix, width, height)
   }
+
 }

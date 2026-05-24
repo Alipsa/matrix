@@ -19,7 +19,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * Matrix matrix = Matrix.builder().data(
  *   'Category': ['A', 'B', 'C', 'D'],
  *   'Value': [30, 20, 40, 10]
- * ).types([String, Number]).matrixName("Pie Chart Example").build()
+ * ).types([String, Number]).matrixName('Pie Chart Example').build()
  *
  * def pieChart = PieChart.create(matrix)
  *   .addSeries('Category', 'Value')
@@ -73,10 +73,10 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
 
   PieChart addSeries(Column xCol, Column yCol) {
     if (xCol == null) {
-      throw new IllegalArgumentException("The xCol is null, cannot add series")
+      throw new IllegalArgumentException('The xCol is null, cannot add series')
     }
     if (yCol == null) {
-      throw new IllegalArgumentException("The yCol is null, cannot add series")
+      throw new IllegalArgumentException('The yCol is null, cannot add series')
     }
     if (xCol.size() != yCol.size()) {
       throw new IllegalArgumentException("xCol and yCol must be of equal length but xCol has ${xCol.size()} elements whereas yCol has ${yCol.size()} elements.")
@@ -86,4 +86,5 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     }
     this
   }
+
 }

@@ -37,8 +37,8 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  *     Adjusted: Number,
  *   ])
  * def ohlcChart = OhlcChart.create(gspc)
- *   .addSeries("GSPC", gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
- * def file2 = new File("OhlcChart2.png")
+ *   .addSeries('GSPC', gspc.Date, gspc.Open, gspc.High, gspc.Low, gspc.Close)
+ * def file2 = new File('OhlcChart2.png')
  * ohlcChart.exportPng(file2)
  * </code></pre>
  */
@@ -61,7 +61,6 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
       title = matrix.matrixName
     }
   }
-
 
   static OhlcChart create(Matrix table, Integer width = null, Integer height = null) {
     new OhlcChart(table, width, height)
@@ -94,4 +93,5 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
       }
     }
   }
+
 }
