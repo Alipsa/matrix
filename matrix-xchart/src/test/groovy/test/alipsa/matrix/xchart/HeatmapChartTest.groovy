@@ -1,12 +1,13 @@
 package test.alipsa.matrix.xchart
 
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
@@ -90,6 +91,98 @@ class HeatmapChartTest {
     File file = new File("build/testVerifyDistribution.png")
     hmc.exportPng(file)
     assertTrue(file.exists())
+  }
+
+  @Test
+  void testVectorHeatmapRejectsUnevenInput() {
+    Matrix matrix = Matrix.builder()
+        .data(c: [1, 2, 3, 4, 5])
+        .types(Number)
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Uneven', 'c', 2)
+    }
+
+    assertTrue(exception.message.contains('cannot be evenly divided'))
+  }
+
+  @Test
+  void testVectorHeatmapRejectsInvalidColumnCount() {
+    Matrix matrix = Matrix.builder()
+        .data(c: [1, 2, 3, 4])
+        .types(Number)
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Invalid', 'c', 0)
+    }
+
+    assertTrue(exception.message.contains('column count'))
+  }
+
+  @Test
+  void testVectorHeatmapRejectsAutoDetectionWithoutSquareInput() {
+    Matrix matrix = Matrix.builder()
+        .data(c: [1, 2, 3, 4, 5])
+        .types(Number)
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Auto', 'c')
+    }
+
+    assertTrue(exception.message.contains('no integer square root'))
+  }
+
+  @Test
+  void testHeatmapRejectsEmptyColumnLists() {
+    Matrix matrix = Matrix.builder().data(c: [1, 2]).types(Number).build()
+
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Empty', [])
+    }
+
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Empty', [], [], [])
+    }
+  }
+
+  @Test
+  void testHeatmapRejectsNullColumnInList() {
+    Matrix matrix = Matrix.builder().data(c: [1, 2]).types(Number).build()
+
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Null', [null, matrix['c']])
+    }
+  }
+
+  @Test
+  void testHeatmapRejectsMismatchedColumnLengths() {
+    Matrix matrix = Matrix.builder()
+        .data(a: [1, 2, 3], b: [4, 5, 6])
+        .types([Number, Number])
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addSeries('Mismatch', [matrix['a'], new Column('short', [4, 5], Number)])
+    }
+
+    assertTrue(exception.message.contains('equal lengths'))
+  }
+
+  @Test
+  void testAddAllToSeriesByRejectsUnnamedMatrix() {
+    Matrix matrix = Matrix.builder()
+        .data(model: ['a', 'b'], value: [1, 2])
+        .types([String, Number])
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      HeatmapChart.create(matrix).addAllToSeriesBy('model')
+    }
+
+    assertTrue(exception.message.contains('name'))
   }
 
   /**

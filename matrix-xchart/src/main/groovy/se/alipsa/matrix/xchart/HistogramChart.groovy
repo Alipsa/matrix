@@ -51,7 +51,9 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
 
   HistogramChart addSeries(String columnName) {
     Column c = matrix.column(columnName)
-    addSeries(c, scottsRule(c).round() as int)
+    List<Number> values = validatedValues(c)
+    BigDecimal range = validateRange(values)
+    addSeries(c.name, values, bucketCount(range, scottsRule(values)), false)
   }
 
   HistogramChart addSeries(String columnName, int numBuckets) {
@@ -59,8 +61,18 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   }
 
   HistogramChart addSeries(Column column, int numBuckets) {
-    Histogram h = new Histogram(column, numBuckets)
-    xchart.addSeries(column.name, h.xAxisData, h.yAxisData)
+    addSeries(column.name, validatedValues(column), numBuckets)
+  }
+
+  private HistogramChart addSeries(String seriesName, List<Number> values, int numBuckets, boolean validateDataRange = true) {
+    if (numBuckets <= 0) {
+      throw new IllegalArgumentException("Histogram bucket count must be positive, got $numBuckets")
+    }
+    if (validateDataRange) {
+      validateRange(values)
+    }
+    Histogram h = new Histogram(values, numBuckets)
+    xchart.addSeries(seriesName, h.xAxisData, h.yAxisData)
     this
   }
 
@@ -75,6 +87,48 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
     def s = Stat.sd(data)
     def n = data.size()
     3.49 * s / n**(1/3)
+  }
+
+  private static int bucketCount(BigDecimal range, BigDecimal binWidth) {
+    if (binWidth == null || binWidth <= 0) {
+      throw new IllegalArgumentException("Histogram bin width must be positive, got $binWidth")
+    }
+    (range / binWidth).ceil() as int
+  }
+
+  private static List<Number> validatedValues(Column column) {
+    if (column == null || column.isEmpty()) {
+      throw new IllegalArgumentException('Histogram column must contain at least one value')
+    }
+    List<Number> values = []
+    column.each { value ->
+      if (value instanceof Number) {
+        values << value
+      }
+    }
+    if (values.isEmpty()) {
+      throw new IllegalArgumentException("Histogram column '$column.name' must contain at least one non-null numeric value")
+    }
+    values
+  }
+
+  private static BigDecimal validateRange(List<Number> values) {
+    BigDecimal min = values[0] as BigDecimal
+    BigDecimal max = values[0] as BigDecimal
+    values.each { Number value ->
+      BigDecimal number = value as BigDecimal
+      if (number < min) {
+        min = number
+      }
+      if (number > max) {
+        max = number
+      }
+    }
+    BigDecimal range = max - min
+    if (range <= 0) {
+      throw new IllegalArgumentException('Histogram data must span more than one distinct value')
+    }
+    range
   }
 
   /**

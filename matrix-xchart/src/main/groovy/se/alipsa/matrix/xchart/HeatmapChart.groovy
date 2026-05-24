@@ -61,8 +61,8 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   }
 
   HeatmapChart addSeries(String seriesName, Column col, Integer columns = null) {
-    int nCols = columns ?: col.size().sqrt() as int
-    int nRows = (int) (col.size() / nCols)
+    int nCols = validateVectorColumn(col, columns)
+    int nRows = (col.size() / nCols) as int
     List<Number[]> heatData = []
     Number[] numberArray = new Number[]{}
     List<List> tmpRows = []
@@ -82,12 +82,14 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   }
 
   HeatmapChart addSeries(String seriesName, List<Column> columns) {
+    validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
     addSeries(seriesName, 1..nRows, 1..nCols, columns)
   }
 
   HeatmapChart addSeries(String seriesName, List columnLabels, List rowLabels, List<Column> columns) {
+    validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
     List<Number[]> heatData = []
@@ -107,6 +109,9 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   }
 
   HeatmapChart addAllToSeriesBy(String columnName) {
+    if (matrix.matrixName == null || matrix.matrixName.isBlank()) {
+      throw new IllegalArgumentException('Matrix must have a name before charting all columns as a heatmap series')
+    }
     int byIdx = matrix.columnIndex(columnName)
     List<Number[]> heatData = []
     List<List> tmpRows = []
@@ -126,5 +131,43 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     List<String> colNames = matrix.columnNames() - columnName
     xchart.addSeries(matrix.matrixName, colNames, matrix[columnName], heatData)
     this
+  }
+
+  private static int validateVectorColumn(Column col, Integer columns) {
+    if (col == null || col.isEmpty()) {
+      throw new IllegalArgumentException('Heatmap column must contain at least one value')
+    }
+    int nCols = columns == null ? autoColumnCount(col) : columns
+    if (nCols <= 0) {
+      throw new IllegalArgumentException("Heatmap column count must be positive, got $nCols")
+    }
+    if (col.size() % nCols != 0) {
+      throw new IllegalArgumentException("Heatmap column '${col.name}' with ${col.size()} values cannot be evenly divided into $nCols columns")
+    }
+    nCols
+  }
+
+  private static void validateColumns(List<Column> columns) {
+    if (columns == null || columns.isEmpty()) {
+      throw new IllegalArgumentException('Heatmap column list must contain at least one column')
+    }
+    Integer expectedSize = null
+    columns.each { Column column ->
+      if (column == null) {
+        throw new IllegalArgumentException('Heatmap column list must not contain null columns')
+      }
+      expectedSize = expectedSize ?: column.size()
+      if (column.size() != expectedSize) {
+        throw new IllegalArgumentException("Heatmap columns must have equal lengths; expected $expectedSize values but column '${column.name}' has ${column.size()}")
+      }
+    }
+  }
+
+  private static int autoColumnCount(Column col) {
+    int nCols = col.size().sqrt() as int
+    if (nCols * nCols != col.size()) {
+      throw new IllegalArgumentException("Heatmap column '${col.name}' with ${col.size()} values has no integer square root; pass an explicit column count instead of relying on auto-detection")
+    }
+    nCols
   }
 }
