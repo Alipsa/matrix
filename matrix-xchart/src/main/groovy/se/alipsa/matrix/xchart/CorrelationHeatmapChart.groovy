@@ -48,7 +48,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     }
   }
 
-  static create(Matrix matrix, Integer width = null, Integer height = null) {
+  static CorrelationHeatmapChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new CorrelationHeatmapChart(matrix, width, height)
   }
 

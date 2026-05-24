@@ -27,11 +27,11 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
 @CompileStatic
 class LineChart extends AbstractXYChart<LineChart> {
 
-  private LineChart(Matrix matrix, int width, int height) {
+  private LineChart(Matrix matrix, Integer width = null, Integer height = null) {
     super(matrix, width, height, XYSeries.XYSeriesRenderStyle.Line)
   }
 
-  static LineChart create(Matrix matrix, int width, int height) {
+  static LineChart create(Matrix matrix, Integer width = null, Integer height = null) {
     return new LineChart(matrix, width, height)
   }
 

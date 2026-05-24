@@ -1,22 +1,56 @@
 package test.alipsa.matrix.xchart
 
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.*
 import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.*
 
 import org.junit.jupiter.api.Test
 import org.knowm.xchart.VectorGraphicsEncoder
+import org.knowm.xchart.XYChart
+import org.knowm.xchart.XYSeries
 import org.knowm.xchart.style.AxesChartStyler
 import org.knowm.xchart.style.Styler
+import org.knowm.xchart.style.XYStyler
 import org.knowm.xchart.style.markers.SeriesMarkers
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.LineChart
 import se.alipsa.matrix.xchart.ScatterChart
+import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
 import java.awt.Color
+import java.util.concurrent.atomic.AtomicBoolean
+
+import javax.swing.SwingUtilities
 
 class XyChartTest {
+
+  @Test
+  void testLineAndAreaChartsCanBeCreatedWithoutExplicitSize() {
+    Matrix matrix = Matrix.builder()
+        .data(x: [1, 2, 3], y: [1, 4, 9])
+        .types([Number] * 2)
+        .build()
+
+    assertNotNull(LineChart.create(matrix).addSeries('x', 'y'))
+    assertNotNull(AreaChart.create(matrix).addSeries('x', 'y'))
+  }
+
+  @Test
+  void testEventDispatchHelperRunsDirectlyOnEventDispatchThread() {
+    AtomicBoolean ran = new AtomicBoolean(false)
+    AtomicBoolean ranOnEdt = new AtomicBoolean(false)
+
+    SwingUtilities.invokeAndWait {
+      DispatchProbe.run {
+        ran.set(true)
+        ranOnEdt.set(SwingUtilities.isEventDispatchThread())
+      }
+    }
+
+    assertTrue(ran.get())
+    assertTrue(ranOnEdt.get())
+  }
 
   @Test
   void testLineChart() {
@@ -222,5 +256,12 @@ class XyChartTest {
       sc.exportPng(fos)
     }
     assertTrue(file.exists())
+  }
+
+  private static class DispatchProbe extends AbstractChart<DispatchProbe, XYChart, XYStyler, XYSeries> {
+
+    static void run(Runnable action) {
+      runOnEventDispatchThread(action)
+    }
   }
 }

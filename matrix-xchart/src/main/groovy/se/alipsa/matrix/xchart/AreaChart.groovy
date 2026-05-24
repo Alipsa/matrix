@@ -23,11 +23,11 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
 @CompileStatic
 class AreaChart extends AbstractXYChart<AreaChart> {
 
-  private AreaChart(Matrix matrix, int width, int height) {
+  private AreaChart(Matrix matrix, Integer width = null, Integer height = null) {
     super(matrix, width, height, XYSeries.XYSeriesRenderStyle.Area)
   }
 
-  static AreaChart create(Matrix matrix, int width, int height) {
+  static AreaChart create(Matrix matrix, Integer width = null, Integer height = null) {
     return new AreaChart(matrix, width, height)
   }
 

@@ -33,7 +33,7 @@ class StickChart extends AbstractCategoryChart<StickChart> {
     super(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Stick)
   }
 
-  static create(Matrix matrix, Integer width = null, Integer height = null) {
+  static StickChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new StickChart(matrix, width, height)
   }
 }

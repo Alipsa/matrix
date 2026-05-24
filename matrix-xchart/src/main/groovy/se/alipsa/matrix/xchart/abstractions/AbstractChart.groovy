@@ -216,17 +216,25 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
   @Override
   void display() {
     String windowTitle = xchart.title ?: matrix.getMatrixName() ?: "Matrix XChart"
-    final JFrame frame = new JFrame(windowTitle);
 
+    runOnEventDispatchThread(() -> {
+      JFrame frame = new JFrame(windowTitle)
+      frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
+      frame.add(exportSwing())
+      frame.pack()
+      frame.setVisible(true)
+    })
+  }
+
+  protected static void runOnEventDispatchThread(Runnable action) {
+    if (SwingUtilities.isEventDispatchThread()) {
+      action.run()
+      return
+    }
     try {
-      SwingUtilities.invokeAndWait(() -> {
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-        frame.add(exportSwing())
-        frame.pack()
-        frame.setVisible(true)
-      })
+      SwingUtilities.invokeAndWait(action)
     } catch (InterruptedException | InvocationTargetException e) {
-      throw new RuntimeException("Error displaying chart", e)
+      throw new RuntimeException('Error displaying chart', e)
     }
   }
 }
