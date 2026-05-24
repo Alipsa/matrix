@@ -151,13 +151,12 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     if (columns == null || columns.isEmpty()) {
       throw new IllegalArgumentException('Heatmap column list must contain at least one column')
     }
+    Integer expectedSize = null
     columns.each { Column column ->
       if (column == null) {
         throw new IllegalArgumentException('Heatmap column list must not contain null columns')
       }
-    }
-    int expectedSize = columns[0].size()
-    columns.each { Column column ->
+      expectedSize = expectedSize ?: column.size()
       if (column.size() != expectedSize) {
         throw new IllegalArgumentException("Heatmap columns must have equal lengths; expected $expectedSize values but column '${column.name}' has ${column.size()}")
       }

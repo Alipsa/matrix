@@ -146,6 +146,11 @@ class HeatmapChartTest {
     assertThrows(IllegalArgumentException) {
       HeatmapChart.create(matrix).addSeries('Empty', [], [], [])
     }
+  }
+
+  @Test
+  void testHeatmapRejectsNullColumnInList() {
+    Matrix matrix = Matrix.builder().data(c: [1, 2]).types(Number).build()
 
     assertThrows(IllegalArgumentException) {
       HeatmapChart.create(matrix).addSeries('Null', [null, matrix['c']])
