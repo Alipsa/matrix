@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import org.knowm.xchart.HeatMapSeries
@@ -27,7 +25,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
-@CompileStatic
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}

@@ -4,6 +4,12 @@
 - fix histogram default bin calculation so Scott's rule is treated as a bin width and converted to a bucket count from the data range
 - add clear validation for invalid histogram input and invalid heatmap shapes
 - breaking: vector heatmap input whose value count is not evenly divisible by the requested column count now throws `IllegalArgumentException` instead of dropping trailing values
+- heatmap auto-detection now requires the value count to have an integer square root; pass an explicit column count for rectangular heatmaps
+- require a named matrix when using `HeatmapChart.addAllToSeriesBy`, avoiding null or fallback XChart series names
+- align `OhlcChart.addSeries` with XChart's date-axis OHLC API and validate that x/open/high/low/close lists have equal lengths
+- validate correlation heatmap column names and numeric column types before rendering, with clear `IllegalArgumentException` messages
+- allow `LineChart.create(matrix)` and `AreaChart.create(matrix)` without explicit width and height, matching the other chart factories
+- make chart `display()` safe to call from the Swing event dispatch thread
 - enforce CodeNarc for the module after clearing existing main and test violations
 
 ## v0.2.3, 2026-01-31

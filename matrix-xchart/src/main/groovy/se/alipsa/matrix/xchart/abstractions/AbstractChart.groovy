@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart.abstractions
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.XChartPanel
@@ -37,7 +35,6 @@ import javax.swing.WindowConstants
  * @param <ST> the XChart styler type for this chart
  * @param <S> the XChart series type for this chart
  */
-@CompileStatic
 abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart<C> {
 
   private static final String DISPLAY_ERROR = 'Error displaying chart'

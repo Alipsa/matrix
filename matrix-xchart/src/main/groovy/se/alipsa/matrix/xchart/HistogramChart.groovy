@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
@@ -24,7 +22,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
-@CompileStatic
 class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, CategoryStyler, CategorySeries> {
 
   private static final BigDecimal SCOTT_FACTOR = 3.49

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.OHLCChart
 import org.knowm.xchart.OHLCChartBuilder
 import org.knowm.xchart.OHLCSeries
@@ -42,7 +40,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * ohlcChart.exportPng(file2)
  * </code></pre>
  */
-@CompileStatic
 class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeries> {
 
   private OhlcChart(Matrix matrix, Integer width = null, Integer height = null) {

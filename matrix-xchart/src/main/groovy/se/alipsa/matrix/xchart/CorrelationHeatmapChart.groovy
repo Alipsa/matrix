@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import org.knowm.xchart.HeatMapSeries
@@ -24,7 +22,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * chart.exportSvg(new File('build/correlationHeatmap.svg')
  * </code></pre>
  */
-@CompileStatic
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   private static final int CORRELATION_SCALE = 2

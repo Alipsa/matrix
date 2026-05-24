@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.PieChartBuilder
 import org.knowm.xchart.PieSeries
 import org.knowm.xchart.style.PieStyler
@@ -28,7 +26,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * pieChart.exportPng(file)
  * </code></pre>
  */
-@CompileStatic
 class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {

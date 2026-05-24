@@ -1,7 +1,5 @@
 package se.alipsa.matrix.xchart
 
-import groovy.transform.CompileStatic
-
 import org.knowm.xchart.BubbleChartBuilder
 import org.knowm.xchart.BubbleSeries
 import org.knowm.xchart.style.BubbleStyler
@@ -31,7 +29,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * File file = new File('build/testBubbleChart.png')
  * bc.exportPng(file)
  */
-@CompileStatic
 class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChart, BubbleStyler, BubbleSeries> {
 
   int numSeries = 0
