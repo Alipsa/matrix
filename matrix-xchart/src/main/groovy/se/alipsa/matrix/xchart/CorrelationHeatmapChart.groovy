@@ -102,8 +102,8 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
         throw new IllegalArgumentException("Correlation heatmap column '$columnName' does not exist")
       }
       Class columnType = matrix.type(columnName)
-      if (!Number.isAssignableFrom(columnType)) {
-        throw new IllegalArgumentException("Correlation heatmap column '$columnName' must be numeric, got ${columnType.simpleName}")
+      if (columnType == null || !Number.isAssignableFrom(columnType)) {
+        throw new IllegalArgumentException("Correlation heatmap column '$columnName' must be numeric, got ${columnType?.simpleName ?: 'null'}")
       }
     }
   }

@@ -89,11 +89,8 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
       if (values == null) {
         throw new IllegalArgumentException("OHLC $columnName data must not be null")
       }
-    }
-    int expectedSize = xData.size()
-    data.each { String columnName, List values ->
-      if (values.size() != expectedSize) {
-        throw new IllegalArgumentException("OHLC series lists must have equal lengths; expected $expectedSize values but $columnName has ${values.size()}")
+      if (values.size() != xData.size()) {
+        throw new IllegalArgumentException("OHLC series lists must have equal lengths; expected ${xData.size()} values but $columnName has ${values.size()}")
       }
     }
   }

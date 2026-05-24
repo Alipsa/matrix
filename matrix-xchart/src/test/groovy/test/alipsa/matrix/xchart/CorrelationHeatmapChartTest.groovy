@@ -52,6 +52,19 @@ class CorrelationHeatmapChartTest {
   }
 
   @Test
+  void testCorrelationHeatmapRejectsUntypedColumn() {
+    Matrix matrix = Matrix.builder()
+        .data(x: [1, 2, 3], y: [1, 4, 9])
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CorrelationHeatmapChart.create(matrix).addSeries('Correlation', ['x', 'y'])
+    }
+
+    assertTrue(exception.message.contains("'x' must be numeric"))
+  }
+
+  @Test
   void testCorrelationHeatmapAcceptsNumericColumns() {
     Matrix matrix = Matrix.builder()
         .data(x: [1, 2, 3], y: [1, 4, 9])
