@@ -1,9 +1,11 @@
 package test.alipsa.matrix.xchart
 
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.xchart.HistogramChart
 
@@ -11,6 +13,55 @@ import java.math.RoundingMode
 
 class HistogramChartTest {
 
+  @Test
+  void testDefaultHistogramUsesScottBinWidth() {
+    Matrix matrix = Matrix.builder()
+        .data(values: (1..100).toList())
+        .types(Number)
+        .build()
+
+    HistogramChart chart = HistogramChart.create(matrix).addSeries('values')
+
+    assertNotNull(chart.getSeries('values'))
+    assertTrue(chart.getSeries('values').getYData().size() > 1)
+  }
+
+  @Test
+  void testCustomBucketCount() {
+    Matrix matrix = Matrix.builder()
+        .data(values: [1, 2, 3, 4, 5, 6])
+        .types(Number)
+        .build()
+
+    HistogramChart chart = HistogramChart.create(matrix).addSeries('values', 3)
+
+    assertNotNull(chart.getSeries('values'))
+    assertEquals(3, chart.getSeries('values').getYData().size())
+  }
+
+  @Test
+  void testHistogramRejectsInvalidInputs() {
+    assertThrows(IllegalArgumentException) {
+      HistogramChart.create(Matrix.builder().data(values: []).types(Number).build()).addSeries('values')
+    }
+
+    assertThrows(IllegalArgumentException) {
+      HistogramChart.create(Matrix.builder().data(values: [null, null]).types(Number).build()).addSeries('values')
+    }
+
+    assertThrows(IllegalArgumentException) {
+      HistogramChart.create(Matrix.builder().data(values: [7, 7, 7]).types(Number).build()).addSeries('values')
+    }
+
+    IllegalArgumentException bucketException = assertThrows(IllegalArgumentException) {
+      HistogramChart.create(Matrix.builder().data(values: [1, 2, 3]).types(Number).build()).addSeries('values', 0)
+    }
+    assertTrue(bucketException.message.contains('bucket count'))
+
+    assertThrows(IllegalArgumentException) {
+      HistogramChart.create(Dataset.airquality()).addSeries(new Column('empty', [], Number), 5)
+    }
+  }
 
   /**
    * Equivalent to the following R code
