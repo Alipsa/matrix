@@ -6,7 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
 
 /**
- * A ChatterChart uses dots to represent values for two different numeric variables.
+ * A ScatterChart uses dots to represent values for two different numeric variables.
  * The position of each dot on the horizontal and vertical axis indicates values for an individual data point.
  * Scatter charts are used to observe relationships between variables.
  * Sample usage:

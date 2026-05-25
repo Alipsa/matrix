@@ -8,6 +8,7 @@ import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.xchart.MatrixTheme
 
 import java.awt.Color
 import java.lang.reflect.InvocationTargetException
@@ -49,6 +50,15 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    */
   Matrix getMatrix() {
     return matrix
+  }
+
+  /**
+   * Get the chart title.
+   *
+   * @return the chart title text
+   */
+  String getTitle() {
+    xchart.title
   }
 
   /**
@@ -106,6 +116,24 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    */
   void exportSvg(File file) {
     VectorGraphicsEncoder.saveVectorGraphic(xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.SVG)
+  }
+
+  /**
+   * Export the chart to a PDF document stream.
+   *
+   * @param os the output stream to write the PDF data to
+   */
+  void exportPdf(OutputStream os) {
+    VectorGraphicsEncoder.saveVectorGraphic(xchart, os, VectorGraphicsEncoder.VectorGraphicsFormat.PDF)
+  }
+
+  /**
+   * Export the chart to a PDF document file.
+   *
+   * @param file the file to write the PDF document to (will be created or overwritten)
+   */
+  void exportPdf(File file) {
+    VectorGraphicsEncoder.saveVectorGraphic(xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.PDF)
   }
 
   /**
@@ -190,6 +218,30 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     xchart.YAxisTitle
   }
 
+  /**
+   * Initialize common chart properties: sets the matrix reference, XChart instance, theme, and title.
+   * Subclasses should call this after building the XChart instance.
+   *
+   * @param chart the XChart instance to wrap
+   * @param matrix the source Matrix data
+   */
+  protected void initChart(C chart, Matrix matrix) {
+    this.xchart = chart
+    this.matrix = matrix
+    style.theme = new MatrixTheme()
+    def matrixName = matrix.matrixName
+    if (matrixName != null && !matrixName.isBlank()) {
+      title = matrix.matrixName
+    }
+  }
+
+  /**
+   * Make the fill color of a series semi-transparent so overlapping areas remain visible.
+   *
+   * @param s the series whose fill color to adjust
+   * @param numSeries the zero-based index of this series, used to select the color from the theme palette
+   * @param transparency the alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
+   */
   void makeFillTransparent(Series s, int numSeries, Integer transparency = 185) {
     // Make the fill transparent so that overlaps are visible
     Color[] colors = style.theme.seriesColors

@@ -29,8 +29,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super()
-    super.matrix = matrix
     PieChartBuilder builder = new PieChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -38,18 +36,44 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    getStyle().setTheme(new MatrixTheme())
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
   }
 
+  /**
+   * Create a new pie chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new PieChart instance
+   */
   static PieChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new PieChart(matrix, width, height)
   }
 
+  /**
+   * Create a new pie chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new PieChart instance
+   */
+  static PieChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new PieChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Create a new donut chart with default styling.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new PieChart configured as a donut
+   */
   static PieChart createDonut(Matrix matrix, Integer width = null, Integer height = null) {
     def chart = new PieChart(matrix, width, height)
     chart.style.setDefaultSeriesRenderStyle(PieSeries.PieSeriesRenderStyle.Donut)
@@ -60,14 +84,50 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     chart
   }
 
-  org.knowm.xchart.PieChart getXchart() {
-    return super.xchart as org.knowm.xchart.PieChart
+  /**
+   * Create a new donut chart with custom styling applied via a closure.
+   * The closure receives the {@link PieStyler} for additional configuration.
+   * <pre><code>
+   * def dc = PieChart.createDonut(matrix) { style ->
+   *     style.labelsDistance = 0.85
+   *     style.plotContentSize = 0.95
+   * }
+   * </code></pre>
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @param config a closure receiving the PieStyler for custom configuration
+   * @return a new PieChart configured as a donut with custom styling
+   */
+  static PieChart createDonut(Matrix matrix, Integer width = null, Integer height = null,
+                              @DelegatesTo(PieStyler) Closure config) {
+    def chart = createDonut(matrix, width, height)
+    config.delegate = chart.style
+    config.resolveStrategy = Closure.DELEGATE_FIRST
+    config.call(chart.style)
+    chart
   }
 
+  /**
+   * Add pie slices using column names from the source Matrix.
+   *
+   * @param xValueCol the name of the column containing slice labels
+   * @param yValueCol the name of the column containing slice values
+   * @return this chart for method chaining
+   */
   PieChart addSeries(String xValueCol, String yValueCol) {
     addSeries(matrix.column(xValueCol), matrix.column(yValueCol))
   }
 
+  /**
+   * Add pie slices using Column objects.
+   *
+   * @param xCol the column containing slice labels
+   * @param yCol the column containing slice values
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if xCol or yCol is null, or if they have different sizes
+   */
   PieChart addSeries(Column xCol, Column yCol) {
     if (xCol == null) {
       throw new IllegalArgumentException('The xCol is null, cannot add series')

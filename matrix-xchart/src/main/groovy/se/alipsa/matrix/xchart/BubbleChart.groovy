@@ -31,10 +31,9 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  */
 class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChart, BubbleStyler, BubbleSeries> {
 
-  int numSeries = 0
+  private int numSeries = 0
 
   private BubbleChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super.matrix = matrix
     def builder = new BubbleChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -42,30 +41,89 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
   }
 
+  /**
+   * Create a new bubble chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new BubbleChart instance
+   */
   static BubbleChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new BubbleChart(matrix, width, height)
   }
 
+  /**
+   * Create a new bubble chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new BubbleChart instance
+   */
+  static BubbleChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new BubbleChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add a bubble series using column names from the source Matrix.
+   * The series will be named after the value column.
+   *
+   * @param xCol the name of the column containing X-axis values
+   * @param yCol the name of the column containing Y-axis values
+   * @param valueCol the name of the column containing bubble size values
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
+   * @return this chart for method chaining
+   */
   BubbleChart addSeries(String xCol, String yCol, String valueCol, Integer transparency = 185) {
     addSeries(matrix.column(xCol), matrix.column(yCol), matrix.column(valueCol), transparency)
   }
 
+  /**
+   * Add a named bubble series using column names from the source Matrix.
+   *
+   * @param seriesName the name for this series (displayed in legend)
+   * @param xCol the name of the column containing X-axis values
+   * @param yCol the name of the column containing Y-axis values
+   * @param valueCol the name of the column containing bubble size values
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
+   * @return this chart for method chaining
+   */
   BubbleChart addSeries(String seriesName, String xCol, String yCol, String valueCol, Integer transparency = 185) {
     addSeries(seriesName, matrix.column(xCol), matrix.column(yCol), matrix.column(valueCol), transparency)
   }
 
+  /**
+   * Add a bubble series using Column objects.
+   * The series will be named after the value column.
+   *
+   * @param xCol the column containing X-axis values
+   * @param yCol the column containing Y-axis values
+   * @param valueCol the column containing bubble size values
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
+   * @return this chart for method chaining
+   */
   BubbleChart addSeries(Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
     addSeries(valueCol.name, xCol, yCol, valueCol, transparency)
   }
 
+  /**
+   * Add a named bubble series using Column objects.
+   *
+   * @param seriesName the name for this series (displayed in legend)
+   * @param xCol the column containing X-axis values
+   * @param yCol the column containing Y-axis values
+   * @param valueCol the column containing bubble size values
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 185
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if valueCol is null
+   */
   BubbleChart addSeries(String seriesName, Column xCol, Column yCol, Column valueCol, Integer transparency = 185) {
     if (valueCol == null) {
       throw new IllegalArgumentException('The valueCol is null, cannot add series')

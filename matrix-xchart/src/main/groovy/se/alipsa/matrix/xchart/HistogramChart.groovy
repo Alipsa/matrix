@@ -1,15 +1,12 @@
 package se.alipsa.matrix.xchart
 
-import org.knowm.xchart.CategoryChart
-import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
 import org.knowm.xchart.Histogram
-import org.knowm.xchart.style.CategoryStyler
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
-import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
 
 /**
  * A HistogramChart is a visual representation of the distribution of quantitative data.
@@ -22,50 +19,79 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
-class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, CategoryStyler, CategorySeries> {
+class HistogramChart extends AbstractCategoryChart<HistogramChart> {
 
   private static final BigDecimal SCOTT_FACTOR = 3.49
   private static final int CUBE_ROOT_DENOMINATOR = 3
   private static final int FREEDMAN_DIACONIS_FACTOR = 2
 
-  private HistogramChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle type) {
-    this.matrix = matrix
-    CategoryChartBuilder builder = new CategoryChartBuilder()
-    if (width != null) {
-      builder.width = width
-    }
-    if (height != null) {
-      builder.height = height
-    }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
-    style.defaultSeriesRenderStyle = type
+  private HistogramChart(Matrix matrix, Integer width = null, Integer height = null) {
+    super(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
   }
 
+  /**
+   * Create a new histogram chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new HistogramChart instance
+   */
   static HistogramChart create(Matrix matrix, Integer width = null, Integer height = null) {
-    new HistogramChart(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
+    new HistogramChart(matrix, width, height)
   }
 
+  /**
+   * Create a new histogram chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new HistogramChart instance
+   */
+  static HistogramChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new HistogramChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add a histogram series using automatic bin count determined by Scott's rule.
+   *
+   * @param columnName the name of the numeric column to create the histogram from
+   * @return this chart for method chaining
+   */
   HistogramChart addSeries(String columnName) {
     Column c = matrix.column(columnName)
     List<Number> values = validatedValues(c)
     BigDecimal range = validateRange(values)
-    addSeries(c.name, values, bucketCount(range, scottsRule(values)), false)
+    addHistogramSeries(c.name, values, bucketCount(range, scottsRule(values)), false)
   }
 
+  /**
+   * Add a histogram series with a specified number of bins.
+   *
+   * @param columnName the name of the numeric column to create the histogram from
+   * @param numBuckets the number of bins to group the data into
+   * @return this chart for method chaining
+   */
   HistogramChart addSeries(String columnName, int numBuckets) {
     addSeries(matrix.column(columnName), numBuckets)
   }
 
+  /**
+   * Add a histogram series from a Column with a specified number of bins.
+   *
+   * @param column the Column containing numeric values
+   * @param numBuckets the number of bins to group the data into
+   * @return this chart for method chaining
+   */
   HistogramChart addSeries(Column column, int numBuckets) {
-    addSeries(column.name, validatedValues(column), numBuckets)
+    addHistogramSeries(column.name, validatedValues(column), numBuckets)
   }
 
-  private HistogramChart addSeries(String seriesName, List<Number> values, int numBuckets, boolean validateDataRange = true) {
+  private HistogramChart addHistogramSeries(String seriesName, List<Number> values, int numBuckets, boolean validateDataRange = true) {
     if (numBuckets <= 0) {
       throw new IllegalArgumentException("Histogram bucket count must be positive, got $numBuckets")
     }
@@ -78,11 +104,13 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   }
 
   /**
-   * Calculate the bin width using Scott's rule
+   * Calculate the bin width using Scott's rule.
    * The formula is:
    * <code>3.49 * s / n^(1/3)</code>
-   * where s is the standard deviation and n the number of data points
-   * @return the suggested number of bins as per the Scott's rule
+   * where s is the standard deviation and n the number of data points.
+   *
+   * @param data the data values to inspect
+   * @return the suggested bin width as per Scott's rule
    */
   static BigDecimal scottsRule(List data) {
     def s = Stat.sd(data)
@@ -129,11 +157,12 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   }
 
   /**
-   * Calculate the bin width using Freedman-Diaconis rule
+   * Calculate the bin width using Freedman-Diaconis rule.
    * The formula is:
    * <code>2 * IQR / n^(1/3)</code>
-   * where IQR is a measure of the spread of the data (1st quartile - 3:rd quartile)
+   * where IQR is a measure of the spread of the data (1st quartile - 3rd quartile)
    * and n is the number of data points.
+   *
    * @param data the data values to inspect
    * @return the suggested bin width as per the Freedman-Diaconis rule
    */

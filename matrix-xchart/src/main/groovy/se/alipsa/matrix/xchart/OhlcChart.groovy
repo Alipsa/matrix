@@ -43,7 +43,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeries> {
 
   private OhlcChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super.matrix = matrix
     def builder = new OHLCChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -51,22 +50,63 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
   }
 
-  static OhlcChart create(Matrix table, Integer width = null, Integer height = null) {
-    new OhlcChart(table, width, height)
+  /**
+   * Create a new OHLC chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new OhlcChart instance
+   */
+  static OhlcChart create(Matrix matrix, Integer width = null, Integer height = null) {
+    new OhlcChart(matrix, width, height)
   }
 
+  /**
+   * Create a new OHLC chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new OhlcChart instance
+   */
+  static OhlcChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new OhlcChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add an OHLC series using column names from the source Matrix.
+   *
+   * @param name the name for this series (displayed in legend)
+   * @param xData the name of the column containing date/time values
+   * @param open the name of the column containing opening prices
+   * @param high the name of the column containing high prices
+   * @param low the name of the column containing low prices
+   * @param close the name of the column containing closing prices
+   * @return this chart for method chaining
+   */
   OhlcChart addSeries(String name, String xData, String open, String high, String low, String close) {
     addSeries(name, matrix[xData] as List<Date>, matrix[open] as List<Number>, matrix[high] as List<Number>, matrix[low] as List<Number>, matrix[close] as List<Number>)
   }
 
+  /**
+   * Add an OHLC series using lists of values.
+   *
+   * @param name the name for this series (displayed in legend)
+   * @param xData the date/time values for the X-axis
+   * @param open the opening price values
+   * @param high the high price values
+   * @param low the low price values
+   * @param close the closing price values
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if any list is null or lists have unequal lengths
+   */
   OhlcChart addSeries(String name, List<Date> xData, List<Number> open, List<Number> high, List<Number> low, List<Number> close) {
     validateEqualLengths(xData, open, high, low, close)
     xchart.addSeries(name, xData, open, high, low, close)

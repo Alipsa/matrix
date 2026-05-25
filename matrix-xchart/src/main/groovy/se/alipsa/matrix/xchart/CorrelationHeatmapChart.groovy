@@ -29,7 +29,6 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
   final Number[] numberArray = new Number[]{}
 
   private CorrelationHeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super.matrix = matrix
     def builder = new HeatMapChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -37,20 +36,47 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
+    initChart(builder.build(), matrix)
     style.setPlotContentSize(1)
     style.setShowValue(true)
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
   }
 
+  /**
+   * Create a new correlation heatmap chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new CorrelationHeatmapChart instance
+   */
   static CorrelationHeatmapChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new CorrelationHeatmapChart(matrix, width, height)
   }
 
+  /**
+   * Create a new correlation heatmap chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new CorrelationHeatmapChart instance
+   */
+  static CorrelationHeatmapChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new CorrelationHeatmapChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add a correlation heatmap series computed from the specified numeric columns.
+   * The correlation matrix is calculated using Pearson correlation coefficients.
+   *
+   * @param title the name for this series (displayed in legend)
+   * @param columnNames the names of the numeric columns to compute correlations for
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if columnNames is empty, or any column is missing or non-numeric
+   */
   CorrelationHeatmapChart addSeries(String title, List<String> columnNames) {
     if (columnNames.isEmpty()) {
       throw new IllegalArgumentException('At least one column name must be provided for the correlation heatmap series.')
@@ -77,7 +103,16 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     )
   }
 
-  CorrelationHeatmapChart addSeries(String seriesName, List columnLabels, List rowLabels, List<List> columns) {
+  /**
+   * Add a correlation heatmap series with pre-computed data and custom labels.
+   *
+   * @param seriesName the name for this series
+   * @param columnLabels labels for the X-axis
+   * @param rowLabels labels for the Y-axis
+   * @param columns the correlation data organized as a list of column lists
+   * @return this chart for method chaining
+   */
+  CorrelationHeatmapChart addSeries(String seriesName, List<String> columnLabels, List<String> rowLabels, List<List> columns) {
     int nCols = columns.size()
     int nRows = columns[0].size()
     List<Number[]> heatData = []

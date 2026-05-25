@@ -7,7 +7,6 @@ import org.knowm.xchart.style.CategoryStyler
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.xchart.MatrixTheme
 
 /**
  * Base class for category chart types (Bar, Stick, Histogram).
@@ -27,7 +26,6 @@ import se.alipsa.matrix.xchart.MatrixTheme
 class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractChart<T, CategoryChart, CategoryStyler, CategorySeries> {
 
   AbstractCategoryChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle chartType) {
-    this.matrix = matrix
     CategoryChartBuilder builder = new CategoryChartBuilder()
     if (width != null) {
       builder.width = width
@@ -35,12 +33,7 @@ class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractCha
     if (height != null) {
       builder.height = height
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
     style.defaultSeriesRenderStyle = chartType
   }
 
@@ -97,6 +90,22 @@ class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractCha
     CategorySeries series = xchart.addSeries(name, xCol, yCol)
     if (renderStyle != null) {
       series.setChartCategorySeriesRenderStyle(renderStyle)
+    }
+    this as T
+  }
+
+  /**
+   * Add multiple Y-axis data series against a shared X-axis (category) column.
+   * Each Y column becomes a separate series named after the column.
+   *
+   * @param xCol the name of the column containing shared category (X-axis) values
+   * @param yCols the names of the columns containing numeric (Y-axis) values
+   * @param renderStyle optional render style override for all series (null to use chart default)
+   * @return this chart for method chaining
+   */
+  T addAllSeries(String xCol, List<String> yCols, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
+    yCols.each { String yCol ->
+      addSeries(xCol, yCol, renderStyle)
     }
     this as T
   }

@@ -7,7 +7,6 @@ import org.knowm.xchart.style.XYStyler
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.xchart.MatrixTheme
 
 /**
  * Base class for XY chart types (Line, Area, Scatter).
@@ -28,7 +27,6 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
 
   protected AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,
                             XYSeries.XYSeriesRenderStyle chartType) {
-    this.matrix = matrix
     XYChartBuilder builder = new XYChartBuilder()
     if (width != null) {
       builder.width = width
@@ -36,12 +34,7 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     if (height != null) {
       builder.height = height
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
     style.defaultSeriesRenderStyle = chartType
   }
 
@@ -87,7 +80,7 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
 
   /**
    * Add a data series to the chart using Column objects.
-   * The series will be named using the X column name.
+   * The series will be named using the Y column name.
    *
    * @param xCol the column containing X values
    * @param yCol the column containing Y values
@@ -95,12 +88,12 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
    * @return this chart for method chaining
    */
   T addSeries(Column xCol, Column yCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
-    addSeries(xCol.name, xCol, yCol, renderStyle)
+    addSeries(yCol.name, xCol, yCol, renderStyle)
   }
 
   /**
    * Add a data series with error bars to the chart using Column objects.
-   * The series will be named using the X column name.
+   * The series will be named using the Y column name.
    *
    * @param xCol the column containing X values
    * @param yCol the column containing Y values
@@ -109,7 +102,7 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
    * @return this chart for method chaining
    */
   T addSeries(Column xCol, Column yCol, Column errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
-    addSeries(xCol.name, xCol, yCol, errorCol, renderStyle)
+    addSeries(yCol.name, xCol, yCol, errorCol, renderStyle)
   }
 
   /**
@@ -145,6 +138,22 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     XYSeries xySeries = xchart.addSeries(name, xCol, yCol)
     if (renderStyle != null) {
       xySeries.setXYSeriesRenderStyle(renderStyle)
+    }
+    this as T
+  }
+
+  /**
+   * Add multiple Y-axis data series against a shared X-axis column.
+   * Each Y column becomes a separate series named after the column.
+   *
+   * @param xCol the name of the column containing shared X values
+   * @param yCols the names of the columns containing Y values
+   * @param renderStyle optional render style override for all series (null to use chart default)
+   * @return this chart for method chaining
+   */
+  T addAllSeries(String xCol, List<String> yCols, XYSeries.XYSeriesRenderStyle renderStyle = null) {
+    yCols.each { String yCol ->
+      addSeries(xCol, yCol, renderStyle)
     }
     this as T
   }

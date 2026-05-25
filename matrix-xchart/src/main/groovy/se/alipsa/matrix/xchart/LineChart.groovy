@@ -28,8 +28,31 @@ class LineChart extends AbstractXYChart<LineChart> {
     super(matrix, width, height, XYSeries.XYSeriesRenderStyle.Line)
   }
 
+  /**
+   * Create a new line chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new LineChart instance
+   */
   static LineChart create(Matrix matrix, Integer width = null, Integer height = null) {
-    return new LineChart(matrix, width, height)
+    new LineChart(matrix, width, height)
+  }
+
+  /**
+   * Create a new line chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new LineChart instance
+   */
+  static LineChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new LineChart(matrix, width, height)
+    chart.title = title
+    chart
   }
 
 }

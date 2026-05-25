@@ -161,7 +161,7 @@ class XyChartTest {
     ac.style.setPlotMargin(0)
     ac.style.setPlotContentSize(.95)
 
-    ac.series.ages.setMarker(SeriesMarkers.DIAMOND)
+    ac.series.liability.setMarker(SeriesMarkers.DIAMOND)
 
     File file = new File('build/testAreaAndLineCombo.svg')
     ac.exportSvg(file)

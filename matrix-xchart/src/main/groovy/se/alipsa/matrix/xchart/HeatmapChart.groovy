@@ -31,7 +31,6 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   Matrix heatMapMatrix
 
   private HeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super.matrix = matrix
     def builder = new HeatMapChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -39,29 +38,62 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
+    initChart(builder.build(), matrix)
     style.setPlotContentSize(1)
     style.setShowValue(true)
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
   }
 
+  /**
+   * Create a new heatmap chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new HeatmapChart instance
+   */
   static HeatmapChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new HeatmapChart(matrix, width, height)
   }
 
+  /**
+   * Create a new heatmap chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new HeatmapChart instance
+   */
+  static HeatmapChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new HeatmapChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add a heatmap series from a single column, reshaping it into a grid.
+   *
+   * @param seriesName the name for this series
+   * @param colName the name of the column containing values
+   * @param columns the number of grid columns; if null, auto-detected from the square root of the column size
+   * @return this chart for method chaining
+   */
   HeatmapChart addSeries(String seriesName, String colName, Integer columns = null) {
     addSeries(seriesName, matrix.column(colName), columns)
   }
 
+  /**
+   * Add a heatmap series from a single Column, reshaping it into a grid.
+   *
+   * @param seriesName the name for this series
+   * @param col the Column containing values
+   * @param columns the number of grid columns; if null, auto-detected from the square root of the column size
+   * @return this chart for method chaining
+   */
   HeatmapChart addSeries(String seriesName, Column col, Integer columns = null) {
     int nCols = validateVectorColumn(col, columns)
     int nRows = (col.size() / nCols) as int
     List<Number[]> heatData = []
-    Number[] numberArray = new Number[]{}
     List<List> tmpRows = []
     int idx = 0
     (0..<nRows).each { int r ->
@@ -78,6 +110,13 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     this
   }
 
+  /**
+   * Add a heatmap series from a list of Columns with auto-generated labels.
+   *
+   * @param seriesName the name for this series
+   * @param columns the list of Columns, each representing a column in the heatmap grid
+   * @return this chart for method chaining
+   */
   HeatmapChart addSeries(String seriesName, List<Column> columns) {
     validateColumns(columns)
     int nCols = columns.size()
@@ -85,7 +124,16 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     addSeries(seriesName, 1..nRows, 1..nCols, columns)
   }
 
-  HeatmapChart addSeries(String seriesName, List columnLabels, List rowLabels, List<Column> columns) {
+  /**
+   * Add a heatmap series from a list of Columns with custom axis labels.
+   *
+   * @param seriesName the name for this series
+   * @param columnLabels labels for the X-axis (columns)
+   * @param rowLabels labels for the Y-axis (rows)
+   * @param columns the list of Columns, each representing a column in the heatmap grid
+   * @return this chart for method chaining
+   */
+  HeatmapChart addSeries(String seriesName, List<?> columnLabels, List<?> rowLabels, List<Column> columns) {
     validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
@@ -105,6 +153,14 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     this
   }
 
+  /**
+   * Add all columns (except the specified one) as a heatmap series, using the specified column for row labels.
+   * The Matrix must have a name set before calling this method.
+   *
+   * @param columnName the name of the column to use as row labels (excluded from heatmap values)
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if the Matrix has no name
+   */
   HeatmapChart addAllToSeriesBy(String columnName) {
     if (matrix.matrixName == null || matrix.matrixName.isBlank()) {
       throw new IllegalArgumentException('Matrix must have a name before charting all columns as a heatmap series')
