@@ -112,7 +112,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
    * @param columns the correlation data organized as a list of column lists
    * @return this chart for method chaining
    */
-  CorrelationHeatmapChart addSeries(String seriesName, List<String> columnLabels, List<String> rowLabels, List<List> columns) {
+  CorrelationHeatmapChart addSeries(String seriesName, List<String> columnLabels, List<String> rowLabels, List<List<Number>> columns) {
     int nCols = columns.size()
     int nRows = columns[0].size()
     List<Number[]> heatData = []

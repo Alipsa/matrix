@@ -25,16 +25,44 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
     style.seriesMarkers = MatrixTheme.MARKERS as org.knowm.xchart.style.markers.Marker[]
   }
 
+  /**
+   * Create a new scatter chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new ScatterChart instance
+   */
   static ScatterChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
     def chart = new ScatterChart(matrix, width, height)
     chart.title = title
     chart
   }
 
+  /**
+   * Create a new scatter chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new ScatterChart instance
+   */
   static ScatterChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new ScatterChart(matrix, width, height)
   }
 
+  /**
+   * Create a new scatter chart with a title, pre-configured with a single X/Y series.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param xAxis the name of the column containing X values
+   * @param yAxis the name of the column containing Y values
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new ScatterChart instance with one series added
+   */
   static ScatterChart create(String title, Matrix matrix, String xAxis, String yAxis, Integer width = null, Integer height = null) {
     def chart = new ScatterChart(matrix, width, height)
     chart.title = title
@@ -42,6 +70,19 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
     chart
   }
 
+  /**
+   * Create a new scatter chart with a title, splitting data into multiple series by a grouping column.
+   * Each unique value in the series column becomes a separate scatter series.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param xAxis the name of the column containing X values
+   * @param yAxis the name of the column containing Y values
+   * @param seriesCol the name of the column used to group data into separate series
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new ScatterChart instance with one series per unique value in seriesCol
+   */
   static ScatterChart create(String title, Matrix matrix, String xAxis, String yAxis, String seriesCol, Integer width = null, Integer height = null) {
     def chart = new ScatterChart(matrix, width, height)
     chart.title = title
