@@ -45,6 +45,20 @@ interface MatrixXChart<C extends Chart> {
   void exportSvg(File file)
 
   /**
+   * Export the chart to a PDF document stream.
+   *
+   * @param os the output stream to write the PDF data to
+   */
+  void exportPdf(OutputStream os)
+
+  /**
+   * Export the chart to a PDF document file.
+   *
+   * @param file the file to write the PDF document to (will be created or overwritten)
+   */
+  void exportPdf(File file)
+
+  /**
    * Export the chart as a Swing component panel.
    * This creates a displayable panel that can be embedded in Swing applications.
    *

@@ -29,10 +29,41 @@ class BarChart extends AbstractCategoryChart<BarChart> {
     super(matrix, width, height, type)
   }
 
+  /**
+   * Create a new bar chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new BarChart instance
+   */
   static BarChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new BarChart(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
   }
 
+  /**
+   * Create a new bar chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new BarChart instance
+   */
+  static BarChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new BarChart(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Create a new stacked bar chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new stacked BarChart instance
+   */
   static BarChart createStacked(Matrix matrix, Integer width = null, Integer height = null) {
     def bc = new BarChart(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
     bc.style.setStacked(true)

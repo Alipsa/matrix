@@ -30,8 +30,31 @@ class StickChart extends AbstractCategoryChart<StickChart> {
     super(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Stick)
   }
 
+  /**
+   * Create a new stick chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new StickChart instance
+   */
   static StickChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new StickChart(matrix, width, height)
+  }
+
+  /**
+   * Create a new stick chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new StickChart instance
+   */
+  static StickChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new StickChart(matrix, width, height)
+    chart.title = title
+    chart
   }
 
 }

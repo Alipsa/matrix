@@ -24,8 +24,31 @@ class AreaChart extends AbstractXYChart<AreaChart> {
     super(matrix, width, height, XYSeries.XYSeriesRenderStyle.Area)
   }
 
+  /**
+   * Create a new area chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new AreaChart instance
+   */
   static AreaChart create(Matrix matrix, Integer width = null, Integer height = null) {
-    return new AreaChart(matrix, width, height)
+    new AreaChart(matrix, width, height)
+  }
+
+  /**
+   * Create a new area chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new AreaChart instance
+   */
+  static AreaChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new AreaChart(matrix, width, height)
+    chart.title = title
+    chart
   }
 
 }

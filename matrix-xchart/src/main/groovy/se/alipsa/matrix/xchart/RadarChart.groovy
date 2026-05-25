@@ -29,10 +29,9 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  */
 class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, RadarStyler, RadarSeries> {
 
-  int numSeries = 0
+  private int numSeries = 0
 
   private RadarChart(Matrix matrix, Integer width = null, Integer height = null) {
-    super.matrix = matrix
     def builder = new RadarChartBuilder()
     if (width != null) {
       builder.width(width)
@@ -40,18 +39,44 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     if (height != null) {
       builder.height(height)
     }
-    xchart = builder.build()
-    style.theme = new MatrixTheme()
-    def matrixName = matrix.matrixName
-    if (matrixName != null && !matrixName.isBlank()) {
-      title = matrix.matrixName
-    }
+    initChart(builder.build(), matrix)
   }
 
-  static RadarChart create(Matrix matrix,  Integer width = null, Integer height = null) {
+  /**
+   * Create a new radar chart with optional dimensions.
+   *
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new RadarChart instance
+   */
+  static RadarChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new RadarChart(matrix, width, height)
   }
 
+  /**
+   * Create a new radar chart with a title and optional dimensions.
+   *
+   * @param title the chart title
+   * @param matrix the source Matrix data
+   * @param width optional chart width in pixels
+   * @param height optional chart height in pixels
+   * @return a new RadarChart instance
+   */
+  static RadarChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new RadarChart(matrix, width, height)
+    chart.title = title
+    chart
+  }
+
+  /**
+   * Add all rows of the Matrix as radar series, using the specified column for series labels.
+   * All other columns become radar axes (radii). Values should be normalized to [0, 1].
+   *
+   * @param seriesNameColumn the name of the column containing series labels (one series per row)
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 150
+   * @return this chart for method chaining
+   */
   RadarChart addSeries(String seriesNameColumn, Integer transparency = 150) {
     def labels = matrix.columnNames() - seriesNameColumn
     xchart.radiiLabels = labels as String[]
