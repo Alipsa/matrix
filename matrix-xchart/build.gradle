@@ -64,7 +64,7 @@ publishing {
                 licenses {
                     license {
                         name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-xchart/master/LICENSE'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-xchart/LICENSE'
                     }
                 }
                 developers {
