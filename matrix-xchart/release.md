@@ -1,6 +1,6 @@
 # Matrix XChart release history
 
-## v0.3.0, unreleased
+## v0.3.0, 2026-05-25
 - fix histogram default bin calculation so Scott's rule is treated as a bin width and converted to a bucket count from the data range
 - add clear validation for invalid histogram input and invalid heatmap shapes
 - breaking: vector heatmap input whose value count is not evenly divisible by the requested column count now throws `IllegalArgumentException` instead of dropping trailing values
@@ -11,6 +11,21 @@
 - allow `LineChart.create(matrix)` and `AreaChart.create(matrix)` without explicit width and height, matching the other chart factories
 - make chart `display()` safe to call from the Swing event dispatch thread
 - enforce CodeNarc for the module after clearing existing main and test violations
+- fix default series naming in XY charts to use the Y column name instead of the X column name, consistent with category charts
+- fix ScatterChart GroovyDoc typo ("ChatterChart" → "ScatterChart")
+- fix PieChart `getXchart()` method that shadowed the parent's `xchart` field access
+- fix HeatmapChart local `numberArray` variable shadowing
+- fix raw `List` types in CorrelationHeatmapChart and HeatmapChart method signatures
+- make `numSeries` fields private in BubbleChart and RadarChart
+- add missing `getTitle()` getter to AbstractChart
+- add `exportPdf(File)` and `exportPdf(OutputStream)` to all chart types
+- add `create(String title, Matrix, ...)` factory methods to all 12 chart types
+- add `addAllSeries(String xCol, List<String> yCols)` bulk methods to XY and category charts
+- add `addAllSeries()` to BoxChart for adding all numeric columns as series
+- add closure-based `createDonut` to PieChart for custom donut styling
+- extract `initChart()` helper in AbstractChart, removing ~12 lines of duplicated initialization from 10 chart classes
+- HistogramChart now extends AbstractCategoryChart, eliminating duplicated constructor logic
+- add GroovyDoc to all previously undocumented public methods
 
 ## v0.2.3, 2026-01-31
 - add @CompileStatic to all 17 classes for performance and type safety (100% static compilation, no @CompileDynamic needed)
