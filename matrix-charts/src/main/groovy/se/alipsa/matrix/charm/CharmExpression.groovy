@@ -20,4 +20,5 @@ interface CharmExpression {
    * @return descriptive string
    */
   String describe()
+
 }

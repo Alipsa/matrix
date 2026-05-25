@@ -26,6 +26,7 @@ class CharmException extends RuntimeException {
   CharmException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }
 
 /**
@@ -52,6 +53,7 @@ class CharmValidationException extends CharmException {
   CharmValidationException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }
 
 /**
@@ -78,6 +80,7 @@ class CharmMappingException extends CharmException {
   CharmMappingException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }
 
 /**
@@ -104,6 +107,7 @@ class CharmCompilationException extends CharmException {
   CharmCompilationException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }
 
 /**
@@ -130,4 +134,5 @@ class CharmRenderException extends CharmException {
   CharmRenderException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }

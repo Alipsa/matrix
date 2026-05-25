@@ -35,9 +35,9 @@ class CharmExportTest {
   void testCharmChartToImage() {
     CharmChart chart = buildCharmChart()
     BufferedImage image = ChartToImage.export(chart)
-    assertNotNull(image, "BufferedImage should not be null")
-    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
-    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+    assertNotNull(image, 'BufferedImage should not be null')
+    assertTrue(image.getWidth() > 0, 'Image width should be greater than 0')
+    assertTrue(image.getHeight() > 0, 'Image height should be greater than 0')
   }
 
   @Test
@@ -46,13 +46,13 @@ class CharmExportTest {
     Path buildDir = Paths.get(
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     ).getParent().getParent().getParent()
-    File file = buildDir.resolve("testCharmExportToPng.png").toFile()
+    File file = buildDir.resolve('testCharmExportToPng.png').toFile()
 
     ChartToPng.export(chart, file)
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "PNG file should not be empty")
+    assertTrue(file.length() > 0, 'PNG file should not be empty')
     BufferedImage image = ImageIO.read(file)
-    assertNotNull(image, "PNG file should be readable by ImageIO")
+    assertNotNull(image, 'PNG file should be readable by ImageIO')
     assertTrue(image.getWidth() > 0)
     assertTrue(image.getHeight() > 0)
   }
@@ -63,13 +63,13 @@ class CharmExportTest {
     Path buildDir = Paths.get(
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     ).getParent().getParent().getParent()
-    File file = buildDir.resolve("testCharmExportToJpeg.jpg").toFile()
+    File file = buildDir.resolve('testCharmExportToJpeg.jpg').toFile()
 
     ChartToJpeg.export(chart, file, 0.9)
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "JPEG file should not be empty")
+    assertTrue(file.length() > 0, 'JPEG file should not be empty')
     BufferedImage image = ImageIO.read(file)
-    assertNotNull(image, "JPEG file should be readable by ImageIO")
+    assertNotNull(image, 'JPEG file should be readable by ImageIO')
     assertTrue(image.getWidth() > 0)
     assertTrue(image.getHeight() > 0)
   }
@@ -78,8 +78,8 @@ class CharmExportTest {
   void testCharmChartToSwing() {
     CharmChart chart = buildCharmChart()
     SvgPanel panel = ChartToSwing.export(chart)
-    assertNotNull(panel, "SvgPanel should not be null")
-    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
+    assertNotNull(panel, 'SvgPanel should not be null')
+    assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
     assertTrue(panel.getPreferredSize().width > 0)
     assertTrue(panel.getPreferredSize().height > 0)
   }
@@ -90,7 +90,7 @@ class CharmExportTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToPng.export(chart, baos)
     byte[] bytes = baos.toByteArray()
-    assertTrue(bytes.length > 0, "PNG output should not be empty")
+    assertTrue(bytes.length > 0, 'PNG output should not be empty')
     // Verify PNG magic bytes
     assertEquals((byte) 0x89, bytes[0])
     assertEquals((byte) 0x50, bytes[1])
@@ -101,13 +101,13 @@ class CharmExportTest {
   @Test
   void testChartToSvgCharmChartFile(@TempDir Path tempDir) {
     CharmChart chart = buildCharmChart()
-    File file = tempDir.resolve("testChartToSvg.svg").toFile()
+    File file = tempDir.resolve('testChartToSvg.svg').toFile()
 
     ChartToSvg.export(chart, file)
-    assertTrue(file.exists(), "SVG file should be created")
-    assertTrue(file.length() > 0, "SVG file should not be empty")
+    assertTrue(file.exists(), 'SVG file should be created')
+    assertTrue(file.length() > 0, 'SVG file should not be empty')
     String content = file.text
-    assertTrue(content.contains('<svg'), "File should contain SVG content")
+    assertTrue(content.contains('<svg'), 'File should contain SVG content')
   }
 
   @Test
@@ -116,8 +116,8 @@ class CharmExportTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToSvg.export(chart, baos)
     String svg = baos.toString('UTF-8')
-    assertTrue(svg.length() > 0, "SVG output should not be empty")
-    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
   @Test
@@ -125,9 +125,9 @@ class CharmExportTest {
     CharmChart chart = buildCharmChart()
     StringWriter writer = new StringWriter()
     ChartToSvg.export(chart, writer)
-    String svg = writer.toString()
-    assertTrue(svg.length() > 0, "SVG output should not be empty")
-    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+    String svg = writer
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
   @Test
@@ -136,8 +136,8 @@ class CharmExportTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToSvg.export(chart, baos)
     String svg = baos.toString('UTF-8')
-    assertTrue(svg.length() > 0, "SVG output should not be empty")
-    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
   @Test
@@ -145,9 +145,9 @@ class CharmExportTest {
     def chart = buildLegacyChart()
     StringWriter writer = new StringWriter()
     ChartToSvg.export(chart, writer)
-    String svg = writer.toString()
-    assertTrue(svg.length() > 0, "SVG output should not be empty")
-    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+    String svg = writer
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
   private static Chart buildLegacyChart() {
@@ -165,4 +165,5 @@ class CharmExportTest {
         .build()
     Charts.plot(data).mapping(x: 'x', y: 'y').addLayer(new PointBuilder()).build()
   }
+
 }

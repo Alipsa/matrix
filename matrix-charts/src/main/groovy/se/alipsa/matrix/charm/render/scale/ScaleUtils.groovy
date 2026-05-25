@@ -8,6 +8,9 @@ import se.alipsa.matrix.core.ValueConverter
  * Utility methods for scale operations.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('ElseBlockBraces')
+@SuppressWarnings('IfStatementBraces')
 class ScaleUtils {
 
   /**
@@ -224,4 +227,5 @@ class ScaleUtils {
     BigDecimal result = nf * (10 ** exp)
     x < 0 ? -result : result
   }
+
 }

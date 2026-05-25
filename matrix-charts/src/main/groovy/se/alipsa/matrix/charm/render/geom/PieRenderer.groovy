@@ -14,6 +14,10 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders pie geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class PieRenderer {
 
   /**
@@ -96,4 +100,5 @@ class PieRenderer {
       currentAngle = nextAngle
     }
   }
+
 }

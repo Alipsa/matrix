@@ -7,6 +7,8 @@ import groovy.transform.CompileStatic
  * Provides HCL (CIELUV-based) to RGB conversion for perceptually uniform color scales.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class ColorSpaceUtil {
 
   // D65 reference white point for CIE XYZ (used in CIELUV conversions)
@@ -99,4 +101,5 @@ class ColorSpaceUtil {
     }
     1.055 * (c ** (1 / 2.4)) - 0.055
   }
+
 }

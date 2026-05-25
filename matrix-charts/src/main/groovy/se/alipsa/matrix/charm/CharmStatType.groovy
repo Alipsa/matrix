@@ -11,6 +11,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum CharmStatType {
+
   IDENTITY,
   COUNT,
   BIN,
@@ -38,4 +39,5 @@ enum CharmStatType {
   SF_COORDINATES,
   SPOKE,
   ALIGN
+
 }

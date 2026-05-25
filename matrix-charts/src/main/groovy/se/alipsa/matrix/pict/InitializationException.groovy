@@ -16,4 +16,5 @@ class InitializationException extends RuntimeException {
   InitializationException(String message, Throwable cause) {
     super(message, cause)
   }
+
 }

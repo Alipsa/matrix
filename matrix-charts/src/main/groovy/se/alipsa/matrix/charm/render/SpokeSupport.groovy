@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Shared parameter resolution for spoke stat/geom behavior.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class SpokeSupport {
 
   /**
@@ -56,4 +57,5 @@ class SpokeSupport {
     BigDecimal radiusParam = ValueConverter.asBigDecimal(params?.radius)
     radiusParam ?: 1
   }
+
 }

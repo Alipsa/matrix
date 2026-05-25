@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.Matrix
  * Immutable compiled Charm chart.
  */
 @CompileStatic
+@SuppressWarnings(value = ['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'IfStatementBraces', 'Instanceof', 'ParameterCount', 'UnnecessaryCollectCall', 'UnnecessaryGString'])
 class Chart {
 
   private final Matrix data
@@ -211,7 +212,7 @@ class Chart {
     if (params == null || params.isEmpty()) {
       return [:]
     }
-    Map<String, Object> frozen = new LinkedHashMap<>()
+    Map<String, Object> frozen = [:]
     params.each { String key, Object value ->
       frozen[key] = deepFreezeValue(value)
     }
@@ -220,7 +221,7 @@ class Chart {
 
   private static Object deepFreezeValue(Object value) {
     if (value instanceof Map) {
-      Map<Object, Object> frozen = new LinkedHashMap<>()
+      Map<Object, Object> frozen = [:]
       (value as Map).each { Object k, Object v ->
         frozen[k] = deepFreezeValue(v)
       }
@@ -307,12 +308,17 @@ class Chart {
    * Returns a fluent render builder for custom configuration.
    *
    * <p>Example:</p>
+
    * <pre>
+
    * Svg svg = chart.renderConfig()
    *     .width(640)
    *     .height(420)
+
    *     .render()
+
    * </pre>
+
    *
    * @return render builder
    */
@@ -367,4 +373,5 @@ class Chart {
     }
     targetFile.text = SvgWriter.toXmlPretty(render())
   }
+
 }

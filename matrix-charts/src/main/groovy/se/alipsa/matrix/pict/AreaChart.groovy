@@ -9,7 +9,7 @@ class AreaChart extends Chart<AreaChart> {
 
   static AreaChart create(Matrix data) {
     if (data.columnCount() != 2) {
-      throw new IllegalArgumentException("Table " + data.matrixName + " does not contain 2 columns.")
+      throw new IllegalArgumentException('Table ' + data.matrixName + ' does not contain 2 columns.')
     }
     AreaChart chart = new AreaChart()
     chart.title = data.matrixName
@@ -43,7 +43,7 @@ class AreaChart extends Chart<AreaChart> {
    * TODO: figure out how groupCol works
    */
   static AreaChart create(String title, Matrix data, String xCol, String yCol, String groupCol) {
-    throw new RuntimeException("Not yet implemented")
+    throw new IllegalStateException('Not yet implemented')
   }
 
   /**
@@ -84,5 +84,7 @@ class AreaChart extends Chart<AreaChart> {
       chart.valueSeriesNames = yCols
       chart
     }
+
   }
+
 }

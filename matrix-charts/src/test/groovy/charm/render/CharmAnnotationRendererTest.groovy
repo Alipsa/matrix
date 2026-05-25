@@ -459,4 +459,5 @@ class CharmAnnotationRendererTest {
         .collect { it[1] as String }
         .findAll { String id -> id.contains(token) }
   }
+
 }

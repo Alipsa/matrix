@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.position.PositionEngine
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class PositionEngineTest {
 
   @Test
@@ -58,7 +59,7 @@ class PositionEngineTest {
     assertEquals(2, result.size())
     // Fill normalizes to [0, 1]
     BigDecimal lastYmax = result.last().ymax as BigDecimal
-    assertEquals(0, BigDecimal.ONE.compareTo(lastYmax))
+    assertEquals(BigDecimal.ONE, lastYmax)
   }
 
   @Test
@@ -155,4 +156,5 @@ class PositionEngineTest {
         params
     )
   }
+
 }

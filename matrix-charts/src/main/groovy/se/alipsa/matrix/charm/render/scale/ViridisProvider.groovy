@@ -9,6 +9,9 @@ import groovy.transform.CompileStatic
  * palette family (viridis, magma, inferno, plasma, cividis, rocket, mako, turbo).
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
 class ViridisProvider {
 
   private static final Map<String, List<String>> PALETTES = [
@@ -114,4 +117,5 @@ class ViridisProvider {
     String alphaHex = String.format('%02X', alphaInt)
     '#' + hex + alphaHex
   }
+
 }

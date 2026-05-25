@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.coord.CartesianCoord
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class CartesianCoordTest {
 
   @Test
@@ -156,4 +157,5 @@ class CartesianCoordTest {
   private static void assertBigDecimalEquals(Number expected, Object actual) {
     assertEquals(0, (expected as BigDecimal).compareTo(actual as BigDecimal))
   }
+
 }

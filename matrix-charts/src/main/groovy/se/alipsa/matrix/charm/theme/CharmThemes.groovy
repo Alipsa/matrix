@@ -11,6 +11,10 @@ import se.alipsa.matrix.charm.Theme
  * for all standard ggplot2 theme presets.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateMapLiteral')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('UnnecessaryObjectReferences')
 class CharmThemes {
 
   /**
@@ -226,4 +230,5 @@ class CharmThemes {
     theme.legendTitle = new ElementText(color: 'black', size: baseSize * 0.9, family: baseFamily)
     theme
   }
+
 }

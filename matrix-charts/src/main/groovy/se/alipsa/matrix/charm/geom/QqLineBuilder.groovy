@@ -75,4 +75,5 @@ class QqLineBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.QQ_LINE
   }
+
 }

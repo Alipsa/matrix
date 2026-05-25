@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Typed layer specification for Charm core.
  */
 @CompileStatic
+@SuppressWarnings('ParameterCount')
 class LayerSpec extends Layer {
 
   /**
@@ -47,4 +48,5 @@ class LayerSpec extends Layer {
         [:]
     new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
   }
+
 }

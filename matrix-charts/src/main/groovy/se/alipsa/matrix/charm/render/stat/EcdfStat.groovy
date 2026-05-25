@@ -9,6 +9,8 @@ import se.alipsa.matrix.charm.render.LayerData
  * Empirical cumulative distribution function stat.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class EcdfStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -47,4 +49,5 @@ class EcdfStat {
 
     result
   }
+
 }

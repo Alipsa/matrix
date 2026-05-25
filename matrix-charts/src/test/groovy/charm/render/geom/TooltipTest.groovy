@@ -157,4 +157,5 @@ class TooltipTest {
     assertTrue(SvgWriter.toXml(lineSvg).contains('<title>t1</title>'))
     assertTrue(SvgWriter.toXml(areaSvg).contains('<title>area x=1'))
   }
+
 }

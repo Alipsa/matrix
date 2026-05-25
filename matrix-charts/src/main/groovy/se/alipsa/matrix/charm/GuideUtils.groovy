@@ -41,7 +41,8 @@ final class GuideUtils {
     }
     throw new CharmValidationException(
         "Unsupported guide value type '${value.getClass().name}' for '${aesthetic}'. " +
-            "Use GuideSpec, GuideType, String, or false."
+            'Use GuideSpec, GuideType, String, or false.'
     )
   }
+
 }

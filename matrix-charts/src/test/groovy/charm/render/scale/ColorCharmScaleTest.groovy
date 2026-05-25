@@ -273,4 +273,5 @@ class ColorCharmScaleTest {
     assertEquals(2, scale.levels.size())
     assertEquals(['A', 'B'], scale.levels)
   }
+
 }

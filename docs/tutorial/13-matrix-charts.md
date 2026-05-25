@@ -13,9 +13,9 @@ To use the matrix-charts module, add the following dependency to your project:
 
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
-implementation 'se.alipsa.matrix:charts'
-implementation 'se.alipsa.matrix:core'
-implementation 'se.alipsa.matrix:stats'
+implementation 'se.alipsa.matrix:matrix-charts'
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-stats'
 ```
 
 ### Maven Configuration

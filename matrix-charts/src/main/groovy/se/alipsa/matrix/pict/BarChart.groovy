@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 @CompileStatic
+@SuppressWarnings('UnnecessaryObjectReferences')
 class BarChart extends Chart<BarChart> {
 
   protected ChartType chartType = ChartType.BASIC
@@ -136,5 +137,7 @@ class BarChart extends Chart<BarChart> {
       chart.valueSeriesNames = yCols
       chart
     }
+
   }
+
 }

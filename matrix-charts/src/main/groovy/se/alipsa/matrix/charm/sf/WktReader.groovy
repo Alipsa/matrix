@@ -2,7 +2,6 @@ package se.alipsa.matrix.charm.sf
 
 import groovy.transform.CompileStatic
 
-import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -11,6 +10,7 @@ import java.util.regex.Pattern
  * Supports POINT, LINESTRING, POLYGON, and MULTI* variants with optional SRID prefix.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class WktReader {
 
   private static final Pattern SRID_PATTERN =
@@ -250,14 +250,17 @@ class WktReader {
   }
 
   private enum TokenType {
+
     WORD,
     NUMBER,
     LPAREN,
     RPAREN,
     COMMA
+
   }
 
   private static class Token {
+
     final TokenType type
     final String text
 
@@ -265,9 +268,11 @@ class WktReader {
       this.type = type
       this.text = text
     }
+
   }
 
   private static class WktTokenizer {
+
     private static final Pattern NUMBER_PATTERN =
         Pattern.compile('[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?')
     private static final Pattern WORD_PATTERN = Pattern.compile('[A-Za-z_]+')
@@ -403,5 +408,7 @@ class WktReader {
         index++
       }
     }
+
   }
+
 }

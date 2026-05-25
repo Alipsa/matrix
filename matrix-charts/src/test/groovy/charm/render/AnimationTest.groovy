@@ -135,4 +135,5 @@ class AnimationTest {
     method.setAccessible(true)
     method.invoke(null, svg) as String
   }
+
 }

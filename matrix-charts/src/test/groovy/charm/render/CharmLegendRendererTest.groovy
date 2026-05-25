@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
@@ -308,4 +306,5 @@ class CharmLegendRendererTest {
       assertTrue(content.contains('id="legend"'), "Legend should be present at ${pos} position")
     }
   }
+
 }

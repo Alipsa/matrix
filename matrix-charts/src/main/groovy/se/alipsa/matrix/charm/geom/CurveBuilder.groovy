@@ -120,4 +120,5 @@ class CurveBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.IDENTITY
   }
+
 }

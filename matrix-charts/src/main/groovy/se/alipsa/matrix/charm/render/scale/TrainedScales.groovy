@@ -37,4 +37,5 @@ class TrainedScales {
 
   /** Trained group scale. */
   CharmScale group
+
 }

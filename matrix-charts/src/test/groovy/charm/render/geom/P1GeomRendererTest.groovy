@@ -16,6 +16,7 @@ import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
 
 @Slow
+@SuppressWarnings('IfStatementBraces')
 class P1GeomRendererTest {
 
   @Test
@@ -156,7 +157,7 @@ class P1GeomRendererTest {
         .split('_')
         .collect { it.toLowerCase().capitalize() }
         .join('') + 'Builder'
-    Class.forName("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
+    getClass().classLoader.loadClass("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
   }
 
   private static LayerBuilder applyOptions(LayerBuilder builder, Map<String, Object> options) {
@@ -181,4 +182,5 @@ class P1GeomRendererTest {
         ])
         .build()
   }
+
 }

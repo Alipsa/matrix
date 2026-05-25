@@ -25,6 +25,7 @@ import javax.imageio.ImageIO
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
+@SuppressWarnings('DuplicateStringLiteral')
 class ChartToPng {
 
   /**
@@ -37,12 +38,12 @@ class ChartToPng {
    */
   static void export(String svgChart, File targetFile) throws IOException {
     if (svgChart == null || svgChart.isEmpty()) {
-      throw new IllegalArgumentException("svgChart cannot be null or empty")
+      throw new IllegalArgumentException('svgChart cannot be null or empty')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
-    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", targetFile)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', targetFile)
   }
 
   /**
@@ -55,12 +56,12 @@ class ChartToPng {
    */
   static void export(String svgChart, OutputStream os) throws IOException {
     if (svgChart == null || svgChart.isEmpty()) {
-      throw new IllegalArgumentException("svgChart cannot be null or empty")
+      throw new IllegalArgumentException('svgChart cannot be null or empty')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
-    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", os)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', os)
   }
 
   /**
@@ -73,10 +74,10 @@ class ChartToPng {
    */
   static void export(Svg svgChart, File targetFile) throws IOException {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart cannot be null")
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     export(svgChart.toXml(), targetFile)
   }
@@ -91,10 +92,10 @@ class ChartToPng {
    */
   static void export(Svg svgChart, OutputStream os) throws IOException {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart cannot be null")
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     export(svgChart.toXml(), os)
   }
@@ -109,10 +110,10 @@ class ChartToPng {
    */
   static void export(CharmChart chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     export(chart.render(), targetFile)
   }
@@ -127,10 +128,10 @@ class ChartToPng {
    */
   static void export(CharmChart chart, OutputStream os) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     export(chart.render(), os)
   }
@@ -145,10 +146,10 @@ class ChartToPng {
    */
   static void export(Chart chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     export(CharmBridge.convert(chart).render(), targetFile)
   }
@@ -163,10 +164,10 @@ class ChartToPng {
    */
   static void export(Chart chart, OutputStream os) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     export(CharmBridge.convert(chart).render(), os)
   }
@@ -183,14 +184,14 @@ class ChartToPng {
     ByteArrayInputStream svgStream = new ByteArrayInputStream(svgContent.getBytes(StandardCharsets.UTF_8))
     SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
     if (svgDocument == null) {
-      throw new IllegalArgumentException("Invalid SVG document")
+      throw new IllegalArgumentException('Invalid SVG document')
     }
     int width = (svgDocument.size().width as BigDecimal).ceil() as int
     int height = (svgDocument.size().height as BigDecimal).ceil() as int
     if (width <= 0 || height <= 0) {
       throw new IllegalArgumentException(
           "SVG document has non-positive dimensions (${width}x${height}); " +
-          "ensure the SVG specifies width/height attributes or a valid viewBox"
+          'ensure the SVG specifies width/height attributes or a valid viewBox'
       )
     }
     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -204,4 +205,5 @@ class ChartToPng {
   private static String stripAnimationCss(String svgContent) {
     AnimationCssStripper.stripFromXml(svgContent)
   }
+
 }

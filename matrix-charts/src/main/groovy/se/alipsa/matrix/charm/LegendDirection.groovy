@@ -6,7 +6,9 @@ import groovy.transform.CompileStatic
  * Typed legend direction constants.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 enum LegendDirection {
+
   VERTICAL, HORIZONTAL
 
   private static final Map<String, LegendDirection> LOOKUP = values().collectEntries {
@@ -42,4 +44,5 @@ enum LegendDirection {
     }
     value
   }
+
 }

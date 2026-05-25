@@ -178,4 +178,5 @@ class CharmEnumTest {
     assertEquals('custom_line', LinetypeName.normalize('custom_line'))
     assertEquals(3, LinetypeName.normalize(3))
   }
+
 }

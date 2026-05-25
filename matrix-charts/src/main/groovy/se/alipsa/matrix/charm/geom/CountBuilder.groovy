@@ -74,4 +74,5 @@ class CountBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.COUNT
   }
+
 }

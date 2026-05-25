@@ -119,4 +119,5 @@ class CoordSpec extends Coord {
   CoordSpec copy() {
     new CoordSpec(type: type, params: new LinkedHashMap<>(params))
   }
+
 }

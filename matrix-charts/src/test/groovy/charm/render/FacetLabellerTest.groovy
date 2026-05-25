@@ -196,9 +196,9 @@ class FacetLabellerTest {
     def allText = textElements.collect { (it as Text).content }.join(' ')
     // Grid facets should show "variable: value" in strips
     assertTrue(allText.contains('R1') || allText.contains('row_var'),
-        "Expected row strip labels")
+        'Expected row strip labels')
     assertTrue(allText.contains('C1') || allText.contains('col_var'),
-        "Expected col strip labels")
+        'Expected col strip labels')
   }
 
   @Test
@@ -229,6 +229,7 @@ class FacetLabellerTest {
     def textElements = svg.descendants().findAll { it instanceof Text }
     def allText = textElements.collect { (it as Text).content }.join(' ')
     assertTrue(allText.contains('cat:') || allText.contains('cat'),
-        "Expected labeller-formatted strips")
+        'Expected labeller-formatted strips')
   }
+
 }

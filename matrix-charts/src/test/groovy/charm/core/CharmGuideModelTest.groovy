@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
 
+@SuppressWarnings('UnnecessaryCast')
 class CharmGuideModelTest {
 
   @Test
@@ -195,4 +196,5 @@ class CharmGuideModelTest {
     assertEquals(GuideType.LEGEND, guides.getSpec('color').type)
     assertEquals(GuideType.NONE, guides.getSpec('fill').type)
   }
+
 }

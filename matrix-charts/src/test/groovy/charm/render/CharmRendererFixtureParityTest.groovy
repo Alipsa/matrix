@@ -194,10 +194,10 @@ class CharmRendererFixtureParityTest {
     Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     // Both should produce rectangles for box bodies and lines for whiskers/medians
-    assertTrue(charmCounts.rect > 0, "Charm should render rects for box bodies")
-    assertTrue(ggCounts.rect > 0, "Gg should render rects for box bodies")
-    assertTrue(charmCounts.line > 0, "Charm should render lines for whiskers/medians")
-    assertTrue(ggCounts.line > 0, "Gg should render lines for whiskers/medians")
+    assertTrue(charmCounts.rect > 0, 'Charm should render rects for box bodies')
+    assertTrue(ggCounts.rect > 0, 'Gg should render rects for box bodies')
+    assertTrue(charmCounts.line > 0, 'Charm should render lines for whiskers/medians')
+    assertTrue(ggCounts.line > 0, 'Gg should render lines for whiskers/medians')
     // Rect counts should be comparable between renderers
     assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 10,
         "Charm rect count (${charmCounts.rect}) and gg rect count (${ggCounts.rect}) should be within tolerance")

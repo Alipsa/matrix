@@ -63,4 +63,5 @@ class Dodge2Position {
     }
     best
   }
+
 }

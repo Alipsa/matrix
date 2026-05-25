@@ -24,6 +24,7 @@ import se.alipsa.matrix.stats.kde.KernelDensity
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class DensityStat {
 
   /**
@@ -96,4 +97,5 @@ class DensityStat {
     if (params.to != null) kdeParams.to = params.to
     kdeParams
   }
+
 }

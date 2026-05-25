@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Canonical layer specification in Charm.
  */
 @CompileStatic
+@SuppressWarnings('ParameterCount')
 class Layer {
 
   private final GeomSpec geomSpec
@@ -160,4 +161,5 @@ class Layer {
         [:]
     new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
   }
+
 }

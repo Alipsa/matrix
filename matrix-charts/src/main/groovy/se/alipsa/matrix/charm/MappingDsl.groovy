@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Closure delegate for `mapping {}` configuration blocks.
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class MappingDsl {
 
   String x
@@ -63,4 +64,5 @@ class MappingDsl {
     if (weight != null) mapping.weight = weight
     mapping
   }
+
 }

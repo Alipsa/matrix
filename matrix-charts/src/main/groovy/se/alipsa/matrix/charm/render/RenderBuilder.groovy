@@ -19,6 +19,7 @@ import se.alipsa.matrix.charm.Chart
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class RenderBuilder {
 
   private final Chart chart
@@ -67,4 +68,5 @@ class RenderBuilder {
       throw new CharmRenderException("Failed to render Charm chart: ${e.message}", e)
     }
   }
+
 }

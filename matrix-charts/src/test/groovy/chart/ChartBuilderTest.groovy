@@ -421,4 +421,5 @@ class ChartBuilderTest {
     assertFalse(chart.style.yAxisVisible)
     assertEquals('stroke-width: 2;', chart.style.css)
   }
+
 }

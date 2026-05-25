@@ -41,4 +41,5 @@ class CssAttributesSpec {
         idPrefix: idPrefix
     )
   }
+
 }

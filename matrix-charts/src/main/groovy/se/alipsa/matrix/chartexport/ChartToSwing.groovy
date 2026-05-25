@@ -13,6 +13,8 @@ import se.alipsa.matrix.pict.Chart
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('Instanceof')
 class ChartToSwing {
 
   /**
@@ -23,7 +25,7 @@ class ChartToSwing {
    */
   static SvgPanel export(String svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     new SvgPanel(svgChart)
   }
@@ -36,7 +38,7 @@ class ChartToSwing {
    */
   static SvgPanel export(Svg svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     export(svgChart.toXml())
   }
@@ -49,7 +51,7 @@ class ChartToSwing {
    */
   static SvgPanel export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     export(chart.render())
   }
@@ -69,7 +71,7 @@ class ChartToSwing {
    */
   static SvgPanel export(Chart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     export(CharmBridge.convert(chart).render())
   }
@@ -83,7 +85,7 @@ class ChartToSwing {
    */
   static SvgPanel export(Object svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     if (svgChart instanceof CharSequence) {
       return export(String.valueOf(svgChart))
@@ -99,4 +101,5 @@ class ChartToSwing {
     }
     throw new IllegalArgumentException("Unsupported chart type: ${svgChart.getClass().name}")
   }
+
 }

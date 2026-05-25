@@ -76,7 +76,7 @@ class SampleStatTest {
       new PointBuilder().stat([:])
     }
 
-    assertTrue(e.message.contains("Unsupported stat type"))
+    assertTrue(e.message.contains('Unsupported stat type'))
   }
 
   @Test
@@ -147,4 +147,5 @@ class SampleStatTest {
       new LayerData(x: i, y: i * 2, rowIndex: i)
     }
   }
+
 }

@@ -17,4 +17,5 @@ class StyleOverride {
   BigDecimal size
   String shape
   String linetype
+
 }

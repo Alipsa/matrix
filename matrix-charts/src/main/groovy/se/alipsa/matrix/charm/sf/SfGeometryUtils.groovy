@@ -6,6 +6,9 @@ import groovy.transform.CompileStatic
  * Utility helpers for simple feature geometry calculations.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateListLiteral')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class SfGeometryUtils {
 
   /**
@@ -124,4 +127,5 @@ class SfGeometryUtils {
     cy /= (6d * area)
     return [cx, cy, area.abs()] as double[]
   }
+
 }

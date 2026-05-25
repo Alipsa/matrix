@@ -15,6 +15,8 @@ import groovy.transform.CompileStatic
  * The dot (.) represents "no variable" on that side.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('UnnecessaryCollectCall')
 class FormulaParser {
 
   /**
@@ -26,7 +28,7 @@ class FormulaParser {
    */
   static Map<String, List<String>> parse(String formula) {
     if (formula == null) {
-      throw new IllegalArgumentException("Formula cannot be null")
+      throw new IllegalArgumentException('Formula cannot be null')
     }
 
     String trimmed = formula.trim()
@@ -65,4 +67,5 @@ class FormulaParser {
         .collect { it.trim() }
         .findAll { it && it != '.' } as List<String>
   }
+
 }

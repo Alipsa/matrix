@@ -33,6 +33,14 @@ import se.alipsa.matrix.core.util.Logger
  * data + mappings -> stat -> position -> scale -> coord -> geom -> theme -> svg
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('MethodSize')
+@SuppressWarnings('UnnecessaryCollectCall')
+@SuppressWarnings('UnnecessaryObjectReferences')
 class CharmRenderer {
 
   private static final Logger log = Logger.getLogger(CharmRenderer)
@@ -291,8 +299,8 @@ class CharmRenderer {
         List<Integer> rowIndexes
         if (layerHasOwnData) {
           if (faceted) {
-            log.warn("Layer-specific data with facets is not fully supported yet; " +
-                "the full layer dataset will be rendered in every panel")
+            log.warn('Layer-specific data with facets is not fully supported yet; ' +
+                'the full layer dataset will be rendered in every panel')
           }
           rowIndexes = defaultRowIndexes(sourceData.rowCount())
         } else {
@@ -473,7 +481,6 @@ class CharmRenderer {
     CoordEngine.apply(coord, data)
   }
 
-
   private static Mapping effectiveMapping(Mapping plotMapping, LayerSpec layer) {
     Mapping mapping = layer.inheritMapping ? plotMapping.copy() : new Mapping()
     if (layer.mapping != null) {
@@ -630,8 +637,11 @@ class CharmRenderer {
   }
 
   private static class AnnotationRenderEntry {
+
     AnnotationSpec annotation
     int annotationIndex
     int drawOrder
+
   }
+
 }

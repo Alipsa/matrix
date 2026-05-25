@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.coord.CoordEngine
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class CoordEngineTest {
 
   @Test
@@ -148,4 +149,5 @@ class CoordEngineTest {
     assertEquals(1, result[0].x)
     assertEquals(2, result[0].y)
   }
+
 }

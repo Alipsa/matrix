@@ -30,4 +30,5 @@ class FixedCoord {
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
     CartesianCoord.compute(coordSpec, data)
   }
+
 }

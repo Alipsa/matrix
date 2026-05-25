@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * fill, border color, border size, and linetype properties.
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class ElementRect {
 
   /** Fill color (CSS color string) */
@@ -23,7 +24,7 @@ class ElementRect {
   /** Border line type: 'solid', 'dashed', 'dotted' */
   String linetype = 'solid'
 
-  ElementRect() {}
+  ElementRect() { }
 
   /**
    * Creates an ElementRect from a map of properties.
@@ -53,4 +54,5 @@ class ElementRect {
         linetype: linetype
     )
   }
+
 }

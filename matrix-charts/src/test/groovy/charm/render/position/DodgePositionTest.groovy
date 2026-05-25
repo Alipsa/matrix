@@ -56,7 +56,7 @@ class DodgePositionTest {
     BigDecimal x1 = result[1].x as BigDecimal
     BigDecimal spread = (x1 - x0).abs()
     // With width=0.5 and 2 groups, spread should be 0.25
-    assertEquals(0, new BigDecimal('0.25').compareTo(spread))
+    assertEquals(0.25, spread)
   }
 
   @Test
@@ -121,4 +121,5 @@ class DodgePositionTest {
         params
     )
   }
+
 }

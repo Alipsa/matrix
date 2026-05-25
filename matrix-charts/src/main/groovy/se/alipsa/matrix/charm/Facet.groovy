@@ -158,4 +158,5 @@ class Facet {
         params: new LinkedHashMap<>(params)
     )
   }
+
 }

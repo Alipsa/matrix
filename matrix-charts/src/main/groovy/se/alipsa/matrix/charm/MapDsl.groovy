@@ -30,4 +30,5 @@ class MapDsl {
   void propertyMissing(String name, Object value) {
     values[name] = value
   }
+
 }

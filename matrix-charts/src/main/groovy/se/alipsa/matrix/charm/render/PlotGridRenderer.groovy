@@ -22,6 +22,10 @@ import java.util.regex.Pattern
  * are document-global even within nested {@code <svg>} elements.</p>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('NestedForLoop')
+@SuppressWarnings('UnnecessaryCast')
 class PlotGridRenderer {
 
   /** Matches url(#someId) references in attribute values. */
@@ -68,7 +72,7 @@ class PlotGridRenderer {
     if (usableWidth <= 0 || usableHeight <= 0) {
       throw new IllegalArgumentException(
           "Not enough space to render PlotGrid: usableWidth=${usableWidth}, usableHeight=${usableHeight}. " +
-          "Increase totalWidth/totalHeight or reduce ncol/nrow, spacing, or title height.")
+          'Increase totalWidth/totalHeight or reduce ncol/nrow, spacing, or title height.')
     }
 
     List<Integer> colWidths = distributeSpace(usableWidth, grid.ncol, grid.widths)
@@ -87,7 +91,7 @@ class PlotGridRenderer {
         throw new IllegalArgumentException(
             "PlotGrid cell at row=${row}, col=${col} (chart index=${index}) has non-positive size: " +
             "width=${cellW}, height=${cellH}. " +
-            "Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or relative widths/heights.")
+            'Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or relative widths/heights.')
       }
 
       int cellX = computeOffset(colWidths, col, grid.spacing)
@@ -100,7 +104,7 @@ class PlotGridRenderer {
         throw new IllegalArgumentException(
             "PlotGrid cell at row=${row}, col=${col} (chart index=${index}) is too small for default margins: " +
             "cellWidth=${cellW}, cellHeight=${cellH}, plotWidth=${plotW}, plotHeight=${plotH}. " +
-            "Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or margins.")
+            'Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or margins.')
       }
       Svg cellSvg = renderer.render(chart, cellConfig)
 
@@ -329,4 +333,5 @@ class PlotGridRenderer {
     }
     value
   }
+
 }

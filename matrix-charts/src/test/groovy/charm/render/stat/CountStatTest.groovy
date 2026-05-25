@@ -84,4 +84,5 @@ class CountStatTest {
         StatSpec.of(CharmStatType.COUNT)
     )
   }
+
 }

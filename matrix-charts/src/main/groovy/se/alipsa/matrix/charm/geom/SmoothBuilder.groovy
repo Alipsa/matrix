@@ -118,4 +118,5 @@ class SmoothBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.SMOOTH
   }
+
 }

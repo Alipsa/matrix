@@ -15,6 +15,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.StatEngine
 import se.alipsa.matrix.charm.render.stat.StatUtils
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class P1StatTest {
 
   @Test
@@ -32,14 +33,14 @@ class P1StatTest {
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
     assertEquals(4, result.size())
-    BigDecimal g1x1 = result.find { it.group == 'g1' && (it.x as BigDecimal).compareTo(1.0) == 0 }?.y as BigDecimal
-    BigDecimal g1x2 = result.find { it.group == 'g1' && (it.x as BigDecimal).compareTo(2.0) == 0 }?.y as BigDecimal
-    BigDecimal g2x1 = result.find { it.group == 'g2' && (it.x as BigDecimal).compareTo(1.0) == 0 }?.y as BigDecimal
-    BigDecimal g2x2 = result.find { it.group == 'g2' && (it.x as BigDecimal).compareTo(2.0) == 0 }?.y as BigDecimal
-    assertEquals(0, g1x1.compareTo(3.0))
-    assertEquals(0, g1x2.compareTo(7.0))
-    assertEquals(0, g2x1.compareTo(2.0))
-    assertEquals(0, g2x2.compareTo(6.0))
+    BigDecimal g1x1 = result.find { it.group == 'g1' && (it.x as BigDecimal) == 1.0 }?.y as BigDecimal
+    BigDecimal g1x2 = result.find { it.group == 'g1' && (it.x as BigDecimal) == 2.0 }?.y as BigDecimal
+    BigDecimal g2x1 = result.find { it.group == 'g2' && (it.x as BigDecimal) == 1.0 }?.y as BigDecimal
+    BigDecimal g2x2 = result.find { it.group == 'g2' && (it.x as BigDecimal) == 2.0 }?.y as BigDecimal
+    assertEquals(g1x1, 3.0)
+    assertEquals(g1x2, 7.0)
+    assertEquals(g2x1, 2.0)
+    assertEquals(g2x2, 6.0)
   }
 
   @Test
@@ -76,7 +77,7 @@ class P1StatTest {
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
     assertEquals(2, result.size())
-    assertTrue(result.any { (it.meta.z as BigDecimal).compareTo(0.0) == 0 })
+    assertTrue(result.any { (it.meta.z as BigDecimal) == 0.0 })
   }
 
   @Test
@@ -101,8 +102,8 @@ class P1StatTest {
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
     List<BigDecimal> observed = result.collect { it.y as BigDecimal }
-    assertTrue(observed.any { it.compareTo(0.0) == 0 })
-    assertFalse(observed.any { it.compareTo(100.0) == 0 })
+    assertTrue(observed.any { it == 0.0 })
+    assertFalse(observed.any { it == 100.0 })
   }
 
   @Test
@@ -224,4 +225,5 @@ class P1StatTest {
         params
     )
   }
+
 }

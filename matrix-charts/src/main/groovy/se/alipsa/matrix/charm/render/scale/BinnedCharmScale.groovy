@@ -11,6 +11,8 @@ import se.alipsa.matrix.core.ValueConverter
  * to pixel coordinates via linear interpolation.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class BinnedCharmScale extends CharmScale {
 
   /** Bin boundary values (n+1 values for n bins). */
@@ -145,4 +147,5 @@ class BinnedCharmScale extends CharmScale {
     }
     numeric.stripTrailingZeros().toPlainString()
   }
+
 }

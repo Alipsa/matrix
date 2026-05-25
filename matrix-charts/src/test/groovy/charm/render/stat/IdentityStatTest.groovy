@@ -53,4 +53,5 @@ class IdentityStatTest {
         StatSpec.of(CharmStatType.IDENTITY)
     )
   }
+
 }

@@ -42,15 +42,15 @@ class AlignStat {
 
     List<LayerData> result = []
     groups.each { Object key, List<LayerData> series ->
-      List<LayerData> sorted = series.sort { LayerData a, LayerData b ->
+      series.sort { LayerData a, LayerData b ->
         BigDecimal x1 = ValueConverter.asBigDecimal(a.x) ?: 0
         BigDecimal x2 = ValueConverter.asBigDecimal(b.x) ?: 0
         x1 <=> x2
       }
-      LayerData template = sorted.first()
+      LayerData template = series.first()
 
       xGrid.each { BigDecimal x ->
-        BigDecimal y = interpolateY(sorted, x)
+        BigDecimal y = interpolateY(series, x)
         if (y == null) {
           return
         }
@@ -114,4 +114,5 @@ class AlignStat {
 
     null
   }
+
 }

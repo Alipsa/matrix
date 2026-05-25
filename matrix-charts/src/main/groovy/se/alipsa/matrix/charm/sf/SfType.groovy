@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum SfType {
+
   POINT,
   LINESTRING,
   POLYGON,
@@ -14,4 +15,5 @@ enum SfType {
   MULTILINESTRING,
   MULTIPOLYGON,
   GEOMETRYCOLLECTION
+
 }

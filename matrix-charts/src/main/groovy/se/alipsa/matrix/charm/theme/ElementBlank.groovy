@@ -10,5 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class ElementBlank {
+
   // Marker class - presence indicates element should not be drawn
+
 }

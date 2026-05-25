@@ -12,6 +12,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders tile geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
 class TileRenderer {
 
   /**
@@ -67,4 +69,5 @@ class TileRenderer {
       elementIndex++
     }
   }
+
 }

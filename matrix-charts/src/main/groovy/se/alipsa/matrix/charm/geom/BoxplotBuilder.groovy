@@ -108,4 +108,5 @@ class BoxplotBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.BOXPLOT
   }
+
 }

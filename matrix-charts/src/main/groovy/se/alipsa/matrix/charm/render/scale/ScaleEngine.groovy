@@ -17,6 +17,13 @@ import se.alipsa.matrix.core.ValueConverter
  * then produces trained {@link CharmScale} instances for each aesthetic.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('ImplementationAsType')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('ParameterCount')
+@SuppressWarnings('UnnecessaryCollectCall')
 class ScaleEngine {
 
   /**
@@ -543,4 +550,5 @@ class ScaleEngine {
       value == null || ValueConverter.asBigDecimal(value) != null
     }
   }
+
 }

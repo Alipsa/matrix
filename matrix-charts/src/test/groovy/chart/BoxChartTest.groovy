@@ -45,7 +45,7 @@ class BoxChartTest {
   @Test
   void testJfxBoxChartRendering() {
     Assumptions.assumeTrue(
-        System.getenv('DISPLAY') != null || Boolean.getBoolean('headless'),
+        System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
         'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
     )
     def data = Matrix.builder().matrixName('BoxData').columns([
@@ -73,10 +73,10 @@ class BoxChartTest {
     ]).types([String, int]).build()
 
     def chart = BoxChart.create('PNG Box Chart', data, 'group', 'value')
-    File file = File.createTempFile("BoxChart", ".png")
+    File file = File.createTempFile('BoxChart', '.png')
     Plot.png(chart, file)
-    assertTrue(file.exists(), "PNG file should exist")
-    assertTrue(file.length() > 0, "PNG file should not be empty")
+    assertTrue(file.exists(), 'PNG file should exist')
+    assertTrue(file.length() > 0, 'PNG file should not be empty')
     file.delete()
   }
 

@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.DensityStat
 
+@SuppressWarnings('UnnecessaryCollectCall')
 class DensityStatTest {
 
   @Test
@@ -33,7 +34,7 @@ class DensityStatTest {
     List<LayerData> result = DensityStat.compute(layer, data)
     result.each { LayerData d ->
       BigDecimal density = d.y as BigDecimal
-      assertTrue(density >= 0, "Density values should be non-negative")
+      assertTrue(density >= 0, 'Density values should be non-negative')
     }
   }
 
@@ -92,7 +93,7 @@ class DensityStatTest {
       double avgY = ((result[i].y as BigDecimal).doubleValue() + (result[i - 1].y as BigDecimal).doubleValue()) / 2.0
       integral += dx * avgY
     }
-    assertEquals(1.0, integral, 0.15, "Density should integrate to approximately 1")
+    assertEquals(1.0, integral, 0.15, 'Density should integrate to approximately 1')
   }
 
   @Test
@@ -146,4 +147,5 @@ class DensityStatTest {
         StatSpec.of(CharmStatType.DENSITY, statParams)
     )
   }
+
 }

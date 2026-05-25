@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * CSS animation specification for Charm SVG output.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class AnimationSpec {
 
   boolean enabled = true
@@ -104,8 +105,9 @@ ${targetSelector} {
   }
 
   private static void ensureNoCdataTerminator(String value, String fieldName) {
-    if (value != null && value.contains(']]>')) {
+    if (value?.contains(']]>')) {
       throw new IllegalArgumentException("Animation field '${fieldName}' must not contain ']]>'")
     }
   }
+
 }

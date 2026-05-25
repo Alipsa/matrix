@@ -21,12 +21,12 @@ class FillPositionTest {
     assertEquals(2, result.size())
 
     // First: ymin=0/100=0, ymax=30/100=0.3
-    assertEquals(0, BigDecimal.ZERO.compareTo(result[0].ymin as BigDecimal))
-    assertEquals(0, new BigDecimal('0.3').compareTo(result[0].ymax as BigDecimal))
+    assertEquals(BigDecimal.ZERO, result[0].ymin as BigDecimal)
+    assertEquals(0.3, result[0].ymax as BigDecimal)
 
     // Second: ymin=30/100=0.3, ymax=100/100=1.0
-    assertEquals(0, new BigDecimal('0.3').compareTo(result[1].ymin as BigDecimal))
-    assertEquals(0, BigDecimal.ONE.compareTo(result[1].ymax as BigDecimal))
+    assertEquals(0.3, result[1].ymin as BigDecimal)
+    assertEquals(BigDecimal.ONE, result[1].ymax as BigDecimal)
   }
 
   @Test
@@ -39,10 +39,10 @@ class FillPositionTest {
     List<LayerData> result = FillPosition.compute(layer, data)
 
     // First: y = (0 + 0.5) / 2 = 0.25
-    assertEquals(0, new BigDecimal('0.25').compareTo(result[0].y as BigDecimal))
+    assertEquals(0.25, result[0].y as BigDecimal)
 
     // Second: y = (0.5 + 1.0) / 2 = 0.75
-    assertEquals(0, new BigDecimal('0.75').compareTo(result[1].y as BigDecimal))
+    assertEquals(0.75, result[1].y as BigDecimal)
   }
 
   @Test
@@ -58,16 +58,16 @@ class FillPositionTest {
     assertEquals(4, result.size())
 
     // A group: total=100
-    assertEquals(0, BigDecimal.ZERO.compareTo(result[0].ymin as BigDecimal))
-    assertEquals(0, new BigDecimal('0.2').compareTo(result[0].ymax as BigDecimal))
-    assertEquals(0, new BigDecimal('0.2').compareTo(result[1].ymin as BigDecimal))
-    assertEquals(0, BigDecimal.ONE.compareTo(result[1].ymax as BigDecimal))
+    assertEquals(BigDecimal.ZERO, result[0].ymin as BigDecimal)
+    assertEquals(0.2, result[0].ymax as BigDecimal)
+    assertEquals(0.2, result[1].ymin as BigDecimal)
+    assertEquals(BigDecimal.ONE, result[1].ymax as BigDecimal)
 
     // B group: total=40
-    assertEquals(0, BigDecimal.ZERO.compareTo(result[2].ymin as BigDecimal))
-    assertEquals(0, new BigDecimal('0.25').compareTo(result[2].ymax as BigDecimal))
-    assertEquals(0, new BigDecimal('0.25').compareTo(result[3].ymin as BigDecimal))
-    assertEquals(0, BigDecimal.ONE.compareTo(result[3].ymax as BigDecimal))
+    assertEquals(BigDecimal.ZERO, result[2].ymin as BigDecimal)
+    assertEquals(0.25, result[2].ymax as BigDecimal)
+    assertEquals(0.25, result[3].ymin as BigDecimal)
+    assertEquals(BigDecimal.ONE, result[3].ymax as BigDecimal)
   }
 
   @Test
@@ -87,11 +87,11 @@ class FillPositionTest {
 
     // With reverse, processing order is [Y, X]
     // Y (y=70): ymin=0/100=0, ymax=70/100=0.7
-    assertEquals(0, BigDecimal.ZERO.compareTo(result[0].ymin as BigDecimal))
-    assertEquals(0, new BigDecimal('0.7').compareTo(result[0].ymax as BigDecimal))
+    assertEquals(BigDecimal.ZERO, result[0].ymin as BigDecimal)
+    assertEquals(0.7, result[0].ymax as BigDecimal)
     // X (y=30): ymin=70/100=0.7, ymax=100/100=1.0
-    assertEquals(0, new BigDecimal('0.7').compareTo(result[1].ymin as BigDecimal))
-    assertEquals(0, BigDecimal.ONE.compareTo(result[1].ymax as BigDecimal))
+    assertEquals(0.7, result[1].ymin as BigDecimal)
+    assertEquals(BigDecimal.ONE, result[1].ymax as BigDecimal)
   }
 
   @Test
@@ -112,9 +112,9 @@ class FillPositionTest {
     assertEquals(1, result.size())
 
     // Single item: normalized to fill [0, 1]
-    assertEquals(0, BigDecimal.ZERO.compareTo(result[0].ymin as BigDecimal))
-    assertEquals(0, BigDecimal.ONE.compareTo(result[0].ymax as BigDecimal))
-    assertEquals(0, new BigDecimal('0.5').compareTo(result[0].y as BigDecimal))
+    assertEquals(BigDecimal.ZERO, result[0].ymin as BigDecimal)
+    assertEquals(BigDecimal.ONE, result[0].ymax as BigDecimal)
+    assertEquals(0.5, result[0].y as BigDecimal)
   }
 
   private static LayerSpec makeLayer(Map<String, Object> params = [:]) {
@@ -126,4 +126,5 @@ class FillPositionTest {
         params
     )
   }
+
 }

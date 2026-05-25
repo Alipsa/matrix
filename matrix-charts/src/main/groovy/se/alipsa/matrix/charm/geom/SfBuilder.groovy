@@ -84,4 +84,5 @@ class SfBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.SF
   }
+
 }

@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementRect
-import se.alipsa.matrix.charm.theme.ElementText
 
 /**
  * Typed theme specification for Charm core.
@@ -12,6 +11,7 @@ import se.alipsa.matrix.charm.theme.ElementText
  * Extends {@link Theme} with builder-style methods for fluent configuration.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ThemeSpec extends Theme {
 
   /**
@@ -115,4 +115,5 @@ class ThemeSpec extends Theme {
     }
     spec
   }
+
 }

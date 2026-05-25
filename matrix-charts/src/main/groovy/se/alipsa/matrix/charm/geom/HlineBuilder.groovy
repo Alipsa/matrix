@@ -86,4 +86,5 @@ class HlineBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.IDENTITY
   }
+
 }

@@ -13,6 +13,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Polar coordinate transform at data level.
  */
 @CompileStatic
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateStringLiteral')
 class PolarCoord {
 
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
@@ -38,4 +40,5 @@ class PolarCoord {
     }
     CartesianCoord.compute(coordSpec, result)
   }
+
 }

@@ -52,11 +52,11 @@ class BinStatTest {
     List<LayerData> result = BinStat.compute(layer, data)
     assertEquals(2, result.size())
     result.each { LayerData datum ->
-      assertNotNull(datum.meta.binStart, "binStart should be set")
-      assertNotNull(datum.meta.binEnd, "binEnd should be set")
-      assertNotNull(datum.meta.density, "density should be set")
-      assertNotNull(datum.meta.xmin, "xmin should be set")
-      assertNotNull(datum.meta.xmax, "xmax should be set")
+      assertNotNull(datum.meta.binStart, 'binStart should be set')
+      assertNotNull(datum.meta.binEnd, 'binEnd should be set')
+      assertNotNull(datum.meta.density, 'density should be set')
+      assertNotNull(datum.meta.xmin, 'xmin should be set')
+      assertNotNull(datum.meta.xmax, 'xmax should be set')
     }
   }
 
@@ -72,7 +72,7 @@ class BinStatTest {
     // x values should be bin centers
     BigDecimal center1 = result[0].x as BigDecimal
     BigDecimal center2 = result[1].x as BigDecimal
-    assertTrue(center1 < center2, "First bin center should be less than second")
+    assertTrue(center1 < center2, 'First bin center should be less than second')
   }
 
   @Test
@@ -114,4 +114,5 @@ class BinStatTest {
         StatSpec.of(CharmStatType.BIN, statParams)
     )
   }
+
 }

@@ -12,6 +12,9 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders smoothed lines, optionally with confidence bands.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
 class SmoothRenderer {
 
   /**
@@ -97,4 +100,5 @@ class SmoothRenderer {
       }
     }
   }
+
 }

@@ -217,4 +217,5 @@ class MappingSpec extends Mapping {
     cloned.apply(mappings())
     cloned
   }
+
 }

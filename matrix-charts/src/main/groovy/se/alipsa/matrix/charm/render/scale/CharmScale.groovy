@@ -61,4 +61,5 @@ abstract class CharmScale {
    * @return true if discrete
    */
   abstract boolean isDiscrete()
+
 }

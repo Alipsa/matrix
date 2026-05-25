@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SfRing {
+
   final List<SfPoint> points
   final boolean hole
 
@@ -14,4 +15,5 @@ class SfRing {
     this.points = points ?: []
     this.hole = hole
   }
+
 }

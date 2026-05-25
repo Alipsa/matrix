@@ -62,4 +62,5 @@ class SfCoordinatesStat {
 
     result
   }
+
 }

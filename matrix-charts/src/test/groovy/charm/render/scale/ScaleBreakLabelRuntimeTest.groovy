@@ -15,6 +15,7 @@ import se.alipsa.matrix.charm.render.scale.ScaleEngine
 
 import java.time.LocalDate
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class ScaleBreakLabelRuntimeTest {
 
   private static void assertNumericTicks(List<Object> actual, List<Number> expected) {
@@ -181,4 +182,5 @@ class ScaleBreakLabelRuntimeTest {
     }
     assertTrue(ex.message.contains('index 1'))
   }
+
 }

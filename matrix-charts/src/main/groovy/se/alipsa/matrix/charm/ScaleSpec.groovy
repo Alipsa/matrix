@@ -297,4 +297,5 @@ class ScaleSpec {
         group: group?.copy()
     )
   }
+
 }

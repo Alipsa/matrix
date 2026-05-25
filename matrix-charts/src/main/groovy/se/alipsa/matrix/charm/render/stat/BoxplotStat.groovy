@@ -18,6 +18,7 @@ import se.alipsa.matrix.core.ValueConverter
  * <p>Uses quantile type 7 (linear interpolation) matching ggplot2 behavior.</p>
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
 class BoxplotStat {
 
   /**
@@ -132,4 +133,5 @@ class BoxplotStat {
     double xj1 = sorted[j] as double
     (xj + g * (xj1 - xj)) as BigDecimal
   }
+
 }

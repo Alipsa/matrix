@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@SuppressWarnings('UnnecessaryCast')
 class ScaleEngineTest {
 
   @Test
@@ -97,9 +98,9 @@ class ScaleEngineTest {
 
     assertTrue(scale instanceof ContinuousCharmScale)
     ContinuousCharmScale continuous = scale as ContinuousCharmScale
-    assertTrue((5.0 as BigDecimal).compareTo(continuous.domainMin) == 0,
+    assertTrue((5.0 as BigDecimal) == continuous.domainMin,
         "Expected domainMin 5 but got ${continuous.domainMin}")
-    assertTrue((15.0 as BigDecimal).compareTo(continuous.domainMax) == 0,
+    assertTrue((15.0 as BigDecimal) == continuous.domainMax,
         "Expected domainMax 15 but got ${continuous.domainMax}")
   }
 
@@ -204,7 +205,7 @@ class ScaleEngineTest {
     ContinuousCharmScale continuous = scale as ContinuousCharmScale
     // When all values are the same, domain expands by 1
     assertTrue(continuous.domainMax > continuous.domainMin,
-        "Domain should expand for single-value data")
+        'Domain should expand for single-value data')
   }
 
   @Test
@@ -432,4 +433,5 @@ class ScaleEngineTest {
     assertEquals('secondary-x', trained.scaleSpec.params.secondaryAxis.name)
     assertEquals('*2', trained.scaleSpec.params.secondaryAxis.transform)
   }
+
 }

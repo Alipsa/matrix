@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.coord.FlipCoord
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class FlipCoordTest {
 
   @Test
@@ -157,4 +158,5 @@ class FlipCoordTest {
   private static void assertBigDecimalEquals(Number expected, Object actual) {
     assertEquals(0, (expected as BigDecimal).compareTo(actual as BigDecimal))
   }
+
 }

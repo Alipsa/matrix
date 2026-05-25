@@ -136,12 +136,14 @@ class RenderContext {
   CharmScale linetypeScaleForLayer(int layerIdx) {
     layerScales[layerIdx]?.linetype ?: linetypeScale
   }
+
 }
 
 /**
  * Panel definition used for facet layout.
  */
 @CompileStatic
+
 class PanelSpec {
   int row
   int col
@@ -153,13 +155,16 @@ class PanelSpec {
   /** Facet variable values for this panel */
   Map<String, Object> facetValues = [:]
   List<Integer> rowIndexes = []
+
 }
 
 /**
  * Layer data flowing through stat -> position -> scale -> coord.
  */
+
 @CompileStatic
 class LayerData {
+
   Object x
   Object y
   Object color
@@ -180,14 +185,18 @@ class LayerData {
   Object weight
   int rowIndex
   Map<String, Object> meta = [:]
+
 }
 
 /**
  * Layer render job.
+
  */
 @CompileStatic
 class LayerRenderJob {
+
   se.alipsa.matrix.charm.LayerSpec layer
   se.alipsa.matrix.charm.Mapping mapping
   List<LayerData> data = []
+
 }

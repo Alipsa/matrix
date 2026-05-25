@@ -10,6 +10,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Two-dimensional rectangular binning stat.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class Bin2DStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -90,4 +92,5 @@ class Bin2DStat {
 
     result
   }
+
 }

@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.coord.FixedCoord
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class FixedCoordTest {
 
   @Test
@@ -39,7 +40,7 @@ class FixedCoordTest {
     assertEquals(5, result[0].x)
     assertEquals(10, result[0].y)
     // Ratio is accessible from coord spec params
-    assertEquals(0, new BigDecimal('2.0').compareTo(coord.ratio))
+    assertEquals(2.0, coord.ratio)
   }
 
   @Test
@@ -89,4 +90,5 @@ class FixedCoordTest {
     // No limits: same reference via pass-through
     assertSame(datum, result[0])
   }
+
 }

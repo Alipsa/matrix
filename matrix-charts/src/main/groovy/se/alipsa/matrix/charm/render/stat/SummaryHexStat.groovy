@@ -18,4 +18,5 @@ class SummaryHexStat {
     }
     summarized
   }
+
 }

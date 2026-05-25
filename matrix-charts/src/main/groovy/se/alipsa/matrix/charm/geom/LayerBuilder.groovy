@@ -16,8 +16,6 @@ import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.core.Matrix
 
-import java.util.Locale
-
 /**
  * Abstract base class for fluent layer builders.
  *
@@ -208,11 +206,11 @@ abstract class LayerBuilder {
       return this
     }
     if (aesthetic == null) {
-      throw new CharmValidationException("Layer scale aesthetic must not be null")
+      throw new CharmValidationException('Layer scale aesthetic must not be null')
     }
     String key = aesthetic.trim().toLowerCase(Locale.ROOT)
     if (key.isEmpty()) {
-      throw new CharmValidationException("Layer scale aesthetic must be non-blank")
+      throw new CharmValidationException('Layer scale aesthetic must be non-blank')
     }
     if (key == 'colour') {
       key = 'color'
@@ -345,5 +343,7 @@ abstract class LayerBuilder {
 
     /** Sets the linetype scale override. */
     void linetype(Scale scale) { collected['linetype'] = scale }
+
   }
+
 }

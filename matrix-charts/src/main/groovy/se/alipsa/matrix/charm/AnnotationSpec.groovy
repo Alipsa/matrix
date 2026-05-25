@@ -22,6 +22,7 @@ abstract class AnnotationSpec {
    * @return copied annotation
    */
   abstract AnnotationSpec copy()
+
 }
 
 /**
@@ -91,6 +92,7 @@ class TextAnnotationSpec extends AnnotationSpec {
     c.@alpha = this.@alpha
     c
   }
+
 }
 
 /**
@@ -162,6 +164,7 @@ class RectAnnotationSpec extends AnnotationSpec {
     c.@alpha = this.@alpha
     c
   }
+
 }
 
 /**
@@ -233,6 +236,7 @@ class SegmentAnnotationSpec extends AnnotationSpec {
     c.@alpha = this.@alpha
     c
   }
+
 }
 
 /**
@@ -265,6 +269,7 @@ class CustomAnnotationSpec extends AnnotationSpec {
         params: new LinkedHashMap<>(params)
     )
   }
+
 }
 
 /**
@@ -284,6 +289,7 @@ class LogticksAnnotationSpec extends AnnotationSpec {
   AnnotationSpec copy() {
     new LogticksAnnotationSpec(drawOrder: drawOrder, params: new LinkedHashMap<>(params))
   }
+
 }
 
 /**
@@ -318,6 +324,7 @@ class RasterAnnotationSpec extends AnnotationSpec {
         params: new LinkedHashMap<>(params)
     )
   }
+
 }
 
 /**
@@ -346,4 +353,5 @@ class MapAnnotationSpec extends AnnotationSpec {
         params: new LinkedHashMap<>(params)
     )
   }
+
 }

@@ -8,6 +8,7 @@ import groovy.transform.stc.SimpleType
  * Transformation strategy for Charm scales.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 interface ScaleTransform {
 
   /**
@@ -32,6 +33,7 @@ interface ScaleTransform {
    * @return original-space value
    */
   BigDecimal invert(BigDecimal value)
+
 }
 
 @CompileStatic
@@ -41,6 +43,7 @@ abstract class BaseScaleTransform implements ScaleTransform {
   String toString() {
     id()
   }
+
 }
 
 @CompileStatic
@@ -60,6 +63,7 @@ class Log10ScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value == null ? null : (10 ** value) as BigDecimal
   }
+
 }
 
 @CompileStatic
@@ -79,6 +83,7 @@ class SqrtScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value == null ? null : value ** 2
   }
+
 }
 
 @CompileStatic
@@ -98,6 +103,7 @@ class ReverseScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value == null ? null : -value
   }
+
 }
 
 @CompileStatic
@@ -117,6 +123,7 @@ class DateScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value
   }
+
 }
 
 @CompileStatic
@@ -136,6 +143,7 @@ class TimeScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value
   }
+
 }
 
 @CompileStatic
@@ -155,6 +163,7 @@ class DatetimeScaleTransform extends BaseScaleTransform {
   BigDecimal invert(BigDecimal value) {
     value
   }
+
 }
 
 @CompileStatic
@@ -204,6 +213,7 @@ class CustomScaleTransform extends BaseScaleTransform {
     }
     value
   }
+
 }
 
 /**
@@ -272,4 +282,5 @@ class ScaleTransforms {
                                 Closure<BigDecimal> inverse = null) {
     new CustomScaleTransform(id, forward, inverse)
   }
+
 }

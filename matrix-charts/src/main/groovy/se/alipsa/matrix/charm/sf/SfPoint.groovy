@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SfPoint {
+
   final BigDecimal x
   final BigDecimal y
 
@@ -14,4 +15,5 @@ class SfPoint {
     this.x = x
     this.y = y
   }
+
 }

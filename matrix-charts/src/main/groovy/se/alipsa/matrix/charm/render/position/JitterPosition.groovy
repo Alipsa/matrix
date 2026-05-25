@@ -11,6 +11,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Jitter position adds random noise to x/y values.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class JitterPosition {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -39,4 +40,5 @@ class JitterPosition {
     }
     result
   }
+
 }

@@ -13,6 +13,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders bar/col geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('Instanceof')
 class BarRenderer {
 
   /**
@@ -101,4 +103,5 @@ class BarRenderer {
       elementIndex++
     }
   }
+
 }

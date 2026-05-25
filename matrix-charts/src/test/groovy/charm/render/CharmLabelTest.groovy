@@ -6,10 +6,8 @@ import static se.alipsa.matrix.charm.Charts.plot
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Theme
-import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
 class CharmLabelTest {
@@ -145,4 +143,5 @@ class CharmLabelTest {
     String svgText = se.alipsa.groovy.svg.io.SvgWriter.toXml(svg)
     assertFalse(svgText.contains('Should be hidden'), 'Title with explicit null should not render')
   }
+
 }

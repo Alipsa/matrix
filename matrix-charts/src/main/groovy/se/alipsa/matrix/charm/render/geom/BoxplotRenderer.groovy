@@ -14,6 +14,12 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders boxplot geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('MethodSize')
 class BoxplotRenderer {
 
   /**
@@ -130,4 +136,5 @@ class BoxplotRenderer {
       }
     }
   }
+
 }

@@ -17,10 +17,15 @@ import java.math.RoundingMode
  * domain expansion, and explicit limits.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('NestedForLoop')
+@SuppressWarnings('UnnecessaryCast')
+@SuppressWarnings('UnnecessaryToString')
 class ContinuousCharmScale extends CharmScale {
 
   private static final BigDecimal BREAK_TOLERANCE_RATIO = 0.001
-  private static final int DEFAULT_BREAK_COUNT = 7
 
   /** Computed data domain minimum (possibly transformed). */
   BigDecimal domainMin
@@ -283,4 +288,5 @@ class ContinuousCharmScale extends CharmScale {
     }
     tick?.toString() ?: ''
   }
+
 }

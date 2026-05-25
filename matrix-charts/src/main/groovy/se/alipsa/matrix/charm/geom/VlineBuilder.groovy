@@ -86,4 +86,5 @@ class VlineBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.IDENTITY
   }
+
 }

@@ -10,7 +10,9 @@ import groovy.transform.CompileStatic
  * supported by the separate {@link Theme#legendPositionCoords} field.</p>
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 enum LegendPosition {
+
   RIGHT, LEFT, TOP, BOTTOM, NONE
 
   private static final Map<String, LegendPosition> LOOKUP = values().collectEntries {
@@ -47,4 +49,5 @@ enum LegendPosition {
     }
     value
   }
+
 }

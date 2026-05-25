@@ -14,6 +14,7 @@ import se.alipsa.matrix.charm.render.RenderContext
 class BlankRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    // Intentionally blank
+    // no-op
   }
+
 }

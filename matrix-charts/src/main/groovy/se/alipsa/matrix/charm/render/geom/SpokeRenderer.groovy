@@ -72,4 +72,5 @@ class SpokeRenderer {
       elementIndex++
     }
   }
+
 }

@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders closed polygon geometry.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class PolygonRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -66,4 +67,5 @@ class PolygonRenderer {
       elementIndex++
     }
   }
+
 }

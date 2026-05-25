@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.LegendPosition
  * Render configuration for Charm SVG output.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class RenderConfig {
 
   int width = 800
@@ -70,4 +71,5 @@ class RenderConfig {
         legendPosition: legendPosition
     )
   }
+
 }

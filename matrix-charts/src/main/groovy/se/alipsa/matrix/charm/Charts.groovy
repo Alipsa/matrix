@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.Row
  * Static DSL entry points for Charm chart specifications.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class Charts {
 
   /**
@@ -221,4 +222,5 @@ class Charts {
     }
     Matrix.builder().data(list).build()
   }
+
 }

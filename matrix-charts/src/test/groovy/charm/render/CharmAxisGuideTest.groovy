@@ -9,7 +9,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideSpec
-import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.core.Matrix
 
 class CharmAxisGuideTest {
@@ -143,4 +142,5 @@ class CharmAxisGuideTest {
     assertTrue(content.contains('translate(0,'), 'Stacked axis should be offset from primary axis')
     assertTrue(content.contains('rotate(45'), 'Stacked axis should include rotated labels')
   }
+
 }

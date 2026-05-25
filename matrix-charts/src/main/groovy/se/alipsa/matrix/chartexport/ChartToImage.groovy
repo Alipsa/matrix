@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
+@SuppressWarnings('DuplicateStringLiteral')
 class ChartToImage {
 
   /**
@@ -27,7 +28,7 @@ class ChartToImage {
    */
   static BufferedImage export(Svg svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     return SvgRenderer.toBufferedImage(svgChart)
   }
@@ -41,7 +42,7 @@ class ChartToImage {
    */
   static BufferedImage export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     return export(chart.render())
   }
@@ -55,7 +56,7 @@ class ChartToImage {
    */
   static BufferedImage export(Chart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     return export(CharmBridge.convert(chart).render())
   }
@@ -69,11 +70,11 @@ class ChartToImage {
    */
   static String base64(Svg svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart cannot be null")
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToPng.export(svgChart, baos)
-    "data:image/png;base64," + Base64.encoder.encodeToString(baos.toByteArray())
+    'data:image/png;base64,' + Base64.encoder.encodeToString(baos.toByteArray())
   }
 
   /**
@@ -85,7 +86,7 @@ class ChartToImage {
    */
   static String base64(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     base64(chart.render())
   }
@@ -99,8 +100,9 @@ class ChartToImage {
    */
   static String base64(Chart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     base64(CharmBridge.convert(chart).render())
   }
+
 }

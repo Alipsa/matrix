@@ -10,6 +10,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum CharmGeomType {
+
   POINT,
   LINE,
   BAR,
@@ -71,4 +72,5 @@ enum CharmGeomType {
    * Geometry types currently supported by the Charm renderer.
    */
   static final Set<CharmGeomType> SUPPORTED = EnumSet.allOf(CharmGeomType)
+
 }

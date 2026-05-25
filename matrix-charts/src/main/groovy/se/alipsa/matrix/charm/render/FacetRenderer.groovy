@@ -14,6 +14,15 @@ import se.alipsa.matrix.core.Matrix
  * and GRID (multi-variable rows/cols, margins, labeller).
  */
 @CompileStatic
+@SuppressWarnings('DuplicateListLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('ImplementationAsType')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('NestedForLoop')
+@SuppressWarnings('ParameterCount')
+@SuppressWarnings('UnnecessaryCast')
+@SuppressWarnings('UnnecessaryCollectCall')
 class FacetRenderer {
 
   /** Unit separator character used as composite key delimiter to avoid ambiguity with data values. */
@@ -73,8 +82,8 @@ class FacetRenderer {
     String dir = (params?.get('dir') ?: 'h') as String
 
     // Group by composite key from all vars
-    LinkedHashMap<String, List<Integer>> grouped = new LinkedHashMap<>()
-    LinkedHashMap<String, Map<String, Object>> facetValuesByKey = new LinkedHashMap<>()
+    LinkedHashMap<String, List<Integer>> grouped = [:]
+    LinkedHashMap<String, Map<String, Object>> facetValuesByKey = [:]
     for (int i = 0; i < chartData.rowCount(); i++) {
       List<String> keyParts = []
       Map<String, Object> fv = [:]
@@ -335,4 +344,5 @@ class FacetRenderer {
     panel.rowIndexes = (0..<data.rowCount()).collect { int idx -> idx }
     panel
   }
+
 }

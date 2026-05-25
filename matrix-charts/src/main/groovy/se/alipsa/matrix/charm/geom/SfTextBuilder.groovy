@@ -73,4 +73,5 @@ class SfTextBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.SF_COORDINATES
   }
+
 }

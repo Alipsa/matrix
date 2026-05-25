@@ -22,8 +22,8 @@ There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
 
 To use matrix-charts, add the following dependencies to your gradle build script
 ```groovy
-implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.1'))
-implementation 'se.alipsa.matrix-core'
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.5.0'))
+implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-charts'
 implementation 'se.alipsa.matrix:matrix-stats'
 ```

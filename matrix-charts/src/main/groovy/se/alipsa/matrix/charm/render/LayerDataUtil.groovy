@@ -43,4 +43,5 @@ class LayerDataUtil {
         meta: datum.meta != null ? new LinkedHashMap<>(datum.meta) : [:]
     )
   }
+
 }

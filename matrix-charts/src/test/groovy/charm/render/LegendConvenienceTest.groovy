@@ -124,4 +124,5 @@ class LegendConvenienceTest {
     }
     assertEquals(LegendPosition.LEFT, firstShorthandThenTheme.theme.legendPosition)
   }
+
 }

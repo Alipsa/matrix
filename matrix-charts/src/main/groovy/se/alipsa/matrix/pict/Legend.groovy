@@ -41,6 +41,9 @@ class Legend {
 
   /** Controls whether legend keys are arranged vertically or horizontally. */
   static enum Direction {
+
     VERTICAL, HORIZONTAL
+
   }
+
 }

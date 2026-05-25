@@ -168,4 +168,5 @@ class DiscreteCharmScaleTest {
     assertTrue(aPos < mPos)
     assertTrue(mPos < bPos)
   }
+
 }

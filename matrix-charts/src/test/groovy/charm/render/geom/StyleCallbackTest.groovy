@@ -16,6 +16,7 @@ import se.alipsa.matrix.core.Matrix
  * original row reference. {@code geomBar()} uses stat=COUNT which produces
  * synthetic data that does not preserve per-row metadata.</p>
  */
+@SuppressWarnings('IfStatementBraces')
 class StyleCallbackTest {
 
   @Test
@@ -181,4 +182,5 @@ class StyleCallbackTest {
     }
     count
   }
+
 }

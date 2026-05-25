@@ -15,6 +15,7 @@ import se.alipsa.matrix.core.ValueConverter
  * - width: dodge width (default 0.9)
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class DodgePosition {
 
   /**
@@ -34,7 +35,7 @@ class DodgePosition {
     BigDecimal width = params.width != null ? ValueConverter.asBigDecimal(params.width) ?: 0.9 : 0.9
 
     // Group data by x value
-    Map<Object, List<LayerData>> byX = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> byX = [:]
     data.each { LayerData datum ->
       Object key = datum.x
       List<LayerData> bucket = byX.get(key)
@@ -62,7 +63,7 @@ class DodgePosition {
       }
 
       BigDecimal groupWidth = width / nGroups
-      Map<Object, BigDecimal> groupOffsets = new LinkedHashMap<>()
+      Map<Object, BigDecimal> groupOffsets = [:]
       groups.eachWithIndex { Object group, int i ->
         BigDecimal offset = (-width / 2) + (groupWidth / 2) + (i * groupWidth)
         groupOffsets.put(group, offset)
@@ -88,4 +89,5 @@ class DodgePosition {
   private static Object resolveGroup(LayerData datum) {
     datum.group ?: datum.fill ?: datum.color
   }
+
 }

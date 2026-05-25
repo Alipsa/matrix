@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.chart
 import static se.alipsa.matrix.charm.Charts.plot
 
-import groovy.lang.GroovyShell
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
@@ -29,6 +28,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
+@SuppressWarnings('ClassSize')
 class CharmApiDesignTest {
 
   @Test
@@ -1754,5 +1754,7 @@ class CharmApiDesignTest {
       spec.addLayer(new SmoothBuilder().method('lm'))
       spec.build()
     }
+
   }
+
 }

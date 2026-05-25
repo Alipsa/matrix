@@ -86,4 +86,5 @@ class LineBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.IDENTITY
   }
+
 }

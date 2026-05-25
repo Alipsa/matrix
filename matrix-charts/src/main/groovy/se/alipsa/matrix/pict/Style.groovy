@@ -80,7 +80,9 @@ class Style {
   }
 
   static enum Position {
+
     TOP, RIGHT, BOTTOM, LEFT
+
   }
 
 }

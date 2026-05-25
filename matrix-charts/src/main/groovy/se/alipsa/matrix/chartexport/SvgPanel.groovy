@@ -12,9 +12,11 @@ import java.nio.charset.StandardCharsets
 
 import javax.swing.JPanel
 
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class SvgPanel extends JPanel {
 
-  private SVGDocument svgDocument
+  private final SVGDocument svgDocument
   private final SVGLoader loader = new SVGLoader()
 
   /**
@@ -22,7 +24,7 @@ class SvgPanel extends JPanel {
    */
   SvgPanel(String svgContent) {
     if (svgContent == null || svgContent.isEmpty()) {
-      throw new IllegalArgumentException("svgContent cannot be null or empty")
+      throw new IllegalArgumentException('svgContent cannot be null or empty')
     }
 
     ByteArrayInputStream stream = new ByteArrayInputStream(
@@ -31,7 +33,7 @@ class SvgPanel extends JPanel {
     this.svgDocument = loader.load(stream, null, LoaderContext.createDefault())
 
     if (svgDocument == null) {
-      throw new IllegalArgumentException("Failed to load SVG content: loader returned null (malformed or unsupported SVG).")
+      throw new IllegalArgumentException('Failed to load SVG content: loader returned null (malformed or unsupported SVG).')
     }
 
     setPreferredSize(new Dimension(
@@ -84,4 +86,5 @@ class SvgPanel extends JPanel {
     svgDocument.render(this, g2d, null)
     g2d.dispose()
   }
+
 }

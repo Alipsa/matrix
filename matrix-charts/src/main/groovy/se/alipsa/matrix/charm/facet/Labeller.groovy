@@ -12,6 +12,7 @@ import groovy.transform.CompileStatic
  * Based on ggplot2's labeller system.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class Labeller {
 
   /** The labelling function: Map<String, Object> -> String */
@@ -144,4 +145,5 @@ class Labeller {
   static Labeller label(Closure<String> fn) {
     new Labeller(fn)
   }
+
 }

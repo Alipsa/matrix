@@ -8,6 +8,8 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.BoxplotStat
 
+@SuppressWarnings('UnnecessaryCast')
+@SuppressWarnings('UnnecessaryGString')
 class BoxplotStatTest {
 
   @Test
@@ -60,7 +62,7 @@ class BoxplotStatTest {
     assertEquals(1, result.size())
     List<BigDecimal> outliers = result[0].meta.outliers as List<BigDecimal>
     assertNotNull(outliers)
-    assertFalse(outliers.isEmpty(), "Should detect outlier at 100")
+    assertFalse(outliers.isEmpty(), 'Should detect outlier at 100')
     assertTrue(outliers.any { (it as BigDecimal).doubleValue() == 100.0 })
   }
 
@@ -74,7 +76,7 @@ class BoxplotStatTest {
     }
     List<LayerData> result = BoxplotStat.compute(layerWide, data)
     List<BigDecimal> outliers = result[0].meta.outliers as List<BigDecimal>
-    assertTrue(outliers.isEmpty(), "Large coef should produce no outliers")
+    assertTrue(outliers.isEmpty(), 'Large coef should produce no outliers')
   }
 
   @Test
@@ -126,4 +128,5 @@ class BoxplotStatTest {
         StatSpec.of(CharmStatType.BOXPLOT, statParams)
     )
   }
+
 }

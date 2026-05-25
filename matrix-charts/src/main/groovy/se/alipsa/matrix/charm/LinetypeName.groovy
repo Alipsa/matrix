@@ -9,7 +9,9 @@ import groovy.transform.CompileStatic
  * the {@code layers {}} DSL where the constants are directly available.</p>
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 enum LinetypeName {
+
   SOLID, DASHED, DOTTED, DOTDASH, LONGDASH, TWODASH
 
   private static final Map<String, LinetypeName> LOOKUP = values().collectEntries {
@@ -45,4 +47,5 @@ enum LinetypeName {
     }
     value
   }
+
 }

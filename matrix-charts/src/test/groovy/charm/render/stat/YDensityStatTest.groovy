@@ -32,7 +32,7 @@ class YDensityStatTest {
     // For y-density used by violin, x remains group center and density is stored in meta.
     result.each { LayerData d ->
       BigDecimal density = d.meta.density as BigDecimal
-      assertTrue(density >= 0, "Density values in meta should be non-negative")
+      assertTrue(density >= 0, 'Density values in meta should be non-negative')
       assertEquals('G', d.x)
     }
   }
@@ -91,4 +91,5 @@ class YDensityStatTest {
         StatSpec.of(CharmStatType.YDENSITY, statParams)
     )
   }
+
 }

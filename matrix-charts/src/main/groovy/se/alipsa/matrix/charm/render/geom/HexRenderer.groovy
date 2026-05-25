@@ -12,6 +12,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders hexagon glyphs centered at x/y coordinates.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('UnnecessaryCast')
 class HexRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -65,4 +67,5 @@ class HexRenderer {
     path << ' Z'
     path.toString()
   }
+
 }

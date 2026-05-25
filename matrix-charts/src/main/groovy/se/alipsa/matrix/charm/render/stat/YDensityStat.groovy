@@ -62,7 +62,7 @@ class YDensityStat {
   }
 
   private static Map<Object, List<LayerData>> groupByX(List<LayerData> data) {
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> groups = [:]
     data.each { LayerData datum ->
       Object key = datum.x ?: '__all__'
       List<LayerData> bucket = groups[key]
@@ -74,4 +74,5 @@ class YDensityStat {
     }
     groups
   }
+
 }

@@ -12,6 +12,9 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders text geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class TextRenderer {
 
   /**
@@ -91,4 +94,5 @@ class TextRenderer {
     }
     'middle'
   }
+
 }

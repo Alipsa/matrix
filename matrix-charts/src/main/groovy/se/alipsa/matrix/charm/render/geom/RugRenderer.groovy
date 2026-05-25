@@ -12,6 +12,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders rug geometry as small axis ticks.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('ParameterCount')
 class RugRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData, int panelWidth, int panelHeight) {
@@ -68,4 +70,5 @@ class RugRenderer {
     }
     GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, datum)
   }
+
 }

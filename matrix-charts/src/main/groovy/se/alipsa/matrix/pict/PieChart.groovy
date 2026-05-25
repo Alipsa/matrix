@@ -62,5 +62,7 @@ class PieChart extends Chart<PieChart> {
       chart.valueSeriesNames = yCols
       chart
     }
+
   }
+
 }

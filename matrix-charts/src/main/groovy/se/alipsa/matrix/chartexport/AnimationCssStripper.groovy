@@ -41,4 +41,5 @@ final class AnimationCssStripper {
   private static boolean containsAnimationMarker(String svgXml) {
     svgXml?.contains(CHARM_ANIMATION_MARKER)
   }
+
 }

@@ -57,4 +57,5 @@ class StatSpec {
   String toString() {
     "StatSpec(${type})"
   }
+
 }

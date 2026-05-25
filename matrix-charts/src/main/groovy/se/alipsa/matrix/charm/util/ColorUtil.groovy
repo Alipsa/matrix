@@ -2,11 +2,14 @@ package se.alipsa.matrix.charm.util
 
 import java.awt.Color
 
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('Instanceof')
 class ColorUtil {
 
     static String asHexString(Color color, String defaultIfNull='none') {
         if (color == null) {
-            return defaultIfNull;
+            return defaultIfNull
         }
         final String red = pad(Integer.toHexString(color.getRed()))
         final String green = pad(Integer.toHexString(color.getGreen()))
@@ -67,6 +70,7 @@ class ColorUtil {
     }
 
     private static String pad(final String hex) {
-        return (hex.length() == 1) ? "0" + hex : hex;
+        return (hex.length() == 1) ? '0' + hex : hex
     }
+
 }

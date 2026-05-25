@@ -11,7 +11,7 @@ class GuidesSpec {
   /** Map of normalized aesthetic names to guide specs. */
   Map<String, GuideSpec> specs = [:]
 
-  GuidesSpec() {}
+  GuidesSpec() { }
 
   /**
    * Creates a guides spec from a map of aesthetic -> GuideSpec.
@@ -103,4 +103,5 @@ class GuidesSpec {
     }
     key == 'colour' ? 'color' : key
   }
+
 }

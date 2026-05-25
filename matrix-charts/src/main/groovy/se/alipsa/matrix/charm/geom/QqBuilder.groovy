@@ -86,4 +86,5 @@ class QqBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.QQ
   }
+
 }

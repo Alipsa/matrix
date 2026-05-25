@@ -97,4 +97,5 @@ class ViolinBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.YDENSITY
   }
+
 }

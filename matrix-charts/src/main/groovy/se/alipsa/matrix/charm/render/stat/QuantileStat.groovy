@@ -11,6 +11,9 @@ import se.alipsa.matrix.stats.regression.QuantileRegression
  * Quantile regression stat producing fitted lines for one or more quantiles.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('UnnecessaryCast')
 class QuantileStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -75,4 +78,5 @@ class QuantileStat {
 
     result
   }
+
 }

@@ -71,4 +71,5 @@ class SfStat {
 
     result
   }
+
 }

@@ -10,6 +10,10 @@ import se.alipsa.matrix.core.ValueConverter
  * Lightweight contour stat that groups x/y samples by z-level slices.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class ContourStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -77,4 +81,5 @@ class ContourStat {
       x1 <=> x2
     }
   }
+
 }

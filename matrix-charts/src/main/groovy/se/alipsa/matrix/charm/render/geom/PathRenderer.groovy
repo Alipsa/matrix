@@ -11,6 +11,8 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders path geometry preserving input data order.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class PathRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -68,4 +70,5 @@ class PathRenderer {
   private static String fmt(BigDecimal value) {
     value?.stripTrailingZeros()?.toPlainString() ?: '0'
   }
+
 }

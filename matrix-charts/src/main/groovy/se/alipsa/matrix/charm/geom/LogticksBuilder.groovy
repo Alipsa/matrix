@@ -87,4 +87,5 @@ class LogticksBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.IDENTITY
   }
+
 }

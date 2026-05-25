@@ -13,7 +13,7 @@ class ContinuousCharmScaleTest {
 
   private static void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual, String message = null) {
     assertNotNull(actual, message ?: "Expected $expected but got null")
-    assertTrue(expected.compareTo(actual) == 0,
+    assertEquals(expected, actual,
         message ?: "Expected $expected but got $actual")
   }
 
@@ -268,4 +268,5 @@ class ContinuousCharmScaleTest {
     BigDecimal result2 = scale.transform(1000)
     assertApproxEquals(300.0, result2)
   }
+
 }

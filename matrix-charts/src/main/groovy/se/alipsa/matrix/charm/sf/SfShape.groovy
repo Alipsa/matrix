@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SfShape {
+
   final SfType type
   final List<SfRing> rings
 
@@ -18,4 +19,5 @@ class SfShape {
   SfShape(List<SfRing> rings) {
     this(null, rings)
   }
+
 }

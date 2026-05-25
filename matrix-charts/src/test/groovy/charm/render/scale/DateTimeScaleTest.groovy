@@ -135,4 +135,5 @@ class DateTimeScaleTest {
 
     assertEquals(['06:00', '07:00', '08:00'], scale.tickLabels(10))
   }
+
 }

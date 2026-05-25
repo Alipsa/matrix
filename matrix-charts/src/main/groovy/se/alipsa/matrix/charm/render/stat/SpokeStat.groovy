@@ -50,4 +50,5 @@ class SpokeStat {
 
     result
   }
+
 }

@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
 @CompileStatic
+@SuppressWarnings('UnnecessaryObjectReferences')
 class BoxChart extends Chart<BoxChart> {
 
   static BoxChart create(String title, Matrix data, String categoryColumnName, String valueColumn) {
@@ -97,5 +98,7 @@ class BoxChart extends Chart<BoxChart> {
       applyTo(chart)
       chart
     }
+
   }
+
 }

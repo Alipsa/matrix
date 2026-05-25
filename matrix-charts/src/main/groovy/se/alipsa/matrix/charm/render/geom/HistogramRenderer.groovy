@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders histogram geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
 class HistogramRenderer {
 
   /**
@@ -81,4 +82,5 @@ class HistogramRenderer {
       elementIndex++
     }
   }
+
 }

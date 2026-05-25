@@ -43,7 +43,7 @@ class CharmCoreModelTest {
   @Test
   void testUnsupportedMappingTypeThrowsClearError() {
     PlotSpec spec = plot(Dataset.mpg())
-    CharmMappingException e = assertThrows(CharmMappingException.class) {
+    CharmMappingException e = assertThrows(CharmMappingException) {
       spec.mapping(x: 123)
     }
     assertTrue(e.message.contains("Unsupported mapping for 'x'"))
@@ -60,7 +60,7 @@ class CharmCoreModelTest {
       layers { geomPoint() }
     }
 
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       spec.build()
     }
     assertTrue(e.message.contains('missing required mappings'))
@@ -76,7 +76,7 @@ class CharmCoreModelTest {
       layers { geomPoint() }
     }
 
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       spec.build()
     }
     assertTrue(e.message.contains("Unknown column 'does_not_exist'"))
@@ -88,7 +88,7 @@ class CharmCoreModelTest {
       layers { geomPoint() }
     }
 
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       spec.build()
     }
     assertTrue(e.message.contains('missing required mappings'))
@@ -105,7 +105,7 @@ class CharmCoreModelTest {
       layers { geomPoint().inheritMapping(false) }
     }
 
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       spec.build()
     }
     assertTrue(e.message.contains('without inherited plot mappings'))
@@ -164,7 +164,7 @@ class CharmCoreModelTest {
       )
     }
 
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       spec.build()
     }
     assertTrue(e.message.contains('geom SMOOTH requires stat SMOOTH'))
@@ -198,7 +198,7 @@ class CharmCoreModelTest {
 
   @Test
   void testLayerDslPositionRejectsInvalidStringValue() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(Dataset.mpg()) {
         mapping {
           x = 'cty'
@@ -222,7 +222,7 @@ class CharmCoreModelTest {
         x = log10()
         y = reverse()
         color = datetime()
-        fill = custom('times2', { BigDecimal v -> v * 2 }, { BigDecimal v -> v / 2 })
+        fill = custom('times2', { BigDecimal v -> v * 2 }) { BigDecimal v -> v / 2 }
       }
     }
 
@@ -256,7 +256,7 @@ class CharmCoreModelTest {
 
   @Test
   void testFacetWrapGridConflictThrowsValidationError() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(Dataset.mpg()) {
         facet {
           rows = ['year']
@@ -271,7 +271,7 @@ class CharmCoreModelTest {
 
   @Test
   void testFacetGridAfterWrapConflictThrowsValidationError() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(Dataset.mpg()) {
         facet {
           wrap {
@@ -307,7 +307,7 @@ class CharmCoreModelTest {
     chart.labels.title = 'Mutated copy'
     assertEquals('Original', chart.labels.title)
 
-    assertThrows(UnsupportedOperationException.class) {
+    assertThrows(UnsupportedOperationException) {
       chart.layers << chart.layers.first()
     }
   }
@@ -349,14 +349,15 @@ class CharmCoreModelTest {
     assertEquals(2, (payload.values as List).size())
     assertEquals(2, (chart.layers.first().params.tags as Set).size())
 
-    assertThrows(UnsupportedOperationException.class) {
+    assertThrows(UnsupportedOperationException) {
       (payload.nested as Map).put('x', 1)
     }
-    assertThrows(UnsupportedOperationException.class) {
+    assertThrows(UnsupportedOperationException) {
       (payload.values as List) << 99
     }
-    assertThrows(UnsupportedOperationException.class) {
+    assertThrows(UnsupportedOperationException) {
       (chart.layers.first().params.tags as Set) << 'z'
     }
   }
+
 }

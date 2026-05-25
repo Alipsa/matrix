@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.regression.LinearRegression
 
 @CompileStatic
+@SuppressWarnings('UnnecessaryObjectReferences')
 class LineChart extends Chart<LineChart> {
 
   static LineChart create(LinearRegression model) {
@@ -65,5 +66,7 @@ class LineChart extends Chart<LineChart> {
       chart.valueSeriesNames = yCols
       chart
     }
+
   }
+
 }

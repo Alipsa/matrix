@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders contour line geometry from ordered x/y points grouped by contour level/group.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ContourRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -19,7 +20,7 @@ class ContourRenderer {
     }
 
     int elementIndex = 0
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> groups = [:]
     layerData.each { LayerData datum ->
       Object key = datum.group ?: datum.meta?.level ?: '__all__'
       List<LayerData> bucket = groups[key]
@@ -80,4 +81,5 @@ class ContourRenderer {
   private static String fmt(BigDecimal value) {
     value?.stripTrailingZeros()?.toPlainString() ?: '0'
   }
+
 }

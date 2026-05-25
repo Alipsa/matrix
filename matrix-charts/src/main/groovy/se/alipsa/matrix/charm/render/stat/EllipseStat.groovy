@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Confidence-ellipse style stat for grouped x/y data.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class EllipseStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -78,4 +79,5 @@ class EllipseStat {
 
     result
   }
+
 }

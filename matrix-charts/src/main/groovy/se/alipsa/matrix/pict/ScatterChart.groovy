@@ -55,5 +55,7 @@ class ScatterChart extends Chart<ScatterChart> {
       chart.valueSeriesNames = yCols
       chart
     }
+
   }
+
 }

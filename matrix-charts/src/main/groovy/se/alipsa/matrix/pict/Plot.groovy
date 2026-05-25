@@ -79,4 +79,5 @@ class Plot {
     Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
     ChartToImage.base64(svg)
   }
+
 }

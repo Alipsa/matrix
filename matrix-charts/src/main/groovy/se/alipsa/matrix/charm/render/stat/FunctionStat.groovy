@@ -10,6 +10,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Function stat evaluates y = f(x) over a range.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('Instanceof')
 class FunctionStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -55,4 +57,5 @@ class FunctionStat {
     }
     result
   }
+
 }

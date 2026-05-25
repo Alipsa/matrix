@@ -22,6 +22,16 @@ import java.math.RoundingMode
  * Renders cartesian axes, tick labels, and axis guide variants.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('MethodSize')
+@SuppressWarnings('NestedForLoop')
+@SuppressWarnings('ParameterCount')
+@SuppressWarnings('UnnecessaryToString')
 class AxisRenderer {
 
   private static final Logger log = Logger.getLogger(AxisRenderer)
@@ -255,7 +265,7 @@ class AxisRenderer {
     BigDecimal dMin = scale.domainMin
     BigDecimal dMax = scale.domainMax
     if (dMin == null || dMax == null) {
-      log.warn("renderAxisLogticks: domain bounds are null. Skipping log tick rendering.")
+      log.warn('renderAxisLogticks: domain bounds are null. Skipping log tick rendering.')
       return
     }
 
@@ -282,7 +292,7 @@ class AxisRenderer {
       prescaleBase = null
     }
     boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
-        (prescaleBase != null && new BigDecimal(prescaleBase.toString()).compareTo(BigDecimal.TEN) == 0)
+        (prescaleBase != null && new BigDecimal(prescaleBase.toString()) == BigDecimal.TEN)
 
     int minExp, maxExp
     if (domainIsLogSpace) {
@@ -292,7 +302,7 @@ class AxisRenderer {
     } else {
       // Domain is in data space; need positive values for log
       if (dMin <= 0 || dMax <= 0) {
-        log.warn("renderAxisLogticks: log scale requires positive domain bounds, " +
+        log.warn('renderAxisLogticks: log scale requires positive domain bounds, ' +
             "but got domainMin=${dMin}, domainMax=${dMax}. Skipping log tick rendering.")
         return
       }
@@ -482,7 +492,7 @@ class AxisRenderer {
     Map<String, Object> params = guide?.params ?: [:]
     BigDecimal labelAngle = (params.angle as BigDecimal) ?: 0
     boolean showMinorTicks = (params['minor.ticks'] ?: params.minorTicks ?: false) as boolean
-    String cap = (params.cap ?: 'none').toString()
+    String cap = (params.cap ?: 'none')
     BigDecimal start = (context.chart.coord?.params?.start as BigDecimal) ?: 0
     Integer direction = context.chart.coord?.params?.direction as Integer
     boolean clockwise = context.chart.coord?.params?.containsKey('clockwise')
@@ -603,4 +613,5 @@ class AxisRenderer {
     }
     norm
   }
+
 }

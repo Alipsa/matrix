@@ -21,7 +21,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Geoms {
 
-  private Geoms() {}
+  private Geoms() { }
 
   /**
    * Creates a new point builder.
@@ -542,4 +542,5 @@ class Geoms {
   static CustomBuilder geomCustom() {
     new CustomBuilder()
   }
+
 }

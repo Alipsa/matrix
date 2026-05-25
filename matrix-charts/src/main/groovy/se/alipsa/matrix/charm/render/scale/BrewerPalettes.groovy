@@ -6,6 +6,10 @@ import groovy.transform.CompileStatic
  * ColorBrewer palette definitions and helpers.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateListLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('UnnecessaryCast')
 class BrewerPalettes {
 
   private static final Map<String, List<String>> PALETTES = [
@@ -59,7 +63,7 @@ class BrewerPalettes {
    */
   static List<String> getPalette(String name) {
     if (name == null) {
-      return null
+      return []
     }
     PALETTES[name.toLowerCase()]
   }
@@ -142,4 +146,5 @@ class BrewerPalettes {
     }
     selected
   }
+
 }

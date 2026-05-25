@@ -7,7 +7,9 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum FacetType {
+
   NONE,
   GRID,
   WRAP
+
 }

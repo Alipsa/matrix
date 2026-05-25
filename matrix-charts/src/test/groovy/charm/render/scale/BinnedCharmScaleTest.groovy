@@ -178,4 +178,5 @@ class BinnedCharmScaleTest {
     BigDecimal above = scale.transform(35)
     assertNotNull(above)
   }
+
 }

@@ -8,6 +8,10 @@ import se.alipsa.matrix.core.Stat
 import java.math.RoundingMode
 
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('ExplicitCallToCompareToMethod')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('NestedForLoop')
 class Histogram extends Chart<Histogram> {
 
   List<? extends Number> originalData = []
@@ -31,7 +35,7 @@ class Histogram extends Chart<Histogram> {
       chart.originalData = data.column(columnName) as List<? extends Number>
       chart.ranges = createRanges(chart.originalData, bins, binDecimals)
     } else {
-      throw new IllegalArgumentException("Column must be numeric in a histogram (hint: you can Barplot a Frequency)")
+      throw new IllegalArgumentException('Column must be numeric in a histogram (hint: you can Barplot a Frequency)')
     }
     return chart
   }
@@ -56,7 +60,7 @@ class Histogram extends Chart<Histogram> {
       ranges.add(new MinMax(chunkMin, chunkMax, binDecimals))
       chunkMin = chunkMax
     }
-    Map<MinMax, Integer> dist = new LinkedHashMap<>()
+    Map<MinMax, Integer> dist = [:]
     for (MinMax group in ranges) {
       dist.put(group, 0)
     }
@@ -139,11 +143,14 @@ class Histogram extends Chart<Histogram> {
       applyTo(chart)
       chart
     }
+
   }
+
 }
 
 @CompileStatic
 class MinMax {
+
   BigDecimal minValue
   BigDecimal maxValue
 
@@ -156,4 +163,5 @@ class MinMax {
   String toString() {
     return minValue + '-' + maxValue
   }
+
 }

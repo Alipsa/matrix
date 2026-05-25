@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders area geometry.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class AreaRenderer {
 
   /**
@@ -70,4 +71,5 @@ class AreaRenderer {
       elementIndex++
     }
   }
+
 }

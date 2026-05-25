@@ -29,6 +29,11 @@ import java.util.regex.Pattern
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('MethodSize')
 class SmoothStat {
 
   private static final Pattern POLY_PATTERN = Pattern.compile(/poly\s*\(\s*(\w+)\s*,\s*(\d+)\s*\)/)
@@ -193,4 +198,5 @@ class SmoothStat {
     }
     (low + high) / 2.0
   }
+
 }

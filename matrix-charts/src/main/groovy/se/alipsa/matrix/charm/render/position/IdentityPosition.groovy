@@ -22,4 +22,5 @@ class IdentityPosition {
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     data
   }
+
 }

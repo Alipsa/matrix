@@ -10,6 +10,10 @@ import se.alipsa.matrix.core.ValueConverter
  * Approximate 2D density stat by binning points and assigning level groups.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class Density2DStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -111,4 +115,5 @@ class Density2DStat {
       x1 <=> x2
     }
   }
+
 }

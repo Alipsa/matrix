@@ -24,7 +24,7 @@ class ErrorMessageTest {
 
   @Test
   void testUnknownColumnIncludesDidYouMeanSuggestion() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(sampleData()) {
         mapping {
           x = 'city'
@@ -40,7 +40,7 @@ class ErrorMessageTest {
 
   @Test
   void testColorLiteralInMappingIncludesHint() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(sampleData()) {
         mapping {
           x = 'cty'
@@ -57,7 +57,7 @@ class ErrorMessageTest {
 
   @Test
   void testMissingYMappingIncludesPointLineHint() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
+    CharmValidationException e = assertThrows(CharmValidationException) {
       plot(sampleData()) {
         mapping { x = 'cty' }
         layers { geomPoint() }

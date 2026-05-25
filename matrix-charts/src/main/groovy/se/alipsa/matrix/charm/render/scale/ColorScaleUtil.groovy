@@ -6,6 +6,9 @@ import groovy.transform.CompileStatic
  * Utilities for color scale interpolation.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateListLiteral')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class ColorScaleUtil {
 
   /**
@@ -84,4 +87,5 @@ class ColorScaleUtil {
       'olive': [128, 128, 0] as int[],
       'teal': [0, 128, 128] as int[]
   ]
+
 }

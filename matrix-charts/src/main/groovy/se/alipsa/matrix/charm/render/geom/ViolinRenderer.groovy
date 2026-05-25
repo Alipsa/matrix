@@ -13,6 +13,9 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders violin geometry from y-density stat output.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('Instanceof')
 class ViolinRenderer {
 
   /**
@@ -40,7 +43,7 @@ class ViolinRenderer {
       baseHalfWidth = ValueConverter.asBigDecimal(layer.params.width) ?: 20
     }
 
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> groups = [:]
     layerData.each { LayerData datum ->
       Object key = datum.meta.centerX ?: datum.x
       List<LayerData> bucket = groups[key]
@@ -110,4 +113,5 @@ class ViolinRenderer {
       elementIndex++
     }
   }
+
 }

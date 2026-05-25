@@ -74,4 +74,5 @@ class CharmParityCorpusTest {
       assertTrue(fixtureRows.first().size() > 0, "fixture '${resourcePath}' must contain at least one column")
     }
   }
+
 }

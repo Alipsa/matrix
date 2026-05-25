@@ -14,4 +14,5 @@ class SfCoord {
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
     FixedCoord.compute(coordSpec, data)
   }
+
 }

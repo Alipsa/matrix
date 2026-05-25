@@ -13,6 +13,10 @@ import se.alipsa.matrix.core.ValueConverter
  */
 @Deprecated
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('ImplementationAsType')
+@SuppressWarnings('ParameterCount')
 class ScaleModel {
 
   private static final List<String> DEFAULT_COLORS = [
@@ -222,4 +226,5 @@ class ScaleModel {
   private static BigDecimal toBigDecimal(Number value) {
     value == null ? 0.0 : (value as BigDecimal)
   }
+
 }

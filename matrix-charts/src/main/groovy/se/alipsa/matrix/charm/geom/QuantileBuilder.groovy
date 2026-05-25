@@ -86,4 +86,5 @@ class QuantileBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.QUANTILE
   }
+
 }

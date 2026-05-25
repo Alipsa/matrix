@@ -14,6 +14,7 @@ import se.alipsa.matrix.pict.Chart
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
+@SuppressWarnings('DuplicateStringLiteral')
 class ChartToJpeg {
 
   /**
@@ -26,10 +27,10 @@ class ChartToJpeg {
    */
   static void export(Svg svgChart, File targetFile, BigDecimal quality = 1.0) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     SvgRenderer.toJpeg(stripAnimationCss(svgChart), targetFile, [quality: quality])
   }
@@ -44,10 +45,10 @@ class ChartToJpeg {
    */
   static void export(CharmChart chart, File targetFile, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     Svg rendered = chart.render()
     if (!hasActiveAnimation(chart)) {
@@ -67,10 +68,10 @@ class ChartToJpeg {
    */
   static void export(Chart chart, File targetFile, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     CharmChart converted = CharmBridge.convert(chart)
     export(converted, targetFile, quality)
@@ -86,10 +87,10 @@ class ChartToJpeg {
    */
   static void export(Svg svgChart, OutputStream os, BigDecimal quality = 1.0) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     SvgRenderer.toJpeg(stripAnimationCss(svgChart), os, [quality: quality])
   }
@@ -104,10 +105,10 @@ class ChartToJpeg {
    */
   static void export(CharmChart chart, OutputStream os, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     Svg rendered = chart.render()
     if (!hasActiveAnimation(chart)) {
@@ -127,10 +128,10 @@ class ChartToJpeg {
    */
   static void export(Chart chart, OutputStream os, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     CharmChart converted = CharmBridge.convert(chart)
     export(converted, os, quality)
@@ -147,4 +148,5 @@ class ChartToJpeg {
   private static boolean hasActiveAnimation(CharmChart chart) {
     chart.animation?.isActive() ?: false
   }
+
 }

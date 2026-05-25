@@ -159,7 +159,7 @@ class P0GeomRendererTest {
         .split('_')
         .collect { it.toLowerCase().capitalize() }
         .join('') + 'Builder'
-    Class.forName("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
+    getClass().classLoader.loadClass("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
   }
 
   private static int countClass(Svg svg, String className) {
@@ -205,4 +205,5 @@ class P0GeomRendererTest {
     }
     raw
   }
+
 }

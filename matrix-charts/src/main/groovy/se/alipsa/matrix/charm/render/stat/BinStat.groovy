@@ -19,6 +19,7 @@ import se.alipsa.matrix.core.ValueConverter
  * </ul>
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class BinStat {
 
   /**
@@ -102,4 +103,5 @@ class BinStat {
     }
     result
   }
+
 }

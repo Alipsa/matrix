@@ -10,6 +10,9 @@ import groovy.transform.CompileStatic
  * and margin properties.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateListLiteral')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class ElementText {
 
   /** Font family (e.g., 'sans-serif', 'serif', 'monospace') */
@@ -39,7 +42,7 @@ class ElementText {
   /** Margin [top, right, bottom, left] in pixels */
   List<Number> margin = [0, 0, 0, 0]
 
-  ElementText() {}
+  ElementText() { }
 
   /**
    * Creates an ElementText from a map of properties.
@@ -74,4 +77,5 @@ class ElementText {
         margin: margin != null ? new ArrayList<>(margin) : [0, 0, 0, 0]
     )
   }
+
 }

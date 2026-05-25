@@ -12,6 +12,7 @@ import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementRect
 import se.alipsa.matrix.charm.theme.ElementText
 
+@SuppressWarnings('UnnecessaryObjectReferences')
 class CharmThemeElementTest {
 
   @Test
@@ -94,7 +95,7 @@ class CharmThemeElementTest {
     override.plotBackground = new ElementRect(fill: '#ff0000')
     override.legendPosition = LegendPosition.BOTTOM
 
-    Theme merged = base.plus(override)
+    Theme merged = base + (override)
     assertEquals('#ff0000', merged.plotBackground.fill)
     assertEquals(LegendPosition.BOTTOM, merged.legendPosition)
     // Base values preserved where not overridden
@@ -110,7 +111,7 @@ class CharmThemeElementTest {
     override.panelGridMajor = null
     override.explicitNulls.add('panelGridMajor')
 
-    Theme merged = base.plus(override)
+    Theme merged = base + (override)
     assertNull(merged.panelGridMajor)
     assertTrue(merged.explicitNulls.contains('panelGridMajor'))
   }
@@ -203,4 +204,5 @@ class CharmThemeElementTest {
     assertEquals('#654321', line.color)
     assertEquals(3, line.size)
   }
+
 }

@@ -48,4 +48,5 @@ class CountStat {
     }
     result
   }
+
 }

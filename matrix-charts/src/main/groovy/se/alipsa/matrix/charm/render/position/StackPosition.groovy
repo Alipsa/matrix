@@ -34,7 +34,7 @@ class StackPosition {
     boolean reverse = params.reverse as boolean ?: false
 
     // Group data by x value, preserving insertion order
-    Map<Object, List<LayerData>> byX = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> byX = [:]
     data.each { LayerData datum ->
       Object key = datum.x
       List<LayerData> bucket = byX.get(key)
@@ -65,4 +65,5 @@ class StackPosition {
 
     result
   }
+
 }

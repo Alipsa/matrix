@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum CharmCoordType {
+
   CARTESIAN,
   POLAR,
   FLIP,
@@ -18,4 +19,5 @@ enum CharmCoordType {
   MAP,
   QUICKMAP,
   SF
+
 }

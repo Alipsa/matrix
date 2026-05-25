@@ -108,4 +108,5 @@ class DensityBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.DENSITY
   }
+
 }

@@ -74,4 +74,5 @@ class Bin2dBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.BIN2D
   }
+
 }

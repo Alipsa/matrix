@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.position.StackPosition
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class StackPositionTest {
 
   @Test
@@ -157,4 +158,5 @@ class StackPositionTest {
         params
     )
   }
+
 }

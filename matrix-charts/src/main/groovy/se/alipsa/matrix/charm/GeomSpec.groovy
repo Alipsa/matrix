@@ -83,4 +83,5 @@ class GeomSpec {
   String toString() {
     "GeomSpec(${type})"
   }
+
 }

@@ -9,12 +9,14 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.core.Matrix
 
-import java.util.Locale
-
 /**
  * Mutable root plot specification that compiles into an immutable {@link Chart}.
  */
 @CompileStatic
+@SuppressWarnings('ClassSize')
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('UnnecessaryCast')
+@SuppressWarnings('UnnecessaryCollectCall')
 class PlotSpec {
 
   private static final LevenshteinDistance COLUMN_DISTANCE = LevenshteinDistance.getDefaultInstance()
@@ -57,14 +59,14 @@ class PlotSpec {
   ]
 
   private final Matrix data
-  private MappingSpec mapping = new MappingSpec()
+  private final MappingSpec mapping = new MappingSpec()
   private final List<LayerSpec> layers = []
-  private ScaleSpec scale = new ScaleSpec()
-  private ThemeSpec theme = new ThemeSpec()
-  private FacetSpec facet = new FacetSpec()
-  private CoordSpec coord = new CoordSpec()
-  private LabelsSpec labels = new LabelsSpec()
-  private GuidesSpec guides = new GuidesSpec()
+  private final ScaleSpec scale = new ScaleSpec()
+  private final ThemeSpec theme = new ThemeSpec()
+  private final FacetSpec facet = new FacetSpec()
+  private final CoordSpec coord = new CoordSpec()
+  private final LabelsSpec labels = new LabelsSpec()
+  private final GuidesSpec guides = new GuidesSpec()
   private AnimationSpec animation
   private final List<AnnotationSpec> annotations = []
 
@@ -596,6 +598,7 @@ class PlotSpec {
 
   @CompileStatic
   private static final class ColumnSuggestion {
+
     final String name
     final int distance
 
@@ -603,8 +606,8 @@ class PlotSpec {
       this.name = name
       this.distance = distance == null ? Integer.MAX_VALUE : distance
     }
-  }
 
+  }
 
   /**
    * Scale DSL delegate.
@@ -824,6 +827,7 @@ class PlotSpec {
       }
       throw new CharmValidationException("Unsupported scale value for '${axis}': ${value.getClass().name}")
     }
+
   }
 
   /**
@@ -1056,6 +1060,7 @@ class PlotSpec {
           size: theme.panelGridMinor?.size ?: 1
       )
     }
+
   }
 
   /**
@@ -1178,14 +1183,18 @@ class PlotSpec {
 
     /**
      * Delegate used for {@code wrap {}} configuration.
+
      */
     @CompileStatic
     static class WrapDsl {
+
       List vars = []
       Integer ncol
       Integer nrow
       Object labeller
+
     }
+
   }
 
   /**
@@ -1362,5 +1371,7 @@ class PlotSpec {
       spec.drawOrder = drawOrder
       target << spec
     }
+
   }
+
 }

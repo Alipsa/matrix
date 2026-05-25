@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.Matrix
  * Lightweight row access helpers for LayerData metadata.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class LayerDataRowAccess {
 
   private LayerDataRowAccess() {
@@ -82,4 +83,5 @@ class LayerDataRowAccess {
     }
     datum?.rowIndex
   }
+
 }

@@ -96,4 +96,5 @@ class HistogramBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.BIN
   }
+
 }

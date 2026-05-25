@@ -9,6 +9,8 @@ import se.alipsa.matrix.charm.render.LayerData
  * Q-Q reference line stat.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class QqLineStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
@@ -59,4 +61,5 @@ class QqLineStat {
 
     result
   }
+
 }

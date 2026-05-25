@@ -8,6 +8,9 @@ import se.alipsa.matrix.core.Matrix
  * Shared constants and utility methods for annotation implementations.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('UnnecessaryCast')
 class AnnotationConstants {
 
   /**
@@ -93,4 +96,5 @@ class AnnotationConstants {
     }
     value.abs() >= INFINITY_MARKER
   }
+
 }

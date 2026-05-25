@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ChartToSvg {
 
   /**
@@ -37,10 +38,10 @@ class ChartToSvg {
    */
   static void export(Chart chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     writeSvg(CharmBridge.convert(chart).render(), targetFile)
   }
@@ -55,10 +56,10 @@ class ChartToSvg {
    */
   static void export(CharmChart chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     writeSvg(chart.render(), targetFile)
   }
@@ -74,10 +75,10 @@ class ChartToSvg {
    */
   static void export(Chart chart, OutputStream os) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     writeSvg(CharmBridge.convert(chart).render(), os)
   }
@@ -93,10 +94,10 @@ class ChartToSvg {
    */
   static void export(CharmChart chart, OutputStream os) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
-      throw new IllegalArgumentException("outputStream cannot be null")
+      throw new IllegalArgumentException('outputStream cannot be null')
     }
     writeSvg(chart.render(), os)
   }
@@ -112,10 +113,10 @@ class ChartToSvg {
    */
   static void export(Chart chart, Writer writer) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (writer == null) {
-      throw new IllegalArgumentException("writer cannot be null")
+      throw new IllegalArgumentException('writer cannot be null')
     }
     writeSvg(CharmBridge.convert(chart).render(), writer)
   }
@@ -131,10 +132,10 @@ class ChartToSvg {
    */
   static void export(CharmChart chart, Writer writer) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (writer == null) {
-      throw new IllegalArgumentException("writer cannot be null")
+      throw new IllegalArgumentException('writer cannot be null')
     }
     writeSvg(chart.render(), writer)
   }
@@ -156,4 +157,5 @@ class ChartToSvg {
     writer.write(svg.toXml())
     writer.flush()
   }
+
 }

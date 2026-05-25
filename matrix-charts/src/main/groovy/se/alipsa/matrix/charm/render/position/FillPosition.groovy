@@ -32,7 +32,7 @@ class FillPosition {
     List<LayerData> stacked = StackPosition.compute(layer, data)
 
     // Find max ymax per x group
-    Map<Object, BigDecimal> maxByX = new LinkedHashMap<>()
+    Map<Object, BigDecimal> maxByX = [:]
     stacked.each { LayerData datum ->
       Object xVal = datum.x
       BigDecimal ymax = datum.ymax as BigDecimal
@@ -62,4 +62,5 @@ class FillPosition {
 
     result
   }
+
 }

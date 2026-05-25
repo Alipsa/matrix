@@ -172,7 +172,7 @@ class PlotCompatibilityTest {
   @Test
   void testJfxReturnsJavafxNode() {
     Assumptions.assumeTrue(
-        System.getenv('DISPLAY') != null || Boolean.getBoolean('headless'),
+        System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
         'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
     )
     Matrix data = sampleData()
@@ -191,4 +191,5 @@ class PlotCompatibilityTest {
       assertEquals(PNG_HEADER[i], header[i], "PNG header byte ${i} should match")
     }
   }
+
 }

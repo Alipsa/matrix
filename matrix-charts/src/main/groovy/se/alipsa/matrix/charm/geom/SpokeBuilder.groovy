@@ -86,4 +86,5 @@ class SpokeBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.SPOKE
   }
+
 }

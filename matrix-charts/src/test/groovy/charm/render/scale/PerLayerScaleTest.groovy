@@ -17,8 +17,6 @@ import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.core.Matrix
 
-import java.util.Locale
-
 /**
  * Tests for per-layer scale overrides in Charm.
  */
@@ -287,4 +285,5 @@ class PerLayerScaleTest {
     String normalized = color.toLowerCase(Locale.ROOT)
     assertTrue(content.contains(normalized), "Expected rendered svg to contain color ${color}")
   }
+
 }

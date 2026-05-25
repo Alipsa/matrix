@@ -9,11 +9,10 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideSpec
-import se.alipsa.matrix.charm.GuideType
-import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.core.Matrix
 
+@SuppressWarnings('UnnecessaryCast')
 class CharmCustomGuideTest {
 
   @Test
@@ -33,10 +32,10 @@ class CharmCustomGuideTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
     }
-    spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
+    spec.guides.setSpec('custom', GuideSpec.custom { ctx ->
       closureCalled = true
       receivedContext = ctx
-    }))
+    })
     Chart built = spec.build()
 
     Svg svg = built.render()
@@ -65,9 +64,9 @@ class CharmCustomGuideTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
     }
-    spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
-      throw new RuntimeException("Test error")
-    }))
+    spec.guides.setSpec('custom', GuideSpec.custom { ctx ->
+      throw new IllegalStateException('Test error')
+    })
     Chart built = spec.build()
 
     // Should not throw - error is caught and rendered as placeholder
@@ -100,4 +99,5 @@ class CharmCustomGuideTest {
     assertTrue(content.contains('My Custom Guide'), 'Custom guide title should be rendered')
     assertTrue(content.contains('id="custom-guide-custom"'), 'Custom guide group should have id')
   }
+
 }

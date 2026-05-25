@@ -21,6 +21,8 @@ import se.alipsa.matrix.gg.GgChart
  * Shared rendering and assertion helpers for charm/gg parity tests.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
+@SuppressWarnings('UnnecessaryCollectCall')
 class CharmRenderTestUtil {
 
   private static final Map<String, Class<?>> PRIMITIVE_TYPES = [
@@ -191,7 +193,7 @@ class CharmRenderTestUtil {
    * @return parsed rows as list of string lists
    */
   static List<List<String>> loadSimpleCsvResource(String resourcePath) {
-    InputStream in = CharmRenderTestUtil.class.classLoader.getResourceAsStream(resourcePath)
+    InputStream in = CharmRenderTestUtil.classLoader.getResourceAsStream(resourcePath)
     if (in == null) {
       throw new IllegalArgumentException("Resource not found: ${resourcePath}")
     }
@@ -218,4 +220,5 @@ class CharmRenderTestUtil {
     List elements = svg.descendants()
     elements.count { Object e -> elementType.isInstance(e) } as int
   }
+
 }

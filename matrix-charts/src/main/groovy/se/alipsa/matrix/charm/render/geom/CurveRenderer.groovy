@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders curved segments using cubic Bezier paths.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class CurveRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -83,4 +84,5 @@ class CurveRenderer {
 
     [cx1, cy1, cx2, cy2]
   }
+
 }

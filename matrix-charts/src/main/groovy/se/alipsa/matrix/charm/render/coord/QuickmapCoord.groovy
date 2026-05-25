@@ -50,4 +50,5 @@ class QuickmapCoord {
     copy.ylim = null
     copy
   }
+
 }

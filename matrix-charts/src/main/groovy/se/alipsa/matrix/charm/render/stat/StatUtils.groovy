@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.ValueConverter
  * Shared helpers for Charm stat computations.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class StatUtils {
 
   private StatUtils() {
@@ -16,7 +17,7 @@ class StatUtils {
   }
 
   static Map<Object, List<LayerData>> groupBySeries(List<LayerData> data) {
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> groups = [:]
     data.each { LayerData datum ->
       Object key = seriesKey(datum)
       List<LayerData> bucket = groups[key]
@@ -105,4 +106,5 @@ class StatUtils {
 
     value as BigDecimal
   }
+
 }

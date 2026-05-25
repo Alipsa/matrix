@@ -18,4 +18,5 @@ class BinHexStat {
     }
     binned
   }
+
 }

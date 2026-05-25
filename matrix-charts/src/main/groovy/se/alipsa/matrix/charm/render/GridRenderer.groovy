@@ -14,6 +14,10 @@ import se.alipsa.matrix.charm.theme.ElementLine
  * Renders major grid lines.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class GridRenderer {
 
   /**
@@ -172,4 +176,5 @@ class GridRenderer {
     }
     norm
   }
+
 }

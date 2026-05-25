@@ -4,11 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
-
-import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
 
@@ -19,7 +16,6 @@ import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
-import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.ColumnExpr
 import se.alipsa.matrix.charm.ColumnRef
@@ -54,6 +50,7 @@ import se.alipsa.matrix.gg.aes.Identity
 /**
  * Phase 2 tests for expanded Charm model types.
  */
+@SuppressWarnings('UnnecessaryObjectReferences')
 class CharmModelExpansionTest {
 
   @Test
@@ -467,4 +464,5 @@ class CharmModelExpansionTest {
     assertTrue(mappings.containsKey('weight'))
     assertEquals(4, mappings.size())
   }
+
 }

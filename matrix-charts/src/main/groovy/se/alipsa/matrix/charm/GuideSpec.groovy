@@ -87,7 +87,7 @@ class GuideSpec {
    * @return copy
    */
   GuideSpec copy() {
-    Map<String, Object> copiedParams = new LinkedHashMap<>()
+    Map<String, Object> copiedParams = [:]
     params.each { String key, Object value ->
       copiedParams.put(key, deepCopy(value))
     }
@@ -115,4 +115,5 @@ class GuideSpec {
     }
     return value
   }
+
 }

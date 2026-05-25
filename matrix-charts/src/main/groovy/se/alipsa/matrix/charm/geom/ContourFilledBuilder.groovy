@@ -96,4 +96,5 @@ class ContourFilledBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.CONTOUR
   }
+
 }

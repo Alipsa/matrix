@@ -84,4 +84,5 @@ class SfLabelBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.SF_COORDINATES
   }
+
 }

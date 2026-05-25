@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders ribbon geometry from ymin/ymax bounds across x.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class RibbonRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -67,4 +68,5 @@ class RibbonRenderer {
       elementIndex++
     }
   }
+
 }

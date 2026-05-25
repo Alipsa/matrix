@@ -87,4 +87,5 @@ class AreaBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.ALIGN
   }
+
 }

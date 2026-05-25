@@ -19,6 +19,7 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
  * not on LayerData.
  */
 @CompileStatic
+@SuppressWarnings('UnnecessaryObjectReferences')
 class FlipCoord {
 
   /**
@@ -51,4 +52,5 @@ class FlipCoord {
     // Apply optional limits after flip so xlim/ylim operate in flipped space.
     CartesianCoord.compute(coordSpec, result)
   }
+
 }

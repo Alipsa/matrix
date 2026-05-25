@@ -86,4 +86,5 @@ class FunctionBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.FUNCTION
   }
+
 }

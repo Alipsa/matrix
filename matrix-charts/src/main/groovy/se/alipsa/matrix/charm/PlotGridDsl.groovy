@@ -146,4 +146,5 @@ class PlotGridDsl {
   PlotGrid build() {
     new PlotGrid(charts, ncol, nrow, widths, heights, title, spacing)
   }
+
 }

@@ -13,6 +13,10 @@ import se.alipsa.matrix.charm.theme.ElementText
  * for plot, panel, axis, legend, strip, and text styling.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('Instanceof')
+@SuppressWarnings('UnnecessaryObjectReferences')
 class Theme {
 
   // ============ Plot-level elements ============
@@ -286,4 +290,5 @@ class Theme {
     }
     value
   }
+
 }

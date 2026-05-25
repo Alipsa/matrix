@@ -33,6 +33,7 @@ import java.awt.Font
  * Integration tests verifying that each legacy chart type converts
  * through CharmBridge and renders valid SVG output.
  */
+@SuppressWarnings('UnnecessaryCast')
 class ChartsCharmIntegrationTest {
 
   @Test
@@ -279,8 +280,8 @@ class ChartsCharmIntegrationTest {
         .build()
 
     BarChart chart = BarChart.createVertical('Styled', data, 'x', ChartType.BASIC, 'y')
-    chart.style.plotBackgroundColor = new java.awt.Color(240, 240, 240)
-    chart.style.chartBackgroundColor = new java.awt.Color(255, 255, 255)
+    chart.style.plotBackgroundColor = new Color(240, 240, 240)
+    chart.style.chartBackgroundColor = new Color(255, 255, 255)
     chart.legend = new Legend(visible: false)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
@@ -549,4 +550,5 @@ class ChartsCharmIntegrationTest {
     Svg svg = charmChart.render()
     assertNotNull(svg)
   }
+
 }

@@ -28,6 +28,7 @@ import se.alipsa.matrix.core.Matrix
  * }</pre>
  */
 @CompileStatic
+@SuppressWarnings('UnnecessaryObjectReferences')
 class BubbleChart extends Chart<BubbleChart> {
 
   /** Size values — one per data point, mapped to point radius. */
@@ -122,16 +123,16 @@ class BubbleChart extends Chart<BubbleChart> {
      */
     BubbleChart build() {
       if (xCol == null) {
-        throw new IllegalStateException("x(...) must be called before build() to specify the x-axis column")
+        throw new IllegalStateException('x(...) must be called before build() to specify the x-axis column')
       }
       if (yCols == null || yCols.isEmpty()) {
-        throw new IllegalStateException("y(...) must be called before build() to specify exactly one y-axis column")
+        throw new IllegalStateException('y(...) must be called before build() to specify exactly one y-axis column')
       }
       if (yCols.size() != 1) {
         throw new IllegalStateException("BubbleChart requires exactly one y-axis column, but got ${yCols.size()}")
       }
       if (sizeCol == null) {
-        throw new IllegalStateException("size(...) must be called before build() to specify the bubble size column")
+        throw new IllegalStateException('size(...) must be called before build() to specify the bubble size column')
       }
       String yCol = yCols[0]
       BubbleChart chart = groupCol
@@ -140,5 +141,7 @@ class BubbleChart extends Chart<BubbleChart> {
       applyTo(chart)
       chart
     }
+
   }
+
 }

@@ -40,4 +40,5 @@ class NudgePosition {
     }
     result
   }
+
 }

@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class SfGeometry {
+
   final SfType type
   final List<SfShape> shapes
   final Integer srid
@@ -18,4 +19,5 @@ class SfGeometry {
     this.srid = srid
     this.empty = empty
   }
+
 }

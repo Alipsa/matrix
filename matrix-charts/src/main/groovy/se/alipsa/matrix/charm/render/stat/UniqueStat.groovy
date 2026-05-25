@@ -28,4 +28,5 @@ class UniqueStat {
     }
     result
   }
+
 }

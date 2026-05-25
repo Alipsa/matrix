@@ -14,6 +14,8 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.core.Matrix
 
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('UnnecessaryCollectCall')
 class PlotGridTest {
 
   @Test
@@ -228,4 +230,5 @@ class PlotGridTest {
     }
     result
   }
+
 }

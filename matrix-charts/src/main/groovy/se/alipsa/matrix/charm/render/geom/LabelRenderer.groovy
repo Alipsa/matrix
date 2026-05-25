@@ -12,6 +12,10 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders text labels with background rectangles.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('DuplicateStringLiteral')
 class LabelRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -83,4 +87,5 @@ class LabelRenderer {
       elementIndex = nextElementIndex
     }
   }
+
 }

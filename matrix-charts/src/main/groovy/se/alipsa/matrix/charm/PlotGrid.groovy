@@ -168,4 +168,5 @@ class PlotGrid {
       throw new CharmRenderException("Failed to render PlotGrid at ${width}x${height}px", e)
     }
   }
+
 }

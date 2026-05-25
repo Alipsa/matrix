@@ -13,6 +13,8 @@ import groovy.transform.CompileStatic
  * {@link LayerParams#propertyMissing(String, Object) propertyMissing}.</p>
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings('Instanceof')
 class LayerDsl extends LayerParams {
 
   /** Point/line size. */
@@ -177,4 +179,5 @@ class LayerDsl extends LayerParams {
   Object propertyMissing(String name) {
     super.propertyMissing(name)
   }
+
 }

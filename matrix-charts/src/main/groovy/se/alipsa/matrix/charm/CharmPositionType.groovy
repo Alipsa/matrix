@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 enum CharmPositionType {
+
   IDENTITY,
   DODGE,
   DODGE2,
@@ -16,4 +17,5 @@ enum CharmPositionType {
   FILL,
   JITTER,
   NUDGE
+
 }

@@ -11,6 +11,8 @@ import se.alipsa.matrix.charm.render.RenderContext
  * Renders kernel density geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
 class DensityRenderer {
 
   /**
@@ -84,4 +86,5 @@ class DensityRenderer {
       }
     }
   }
+
 }

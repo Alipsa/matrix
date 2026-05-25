@@ -17,6 +17,9 @@ import se.alipsa.matrix.core.ValueConverter
  * so clamped values can influence trained scale domains.
  */
 @CompileStatic
+@SuppressWarnings('CyclomaticComplexity')
+@SuppressWarnings('DuplicateNumberLiteral')
+@SuppressWarnings('IfStatementBraces')
 class CartesianCoord {
 
   /**
@@ -73,4 +76,5 @@ class CartesianCoord {
 
     result
   }
+
 }

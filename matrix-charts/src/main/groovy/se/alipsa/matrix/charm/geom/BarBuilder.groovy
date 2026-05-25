@@ -86,4 +86,5 @@ class BarBuilder extends LayerBuilder {
   protected CharmStatType defaultStatType() {
     CharmStatType.COUNT
   }
+
 }

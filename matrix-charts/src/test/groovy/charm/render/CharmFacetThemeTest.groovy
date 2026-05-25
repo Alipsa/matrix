@@ -265,4 +265,5 @@ class CharmFacetThemeTest {
     assertTrue(svgText.contains('#FF6600'), 'Custom strip background color should be in SVG')
     assertTrue(svgText.contains('monospace'), 'Custom strip font family should be in SVG')
   }
+
 }

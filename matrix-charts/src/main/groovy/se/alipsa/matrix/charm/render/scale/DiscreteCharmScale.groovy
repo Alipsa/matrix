@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * Each level is centered within its band.
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class DiscreteCharmScale extends CharmScale {
 
   /** Ordered list of discrete levels. */
@@ -84,4 +85,5 @@ class DiscreteCharmScale extends CharmScale {
       value?.toString()
     } as List<String>
   }
+
 }

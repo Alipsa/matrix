@@ -12,6 +12,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders line geometry.
  */
 @CompileStatic
+@SuppressWarnings('AbcMetric')
+@SuppressWarnings('DuplicateNumberLiteral')
 class LineRenderer {
 
   /**
@@ -63,4 +65,5 @@ class LineRenderer {
       }
     }
   }
+
 }

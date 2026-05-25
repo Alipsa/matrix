@@ -16,6 +16,7 @@ import se.alipsa.matrix.pict.Chart
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
+@SuppressWarnings('DuplicateStringLiteral')
 class ChartToJfx {
 
   /**
@@ -27,7 +28,7 @@ class ChartToJfx {
    */
   static SVGImage export(String svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
+      throw new IllegalArgumentException('svgChart must not be null')
     }
     SVGLoader.load(svgChart)
   }
@@ -41,7 +42,7 @@ class ChartToJfx {
    */
   static SVGImage export(Svg chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     SVGLoader.load(chart.toXml())
   }
@@ -56,7 +57,7 @@ class ChartToJfx {
    */
   static SVGImage export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+      throw new IllegalArgumentException('chart must not be null')
     }
     export(chart.render())
   }
@@ -70,8 +71,9 @@ class ChartToJfx {
    */
   static SVGImage export(Chart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
+      throw new IllegalArgumentException('chart cannot be null')
     }
     export(CharmBridge.convert(chart).render())
   }
+
 }

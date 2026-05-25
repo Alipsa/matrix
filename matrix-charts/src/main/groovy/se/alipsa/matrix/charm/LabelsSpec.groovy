@@ -57,4 +57,5 @@ class LabelsSpec extends Labels {
         guides: new LinkedHashMap<>(guides)
     )
   }
+
 }

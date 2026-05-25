@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.*
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.SmoothStat
 
+@SuppressWarnings('UnnecessaryGString')
 class SmoothStatTest {
 
   @Test
@@ -24,7 +25,7 @@ class SmoothStatTest {
     result.each { LayerData d ->
       double fitted = (d.y as BigDecimal).doubleValue()
       double expected = (d.x as BigDecimal).doubleValue() * 2
-      assertEquals(expected, fitted, 0.1, "Fitted value should match y=2x")
+      assertEquals(expected, fitted, 0.1, 'Fitted value should match y=2x')
     }
   }
 
@@ -37,8 +38,8 @@ class SmoothStatTest {
     List<LayerData> result = SmoothStat.compute(layer, data)
     assertFalse(result.isEmpty())
     result.each { LayerData d ->
-      assertNotNull(d.meta.ymin, "ymin should be set when se=true")
-      assertNotNull(d.meta.ymax, "ymax should be set when se=true")
+      assertNotNull(d.meta.ymin, 'ymin should be set when se=true')
+      assertNotNull(d.meta.ymax, 'ymax should be set when se=true')
       BigDecimal ymin = d.meta.ymin as BigDecimal
       BigDecimal ymax = d.meta.ymax as BigDecimal
       BigDecimal yFit = d.y as BigDecimal
@@ -55,8 +56,8 @@ class SmoothStatTest {
     }
     List<LayerData> result = SmoothStat.compute(layer, data)
     result.each { LayerData d ->
-      assertNull(d.meta.ymin, "ymin should not be set when se=false")
-      assertNull(d.meta.ymax, "ymax should not be set when se=false")
+      assertNull(d.meta.ymin, 'ymin should not be set when se=false')
+      assertNull(d.meta.ymax, 'ymax should not be set when se=false')
     }
   }
 
@@ -75,7 +76,7 @@ class SmoothStatTest {
       double x = (d.x as BigDecimal).doubleValue()
       double fitted = (d.y as BigDecimal).doubleValue()
       double expected = x * x
-      assertEquals(expected, fitted, 1.0, "Polynomial fit should approximate x^2")
+      assertEquals(expected, fitted, 1.0, 'Polynomial fit should approximate x^2')
     }
   }
 
@@ -114,4 +115,5 @@ class SmoothStatTest {
         StatSpec.of(CharmStatType.SMOOTH, statParams)
     )
   }
+
 }

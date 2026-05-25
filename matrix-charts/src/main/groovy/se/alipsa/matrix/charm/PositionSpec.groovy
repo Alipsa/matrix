@@ -93,4 +93,5 @@ class PositionSpec {
   String toString() {
     "PositionSpec(${type})"
   }
+
 }

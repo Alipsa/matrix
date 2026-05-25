@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotSpec
 
+@SuppressWarnings('UnnecessaryCast')
 class ChartsDataConversionTest {
 
   @Test
@@ -77,19 +78,22 @@ class ChartsDataConversionTest {
 
   @Test
   void testConvenienceInputRejectsEmptyCollections() {
-    assertThrows(IllegalArgumentException.class) {
+    assertThrows(IllegalArgumentException) {
       plot([] as List<Map>)
     }
-    assertThrows(IllegalArgumentException.class) {
+    assertThrows(IllegalArgumentException) {
       plot([:] as Map<String, List>)
     }
-    assertThrows(IllegalArgumentException.class) {
+    assertThrows(IllegalArgumentException) {
       plot([] as Iterable)
     }
   }
 
   static class SampleObs {
+
     String group
     Integer value
+
   }
+
 }

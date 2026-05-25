@@ -68,4 +68,5 @@ enum GuideType {
     }
     LOOKUP[value.trim().toLowerCase(Locale.ROOT)]
   }
+
 }

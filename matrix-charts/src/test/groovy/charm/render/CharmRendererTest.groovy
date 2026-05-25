@@ -349,11 +349,11 @@ class CharmRendererTest {
     // chartData x: [1,2,3] and layerData x: [4,5,6] should produce 6 distinct
     // cx values after scaling. If layer data were ignored, only 3 would appear.
     List<Circle> circles = svg.descendants().findAll { it instanceof Circle } as List<Circle>
-    Set<String> distinctCx = circles.collect { it.cx } as Set
+    Set<String> distinctCx = circles*.cx as Set
     assertTrue(distinctCx.size() > 3,
         "Expected more than 3 distinct cx positions when using layer-specific data, got ${distinctCx.size()}")
 
-    Set<String> distinctCy = circles.collect { it.cy } as Set
+    Set<String> distinctCy = circles*.cy as Set
     assertTrue(distinctCy.size() > 3,
         "Expected more than 3 distinct cy positions when using layer-specific data, got ${distinctCy.size()}")
   }
@@ -417,8 +417,8 @@ class CharmRendererTest {
 
     // With layer-specific data (x up to 200), the baseline circles from narrowData (x 1-2)
     // should be compressed to the left of the panel compared to the baseline-only chart.
-    Set<String> baselineCxSet = baselineCircles.collect { it.cx } as Set
-    Set<String> layerCxSet = layerCircles.collect { it.cx } as Set
+    Set<String> baselineCxSet = baselineCircles*.cx as Set
+    Set<String> layerCxSet = layerCircles*.cx as Set
     assertNotEquals(baselineCxSet, layerCxSet,
         'Layer-specific data should change scale range, producing different circle positions')
   }
@@ -432,4 +432,5 @@ class CharmRendererTest {
         clipPath: elements.count { it.class.simpleName == 'ClipPath' } as int
     ]
   }
+
 }

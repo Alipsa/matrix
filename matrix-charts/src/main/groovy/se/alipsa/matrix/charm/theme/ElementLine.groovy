@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * color, size (line width), linetype, and lineend properties.
  */
 @CompileStatic
+@SuppressWarnings('IfStatementBraces')
 class ElementLine {
 
   /** Line color (CSS color string) */
@@ -23,7 +24,7 @@ class ElementLine {
   /** Line end cap: 'butt', 'round', 'square' */
   String lineend = 'butt'
 
-  ElementLine() {}
+  ElementLine() { }
 
   /**
    * Creates an ElementLine from a map of properties.
@@ -54,4 +55,5 @@ class ElementLine {
         lineend: lineend
     )
   }
+
 }
