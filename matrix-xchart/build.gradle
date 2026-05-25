@@ -10,10 +10,6 @@ group = 'se.alipsa.matrix'
 version = '0.3.0'
 description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
 
-ext.nexusUrl = version.contains("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-
 JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
@@ -92,7 +88,6 @@ publishing {
                     username = sonatypeUsername
                     password = sonatypePassword
                 }
-                url = nexusUrl
             }
         }
     }
