@@ -22,33 +22,48 @@ class Coord {
   /**
    * Sets coordinate system type.
    *
-   * @param value CharmCoordType or string value
+   * @param value coord type value
    */
-  void setType(Object value) {
+  void setType(CharmCoordType value) {
     if (value == null) {
       type = CharmCoordType.CARTESIAN
       return
     }
-    if (value instanceof CharmCoordType) {
-      type = value as CharmCoordType
+    type = value
+  }
+
+  /**
+   * Sets coordinate system type.
+   *
+   * @param value coord type name
+   */
+  void setType(String value) {
+    if (value == null) {
+      type = CharmCoordType.CARTESIAN
       return
     }
-    if (value instanceof CharSequence) {
-      switch (value.toString().trim().toLowerCase(Locale.ROOT)) {
-        case 'cartesian' -> type = CharmCoordType.CARTESIAN
-        case 'polar' -> type = CharmCoordType.POLAR
-        case 'flip' -> type = CharmCoordType.FLIP
-        case 'fixed' -> type = CharmCoordType.FIXED
-        case 'trans' -> type = CharmCoordType.TRANS
-        case 'radial' -> type = CharmCoordType.RADIAL
-        case 'map' -> type = CharmCoordType.MAP
-        case 'quickmap' -> type = CharmCoordType.QUICKMAP
-        case 'sf' -> type = CharmCoordType.SF
-        default -> throw new CharmValidationException("Unsupported coord type '${value}'")
-      }
-      return
+    switch (value.trim().toLowerCase(Locale.ROOT)) {
+      case 'cartesian' -> type = CharmCoordType.CARTESIAN
+      case 'polar' -> type = CharmCoordType.POLAR
+      case 'flip' -> type = CharmCoordType.FLIP
+      case 'fixed' -> type = CharmCoordType.FIXED
+      case 'trans' -> type = CharmCoordType.TRANS
+      case 'radial' -> type = CharmCoordType.RADIAL
+      case 'map' -> type = CharmCoordType.MAP
+      case 'quickmap' -> type = CharmCoordType.QUICKMAP
+      case 'sf' -> type = CharmCoordType.SF
+      default -> throw new CharmValidationException("Unsupported coord type '${value}'")
     }
-    throw new CharmValidationException("Unsupported coord type input '${value.getClass().name}'")
+  }
+
+  /**
+   * Resets coordinate system type to cartesian.
+   *
+   * @param value null coord type value
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  void setType(Void value) {
+    type = CharmCoordType.CARTESIAN
   }
 
   /**

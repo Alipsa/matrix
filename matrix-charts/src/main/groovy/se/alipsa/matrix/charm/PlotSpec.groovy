@@ -859,12 +859,22 @@ class PlotSpec {
     }
 
     /**
-     * Creates a manual color scale from a list of colors or a named map.
+     * Creates a manual color scale from a named map.
      *
-     * @param values color list or named map (e.g. {@code ['below': '#e74c3c', 'above': '#2ecc71']})
+     * @param namedValues named color map (e.g. {@code ['below': '#e74c3c', 'above': '#2ecc71']})
      * @return scale object
      */
-    Scale manual(Object values) {
+    Scale manual(Map<String, String> namedValues) {
+      Scale.manual(namedValues)
+    }
+
+    /**
+     * Creates a manual color scale from a list of colors.
+     *
+     * @param values color list
+     * @return scale object
+     */
+    Scale manual(List<String> values) {
       Scale.manual(values)
     }
 
