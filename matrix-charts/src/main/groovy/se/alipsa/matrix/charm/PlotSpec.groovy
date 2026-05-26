@@ -260,6 +260,71 @@ class PlotSpec {
     this
   }
 
+  // ---- Operator composition (ggplot2-style + chaining) ----
+
+  /**
+   * Adds a layer via the {@code +} operator.
+   *
+   * @param builder configured layer builder
+   * @return this plot spec
+   */
+  PlotSpec plus(se.alipsa.matrix.charm.geom.LayerBuilder builder) {
+    addLayer(builder)
+  }
+
+  /**
+   * Merges a theme via the {@code +} operator.
+   *
+   * @param other theme to merge
+   * @return this plot spec
+   */
+  PlotSpec plus(Theme other) {
+    if (other == null) {
+      return this
+    }
+    Theme merged = theme.plus(other)
+    merged.properties.each { key, val ->
+      String k = key as String
+      if (k != 'class' && theme.hasProperty(k)) {
+        theme.setProperty(k, val)
+      }
+    }
+    this
+  }
+
+  /**
+   * Replaces labels via the {@code +} operator.
+   *
+   * @param other labels to apply
+   * @return this plot spec
+   */
+  PlotSpec plus(LabelsSpec other) {
+    if (other == null) {
+      return this
+    }
+    if (other.title != null) { labels.title = other.title }
+    if (other.subtitle != null) { labels.subtitle = other.subtitle }
+    if (other.caption != null) { labels.caption = other.caption }
+    if (other.x != null) { labels.x = other.x }
+    if (other.y != null) { labels.y = other.y }
+    this
+  }
+
+  /**
+   * Applies a coord spec via the {@code +} operator.
+   *
+   * @param other coord to apply
+   * @return this plot spec
+   */
+  PlotSpec plus(CoordSpec other) {
+    if (other == null) {
+      return this
+    }
+    coord.type = other.type
+    other.params.each { String k, Object v -> coord.params[k] = v }
+    this
+  }
+
   /**
    * Configures scales using closure syntax.
    *
