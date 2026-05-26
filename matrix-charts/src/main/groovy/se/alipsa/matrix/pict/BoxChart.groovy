@@ -7,6 +7,17 @@ import se.alipsa.matrix.core.Matrix
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BoxChart extends Chart<BoxChart> {
 
+  /**
+   * Creates a box chart from category and value columns.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param categoryColumnName category column name
+   * @param valueColumn value column name
+   * @return box chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static BoxChart create(String title, Matrix data, String categoryColumnName, String valueColumn) {
     Map<String, Matrix> groups = data.split(categoryColumnName).sort() as Map<String, Matrix>
     BoxChart chart = new BoxChart()
@@ -19,6 +30,16 @@ class BoxChart extends Chart<BoxChart> {
     return chart
   }
 
+  /**
+   * Creates a box chart from multiple value columns.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param columnNames value column names
+   * @return box chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static BoxChart create(String title, Matrix data, List<String> columnNames) {
     BoxChart chart = new BoxChart()
     chart.title = title

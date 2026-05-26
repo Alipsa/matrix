@@ -16,6 +16,14 @@ class Histogram extends Chart<Histogram> {
   Map<MinMax, Integer> ranges
   Integer numberOfBins = 9
 
+  /**
+   * Creates a histogram from named parameters.
+   *
+   * @param params named parameters: title, data, columnName, bins, binDecimals
+   * @return histogram
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static Histogram create(Map params) {
     String title = params.title as String
     Matrix data = params.data as Matrix
@@ -25,6 +33,18 @@ class Histogram extends Chart<Histogram> {
     return create(title, data, columnName, bins, binDecimals)
   }
 
+  /**
+   * Creates a histogram from a matrix column.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param columnName numeric column name
+   * @param bins number of bins
+   * @param binDecimals number of decimals for bin boundaries
+   * @return histogram
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static Histogram create(String title, Matrix data, String columnName, Integer bins = 9, int binDecimals = 1) {
     Histogram chart = new Histogram()
     chart.title = title
@@ -38,6 +58,15 @@ class Histogram extends Chart<Histogram> {
     return chart
   }
 
+  /**
+   * Creates a histogram from numeric values.
+   *
+   * @param column numeric values
+   * @param bins number of bins
+   * @return histogram
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static Histogram create(List<? extends Number> column, Integer bins = 9) {
     Histogram chart = new Histogram()
     chart.originalData = column

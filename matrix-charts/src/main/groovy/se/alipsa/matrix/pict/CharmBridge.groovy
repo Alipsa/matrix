@@ -84,7 +84,11 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     boolean horizontal = chart.direction == ChartDirection.HORIZONTAL
-    PositionSpec position = chart.stacked ? PositionSpec.of(CharmPositionType.STACK) : PositionSpec.of(CharmPositionType.IDENTITY)
+    PositionSpec position = switch (chart.chartType) {
+      case ChartType.STACKED -> PositionSpec.of(CharmPositionType.STACK)
+      case ChartType.GROUPED -> PositionSpec.of(CharmPositionType.DODGE)
+      default -> PositionSpec.of(CharmPositionType.IDENTITY)
+    }
 
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {

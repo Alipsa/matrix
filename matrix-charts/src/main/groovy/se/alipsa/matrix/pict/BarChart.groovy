@@ -17,6 +17,18 @@ class BarChart extends Chart<BarChart> {
     return direction
   }
 
+  /**
+   * Creates a bar chart from positional series.
+   *
+   * @param title chart title
+   * @param chartType bar chart type
+   * @param direction bar direction
+   * @param groupColumn category values
+   * @param valueColumn value series
+   * @return bar chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static BarChart create(String title, ChartType chartType, ChartDirection direction, List<?> groupColumn, List<?>... valueColumn) {
     BarChart chart = new BarChart()
     chart.title = title
@@ -28,6 +40,19 @@ class BarChart extends Chart<BarChart> {
     return chart
   }
 
+  /**
+   * Creates a bar chart from matrix columns.
+   *
+   * @param title chart title
+   * @param chartType bar chart type
+   * @param data chart data
+   * @param categoryColumnName category column name
+   * @param direction bar direction
+   * @param valueColumn value column names
+   * @return bar chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static BarChart create(String title, ChartType chartType, Matrix data, String categoryColumnName, ChartDirection direction, String... valueColumn) {
     List<?> groupColumn = data.column(categoryColumnName) as List<?>
     List<List<?>> valueColumns = data.columns(valueColumn.toList()) as List<List<?>>

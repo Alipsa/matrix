@@ -6,10 +6,31 @@ import se.alipsa.matrix.core.Matrix
 @SuppressWarnings('UnnecessaryObjectReferences')
 class LineChart extends Chart<LineChart> {
 
+  /**
+   * Creates a line chart from matrix columns.
+   *
+   * @param data chart data
+   * @param xAxis x-axis column name
+   * @param valueColumns y-axis column names
+   * @return line chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static LineChart create(Matrix data, String xAxis, String... valueColumns) {
     create(data.matrixName, data, xAxis, valueColumns)
   }
 
+  /**
+   * Creates a line chart from matrix columns.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param xAxis x-axis column name
+   * @param valueColumns y-axis column names
+   * @return line chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static LineChart create(String title, Matrix data, String xAxis, String... valueColumns) {
     LineChart chart = new LineChart()
     chart.title = title

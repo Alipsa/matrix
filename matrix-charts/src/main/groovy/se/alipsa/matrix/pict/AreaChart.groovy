@@ -5,6 +5,14 @@ import se.alipsa.matrix.core.Matrix
 /** Area chart for visualizing data as filled regions between lines and an axis. */
 class AreaChart extends Chart<AreaChart> {
 
+  /**
+   * Creates an area chart from a two-column matrix.
+   *
+   * @param data chart data
+   * @return area chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static AreaChart create(Matrix data) {
     if (data.columnCount() != 2) {
       throw new IllegalArgumentException('Table ' + data.matrixName + ' does not contain 2 columns.')
@@ -17,6 +25,16 @@ class AreaChart extends Chart<AreaChart> {
     return chart
   }
 
+  /**
+   * Creates an area chart from positional series.
+   *
+   * @param title chart title
+   * @param groupColumn x-axis values
+   * @param valueColumn y-axis series
+   * @return area chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static AreaChart create(String title, List<?> groupColumn, List<?>... valueColumn) {
     AreaChart chart = new AreaChart()
     chart.title = title
@@ -26,9 +44,16 @@ class AreaChart extends Chart<AreaChart> {
   }
 
   /**
-   * AreaPlot.create(
-   *         "Boston Robberies by month: Jan 1966-Oct 1975", robberies, "Record", "Robberies")
+   * Creates an area chart from matrix columns.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param xCol x-axis column name
+   * @param yCol y-axis column name
+   * @return area chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
    */
+  @Deprecated
   static AreaChart create(String title, Matrix data, String xCol, String yCol) {
     List<?> xColumn = data.column(xCol) as List<?>
     List<?> yColumn = data.column(yCol) as List<?>

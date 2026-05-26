@@ -46,7 +46,9 @@ class BubbleChart extends Chart<BubbleChart> {
    * @param yCol column name for y-axis values
    * @param sizeCol column name for size values
    * @return a configured BubbleChart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
    */
+  @Deprecated
   static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol) {
     BubbleChart chart = new BubbleChart()
     chart.title = title
@@ -69,7 +71,9 @@ class BubbleChart extends Chart<BubbleChart> {
    * @param sizeCol column name for size values
    * @param groupCol column name for grouping (colour aesthetic)
    * @return a configured BubbleChart with group data
+   * @deprecated Use {@link #builder(Matrix)} for new code.
    */
+  @Deprecated
   static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol, String groupCol) {
     BubbleChart chart = create(title, data, xCol, yCol, sizeCol)
     chart.groupColumn = groupCol

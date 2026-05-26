@@ -5,6 +5,17 @@ import se.alipsa.matrix.core.Matrix
 /** Scatter chart for visualizing relationships between two numerical variables. */
 class ScatterChart extends Chart<ScatterChart> {
 
+  /**
+   * Creates a scatter chart from matrix columns.
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param xAxis x-axis column name
+   * @param yAxis y-axis column name
+   * @return scatter chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static ScatterChart create(String title, Matrix data, String xAxis, String yAxis) {
     ScatterChart chart = new ScatterChart()
     chart.title = title
