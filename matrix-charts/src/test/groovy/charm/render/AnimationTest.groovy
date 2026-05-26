@@ -1,6 +1,7 @@
 package charm.render
 
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.chartexport.AnimationCssStripper
+import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
@@ -72,6 +74,10 @@ class AnimationTest {
       ChartToJpeg.export(chart, jpeg)
       assertTrue(png.exists() && png.length() > 0)
       assertTrue(jpeg.exists() && jpeg.length() > 0)
+
+      def img = ChartToImage.export(chart)
+      assertNotNull(img)
+      assertTrue(img.width > 0 && img.height > 0)
     } finally {
       png.delete()
       jpeg.delete()
