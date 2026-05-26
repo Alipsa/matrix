@@ -30,7 +30,7 @@ class ChartToImage {
     if (svgChart == null) {
       throw new IllegalArgumentException('svgChart must not be null')
     }
-    return SvgRenderer.toBufferedImage(svgChart)
+    return SvgRenderer.toBufferedImage(AnimationCssStripper.stripFromSvg(svgChart))
   }
 
   /**

@@ -50,12 +50,7 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
-    Svg rendered = chart.render()
-    if (!hasActiveAnimation(chart)) {
-      SvgRenderer.toJpeg(rendered, targetFile, [quality: quality])
-      return
-    }
-    SvgRenderer.toJpeg(stripAnimationCss(rendered), targetFile, [quality: quality])
+    SvgRenderer.toJpeg(stripAnimationCss(chart.render()), targetFile, [quality: quality])
   }
 
   /**
@@ -110,12 +105,7 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
-    Svg rendered = chart.render()
-    if (!hasActiveAnimation(chart)) {
-      SvgRenderer.toJpeg(rendered, os, [quality: quality])
-      return
-    }
-    SvgRenderer.toJpeg(stripAnimationCss(rendered), os, [quality: quality])
+    SvgRenderer.toJpeg(stripAnimationCss(chart.render()), os, [quality: quality])
   }
 
   /**
@@ -139,14 +129,6 @@ class ChartToJpeg {
 
   private static Svg stripAnimationCss(Svg svgChart) {
     AnimationCssStripper.stripFromSvg(svgChart)
-  }
-
-  private static String stripAnimationCss(String svgXml) {
-    AnimationCssStripper.stripFromXml(svgXml)
-  }
-
-  private static boolean hasActiveAnimation(CharmChart chart) {
-    chart.animation?.isActive() ?: false
   }
 
 }
