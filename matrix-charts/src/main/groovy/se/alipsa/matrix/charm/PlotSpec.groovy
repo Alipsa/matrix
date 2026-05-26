@@ -6,6 +6,7 @@ import groovy.transform.stc.SimpleType
 import org.apache.commons.text.similarity.LevenshteinDistance
 
 import se.alipsa.matrix.charm.facet.Labeller
+import se.alipsa.matrix.charm.theme.CharmThemes
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -66,6 +67,7 @@ class PlotSpec {
   private final LabelsSpec labels = new LabelsSpec()
   private final GuidesSpec guides = new GuidesSpec()
   private AnimationSpec animation
+  private CssAttributesSpec cssAttributes
   private final List<AnnotationSpec> annotations = []
 
   /**
@@ -342,6 +344,16 @@ class PlotSpec {
   }
 
   /**
+   * Shorthand for {@code coord { type = FLIP }}.
+   *
+   * @return this plot spec
+   */
+  PlotSpec coordFlip() {
+    coord.type = CharmCoordType.FLIP
+    this
+  }
+
+  /**
    * Configures labels using closure syntax.
    *
    * @param configure closure for labels options
@@ -384,6 +396,23 @@ class PlotSpec {
   }
 
   /**
+   * Configures CSS attribute injection using closure syntax.
+   *
+   * @param configure closure for CSS attributes options
+   * @return this plot spec
+   */
+  PlotSpec cssAttributes(
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = CssAttributesSpec) Closure<?> configure
+  ) {
+    CssAttributesSpec spec = cssAttributes?.copy() ?: new CssAttributesSpec()
+    Closure<?> body = configure.rehydrate(spec, this, this)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    cssAttributes = spec
+    this
+  }
+
+  /**
    * Adds annotations via closure DSL.
    *
    * @param configure closure for annotation declarations
@@ -421,7 +450,7 @@ class PlotSpec {
           labels.copy(),
           compiledGuides,
           compiledAnnotations,
-          null,
+          cssAttributes?.copy(),
           compiledAnimation
       )
     } catch (CharmException e) {
@@ -1038,6 +1067,62 @@ class PlotSpec {
           color: value,
           size: theme.panelGridMinor?.size ?: 1
       )
+    }
+
+    // ---- Theme presets ----
+
+    /** Applies the preset by name (e.g. 'minimal', 'dark', 'classic'). */
+    void setPreset(String name) { apply(resolvePreset(name)) }
+
+    /** Applies a preset theme, merging its settings into the current theme. */
+    void apply(Theme preset) {
+      if (preset == null) {
+        throw new CharmValidationException('preset theme cannot be null')
+      }
+      preset.properties.each { key, val ->
+        String k = key as String
+        if (k != 'class' && theme.hasProperty(k)) {
+          theme.setProperty(k, val)
+        }
+      }
+    }
+
+    /** @return gray theme (ggplot2 default) */
+    static Theme gray() { CharmThemes.gray() }
+
+    /** @return classic theme */
+    static Theme classic() { CharmThemes.classic() }
+
+    /** @return black and white theme */
+    static Theme bw() { CharmThemes.bw() }
+
+    /** @return minimal theme */
+    static Theme minimal() { CharmThemes.minimal() }
+
+    /** @return void theme (data only) */
+    static Theme void_() { CharmThemes.void_() }
+
+    /** @return light theme */
+    static Theme light() { CharmThemes.light() }
+
+    /** @return dark theme */
+    static Theme dark() { CharmThemes.dark() }
+
+    /** @return linedraw theme */
+    static Theme linedraw() { CharmThemes.linedraw() }
+
+    private static Theme resolvePreset(String name) {
+      switch (name?.toLowerCase(Locale.ROOT)) {
+        case 'gray', 'grey' -> CharmThemes.gray()
+        case 'classic' -> CharmThemes.classic()
+        case 'bw' -> CharmThemes.bw()
+        case 'minimal' -> CharmThemes.minimal()
+        case 'void' -> CharmThemes.void_()
+        case 'light' -> CharmThemes.light()
+        case 'dark' -> CharmThemes.dark()
+        case 'linedraw' -> CharmThemes.linedraw()
+        default -> throw new CharmValidationException("Unknown theme preset: '${name}'")
+      }
     }
 
   }
