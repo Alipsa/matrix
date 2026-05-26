@@ -394,6 +394,105 @@ class ChartBuilderTest {
   }
 
   @Test
+  void testBuilderValidationMissingX() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 10], [2, 20]])
+        .types([int, int])
+        .build()
+
+    def ex = assertThrows(IllegalStateException) {
+      AreaChart.builder(data).y('y').build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      BarChart.builder(data).y('y').build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      LineChart.builder(data).y('y').build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      ScatterChart.builder(data).y('y').build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      PieChart.builder(data).y('y').build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      Histogram.builder(data).build()
+    }
+    assertTrue(ex.message.contains('x(...)'))
+  }
+
+  @Test
+  void testBuilderValidationMissingY() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 10], [2, 20]])
+        .types([int, int])
+        .build()
+
+    def ex = assertThrows(IllegalStateException) {
+      AreaChart.builder(data).x('x').build()
+    }
+    assertTrue(ex.message.contains('y(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      BarChart.builder(data).x('x').build()
+    }
+    assertTrue(ex.message.contains('y(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      LineChart.builder(data).x('x').build()
+    }
+    assertTrue(ex.message.contains('y(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      ScatterChart.builder(data).x('x').build()
+    }
+    assertTrue(ex.message.contains('y(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      PieChart.builder(data).x('x').build()
+    }
+    assertTrue(ex.message.contains('y(...)'))
+  }
+
+  @Test
+  void testBoxChartBuilderValidationMissingXAndColumns() {
+    def data = Matrix.builder()
+        .columnNames(['dept', 'salary'])
+        .rows([['HR', 50000], ['IT', 70000]])
+        .types([String, int])
+        .build()
+
+    def ex = assertThrows(IllegalStateException) {
+      BoxChart.builder(data).y('salary').build()
+    }
+    assertTrue(ex.message.contains('x(...)') || ex.message.contains('columns(...)'))
+
+    ex = assertThrows(IllegalStateException) {
+      BoxChart.builder(data).x('dept').build()
+    }
+    assertTrue(ex.message.contains('y(...)') || ex.message.contains('columns(...)'))
+
+    // columns() mode should work without x/y
+    def chart = BoxChart.builder(data)
+        .title('Test')
+        .columns(['dept', 'salary'])
+        .build()
+    assertNotNull(chart)
+  }
+
+  @Test
   void testBuilderFluentStyleMethods() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])

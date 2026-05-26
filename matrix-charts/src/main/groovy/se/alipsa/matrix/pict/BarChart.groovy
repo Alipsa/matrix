@@ -125,6 +125,12 @@ class BarChart extends Chart<BarChart> {
      * @return the bar chart
      */
     BarChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       BarChart chart = new BarChart()
       applyTo(chart)
       chart.chartType = chartType
