@@ -5,6 +5,16 @@ import se.alipsa.matrix.core.Matrix
 /** Pie chart for visualizing proportional data as circular segments. */
 class PieChart extends Chart<PieChart> {
 
+  /**
+   * Creates a pie chart from positional series.
+   *
+   * @param title chart title
+   * @param groupCol category values
+   * @param numberCol numeric values
+   * @return pie chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static PieChart create(String title, List<?> groupCol, List<?> numberCol) {
     PieChart chart = new PieChart()
     chart.categorySeries = groupCol
@@ -13,10 +23,31 @@ class PieChart extends Chart<PieChart> {
     return chart
   }
 
+  /**
+   * Creates a pie chart from matrix columns.
+   *
+   * @param table chart data
+   * @param groupColName category column name
+   * @param numberColName numeric column name
+   * @return pie chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static PieChart create(Matrix table, String groupColName, String numberColName) {
     return create(table.matrixName, table, groupColName, numberColName)
   }
 
+  /**
+   * Creates a pie chart from matrix columns.
+   *
+   * @param title chart title
+   * @param table chart data
+   * @param groupColName category column name
+   * @param numberColName numeric column name
+   * @return pie chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
+   */
+  @Deprecated
   static PieChart create(String title, Matrix table, String groupColName, String numberColName) {
     return create(title, table.column(groupColName) as List<?>, table.column(numberColName) as List<?>)
   }

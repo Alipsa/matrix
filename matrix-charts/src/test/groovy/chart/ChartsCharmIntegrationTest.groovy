@@ -10,6 +10,7 @@ import se.alipsa.groovy.svg.Path
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
+import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
@@ -110,6 +111,28 @@ class ChartsCharmIntegrationTest {
     def rects = svg.descendants().findAll { it instanceof Rect }
     // 6 bars (3 categories x 2 series) + background rects; in long format these become 6 data rects
     assertTrue(rects.size() >= 3, "Stacked bar should render multiple rects, got ${rects.size()}")
+  }
+
+  @Test
+  void testGroupedBarChartUsesDodgePosition() {
+    Matrix data = Matrix.builder()
+        .matrixName('GroupedBar')
+        .columns([
+            region: ['North', 'South', 'East'],
+            q1    : [50, 60, 40],
+            q2    : [70, 55, 80]
+        ])
+        .types([String, Number, Number])
+        .build()
+
+    BarChart chart = BarChart.createVertical('Revenue', data, 'region', ChartType.GROUPED, 'q1', 'q2')
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertEquals(CharmPositionType.DODGE, charmChart.layers.first().positionType)
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+    def rects = svg.descendants().findAll { it instanceof Rect }
+    assertTrue(rects.size() >= 6, "Grouped bar should render multiple rects, got ${rects.size()}")
   }
 
   @Test
