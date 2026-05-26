@@ -1,16 +1,10 @@
 package se.alipsa.matrix.pict
 
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.stats.regression.LinearRegression
 
 /** Line chart for visualizing data trends over a continuous axis. */
 @SuppressWarnings('UnnecessaryObjectReferences')
 class LineChart extends Chart<LineChart> {
-
-  @SuppressWarnings('UnusedMethodParameter')
-  static LineChart create(LinearRegression model) {
-    null
-  }
 
   static LineChart create(Matrix data, String xAxis, String... valueColumns) {
     create(data.matrixName, data, xAxis, valueColumns)
@@ -57,6 +51,12 @@ class LineChart extends Chart<LineChart> {
      * @return the line chart
      */
     LineChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       LineChart chart = new LineChart()
       applyTo(chart)
       chart.categorySeries = data.column(xCol) as List<?>

@@ -67,6 +67,12 @@ class AreaChart extends Chart<AreaChart> {
      * @return the area chart
      */
     AreaChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       AreaChart chart = new AreaChart()
       applyTo(chart)
       chart.categorySeries = data.column(xCol) as List<?>

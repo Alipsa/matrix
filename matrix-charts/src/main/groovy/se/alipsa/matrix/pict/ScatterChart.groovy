@@ -45,6 +45,12 @@ class ScatterChart extends Chart<ScatterChart> {
      * @return the scatter chart
      */
     ScatterChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       ScatterChart chart = new ScatterChart()
       applyTo(chart)
       chart.categorySeries = data.column(xCol) as List<?>

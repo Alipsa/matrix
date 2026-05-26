@@ -85,6 +85,14 @@ class BoxChart extends Chart<BoxChart> {
      * @return the box chart
      */
     BoxChart build() {
+      if (!columnNames) {
+        if (xCol == null) {
+          throw new IllegalStateException('x(...) or columns(...) must be called before build()')
+        }
+        if (yCols == null || yCols.isEmpty()) {
+          throw new IllegalStateException('y(...) or columns(...) must be called before build()')
+        }
+      }
       String chartTitle = this.@title
       BoxChart chart
       if (columnNames) {

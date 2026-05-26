@@ -136,6 +136,9 @@ class Histogram extends Chart<Histogram> {
      * @return the histogram
      */
     Histogram build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
       Histogram chart = Histogram.create(this.@title, data, xCol, bins, binDecimals)
       applyTo(chart)
       chart

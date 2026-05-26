@@ -52,6 +52,12 @@ class PieChart extends Chart<PieChart> {
      * @return the pie chart
      */
     PieChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       PieChart chart = new PieChart()
       applyTo(chart)
       chart.categorySeries = data.column(xCol) as List<?>
