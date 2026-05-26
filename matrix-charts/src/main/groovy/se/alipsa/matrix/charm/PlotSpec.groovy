@@ -5,6 +5,7 @@ import groovy.transform.stc.SimpleType
 
 import org.apache.commons.text.similarity.LevenshteinDistance
 
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.charm.theme.CharmThemes
 import se.alipsa.matrix.core.Matrix
@@ -523,6 +524,44 @@ class PlotSpec {
     } catch (Exception e) {
       throw new CharmCompilationException("Failed to compile plot specification: ${e.message}", e)
     }
+  }
+
+  /**
+   * Compiles and renders this plot using default dimensions (800x600).
+   *
+   * @return SVG model object
+   */
+  Svg render() {
+    build().render()
+  }
+
+  /**
+   * Compiles and renders this plot at the given dimensions.
+   *
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @return SVG model object
+   */
+  Svg render(int width, int height) {
+    build().render(width, height)
+  }
+
+  /**
+   * Compiles and writes this plot to the target file path.
+   *
+   * @param targetPath output file path
+   */
+  void writeTo(String targetPath) {
+    build().writeTo(targetPath)
+  }
+
+  /**
+   * Compiles and writes this plot to the target file.
+   *
+   * @param targetFile output file
+   */
+  void writeTo(File targetFile) {
+    build().writeTo(targetFile)
   }
 
   private void validate() {

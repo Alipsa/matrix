@@ -10,6 +10,7 @@ import testutil.Slow
 
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
+import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -91,6 +92,70 @@ class WriteToAndPlotGridExportTest {
     assertTrue(file.exists())
     String content = file.text
     assertTrue(content.contains('<svg'))
+  }
+
+  @Test
+  void testChartWriteToSvgWithDimensions(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart-sized.svg').toFile()
+    chart.writeTo(file, 320, 240)
+    assertTrue(file.exists())
+    String content = file.text
+    assertTrue(content.contains('<svg'))
+    assertTrue(content.contains('width="320"'))
+    assertTrue(content.contains('height="240"'))
+  }
+
+  @Test
+  void testChartWriteToPngWithDimensions(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart-sized.png').toFile()
+    chart.writeTo(file, 320, 240)
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(320, image.width)
+    assertEquals(240, image.height)
+  }
+
+  @Test
+  void testChartWriteToJpegStringPathWithDimensions(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    String path = tempDir.resolve('chart-sized.jpg') as String
+    chart.writeTo(path, 320, 240)
+    File file = new File(path)
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(320, image.width)
+    assertEquals(240, image.height)
+  }
+
+  @Test
+  void testPlotSpecRenderConvenienceMethods() {
+    PlotSpec spec = buildPlotSpec()
+    assertEquals('800', spec.render().width.toString())
+    assertEquals('600', spec.render().height.toString())
+    assertEquals('320', spec.render(320, 240).width.toString())
+    assertEquals('240', spec.render(320, 240).height.toString())
+  }
+
+  @Test
+  void testPlotSpecWriteToConvenienceMethods(@TempDir Path tempDir) {
+    PlotSpec spec = buildPlotSpec()
+    File fileTarget = tempDir.resolve('plot-spec-file.svg').toFile()
+    String pathTarget = tempDir.resolve('plot-spec-path.svg') as String
+
+    spec.writeTo(fileTarget)
+    spec.writeTo(pathTarget)
+
+    assertTrue(fileTarget.exists())
+    assertTrue(fileTarget.text.contains('<svg'))
+    File pathFile = new File(pathTarget)
+    assertTrue(pathFile.exists())
+    assertTrue(pathFile.text.contains('<svg'))
   }
 
   // ---- PlotGrid.writeTo ----
@@ -236,6 +301,10 @@ class WriteToAndPlotGridExportTest {
   }
 
   private static Chart buildChart() {
+    buildPlotSpec().build()
+  }
+
+  private static PlotSpec buildPlotSpec() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 2], [2, 4], [3, 6]])
@@ -243,7 +312,7 @@ class WriteToAndPlotGridExportTest {
     plot(data) {
       mapping { x = 'x'; y = 'y' }
       layers { geomPoint() }
-    }.build()
+    }
   }
 
   private static PlotGrid buildGrid() {
