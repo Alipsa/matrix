@@ -5,6 +5,7 @@ import org.girod.javafx.svgimage.SVGLoader
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -74,6 +75,19 @@ class ChartToJfx {
       throw new IllegalArgumentException('chart cannot be null')
     }
     export(CharmBridge.convert(chart).render())
+  }
+
+  /**
+   * Create a JavaFX {@link SVGImage} from a {@link PlotGrid}.
+   *
+   * @param grid the plot grid to render and convert
+   * @return an {@link SVGImage} representing the rendered grid
+   */
+  static SVGImage export(PlotGrid grid) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    export(grid.render())
   }
 
 }

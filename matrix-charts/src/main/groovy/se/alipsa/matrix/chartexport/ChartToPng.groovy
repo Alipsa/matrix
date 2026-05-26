@@ -6,6 +6,7 @@ import com.github.weisj.jsvg.parser.SVGLoader
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -170,6 +171,40 @@ class ChartToPng {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
     export(CharmBridge.convert(chart).render(), os)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as a PNG image file.
+   *
+   * @param grid the plot grid to export
+   * @param targetFile the {@link File} where the PNG image will be written
+   * @throws IllegalArgumentException if grid or targetFile is null
+   */
+  static void export(PlotGrid grid, File targetFile) throws IOException {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    export(grid.render(), targetFile)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as PNG to an {@link OutputStream}.
+   *
+   * @param grid the plot grid to export
+   * @param os the output stream to write the PNG to
+   * @throws IllegalArgumentException if grid or os is null
+   */
+  static void export(PlotGrid grid, OutputStream os) throws IOException {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (os == null) {
+      throw new IllegalArgumentException('outputStream cannot be null')
+    }
+    export(grid.render(), os)
   }
 
   /**

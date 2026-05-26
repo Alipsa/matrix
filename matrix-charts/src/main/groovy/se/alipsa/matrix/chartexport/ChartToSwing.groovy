@@ -2,6 +2,7 @@ package se.alipsa.matrix.chartexport
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -74,6 +75,19 @@ class ChartToSwing {
       throw new IllegalArgumentException('chart cannot be null')
     }
     export(CharmBridge.convert(chart).render())
+  }
+
+  /**
+   * Create a {@link SvgPanel} from a {@link PlotGrid}.
+   *
+   * @param grid the plot grid to render
+   * @return a {@link SvgPanel} displaying the rendered grid
+   */
+  static SvgPanel export(PlotGrid grid) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    export(grid.render())
   }
 
   /**

@@ -3,6 +3,7 @@ package se.alipsa.matrix.chartexport
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -103,6 +104,34 @@ class ChartToImage {
       throw new IllegalArgumentException('chart cannot be null')
     }
     base64(CharmBridge.convert(chart).render())
+  }
+
+  /**
+   * Export a {@link PlotGrid} to a {@link BufferedImage}.
+   *
+   * @param grid the plot grid to export
+   * @return rendered image
+   * @throws IllegalArgumentException if grid is null
+   */
+  static BufferedImage export(PlotGrid grid) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    export(grid.render())
+  }
+
+  /**
+   * Export a {@link PlotGrid} as a base64-encoded PNG data URI.
+   *
+   * @param grid the plot grid to export
+   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
+   * @throws IllegalArgumentException if grid is null
+   */
+  static String base64(PlotGrid grid) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    base64(grid.render())
   }
 
 }
