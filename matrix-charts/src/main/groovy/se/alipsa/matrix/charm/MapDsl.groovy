@@ -1,12 +1,10 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Generic map delegate used by nested theme DSL blocks.
  */
-@CompileStatic
 class MapDsl {
 
   private final Map<String, Object> values = [:]

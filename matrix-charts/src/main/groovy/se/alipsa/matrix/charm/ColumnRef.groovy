@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Column-reference implementation for aesthetic mappings.
  */
-@CompileStatic
 class ColumnRef implements ColumnExpr {
 
   private final String name

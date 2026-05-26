@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Mutable DSL delegate for building {@link PlotGrid} specifications.
  *
@@ -19,7 +17,6 @@ import groovy.transform.CompileStatic
  * }
  * </pre>
  */
-@CompileStatic
 class PlotGridDsl {
 
   private final List<Chart> charts = []

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed point shape name constants.
  *
  * <p>Use these in {@code geomPoint().shape(ShapeName.CIRCLE)} or inside
  * the {@code layers {}} DSL where the constants are directly available.</p>
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 enum ShapeName {
 

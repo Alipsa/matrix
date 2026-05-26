@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * Utilities for color scale interpolation.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateListLiteral')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')

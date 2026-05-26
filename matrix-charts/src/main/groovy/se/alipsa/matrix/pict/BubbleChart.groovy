@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -27,7 +25,6 @@ import se.alipsa.matrix.core.Matrix
  *     .build()
  * }</pre>
  */
-@CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BubbleChart extends Chart<BubbleChart> {
 
@@ -102,7 +99,6 @@ class BubbleChart extends Chart<BubbleChart> {
   /**
    * Fluent builder for {@link BubbleChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, BubbleChart> {
 
     private String sizeCol

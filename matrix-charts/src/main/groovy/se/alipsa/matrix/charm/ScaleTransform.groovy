@@ -1,13 +1,11 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
 /**
  * Transformation strategy for Charm scales.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 interface ScaleTransform {
 
@@ -36,7 +34,6 @@ interface ScaleTransform {
 
 }
 
-@CompileStatic
 abstract class BaseScaleTransform implements ScaleTransform {
 
   @Override
@@ -46,7 +43,6 @@ abstract class BaseScaleTransform implements ScaleTransform {
 
 }
 
-@CompileStatic
 class Log10ScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -66,7 +62,6 @@ class Log10ScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class SqrtScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -86,7 +81,6 @@ class SqrtScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class ReverseScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -106,7 +100,6 @@ class ReverseScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class DateScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -126,7 +119,6 @@ class DateScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class TimeScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -146,7 +138,6 @@ class TimeScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class DatetimeScaleTransform extends BaseScaleTransform {
 
   @Override
@@ -166,7 +157,6 @@ class DatetimeScaleTransform extends BaseScaleTransform {
 
 }
 
-@CompileStatic
 class CustomScaleTransform extends BaseScaleTransform {
 
   private final String transformId
@@ -219,7 +209,6 @@ class CustomScaleTransform extends BaseScaleTransform {
 /**
  * Registry and factory methods for transform strategies.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class ScaleTransforms {
 

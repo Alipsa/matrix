@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.sf.SfGeometry
@@ -9,7 +7,6 @@ import se.alipsa.matrix.charm.sf.SfGeometry
 /**
  * Expands simple-feature geometries into x/y rows for rendering.
  */
-@CompileStatic
 @SuppressWarnings('ReturnNullFromCatchBlock')
 class SfStat {
 

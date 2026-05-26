@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed legend direction constants.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 enum LegendDirection {
 

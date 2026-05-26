@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Utility methods for scale operations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ElseBlockBraces')
 @SuppressWarnings('IfStatementBraces')

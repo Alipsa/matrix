@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LinetypeName
 import se.alipsa.matrix.charm.ShapeName
 
@@ -20,7 +18,6 @@ import se.alipsa.matrix.charm.ShapeName
  * }
  * }</pre>
  */
-@CompileStatic
 class LayersDsl {
 
   /** Builders collected during DSL evaluation. */

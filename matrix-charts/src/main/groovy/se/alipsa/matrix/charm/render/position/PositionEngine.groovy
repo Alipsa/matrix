@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.position
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.util.Logger
  * Central dispatch hub for position adjustments.
  * Routes position computation to the appropriate position class based on the layer's position type.
  */
-@CompileStatic
 class PositionEngine {
 
   private static final Logger log = Logger.getLogger(PositionEngine)

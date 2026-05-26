@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * Trained discrete scale for categorical data.
  *
  * Maps categorical levels to evenly spaced band positions within the output range.
  * Each level is centered within its band.
  */
-@CompileStatic
 @SuppressWarnings('IfStatementBraces')
 class DiscreteCharmScale extends CharmScale {
 

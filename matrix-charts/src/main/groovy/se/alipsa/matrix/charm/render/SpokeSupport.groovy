@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Shared parameter resolution for spoke stat/geom behavior.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class SpokeSupport {
 

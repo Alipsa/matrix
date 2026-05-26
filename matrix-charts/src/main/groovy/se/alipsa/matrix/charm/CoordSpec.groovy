@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed coordinate specification for Charm core.
  */
-@CompileStatic
 class CoordSpec extends Coord {
 
   /**

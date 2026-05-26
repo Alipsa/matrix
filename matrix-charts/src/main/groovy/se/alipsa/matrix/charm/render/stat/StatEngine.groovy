@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.util.Logger
  * Central dispatch hub for statistical transformations.
  * Routes stat computation to the appropriate stat class based on the layer's stat type.
  */
-@CompileStatic
 class StatEngine {
 
   private static final Logger log = Logger.getLogger(StatEngine)

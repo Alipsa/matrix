@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Quickmap coord with approximate latitude-based aspect correction.
  */
-@CompileStatic
 class QuickmapCoord {
 
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {

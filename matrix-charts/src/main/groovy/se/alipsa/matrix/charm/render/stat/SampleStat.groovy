@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -21,7 +19,6 @@ import java.util.Random
  *   <li>{@code method}: {@code random} (default) or {@code systematic}</li>
  * </ul>
  */
-@CompileStatic
 class SampleStat {
 
   private static final Logger log = Logger.getLogger(SampleStat)

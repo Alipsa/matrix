@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.sf
 
-import groovy.transform.CompileStatic
-
 /**
  * A single 2D point in a simple feature geometry.
  */
-@CompileStatic
 class SfPoint {
 
   final BigDecimal x

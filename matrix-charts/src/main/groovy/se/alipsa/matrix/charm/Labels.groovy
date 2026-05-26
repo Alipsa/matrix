@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Labels and guide titles for a Charm chart.
  */
-@CompileStatic
 class Labels {
 
   private String title

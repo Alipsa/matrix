@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 
 /**
  * Q-Q stat against the standard normal distribution.
  */
-@CompileStatic
 class QqStat {
 
   @SuppressWarnings('UnusedMethodParameter')

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * ColorBrewer palette definitions and helpers.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateListLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')

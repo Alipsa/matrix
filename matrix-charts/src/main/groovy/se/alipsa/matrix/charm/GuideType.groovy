@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Enumeration of guide types for legend and axis rendering.
  */
-@CompileStatic
 enum GuideType {
 
   /** Standard discrete legend with color/shape/size keys. */

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * Provides Viridis family color palettes.
  *
  * Generates perceptually uniform, colorblind-friendly colors from the viridis
  * palette family (viridis, magma, inferno, plasma, cividis, rocket, mako, turbo).
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')

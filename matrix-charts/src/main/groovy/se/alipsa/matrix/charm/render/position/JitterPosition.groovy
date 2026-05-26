@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.position
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Jitter position adds random noise to x/y values.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class JitterPosition {
 

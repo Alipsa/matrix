@@ -1,7 +1,5 @@
 package se.alipsa.matrix.chartexport
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgReader
 
@@ -10,7 +8,6 @@ import java.util.regex.Pattern
 /**
  * Shared helper for stripping Charm animation CSS from SVG content.
  */
-@CompileStatic
 final class AnimationCssStripper {
 
   private static final String CHARM_ANIMATION_MARKER = 'charm-animation'

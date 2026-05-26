@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Faceting configuration for Charm charts.
  */
-@CompileStatic
 class Facet {
 
   private FacetType type = FacetType.NONE

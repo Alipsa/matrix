@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Base exception type for Charm domain, mapping, and rendering errors.
  */
-@CompileStatic
 class CharmException extends RuntimeException {
 
   /**
@@ -32,7 +29,6 @@ class CharmException extends RuntimeException {
 /**
  * Indicates invalid chart specifications and validation failures.
  */
-@CompileStatic
 class CharmValidationException extends CharmException {
 
   /**
@@ -59,7 +55,6 @@ class CharmValidationException extends CharmException {
 /**
  * Indicates invalid aesthetic and mapping input.
  */
-@CompileStatic
 class CharmMappingException extends CharmException {
 
   /**
@@ -86,7 +81,6 @@ class CharmMappingException extends CharmException {
 /**
  * Indicates failures during mutable-spec to immutable-chart compilation.
  */
-@CompileStatic
 class CharmCompilationException extends CharmException {
 
   /**
@@ -113,7 +107,6 @@ class CharmCompilationException extends CharmException {
 /**
  * Indicates chart rendering failures.
  */
-@CompileStatic
 class CharmRenderException extends CharmException {
 
   /**

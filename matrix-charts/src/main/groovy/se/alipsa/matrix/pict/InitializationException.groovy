@@ -1,9 +1,6 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 /** Exception thrown when chart initialization fails. */
-@CompileStatic
 class InitializationException extends RuntimeException {
 
   InitializationException() {

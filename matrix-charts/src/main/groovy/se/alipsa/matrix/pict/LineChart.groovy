@@ -1,12 +1,9 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.regression.LinearRegression
 
 /** Line chart for visualizing data trends over a continuous axis. */
-@CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class LineChart extends Chart<LineChart> {
 
@@ -50,7 +47,6 @@ class LineChart extends Chart<LineChart> {
   /**
    * Fluent builder for {@link LineChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, LineChart> {
 
     Builder(Matrix data) { super(data) }

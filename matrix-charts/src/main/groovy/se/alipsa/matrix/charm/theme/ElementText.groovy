@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.theme
 
-import groovy.transform.CompileStatic
-
 /**
  * Text element styling for charm themes.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * font family, face, size, color, justification, angle, line height,
  * and margin properties.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateListLiteral')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')

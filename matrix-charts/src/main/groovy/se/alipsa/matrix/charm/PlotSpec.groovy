@@ -1,6 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
@@ -12,7 +11,6 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Mutable root plot specification that compiles into an immutable {@link Chart}.
  */
-@CompileStatic
 @SuppressWarnings('ClassSize')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('UnnecessaryCast')
@@ -596,7 +594,6 @@ class PlotSpec {
     " Did you mean: ${suggestions.join(', ')}?"
   }
 
-  @CompileStatic
   private static final class ColumnSuggestion {
 
     final String name
@@ -612,7 +609,6 @@ class PlotSpec {
   /**
    * Scale DSL delegate.
    */
-  @CompileStatic
   static class ScaleDsl {
 
     // ---- Legend position constants for guide configuration ----
@@ -838,7 +834,6 @@ class PlotSpec {
    * nested closures ({@code legend {}}, {@code axis {}}, etc.) that
    * delegated to {@link MapDsl} and were invisible to the IDE.</p>
    */
-  @CompileStatic
   static class ThemeDsl {
 
     // ---- Legend position constants for IDE auto-complete ----
@@ -1066,7 +1061,6 @@ class PlotSpec {
   /**
    * Facet DSL delegate.
    */
-  @CompileStatic
   static class FacetDsl {
 
     private final Facet facet
@@ -1185,7 +1179,6 @@ class PlotSpec {
      * Delegate used for {@code wrap {}} configuration.
 
      */
-    @CompileStatic
     static class WrapDsl {
 
       List vars = []
@@ -1200,7 +1193,6 @@ class PlotSpec {
   /**
    * Guides DSL delegate for configuring guide types per aesthetic.
    */
-  @CompileStatic
   static class GuidesDsl {
 
     private final GuidesSpec guides
@@ -1258,7 +1250,6 @@ class PlotSpec {
   /**
    * Annotation DSL delegate.
    */
-  @CompileStatic
   static class AnnotationDsl {
 
     private final List<AnnotationSpec> target

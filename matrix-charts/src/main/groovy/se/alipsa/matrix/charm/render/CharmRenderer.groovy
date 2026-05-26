@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.AnimationSpec
@@ -32,7 +30,6 @@ import se.alipsa.matrix.core.util.Logger
  * Data flow:
  * data + mappings -> stat -> position -> scale -> coord -> geom -> theme -> svg
  */
-@CompileStatic
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('CyclomaticComplexity')
 @SuppressWarnings('DuplicateNumberLiteral')

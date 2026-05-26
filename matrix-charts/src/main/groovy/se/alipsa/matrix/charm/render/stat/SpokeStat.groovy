@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Computes xend/yend from x/y plus angle/radius for spoke geoms.
  */
-@CompileStatic
 class SpokeStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

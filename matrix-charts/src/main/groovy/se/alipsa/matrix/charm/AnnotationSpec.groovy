@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Base type for annotations defined in the plot specification.
  */
-@CompileStatic
 abstract class AnnotationSpec {
 
   /**
@@ -32,7 +29,6 @@ abstract class AnnotationSpec {
  * are declared as explicit fields for IDE autocomplete. Values are written
  * through to {@link #params} so the renderer reads them unchanged.</p>
  */
-@CompileStatic
 class TextAnnotationSpec extends AnnotationSpec {
 
   Number x
@@ -102,7 +98,6 @@ class TextAnnotationSpec extends AnnotationSpec {
  * are declared as explicit fields for IDE autocomplete. Values are written
  * through to {@link #params} so the renderer reads them unchanged.</p>
  */
-@CompileStatic
 class RectAnnotationSpec extends AnnotationSpec {
 
   Number xmin
@@ -174,7 +169,6 @@ class RectAnnotationSpec extends AnnotationSpec {
  * are declared as explicit fields for IDE autocomplete. Values are written
  * through to {@link #params} so the renderer reads them unchanged.</p>
  */
-@CompileStatic
 class SegmentAnnotationSpec extends AnnotationSpec {
 
   Number x
@@ -242,7 +236,6 @@ class SegmentAnnotationSpec extends AnnotationSpec {
 /**
  * Custom grob annotation specification.
  */
-@CompileStatic
 class CustomAnnotationSpec extends AnnotationSpec {
 
   Object grob
@@ -275,7 +268,6 @@ class CustomAnnotationSpec extends AnnotationSpec {
 /**
  * Log tick annotation specification.
  */
-@CompileStatic
 class LogticksAnnotationSpec extends AnnotationSpec {
 
   Map<String, Object> params = [:]
@@ -295,7 +287,6 @@ class LogticksAnnotationSpec extends AnnotationSpec {
 /**
  * Raster annotation specification.
  */
-@CompileStatic
 class RasterAnnotationSpec extends AnnotationSpec {
 
   List<List<String>> raster = []
@@ -330,7 +321,6 @@ class RasterAnnotationSpec extends AnnotationSpec {
 /**
  * Map annotation specification.
  */
-@CompileStatic
 class MapAnnotationSpec extends AnnotationSpec {
 
   Matrix map

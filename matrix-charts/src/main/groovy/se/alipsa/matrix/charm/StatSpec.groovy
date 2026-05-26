@@ -1,12 +1,9 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Parameterized statistical transformation specification carrying the
  * stat type plus configuration parameters.
  */
-@CompileStatic
 class StatSpec {
 
   final CharmStatType type

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.sf
 
-import groovy.transform.CompileStatic
-
 /**
  * A shape is a collection of rings that together define a geometry part.
  */
-@CompileStatic
 class SfShape {
 
   final SfType type

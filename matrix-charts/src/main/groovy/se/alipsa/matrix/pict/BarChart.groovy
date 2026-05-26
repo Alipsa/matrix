@@ -1,11 +1,8 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /** Bar chart for visualizing categorical data with rectangular bars. */
-@CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BarChart extends Chart<BarChart> {
 
@@ -100,7 +97,6 @@ class BarChart extends Chart<BarChart> {
   /**
    * Fluent builder for {@link BarChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, BarChart> {
 
     private ChartType chartType = ChartType.BASIC

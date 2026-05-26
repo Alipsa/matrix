@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -18,7 +16,6 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
  * Axis labels are swapped by the renderer (not here) since labels are on the Chart,
  * not on LayerData.
  */
-@CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class FlipCoord {
 

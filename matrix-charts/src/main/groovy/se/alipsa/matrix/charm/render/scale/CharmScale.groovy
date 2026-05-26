@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.Scale
 
 /**
@@ -11,7 +9,6 @@ import se.alipsa.matrix.charm.Scale
  * and data values. Once trained, it maps data values to pixel coordinates and provides
  * tick marks/labels for axis rendering.
  */
-@CompileStatic
 abstract class CharmScale {
 
   /** The user-facing scale configuration that produced this trained scale. */

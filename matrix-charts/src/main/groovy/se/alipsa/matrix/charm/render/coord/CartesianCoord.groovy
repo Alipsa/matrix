@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -16,7 +14,6 @@ import se.alipsa.matrix.core.ValueConverter
  * This coordinate step runs after stats/positions but before scale training,
  * so clamped values can influence trained scale domains.
  */
-@CompileStatic
 @SuppressWarnings('CyclomaticComplexity')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')

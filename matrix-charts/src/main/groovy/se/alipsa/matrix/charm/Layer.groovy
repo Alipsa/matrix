@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Canonical layer specification in Charm.
  */
-@CompileStatic
 @SuppressWarnings('ParameterCount')
 class Layer {
 

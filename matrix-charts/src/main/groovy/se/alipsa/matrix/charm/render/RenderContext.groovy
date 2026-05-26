@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Defs
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
@@ -16,7 +14,6 @@ import se.alipsa.matrix.charm.render.scale.TrainedScales
  * The chart/config/svg references are immutable, while trained scales/panels/defs
  * are initialized once during renderer setup and then treated as read-only.
  */
-@CompileStatic
 class RenderContext {
 
   final Chart chart
@@ -142,9 +139,9 @@ class RenderContext {
 /**
  * Panel definition used for facet layout.
  */
-@CompileStatic
 
 class PanelSpec {
+
   int row
   int col
   String label
@@ -162,7 +159,6 @@ class PanelSpec {
  * Layer data flowing through stat -> position -> scale -> coord.
  */
 
-@CompileStatic
 class LayerData {
 
   Object x
@@ -192,7 +188,6 @@ class LayerData {
  * Layer render job.
 
  */
-@CompileStatic
 class LayerRenderJob {
 
   se.alipsa.matrix.charm.LayerSpec layer

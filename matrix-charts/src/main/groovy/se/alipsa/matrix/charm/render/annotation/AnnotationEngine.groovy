@@ -1,7 +1,6 @@
 package se.alipsa.matrix.charm.render.annotation
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
@@ -31,7 +30,6 @@ import se.alipsa.matrix.core.util.Logger
 /**
  * Dispatch and rendering helpers for charm annotations.
  */
-@CompileStatic
 class AnnotationEngine {
 
   private static final Logger log = Logger.getLogger(AnnotationEngine)
@@ -814,7 +812,6 @@ class AnnotationEngine {
     ]
   }
 
-  @CompileStatic
   private static class GgScaleCompat {
     CharmScale scale
 
@@ -847,7 +844,6 @@ class AnnotationEngine {
     }
   }
 
-  @CompileStatic
   private static class GgCoordCompat {
     List<Number> transform(Number x, Number y, Map<String, ?> scales) {
       GgScaleCompat xScale = scales?.get('x') as GgScaleCompat

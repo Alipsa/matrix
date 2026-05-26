@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
 /**
  * Static DSL entry points for Charm chart specifications.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class Charts {
 

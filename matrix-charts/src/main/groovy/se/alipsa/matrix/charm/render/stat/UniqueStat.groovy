@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -9,7 +7,6 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
 /**
  * Unique stat drops duplicate observations by x/y/group/color/fill.
  */
-@CompileStatic
 class UniqueStat {
 
   @SuppressWarnings('UnusedMethodParameter')

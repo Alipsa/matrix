@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -10,7 +8,6 @@ import se.alipsa.matrix.charm.render.RenderContext
 /**
  * Renders ribbon geometry from ymin/ymax bounds across x.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class RibbonRenderer {
 

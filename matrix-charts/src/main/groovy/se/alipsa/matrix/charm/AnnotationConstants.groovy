@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Shared constants and utility methods for annotation implementations.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('Instanceof')
 @SuppressWarnings('UnnecessaryCast')

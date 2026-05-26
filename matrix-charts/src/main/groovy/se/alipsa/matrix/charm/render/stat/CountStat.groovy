@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 
@@ -9,7 +7,6 @@ import se.alipsa.matrix.charm.render.LayerData
  * Count stat transformation - counts occurrences of each unique x value.
  * Used by geom_bar to count observations in each category.
  */
-@CompileStatic
 class CountStat {
 
   /**

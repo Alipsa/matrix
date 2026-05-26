@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.Stat
@@ -12,7 +10,6 @@ import java.util.Locale
 /**
  * Summary stat over x bins.
  */
-@CompileStatic
 class SummaryBinStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

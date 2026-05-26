@@ -1,11 +1,8 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /** Pie chart for visualizing proportional data as circular segments. */
-@CompileStatic
 class PieChart extends Chart<PieChart> {
 
   static PieChart create(String title, List<?> groupCol, List<?> numberCol) {
@@ -44,7 +41,6 @@ class PieChart extends Chart<PieChart> {
   /**
    * Fluent builder for {@link PieChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, PieChart> {
 
     Builder(Matrix data) { super(data) }

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -12,7 +10,6 @@ import java.util.Locale
 /**
  * Renders simple-feature outputs by routing to point/path/polygon renderers.
  */
-@CompileStatic
 class SfRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /** Scatter chart for visualizing relationships between two numerical variables. */
-@CompileStatic
 class ScatterChart extends Chart<ScatterChart> {
 
   static ScatterChart create(String title, Matrix data, String xAxis, String yAxis) {
@@ -38,7 +35,6 @@ class ScatterChart extends Chart<ScatterChart> {
   /**
    * Fluent builder for {@link ScatterChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, ScatterChart> {
 
     Builder(Matrix data) { super(data) }

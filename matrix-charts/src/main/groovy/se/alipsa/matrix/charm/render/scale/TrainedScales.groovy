@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * Container for all trained scales produced by {@link ScaleEngine}.
  *
  * Holds one scale per aesthetic channel: x, y, color, fill, and
  * optional size, shape, alpha, linetype, group.
  */
-@CompileStatic
 class TrainedScales {
 
   /** Trained x-axis scale. */

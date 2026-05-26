@@ -1,7 +1,6 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Layer DSL delegate for geom configuration blocks.
@@ -12,7 +11,6 @@ import groovy.transform.CompileStatic
  * {@code method}, {@code se}, {@code bins}) still fall through to
  * {@link LayerParams#propertyMissing(String, Object) propertyMissing}.</p>
  */
-@CompileStatic
 @SuppressWarnings(['IfStatementBraces', 'Instanceof', 'UnnecessaryOverridingMethod'])
 class LayerDsl extends LayerParams {
 

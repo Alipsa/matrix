@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
@@ -20,7 +18,6 @@ import javafx.scene.Group
  * new code. This class is retained for backward compatibility with existing chart type factories.
  */
 @Deprecated
-@CompileStatic
 class Plot {
 
   /**

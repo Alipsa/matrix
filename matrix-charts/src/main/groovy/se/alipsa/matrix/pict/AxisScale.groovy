@@ -1,12 +1,9 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 /**
  * Defines a custom axis scale with start, end, and step values.
  * Instances are immutable after construction.
  */
-@CompileStatic
 class AxisScale {
 
   private final BigDecimal start

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /** Area chart for visualizing data as filled regions between lines and an axis. */
-@CompileStatic
 class AreaChart extends Chart<AreaChart> {
 
   static AreaChart create(Matrix data) {
@@ -68,7 +65,6 @@ class AreaChart extends Chart<AreaChart> {
   /**
    * Fluent builder for {@link AreaChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, AreaChart> {
 
     Builder(Matrix data) { super(data) }

@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Collection of guide specifications keyed by normalized aesthetic name.
  */
-@CompileStatic
 class GuidesSpec {
 
   /** Map of normalized aesthetic names to guide specs. */

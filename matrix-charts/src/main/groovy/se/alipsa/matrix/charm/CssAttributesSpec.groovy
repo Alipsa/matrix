@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * CSS attribute configuration for charm-rendered SVG output.
  */
-@CompileStatic
 class CssAttributesSpec {
 
   /** Master toggle for CSS class/id/data-* emission. */

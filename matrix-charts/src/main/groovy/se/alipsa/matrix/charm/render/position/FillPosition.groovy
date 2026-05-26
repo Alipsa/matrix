@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.position
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 
@@ -12,7 +10,6 @@ import se.alipsa.matrix.charm.render.LayerData
  * Supports params:
  * - reverse: boolean (default false) - if true, reverses stacking order within each x group
  */
-@CompileStatic
 class FillPosition {
 
   /**

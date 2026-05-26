@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -10,7 +8,6 @@ import se.alipsa.matrix.charm.render.RenderContext
 /**
  * Renders rectangle geometry.
  */
-@CompileStatic
 class RectRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {

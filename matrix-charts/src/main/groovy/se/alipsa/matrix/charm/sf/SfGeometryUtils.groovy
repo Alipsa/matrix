@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.sf
 
-import groovy.transform.CompileStatic
-
 /**
  * Utility helpers for simple feature geometry calculations.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateListLiteral', 'DuplicateNumberLiteral', 'IfStatementBraces', 'ReturnsNullInsteadOfEmptyCollection'])
 class SfGeometryUtils {
 

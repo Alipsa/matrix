@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed legend position constants.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * compile-time safety. Absolute positioning via {@code [x, y]} lists is
  * supported by the separate {@link Theme#legendPositionCoords} field.</p>
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 enum LegendPosition {
 

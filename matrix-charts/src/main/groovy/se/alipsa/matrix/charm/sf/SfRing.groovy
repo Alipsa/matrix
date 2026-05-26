@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.sf
 
-import groovy.transform.CompileStatic
-
 /**
  * A ring is an ordered list of points, optionally marked as a hole.
  */
-@CompileStatic
 class SfRing {
 
   final List<SfPoint> points

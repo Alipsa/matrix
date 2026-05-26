@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementRect
 import se.alipsa.matrix.charm.theme.ElementText
@@ -12,7 +10,6 @@ import se.alipsa.matrix.charm.theme.ElementText
  * Replaces the previous map-based approach with strongly typed element classes
  * for plot, panel, axis, legend, strip, and text styling.
  */
-@CompileStatic
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('Instanceof')

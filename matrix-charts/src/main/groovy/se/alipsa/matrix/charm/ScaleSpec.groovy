@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Grouped scale specification for x/y/color/fill.
  */
-@CompileStatic
 class ScaleSpec {
 
   private Scale x

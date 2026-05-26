@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.sf
 
-import groovy.transform.CompileStatic
-
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -9,7 +7,6 @@ import java.util.regex.Pattern
  * Minimal WKT reader for Simple Features geometries.
  * Supports POINT, LINESTRING, POLYGON, and MULTI* variants with optional SRID prefix.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class WktReader {
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.facet
 
-import groovy.transform.CompileStatic
-
 /**
  * Labeller class for formatting facet strip labels.
  *
@@ -11,7 +9,6 @@ import groovy.transform.CompileStatic
  *
  * Based on ggplot2's labeller system.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class Labeller {
 

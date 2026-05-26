@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import org.dom4j.Attribute
 import org.dom4j.Element
 
@@ -21,7 +19,6 @@ import java.util.regex.Pattern
  * SVG IDs are rewritten with per-cell prefixes to prevent collisions, since SVG IDs
  * are document-global even within nested {@code <svg>} elements.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('NestedForLoop')

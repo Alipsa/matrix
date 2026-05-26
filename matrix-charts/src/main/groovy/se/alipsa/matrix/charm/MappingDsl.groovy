@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Closure delegate for `mapping {}` configuration blocks.
  */
-@CompileStatic
 @SuppressWarnings('IfStatementBraces')
 class MappingDsl {
 

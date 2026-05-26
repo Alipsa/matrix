@@ -1,12 +1,9 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 /**
  * Utility class for color space conversions.
  * Provides HCL (CIELUV-based) to RGB conversion for perceptually uniform color scales.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 class ColorSpaceUtil {

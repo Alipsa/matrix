@@ -1,7 +1,5 @@
 package se.alipsa.matrix.chartexport
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.pict.CharmBridge
@@ -24,7 +22,6 @@ import java.nio.charset.StandardCharsets
  * ChartToSvg.export(charmChart, new File('chart.svg'))
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToSvg {
 

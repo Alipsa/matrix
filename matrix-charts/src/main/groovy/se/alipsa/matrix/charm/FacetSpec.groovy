@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed facet specification for Charm core.
  */
-@CompileStatic
 class FacetSpec extends Facet {
 
   /**

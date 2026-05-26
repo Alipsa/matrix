@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.ValueConverter
@@ -13,7 +11,6 @@ import se.alipsa.matrix.stats.kde.KernelDensity
  * LayerData with x as group center and y as evaluation points.
  * Density is stored in {@code meta.density}.
  */
-@CompileStatic
 class YDensityStat {
 
   /**

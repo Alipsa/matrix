@@ -1,12 +1,9 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Parameterized geometry specification carrying the geom type plus
  * metadata needed for rendering dispatch.
  */
-@CompileStatic
 class GeomSpec {
 
   final CharmGeomType type

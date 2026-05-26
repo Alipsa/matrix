@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.render.PlotGridRenderer
 
@@ -21,7 +19,6 @@ import se.alipsa.matrix.charm.render.PlotGridRenderer
  * Svg svg = grid.render(1200, 800)
  * </pre>
  */
-@CompileStatic
 class PlotGrid {
 
   private final List<Chart> charts

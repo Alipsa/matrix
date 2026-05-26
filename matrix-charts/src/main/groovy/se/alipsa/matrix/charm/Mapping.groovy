@@ -1,12 +1,10 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Canonical aesthetic mappings for a plot or layer.
  */
-@CompileStatic
 class Mapping {
 
   private ColumnExpr x

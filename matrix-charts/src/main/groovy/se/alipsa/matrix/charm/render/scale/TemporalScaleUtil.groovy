@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.core.ValueConverter
 
@@ -27,7 +25,6 @@ import java.util.Locale
  * - date/datetime: epoch-millis from instant
  * - time: millis since midnight
  */
-@CompileStatic
 class TemporalScaleUtil {
 
   static final ZoneId DEFAULT_ZONE = ZoneOffset.UTC
@@ -795,7 +792,6 @@ class TemporalScaleUtil {
     }
   }
 
-  @CompileStatic
   private static final class BreakInterval {
 
     final String unit

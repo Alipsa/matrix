@@ -1,12 +1,9 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
 /** Box-and-whisker chart for visualizing the distribution of numerical data. */
-@CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BoxChart extends Chart<BoxChart> {
 
@@ -65,7 +62,6 @@ class BoxChart extends Chart<BoxChart> {
   /**
    * Fluent builder for {@link BoxChart}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, BoxChart> {
 
     private List<String> columnNames

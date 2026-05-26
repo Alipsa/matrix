@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.geom.GeomUtils
@@ -23,7 +21,6 @@ import se.alipsa.matrix.stats.kde.KernelDensity
  *   <li>{@code to} - custom range end</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings('IfStatementBraces')
 class DensityStat {
 

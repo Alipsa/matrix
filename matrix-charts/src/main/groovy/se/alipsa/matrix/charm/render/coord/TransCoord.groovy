@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.charm.ScaleTransforms
@@ -12,7 +10,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Coordinate transform applying named transforms to x/y.
  */
-@CompileStatic
 class TransCoord {
 
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {

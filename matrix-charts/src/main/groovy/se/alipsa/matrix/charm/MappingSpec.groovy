@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed aesthetic mapping specification for Charm core.
  */
-@CompileStatic
 class MappingSpec extends Mapping {
 
   /**

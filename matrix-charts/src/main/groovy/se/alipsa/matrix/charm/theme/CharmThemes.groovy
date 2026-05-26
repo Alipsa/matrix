@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.theme
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.Theme
 
 /**
@@ -10,7 +8,6 @@ import se.alipsa.matrix.charm.Theme
  * Mirrors the gg Themes class, providing themed element configurations
  * for all standard ggplot2 theme presets.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateMapLiteral')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')

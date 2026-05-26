@@ -1,12 +1,9 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Parameterized position-adjustment specification carrying the
  * position type plus configuration parameters.
  */
-@CompileStatic
 class PositionSpec {
 
   final CharmPositionType type

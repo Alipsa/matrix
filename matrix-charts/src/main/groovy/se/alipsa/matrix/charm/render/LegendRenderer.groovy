@@ -23,7 +23,6 @@ import se.alipsa.matrix.core.util.Logger
  * Supports discrete legends, colorbars, colorsteps, size legends,
  * alpha legends, custom guides, and legend merging/positioning.
  */
-@CompileStatic
 class LegendRenderer {
 
   private static final Logger log = Logger.getLogger(LegendRenderer)

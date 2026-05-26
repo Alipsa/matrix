@@ -1,14 +1,11 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
 /** Histogram chart for visualizing the frequency distribution of numerical data. */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ExplicitCallToCompareToMethod')
 @SuppressWarnings('Instanceof')
@@ -110,7 +107,6 @@ class Histogram extends Chart<Histogram> {
   /**
    * Fluent builder for {@link Histogram}.
    */
-  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, Histogram> {
 
     private Integer bins = 9
@@ -149,7 +145,6 @@ class Histogram extends Chart<Histogram> {
 
 }
 
-@CompileStatic
 class MinMax {
 
   BigDecimal minValue

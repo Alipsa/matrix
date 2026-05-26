@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
@@ -16,7 +14,6 @@ import se.alipsa.matrix.core.ValueConverter
  * Takes a compiled {@link Chart}, {@link RenderConfig}, and collected layer data,
  * then produces trained {@link CharmScale} instances for each aesthetic.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')

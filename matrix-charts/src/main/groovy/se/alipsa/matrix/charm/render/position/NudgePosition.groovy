@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.position
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Nudge position shifts points by fixed x/y offsets.
  */
-@CompileStatic
 class NudgePosition {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
@@ -23,7 +21,6 @@ import se.alipsa.matrix.core.Matrix
  * geom-specific fluent setters. Common concerns (mapping, position,
  * inherit-mapping) are handled here.</p>
  */
-@CompileStatic
 @SuppressWarnings(['Instanceof', 'DuplicateStringLiteral'])
 abstract class LayerBuilder {
 
@@ -316,7 +313,6 @@ abstract class LayerBuilder {
    * <p>Each method sets a scale for an aesthetic channel. Accepts any
    * {@link Scale} instance (e.g. {@code Scale.manual(...)}, {@code Scale.transform('log10')}).</p>
    */
-  @CompileStatic
   static class LayerScaleDsl {
 
     final Map<String, Scale> collected = [:]

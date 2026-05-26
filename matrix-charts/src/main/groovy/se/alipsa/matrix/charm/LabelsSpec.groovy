@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed labels specification for Charm core.
  */
-@CompileStatic
 class LabelsSpec extends Labels {
 
   /**

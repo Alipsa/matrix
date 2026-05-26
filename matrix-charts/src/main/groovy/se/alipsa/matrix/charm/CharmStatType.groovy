@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Expanded statistical transformation types covering the full gg surface.
  *
@@ -9,7 +7,6 @@ import groovy.transform.CompileStatic
  * {@code se.alipsa.matrix.gg.layer.StatType} to support 1:1 mapping
  * from the gg adapter.
  */
-@CompileStatic
 enum CharmStatType {
 
   IDENTITY,

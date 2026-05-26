@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LegendPosition
 
 /**
  * Render configuration for Charm SVG output.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class RenderConfig {
 

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Marker interface for expression types that can appear in Charm
  * aesthetic mappings.
@@ -11,7 +9,6 @@ import groovy.transform.CompileStatic
  * {@code AfterScale}, {@code Identity}) implement it to allow the Charm
  * pipeline to accept them without casting.
  */
-@CompileStatic
 interface CharmExpression {
 
   /**

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.geom
 
-import groovy.transform.CompileStatic
-
 /**
  * Static factory for geometry builders.
  *
@@ -18,7 +16,6 @@ import groovy.transform.CompileStatic
  * }
  * }</pre>
  */
-@CompileStatic
 class Geoms {
 
   private Geoms() { }

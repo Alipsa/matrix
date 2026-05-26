@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * CSS animation specification for Charm SVG output.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class AnimationSpec {
 

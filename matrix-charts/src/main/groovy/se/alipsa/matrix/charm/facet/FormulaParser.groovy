@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.facet
 
-import groovy.transform.CompileStatic
-
 /**
  * Parser for ggplot2-style formula strings.
  *
@@ -14,7 +12,6 @@ import groovy.transform.CompileStatic
  *
  * The dot (.) represents "no variable" on that side.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('UnnecessaryCollectCall')
 class FormulaParser {

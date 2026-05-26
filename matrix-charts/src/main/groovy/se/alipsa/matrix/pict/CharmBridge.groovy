@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.LegendDirection
@@ -31,7 +29,6 @@ import java.awt.Font
  * {@link Chart} with categorySeries, valueSeries, style, title, etc.
  * This bridge converts that into a Charm PlotSpec → immutable Chart → SVG.</p>
  */
-@CompileStatic
 class CharmBridge {
 
   /**

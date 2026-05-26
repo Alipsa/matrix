@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 /**
  * Utilities for working with {@link LayerData} instances in the render pipeline.
  */
-@CompileStatic
 class LayerDataUtil {
 
   private LayerDataUtil() {

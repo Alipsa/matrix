@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.ValueConverter
@@ -20,7 +18,6 @@ import se.alipsa.matrix.core.ValueConverter
  *   <li>IDENTITY - pass-through (data values are colors)</li>
  * </ul>
  */
-@CompileStatic
 class ColorCharmScale extends CharmScale {
 
   private static final List<String> DEFAULT_COLORS = [

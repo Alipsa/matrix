@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import java.awt.Color
 import java.awt.Font
 
@@ -18,7 +16,6 @@ import java.awt.Font
  * chart.legend = legend
  * </pre>
  */
-@CompileStatic
 class Legend {
 
   /** Legend title text. */

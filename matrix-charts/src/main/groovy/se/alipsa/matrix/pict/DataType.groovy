@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,7 +11,6 @@ import java.time.LocalTime
  * <p>When validating series inputs, columns of the same category (e.g. Long and Double are both numeric)
  * are considered compatible, while a mismatch (e.g. String vs Double) is not.</p>
  */
-@CompileStatic
 enum DataType {
 
   NUMERIC, CHARACTER

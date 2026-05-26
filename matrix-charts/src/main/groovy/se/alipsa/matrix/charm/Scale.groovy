@@ -1,13 +1,11 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
 /**
  * Scale configuration for one aesthetic axis/channel.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('Instanceof')
 class Scale {

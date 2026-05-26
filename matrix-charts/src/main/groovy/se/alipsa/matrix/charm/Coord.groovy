@@ -1,12 +1,10 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Coordinate system specification.
  */
-@CompileStatic
 class Coord {
 
   private CharmCoordType type = CharmCoordType.CARTESIAN

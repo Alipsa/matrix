@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.scale
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.ValueConverter
 
 /**
@@ -10,7 +8,6 @@ import se.alipsa.matrix.core.ValueConverter
  * Maps continuous values into discrete bins, then transforms bin centers
  * to pixel coordinates via linear interpolation.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')
 class BinnedCharmScale extends CharmScale {

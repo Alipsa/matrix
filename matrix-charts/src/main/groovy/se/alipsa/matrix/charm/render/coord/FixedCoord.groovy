@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 
@@ -15,7 +13,6 @@ import se.alipsa.matrix.charm.render.LayerData
  * {@link CoordSpec} but is not applied to adjust panel dimensions or
  * scale ranges yet.
  */
-@CompileStatic
 class FixedCoord {
 
   /**

@@ -2,8 +2,6 @@ package se.alipsa.matrix.charm.render.stat
 
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.Stat
@@ -12,7 +10,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Confidence-ellipse style stat for grouped x/y data.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class EllipseStat {
 

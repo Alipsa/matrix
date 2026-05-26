@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -13,7 +11,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Renders spokes from x/y using angle and radius columns or params.
  */
-@CompileStatic
 class SpokeRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {

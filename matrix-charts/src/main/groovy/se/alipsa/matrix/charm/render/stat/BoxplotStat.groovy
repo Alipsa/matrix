@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.ValueConverter
@@ -17,7 +15,6 @@ import se.alipsa.matrix.core.ValueConverter
  *
  * <p>Uses quantile type 7 (linear interpolation) matching ggplot2 behavior.</p>
  */
-@CompileStatic
 @SuppressWarnings('AbcMetric')
 class BoxplotStat {
 

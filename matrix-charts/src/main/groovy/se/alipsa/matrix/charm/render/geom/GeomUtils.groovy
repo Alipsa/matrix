@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.FacetType
@@ -21,7 +19,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Shared helpers for Charm geom renderers.
  */
-@CompileStatic
 class GeomUtils {
 
   private static final List<String> DEFAULT_PALETTE = [

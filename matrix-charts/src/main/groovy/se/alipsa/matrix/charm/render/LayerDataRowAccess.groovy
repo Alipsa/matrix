@@ -1,13 +1,10 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Lightweight row access helpers for LayerData metadata.
  */
-@CompileStatic
 @SuppressWarnings('Instanceof')
 class LayerDataRowAccess {
 

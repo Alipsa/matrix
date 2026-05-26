@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.CharmRenderer
@@ -11,7 +9,6 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Immutable compiled Charm chart.
  */
-@CompileStatic
 @SuppressWarnings(value = ['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'IfStatementBraces', 'Instanceof', 'ParameterCount', 'UnnecessaryCollectCall', 'UnnecessaryGString'])
 class Chart {
 

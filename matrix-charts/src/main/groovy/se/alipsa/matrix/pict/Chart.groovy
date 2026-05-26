@@ -1,7 +1,5 @@
 package se.alipsa.matrix.pict
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
@@ -15,7 +13,6 @@ import java.awt.Font
  * inout.view(Plot.jfx(chart))
  * </code>
  */
-@CompileStatic
 abstract class Chart<T extends Chart> {
 
   protected String title
@@ -190,7 +187,6 @@ abstract class Chart<T extends Chart> {
    * @param <B> the concrete builder type (for fluent method chaining)
    * @param <C> the concrete chart type produced by this builder
    */
-  @CompileStatic
   abstract static class ChartBuilder<B extends ChartBuilder, C extends Chart> {
 
     protected Matrix data

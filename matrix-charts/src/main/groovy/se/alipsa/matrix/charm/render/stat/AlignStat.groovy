@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.ValueConverter
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Aligns grouped series to a shared x-grid using linear interpolation.
  */
-@CompileStatic
 class AlignStat {
 
   @SuppressWarnings('UnusedMethodParameter')

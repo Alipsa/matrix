@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
 import se.alipsa.matrix.core.ValueConverter
@@ -12,7 +10,6 @@ import se.alipsa.matrix.core.ValueConverter
  * @deprecated Use {@link se.alipsa.matrix.charm.render.scale.CharmScale} hierarchy instead.
  */
 @Deprecated
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('ImplementationAsType')

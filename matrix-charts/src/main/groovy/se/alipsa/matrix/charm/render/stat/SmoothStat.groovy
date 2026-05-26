@@ -1,7 +1,6 @@
 package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -28,7 +27,6 @@ import java.util.regex.Pattern
  *   <li>{@code degree} - polynomial degree (default 1, overrides formula)</li>
  * </ul>
  */
-@CompileStatic
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')

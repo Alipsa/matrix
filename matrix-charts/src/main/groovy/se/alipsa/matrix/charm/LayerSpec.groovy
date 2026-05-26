@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Typed layer specification for Charm core.
  */
-@CompileStatic
 @SuppressWarnings('ParameterCount')
 class LayerSpec extends Layer {
 

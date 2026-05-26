@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.theme
 
-import groovy.transform.CompileStatic
-
 /**
  * Line element styling for charm themes.
  *
  * Mirrors the gg ElementLine structure, providing typed access to
  * color, size (line width), linetype, and lineend properties.
  */
-@CompileStatic
 @SuppressWarnings('IfStatementBraces')
 class ElementLine {
 

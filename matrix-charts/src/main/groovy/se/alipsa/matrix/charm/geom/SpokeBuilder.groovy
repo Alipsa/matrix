@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.geom
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.LinetypeName
@@ -20,7 +18,6 @@ import se.alipsa.matrix.charm.LinetypeName
  * }
  * }</pre>
  */
-@CompileStatic
 class SpokeBuilder extends LayerBuilder {
 
   /**

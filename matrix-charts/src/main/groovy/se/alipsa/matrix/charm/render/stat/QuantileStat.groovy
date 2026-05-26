@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.ValueConverter
@@ -10,7 +8,6 @@ import se.alipsa.matrix.stats.regression.QuantileRegression
 /**
  * Quantile regression stat producing fitted lines for one or more quantiles.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('Instanceof')
 @SuppressWarnings('UnnecessaryCast')

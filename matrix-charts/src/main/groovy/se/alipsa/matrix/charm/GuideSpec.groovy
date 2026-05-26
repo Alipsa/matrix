@@ -1,11 +1,8 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileStatic
-
 /**
  * Specification for a single guide (legend, colorbar, axis, etc.).
  */
-@CompileStatic
 class GuideSpec {
 
   /** The guide type. */

@@ -1,14 +1,11 @@
 package se.alipsa.matrix.charm.theme
 
-import groovy.transform.CompileStatic
-
 /**
  * Rectangle element styling for charm themes.
  *
  * Mirrors the gg ElementRect structure, providing typed access to
  * fill, border color, border size, and linetype properties.
  */
-@CompileStatic
 @SuppressWarnings('IfStatementBraces')
 class ElementRect {
 

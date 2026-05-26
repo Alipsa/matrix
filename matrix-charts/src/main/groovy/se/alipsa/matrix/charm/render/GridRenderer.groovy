@@ -2,8 +2,6 @@ package se.alipsa.matrix.charm.render
 
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.GuideType
@@ -13,7 +11,6 @@ import se.alipsa.matrix.charm.theme.ElementLine
 /**
  * Renders major grid lines.
  */
-@CompileStatic
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('CyclomaticComplexity')
 @SuppressWarnings('DuplicateNumberLiteral')

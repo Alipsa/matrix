@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.stat
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.ValueConverter
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Function stat evaluates y = f(x) over a range.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('Instanceof')
 class FunctionStat {

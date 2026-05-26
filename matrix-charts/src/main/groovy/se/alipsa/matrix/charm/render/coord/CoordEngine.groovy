@@ -1,7 +1,5 @@
 package se.alipsa.matrix.charm.render.coord
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
@@ -14,7 +12,6 @@ import se.alipsa.matrix.core.util.Logger
  * Unlike StatEngine/PositionEngine which operate per-layer, the coordinate engine
  * operates at the chart level since the coordinate system is shared across all layers.
  */
-@CompileStatic
 class CoordEngine {
 
   private static final Logger log = Logger.getLogger(CoordEngine)
