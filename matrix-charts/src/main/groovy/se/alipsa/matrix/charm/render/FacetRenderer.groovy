@@ -227,6 +227,7 @@ class FacetRenderer {
   /**
    * Computes margin panels for FacetGrid with margins=true.
    */
+  @SuppressWarnings('UnusedPrivateMethodParameter')
   private List<PanelSpec> computeMarginPanels(
       Matrix chartData,
       List<String> rowLevels,
@@ -308,6 +309,7 @@ class FacetRenderer {
    * Applies a labeller to facet values. Supports charm Labeller objects,
    * string-based labeller names ('value', 'both'), and null (defaults to 'value').
    */
+  @SuppressWarnings('UnusedPrivateMethodParameter')
   private static String applyLabeller(Object labeller, Map<String, Object> facetValues, List<String> varNames) {
     if (labeller instanceof Labeller) {
       return (labeller as Labeller).label(facetValues)

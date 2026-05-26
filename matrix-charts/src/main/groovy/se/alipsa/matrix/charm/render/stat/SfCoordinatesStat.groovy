@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.sf.SfGeometryUtils
  * Computes representative label points for simple-feature geometries.
  */
 @CompileStatic
+@SuppressWarnings('ReturnNullFromCatchBlock')
 class SfCoordinatesStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

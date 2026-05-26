@@ -220,6 +220,7 @@ class CustomScaleTransform extends BaseScaleTransform {
  * Registry and factory methods for transform strategies.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 class ScaleTransforms {
 
   private static final Map<String, ScaleTransform> BUILTIN = [

@@ -12,6 +12,7 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
 @CompileStatic
 class UniqueStat {
 
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
       return []

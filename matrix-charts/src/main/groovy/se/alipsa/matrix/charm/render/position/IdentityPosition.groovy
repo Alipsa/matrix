@@ -19,6 +19,7 @@ class IdentityPosition {
    * @param data layer data
    * @return input data unchanged
    */
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     data
   }

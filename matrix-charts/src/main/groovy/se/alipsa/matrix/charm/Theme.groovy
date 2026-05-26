@@ -152,7 +152,7 @@ class Theme {
   String themeName
 
   /** Track properties explicitly set to null (e.g., element_blank()). */
-  Set<String> explicitNulls = new HashSet<>()
+  Set<String> explicitNulls = [] as Set
 
   /**
    * Copies this theme.

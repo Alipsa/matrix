@@ -10,6 +10,7 @@ import se.alipsa.matrix.charm.sf.SfGeometry
  * Expands simple-feature geometries into x/y rows for rendering.
  */
 @CompileStatic
+@SuppressWarnings('ReturnNullFromCatchBlock')
 class SfStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

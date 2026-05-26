@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.util
 
 import java.awt.Color
 
+/** Utility methods for color conversion and parsing. */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('Instanceof')

@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets
 
 import javax.swing.JPanel
 
+/** Swing panel that renders SVG content using the JSVG library. */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')
 class SvgPanel extends JPanel {

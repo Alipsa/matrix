@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
+/** Scatter chart for visualizing relationships between two numerical variables. */
 @CompileStatic
 class ScatterChart extends Chart<ScatterChart> {
 

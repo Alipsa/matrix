@@ -13,6 +13,7 @@ import se.alipsa.matrix.charm.render.LayerData
 @SuppressWarnings('DuplicateStringLiteral')
 class QqLineStat {
 
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
       return []

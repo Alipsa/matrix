@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
+/** Histogram chart for visualizing the frequency distribution of numerical data. */
 @CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ExplicitCallToCompareToMethod')

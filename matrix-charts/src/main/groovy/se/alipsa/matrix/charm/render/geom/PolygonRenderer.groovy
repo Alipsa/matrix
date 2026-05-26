@@ -21,7 +21,7 @@ class PolygonRenderer {
 
     int elementIndex = 0
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(layerData)
-    groups.each { Object _, List<LayerData> groupData ->
+    groups.each { Object key, List<LayerData> groupData ->
       if (groupData.size() < 3) {
         return
       }

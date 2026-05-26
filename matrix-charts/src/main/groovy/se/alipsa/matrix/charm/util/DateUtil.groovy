@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.format.TextStyle
 
+/** Utility methods for date formatting and month-name generation. */
 class DateUtil {
 
   static List<String> getMonthNames() {

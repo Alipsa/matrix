@@ -24,6 +24,7 @@ import se.alipsa.matrix.core.Matrix
  * inherit-mapping) are handled here.</p>
  */
 @CompileStatic
+@SuppressWarnings(['Instanceof', 'DuplicateStringLiteral'])
 abstract class LayerBuilder {
 
   protected Mapping layerMapping

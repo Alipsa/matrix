@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
+/** Bar chart for visualizing categorical data with rectangular bars. */
 @CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BarChart extends Chart<BarChart> {

@@ -13,8 +13,7 @@ import groovy.transform.CompileStatic
  * {@link LayerParams#propertyMissing(String, Object) propertyMissing}.</p>
  */
 @CompileStatic
-@SuppressWarnings('IfStatementBraces')
-@SuppressWarnings('Instanceof')
+@SuppressWarnings(['IfStatementBraces', 'Instanceof', 'UnnecessaryOverridingMethod'])
 class LayerDsl extends LayerParams {
 
   /** Point/line size. */

@@ -6,9 +6,7 @@ import groovy.transform.CompileStatic
  * Utility helpers for simple feature geometry calculations.
  */
 @CompileStatic
-@SuppressWarnings('DuplicateListLiteral')
-@SuppressWarnings('DuplicateNumberLiteral')
-@SuppressWarnings('IfStatementBraces')
+@SuppressWarnings(['DuplicateListLiteral', 'DuplicateNumberLiteral', 'IfStatementBraces', 'ReturnsNullInsteadOfEmptyCollection'])
 class SfGeometryUtils {
 
   /**

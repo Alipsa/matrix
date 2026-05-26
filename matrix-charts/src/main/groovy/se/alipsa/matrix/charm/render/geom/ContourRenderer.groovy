@@ -31,7 +31,7 @@ class ContourRenderer {
       bucket << datum
     }
 
-    groups.each { Object _, List<LayerData> groupData ->
+    groups.each { Object key, List<LayerData> groupData ->
       if (groupData.isEmpty()) {
         return
       }

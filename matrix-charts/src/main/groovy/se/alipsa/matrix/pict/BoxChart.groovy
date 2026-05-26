@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
+/** Box-and-whisker chart for visualizing the distribution of numerical data. */
 @CompileStatic
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BoxChart extends Chart<BoxChart> {

@@ -125,6 +125,7 @@ class AxisRenderer {
     }
   }
 
+  @SuppressWarnings('UnusedPrivateMethodParameter')
   private void renderStandardXAxis(G axes, RenderContext context, int panelWidth, int panelHeight,
                                     int tickLen, int tickCount,
                                     ElementLine xLine, ElementText xText, GuideSpec xGuide,
@@ -200,6 +201,7 @@ class AxisRenderer {
     }
   }
 
+  @SuppressWarnings('UnusedPrivateMethodParameter')
   private void renderStandardYAxis(G axes, RenderContext context, int panelHeight,
                                     int tickLen, int tickCount,
                                     ElementLine yLine, ElementText yText, GuideSpec yGuide,
@@ -439,6 +441,7 @@ class AxisRenderer {
     }
   }
 
+  @SuppressWarnings('UnusedPrivateMethodParameter')
   private static void drawLogtick(G group, BigDecimal pos, int len, boolean isXAxis,
                                    int panelWidth, int panelHeight,
                                    String color, BigDecimal width) {

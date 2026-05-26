@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.LayerData
 @CompileStatic
 class QqStat {
 
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
       return []

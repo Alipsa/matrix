@@ -19,8 +19,8 @@ import java.awt.Font
 abstract class Chart<T extends Chart> {
 
   protected String title
-  protected String xAxisTitle = ""
-  protected String yAxisTitle = ""
+  protected String xAxisTitle = ''
+  protected String yAxisTitle = ''
 
   protected List<?> categorySeries
   protected List<List<?>> valueSeries
@@ -45,17 +45,19 @@ abstract class Chart<T extends Chart> {
     return valueSeries
   }
 
+  private static final int REQUIRED_COLUMN_COUNT = 2
+
   static void validateSeries(Matrix[] series) {
     int idx = 0
     if (series == null || series.length == 0) {
-      throw new IllegalArgumentException("The series contains no data")
+      throw new IllegalArgumentException('The series contains no data')
     }
 
     Matrix firstTable = series[0]
     Class firstColumn = firstTable.type(0)
     Class secondColumn = firstTable.type(1)
-    if (firstTable.columnCount() != 2) {
-      throw new IllegalArgumentException("Table " + idx + "(" + firstTable.matrixName + ") does not contain 2 columns.")
+    if (firstTable.columnCount() != REQUIRED_COLUMN_COUNT) {
+      throw new IllegalArgumentException("Table ${idx}(${firstTable.matrixName}) does not contain ${REQUIRED_COLUMN_COUNT} columns.")
     }
 
     for (Matrix table in series) {
@@ -63,8 +65,8 @@ abstract class Chart<T extends Chart> {
         idx++
         continue
       }
-      if (table.columnCount() != 2) {
-        throw new IllegalArgumentException("Table " + idx + "(" + table.matrixName + ") does not contain 2 columns.")
+      if (table.columnCount() != REQUIRED_COLUMN_COUNT) {
+        throw new IllegalArgumentException("Table ${idx}(${table.matrixName}) does not contain ${REQUIRED_COLUMN_COUNT} columns.")
       }
       Class col0Type = table.type(0)
       Class col1Type = table.type(1)
@@ -169,7 +171,7 @@ abstract class Chart<T extends Chart> {
 
   @Override
   String toString() {
-    return title + ", " + categorySeries.size() + " categories, " + valueSeries.size() + " value series"
+    "${title}, ${categorySeries.size()} categories, ${valueSeries.size()} value series"
   }
 
   /**
@@ -202,7 +204,7 @@ abstract class Chart<T extends Chart> {
     protected Legend legend
     protected Style style
 
-    ChartBuilder(Matrix data) {
+    protected ChartBuilder(Matrix data) {
       this.data = data
     }
 
@@ -264,7 +266,9 @@ abstract class Chart<T extends Chart> {
     B legendDirection(Legend.Direction direction) { ensureLegend(); legend.direction = direction; this as B }
 
     private void ensureLegend() {
-      if (legend == null) legend = new Legend()
+      if (legend == null) {
+        legend = new Legend()
+      }
     }
 
     /** Sets the style configuration. */
@@ -289,7 +293,9 @@ abstract class Chart<T extends Chart> {
     B css(String css) { ensureStyle(); style.css = css; this as B }
 
     private void ensureStyle() {
-      if (style == null) style = new Style()
+      if (style == null) {
+        style = new Style()
+      }
     }
 
     /**
@@ -297,13 +303,27 @@ abstract class Chart<T extends Chart> {
      * Called by subclass {@link #build()} implementations.
      */
     protected void applyTo(C chart) {
-      if (title) chart.title = title
-      if (xAxisTitle) chart.xAxisTitle = xAxisTitle
-      if (yAxisTitle) chart.yAxisTitle = yAxisTitle
-      if (xAxisScale) chart.xAxisScale = xAxisScale
-      if (yAxisScale) chart.yAxisScale = yAxisScale
-      if (legend) chart.legend = legend
-      if (style) chart.style = style
+      if (title) {
+        chart.title = title
+      }
+      if (xAxisTitle) {
+        chart.xAxisTitle = xAxisTitle
+      }
+      if (yAxisTitle) {
+        chart.yAxisTitle = yAxisTitle
+      }
+      if (xAxisScale) {
+        chart.xAxisScale = xAxisScale
+      }
+      if (yAxisScale) {
+        chart.yAxisScale = yAxisScale
+      }
+      if (legend) {
+        chart.legend = legend
+      }
+      if (style) {
+        chart.style = style
+      }
     }
 
     /**
@@ -312,5 +332,7 @@ abstract class Chart<T extends Chart> {
      * @return the fully configured chart
      */
     abstract C build()
+
   }
+
 }

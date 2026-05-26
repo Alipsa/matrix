@@ -30,7 +30,7 @@ class DensityRenderer {
     }
 
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(layerData)
-    groups.each { Object _, List<LayerData> groupData ->
+    groups.each { Object key, List<LayerData> groupData ->
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
       List<BigDecimal[]> points = []
       sorted.each { LayerData datum ->

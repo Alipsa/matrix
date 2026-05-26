@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
+/** Pie chart for visualizing proportional data as circular segments. */
 @CompileStatic
 class PieChart extends Chart<PieChart> {
 

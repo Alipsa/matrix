@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Utility methods for normalizing guide configuration values.
  */
 @CompileStatic
+@SuppressWarnings('Instanceof')
 final class GuideUtils {
 
   private GuideUtils() {

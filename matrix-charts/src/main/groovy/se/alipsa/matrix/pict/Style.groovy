@@ -50,7 +50,6 @@ import java.awt.Color
  *    <li>top left</li>
  *    <li>top center</li>
  *  </ol>
- *
  */
 @CompileStatic
 class Style {

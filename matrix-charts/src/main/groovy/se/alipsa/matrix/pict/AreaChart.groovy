@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
+/** Area chart for visualizing data as filled regions between lines and an axis. */
 @CompileStatic
 class AreaChart extends Chart<AreaChart> {
 
@@ -42,6 +43,7 @@ class AreaChart extends Chart<AreaChart> {
   /**
    * TODO: figure out how groupCol works
    */
+  @SuppressWarnings('UnusedMethodParameter')
   static AreaChart create(String title, Matrix data, String xCol, String yCol, String groupCol) {
     throw new IllegalStateException('Not yet implemented')
   }

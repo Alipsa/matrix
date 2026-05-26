@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.ValueConverter
 @CompileStatic
 class AlignStat {
 
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
       return []

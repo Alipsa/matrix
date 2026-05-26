@@ -19,6 +19,7 @@ class CountStat {
    * @param data layer data
    * @return one LayerData per unique x value with y=count and meta.percent
    */
+  @SuppressWarnings('UnusedMethodParameter')
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data.isEmpty()) {
       return []

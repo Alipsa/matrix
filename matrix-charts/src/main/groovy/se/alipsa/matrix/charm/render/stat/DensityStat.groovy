@@ -38,7 +38,7 @@ class DensityStat {
     Map<String, Object> kdeParams = buildKdeParams(StatEngine.effectiveParams(layer))
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(data)
     List<LayerData> result = []
-    groups.each { Object _, List<LayerData> bucket ->
+    groups.each { Object key, List<LayerData> bucket ->
       List<Number> values = extractNumericX(bucket)
       if (values.size() < 2) {
         return

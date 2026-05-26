@@ -99,7 +99,7 @@ class P2GeomRendererTest {
         .split('_')
         .collect { it.toLowerCase().capitalize() }
         .join('') + 'Builder'
-    getClass().classLoader.loadClass("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
+    P2GeomRendererTest.classLoader.loadClass("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
   }
 
   private static LayerBuilder applyOptions(LayerBuilder builder, Map<String, Object> options) {
