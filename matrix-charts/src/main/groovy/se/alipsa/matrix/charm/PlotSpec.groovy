@@ -640,41 +640,41 @@ class PlotSpec {
       this.scale = scale
     }
 
-    /**
-     * Sets x scale.
-     *
-     * @param value scale input
-     */
-    void setX(Object value) {
-      scale.x = coerce(value, 'x')
-    }
+    /** Sets x scale. */
+    void setX(Scale value) { scale.x = value }
 
-    /**
-     * Sets y scale.
-     *
-     * @param value scale input
-     */
-    void setY(Object value) {
-      scale.y = coerce(value, 'y')
-    }
+    /** Sets x scale from a transform. */
+    void setX(ScaleTransform value) { scale.x = Scale.transform(value) }
 
-    /**
-     * Sets color scale.
-     *
-     * @param value scale input
-     */
-    void setColor(Object value) {
-      scale.color = coerce(value, 'color')
-    }
+    /** Sets x scale from a transform name. */
+    void setX(String value) { scale.x = Scale.transform(value) }
 
-    /**
-     * Sets fill scale.
-     *
-     * @param value scale input
-     */
-    void setFill(Object value) {
-      scale.fill = coerce(value, 'fill')
-    }
+    /** Sets y scale. */
+    void setY(Scale value) { scale.y = value }
+
+    /** Sets y scale from a transform. */
+    void setY(ScaleTransform value) { scale.y = Scale.transform(value) }
+
+    /** Sets y scale from a transform name. */
+    void setY(String value) { scale.y = Scale.transform(value) }
+
+    /** Sets color scale. */
+    void setColor(Scale value) { scale.color = value }
+
+    /** Sets color scale from a transform. */
+    void setColor(ScaleTransform value) { scale.color = Scale.transform(value) }
+
+    /** Sets color scale from a transform name. */
+    void setColor(String value) { scale.color = Scale.transform(value) }
+
+    /** Sets fill scale. */
+    void setFill(Scale value) { scale.fill = value }
+
+    /** Sets fill scale from a transform. */
+    void setFill(ScaleTransform value) { scale.fill = Scale.transform(value) }
+
+    /** Sets fill scale from a transform name. */
+    void setFill(String value) { scale.fill = Scale.transform(value) }
 
     /**
      * Creates a log10 transform scale.
@@ -807,22 +807,6 @@ class PlotSpec {
 
     /** Creates a none guide spec. */
     GuideSpec none() { GuideSpec.none() }
-
-    private Scale coerce(Object value, String axis) {
-      if (value == null) {
-        return null
-      }
-      if (value instanceof Scale) {
-        return value as Scale
-      }
-      if (value instanceof ScaleTransform) {
-        return Scale.transform(value as ScaleTransform)
-      }
-      if (value instanceof CharSequence) {
-        return Scale.transform(value.toString())
-      }
-      throw new CharmValidationException("Unsupported scale value for '${axis}': ${value.getClass().name}")
-    }
 
   }
 
@@ -1130,7 +1114,7 @@ class PlotSpec {
      *
      * @param labeller labeller instance
      */
-    void setLabeller(Object labeller) {
+    void setLabeller(Labeller labeller) {
       facet.params['labeller'] = labeller
     }
 
@@ -1181,10 +1165,10 @@ class PlotSpec {
      */
     static class WrapDsl {
 
-      List vars = []
+      List<String> vars = []
       Integer ncol
       Integer nrow
-      Object labeller
+      Labeller labeller
 
     }
 
@@ -1206,26 +1190,97 @@ class PlotSpec {
       this.guides = guides
     }
 
-    /** Sets the color guide. */
-    void setColor(Object value) { guides.setSpec('color', GuideUtils.coerceGuide(value, 'color')) }
+    /** Sets the color guide from a spec. */
+    void setColor(GuideSpec value) { guides.setSpec('color', value) }
 
-    /** Sets the fill guide. */
-    void setFill(Object value) { guides.setSpec('fill', GuideUtils.coerceGuide(value, 'fill')) }
+    /** Sets the color guide from a type. */
+    void setColor(GuideType value) { guides.setSpec('color', new GuideSpec(value)) }
 
-    /** Sets the size guide. */
-    void setSize(Object value) { guides.setSpec('size', GuideUtils.coerceGuide(value, 'size')) }
+    /** Sets the color guide from a type name. */
+    void setColor(String value) { guides.setSpec('color', GuideUtils.coerceGuide(value, 'color')) }
 
-    /** Sets the shape guide. */
-    void setShape(Object value) { guides.setSpec('shape', GuideUtils.coerceGuide(value, 'shape')) }
+    /** Disables the color guide (false) or throws on true. */
+    void setColor(boolean value) { guides.setSpec('color', coerceBool(value, 'color')) }
 
-    /** Sets the alpha guide. */
-    void setAlpha(Object value) { guides.setSpec('alpha', GuideUtils.coerceGuide(value, 'alpha')) }
+    /** Sets the fill guide from a spec. */
+    void setFill(GuideSpec value) { guides.setSpec('fill', value) }
 
-    /** Sets the x guide. */
-    void setX(Object value) { guides.setSpec('x', GuideUtils.coerceGuide(value, 'x')) }
+    /** Sets the fill guide from a type. */
+    void setFill(GuideType value) { guides.setSpec('fill', new GuideSpec(value)) }
 
-    /** Sets the y guide. */
-    void setY(Object value) { guides.setSpec('y', GuideUtils.coerceGuide(value, 'y')) }
+    /** Sets the fill guide from a type name. */
+    void setFill(String value) { guides.setSpec('fill', GuideUtils.coerceGuide(value, 'fill')) }
+
+    /** Disables the fill guide (false) or throws on true. */
+    void setFill(boolean value) { guides.setSpec('fill', coerceBool(value, 'fill')) }
+
+    /** Sets the size guide from a spec. */
+    void setSize(GuideSpec value) { guides.setSpec('size', value) }
+
+    /** Sets the size guide from a type. */
+    void setSize(GuideType value) { guides.setSpec('size', new GuideSpec(value)) }
+
+    /** Sets the size guide from a type name. */
+    void setSize(String value) { guides.setSpec('size', GuideUtils.coerceGuide(value, 'size')) }
+
+    /** Disables the size guide (false) or throws on true. */
+    void setSize(boolean value) { guides.setSpec('size', coerceBool(value, 'size')) }
+
+    /** Sets the shape guide from a spec. */
+    void setShape(GuideSpec value) { guides.setSpec('shape', value) }
+
+    /** Sets the shape guide from a type. */
+    void setShape(GuideType value) { guides.setSpec('shape', new GuideSpec(value)) }
+
+    /** Sets the shape guide from a type name. */
+    void setShape(String value) { guides.setSpec('shape', GuideUtils.coerceGuide(value, 'shape')) }
+
+    /** Disables the shape guide (false) or throws on true. */
+    void setShape(boolean value) { guides.setSpec('shape', coerceBool(value, 'shape')) }
+
+    /** Sets the alpha guide from a spec. */
+    void setAlpha(GuideSpec value) { guides.setSpec('alpha', value) }
+
+    /** Sets the alpha guide from a type. */
+    void setAlpha(GuideType value) { guides.setSpec('alpha', new GuideSpec(value)) }
+
+    /** Sets the alpha guide from a type name. */
+    void setAlpha(String value) { guides.setSpec('alpha', GuideUtils.coerceGuide(value, 'alpha')) }
+
+    /** Disables the alpha guide (false) or throws on true. */
+    void setAlpha(boolean value) { guides.setSpec('alpha', coerceBool(value, 'alpha')) }
+
+    /** Sets the x guide from a spec. */
+    void setX(GuideSpec value) { guides.setSpec('x', value) }
+
+    /** Sets the x guide from a type. */
+    void setX(GuideType value) { guides.setSpec('x', new GuideSpec(value)) }
+
+    /** Sets the x guide from a type name. */
+    void setX(String value) { guides.setSpec('x', GuideUtils.coerceGuide(value, 'x')) }
+
+    /** Disables the x guide (false) or throws on true. */
+    void setX(boolean value) { guides.setSpec('x', coerceBool(value, 'x')) }
+
+    /** Sets the y guide from a spec. */
+    void setY(GuideSpec value) { guides.setSpec('y', value) }
+
+    /** Sets the y guide from a type. */
+    void setY(GuideType value) { guides.setSpec('y', new GuideSpec(value)) }
+
+    /** Sets the y guide from a type name. */
+    void setY(String value) { guides.setSpec('y', GuideUtils.coerceGuide(value, 'y')) }
+
+    /** Disables the y guide (false) or throws on true. */
+    void setY(boolean value) { guides.setSpec('y', coerceBool(value, 'y')) }
+
+    private static GuideSpec coerceBool(boolean value, String aesthetic) {
+      if (value) {
+        throw new CharmValidationException(
+            "Cannot set '${aesthetic}' guide to true — use a GuideSpec, GuideType, or guide type name")
+      }
+      GuideSpec.none()
+    }
 
     /** Creates a legend guide spec. */
     GuideSpec legend(Map<String, Object> params = [:]) { GuideSpec.legend(params) }
