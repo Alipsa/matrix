@@ -4,6 +4,7 @@ enum ExportFormat {
 
   PNG,
   JPEG,
+  PDF,
   SVG
 
   static ExportFormat fromFile(File file) {
@@ -25,6 +26,7 @@ enum ExportFormat {
     switch (ext.toLowerCase(Locale.ROOT)) {
       case 'png' -> PNG
       case 'jpg', 'jpeg' -> JPEG
+      case 'pdf' -> PDF
       default -> SVG
     }
   }

@@ -62,6 +62,7 @@ dependencies {
 
   api libs.fxsvgimage
   api libs.jsvg
+  implementation libs.pdfbox
 
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"

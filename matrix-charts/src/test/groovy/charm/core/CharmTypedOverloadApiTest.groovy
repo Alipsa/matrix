@@ -3,7 +3,6 @@ package charm.core
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
@@ -101,8 +100,8 @@ class CharmTypedOverloadApiTest {
     spec.start = 0
 
     assertEquals(CharmCoordType.CARTESIAN, spec.type)
-    assertEquals(0, spec.ratio.compareTo(1.5 as BigDecimal))
-    assertEquals(0, spec.start.compareTo(0 as BigDecimal))
+    assert spec.ratio == 1.5
+    assert spec.start == 0
   }
 
 }
