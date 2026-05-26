@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.CharmRenderException
+import se.alipsa.matrix.chartexport.AnimationCssStripper
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
@@ -104,12 +105,12 @@ class AnimationTest {
 </svg>'''
 
     String pngSanitized = invokeStrip(ChartToPng, svg)
-    String jpegSanitized = invokeStrip(ChartToJpeg, svg)
+    String stripperSanitized = AnimationCssStripper.stripFromXml(svg)
 
     assertFalse(pngSanitized.contains('charm-animation'))
-    assertFalse(jpegSanitized.contains('charm-animation'))
+    assertFalse(stripperSanitized.contains('charm-animation'))
     assertTrue(pngSanitized.contains('<circle'))
-    assertTrue(jpegSanitized.contains('<circle'))
+    assertTrue(stripperSanitized.contains('<circle'))
   }
 
   @Test
@@ -117,10 +118,10 @@ class AnimationTest {
     String svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="3"/></svg>'
 
     String pngSanitized = invokeStrip(ChartToPng, svg)
-    String jpegSanitized = invokeStrip(ChartToJpeg, svg)
+    String stripperSanitized = AnimationCssStripper.stripFromXml(svg)
 
     assertSame(svg, pngSanitized)
-    assertSame(svg, jpegSanitized)
+    assertSame(svg, stripperSanitized)
   }
 
   private static Matrix sampleData() {
