@@ -192,8 +192,8 @@ class PlotGrid {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
     switch (ExportFormat.fromFile(targetFile)) {
-      case ExportFormat.PNG -> se.alipsa.matrix.chartexport.ChartToPng.export(render(), targetFile)
-      case ExportFormat.JPEG -> se.alipsa.matrix.chartexport.ChartToJpeg.export(render(), targetFile)
+      case ExportFormat.PNG -> se.alipsa.matrix.chartexport.ChartToPng.export(this, targetFile)
+      case ExportFormat.JPEG -> se.alipsa.matrix.chartexport.ChartToJpeg.export(this, targetFile)
       default -> targetFile.text = SvgWriter.toXmlPretty(render())
     }
   }
