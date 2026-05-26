@@ -137,13 +137,8 @@ class Scale {
     transformStrategy?.id()
   }
 
-  /**
-   * Sets transform name.
-   *
-   * @param transform transform name
-   */
-  void setTransform(Object transform) {
-    this.transformStrategy = ScaleTransforms.resolve(transform)
+  private void applyTransformStrategy(ScaleTransform transform) {
+    this.transformStrategy = transform
     if (this.transformStrategy == null) {
       if (type == ScaleType.TRANSFORM) {
         type = ScaleType.CONTINUOUS
@@ -151,6 +146,34 @@ class Scale {
       return
     }
     type = ScaleType.TRANSFORM
+  }
+
+  /**
+   * Sets transform name.
+   *
+   * @param transformName transform name
+   */
+  void setTransform(String transformName) {
+    applyTransformStrategy(ScaleTransforms.resolve(transformName))
+  }
+
+  /**
+   * Sets transform strategy object.
+   *
+   * @param transform transform strategy object
+   */
+  void setTransform(ScaleTransform transform) {
+    applyTransformStrategy(ScaleTransforms.resolve(transform))
+  }
+
+  /**
+   * Clears transform strategy.
+   *
+   * @param transform null transform value
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  void setTransform(Void transform) {
+    applyTransformStrategy(null)
   }
 
   /**
@@ -168,14 +191,7 @@ class Scale {
    * @param transformStrategy strategy object
    */
   void setTransformStrategy(ScaleTransform transformStrategy) {
-    this.transformStrategy = transformStrategy
-    if (transformStrategy == null) {
-      if (type == ScaleType.TRANSFORM) {
-        type = ScaleType.CONTINUOUS
-      }
-      return
-    }
-    type = ScaleType.TRANSFORM
+    applyTransformStrategy(transformStrategy)
   }
 
   /**
@@ -235,17 +251,26 @@ class Scale {
   /**
    * Creates a manual color scale.
    *
-   * @param values color list or named map
+   * @param namedValues named color map
    * @return scale instance
    */
-  static Scale manual(Object values) {
+  static Scale manual(Map<String, String> namedValues) {
     Scale s = new Scale(type: ScaleType.DISCRETE)
     s.params['colorType'] = 'manual'
-    if (values instanceof Map) {
-      s.params['namedValues'] = values
-    } else if (values instanceof List) {
-      s.params['values'] = values
-    }
+    s.params['namedValues'] = namedValues == null ? [:] : new LinkedHashMap<String, String>(namedValues)
+    s
+  }
+
+  /**
+   * Creates a manual color scale.
+   *
+   * @param values color list
+   * @return scale instance
+   */
+  static Scale manual(List<String> values) {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'manual'
+    s.params['values'] = values == null ? [] : new ArrayList<String>(values)
     s
   }
 
@@ -492,11 +517,58 @@ class Scale {
    * (for example {@code 'legend'} or {@code 'colorbar'}), or {@code false} for
    * {@link GuideType#NONE}. Passing {@code null} removes any attached guide.</p>
    *
-   * @param value guide value
+   * @param value guide spec
    * @return this scale
    */
-  Scale guide(Object value) {
-    GuideSpec guideSpec = GuideUtils.coerceGuide(value, 'scale')
+  Scale guide(GuideSpec value) {
+    setGuideSpec(value?.copy())
+  }
+
+  /**
+   * Attaches a guide configuration to this scale.
+   *
+   * @param value guide type
+   * @return this scale
+   */
+  Scale guide(GuideType value) {
+    setGuideSpec(value == null ? null : new GuideSpec(value))
+  }
+
+  /**
+   * Attaches a guide configuration to this scale.
+   *
+   * @param value guide type name
+   * @return this scale
+   */
+  Scale guide(String value) {
+    setGuideSpec(GuideUtils.coerceGuide(value, 'scale'))
+  }
+
+  /**
+   * Attaches a guide configuration to this scale.
+   *
+   * @param value false suppresses guide rendering
+   * @return this scale
+   */
+  Scale guide(boolean value) {
+    if (value) {
+      throw new CharmValidationException('Cannot set scale guide to true — use a GuideSpec, GuideType, or guide type name')
+    }
+    setGuideSpec(GuideSpec.none())
+  }
+
+  /**
+   * Removes any attached guide configuration.
+   *
+   * @param value null guide value
+   * @return this scale
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  Scale guide(Void value) {
+    setGuideSpec(null)
+  }
+
+  private Scale setGuideSpec(GuideSpec guideSpec) {
     if (guideSpec == null) {
       params.remove('guide')
     } else {

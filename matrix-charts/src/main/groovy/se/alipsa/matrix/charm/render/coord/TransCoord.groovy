@@ -1,5 +1,6 @@
 package se.alipsa.matrix.charm.render.coord
 
+import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.charm.ScaleTransforms
@@ -10,6 +11,7 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Coordinate transform applying named transforms to x/y.
  */
+@SuppressWarnings('Instanceof')
 class TransCoord {
 
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
@@ -48,8 +50,14 @@ class TransCoord {
       return null
     }
     try {
-      ScaleTransforms.resolve(value)
-    } catch (Exception ignored) {
+      if (value instanceof ScaleTransform) {
+        return ScaleTransforms.resolve(value as ScaleTransform)
+      }
+      if (value instanceof CharSequence) {
+        return ScaleTransforms.resolve(value.toString())
+      }
+      null
+    } catch (CharmValidationException ignored) {
       null
     }
   }

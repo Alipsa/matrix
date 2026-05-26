@@ -209,7 +209,6 @@ class CustomScaleTransform extends BaseScaleTransform {
 /**
  * Registry and factory methods for transform strategies.
  */
-@SuppressWarnings('Instanceof')
 class ScaleTransforms {
 
   private static final Map<String, ScaleTransform> BUILTIN = [
@@ -222,22 +221,34 @@ class ScaleTransforms {
   ]
 
   /**
-   * Resolves a transform from object input.
+   * Resolves a transform from a transform id.
    *
-   * @param value transform instance or transform id
+   * @param value transform id
    * @return transform strategy
    */
-  static ScaleTransform resolve(Object value) {
-    if (value == null) {
-      return null
-    }
-    if (value instanceof ScaleTransform) {
-      return value as ScaleTransform
-    }
-    if (value instanceof CharSequence) {
-      return named(value.toString())
-    }
-    throw new CharmValidationException("Unsupported transform input: ${value.getClass().name}")
+  static ScaleTransform resolve(String value) {
+    value == null ? null : named(value)
+  }
+
+  /**
+   * Resolves a transform strategy.
+   *
+   * @param value transform strategy
+   * @return transform strategy
+   */
+  static ScaleTransform resolve(ScaleTransform value) {
+    value
+  }
+
+  /**
+   * Resolves a null transform value.
+   *
+   * @param value null transform value
+   * @return null
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  static ScaleTransform resolve(Void value) {
+    null
   }
 
   /**

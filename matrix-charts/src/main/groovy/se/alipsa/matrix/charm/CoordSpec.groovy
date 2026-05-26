@@ -11,7 +11,30 @@ class CoordSpec extends Coord {
    * @param value coord type value
    * @return this spec
    */
-  CoordSpec type(Object value) {
+  CoordSpec type(CharmCoordType value) {
+    setType(value)
+    this
+  }
+
+  /**
+   * Builder-style coordinate type setter.
+   *
+   * @param value coord type name
+   * @return this spec
+   */
+  CoordSpec type(String value) {
+    setType(value)
+    this
+  }
+
+  /**
+   * Builder-style coordinate type reset.
+   *
+   * @param value null coord type value
+   * @return this spec
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  CoordSpec type(Void value) {
     setType(value)
     this
   }
@@ -51,8 +74,8 @@ class CoordSpec extends Coord {
     params.ratio as BigDecimal
   }
 
-  void setRatio(Object value) {
-    params.ratio = value
+  void setRatio(Number value) {
+    params.ratio = value == null ? null : value as BigDecimal
   }
 
   /**
@@ -77,8 +100,8 @@ class CoordSpec extends Coord {
     params.start as BigDecimal
   }
 
-  void setStart(Object value) {
-    params.start = value
+  void setStart(Number value) {
+    params.start = value == null ? null : value as BigDecimal
   }
 
   /**
