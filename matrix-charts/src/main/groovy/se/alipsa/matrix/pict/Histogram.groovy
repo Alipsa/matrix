@@ -21,7 +21,8 @@ class Histogram extends Chart<Histogram> {
    *
    * @param params named parameters: title, data, columnName, bins, binDecimals
    * @return histogram
-   * @deprecated Use {@link #builder(Matrix)} for new code.
+   * @deprecated Use {@link #builder(Matrix)} with {@code title(...)}, {@code x(...)},
+   * {@code bins(...)}, and {@code binDecimals(...)} for new code.
    */
   @Deprecated
   static Histogram create(Map params) {
