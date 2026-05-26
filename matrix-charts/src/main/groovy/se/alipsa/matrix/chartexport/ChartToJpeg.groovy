@@ -3,6 +3,7 @@ package se.alipsa.matrix.chartexport
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -125,6 +126,42 @@ class ChartToJpeg {
     }
     CharmChart converted = CharmBridge.convert(chart)
     export(converted, os, quality)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as a JPEG image file.
+   *
+   * @param grid the plot grid to export
+   * @param targetFile the {@link File} where the JPEG image will be written
+   * @param quality JPEG compression quality (0.0 to 1.0)
+   * @throws IllegalArgumentException if grid or targetFile is null
+   */
+  static void export(PlotGrid grid, File targetFile, BigDecimal quality = 1.0) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    export(grid.render(), targetFile, quality)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as JPEG to an {@link OutputStream}.
+   *
+   * @param grid the plot grid to export
+   * @param os the output stream to write the JPEG to
+   * @param quality JPEG compression quality (0.0 to 1.0)
+   * @throws IllegalArgumentException if grid or os is null
+   */
+  static void export(PlotGrid grid, OutputStream os, BigDecimal quality = 1.0) {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (os == null) {
+      throw new IllegalArgumentException('outputStream cannot be null')
+    }
+    export(grid.render(), os, quality)
   }
 
   private static Svg stripAnimationCss(Svg svgChart) {

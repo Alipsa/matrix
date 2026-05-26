@@ -4,6 +4,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderBuilder
+import se.alipsa.matrix.chartexport.ExportFormat
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -360,7 +361,8 @@ class Chart {
   }
 
   /**
-   * Writes rendered SVG to a target file.
+   * Writes the chart to a target file, auto-detecting the format from the file extension.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
    *
    * @param targetFile output file
    */
@@ -368,7 +370,11 @@ class Chart {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
-    targetFile.text = SvgWriter.toXmlPretty(render())
+    switch (ExportFormat.fromFile(targetFile)) {
+      case ExportFormat.PNG -> se.alipsa.matrix.chartexport.ChartToPng.export(this, targetFile)
+      case ExportFormat.JPEG -> se.alipsa.matrix.chartexport.ChartToJpeg.export(this, targetFile)
+      default -> targetFile.text = SvgWriter.toXmlPretty(render())
+    }
   }
 
 }

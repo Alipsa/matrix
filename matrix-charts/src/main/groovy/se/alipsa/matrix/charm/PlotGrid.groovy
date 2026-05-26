@@ -1,7 +1,9 @@
 package se.alipsa.matrix.charm
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.PlotGridRenderer
+import se.alipsa.matrix.chartexport.ExportFormat
 
 /**
  * Immutable compiled multi-plot grid specification.
@@ -163,6 +165,36 @@ class PlotGrid {
       throw e
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render PlotGrid at ${width}x${height}px", e)
+    }
+  }
+
+  /**
+   * Writes the grid to a target file path, auto-detecting the format from the file extension.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
+   *
+   * @param targetPath path to output file
+   */
+  void writeTo(String targetPath) {
+    if (targetPath == null || targetPath.trim().isEmpty()) {
+      throw new IllegalArgumentException('targetPath cannot be blank')
+    }
+    writeTo(new File(targetPath))
+  }
+
+  /**
+   * Writes the grid to a target file, auto-detecting the format from the file extension.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
+   *
+   * @param targetFile output file
+   */
+  void writeTo(File targetFile) {
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    switch (ExportFormat.fromFile(targetFile)) {
+      case ExportFormat.PNG -> se.alipsa.matrix.chartexport.ChartToPng.export(this, targetFile)
+      case ExportFormat.JPEG -> se.alipsa.matrix.chartexport.ChartToJpeg.export(this, targetFile)
+      default -> targetFile.text = SvgWriter.toXmlPretty(render())
     }
   }
 

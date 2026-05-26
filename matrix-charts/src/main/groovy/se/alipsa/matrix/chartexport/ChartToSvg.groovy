@@ -3,6 +3,7 @@ package se.alipsa.matrix.chartexport
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
 
@@ -136,6 +137,57 @@ class ChartToSvg {
       throw new IllegalArgumentException('writer cannot be null')
     }
     writeSvg(chart.render(), writer)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as an SVG file.
+   *
+   * @param grid the plot grid to export
+   * @param targetFile the file to write the SVG to
+   * @throws IllegalArgumentException if grid or targetFile is null
+   */
+  static void export(PlotGrid grid, File targetFile) throws IOException {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    writeSvg(grid.render(), targetFile)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as SVG to an {@link OutputStream}.
+   *
+   * @param grid the plot grid to export
+   * @param os the output stream to write the SVG to
+   * @throws IllegalArgumentException if grid or os is null
+   */
+  static void export(PlotGrid grid, OutputStream os) throws IOException {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (os == null) {
+      throw new IllegalArgumentException('outputStream cannot be null')
+    }
+    writeSvg(grid.render(), os)
+  }
+
+  /**
+   * Export a {@link PlotGrid} as SVG to a {@link Writer}.
+   *
+   * @param grid the plot grid to export
+   * @param writer the writer to write the SVG to
+   * @throws IllegalArgumentException if grid or writer is null
+   */
+  static void export(PlotGrid grid, Writer writer) throws IOException {
+    if (grid == null) {
+      throw new IllegalArgumentException('grid cannot be null')
+    }
+    if (writer == null) {
+      throw new IllegalArgumentException('writer cannot be null')
+    }
+    writeSvg(grid.render(), writer)
   }
 
   private static void writeSvg(Svg svg, File targetFile) throws IOException {
