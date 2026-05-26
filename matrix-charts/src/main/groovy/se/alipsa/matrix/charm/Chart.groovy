@@ -4,6 +4,8 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderBuilder
+import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.chartexport.ExportFormat
 import se.alipsa.matrix.core.Matrix
 
@@ -371,9 +373,43 @@ class Chart {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
     switch (ExportFormat.fromFile(targetFile)) {
-      case ExportFormat.PNG -> se.alipsa.matrix.chartexport.ChartToPng.export(this, targetFile)
-      case ExportFormat.JPEG -> se.alipsa.matrix.chartexport.ChartToJpeg.export(this, targetFile)
+      case ExportFormat.PNG -> ChartToPng.export(this, targetFile)
+      case ExportFormat.JPEG -> ChartToJpeg.export(this, targetFile)
       default -> targetFile.text = SvgWriter.toXmlPretty(render())
+    }
+  }
+
+  /**
+   * Writes the chart to a target file path using custom render dimensions.
+   *
+   * @param targetPath output file path
+   * @param width render width in pixels
+   * @param height render height in pixels
+   */
+  void writeTo(String targetPath, int width, int height) {
+    if (targetPath == null || targetPath.trim().isEmpty()) {
+      throw new IllegalArgumentException('targetPath cannot be blank')
+    }
+    writeTo(new File(targetPath), width, height)
+  }
+
+  /**
+   * Writes the chart to a target file using custom render dimensions.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
+   *
+   * @param targetFile output file
+   * @param width render width in pixels
+   * @param height render height in pixels
+   */
+  void writeTo(File targetFile, int width, int height) {
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    Svg svg = render(width, height)
+    switch (ExportFormat.fromFile(targetFile)) {
+      case ExportFormat.PNG -> ChartToPng.export(svg, targetFile)
+      case ExportFormat.JPEG -> ChartToJpeg.export(svg, targetFile)
+      default -> targetFile.text = SvgWriter.toXmlPretty(svg)
     }
   }
 
