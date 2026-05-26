@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderBuilder
 import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.chartexport.ExportFormat
 import se.alipsa.matrix.core.Matrix
@@ -364,7 +365,7 @@ class Chart {
 
   /**
    * Writes the chart to a target file, auto-detecting the format from the file extension.
-   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, {@code .pdf}, and {@code .svg} (default).
    *
    * @param targetFile output file
    */
@@ -375,6 +376,7 @@ class Chart {
     switch (ExportFormat.fromFile(targetFile)) {
       case ExportFormat.PNG -> ChartToPng.export(this, targetFile)
       case ExportFormat.JPEG -> ChartToJpeg.export(this, targetFile)
+      case ExportFormat.PDF -> ChartToPdf.export(this, targetFile)
       default -> targetFile.text = SvgWriter.toXmlPretty(render())
     }
   }
@@ -395,7 +397,7 @@ class Chart {
 
   /**
    * Writes the chart to a target file using custom render dimensions.
-   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, and {@code .svg} (default).
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, {@code .pdf}, and {@code .svg} (default).
    *
    * @param targetFile output file
    * @param width render width in pixels
@@ -409,6 +411,7 @@ class Chart {
     switch (ExportFormat.fromFile(targetFile)) {
       case ExportFormat.PNG -> ChartToPng.export(svg, targetFile)
       case ExportFormat.JPEG -> ChartToJpeg.export(svg, targetFile)
+      case ExportFormat.PDF -> ChartToPdf.export(svg, targetFile)
       default -> targetFile.text = SvgWriter.toXmlPretty(svg)
     }
   }

@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.charm.Charts.plot
 import static se.alipsa.matrix.charm.Charts.plotGrid
 
+import org.apache.pdfbox.Loader
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
@@ -13,6 +16,7 @@ import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ChartToSwing
@@ -75,6 +79,14 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testWriteToPdf(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart.pdf').toFile()
+    chart.writeTo(file)
+    assertPdfDimensions(file, 800, 600)
+  }
+
+  @Test
   void testWriteToStringPath(@TempDir Path tempDir) {
     Chart chart = buildChart()
     String path = tempDir.resolve('chart.png') as String
@@ -131,6 +143,14 @@ class WriteToAndPlotGridExportTest {
     assertNotNull(image)
     assertEquals(320, image.width)
     assertEquals(240, image.height)
+  }
+
+  @Test
+  void testChartWriteToPdfWithDimensions(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart-sized.pdf').toFile()
+    chart.writeTo(file, 320, 240)
+    assertPdfDimensions(file, 320, 240)
   }
 
   @Test
@@ -195,6 +215,14 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testPlotGridWriteToPdf(@TempDir Path tempDir) {
+    PlotGrid grid = buildGrid()
+    File file = tempDir.resolve('grid.pdf').toFile()
+    grid.writeTo(file)
+    assertPdfDimensions(file, 800, 600)
+  }
+
+  @Test
   void testPlotGridWriteToStringPath(@TempDir Path tempDir) {
     PlotGrid grid = buildGrid()
     String path = tempDir.resolve('grid.png') as String
@@ -245,6 +273,27 @@ class WriteToAndPlotGridExportTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToJpeg.export(grid, baos)
     assertTrue(baos.size() > 0)
+  }
+
+  @Test
+  void testPlotGridExportToPdfFile(@TempDir Path tempDir) {
+    PlotGrid grid = buildGrid()
+    File file = tempDir.resolve('grid-export.pdf').toFile()
+    ChartToPdf.export(grid, file)
+    assertPdfDimensions(file, 800, 600)
+  }
+
+  @Test
+  void testPlotGridExportToPdfOutputStream() {
+    PlotGrid grid = buildGrid()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToPdf.export(grid, baos)
+    byte[] bytes = baos.toByteArray()
+    assertTrue(bytes.length > 0)
+    assertEquals((byte) 0x25, bytes[0])
+    assertEquals((byte) 0x50, bytes[1])
+    assertEquals((byte) 0x44, bytes[2])
+    assertEquals((byte) 0x46, bytes[3])
   }
 
   @Test
@@ -321,6 +370,20 @@ class WriteToAndPlotGridExportTest {
     plotGrid {
       add c1, c2
       ncol 2
+    }
+  }
+
+  private static void assertPdfDimensions(File file, int width, int height) {
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    PDDocument document = Loader.loadPDF(file)
+    try {
+      assertEquals(1, document.numberOfPages)
+      PDRectangle mediaBox = document.getPage(0).mediaBox
+      assertEquals(width as float, mediaBox.width, 0.01f)
+      assertEquals(height as float, mediaBox.height, 0.01f)
+    } finally {
+      document.close()
     }
   }
 
