@@ -1074,12 +1074,13 @@ class PlotSpec {
     /** Applies the preset by name (e.g. 'minimal', 'dark', 'classic'). */
     void setPreset(String name) { apply(resolvePreset(name)) }
 
-    /** Applies a preset theme, merging its settings into the current theme. */
+    /** Applies a preset theme, deep-merging its settings into the current theme. */
     void apply(Theme preset) {
       if (preset == null) {
         throw new CharmValidationException('preset theme cannot be null')
       }
-      preset.properties.each { key, val ->
+      Theme merged = theme.plus(preset)
+      merged.properties.each { key, val ->
         String k = key as String
         if (k != 'class' && theme.hasProperty(k)) {
           theme.setProperty(k, val)
