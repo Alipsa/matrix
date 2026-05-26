@@ -1,26 +1,16 @@
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*
 
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.chartexport.ChartToImage
+import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
 
 import java.time.LocalDate
 
 class PngTest {
-
-    @BeforeAll
-    static void init() {
-        if ('true' == System.getProperty('headless')) {
-            println('Enable monocle for headless testing')
-            System.setProperty('testfx.robot', 'glass')
-            System.setProperty('testfx.headless', 'true')
-            System.setProperty('prism.order', 'sw')
-            System.setProperty('prism.text', 't2k')
-        }
-    }
 
     def empData = Matrix.builder().data(
             emp_id: 1..5,
@@ -35,26 +25,19 @@ class PngTest {
         def file = File.createTempFile('barchart', '.png')
         BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')
         try {
-            Plot.png(chart, file, 600, 400)
-            //println("Wrote $file")
+            ChartToPng.export(chart, file)
             assertTrue(file.exists())
+        } finally {
             file.delete()
-        } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
-            println "No graphics environment available: $e, skipping test"
         }
     }
 
     @Test
     void testBarchartToBase64() {
         BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')
-        try {
-            def base64 = Plot.base64(chart, 600, 400)
-            // println(base64)
-            assertNotNull(base64)
-            assertTrue(base64.startsWith('data:image/png;base64,'))
-        } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
-            println "No graphics environment available: $e, skipping test"
-        }
+        def base64 = ChartToImage.base64(chart)
+        assertNotNull(base64)
+        assertTrue(base64.startsWith('data:image/png;base64,'))
     }
 
     @Test
@@ -62,12 +45,10 @@ class PngTest {
         def file = File.createTempFile('areaChart', '.png')
         AreaChart chart = AreaChart.create('Salaries', empData, 'emp_name', 'salary')
         try {
-            Plot.png(chart, file, 1024, 768)
-            //println("Wrote $file")
+            ChartToPng.export(chart, file)
             assertTrue(file.exists())
+        } finally {
             file.delete()
-        } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
-            println "No graphics environment available: $e, skipping test"
         }
     }
 

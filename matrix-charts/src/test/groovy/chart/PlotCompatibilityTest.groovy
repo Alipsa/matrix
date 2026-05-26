@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.chartexport.ChartToImage
+import se.alipsa.matrix.chartexport.ChartToJfx
+import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
@@ -12,12 +15,11 @@ import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
-import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 
 /**
- * Compatibility tests verifying that {@link Plot} methods produce valid
- * output for each chart type after the Charm rewiring.
+ * Tests verifying that legacy chart types produce valid export output
+ * through the current export API (ChartToPng, ChartToImage, ChartToJfx).
  */
 class PlotCompatibilityTest {
 
@@ -40,7 +42,7 @@ class PlotCompatibilityTest {
     AreaChart chart = AreaChart.create('Area PNG', data, 'category', 'value')
     File file = File.createTempFile('AreaChart', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -55,7 +57,7 @@ class PlotCompatibilityTest {
     BarChart chart = BarChart.createVertical('Bar PNG', data, 'category', ChartType.BASIC, 'value')
     File file = File.createTempFile('BarChart', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -77,7 +79,7 @@ class PlotCompatibilityTest {
     LineChart chart = LineChart.create('Line PNG', data, 'x', 'y')
     File file = File.createTempFile('LineChart', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -92,7 +94,7 @@ class PlotCompatibilityTest {
     PieChart chart = PieChart.create('Pie PNG', data, 'category', 'value')
     File file = File.createTempFile('PieChart', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -114,7 +116,7 @@ class PlotCompatibilityTest {
     ScatterChart chart = ScatterChart.create('Scatter PNG', data, 'x', 'y')
     File file = File.createTempFile('ScatterChart', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -133,7 +135,7 @@ class PlotCompatibilityTest {
     Histogram chart = Histogram.create('Hist PNG', data, 'score', 4)
     File file = File.createTempFile('Histogram', '.png')
     try {
-      Plot.png(chart, file)
+      ChartToPng.export(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -147,7 +149,7 @@ class PlotCompatibilityTest {
     Matrix data = sampleData()
     BarChart chart = BarChart.createVertical('Bar OS', data, 'category', ChartType.BASIC, 'value')
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    Plot.png(chart, baos)
+    ChartToPng.export(chart, baos)
     byte[] bytes = baos.toByteArray()
     assertTrue(bytes.length > 100, 'PNG output should have content')
     for (int i = 0; i < PNG_HEADER.length; i++) {
@@ -159,7 +161,7 @@ class PlotCompatibilityTest {
   void testBase64ReturnsValidDataUri() {
     Matrix data = sampleData()
     PieChart chart = PieChart.create('Pie Base64', data, 'category', 'value')
-    String uri = Plot.base64(chart)
+    String uri = ChartToImage.base64(chart)
     assertTrue(uri.startsWith('data:image/png;base64,'), 'Should start with data URI prefix')
     String base64Part = uri.substring('data:image/png;base64,'.length())
     byte[] decoded = Base64.decoder.decode(base64Part)
@@ -177,8 +179,8 @@ class PlotCompatibilityTest {
     )
     Matrix data = sampleData()
     ScatterChart chart = ScatterChart.create('JFX Test', data, 'category', 'value')
-    javafx.scene.Node node = Plot.jfx(chart)
-    assertNotNull(node, 'jfx() should return a non-null Node')
+    javafx.scene.Node node = ChartToJfx.export(chart)
+    assertNotNull(node, 'export() should return a non-null Node')
     assertTrue(node instanceof javafx.scene.Node, 'Result should be a javafx.scene.Node')
   }
 
