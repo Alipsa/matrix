@@ -38,14 +38,6 @@ class AreaChart extends Chart<AreaChart> {
   }
 
   /**
-   * TODO: figure out how groupCol works
-   */
-  @SuppressWarnings('UnusedMethodParameter')
-  static AreaChart create(String title, Matrix data, String xCol, String yCol, String groupCol) {
-    throw new IllegalStateException('Not yet implemented')
-  }
-
-  /**
    * Creates a new fluent builder for constructing an {@link AreaChart}.
    *
    * <p>Example:

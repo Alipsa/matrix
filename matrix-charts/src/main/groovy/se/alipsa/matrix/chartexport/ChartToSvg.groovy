@@ -1,6 +1,7 @@
 package se.alipsa.matrix.chartexport
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.Chart
@@ -140,18 +141,18 @@ class ChartToSvg {
   private static void writeSvg(Svg svg, File targetFile) throws IOException {
     targetFile.parentFile?.mkdirs()
     targetFile.withWriter('UTF-8') { Writer writer ->
-      writer.write(svg.toXml())
+      writer.write(SvgWriter.toXmlPretty(svg))
       writer.flush()
     }
   }
 
   private static void writeSvg(Svg svg, OutputStream os) throws IOException {
-    os.write(svg.toXml().getBytes(StandardCharsets.UTF_8))
+    os.write(SvgWriter.toXmlPretty(svg).getBytes(StandardCharsets.UTF_8))
     os.flush()
   }
 
   private static void writeSvg(Svg svg, Writer writer) throws IOException {
-    writer.write(svg.toXml())
+    writer.write(SvgWriter.toXmlPretty(svg))
     writer.flush()
   }
 

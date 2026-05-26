@@ -324,7 +324,7 @@ class Chart {
   }
 
   /**
-   * Renders this chart to an SVG object.
+   * Renders this chart to an SVG object using default dimensions (800x600).
    *
    * @return SVG model object
    */
