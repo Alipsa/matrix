@@ -1199,8 +1199,8 @@ class PlotSpec {
     /** Sets the color guide from a type name. */
     void setColor(String value) { guides.setSpec('color', GuideUtils.coerceGuide(value, 'color')) }
 
-    /** Disables the color guide when set to false. */
-    void setColor(boolean value) { if (!value) { guides.setSpec('color', GuideSpec.none()) } }
+    /** Disables the color guide (false) or throws on true. */
+    void setColor(boolean value) { guides.setSpec('color', coerceBool(value, 'color')) }
 
     /** Sets the fill guide from a spec. */
     void setFill(GuideSpec value) { guides.setSpec('fill', value) }
@@ -1211,8 +1211,8 @@ class PlotSpec {
     /** Sets the fill guide from a type name. */
     void setFill(String value) { guides.setSpec('fill', GuideUtils.coerceGuide(value, 'fill')) }
 
-    /** Disables the fill guide when set to false. */
-    void setFill(boolean value) { if (!value) { guides.setSpec('fill', GuideSpec.none()) } }
+    /** Disables the fill guide (false) or throws on true. */
+    void setFill(boolean value) { guides.setSpec('fill', coerceBool(value, 'fill')) }
 
     /** Sets the size guide from a spec. */
     void setSize(GuideSpec value) { guides.setSpec('size', value) }
@@ -1223,8 +1223,8 @@ class PlotSpec {
     /** Sets the size guide from a type name. */
     void setSize(String value) { guides.setSpec('size', GuideUtils.coerceGuide(value, 'size')) }
 
-    /** Disables the size guide when set to false. */
-    void setSize(boolean value) { if (!value) { guides.setSpec('size', GuideSpec.none()) } }
+    /** Disables the size guide (false) or throws on true. */
+    void setSize(boolean value) { guides.setSpec('size', coerceBool(value, 'size')) }
 
     /** Sets the shape guide from a spec. */
     void setShape(GuideSpec value) { guides.setSpec('shape', value) }
@@ -1235,8 +1235,8 @@ class PlotSpec {
     /** Sets the shape guide from a type name. */
     void setShape(String value) { guides.setSpec('shape', GuideUtils.coerceGuide(value, 'shape')) }
 
-    /** Disables the shape guide when set to false. */
-    void setShape(boolean value) { if (!value) { guides.setSpec('shape', GuideSpec.none()) } }
+    /** Disables the shape guide (false) or throws on true. */
+    void setShape(boolean value) { guides.setSpec('shape', coerceBool(value, 'shape')) }
 
     /** Sets the alpha guide from a spec. */
     void setAlpha(GuideSpec value) { guides.setSpec('alpha', value) }
@@ -1247,8 +1247,8 @@ class PlotSpec {
     /** Sets the alpha guide from a type name. */
     void setAlpha(String value) { guides.setSpec('alpha', GuideUtils.coerceGuide(value, 'alpha')) }
 
-    /** Disables the alpha guide when set to false. */
-    void setAlpha(boolean value) { if (!value) { guides.setSpec('alpha', GuideSpec.none()) } }
+    /** Disables the alpha guide (false) or throws on true. */
+    void setAlpha(boolean value) { guides.setSpec('alpha', coerceBool(value, 'alpha')) }
 
     /** Sets the x guide from a spec. */
     void setX(GuideSpec value) { guides.setSpec('x', value) }
@@ -1259,8 +1259,8 @@ class PlotSpec {
     /** Sets the x guide from a type name. */
     void setX(String value) { guides.setSpec('x', GuideUtils.coerceGuide(value, 'x')) }
 
-    /** Disables the x guide when set to false. */
-    void setX(boolean value) { if (!value) { guides.setSpec('x', GuideSpec.none()) } }
+    /** Disables the x guide (false) or throws on true. */
+    void setX(boolean value) { guides.setSpec('x', coerceBool(value, 'x')) }
 
     /** Sets the y guide from a spec. */
     void setY(GuideSpec value) { guides.setSpec('y', value) }
@@ -1271,8 +1271,16 @@ class PlotSpec {
     /** Sets the y guide from a type name. */
     void setY(String value) { guides.setSpec('y', GuideUtils.coerceGuide(value, 'y')) }
 
-    /** Disables the y guide when set to false. */
-    void setY(boolean value) { if (!value) { guides.setSpec('y', GuideSpec.none()) } }
+    /** Disables the y guide (false) or throws on true. */
+    void setY(boolean value) { guides.setSpec('y', coerceBool(value, 'y')) }
+
+    private static GuideSpec coerceBool(boolean value, String aesthetic) {
+      if (value) {
+        throw new CharmValidationException(
+            "Cannot set '${aesthetic}' guide to true — use a GuideSpec, GuideType, or guide type name")
+      }
+      GuideSpec.none()
+    }
 
     /** Creates a legend guide spec. */
     GuideSpec legend(Map<String, Object> params = [:]) { GuideSpec.legend(params) }
