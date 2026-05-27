@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.pict.Chart
@@ -19,9 +20,14 @@ import java.awt.image.BufferedImage
  *
  * <p>The current implementation renders the chart through the existing SVG-to-image
  * pipeline and embeds the resulting image on a single PDF page.</p>
+ *
+ * <p>Accepts SVG strings, {@link Svg} objects, {@link CharmChart} instances,
+ * legacy {@link Chart} instances, and {@link PlotGrid} grids.</p>
  */
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToPdf {
+
+  private static final float PDF_POINT_SCALE = 0.75f  // 72 PDF points / 96 screen pixels
 
   /**
    * Export an {@link Svg} chart as a PDF file.
@@ -47,6 +53,32 @@ class ChartToPdf {
       throw new IllegalArgumentException('svgChart cannot be null')
     }
     writePdf(ChartToImage.export(svgChart), os)
+  }
+
+  /**
+   * Export an SVG string as a PDF file.
+   *
+   * @param svgChart the SVG content as a {@link String}
+   * @param targetFile the PDF file to write
+   */
+  static void export(String svgChart, File targetFile) throws IOException {
+    if (svgChart == null || svgChart.isEmpty()) {
+      throw new IllegalArgumentException('svgChart cannot be null or empty')
+    }
+    export(SvgReader.parse(svgChart), targetFile)
+  }
+
+  /**
+   * Export an SVG string as PDF to an {@link OutputStream}.
+   *
+   * @param svgChart the SVG content as a {@link String}
+   * @param os the output stream to write
+   */
+  static void export(String svgChart, OutputStream os) throws IOException {
+    if (svgChart == null || svgChart.isEmpty()) {
+      throw new IllegalArgumentException('svgChart cannot be null or empty')
+    }
+    export(SvgReader.parse(svgChart), os)
   }
 
   /**
@@ -159,15 +191,26 @@ class ChartToPdf {
     if (image == null) {
       throw new IllegalArgumentException('image cannot be null')
     }
+    float pageWidth = image.width * PDF_POINT_SCALE
+    float pageHeight = image.height * PDF_POINT_SCALE
     PDDocument document = new PDDocument()
-    PDPage page = new PDPage(new PDRectangle(image.width as float, image.height as float))
-    document.addPage(page)
-    PDImageXObject pdfImage = LosslessFactory.createFromImage(document, image)
-    PDPageContentStream contentStream = new PDPageContentStream(document, page)
     try {
-      contentStream.drawImage(pdfImage, 0, 0, image.width as float, image.height as float)
-    } finally {
-      contentStream.close()
+      PDPage page = new PDPage(new PDRectangle(pageWidth, pageHeight))
+      document.addPage(page)
+      PDImageXObject pdfImage = LosslessFactory.createFromImage(document, image)
+      PDPageContentStream contentStream = new PDPageContentStream(document, page)
+      try {
+        contentStream.drawImage(pdfImage, 0, 0, pageWidth, pageHeight)
+      } finally {
+        contentStream.close()
+      }
+    } catch (IOException e) {
+      try {
+        document.close()
+      } catch (IOException closeEx) {
+        e.addSuppressed(closeEx)
+      }
+      throw e
     }
     document
   }

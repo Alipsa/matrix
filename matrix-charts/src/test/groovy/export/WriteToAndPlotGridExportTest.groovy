@@ -87,6 +87,24 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testExportSvgStringToPdfFile(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    String svgString = chart.render().toXml()
+    File file = tempDir.resolve('svg-string.pdf').toFile()
+    ChartToPdf.export(svgString, file)
+    assertPdfDimensions(file, 800, 600)
+  }
+
+  @Test
+  void testExportSvgStringToPdfOutputStream() {
+    Chart chart = buildChart()
+    String svgString = chart.render().toXml()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToPdf.export(svgString, baos)
+    assertPdfHeader(baos.toByteArray())
+  }
+
+  @Test
   void testWriteToStringPath(@TempDir Path tempDir) {
     Chart chart = buildChart()
     String path = tempDir.resolve('chart.png') as String
@@ -151,6 +169,14 @@ class WriteToAndPlotGridExportTest {
     File file = tempDir.resolve('chart-sized.pdf').toFile()
     chart.writeTo(file, 320, 240)
     assertPdfDimensions(file, 320, 240)
+  }
+
+  @Test
+  void testCharmChartExportToPdfOutputStream() {
+    Chart chart = buildChart()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToPdf.export(chart, baos)
+    assertPdfHeader(baos.toByteArray())
   }
 
   @Test
@@ -288,12 +314,7 @@ class WriteToAndPlotGridExportTest {
     PlotGrid grid = buildGrid()
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     ChartToPdf.export(grid, baos)
-    byte[] bytes = baos.toByteArray()
-    assertTrue(bytes.length > 0)
-    assertEquals((byte) 0x25, bytes[0])
-    assertEquals((byte) 0x50, bytes[1])
-    assertEquals((byte) 0x44, bytes[2])
-    assertEquals((byte) 0x46, bytes[3])
+    assertPdfHeader(baos.toByteArray())
   }
 
   @Test
@@ -373,18 +394,28 @@ class WriteToAndPlotGridExportTest {
     }
   }
 
-  private static void assertPdfDimensions(File file, int width, int height) {
+  private static void assertPdfDimensions(File file, int pixelWidth, int pixelHeight) {
     assertTrue(file.exists())
     assertTrue(file.length() > 0)
+    float expectedPtWidth = pixelWidth * 72f / 96f
+    float expectedPtHeight = pixelHeight * 72f / 96f
     PDDocument document = Loader.loadPDF(file)
     try {
       assertEquals(1, document.numberOfPages)
       PDRectangle mediaBox = document.getPage(0).mediaBox
-      assertEquals(width as float, mediaBox.width, 0.01f)
-      assertEquals(height as float, mediaBox.height, 0.01f)
+      assertEquals(expectedPtWidth, mediaBox.width, 0.1f)
+      assertEquals(expectedPtHeight, mediaBox.height, 0.1f)
     } finally {
       document.close()
     }
+  }
+
+  private static void assertPdfHeader(byte[] bytes) {
+    assertTrue(bytes.length >= 4)
+    assertEquals((byte) 0x25, bytes[0])
+    assertEquals((byte) 0x50, bytes[1])
+    assertEquals((byte) 0x44, bytes[2])
+    assertEquals((byte) 0x46, bytes[3])
   }
 
 }
