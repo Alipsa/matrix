@@ -335,6 +335,8 @@ class Chart {
   Svg render() {
     try {
       new CharmRenderer().render(this)
+    } catch (CharmRenderException e) {
+      throw e
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render Charm chart: ${e.message}", e)
     }

@@ -1,6 +1,7 @@
 package charm.render
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -12,13 +13,48 @@ import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 
+import java.lang.reflect.Field
+
 class CharmRendererTest {
+
+  @Test
+  void testRenderExceptionIsNotDoubleWrapped() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+      }
+      layers { geomPoint() }
+    }.build()
+
+    setField(chart.layers[0].geomSpec, 'type', null)
+
+    CharmRenderException ex = assertThrows(CharmRenderException) {
+      chart.render()
+    }
+    assertFalse(
+        ex.cause instanceof CharmRenderException,
+        "render() must not double-wrap CharmRenderException; cause was: ${ex.cause?.getClass()?.name}"
+    )
+  }
+
+  private static void setField(Object target, String name, Object value) {
+    Field field = target.class.getDeclaredField(name)
+    field.accessible = true
+    field.set(target, value)
+  }
 
   @Test
   void testPointLayerRendersCirclesAxesAndClipPath() {

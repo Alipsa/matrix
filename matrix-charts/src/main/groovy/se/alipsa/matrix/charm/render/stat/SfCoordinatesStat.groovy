@@ -4,12 +4,15 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.sf.SfGeometry
 import se.alipsa.matrix.charm.sf.SfGeometryUtils
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Computes representative label points for simple-feature geometries.
  */
 @SuppressWarnings('ReturnNullFromCatchBlock')
 class SfCoordinatesStat {
+
+  private static final Logger log = Logger.getLogger(SfCoordinatesStat)
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
@@ -28,7 +31,8 @@ class SfCoordinatesStat {
       SfGeometry geometry
       try {
         geometry = SfStatSupport.toGeometry(geometryValue)
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log.debug("SfCoordinatesStat: skipping row - cannot parse geometry from '${geometryValue}': ${e.message}")
         return
       }
       if (geometry == null || geometry.empty) {
