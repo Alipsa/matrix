@@ -262,6 +262,17 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testPlotGridWriteToJpegWithDimensions(@TempDir Path tempDir) {
+    PlotGrid grid = buildSingleGrid()
+    File file = tempDir.resolve('grid-sized.jpg').toFile()
+    grid.writeTo(file, 320, 240)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(320, image.width)
+    assertEquals(240, image.height)
+  }
+
+  @Test
   void testPlotGridWriteToSvgWithDimensions(@TempDir Path tempDir) {
     PlotGrid grid = buildSingleGrid()
     File file = tempDir.resolve('grid-sized.svg').toFile()
@@ -281,6 +292,10 @@ class WriteToAndPlotGridExportTest {
     File file = new File(path)
     assertTrue(file.exists())
     assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(320, image.width)
+    assertEquals(240, image.height)
   }
 
   @Test
