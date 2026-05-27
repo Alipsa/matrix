@@ -27,8 +27,7 @@ import java.awt.image.BufferedImage
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToPdf {
 
-  private static final float SCREEN_DPI = 96.0f  // standard screen resolution
-  private static final float PDF_DPI = 72.0f      // 1 pt = 1/72 inch
+  private static final float PDF_POINT_SCALE = 0.75f  // 72 PDF points / 96 screen pixels
 
   /**
    * Export an {@link Svg} chart as a PDF file.
@@ -192,8 +191,8 @@ class ChartToPdf {
     if (image == null) {
       throw new IllegalArgumentException('image cannot be null')
     }
-    float pageWidth = (image.width * PDF_DPI / SCREEN_DPI) as float
-    float pageHeight = (image.height * PDF_DPI / SCREEN_DPI) as float
+    float pageWidth = image.width * PDF_POINT_SCALE
+    float pageHeight = image.height * PDF_POINT_SCALE
     PDDocument document = new PDDocument()
     try {
       PDPage page = new PDPage(new PDRectangle(pageWidth, pageHeight))
