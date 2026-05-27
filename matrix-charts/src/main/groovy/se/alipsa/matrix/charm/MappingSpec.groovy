@@ -6,191 +6,292 @@ package se.alipsa.matrix.charm
 class MappingSpec extends Mapping {
 
   /**
-   * Builder-style x mapping assignment.
+   * Builder-style x mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec x(Object value) {
-    setX(value)
-    this
-  }
+  MappingSpec x(String value) { setX(value); this }
 
   /**
-   * Builder-style y mapping assignment.
+   * Builder-style x mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec y(Object value) {
-    setY(value)
-    this
-  }
+  MappingSpec x(ColumnExpr value) { setX(value); this }
 
   /**
-   * Builder-style color mapping assignment.
+   * Builder-style y mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec color(Object value) {
-    setColor(value)
-    this
-  }
+  MappingSpec y(String value) { setY(value); this }
 
   /**
-   * Builder-style fill mapping assignment.
+   * Builder-style y mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec fill(Object value) {
-    setFill(value)
-    this
-  }
+  MappingSpec y(ColumnExpr value) { setY(value); this }
 
   /**
-   * Builder-style size mapping assignment.
+   * Builder-style color mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec size(Object value) {
-    setSize(value)
-    this
-  }
+  MappingSpec color(String value) { setColor(value); this }
 
   /**
-   * Builder-style shape mapping assignment.
+   * Builder-style color mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec shape(Object value) {
-    setShape(value)
-    this
-  }
+  MappingSpec color(ColumnExpr value) { setColor(value); this }
 
   /**
-   * Builder-style group mapping assignment.
+   * Builder-style fill mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec group(Object value) {
-    setGroup(value)
-    this
-  }
+  MappingSpec fill(String value) { setFill(value); this }
 
   /**
-   * Builder-style xend mapping assignment.
+   * Builder-style fill mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec xend(Object value) {
-    setXend(value)
-    this
-  }
+  MappingSpec fill(ColumnExpr value) { setFill(value); this }
 
   /**
-   * Builder-style yend mapping assignment.
+   * Builder-style size mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec yend(Object value) {
-    setYend(value)
-    this
-  }
+  MappingSpec size(String value) { setSize(value); this }
 
   /**
-   * Builder-style xmin mapping assignment.
+   * Builder-style size mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec xmin(Object value) {
-    setXmin(value)
-    this
-  }
+  MappingSpec size(ColumnExpr value) { setSize(value); this }
 
   /**
-   * Builder-style xmax mapping assignment.
+   * Builder-style shape mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec xmax(Object value) {
-    setXmax(value)
-    this
-  }
+  MappingSpec shape(String value) { setShape(value); this }
 
   /**
-   * Builder-style ymin mapping assignment.
+   * Builder-style shape mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec ymin(Object value) {
-    setYmin(value)
-    this
-  }
+  MappingSpec shape(ColumnExpr value) { setShape(value); this }
 
   /**
-   * Builder-style ymax mapping assignment.
+   * Builder-style group mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec ymax(Object value) {
-    setYmax(value)
-    this
-  }
+  MappingSpec group(String value) { setGroup(value); this }
 
   /**
-   * Builder-style alpha mapping assignment.
+   * Builder-style group mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec alpha(Object value) {
-    setAlpha(value)
-    this
-  }
+  MappingSpec group(ColumnExpr value) { setGroup(value); this }
 
   /**
-   * Builder-style linetype mapping assignment.
+   * Builder-style xend mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec linetype(Object value) {
-    setLinetype(value)
-    this
-  }
+  MappingSpec xend(String value) { setXend(value); this }
 
   /**
-   * Builder-style label mapping assignment.
+   * Builder-style xend mapping assignment from a column expression.
    *
-   * @param value mapping value
+   * @param value column expression
    * @return this spec
    */
-  MappingSpec label(Object value) {
-    setLabel(value)
-    this
-  }
+  MappingSpec xend(ColumnExpr value) { setXend(value); this }
 
   /**
-   * Builder-style weight mapping assignment.
+   * Builder-style yend mapping assignment from a column name.
    *
-   * @param value mapping value
+   * @param value column name
    * @return this spec
    */
-  MappingSpec weight(Object value) {
-    setWeight(value)
-    this
-  }
+  MappingSpec yend(String value) { setYend(value); this }
+
+  /**
+   * Builder-style yend mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec yend(ColumnExpr value) { setYend(value); this }
+
+  /**
+   * Builder-style xmin mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec xmin(String value) { setXmin(value); this }
+
+  /**
+   * Builder-style xmin mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec xmin(ColumnExpr value) { setXmin(value); this }
+
+  /**
+   * Builder-style xmax mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec xmax(String value) { setXmax(value); this }
+
+  /**
+   * Builder-style xmax mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec xmax(ColumnExpr value) { setXmax(value); this }
+
+  /**
+   * Builder-style ymin mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec ymin(String value) { setYmin(value); this }
+
+  /**
+   * Builder-style ymin mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec ymin(ColumnExpr value) { setYmin(value); this }
+
+  /**
+   * Builder-style ymax mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec ymax(String value) { setYmax(value); this }
+
+  /**
+   * Builder-style ymax mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec ymax(ColumnExpr value) { setYmax(value); this }
+
+  /**
+   * Builder-style alpha mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec alpha(String value) { setAlpha(value); this }
+
+  /**
+   * Builder-style alpha mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec alpha(ColumnExpr value) { setAlpha(value); this }
+
+  /**
+   * Builder-style linetype mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec linetype(String value) { setLinetype(value); this }
+
+  /**
+   * Builder-style linetype mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec linetype(ColumnExpr value) { setLinetype(value); this }
+
+  /**
+   * Builder-style label mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec label(String value) { setLabel(value); this }
+
+  /**
+   * Builder-style label mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec label(ColumnExpr value) { setLabel(value); this }
+
+  /**
+   * Builder-style tooltip mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec tooltip(String value) { setTooltip(value); this }
+
+  /**
+   * Builder-style tooltip mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec tooltip(ColumnExpr value) { setTooltip(value); this }
+
+  /**
+   * Builder-style weight mapping assignment from a column name.
+   *
+   * @param value column name
+   * @return this spec
+   */
+  MappingSpec weight(String value) { setWeight(value); this }
+
+  /**
+   * Builder-style weight mapping assignment from a column expression.
+   *
+   * @param value column expression
+   * @return this spec
+   */
+  MappingSpec weight(ColumnExpr value) { setWeight(value); this }
 
   /**
    * Builder-style named mapping apply.

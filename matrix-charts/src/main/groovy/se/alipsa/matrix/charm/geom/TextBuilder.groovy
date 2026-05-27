@@ -19,6 +19,8 @@ import se.alipsa.matrix.charm.CharmStatType
  */
 class TextBuilder extends LayerBuilder {
 
+  private static final String FONTFACE = 'fontface'
+
   /**
    * Sets the label text content.
    *
@@ -85,13 +87,24 @@ class TextBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets font face (e.g. bold, italic).
+   * Sets font face by name (e.g. 'bold', 'italic').
    *
-   * @param value fontface name or integer code
+   * @param value fontface name
    * @return this builder
    */
-  TextBuilder fontface(Object value) {
-    params['fontface'] = value
+  TextBuilder fontface(String value) {
+    params[FONTFACE] = value
+    this
+  }
+
+  /**
+   * Sets font face by integer code (1 = plain, 2 = bold, 3 = italic, 4 = bold-italic).
+   *
+   * @param value fontface integer code
+   * @return this builder
+   */
+  TextBuilder fontface(int value) {
+    params[FONTFACE] = value
     this
   }
 

@@ -2,12 +2,16 @@ package export
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
 
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
@@ -20,6 +24,7 @@ import se.alipsa.matrix.pict.Chart
 import se.alipsa.matrix.pict.ScatterChart
 
 import java.awt.image.BufferedImage
+import java.lang.reflect.Method
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -82,6 +87,34 @@ class CharmExportTest {
     assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
     assertTrue(panel.getPreferredSize().width > 0)
     assertTrue(panel.getPreferredSize().height > 0)
+  }
+
+  @Test
+  @CompileStatic
+  void testChartToSwingTypedOverloads() {
+    CharmChart charmChart = buildCharmChart()
+    Svg svg = charmChart.render()
+    String svgText = svg.toXml()
+    CharSequence svgSequence = new StringBuilder(svgText)
+    Chart legacyChart = buildLegacyChart()
+    PlotGrid grid = Charts.plotGrid([charmChart], 1)
+
+    assertNotNull(ChartToSwing.export(svgText))
+    assertNotNull(ChartToSwing.export(svgSequence))
+    assertNotNull(ChartToSwing.export(svg))
+    assertNotNull(ChartToSwing.export(charmChart))
+    assertNotNull(ChartToSwing.export(legacyChart))
+    assertNotNull(ChartToSwing.export(grid))
+  }
+
+  @Test
+  void testChartToSwingDoesNotExposeObjectExportOverload() {
+    List<Method> objectOverloads = ChartToSwing.declaredMethods.findAll { Method method ->
+      method.name == 'export' &&
+          method.parameterTypes.length == 1 &&
+          method.parameterTypes[0] == Object
+    }
+    assertTrue(objectOverloads.isEmpty(), 'ChartToSwing.export(Object) should not be public API')
   }
 
   @Test

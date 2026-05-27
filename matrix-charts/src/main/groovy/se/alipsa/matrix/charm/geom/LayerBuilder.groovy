@@ -77,32 +77,73 @@ abstract class LayerBuilder {
   }
 
   /**
-   * Sets the position adjustment for this layer.
+   * Sets the position adjustment from a type enum.
    *
-   * @param value position type, spec, or string name
+   * @param value position type
    * @return this builder
    */
-  LayerBuilder position(Object value) {
+  LayerBuilder position(CharmPositionType value) {
     this.positionSpec = LayerDsl.parsePosition(value)
     this
   }
 
   /**
-   * Sets the statistical transformation for this layer.
+   * Sets the position adjustment from a spec.
    *
-   * @param stat stat value as enum, spec, or string name
+   * @param value position spec
    * @return this builder
    */
-  LayerBuilder stat(Object stat) {
+  LayerBuilder position(PositionSpec value) {
+    this.positionSpec = LayerDsl.parsePosition(value)
+    this
+  }
+
+  /**
+   * Sets the position adjustment by name (case-insensitive).
+   *
+   * @param value position name (e.g. 'dodge', 'stack', 'jitter')
+   * @return this builder
+   */
+  LayerBuilder position(String value) {
+    this.positionSpec = LayerDsl.parsePosition(value)
+    this
+  }
+
+  /**
+   * Sets the statistical transformation from a type enum.
+   *
+   * @param stat stat type
+   * @return this builder
+   */
+  LayerBuilder stat(CharmStatType stat) {
     statParams.clear()
-    if (stat instanceof StatSpec) {
-      StatSpec statSpec = stat as StatSpec
-      this.statType = statSpec.type
-      if (statSpec.params != null) {
-        this.statParams.putAll(statSpec.params)
-      }
-      return this
+    this.statType = stat
+    this
+  }
+
+  /**
+   * Sets the statistical transformation from a spec (includes params).
+   *
+   * @param stat stat spec
+   * @return this builder
+   */
+  LayerBuilder stat(StatSpec stat) {
+    statParams.clear()
+    this.statType = stat.type
+    if (stat.params != null) {
+      this.statParams.putAll(stat.params)
     }
+    this
+  }
+
+  /**
+   * Sets the statistical transformation by name (case-insensitive).
+   *
+   * @param stat stat name (e.g. 'count', 'bin', 'identity')
+   * @return this builder
+   */
+  LayerBuilder stat(String stat) {
+    statParams.clear()
     this.statType = parseStatType(stat)
     this
   }
@@ -286,25 +327,19 @@ abstract class LayerBuilder {
     )
   }
 
-  private static CharmStatType parseStatType(Object stat) {
+  private static CharmStatType parseStatType(String stat) {
     if (stat == null) {
       return null
     }
-    if (stat instanceof CharmStatType) {
-      return stat as CharmStatType
+    String normalized = stat.trim()
+    if (normalized.isEmpty()) {
+      return null
     }
-    if (stat instanceof CharSequence) {
-      String normalized = stat.toString().trim()
-      if (normalized.isEmpty()) {
-        return null
-      }
-      try {
-        return CharmStatType.valueOf(normalized.toUpperCase(Locale.ROOT))
-      } catch (IllegalArgumentException e) {
-        throw new CharmValidationException("Unsupported stat '${stat}'", e)
-      }
+    try {
+      return CharmStatType.valueOf(normalized.toUpperCase(Locale.ROOT))
+    } catch (IllegalArgumentException e) {
+      throw new CharmValidationException("Unsupported stat '${stat}'", e)
     }
-    throw new CharmValidationException("Unsupported stat type '${stat.getClass().name}'")
   }
 
   /**

@@ -71,12 +71,12 @@ class SampleStatTest {
   }
 
   @Test
-  void testLayerBuilderRejectsUnsupportedStatTypeWithValidationError() {
-    CharmValidationException e = assertThrows(CharmValidationException) {
+  void testLayerBuilderRejectsUnsupportedStatTypeWithMissingMethodError() {
+    MissingMethodException e = assertThrows(MissingMethodException) {
       new PointBuilder().stat([:])
     }
 
-    assertTrue(e.message.contains('Unsupported stat type'))
+    assertTrue(e.message.contains('No signature of method: stat'))
   }
 
   @Test

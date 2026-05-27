@@ -19,6 +19,8 @@ import se.alipsa.matrix.charm.CharmStatType
  */
 class Bin2dBuilder extends LayerBuilder {
 
+  private static final String BINS = 'bins'
+
   /**
    * Sets bin fill colour.
    *
@@ -52,13 +54,24 @@ class Bin2dBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets bin count (integer or list of two integers for x/y).
+   * Sets bin count (same for x and y).
    *
    * @param value bin count
    * @return this builder
    */
-  Bin2dBuilder bins(Object value) {
-    params['bins'] = value
+  Bin2dBuilder bins(int value) {
+    params[BINS] = value
+    this
+  }
+
+  /**
+   * Sets bin counts for x and y separately.
+   *
+   * @param value list of [xBins, yBins]
+   * @return this builder
+   */
+  Bin2dBuilder bins(List<Integer> value) {
+    params[BINS] = value
     this
   }
 
