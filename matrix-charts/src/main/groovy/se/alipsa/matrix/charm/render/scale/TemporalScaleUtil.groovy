@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.scale
 
 import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.core.ValueConverter
+import se.alipsa.matrix.core.util.Logger
 
 import java.time.Duration
 import java.time.Instant
@@ -29,6 +30,7 @@ class TemporalScaleUtil {
 
   static final ZoneId DEFAULT_ZONE = ZoneOffset.UTC
 
+  private static final Logger log = Logger.getLogger(TemporalScaleUtil)
   private static final BigDecimal MILLIS_PER_DAY = 86_400_000
   private static final String DATE_TRANSFORM = 'date'
   private static final String TIME_TRANSFORM = 'time'
@@ -60,6 +62,7 @@ class TemporalScaleUtil {
     try {
       return ZoneId.of(configured)
     } catch (Exception ignored) {
+      log.warn("Invalid zoneId '${configured}', falling back to ${DEFAULT_ZONE.id}; check the 'zoneId' scale parameter")
       return DEFAULT_ZONE
     }
   }
@@ -788,6 +791,7 @@ class TemporalScaleUtil {
     try {
       DateTimeFormatter.ofPattern(resolved)
     } catch (Exception ignored) {
+      log.warn("Invalid date/time format pattern '${resolved}', falling back to '${fallback}'")
       DateTimeFormatter.ofPattern(fallback)
     }
   }

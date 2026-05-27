@@ -3,12 +3,15 @@ package se.alipsa.matrix.charm.render.stat
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.sf.SfGeometry
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Expands simple-feature geometries into x/y rows for rendering.
  */
 @SuppressWarnings('ReturnNullFromCatchBlock')
 class SfStat {
+
+  private static final Logger log = Logger.getLogger(SfStat)
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
@@ -27,7 +30,8 @@ class SfStat {
       SfGeometry geometry
       try {
         geometry = SfStatSupport.toGeometry(geometryValue)
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log.debug("SfStat: skipping row - cannot parse geometry from '${geometryValue}': ${e.message}")
         return
       }
       if (geometry == null || geometry.empty) {
