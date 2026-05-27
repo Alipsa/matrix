@@ -21,6 +21,7 @@ import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.charm.geom.TextBuilder
 
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 
 @CompileStatic
 class CharmTypedOverloadApiTest {
@@ -48,8 +49,7 @@ class CharmTypedOverloadApiTest {
   void testMappingSpecFluentApiDoesNotExposeObjectOverloads() {
     List<Method> objectOverloads = MappingSpec.declaredMethods.findAll { Method method ->
       MAPPING_FLUENT_METHODS.contains(method.name) &&
-          method.parameterTypes.length == 1 &&
-          method.parameterTypes[0] == Object
+          isPublicSingleObjectParameter(method)
     }
     assertTrue(objectOverloads.isEmpty(), "Unexpected Object overloads: ${objectOverloads*.name}")
   }
@@ -124,11 +124,15 @@ class CharmTypedOverloadApiTest {
 
   private static void assertNoPublicObjectOverload(Class<?> type, String methodName) {
     List<Method> objectOverloads = type.declaredMethods.findAll { Method method ->
-      method.name == methodName &&
-          method.parameterTypes.length == 1 &&
-          method.parameterTypes[0] == Object
+      method.name == methodName && isPublicSingleObjectParameter(method)
     }
     assertTrue(objectOverloads.isEmpty(), "${type.simpleName}.${methodName}(Object) should not be public API")
+  }
+
+  private static boolean isPublicSingleObjectParameter(Method method) {
+    Modifier.isPublic(method.modifiers) &&
+        method.parameterTypes.length == 1 &&
+        method.parameterTypes[0] == Object
   }
 
 }
