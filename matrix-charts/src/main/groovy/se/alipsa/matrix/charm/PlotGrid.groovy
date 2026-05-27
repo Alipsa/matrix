@@ -185,6 +185,22 @@ class PlotGrid {
   }
 
   /**
+   * Writes the grid to a target file path using custom render dimensions,
+   * auto-detecting the format from the file extension.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, {@code .pdf}, and {@code .svg} (default).
+   *
+   * @param targetPath path to output file
+   * @param width render width in pixels
+   * @param height render height in pixels
+   */
+  void writeTo(String targetPath, int width, int height) {
+    if (targetPath == null || targetPath.trim().isEmpty()) {
+      throw new IllegalArgumentException('targetPath cannot be blank')
+    }
+    writeTo(new File(targetPath), width, height)
+  }
+
+  /**
    * Writes the grid to a target file, auto-detecting the format from the file extension.
    * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, {@code .pdf}, and {@code .svg} (default).
    *
@@ -199,6 +215,28 @@ class PlotGrid {
       case ExportFormat.JPEG -> ChartToJpeg.export(this, targetFile)
       case ExportFormat.PDF -> ChartToPdf.export(this, targetFile)
       default -> targetFile.text = SvgWriter.toXmlPretty(render())
+    }
+  }
+
+  /**
+   * Writes the grid to a target file using custom render dimensions,
+   * auto-detecting the format from the file extension.
+   * Supported extensions: {@code .png}, {@code .jpg}/{@code .jpeg}, {@code .pdf}, and {@code .svg} (default).
+   *
+   * @param targetFile output file
+   * @param width render width in pixels
+   * @param height render height in pixels
+   */
+  void writeTo(File targetFile, int width, int height) {
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    Svg svg = render(width, height)
+    switch (ExportFormat.fromFile(targetFile)) {
+      case ExportFormat.PNG -> ChartToPng.export(svg, targetFile)
+      case ExportFormat.JPEG -> ChartToJpeg.export(svg, targetFile)
+      case ExportFormat.PDF -> ChartToPdf.export(svg, targetFile)
+      default -> targetFile.text = SvgWriter.toXmlPretty(svg)
     }
   }
 
