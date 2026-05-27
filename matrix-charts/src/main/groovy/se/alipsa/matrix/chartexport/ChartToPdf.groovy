@@ -27,8 +27,8 @@ import java.awt.image.BufferedImage
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToPdf {
 
-  private static final float SCREEN_DPI = 96.0f
-  private static final float PDF_DPI = 72.0f
+  private static final float SCREEN_DPI = 96.0f  // standard screen resolution
+  private static final float PDF_DPI = 72.0f      // 1 pt = 1/72 inch
 
   /**
    * Export an {@link Svg} chart as a PDF file.

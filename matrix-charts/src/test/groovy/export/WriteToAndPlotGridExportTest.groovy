@@ -403,8 +403,8 @@ class WriteToAndPlotGridExportTest {
     try {
       assertEquals(1, document.numberOfPages)
       PDRectangle mediaBox = document.getPage(0).mediaBox
-      assertEquals(expectedPtWidth, mediaBox.width, 0.5f)
-      assertEquals(expectedPtHeight, mediaBox.height, 0.5f)
+      assertEquals(expectedPtWidth, mediaBox.width, 0.1f)
+      assertEquals(expectedPtHeight, mediaBox.height, 0.1f)
     } finally {
       document.close()
     }
