@@ -39,6 +39,7 @@ class CharmRendererTest {
       layers { geomPoint() }
     }.build()
 
+    // GeomSpec.type is final; reflection is needed to force this renderer-only failure path.
     setField(chart.layers[0].geomSpec, 'type', null)
 
     CharmRenderException ex = assertThrows(CharmRenderException) {

@@ -62,7 +62,7 @@ class TemporalScaleUtil {
     try {
       return ZoneId.of(configured)
     } catch (Exception ignored) {
-      log.warn("Invalid zoneId '${configured}', falling back to ${DEFAULT_ZONE}; check the 'zoneId' scale parameter")
+      log.warn("Invalid zoneId '${configured}', falling back to ${DEFAULT_ZONE.id}; check the 'zoneId' scale parameter")
       return DEFAULT_ZONE
     }
   }
