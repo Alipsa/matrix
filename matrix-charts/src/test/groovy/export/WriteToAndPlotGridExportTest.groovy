@@ -241,6 +241,49 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testPlotGridWriteToPdfWithDimensions(@TempDir Path tempDir) {
+    PlotGrid grid = buildSingleGrid()
+    File file = tempDir.resolve('grid-sized.pdf').toFile()
+    grid.writeTo(file, 320, 240)
+    assertPdfDimensions(file, 320, 240)
+  }
+
+  @Test
+  void testPlotGridWriteToPngWithDimensions(@TempDir Path tempDir) {
+    PlotGrid grid = buildSingleGrid()
+    File file = tempDir.resolve('grid-sized.png').toFile()
+    grid.writeTo(file, 320, 240)
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(320, image.width)
+    assertEquals(240, image.height)
+  }
+
+  @Test
+  void testPlotGridWriteToSvgWithDimensions(@TempDir Path tempDir) {
+    PlotGrid grid = buildSingleGrid()
+    File file = tempDir.resolve('grid-sized.svg').toFile()
+    grid.writeTo(file, 320, 240)
+    assertTrue(file.exists())
+    String content = file.text
+    assertTrue(content.contains('<svg'))
+    assertTrue(content.contains('width="320"'))
+    assertTrue(content.contains('height="240"'))
+  }
+
+  @Test
+  void testPlotGridWriteToStringPathWithDimensions(@TempDir Path tempDir) {
+    PlotGrid grid = buildSingleGrid()
+    String path = tempDir.resolve('grid-sized.png') as String
+    grid.writeTo(path, 320, 240)
+    File file = new File(path)
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+  }
+
+  @Test
   void testPlotGridWriteToPdf(@TempDir Path tempDir) {
     PlotGrid grid = buildGrid()
     File file = tempDir.resolve('grid.pdf').toFile()
@@ -391,6 +434,14 @@ class WriteToAndPlotGridExportTest {
     plotGrid {
       add c1, c2
       ncol 2
+    }
+  }
+
+  private static PlotGrid buildSingleGrid() {
+    Chart chart = buildChart()
+    plotGrid {
+      add chart
+      ncol 1
     }
   }
 
