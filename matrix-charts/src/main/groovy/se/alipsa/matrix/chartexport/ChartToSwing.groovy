@@ -32,6 +32,19 @@ class ChartToSwing {
   }
 
   /**
+   * Create a {@link SvgPanel} from an SVG document represented as a character sequence.
+   *
+   * @param svgChart the SVG content
+   * @return a {@link SvgPanel} displaying the provided SVG content
+   */
+  static SvgPanel export(CharSequence svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException('svgChart must not be null')
+    }
+    export(svgChart.toString())
+  }
+
+  /**
    * Create a {@link SvgPanel} from an {@link Svg} instance.
    *
    * @param svgChart the {@link Svg} chart to render
@@ -58,13 +71,6 @@ class ChartToSwing {
   }
 
   /**
-   * Dynamic dispatch overload for untyped chart objects.
-   *
-   * @param svgChart an SVG string, {@link Svg}, or {@link CharmChart}
-   * @return a {@link SvgPanel} displaying the rendered chart
-   * @throws IllegalArgumentException if svgChart is null or an unsupported type
-   */
-  /**
    * Create a {@link SvgPanel} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
    *
    * @param chart the legacy chart to render
@@ -88,32 +94,6 @@ class ChartToSwing {
       throw new IllegalArgumentException('grid cannot be null')
     }
     export(grid.render())
-  }
-
-  /**
-   * Dynamic dispatch overload for untyped chart objects.
-   *
-   * @param svgChart an SVG string, {@link Svg}, {@link CharmChart}, or legacy {@link Chart}
-   * @return a {@link SvgPanel} displaying the rendered chart
-   * @throws IllegalArgumentException if svgChart is null or an unsupported type
-   */
-  static SvgPanel export(Object svgChart) {
-    if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
-    }
-    if (svgChart instanceof CharSequence) {
-      return export(String.valueOf(svgChart))
-    }
-    if (svgChart instanceof Svg) {
-      return export((Svg) svgChart)
-    }
-    if (svgChart instanceof CharmChart) {
-      return export((CharmChart) svgChart)
-    }
-    if (svgChart instanceof Chart) {
-      return export((Chart) svgChart)
-    }
-    throw new IllegalArgumentException("Unsupported chart type: ${svgChart.getClass().name}")
   }
 
 }

@@ -20,6 +20,8 @@ import se.alipsa.matrix.charm.CharmStatType
  */
 class LabelBuilder extends LayerBuilder {
 
+  private static final String FONTFACE = 'fontface'
+
   /**
    * Sets label text size.
    *
@@ -86,13 +88,24 @@ class LabelBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets font face (e.g. bold, italic).
+   * Sets font face by name (e.g. 'bold', 'italic').
    *
-   * @param value fontface name or integer code
+   * @param value fontface name
    * @return this builder
    */
-  LabelBuilder fontface(Object value) {
-    params['fontface'] = value
+  LabelBuilder fontface(String value) {
+    params[FONTFACE] = value
+    this
+  }
+
+  /**
+   * Sets font face by integer code (1 = plain, 2 = bold, 3 = italic, 4 = bold-italic).
+   *
+   * @param value fontface integer code
+   * @return this builder
+   */
+  LabelBuilder fontface(int value) {
+    params[FONTFACE] = value
     this
   }
 
