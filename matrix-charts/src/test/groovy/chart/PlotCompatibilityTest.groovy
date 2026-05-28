@@ -213,6 +213,7 @@ class PlotCompatibilityTest {
         .title('Y Labels')
         .x('x')
         .y('y')
+        .xAxisVisible(true)
         .build()
     chart.style.yLabels = ['30': 'High', '10': 'Low', '20': 'Middle']
 
