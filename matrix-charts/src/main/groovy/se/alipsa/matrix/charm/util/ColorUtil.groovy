@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.util
 
 import java.awt.Color
+import java.math.RoundingMode
 
 /** Utility methods for color conversion and parsing. */
 @SuppressWarnings('DuplicateNumberLiteral')
@@ -60,7 +61,7 @@ class ColorUtil {
         if (matcher.matches()) {
             int pct = Integer.parseInt(matcher.group(1))
             pct = 0.max(pct.min(100)) as int
-            int value = (255 * (pct / 100.0f)).round() as int
+            int value = (255 * pct / 100).setScale(0, RoundingMode.HALF_UP) as int
             String hex = pad(Integer.toHexString(value))
             return "#${hex}${hex}${hex}"
         }

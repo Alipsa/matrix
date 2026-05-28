@@ -28,16 +28,6 @@ compileGroovy {
   options.deprecation = true
 }
 
-// we should consider using monocle to allow this to work for back-end headless apps:
-// https://wiki.openjdk.org/display/OpenJFX/Monocle
-/*
-this makes the javafx dependencies added to the pom
-javafx {
-  version = "19.0.2.1"
-  modules = ['javafx.controls', 'javafx.swing']
-}
- */
-
 dependencies {
   OperatingSystem os = OperatingSystem.current()
 
@@ -55,7 +45,6 @@ dependencies {
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
-  //compileOnly project(':matrix-groovy-ext')
   api libs.gsvg
   api libs.gsvg.export
   implementation libs.commons.text
@@ -71,13 +60,10 @@ dependencies {
 
   testImplementation libs.groovy
   testImplementation libs.groovy.xml
-  //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
-
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-stats')
   testImplementation project(':matrix-datasets')
   testImplementation project(':matrix-ggplot')
-  //testImplementation project(':matrix-groovy-ext')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
