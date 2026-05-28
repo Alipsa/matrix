@@ -214,11 +214,14 @@ class PlotCompatibilityTest {
         .x('x')
         .y('y')
         .build()
-    chart.style.yLabels = ['10': 'Low', '20': 'Middle', '30': 'High']
+    chart.style.yLabels = ['30': 'High', '10': 'Low', '20': 'Middle']
 
     List<String> labels = textContent(CharmBridge.renderSvg(chart, 800, 600))
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
 
     assertTrue(labels.containsAll(['Low', 'Middle', 'High']))
+    assertEquals(['10', '20', '30'], charmChart.scale.y.breaks*.toString())
+    assertEquals(['Low', 'Middle', 'High'], charmChart.scale.y.labels)
   }
 
   @Test

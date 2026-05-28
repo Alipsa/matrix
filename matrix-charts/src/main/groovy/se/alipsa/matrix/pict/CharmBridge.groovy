@@ -345,6 +345,9 @@ class CharmBridge {
   }
 
   private static List<BigDecimal> axisBreaks(AxisScale axisScale) {
+    if (axisScale.step <= 0) {
+      throw new IllegalArgumentException("AxisScale step must be positive, got ${axisScale.step}")
+    }
     List<BigDecimal> breaks = []
     BigDecimal current = axisScale.start
     while (current <= axisScale.end) {
@@ -358,14 +361,14 @@ class CharmBridge {
   }
 
   private static void applyYLabels(Scale scale, Map<String, String> yLabels) {
-    List<BigDecimal> breaks = []
-    List<String> labels = []
-    yLabels.each { String value, String label ->
-      breaks << new BigDecimal(value)
-      labels << label
+    List<AbstractMap.SimpleEntry<BigDecimal, String>> entries = yLabels.collect { String value, String label ->
+      new AbstractMap.SimpleEntry<BigDecimal, String>(new BigDecimal(value), label)
     }
-    scale.breaks = breaks
-    scale.labels = labels
+    entries.sort { AbstractMap.SimpleEntry<BigDecimal, String> entry ->
+      entry.key
+    }
+    scale.breaks = entries*.key
+    scale.labels = entries*.value
   }
 
   /**
