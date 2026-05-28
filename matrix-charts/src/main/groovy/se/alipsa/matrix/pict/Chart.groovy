@@ -285,7 +285,14 @@ abstract class Chart<T extends Chart> {
     /** Sets y-axis visibility. */
     B yAxisVisible(boolean visible) { ensureStyle(); style.yAxisVisible = visible; this as B }
 
-    /** Sets custom CSS. */
+    /**
+     * Sets legacy raw CSS text.
+     *
+     * @param css raw CSS text
+     * @return this builder
+     * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
+     */
+    @Deprecated
     B css(String css) { ensureStyle(); style.css = css; this as B }
 
     private void ensureStyle() {

@@ -51,6 +51,15 @@ import java.awt.Color
  */
 class Style {
 
+  /**
+   * Legacy raw CSS text retained for source compatibility.
+   *
+   * <p>The Charm bridge does not inject arbitrary stylesheet text. Prefer Charm theme
+   * settings and CSS attribute APIs for new code.</p>
+   *
+   * @deprecated Raw CSS is not applied by the Charm bridge.
+   */
+  @Deprecated
   String css
 
   /** The back ground color of the plot area (where the actual chart is drawn) */
@@ -65,12 +74,27 @@ class Style {
   Boolean xAxisVisible
   Boolean yAxisVisible
 
+  /** Maps numeric y-axis break values to custom display labels. */
   Map<String, String> yLabels = [:]
 
+  /**
+   * Sets legacy raw CSS text.
+   *
+   * @param css raw CSS text
+   * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
+   */
+  @Deprecated
   void setCss(String css) {
     this.css = css
   }
 
+  /**
+   * Returns legacy raw CSS text.
+   *
+   * @return raw CSS text
+   * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
+   */
+  @Deprecated
   String getCss() {
     return css
   }

@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.geom.AreaBuilder
 import se.alipsa.matrix.charm.geom.BarBuilder
 import se.alipsa.matrix.charm.geom.BoxplotBuilder
@@ -267,6 +268,7 @@ class CharmBridge {
     if (chart.yAxisTitle) {
       labels.y = chart.yAxisTitle
     }
+    applyAxisScales(spec, chart)
 
     se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
     if (chart.style?.plotBackgroundColor) {
@@ -318,6 +320,52 @@ class CharmBridge {
         labels.guides['fill'] = legend.title
       }
     }
+  }
+
+  private static void applyAxisScales(PlotSpec spec, Chart chart) {
+    if (chart.xAxisScale != null) {
+      spec.scale.x(scaleFromAxisScale(chart.xAxisScale))
+    }
+
+    Scale yScale = chart.yAxisScale != null ? scaleFromAxisScale(chart.yAxisScale) : null
+    if (chart.style?.yLabels) {
+      yScale = yScale ?: Scale.continuous()
+      applyYLabels(yScale, chart.style.yLabels)
+    }
+    if (yScale != null) {
+      spec.scale.y(yScale)
+    }
+  }
+
+  private static Scale scaleFromAxisScale(AxisScale axisScale) {
+    Scale scale = Scale.continuous()
+    scale.params['limits'] = [axisScale.start, axisScale.end]
+    scale.breaks = axisBreaks(axisScale)
+    scale
+  }
+
+  private static List<BigDecimal> axisBreaks(AxisScale axisScale) {
+    List<BigDecimal> breaks = []
+    BigDecimal current = axisScale.start
+    while (current <= axisScale.end) {
+      breaks << current
+      current += axisScale.step
+    }
+    if (breaks.last() != axisScale.end) {
+      breaks << axisScale.end
+    }
+    breaks
+  }
+
+  private static void applyYLabels(Scale scale, Map<String, String> yLabels) {
+    List<BigDecimal> breaks = []
+    List<String> labels = []
+    yLabels.each { String value, String label ->
+      breaks << new BigDecimal(value)
+      labels << label
+    }
+    scale.breaks = breaks
+    scale.labels = labels
   }
 
   /**

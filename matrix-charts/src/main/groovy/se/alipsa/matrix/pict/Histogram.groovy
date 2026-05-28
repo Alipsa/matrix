@@ -182,15 +182,21 @@ class MinMax {
 
   BigDecimal minValue
   BigDecimal maxValue
+  private final int binDecimals
 
   MinMax(BigDecimal minValue, BigDecimal maxValue, int binDecimals = 1) {
-    this.minValue = minValue.setScale(binDecimals, RoundingMode.HALF_EVEN)
-    this.maxValue = maxValue.setScale(binDecimals, RoundingMode.HALF_EVEN)
+    this.minValue = minValue
+    this.maxValue = maxValue
+    this.binDecimals = binDecimals
   }
 
   @Override
   String toString() {
-    return minValue + '-' + maxValue
+    return "${format(minValue)}-${format(maxValue)}"
+  }
+
+  private String format(BigDecimal value) {
+    value.setScale(binDecimals, RoundingMode.HALF_EVEN).toString()
   }
 
 }

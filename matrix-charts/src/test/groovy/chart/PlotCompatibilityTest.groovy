@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.Text
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
+import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
@@ -172,6 +176,67 @@ class PlotCompatibilityTest {
   }
 
   @Test
+  void testLegacyAxisScaleAppliesToCharmBridge() {
+    Matrix data = Matrix.builder()
+        .matrixName('AxisScaleData')
+        .columns([
+            x: [0, 1, 2, 3, 4, 5],
+            y: [0, 10, 20, 30, 40, 50]
+        ])
+        .types([Number, Number])
+        .build()
+    LineChart chart = LineChart.builder(data)
+        .title('Axis Scale')
+        .x('x')
+        .y('y')
+        .xAxisScale(0, 5, 1)
+        .yAxisScale(0, 50, 10)
+        .build()
+
+    List<String> labels = textContent(CharmBridge.renderSvg(chart, 800, 600))
+
+    assertTrue(labels.containsAll(['0', '1', '2', '3', '4', '5']))
+    assertTrue(labels.containsAll(['10', '20', '30', '40', '50']))
+  }
+
+  @Test
+  void testLegacyYLabelsApplyToCharmBridge() {
+    Matrix data = Matrix.builder()
+        .matrixName('YLabelData')
+        .columns([
+            x: [1, 2, 3],
+            y: [10, 20, 30]
+        ])
+        .types([Number, Number])
+        .build()
+    LineChart chart = LineChart.builder(data)
+        .title('Y Labels')
+        .x('x')
+        .y('y')
+        .build()
+    chart.style.yLabels = ['10': 'Low', '20': 'Middle', '30': 'High']
+
+    List<String> labels = textContent(CharmBridge.renderSvg(chart, 800, 600))
+
+    assertTrue(labels.containsAll(['Low', 'Middle', 'High']))
+  }
+
+  @Test
+  @SuppressWarnings('GrDeprecatedAPIUsage')
+  void testLegacyCssApiRemainsCallableWithoutRawCharmCssInjection() {
+    Matrix data = sampleData()
+    BarChart chart = BarChart.builder(data)
+        .title('CSS Compatibility')
+        .x('category')
+        .y('value')
+        .css('.legacy-custom { fill: red; }')
+        .build()
+
+    assertEquals('.legacy-custom { fill: red; }', chart.style.css)
+    assertFalse(SvgWriter.toXml(CharmBridge.renderSvg(chart, 800, 600)).contains('.legacy-custom'))
+  }
+
+  @Test
   void testJfxReturnsJavafxNode() {
     Assumptions.assumeTrue(
         System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
@@ -192,6 +257,10 @@ class PlotCompatibilityTest {
     for (int i = 0; i < PNG_HEADER.length; i++) {
       assertEquals(PNG_HEADER[i], header[i], "PNG header byte ${i} should match")
     }
+  }
+
+  private static List<String> textContent(Svg svg) {
+    svg.descendants().findAll { it instanceof Text }*.content
   }
 
 }
