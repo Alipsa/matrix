@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -184,6 +186,50 @@ class ChartToPdf {
       document.save(os)
     } finally {
       document.close()
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
+   * @param targetFile the PDF file to write
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, File targetFile) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, targetFile)
+      case CharmChart -> export(chart as CharmChart, targetFile)
+      case Chart -> export(chart as Chart, targetFile)
+      case Svg -> export(chart as Svg, targetFile)
+      case CharSequence -> export(chart.toString(), targetFile)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
+   * @param os the output stream to write
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, OutputStream os) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, os)
+      case CharmChart -> export(chart as CharmChart, os)
+      case Chart -> export(chart as Chart, os)
+      case Svg -> export(chart as Svg, os)
+      case CharSequence -> export(chart.toString(), os)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
 

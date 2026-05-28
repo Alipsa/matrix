@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart as CharmChart
@@ -201,6 +203,66 @@ class ChartToSvg {
   private static void writeSvg(Svg svg, OutputStream os) throws IOException {
     os.write(SvgWriter.toXml(svg).getBytes(StandardCharsets.UTF_8))
     os.flush()
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param targetFile the file to write the SVG to
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, File targetFile) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, targetFile)
+      case CharmChart -> export(chart as CharmChart, targetFile)
+      case Chart -> export(chart as Chart, targetFile)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param os the output stream to write the SVG to
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, OutputStream os) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, os)
+      case CharmChart -> export(chart as CharmChart, os)
+      case Chart -> export(chart as Chart, os)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param writer the writer to write the SVG to
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, Writer writer) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, writer)
+      case CharmChart -> export(chart as CharmChart, writer)
+      case Chart -> export(chart as Chart, writer)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
   private static void writeSvg(Svg svg, Writer writer) throws IOException {

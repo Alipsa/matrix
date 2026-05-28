@@ -85,7 +85,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToSwing.export(svgContent)
     })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    assertTrue(exception.getMessage().contains('must not be null'))
   }
 
   @Test
@@ -94,7 +94,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToSwing.export(svg)
     })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    assertTrue(exception.getMessage().contains('must not be null'))
   }
 
   @Test
@@ -140,6 +140,14 @@ class ChartToSwingTest {
     assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
     assertTrue(panel.getPreferredSize().width > 0)
     assertTrue(panel.getPreferredSize().height > 0)
+  }
+
+  @Test
+  void testExportTypedDispatchCharmChart() {
+    CharmChart chart = buildCharmChart()
+
+    SvgPanel panel = ChartToSwing.export(chart)
+    assertNotNull(panel, "SvgPanel should not be null via typed dispatch")
   }
 
   @Test

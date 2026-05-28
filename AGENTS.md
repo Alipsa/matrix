@@ -60,6 +60,23 @@ void setLegendPosition(Object value) { ... }
 PointBuilder shape(Object value) { ... }
 ```
 
+**Exception — Object fallback dispatch methods:** An `Object` parameter is acceptable in a **fallback method** that dispatches via `instanceof` to existing typed overloads. This allows dynamically-typed callers (e.g. `def chart = createChart()`) to use the API without compile-time type knowledge. The typed overloads must always exist alongside the fallback — the `Object` method is never the only entry point.
+
+```groovy
+// Good - Object fallback alongside typed overloads
+static SvgPanel export(CharmChart chart) { ... }
+static SvgPanel export(Svg chart) { ... }
+static SvgPanel export(PlotGrid grid) { ... }
+
+@CompileDynamic
+static SvgPanel export(Object chart) {
+  if (chart instanceof CharmChart) export((CharmChart) chart)
+  else if (chart instanceof Svg) export((Svg) chart)
+  else if (chart instanceof PlotGrid) export((PlotGrid) chart)
+  else throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+}
+```
+
 When a value can legitimately be one of several types (e.g. an enum or a list), provide a separate overload for each type. Use enums instead of strings for fixed sets of values (e.g. positions, directions, shape names, line types) and do any string-to-enum conversion at API boundaries (bridges, adapters).
 
 ## Prefer idiomatic groovy constructs.
@@ -985,7 +1002,7 @@ keep the old colon-style switch. Do **not** attempt to convert these to arrow sy
 switch (schema.getType()) {
   case Schema.Type.STRING: return v.toString()
   case Schema.Type.INT:
-    if (v instanceof Number) return ((Number) v).intValue()
+    if (v instanceof Number) return v.intValue()
     break
   case Schema.Type.ARRAY:
     // ... loop and return ...

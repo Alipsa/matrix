@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
@@ -15,7 +17,6 @@ import se.alipsa.matrix.pict.Chart
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
 class ChartToSwing {
 
   /**
@@ -94,6 +95,28 @@ class ChartToSwing {
       throw new IllegalArgumentException('grid cannot be null')
     }
     export(grid.render())
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
+   * @return a {@link SvgPanel} displaying the rendered chart
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static SvgPanel export(Object chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid)
+      case CharmChart -> export(chart as CharmChart)
+      case Chart -> export(chart as Chart)
+      case Svg -> export(chart as Svg)
+      case CharSequence -> export(chart as CharSequence)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
 }

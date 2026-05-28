@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import org.girod.javafx.svgimage.SVGImage
 import org.girod.javafx.svgimage.SVGLoader
 
@@ -88,6 +90,28 @@ class ChartToJfx {
       throw new IllegalArgumentException('grid cannot be null')
     }
     export(grid.render())
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or String)
+   * @return an {@link SVGImage} representing the rendered chart
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static SVGImage export(Object chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid)
+      case CharmChart -> export(chart as CharmChart)
+      case Chart -> export(chart as Chart)
+      case Svg -> export(chart as Svg)
+      case CharSequence -> export(chart.toString())
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
 }
