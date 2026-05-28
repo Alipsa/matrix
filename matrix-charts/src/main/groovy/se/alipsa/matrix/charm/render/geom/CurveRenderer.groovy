@@ -44,6 +44,7 @@ class CurveRenderer {
       if (alpha < 1.0) {
         path.addAttribute('stroke-opacity', alpha)
       }
+      ArrowMarkerSupport.applyArrowMarker(path, context, layer, stroke, elementIndex)
       GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, datum)
       elementIndex++
     }
