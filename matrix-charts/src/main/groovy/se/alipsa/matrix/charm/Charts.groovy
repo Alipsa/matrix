@@ -206,7 +206,7 @@ class Charts {
     if (observations == null) {
       throw new IllegalArgumentException('observations cannot be null')
     }
-    List<?> list = observations instanceof List<?> ? (observations as List<?>) : observations.collect { Object it -> it } as List<?>
+    List<?> list = observations instanceof List<?> ? observations : observations.collect { Object it -> it } as List<?>
     if (list.isEmpty()) {
       throw new IllegalArgumentException('observations cannot be empty')
     }

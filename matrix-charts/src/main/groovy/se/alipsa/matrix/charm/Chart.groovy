@@ -193,7 +193,7 @@ class Chart {
       return new MappingSpec()
     }
     if (value instanceof MappingSpec) {
-      return (value as MappingSpec).copy()
+      return value.copy()
     }
     MappingSpec converted = new MappingSpec()
     converted.apply(value.mappings())
@@ -223,18 +223,18 @@ class Chart {
   private static Object deepFreezeValue(Object value) {
     if (value instanceof Map) {
       Map<Object, Object> frozen = [:]
-      (value as Map).each { Object k, Object v ->
+      value.each { Object k, Object v ->
         frozen[k] = deepFreezeValue(v)
       }
       return Collections.unmodifiableMap(frozen)
     }
     if (value instanceof List) {
-      List<Object> frozen = (value as List).collect { Object v -> deepFreezeValue(v) } as List<Object>
+      List<Object> frozen = value.collect { Object v -> deepFreezeValue(v) } as List<Object>
       return Collections.unmodifiableList(frozen)
     }
     if (value instanceof Set) {
       Set<Object> frozen = new LinkedHashSet<>()
-      (value as Set).each { Object v ->
+      value.each { Object v ->
         frozen << deepFreezeValue(v)
       }
       return Collections.unmodifiableSet(frozen)
@@ -247,7 +247,7 @@ class Chart {
       return new ThemeSpec()
     }
     if (value instanceof ThemeSpec) {
-      return (value as ThemeSpec).copy()
+      return value.copy()
     }
     ThemeSpec spec = new ThemeSpec()
     Theme copy = value.copy()
@@ -265,7 +265,7 @@ class Chart {
       return new FacetSpec()
     }
     if (value instanceof FacetSpec) {
-      return (value as FacetSpec).copy()
+      return value.copy()
     }
     new FacetSpec(
         type: value.type,
@@ -283,7 +283,7 @@ class Chart {
       return new CoordSpec()
     }
     if (value instanceof CoordSpec) {
-      return (value as CoordSpec).copy()
+      return value.copy()
     }
     new CoordSpec(type: value.type, params: new LinkedHashMap<>(value.params))
   }
@@ -293,7 +293,7 @@ class Chart {
       return new LabelsSpec()
     }
     if (value instanceof LabelsSpec) {
-      return (value as LabelsSpec).copy()
+      return value.copy()
     }
     new LabelsSpec(
         title: value.title,

@@ -22,10 +22,10 @@ final class GuideUtils {
       return null
     }
     if (value instanceof GuideSpec) {
-      return (value as GuideSpec).copy()
+      return value.copy()
     }
     if (value instanceof GuideType) {
-      return new GuideSpec(value as GuideType)
+      return new GuideSpec(value)
     }
     if (value instanceof CharSequence) {
       GuideType type = GuideType.fromString(value.toString())

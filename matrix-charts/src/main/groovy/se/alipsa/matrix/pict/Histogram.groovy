@@ -93,7 +93,7 @@ class Histogram extends Chart<Histogram> {
       dist.put(group, 0)
     }
     for (Number value in column) {
-      BigDecimal bdValue = (value instanceof BigDecimal) ? (BigDecimal) value : new BigDecimal(value.toString())
+      BigDecimal bdValue = (value instanceof BigDecimal) ? value : new BigDecimal(value.toString())
       for (MinMax group in ranges) {
         if (bdValue.compareTo(group.maxValue) <= 0) {
           Integer num = dist[group]

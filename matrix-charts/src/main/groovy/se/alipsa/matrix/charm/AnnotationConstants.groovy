@@ -35,7 +35,7 @@ class AnnotationConstants {
     }
 
     if (value instanceof String) {
-      String str = (value as String).toLowerCase()
+      String str = value.toLowerCase()
       if (str == 'inf' || str == '+inf') {
         return INFINITY_MARKER
       }

@@ -626,7 +626,7 @@ class CharmRenderer {
 
   private static Matrix resolveLayerData(Matrix chartData, LayerSpec layer) {
     Object layerData = layer.params['__layer_data']
-    layerData instanceof Matrix ? layerData as Matrix : chartData
+    layerData instanceof Matrix ? layerData : chartData
   }
 
   private static List<Integer> defaultRowIndexes(int rowCount) {

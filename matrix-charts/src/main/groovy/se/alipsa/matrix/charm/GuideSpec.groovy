@@ -98,14 +98,14 @@ class GuideSpec {
   private static Object deepCopy(Object value) {
     if (value instanceof Map) {
       Map<Object, Object> result = [:]
-      (value as Map).each { Object k, Object v ->
+      value.each { Object k, Object v ->
         result[k] = deepCopy(v)
       }
       return result
     }
     if (value instanceof List) {
       List<Object> result = []
-      (value as List).each { Object element ->
+      value.each { Object element ->
         result << deepCopy(element)
       }
       return result

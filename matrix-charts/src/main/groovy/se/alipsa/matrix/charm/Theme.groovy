@@ -271,19 +271,19 @@ class Theme {
 
   private static Object deepCopy(Object value) {
     if (value instanceof ElementText) {
-      return (value as ElementText).copy()
+      return value.copy()
     }
     if (value instanceof ElementLine) {
-      return (value as ElementLine).copy()
+      return value.copy()
     }
     if (value instanceof ElementRect) {
-      return (value as ElementRect).copy()
+      return value.copy()
     }
     if (value instanceof List) {
-      return [*(value as List)]
+      return [*value]
     }
     if (value instanceof Set) {
-      return new LinkedHashSet<>(value as Set)
+      return new LinkedHashSet<>(value)
     }
     value
   }

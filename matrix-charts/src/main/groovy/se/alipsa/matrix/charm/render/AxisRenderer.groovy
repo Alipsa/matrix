@@ -279,7 +279,7 @@ class AxisRenderer {
     Object prescaleBaseRaw = params['prescaleBase']
     Number prescaleBase
     if (prescaleBaseRaw instanceof Number) {
-      prescaleBase = (Number) prescaleBaseRaw
+      prescaleBase = prescaleBaseRaw
     } else if (prescaleBaseRaw instanceof CharSequence) {
       try {
         prescaleBase = new BigDecimal(prescaleBaseRaw.toString())

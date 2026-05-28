@@ -120,10 +120,10 @@ class LayerDsl extends LayerParams {
       return PositionSpec.of(CharmPositionType.IDENTITY)
     }
     if (value instanceof PositionSpec) {
-      return (value as PositionSpec).copy()
+      return value.copy()
     }
     if (value instanceof CharmPositionType) {
-      return PositionSpec.of(value as CharmPositionType)
+      return PositionSpec.of(value)
     }
     if (value instanceof CharSequence) {
       try {
