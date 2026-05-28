@@ -286,13 +286,11 @@ abstract class Chart<T extends Chart> {
     B yAxisVisible(boolean visible) { ensureStyle(); style.yAxisVisible = visible; this as B }
 
     /**
-     * Sets legacy raw CSS text.
+     * Sets raw CSS text to inject into Charm-rendered SVG output.
      *
      * @param css raw CSS text
      * @return this builder
-     * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
      */
-    @Deprecated
     B css(String css) { ensureStyle(); style.css = css; this as B }
 
     private void ensureStyle() {

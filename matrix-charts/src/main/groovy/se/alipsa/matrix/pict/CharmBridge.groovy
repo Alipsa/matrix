@@ -268,6 +268,9 @@ class CharmBridge {
     if (chart.yAxisTitle) {
       labels.y = chart.yAxisTitle
     }
+    if (chart.style?.css?.trim()) {
+      spec.stylesheet(chart.style.css)
+    }
     applyAxisScales(spec, chart)
 
     se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec

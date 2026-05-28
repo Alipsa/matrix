@@ -226,8 +226,7 @@ class PlotCompatibilityTest {
   }
 
   @Test
-  @SuppressWarnings('GrDeprecatedAPIUsage')
-  void testLegacyCssApiRemainsCallableWithoutRawCharmCssInjection() {
+  void testLegacyCssApiInjectsRawCharmCss() {
     Matrix data = sampleData()
     BarChart chart = BarChart.builder(data)
         .title('CSS Compatibility')
@@ -237,7 +236,9 @@ class PlotCompatibilityTest {
         .build()
 
     assertEquals('.legacy-custom { fill: red; }', chart.style.css)
-    assertFalse(SvgWriter.toXml(CharmBridge.renderSvg(chart, 800, 600)).contains('.legacy-custom'))
+    String xml = SvgWriter.toXml(CharmBridge.renderSvg(chart, 800, 600))
+    assertTrue(xml.contains('<style'))
+    assertTrue(xml.contains('.legacy-custom { fill: red; }'))
   }
 
   @Test

@@ -1,8 +1,9 @@
 # Matrix Charts
 
 Matrix Charts provides various predefined charts that can easily be created based on
-Matrix data. There are two different Plot classes that can either produce JavaFX (Plot) or Swing-based
-charts (SwingPlot) respectively.
+Matrix data. The native representation is SVG, and charts can be exported through the
+`se.alipsa.matrix.chartexport` package to PNG, JPEG, SVG, PDF, JavaFX, or Swing.
+The older `Plot` helper remains available for compatibility but is deprecated.
 
 ## Fluent Builder API
 
@@ -110,6 +111,10 @@ All builders share these methods inherited from `Chart.ChartBuilder`:
 - `legend(Legend)` — legend configuration
 - `style(Style)` — style configuration
 
+`AxisScale` settings are applied during Charm rendering. `Style.yLabels` can be used for
+custom y-axis labels on legacy PICT charts. `Style.css` is injected into Charm-rendered
+SVG as a stylesheet.
+
 ## Charm API Recipes
 
 The `matrix-charts` module also includes the Charm Grammar-of-Graphics DSL.
@@ -185,6 +190,71 @@ def chart = plot(mtcars) {
 }.build()
 
 chart.writeTo('charm-histogram.svg')
+```
+
+### Recipe: Charm Segment Arrows
+
+```groovy
+import se.alipsa.matrix.charm.ArrowSpec
+import static se.alipsa.matrix.charm.Charts.plot
+
+def chart = plot(data) {
+  mapping {
+    x = 'x'
+    y = 'y'
+    xend = 'x2'
+    yend = 'y2'
+  }
+  layers {
+    geomSegment().arrow(ArrowSpec.end(8, 6)).color('#336699')
+  }
+}.build()
+
+chart.writeTo('segment-arrows.svg')
+```
+
+Use `ArrowSpec.start(...)`, `ArrowSpec.end(...)`, or `ArrowSpec.both(...)` to choose
+where arrowheads are rendered. Length and width are SVG user-unit pixels.
+
+### Recipe: PICT Axis Scale and Y Labels
+
+```groovy
+import se.alipsa.matrix.pict.LineChart
+import se.alipsa.matrix.pict.Style
+import se.alipsa.matrix.chartexport.ChartToPng
+
+def style = new Style()
+style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
+
+def chart = LineChart.builder(data)
+    .title('Capacity')
+    .x('month')
+    .y('capacity')
+    .yAxisScale(0, 100, 50)
+    .style(style)
+    .build()
+
+ChartToPng.export(chart, new File('capacity.png'))
+```
+
+### Recipe: Export a Plot Grid with Dimensions
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plotGrid
+
+def grid = plotGrid([chart1, chart2, chart3, chart4], 2)
+
+grid.writeTo('dashboard.png', 1200, 800)
+grid.writeTo('dashboard.pdf', 1200, 800)
+```
+
+### Recipe: Export SVG XML to PDF
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToPdf
+
+String svgXml = charmChart.render().toXml()
+ChartToPdf.export(svgXml, new File('chart.pdf'))
 ```
 
 ## GGPlot Cookbook

@@ -7,7 +7,7 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
 
 **Architecture**
   - Introduced `se.alipsa.matrix.charm` as the single rendering engine for all three charting APIs (Charm, gg, charts).
-  - All chart rendering now produces SVG via gsvg. Export to PNG/JPEG/JavaFX/Swing goes through `se.alipsa.matrix.chartexport`.
+  - All chart rendering now produces SVG via gsvg. Export to PNG/JPEG/PDF/JavaFX/Swing goes through `se.alipsa.matrix.chartexport`.
   - The gg API (`se.alipsa.matrix.gg`) is preserved as a thin compatibility wrapper delegating to Charm.
   - The pictura API (`se.alipsa.matrix.pict`) is backed by Charm via `CharmBridge`. `Plot` is `@Deprecated` but functional.
   - `Plot.png()` no longer requires JavaFX toolkit initialization.
@@ -17,14 +17,26 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
   - **`Plot.jfx()` return type changed** from `javafx.scene.chart.Chart` to `javafx.scene.Node`. Code using `view()` or similar methods that accept `Node` is unaffected.
   - **Legacy backend packages removed:** `se.alipsa.matrix.charts.jfx`, `se.alipsa.matrix.charts.swing`, `se.alipsa.matrix.charts.png`, `se.alipsa.matrix.charts.svg`, and `se.alipsa.matrix.charts.util.StyleUtil`. Use `chartexport` classes (`ChartToPng`, `ChartToJfx`, `ChartToSwing`, `ChartToJpeg`, `ChartToImage`) instead.
   - **`org.knowm.xchart:xchart` dependency removed.** If you depended on xchart transitively, add it directly.
+  - Public builder APIs now prefer typed overloads for mapping, layer `stat`, layer `position`, `fontface`, bin counts, and segment/curve arrows. Unsupported argument types now fail earlier through Groovy method dispatch instead of broad `Object` catch-all methods.
 
 **New Features**
   - Charm closure DSL for idiomatic Groovy chart specifications (`Charts.plot(data) { ... }`).
   - Immutable compiled chart models (`Chart`) with deterministic lifecycle (spec -> build -> render).
   - Typed column references via `col` proxy (`col.name`, `col['name']`).
   - `@CompileStatic` support throughout Charm core.
-  - Charm export overloads added to all five chartexport classes.
+  - Charm export overloads added to the chartexport classes.
+  - `ChartToPdf.export(String, File)` and `ChartToPdf.export(String, OutputStream)` now accept raw SVG XML strings, matching the PNG export API.
+  - `PlotGrid.writeTo(File, int, int)` and `PlotGrid.writeTo(String, int, int)` now export grid layouts with explicit output dimensions.
+  - Segment and curve geoms now support rendered arrowheads through `ArrowSpec.start(...)`, `ArrowSpec.end(...)`, and `ArrowSpec.both(...)`.
+  - Charm `stylesheet(String)` injects raw CSS into rendered SVG, and PICT `Style.css` now uses that path.
   - `verifyGgRegression` Gradle task for pre-merge gg test regression gating.
+
+**Compatibility and Rendering Fixes**
+  - PDF export now closes partially-created PDF documents if image embedding fails, and PDF page sizes now convert screen pixels to PDF points at 96 DPI.
+  - `Chart.render()` now preserves an existing `CharmRenderException` instead of wrapping it in a second `CharmRenderException`.
+  - Temporal scale fallbacks and spatial geometry parse fallbacks now emit logger diagnostics instead of failing silently.
+  - Legacy PICT `AxisScale`, `Style.yLabels`, and `Style.css` settings are applied by the Charm bridge.
+  - Legacy histogram bin counting preserves exact internal bin boundaries and rounds labels only for display.
 
 **Documentation**
   - Added [charm.md](docs/charm.md) with comprehensive Charm DSL guide and migration notes.

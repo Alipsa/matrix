@@ -88,6 +88,7 @@ class CharmRenderer {
     renderPanels(context)
     renderLabels(context)
     legendRenderer.render(context)
+    injectStylesheet(context)
     injectAnimationStyle(context)
     svg
   }
@@ -334,6 +335,16 @@ class CharmRenderer {
     context.svg.addStyle()
         .type('text/css')
         .addCdataContent(animation.toCss())
+  }
+
+  private static void injectStylesheet(RenderContext context) {
+    String stylesheet = context.chart.stylesheet
+    if (!stylesheet?.trim()) {
+      return
+    }
+    context.svg.addStyle()
+        .type('text/css')
+        .addCdataContent(stylesheet)
   }
 
   private static void renderAnnotationsAtOrder(

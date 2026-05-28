@@ -1,8 +1,9 @@
 # Matrix Charts Module
 
 The Matrix Charts module is a Groovy library for creating various types of graphs and charts based on Matrix data. 
-It provides a simple and intuitive API for generating visualizations that can be exported to different formats but the
-"native" format is SVG. It uses the gsvg SVG model to greate charts and it is always possible to access the model directly
+It provides a simple and intuitive API for generating visualizations that can be exported to SVG, PNG, JPEG, PDF,
+JavaFX, or Swing, but the
+"native" format is SVG. It uses the gsvg SVG model to create charts and it is always possible to access the model directly
 for advanced customization.
 
 ## Installation
@@ -104,6 +105,7 @@ Area charts are useful for showing trends over time or comparing values across c
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with time series data
 def timeData = Matrix.builder().data(
@@ -117,7 +119,7 @@ def timeData = Matrix.builder().data(
 def areaChart = AreaChart.create("Monthly Performance", timeData, "month", "sales", "profit")
 
 // Export the chart to PNG
-Plot.png(areaChart, new File("monthly_performance.png"))
+ChartToPng.export(areaChart, new File("monthly_performance.png"))
 ```
 
 ### Bar Chart
@@ -127,6 +129,7 @@ Bar charts are excellent for comparing values across different categories. You c
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with categorical data
 def productData = Matrix.builder().data(
@@ -155,8 +158,8 @@ def horizontalBarChart = BarChart.createHorizontal(
 )
 
 // Export the charts
-Plot.png(verticalBarChart, new File("vertical_bar_chart.png"))
-Plot.png(horizontalBarChart, new File("horizontal_bar_chart.png"))
+ChartToPng.export(verticalBarChart, new File("vertical_bar_chart.png"))
+ChartToPng.export(horizontalBarChart, new File("horizontal_bar_chart.png"))
 ```
 
 The `ChartType` enum provides different styles for bar charts:
@@ -171,6 +174,7 @@ Pie charts are useful for showing proportions of a whole.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with market share data
 def marketData = Matrix.builder().data(
@@ -183,7 +187,7 @@ def marketData = Matrix.builder().data(
 def pieChart = PieChart.create("Market Share", marketData, "company", "market_share")
 
 // Export the chart
-Plot.png(pieChart, new File("market_share.png"))
+ChartToPng.export(pieChart, new File("market_share.png"))
 ```
 
 ### Line Chart
@@ -193,6 +197,7 @@ Line charts are ideal for showing trends over time or continuous data.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 import java.time.LocalDate
 
 // Create a Matrix with time series data
@@ -219,7 +224,7 @@ def lineChart = LineChart.create(
 )
 
 // Export the chart
-Plot.png(lineChart, new File("temperature_trends.png"))
+ChartToPng.export(lineChart, new File("temperature_trends.png"))
 ```
 
 ### Scatter Chart
@@ -229,6 +234,7 @@ Scatter charts are useful for showing the relationship between two variables.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with correlation data
 def correlationData = Matrix.builder().data(
@@ -246,43 +252,70 @@ def scatterChart = ScatterChart.create(
 )
 
 // Export the chart
-Plot.png(scatterChart, new File("height_weight_correlation.png"))
+ChartToPng.export(scatterChart, new File("height_weight_correlation.png"))
 ```
 
 ## Exporting Charts
 
-The matrix-charts module provides several ways to export charts using the `Plot` class:
+The recommended export API lives in `se.alipsa.matrix.chartexport`. It accepts PICT charts,
+Charm charts, `Svg` objects, and SVG XML strings where the target format supports them.
 
-### Export to PNG
-
-```groovy
-// Export to PNG file
-Plot.png(chart, new File("chart.png"))
-
-// Export to PNG with custom dimensions
-Plot.png(chart, new File("chart.png"), 800, 600)
-```
-
-### Export to SVG
+### Export to PNG, JPEG, SVG, or PDF
 
 ```groovy
-// Export to SVG file
-Plot.svg(chart, new File("chart.svg"))
+import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.chartexport.ChartToPdf
+import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToSvg
 
-// Export to SVG with custom dimensions
-Plot.svg(chart, new File("chart.svg"), 800, 600)
+ChartToPng.export(chart, new File("chart.png"))
+ChartToJpeg.export(chart, new File("chart.jpg"), 0.9)
+ChartToSvg.export(chart, new File("chart.svg"))
+ChartToPdf.export(chart, new File("chart.pdf"))
 ```
 
-### Export to JavaFX
-
-If you're working with a JavaFX application, you can convert the chart to a JavaFX chart:
+PDF export now scales screen pixels to PDF points, so an 800x600 chart is written as a
+600x450 point PDF page. Raw SVG XML from a Charm chart can also be converted directly
+to PDF:
 
 ```groovy
-// Get a JavaFX chart object
-javafx.scene.chart.Chart jfxChart = Plot.jfx(chart)
-
-// Now you can add this chart to your JavaFX scene
+String svgXml = charmChart.render().toXml()
+ChartToPdf.export(svgXml, new File("chart-from-svg.pdf"))
 ```
+
+### Export Plot Grids with Custom Dimensions
+
+For Charm charts, `PlotGrid.writeTo` accepts explicit dimensions for PNG, JPEG, SVG,
+and PDF output:
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plotGrid
+
+def grid = plotGrid([charmChart1, charmChart2], 2)
+grid.writeTo("dashboard.png", 1200, 700)
+grid.writeTo("dashboard.pdf", 1200, 700)
+```
+
+### Export to JavaFX or Swing
+
+If you're working with a JavaFX application, export to a JavaFX `Node`:
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToJfx
+
+javafx.scene.Node node = ChartToJfx.export(chart)
+```
+
+For Swing:
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToSwing
+
+def panel = ChartToSwing.export(chart)
+```
+
+The older `Plot` helper class remains available for source compatibility, but it is deprecated.
+Use the `chartexport` classes for new code.
 
 ## Customizing Charts
 
@@ -340,6 +373,7 @@ import java.time.LocalDate
 import javafx.scene.paint.Color
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a sample Matrix with sales data
 def salesData = Matrix.builder().data(
@@ -361,7 +395,7 @@ def barChart = BarChart.createVertical(
     .setXAxisTitle("Quarter")
     .setYAxisTitle("Sales (in thousands)")
 File file = new File("quarterly_sales_bar.png")
-Plot.png(barChart, file)
+ChartToPng.export(barChart, file)
 println "saved barchart to $file.absolutePath"
 
 salesData['quarter'] = [1, 2, 3, 4]
@@ -376,7 +410,7 @@ def lineChart = LineChart.create(
     .setXAxisTitle("Quarter")
     .setYAxisTitle("Sales (in thousands)")
 file = new File("quarterly_sales_line.png")
-Plot.png(lineChart, file)
+ChartToPng.export(lineChart, file)
 println "saved lineChart to $file.absolutePath"
 
 // Create a pie chart (using only one quarter for demonstration)
@@ -393,7 +427,7 @@ def pieChart = PieChart.create(
     "sales"
 )
 file = new File("q4_sales_pie.png")
-Plot.png(pieChart, file)
+ChartToPng.export(pieChart, file)
 println "saved pieChart to $file.absolutePath"
 println "Charts have been exported successfully."
 ```
@@ -443,6 +477,28 @@ def chart = plot(mtcars) {
 
 chart.writeTo('charm-mtcars.svg')
 ```
+
+Charm segment and curve layers can draw arrowheads using `ArrowSpec`:
+
+```groovy
+import se.alipsa.matrix.charm.ArrowSpec
+
+def arrows = plot(mtcars) {
+  mapping {
+    x = 'mpg'
+    y = 'wt'
+    xend = 'hp'
+    yend = 'qsec'
+  }
+  layers {
+    geomSegment().arrow(ArrowSpec.end(8, 6)).color('#336699')
+  }
+}.build()
+```
+
+PICT charts continue to render through Charm. Custom `AxisScale` settings and
+`style.yLabels` are applied by the bridge, and `style.css` is injected into the
+rendered SVG as a stylesheet.
 
 For full Charm coverage, see:
 - [matrix-charts/docs/charm.md](../../matrix-charts/docs/charm.md)

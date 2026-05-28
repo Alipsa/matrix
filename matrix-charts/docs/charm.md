@@ -253,6 +253,31 @@ layers {
 
 Layer params take priority over mapped aesthetics: if both `mapping { fill = 'status' }` and `geomCol().fill('#336699')` are present, the literal layer param wins. This matches ggplot2 behavior.
 
+### Segment and Curve Arrows
+
+`geomSegment()` and `geomCurve()` support SVG arrow markers through `ArrowSpec`:
+
+```groovy
+import se.alipsa.matrix.charm.ArrowSpec
+
+plot(data) {
+  mapping {
+    x = 'x'
+    y = 'y'
+    xend = 'x2'
+    yend = 'y2'
+  }
+  layers {
+    geomSegment().arrow(ArrowSpec.end(8, 6)).color('#336699')
+    geomCurve().arrow(ArrowSpec.both(7, 5)).curvature(0.25)
+  }
+}
+```
+
+Use `ArrowSpec.start(...)`, `ArrowSpec.end(...)`, or `ArrowSpec.both(...)` to choose
+the endpoint markers. Length and width are SVG user-unit pixels. Pass `false` as the
+third argument for an open arrowhead, for example `ArrowSpec.end(8, 6, false)`.
+
 ### Style Callbacks
 
 For per-datum conditional styling, use the `style {}` callback on a layer. The callback receives a `Row` from the original data matrix and a mutable `StyleOverride` object:
@@ -754,6 +779,21 @@ Available properties in `animation {}`:
 
 Note: CSS `@keyframes` animations are embedded in the SVG `<style>` block and are visible only in SVG viewers that support CSS animation. Animation styles are silently stripped when exporting to PNG/JPEG with `ChartToPng`/`ChartToJpeg` because raster output is static.
 
+## Raw SVG Stylesheets
+
+Charm can inject raw CSS text into the rendered SVG:
+
+```groovy
+def chart = plot(data) {
+  mapping { x = 'x'; y = 'y' }
+  layers { geomPoint() }
+  stylesheet('.charm-point { stroke-width: 2; }')
+}.build()
+```
+
+The stylesheet is emitted as an SVG `<style type="text/css">` element. PICT
+`Style.css` values use the same mechanism when legacy charts are bridged to Charm.
+
 ## Multi-plot Composition
 
 Charm provides `PlotGrid` for arranging multiple independent charts into a single SVG. Each subplot is rendered into a nested `<svg>` element for viewport isolation (independent clipping and coordinate spaces).
@@ -806,6 +846,14 @@ grid = plot_grid(c1, c2)
 Svg svg = grid.render(1200, 800)
 ChartToPng.export(svg, new File('dashboard.png'))
 new File('dashboard.svg').text = SvgWriter.toXml(svg)
+```
+
+`PlotGrid.writeTo` also accepts explicit dimensions and chooses the exporter from the
+file extension:
+
+```groovy
+grid.writeTo('dashboard.png', 1200, 800)
+grid.writeTo('dashboard.pdf', 1200, 800)
 ```
 
 ### Options
@@ -926,6 +974,20 @@ import se.alipsa.matrix.chartexport.ChartToJpeg
 ChartToJpeg.export(chart, new File('plot.jpg'), 0.9)
 ```
 
+### PDF
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToPdf
+
+ChartToPdf.export(chart, new File('plot.pdf'))
+
+String svgXml = chart.render().toXml()
+ChartToPdf.export(svgXml, new File('plot-from-svg.pdf'))
+```
+
+PDF pages are sized in points. Chart images are converted from screen pixels at 96 DPI
+to PDF's 72 points per inch.
+
 ### JavaFX
 
 ```groovy
@@ -943,6 +1005,9 @@ import se.alipsa.matrix.chartexport.ChartToSwing
 def panel = ChartToSwing.export(chart)
 // Add panel to your Swing container
 ```
+
+`ChartToSwing` provides typed overloads for SVG strings, `Svg`, Charm `Chart`, PICT
+`Chart`, and `PlotGrid`.
 
 ## Static Compilation
 
@@ -965,6 +1030,12 @@ class MyCharts {
 }
 ```
 
+Public fluent builder methods use typed overloads for common multi-type settings:
+column mappings accept `String` or `ColumnExpr`, `stat` accepts `CharmStatType`,
+`StatSpec`, or `String`, `position` accepts `CharmPositionType`, `PositionSpec`, or
+`String`, and `fontface` accepts `String` or `int`. Passing unsupported arbitrary
+objects now fails through normal Groovy method dispatch.
+
 ## Relationship to gg and charts APIs
 
 All three APIs in matrix-charts share the same Charm rendering engine:
@@ -973,7 +1044,7 @@ All three APIs in matrix-charts share the same Charm rendering engine:
 charm ----renders----> Svg (gsvg)
 gg ------adapts------> charm ---renders-> Svg
 charts --builds------> charm ---renders-> Svg
-         Svg ----exports----> chartexport ------> PNG/JPEG/JFX/Swing
+         Svg ----exports----> chartexport ------> PNG/JPEG/PDF/JFX/Swing
 ```
 
 - **Charm** is the core. Use it for new code and when you want the most idiomatic Groovy experience.
