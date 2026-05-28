@@ -348,6 +348,9 @@ class CharmBridge {
     if (axisScale.step <= 0) {
       throw new IllegalArgumentException("AxisScale step must be positive, got ${axisScale.step}")
     }
+    if (axisScale.start > axisScale.end) {
+      throw new IllegalArgumentException("AxisScale start (${axisScale.start}) must be <= end (${axisScale.end})")
+    }
     List<BigDecimal> breaks = []
     BigDecimal current = axisScale.start
     while (current <= axisScale.end) {
