@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.pict.Histogram
 
@@ -32,6 +33,19 @@ class HistogramTest {
       assertEquals(expected[i], it.value)
       i++
     }
+  }
+
+  @Test
+  void testRoundedBinLabelsDoNotDropValuesAtExactMax() {
+    Matrix data = Matrix.builder()
+        .matrixName('RoundedHistogram')
+        .columns([value: [0.0, 3.4, 6.8, 10.4]])
+        .types([Number])
+        .build()
+    def chart = Histogram.create('Rounded Histogram', data, 'value', 3, 0)
+
+    assertEquals(4, chart.ranges.values().sum())
+    assertEquals(['0-3', '3-7', '7-10'], chart.ranges.keySet()*.toString())
   }
 
 }
