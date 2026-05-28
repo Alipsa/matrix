@@ -242,9 +242,9 @@ class ContinuousCharmScale extends CharmScale {
       return bd.toBigInteger().toString()
     }
     if (bd < BigDecimal.ONE) {
-      return String.format('%.2g', bd as double)
+      return String.format('%.2g', bd)
     }
-    String.format('%.0f', bd as double)
+    String.format('%.0f', bd)
   }
 
   private List<Object> resolveConfiguredBreaks() {

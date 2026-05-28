@@ -63,7 +63,7 @@ class PlotGrid {
     if (spacing < 0) {
       throw new IllegalArgumentException("spacing must be >= 0, got $spacing")
     }
-    int minRows = Math.ceil(charts.size() / (double) ncol) as int
+    int minRows = (charts.size() / ncol).ceil() as int
     if (nrow != null && nrow < 1) {
       throw new IllegalArgumentException("nrow must be >= 1, got $nrow")
     }
