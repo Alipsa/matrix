@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.charm.ArrowSpec
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.ColumnExpr
@@ -15,9 +16,11 @@ import se.alipsa.matrix.charm.MappingSpec
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.geom.Bin2dBuilder
+import se.alipsa.matrix.charm.geom.CurveBuilder
 import se.alipsa.matrix.charm.geom.LabelBuilder
 import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.SegmentBuilder
 import se.alipsa.matrix.charm.geom.TextBuilder
 
 import java.lang.reflect.Method
@@ -114,12 +117,27 @@ class CharmTypedOverloadApiTest {
   }
 
   @Test
+  void testLineEndpointBuilderArrowTypedOverloads() {
+    ArrowSpec arrow = ArrowSpec.end()
+
+    SegmentBuilder segmentBuilder = new SegmentBuilder()
+    segmentBuilder.arrow(arrow)
+    assertSame(arrow, segmentBuilder.build().params['arrow'])
+
+    CurveBuilder curveBuilder = new CurveBuilder()
+    curveBuilder.arrow(arrow)
+    assertSame(arrow, curveBuilder.build().params['arrow'])
+  }
+
+  @Test
   void testBuilderApisDoNotExposeTargetedObjectOverloads() {
     assertNoPublicObjectOverload(TextBuilder, 'fontface')
     assertNoPublicObjectOverload(LabelBuilder, 'fontface')
     assertNoPublicObjectOverload(Bin2dBuilder, 'bins')
     assertNoPublicObjectOverload(LayerBuilder, 'stat')
     assertNoPublicObjectOverload(LayerBuilder, 'position')
+    assertNoPublicObjectOverload(SegmentBuilder, 'arrow')
+    assertNoPublicObjectOverload(CurveBuilder, 'arrow')
   }
 
   private static void assertNoPublicObjectOverload(Class<?> type, String methodName) {

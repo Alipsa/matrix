@@ -18,41 +18,7 @@ import se.alipsa.matrix.charm.CharmStatType
  * }
  * }</pre>
  */
-class LabelBuilder extends LayerBuilder {
-
-  private static final String FONTFACE = 'fontface'
-
-  /**
-   * Sets label text size.
-   *
-   * @param value size value
-   * @return this builder
-   */
-  LabelBuilder size(Number value) {
-    params['size'] = value
-    this
-  }
-
-  /**
-   * Sets label text colour.
-   *
-   * @param value colour value
-   * @return this builder
-   */
-  LabelBuilder color(String value) {
-    params['color'] = value
-    this
-  }
-
-  /**
-   * Sets label text colour (British spelling alias).
-   *
-   * @param value colour value
-   * @return this builder
-   */
-  LabelBuilder colour(String value) {
-    color(value)
-  }
+class LabelBuilder extends TextLayerBuilder<LabelBuilder> {
 
   /**
    * Sets label background fill colour.
@@ -62,72 +28,6 @@ class LabelBuilder extends LayerBuilder {
    */
   LabelBuilder fill(String value) {
     params['fill'] = value
-    this
-  }
-
-  /**
-   * Sets label rotation angle in degrees.
-   *
-   * @param value angle in degrees
-   * @return this builder
-   */
-  LabelBuilder angle(Number value) {
-    params['angle'] = value
-    this
-  }
-
-  /**
-   * Sets font family.
-   *
-   * @param value font family name
-   * @return this builder
-   */
-  LabelBuilder family(String value) {
-    params['family'] = value
-    this
-  }
-
-  /**
-   * Sets font face by name (e.g. 'bold', 'italic').
-   *
-   * @param value fontface name
-   * @return this builder
-   */
-  LabelBuilder fontface(String value) {
-    params[FONTFACE] = value
-    this
-  }
-
-  /**
-   * Sets font face by integer code (1 = plain, 2 = bold, 3 = italic, 4 = bold-italic).
-   *
-   * @param value fontface integer code
-   * @return this builder
-   */
-  LabelBuilder fontface(int value) {
-    params[FONTFACE] = value
-    this
-  }
-
-  /**
-   * Sets horizontal justification (0 = left, 0.5 = centre, 1 = right).
-   *
-   * @param value horizontal justification
-   * @return this builder
-   */
-  LabelBuilder hjust(Number value) {
-    params['hjust'] = value
-    this
-  }
-
-  /**
-   * Sets vertical justification (0 = bottom, 0.5 = middle, 1 = top).
-   *
-   * @param value vertical justification
-   * @return this builder
-   */
-  LabelBuilder vjust(Number value) {
-    params['vjust'] = value
     this
   }
 

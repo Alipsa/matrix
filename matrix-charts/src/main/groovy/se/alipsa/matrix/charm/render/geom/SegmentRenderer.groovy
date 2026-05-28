@@ -115,6 +115,7 @@ class SegmentRenderer {
     if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
+    ArrowMarkerSupport.applyArrowMarker(line, context, layer, stroke, elementIndex)
     GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, datum)
   }
 }

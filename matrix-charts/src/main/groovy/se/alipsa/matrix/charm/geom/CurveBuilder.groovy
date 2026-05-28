@@ -2,7 +2,6 @@ package se.alipsa.matrix.charm.geom
 
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
-import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for curve layers.
@@ -18,50 +17,7 @@ import se.alipsa.matrix.charm.LinetypeName
  * }
  * }</pre>
  */
-class CurveBuilder extends LayerBuilder {
-
-  /**
-   * Sets curve colour.
-   *
-   * @param value colour value
-   * @return this builder
-   */
-  CurveBuilder color(String value) {
-    params['color'] = value
-    this
-  }
-
-  /**
-   * Sets curve colour (British spelling alias).
-   *
-   * @param value colour value
-   * @return this builder
-   */
-  CurveBuilder colour(String value) {
-    color(value)
-  }
-
-  /**
-   * Sets curve line width.
-   *
-   * @param value size value
-   * @return this builder
-   */
-  CurveBuilder size(Number value) {
-    params['size'] = value
-    this
-  }
-
-  /**
-   * Sets line type.
-   *
-   * @param value linetype name
-   * @return this builder
-   */
-  CurveBuilder linetype(LinetypeName value) {
-    params['linetype'] = value
-    this
-  }
+class CurveBuilder extends LineEndpointBuilder<CurveBuilder> {
 
   /**
    * Sets the amount of curvature. Negative values produce left-hand curves,
@@ -94,17 +50,6 @@ class CurveBuilder extends LayerBuilder {
    */
   CurveBuilder ncp(Integer value) {
     params['ncp'] = value
-    this
-  }
-
-  /**
-   * Sets arrow specification for curve endpoints.
-   *
-   * @param value arrow specification
-   * @return this builder
-   */
-  CurveBuilder arrow(Object value) {
-    params['arrow'] = value
     this
   }
 
