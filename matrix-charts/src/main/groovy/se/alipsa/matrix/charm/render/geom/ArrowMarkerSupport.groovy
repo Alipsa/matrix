@@ -55,7 +55,7 @@ class ArrowMarkerSupport {
         .refX(arrow.length)
         .refY(mid)
         .orient('auto-start-reverse')
-        .markerUnits('strokeWidth')
+        .markerUnits('userSpaceOnUse')
     if (arrow.closed) {
       marker.addPolygon("0,0 ${arrow.length},${mid} 0,${arrow.width}")
           .fill(stroke)

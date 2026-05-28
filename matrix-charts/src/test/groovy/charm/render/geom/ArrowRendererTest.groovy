@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.charm.Charts.*
 
 import org.junit.jupiter.api.Test
+import testutil.Slow
 
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.ArrowSpec
@@ -13,6 +14,7 @@ import se.alipsa.matrix.core.Matrix
 class ArrowRendererTest {
 
   @Test
+  @Slow
   void testSegmentArrowRendersStartAndEndMarkers() {
     Matrix data = segmentData()
 
@@ -32,6 +34,7 @@ class ArrowRendererTest {
   }
 
   @Test
+  @Slow
   void testCurveArrowRendersEndMarker() {
     Matrix data = segmentData()
 
