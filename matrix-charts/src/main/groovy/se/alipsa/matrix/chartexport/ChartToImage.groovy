@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
@@ -132,6 +134,48 @@ class ChartToImage {
       throw new IllegalArgumentException('grid cannot be null')
     }
     base64(grid.render())
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, or Svg)
+   * @return rendered image
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static BufferedImage export(Object chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid)
+      case CharmChart -> export(chart as CharmChart)
+      case Chart -> export(chart as Chart)
+      case Svg -> export(chart as Svg)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed base64 overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, or Svg)
+   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static String base64(Object chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> base64(chart as PlotGrid)
+      case CharmChart -> base64(chart as CharmChart)
+      case Chart -> base64(chart as Chart)
+      case Svg -> base64(chart as Svg)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
 }

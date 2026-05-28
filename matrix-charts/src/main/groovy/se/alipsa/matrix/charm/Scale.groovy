@@ -585,7 +585,7 @@ class Scale {
   Scale copy() {
     Map<String, Object> copiedParams = new LinkedHashMap<>(params)
     if (copiedParams['guide'] instanceof GuideSpec) {
-      copiedParams['guide'] = (copiedParams['guide'] as GuideSpec).copy()
+      copiedParams['guide'] = copiedParams['guide'].copy()
     }
     new Scale(
         type: type,

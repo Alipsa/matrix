@@ -408,7 +408,7 @@ class Mapping {
       return null
     }
     if (value instanceof ColumnExpr) {
-      return value as ColumnExpr
+      return value
     }
     if (value instanceof CharSequence) {
       return new ColumnRef(value.toString())

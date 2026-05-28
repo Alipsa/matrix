@@ -28,7 +28,7 @@ class ColorUtil {
             return defaultIfNull
         }
         if (color instanceof Color) {
-            return asHexString(color as Color, defaultIfNull)
+            return asHexString(color, defaultIfNull)
         }
         if (color.getClass().name == 'javafx.scene.paint.Color') {
             try {

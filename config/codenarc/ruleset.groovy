@@ -15,9 +15,7 @@ ruleset {
     ruleset('rulesets/design.xml') {
         exclude 'AbstractClassWithoutAbstractMethod'
         exclude 'BuilderMethodWithSideEffects'
-        'Instanceof' {
-            priority = 3
-        }
+        exclude 'Instanceof'
     }
 
     // DRY rules

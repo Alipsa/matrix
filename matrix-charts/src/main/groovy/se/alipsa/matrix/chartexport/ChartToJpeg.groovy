@@ -1,5 +1,7 @@
 package se.alipsa.matrix.chartexport
 
+import groovy.transform.CompileDynamic
+
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
@@ -162,6 +164,50 @@ class ChartToJpeg {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
     export(grid.render(), os, quality)
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, or Svg)
+   * @param targetFile the {@link File} where the JPEG image will be written
+   * @param quality JPEG compression quality (0.0 to 1.0)
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, File targetFile, BigDecimal quality = 1.0) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, targetFile, quality)
+      case CharmChart -> export(chart as CharmChart, targetFile, quality)
+      case Chart -> export(chart as Chart, targetFile, quality)
+      case Svg -> export(chart as Svg, targetFile, quality)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, or Svg)
+   * @param os the output stream to write the JPEG to
+   * @param quality JPEG compression quality (0.0 to 1.0)
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, OutputStream os, BigDecimal quality = 1.0) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart must not be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, os, quality)
+      case CharmChart -> export(chart as CharmChart, os, quality)
+      case Chart -> export(chart as Chart, os, quality)
+      case Svg -> export(chart as Svg, os, quality)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
   private static Svg stripAnimationCss(Svg svgChart) {

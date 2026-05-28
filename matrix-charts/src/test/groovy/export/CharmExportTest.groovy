@@ -108,13 +108,20 @@ class CharmExportTest {
   }
 
   @Test
-  void testChartToSwingDoesNotExposeObjectExportOverload() {
+  void testChartToSwingExposesObjectFallback() {
     List<Method> objectOverloads = ChartToSwing.declaredMethods.findAll { Method method ->
       method.name == 'export' &&
           method.parameterTypes.length == 1 &&
           method.parameterTypes[0] == Object
     }
-    assertTrue(objectOverloads.isEmpty(), 'ChartToSwing.export(Object) should not be public API')
+    assertFalse(objectOverloads.isEmpty(), 'ChartToSwing should expose export(Object) fallback')
+  }
+
+  @Test
+  void testChartToSwingObjectDispatch() {
+    Object chart = buildCharmChart()
+    SvgPanel panel = ChartToSwing.export(chart)
+    assertNotNull(panel, 'Object dispatch should produce an SvgPanel')
   }
 
   @Test

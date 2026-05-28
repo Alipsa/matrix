@@ -60,6 +60,23 @@ void setLegendPosition(Object value) { ... }
 PointBuilder shape(Object value) { ... }
 ```
 
+**Exception — Object fallback dispatch methods:** An `Object` parameter is acceptable in a **fallback method** that dispatches via `instanceof` to existing typed overloads. This allows dynamically-typed callers (e.g. `def chart = createChart()`) to use the API without compile-time type knowledge. The typed overloads must always exist alongside the fallback — the `Object` method is never the only entry point.
+
+```groovy
+// Good - Object fallback alongside typed overloads
+static SvgPanel export(CharmChart chart) { ... }
+static SvgPanel export(Svg chart) { ... }
+static SvgPanel export(PlotGrid grid) { ... }
+
+@CompileDynamic
+static SvgPanel export(Object chart) {
+  if (chart instanceof CharmChart) export((CharmChart) chart)
+  else if (chart instanceof Svg) export((Svg) chart)
+  else if (chart instanceof PlotGrid) export((PlotGrid) chart)
+  else throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+}
+```
+
 When a value can legitimately be one of several types (e.g. an enum or a list), provide a separate overload for each type. Use enums instead of strings for fixed sets of values (e.g. positions, directions, shape names, line types) and do any string-to-enum conversion at API boundaries (bridges, adapters).
 
 ## Prefer idiomatic groovy constructs.
@@ -69,6 +86,95 @@ Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Gr
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.
  - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Strongly prefer BigDecimal over double/float unless performance is critical.
+
+## Flow typing after `instanceof`
+
+Under `@CompileStatic` (enabled globally in this project), Groovy narrows the type of a local variable after an `instanceof` check — explicit casts are redundant in those cases:
+
+```groovy
+// Good — flow typing narrows value to Number
+if (value instanceof Number) return value.intValue()
+
+// Bad — redundant cast
+if (value instanceof Number) return ((Number) value).intValue()
+if (value instanceof Number) return (value as Number).intValue()
+```
+
+**When flow typing does NOT apply** (cast is required):
+
+- **Property access chains** — the compiler doesn't narrow a property type on re-access, even if the `instanceof` guard covers the same expression:
+  ```groovy
+  // Cast required — datum.meta.__row is re-evaluated, not narrowed
+  if (datum.meta?.__row instanceof Map) {
+    Map<String, Object> row = datum.meta.__row as Map<String, Object>
+  }
+  ```
+
+- **Wildcard or raw generics** — narrowing `first` doesn't change the container's generic type:
+  ```groovy
+  List<?> list = ...
+  Object first = list.first()
+  // Cast required — list is still List<?>, not List<Map>
+  if (first instanceof Map) {
+    return Matrix.builder().mapList(list as List<Map>).build()
+  }
+  ```
+
+- **Ternary expressions** — flow typing doesn't apply inside ternary branches:
+  ```groovy
+  // Cast required
+  datum.meta.__data instanceof Matrix ? datum.meta.__data as Matrix : null
+  ```
+
+- **Mutable class fields** — the compiler can't guarantee a field hasn't been reassigned by another thread between the check and the usage:
+  ```groovy
+  class Renderer {
+    Object data
+    void render() {
+      // Cast required — data is a mutable field, not a local variable
+      if (data instanceof Matrix) {
+        int rows = (data as Matrix).rowCount()
+      }
+    }
+  }
+  ```
+
+- **Closures and anonymous inner classes** — a local variable checked with `instanceof` loses its narrowed type inside a closure or anonymous class, because the variable could be reassigned before the closure executes:
+  ```groovy
+  if (value instanceof Number) {
+    // Cast required — flow typing doesn't carry into the closure
+    list.collect { (value as Number).intValue() }
+  }
+  ```
+
+- **Logical OR (`||`) chains** — flow typing doesn't narrow across `||` because either branch could be true, so the right-hand side can't assume the `instanceof` passed. (`&&` chains work fine since both sides must be true):
+  ```groovy
+  // COMPILER ERROR — v is still Object when evaluating toUpperCase()
+  if (v instanceof String || v.toUpperCase() == 'DEFAULT') { ... }
+
+  // Fix — split into separate checks
+  if (v instanceof String) {
+    if (v.toUpperCase() == 'DEFAULT') { ... }
+  }
+
+  // OK — && works because instanceof must be true for the right side to evaluate
+  if (v instanceof String && v.toUpperCase() == 'DEFAULT') { ... }
+  ```
+
+- **Overloaded methods with supertypes** — when multiple overloads match the narrowed type (e.g. `String` is also a `CharSequence`), the compiler may report an ambiguous call or fall back to `Object`:
+  ```groovy
+  void log(CharSequence cs) { ... }
+  void log(String s) { ... }
+
+  void handle(Object obj) {
+    if (obj instanceof String) {
+      // COMPILER ERROR — ambiguous between log(CharSequence) and log(String)
+      log(obj)
+      // Fix — explicit cast to pick the intended overload
+      log((String) obj)
+    }
+  }
+  ```
 
 ## Numeric types
 - Use Number in method parameters and use BigDecimal when returning numeric values
@@ -985,7 +1091,7 @@ keep the old colon-style switch. Do **not** attempt to convert these to arrow sy
 switch (schema.getType()) {
   case Schema.Type.STRING: return v.toString()
   case Schema.Type.INT:
-    if (v instanceof Number) return ((Number) v).intValue()
+    if (v instanceof Number) return v.intValue()
     break
   case Schema.Type.ARRAY:
     // ... loop and return ...
