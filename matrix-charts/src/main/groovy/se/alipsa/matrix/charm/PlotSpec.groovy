@@ -69,6 +69,7 @@ class PlotSpec {
   private final GuidesSpec guides = new GuidesSpec()
   private AnimationSpec animation
   private CssAttributesSpec cssAttributes
+  private String stylesheet
   private final List<AnnotationSpec> annotations = []
 
   /**
@@ -171,6 +172,15 @@ class PlotSpec {
    */
   AnimationSpec getAnimation() {
     animation?.copy()
+  }
+
+  /**
+   * Returns raw SVG stylesheet text.
+   *
+   * @return stylesheet text or null
+   */
+  String getStylesheet() {
+    stylesheet
   }
 
   /**
@@ -479,6 +489,17 @@ class PlotSpec {
   }
 
   /**
+   * Sets raw SVG stylesheet text to inject into the rendered chart.
+   *
+   * @param css raw CSS text
+   * @return this plot spec
+   */
+  PlotSpec stylesheet(String css) {
+    stylesheet = css
+    this
+  }
+
+  /**
    * Adds annotations via closure DSL.
    *
    * @param configure closure for annotation declarations
@@ -517,7 +538,8 @@ class PlotSpec {
           compiledGuides,
           compiledAnnotations,
           cssAttributes?.copy(),
-          compiledAnimation
+          compiledAnimation,
+          stylesheet
       )
     } catch (CharmException e) {
       throw e

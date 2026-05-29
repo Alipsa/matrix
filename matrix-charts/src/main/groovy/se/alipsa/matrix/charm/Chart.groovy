@@ -28,6 +28,7 @@ class Chart {
   private final List<AnnotationSpec> annotations
   private final CssAttributesSpec cssAttributes
   private final AnimationSpec animation
+  private final String stylesheet
 
   /**
    * Creates a new compiled chart model.
@@ -44,6 +45,7 @@ class Chart {
    * @param annotations annotation list
    * @param cssAttributes css attribute configuration
    * @param animation animation specification
+   * @param stylesheet raw SVG stylesheet text
    */
   Chart(
       Matrix data,
@@ -57,7 +59,8 @@ class Chart {
       GuidesSpec guides,
       List<AnnotationSpec> annotations,
       CssAttributesSpec cssAttributes = null,
-      AnimationSpec animation = null
+      AnimationSpec animation = null,
+      String stylesheet = null
   ) {
     this.data = data
     this.mapping = toMappingSpec(mapping)
@@ -75,6 +78,7 @@ class Chart {
     )
     this.cssAttributes = cssAttributes?.copy() ?: new CssAttributesSpec()
     this.animation = animation?.copy()
+    this.stylesheet = stylesheet
   }
 
   /**
@@ -186,6 +190,15 @@ class Chart {
    */
   AnimationSpec getAnimation() {
     animation?.copy()
+  }
+
+  /**
+   * Returns raw SVG stylesheet text.
+   *
+   * @return stylesheet text or null
+   */
+  String getStylesheet() {
+    stylesheet
   }
 
   private static MappingSpec toMappingSpec(Mapping value) {

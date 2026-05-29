@@ -27,7 +27,7 @@ A comprehensive guide to using the `se.alipsa.matrix.pict` package for creating 
 
 The `se.alipsa.matrix.pict` package provides a chart-type-first API for creating common visualizations. You start by choosing a chart type (e.g. `BarChart`, `LineChart`), then supply data and configure styling. This is a familiar pattern for users of libraries like xchart or JavaFX charts.
 
-All chart types are backed by the [Charm](charm.md) rendering engine internally. Charts render to SVG and can be exported to PNG, JPEG, JavaFX, or Swing via `se.alipsa.matrix.chartexport`.
+All chart types are backed by the [Charm](charm.md) rendering engine internally. Charts render to SVG and can be exported to PNG, JPEG, PDF, JavaFX, or Swing via `se.alipsa.matrix.chartexport`.
 
 ### Key Features
 - Fluent builder API for creating and configuring charts in one chain
@@ -44,8 +44,8 @@ This guide reflects the current PICT implementation, including:
 - Legend API is centered around `Legend` and fluent builder methods (`legendTitle`, `legendPosition`, etc.)
 - Builder style methods now include `titleVisible`, `xAxisVisible`, `yAxisVisible`, and `css`
 - `AxisScale` is immutable and validated (`start < end`, `step > 0`, non-null values)
-- Axis visibility flags are bridged to Charm rendering (`xAxisVisible(false)`, `yAxisVisible(false)`)
-- `Style.css` is stored in the chart style but not injected into rendered SVG by Charm
+- Axis scale settings, axis visibility flags, `Style.yLabels`, and `Style.css` are bridged to Charm rendering
+- Histogram bin calculations preserve exact bin boundaries internally and round labels only for display
 
 ## Quick Start
 
@@ -84,7 +84,7 @@ ChartToPng.export(chart, new File('fruit_sales.png'))
 1. **Create** a chart via the fluent builder (or a static factory method)
 2. **Configure** title, axes, and chart-specific options in the builder chain
 3. **Build** the chart with `.build()`
-4. **Export** to SVG, PNG, JPEG, JavaFX, or Swing
+4. **Export** to SVG, PNG, JPEG, PDF, JavaFX, or Swing
 
 ```groovy
 def chart = LineChart.builder(data)
@@ -131,7 +131,7 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `titleVisible(boolean)` | Whether the title is visible |
 | `xAxisVisible(boolean)` | Whether the x-axis is visible |
 | `yAxisVisible(boolean)` | Whether the y-axis is visible |
-| `css(String)` | Custom CSS string (stored on style; not injected by Charm renderer) |
+| `css(String)` | Custom CSS string injected into Charm-rendered SVG |
 | `build()` | Build the chart |
 
 ### Chart-Specific Builder Methods
@@ -687,7 +687,16 @@ chart.style.yAxisVisible = false
 chart.style.css = 'stroke-width: 2; font-family: Arial;'
 ```
 
-`Style.css` is currently persisted on the chart style object for compatibility, but is not injected into Charm-rendered SVG output.
+`Style.css` is injected into Charm-rendered SVG output as a raw stylesheet.
+
+### Custom Y Labels
+
+```groovy
+chart.style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
+```
+
+Custom y labels are applied by the Charm bridge. Map keys are parsed as numeric axis
+breaks and sorted numerically before rendering.
 
 ### Fluent Configuration
 
@@ -734,6 +743,8 @@ chart.setYAxisScale(0, 500, 50)
 - `start` must be less than `end`
 - `step` must be greater than `0`
 
+Axis scales are applied to the rendered Charm axis limits and breaks.
+
 ### Axis Titles
 
 ```groovy
@@ -778,7 +789,9 @@ chart.valueSeriesNames      // List<String> -- series names
 
 ## Output Formats
 
-All export classes are in the `se.alipsa.matrix.chartexport` package and accept legacy `Chart` objects, Charm `Chart`, `Svg`, or SVG strings.
+All export classes are in the `se.alipsa.matrix.chartexport` package and accept legacy
+`Chart` objects, Charm `Chart`, and `Svg` objects where applicable. PNG, PDF, JavaFX,
+and Swing exporters also accept raw SVG XML strings.
 
 ### PNG
 
@@ -816,6 +829,18 @@ ChartToJpeg.export(chart, new File('chart.jpg'), 0.9)
 // To OutputStream
 ChartToJpeg.export(chart, outputStream, 0.9)
 ```
+
+### PDF
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToPdf
+
+ChartToPdf.export(chart, new File('chart.pdf'))
+ChartToPdf.export(chart, outputStream)
+```
+
+PDF page dimensions are written in points. Rasterized chart pixels are scaled from
+96 DPI screen units to PDF's 72 points per inch.
 
 ### Base64 Data URI
 
@@ -883,7 +908,7 @@ All three APIs in matrix-charts share the same Charm rendering engine:
 charm ----renders----> Svg (gsvg)
 gg ------adapts------> charm ---renders-> Svg
 pict ----builds------> charm ---renders-> Svg (via CharmBridge)
-        Svg ----exports----> chartexport ------> PNG/JPEG/JFX/Swing
+        Svg ----exports----> chartexport ------> PNG/JPEG/PDF/JFX/Swing
 ```
 
 - **PICT** (this guide) -- chart-type-first API. Start with `BarChart.builder(data)` and configure from there.

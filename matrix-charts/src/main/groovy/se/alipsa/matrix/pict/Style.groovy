@@ -51,15 +51,7 @@ import java.awt.Color
  */
 class Style {
 
-  /**
-   * Legacy raw CSS text retained for source compatibility.
-   *
-   * <p>The Charm bridge does not inject arbitrary stylesheet text. Prefer Charm theme
-   * settings and CSS attribute APIs for new code.</p>
-   *
-   * @deprecated Raw CSS is not applied by the Charm bridge.
-   */
-  @Deprecated
+  /** Raw CSS text injected into Charm-rendered SVG output. */
   String css
 
   /** The back ground color of the plot area (where the actual chart is drawn) */
@@ -78,23 +70,19 @@ class Style {
   Map<String, String> yLabels = [:]
 
   /**
-   * Sets legacy raw CSS text.
+   * Sets raw CSS text.
    *
    * @param css raw CSS text
-   * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
    */
-  @Deprecated
   void setCss(String css) {
     this.css = css
   }
 
   /**
-   * Returns legacy raw CSS text.
+   * Returns raw CSS text.
    *
    * @return raw CSS text
-   * @deprecated Raw CSS is not applied by the Charm bridge; use Charm theme settings instead.
    */
-  @Deprecated
   String getCss() {
     return css
   }

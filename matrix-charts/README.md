@@ -4,7 +4,7 @@
 Groovy library for creating graphs based on Matrix or [][] data
 
 Matrix-charts is a "native" chart library that creates charts as SVGs.
-An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using
+An SVG chart can be exported to Swing, JavaFX, Image, PNG, JPG, or PDF using
 the exporters in the se.alipsa.matrix.chartexport package.
 
 There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
@@ -84,6 +84,43 @@ chart.writeTo('mpg_chart.svg')
 
 See **[charm.md](docs/charm.md)** for comprehensive documentation.
 
+### Charm Export Examples
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToPdf
+
+chart.writeTo('mpg_chart.svg')
+chart.writeTo('mpg_chart.png')
+ChartToPdf.export(chart, new File('mpg_chart.pdf'))
+
+// Raw SVG XML can also be exported directly to PDF.
+String svgXml = chart.render().toXml()
+ChartToPdf.export(svgXml, new File('mpg_chart_from_svg.pdf'))
+```
+
+Plot grids support explicit output dimensions for every writable format:
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plotGrid
+
+def grid = plotGrid([chart, chart], 2)
+grid.writeTo('mpg_dashboard.png', 1200, 700)
+grid.writeTo('mpg_dashboard.pdf', 1200, 700)
+```
+
+Segment and curve layers can render SVG arrow markers:
+
+```groovy
+import se.alipsa.matrix.charm.ArrowSpec
+
+def arrowChart = plot(Dataset.mtcars()) {
+  mapping { x = 'mpg'; y = 'wt'; xend = 'hp'; yend = 'qsec' }
+  layers {
+    geomSegment().arrow(ArrowSpec.end(8, 6)).color('#336699')
+  }
+}.build()
+```
+
 ## Charts Example
 
 ```groovy
@@ -113,6 +150,9 @@ def pieChart = PieChart.builder(empData)
 ChartToPng.export(areaChart, new File("areaChart.png"))
 ChartToPng.export(barChart, new File("barChart.png"))
 ```
+
+PICT charts are bridged through Charm. Axis scale settings, custom `style.yLabels`,
+and `style.css` are applied during rendering.
 
 See **[pict.md](docs/pict.md)** for comprehensive documentation.
 

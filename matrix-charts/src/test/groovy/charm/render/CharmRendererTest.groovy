@@ -13,6 +13,7 @@ import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
@@ -49,6 +50,72 @@ class CharmRendererTest {
         ex.cause instanceof CharmRenderException,
         "render() must not double-wrap CharmRenderException; cause was: ${ex.cause?.getClass()?.name}"
     )
+  }
+
+  @Test
+  void testPlotSpecStylesheetInjectsRawCss() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4]])
+        .build()
+
+    Chart chart = Charts.plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      stylesheet('.custom-point { stroke: red; }')
+    }.build()
+
+    String xml = SvgWriter.toXml(chart.render())
+
+    assertTrue(xml.contains('<style'))
+    assertTrue(xml.contains('.custom-point { stroke: red; }'))
+  }
+
+  @Test
+  void testUserStylesheetIsInjectedAfterAnimationCss() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4]])
+        .build()
+
+    Chart chart = Charts.plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      animation {
+        selector = '.charm-point'
+        name = 'fade'
+        keyframes = 'from { opacity: 0; } to { opacity: 1; }'
+      }
+      stylesheet('.charm-point { animation-name: none; }')
+    }.build()
+
+    String xml = SvgWriter.toXml(chart.render())
+
+    int animationIndex = xml.indexOf('/* charm-animation */')
+    int stylesheetIndex = xml.indexOf('.charm-point { animation-name: none; }')
+
+    assertTrue(animationIndex >= 0)
+    assertTrue(stylesheetIndex >= 0)
+    assertTrue(animationIndex < stylesheetIndex)
+  }
+
+  @Test
+  void testStylesheetRejectsCdataTerminator() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2]])
+        .build()
+
+    Chart chart = Charts.plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      stylesheet('.custom { content: "]]>"; }')
+    }.build()
+
+    CharmRenderException ex = assertThrows(CharmRenderException) {
+      chart.render()
+    }
+    assertTrue(ex.message.contains("Stylesheet must not contain ']]>'"))
   }
 
   private static void setField(Object target, String name, Object value) {

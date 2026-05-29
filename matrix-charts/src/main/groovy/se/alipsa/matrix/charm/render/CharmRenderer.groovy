@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
@@ -89,6 +90,7 @@ class CharmRenderer {
     renderLabels(context)
     legendRenderer.render(context)
     injectAnimationStyle(context)
+    injectStylesheet(context)
     svg
   }
 
@@ -334,6 +336,23 @@ class CharmRenderer {
     context.svg.addStyle()
         .type('text/css')
         .addCdataContent(animation.toCss())
+  }
+
+  private static void injectStylesheet(RenderContext context) {
+    String stylesheet = context.chart.stylesheet
+    if (!stylesheet?.trim()) {
+      return
+    }
+    ensureNoCdataTerminator(stylesheet)
+    context.svg.addStyle()
+        .type('text/css')
+        .addCdataContent(stylesheet)
+  }
+
+  private static void ensureNoCdataTerminator(String stylesheet) {
+    if (stylesheet.contains(']]>')) {
+      throw new CharmRenderException("Stylesheet must not contain ']]>'")
+    }
   }
 
   private static void renderAnnotationsAtOrder(
