@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
@@ -350,7 +351,7 @@ class CharmRenderer {
 
   private static void ensureNoCdataTerminator(String stylesheet) {
     if (stylesheet.contains(']]>')) {
-      throw new IllegalArgumentException("Stylesheet must not contain ']]>'")
+      throw new CharmRenderException("Stylesheet must not contain ']]>'")
     }
   }
 

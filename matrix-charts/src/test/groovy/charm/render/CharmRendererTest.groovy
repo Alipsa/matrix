@@ -91,7 +91,12 @@ class CharmRendererTest {
 
     String xml = SvgWriter.toXml(chart.render())
 
-    assertTrue(xml.indexOf('/* charm-animation */') < xml.indexOf('.charm-point { animation-name: none; }'))
+    int animationIndex = xml.indexOf('/* charm-animation */')
+    int stylesheetIndex = xml.indexOf('.charm-point { animation-name: none; }')
+
+    assertTrue(animationIndex >= 0)
+    assertTrue(stylesheetIndex >= 0)
+    assertTrue(animationIndex < stylesheetIndex)
   }
 
   @Test
