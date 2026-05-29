@@ -88,8 +88,8 @@ class CharmRenderer {
     renderPanels(context)
     renderLabels(context)
     legendRenderer.render(context)
-    injectStylesheet(context)
     injectAnimationStyle(context)
+    injectStylesheet(context)
     svg
   }
 
@@ -342,9 +342,16 @@ class CharmRenderer {
     if (!stylesheet?.trim()) {
       return
     }
+    ensureNoCdataTerminator(stylesheet)
     context.svg.addStyle()
         .type('text/css')
         .addCdataContent(stylesheet)
+  }
+
+  private static void ensureNoCdataTerminator(String stylesheet) {
+    if (stylesheet.contains(']]>')) {
+      throw new IllegalArgumentException("Stylesheet must not contain ']]>'")
+    }
   }
 
   private static void renderAnnotationsAtOrder(
