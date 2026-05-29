@@ -292,6 +292,35 @@ class ChartsCharmIntegrationTest {
   }
 
   @Test
+  void testMultiSeriesScatterChartMapsColorAesthetic() {
+    Matrix data = Matrix.builder()
+        .matrixName('MultiScatter')
+        .columns([
+            x: [1, 2, 3, 4],
+            s1: [10, 20, 15, 25],
+            s2: [5, 15, 10, 20]
+        ])
+        .types([Number, Number, Number])
+        .build()
+
+    ScatterChart chart = ScatterChart.builder(data)
+        .title('Multi Scatter')
+        .x('x')
+        .y('s1', 's2')
+        .build()
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+    assertEquals('series', charmChart.mapping.color?.toString(),
+        'Multi-series scatter should map color aesthetic to series column')
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+    def circles = svg.descendants().findAll { it instanceof Circle }
+    assertEquals(8, circles.size(), 'Multi-series scatter should render 8 circles (4 per series)')
+  }
+
+  @Test
   void testStyleThemePassthrough() {
     Matrix data = Matrix.builder()
         .matrixName('StyledChart')

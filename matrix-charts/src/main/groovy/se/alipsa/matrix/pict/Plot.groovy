@@ -9,15 +9,19 @@ import java.nio.file.Files
 import javafx.scene.Group
 
 /**
- * Exports legacy chart types to PNG, base64, and JavaFX formats.
+ * Primary export API for pict chart types (AreaChart, BarChart, BoxChart, BubbleChart,
+ * Histogram, LineChart, PieChart, ScatterChart).
  *
- * <p>All methods now delegate through Charm for SVG-first rendering.
+ * <p>All methods delegate through {@link CharmBridge} for SVG-first rendering via Charm.
  * For direct Charm API usage, see {@link se.alipsa.matrix.charm.Charts}.</p>
  *
- * @deprecated Use the Charm API ({@link se.alipsa.matrix.charm.Charts#plot}) directly for
- * new code. This class is retained for backward compatibility with existing chart type factories.
+ * <p>Example:
+ * <pre>
+ * LineChart chart = LineChart.builder(data).title('Sales').x('month').y('revenue').build()
+ * inout.view(Plot.jfx(chart))
+ * Plot.png(chart, new File('chart.png'))
+ * </pre>
  */
-@Deprecated
 class Plot {
 
   /**
@@ -49,6 +53,21 @@ class Plot {
   }
 
   /**
+   * Renders a chart to an SVG object.
+   *
+   * <p>Use this when you need the raw SVG for HTML embedding, further manipulation,
+   * or writing to a file.</p>
+   *
+   * @param chart the chart to render
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @return the rendered SVG
+   */
+  static Svg svg(Chart chart, int width = 800, int height = 600) {
+    CharmBridge.renderSvg(chart, width, height)
+  }
+
+  /**
    * Converts a chart to a JavaFX Node for display.
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
@@ -60,8 +79,7 @@ class Plot {
    * @return a JavaFX Node rendering the chart
    */
   static Group jfx(Chart chart) {
-    Svg svg = CharmBridge.convert(chart).render()
-    ChartToJfx.export(svg)
+    ChartToJfx.export(chart)
   }
 
   /**
@@ -73,8 +91,8 @@ class Plot {
    * @return data URI string
    */
   static String base64(Chart chart, double width = 800, double height = 600) {
-    Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
-    ChartToImage.base64(svg)
+    Svg svgChart = CharmBridge.renderSvg(chart, width as int, height as int)
+    ChartToImage.base64(svgChart)
   }
 
 }

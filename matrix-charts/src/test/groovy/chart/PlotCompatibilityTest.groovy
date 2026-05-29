@@ -19,6 +19,7 @@ import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
+import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 
 /**
@@ -37,6 +38,17 @@ class PlotCompatibilityTest {
             value   : [10, 25, 15, 30]
         ])
         .types([String, Number])
+        .build()
+  }
+
+  private static Matrix sampleNumericData() {
+    Matrix.builder()
+        .matrixName('Numeric')
+        .columns([
+            x: [1, 2, 3, 4],
+            y: [10, 20, 15, 25]
+        ])
+        .types([int, Number])
         .build()
   }
 
@@ -239,6 +251,27 @@ class PlotCompatibilityTest {
     String xml = SvgWriter.toXml(CharmBridge.renderSvg(chart, 800, 600))
     assertTrue(xml.contains('<style'))
     assertTrue(xml.contains('.legacy-custom { fill: red; }'))
+  }
+
+  @Test
+  void testPlotSvgReturnsSvgObject() {
+    Matrix data = sampleData()
+    BarChart chart = BarChart.createVertical('SVG Test', data, 'category', ChartType.BASIC, 'value')
+    Svg svg = Plot.svg(chart)
+    assertNotNull(svg, 'Plot.svg() should return a non-null Svg')
+    String xml = SvgWriter.toXml(svg)
+    assertTrue(xml.contains('<svg'), 'Result should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgWithExplicitDimensions() {
+    Matrix data = sampleData()
+    LineChart chart = LineChart.create('Sized SVG', sampleNumericData(), 'x', 'y')
+    Svg svg = Plot.svg(chart, 1200, 900)
+    assertNotNull(svg, 'Plot.svg() with dimensions should return a non-null Svg')
+    String xml = SvgWriter.toXml(svg)
+    assertTrue(xml.contains('1200'), 'SVG should reflect requested width')
+    assertTrue(xml.contains('900'), 'SVG should reflect requested height')
   }
 
   @Test

@@ -112,6 +112,27 @@ class ChartBuilderTest {
   }
 
   @Test
+  void testBarChartBuilderGrouped() {
+    def data = Matrix.builder()
+        .columnNames(['region', 'q1', 'q2'])
+        .rows([
+            ['North', 100, 120], ['South', 200, 180]
+        ])
+        .types([String, int, int])
+        .build()
+
+    def chart = BarChart.builder(data)
+        .title('Grouped Bars')
+        .x('region')
+        .y('q1', 'q2')
+        .grouped()
+        .build()
+
+    assertEquals(ChartType.GROUPED, chart.chartType)
+    assertFalse(chart.isStacked())
+  }
+
+  @Test
   void testLineChartBuilder() {
     def data = Matrix.builder()
         .columnNames(['year', 'sales', 'profit'])

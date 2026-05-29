@@ -175,8 +175,9 @@ class CharmBridge {
 
   private static PlotSpec buildScatterSpec(ScatterChart chart) {
     Matrix data = buildLongFormatMatrix(chart)
+    boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
     spec.addLayer(new PointBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
