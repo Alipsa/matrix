@@ -21,6 +21,7 @@ import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.Chart
+import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 
 import java.awt.image.BufferedImage
@@ -96,14 +97,14 @@ class CharmExportTest {
     Svg svg = charmChart.render()
     String svgText = svg.toXml()
     CharSequence svgSequence = new StringBuilder(svgText)
-    Chart legacyChart = buildLegacyChart()
+    Chart pictChart = buildPictChart()
     PlotGrid grid = Charts.plotGrid([charmChart], 1)
 
     assertNotNull(ChartToSwing.export(svgText))
     assertNotNull(ChartToSwing.export(svgSequence))
     assertNotNull(ChartToSwing.export(svg))
     assertNotNull(ChartToSwing.export(charmChart))
-    assertNotNull(ChartToSwing.export(legacyChart))
+    assertNotNull(Plot.swing(pictChart))
     assertNotNull(ChartToSwing.export(grid))
   }
 
@@ -171,10 +172,10 @@ class CharmExportTest {
   }
 
   @Test
-  void testChartToSvgLegacyOutputStream() {
-    def chart = buildLegacyChart()
+  void testChartToSvgPictOutputStream() {
+    def chart = buildPictChart()
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    ChartToSvg.export(chart, baos)
+    Plot.svg(chart, baos)
     String svg = baos.toString('UTF-8')
     assertTrue(svg.length() > 0, 'SVG output should not be empty')
     assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
@@ -182,20 +183,20 @@ class CharmExportTest {
 
   @Test
   void testChartToSvgLegacyWriter() {
-    def chart = buildLegacyChart()
+    def chart = buildPictChart()
     StringWriter writer = new StringWriter()
-    ChartToSvg.export(chart, writer)
+    Plot.svg(chart, writer)
     String svg = writer
     assertTrue(svg.length() > 0, 'SVG output should not be empty')
     assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
-  private static Chart buildLegacyChart() {
+  private static Chart buildPictChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])
         .build()
-    ScatterChart.create('Test', data, 'x', 'y')
+    ScatterChart.builder(data).title('Test').x('x').y('y').build()
   }
 
   private static CharmChart buildCharmChart() {

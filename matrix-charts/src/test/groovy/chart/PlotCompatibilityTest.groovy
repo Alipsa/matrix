@@ -9,7 +9,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
@@ -20,6 +19,8 @@ import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
+
+import javafx.scene.Group
 
 /**
  * Tests verifying that PICT chart types produce valid output through Plot
@@ -57,7 +58,7 @@ class PlotCompatibilityTest {
     AreaChart chart = AreaChart.create('Area PNG', data, 'category', 'value')
     File file = File.createTempFile('AreaChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -72,7 +73,7 @@ class PlotCompatibilityTest {
     BarChart chart = BarChart.createVertical('Bar PNG', data, 'category', ChartType.BASIC, 'value')
     File file = File.createTempFile('BarChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -91,10 +92,14 @@ class PlotCompatibilityTest {
         ])
         .types([int, Number])
         .build()
-    LineChart chart = LineChart.create('Line PNG', data, 'x', 'y')
+    LineChart chart = LineChart.builder(data)
+        .title('Line PNG')
+        .x('x')
+        .y('y')
+        .build()
     File file = File.createTempFile('LineChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -109,7 +114,7 @@ class PlotCompatibilityTest {
     PieChart chart = PieChart.create('Pie PNG', data, 'category', 'value')
     File file = File.createTempFile('PieChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -131,7 +136,7 @@ class PlotCompatibilityTest {
     ScatterChart chart = ScatterChart.create('Scatter PNG', data, 'x', 'y')
     File file = File.createTempFile('ScatterChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -147,10 +152,14 @@ class PlotCompatibilityTest {
         .columns([score: [55, 60, 65, 70, 75, 80, 85, 90]])
         .types([Number])
         .build()
-    Histogram chart = Histogram.create('Hist PNG', data, 'score', 4)
+    Histogram chart = Histogram.builder(data)
+        .title('Hist PNG')
+        .x('score')
+        .bins(4)
+        .build()
     File file = File.createTempFile('Histogram', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -164,7 +173,7 @@ class PlotCompatibilityTest {
     Matrix data = sampleData()
     BarChart chart = BarChart.createVertical('Bar OS', data, 'category', ChartType.BASIC, 'value')
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    ChartToPng.export(chart, baos)
+    Plot.png(chart, baos)
     byte[] bytes = baos.toByteArray()
     assertTrue(bytes.length > 100, 'PNG output should have content')
     for (int i = 0; i < PNG_HEADER.length; i++) {
@@ -368,10 +377,13 @@ class PlotCompatibilityTest {
         'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
     )
     Matrix data = sampleData()
-    ScatterChart chart = ScatterChart.create('JFX Test', data, 'category', 'value')
-    javafx.scene.Node node = Plot.jfx(chart)
+    ScatterChart chart = ScatterChart.builder(data).title('JFX Test')
+        .x('category')
+        .y('value')
+        .build()
+    def node = Plot.jfx(chart)
     assertNotNull(node, 'export() should return a non-null Node')
-    assertTrue(node instanceof javafx.scene.Node, 'Result should be a javafx.scene.Node')
+    assertTrue(node instanceof Group, 'Result should be a javafx.scene.Group')
   }
 
   @Test

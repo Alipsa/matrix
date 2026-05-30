@@ -13,7 +13,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.Chart
 
 import java.awt.image.BufferedImage
 
@@ -24,7 +23,7 @@ import java.awt.image.BufferedImage
  * pipeline and embeds the resulting image on a single PDF page.</p>
  *
  * <p>Accepts SVG strings, {@link Svg} objects, {@link CharmChart} instances,
- * legacy {@link Chart} instances, and {@link PlotGrid} grids.</p>
+ * and {@link PlotGrid} grids.</p>
  */
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToPdf {
@@ -110,32 +109,6 @@ class ChartToPdf {
   }
 
   /**
-   * Export a legacy {@link Chart} as a PDF file.
-   *
-   * @param chart the legacy chart to export
-   * @param targetFile the PDF file to write
-   */
-  static void export(Chart chart, File targetFile) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    writePdf(ChartToImage.export(chart), targetFile)
-  }
-
-  /**
-   * Export a legacy {@link Chart} as PDF to an {@link OutputStream}.
-   *
-   * @param chart the legacy chart to export
-   * @param os the output stream to write
-   */
-  static void export(Chart chart, OutputStream os) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    writePdf(ChartToImage.export(chart), os)
-  }
-
-  /**
    * Export a {@link PlotGrid} as a PDF file.
    *
    * @param grid the plot grid to export
@@ -204,7 +177,6 @@ class ChartToPdf {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile)
       case CharmChart -> export(chart as CharmChart, targetFile)
-      case Chart -> export(chart as Chart, targetFile)
       case Svg -> export(chart as Svg, targetFile)
       case CharSequence -> export(chart.toString(), targetFile)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
@@ -226,7 +198,6 @@ class ChartToPdf {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os)
       case CharmChart -> export(chart as CharmChart, os)
-      case Chart -> export(chart as Chart, os)
       case Svg -> export(chart as Svg, os)
       case CharSequence -> export(chart.toString(), os)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")

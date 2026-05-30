@@ -6,8 +6,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.CharmBridge
-import se.alipsa.matrix.pict.Chart
 
 /**
  * Exports charts as JPEG images.
@@ -57,25 +55,6 @@ class ChartToJpeg {
   }
 
   /**
-   * Export a legacy {@link Chart} (e.g. BarChart, ScatterChart) as a JPEG image file.
-   *
-   * @param chart the legacy chart to export
-   * @param targetFile the {@link File} where the JPEG image will be written
-   * @param quality JPEG compression quality (0.0 to 1.0)
-   * @throws IllegalArgumentException if chart or targetFile is null
-   */
-  static void export(Chart chart, File targetFile, BigDecimal quality = 1.0) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile cannot be null')
-    }
-    CharmChart converted = CharmBridge.convert(chart)
-    export(converted, targetFile, quality)
-  }
-
-  /**
    * Export an {@link Svg} chart as JPEG to an {@link OutputStream}.
    *
    * @param svgChart the {@link Svg} object containing the chart
@@ -109,25 +88,6 @@ class ChartToJpeg {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
     SvgRenderer.toJpeg(stripAnimationCss(chart.render()), os, [quality: quality])
-  }
-
-  /**
-   * Export a legacy {@link Chart} as JPEG to an {@link OutputStream}.
-   *
-   * @param chart the legacy chart to export
-   * @param os the output stream to write the JPEG to
-   * @param quality JPEG compression quality (0.0 to 1.0)
-   * @throws IllegalArgumentException if chart or os is null
-   */
-  static void export(Chart chart, OutputStream os, BigDecimal quality = 1.0) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    if (os == null) {
-      throw new IllegalArgumentException('outputStream cannot be null')
-    }
-    CharmChart converted = CharmBridge.convert(chart)
-    export(converted, os, quality)
   }
 
   /**
@@ -182,7 +142,6 @@ class ChartToJpeg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile, quality)
       case CharmChart -> export(chart as CharmChart, targetFile, quality)
-      case Chart -> export(chart as Chart, targetFile, quality)
       case Svg -> export(chart as Svg, targetFile, quality)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
@@ -204,7 +163,6 @@ class ChartToJpeg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os, quality)
       case CharmChart -> export(chart as CharmChart, os, quality)
-      case Chart -> export(chart as Chart, os, quality)
       case Svg -> export(chart as Svg, os, quality)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }

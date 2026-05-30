@@ -5,8 +5,6 @@ import groovy.transform.CompileDynamic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.CharmBridge
-import se.alipsa.matrix.pict.Chart
 
 /**
  * Exports charts as Swing {@link SvgPanel} components.
@@ -72,19 +70,6 @@ class ChartToSwing {
   }
 
   /**
-   * Create a {@link SvgPanel} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
-   *
-   * @param chart the legacy chart to render
-   * @return a {@link SvgPanel} displaying the rendered chart
-   */
-  static SvgPanel export(Chart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    export(CharmBridge.convert(chart).render())
-  }
-
-  /**
    * Create a {@link SvgPanel} from a {@link PlotGrid}.
    *
    * @param grid the plot grid to render
@@ -112,7 +97,6 @@ class ChartToSwing {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)
       case CharmChart -> export(chart as CharmChart)
-      case Chart -> export(chart as Chart)
       case Svg -> export(chart as Svg)
       case CharSequence -> export(chart as CharSequence)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")

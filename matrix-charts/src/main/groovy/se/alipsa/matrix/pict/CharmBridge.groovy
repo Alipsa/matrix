@@ -33,7 +33,7 @@ import java.awt.Font
 class CharmBridge {
 
   /**
-   * Converts a legacy charts {@link Chart} to a Charm {@link se.alipsa.matrix.charm.Chart}
+   * Converts a pict chart {@link Chart} to a Charm {@link se.alipsa.matrix.charm.Chart}
    * using default dimensions (800x600).
    *
    * @param chart the legacy chart

@@ -4,7 +4,11 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
+import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToSwing
+import se.alipsa.matrix.chartexport.SvgPanel
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -62,6 +66,34 @@ class Plot {
     requireOutputStream(os)
     Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
     ChartToPng.export(svg, os)
+  }
+
+  /**
+   * Export a {@link Chart} (e.g. BarChart, ScatterChart) to a JPEG image file.
+   *
+   * @param chart the legacy chart to export
+   * @param targetFile the {@link File} where the JPEG image will be written
+   * @param quality JPEG compression quality (0.0 to 1.0), default to 1.0 (maximum quality)
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
+  static void jpg(Chart chart, File targetFile, BigDecimal quality = 1.0) {
+    requireChart(chart)
+    requireFile(targetFile)
+    ChartToJpeg.export(CharmBridge.convert(chart), targetFile, quality)
+  }
+
+  /**
+   * Export a legacy {@link Chart} as JPEG to an {@link OutputStream}.
+   *
+   * @param chart the legacy chart to export
+   * @param os the output stream to write the JPEG to
+   * @param quality JPEG compression quality (0.0 to 1.0)
+   * @throws IllegalArgumentException if chart or os is null
+   */
+  static void jpg(Chart chart, OutputStream os, BigDecimal quality = 1.0) {
+    requireChart(chart)
+    requireOutputStream(os)
+    ChartToJpeg.export(CharmBridge.convert(chart), os, quality)
   }
 
   /**
@@ -136,6 +168,30 @@ class Plot {
   }
 
   /**
+   * Export a {@link Chart} to a PDF file.
+   *
+   * @param chart the chart to export
+   * @param targetFile the PDF file to write
+   */
+  static void pdf(Chart chart, File targetFile) throws IOException {
+    requireChart(chart)
+    requireFile(targetFile)
+    ChartToPdf.export(CharmBridge.convert(chart), targetFile)
+  }
+
+  /**
+   * Export a {@link Chart} to a PDF file.
+   *
+   * @param chart the chart to export
+   * @param os the output stream to write
+   */
+  static void pdf(Chart chart, OutputStream os) throws IOException {
+    requireChart(chart)
+    requireOutputStream(os)
+    ChartToPdf.export(CharmBridge.convert(chart), os)
+  }
+
+  /**
    * Converts a chart to a JavaFX Node for display.
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
@@ -147,7 +203,19 @@ class Plot {
    * @throws IllegalArgumentException if chart is null
    */
   static Group jfx(Chart chart) {
-    ChartToJfx.export(requireChart(chart))
+    requireChart(chart)
+    ChartToJfx.export(CharmBridge.convert(chart))
+  }
+
+  /**
+   * Create a {@link se.alipsa.matrix.chartexport.SvgPanel} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
+   *
+   * @param chart the legacy chart to render
+   * @return a {@link se.alipsa.matrix.chartexport.SvgPanel} displaying the rendered chart
+   */
+  static SvgPanel swing(Chart chart) {
+    requireChart(chart)
+    ChartToSwing.export(CharmBridge.convert(chart).render())
   }
 
   /**

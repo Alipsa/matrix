@@ -37,19 +37,11 @@ class SfGeometryUtils {
   static SfPoint representativePoint(SfGeometry geometry) {
     if (geometry == null || geometry.empty || geometry.shapes.isEmpty()) return null
     switch (geometry.type) {
-      case SfType.POINT:
-      case SfType.MULTIPOINT:
-        return averagePoint(geometry)
-      case SfType.LINESTRING:
-      case SfType.MULTILINESTRING:
-        return averagePoint(geometry)
-      case SfType.POLYGON:
-      case SfType.MULTIPOLYGON:
-        return polygonCentroid(geometry)
-      case SfType.GEOMETRYCOLLECTION:
-        return averagePoint(geometry)
-      default:
-        return averagePoint(geometry)
+      case SfType.POINT, SfType.MULTIPOINT -> averagePoint(geometry)
+      case SfType.LINESTRING, SfType.MULTILINESTRING -> averagePoint(geometry)
+      case SfType.POLYGON, SfType.MULTIPOLYGON -> polygonCentroid(geometry)
+      case SfType.GEOMETRYCOLLECTION -> averagePoint(geometry)
+      default -> averagePoint(geometry)
     }
   }
 

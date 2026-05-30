@@ -6,46 +6,21 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.CharmBridge
-import se.alipsa.matrix.pict.Chart
 
 import java.nio.charset.StandardCharsets
 
 /**
  * Exports charts as SVG files.
  *
- * <p>Accepts legacy {@link Chart} instances (e.g. ScatterChart, BarChart)
- * and Charm {@link CharmChart} instances. Legacy charts are converted
- * via {@link CharmBridge} before rendering.</p>
+ * <p>Accepts Charm {@link CharmChart} instances.</p>
  *
  * <pre>
- * // Export a legacy chart
- * ChartToSvg.export(scatterChart, new File('chart.svg'))
- *
  * // Export a Charm chart
  * ChartToSvg.export(charmChart, new File('chart.svg'))
  * </pre>
  */
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToSvg {
-
-  /**
-   * Export a legacy chart as an SVG file.
-   *
-   * @param chart the chart to export
-   * @param targetFile the file to write the SVG to
-   * @throws IOException if an error occurs during file writing
-   * @throws IllegalArgumentException if chart or targetFile is null
-   */
-  static void export(Chart chart, File targetFile) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile cannot be null')
-    }
-    writeSvg(CharmBridge.convert(chart).render(), targetFile)
-  }
 
   /**
    * Export a Charm chart as an SVG file.
@@ -66,25 +41,6 @@ class ChartToSvg {
   }
 
   /**
-   * Export a legacy chart as SVG to an {@link OutputStream}.
-   * The caller is responsible for closing the OutputStream.
-   *
-   * @param chart the chart to export
-   * @param os the output stream to write the SVG to
-   * @throws IOException if an error occurs during writing
-   * @throws IllegalArgumentException if chart or os is null
-   */
-  static void export(Chart chart, OutputStream os) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    if (os == null) {
-      throw new IllegalArgumentException('outputStream cannot be null')
-    }
-    writeSvg(CharmBridge.convert(chart).render(), os)
-  }
-
-  /**
    * Export a Charm chart as SVG to an {@link OutputStream}.
    * The caller is responsible for closing the OutputStream.
    *
@@ -101,25 +57,6 @@ class ChartToSvg {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
     writeSvg(chart.render(), os)
-  }
-
-  /**
-   * Export a legacy chart as SVG to a {@link Writer}.
-   * The caller is responsible for closing the Writer.
-   *
-   * @param chart the chart to export
-   * @param writer the writer to write the SVG to
-   * @throws IOException if an error occurs during writing
-   * @throws IllegalArgumentException if chart or writer is null
-   */
-  static void export(Chart chart, Writer writer) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    if (writer == null) {
-      throw new IllegalArgumentException('writer cannot be null')
-    }
-    writeSvg(CharmBridge.convert(chart).render(), writer)
   }
 
   /**
@@ -220,7 +157,6 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile)
       case CharmChart -> export(chart as CharmChart, targetFile)
-      case Chart -> export(chart as Chart, targetFile)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -240,7 +176,6 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os)
       case CharmChart -> export(chart as CharmChart, os)
-      case Chart -> export(chart as Chart, os)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -260,7 +195,6 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, writer)
       case CharmChart -> export(chart as CharmChart, writer)
-      case Chart -> export(chart as Chart, writer)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }

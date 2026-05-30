@@ -8,8 +8,6 @@ import org.girod.javafx.svgimage.SVGLoader
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.CharmBridge
-import se.alipsa.matrix.pict.Chart
 
 /**
  * Exports charts as JavaFX {@link SVGImage} nodes.
@@ -66,20 +64,6 @@ class ChartToJfx {
   }
 
   /**
-   * Create a JavaFX {@link SVGImage} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
-   *
-   * @param chart the legacy chart to render and convert
-   * @return an {@link SVGImage} representing the rendered chart
-   * @throws RuntimeException if rendering or SVG loading fails
-   */
-  static SVGImage export(Chart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    export(CharmBridge.convert(chart).render())
-  }
-
-  /**
    * Create a JavaFX {@link SVGImage} from a {@link PlotGrid}.
    *
    * @param grid the plot grid to render and convert
@@ -107,7 +91,6 @@ class ChartToJfx {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)
       case CharmChart -> export(chart as CharmChart)
-      case Chart -> export(chart as Chart)
       case Svg -> export(chart as Svg)
       case CharSequence -> export(chart.toString())
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
