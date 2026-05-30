@@ -16,17 +16,20 @@ matrix-charts  (Charm engine + export utilities)
 
 No package renames. The `se.alipsa.matrix.pict` package stays as-is; only the artifact coordinate changes from `matrix-charts` to `matrix-pict`. This is a clean cut — 0.x versions allow breaking changes.
 
+> **Note on phase ordering:** Phases 2 and 3 (source move and test move) are bundled into a single PR. Once pict source leaves `matrix-charts`, any remaining pict test imports in `matrix-charts` fail to compile — matrix-charts cannot depend on matrix-pict. The source and test moves must land together.
+
 ---
 
 ## Phase 1: Scaffold matrix-pict module
 
 **PR scope:** Create the empty module wired into the build, before any source moves.
 
-- 1.1 [ ] Create directory `matrix-pict/src/main/groovy/se/alipsa/matrix/pict/` and `matrix-pict/src/test/groovy/`
-- 1.2 [ ] Write `matrix-pict/build.gradle` modelled on `matrix-ggplot/build.gradle`:
+- 1.1 [x] Create directory `matrix-pict/src/main/groovy/se/alipsa/matrix/pict/` and `matrix-pict/src/test/groovy/`
+- 1.2 [x] Create `matrix-pict/docs/` directory (needed for the `pict.md` move in Phase 4)
+- 1.3 [x] Write `matrix-pict/build.gradle` modelled on `matrix-ggplot/build.gradle`:
   - `version = '0.5.0-SNAPSHOT'`
   - `description = "Groovy chart-type-first API for matrix (pict)"`
-  - `api project(':matrix-charts')` — transitively provides gsvg, chartexport, Charm, JavaFX compileOnly. Use `api` (not `implementation` as matrix-ggplot does) because `Plot.svg()` returns `Svg` from gsvg; callers need that type visible without adding matrix-charts to their own dependencies.
+  - `api project(':matrix-charts')` — transitively provides gsvg, chartexport, Charm, JavaFX compileOnly. Use `api` (same as matrix-ggplot) because `Plot.svg()` returns `Svg` from gsvg; callers need that type visible without adding matrix-charts to their own dependencies.
   - `compileOnly project(':matrix-core')`
   - `compileOnly project(':matrix-stats')`
   - `compileOnly libs.groovy`
@@ -35,9 +38,8 @@ No package renames. The `se.alipsa.matrix.pict` package stays as-is; only the ar
   - `testFast` task identical to matrix-charts/matrix-ggplot
   - Maven publishing block: `name = 'Groovy Matrix Pict'`, SCM url `matrix-pict`
   - Signing block (same guard as other modules)
-- 1.3 [ ] Add `include 'matrix-pict'` to `settings.gradle` (place it after `matrix-ggplot`)
-- 1.4 [ ] Copy `testutil/Slow.groovy` to `matrix-pict/src/test/groovy/testutil/Slow.groovy` (it's a local JUnit tag annotation; each module keeps its own copy)
-- 1.5 [ ] Create `matrix-pict/docs/` directory (needed for the `pict.md` move in Phase 5.1)
+- 1.4 [x] Add `include 'matrix-pict'` to `settings.gradle` (place it after `matrix-ggplot`)
+- 1.5 [x] Copy `testutil/Slow.groovy` to `matrix-pict/src/test/groovy/testutil/Slow.groovy` (it's a local JUnit tag annotation; each module keeps its own copy)
 
 **Verification:**
 ```bash
@@ -47,77 +49,108 @@ Expected: empty module compiles and produces an (empty) jar.
 
 ---
 
-## Phase 2: Move pict source files
+## Phase 2: Add Charm coverage and clean pict references from matrix-charts tests
 
-**PR scope:** Move all 17 production source files from `matrix-charts` to `matrix-pict`. No content changes — move only.
+**PR scope:** Prepare `matrix-charts` tests for the source move. Add Charm-level equivalents for any export functionality currently tested only through pict, and surgically remove pict references from the two Charm test files that contain them. No files are moved in this phase.
 
-Files to move from `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` to the identical path under `matrix-pict/`:
+### Charm coverage additions
 
-- 2.1 [ ] `AreaChart.groovy`
-- 2.2 [ ] `AxisScale.groovy`
-- 2.3 [ ] `BarChart.groovy`
-- 2.4 [ ] `BoxChart.groovy`
-- 2.5 [ ] `BubbleChart.groovy`
-- 2.6 [ ] `Chart.groovy`
-- 2.7 [ ] `CharmBridge.groovy`
-- 2.8 [ ] `ChartDirection.groovy`
-- 2.9 [ ] `ChartType.groovy`
-- 2.10 [ ] `DataType.groovy`
-- 2.11 [ ] `Histogram.groovy`
-- 2.12 [ ] `Legend.groovy`
-- 2.13 [ ] `LineChart.groovy`
-- 2.14 [ ] `PieChart.groovy`
-- 2.15 [ ] `Plot.groovy`
-- 2.16 [ ] `ScatterChart.groovy`
-- 2.17 [ ] `Style.groovy`
+- 2.1 [ ] **Add `testCharmChartToBase64` to `export/CharmExportTest.groovy`** — `CharmExportTest` has `testCharmChartToImage` but no base64 test. Moving `testBase64ReturnsValidDataUri` (PlotCompatibilityTest) and `testBarchartToBase64` (PngTest) to matrix-pict in Phase 3 would leave no Charm-level `ChartToImage.base64()` coverage in matrix-charts. Add:
+  ```groovy
+  @Test
+  void testCharmChartToBase64() {
+      CharmChart chart = buildCharmChart()
+      String dataUri = ChartToImage.base64(chart)
+      assertNotNull(dataUri)
+      assertTrue(dataUri.startsWith('data:image/png;base64,'))
+  }
+  ```
 
-After moving, delete `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` entirely.
+- 2.2 [ ] **Extract `testBarchartToPng` from `PngTest.groovy` into `export/WriteToAndPlotGridExportTest.groovy`** — this test uses `Charts.plot()` (Charm DSL), not pict. Moving all of PngTest in Phase 3 would lose this Charm PNG test from matrix-charts. Rename it `testCharmChartToPngViaExporter` in WriteToAndPlotGridExportTest to avoid clashing with the existing `testCharmChartToPng` in CharmExportTest.
+
+### Surgical edits (remove pict references from Charm test files)
+
+- 2.3 [ ] **Edit `charm/api/CharmApiDesignTest.groovy`** (do not move — it tests the Charm DSL):
+  - Extract `testImportAliasStrategyCompilesAndRuns` and stage it for addition to `chart/PlotCompatibilityTest.groovy` in matrix-pict (Phase 3, step 3.6). In matrix-pict's test classpath, pict.Chart is present directly and charm.Chart transitively, so the test works without build.gradle changes.
+  - Remove the extracted method and the `import se.alipsa.matrix.pict.Chart as LegacyChart` line from CharmApiDesignTest.
+
+- 2.4 [ ] **Edit `export/CharmExportTest.groovy`** (do not move — it is a Charm test file):
+  - Extract `testChartToSvgPictOutputStream` and `testChartToSvgLegacyWriter` and stage them for addition to `chart/PlotCompatibilityTest.groovy` in matrix-pict (Phase 3, step 3.6).
+  - Extract the `Plot.swing(pictChart)` assertion from `testChartToSwingTypedOverloads` into a new `testPlotSwingReturnsSvgPanel` test staged for PlotCompatibilityTest; remove that assertion from CharmExportTest.
+  - Remove the now-unused pict imports (`se.alipsa.matrix.pict.Chart`, `se.alipsa.matrix.pict.Plot`, `se.alipsa.matrix.pict.ScatterChart`) and the `buildPictChart()` helper from CharmExportTest.
 
 **Verification:**
 ```bash
-./gradlew :matrix-pict:compileGroovy
-./gradlew :matrix-charts:compileGroovy
+./gradlew :matrix-charts:test -Pheadless=true
 ```
-Both must compile cleanly with no unresolved references.
-
-After moving, confirm no pict source remains in matrix-charts:
+All matrix-charts tests must pass. Confirm no pict imports remain in CharmApiDesignTest or CharmExportTest:
 ```bash
-grep -r "se.alipsa.matrix.pict" matrix-charts/src/main/
+grep -r "se.alipsa.matrix.pict" matrix-charts/src/test/groovy/charm/ matrix-charts/src/test/groovy/export/
 ```
 Expected: zero results.
 
 ---
 
-## Phase 3: Move pict tests
+## Phase 3: Move pict source and tests to matrix-pict
 
-**PR scope:** Relocate tests that depend on `se.alipsa.matrix.pict` from `matrix-charts` to `matrix-pict`. Includes one surgical edit to `CharmApiDesignTest.groovy` (see 3.0 below) to remove its sole pict reference before moving the pict test files.
+**PR scope:** Move all 17 production source files and 8 test files in one PR. Source move and test move must be atomic — splitting them would leave matrix-charts with uncompilable pict imports.
 
-- 3.0 [ ] **Edit `charm/api/CharmApiDesignTest.groovy` in `matrix-charts`** (do not move this file — it tests the Charm DSL and belongs in matrix-charts):
-  - Extract the `testImportAliasStrategyCompilesAndRuns` test method into `chart/PlotCompatibilityTest.groovy` in `matrix-pict` (add it there as part of step 3.7). In matrix-pict's test classpath, pict.Chart is present directly and charm.Chart is available transitively, so the test works without any build.gradle changes.
-  - Remove the extracted method and the `import se.alipsa.matrix.pict.Chart as LegacyChart` line from `CharmApiDesignTest.groovy`.
+### Source files
 
-Tests to move from `matrix-charts/src/test/groovy/` to the identical path under `matrix-pict/src/test/groovy/`:
+Move from `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` to the identical path under `matrix-pict/src/main/groovy/`:
 
-- 3.1 [ ] `chart/BoxChartTest.groovy`
-- 3.2 [ ] `chart/ChartBuilderTest.groovy`
-- 3.3 [ ] `chart/ChartFactoryBaselineTest.groovy`
-- 3.4 [ ] `chart/ChartsCharmIntegrationTest.groovy`
-- 3.5 [ ] `chart/HistogramTest.groovy`
-- 3.6 [ ] `chart/LineChartTest.groovy`
-- 3.7 [ ] `chart/PlotCompatibilityTest.groovy` — add the `testImportAliasStrategyCompilesAndRuns` method extracted in step 3.0 here
-- 3.8 [ ] `PngTest.groovy`
-- 3.9 [ ] `export/CharmExportTest.groovy` — imports `se.alipsa.matrix.pict.Chart` and `se.alipsa.matrix.pict.ScatterChart`; since `matrix-pict` has access to all chartexport utilities transitively, this test moves cleanly
+- 3.1 [ ] `AreaChart.groovy`
+- 3.2 [ ] `AxisScale.groovy`
+- 3.3 [ ] `BarChart.groovy`
+- 3.4 [ ] `BoxChart.groovy`
+- 3.5 [ ] `BubbleChart.groovy`
+- 3.6 [ ] `Chart.groovy`
+- 3.7 [ ] `CharmBridge.groovy`
+- 3.8 [ ] `ChartDirection.groovy`
+- 3.9 [ ] `ChartType.groovy`
+- 3.10 [ ] `DataType.groovy`
+- 3.11 [ ] `Histogram.groovy`
+- 3.12 [ ] `Legend.groovy`
+- 3.13 [ ] `LineChart.groovy`
+- 3.14 [ ] `PieChart.groovy`
+- 3.15 [ ] `Plot.groovy`
+- 3.16 [ ] `ScatterChart.groovy`
+- 3.17 [ ] `Style.groovy`
+
+After moving, delete `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` entirely.
+
+Confirm no pict source remains in matrix-charts:
+```bash
+grep -r "se.alipsa.matrix.pict" matrix-charts/src/main/
+```
+Expected: zero results.
+
+### Test files
+
+Move from `matrix-charts/src/test/groovy/` to the identical path under `matrix-pict/src/test/groovy/`:
+
+- 3.18 [ ] `chart/BoxChartTest.groovy`
+- 3.19 [ ] `chart/ChartBuilderTest.groovy`
+- 3.20 [ ] `chart/ChartFactoryBaselineTest.groovy`
+- 3.21 [ ] `chart/ChartsCharmIntegrationTest.groovy`
+- 3.22 [ ] `chart/HistogramTest.groovy`
+- 3.23 [ ] `chart/LineChartTest.groovy`
+- 3.24 [ ] `chart/PlotCompatibilityTest.groovy` — add the methods staged in Phase 2 steps 2.3 and 2.4 here before moving
+- 3.25 [ ] `PngTest.groovy` — `testBarchartToPng` must already be extracted (Phase 2 step 2.2) before this move
 
 After moving, delete the now-empty `chart/` directory from `matrix-charts/src/test/groovy/`.
 
 **Tests that stay in `matrix-charts`:**
-- `charm/api/CharmApiDesignTest.groovy` — Charm DSL design tests; after step 3.0 it has no pict imports
-- `export/WriteToAndPlotGridExportTest.groovy` — no pict imports; tests PlotGrid and SVG/PNG export at the chartexport level
+- `charm/api/CharmApiDesignTest.groovy` — Charm DSL design tests; has no pict imports after Phase 2
+- `export/CharmExportTest.groovy` — Charm export tests; has no pict imports after Phase 2
+- `export/WriteToAndPlotGridExportTest.groovy` — no pict imports; gains the Charm PNG test from Phase 2
 
 **Build dependency check:** `matrix-charts/build.gradle` already has `testImplementation project(':matrix-ggplot')`. This remains needed — `CharmApiDesignTest` imports `se.alipsa.matrix.gg.GgChart`. Do not remove it. No `project(':matrix-pict')` test dependency is needed.
 
 **Verification:**
 ```bash
+./gradlew :matrix-pict:compileGroovy
+./gradlew :matrix-charts:compileGroovy
 ./gradlew :matrix-pict:test -Pheadless=true
 ./gradlew :matrix-charts:test -Pheadless=true
 ```
@@ -125,19 +158,28 @@ All tests in both modules must pass.
 
 ---
 
-## Phase 4: Update matrix-bom
+## Phase 4: Update docs and AGENTS.md
 
-**Note:** The published BOM definition is `matrix-bom/bom.xml`. The sibling
-`matrix-bom/pom.xml` is the BOM integration-test project. Edit `matrix-bom/bom.xml`
-directly.
+**PR scope:** Move `pict.md` into the new module and update all documentation to reflect the new artifact coordinate. No code changes.
 
-- 4.1 [ ] Add `<matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>` to the
-  `bom.xml` `<properties>` block immediately after `<matrixGgplotVersion>`.
-  Verify that the `<matrixChartsVersion>` property in `bom.xml` matches the version
-  in `matrix-charts/build.gradle` before committing — they must stay in sync.
-- 4.2 [ ] Add a `<dependency>` entry for `matrix-pict` in `bom.xml`'s
-  `<dependencyManagement>/<dependencies>` block, immediately after the
-  `matrix-ggplot` entry:
+- 4.1 [ ] Move `matrix-charts/docs/pict.md` to `matrix-pict/docs/pict.md`
+- 4.2 [ ] Update `docs/cookbook/matrix-charts.md` — replace any pict import/dependency examples that reference `matrix-charts` with `matrix-pict`
+- 4.3 [ ] Update `docs/tutorial/13-matrix-charts.md` — same coordinate change for pict usage
+- 4.4 [ ] Update `matrix-charts/README.md` — remove pict API docs/references; note that pict is now in `matrix-pict`
+- 4.5 [ ] Update `AGENTS.md` module table — add `matrix-pict` row: `"chart-type-first API (BarChart, LineChart, etc.), delegates to Charm in matrix-charts"`; update `matrix-charts` description to remove the pict reference
+
+**Verification:** Manual review of changed doc files. No build step required.
+
+---
+
+## Phase 5: Update matrix-bom
+
+**PR scope:** Register `matrix-pict` in the BOM so consumers can manage its version centrally.
+
+> **Note:** The published BOM definition is `matrix-bom/bom.xml`. The sibling `matrix-bom/pom.xml` is the BOM integration-test project. Edit `matrix-bom/bom.xml` directly.
+
+- 5.1 [ ] Add `<matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>` to the `bom.xml` `<properties>` block immediately after `<matrixGgplotVersion>`. Verify that `<matrixChartsVersion>` in `bom.xml` matches the version in `matrix-charts/build.gradle` before committing — they must stay in sync.
+- 5.2 [ ] Add a `<dependency>` entry for `matrix-pict` in `bom.xml`'s `<dependencyManagement>/<dependencies>` block, immediately after the `matrix-ggplot` entry:
 
 ```xml
 <dependency>
@@ -147,30 +189,11 @@ directly.
 </dependency>
 ```
 
-This follows the existing `matrix-charts` and `matrix-ggplot` convention: each module
-has a dedicated version property in `bom.xml`. Use `0.5.0-SNAPSHOT` consistently for
-the initial `matrix-pict` module and BOM property.
-
 **Verification:**
 ```bash
 mvn -f matrix-bom/bom.xml validate
 ```
 `bom.xml` must parse without errors.
-
----
-
-## Phase 5: Update docs and AGENTS.md
-
-**PR scope:** Update all documentation to reflect the new artifact coordinate.
-
-- 5.1 [ ] Move `matrix-charts/docs/pict.md` to `matrix-pict/docs/pict.md`
-- 5.2 [ ] Update `docs/cookbook/matrix-charts.md` — replace any pict import/dependency examples that reference `matrix-charts` with `matrix-pict`
-- 5.3 [ ] Update `docs/tutorial/13-matrix-charts.md` — same coordinate change for pict usage
-- 5.4 [ ] Update `matrix-charts/README.md` — remove pict API docs/references; note that pict is now in `matrix-pict`
-- 5.5 [ ] Update `AGENTS.md` module table — add `matrix-pict` row: `"chart-type-first API (BarChart, LineChart, etc.), delegates to Charm in matrix-charts"`; update `matrix-charts` description to remove the pict reference
-
-**Verification:**
-Manual review of changed doc files. No build step required.
 
 ---
 
