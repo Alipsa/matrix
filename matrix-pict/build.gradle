@@ -1,0 +1,187 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.internal.os.OperatingSystem
+plugins {
+  id('groovy')
+  id('java-library')
+  id('maven-publish')
+  id('signing')
+  alias(libs.plugins.alipsaNexusRelease)
+}
+
+group = 'se.alipsa.matrix'
+version = '0.5.0-SNAPSHOT'
+description = "Groovy chart-type-first API for matrix (pict)"
+
+codenarc {
+  ignoreFailures = true
+}
+
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+  options.deprecation = true
+}
+
+dependencies {
+  OperatingSystem os = OperatingSystem.current()
+
+  def arch = System.getProperty('os.arch')
+  def qualifier = 'unknown'
+  if (os.isLinux()) {
+    qualifier = arch == 'aarch64' ? 'linux-aarch64' : 'linux'
+  } else if (os.isWindows()) {
+    qualifier = 'win'
+  } else if (os.isMacOsX()) {
+    qualifier = arch == 'aarch64' ? 'mac-aarch64' : 'mac'
+  }
+  def javaFxVersion = libs.versions.v.javafx.get()
+
+  compileOnly libs.groovy
+  compileOnly project(':matrix-core')
+  compileOnly project(':matrix-stats')
+  api project(':matrix-charts')
+
+  compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
+  compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
+  compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
+  compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
+
+  testImplementation libs.groovy
+  testImplementation libs.groovy.xml
+
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-stats')
+  testImplementation project(':matrix-datasets')
+  testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
+  testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
+  testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
+  testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
+  testImplementation libs.groovier.junit
+  testImplementation libs.junit.jupiter
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
+  testImplementation libs.groovy.sql
+}
+
+test {
+  testLogging.showStandardStreams = true
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
+  useJUnitPlatform()
+  failOnNoDiscoveredTests = false
+  testLogging {
+    events TestLogEvent.FAILED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+  }
+}
+
+tasks.register('testFast', Test) {
+  description = 'Runs only fast (non-render) tests. Use for quick dev-cycle feedback.'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform {
+    excludeTags 'slow'
+  }
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
+}
+
+//Maven Central uploads
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+  archiveClassifier.set 'javadoc'
+  from groovydoc.destinationDir
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  archiveClassifier.set 'sources'
+  from sourceSets.main.allSource
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = 'Groovy Matrix Pict'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-pict"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-pict/LICENSE'
+          }
+        }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
+        }
+        scm {
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-pict'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
+    }
+  }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+        url = nexusUrl
+      }
+    }
+  }
+}
+
+
+signing {
+  if (project.properties['signing.keyId'] != null) {
+    sign publishing.publications.maven
+  } else {
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
+  }
+}
+
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
+}
