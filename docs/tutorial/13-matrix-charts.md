@@ -105,7 +105,6 @@ Area charts are useful for showing trends over time or comparing values across c
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with time series data
 def timeData = Matrix.builder().data(
@@ -119,7 +118,7 @@ def timeData = Matrix.builder().data(
 def areaChart = AreaChart.create("Monthly Performance", timeData, "month", "sales", "profit")
 
 // Export the chart to PNG
-ChartToPng.export(areaChart, new File("monthly_performance.png"))
+Plot.png(areaChart, new File("monthly_performance.png"))
 ```
 
 ### Bar Chart
@@ -129,7 +128,6 @@ Bar charts are excellent for comparing values across different categories. You c
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with categorical data
 def productData = Matrix.builder().data(
@@ -158,8 +156,8 @@ def horizontalBarChart = BarChart.createHorizontal(
 )
 
 // Export the charts
-ChartToPng.export(verticalBarChart, new File("vertical_bar_chart.png"))
-ChartToPng.export(horizontalBarChart, new File("horizontal_bar_chart.png"))
+Plot.png(verticalBarChart, new File("vertical_bar_chart.png"))
+Plot.png(horizontalBarChart, new File("horizontal_bar_chart.png"))
 ```
 
 The `ChartType` enum provides different styles for bar charts:
@@ -174,7 +172,6 @@ Pie charts are useful for showing proportions of a whole.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with market share data
 def marketData = Matrix.builder().data(
@@ -187,7 +184,7 @@ def marketData = Matrix.builder().data(
 def pieChart = PieChart.create("Market Share", marketData, "company", "market_share")
 
 // Export the chart
-ChartToPng.export(pieChart, new File("market_share.png"))
+Plot.png(pieChart, new File("market_share.png"))
 ```
 
 ### Line Chart
@@ -197,7 +194,6 @@ Line charts are ideal for showing trends over time or continuous data.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 import java.time.LocalDate
 
 // Create a Matrix with time series data
@@ -224,7 +220,7 @@ def lineChart = LineChart.create(
 )
 
 // Export the chart
-ChartToPng.export(lineChart, new File("temperature_trends.png"))
+Plot.png(lineChart, new File("temperature_trends.png"))
 ```
 
 ### Scatter Chart
@@ -234,7 +230,6 @@ Scatter charts are useful for showing the relationship between two variables.
 ```groovy
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a Matrix with correlation data
 def correlationData = Matrix.builder().data(
@@ -252,12 +247,13 @@ def scatterChart = ScatterChart.create(
 )
 
 // Export the chart
-ChartToPng.export(scatterChart, new File("height_weight_correlation.png"))
+Plot.png(scatterChart, new File("height_weight_correlation.png"))
 ```
 
 ## Exporting Charts
 
-The recommended export API lives in `se.alipsa.matrix.chartexport`. It accepts PICT charts,
+Use `Plot.png(...)` as the PICT-facing PNG export API. The
+`se.alipsa.matrix.chartexport` package provides additional formats and accepts PICT charts,
 Charm charts, `Svg` objects, and SVG XML strings where the target format supports them.
 
 ### Export to PNG, JPEG, SVG, or PDF
@@ -265,12 +261,11 @@ Charm charts, `Svg` objects, and SVG XML strings where the target format support
 ```groovy
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPdf
-import se.alipsa.matrix.chartexport.ChartToPng
-import se.alipsa.matrix.chartexport.ChartToSvg
+import se.alipsa.matrix.pict.Plot
 
-ChartToPng.export(chart, new File("chart.png"))
+Plot.png(chart, new File("chart.png"))
 ChartToJpeg.export(chart, new File("chart.jpg"), 0.9)
-ChartToSvg.export(chart, new File("chart.svg"))
+Plot.svg(chart, new File("chart.svg"))
 ChartToPdf.export(chart, new File("chart.pdf"))
 ```
 
@@ -314,8 +309,9 @@ import se.alipsa.matrix.chartexport.ChartToSwing
 def panel = ChartToSwing.export(chart)
 ```
 
-The older `Plot` helper class remains available for source compatibility, but it is deprecated.
-Use the `chartexport` classes for new code.
+For PICT charts, use `Plot.png(...)`, `Plot.svg(...)`, `Plot.base64(...)`, or
+`Plot.jfx(...)` where applicable. Use the `chartexport` classes for formats and targets
+that are not exposed by `Plot`.
 
 ## Customizing Charts
 
@@ -373,7 +369,6 @@ import java.time.LocalDate
 import javafx.scene.paint.Color
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 // Create a sample Matrix with sales data
 def salesData = Matrix.builder().data(
@@ -395,7 +390,7 @@ def barChart = BarChart.createVertical(
     .setXAxisTitle("Quarter")
     .setYAxisTitle("Sales (in thousands)")
 File file = new File("quarterly_sales_bar.png")
-ChartToPng.export(barChart, file)
+Plot.png(barChart, file)
 println "saved barchart to $file.absolutePath"
 
 salesData['quarter'] = [1, 2, 3, 4]
@@ -410,7 +405,7 @@ def lineChart = LineChart.create(
     .setXAxisTitle("Quarter")
     .setYAxisTitle("Sales (in thousands)")
 file = new File("quarterly_sales_line.png")
-ChartToPng.export(lineChart, file)
+Plot.png(lineChart, file)
 println "saved lineChart to $file.absolutePath"
 
 // Create a pie chart (using only one quarter for demonstration)
@@ -427,7 +422,7 @@ def pieChart = PieChart.create(
     "sales"
 )
 file = new File("q4_sales_pie.png")
-ChartToPng.export(pieChart, file)
+Plot.png(pieChart, file)
 println "saved pieChart to $file.absolutePath"
 println "Charts have been exported successfully."
 ```

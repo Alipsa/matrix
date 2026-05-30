@@ -50,21 +50,14 @@ class WktReader {
 
   private static SfGeometry parseGeometry(WktTokenizer tokenizer, SfType type, Integer srid) {
     switch (type) {
-      case SfType.POINT:
-        return parsePointGeometry(tokenizer, type, srid)
-      case SfType.LINESTRING:
-        return parseLineStringGeometry(tokenizer, type, srid)
-      case SfType.POLYGON:
-        return parsePolygonGeometry(tokenizer, type, srid)
-      case SfType.MULTIPOINT:
-        return parseMultiPointGeometry(tokenizer, type, srid)
-      case SfType.MULTILINESTRING:
-        return parseMultiLineStringGeometry(tokenizer, type, srid)
-      case SfType.MULTIPOLYGON:
-        return parseMultiPolygonGeometry(tokenizer, type, srid)
-      case SfType.GEOMETRYCOLLECTION:
-        return parseGeometryCollectionGeometry(tokenizer, type, srid)
-      default:
+      case SfType.POINT -> parsePointGeometry(tokenizer, type, srid)
+      case SfType.LINESTRING -> parseLineStringGeometry(tokenizer, type, srid)
+      case SfType.POLYGON -> parsePolygonGeometry(tokenizer, type, srid)
+      case SfType.MULTIPOINT -> parseMultiPointGeometry(tokenizer, type, srid)
+      case SfType.MULTILINESTRING -> parseMultiLineStringGeometry(tokenizer, type, srid)
+      case SfType.MULTIPOLYGON -> parseMultiPolygonGeometry(tokenizer, type, srid)
+      case SfType.GEOMETRYCOLLECTION -> parseGeometryCollectionGeometry(tokenizer, type, srid)
+      default ->
         throw new IllegalArgumentException("Unsupported geometry type: $type")
     }
   }
@@ -234,15 +227,14 @@ class WktReader {
       throw new IllegalArgumentException('Geometry type is missing')
     }
     switch (typeName.toUpperCase(Locale.ROOT)) {
-      case 'POINT': return SfType.POINT
-      case 'LINESTRING': return SfType.LINESTRING
-      case 'POLYGON': return SfType.POLYGON
-      case 'MULTIPOINT': return SfType.MULTIPOINT
-      case 'MULTILINESTRING': return SfType.MULTILINESTRING
-      case 'MULTIPOLYGON': return SfType.MULTIPOLYGON
-      case 'GEOMETRYCOLLECTION': return SfType.GEOMETRYCOLLECTION
-      default:
-        throw new IllegalArgumentException("Unsupported geometry type: $typeName")
+      case 'POINT' -> SfType.POINT
+      case 'LINESTRING' -> SfType.LINESTRING
+      case 'POLYGON' -> SfType.POLYGON
+      case 'MULTIPOINT'-> SfType.MULTIPOINT
+      case 'MULTILINESTRING' -> SfType.MULTILINESTRING
+      case 'MULTIPOLYGON' -> SfType.MULTIPOLYGON
+      case 'GEOMETRYCOLLECTION' -> SfType.GEOMETRYCOLLECTION
+      default -> throw new IllegalArgumentException("Unsupported geometry type: $typeName")
     }
   }
 

@@ -3,6 +3,7 @@ import static se.alipsa.matrix.core.ListConverter.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
@@ -23,9 +24,33 @@ class PngTest {
     @Test
     void testBarchartToPng() {
         def file = File.createTempFile('barchart', '.png')
-        BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')
+        def chart = Charts.plot(empData)
+            .mapping {
+                x = 'emp_name'
+                y = 'salary'
+            }
+            .labels {
+                title = 'Salaries'
+            }
+            .layers {
+                geomBar()
+            }
+        .build()
+
         try {
             ChartToPng.export(chart, file)
+            assertTrue(file.exists())
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
+    void testPictBarchartToPng() {
+        def file = File.createTempFile('barchart', '.png')
+        BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')
+        try {
+            Plot.png(chart, file)
             assertTrue(file.exists())
         } finally {
             file.delete()
@@ -43,9 +68,13 @@ class PngTest {
     @Test
     void testAreaChartToPng() {
         def file = File.createTempFile('areaChart', '.png')
-        AreaChart chart = AreaChart.create('Salaries', empData, 'emp_name', 'salary')
+        AreaChart chart = AreaChart.builder(empData)
+            .title('Salaries')
+            .x('emp_name')
+            .y('salary')
+            .build()
         try {
-            ChartToPng.export(chart, file)
+            Plot.png(chart, file)
             assertTrue(file.exists())
         } finally {
             file.delete()

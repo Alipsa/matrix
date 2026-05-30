@@ -144,6 +144,9 @@ class BarChart extends Chart<BarChart> {
     /** Sets the chart type to stacked. */
     Builder stacked() { this.chartType = ChartType.STACKED; this }
 
+    /** Sets the chart type to grouped (side-by-side bars). */
+    Builder grouped() { this.chartType = ChartType.GROUPED; this }
+
     /**
      * Builds the configured {@link BarChart}.
      *

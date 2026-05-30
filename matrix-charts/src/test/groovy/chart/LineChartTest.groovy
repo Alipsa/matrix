@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.LineChart
+import se.alipsa.matrix.pict.Plot
 
 import java.time.YearMonth
 
@@ -33,14 +33,18 @@ class LineChartTest {
     .types([YearMonth, int])
     .build()
 
-    def chart = LineChart.create(salesData, 'yearMonth', 'sales')
+    def chart = LineChart.builder(salesData)
+        .title('Monthly Sales')
+        .x('yearMonth')
+        .y('sales')
+        .build()
     assertIterableEquals(['sales'], chart.valueSeriesNames, 'ValueSeries Names')
     assertEquals(1, chart.valueSeries.size(), 'Number of valueseries')
     assertEquals(12, chart.categorySeries.size(), 'Number of elements in x')
     assertEquals(12, chart.valueSeries[0].size(), 'Number of elements in y')
     File file = File.createTempFile('JfxLineChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists())
     } finally {
       file.delete()

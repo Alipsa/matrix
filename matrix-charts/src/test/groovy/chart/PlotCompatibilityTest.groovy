@@ -9,8 +9,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
-import se.alipsa.matrix.chartexport.ChartToJfx
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
@@ -19,11 +17,14 @@ import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
+import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 
+import javafx.scene.Group
+
 /**
- * Tests verifying that legacy chart types produce valid export output
- * through the current export API (ChartToPng, ChartToImage, ChartToJfx).
+ * Tests verifying that PICT chart types produce valid output through Plot
+ * and remain compatible with the underlying image export APIs.
  */
 class PlotCompatibilityTest {
 
@@ -40,13 +41,24 @@ class PlotCompatibilityTest {
         .build()
   }
 
+  private static Matrix sampleNumericData() {
+    Matrix.builder()
+        .matrixName('Numeric')
+        .columns([
+            x: [1, 2, 3, 4],
+            y: [10, 20, 15, 25]
+        ])
+        .types([int, Number])
+        .build()
+  }
+
   @Test
   void testPngToFileWithAreaChart() {
     Matrix data = sampleData()
     AreaChart chart = AreaChart.create('Area PNG', data, 'category', 'value')
     File file = File.createTempFile('AreaChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -61,7 +73,7 @@ class PlotCompatibilityTest {
     BarChart chart = BarChart.createVertical('Bar PNG', data, 'category', ChartType.BASIC, 'value')
     File file = File.createTempFile('BarChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -80,10 +92,14 @@ class PlotCompatibilityTest {
         ])
         .types([int, Number])
         .build()
-    LineChart chart = LineChart.create('Line PNG', data, 'x', 'y')
+    LineChart chart = LineChart.builder(data)
+        .title('Line PNG')
+        .x('x')
+        .y('y')
+        .build()
     File file = File.createTempFile('LineChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -98,7 +114,7 @@ class PlotCompatibilityTest {
     PieChart chart = PieChart.create('Pie PNG', data, 'category', 'value')
     File file = File.createTempFile('PieChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -120,7 +136,7 @@ class PlotCompatibilityTest {
     ScatterChart chart = ScatterChart.create('Scatter PNG', data, 'x', 'y')
     File file = File.createTempFile('ScatterChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -136,10 +152,14 @@ class PlotCompatibilityTest {
         .columns([score: [55, 60, 65, 70, 75, 80, 85, 90]])
         .types([Number])
         .build()
-    Histogram chart = Histogram.create('Hist PNG', data, 'score', 4)
+    Histogram chart = Histogram.builder(data)
+        .title('Hist PNG')
+        .x('score')
+        .bins(4)
+        .build()
     File file = File.createTempFile('Histogram', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 100, 'PNG file should have content')
       assertPngHeader(file)
@@ -153,7 +173,7 @@ class PlotCompatibilityTest {
     Matrix data = sampleData()
     BarChart chart = BarChart.createVertical('Bar OS', data, 'category', ChartType.BASIC, 'value')
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    ChartToPng.export(chart, baos)
+    Plot.png(chart, baos)
     byte[] bytes = baos.toByteArray()
     assertTrue(bytes.length > 100, 'PNG output should have content')
     for (int i = 0; i < PNG_HEADER.length; i++) {
@@ -242,16 +262,136 @@ class PlotCompatibilityTest {
   }
 
   @Test
+  void testPlotSvgReturnsSvgObject() {
+    Matrix data = sampleData()
+    BarChart chart = BarChart.createVertical('SVG Test', data, 'category', ChartType.BASIC, 'value')
+    Svg svg = Plot.svg(chart)
+    assertNotNull(svg, 'Plot.svg() should return a non-null Svg')
+    String xml = SvgWriter.toXml(svg)
+    assertTrue(xml.contains('<svg'), 'Result should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgWithExplicitDimensions() {
+    LineChart chart = LineChart.create('Sized SVG', sampleNumericData(), 'x', 'y')
+    Svg svg = Plot.svg(chart, 1200, 900)
+    assertNotNull(svg, 'Plot.svg() with dimensions should return a non-null Svg')
+    assertEquals('1200', svg.width.toString())
+    assertEquals('900', svg.height.toString())
+  }
+
+  @Test
+  void testPlotSvgRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.svg((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testPlotPngRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.png((se.alipsa.matrix.pict.Chart) null, new ByteArrayOutputStream())
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testPlotPngRejectsNullTargets() {
+    BarChart chart = BarChart.createVertical('PNG Null Targets', sampleData(), 'category', ChartType.BASIC, 'value')
+
+    IllegalArgumentException fileException = assertThrows(IllegalArgumentException) {
+      Plot.png(chart, (File) null)
+    }
+    assertEquals('file cannot be null', fileException.message)
+
+    IllegalArgumentException outputStreamException = assertThrows(IllegalArgumentException) {
+      Plot.png(chart, (OutputStream) null)
+    }
+    assertEquals('output stream cannot be null', outputStreamException.message)
+  }
+
+  @Test
+  void testPlotBase64RejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.base64((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testPlotSvgToFile() {
+    BarChart chart = BarChart.createVertical('SVG File', sampleData(), 'category', ChartType.BASIC, 'value')
+    File file = File.createTempFile('BarChart', '.svg')
+    try {
+      Plot.svg(chart, file, 1200, 900)
+      String xml = file.text
+      assertTrue(xml.contains('<svg'), 'SVG file should contain an SVG element')
+      assertTrue(xml.contains('width="1200"'), 'SVG file should reflect requested width')
+      assertTrue(xml.contains('height="900"'), 'SVG file should reflect requested height')
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void testPlotSvgToOutputStream() {
+    BarChart chart = BarChart.createVertical('SVG Stream', sampleData(), 'category', ChartType.BASIC, 'value')
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Plot.svg(chart, baos)
+    assertTrue(baos.toString('UTF-8').contains('<svg'), 'SVG output stream should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgToWriter() {
+    BarChart chart = BarChart.createVertical('SVG Writer', sampleData(), 'category', ChartType.BASIC, 'value')
+    StringWriter writer = new StringWriter()
+    Plot.svg(chart, writer)
+    assertTrue(writer.toString().contains('<svg'), 'SVG writer should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgRejectsNullTargets() {
+    BarChart chart = BarChart.createVertical('SVG Null Targets', sampleData(), 'category', ChartType.BASIC, 'value')
+
+    IllegalArgumentException fileException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (File) null)
+    }
+    assertEquals('file cannot be null', fileException.message)
+
+    IllegalArgumentException outputStreamException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (OutputStream) null)
+    }
+    assertEquals('output stream cannot be null', outputStreamException.message)
+
+    IllegalArgumentException writerException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (Writer) null)
+    }
+    assertEquals('writer cannot be null', writerException.message)
+  }
+
+  @Test
   void testJfxReturnsJavafxNode() {
     Assumptions.assumeTrue(
         System.getenv('DISPLAY') != null || 'true' == System.getProperty('headless'),
         'No DISPLAY available; skipping JavaFX test. Run with -Pheadless=true for headless mode.'
     )
     Matrix data = sampleData()
-    ScatterChart chart = ScatterChart.create('JFX Test', data, 'category', 'value')
-    javafx.scene.Node node = ChartToJfx.export(chart)
+    ScatterChart chart = ScatterChart.builder(data).title('JFX Test')
+        .x('category')
+        .y('value')
+        .build()
+    def node = Plot.jfx(chart)
     assertNotNull(node, 'export() should return a non-null Node')
-    assertTrue(node instanceof javafx.scene.Node, 'Result should be a javafx.scene.Node')
+    assertTrue(node instanceof Group, 'Result should be a javafx.scene.Group')
+  }
+
+  @Test
+  void testPlotJfxRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.jfx((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
   }
 
   private static void assertPngHeader(File file) {

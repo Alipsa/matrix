@@ -5,10 +5,11 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.chartexport.ChartToJfx
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.BoxChart
+import se.alipsa.matrix.pict.Plot
+
+import javafx.scene.Group
 
 class BoxChartTest {
 
@@ -57,9 +58,9 @@ class BoxChartTest {
     ]).types([String, int]).build()
 
     def chart = BoxChart.create('JFX Box Chart', data, 'group', 'value')
-    def jfxNode = ChartToJfx.export(chart)
+    def jfxNode = Plot.jfx(chart)
     assertNotNull(jfxNode)
-    assertTrue(jfxNode instanceof javafx.scene.Node, "Expected javafx.scene.Node but got ${jfxNode.getClass().name}")
+    assertTrue(jfxNode instanceof Group, "Expected javafx.scene.Group but got ${jfxNode.getClass().name}")
   }
 
   @Test
@@ -76,7 +77,7 @@ class BoxChartTest {
     def chart = BoxChart.create('PNG Box Chart', data, 'group', 'value')
     File file = File.createTempFile('BoxChart', '.png')
     try {
-      ChartToPng.export(chart, file)
+      Plot.png(chart, file)
       assertTrue(file.exists(), 'PNG file should exist')
       assertTrue(file.length() > 0, 'PNG file should not be empty')
     } finally {
