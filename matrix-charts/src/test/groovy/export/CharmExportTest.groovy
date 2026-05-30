@@ -20,9 +20,6 @@ import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.pict.Chart
-import se.alipsa.matrix.pict.Plot
-import se.alipsa.matrix.pict.ScatterChart
 
 import java.awt.image.BufferedImage
 import java.lang.reflect.Method
@@ -44,6 +41,14 @@ class CharmExportTest {
     assertNotNull(image, 'BufferedImage should not be null')
     assertTrue(image.getWidth() > 0, 'Image width should be greater than 0')
     assertTrue(image.getHeight() > 0, 'Image height should be greater than 0')
+  }
+
+  @Test
+  void testCharmChartToBase64() {
+    CharmChart chart = buildCharmChart()
+    String dataUri = ChartToImage.base64(chart)
+    assertNotNull(dataUri)
+    assertTrue(dataUri.startsWith('data:image/png;base64,'))
   }
 
   @Test
@@ -97,14 +102,12 @@ class CharmExportTest {
     Svg svg = charmChart.render()
     String svgText = svg.toXml()
     CharSequence svgSequence = new StringBuilder(svgText)
-    Chart pictChart = buildPictChart()
     PlotGrid grid = Charts.plotGrid([charmChart], 1)
 
     assertNotNull(ChartToSwing.export(svgText))
     assertNotNull(ChartToSwing.export(svgSequence))
     assertNotNull(ChartToSwing.export(svg))
     assertNotNull(ChartToSwing.export(charmChart))
-    assertNotNull(Plot.swing(pictChart))
     assertNotNull(ChartToSwing.export(grid))
   }
 
@@ -169,34 +172,6 @@ class CharmExportTest {
     String svg = writer
     assertTrue(svg.length() > 0, 'SVG output should not be empty')
     assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
-  }
-
-  @Test
-  void testChartToSvgPictOutputStream() {
-    def chart = buildPictChart()
-    ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    Plot.svg(chart, baos)
-    String svg = baos.toString('UTF-8')
-    assertTrue(svg.length() > 0, 'SVG output should not be empty')
-    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
-  }
-
-  @Test
-  void testChartToSvgLegacyWriter() {
-    def chart = buildPictChart()
-    StringWriter writer = new StringWriter()
-    Plot.svg(chart, writer)
-    String svg = writer
-    assertTrue(svg.length() > 0, 'SVG output should not be empty')
-    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
-  }
-
-  private static Chart buildPictChart() {
-    Matrix data = Matrix.builder()
-        .columnNames('x', 'y')
-        .rows([[1, 3], [2, 5], [3, 4]])
-        .build()
-    ScatterChart.builder(data).title('Test').x('x').y('y').build()
   }
 
   private static CharmChart buildCharmChart() {
