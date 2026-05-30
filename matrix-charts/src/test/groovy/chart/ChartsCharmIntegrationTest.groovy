@@ -311,7 +311,7 @@ class ChartsCharmIntegrationTest {
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     assertNotNull(charmChart)
-    assertEquals('series', charmChart.mapping.color?.toString(),
+    assertEquals('series', charmChart.mapping.color?.columnName(),
         'Multi-series scatter should map color aesthetic to series column')
 
     Svg svg = charmChart.render()

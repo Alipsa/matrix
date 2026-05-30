@@ -270,8 +270,39 @@ class PlotCompatibilityTest {
     Svg svg = Plot.svg(chart, 1200, 900)
     assertNotNull(svg, 'Plot.svg() with dimensions should return a non-null Svg')
     String xml = SvgWriter.toXml(svg)
-    assertTrue(xml.contains('1200'), 'SVG should reflect requested width')
-    assertTrue(xml.contains('900'), 'SVG should reflect requested height')
+    assertTrue(xml.contains('width="1200"'), 'SVG should reflect requested width')
+    assertTrue(xml.contains('height="900"'), 'SVG should reflect requested height')
+  }
+
+  @Test
+  void testPlotSvgToFile() {
+    BarChart chart = BarChart.createVertical('SVG File', sampleData(), 'category', ChartType.BASIC, 'value')
+    File file = File.createTempFile('BarChart', '.svg')
+    try {
+      Plot.svg(chart, file, 1200, 900)
+      String xml = file.text
+      assertTrue(xml.contains('<svg'), 'SVG file should contain an SVG element')
+      assertTrue(xml.contains('width="1200"'), 'SVG file should reflect requested width')
+      assertTrue(xml.contains('height="900"'), 'SVG file should reflect requested height')
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void testPlotSvgToOutputStream() {
+    BarChart chart = BarChart.createVertical('SVG Stream', sampleData(), 'category', ChartType.BASIC, 'value')
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Plot.svg(chart, baos)
+    assertTrue(baos.toString('UTF-8').contains('<svg'), 'SVG output stream should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgToWriter() {
+    BarChart chart = BarChart.createVertical('SVG Writer', sampleData(), 'category', ChartType.BASIC, 'value')
+    StringWriter writer = new StringWriter()
+    Plot.svg(chart, writer)
+    assertTrue(writer.toString().contains('<svg'), 'SVG writer should contain an SVG element')
   }
 
   @Test
@@ -282,9 +313,17 @@ class PlotCompatibilityTest {
     )
     Matrix data = sampleData()
     ScatterChart chart = ScatterChart.create('JFX Test', data, 'category', 'value')
-    javafx.scene.Node node = ChartToJfx.export(chart)
+    javafx.scene.Node node = Plot.jfx(chart)
     assertNotNull(node, 'export() should return a non-null Node')
     assertTrue(node instanceof javafx.scene.Node, 'Result should be a javafx.scene.Node')
+  }
+
+  @Test
+  void testPlotJfxRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.jfx((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
   }
 
   private static void assertPngHeader(File file) {

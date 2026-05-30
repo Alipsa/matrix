@@ -812,15 +812,13 @@ Plot.png(chart, baos)
 ### SVG
 
 ```groovy
-import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.pict.Plot
 
-def svg = Plot.svg(chart)
-ChartToSvg.export(svg, new File('chart.svg'))
+Plot.svg(chart, new File('chart.svg'))
 
 // To OutputStream or Writer
-ChartToSvg.export(svg, outputStream)
-ChartToSvg.export(svg, writer)
+Plot.svg(chart, outputStream)
+Plot.svg(chart, writer)
 ```
 
 ### JPEG

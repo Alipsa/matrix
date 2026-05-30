@@ -1,10 +1,12 @@
 package se.alipsa.matrix.pict
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToPng
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import javafx.scene.Group
 
@@ -68,6 +70,51 @@ class Plot {
   }
 
   /**
+   * Exports a chart as an SVG file.
+   *
+   * @param chart the chart to export
+   * @param file target file
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @throws IOException if file writing fails
+   */
+  static void svg(Chart chart, File file, int width = 800, int height = 600) throws IOException {
+    try (OutputStream os = Files.newOutputStream(file.toPath())) {
+      svg(chart, os, width, height)
+    }
+  }
+
+  /**
+   * Exports a chart as SVG to an output stream.
+   * The caller is responsible for closing the output stream.
+   *
+   * @param chart the chart to export
+   * @param os target output stream
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @throws IOException if writing fails
+   */
+  static void svg(Chart chart, OutputStream os, int width = 800, int height = 600) throws IOException {
+    os.write(SvgWriter.toXml(svg(chart, width, height)).getBytes(StandardCharsets.UTF_8))
+    os.flush()
+  }
+
+  /**
+   * Exports a chart as SVG to a writer.
+   * The caller is responsible for closing the writer.
+   *
+   * @param chart the chart to export
+   * @param writer target writer
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @throws IOException if writing fails
+   */
+  static void svg(Chart chart, Writer writer, int width = 800, int height = 600) throws IOException {
+    writer.write(SvgWriter.toXml(svg(chart, width, height)))
+    writer.flush()
+  }
+
+  /**
    * Converts a chart to a JavaFX Node for display.
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
@@ -91,8 +138,8 @@ class Plot {
    * @return data URI string
    */
   static String base64(Chart chart, double width = 800, double height = 600) {
-    Svg svgChart = CharmBridge.renderSvg(chart, width as int, height as int)
-    ChartToImage.base64(svgChart)
+    Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
+    ChartToImage.base64(svg)
   }
 
 }
