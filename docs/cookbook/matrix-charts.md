@@ -1,9 +1,9 @@
 # Matrix Charts
 
 Matrix Charts provides various predefined charts that can easily be created based on
-Matrix data. The native representation is SVG, and charts can be exported through the
-`se.alipsa.matrix.chartexport` package to PNG, JPEG, SVG, PDF, JavaFX, or Swing.
-The older `Plot` helper remains available for compatibility but is deprecated.
+Matrix data. The native representation is SVG. Export PICT charts to PNG with
+`Plot.png(...)`. The `se.alipsa.matrix.chartexport` package provides additional
+targets including JPEG, PDF, JavaFX, and Swing, plus lower-level conversion APIs.
 
 ## Fluent Builder API
 
@@ -221,7 +221,7 @@ where arrowheads are rendered. Length and width are SVG user-unit pixels.
 ```groovy
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.Style
-import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.pict.Plot
 
 def style = new Style()
 style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
@@ -234,7 +234,7 @@ def chart = LineChart.builder(data)
     .style(style)
     .build()
 
-ChartToPng.export(chart, new File('capacity.png'))
+Plot.png(chart, new File('capacity.png'))
 ```
 
 ### Recipe: Export a Plot Grid with Dimensions

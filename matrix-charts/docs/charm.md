@@ -1049,7 +1049,7 @@ charts --builds------> charm ---renders-> Svg
 
 - **Charm** is the core. Use it for new code and when you want the most idiomatic Groovy experience.
 - **gg** is a compatibility wrapper that builds the same Charm `PlotSpec` under the hood. Use it when porting R code or when you prefer ggplot2 syntax.
-- **charts** (`AreaChart`, `BarChart`, etc.) is a chart-type-first API backed by Charm via `CharmBridge`. The `Plot` class is `@Deprecated` but continues to work.
+- **charts** (`AreaChart`, `BarChart`, etc.) is a chart-type-first API backed by Charm via `CharmBridge`. Use `Plot` as its PICT-facing export helper.
 
 ## Migration Guide
 
@@ -1064,9 +1064,9 @@ The `charts` package previously used multiple backend-specific converters:
 | `charts.png.PngConverter`                         | **Removed**         | `ChartToPng.export(chart, file)` via chartexport             |
 | `charts.svg.SvgBarChart` / `SvgChart`             | **Removed**         | Use Charm DSL or gg API, then `chart.render()` for SVG       |
 | `charts.util.StyleUtil`                           | **Removed**         | No replacement needed (was JavaFX-specific)                  |
-| `Plot.jfx(chart)`                                 | Deprecated, rewired | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`) |
-| `Plot.png(chart, file)`                           | Deprecated, rewired | Works as before, no longer requires JavaFX toolkit           |
-| `Plot.base64(chart)`                              | Deprecated, rewired | Works as before                                              |
+| `Plot.jfx(chart)`                                 | Rewired             | Returns `javafx.scene.Node` (was `javafx.scene.chart.Chart`) |
+| `Plot.png(chart, file)`                           | Rewired             | Works as before, no longer requires JavaFX toolkit           |
+| `Plot.base64(chart)`                              | Rewired             | Works as before                                              |
 
 ### Breaking changes in this release
 
@@ -1081,7 +1081,7 @@ The `charts` package previously used multiple backend-specific converters:
 // Old
 SwingPlot.png(chart, file)
 
-// New (via deprecated but working Plot)
+// New PICT-facing helper
 Plot.png(chart, file)
 
 // New (via chartexport directly)
@@ -1099,7 +1099,7 @@ Node node = JfxConverter.convert(chart)
 import se.alipsa.matrix.chartexport.ChartToJfx
 def node = ChartToJfx.export(chart)
 
-// Or via deprecated Plot
+// Or via the PICT-facing helper
 def node = Plot.jfx(chart)
 ```
 

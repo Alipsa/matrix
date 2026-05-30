@@ -4,8 +4,9 @@
 Groovy library for creating graphs based on Matrix or [][] data
 
 Matrix-charts is a "native" chart library that creates charts as SVGs.
-An SVG chart can be exported to Swing, JavaFX, Image, PNG, JPG, or PDF using
-the exporters in the se.alipsa.matrix.chartexport package.
+PICT charts can be exported to PNG with `Plot.png(...)`. The exporters in the
+`se.alipsa.matrix.chartexport` package provide Swing, JavaFX, Image, PNG, JPG,
+and PDF conversion for PICT, SVG, and Charm charts.
 
 There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
 1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
@@ -127,7 +128,6 @@ def arrowChart = plot(Dataset.mtcars()) {
 import java.time.LocalDate
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 def empData = Matrix.builder().data(
     emp_id: 1..5,
@@ -146,9 +146,9 @@ def barChart = BarChart.builder(empData)
 def pieChart = PieChart.builder(empData)
     .title("Salaries").x("emp_name").y("salary").build()
 
-// Export to PNG via chartexport
-ChartToPng.export(areaChart, new File("areaChart.png"))
-ChartToPng.export(barChart, new File("barChart.png"))
+// Export PICT charts to PNG via Plot
+Plot.png(areaChart, new File("areaChart.png"))
+Plot.png(barChart, new File("barChart.png"))
 ```
 
 PICT charts are bridged through Charm. Axis scale settings, custom `style.yLabels`,

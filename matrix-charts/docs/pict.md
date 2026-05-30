@@ -27,7 +27,10 @@ A comprehensive guide to using the `se.alipsa.matrix.pict` package for creating 
 
 The `se.alipsa.matrix.pict` package provides a chart-type-first API for creating common visualizations. You start by choosing a chart type (e.g. `BarChart`, `LineChart`), then supply data and configure styling. This is a familiar pattern for users of libraries like xchart or JavaFX charts.
 
-All chart types are backed by the [Charm](charm.md) rendering engine internally. Charts render to SVG and can be exported to PNG, JPEG, PDF, JavaFX, or Swing via `se.alipsa.matrix.chartexport`.
+All chart types are backed by the [Charm](charm.md) rendering engine internally. Use
+`Plot` for PICT-facing PNG, SVG, base64 PNG, and JavaFX output. The
+`se.alipsa.matrix.chartexport` package provides additional conversions such as JPEG,
+PDF, buffered images, and Swing panels.
 
 ### Key Features
 - Fluent builder API for creating and configuring charts in one chain
@@ -62,7 +65,6 @@ implementation 'se.alipsa.matrix:matrix-charts'
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 def data = Matrix.builder().data(
     product: ['Apples', 'Bananas', 'Cherries', 'Dates'],
@@ -76,7 +78,7 @@ def chart = BarChart.builder(data)
     .build()
 
 // Export to PNG
-ChartToPng.export(chart, new File('fruit_sales.png'))
+Plot.png(chart, new File('fruit_sales.png'))
 ```
 
 ### General Workflow
@@ -95,7 +97,7 @@ def chart = LineChart.builder(data)
     .yAxisTitle('Revenue (USD)')
     .build()
 
-ChartToPng.export(chart, new File('revenue.png'))
+Plot.png(chart, new File('revenue.png'))
 ```
 
 ## Builder API
@@ -213,7 +215,7 @@ def chart = AreaChart.builder(data)
     .yAxisTitle('Visitors')
     .build()
 
-ChartToPng.export(chart, new File('visitors.png'))
+Plot.png(chart, new File('visitors.png'))
 ```
 
 ### BarChart
@@ -298,7 +300,7 @@ def chart = BarChart.builder(data)
     .yAxisTitle('Revenue')
     .build()
 
-ChartToPng.export(chart, new File('stacked_bars.png'))
+Plot.png(chart, new File('stacked_bars.png'))
 ```
 
 **Querying bar chart properties:**
@@ -355,7 +357,7 @@ def chart = BoxChart.builder(data)
     .yAxisTitle('Score')
     .build()
 
-ChartToPng.export(chart, new File('boxplot.png'))
+Plot.png(chart, new File('boxplot.png'))
 ```
 
 ### Histogram
@@ -418,7 +420,7 @@ def chart = Histogram.builder(mtcars)
     .yAxisTitle('Frequency')
     .build()
 
-ChartToPng.export(chart, new File('mpg_histogram.png'))
+Plot.png(chart, new File('mpg_histogram.png'))
 ```
 
 ### LineChart
@@ -467,7 +469,7 @@ def chart = LineChart.builder(data)
     .yAxisTitle('Sales')
     .build()
 
-ChartToPng.export(chart, new File('line_chart.png'))
+Plot.png(chart, new File('line_chart.png'))
 ```
 
 ### PieChart
@@ -509,7 +511,7 @@ def chart = PieChart.builder(data)
     .y('amount')
     .build()
 
-ChartToPng.export(chart, new File('budget_pie.png'))
+Plot.png(chart, new File('budget_pie.png'))
 ```
 
 ### ScatterChart
@@ -548,7 +550,7 @@ def chart = ScatterChart.builder(data)
     .yAxisTitle('Weight (kg)')
     .build()
 
-ChartToPng.export(chart, new File('scatter.png'))
+Plot.png(chart, new File('scatter.png'))
 ```
 
 ### BubbleChart
@@ -601,7 +603,7 @@ def chart = BubbleChart.builder(data)
     .yAxisTitle('Latitude')
     .build()
 
-ChartToPng.export(chart, new File('bubbles.png'))
+Plot.png(chart, new File('bubbles.png'))
 ```
 
 | Chart-Specific Builder Method | Description |
@@ -789,33 +791,36 @@ chart.valueSeriesNames      // List<String> -- series names
 
 ## Output Formats
 
-All export classes are in the `se.alipsa.matrix.chartexport` package and accept legacy
-`Chart` objects, Charm `Chart`, and `Svg` objects where applicable. PNG, PDF, JavaFX,
-and Swing exporters also accept raw SVG XML strings.
+Use `Plot` as the PICT-facing export helper. The classes in
+`se.alipsa.matrix.chartexport` provide additional formats and accept PICT `Chart`
+objects, Charm `Chart`, and `Svg` objects where applicable. PNG, PDF, JavaFX, and
+Swing exporters also accept raw SVG XML strings.
 
 ### PNG
 
 ```groovy
-import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.pict.Plot
 
 // To file
-ChartToPng.export(chart, new File('chart.png'))
+Plot.png(chart, new File('chart.png'))
 
 // To OutputStream
 ByteArrayOutputStream baos = new ByteArrayOutputStream()
-ChartToPng.export(chart, baos)
+Plot.png(chart, baos)
 ```
 
 ### SVG
 
 ```groovy
 import se.alipsa.matrix.chartexport.ChartToSvg
+import se.alipsa.matrix.pict.Plot
 
-ChartToSvg.export(chart, new File('chart.svg'))
+def svg = Plot.svg(chart)
+ChartToSvg.export(svg, new File('chart.svg'))
 
 // To OutputStream or Writer
-ChartToSvg.export(chart, outputStream)
-ChartToSvg.export(chart, writer)
+ChartToSvg.export(svg, outputStream)
+ChartToSvg.export(svg, writer)
 ```
 
 ### JPEG
@@ -845,9 +850,9 @@ PDF page dimensions are written in points. Rasterized chart pixels are scaled fr
 ### Base64 Data URI
 
 ```groovy
-import se.alipsa.matrix.chartexport.ChartToImage
+import se.alipsa.matrix.pict.Plot
 
-String dataUri = ChartToImage.base64(chart)
+String dataUri = Plot.base64(chart)
 // Returns: "data:image/png;base64,iVBOR..."
 ```
 
@@ -862,9 +867,9 @@ BufferedImage image = ChartToImage.export(chart)
 ### JavaFX
 
 ```groovy
-import se.alipsa.matrix.chartexport.ChartToJfx
+import se.alipsa.matrix.pict.Plot
 
-javafx.scene.Node node = ChartToJfx.export(chart)
+javafx.scene.Node node = Plot.jfx(chart)
 ```
 
 ### Swing
@@ -876,7 +881,7 @@ def panel = ChartToSwing.export(chart)
 // Add panel to a Swing container
 ```
 
-> **Note:** The `Plot` class is `@Deprecated`. Use the `chartexport` classes above instead.
+Use `chartexport` directly when you need a format or target that is not exposed by `Plot`.
 
 ## Error Handling
 
@@ -932,7 +937,6 @@ pict ----builds------> charm ---renders-> Svg (via CharmBridge)
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 def sales = Matrix.builder().data(
     month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -949,7 +953,7 @@ def lineChart = LineChart.builder(sales)
     .yAxisTitle('Units')
     .build()
 lineChart.setValueSeriesNames(['Online', 'Retail'])
-ChartToPng.export(lineChart, new File('trend.png'))
+Plot.png(lineChart, new File('trend.png'))
 
 // Stacked bar chart for composition
 def barChart = BarChart.builder(sales)
@@ -959,7 +963,7 @@ def barChart = BarChart.builder(sales)
     .stacked()
     .build()
 barChart.setValueSeriesNames(['Online', 'Retail'])
-ChartToPng.export(barChart, new File('composition.png'))
+Plot.png(barChart, new File('composition.png'))
 ```
 
 ### Histogram from a Dataset
@@ -967,7 +971,6 @@ ChartToPng.export(barChart, new File('composition.png'))
 ```groovy
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.pict.*
-import se.alipsa.matrix.chartexport.ChartToPng
 
 def mtcars = Dataset.mtcars()
 def chart = Histogram.builder(mtcars)
@@ -978,7 +981,7 @@ def chart = Histogram.builder(mtcars)
     .yAxisTitle('Count')
     .build()
 
-ChartToPng.export(chart, new File('displacement.png'))
+Plot.png(chart, new File('displacement.png'))
 ```
 
 ### Styled Pie Chart
@@ -1000,7 +1003,7 @@ def chart = PieChart.builder(data)
     .build()
 chart.style.chartBackgroundColor = Color.WHITE
 
-ChartToPng.export(chart, new File('languages.png'))
+Plot.png(chart, new File('languages.png'))
 ```
 
 ### Box Plot Comparison
@@ -1021,7 +1024,7 @@ def chart = BoxChart.builder(data)
     .yAxisTitle('Result')
     .build()
 
-ChartToPng.export(chart, new File('comparison.png'))
+Plot.png(chart, new File('comparison.png'))
 ```
 
 ## Additional Resources
