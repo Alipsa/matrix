@@ -27,6 +27,9 @@ import javafx.scene.Group
 class Plot {
 
   private static final String CHART_CANNOT_BE_NULL = 'chart cannot be null'
+  private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
+  private static final String OUTPUT_STREAM_CANNOT_BE_NULL = 'output stream cannot be null'
+  private static final String WRITER_CANNOT_BE_NULL = 'writer cannot be null'
 
   /**
    * Exports a chart as a PNG image file.
@@ -35,10 +38,12 @@ class Plot {
    * @param file target file
    * @param width image width in pixels
    * @param height image height in pixels
+   * @throws IllegalArgumentException if chart or file is null
    * @throws IOException if file writing fails
    */
   static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
-    try (OutputStream os = Files.newOutputStream(file.toPath())) {
+    requireChart(chart)
+    try (OutputStream os = Files.newOutputStream(requireFile(file).toPath())) {
       png(chart, os, width, height)
     }
   }
@@ -50,8 +55,11 @@ class Plot {
    * @param os target output stream
    * @param width image width in pixels
    * @param height image height in pixels
+   * @throws IllegalArgumentException if chart or output stream is null
    */
   static void png(Chart chart, OutputStream os, double width = 800, double height = 600) {
+    requireChart(chart)
+    requireOutputStream(os)
     Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
     ChartToPng.export(svg, os)
   }
@@ -66,12 +74,10 @@ class Plot {
    * @param width SVG width in pixels
    * @param height SVG height in pixels
    * @return the rendered SVG
+   * @throws IllegalArgumentException if chart is null
   */
   static Svg svg(Chart chart, int width = 800, int height = 600) {
-    if (chart == null) {
-      throw new IllegalArgumentException(CHART_CANNOT_BE_NULL)
-    }
-    CharmBridge.renderSvg(chart, width, height)
+    CharmBridge.renderSvg(requireChart(chart), width, height)
   }
 
   /**
@@ -81,10 +87,12 @@ class Plot {
    * @param file target file
    * @param width SVG width in pixels
    * @param height SVG height in pixels
+   * @throws IllegalArgumentException if chart or file is null
    * @throws IOException if file writing fails
    */
   static void svg(Chart chart, File file, int width = 800, int height = 600) throws IOException {
-    try (OutputStream os = Files.newOutputStream(file.toPath())) {
+    requireChart(chart)
+    try (OutputStream os = Files.newOutputStream(requireFile(file).toPath())) {
       svg(chart, os, width, height)
     }
   }
@@ -98,9 +106,12 @@ class Plot {
    * @param os target output stream
    * @param width SVG width in pixels
    * @param height SVG height in pixels
+   * @throws IllegalArgumentException if chart or output stream is null
    * @throws IOException if writing fails
    */
   static void svg(Chart chart, OutputStream os, int width = 800, int height = 600) throws IOException {
+    requireChart(chart)
+    requireOutputStream(os)
     os.write(SvgWriter.toXml(svg(chart, width, height)).getBytes(StandardCharsets.UTF_8))
     os.flush()
   }
@@ -114,9 +125,12 @@ class Plot {
    * @param writer target writer
    * @param width SVG width in pixels
    * @param height SVG height in pixels
+   * @throws IllegalArgumentException if chart or writer is null
    * @throws IOException if writing fails
    */
   static void svg(Chart chart, Writer writer, int width = 800, int height = 600) throws IOException {
+    requireChart(chart)
+    requireWriter(writer)
     writer.write(SvgWriter.toXml(svg(chart, width, height)))
     writer.flush()
   }
@@ -130,12 +144,10 @@ class Plot {
    *
    * @param chart the chart to convert
    * @return a JavaFX Node rendering the chart
+   * @throws IllegalArgumentException if chart is null
    */
   static Group jfx(Chart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException(CHART_CANNOT_BE_NULL)
-    }
-    ChartToJfx.export(chart)
+    ChartToJfx.export(requireChart(chart))
   }
 
   /**
@@ -145,10 +157,39 @@ class Plot {
    * @param width image width in pixels
    * @param height image height in pixels
    * @return data URI string
+   * @throws IllegalArgumentException if chart is null
    */
   static String base64(Chart chart, double width = 800, double height = 600) {
-    Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
+    Svg svg = CharmBridge.renderSvg(requireChart(chart), width as int, height as int)
     ChartToImage.base64(svg)
+  }
+
+  private static Chart requireChart(Chart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException(CHART_CANNOT_BE_NULL)
+    }
+    chart
+  }
+
+  private static File requireFile(File file) {
+    if (file == null) {
+      throw new IllegalArgumentException(FILE_CANNOT_BE_NULL)
+    }
+    file
+  }
+
+  private static OutputStream requireOutputStream(OutputStream os) {
+    if (os == null) {
+      throw new IllegalArgumentException(OUTPUT_STREAM_CANNOT_BE_NULL)
+    }
+    os
+  }
+
+  private static Writer requireWriter(Writer writer) {
+    if (writer == null) {
+      throw new IllegalArgumentException(WRITER_CANNOT_BE_NULL)
+    }
+    writer
   }
 
 }

@@ -267,15 +267,45 @@ class PlotCompatibilityTest {
     LineChart chart = LineChart.create('Sized SVG', sampleNumericData(), 'x', 'y')
     Svg svg = Plot.svg(chart, 1200, 900)
     assertNotNull(svg, 'Plot.svg() with dimensions should return a non-null Svg')
-    String xml = SvgWriter.toXml(svg)
-    assertTrue(xml.contains('width="1200"'), 'SVG should reflect requested width')
-    assertTrue(xml.contains('height="900"'), 'SVG should reflect requested height')
+    assertEquals('1200', svg.width.toString())
+    assertEquals('900', svg.height.toString())
   }
 
   @Test
   void testPlotSvgRejectsNullChart() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Plot.svg((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testPlotPngRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.png((se.alipsa.matrix.pict.Chart) null, new ByteArrayOutputStream())
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testPlotPngRejectsNullTargets() {
+    BarChart chart = BarChart.createVertical('PNG Null Targets', sampleData(), 'category', ChartType.BASIC, 'value')
+
+    IllegalArgumentException fileException = assertThrows(IllegalArgumentException) {
+      Plot.png(chart, (File) null)
+    }
+    assertEquals('file cannot be null', fileException.message)
+
+    IllegalArgumentException outputStreamException = assertThrows(IllegalArgumentException) {
+      Plot.png(chart, (OutputStream) null)
+    }
+    assertEquals('output stream cannot be null', outputStreamException.message)
+  }
+
+  @Test
+  void testPlotBase64RejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.base64((se.alipsa.matrix.pict.Chart) null)
     }
     assertEquals('chart cannot be null', exception.message)
   }
@@ -309,6 +339,26 @@ class PlotCompatibilityTest {
     StringWriter writer = new StringWriter()
     Plot.svg(chart, writer)
     assertTrue(writer.toString().contains('<svg'), 'SVG writer should contain an SVG element')
+  }
+
+  @Test
+  void testPlotSvgRejectsNullTargets() {
+    BarChart chart = BarChart.createVertical('SVG Null Targets', sampleData(), 'category', ChartType.BASIC, 'value')
+
+    IllegalArgumentException fileException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (File) null)
+    }
+    assertEquals('file cannot be null', fileException.message)
+
+    IllegalArgumentException outputStreamException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (OutputStream) null)
+    }
+    assertEquals('output stream cannot be null', outputStreamException.message)
+
+    IllegalArgumentException writerException = assertThrows(IllegalArgumentException) {
+      Plot.svg(chart, (Writer) null)
+    }
+    assertEquals('writer cannot be null', writerException.message)
   }
 
   @Test

@@ -262,11 +262,10 @@ Charm charts, `Svg` objects, and SVG XML strings where the target format support
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.pict.Plot
-import se.alipsa.matrix.chartexport.ChartToSvg
 
 Plot.png(chart, new File("chart.png"))
 ChartToJpeg.export(chart, new File("chart.jpg"), 0.9)
-ChartToSvg.export(chart, new File("chart.svg"))
+Plot.svg(chart, new File("chart.svg"))
 ChartToPdf.export(chart, new File("chart.pdf"))
 ```
 
