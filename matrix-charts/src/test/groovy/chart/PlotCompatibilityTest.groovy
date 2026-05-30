@@ -9,7 +9,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.chartexport.ChartToImage
-import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
@@ -23,8 +22,8 @@ import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
 
 /**
- * Tests verifying that legacy chart types produce valid export output
- * through the current export API (ChartToPng, ChartToImage, ChartToJfx).
+ * Tests verifying that PICT chart types produce valid output through Plot
+ * and remain compatible with the underlying image export APIs.
  */
 class PlotCompatibilityTest {
 
