@@ -64,8 +64,11 @@ class Plot {
    * @param width SVG width in pixels
    * @param height SVG height in pixels
    * @return the rendered SVG
-   */
+  */
   static Svg svg(Chart chart, int width = 800, int height = 600) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
     CharmBridge.renderSvg(chart, width, height)
   }
 

@@ -275,6 +275,14 @@ class PlotCompatibilityTest {
   }
 
   @Test
+  void testPlotSvgRejectsNullChart() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Plot.svg((se.alipsa.matrix.pict.Chart) null)
+    }
+    assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
   void testPlotSvgToFile() {
     BarChart chart = BarChart.createVertical('SVG File', sampleData(), 'category', ChartType.BASIC, 'value')
     File file = File.createTempFile('BarChart', '.svg')
