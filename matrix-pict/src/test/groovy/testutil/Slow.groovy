@@ -15,12 +15,12 @@ import java.lang.annotation.Target
  * Usage on a whole class (every test in the class is slow):
  * <pre>
  * {@literal @}Slow
- * class GeomFunctionTest { ... }
+ * class PlotCompatibilityTest { ... }
  * </pre>
  *
  * Usage on individual methods in a mixed class:
  * <pre>
- * class GeomBarColTest {
+ * class ChartBuilderTest {
  *   {@literal @}Test
  *   void testDefaults() { ... }   // fast — no @Slow
  *

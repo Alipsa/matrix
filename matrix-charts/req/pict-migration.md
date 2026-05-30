@@ -24,9 +24,9 @@ No package renames. The `se.alipsa.matrix.pict` package stays as-is; only the ar
 
 **PR scope:** Create the empty module wired into the build, before any source moves.
 
-- 1.1 [ ] Create directory `matrix-pict/src/main/groovy/se/alipsa/matrix/pict/` and `matrix-pict/src/test/groovy/`
-- 1.2 [ ] Create `matrix-pict/docs/` directory (needed for the `pict.md` move in Phase 4)
-- 1.3 [ ] Write `matrix-pict/build.gradle` modelled on `matrix-ggplot/build.gradle`:
+- 1.1 [x] Create directory `matrix-pict/src/main/groovy/se/alipsa/matrix/pict/` and `matrix-pict/src/test/groovy/`
+- 1.2 [x] Create `matrix-pict/docs/` directory (needed for the `pict.md` move in Phase 4)
+- 1.3 [x] Write `matrix-pict/build.gradle` modelled on `matrix-ggplot/build.gradle`:
   - `version = '0.5.0-SNAPSHOT'`
   - `description = "Groovy chart-type-first API for matrix (pict)"`
   - `api project(':matrix-charts')` — transitively provides gsvg, chartexport, Charm, JavaFX compileOnly. Use `api` (same as matrix-ggplot) because `Plot.svg()` returns `Svg` from gsvg; callers need that type visible without adding matrix-charts to their own dependencies.
@@ -38,8 +38,8 @@ No package renames. The `se.alipsa.matrix.pict` package stays as-is; only the ar
   - `testFast` task identical to matrix-charts/matrix-ggplot
   - Maven publishing block: `name = 'Groovy Matrix Pict'`, SCM url `matrix-pict`
   - Signing block (same guard as other modules)
-- 1.4 [ ] Add `include 'matrix-pict'` to `settings.gradle` (place it after `matrix-ggplot`)
-- 1.5 [ ] Copy `testutil/Slow.groovy` to `matrix-pict/src/test/groovy/testutil/Slow.groovy` (it's a local JUnit tag annotation; each module keeps its own copy)
+- 1.4 [x] Add `include 'matrix-pict'` to `settings.gradle` (place it after `matrix-ggplot`)
+- 1.5 [x] Copy `testutil/Slow.groovy` to `matrix-pict/src/test/groovy/testutil/Slow.groovy` (it's a local JUnit tag annotation; each module keeps its own copy)
 
 **Verification:**
 ```bash
