@@ -20,11 +20,13 @@ import javafx.scene.Group
  * <p>Example:
  * <pre>
  * LineChart chart = LineChart.builder(data).title('Sales').x('month').y('revenue').build()
- * inout.view(Plot.jfx(chart))
+ * javafx.scene.Node node = Plot.jfx(chart)
  * Plot.png(chart, new File('chart.png'))
  * </pre>
  */
 class Plot {
+
+  private static final String CHART_CANNOT_BE_NULL = 'chart cannot be null'
 
   /**
    * Exports a chart as a PNG image file.
@@ -67,7 +69,7 @@ class Plot {
   */
   static Svg svg(Chart chart, int width = 800, int height = 600) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
+      throw new IllegalArgumentException(CHART_CANNOT_BE_NULL)
     }
     CharmBridge.renderSvg(chart, width, height)
   }
@@ -89,7 +91,8 @@ class Plot {
 
   /**
    * Exports a chart as SVG to an output stream.
-   * The caller is responsible for closing the output stream.
+   * The method flushes the output stream after writing. The caller is responsible
+   * for closing the output stream.
    *
    * @param chart the chart to export
    * @param os target output stream
@@ -104,7 +107,8 @@ class Plot {
 
   /**
    * Exports a chart as SVG to a writer.
-   * The caller is responsible for closing the writer.
+   * The method flushes the writer after writing. The caller is responsible for
+   * closing the writer.
    *
    * @param chart the chart to export
    * @param writer target writer
@@ -122,13 +126,15 @@ class Plot {
    *
    * <p><b>Breaking change:</b> Previously returned {@code javafx.scene.chart.Chart}.
    * Now returns {@code javafx.scene.Group} (an SVGImage extending Group).
-   * Callers using {@code inout.view(Plot.jfx(chart))} are unaffected since
-   * {@code view()} accepts {@code Node}.</p>
+   * Use the returned {@code Node} in a JavaFX scene graph.</p>
    *
    * @param chart the chart to convert
    * @return a JavaFX Node rendering the chart
    */
   static Group jfx(Chart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException(CHART_CANNOT_BE_NULL)
+    }
     ChartToJfx.export(chart)
   }
 

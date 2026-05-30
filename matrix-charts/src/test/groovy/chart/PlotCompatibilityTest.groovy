@@ -265,7 +265,6 @@ class PlotCompatibilityTest {
 
   @Test
   void testPlotSvgWithExplicitDimensions() {
-    Matrix data = sampleData()
     LineChart chart = LineChart.create('Sized SVG', sampleNumericData(), 'x', 'y')
     Svg svg = Plot.svg(chart, 1200, 900)
     assertNotNull(svg, 'Plot.svg() with dimensions should return a non-null Svg')

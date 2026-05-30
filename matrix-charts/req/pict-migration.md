@@ -112,25 +112,33 @@ All tests in both modules must pass.
 
 ## Phase 4: Update matrix-bom
 
-**Note:** `matrix-bom` is a Maven project (`pom.xml`), not a Gradle module. Edit `matrix-bom/pom.xml` directly.
+**Note:** The published BOM definition is `matrix-bom/bom.xml`. The sibling
+`matrix-bom/pom.xml` is the BOM integration-test project. Edit `matrix-bom/bom.xml`
+directly.
 
-- 4.1 [ ] Add a `<dependency>` entry for `matrix-pict` in `pom.xml`'s `<dependencyManagement>/<dependencies>` block, immediately after the `matrix-ggplot` entry, following the same pattern:
+- 4.1 [ ] Add `<matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>` to the
+  `bom.xml` `<properties>` block immediately after `<matrixGgplotVersion>`.
+- 4.2 [ ] Add a `<dependency>` entry for `matrix-pict` in `bom.xml`'s
+  `<dependencyManagement>/<dependencies>` block, immediately after the
+  `matrix-ggplot` entry:
 
 ```xml
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-pict</artifactId>
-  <version>${project.version}</version>
+  <version>${matrixPictVersion}</version>
 </dependency>
 ```
 
-**Note:** `${project.version}` resolves to the bom's own version (`2.5.0-SNAPSHOT`). The bom and the individual modules currently have separate version numbers (`matrix-pict` is `0.5.0`), so verify whether the existing `matrix-charts` and `matrix-ggplot` entries use `${project.version}` or hardcode versions, and follow the same convention.
+This follows the existing `matrix-charts` and `matrix-ggplot` convention: each module
+has a dedicated version property in `bom.xml`. Use `0.5.0-SNAPSHOT` consistently for
+the initial `matrix-pict` module and BOM property.
 
 **Verification:**
 ```bash
-cd matrix-bom && mvn validate
+mvn -f matrix-bom/bom.xml validate
 ```
-pom.xml must parse without errors.
+`bom.xml` must parse without errors.
 
 ---
 
