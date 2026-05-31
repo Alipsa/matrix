@@ -4,7 +4,6 @@ import static se.alipsa.matrix.core.ListConverter.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
@@ -36,7 +35,7 @@ class PngTest {
     @Test
     void testBarchartToBase64() {
         BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')
-        def base64 = ChartToImage.base64(chart)
+        def base64 = Plot.base64(chart)
         assertNotNull(base64)
         assertTrue(base64.startsWith('data:image/png;base64,'))
     }

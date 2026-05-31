@@ -8,8 +8,9 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.chartexport.ChartToImage
+import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.CharmBridge
@@ -185,7 +186,7 @@ class PlotCompatibilityTest {
   void testBase64ReturnsValidDataUri() {
     Matrix data = sampleData()
     PieChart chart = PieChart.create('Pie Base64', data, 'category', 'value')
-    String uri = ChartToImage.base64(chart)
+    String uri = Plot.base64(chart)
     assertTrue(uri.startsWith('data:image/png;base64,'), 'Should start with data URI prefix')
     String base64Part = uri.substring('data:image/png;base64,'.length())
     byte[] decoded = Base64.decoder.decode(base64Part)
@@ -392,6 +393,70 @@ class PlotCompatibilityTest {
       Plot.jfx((se.alipsa.matrix.pict.Chart) null)
     }
     assertEquals('chart cannot be null', exception.message)
+  }
+
+  @Test
+  void testImportAliasStrategyCompilesAndRuns() {
+    Matrix mpg = Dataset.mpg()
+    GroovyShell shell = new GroovyShell(new Binding([mpg: mpg]))
+    Object result = shell.evaluate('''
+      import se.alipsa.matrix.charm.Chart as CharmChart
+      import se.alipsa.matrix.pict.Chart as LegacyChart
+      import static se.alipsa.matrix.charm.Charts.chart
+
+      CharmChart c = chart(mpg) {
+        mapping {
+          x = 'cty'
+          y = 'hwy'
+        }
+        layers { geomPoint() }
+      }.build()
+
+      assert LegacyChart != null
+      c.render()
+    ''')
+    assertTrue(result instanceof Svg)
+  }
+
+  @Test
+  void testChartToSvgPictOutputStream() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    ScatterChart chart = ScatterChart.builder(data).title('Test').x('x').y('y').build()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Plot.svg(chart, baos)
+    String svg = baos.toString('UTF-8')
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
+  }
+
+  @Test
+  void testChartToSvgLegacyWriter() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    ScatterChart chart = ScatterChart.builder(data).title('Test').x('x').y('y').build()
+    StringWriter writer = new StringWriter()
+    Plot.svg(chart, writer)
+    String svg = writer
+    assertTrue(svg.length() > 0, 'SVG output should not be empty')
+    assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
+  }
+
+  @Test
+  void testPlotSwingReturnsSvgPanel() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    ScatterChart chart = ScatterChart.builder(data).title('Test').x('x').y('y').build()
+    SvgPanel panel = Plot.swing(chart)
+    assertNotNull(panel, 'Plot.swing() should return a non-null SvgPanel')
+    assertTrue(panel.preferredSize.width > 0)
+    assertTrue(panel.preferredSize.height > 0)
   }
 
   private static void assertPngHeader(File file) {
