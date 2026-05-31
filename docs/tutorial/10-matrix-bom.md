@@ -188,7 +188,8 @@ The Matrix BOM includes version management for the following modules:
 - `matrix-sql`: Database interaction
 - `matrix-parquet`: Parquet file format support (experimental)
 - `matrix-bigquery`: Google BigQuery integration (experimental)
-- `matrix-charts`: Chart creation in various formats (experimental)
+- `matrix-charts`: Charm rendering engine and export utilities (experimental)
+- `matrix-pict`: Chart-type-first API backed by the Charm engine (experimental)
 - `matrix-tablesaw`: Interoperability with Tablesaw (experimental)
 
 ## Choosing the Right BOM Version

@@ -1,10 +1,11 @@
-# Matrix Charts Module
+# Matrix Pict and Charts Modules
 
-The Matrix Charts module is a Groovy library for creating various types of graphs and charts based on Matrix data. 
-It provides a simple and intuitive API for generating visualizations that can be exported to SVG, PNG, JPEG, PDF,
-JavaFX, or Swing, but the
-"native" format is SVG. It uses the gsvg SVG model to create charts and it is always possible to access the model directly
-for advanced customization.
+The `matrix-pict` module provides a simple chart-type-first API for creating graphs
+and charts based on Matrix data. It delegates rendering to the Charm engine in
+`matrix-charts`, which also provides a Grammar-of-Graphics DSL and export utilities.
+Charts can be exported to SVG, PNG, JPEG, PDF, JavaFX, or Swing. The native format is
+SVG, using the gsvg model, which can also be accessed directly for advanced
+customization.
 
 ## Installation
 
@@ -20,7 +21,8 @@ implementation 'se.alipsa.matrix:matrix-stats'
 ```
 
 > Note: PICT chart types previously lived in `matrix-charts` but have been extracted
-> into the separate `matrix-pict` module. The Charm DSL remains in `matrix-charts`.
+> into the separate `matrix-pict` module. The Charm DSL remains in `matrix-charts`,
+> which is pulled in transitively by `matrix-pict`.
 
 ### Maven Configuration
 
@@ -448,8 +450,8 @@ println "Charts have been exported successfully."
 
 ## Charm DSL (matrix-charts core)
 
-Beyond chart-type-first classes (`AreaChart`, `BarChart`, `LineChart`, etc.), `matrix-charts`
-also includes the Charm Grammar-of-Graphics DSL.
+Alongside the chart-type-first classes (`AreaChart`, `BarChart`, `LineChart`, etc.)
+provided by `matrix-pict`, `matrix-charts` includes the Charm Grammar-of-Graphics DSL.
 
 ```groovy
 import static se.alipsa.matrix.charm.Charts.plot

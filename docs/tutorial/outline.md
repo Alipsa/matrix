@@ -94,8 +94,8 @@
   - Schema evolution and explicit nested schema control
 - [Matrix BigQuery Module](12-matrix-bigquery.md)
   - Google BigQuery integration
-- [Matrix Charts Module](13-matrix-charts.md)
-  - Alternative charting capabilities
+- [Matrix Pict and Charts Modules](13-matrix-charts.md)
+  - Chart-type-first PICT API and Charm rendering engine
 - [Matrix GGPlot Module](13b-matrix-ggplot.md)
   - ggplot2-compatible charting API
   - Closure-based `aes`, `qplot`, and `cols()` helpers

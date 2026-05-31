@@ -136,9 +136,11 @@ The Matrix project consists of multiple modules, each providing specific functio
 
 11. **matrix-bigquery**: Google BigQuery integration (experimental).
 
-12. **matrix-charts**: Alternative chart creation capabilities (experimental).
+12. **matrix-charts**: Charm Grammar-of-Graphics rendering engine and export utilities (experimental).
 
-13. **matrix-tablesaw**: Interoperability with the Tablesaw library (experimental).
+13. **matrix-pict**: Chart-type-first API backed by the Charm engine in matrix-charts (experimental).
+
+14. **matrix-tablesaw**: Interoperability with the Tablesaw library (experimental).
 
 In the following sections, we'll explore each of these modules in detail, starting with the core functionality provided by the matrix-core module.
 
