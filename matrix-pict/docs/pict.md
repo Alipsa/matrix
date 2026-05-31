@@ -55,7 +55,7 @@ This guide reflects the current PICT implementation, including:
 ### Dependencies
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.4.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.5.0'))
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-pict'
 ```
@@ -108,42 +108,42 @@ Every chart type provides a fluent builder via `ChartType.builder(Matrix data)`.
 
 All builders inherit these methods from `Chart.ChartBuilder`:
 
-| Method | Description |
-|---|---|
-| `title(String)` | Chart title |
-| `x(String)` | X-axis (category) column name |
-| `y(String)` | Y-axis (value) column name |
-| `y(String...)` | Multiple y-axis column names (multi-series) |
-| `xAxisTitle(String)` | X-axis label |
-| `yAxisTitle(String)` | Y-axis label |
-| `xAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom x-axis scale |
-| `yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom y-axis scale |
-| `xAxisScale(AxisScale)` | X-axis scale from AxisScale object |
-| `yAxisScale(AxisScale)` | Y-axis scale from AxisScale object |
-| `legend(Legend)` | Legend configuration object |
-| `legendTitle(String)` | Legend title text |
-| `legendVisible(boolean)` | Whether the legend is visible |
-| `legendPosition(Style.Position)` | Legend position (TOP, RIGHT, BOTTOM, LEFT) |
-| `legendFont(Font)` | Legend font (`java.awt.Font`) |
-| `legendBackgroundColor(Color)` | Legend background color (`java.awt.Color`) |
-| `legendDirection(Legend.Direction)` | Legend key layout (VERTICAL, HORIZONTAL) |
-| `style(Style)` | Style configuration object |
-| `plotBackgroundColor(Color)` | Plot area background color (`java.awt.Color`) |
-| `chartBackgroundColor(Color)` | Chart background color (`java.awt.Color`) |
-| `titleVisible(boolean)` | Whether the title is visible |
-| `xAxisVisible(boolean)` | Whether the x-axis is visible |
-| `yAxisVisible(boolean)` | Whether the y-axis is visible |
-| `css(String)` | Custom CSS string injected into Charm-rendered SVG |
-| `build()` | Build the chart |
+| Method                                                          | Description                                        |
+|-----------------------------------------------------------------|----------------------------------------------------|
+| `title(String)`                                                 | Chart title                                        |
+| `x(String)`                                                     | X-axis (category) column name                      |
+| `y(String)`                                                     | Y-axis (value) column name                         |
+| `y(String...)`                                                  | Multiple y-axis column names (multi-series)        |
+| `xAxisTitle(String)`                                            | X-axis label                                       |
+| `yAxisTitle(String)`                                            | Y-axis label                                       |
+| `xAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom x-axis scale                                |
+| `yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom y-axis scale                                |
+| `xAxisScale(AxisScale)`                                         | X-axis scale from AxisScale object                 |
+| `yAxisScale(AxisScale)`                                         | Y-axis scale from AxisScale object                 |
+| `legend(Legend)`                                                | Legend configuration object                        |
+| `legendTitle(String)`                                           | Legend title text                                  |
+| `legendVisible(boolean)`                                        | Whether the legend is visible                      |
+| `legendPosition(Style.Position)`                                | Legend position (TOP, RIGHT, BOTTOM, LEFT)         |
+| `legendFont(Font)`                                              | Legend font (`java.awt.Font`)                      |
+| `legendBackgroundColor(Color)`                                  | Legend background color (`java.awt.Color`)         |
+| `legendDirection(Legend.Direction)`                             | Legend key layout (VERTICAL, HORIZONTAL)           |
+| `style(Style)`                                                  | Style configuration object                         |
+| `plotBackgroundColor(Color)`                                    | Plot area background color (`java.awt.Color`)      |
+| `chartBackgroundColor(Color)`                                   | Chart background color (`java.awt.Color`)          |
+| `titleVisible(boolean)`                                         | Whether the title is visible                       |
+| `xAxisVisible(boolean)`                                         | Whether the x-axis is visible                      |
+| `yAxisVisible(boolean)`                                         | Whether the y-axis is visible                      |
+| `css(String)`                                                   | Custom CSS string injected into Charm-rendered SVG |
+| `build()`                                                       | Build the chart                                    |
 
 ### Chart-Specific Builder Methods
 
-| Chart Type | Extra Methods |
-|---|---|
-| `BarChart.Builder` | `horizontal()`, `vertical()`, `stacked()`, `chartType(ChartType)`, `direction(ChartDirection)` |
-| `Histogram.Builder` | `bins(Integer)`, `binDecimals(int)` |
-| `BoxChart.Builder` | `columns(List<String>)` |
-| `BubbleChart.Builder` | `size(String)`, `group(String)` |
+| Chart Type            | Extra Methods                                                                                  |
+|-----------------------|------------------------------------------------------------------------------------------------|
+| `BarChart.Builder`    | `horizontal()`, `vertical()`, `stacked()`, `chartType(ChartType)`, `direction(ChartDirection)` |
+| `Histogram.Builder`   | `bins(Integer)`, `binDecimals(int)`                                                            |
+| `BoxChart.Builder`    | `columns(List<String>)`                                                                        |
+| `BubbleChart.Builder` | `size(String)`, `group(String)`                                                                |
 
 ### Example
 
@@ -268,18 +268,18 @@ BarChart chart = BarChart.create('Sales', ChartType.STACKED, data, 'category',
 
 **ChartType options:**
 
-| Type | Description |
-|---|---|
-| `ChartType.BASIC` | Standard non-stacked bars (default) |
+| Type                | Description                         |
+|---------------------|-------------------------------------|
+| `ChartType.BASIC`   | Standard non-stacked bars (default) |
 | `ChartType.STACKED` | Values stacked on top of each other |
-| `ChartType.GROUPED` | Values placed side by side |
+| `ChartType.GROUPED` | Values placed side by side          |
 
 **ChartDirection options:**
 
-| Direction | Description |
-|---|---|
-| `ChartDirection.VERTICAL` | Bars grow upward (default) |
-| `ChartDirection.HORIZONTAL` | Bars grow rightward |
+| Direction                   | Description                |
+|-----------------------------|----------------------------|
+| `ChartDirection.VERTICAL`   | Bars grow upward (default) |
+| `ChartDirection.HORIZONTAL` | Bars grow rightward        |
 
 **Example -- stacked bar chart:**
 
@@ -606,10 +606,10 @@ def chart = BubbleChart.builder(data)
 Plot.png(chart, new File('bubbles.png'))
 ```
 
-| Chart-Specific Builder Method | Description |
-|---|---|
-| `size(String)` | Column mapped to point radius |
-| `group(String)` | Column mapped to colour aesthetic (optional) |
+| Chart-Specific Builder Method | Description                                  |
+|-------------------------------|----------------------------------------------|
+| `size(String)`                | Column mapped to point radius                |
+| `group(String)`               | Column mapped to colour aesthetic (optional) |
 
 ## Styling
 
@@ -920,13 +920,13 @@ pict ----builds------> charm ---renders-> Svg (via CharmBridge)
 
 ### When to Use Which
 
-| Use case | Recommended API |
-|---|---|
-| Quick bar/pie/line chart with minimal configuration | **PICT** |
-| Full Grammar of Graphics with faceting, annotations, and custom scales | **Charm** |
-| Porting R ggplot2 code to Groovy | **gg** |
-| `@CompileStatic` chart code | **Charm** (programmatic API) |
-| Multi-layer plots (e.g. points + regression line) | **Charm** or **gg** |
+| Use case                                                               | Recommended API              |
+|------------------------------------------------------------------------|------------------------------|
+| Quick bar/pie/line chart with minimal configuration                    | **PICT**                     |
+| Full Grammar of Graphics with faceting, annotations, and custom scales | **Charm**                    |
+| Porting R ggplot2 code to Groovy                                       | **gg**                       |
+| `@CompileStatic` chart code                                            | **Charm** (programmatic API) |
+| Multi-layer plots (e.g. points + regression line)                      | **Charm** or **gg**          |
 
 ## Examples
 
