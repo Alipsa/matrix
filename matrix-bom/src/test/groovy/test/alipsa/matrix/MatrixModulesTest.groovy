@@ -12,8 +12,8 @@ import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.pict.Plot
 import se.alipsa.matrix.pict.ScatterChart
-import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.csv.CsvExporter
@@ -275,16 +275,21 @@ class MatrixModulesTest {
     String svg = SvgWriter.toXml(svgObj)
     assertTrue(svg.contains('<svg'), "Output should contain SVG tag")
     assertTrue(svg.contains('MPG vs Weight'), "SVG should contain title")
+  }
 
-    // Test legacy chart export via ChartToSvg
+  @Test
+  void testPict() {
+    // Test chart-type-first API via matrix-pict
+    Matrix mtcars = Dataset.mtcars()
     ScatterChart scatterChart = ScatterChart.builder(mtcars)
         .title('MPG vs Weight')
         .x('wt')
         .y('mpg')
         .build()
+
     File svgFile = tempDir.resolve('scatter_chart.svg').toFile()
-    ChartToSvg.export(scatterChart, svgFile)
-    assertTrue(svgFile.exists(), "SVG file should be created by ChartToSvg.export")
+    Plot.svg(scatterChart, svgFile)
+    assertTrue(svgFile.exists(), "SVG file should be created by Plot.svg")
     assertTrue(svgFile.length() > 0, "SVG file should not be empty")
   }
 

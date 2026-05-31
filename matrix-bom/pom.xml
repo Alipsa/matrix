@@ -97,8 +97,13 @@
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-ggplot</artifactId>
     </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-pict</artifactId>
+    </dependency>
     <!-- matrix-ggplot provides the gg API used in testGgPlot(); -->
-    <!-- testCharts() covers Charm + legacy export via matrix-charts (charm rendering engine) -->
+    <!-- testCharts() covers Charm via matrix-charts (charm rendering engine) -->
+    <!-- testPict() covers the chart-type-first API via matrix-pict -->
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-xchart</artifactId>

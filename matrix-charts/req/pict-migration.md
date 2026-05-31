@@ -178,8 +178,8 @@ All tests in both modules must pass.
 
 > **Note:** The published BOM definition is `matrix-bom/bom.xml`. The sibling `matrix-bom/pom.xml` is the BOM integration-test project. Edit `matrix-bom/bom.xml` directly.
 
-- 5.1 [ ] Add `<matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>` to the `bom.xml` `<properties>` block immediately after `<matrixGgplotVersion>`. Verify that `<matrixChartsVersion>` in `bom.xml` matches the version in `matrix-charts/build.gradle` before committing — they must stay in sync.
-- 5.2 [ ] Add a `<dependency>` entry for `matrix-pict` in `bom.xml`'s `<dependencyManagement>/<dependencies>` block, immediately after the `matrix-ggplot` entry:
+- 5.1 [x] Add `<matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>` to the `bom.xml` `<properties>` block immediately after `<matrixGgplotVersion>`. Verify that `<matrixChartsVersion>` in `bom.xml` matches the version in `matrix-charts/build.gradle` before committing — they must stay in sync.
+- 5.2 [x] Add a `<dependency>` entry for `matrix-pict` in `bom.xml`'s `<dependencyManagement>/<dependencies>` block, immediately after the `matrix-ggplot` entry:
 
 ```xml
 <dependency>
