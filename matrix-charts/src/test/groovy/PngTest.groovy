@@ -22,30 +22,6 @@ class PngTest {
     .build()
 
     @Test
-    void testBarchartToPng() {
-        def file = File.createTempFile('barchart', '.png')
-        def chart = Charts.plot(empData)
-            .mapping {
-                x = 'emp_name'
-                y = 'salary'
-            }
-            .labels {
-                title = 'Salaries'
-            }
-            .layers {
-                geomBar()
-            }
-        .build()
-
-        try {
-            ChartToPng.export(chart, file)
-            assertTrue(file.exists())
-        } finally {
-            file.delete()
-        }
-    }
-
-    @Test
     void testPictBarchartToPng() {
         def file = File.createTempFile('barchart', '.png')
         BarChart chart = BarChart.createVertical('Salaries', empData, 'emp_name', ChartType.BASIC, 'salary')

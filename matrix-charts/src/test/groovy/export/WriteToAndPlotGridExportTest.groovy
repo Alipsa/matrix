@@ -44,6 +44,27 @@ class WriteToAndPlotGridExportTest {
   }
 
   @Test
+  void testCharmChartToPngViaExporter(@TempDir Path tempDir) {
+    Chart chart = plot(
+        Matrix.builder()
+            .columnNames('category', 'value')
+            .rows([['A', 10], ['B', 20], ['C', 15]])
+            .build()
+    ) {
+      mapping { x = 'category'; y = 'value' }
+      layers { geomBar() }
+    }.build()
+
+    File file = tempDir.resolve('charm-bar-chart.png').toFile()
+    ChartToPng.export(chart, file)
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertTrue(image.width > 0 && image.height > 0)
+  }
+
+  @Test
   void testWriteToJpeg(@TempDir Path tempDir) {
     Chart chart = buildChart()
     File file = tempDir.resolve('chart.jpg').toFile()

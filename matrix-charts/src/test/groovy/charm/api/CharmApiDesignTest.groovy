@@ -96,29 +96,6 @@ class CharmApiDesignTest {
   }
 
   @Test
-  void testImportAliasStrategyCompilesAndRuns() {
-    Matrix mpg = Dataset.mpg()
-    GroovyShell shell = new GroovyShell(new Binding([mpg: mpg]))
-    Object result = shell.evaluate('''
-      import se.alipsa.matrix.charm.Chart as CharmChart
-      import se.alipsa.matrix.pict.Chart as LegacyChart
-      import static se.alipsa.matrix.charm.Charts.chart
-
-      CharmChart c = chart(mpg) {
-        mapping {
-          x = 'cty'
-          y = 'hwy'
-        }
-        layers { geomPoint() }
-      }.build()
-
-      assert LegacyChart != null
-      c.render()
-    ''')
-    assertTrue(result instanceof Svg)
-  }
-
-  @Test
   void testGgFacadeSecondarySyntaxStillRenders() {
     Matrix mpg = Dataset.mpg()
     GgChart gg = se.alipsa.matrix.gg.GgPlot.ggplot(

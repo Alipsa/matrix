@@ -55,7 +55,7 @@ Expected: empty module compiles and produces an (empty) jar.
 
 ### Charm coverage additions
 
-- 2.1 [ ] **Add `testCharmChartToBase64` to `export/CharmExportTest.groovy`** — `CharmExportTest` has `testCharmChartToImage` but no base64 test. Moving `testBase64ReturnsValidDataUri` (PlotCompatibilityTest) and `testBarchartToBase64` (PngTest) to matrix-pict in Phase 3 would leave no Charm-level `ChartToImage.base64()` coverage in matrix-charts. Add:
+- 2.1 [x] **Add `testCharmChartToBase64` to `export/CharmExportTest.groovy`** — `CharmExportTest` has `testCharmChartToImage` but no base64 test. Moving `testBase64ReturnsValidDataUri` (PlotCompatibilityTest) and `testBarchartToBase64` (PngTest) to matrix-pict in Phase 3 would leave no Charm-level `ChartToImage.base64()` coverage in matrix-charts. Add:
   ```groovy
   @Test
   void testCharmChartToBase64() {
@@ -66,15 +66,15 @@ Expected: empty module compiles and produces an (empty) jar.
   }
   ```
 
-- 2.2 [ ] **Extract `testBarchartToPng` from `PngTest.groovy` into `export/WriteToAndPlotGridExportTest.groovy`** — this test uses `Charts.plot()` (Charm DSL), not pict. Moving all of PngTest in Phase 3 would lose this Charm PNG test from matrix-charts. Rename it `testCharmChartToPngViaExporter` in WriteToAndPlotGridExportTest to avoid clashing with the existing `testCharmChartToPng` in CharmExportTest.
+- 2.2 [x] **Extract `testBarchartToPng` from `PngTest.groovy` into `export/WriteToAndPlotGridExportTest.groovy`** — this test uses `Charts.plot()` (Charm DSL), not pict. Moving all of PngTest in Phase 3 would lose this Charm PNG test from matrix-charts. Rename it `testCharmChartToPngViaExporter` in WriteToAndPlotGridExportTest to avoid clashing with the existing `testCharmChartToPng` in CharmExportTest.
 
 ### Surgical edits (remove pict references from Charm test files)
 
-- 2.3 [ ] **Edit `charm/api/CharmApiDesignTest.groovy`** (do not move — it tests the Charm DSL):
+- 2.3 [x] **Edit `charm/api/CharmApiDesignTest.groovy`** (do not move — it tests the Charm DSL):
   - Extract `testImportAliasStrategyCompilesAndRuns` and stage it for addition to `chart/PlotCompatibilityTest.groovy` in matrix-pict (Phase 3, step 3.6). In matrix-pict's test classpath, pict.Chart is present directly and charm.Chart transitively, so the test works without build.gradle changes.
   - Remove the extracted method and the `import se.alipsa.matrix.pict.Chart as LegacyChart` line from CharmApiDesignTest.
 
-- 2.4 [ ] **Edit `export/CharmExportTest.groovy`** (do not move — it is a Charm test file):
+- 2.4 [x] **Edit `export/CharmExportTest.groovy`** (do not move — it is a Charm test file):
   - Extract `testChartToSvgPictOutputStream` and `testChartToSvgLegacyWriter` and stage them for addition to `chart/PlotCompatibilityTest.groovy` in matrix-pict (Phase 3, step 3.6).
   - Extract the `Plot.swing(pictChart)` assertion from `testChartToSwingTypedOverloads` into a new `testPlotSwingReturnsSvgPanel` test staged for PlotCompatibilityTest; remove that assertion from CharmExportTest.
   - Remove the now-unused pict imports (`se.alipsa.matrix.pict.Chart`, `se.alipsa.matrix.pict.Plot`, `se.alipsa.matrix.pict.ScatterChart`) and the `buildPictChart()` helper from CharmExportTest.
