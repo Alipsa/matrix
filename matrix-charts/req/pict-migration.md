@@ -162,11 +162,11 @@ All tests in both modules must pass.
 
 **PR scope:** Move `pict.md` into the new module and update all documentation to reflect the new artifact coordinate. No code changes.
 
-- 4.1 [ ] Move `matrix-charts/docs/pict.md` to `matrix-pict/docs/pict.md`
-- 4.2 [ ] Update `docs/cookbook/matrix-charts.md` — replace any pict import/dependency examples that reference `matrix-charts` with `matrix-pict`
-- 4.3 [ ] Update `docs/tutorial/13-matrix-charts.md` — same coordinate change for pict usage
-- 4.4 [ ] Update `matrix-charts/README.md` — remove pict API docs/references; note that pict is now in `matrix-pict`
-- 4.5 [ ] Update `AGENTS.md` module table — add `matrix-pict` row: `"chart-type-first API (BarChart, LineChart, etc.), delegates to Charm in matrix-charts"`; update `matrix-charts` description to remove the pict reference
+- 4.1 [x] Move `matrix-charts/docs/pict.md` to `matrix-pict/docs/pict.md`
+- 4.2 [x] Update `docs/cookbook/matrix-charts.md` — replace any pict import/dependency examples that reference `matrix-charts` with `matrix-pict`
+- 4.3 [x] Update `docs/tutorial/13-matrix-charts.md` — same coordinate change for pict usage
+- 4.4 [x] Update `matrix-charts/README.md` — remove pict API docs/references; note that pict is now in `matrix-pict`
+- 4.5 [x] Update `AGENTS.md` module table — add `matrix-pict` row: `"chart-type-first API (BarChart, LineChart, etc.), delegates to Charm in matrix-charts"`; update `matrix-charts` description to remove the pict reference
 
 **Verification:** Manual review of changed doc files. No build step required.
 

@@ -27,7 +27,7 @@ A comprehensive guide to using the `se.alipsa.matrix.pict` package for creating 
 
 The `se.alipsa.matrix.pict` package provides a chart-type-first API for creating common visualizations. You start by choosing a chart type (e.g. `BarChart`, `LineChart`), then supply data and configure styling. This is a familiar pattern for users of libraries like xchart or JavaFX charts.
 
-All chart types are backed by the [Charm](charm.md) rendering engine internally. Use
+All chart types are backed by the [Charm](../../matrix-charts/docs/charm.md) rendering engine internally. Use
 `Plot` for PICT-facing PNG, SVG, base64 PNG, and JavaFX output. The
 `se.alipsa.matrix.chartexport` package provides additional conversions such as JPEG,
 PDF, buffered images, and Swing panels.
@@ -57,7 +57,7 @@ This guide reflects the current PICT implementation, including:
 ```groovy
 implementation(platform('se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation 'se.alipsa.matrix:matrix-core'
-implementation 'se.alipsa.matrix:matrix-charts'
+implementation 'se.alipsa.matrix:matrix-pict'
 ```
 
 ### Creating Your First Chart
@@ -905,7 +905,7 @@ IllegalArgumentException: "Column mismatch in series..."
 
 ## Relationship to Charm and gg APIs
 
-All three APIs in matrix-charts share the same Charm rendering engine:
+All three APIs share the same Charm rendering engine in matrix-charts:
 
 ```
 charm ----renders----> Svg (gsvg)
@@ -915,7 +915,7 @@ pict ----builds------> charm ---renders-> Svg (via CharmBridge)
 ```
 
 - **PICT** (this guide) -- chart-type-first API. Start with `BarChart.builder(data)` and configure from there.
-- **[Charm](charm.md)** -- core Grammar of Graphics DSL. More expressive, supports closures, scales, faceting, annotations, and custom themes.
+- **[Charm](../../matrix-charts/docs/charm.md)** -- core Grammar of Graphics DSL. More expressive, supports closures, scales, faceting, annotations, and custom themes.
 - **[gg](../../matrix-ggplot/docs/ggPlot.md)** -- ggplot2-compatible wrapper. Best for porting R code or when you prefer `ggplot() + geom_point()` syntax.
 
 ### When to Use Which
@@ -1027,6 +1027,6 @@ Plot.png(chart, new File('comparison.png'))
 
 ## Additional Resources
 
-- **[charm.md](charm.md)** -- Charm DSL guide (Grammar of Graphics)
+- **[charm.md](../../matrix-charts/docs/charm.md)** -- Charm DSL guide (Grammar of Graphics)
 - **[ggPlot.md](../../matrix-ggplot/docs/ggPlot.md)** -- ggplot2-compatible API guide (54+ geoms)
-- **API Documentation** -- [JavaDoc](https://javadoc.io/doc/se.alipsa.matrix/matrix-charts)
+- **API Documentation** -- [JavaDoc](https://javadoc.io/doc/se.alipsa.matrix/matrix-pict)

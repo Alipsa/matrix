@@ -1,9 +1,11 @@
 # Matrix Charts
 
-Matrix Charts provides various predefined charts that can easily be created based on
-Matrix data. The native representation is SVG. Export PICT charts to PNG with
-`Plot.png(...)`. The `se.alipsa.matrix.chartexport` package provides additional
-targets including JPEG, PDF, JavaFX, and Swing, plus lower-level conversion APIs.
+Matrix Charts provides the Charm rendering engine and export utilities. The separate
+`matrix-pict` module provides predefined chart types (AreaChart, BarChart, etc.) that
+can easily be created based on Matrix data. The native representation is SVG. Export
+PICT charts to PNG with `Plot.png(...)`. The `se.alipsa.matrix.chartexport` package
+provides additional targets including JPEG, PDF, JavaFX, and Swing, plus lower-level
+conversion APIs.
 
 ## Fluent Builder API
 
