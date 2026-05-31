@@ -45,6 +45,7 @@
     <matrixJsonVersion>2.2.0</matrixJsonVersion>
     <matrixLoggingVersion>0.1.0-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.5.0</matrixParquetVersion>
+    <matrixPictVersion>0.5.0-SNAPSHOT</matrixPictVersion>
     <matrixSmileVersion>0.2.0</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.4.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
@@ -118,6 +119,11 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-parquet</artifactId>
         <version>${matrixParquetVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-pict</artifactId>
+        <version>${matrixPictVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
