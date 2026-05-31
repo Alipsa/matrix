@@ -6,8 +6,6 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.pict.CharmBridge
-import se.alipsa.matrix.pict.Chart
 
 import java.awt.image.BufferedImage
 
@@ -51,20 +49,6 @@ class ChartToImage {
   }
 
   /**
-   * Export a legacy {@link Chart} (e.g. BarChart, ScatterChart) to a {@link BufferedImage}.
-   *
-   * @param chart the legacy chart to export
-   * @return rendered image
-   * @throws IllegalArgumentException if chart is null
-   */
-  static BufferedImage export(Chart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    return export(CharmBridge.convert(chart).render())
-  }
-
-  /**
    * Export an {@link Svg} chart as a base64-encoded PNG data URI.
    *
    * @param svgChart the {@link Svg} object containing the chart
@@ -92,20 +76,6 @@ class ChartToImage {
       throw new IllegalArgumentException('chart cannot be null')
     }
     base64(chart.render())
-  }
-
-  /**
-   * Export a legacy {@link Chart} as a base64-encoded PNG data URI.
-   *
-   * @param chart the legacy chart to export
-   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
-   * @throws IllegalArgumentException if chart is null
-   */
-  static String base64(Chart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart cannot be null')
-    }
-    base64(CharmBridge.convert(chart).render())
   }
 
   /**
@@ -151,7 +121,6 @@ class ChartToImage {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)
       case CharmChart -> export(chart as CharmChart)
-      case Chart -> export(chart as Chart)
       case Svg -> export(chart as Svg)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
@@ -172,7 +141,6 @@ class ChartToImage {
     switch (chart) {
       case PlotGrid -> base64(chart as PlotGrid)
       case CharmChart -> base64(chart as CharmChart)
-      case Chart -> base64(chart as Chart)
       case Svg -> base64(chart as Svg)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }

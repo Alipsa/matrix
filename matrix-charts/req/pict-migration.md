@@ -99,23 +99,23 @@ Expected: zero results.
 
 Move from `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` to the identical path under `matrix-pict/src/main/groovy/`:
 
-- 3.1 [ ] `AreaChart.groovy`
-- 3.2 [ ] `AxisScale.groovy`
-- 3.3 [ ] `BarChart.groovy`
-- 3.4 [ ] `BoxChart.groovy`
-- 3.5 [ ] `BubbleChart.groovy`
-- 3.6 [ ] `Chart.groovy`
-- 3.7 [ ] `CharmBridge.groovy`
-- 3.8 [ ] `ChartDirection.groovy`
-- 3.9 [ ] `ChartType.groovy`
-- 3.10 [ ] `DataType.groovy`
-- 3.11 [ ] `Histogram.groovy`
-- 3.12 [ ] `Legend.groovy`
-- 3.13 [ ] `LineChart.groovy`
-- 3.14 [ ] `PieChart.groovy`
-- 3.15 [ ] `Plot.groovy`
-- 3.16 [ ] `ScatterChart.groovy`
-- 3.17 [ ] `Style.groovy`
+- 3.1 [x] `AreaChart.groovy`
+- 3.2 [x] `AxisScale.groovy`
+- 3.3 [x] `BarChart.groovy`
+- 3.4 [x] `BoxChart.groovy`
+- 3.5 [x] `BubbleChart.groovy`
+- 3.6 [x] `Chart.groovy`
+- 3.7 [x] `CharmBridge.groovy`
+- 3.8 [x] `ChartDirection.groovy`
+- 3.9 [x] `ChartType.groovy`
+- 3.10 [x] `DataType.groovy`
+- 3.11 [x] `Histogram.groovy`
+- 3.12 [x] `Legend.groovy`
+- 3.13 [x] `LineChart.groovy`
+- 3.14 [x] `PieChart.groovy`
+- 3.15 [x] `Plot.groovy`
+- 3.16 [x] `ScatterChart.groovy`
+- 3.17 [x] `Style.groovy`
 
 After moving, delete `matrix-charts/src/main/groovy/se/alipsa/matrix/pict/` entirely.
 
@@ -129,14 +129,14 @@ Expected: zero results.
 
 Move from `matrix-charts/src/test/groovy/` to the identical path under `matrix-pict/src/test/groovy/`:
 
-- 3.18 [ ] `chart/BoxChartTest.groovy`
-- 3.19 [ ] `chart/ChartBuilderTest.groovy`
-- 3.20 [ ] `chart/ChartFactoryBaselineTest.groovy`
-- 3.21 [ ] `chart/ChartsCharmIntegrationTest.groovy`
-- 3.22 [ ] `chart/HistogramTest.groovy`
-- 3.23 [ ] `chart/LineChartTest.groovy`
-- 3.24 [ ] `chart/PlotCompatibilityTest.groovy` — add the methods staged in Phase 2 steps 2.3 and 2.4 here before moving
-- 3.25 [ ] `PngTest.groovy` — `testBarchartToPng` must already be extracted (Phase 2 step 2.2) before this move
+- 3.18 [x] `chart/BoxChartTest.groovy`
+- 3.19 [x] `chart/ChartBuilderTest.groovy`
+- 3.20 [x] `chart/ChartFactoryBaselineTest.groovy`
+- 3.21 [x] `chart/ChartsCharmIntegrationTest.groovy`
+- 3.22 [x] `chart/HistogramTest.groovy`
+- 3.23 [x] `chart/LineChartTest.groovy`
+- 3.24 [x] `chart/PlotCompatibilityTest.groovy` — add the methods staged in Phase 2 steps 2.3 and 2.4 here before moving
+- 3.25 [x] `PngTest.groovy` — `testBarchartToPng` must already be extracted (Phase 2 step 2.2) before this move
 
 After moving, delete the now-empty `chart/` directory from `matrix-charts/src/test/groovy/`.
 
