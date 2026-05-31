@@ -8,16 +8,19 @@ for advanced customization.
 
 ## Installation
 
-To use the matrix-charts module, add the following dependency to your project:
+To use the PICT chart types, add the following dependency to your project:
 
 ### Gradle Configuration
 
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
-implementation 'se.alipsa.matrix:matrix-charts'
+implementation 'se.alipsa.matrix:matrix-pict'
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'
 ```
+
+> Note: PICT chart types previously lived in `matrix-charts` but have been extracted
+> into the separate `matrix-pict` module. The Charm DSL remains in `matrix-charts`.
 
 ### Maven Configuration
 
@@ -42,7 +45,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>
-         <artifactId>matrix-charts</artifactId>
+         <artifactId>matrix-pict</artifactId>
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>
@@ -58,7 +61,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
 
 ## Chart Types
 
-The matrix-charts module supports several types of charts:
+The `matrix-pict` module supports several types of charts:
 
 1. **Area Chart**: Displays data as filled areas under a line
 2. **Bar Chart**: Displays data as horizontal or vertical bars
@@ -507,8 +510,12 @@ GGPlot compatibility (`ggplot`, `aes`, `geom_*`, `qplot`) belongs to the separat
 
 ## Conclusion
 
-The matrix-charts module provides a powerful and flexible way to create various types of charts from Matrix data. It offers a simple API for generating visualizations that can be exported to different formats, making it easy to include data visualizations in your Groovy applications.
+The `matrix-pict` module provides a powerful and flexible way to create various types
+of charts from Matrix data. It offers a simple API for generating visualizations that
+can be exported to different formats, making it easy to include data visualizations in
+your Groovy applications.
 
-In the next section, we'll cover the matrix-ggplot module for ggplot2-compatible charting built on top of matrix-charts.
+In the next section, we'll cover the matrix-ggplot module for ggplot2-compatible
+charting built on top of matrix-charts.
 
 Go to [previous section](12-matrix-bigquery.md) | Go to [next section](13b-matrix-ggplot.md) | Back to [outline](outline.md)

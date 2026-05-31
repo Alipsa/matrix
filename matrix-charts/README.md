@@ -3,17 +3,14 @@
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 
-Matrix-charts is a "native" chart library that creates charts as SVGs.
-PICT charts can be exported to PNG with `Plot.png(...)`. The exporters in the
-`se.alipsa.matrix.chartexport` package provide Swing, JavaFX, Image, PNG, JPG,
-and PDF conversion for PICT, SVG, and Charm charts.
+Matrix-charts is a "native" chart library that creates charts as SVGs. The Charm
+rendering engine and export utilities live here. The `se.alipsa.matrix.chartexport`
+package provides Swing, JavaFX, Image, PNG, JPG, and PDF conversion for SVG and
+Charm charts.
 
-There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
-1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
-   Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
-2. **[PICT](docs/pict.md)** The `se.alipsa.matrix.pict` package contains charts in a "familiar style"
-    (begin with the chart type, e.g. `AreaChart`, then add data and styling).
-    Backed by Charm internally.
+> **PICT has moved:** The chart-type-first API (`AreaChart`, `BarChart`, etc.) previously
+> in this module has been extracted to **[matrix-pict](../matrix-pict/README.md)**.
+> It depends on `matrix-charts` and delegates to Charm under the hood.
 
 > For ggplot2-style API, see **[matrix-ggplot](../matrix-ggplot/README.md)** — a compatibility
 > layer mimicking the ggplot2 API in R. It depends on matrix-charts and delegates to Charm under the hood.
@@ -121,40 +118,6 @@ def arrowChart = plot(Dataset.mtcars()) {
   }
 }.build()
 ```
-
-## Charts Example
-
-```groovy
-import java.time.LocalDate
-import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pict.*
-
-def empData = Matrix.builder().data(
-    emp_id: 1..5,
-    emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
-    salary: [623.3, 515.2, 611.0, 729.0, 843.25],
-    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
-    .types(int, String, Number, LocalDate)
-    .build()
-
-def areaChart = AreaChart.builder(empData)
-    .title("Salaries").x("emp_name").y("salary").build()
-
-def barChart = BarChart.builder(empData)
-    .title("Salaries").x("emp_name").y("salary").vertical().build()
-
-def pieChart = PieChart.builder(empData)
-    .title("Salaries").x("emp_name").y("salary").build()
-
-// Export PICT charts to PNG via Plot
-Plot.png(areaChart, new File("areaChart.png"))
-Plot.png(barChart, new File("barChart.png"))
-```
-
-PICT charts are bridged through Charm. Axis scale settings, custom `style.yLabels`,
-and `style.css` are applied during rendering.
-
-See **[pict.md](docs/pict.md)** for comprehensive documentation.
 
 # Release version compatibility matrix
 See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions.

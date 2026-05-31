@@ -499,8 +499,9 @@ import static se.alipsa.matrix.gg.GgPlot.*
 | **matrix-core**        | Core Matrix/Grid classes, basic statistics, data conversion              |
 | **matrix-stats**       | Statistical tests, regression, clustering, time series, and related math |
 | **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                           |
-| **matrix-charts**      | Charm rendering engine and chart-type-first API with SVG output          |
+| **matrix-charts**      | Charm rendering engine and export utilities with SVG output              |
 | **matrix-ggplot**      | GGPlot2-style charting API, delegates to Charm in matrix-charts          |
+| **matrix-pict**        | Chart-type-first API (BarChart, LineChart, etc.), delegates to Charm in matrix-charts |
 | **matrix-xchart**      | XChart integration                                                       |
 | **matrix-csv**         | Advanced CSV import/export via commons-csv                               |
 | **matrix-json**        | JSON import/export via Jackson                                           |
