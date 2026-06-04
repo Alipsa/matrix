@@ -1,3 +1,4 @@
+// Full package declaration required to access @PackageScope members of CharmRenderer.
 package se.alipsa.matrix.charm.render
 
 import static org.junit.jupiter.api.Assertions.*

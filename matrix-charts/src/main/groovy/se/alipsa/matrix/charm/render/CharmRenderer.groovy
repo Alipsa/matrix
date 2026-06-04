@@ -191,7 +191,7 @@ class CharmRenderer {
       int displayLayer = layerIdx + 1
       return "Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${divergencePct.setScale(1, RoundingMode.HALF_UP)}%; axis ticks may be misleading"
     }
-    null
+    return null
   }
 
   private void renderCanvas(RenderContext context) {
