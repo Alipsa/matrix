@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render
 
+import groovy.transform.PackageScope
+
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.AnimationSpec
@@ -24,6 +26,8 @@ import se.alipsa.matrix.charm.render.stat.StatEngine
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
+
+import java.math.RoundingMode
 
 /**
  * Charm SVG renderer.
@@ -103,12 +107,21 @@ class CharmRenderer {
     List<Object> shapeValues = []
     List<Object> alphaValues = []
     List<Object> linetypeValues = []
+    List<LayerScaleTrainingData> layerScaleData = []
 
-    context.chart.layers.each { LayerSpec layer ->
+    context.chart.layers.eachWithIndex { LayerSpec layer, int idx ->
       Matrix sourceData = resolveLayerData(context.chart.data, layer)
       List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
       Mapping mapping = effectiveMapping(context.chart.mapping, layer)
       List<LayerData> pipelineData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
+      layerScaleData << new LayerScaleTrainingData(
+          layerIndex: idx,
+          layer: layer,
+          sourceData: sourceData,
+          rowIndexes: rowIndexes,
+          mapping: mapping,
+          pipelineData: pipelineData
+      )
       xValues.addAll(pipelineData.collect { LayerData d -> d.x })
       yValues.addAll(pipelineData.collect { LayerData d -> d.y })
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
@@ -131,17 +144,12 @@ class CharmRenderer {
     context.alphaScale = trained.alpha
     context.linetypeScale = trained.linetype
 
-    // Per-layer scale training
-    context.chart.layers.eachWithIndex { LayerSpec layer, int idx ->
-      if (layer.scales != null && !layer.scales.isEmpty()) {
-        Matrix sourceData = resolveLayerData(context.chart.data, layer)
-        List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
-        Mapping mapping = effectiveMapping(context.chart.mapping, layer)
-        List<LayerData> layerPipelineData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
+    layerScaleData.each { LayerScaleTrainingData layerData ->
+      if (!layerData.layer.scales.isEmpty()) {
         TrainedScales layerTrained = ScaleEngine.trainLayerScales(
-            layer.scales, context.config, layerPipelineData, context.chart)
-        context.layerScales[idx] = layerTrained
-        checkScaleDivergence(idx, layerTrained, context)
+            layerData.layer.scales, context.config, layerData.pipelineData, context.chart)
+        context.layerScales[layerData.layerIndex] = layerTrained
+        checkScaleDivergence(layerData.layerIndex, layerTrained, context)
       }
     }
   }
@@ -153,17 +161,29 @@ class CharmRenderer {
 
   private static void checkPositionalDivergence(String axis, int layerIdx,
                                                   CharmScale layerScale, CharmScale globalScale) {
+    String warning = positionalDivergenceWarning(axis, layerIdx, layerScale, globalScale)
+    if (warning != null) {
+      log.warn(warning)
+    }
+  }
+
+  @PackageScope
+  static String positionalDivergenceWarning(String axis, int layerIdx,
+                                            CharmScale layerScale, CharmScale globalScale) {
     if (layerScale == null || globalScale == null) {
-      return
+      return null
     }
-    if (!(layerScale instanceof ContinuousCharmScale) || !(globalScale instanceof ContinuousCharmScale)) {
-      return
+    if (!(layerScale instanceof ContinuousCharmScale)) {
+      return null
     }
-    ContinuousCharmScale layerCont = layerScale as ContinuousCharmScale
-    ContinuousCharmScale globalCont = globalScale as ContinuousCharmScale
+    if (!(globalScale instanceof ContinuousCharmScale)) {
+      return null
+    }
+    ContinuousCharmScale layerCont = layerScale
+    ContinuousCharmScale globalCont = globalScale
     BigDecimal globalSpan = (globalCont.domainMax - globalCont.domainMin).abs()
     if (globalSpan == 0) {
-      return
+      return null
     }
     BigDecimal layerSpan = (layerCont.domainMax - layerCont.domainMin).abs()
     BigDecimal spanPct = ((layerSpan - globalSpan) / globalSpan * 100).abs()
@@ -172,8 +192,9 @@ class CharmRenderer {
     BigDecimal divergencePct = spanPct.max(minOffsetPct).max(maxOffsetPct)
     if (divergencePct > 10) {
       int displayLayer = layerIdx + 1
-      log.warn("Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${divergencePct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
+      return "Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${divergencePct.setScale(1, RoundingMode.HALF_UP)}%; axis ticks may be misleading"
     }
+    null
   }
 
   private void renderCanvas(RenderContext context) {
@@ -498,11 +519,27 @@ class CharmRenderer {
   }
 
   private static Mapping effectiveMapping(Mapping plotMapping, LayerSpec layer) {
+    Mapping layerMapping = layer.mapping
+    if (layer.inheritMapping && (layerMapping == null || layerMapping.mappings().isEmpty())) {
+      // Chart.getMapping() gives each caller a private copy, and mapData only reads it.
+      return plotMapping
+    }
     Mapping mapping = layer.inheritMapping ? plotMapping.copy() : new Mapping()
-    if (layer.mapping != null) {
-      mapping.apply(layer.mapping.mappings())
+    if (layerMapping != null) {
+      mapping.apply(layerMapping.mappings())
     }
     mapping
+  }
+
+  private static class LayerScaleTrainingData {
+
+    int layerIndex
+    LayerSpec layer
+    Matrix sourceData
+    List<Integer> rowIndexes
+    Mapping mapping
+    List<LayerData> pipelineData
+
   }
 
   private void renderLabels(RenderContext context) {
