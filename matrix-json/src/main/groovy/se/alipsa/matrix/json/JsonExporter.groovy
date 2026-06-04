@@ -28,7 +28,7 @@ class JsonExporter {
   @Deprecated
   JsonExporter(Grid grid, List<String> columnNames) {
     if (grid == null || columnNames == null) {
-      throw new IllegalArgumentException("Grid and columnNames cannot be null")
+      throw new IllegalArgumentException('Grid and columnNames cannot be null')
     }
     this.table = Matrix.builder()
         .columnNames(columnNames)
@@ -42,7 +42,7 @@ class JsonExporter {
   @Deprecated
   JsonExporter(Matrix table) {
     if (table == null) {
-      throw new IllegalArgumentException("Matrix table cannot be null")
+      throw new IllegalArgumentException('Matrix table cannot be null')
     }
     this.table = table
   }

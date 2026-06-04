@@ -3,7 +3,6 @@ package se.alipsa.matrix.csv
 import groovy.transform.CompileStatic
 
 import java.nio.charset.Charset
-import java.util.Locale
 
 /**
  * Shared conversion helpers for CSV option handling.

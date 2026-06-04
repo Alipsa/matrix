@@ -57,6 +57,7 @@ class JsonReader {
   private static final ObjectMapper MAPPER = new ObjectMapper()
       .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
   private static final JsonFactory FACTORY = MAPPER.getFactory()
+  private static final String DOT = '.'
 
   private JsonReader() {
     // Only static methods
@@ -189,7 +190,7 @@ class JsonReader {
    */
   private static String tableName(File file) {
     String name = file.getName()
-    int dot = name.lastIndexOf('.')
+    int dot = name.lastIndexOf(DOT)
     dot > 0 ? name.substring(0, dot) : name
   }
 
@@ -200,7 +201,7 @@ class JsonReader {
     String path = url.getFile() ?: url.getPath()
     int slash = path.lastIndexOf('/')
     String name = slash >= 0 ? path.substring(slash + 1) : path
-    int dot = name.lastIndexOf('.')
+    int dot = name.lastIndexOf(DOT)
     dot > 0 ? name.substring(0, dot) : name
   }
 
@@ -304,7 +305,7 @@ class JsonReader {
   private static void flatten(String prefix, Object node, Map<String, Object> result) {
     if (node instanceof Map) {
       Map<String, Object> mapNode = (Map<String, Object>) node
-      String pathPrefix = prefix.isEmpty() ? '' : prefix + '.'
+      String pathPrefix = prefix.isEmpty() ? '' : prefix + DOT
       for (Map.Entry<String, Object> entry : mapNode.entrySet()) {
         flatten(pathPrefix + entry.getKey(), entry.getValue(), result)
       }
@@ -319,8 +320,8 @@ class JsonReader {
       if (result.containsKey(prefix)) {
         throw new IllegalArgumentException(
             "Duplicate key detected after flattening: '${prefix}'. " +
-            "This can occur when JSON contains both a literal key and a nested structure " +
-            "that flatten to the same path (e.g., {\"a.b\": 1, \"a\": {\"b\": 2}}). " +
+            'This can occur when JSON contains both a literal key and a nested structure ' +
+            'that flatten to the same path (e.g., {"a.b": 1, "a": {"b": 2}}). ' +
             "Previous value: ${result.get(prefix)}, New value: ${node}"
         )
       }

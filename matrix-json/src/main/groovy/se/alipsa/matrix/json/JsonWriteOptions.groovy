@@ -11,8 +11,13 @@ import se.alipsa.matrix.core.spi.OptionMaps
 @CompileStatic
 class JsonWriteOptions {
 
+  private static final String OPT_INDENT = 'indent'
+  private static final String OPT_DATE_FORMAT = 'dateFormat'
+  private static final String DEFAULT_DATE_FORMAT = 'yyyy-MM-dd'
+  private static final String DEFAULT_INDENT = 'false'
+
   boolean indent = false
-  String dateFormat = 'yyyy-MM-dd'
+  String dateFormat = DEFAULT_DATE_FORMAT
   Map<String, Closure> columnFormatters = [:]
 
   JsonWriteOptions indent(boolean value) {
@@ -33,8 +38,8 @@ class JsonWriteOptions {
   static JsonWriteOptions fromMap(Map<String, ?> options) {
     JsonWriteOptions result = new JsonWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
-    if (normalized.containsKey('indent')) {
-      result.indent(normalized.indent as boolean)
+    if (normalized.containsKey(OPT_INDENT)) {
+      result.indent(normalized.get(OPT_INDENT) as boolean)
     }
     if (normalized.containsKey('dateformat')) {
       String dateFormat = OptionMaps.stringValueOrNull(normalized.dateformat)
@@ -72,8 +77,8 @@ class JsonWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('indent', Boolean, 'false', 'Whether to pretty-print the JSON output'),
-        new OptionDescriptor('dateFormat', String, 'yyyy-MM-dd', 'Date format pattern for temporal values'),
+        new OptionDescriptor(OPT_INDENT, Boolean, DEFAULT_INDENT, 'Whether to pretty-print the JSON output'),
+        new OptionDescriptor(OPT_DATE_FORMAT, String, DEFAULT_DATE_FORMAT, 'Date format pattern for temporal values'),
         new OptionDescriptor('columnFormatters', Map, null, 'Map of column names to formatting closures')
     ]
   }

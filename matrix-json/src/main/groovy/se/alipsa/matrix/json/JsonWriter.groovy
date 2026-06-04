@@ -295,7 +295,7 @@ class JsonWriter {
 
     private WriteBuilder(Matrix matrix) {
       if (matrix == null) {
-        throw new IllegalArgumentException("Matrix cannot be null")
+        throw new IllegalArgumentException('Matrix cannot be null')
       }
       this.matrix = matrix
     }
@@ -363,7 +363,7 @@ class JsonWriter {
      */
     void to(File file) throws IOException {
       if (file == null) {
-        throw new IllegalArgumentException("Output file cannot be null")
+        throw new IllegalArgumentException('Output file cannot be null')
       }
       if (file.isDirectory()) {
         throw new IOException("Output file '${file.absolutePath}' is a directory, cannot write JSON data")
@@ -408,7 +408,7 @@ class JsonWriter {
      */
     void to(Writer writer) throws IOException {
       if (writer == null) {
-        throw new IllegalArgumentException("Writer cannot be null")
+        throw new IllegalArgumentException('Writer cannot be null')
       }
       writeTo(writer)
       writer.flush()

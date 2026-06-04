@@ -14,6 +14,10 @@ import java.nio.charset.StandardCharsets
 @CompileStatic
 class JsonReadOptions {
 
+  private static final String OPT_CHARSET = 'charset'
+  private static final String OPT_MATRIX_NAME = 'matrixname'
+  private static final String OPT_TYPES = 'types'
+
   Charset charset = StandardCharsets.UTF_8
   String matrixName = null
   List<Class> types = null
@@ -65,25 +69,25 @@ class JsonReadOptions {
   static JsonReadOptions fromMap(Map<String, ?> options) {
     JsonReadOptions result = new JsonReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
-    if (normalized.containsKey('charset')) {
-      Object value = normalized.charset
+    if (normalized.containsKey(OPT_CHARSET)) {
+      Object value = normalized.get(OPT_CHARSET)
       if (value instanceof Charset) {
         result.charset(value as Charset)
       } else if (value instanceof CharSequence) {
         result.charset(String.valueOf(value))
       } else if (value != null) {
-        throw new IllegalArgumentException("charset must be a Charset or String but was ${value?.class}")
+        throw new IllegalArgumentException("${OPT_CHARSET} must be a Charset or String but was ${value?.class}")
       }
     }
-    if (normalized.containsKey('matrixname') || normalized.containsKey('tablename')) {
-      String key = normalized.containsKey('matrixname') ? 'matrixname' : 'tablename'
+    if (normalized.containsKey(OPT_MATRIX_NAME) || normalized.containsKey('tablename')) {
+      String key = normalized.containsKey(OPT_MATRIX_NAME) ? OPT_MATRIX_NAME : 'tablename'
       Object val = normalized[key]
       if (val != null) {
         result.matrixName(String.valueOf(val))
       }
     }
-    if (normalized.containsKey('types')) {
-      Object value = normalized.types
+    if (normalized.containsKey(OPT_TYPES)) {
+      Object value = normalized.get(OPT_TYPES)
       if (value instanceof List) {
         result.types(value as List<Class>)
       } else if (value != null && value.getClass().isArray()) {
@@ -119,9 +123,9 @@ class JsonReadOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('charset', Charset, 'UTF-8', 'The character encoding to use when reading JSON'),
+        new OptionDescriptor(OPT_CHARSET, Charset, 'UTF-8', 'The character encoding to use when reading JSON'),
         new OptionDescriptor('matrixName', String, null, 'Override the name for the resulting Matrix (default: derived from filename). Also accepted as tableName'),
-        new OptionDescriptor('types', List, null, 'List of column types for automatic conversion after parsing'),
+        new OptionDescriptor(OPT_TYPES, List, null, 'List of column types for automatic conversion after parsing'),
         new OptionDescriptor('dateTimeFormat', String, null, 'Date/time format pattern for type conversion')
     ]
   }

@@ -471,7 +471,7 @@ class CsvReader {
       headerRow = rows.remove(0)
     } else {
       for (int i = 0; i < ncols; i++) {
-        headerRow << "c" + i
+        headerRow << 'c' + i
       }
     }
     def types = [String] * ncols

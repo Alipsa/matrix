@@ -303,10 +303,10 @@ class CsvWriter {
    */
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix table cannot be null")
+      throw new IllegalArgumentException('Matrix table cannot be null')
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Cannot export matrix with no columns")
+      throw new IllegalArgumentException('Cannot export matrix with no columns')
     }
   }
 
@@ -334,8 +334,8 @@ class CsvWriter {
       }
       String fileName = safeName + '.csv'
       File target = new File(out, fileName)
-      java.nio.file.Path targetPath = target.toPath().normalize()
-      java.nio.file.Path dirPath = out.toPath().normalize()
+      Path targetPath = target.toPath().normalize()
+      Path dirPath = out.toPath().normalize()
       if (!targetPath.startsWith(dirPath)) {
         throw new IllegalArgumentException("Matrix name results in a path outside the target directory: ${matrix.matrixName}")
       }
