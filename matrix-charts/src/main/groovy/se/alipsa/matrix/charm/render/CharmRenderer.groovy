@@ -117,9 +117,6 @@ class CharmRenderer {
       layerScaleData << new LayerScaleTrainingData(
           layerIndex: idx,
           layer: layer,
-          sourceData: sourceData,
-          rowIndexes: rowIndexes,
-          mapping: mapping,
           pipelineData: pipelineData
       )
       xValues.addAll(pipelineData.collect { LayerData d -> d.x })
@@ -535,9 +532,6 @@ class CharmRenderer {
 
     int layerIndex
     LayerSpec layer
-    Matrix sourceData
-    List<Integer> rowIndexes
-    Mapping mapping
     List<LayerData> pipelineData
 
   }
