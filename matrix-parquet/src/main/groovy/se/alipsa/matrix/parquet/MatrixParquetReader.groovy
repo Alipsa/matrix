@@ -92,10 +92,10 @@ class MatrixParquetReader {
   private static final Logger log = Logger.getLogger(MatrixParquetReader)
 
   /** Metadata key for storing Matrix column types in Parquet file */
-  static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
+  static final String METADATA_COLUMN_TYPES = 'matrix.columnTypes'
 
   /** Metadata key for storing Matrix index column names in Parquet file */
-  static final String METADATA_INDEX_COLUMNS = "matrix.indexColumns"
+  static final String METADATA_INDEX_COLUMNS = 'matrix.indexColumns'
 
   /** Parquet schema field name for repeated list entries */
   private static final String FIELD_LIST = 'list'
@@ -108,6 +108,16 @@ class MatrixParquetReader {
 
   /** Cache for Class.forName() results to avoid repeated reflection calls */
   private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>()
+
+  private static final String ERR_PATH_NULL = 'Path cannot be null'
+  private static final String ERR_FILE_PATH_NULL = 'File path cannot be null'
+  private static final String ERR_CONTENT_NULL = 'Content cannot be null'
+  private static final String ERR_URL_NULL = 'URL cannot be null'
+  private static final String ERR_URL_STRING_NULL = 'URL string cannot be null'
+  private static final String ERR_ZONE_ID_NULL = 'ZoneId cannot be null'
+  private static final String DOT = '.'
+  private static final String COMMA = ','
+  private static final long MICROS_PER_SECOND = 1_000_000L
 
   /**
    * Creates a new builder for reading Parquet data into a Matrix.
@@ -208,7 +218,7 @@ class MatrixParquetReader {
      */
     Matrix read(java.nio.file.Path path) {
       if (path == null) {
-        throw new IllegalArgumentException("Path cannot be null")
+        throw new IllegalArgumentException(ERR_PATH_NULL)
       }
       read(path.toFile())
     }
@@ -221,7 +231,7 @@ class MatrixParquetReader {
      */
     Matrix read(byte[] content) {
       if (content == null) {
-        throw new IllegalArgumentException("Content cannot be null")
+        throw new IllegalArgumentException(ERR_CONTENT_NULL)
       }
       read(new ByteArrayInputStream(content))
     }
@@ -275,7 +285,7 @@ class MatrixParquetReader {
      */
     Matrix readFile(String filePath) {
       if (filePath == null) {
-        throw new IllegalArgumentException("File path cannot be null")
+        throw new IllegalArgumentException(ERR_FILE_PATH_NULL)
       }
       read(new File(filePath))
     }
@@ -288,7 +298,7 @@ class MatrixParquetReader {
      */
     Matrix readUrl(String urlString) {
       if (urlString == null) {
-        throw new IllegalArgumentException("URL string cannot be null")
+        throw new IllegalArgumentException(ERR_URL_STRING_NULL)
       }
       read(new URI(urlString).toURL())
     }
@@ -321,7 +331,7 @@ class MatrixParquetReader {
    */
   private static void validateFile(File file) {
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw new IllegalArgumentException('File cannot be null')
     }
     if (!file.exists()) {
       throw new IllegalArgumentException("File does not exist: ${file.absolutePath}")
@@ -353,7 +363,7 @@ class MatrixParquetReader {
    */
   static Matrix read(java.nio.file.Path path) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(ERR_PATH_NULL)
     }
     read(path.toFile())
   }
@@ -368,7 +378,7 @@ class MatrixParquetReader {
    */
   static Matrix read(java.nio.file.Path path, String matrixName) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(ERR_PATH_NULL)
     }
     read(path.toFile(), matrixName)
   }
@@ -382,7 +392,7 @@ class MatrixParquetReader {
    */
   static Matrix readFile(String filePath) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_PATH_NULL)
     }
     read(new File(filePath))
   }
@@ -397,7 +407,7 @@ class MatrixParquetReader {
    */
   static Matrix readFile(String filePath, String matrixName) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_PATH_NULL)
     }
     read(new File(filePath), matrixName)
   }
@@ -413,7 +423,7 @@ class MatrixParquetReader {
    */
   static Matrix read(byte[] content) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
     read(new ByteArrayInputStream(content))
   }
@@ -430,7 +440,7 @@ class MatrixParquetReader {
    */
   static Matrix read(byte[] content, String matrixName) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
     read(new ByteArrayInputStream(content), matrixName)
   }
@@ -447,7 +457,7 @@ class MatrixParquetReader {
    */
   static Matrix read(byte[] content, ZoneId zoneId) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
     read(new ByteArrayInputStream(content), zoneId)
   }
@@ -465,7 +475,7 @@ class MatrixParquetReader {
    */
   static Matrix read(byte[] content, String matrixName, ZoneId zoneId) {
     if (content == null) {
-      throw new IllegalArgumentException("Content cannot be null")
+      throw new IllegalArgumentException(ERR_CONTENT_NULL)
     }
     read(new ByteArrayInputStream(content), matrixName, zoneId)
   }
@@ -506,7 +516,7 @@ class MatrixParquetReader {
    */
   static Matrix read(URL url) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException(ERR_URL_NULL)
     }
     url.openStream().withCloseable { InputStream is ->
       readFromInputStream(is, null, null)
@@ -522,7 +532,7 @@ class MatrixParquetReader {
    */
   static Matrix readUrl(String urlString) {
     if (urlString == null) {
-      throw new IllegalArgumentException("URL string cannot be null")
+      throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
     read(new URI(urlString).toURL())
   }
@@ -540,7 +550,7 @@ class MatrixParquetReader {
    */
   static Matrix read(File file, ZoneId zoneId) {
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     try {
       ZONE_ID_HOLDER.set(zoneId)
@@ -560,7 +570,7 @@ class MatrixParquetReader {
    */
   static Matrix read(java.nio.file.Path path, ZoneId zoneId) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(ERR_PATH_NULL)
     }
     read(path.toFile(), zoneId)
   }
@@ -575,7 +585,7 @@ class MatrixParquetReader {
    */
   static Matrix readFile(String filePath, ZoneId zoneId) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_PATH_NULL)
     }
     read(new File(filePath), zoneId)
   }
@@ -592,7 +602,7 @@ class MatrixParquetReader {
    */
   static Matrix read(InputStream is, ZoneId zoneId) {
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     readFromInputStream(is, null, zoneId)
   }
@@ -607,10 +617,10 @@ class MatrixParquetReader {
    */
   static Matrix read(URL url, ZoneId zoneId) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException(ERR_URL_NULL)
     }
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     url.openStream().withCloseable { InputStream is ->
       readFromInputStream(is, null, zoneId)
@@ -627,7 +637,7 @@ class MatrixParquetReader {
    */
   static Matrix readUrl(String urlString, ZoneId zoneId) {
     if (urlString == null) {
-      throw new IllegalArgumentException("URL string cannot be null")
+      throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
     read(new URI(urlString).toURL(), zoneId)
   }
@@ -643,7 +653,7 @@ class MatrixParquetReader {
    */
   static Matrix read(File file, String matrixName, ZoneId zoneId) {
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     try {
       ZONE_ID_HOLDER.set(zoneId)
@@ -664,7 +674,7 @@ class MatrixParquetReader {
    */
   static Matrix read(java.nio.file.Path path, String matrixName, ZoneId zoneId) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException(ERR_PATH_NULL)
     }
     read(path.toFile(), matrixName, zoneId)
   }
@@ -680,7 +690,7 @@ class MatrixParquetReader {
    */
   static Matrix readFile(String filePath, String matrixName, ZoneId zoneId) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException(ERR_FILE_PATH_NULL)
     }
     read(new File(filePath), matrixName, zoneId)
   }
@@ -698,7 +708,7 @@ class MatrixParquetReader {
    */
   static Matrix read(InputStream is, String matrixName, ZoneId zoneId) {
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     readFromInputStream(is, matrixName, zoneId)
   }
@@ -714,10 +724,10 @@ class MatrixParquetReader {
    */
   static Matrix read(URL url, String matrixName, ZoneId zoneId) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException(ERR_URL_NULL)
     }
     if (zoneId == null) {
-      throw new IllegalArgumentException("ZoneId cannot be null")
+      throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
     url.openStream().withCloseable { InputStream is ->
       readFromInputStream(is, matrixName, zoneId)
@@ -735,7 +745,7 @@ class MatrixParquetReader {
    */
   static Matrix readUrl(String urlString, String matrixName, ZoneId zoneId) {
     if (urlString == null) {
-      throw new IllegalArgumentException("URL string cannot be null")
+      throw new IllegalArgumentException(ERR_URL_STRING_NULL)
     }
     read(new URI(urlString).toURL(), matrixName, zoneId)
   }
@@ -765,15 +775,15 @@ class MatrixParquetReader {
 
     ParquetReader.builder(new GroupReadSupport(), path).build().withCloseable { reader ->
       String matrixName
-      if (file.name.contains('.')) {
-        matrixName = file.name.substring(0, file.name.lastIndexOf('.'))
+      if (file.name.contains(DOT)) {
+        matrixName = file.name.substring(0, file.name.lastIndexOf(DOT))
       } else {
         matrixName = file.name
       }
 
       Group row = reader.read()
       GroupType schema = row != null ? row.getType() : footer.getFileMetaData().getSchema()
-      List<String> fieldNames = schema.fields.collect { it.name }
+      List<String> fieldNames = schema.fields*.name
       if (fieldTypes == null) {
         fieldTypes = extractFieldTypes(schema)
       }
@@ -814,7 +824,7 @@ class MatrixParquetReader {
    */
   private static Matrix restoreIndex(Matrix matrix, String indexString) {
     if (indexString != null && !indexString.trim().isEmpty()) {
-      String[] indexColumns = indexString.split(',').collect { it.trim() } as String[]
+      String[] indexColumns = indexString.split(COMMA)*.trim() as String[]
       matrix.createIndex(indexColumns)
     }
     matrix
@@ -846,7 +856,7 @@ class MatrixParquetReader {
   }
 
   private static List<Class> parseTypeString(String typeString) {
-    typeString.split(',').collect { className ->
+    typeString.split(COMMA).collect { className ->
       getCachedClass(className.trim())
     }
   }
@@ -920,7 +930,7 @@ class MatrixParquetReader {
         }
         if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
           int millis = group.getInteger(fieldName, 0)
-          return Time.valueOf(LocalTime.ofNanoOfDay(millis * 1_000_000L))
+          return Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
         }
         if (expectedType == java.sql.Date) {
           return java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
@@ -929,8 +939,8 @@ class MatrixParquetReader {
       case PrimitiveTypeName.INT64:
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
           long micros = group.getLong(fieldName, 0)
-          long epochSecond = Math.floorDiv(micros, 1_000_000L)
-          int microOfSecond = (int) Math.floorMod(micros, 1_000_000L)
+          long epochSecond = Math.floorDiv(micros, MICROS_PER_SECOND)
+          int microOfSecond = (int) Math.floorMod(micros, MICROS_PER_SECOND)
           Instant instant = Instant.ofEpochSecond(epochSecond, microOfSecond * 1_000L)
           if (expectedType == java.sql.Timestamp) {
             return java.sql.Timestamp.from(instant)

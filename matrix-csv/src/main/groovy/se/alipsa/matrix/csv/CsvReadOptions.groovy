@@ -10,7 +10,6 @@ import se.alipsa.matrix.core.spi.OptionMaps
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Typed options class for CSV read operations via the SPI.

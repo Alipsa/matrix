@@ -13,10 +13,6 @@ group = 'se.alipsa.matrix'
 version = '0.5.0-SNAPSHOT'
 description = "Groovy chart-type-first API for matrix (pict)"
 
-codenarc {
-  ignoreFailures = true
-}
-
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"

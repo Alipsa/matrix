@@ -3,8 +3,6 @@ import static se.alipsa.matrix.core.ListConverter.*
 
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.*
 

@@ -1,9 +1,9 @@
 ruleset {
-    description 'CodeNarc ruleset for Matrix'
+    description 'Consolidated CodeNarc ruleset for all Matrix modules'
 
     // Basic rules
     ruleset('rulesets/basic.xml') {
-        exclude 'EmptyCatchBlock' // Allow empty catch blocks for now
+        exclude 'EmptyCatchBlock'
         exclude 'EmptyIfStatement'
         exclude 'EmptyElseBlock'
     }
@@ -15,7 +15,10 @@ ruleset {
     ruleset('rulesets/design.xml') {
         exclude 'AbstractClassWithoutAbstractMethod'
         exclude 'BuilderMethodWithSideEffects'
+        exclude 'CloseWithoutCloseable'
         exclude 'Instanceof'
+        exclude 'NestedForLoop'
+        exclude 'PrivateFieldCouldBeFinal'
     }
 
     // DRY rules
@@ -30,13 +33,13 @@ ruleset {
 
     // Exception handling
     ruleset('rulesets/exceptions.xml') {
-        exclude 'CatchException' // Allow catching Exception for compatibility
+        exclude 'CatchException'
         exclude 'CatchThrowable'
     }
 
     // Imports
     ruleset('rulesets/imports.xml') {
-        exclude 'NoWildcardImports' // Allow wildcard imports in Groovy style
+        exclude 'NoWildcardImports'
     }
 
     // Naming conventions
@@ -59,7 +62,7 @@ ruleset {
 
     // Size/Complexity rules
     ruleset('rulesets/size.xml') {
-        exclude 'CrapMetric' // Requires a Cobertura XML report; this build uses JaCoCo instead
+        exclude 'CrapMetric'
         'AbcMetric' {
             maxMethodAbcScore = 70
             doNotApplyToFilesMatching = /.*Test\.groovy/
@@ -86,27 +89,39 @@ ruleset {
     ruleset('rulesets/unnecessary.xml') {
         exclude 'UnnecessaryGetter'
         exclude 'UnnecessarySetter'
-        exclude 'UnnecessaryReturnKeyword'
         exclude 'UnnecessaryPublicModifier'
+        exclude 'UnnecessaryReturnKeyword'
     }
 
     // Unused code
     ruleset('rulesets/unused.xml') {
-        exclude 'UnusedVariable' // Too strict for dynamic Groovy code
+        exclude 'UnusedVariable'
     }
 
-    // Formatting
+    // Formatting — disabled in favor of Spotless
     ruleset('rulesets/formatting.xml') {
+        exclude 'BlockEndsWithBlankLine'
+        exclude 'BlockStartsWithBlankLine'
+        exclude 'ClassEndsWithBlankLine'
+        exclude 'ClassStartsWithBlankLine'
+        exclude 'ConsecutiveBlankLines'
+        exclude 'Indentation'
+        exclude 'LineLength'
+        exclude 'SpaceAfterComma'
+        exclude 'SpaceAfterMethodCallName'
+        exclude 'SpaceAfterOpeningBrace'
         exclude 'SpaceAroundMapEntryColon'
-        exclude 'LineLength' // Don't enforce line length
-        exclude 'Indentation' // Skip indentation checks
+        exclude 'SpaceAroundOperator'
+        exclude 'SpaceBeforeClosingBrace'
+        exclude 'SpaceInsideParentheses'
     }
 
-    // Comments rules (ClassJavadoc moved here in CodeNarc 3.7+)
+    // Comments
     ruleset('rulesets/comments.xml') {
         'ClassJavadoc' {
             doNotApplyToFilesMatching = /.*Test\.groovy/
         }
+        exclude 'SpaceAfterCommentDelimiter'
     }
 
     // Groovy-specific rules

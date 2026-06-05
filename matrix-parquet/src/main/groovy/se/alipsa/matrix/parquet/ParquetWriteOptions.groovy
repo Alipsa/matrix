@@ -13,6 +13,9 @@ import java.time.ZoneId
 @CompileStatic
 class ParquetWriteOptions {
 
+  private static final String KEY_PRECISION = 'precision'
+  private static final String KEY_SCALE = 'scale'
+
   boolean inferPrecisionAndScale = true
   Integer precision = null
   Integer scale = null
@@ -99,13 +102,13 @@ class ParquetWriteOptions {
         result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
       }
     }
-    if (normalized.containsKey('precision')) {
+    if (normalized.containsKey(KEY_PRECISION)) {
       Object precision = normalized.precision
       if (precision != null) {
         result.precision((precision as Number).intValue())
       }
     }
-    if (normalized.containsKey('scale')) {
+    if (normalized.containsKey(KEY_SCALE)) {
       Object scale = normalized.scale
       if (scale != null) {
         result.scale((scale as Number).intValue())
@@ -162,9 +165,9 @@ class ParquetWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('inferPrecisionAndScale', Boolean, 'true', 'Infer precision and scale for BigDecimal columns'),
-        new OptionDescriptor('precision', Integer, null, 'Uniform precision for all BigDecimal columns'),
-        new OptionDescriptor('scale', Integer, null, 'Uniform scale for all BigDecimal columns'),
+        new OptionDescriptor('inferPrecisionAndScale', Boolean, Boolean.TRUE.toString(), 'Infer precision and scale for BigDecimal columns'),
+        new OptionDescriptor(KEY_PRECISION, Integer, null, 'Uniform precision for all BigDecimal columns'),
+        new OptionDescriptor(KEY_SCALE, Integer, null, 'Uniform scale for all BigDecimal columns'),
         new OptionDescriptor('decimalMeta', Map, null, 'Map of column names to [precision, scale] arrays'),
         new OptionDescriptor('zoneId', ZoneId, null, 'Time zone to use when writing timestamp values')
     ]

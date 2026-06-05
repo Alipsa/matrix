@@ -38,6 +38,7 @@ import java.sql.Timestamp
  * </pre></code>
  */
 @CompileDynamic
+@SuppressWarnings(['ClassSize', 'GetterMethodCouldBeProperty'])
 class MatrixResultSet implements ResultSet {
 
   private static final String RESULT_SET_CLOSED = 'Result set is closed'

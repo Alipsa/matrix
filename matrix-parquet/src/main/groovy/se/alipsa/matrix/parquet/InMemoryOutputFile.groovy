@@ -106,7 +106,7 @@ class InMemoryOutputFile implements OutputFile {
    */
   byte[] getBytes() {
     if (stream == null) {
-      throw new IllegalStateException("No data has been written yet. Call this method after closing the writer.")
+      throw new IllegalStateException('No data has been written yet. Call this method after closing the writer.')
     }
     stream.toByteArray()
   }

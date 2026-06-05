@@ -14,6 +14,7 @@ version = '0.5.0-SNAPSHOT'
 description = "Groovy ggplot2-style charting API for matrix"
 
 codenarc {
+  // TODO: Fix ~3000 CodeNarc violations and remove this override
   ignoreFailures = true
 }
 
