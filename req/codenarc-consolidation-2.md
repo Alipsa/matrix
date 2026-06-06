@@ -89,13 +89,15 @@
 
 - [x] **1.2 Fix all UnnecessaryGString violations**
 
-  In both test files, replace every `"string literal"` that contains no `${...}` interpolation with a single-quoted `'string literal'`. Example:
+  In the reported test source, replace every `"string literal"` that contains no `${...}` interpolation with a single-quoted `'string literal'`. Example:
   ```groovy
   // Before
   def path = "src/test/resources/data.parquet"
   // After
   def path = 'src/test/resources/data.parquet'
   ```
+
+  Audit note: The fresh XML report contained violations only in `MatrixParquetTest.groovy`. `ParquetFormatProviderTest.groovy` still has double-quoted strings on lines 65, 94, 125, 130, and 135 because those literals contain embedded single quotes such as `decimalMeta['amount']`; CodeNarc does not flag them as `UnnecessaryGString`.
 
 - [x] **1.3 Remove the codenarcTest override from matrix-parquet/build.gradle**
 
