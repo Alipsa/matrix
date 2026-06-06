@@ -29,13 +29,13 @@ class CsvWriterTest {
     File outputFile = tempDir.resolve('output.csv').toFile()
     CsvWriter.write(matrix, outputFile)
 
-    assertTrue(outputFile.exists(), "Output file should exist")
+    assertTrue(outputFile.exists(), 'Output file should exist')
 
     // Read it back and verify
     Matrix result = CsvReader.read(outputFile)
-    assertEquals(2, result.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'amount'], result.columnNames(), "Column names")
-    assertEquals(['2', 'Bob', '200.00'], result.row(1), "Last row")
+    assertEquals(2, result.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'amount'], result.columnNames(), 'Column names')
+    assertEquals(['2', 'Bob', '200.00'], result.row(1), 'Last row')
   }
 
   @Test
@@ -48,10 +48,10 @@ class CsvWriterTest {
     Path outputPath = tempDir.resolve('output2.csv')
     CsvWriter.write(matrix, outputPath)
 
-    assertTrue(outputPath.toFile().exists(), "Output file should exist")
+    assertTrue(outputPath.toFile().exists(), 'Output file should exist')
 
     Matrix result = CsvReader.read(outputPath)
-    assertEquals(2, result.rowCount(), "Number of rows")
+    assertEquals(2, result.rowCount(), 'Number of rows')
   }
 
   @Test
@@ -64,7 +64,7 @@ class CsvWriterTest {
     String filePath = tempDir.resolve('output3.csv').toFile().path
     CsvWriter.write(matrix, filePath)
 
-    assertTrue(new File(filePath).exists(), "Output file should exist")
+    assertTrue(new File(filePath).exists(), 'Output file should exist')
   }
 
   @Test
@@ -80,16 +80,16 @@ class CsvWriterTest {
 
     String csvContent = CsvWriter.writeString(matrix)
 
-    assertNotNull(csvContent, "CSV content should not be null")
-    assertTrue(csvContent.contains('name,age'), "Should contain header")
-    assertTrue(csvContent.contains('Alice,30'), "Should contain first row")
-    assertTrue(csvContent.contains('Bob,25'), "Should contain second row")
-    assertTrue(csvContent.contains('Charlie,35'), "Should contain third row")
+    assertNotNull(csvContent, 'CSV content should not be null')
+    assertTrue(csvContent.contains('name,age'), 'Should contain header')
+    assertTrue(csvContent.contains('Alice,30'), 'Should contain first row')
+    assertTrue(csvContent.contains('Bob,25'), 'Should contain second row')
+    assertTrue(csvContent.contains('Charlie,35'), 'Should contain third row')
 
     // Verify by parsing it back
     Matrix result = CsvReader.readString(csvContent)
-    assertEquals(3, result.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], result.columnNames(), "Column names")
+    assertEquals(3, result.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], result.columnNames(), 'Column names')
   }
 
   @Test
@@ -101,9 +101,9 @@ class CsvWriterTest {
 
     String csvContent = CsvWriter.writeString(matrix, CSVFormat.DEFAULT, false)
 
-    assertFalse(csvContent.contains('x,y'), "Should not contain header")
-    assertTrue(csvContent.contains('1,2'), "Should contain first row")
-    assertTrue(csvContent.contains('3,4'), "Should contain second row")
+    assertFalse(csvContent.contains('x,y'), 'Should not contain header')
+    assertTrue(csvContent.contains('1,2'), 'Should contain first row')
+    assertTrue(csvContent.contains('3,4'), 'Should contain second row')
   }
 
   @Test
@@ -116,12 +116,12 @@ class CsvWriterTest {
     File outputFile = tempDir.resolve('excel.csv').toFile()
     CsvWriter.writeExcelCsv(matrix, outputFile)
 
-    assertTrue(outputFile.exists(), "Excel CSV file should exist")
+    assertTrue(outputFile.exists(), 'Excel CSV file should exist')
 
     // Read it back
     Matrix result = CsvReader.read(outputFile, CSVFormat.EXCEL)
-    assertEquals(1, result.rowCount(), "Number of rows")
-    assertEquals(['name', 'value'], result.columnNames(), "Column names")
+    assertEquals(1, result.rowCount(), 'Number of rows')
+    assertEquals(['name', 'value'], result.columnNames(), 'Column names')
   }
 
   @Test
@@ -133,9 +133,9 @@ class CsvWriterTest {
 
     String csvContent = CsvWriter.writeExcelCsvString(matrix)
 
-    assertNotNull(csvContent, "Excel CSV string should not be null")
-    assertTrue(csvContent.contains('"a","b"'), "Should contain quoted header")
-    assertTrue(csvContent.contains('"1","2"'), "Should contain quoted data")
+    assertNotNull(csvContent, 'Excel CSV string should not be null')
+    assertTrue(csvContent.contains('"a","b"'), 'Should contain quoted header')
+    assertTrue(csvContent.contains('"1","2"'), 'Should contain quoted data')
   }
 
   @Test
@@ -151,12 +151,12 @@ class CsvWriterTest {
     File outputFile = tempDir.resolve('output.tsv').toFile()
     CsvWriter.writeTsv(matrix, outputFile)
 
-    assertTrue(outputFile.exists(), "TSV file should exist")
+    assertTrue(outputFile.exists(), 'TSV file should exist')
 
     // Read it back
     Matrix result = CsvReader.read(outputFile, CSVFormat.TDF)
-    assertEquals(2, result.rowCount(), "Number of rows")
-    assertEquals(['name', 'age', 'city'], result.columnNames(), "Column names")
+    assertEquals(2, result.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age', 'city'], result.columnNames(), 'Column names')
   }
 
   @Test
@@ -168,9 +168,9 @@ class CsvWriterTest {
 
     String tsvContent = CsvWriter.writeTsvString(matrix)
 
-    assertNotNull(tsvContent, "TSV string should not be null")
-    assertTrue(tsvContent.contains("x\ty\tz"), "Should contain tab-separated header")
-    assertTrue(tsvContent.contains("1\t2\t3"), "Should contain tab-separated data")
+    assertNotNull(tsvContent, 'TSV string should not be null')
+    assertTrue(tsvContent.contains('x\ty\tz'), 'Should contain tab-separated header')
+    assertTrue(tsvContent.contains('1\t2\t3'), 'Should contain tab-separated data')
   }
 
   @Test
@@ -184,9 +184,9 @@ class CsvWriterTest {
     CsvWriter.write(matrix, writer)
 
     String csvContent = writer.buffer
-    assertTrue(csvContent.contains('col1,col2'), "Should contain header")
-    assertTrue(csvContent.contains('a,b'), "Should contain first row")
-    assertTrue(csvContent.contains('c,d'), "Should contain second row")
+    assertTrue(csvContent.contains('col1,col2'), 'Should contain header')
+    assertTrue(csvContent.contains('a,b'), 'Should contain first row')
+    assertTrue(csvContent.contains('c,d'), 'Should contain second row')
   }
 
   @Test
@@ -202,8 +202,8 @@ class CsvWriterTest {
 
     String csvContent = CsvWriter.writeString(matrix, format)
 
-    assertTrue(csvContent.contains('name;value'), "Should use semicolon delimiter")
-    assertTrue(csvContent.contains('Alice;100'), "Data should use semicolon delimiter")
+    assertTrue(csvContent.contains('name;value'), 'Should use semicolon delimiter')
+    assertTrue(csvContent.contains('Alice;100'), 'Data should use semicolon delimiter')
   }
 
   @Test
@@ -218,10 +218,10 @@ class CsvWriterTest {
     CsvWriter.write(matrix, directory)
 
     File expectedFile = new File(directory, 'TestMatrix.csv')
-    assertTrue(expectedFile.exists(), "File should be created in directory with matrix name")
+    assertTrue(expectedFile.exists(), 'File should be created in directory with matrix name')
 
     Matrix result = CsvReader.read(expectedFile)
-    assertEquals(1, result.rowCount(), "Number of rows")
+    assertEquals(1, result.rowCount(), 'Number of rows')
   }
 
   @Test
@@ -232,8 +232,8 @@ class CsvWriterTest {
 
     String csvContent = CsvWriter.writeString(matrix)
 
-    assertTrue(csvContent.contains('a,b,c'), "Should contain header even for empty matrix")
-    assertFalse(csvContent.contains('null'), "Should not contain null values")
+    assertTrue(csvContent.contains('a,b,c'), 'Should contain header even for empty matrix')
+    assertFalse(csvContent.contains('null'), 'Should not contain null values')
   }
 
   @Test
@@ -267,8 +267,8 @@ class CsvWriterTest {
     // Read it back
     Matrix result = CsvReader.readString(csvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }

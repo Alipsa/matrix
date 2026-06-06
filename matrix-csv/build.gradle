@@ -44,11 +44,6 @@ dependencies {
 
 }
 
-codenarcTest {
-  // TODO: Fix test CodeNarc violations and remove this override
-  ignoreFailures = true
-}
-
 test {
   useJUnitPlatform()
   testLogging {

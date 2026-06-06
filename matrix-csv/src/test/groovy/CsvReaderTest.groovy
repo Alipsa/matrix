@@ -13,41 +13,41 @@ class CsvReaderTest {
 
   @Test
   void readCsvFromFile() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
     CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
 
     Matrix basic = CsvReader.read(file, format)
-    assertEquals(4, basic.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], basic.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], basic.row(3), "last row")
+    assertEquals(4, basic.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], basic.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], basic.row(3), 'last row')
   }
 
   @Test
   void readCsvFromUrl() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
 
     Matrix basic = CsvReader.read(url, format)
-    assertEquals(4, basic.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], basic.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], basic.row(3), "last row")
+    assertEquals(4, basic.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], basic.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], basic.row(3), 'last row')
   }
 
   @Test
   void readCsvWithMapFormat() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
 
     Matrix b = CsvReader.read((CsvOption.Trim): true, url)
-    assertEquals(4, b.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], b.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b.row(3), "last row")
+    assertEquals(4, b.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], b.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b.row(3), 'last row')
 
     // Test beautiful named arguments syntax
     Matrix b2 = CsvReader.read(Trim: true, url)
-    assertEquals(4, b2.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], b2.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b2.row(3), "last row")
+    assertEquals(4, b2.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], b2.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b2.row(3), 'last row')
   }
 
   @Test
@@ -59,10 +59,10 @@ class CsvReaderTest {
 
     Matrix matrix = CsvReader.readString(csvContent)
 
-    assertEquals(3, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
-    assertEquals(['1', 'Alice', '2023-01-01', '100.00'], matrix.row(0), "first row")
-    assertEquals(['3', 'Charlie', '2023-01-03', '150.50'], matrix.row(2), "last row")
+    assertEquals(3, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
+    assertEquals(['1', 'Alice', '2023-01-01', '100.00'], matrix.row(0), 'first row')
+    assertEquals(['3', 'Charlie', '2023-01-03', '150.50'], matrix.row(2), 'last row')
   }
 
   @Test
@@ -78,9 +78,9 @@ class CsvReaderTest {
 
     Matrix matrix = CsvReader.readString(csvContent, format)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
-    assertEquals(['2', 'Bob', '2023-01-02', '200,00'], matrix.row(1), "last row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
+    assertEquals(['2', 'Bob', '2023-01-02', '200,00'], matrix.row(1), 'last row')
   }
 
   @Test
@@ -90,32 +90,32 @@ class CsvReaderTest {
 
     Matrix matrix = CsvReader.readString(csvContent, CSVFormat.DEFAULT, false)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['c0', 'c1', 'c2'], matrix.columnNames(), "Auto-generated column names")
-    assertEquals(['1', 'Alice', '100.00'], matrix.row(0), "first row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['c0', 'c1', 'c2'], matrix.columnNames(), 'Auto-generated column names')
+    assertEquals(['1', 'Alice', '100.00'], matrix.row(0), 'first row')
   }
 
   @Test
   void readFileFromStringPath() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
     String filePath = file.absolutePath
 
     Matrix matrix = CsvReader.readFile(filePath, CSVFormat.Builder.create().setTrim(true).build())
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
   void readUrlFromString() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     String urlString = url.toExternalForm()
 
     Matrix matrix = CsvReader.readUrl(urlString, CSVFormat.Builder.create().setTrim(true).build())
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -127,9 +127,9 @@ Bob,25'''
     StringReader reader = new StringReader(csvContent)
     Matrix matrix = CsvReader.read(reader)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], matrix.columnNames(), "Column names")
-    assertEquals(['Alice', '30'], matrix.row(0), "first row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], matrix.columnNames(), 'Column names')
+    assertEquals(['Alice', '30'], matrix.row(0), 'first row')
   }
 
   @Test
@@ -141,20 +141,20 @@ Bob,25'''
     InputStream is = new ByteArrayInputStream(csvContent.bytes)
     Matrix matrix = CsvReader.read(is)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], matrix.columnNames(), "Column names")
-    assertEquals(['Bob', '25'], matrix.row(1), "last row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], matrix.columnNames(), 'Column names')
+    assertEquals(['Bob', '25'], matrix.row(1), 'last row')
   }
 
   @Test
   void readFromPath() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
 
     Matrix matrix = CsvReader.read(file.toPath(), CSVFormat.Builder.create().setTrim(true).build())
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -163,9 +163,9 @@ Bob,25'''
 
     Matrix matrix = CsvReader.readString(csvContent)
 
-    assertNotNull(matrix, "Matrix should not be null")
-    assertEquals(0, matrix.rowCount(), "Empty CSV should have 0 rows")
-    assertEquals(0, matrix.columnCount(), "Empty CSV should have 0 columns")
+    assertNotNull(matrix, 'Matrix should not be null')
+    assertEquals(0, matrix.rowCount(), 'Empty CSV should have 0 rows')
+    assertEquals(0, matrix.columnCount(), 'Empty CSV should have 0 columns')
   }
 
   @Test
@@ -174,10 +174,10 @@ Bob,25'''
 
     Matrix matrix = CsvReader.readString(csvContent)
 
-    assertNotNull(matrix, "Matrix should not be null")
-    assertEquals(0, matrix.rowCount(), "Header-only CSV should have 0 data rows")
-    assertEquals(3, matrix.columnCount(), "Should have 3 columns")
-    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), "Column names")
+    assertNotNull(matrix, 'Matrix should not be null')
+    assertEquals(0, matrix.rowCount(), 'Header-only CSV should have 0 data rows')
+    assertEquals(3, matrix.columnCount(), 'Should have 3 columns')
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -187,9 +187,9 @@ Alice,95'''
 
     Matrix matrix = CsvReader.readString(csvContent)
 
-    assertEquals(1, matrix.rowCount(), "Should have 1 row")
-    assertEquals(['name', 'score'], matrix.columnNames(), "Column names")
-    assertEquals(['Alice', '95'], matrix.row(0), "Single row content")
+    assertEquals(1, matrix.rowCount(), 'Should have 1 row')
+    assertEquals(['name', 'score'], matrix.columnNames(), 'Column names')
+    assertEquals(['Alice', '95'], matrix.row(0), 'Single row content')
   }
 
   @Test
@@ -200,14 +200,14 @@ Alice,95'''
 
     Matrix matrix = CsvReader.readString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['Alice', 'Works at "Tech Corp"', '100'], matrix.row(0), "Quoted values handled correctly")
-    assertEquals(['Bob', 'Said: "Hello, World!"', '200'], matrix.row(1), "Escaped quotes handled correctly")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['Alice', 'Works at "Tech Corp"', '100'], matrix.row(0), 'Quoted values handled correctly')
+    assertEquals(['Bob', 'Said: "Hello, World!"', '200'], matrix.row(1), 'Escaped quotes handled correctly')
   }
 
   @Test
   void readCsvWithMapFormatAndComplexOptions() {
-    URL url = getClass().getResource("/colonQuotesEmptyLine.csv")
+    URL url = getClass().getResource('/colonQuotesEmptyLine.csv')
 
     Matrix m = CsvReader.read(
         Trim: true,
@@ -217,9 +217,9 @@ Alice,95'''
         Header: ['id', 'name', 'date', 'amount'],
         url)
 
-    assertEquals(4, m.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], m.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], m.row(3), "last row")
+    assertEquals(4, m.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], m.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], m.row(3), 'last row')
   }
 
   @Test
@@ -231,24 +231,24 @@ Alice,95'''
     InputStream is = new ByteArrayInputStream(csvContent.bytes)
     Matrix matrix = CsvReader.read(is, CSVFormat.DEFAULT, true, java.nio.charset.StandardCharsets.UTF_8, 'TestMatrix')
 
-    assertEquals('TestMatrix', matrix.matrixName, "Matrix name should be set")
-    assertEquals(2, matrix.rowCount(), "Number of rows")
+    assertEquals('TestMatrix', matrix.matrixName, 'Matrix name should be set')
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
   }
 
   @Test
   void readWithTypesOption() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
 
     Matrix m = CsvReader.read(
         types: [Integer, String, LocalDate, BigDecimal],
         dateTimeFormat: 'yyyy-MM-dd',
         url)
 
-    assertEquals(4, m.rowCount(), "Number of rows")
-    assertEquals(Integer, m.type(0), "id column type")
-    assertEquals(String, m.type(1), "name column type")
-    assertEquals(LocalDate, m.type(2), "date column type")
-    assertEquals(BigDecimal, m.type(3), "amount column type")
+    assertEquals(4, m.rowCount(), 'Number of rows')
+    assertEquals(Integer, m.type(0), 'id column type')
+    assertEquals(String, m.type(1), 'name column type')
+    assertEquals(LocalDate, m.type(2), 'date column type')
+    assertEquals(BigDecimal, m.type(3), 'amount column type')
     assertEquals(4, m.row(3)[0])
     assertEquals(LocalDate.of(2023, 7, 1), m.row(3)[2])
     assertEquals(222.99, m.row(3)[3])
@@ -256,14 +256,14 @@ Alice,95'''
 
   @Test
   void readWithCaseInsensitiveKeys() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
 
     // camelCase keys
     Matrix m1 = CsvReader.read(trim: true, url)
-    assertEquals(4, m1.rowCount(), "camelCase keys should work")
+    assertEquals(4, m1.rowCount(), 'camelCase keys should work')
 
     // PascalCase keys
     Matrix m2 = CsvReader.read(Trim: true, url)
-    assertEquals(4, m2.rowCount(), "PascalCase keys should work")
+    assertEquals(4, m2.rowCount(), 'PascalCase keys should work')
   }
 }

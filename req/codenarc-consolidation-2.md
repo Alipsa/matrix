@@ -201,7 +201,7 @@
 - `matrix-csv/build.gradle` (remove the `codenarcTest { ignoreFailures = true }` block near line 49)
 - `matrix-csv/src/test/groovy/` (7 test files + 1 internal)
 
-- [ ] **3.1 Audit violations from the XML report**
+- [x] **3.1 Audit violations from the XML report**
 
   ```bash
   ./gradlew :matrix-csv:codenarcTest
@@ -216,26 +216,34 @@
   "
   ```
 
-- [ ] **3.2 Fix UnnecessaryGString violations (320)**
+- [x] **3.2 Fix UnnecessaryGString violations (320)**
 
   Replace uninterpolated `"string"` → `'string'` in all test files.
 
-- [ ] **3.3 Fix UnnecessaryCallForLastElement violations (4)**
+- [x] **3.3 Fix UnnecessaryCallForLastElement violations (4)**
 
   Replace `list[list.size() - 1]` with `list.last()`.
 
-- [ ] **3.4 Fix UnnecessaryGroovyImport violation (1)**
+- [x] **3.4 Fix UnnecessaryGroovyImport violation (1)**
 
   Remove the explicit import of a `java.lang.*` or `groovy.lang.*` class (e.g., `import java.lang.String`).
 
-- [ ] **3.5 Remove the codenarcTest override**
+- [x] **3.5 Remove the codenarcTest override**
 
   In `matrix-csv/build.gradle`, delete the `codenarcTest { ignoreFailures = true }` block (near line 49).
 
-- [ ] **3.6 Verify**
+- [x] **3.6 Verify**
 
   ```bash
   ./gradlew :matrix-csv:codenarcTest
+  ./gradlew :matrix-csv:test
+  ```
+
+  Completed verification:
+  ```bash
+  ./gradlew :matrix-csv:codenarcTest
+  ./gradlew :matrix-csv:codenarcMain
+  ./gradlew :matrix-csv:spotlessCheck
   ./gradlew :matrix-csv:test
   ```
 
