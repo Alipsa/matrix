@@ -140,7 +140,7 @@
 - `matrix-json/build.gradle` (remove lines 47–50)
 - `matrix-json/src/test/groovy/` (6 test files)
 
-- [ ] **2.1 Audit violations from the XML report**
+- [x] **2.1 Audit violations from the XML report**
 
   ```bash
   ./gradlew :matrix-json:codenarcTest
@@ -155,13 +155,13 @@
   "
   ```
 
-- [ ] **2.2 Fix UnnecessaryGString violations**
+- [x] **2.2 Fix UnnecessaryGString violations**
 
   Replace uninterpolated `"string"` → `'string'` in all 6 test files:
   - `JsonWriterTest.groovy`, `JsonFormatProviderTest.groovy`, `JsonImporterTest.groovy`
   - `DuplicateKeyTest.groovy`, `JsonExporterTest.groovy`, `JsonReaderTest.groovy`
 
-- [ ] **2.3 Remove the codenarcTest override from matrix-json/build.gradle**
+- [x] **2.3 Remove the codenarcTest override from matrix-json/build.gradle**
 
   Delete lines 47–50:
   ```groovy
@@ -171,10 +171,18 @@
   }
   ```
 
-- [ ] **2.4 Verify**
+- [x] **2.4 Verify**
 
   ```bash
   ./gradlew :matrix-json:codenarcTest
+  ./gradlew :matrix-json:test
+  ```
+
+  Completed verification:
+  ```bash
+  ./gradlew :matrix-json:codenarcTest
+  ./gradlew :matrix-json:codenarcMain
+  ./gradlew :matrix-json:spotlessCheck
   ./gradlew :matrix-json:test
   ```
 

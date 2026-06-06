@@ -19,9 +19,9 @@ class JsonExporterTest {
     void testExportJson() {
         def empData = Matrix.builder().data(
                 emp_id: 1..3,
-                emp_name: ["Rick","Dan","Michelle"],
+                emp_name: ['Rick','Dan','Michelle'],
                 salary: [623.3,515.2,611.0],
-                start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+                start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
             .types([int, String, Number, LocalDate])
             .build()
         //println empData.content()
@@ -51,9 +51,9 @@ class JsonExporterTest {
     void testExportJsonWithConverter() {
         def empData = Matrix.builder().data(
             emp_id: 1..3,
-            emp_name: ["Rick","Dan","Michelle"],
+            emp_name: ['Rick','Dan','Michelle'],
             salary: [623.3,515.2,611.0],
-            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+            start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
             .types([int, String, Number, LocalDate])
             .build()
         //println empData.content()
@@ -103,7 +103,7 @@ class JsonExporterTest {
         Matrix empty = Matrix.builder().build()
         JsonExporter exporter = new JsonExporter(empty)
         String json = exporter.toJson()
-        assertEquals('[]', json, "Empty matrix should export as empty JSON array")
+        assertEquals('[]', json, 'Empty matrix should export as empty JSON array')
     }
 
     @Test
@@ -115,7 +115,7 @@ class JsonExporterTest {
 
         JsonExporter exporter = new JsonExporter(m)
         String json = exporter.toJson()
-        assertEquals('[]', json, "Matrix with 0 rows should export as empty array")
+        assertEquals('[]', json, 'Matrix with 0 rows should export as empty array')
     }
 
     @Test
@@ -127,10 +127,10 @@ class JsonExporterTest {
         JsonExporter exporter = new JsonExporter(m)
         String json = exporter.toJson(true)
 
-        assertTrue(json.contains('\n'), "Pretty printed JSON should contain newlines")
-        assertTrue(json.contains('  '), "Pretty printed JSON should contain indentation")
-        assertTrue(json.contains('"id"'), "Should contain id field")
-        assertTrue(json.contains('"name"'), "Should contain name field")
+        assertTrue(json.contains('\n'), 'Pretty printed JSON should contain newlines')
+        assertTrue(json.contains('  '), 'Pretty printed JSON should contain indentation')
+        assertTrue(json.contains('"id"'), 'Should contain id field')
+        assertTrue(json.contains('"name"'), 'Should contain name field')
     }
 
     // Phase 3: API Enhancement Tests
@@ -140,7 +140,7 @@ class JsonExporterTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
             new JsonExporter(null)
         }
-        assertTrue(ex.message.contains("cannot be null"), "Error should mention null validation")
+        assertTrue(ex.message.contains('cannot be null'), 'Error should mention null validation')
     }
 
     @Test
@@ -148,7 +148,7 @@ class JsonExporterTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
             new JsonExporter(null, ['col1', 'col2'])
         }
-        assertTrue(ex.message.contains("cannot be null"), "Error should mention null validation")
+        assertTrue(ex.message.contains('cannot be null'), 'Error should mention null validation')
     }
 
     @Test
@@ -157,7 +157,7 @@ class JsonExporterTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
             new JsonExporter(m.grid(), null)
         }
-        assertTrue(ex.message.contains("cannot be null"), "Error should mention null validation")
+        assertTrue(ex.message.contains('cannot be null'), 'Error should mention null validation')
     }
 
     @Test
@@ -169,11 +169,11 @@ class JsonExporterTest {
         // Static method - one-liner convenience
         String json = JsonExporter.toJson(m)
 
-        assertNotNull(json, "JSON should not be null")
-        assertTrue(json.contains('"id"'), "Should contain id field")
-        assertTrue(json.contains('"name"'), "Should contain name field")
-        assertTrue(json.contains('Alice'), "Should contain Alice")
-        assertTrue(json.contains('Bob'), "Should contain Bob")
+        assertNotNull(json, 'JSON should not be null')
+        assertTrue(json.contains('"id"'), 'Should contain id field')
+        assertTrue(json.contains('"name"'), 'Should contain name field')
+        assertTrue(json.contains('Alice'), 'Should contain Alice')
+        assertTrue(json.contains('Bob'), 'Should contain Bob')
     }
 
     @Test
@@ -184,8 +184,8 @@ class JsonExporterTest {
 
         String json = JsonExporter.toJson(m, true)
 
-        assertTrue(json.contains('\n'), "Pretty printed JSON should contain newlines")
-        assertTrue(json.contains('  '), "Pretty printed JSON should contain indentation")
+        assertTrue(json.contains('\n'), 'Pretty printed JSON should contain newlines')
+        assertTrue(json.contains('  '), 'Pretty printed JSON should contain indentation')
     }
 
     @Test
@@ -198,17 +198,17 @@ class JsonExporterTest {
         try {
             JsonExporter.toJsonFile(m, tempFile)
 
-            assertTrue(tempFile.exists(), "File should exist")
-            assertTrue(tempFile.length() > 0, "File should not be empty")
+            assertTrue(tempFile.exists(), 'File should exist')
+            assertTrue(tempFile.length() > 0, 'File should not be empty')
 
             String content = tempFile.text
-            assertTrue(content.contains('"id"'), "Should contain id field")
-            assertTrue(content.contains('"value"'), "Should contain value field")
+            assertTrue(content.contains('"id"'), 'Should contain id field')
+            assertTrue(content.contains('"value"'), 'Should contain value field')
 
             // Verify we can parse it back
             Matrix parsed = JsonImporter.parse(tempFile)
-            assertEquals(3, parsed.rowCount(), "Should have 3 rows")
-            assertEquals(2, parsed.columnCount(), "Should have 2 columns")
+            assertEquals(3, parsed.rowCount(), 'Should have 3 rows')
+            assertEquals(2, parsed.columnCount(), 'Should have 2 columns')
         } finally {
             tempFile.delete()
         }
@@ -225,7 +225,7 @@ class JsonExporterTest {
             JsonExporter.toJsonFile(m, tempFile, true)
 
             String content = tempFile.text
-            assertTrue(content.contains('\n'), "Should have pretty printing with newlines")
+            assertTrue(content.contains('\n'), 'Should have pretty printing with newlines')
         } finally {
             tempFile.delete()
         }

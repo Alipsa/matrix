@@ -21,8 +21,8 @@ class DuplicateKeyTest {
       JsonImporter.parse(json)
     }
 
-    assertTrue(exception.message.contains("Duplicate key detected"))
-    assertTrue(exception.message.contains("a.b"))
+    assertTrue(exception.message.contains('Duplicate key detected'))
+    assertTrue(exception.message.contains('a.b'))
   }
 
   @Test
@@ -36,8 +36,8 @@ class DuplicateKeyTest {
       JsonImporter.parse(json)
     }
 
-    assertTrue(exception.message.contains("Duplicate key detected"))
-    assertTrue(exception.message.contains("x.y.z"))
+    assertTrue(exception.message.contains('Duplicate key detected'))
+    assertTrue(exception.message.contains('x.y.z'))
   }
 
   @Test
@@ -49,6 +49,6 @@ class DuplicateKeyTest {
     Matrix m = JsonImporter.parse(json)
 
     assertEquals(2, m.columnCount())
-    assertEquals(["a.b", "c"], m.columnNames())
+    assertEquals(['a.b', 'c'], m.columnNames())
   }
 }

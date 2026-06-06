@@ -91,6 +91,6 @@ class JsonFormatProviderTest {
 
     Matrix matrix = Matrix.read([matrixName: 'custom_name'], file)
 
-    assertEquals('custom_name', matrix.matrixName, "matrixName option should override file-derived name")
+    assertEquals('custom_name', matrix.matrixName, 'matrixName option should override file-derived name')
   }
 }

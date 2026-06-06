@@ -42,9 +42,9 @@ class JsonImporterTest {
 
     Matrix empData = Matrix.builder().data(
         emp_id: 1..3,
-        emp_name: ["Rick","Dan","Michelle"],
+        emp_name: ['Rick','Dan','Michelle'],
         salary: [623.3,515.2,611.0],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
       .types(int, String, Number, LocalDate)
       .build()
     assertEquals(empData, table, empData.diff(table))
@@ -54,7 +54,7 @@ class JsonImporterTest {
   void testNested() {
     ObjectMapper mapper = new ObjectMapper()
 
-    Family f1 = new Family("Nyfelt-Wersäll")
+    Family f1 = new Family('Nyfelt-Wersäll')
     f1.members.add(new Person('Per'))
     f1.members.add(new Person('Louise'))
 
@@ -130,7 +130,7 @@ class JsonImporterTest {
     if (jsonNode.isObject()) {
       ObjectNode objectNode = (ObjectNode) jsonNode
       Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields()
-      String pathPrefix = currentPath.isEmpty() ? "" : currentPath + "."
+      String pathPrefix = currentPath.isEmpty() ? '' : currentPath + '.'
 
       while (iter.hasNext()) {
         Map.Entry<String, JsonNode> entry = iter.next()
@@ -169,8 +169,8 @@ class JsonImporterTest {
 
       Matrix table = JsonImporter.parseFromFile(tempFile.absolutePath)
 
-      assertEquals(2, table.rowCount(), "Should have 2 rows")
-      assertEquals(3, table.columnCount(), "Should have 3 columns")
+      assertEquals(2, table.rowCount(), 'Should have 2 rows')
+      assertEquals(3, table.columnCount(), 'Should have 3 columns')
       assertEquals(['emp_id', 'emp_name', 'salary'], table.columnNames())
       // Check individual values rather than comparing lists directly
       assertEquals(1, table.row(0)[0])
@@ -195,8 +195,8 @@ class JsonImporterTest {
 
       Matrix table = JsonImporter.parse(tempFile.toPath())
 
-      assertEquals(3, table.rowCount(), "Should have 3 rows")
-      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(3, table.rowCount(), 'Should have 3 rows')
+      assertEquals(2, table.columnCount(), 'Should have 2 columns')
       assertEquals(['id', 'name'], table.columnNames())
       assertEquals(3, table.row(2)[0])
       assertEquals('Charlie', table.row(2)[1])
@@ -218,8 +218,8 @@ class JsonImporterTest {
       URL url = tempFile.toURI().toURL()
       Matrix table = JsonImporter.parse(url)
 
-      assertEquals(2, table.rowCount(), "Should have 2 rows")
-      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(2, table.rowCount(), 'Should have 2 rows')
+      assertEquals(2, table.columnCount(), 'Should have 2 columns')
       assertEquals(['x', 'y'], table.columnNames())
       assertEquals(10, table.row(0)[0])
       assertEquals(20, table.row(0)[1])
@@ -242,8 +242,8 @@ class JsonImporterTest {
       String urlString = tempFile.toURI().toURL() as String
       Matrix table = JsonImporter.parseFromUrl(urlString)
 
-      assertEquals(1, table.rowCount(), "Should have 1 row")
-      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(1, table.rowCount(), 'Should have 1 row')
+      assertEquals(2, table.columnCount(), 'Should have 2 columns')
       assertEquals(['a', 'b'], table.columnNames())
       assertEquals(1, table.row(0)[0])
       assertEquals(2, table.row(0)[1])
@@ -257,16 +257,16 @@ class JsonImporterTest {
   @Test
   void testEmptyJsonArray() {
     Matrix m = JsonImporter.parse('[]')
-    assertNotNull(m, "Matrix should not be null")
-    assertEquals(0, m.rowCount(), "Empty JSON should have 0 rows")
-    assertEquals(0, m.columnCount(), "Empty JSON should have 0 columns")
+    assertNotNull(m, 'Matrix should not be null')
+    assertEquals(0, m.rowCount(), 'Empty JSON should have 0 rows')
+    assertEquals(0, m.columnCount(), 'Empty JSON should have 0 columns')
   }
 
   @Test
   void testSingleRow() {
     Matrix m = JsonImporter.parse('[{"id": 1, "name": "Alice"}]')
-    assertEquals(1, m.rowCount(), "Should have 1 row")
-    assertEquals(2, m.columnCount(), "Should have 2 columns")
+    assertEquals(1, m.rowCount(), 'Should have 1 row')
+    assertEquals(2, m.columnCount(), 'Should have 2 columns')
     assertEquals(['id', 'name'], m.columnNames())
     assertEquals(1, m.row(0)[0])
     assertEquals('Alice', m.row(0)[1])
@@ -279,19 +279,19 @@ class JsonImporterTest {
       {"a": 3},
       {"b": 4, "c": 5}
     ]''')
-    assertEquals(3, m.rowCount(), "Should have 3 rows")
-    assertEquals(3, m.columnCount(), "Should have 3 columns")
+    assertEquals(3, m.rowCount(), 'Should have 3 rows')
+    assertEquals(3, m.columnCount(), 'Should have 3 columns')
     assertEquals(['a', 'b', 'c'], m.columnNames())
     // Row 0: [1, 2, null]
     // Row 1: [3, null, null]
     // Row 2: [null, 4, 5]
     assertEquals(1, m[0, 'a'])
     assertEquals(2, m[0, 'b'])
-    assertNull(m[0, 'c'], "Row 0 column c should be null")
+    assertNull(m[0, 'c'], 'Row 0 column c should be null')
     assertEquals(3, m[1, 'a'])
-    assertNull(m[1, 'b'], "Row 1 column b should be null")
-    assertNull(m[1, 'c'], "Row 1 column c should be null")
-    assertNull(m[2, 'a'], "Row 2 column a should be null")
+    assertNull(m[1, 'b'], 'Row 1 column b should be null')
+    assertNull(m[1, 'c'], 'Row 1 column c should be null')
+    assertNull(m[2, 'a'], 'Row 2 column a should be null')
     assertEquals(4, m[2, 'b'])
     assertEquals(5, m[2, 'c'])
   }
@@ -301,7 +301,7 @@ class JsonImporterTest {
     IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       JsonImporter.parse('{"not": "an array"}')
     }
-    assertTrue(ex.message.contains("Expected JSON array"), "Error should mention array expectation")
+    assertTrue(ex.message.contains('Expected JSON array'), 'Error should mention array expectation')
   }
 
   @Test
@@ -314,7 +314,7 @@ class JsonImporterTest {
   @Test
   void testFileNotFound() {
     assertThrows(FileNotFoundException) {
-      JsonImporter.parse(new File("/nonexistent/path/file.json"))
+      JsonImporter.parse(new File('/nonexistent/path/file.json'))
     }
   }
 }
