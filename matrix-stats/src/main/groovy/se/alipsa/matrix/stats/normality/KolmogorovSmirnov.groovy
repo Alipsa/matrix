@@ -103,14 +103,10 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * Lilliefors test instead, which provides a corrected version of the K-S test specifically for normality
  * testing with estimated parameters.</p>
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 class KolmogorovSmirnov {
   private static final double ASYMPTOTIC_CORRECTION_BASE = 0.12d
   private static final double ASYMPTOTIC_CORRECTION_SCALE = 0.11d
-  private static final double PROBABILITY_LOWER_BOUND = 0.0d
-  private static final double PROBABILITY_UPPER_BOUND = 1.0d
-  private static final double SERIES_MULTIPLIER = 2.0d
-
-
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
 
   /**
@@ -208,8 +204,8 @@ class KolmogorovSmirnov {
 
   private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution) {
     int n = sortedValues.length
-    double dPlus = PROBABILITY_LOWER_BOUND
-    double dMinus = PROBABILITY_LOWER_BOUND
+    double dPlus = 0.0d
+    double dMinus = 0.0d
 
     for (int i = 0; i < n; i++) {
       double theoretical = distribution.cumulativeProbability(sortedValues[i])
@@ -223,8 +219,8 @@ class KolmogorovSmirnov {
   }
 
   private static double calculateOneSamplePValue(double dStatistic, int sampleSize) {
-    if (dStatistic <= PROBABILITY_LOWER_BOUND) {
-      return PROBABILITY_UPPER_BOUND
+    if (dStatistic <= 0.0d) {
+      return 1.0d
     }
 
     // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
@@ -270,8 +266,8 @@ class KolmogorovSmirnov {
   }
 
   private static double calculateTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
-    if (dStatistic <= PROBABILITY_LOWER_BOUND) {
-      return PROBABILITY_UPPER_BOUND
+    if (dStatistic <= 0.0d) {
+      return 1.0d
     }
     if ((sampleSize1 as long) * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
       long differenceCount = Math.round(dStatistic * sampleSize1 * sampleSize2)
@@ -288,8 +284,8 @@ class KolmogorovSmirnov {
     BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
     BigDecimal cdf = new BigDecimal(validPathCount)
       .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
-    double pValue = PROBABILITY_UPPER_BOUND - cdf.doubleValue()
-    Math.max(PROBABILITY_LOWER_BOUND, Math.min(PROBABILITY_UPPER_BOUND, pValue))
+    double pValue = 1.0d - cdf.doubleValue()
+    Math.max(0.0d, Math.min(1.0d, pValue))
   }
 
   private static BigInteger countValidPaths(int sampleSize1, int sampleSize2, long thresholdCount) {
@@ -328,17 +324,17 @@ class KolmogorovSmirnov {
   }
 
   private static double kolmogorovProbability(double lambda) {
-    double sum = PROBABILITY_LOWER_BOUND
+    double sum = 0.0d
 
     for (int j = 1; j <= 100; j++) {
-      double term = Math.exp(-SERIES_MULTIPLIER * j * j * lambda * lambda)
-      sum += (j % SERIES_MULTIPLIER != 0 ? PROBABILITY_UPPER_BOUND : -PROBABILITY_UPPER_BOUND) * term
+      double term = Math.exp(-2.0d * j * j * lambda * lambda)
+      sum += (j % 2 != 0 ? 1.0d : -1.0d) * term
       if (term < 1e-12d) {
         break
       }
     }
 
-    Math.max(PROBABILITY_LOWER_BOUND, Math.min(PROBABILITY_UPPER_BOUND, SERIES_MULTIPLIER * sum))
+    Math.max(0.0d, Math.min(1.0d, 2.0d * sum))
   }
 
   private static void validateData(List<? extends Number> data) {

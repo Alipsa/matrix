@@ -7,9 +7,8 @@ package se.alipsa.matrix.stats
  * for numerical stability. For BigDecimal / List-based mean and variance, use
  * {@link se.alipsa.matrix.core.Stat} instead.</p>
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 final class StatUtils {
-  private static final double ZERO_VALUE = 0.0d
-
   private StatUtils() {
   }
 
@@ -23,8 +22,8 @@ final class StatUtils {
   static double mean(double[] values) {
     validateNotEmpty(values, 'Mean')
 
-    double sum = ZERO_VALUE
-    double compensation = ZERO_VALUE
+    double sum = 0.0d
+    double compensation = 0.0d
     for (double value : values) {
       double adjusted = value - compensation
       double nextSum = sum + adjusted
@@ -56,7 +55,7 @@ final class StatUtils {
   static double variance(double[] values, double mean) {
     validateForVariance(values)
 
-    double sumSquaredDeviation = ZERO_VALUE
+    double sumSquaredDeviation = 0.0d
     for (double value : values) {
       double deviation = value - mean
       sumSquaredDeviation += deviation * deviation
