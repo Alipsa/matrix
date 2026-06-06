@@ -15,22 +15,23 @@ import se.alipsa.matrix.gg.scale.SecondaryAxis
 /**
  * Tests for secondary axes (sec_axis and dup_axis).
  */
+@SuppressWarnings('ClosureAsLastMethodParameter')
 class SecondaryAxisTest {
 
   @Test
   void testSecAxisCreation() {
     // Test creating a secondary axis with transformation
-    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")
+    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')
 
     assertNotNull(secAxis)
-    assertEquals("Fahrenheit", secAxis.name)
+    assertEquals('Fahrenheit', secAxis.name)
     assertNotNull(secAxis.transform)
   }
 
   @Test
   void testSecAxisTransformation() {
     // Test that the transformation works correctly
-    SecondaryAxis secAxis = sec_axis({ it * 2 }, name: "Doubled")
+    SecondaryAxis secAxis = sec_axis({ it * 2 }, name: 'Doubled')
 
     assertEquals(20, secAxis.applyTransform(10))
     assertEquals(100, secAxis.applyTransform(50))
@@ -40,7 +41,7 @@ class SecondaryAxisTest {
   @Test
   void testSecAxisTransformationCelsiusToFahrenheit() {
     // Real-world example: Celsius to Fahrenheit
-    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")
+    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')
 
     assertEquals(32.0, secAxis.applyTransform(0), 0.01)  // 0°C = 32°F
     assertEquals(212.0, secAxis.applyTransform(100), 0.01)  // 100°C = 212°F
@@ -50,7 +51,7 @@ class SecondaryAxisTest {
   @Test
   void testSecAxisTransformationHandlesNull() {
     // Test that null values are handled gracefully
-    SecondaryAxis secAxis = sec_axis({ it * 2 }, name: "Doubled")
+    SecondaryAxis secAxis = sec_axis({ it * 2 }, name: 'Doubled')
 
     assertNull(secAxis.applyTransform(null))
   }
@@ -77,9 +78,9 @@ class SecondaryAxisTest {
   @Test
   void testDupAxisWithName() {
     // Test dup_axis with custom name
-    SecondaryAxis dupAxis = dup_axis(name: "Repeated Axis")
+    SecondaryAxis dupAxis = dup_axis(name: 'Repeated Axis')
 
-    assertEquals("Repeated Axis", dupAxis.name)
+    assertEquals('Repeated Axis', dupAxis.name)
     assertEquals(42, dupAxis.applyTransform(42))
   }
 
@@ -88,11 +89,11 @@ class SecondaryAxisTest {
     // Test sec_axis with explicit breaks
     SecondaryAxis secAxis = sec_axis(
       { it * 1000 },
-      name: "Kilometers",
+      name: 'Kilometers',
       breaks: [0, 5, 10, 15, 20]
     )
 
-    assertEquals("Kilometers", secAxis.name)
+    assertEquals('Kilometers', secAxis.name)
     assertNotNull(secAxis.breaks)
     assertEquals(5, secAxis.breaks.size())
   }
@@ -102,50 +103,50 @@ class SecondaryAxisTest {
     // Test sec_axis with custom labels
     SecondaryAxis secAxis = sec_axis(
       { it / 1000 },
-      name: "Thousands",
-      labels: ["0", "1k", "2k", "3k", "4k"]
+      name: 'Thousands',
+      labels: ['0', '1k', '2k', '3k', '4k']
     )
 
     assertNotNull(secAxis.labels)
     assertEquals(5, secAxis.labels.size())
-    assertEquals("1k", secAxis.labels[1])
+    assertEquals('1k', secAxis.labels[1])
   }
 
   @Test
   void testScaleXContinuousWithSecAxis() {
     // Test that ScaleXContinuous accepts sec.axis parameter
     ScaleXContinuous scale = scale_x_continuous(
-      'sec.axis': sec_axis({ it * 2 }, name: "Doubled")
+      'sec.axis': sec_axis({ it * 2 }, name: 'Doubled')
     )
 
     assertNotNull(scale)
     assertNotNull(scale.secAxis)
-    assertEquals("Doubled", scale.secAxis.name)
-    assertEquals("top", scale.secAxis.position)  // Secondary x-axis should be on top
+    assertEquals('Doubled', scale.secAxis.name)
+    assertEquals('top', scale.secAxis.position)  // Secondary x-axis should be on top
   }
 
   @Test
   void testScaleYContinuousWithSecAxis() {
     // Test that ScaleYContinuous accepts sec.axis parameter
     ScaleYContinuous scale = scale_y_continuous(
-      'sec.axis': sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")
+      'sec.axis': sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')
     )
 
     assertNotNull(scale)
     assertNotNull(scale.secAxis)
-    assertEquals("Fahrenheit", scale.secAxis.name)
-    assertEquals("right", scale.secAxis.position)  // Secondary y-axis should be on right
+    assertEquals('Fahrenheit', scale.secAxis.name)
+    assertEquals('right', scale.secAxis.position)  // Secondary y-axis should be on right
   }
 
   @Test
   void testScaleXContinuousWithDupAxis() {
     // Test that ScaleXContinuous works with dup_axis
     ScaleXContinuous scale = scale_x_continuous(
-      'sec.axis': dup_axis(name: "Time (repeated)")
+      'sec.axis': dup_axis(name: 'Time (repeated)')
     )
 
     assertNotNull(scale.secAxis)
-    assertEquals("Time (repeated)", scale.secAxis.name)
+    assertEquals('Time (repeated)', scale.secAxis.name)
   }
 
   @Test
@@ -176,14 +177,14 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 }, name: "MPG x 1.8"))
+      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 }, name: 'MPG x 1.8'))
 
     assertNotNull(chart)
     Svg svg = chart.render()
     assertNotNull(svg)
 
     // Basic check that the SVG is generated
-    String svgString = svg.toString()
+    String svgString = svg.toXml()
     assertTrue(svgString.contains('svg'))
   }
 
@@ -201,7 +202,7 @@ class SecondaryAxisTest {
     assertNotNull(svg)
 
     // Check that the SVG is generated (basic sanity check)
-    String svgString = svg.toString()
+    String svgString = svg.toXml()
     assertTrue(svgString.contains('svg'))
   }
 
@@ -209,7 +210,7 @@ class SecondaryAxisTest {
   void testSecondaryAxisBreaksAndLabels() {
     // Test that secondary axis computes breaks and labels correctly
     ScaleYContinuous scale = scale_y_continuous(
-      'sec.axis': sec_axis({ it * 1000 }, name: "Meters to Kilometers")
+      'sec.axis': sec_axis({ it * 1000 }, name: 'Meters to Kilometers')
     )
 
     // Train the scale with some data
@@ -253,7 +254,7 @@ class SecondaryAxisTest {
   @Test
   void testSecondaryAxisWithNegativeTransformation() {
     // Test transformation that can produce negative values
-    SecondaryAxis secAxis = sec_axis({ -it }, name: "Negated")
+    SecondaryAxis secAxis = sec_axis({ -it }, name: 'Negated')
 
     assertEquals(-10, secAxis.applyTransform(10))
     assertEquals(10, secAxis.applyTransform(-10))
@@ -263,7 +264,7 @@ class SecondaryAxisTest {
   @Test
   void testSecondaryAxisWithComplexTransformation() {
     // Test more complex transformation (e.g., logarithmic scale conversion)
-    SecondaryAxis secAxis = sec_axis({ it ** 2 }, name: "Squared")
+    SecondaryAxis secAxis = sec_axis({ it ** 2 }, name: 'Squared')
 
     assertEquals(4, secAxis.applyTransform(2))
     assertEquals(9, secAxis.applyTransform(3))
@@ -273,9 +274,9 @@ class SecondaryAxisTest {
   @Test
   void testIdiomaticSyntaxSimple() {
     // Test the idiomatic Groovy syntax: sec_axis("name") { closure }
-    SecondaryAxis secAxis = sec_axis("Fahrenheit") { it * 1.8 + 32 }
+    SecondaryAxis secAxis = sec_axis('Fahrenheit') { it * 1.8 + 32 }
 
-    assertEquals("Fahrenheit", secAxis.name)
+    assertEquals('Fahrenheit', secAxis.name)
     assertEquals(32.0, secAxis.applyTransform(0), 0.01)
     assertEquals(212.0, secAxis.applyTransform(100), 0.01)
   }
@@ -283,9 +284,9 @@ class SecondaryAxisTest {
   @Test
   void testIdiomaticSyntaxWithParams() {
     // Test the idiomatic syntax with additional parameters
-    SecondaryAxis secAxis = sec_axis("Kilometers", breaks: [0, 5, 10]) { it / 1000 }
+    SecondaryAxis secAxis = sec_axis('Kilometers', breaks: [0, 5, 10]) { it / 1000 }
 
-    assertEquals("Kilometers", secAxis.name)
+    assertEquals('Kilometers', secAxis.name)
     assertNotNull(secAxis.breaks)
     assertEquals(3, secAxis.breaks.size())
     assertEquals(0.01, secAxis.applyTransform(10), 0.001)
@@ -294,9 +295,9 @@ class SecondaryAxisTest {
   @Test
   void testDupAxisIdiomaticSyntax() {
     // Test dup_axis with simple string parameter
-    SecondaryAxis dupAxis = dup_axis("Repeated")
+    SecondaryAxis dupAxis = dup_axis('Repeated')
 
-    assertEquals("Repeated", dupAxis.name)
+    assertEquals('Repeated', dupAxis.name)
     assertEquals(42, dupAxis.applyTransform(42))
   }
 
@@ -307,12 +308,12 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_y_continuous('sec.axis': sec_axis("MPG x 1.8") { it * 1.8 })
+      scale_y_continuous('sec.axis': sec_axis('MPG x 1.8') { it * 1.8 })
 
     assertNotNull(chart)
     Svg svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('svg'))
+    assertTrue(svg.toXml().contains('svg'))
   }
 
   @Test
@@ -322,7 +323,7 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_x_continuous('sec.axis': dup_axis("Horsepower (repeated)"))
+      scale_x_continuous('sec.axis': dup_axis('Horsepower (repeated)'))
 
     assertNotNull(chart)
     Svg svg = chart.render()
@@ -336,7 +337,7 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")) +
+      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')) +
       coord_flip()
 
     assertNotNull(chart)
@@ -344,7 +345,7 @@ class SecondaryAxisTest {
     assertNotNull(svg)
 
     // Check that the SVG is generated
-    String svgString = svg.toString()
+    String svgString = svg.toXml()
     assertTrue(svgString.contains('svg'))
   }
 
@@ -355,13 +356,13 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_x_continuous('sec.axis': dup_axis("HP (repeated)")) +
+      scale_x_continuous('sec.axis': dup_axis('HP (repeated)')) +
       coord_flip()
 
     assertNotNull(chart)
     Svg svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('svg'))
+    assertTrue(svg.toXml().contains('svg'))
   }
 
   @Test
@@ -371,14 +372,14 @@ class SecondaryAxisTest {
 
     def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
       geom_point() +
-      scale_x_continuous('sec.axis': dup_axis("HP (repeated)")) +
-      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")) +
+      scale_x_continuous('sec.axis': dup_axis('HP (repeated)')) +
+      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')) +
       coord_flip()
 
     assertNotNull(chart)
     Svg svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('svg'))
+    assertTrue(svg.toXml().contains('svg'))
   }
 
   @Test
@@ -397,7 +398,7 @@ class SecondaryAxisTest {
       scale_x_continuous(
         'sec.axis': sec_axis(
           { it * 1.8 + 32 },
-          name: "Fahrenheit",
+          name: 'Fahrenheit',
           breaks: [32, 68, 104]  // These are in Fahrenheit (secondary units)
         )
       )
@@ -407,13 +408,13 @@ class SecondaryAxisTest {
     assertNotNull(svg)
 
     // The chart should render without errors
-    assertTrue(svg.toString().contains('svg'))
+    assertTrue(svg.toXml().contains('svg'))
   }
 
   @Test
   void testInverseTransformForLinearFunction() {
     // Test the inverse transformation for a simple linear function
-    SecondaryAxis secAxis = sec_axis({ it * 2 + 10 }, name: "Doubled")
+    SecondaryAxis secAxis = sec_axis({ it * 2 + 10 }, name: 'Doubled')
 
     // For f(x) = 2x + 10:
     // f(0) = 10, so inverse(10) should be ~0
@@ -431,7 +432,7 @@ class SecondaryAxisTest {
   @Test
   void testInverseTransformForCelsiusToFahrenheit() {
     // Test inverse transformation for Celsius to Fahrenheit
-    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")
+    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: 'Fahrenheit')
 
     // F = C * 1.8 + 32
     // 32°F should give 0°C

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
 
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 
@@ -30,14 +29,14 @@ class GgSaveTest {
     svg.height(100)
     svg.addRect(200, 100).fill('blue')
 
-    File svgFile = tempDir.resolve("single.svg").toFile()
+    File svgFile = tempDir.resolve('single.svg').toFile()
     ggsave(svgFile.absolutePath, svg)
 
-    assertTrue(svgFile.exists(), "SVG file should be created")
+    assertTrue(svgFile.exists(), 'SVG file should be created')
     String content = svgFile.text
-    assertTrue(content.contains('<svg'), "File should contain SVG content")
-    assertTrue(content.contains('width="200"'), "SVG should have correct width")
-    assertTrue(content.contains('height="100"'), "SVG should have correct height")
+    assertTrue(content.contains('<svg'), 'File should contain SVG content')
+    assertTrue(content.contains('width="200"'), 'SVG should have correct width')
+    assertTrue(content.contains('height="100"'), 'SVG should have correct height')
   }
 
   @Test
@@ -47,11 +46,11 @@ class GgSaveTest {
     svg.height(100)
     svg.addRect(200, 100).fill('green')
 
-    File pngFile = tempDir.resolve("single.png").toFile()
+    File pngFile = tempDir.resolve('single.png').toFile()
     ggsave(pngFile.absolutePath, svg)
 
-    assertTrue(pngFile.exists(), "PNG file should be created")
-    assertTrue(pngFile.length() > 0, "PNG file should not be empty")
+    assertTrue(pngFile.exists(), 'PNG file should be created')
+    assertTrue(pngFile.length() > 0, 'PNG file should not be empty')
   }
 
   @Test
@@ -68,19 +67,19 @@ class GgSaveTest {
     svg2.addRect(300, 150).fill('blue')
     svg2.addText('Chart 2').x(10).y(20)
 
-    File svgFile = tempDir.resolve("multiple.svg").toFile()
+    File svgFile = tempDir.resolve('multiple.svg').toFile()
     ggsave(svgFile.absolutePath, svg1, svg2)
 
-    assertTrue(svgFile.exists(), "SVG file should be created")
+    assertTrue(svgFile.exists(), 'SVG file should be created')
     String content = svgFile.text
-    assertTrue(content.contains('<svg'), "File should contain SVG content")
+    assertTrue(content.contains('<svg'), 'File should contain SVG content')
     // Should have combined height (150 + 150 = 300)
-    assertTrue(content.contains('height="300"'), "Combined SVG should have total height")
+    assertTrue(content.contains('height="300"'), 'Combined SVG should have total height')
     // Should have max width (300)
-    assertTrue(content.contains('width="300"'), "Combined SVG should have max width")
+    assertTrue(content.contains('width="300"'), 'Combined SVG should have max width')
     // Should contain both chart contents
-    assertTrue(content.contains('Chart 1'), "Should contain first chart")
-    assertTrue(content.contains('Chart 2'), "Should contain second chart")
+    assertTrue(content.contains('Chart 1'), 'Should contain first chart')
+    assertTrue(content.contains('Chart 2'), 'Should contain second chart')
   }
 
   @Test
@@ -95,11 +94,11 @@ class GgSaveTest {
     svg2.height(100)
     svg2.addRect(200, 100).fill('purple')
 
-    File pngFile = tempDir.resolve("multiple.png").toFile()
+    File pngFile = tempDir.resolve('multiple.png').toFile()
     ggsave(pngFile.absolutePath, svg1, svg2)
 
-    assertTrue(pngFile.exists(), "PNG file should be created")
-    assertTrue(pngFile.length() > 0, "PNG file should not be empty")
+    assertTrue(pngFile.exists(), 'PNG file should be created')
+    assertTrue(pngFile.length() > 0, 'PNG file should not be empty')
   }
 
   @Test
@@ -112,13 +111,13 @@ class GgSaveTest {
 
     GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_point()
 
-    File svgFile = tempDir.resolve("chart.svg").toFile()
+    File svgFile = tempDir.resolve('chart.svg').toFile()
     ggsave(svgFile.absolutePath, chart)
 
-    assertTrue(svgFile.exists(), "SVG file should be created")
+    assertTrue(svgFile.exists(), 'SVG file should be created')
     String content = svgFile.text
-    assertTrue(content.contains('<svg'), "File should contain SVG content")
-    assertTrue(content.contains('<circle'), "Chart should contain points")
+    assertTrue(content.contains('<svg'), 'File should contain SVG content')
+    assertTrue(content.contains('<circle'), 'Chart should contain points')
   }
 
   @Test
@@ -131,11 +130,11 @@ class GgSaveTest {
 
     GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
 
-    File pngFile = tempDir.resolve("chart.png").toFile()
+    File pngFile = tempDir.resolve('chart.png').toFile()
     ggsave(pngFile.absolutePath, chart)
 
-    assertTrue(pngFile.exists(), "PNG file should be created")
-    assertTrue(pngFile.length() > 0, "PNG file should not be empty")
+    assertTrue(pngFile.exists(), 'PNG file should be created')
+    assertTrue(pngFile.length() > 0, 'PNG file should not be empty')
   }
 
   @Test
@@ -154,14 +153,14 @@ class GgSaveTest {
         geom_line() +
         labs(title: 'Chart 2')
 
-    File svgFile = tempDir.resolve("charts.svg").toFile()
+    File svgFile = tempDir.resolve('charts.svg').toFile()
     ggsave(svgFile.absolutePath, chart1, chart2)
 
-    assertTrue(svgFile.exists(), "SVG file should be created")
+    assertTrue(svgFile.exists(), 'SVG file should be created')
     String content = svgFile.text
-    assertTrue(content.contains('<svg'), "File should contain SVG content")
-    assertTrue(content.contains('Chart 1'), "Should contain first chart title")
-    assertTrue(content.contains('Chart 2'), "Should contain second chart title")
+    assertTrue(content.contains('<svg'), 'File should contain SVG content')
+    assertTrue(content.contains('Chart 1'), 'Should contain first chart title')
+    assertTrue(content.contains('Chart 2'), 'Should contain second chart title')
   }
 
   @Test
@@ -175,11 +174,11 @@ class GgSaveTest {
     GgChart chart1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_point()
     GgChart chart2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
 
-    File pngFile = tempDir.resolve("charts.png").toFile()
+    File pngFile = tempDir.resolve('charts.png').toFile()
     ggsave(pngFile.absolutePath, chart1, chart2)
 
-    assertTrue(pngFile.exists(), "PNG file should be created")
-    assertTrue(pngFile.length() > 0, "PNG file should not be empty")
+    assertTrue(pngFile.exists(), 'PNG file should be created')
+    assertTrue(pngFile.length() > 0, 'PNG file should not be empty')
   }
 
   @Test
@@ -188,14 +187,14 @@ class GgSaveTest {
     svg.width(200)
     svg.height(100)
 
-    File invalidFile = tempDir.resolve("test.pdf").toFile()
+    File invalidFile = tempDir.resolve('test.pdf').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       ggsave(invalidFile.absolutePath, svg)
     }
 
-    assertTrue(exception.message.contains("File extension must be .svg"),
-        "Should throw error for invalid extension")
+    assertTrue(exception.message.contains('File extension must be .svg'),
+        'Should throw error for invalid extension')
   }
 
   @Test
@@ -204,14 +203,14 @@ class GgSaveTest {
     svg.width(200)
     svg.height(100)
 
-    File noExtFile = tempDir.resolve("test_no_extension").toFile()
+    File noExtFile = tempDir.resolve('test_no_extension').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       ggsave(noExtFile.absolutePath, svg)
     }
 
-    assertTrue(exception.message.contains("File path must have a valid extension"),
-        "Should throw error for file without extension")
+    assertTrue(exception.message.contains('File path must have a valid extension'),
+        'Should throw error for file without extension')
   }
 
   @Test
@@ -220,14 +219,14 @@ class GgSaveTest {
     svg.width(200)
     svg.height(100)
 
-    File trailingDotFile = tempDir.resolve("test.").toFile()
+    File trailingDotFile = tempDir.resolve('test.').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       ggsave(trailingDotFile.absolutePath, svg)
     }
 
-    assertTrue(exception.message.contains("File path must have a valid extension"),
-        "Should throw error for file with trailing dot but no extension")
+    assertTrue(exception.message.contains('File path must have a valid extension'),
+        'Should throw error for file with trailing dot but no extension')
   }
 
   @Test
@@ -239,40 +238,40 @@ class GgSaveTest {
         .build()
 
     GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_point()
-    File noExtFile = tempDir.resolve("chart_no_ext").toFile()
+    File noExtFile = tempDir.resolve('chart_no_ext').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       ggsave(noExtFile.absolutePath, chart)
     }
 
-    assertTrue(exception.message.contains("File path must have a valid extension"),
-        "Should throw error for chart save without extension")
+    assertTrue(exception.message.contains('File path must have a valid extension'),
+        'Should throw error for chart save without extension')
   }
 
   @Test
   void testGgSaveNoSvgs() {
-    File svgFile = tempDir.resolve("empty.svg").toFile()
+    File svgFile = tempDir.resolve('empty.svg').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       Svg[] emptyArray = []
       ggsave(svgFile.absolutePath, emptyArray)
     }
 
-    assertTrue(exception.message.contains("At least one SVG object must be provided"),
-        "Should throw error when no SVGs provided")
+    assertTrue(exception.message.contains('At least one SVG object must be provided'),
+        'Should throw error when no SVGs provided')
   }
 
   @Test
   void testGgSaveNoCharts() {
-    File svgFile = tempDir.resolve("empty.svg").toFile()
+    File svgFile = tempDir.resolve('empty.svg').toFile()
 
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       GgChart[] charts = []
       ggsave(svgFile.absolutePath, charts)
     }
 
-    assertTrue(exception.message.contains("At least one GgChart object must be provided"),
-        "Should throw error when no charts provided")
+    assertTrue(exception.message.contains('At least one GgChart object must be provided'),
+        'Should throw error when no charts provided')
   }
 
   @Test
@@ -293,15 +292,15 @@ class GgSaveTest {
     svg3.height(80)
     svg3.addRect(300, 80).fill('green')
 
-    File svgFile = tempDir.resolve("different_widths.svg").toFile()
+    File svgFile = tempDir.resolve('different_widths.svg').toFile()
     ggsave(svgFile.absolutePath, svg1, svg2, svg3)
 
-    assertTrue(svgFile.exists(), "SVG file should be created")
+    assertTrue(svgFile.exists(), 'SVG file should be created')
     String content = svgFile.text
 
     // Should have max width (400)
-    assertTrue(content.contains('width="400"'), "Combined SVG should have max width")
+    assertTrue(content.contains('width="400"'), 'Combined SVG should have max width')
     // Should have total height (100 + 150 + 80 = 330)
-    assertTrue(content.contains('height="330"'), "Combined SVG should have total height")
+    assertTrue(content.contains('height="330"'), 'Combined SVG should have total height')
   }
 }

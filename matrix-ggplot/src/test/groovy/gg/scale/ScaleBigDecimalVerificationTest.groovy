@@ -19,8 +19,8 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
   @Test
   void testScaleContinuousPrecision() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 100] as List<BigDecimal>
+    scale.expand = [0, 0]
+    scale.range = [0, 100]
     scale.train([0, 10])
 
     // Test that transform returns BigDecimal
@@ -42,7 +42,7 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
   void testScaleLog10Precision() {
     ScaleXLog10 scale = new ScaleXLog10()
     scale.expand = null  // No expansion
-    scale.range = [0, 300] as List<BigDecimal>
+    scale.range = [0, 300]
     scale.train([1, 10, 100, 1000])
 
     // Test transform returns BigDecimal
@@ -67,7 +67,7 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
 
     ScaleXSqrt scale = new ScaleXSqrt()
     scale.expand = null  // No expansion
-    scale.range = [0, 100] as List<BigDecimal>
+    scale.range = [0, 100]
     scale.train([0, 4, 16, 64, 100])
 
     // Test transform returns BigDecimal
@@ -82,20 +82,20 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
     // Test breaks are BigDecimal
     def breaks = scale.getComputedBreaks()
     //println "Breaks: $breaks"
-    assertTrue(breaks.every { it instanceof BigDecimal }, "Breaks should be BigDecimal")
+    assertTrue(breaks.every { it instanceof BigDecimal }, 'Breaks should be BigDecimal')
   }
 
   @Test
   void testScaleSizeContinuousPrecision() {
 
     ScaleSizeContinuous scale = new ScaleSizeContinuous()
-    scale.range = [1, 10] as List<BigDecimal>
+    scale.range = [1, 10]
     scale.train([0, 50, 100])
 
     // Test transform returns BigDecimal
     def result = scale.transform(50)
-    //println "transform(50) = $result (type: ${result.class.simpleName})"
-    assertTrue(result instanceof BigDecimal, "transform should return BigDecimal")
+    //println "transform(50) = $result (type: ${result.simpleName})"
+    assertTrue(result instanceof BigDecimal, 'transform should return BigDecimal')
 
     // Verify range mapping
     def min = scale.transform(0)
@@ -108,18 +108,18 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
   @Test
   void testBreakGenerationWithBigDecimal() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<BigDecimal>
+    scale.expand = [0, 0]
     scale.train([0, 100])
 
     def breaks = scale.getComputedBreaks()
 
     // Verify all breaks are BigDecimal
-    assertTrue(breaks.every { it instanceof BigDecimal }, "All breaks should be BigDecimal")
+    assertTrue(breaks.every { it instanceof BigDecimal }, 'All breaks should be BigDecimal')
 
     // Check labels formatting
     def labels = scale.getComputedLabels()
     //println "Generated labels: $labels"
-    assertTrue(labels.every { it instanceof String }, "All labels should be String")
+    assertTrue(labels.every { it instanceof String }, 'All labels should be String')
   }
 
   @Test
@@ -128,9 +128,9 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
     scale.train([0, 100])
 
     // Test various NA forms
-    assertNull(scale.transform(null), "null should return null")
-    assertNull(scale.transform("NA"), "NA string should return null")
-    assertNull(scale.transform("NaN"), "NaN string should return null")
-    assertNull(scale.transform(Double.NaN), "Double.NaN should return null")
+    assertNull(scale.transform(null), 'null should return null')
+    assertNull(scale.transform('NA'), 'NA string should return null')
+    assertNull(scale.transform('NaN'), 'NaN string should return null')
+    assertNull(scale.transform(Double.NaN), 'Double.NaN should return null')
   }
 }

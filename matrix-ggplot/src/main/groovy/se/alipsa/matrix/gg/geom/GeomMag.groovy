@@ -16,6 +16,7 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * - Engineering: Stress fields, displacement fields
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomMag extends Geom {
 
   /** Default point color */
@@ -41,18 +42,26 @@ class GeomMag extends Geom {
 
   GeomMag() {
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'steelblue', size: 3, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'steelblue', size: 3, alpha: 1.0]
   }
 
   GeomMag(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
-    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
     this.shape = params.shape as String ?: this.shape
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.scaleToMagnitude != null) this.scaleToMagnitude = params.scaleToMagnitude as boolean
-    if (params.sizeMultiplier != null) this.sizeMultiplier = params.sizeMultiplier as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.scaleToMagnitude != null) {
+      this.scaleToMagnitude = params.scaleToMagnitude as boolean
+    }
+    if (params.sizeMultiplier != null) {
+      this.sizeMultiplier = params.sizeMultiplier as BigDecimal
+    }
     this.params = params
   }
 

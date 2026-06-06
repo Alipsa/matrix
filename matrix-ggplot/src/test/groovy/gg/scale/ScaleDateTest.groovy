@@ -479,7 +479,7 @@ class ScaleDateTest {
       LocalDate.of(2024, 1, 10)
     ])
     def shortBreaks = shortScale.getComputedBreaks()
-    assertTrue(shortBreaks.size() >= 2, "Short span should have multiple breaks")
+    assertTrue(shortBreaks.size() >= 2, 'Short span should have multiple breaks')
 
     // Medium span: months
     ScaleXDate mediumScale = new ScaleXDate()
@@ -488,7 +488,7 @@ class ScaleDateTest {
       LocalDate.of(2024, 6, 30)
     ])
     def mediumBreaks = mediumScale.getComputedBreaks()
-    assertTrue(mediumBreaks.size() >= 2, "Medium span should have multiple breaks")
+    assertTrue(mediumBreaks.size() >= 2, 'Medium span should have multiple breaks')
 
     // Long span: years
     ScaleXDate longScale = new ScaleXDate()
@@ -497,7 +497,7 @@ class ScaleDateTest {
       LocalDate.of(2024, 12, 31)
     ])
     def longBreaks = longScale.getComputedBreaks()
-    assertTrue(longBreaks.size() >= 2, "Long span should have multiple breaks")
+    assertTrue(longBreaks.size() >= 2, 'Long span should have multiple breaks')
   }
 
   @Test
@@ -511,7 +511,7 @@ class ScaleDateTest {
       LocalDateTime.of(2024, 1, 15, 12, 30)
     ])
     def shortBreaks = shortScale.getComputedBreaks()
-    assertTrue(shortBreaks.size() >= 2, "Short span should have multiple breaks")
+    assertTrue(shortBreaks.size() >= 2, 'Short span should have multiple breaks')
 
     // Medium span: hours
     ScaleXDatetime mediumScale = new ScaleXDatetime()
@@ -520,7 +520,7 @@ class ScaleDateTest {
       LocalDateTime.of(2024, 1, 15, 18, 0)
     ])
     def mediumBreaks = mediumScale.getComputedBreaks()
-    assertTrue(mediumBreaks.size() >= 2, "Medium span should have multiple breaks")
+    assertTrue(mediumBreaks.size() >= 2, 'Medium span should have multiple breaks')
 
     // Long span: days
     ScaleXDatetime longScale = new ScaleXDatetime()
@@ -529,6 +529,6 @@ class ScaleDateTest {
       LocalDateTime.of(2024, 1, 7, 0, 0)
     ])
     def longBreaks = longScale.getComputedBreaks()
-    assertTrue(longBreaks.size() >= 2, "Long span should have multiple breaks")
+    assertTrue(longBreaks.size() >= 2, 'Long span should have multiple breaks')
   }
 }

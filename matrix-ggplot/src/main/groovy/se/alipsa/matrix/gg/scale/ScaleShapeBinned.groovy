@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
  * Missing or invalid values map to naValue.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleShapeBinned extends ScaleContinuous {
 
   /** List of shapes to use for bins */
@@ -41,19 +42,35 @@ class ScaleShapeBinned extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.shapes) this.shapes = params.shapes as List<String>
-    if (params.bins != null) this.bins = (params.bins as Number).intValue()
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.shapes) {
+      this.shapes = params.shapes as List<String>
+    }
+    if (params.bins != null) {
+      this.bins = (params.bins as Number).intValue()
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
   }
 
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
@@ -82,7 +99,9 @@ class ScaleShapeBinned extends ScaleContinuous {
     binIndex = binIndex.max(0) as int
 
     // Map bin to shape (cycle through shapes if more bins than shapes)
-    if (shapes.isEmpty()) return naValue
+    if (shapes.isEmpty()) {
+      return naValue
+    }
     return shapes[binIndex % shapes.size()]
   }
 }

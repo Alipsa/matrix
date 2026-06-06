@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - density: count / (n * binwidth)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomHistogram extends Geom {
 
   /** Bar fill color */
@@ -40,18 +41,32 @@ class GeomHistogram extends Geom {
   GeomHistogram() {
     defaultStat = StatType.BIN
     requiredAes = ['x']
-    defaultAes = [fill: '#595959', color: 'white', alpha: 1.0] as Map<String, Object>
+    defaultAes = [fill: '#595959', color: 'white', alpha: 1.0]
   }
 
   GeomHistogram(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.alpha) this.alpha = params.alpha as Number
-    if (params.linewidth) this.linewidth = params.linewidth as Number
-    if (params.bins) this.bins = params.bins as Integer
-    if (params.binwidth) this.binwidth = params.binwidth as Number
+    if (params.fill) {
+      this.fill = ColorUtil.normalizeColor(params.fill as String)
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.alpha) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.linewidth) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.bins) {
+      this.bins = params.bins as Integer
+    }
+    if (params.binwidth) {
+      this.binwidth = params.binwidth as Number
+    }
     this.params = params
   }
 

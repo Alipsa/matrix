@@ -35,7 +35,7 @@ class ScaleFillIdentityTest {
     def scale = new ScaleFillIdentity()
     // grey50 may be normalised to a hex value by the color pipeline
     assertNotNull(scale.transform(null))
-    assertTrue(scale.transform(null).toString().startsWith('#') ||
+    assertTrue(scale.transform(null).startsWith('#') ||
                scale.transform(null) == 'grey50')
   }
 

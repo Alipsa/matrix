@@ -30,6 +30,7 @@ import groovy.transform.CompileStatic
  * - "asn" or "asin" - arcsine square root (for proportions)
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class CoordTrans extends Coord {
 
   /** X-axis transformation */
@@ -69,7 +70,7 @@ class CoordTrans extends Coord {
       } else if (params.x instanceof Trans) {
         this.xTrans = params.x as Trans
       } else {
-        throw new IllegalArgumentException("x parameter must be String, Map, or Trans")
+        throw new IllegalArgumentException('x parameter must be String, Map, or Trans')
       }
     } else {
       this.xTrans = new Transformations.IdentityTrans()
@@ -94,15 +95,19 @@ class CoordTrans extends Coord {
       } else if (params.y instanceof Trans) {
         this.yTrans = params.y as Trans
       } else {
-        throw new IllegalArgumentException("y parameter must be String, Map, or Trans")
+        throw new IllegalArgumentException('y parameter must be String, Map, or Trans')
       }
     } else {
       this.yTrans = new Transformations.IdentityTrans()
     }
 
     // Handle other parameters
-    if (params.xlim) this.xlim = params.xlim as List<Number>
-    if (params.ylim) this.ylim = params.ylim as List<Number>
+    if (params.xlim) {
+      this.xlim = params.xlim as List<Number>
+    }
+    if (params.ylim) {
+      this.ylim = params.ylim as List<Number>
+    }
   }
 
   /**

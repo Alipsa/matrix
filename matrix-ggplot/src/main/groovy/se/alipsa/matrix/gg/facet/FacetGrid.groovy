@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.Matrix
  *     facet_grid(rows: 'cyl', cols: 'gear')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateListLiteral', 'DuplicateStringLiteral', 'UnnecessaryElseStatement'])
 class FacetGrid extends Facet {
 
   /** Row faceting variable(s) */
@@ -57,8 +58,12 @@ class FacetGrid extends Facet {
       this.cols = params.cols as List<String>
     }
 
-    if (params.scales) this.scales = params.scales as String
-    if (params.space) this.space = params.space as String
+    if (params.scales) {
+      this.scales = params.scales as String
+    }
+    if (params.space) {
+      this.space = params.space as String
+    }
     if (params.labeller) {
       // Accept String, gg Labeller, and charm Labeller objects
       if (params.labeller instanceof se.alipsa.matrix.charm.facet.Labeller || params.labeller instanceof String) {
@@ -67,9 +72,15 @@ class FacetGrid extends Facet {
         this.labeller = params.labeller as String
       }
     }
-    if (params.containsKey('strip')) this.strip = params.strip as boolean
-    if (params.containsKey('margins')) this.margins = params.margins as boolean
-    if (params.panelSpacing != null) this.panelSpacing = params.panelSpacing as int
+    if (params.containsKey('strip')) {
+      this.strip = params.strip as boolean
+    }
+    if (params.containsKey('margins')) {
+      this.margins = params.margins as boolean
+    }
+    if (params.panelSpacing != null) {
+      this.panelSpacing = params.panelSpacing as int
+    }
   }
 
   @Override
@@ -101,8 +112,12 @@ class FacetGrid extends Facet {
     List<Object> colValues = getUniqueValues(data, cols)
 
     // Handle case where one dimension is empty
-    if (rowValues.isEmpty()) rowValues = [null]
-    if (colValues.isEmpty()) colValues = [null]
+    if (rowValues.isEmpty()) {
+      rowValues = [null]
+    }
+    if (colValues.isEmpty()) {
+      colValues = [null]
+    }
 
     List<Map<String, Object>> panels = []
 
@@ -201,7 +216,9 @@ class FacetGrid extends Facet {
    * Get the row index for a panel based on its values.
    */
   int getRowIndex(Map<String, Object> panelValues, Matrix data) {
-    if (rows.isEmpty()) return 0
+    if (rows.isEmpty()) {
+      return 0
+    }
 
     List<Object> rowValues = getUniqueValues(data, rows)
     Object panelRowVal = rows.size() == 1 ? panelValues[rows[0]] :
@@ -214,7 +231,9 @@ class FacetGrid extends Facet {
    * Get the column index for a panel based on its values.
    */
   int getColIndex(Map<String, Object> panelValues, Matrix data) {
-    if (cols.isEmpty()) return 0
+    if (cols.isEmpty()) {
+      return 0
+    }
 
     List<Object> colValues = getUniqueValues(data, cols)
     Object panelColVal = cols.size() == 1 ? panelValues[cols[0]] :
@@ -274,7 +293,7 @@ class FacetGrid extends Facet {
     if (labeller == 'both' && rows.size() == 1) {
       return "${rows[0]}: ${val}"
     }
-    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val.toString()
+    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val?.toString()
   }
 
   /**
@@ -312,6 +331,6 @@ class FacetGrid extends Facet {
     if (labeller == 'both' && cols.size() == 1) {
       return "${cols[0]}: ${val}"
     }
-    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val.toString()
+    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val?.toString()
   }
 }

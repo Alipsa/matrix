@@ -10,13 +10,11 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
-import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.scale.ScaleXContinuous
-import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.stat.GgStat
 
+@SuppressWarnings('UnnecessaryGString')
 class GeomBoxplotTest {
 
   // ============== GeomBoxplot Defaults ==============
@@ -154,22 +152,22 @@ class GeomBoxplotTest {
     def boxplotData = GgStat.boxplot(data, aes)
 
     /*
-    println "Boxplot data:"
-    println "Columns: ${boxplotData.columnNames()}"
+    println "Boxplot data:'
+    println 'Columns: ${boxplotData.columnNames()}'
     boxplotData.each { row ->
-      println "  x=${row['x']}, ymin=${row['ymin']}, lower=${row['lower']}, " +
-              "middle=${row['middle']}, upper=${row['upper']}, ymax=${row['ymax']}, " +
-              "outliers=${row['outliers']}"
+      println '  x=${row['x']}, ymin=${row['ymin']}, lower=${row['lower']}, ' +
+              'middle=${row['middle']}, upper=${row['upper']}, ymax=${row['ymax']}, ' +
+              'outliers=${row['outliers']}"
     }
     */
-    assertTrue(boxplotData.columnNames().contains('x'), "Should have x column")
-    assertTrue(boxplotData.columnNames().contains('ymin'), "Should have ymin column")
-    assertTrue(boxplotData.columnNames().contains('lower'), "Should have lower column")
-    assertTrue(boxplotData.columnNames().contains('middle'), "Should have middle column")
-    assertTrue(boxplotData.columnNames().contains('upper'), "Should have upper column")
-    assertTrue(boxplotData.columnNames().contains('ymax'), "Should have ymax column")
-    assertTrue(boxplotData.columnNames().contains('outliers'), "Should have outliers column")
-    assertEquals(1, boxplotData.rowCount(), "Should have 1 group")
+    assertTrue(boxplotData.columnNames().contains('x'), 'Should have x column')
+    assertTrue(boxplotData.columnNames().contains('ymin'), 'Should have ymin column')
+    assertTrue(boxplotData.columnNames().contains('lower'), 'Should have lower column')
+    assertTrue(boxplotData.columnNames().contains('middle'), 'Should have middle column')
+    assertTrue(boxplotData.columnNames().contains('upper'), 'Should have upper column')
+    assertTrue(boxplotData.columnNames().contains('ymax'), 'Should have ymax column')
+    assertTrue(boxplotData.columnNames().contains('outliers'), 'Should have outliers column')
+    assertEquals(1, boxplotData.rowCount(), 'Should have 1 group')
   }
 
   @Test
@@ -211,13 +209,13 @@ class GeomBoxplotTest {
     def boxplotData = GgStat.boxplot(data, aes)
 
     /*
-    println "Multiple groups boxplot:"
+    println 'Multiple groups boxplot:'
     boxplotData.each { row ->
-      println "  ${row['x']}: median=${row['middle']}"
+      println '  ${row['x']}: median=${row['middle']}'
     }*/
 
-    assertEquals(3, boxplotData.rowCount(), "Should have 3 groups")
-    assertTrue(boxplotData.columnNames().contains('relvarwidth'), "Should have relvarwidth column")
+    assertEquals(3, boxplotData.rowCount(), 'Should have 3 groups')
+    assertTrue(boxplotData.columnNames().contains('relvarwidth'), 'Should have relvarwidth column')
   }
 
   @Test
@@ -238,8 +236,8 @@ class GeomBoxplotTest {
     assertEquals(1.0d, (row['ymin'] as Number).doubleValue(), 0.0001d)
     assertEquals(9.0d, (row['ymax'] as Number).doubleValue(), 0.0001d)
     def outliers = row['outliers'] as List
-    assertEquals(1, outliers.size(), "Should have exactly one outlier")
-    assertTrue(outliers.contains(50), "Outlier list should include 50")
+    assertEquals(1, outliers.size(), 'Should have exactly one outlier')
+    assertTrue(outliers.contains(50), 'Outlier list should include 50')
   }
 
   @Test
@@ -262,9 +260,9 @@ class GeomBoxplotTest {
     def outliers = boxplotData.row(0)['outliers']
     //println "Outliers found: ${outliers}"
 
-    assertNotNull(outliers, "Should have outliers")
-    assertTrue(outliers instanceof List, "Outliers should be a list")
-    assertTrue((outliers as List).size() >= 1, "Should have at least 1 outlier")
+    assertNotNull(outliers, 'Should have outliers')
+    assertTrue(outliers instanceof List, 'Outliers should be a list')
+    assertTrue((outliers as List).size() >= 1, 'Should have at least 1 outlier')
   }
 
   // ============== Full Chart Tests ==============
@@ -361,8 +359,8 @@ class GeomBoxplotTest {
       widths << (match[1] as String).toDouble()
     }
 
-    assertTrue(widths.size() >= 2, "Should render multiple box widths")
-    assertTrue(widths.max() > widths.min(), "Box widths should vary with x range")
+    assertTrue(widths.size() >= 2, 'Should render multiple box widths')
+    assertTrue(widths.max() > widths.min(), 'Box widths should vary with x range')
   }
 
   @Slow
@@ -387,7 +385,7 @@ class GeomBoxplotTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill-opacity'), "Should have fill-opacity for transparency")
+    assertTrue(content.contains('fill-opacity'), 'Should have fill-opacity for transparency')
 
     File outputFile = new File('build/alpha_boxplot.svg')
     write(svg, outputFile)

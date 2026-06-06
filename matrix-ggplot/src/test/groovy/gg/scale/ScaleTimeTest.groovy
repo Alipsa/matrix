@@ -218,7 +218,7 @@ class ScaleTimeTest {
     assertTrue(breaks.every { it instanceof LocalTime })
     // Verify 10-second breaks
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(10, interval)
     }
   }
@@ -233,7 +233,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 10-second breaks for 1-minute span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(10, interval)
     }
   }
@@ -248,7 +248,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 30-second breaks for 5-minute span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(30, interval)
     }
   }
@@ -263,7 +263,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 10-minute breaks for 1-hour span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(600, interval)  // 10 minutes = 600 seconds
     }
   }
@@ -278,7 +278,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 15-minute breaks for 2-hour span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(900, interval)  // 15 minutes = 900 seconds
     }
   }
@@ -293,7 +293,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 30-minute breaks for 6-hour span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(1800, interval)  // 30 minutes = 1800 seconds
     }
   }
@@ -308,7 +308,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 1-hour breaks for 12-hour span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(3600, interval)  // 1 hour = 3600 seconds
     }
   }
@@ -323,7 +323,7 @@ class ScaleTimeTest {
     assertFalse(breaks.isEmpty())
     // Verify 2-hour breaks for full-day span
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(7200, interval)  // 2 hours = 7200 seconds
     }
   }
@@ -352,7 +352,7 @@ class ScaleTimeTest {
     assertEquals(LocalTime.of(9, 0), breaks[0])
     // Verify 15-minute intervals
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(900, interval)  // 15 minutes = 900 seconds
     }
   }
@@ -370,7 +370,7 @@ class ScaleTimeTest {
     assertEquals(LocalTime.of(8, 0), breaks[0])
     // Verify 2-hour intervals
     if (breaks.size() >= 2) {
-      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      long interval = Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
       assertEquals(7200, interval)  // 2 hours = 7200 seconds
     }
   }
@@ -494,7 +494,7 @@ class ScaleTimeTest {
     assertFalse(labels.isEmpty())
     // Should contain AM/PM or am/pm (locale-dependent)
     assertTrue(labels.any {
-      String label = it.toString()
+      String label = it
       label.contains('AM') || label.contains('PM') || label.contains('am') || label.contains('pm')
     })
   }

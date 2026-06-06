@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleColorStepsN
 
+@SuppressWarnings('ExplicitCallToCompareToMethod')
 class ScaleColorStepsNTest {
 
   @Test
@@ -33,9 +34,9 @@ class ScaleColorStepsNTest {
     assertEquals(3, scale.values.size())
     // Should be equally spaced: [0.0, 0.5, 1.0]
     // Use compareTo for BigDecimal comparison to handle different scales
-    assertEquals(0, (scale.values[0] as BigDecimal).compareTo(0.0 as BigDecimal))
-    assertEquals(0, (scale.values[1] as BigDecimal).compareTo(0.5 as BigDecimal))
-    assertEquals(0, (scale.values[2] as BigDecimal).compareTo(1.0 as BigDecimal))
+    assertEquals(0, (scale.values[0]).compareTo(0.0))
+    assertEquals(0, (scale.values[1]).compareTo(0.5))
+    assertEquals(0, (scale.values[2]).compareTo(1.0))
   }
 
   @Test
@@ -144,7 +145,7 @@ class ScaleColorStepsNTest {
   void testFluentAPI() {
     def scale = new ScaleColorStepsN()
       .colors(['purple', 'pink', 'orange'])
-      .values([0.0, 0.3, 1.0] as List<BigDecimal>)
+      .values([0.0, 0.3, 1.0])
 
     assertEquals(['purple', 'pink', 'orange'], scale.colors)
     assertEquals([0.0, 0.3, 1.0].collect { it as BigDecimal }, scale.values)

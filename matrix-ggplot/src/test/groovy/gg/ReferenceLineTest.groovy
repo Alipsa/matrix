@@ -80,8 +80,8 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain point elements")
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<circle'), 'Should contain point elements')
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/hline_test.svg')
     write(svg, outputFile)
@@ -166,7 +166,7 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/vline_test.svg')
     write(svg, outputFile)
@@ -252,7 +252,7 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/abline_test.svg')
     write(svg, outputFile)
@@ -344,7 +344,7 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/segment_test.svg')
     write(svg, outputFile)
@@ -395,7 +395,7 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/segment_from_data.svg')
     write(svg, outputFile)
@@ -456,7 +456,7 @@ class ReferenceLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('stroke-dasharray'), "Should have dashed lines")
+    assertTrue(content.contains('stroke-dasharray'), 'Should have dashed lines')
 
     File outputFile = new File('build/line_types_comparison.svg')
     write(svg, outputFile)

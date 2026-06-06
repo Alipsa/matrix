@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  * The conversion is best-effort and focuses on common ggplot2 patterns.
  */
 @CompileStatic
+@SuppressWarnings(['CyclomaticComplexity', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'MethodSize'])
 class Rconverter {
 
   private static final Map<String, String> FUNCTION_ALIASES = [
@@ -397,7 +398,7 @@ class Rconverter {
       out.append(ch)
       i++
     }
-    return out.toString()
+    return out
   }
 
   private static String normalizeFunctionName(String name) {
@@ -454,9 +455,15 @@ class Rconverter {
   }
 
   private static String normalizeLiteral(String value) {
-    if (value == 'TRUE') return 'true'
-    if (value == 'FALSE') return 'false'
-    if (value == 'NULL' || value == 'NA') return 'null'
+    if (value == 'TRUE') {
+      return 'true'
+    }
+    if (value == 'FALSE') {
+      return 'false'
+    }
+    if (value == 'NULL' || value == 'NA') {
+      return 'null'
+    }
     return value
   }
 
@@ -523,7 +530,7 @@ class Rconverter {
       }
       out.append(ch)
     }
-    return out.toString()
+    return out
   }
 
   private static List<String> splitTopLevel(String input, char delimiter) {

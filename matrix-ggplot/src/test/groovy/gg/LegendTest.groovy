@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.theme.Theme
 
 class LegendTest {
 
@@ -36,15 +35,15 @@ class LegendTest {
     String content = SvgWriter.toXml(svg)
 
     // Should contain legend group
-    assertTrue(content.contains('id="legend"'), "Should contain legend group")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend group')
 
     // Should contain legend title
-    assertTrue(content.contains('Category'), "Should contain legend title")
+    assertTrue(content.contains('Category'), 'Should contain legend title')
 
     // Should contain legend entries for A, B, C
-    assertTrue(content.contains('>A<'), "Should contain label A")
-    assertTrue(content.contains('>B<'), "Should contain label B")
-    assertTrue(content.contains('>C<'), "Should contain label C")
+    assertTrue(content.contains('>A<'), 'Should contain label A')
+    assertTrue(content.contains('>B<'), 'Should contain label B')
+    assertTrue(content.contains('>C<'), 'Should contain label C')
 
     File outputFile = new File('build/legend_discrete_color.svg')
     write(svg, outputFile)
@@ -69,7 +68,7 @@ class LegendTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('id="legend"'), "Should contain legend group")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend group')
 
     File outputFile = new File('build/legend_discrete_fill.svg')
     write(svg, outputFile)
@@ -95,7 +94,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('id="legend"'), "Should contain legend group")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend group')
 
     File outputFile = new File('build/legend_manual_colors.svg')
     write(svg, outputFile)
@@ -129,7 +128,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('id="legend"'), "Should contain legend group")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend group')
 
     File outputFile = new File('build/legend_continuous_color.svg')
     write(svg, outputFile)
@@ -149,7 +148,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('id="legend"'), "Should contain legend")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend')
 
     File outputFile = new File('build/legend_position_right.svg')
     write(svg, outputFile)
@@ -240,7 +239,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('id="legend"'), "Should contain legend")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend')
 
     File outputFile = new File('build/legend_with_line.svg')
     write(svg, outputFile)
@@ -266,7 +265,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('id="legend"'), "Should contain legend")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend')
 
     File outputFile = new File('build/legend_point_and_line.svg')
     write(svg, outputFile)
@@ -285,7 +284,7 @@ class LegendTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('My Custom Legend'), "Should contain custom legend title")
+    assertTrue(content.contains('My Custom Legend'), 'Should contain custom legend title')
 
     File outputFile = new File('build/legend_custom_title.svg')
     write(svg, outputFile)
@@ -303,7 +302,7 @@ class LegendTest {
     String content = SvgWriter.toXml(svg)
 
     // Scale name should be used as legend title
-    assertTrue(content.contains('Scale Name'), "Should contain scale name as legend title")
+    assertTrue(content.contains('Scale Name'), 'Should contain scale name as legend title')
 
     File outputFile = new File('build/legend_scale_name.svg')
     write(svg, outputFile)

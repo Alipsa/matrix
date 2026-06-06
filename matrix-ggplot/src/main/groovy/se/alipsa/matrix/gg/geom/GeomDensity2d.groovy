@@ -16,6 +16,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_density_2d(n: 100) - number of grid points
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomDensity2d extends Geom {
 
   /** Line color */
@@ -42,20 +43,38 @@ class GeomDensity2d extends Geom {
   GeomDensity2d() {
     defaultStat = StatType.DENSITY_2D
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', linewidth: 0.5] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 0.5]
   }
 
   GeomDensity2d(Map params) {
     this()
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.bins != null) this.bins = params.bins as int
-    if (params.n != null) this.n = params.n as int
-    if (params.h) this.h = params.h as List<Number>
+    if (params.color) {
+      this.color = params.color as String
+    }
+    if (params.colour) {
+      this.color = params.colour as String
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.bins != null) {
+      this.bins = params.bins as int
+    }
+    if (params.n != null) {
+      this.n = params.n as int
+    }
+    if (params.h) {
+      this.h = params.h as List<Number>
+    }
     this.color = ColorUtil.normalizeColor(this.color)
     this.params = params
   }

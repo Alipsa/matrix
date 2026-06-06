@@ -15,11 +15,11 @@ class CssAttributeConfigTest {
   void testDefaultConfiguration() {
     def config = new CssAttributeConfig()
 
-    assertFalse(config.enabled, "CSS attributes should be disabled by default")
-    assertTrue(config.includeClasses, "Classes should be included when enabled")
-    assertTrue(config.includeIds, "IDs should be included when enabled")
-    assertFalse(config.includeDataAttributes, "Data attributes should be disabled by default")
-    assertNull(config.chartIdPrefix, "Chart ID prefix should be null by default")
+    assertFalse(config.enabled, 'CSS attributes should be disabled by default')
+    assertTrue(config.includeClasses, 'Classes should be included when enabled')
+    assertTrue(config.includeIds, 'IDs should be included when enabled')
+    assertFalse(config.includeDataAttributes, 'Data attributes should be disabled by default')
+    assertNull(config.chartIdPrefix, 'Chart ID prefix should be null by default')
     assertEquals('gg', config.idPrefix, "Default ID prefix should be 'gg'")
   }
 
@@ -47,7 +47,7 @@ class CssAttributeConfigTest {
     def config = new CssAttributeConfig([enabled: true])
 
     assertTrue(config.enabled)
-    assertTrue(config.includeClasses, "Should use default values for unspecified options")
+    assertTrue(config.includeClasses, 'Should use default values for unspecified options')
     assertTrue(config.includeIds)
     assertFalse(config.includeDataAttributes)
   }
@@ -94,7 +94,7 @@ class CssAttributeConfigTest {
     ])
 
     assertTrue(config.enabled)
-    assertTrue(config.includeDataAttributes, "Phase 2 data attributes can be enabled")
+    assertTrue(config.includeDataAttributes, 'Phase 2 data attributes can be enabled')
   }
 
   @Test
@@ -106,7 +106,7 @@ class CssAttributeConfigTest {
     ])
 
     assertTrue(config.enabled)
-    assertFalse(config.includeClasses, "Classes can be disabled")
-    assertFalse(config.includeIds, "IDs can be disabled")
+    assertFalse(config.includeClasses, 'Classes can be disabled')
+    assertFalse(config.includeIds, 'IDs can be disabled')
   }
 }

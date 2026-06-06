@@ -25,6 +25,6 @@ class GeomBarColorTest {
     assertNotNull(svg)
 
     String svgContent = SvgWriter.toXml(svg)
-    assertTrue(svgContent.contains('fill="#b3b3b3"'), "Expected grey70 to map to #b3b3b3")
+    assertTrue(svgContent.contains('fill="#b3b3b3"'), 'Expected grey70 to map to #b3b3b3')
   }
 }

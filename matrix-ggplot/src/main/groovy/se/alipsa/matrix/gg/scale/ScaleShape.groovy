@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  * Maps categorical levels to a repeating set of shape names.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleShape extends ScaleDiscrete {
 
   List<String> shapes = [
@@ -33,11 +34,21 @@ class ScaleShape extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.shapes) this.shapes = params.shapes as List<String>
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.shapes) {
+      this.shapes = params.shapes as List<String>
+    }
   }
 
   /**
@@ -48,9 +59,13 @@ class ScaleShape extends ScaleDiscrete {
    */
   @Override
   Object transform(Object value) {
-    if (value == null || levels.isEmpty()) return null
+    if (value == null || levels.isEmpty()) {
+      return null
+    }
     int index = levels.indexOf(value)
-    if (index < 0) return null
+    if (index < 0) {
+      return null
+    }
     return shapes[index % shapes.size()]
   }
 }

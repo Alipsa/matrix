@@ -12,6 +12,7 @@ import groovy.transform.CompileStatic
  * - scale_y_time(time_breaks: '1 hour') - breaks every hour
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYTime extends ScaleXTime {
 
   ScaleYTime() {

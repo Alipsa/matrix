@@ -20,6 +20,7 @@ import java.time.temporal.Temporal
  * - scale_x_date(date_breaks: '1 month') - breaks every month
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ReturnNullFromCatchBlock'])
 class ScaleXDate extends ScaleContinuous {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
@@ -53,32 +54,68 @@ class ScaleXDate extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.date_format) this.dateFormat = params.date_format as String
-    if (params.dateFormat) this.dateFormat = params.dateFormat as String
-    if (params.date_breaks) this.dateBreaks = params.date_breaks as String
-    if (params.dateBreaks) this.dateBreaks = params.dateBreaks as String
-    if (params.date_labels) this.dateFormat = params.date_labels as String
-    if (params.zone_id) this.zoneId = params.zone_id as String
-    if (params.zoneId) this.zoneId = params.zoneId as String
-    if (params.timezone) this.zoneId = params.timezone as String
-    if (params.tz) this.zoneId = params.tz as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.date_format) {
+      this.dateFormat = params.date_format as String
+    }
+    if (params.dateFormat) {
+      this.dateFormat = params.dateFormat as String
+    }
+    if (params.date_breaks) {
+      this.dateBreaks = params.date_breaks as String
+    }
+    if (params.dateBreaks) {
+      this.dateBreaks = params.dateBreaks as String
+    }
+    if (params.date_labels) {
+      this.dateFormat = params.date_labels as String
+    }
+    if (params.zone_id) {
+      this.zoneId = params.zone_id as String
+    }
+    if (params.zoneId) {
+      this.zoneId = params.zoneId as String
+    }
+    if (params.timezone) {
+      this.zoneId = params.timezone as String
+    }
+    if (params.tz) {
+      this.zoneId = params.tz as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
   }
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Convert all date values to epoch milliseconds
     List<Long> epochValues = data.findResults { toEpochMillis(it) } as List<Long>
 
-    if (epochValues.isEmpty()) return
+    if (epochValues.isEmpty()) {
+      return
+    }
 
     // Compute min/max
     long min = epochValues.min() as long
@@ -88,11 +125,15 @@ class ScaleXDate extends ScaleContinuous {
     if (limits && limits.size() >= 2) {
       if (limits[0] != null) {
         Long limMin = toEpochMillis(limits[0])
-        if (limMin != null) min = limMin
+        if (limMin != null) {
+          min = limMin
+        }
       }
       if (limits[1] != null) {
         Long limMax = toEpochMillis(limits[1])
-        if (limMax != null) max = limMax
+        if (limMax != null) {
+          max = limMax
+        }
       }
     }
 
@@ -114,7 +155,9 @@ class ScaleXDate extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     Long epochMillis = toEpochMillis(value)
-    if (epochMillis == null) return null
+    if (epochMillis == null) {
+      return null
+    }
 
     double v = epochMillis
     double dMin = minEpochMillis
@@ -122,7 +165,9 @@ class ScaleXDate extends ScaleContinuous {
     double rMin = range[0] as double
     double rMax = range[1] as double
 
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax == dMin) {
+      return (rMin + rMax) / 2
+    }
 
     // Linear interpolation
     double normalized = (v - dMin) / (dMax - dMin)
@@ -132,7 +177,9 @@ class ScaleXDate extends ScaleContinuous {
   @Override
   Object inverse(Object value) {
     Double numeric = value instanceof Number ? value as double : null
-    if (numeric == null) return null
+    if (numeric == null) {
+      return null
+    }
 
     double v = numeric
     double dMin = minEpochMillis
@@ -155,7 +202,9 @@ class ScaleXDate extends ScaleContinuous {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
 
     ZoneId effectiveZone = resolveZoneId()
 
@@ -168,7 +217,9 @@ class ScaleXDate extends ScaleContinuous {
 
   @Override
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
 
     ZoneId effectiveZone = resolveZoneId()
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat)
@@ -292,7 +343,9 @@ class ScaleXDate extends ScaleContinuous {
    * Convert various date types to epoch milliseconds.
    */
   private Long toEpochMillis(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
     ZoneId effectiveZone = resolveZoneId()
 
@@ -330,7 +383,9 @@ class ScaleXDate extends ScaleContinuous {
 
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
-      if (s.isEmpty()) return null
+      if (s.isEmpty()) {
+        return null
+      }
       try {
         // Try parsing as ISO date
         LocalDate ld = LocalDate.parse(s)

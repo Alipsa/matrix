@@ -13,6 +13,7 @@ import groovy.transform.CompileStatic
  * Note: Values < 0 are filtered out since sqrt is undefined for negative numbers.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYSqrt extends ScaleXSqrt {
 
   ScaleYSqrt() {

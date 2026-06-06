@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
  * Controls all visual styling aspects of the chart.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class Theme implements Cloneable {
 
   // ============ Plot-level elements ============
@@ -282,6 +283,7 @@ class Theme implements Cloneable {
  * Text element styling.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementText {
   String family
   String face  // 'plain', 'italic', 'bold', 'bold.italic'
@@ -298,7 +300,9 @@ class ElementText {
   ElementText(Map params) {
     params.each { key, value ->
       String k = key as String
-      if (k == 'colour') k = 'color'
+      if (k == 'colour') {
+        k = 'color'
+      }
       if (this.hasProperty(k)) {
         this.setProperty(k, value)
       }
@@ -310,6 +314,7 @@ class ElementText {
  * Line element styling.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementLine {
   String color = 'black'
   Number size = 1        // Line width in pixels
@@ -322,8 +327,12 @@ class ElementLine {
     params.each { key, value ->
       String k = key as String
       // Handle aliases
-      if (k == 'colour') k = 'color'
-      else if (k == 'linewidth') k = 'size'
+      if (k == 'colour') {
+        k = 'color'
+      }
+      else if (k == 'linewidth') {
+        k = 'size'
+      }
 
       if (this.hasProperty(k)) {
         this.setProperty(k, value)
@@ -336,6 +345,7 @@ class ElementLine {
  * Rectangle element styling.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementRect {
   String fill = 'white'
   String color = 'black'  // Border color
@@ -358,6 +368,7 @@ class ElementRect {
  * Blank element - removes the element entirely.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementBlank {
   // Marker class - presence indicates element should not be drawn
 }

@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Similar to geom_tile() but computes counts automatically.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomBin2d extends Geom {
 
   /** Number of bins in x and y directions */
@@ -49,7 +50,7 @@ class GeomBin2d extends Geom {
   GeomBin2d() {
     defaultStat = StatType.IDENTITY  // We compute bins internally
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'steelblue', color: 'white'] as Map<String, Object>
+    defaultAes = [fill: 'steelblue', color: 'white']
   }
 
   GeomBin2d(Map params) {
@@ -60,7 +61,9 @@ class GeomBin2d extends Geom {
     this.color = (params.color ?: params.colour) as String ?: this.color
     this.linewidth = params.linewidth as BigDecimal ?: this.linewidth
     this.alpha = params.alpha as BigDecimal ?: this.alpha
-    if (params.drop != null) this.drop = params.drop as boolean
+    if (params.drop != null) {
+      this.drop = params.drop as boolean
+    }
     this.fillColors = (params.fillColors ?: params.fill_colors) as List<String> ?: this.fillColors
     this.fill = ColorUtil.normalizeColor(this.fill)
     this.color = ColorUtil.normalizeColor(this.color)

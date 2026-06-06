@@ -9,13 +9,14 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Used for categorical x-axis data (bar charts, etc.).
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXDiscrete extends ScaleDiscrete {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
   String position = 'bottom'
 
   /** Expansion factor for adding padding at the ends */
-  List<Number> discreteExpand = [0, 0.6] as List<Number>
+  List<Number> discreteExpand = [0, 0.6]
 
   ScaleXDiscrete() {
     aesthetic = 'x'
@@ -32,18 +33,28 @@ class ScaleXDiscrete extends ScaleDiscrete {
     this.breaks = params.breaks as List ?: this.breaks
     this.labels = params.labels as List<String> ?: this.labels
     this.position = params.position as String ?: this.position
-    if (params.drop != null) this.drop = params.drop as boolean
+    if (params.drop != null) {
+      this.drop = params.drop as boolean
+    }
     this.discreteExpand = params.expand as List<Number> ?: this.discreteExpand
-    if (params.guide) this.guide = params.guide
+    if (params.guide) {
+      this.guide = params.guide
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return null
-    if (levels.isEmpty()) return null
+    if (value == null) {
+      return null
+    }
+    if (levels.isEmpty()) {
+      return null
+    }
 
     int index = levels.indexOf(value)
-    if (index < 0) return null
+    if (index < 0) {
+      return null
+    }
 
     // Map to position within range with discrete expansion
     BigDecimal rMin = range[0] as BigDecimal
@@ -69,7 +80,9 @@ class ScaleXDiscrete extends ScaleDiscrete {
    * Get bandwidth without expansion applied.
    */
   private BigDecimal getBandwidthUnexpanded() {
-    if (levels.isEmpty()) return 0
+    if (levels.isEmpty()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
     return (rMax - rMin).abs() / (levels.size() + 1)  // +1 for padding
@@ -77,7 +90,9 @@ class ScaleXDiscrete extends ScaleDiscrete {
 
   @Override
   BigDecimal getBandwidth() {
-    if (levels.isEmpty()) return 0
+    if (levels.isEmpty()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
 
@@ -122,8 +137,12 @@ class ScaleXDiscrete extends ScaleDiscrete {
    */
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.discrete()
-    if (limits) s.params['limits'] = limits
-    if (discreteExpand) s.params['expand'] = discreteExpand
+    if (limits) {
+      s.params['limits'] = limits
+    }
+    if (discreteExpand) {
+      s.params['expand'] = discreteExpand
+    }
     s
   }
 }

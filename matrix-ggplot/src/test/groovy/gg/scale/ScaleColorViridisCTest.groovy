@@ -89,9 +89,9 @@ class ScaleColorViridisCTest {
 
   @Test
   void testBeginGreaterThanEndThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridisC(begin: 0.8, end: 0.2)
-    })
+    }
     assertTrue(exception.message.contains('begin'))
     assertTrue(exception.message.contains('end'))
   }

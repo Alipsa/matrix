@@ -33,6 +33,7 @@ import groovy.transform.CompileStatic
  * @param values Optional positions for each color in [0,1] range
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorStepsN extends ScaleContinuous {
   String aesthetic = 'color'
   int bins = 5
@@ -55,10 +56,16 @@ class ScaleColorStepsN extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
-    if (!colors || colors.isEmpty()) return naValue
-    if (colors.size() == 1) return colors[0]
+    if (!colors || colors.isEmpty()) {
+      return naValue
+    }
+    if (colors.size() == 1) {
+      return colors[0]
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
@@ -74,7 +81,9 @@ class ScaleColorStepsN extends ScaleContinuous {
 
     // Calculate bin index using bins parameter (user-configurable bin count)
     int binsCount = 1.max(bins).intValue()
-    if (binsCount == 1) return colors[0]
+    if (binsCount == 1) {
+      return colors[0]
+    }
 
     BigDecimal scaled = normalized * binsCount
     int binIndex = scaled.floor().intValue()
@@ -108,18 +117,42 @@ class ScaleColorStepsN extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
-    if (params.bins != null) this.bins = (params.bins as Number).intValue()
-    if (params.containsKey('colors')) this.colors = params.colors as List<String>
-    if (params.containsKey('colours')) this.colors = params.colours as List<String>
-    if (params.containsKey('values')) this.values = params.values as List<BigDecimal>
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.guide) this.guideType = params.guide as String
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
+    if (params.bins != null) {
+      this.bins = (params.bins as Number).intValue()
+    }
+    if (params.containsKey('colors')) {
+      this.colors = params.colors as List<String>
+    }
+    if (params.containsKey('colours')) {
+      this.colors = params.colours as List<String>
+    }
+    if (params.containsKey('values')) {
+      this.values = params.values as List<BigDecimal>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.guide) {
+      this.guideType = params.guide as String
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
   }
 
   ScaleColorStepsN colors(List<String> colors) {

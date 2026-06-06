@@ -9,13 +9,13 @@ import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
 
-import java.util.Locale
 
 /**
  * Base class for geometric objects (geoms).
  * Geoms determine how data is visually represented (points, lines, bars, etc.).
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class Geom {
 
   /** Default statistical transformation for this geom */
@@ -64,7 +64,7 @@ class Geom {
       (StatType.SF_COORDINATES): CharmStatType.SF_COORDINATES,
       (StatType.SPOKE)     : CharmStatType.SPOKE,
       (StatType.ALIGN)     : CharmStatType.ALIGN
-  ] as Map<StatType, CharmStatType>
+  ]
 
   private static final Map<PositionType, CharmPositionType> POSITION_TYPE_MAP = [
       (PositionType.IDENTITY): CharmPositionType.IDENTITY,
@@ -74,7 +74,7 @@ class Geom {
       (PositionType.FILL)    : CharmPositionType.FILL,
       (PositionType.JITTER)  : CharmPositionType.JITTER,
       (PositionType.NUDGE)   : CharmPositionType.NUDGE
-  ] as Map<PositionType, CharmPositionType>
+  ]
 
   /**
    * Returns this geom represented as a Charm {@link GeomSpec}.

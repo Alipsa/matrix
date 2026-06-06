@@ -37,7 +37,7 @@ class ChartToJpegTest {
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     )
     Path buildDir = classLocation.getParent().getParent().getParent()
-    Path filePath = buildDir.resolve("testExportToJpeg.jpg")
+    Path filePath = buildDir.resolve('testExportToJpeg.jpg')
     File file = filePath.toFile()
 
     GgExport.toJpeg(chart, file, 0.9)
@@ -46,15 +46,15 @@ class ChartToJpegTest {
     assertTrue(file.exists())
 
     // Verify file size is greater than zero
-    assertTrue(file.length() > 0, "JPEG file should not be empty")
+    assertTrue(file.length() > 0, 'JPEG file should not be empty')
 
     // Verify the image can be read successfully using ImageIO
     BufferedImage image = ImageIO.read(file)
-    assertNotNull(image, "JPEG file should be readable by ImageIO")
+    assertNotNull(image, 'JPEG file should be readable by ImageIO')
 
     // Verify image dimensions are reasonable (greater than zero)
-    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
-    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+    assertTrue(image.getWidth() > 0, 'Image width should be greater than 0')
+    assertTrue(image.getHeight() > 0, 'Image height should be greater than 0')
   }
 
   @Test
@@ -63,12 +63,12 @@ class ChartToJpegTest {
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     )
     Path buildDir = classLocation.getParent().getParent().getParent()
-    File file = buildDir.resolve("testNullSvg.jpg").toFile()
+    File file = buildDir.resolve('testNullSvg.jpg').toFile()
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToJpeg.export((Svg) null, file, 0.9)
-    })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    }
+    assertEquals('svgChart must not be null', exception.getMessage())
   }
 
   @Test
@@ -77,10 +77,10 @@ class ChartToJpegTest {
     GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) + geom_point()
     Svg svg = chart.render()
 
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToJpeg.export(svg, (File) null, 0.9)
-    })
-    assertEquals("targetFile cannot be null", exception.getMessage())
+    }
+    assertEquals('targetFile cannot be null', exception.getMessage())
   }
 
   @Test
@@ -90,13 +90,13 @@ class ChartToJpegTest {
     Path buildDir = Paths.get(
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     ).getParent().getParent().getParent()
-    File file = buildDir.resolve("testCharmChartToJpeg.jpg").toFile()
+    File file = buildDir.resolve('testCharmChartToJpeg.jpg').toFile()
 
     ChartToJpeg.export(chart, file, 0.9)
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "JPEG file should not be empty")
+    assertTrue(file.length() > 0, 'JPEG file should not be empty')
     BufferedImage image = ImageIO.read(file)
-    assertNotNull(image, "JPEG file should be readable by ImageIO")
+    assertNotNull(image, 'JPEG file should be readable by ImageIO')
     assertTrue(image.getWidth() > 0)
     assertTrue(image.getHeight() > 0)
   }
@@ -108,11 +108,11 @@ class ChartToJpegTest {
     Path buildDir = Paths.get(
         getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
     ).getParent().getParent().getParent()
-    File file = buildDir.resolve("testCharmChartToJpegDefault.jpg").toFile()
+    File file = buildDir.resolve('testCharmChartToJpegDefault.jpg').toFile()
 
     ChartToJpeg.export(chart, file)
     assertTrue(file.exists())
-    assertTrue(file.length() > 0, "JPEG file should not be empty")
+    assertTrue(file.length() > 0, 'JPEG file should not be empty')
   }
 
   private static CharmChart buildCharmChart() {

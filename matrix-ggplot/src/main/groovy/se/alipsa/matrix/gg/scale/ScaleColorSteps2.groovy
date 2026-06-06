@@ -31,6 +31,7 @@ import groovy.transform.CompileStatic
  * @param midpoint Data value at center (default: mean of data range)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorSteps2 extends ScaleContinuous {
   String aesthetic = 'color'
   int bins = 5
@@ -57,10 +58,16 @@ class ScaleColorSteps2 extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
-    if (!colors || colors.isEmpty()) return naValue
-    if (colors.size() == 1) return colors[0]
+    if (!colors || colors.isEmpty()) {
+      return naValue
+    }
+    if (colors.size() == 1) {
+      return colors[0]
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
@@ -89,7 +96,9 @@ class ScaleColorSteps2 extends ScaleContinuous {
 
     // Calculate bin index
     int binsCount = 1.max(colors.size()) as int
-    if (binsCount == 1) return colors[0]
+    if (binsCount == 1) {
+      return colors[0]
+    }
 
     BigDecimal scaled = normalized * binsCount
     int binIndex = scaled.floor() as int
@@ -119,21 +128,51 @@ class ScaleColorSteps2 extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
-    if (params.bins != null) this.bins = (params.bins as Number).intValue()
-    if (params.containsKey('colors')) this.colors = params.colors as List<String>
-    if (params.containsKey('colours')) this.colors = params.colours as List<String>
-    if (params.low) this.low = params.low as String
-    if (params.mid) this.mid = params.mid as String
-    if (params.high) this.high = params.high as String
-    if (params.midpoint != null) this.midpoint = params.midpoint as BigDecimal
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.guide) this.guideType = params.guide as String
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
+    if (params.bins != null) {
+      this.bins = (params.bins as Number).intValue()
+    }
+    if (params.containsKey('colors')) {
+      this.colors = params.colors as List<String>
+    }
+    if (params.containsKey('colours')) {
+      this.colors = params.colours as List<String>
+    }
+    if (params.low) {
+      this.low = params.low as String
+    }
+    if (params.mid) {
+      this.mid = params.mid as String
+    }
+    if (params.high) {
+      this.high = params.high as String
+    }
+    if (params.midpoint != null) {
+      this.midpoint = params.midpoint as BigDecimal
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.guide) {
+      this.guideType = params.guide as String
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
   }
 
   ScaleColorSteps2 midpoint(BigDecimal value) {

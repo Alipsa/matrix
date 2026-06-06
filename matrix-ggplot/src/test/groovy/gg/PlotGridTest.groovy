@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.GgChart
  * Integration tests for the {@code plot_grid} API in GgPlot, verifying
  * that GgChart instances compile and compose correctly into PlotGrid SVGs.
  */
+@SuppressWarnings('UnnecessaryCollectCall')
 class PlotGridTest {
 
   private static final Matrix DATA = Matrix.builder()

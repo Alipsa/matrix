@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_path(color: 'red', linewidth: 2) - styled path
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomPath extends Geom {
 
   /** Line color */
@@ -42,16 +43,22 @@ class GeomPath extends Geom {
   GeomPath() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [color: 'black', size: 1, linetype: 'solid']
   }
 
   GeomPath(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.size != null) this.size = params.size as BigDecimal
-    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
+    if (params.linewidth != null) {
+      this.size = params.linewidth as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.lineend = params.lineend as String ?: this.lineend
     this.linejoin = params.linejoin as String ?: this.linejoin
     this.params = params

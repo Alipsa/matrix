@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Similar to geom_bin_2d() but uses hexagonal bins instead of rectangular.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomHex extends Geom {
 
   /** Number of bins in x direction */
@@ -49,18 +50,28 @@ class GeomHex extends Geom {
   GeomHex() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'steelblue', color: 'white'] as Map<String, Object>
+    defaultAes = [fill: 'steelblue', color: 'white']
   }
 
   GeomHex(Map params) {
     this()
-    if (params.bins != null) this.bins = params.bins as int
-    if (params.binwidth != null) this.binwidth = params.binwidth as BigDecimal
+    if (params.bins != null) {
+      this.bins = params.bins as int
+    }
+    if (params.binwidth != null) {
+      this.binwidth = params.binwidth as BigDecimal
+    }
     this.fill = params.fill as String ?: this.fill
     this.color = (params.color ?: params.colour) as String ?: this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.drop != null) this.drop = params.drop as boolean
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.drop != null) {
+      this.drop = params.drop as boolean
+    }
     this.fillColors = (params.fillColors ?: params.fill_colors) as List<String> ?: this.fillColors
     this.fill = ColorUtil.normalizeColor(this.fill)
     this.color = ColorUtil.normalizeColor(this.color)

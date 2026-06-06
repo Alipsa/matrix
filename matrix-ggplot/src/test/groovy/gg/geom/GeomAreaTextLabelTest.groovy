@@ -69,8 +69,8 @@ class GeomAreaTextLabelTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain path element for area")
-    assertTrue(content.contains('fill="steelblue"'), "Should have fill color")
+    assertTrue(content.contains('<path'), 'Should contain path element for area')
+    assertTrue(content.contains('fill="steelblue"'), 'Should have fill color')
 
     File outputFile = new File('build/simple_area_chart.svg')
     write(svg, outputFile)
@@ -197,8 +197,8 @@ class GeomAreaTextLabelTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<text'), "Should contain text elements")
-    assertTrue(content.contains('Point A'), "Should have label text")
+    assertTrue(content.contains('<text'), 'Should contain text elements')
+    assertTrue(content.contains('Point A'), 'Should have label text')
 
     File outputFile = new File('build/text_labels_scatter.svg')
     write(svg, outputFile)
@@ -229,7 +229,7 @@ class GeomAreaTextLabelTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('rotate'), "Should have rotation transform")
+    assertTrue(content.contains('rotate'), 'Should have rotation transform')
 
     File outputFile = new File('build/rotated_text.svg')
     write(svg, outputFile)
@@ -316,8 +316,8 @@ class GeomAreaTextLabelTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect for label background")
-    assertTrue(content.contains('<text'), "Should contain text elements")
+    assertTrue(content.contains('<rect'), 'Should contain rect for label background')
+    assertTrue(content.contains('<text'), 'Should contain text elements')
 
     File outputFile = new File('build/labels_scatter.svg')
     write(svg, outputFile)

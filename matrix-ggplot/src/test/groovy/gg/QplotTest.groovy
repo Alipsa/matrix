@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomLine
 import se.alipsa.matrix.gg.geom.GeomPoint
 
+@SuppressWarnings('UnnecessarySelfAssignment')
 class QplotTest {
 
   Matrix numericData = Matrix.builder()

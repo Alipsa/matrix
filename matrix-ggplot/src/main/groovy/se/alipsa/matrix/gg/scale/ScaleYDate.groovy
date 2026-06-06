@@ -12,6 +12,7 @@ import groovy.transform.CompileStatic
  * - scale_y_date(date_breaks: '1 month') - breaks every month
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYDate extends ScaleXDate {
 
   ScaleYDate() {

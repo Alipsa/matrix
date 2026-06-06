@@ -39,6 +39,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomParallel extends Geom {
 
   /** Line color */
@@ -59,18 +60,32 @@ class GeomParallel extends Geom {
   GeomParallel() {
     defaultStat = StatType.IDENTITY
     requiredAes = []
-    defaultAes = [color: 'steelblue', alpha: 0.5] as Map<String, Object>
+    defaultAes = [color: 'steelblue', alpha: 0.5]
   }
 
   GeomParallel(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.vars) this.vars = params.vars as List<String>
-    if (params.scale) this.scale = params.scale as String
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.vars) {
+      this.vars = params.vars as List<String>
+    }
+    if (params.scale) {
+      this.scale = params.scale as String
+    }
     this.params = params
   }
 

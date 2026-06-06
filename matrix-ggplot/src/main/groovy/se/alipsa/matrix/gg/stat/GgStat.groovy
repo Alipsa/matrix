@@ -29,6 +29,7 @@ import java.util.regex.Pattern
  * All methods are static and delegate to matrix-core Stat or matrix-stats where possible.
  */
 @CompileStatic
+@SuppressWarnings(['AbcMetric', 'BooleanGetBoolean', 'BrokenOddnessCheck', 'ClassSize', 'CyclomaticComplexity', 'DuplicateListLiteral', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'ExplicitTreeSetInstantiation', 'MethodSize', 'UnnecessaryElseStatement', 'UnnecessaryObjectReferences', 'UnnecessaryToString', 'UnusedMethodParameter', 'VariableName'])
 class GgStat {
 
   private static final boolean VALIDATE_SORTED_QUANTILES =
@@ -60,10 +61,14 @@ class GgStat {
 
     data.eachWithIndex { Row row, int idx ->
       Object geomVal = row[geometryCol]
-      if (geomVal == null) return
+      if (geomVal == null) {
+        return
+      }
 
       SfGeometry geometry = toGeometry(geomVal)
-      if (geometry == null || geometry.empty) return
+      if (geometry == null || geometry.empty) {
+        return
+      }
 
       int partIndex = 0
       geometry.shapes.each { shape ->
@@ -79,7 +84,7 @@ class GgStat {
             rowMap.put('__sf_ring', ringIndex)
             rowMap.put('__sf_hole', ring.hole)
             rowMap.put('__sf_type', shapeType)
-            rowMap.put('__sf_group', "${idx}:${partIndex}:${ringIndex}".toString())
+            rowMap.put('__sf_group', "${idx}:${partIndex}:${ringIndex}")
             rows << rowMap
           }
           ringIndex++
@@ -109,19 +114,25 @@ class GgStat {
 
     data.eachWithIndex { Row row, int idx ->
       Object geomVal = row[geometryCol]
-      if (geomVal == null) return
+      if (geomVal == null) {
+        return
+      }
 
       SfGeometry geometry = toGeometry(geomVal)
-      if (geometry == null || geometry.empty) return
+      if (geometry == null || geometry.empty) {
+        return
+      }
 
       SfPoint point = SfGeometryUtils.representativePoint(geometry)
-      if (point == null) return
+      if (point == null) {
+        return
+      }
 
       Map<String, Object> rowMap = new LinkedHashMap<>(row.toMap())
       rowMap.put('x', point.x)
       rowMap.put('y', point.y)
       rowMap.put('__sf_id', idx)
-      rowMap.put('__sf_type', geometry.type.toString())
+      rowMap.put('__sf_type', geometry.type)
       rows << rowMap
     }
 
@@ -137,14 +148,14 @@ class GgStat {
 
     Object paramGeom = params?.geometry
     if (paramGeom != null) {
-      col = paramGeom.toString()
+      col = paramGeom
       requireColumn(data, col, 'geom_sf(geometry: ...)')
       return col
     }
 
     Object metaGeom = data.metaData?.get('geometryColumn')
     if (metaGeom != null) {
-      col = metaGeom.toString()
+      col = metaGeom
       requireColumn(data, col, 'metaData.geometryColumn')
       return col
     }
@@ -179,7 +190,7 @@ class GgStat {
   static Matrix count(Matrix data, Aes aes) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_count requires x aesthetic")
+      throw new IllegalArgumentException('stat_count requires x aesthetic')
     }
     String fillCol = aes.fillColName
     if (fillCol != null && data.columnNames().contains(fillCol)) {
@@ -202,8 +213,8 @@ class GgStat {
             (fillCol): key[1],
             count: count,
             percent: percent
-        ] as Map<String, Object>
-      }
+        ]
+      } as List<Map>
       return Matrix.builder().mapList(rows as List<Map<String, Object>>).build()
     }
 
@@ -228,10 +239,10 @@ class GgStat {
   static Matrix bin(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_bin requires x aesthetic")
+      throw new IllegalArgumentException('stat_bin requires x aesthetic')
     }
 
-    List<Number> values = data[xCol] as List<Number>
+    List<Number> values = data[xCol]
     if (values == null || values.isEmpty()) {
       return Matrix.builder()
           .columnNames(['x', 'xmin', 'xmax', 'count', 'density'])
@@ -263,7 +274,9 @@ class GgStat {
     } else {
       binwidthBD = binwidth as BigDecimal
       bins = (range / binwidthBD).ceil().intValue()
-      if (bins == 0) bins = 1
+      if (bins == 0) {
+        bins = 1
+      }
     }
 
     // Create bin counts
@@ -273,7 +286,7 @@ class GgStat {
       BigDecimal xmax = minVal + (i + 1) * binwidthBD
       BigDecimal center = (xmin + xmax) / 2
 
-      int count = values.count { Number v ->
+      int count = values.count { v ->
         BigDecimal vBD = v as BigDecimal
         vBD >= xmin && (i == bins - 1 ? vBD <= xmax : vBD < xmax)
       } as int
@@ -308,7 +321,7 @@ class GgStat {
   static Matrix boxplot(Matrix data, Aes aes, Map params = [:]) {
     String yCol = aes.yColName
     if (yCol == null) {
-      throw new IllegalArgumentException("stat_boxplot requires y aesthetic")
+      throw new IllegalArgumentException('stat_boxplot requires y aesthetic')
     }
 
     String xCol = aes.xColName
@@ -454,7 +467,7 @@ class GgStat {
    */
   static Map<String, Object> parseFormula(String formula) {
     if (formula == null || formula.trim().isEmpty()) {
-      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false] as Map<String, Object>
+      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false]
     }
 
     String cleaned = formula.trim()
@@ -489,11 +502,11 @@ class GgStat {
           "Polynomial degree must be at least 1, got: $degree in formula '$formula'"
         )
       }
-      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true] as Map<String, Object>
+      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true]
     }
 
     // Simple linear: y ~ x
-    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false] as Map<String, Object>
+    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false]
   }
 
   /**
@@ -517,7 +530,7 @@ class GgStat {
     String yCol = aes.yColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_smooth requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_smooth requires x and y aesthetics')
     }
 
     String method = params.method ?: 'lm'
@@ -549,8 +562,8 @@ class GgStat {
       polyDegree = (formulaParsed.polyDegree ?: 1) as int
     }
 
-    List<Number> rawX = data[xCol] as List<Number>
-    List<Number> rawY = data[yCol] as List<Number>
+    List<Number> rawX = data[xCol]
+    List<Number> rawY = data[yCol]
     List<Number> xValues = []
     List<Number> yValues = []
     int maxIdx = (rawX?.size() ?: 0).min(rawY?.size() ?: 0)
@@ -688,7 +701,7 @@ class GgStat {
     String yCol = aes.yColName
 
     if (!xCol || !yCol) {
-      throw new IllegalArgumentException("stat_quantile requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_quantile requires x and y aesthetics')
     }
 
     // Extract quantiles parameter (default: [0.25, 0.5, 0.75])
@@ -713,8 +726,8 @@ class GgStat {
     // while keeping x and y synchronized (same indices after filtering)
     List<Number> xValues = []
     List<Number> yValues = []
-    List<?> rawX = data[xCol] as List<?>
-    List<?> rawY = data[yCol] as List<?>
+    List<?> rawX = data[xCol]
+    List<?> rawY = data[yCol]
     int maxIdx = ((rawX?.size() ?: 0).min(rawY?.size() ?: 0)) as int
     for (int i = 0; i < maxIdx; i++) {
       def xVal = rawX[i]
@@ -768,7 +781,9 @@ class GgStat {
   }
 
   private static BigDecimal tCritical(int df, BigDecimal level) {
-    if (df <= 0) return 0.0
+    if (df <= 0) {
+      return 0.0
+    }
     BigDecimal target = 0.5 + level / 2.0
     TDistribution dist = new TDistribution(df as double)
     BigDecimal low = 0.0
@@ -813,7 +828,7 @@ class GgStat {
     }
 
     if (yCol == null) {
-      throw new IllegalArgumentException("stat_summary requires y aesthetic")
+      throw new IllegalArgumentException('stat_summary requires y aesthetic')
     }
 
     if (funData) {
@@ -831,7 +846,7 @@ class GgStat {
             }
           }
           if (confInt == null || confInt <= 0.0 || confInt > 1.0) {
-            throw new IllegalArgumentException("median_hilow requires conf.int in (0, 1]")
+            throw new IllegalArgumentException('median_hilow requires conf.int in (0, 1]')
           }
           return medianHiLow(data, xCol, yCol, confInt)
         default:
@@ -853,7 +868,7 @@ class GgStat {
       }
     } else {
       // Single summary value
-      List<Number> values = data[yCol] as List<Number>
+      List<Number> values = data[yCol]
       Number result
       switch (fun) {
         case 'mean':
@@ -886,14 +901,14 @@ class GgStat {
     Map<String, Matrix> groups = Stat.groupBy(data, xCol).toStringKeyMap()
     List<Map<String, Object>> rows = []
     groups.each { groupKey, groupData ->
-      List<Number> values = groupData[yCol] as List<Number>
+      List<Number> values = groupData[yCol]
       rows << meanClNormalRow(groupKey, values, xCol, yCol, level)
     }
     return Matrix.builder().mapList(rows).build()
   }
 
   private static Matrix meanClNormalUngrouped(Matrix data, String yCol, BigDecimal level) {
-    List<Number> values = data[yCol] as List<Number>
+    List<Number> values = data[yCol]
     Map<String, Object> row = meanClNormalRow('all', values, 'x', yCol, level)
     return Matrix.builder().mapList([row]).build()
   }
@@ -931,14 +946,14 @@ class GgStat {
     Map<String, Matrix> groups = Stat.groupBy(data, xCol).toStringKeyMap()
     List<Map<String, Object>> rows = []
     groups.each { groupKey, groupData ->
-      List<Number> values = groupData[yCol] as List<Number>
+      List<Number> values = groupData[yCol]
       rows << medianHiLowRow(groupKey, values, xCol, yCol, confInt)
     }
     return Matrix.builder().mapList(rows).build()
   }
 
   private static Matrix medianHiLowUngrouped(Matrix data, String yCol, BigDecimal confInt) {
-    List<Number> values = data[yCol] as List<Number>
+    List<Number> values = data[yCol]
     Map<String, Object> row = medianHiLowRow('all', values, 'x', yCol, confInt)
     return Matrix.builder().mapList([row]).build()
   }
@@ -991,7 +1006,7 @@ class GgStat {
   static Matrix density(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_density requires x aesthetic")
+      throw new IllegalArgumentException('stat_density requires x aesthetic')
     }
 
     // Determine grouping column
@@ -1041,7 +1056,7 @@ class GgStat {
   static Matrix ydensity(Matrix data, Aes aes, Map params = [:]) {
     String yCol = aes.yColName
     if (yCol == null) {
-      throw new IllegalArgumentException("stat_ydensity requires y aesthetic")
+      throw new IllegalArgumentException('stat_ydensity requires y aesthetic')
     }
 
     String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
@@ -1064,7 +1079,7 @@ class GgStat {
   static Matrix ecdf(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_ecdf requires x aesthetic")
+      throw new IllegalArgumentException('stat_ecdf requires x aesthetic')
     }
 
     String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
@@ -1109,7 +1124,7 @@ class GgStat {
 
   private static Map<String, Object> ecdfRow(String xName, Number xValue, BigDecimal yValue,
                                               String groupCol, Object groupKey) {
-    Map<String, Object> row = [(xName): xValue, y: yValue] as Map<String, Object>
+    Map<String, Object> row = [(xName): xValue, y: yValue]
     if (groupCol) {
       row[groupCol] = groupKey
     }
@@ -1127,7 +1142,7 @@ class GgStat {
   static Matrix qq(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_qq requires x aesthetic")
+      throw new IllegalArgumentException('stat_qq requires x aesthetic')
     }
 
     String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
@@ -1161,7 +1176,7 @@ class GgStat {
     for (int i = 0; i < n; i++) {
       BigDecimal p = (i + 0.5) / n
       BigDecimal theoretical = normalQuantile(p)
-      Map<String, Object> row = [x: theoretical, y: sorted[i]] as Map<String, Object>
+      Map<String, Object> row = [x: theoretical, y: sorted[i]]
       if (groupCol) {
         row[groupCol] = groupKey
       }
@@ -1181,7 +1196,7 @@ class GgStat {
   static Matrix qqLine(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     if (xCol == null) {
-      throw new IllegalArgumentException("stat_qq_line requires x aesthetic")
+      throw new IllegalArgumentException('stat_qq_line requires x aesthetic')
     }
 
     String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
@@ -1229,8 +1244,8 @@ class GgStat {
     BigDecimal minTheo = safeNormalQuantile(0.5 / n)
     BigDecimal maxTheo = safeNormalQuantile((n - 0.5) / n)
 
-    Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept] as Map<String, Object>
-    Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept] as Map<String, Object>
+    Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept]
+    Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept]
     if (groupCol) {
       start[groupCol] = groupKey
       end[groupCol] = groupKey
@@ -1411,7 +1426,7 @@ class GgStat {
    */
   static Matrix bin2d(Matrix data, Aes aes, Map params = [:]) {
     // Placeholder - needs implementation
-    throw new UnsupportedOperationException("stat_bin2d not yet implemented")
+    throw new UnsupportedOperationException('stat_bin2d not yet implemented')
   }
 
   /**
@@ -1420,7 +1435,7 @@ class GgStat {
    */
   static Matrix contour(Matrix data, Aes aes, Map params = [:]) {
     // Placeholder - needs implementation
-    throw new UnsupportedOperationException("stat_contour not yet implemented")
+    throw new UnsupportedOperationException('stat_contour not yet implemented')
   }
 
   /**
@@ -1514,7 +1529,9 @@ class GgStat {
    * @return Matrix with duplicate rows removed
    */
   static Matrix unique(Matrix data, Aes aes, Map params = [:]) {
-    if (data == null || data.rowCount() == 0) return data
+    if (data == null || data.rowCount() == 0) {
+      return data
+    }
 
     // Determine which columns to use for uniqueness
     List<String> columns = []
@@ -1522,8 +1539,12 @@ class GgStat {
       columns = params.columns as List<String>
     } else {
       // Use aesthetic columns if available
-      if (aes.xColName) columns << aes.xColName
-      if (aes.yColName) columns << aes.yColName
+      if (aes.xColName) {
+        columns << aes.xColName
+      }
+      if (aes.yColName) {
+        columns << aes.yColName
+      }
       if (columns.isEmpty()) {
         // Use all columns if no aesthetics specified
         columns = data.columnNames()
@@ -1624,7 +1645,7 @@ class GgStat {
         if (e instanceof IllegalArgumentException) {
           throw e
         }
-        throw new IllegalArgumentException("Error evaluating stat_function at x=" + x + ": " + e.message, e)
+        throw new IllegalArgumentException('Error evaluating stat_function at x=' + x + ': ' + e.message, e)
       }
       xVals << x
       yVals << y
@@ -1653,7 +1674,7 @@ class GgStat {
     String yCol = aes.yColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_summary_bin requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_summary_bin requires x and y aesthetics')
     }
 
     // Get numeric x and y values
@@ -1674,17 +1695,19 @@ class GgStat {
     BigDecimal xMin = points.collect { it.x as BigDecimal }.min()
     BigDecimal xMax = points.collect { it.x as BigDecimal }.max()
     BigDecimal range = xMax - xMin
-    if (range == 0) range = 1
+    if (range == 0) {
+      range = 1
+    }
 
     BigDecimal binWidth
     int nBins
     if (params.binwidth != null) {
       binWidth = params.binwidth as BigDecimal
       if (binWidth <= 0) {
-        throw new IllegalArgumentException("stat_summary_bin requires a positive binwidth, but was " + binWidth)
+        throw new IllegalArgumentException('stat_summary_bin requires a positive binwidth, but was ' + binWidth)
       }
       if (binWidth <= 0) {
-        throw new IllegalArgumentException("binwidth must be positive, was " + binWidth)
+        throw new IllegalArgumentException('binwidth must be positive, was ' + binWidth)
       }
       nBins = (range / binWidth).ceil() as int
     } else {
@@ -1692,13 +1715,13 @@ class GgStat {
       if (binsParam == null) {
         nBins = 30
       } else if (binsParam <= 0) {
-        throw new IllegalArgumentException("bins must be positive, was " + binsParam)
+        throw new IllegalArgumentException('bins must be positive, was ' + binsParam)
       } else {
         nBins = binsParam
       }
       binWidth = range / nBins
       if (binWidth <= 0) {
-        throw new IllegalArgumentException("stat_summary_bin computed a non-positive binwidth " + binWidth + " from bins=" + nBins)
+        throw new IllegalArgumentException('stat_summary_bin computed a non-positive binwidth ' + binWidth + ' from bins=' + nBins)
       }
     }
 
@@ -1722,7 +1745,9 @@ class GgStat {
     List<Integer> nVals = []
 
     binned.each { int binIdx, List<Number> yValues ->
-      if (yValues.isEmpty()) return
+      if (yValues.isEmpty()) {
+        return
+      }
 
       BigDecimal binMin = xMin + binIdx * binWidth
       BigDecimal binMax = binMin + binWidth
@@ -1793,7 +1818,7 @@ class GgStat {
     String yCol = aes.yColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_ellipse requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_ellipse requires x and y aesthetics')
     }
 
     // Extract numeric x, y pairs
@@ -1847,7 +1872,7 @@ class GgStat {
     String yCol = aes.yColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_bin_hex requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_bin_hex requires x and y aesthetics')
     }
 
     // Collect numeric x,y values and compute bounds
@@ -1867,7 +1892,7 @@ class GgStat {
     BigDecimal dy = hexDims.dy as BigDecimal
 
     // Count points in each hexagon
-    Map<String, Integer> hexCounts = [:] as Map<String, Integer>
+    Map<String, Integer> hexCounts = [:]
 
     for (se.alipsa.matrix.gg.geom.Point point : points) {
       // Find hexagon coordinates for this point
@@ -1908,10 +1933,10 @@ class GgStat {
     String zCol = aes.fillColName ?: aes.colorColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_summary_hex requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_summary_hex requires x and y aesthetics')
     }
     if (zCol == null) {
-      throw new IllegalArgumentException("stat_summary_hex requires fill or color aesthetic for the summary variable")
+      throw new IllegalArgumentException('stat_summary_hex requires fill or color aesthetic for the summary variable')
     }
 
     // Collect numeric x,y,z values and compute bounds
@@ -1949,7 +1974,9 @@ class GgStat {
     List<BigDecimal> valueVals = []
 
     hexValues.each { String key, List<BigDecimal> zValues ->
-      if (zValues.isEmpty()) return
+      if (zValues.isEmpty()) {
+        return
+      }
 
       def center = hexKeyToCenter(key, xMin, yMin, dx, dy)
       xVals << (center.x as BigDecimal)
@@ -1980,10 +2007,10 @@ class GgStat {
     String zCol = aes.fillColName ?: aes.colorColName
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("stat_summary_2d requires x and y aesthetics")
+      throw new IllegalArgumentException('stat_summary_2d requires x and y aesthetics')
     }
     if (zCol == null) {
-      throw new IllegalArgumentException("stat_summary_2d requires fill or color aesthetic for the summary variable")
+      throw new IllegalArgumentException('stat_summary_2d requires fill or color aesthetic for the summary variable')
     }
 
     // Collect numeric x,y,z values and compute bounds
@@ -2001,8 +2028,12 @@ class GgStat {
     // Calculate bin widths
     BigDecimal xRange = xMax - xMin
     BigDecimal yRange = yMax - yMin
-    if (xRange == 0) xRange = 1
-    if (yRange == 0) yRange = 1
+    if (xRange == 0) {
+      xRange = 1
+    }
+    if (yRange == 0) {
+      yRange = 1
+    }
 
     BigDecimal xBinWidth, yBinWidth
     int xNBins, yNBins
@@ -2054,7 +2085,9 @@ class GgStat {
     List<BigDecimal> valueVals = []
 
     gridValues.each { String key, List<BigDecimal> zValues ->
-      if (zValues.isEmpty()) return
+      if (zValues.isEmpty()) {
+        return
+      }
 
       String[] coords = key.split(',')
       int xBinIdx = coords[0] as int
@@ -2302,7 +2335,9 @@ class GgStat {
    */
   @CompileDynamic
   static Matrix align(Matrix data, Aes aes, Map params = [:]) {
-    if (data == null || data.rowCount() == 0) return data
+    if (data == null || data.rowCount() == 0) {
+      return data
+    }
 
     // 1. Extract column names
     String xCol = aes.xColName
@@ -2343,9 +2378,15 @@ class GgStat {
       def sortedRows = rows.sort(false) { a, b ->
         def aNum = ScaleUtils.coerceToNumber(a[xCol])
         def bNum = ScaleUtils.coerceToNumber(b[xCol])
-        if (aNum == null && bNum == null) return 0
-        if (aNum == null) return -1
-        if (bNum == null) return 1
+        if (aNum == null && bNum == null) {
+          return 0
+        }
+        if (aNum == null) {
+          return -1
+        }
+        if (bNum == null) {
+          return 1
+        }
         return aNum <=> bNum
       }
 
@@ -2355,7 +2396,9 @@ class GgStat {
             ScaleUtils.coerceToNumber(row[yCol]) != null
       }
 
-      if (validRows.isEmpty()) return
+      if (validRows.isEmpty()) {
+        return
+      }
 
       // Create interpolated points for each x-value in the union
       allXValues.each { targetX ->
@@ -2402,7 +2445,9 @@ class GgStat {
    */
   @CompileDynamic
   private static BigDecimal interpolateY(List rows, String xCol, String yCol, BigDecimal targetX) {
-    if (rows.isEmpty()) return null
+    if (rows.isEmpty()) {
+      return null
+    }
 
     // Find surrounding points
     def before = null
@@ -2410,7 +2455,9 @@ class GgStat {
 
     for (int i = 0; i < rows.size(); i++) {
       BigDecimal rowX = ScaleUtils.coerceToNumber(rows[i][xCol])
-      if (rowX == null) continue
+      if (rowX == null) {
+        continue
+      }
 
       if (rowX <= targetX) {
         before = rows[i]
@@ -2482,7 +2529,9 @@ class GgStat {
   @CompileDynamic
   private static void copyOtherColumns(Map targetRow, List sourceRows,
                                        String xCol, BigDecimal targetX, Set<String> excludeCols) {
-    if (sourceRows.isEmpty()) return
+    if (sourceRows.isEmpty()) {
+      return
+    }
 
     // Find nearest row by x-distance
     def nearest = sourceRows[0]

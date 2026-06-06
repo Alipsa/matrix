@@ -16,6 +16,7 @@ import groovy.transform.CompileStatic
  * @see ScaleYBinned
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 abstract class ScaleBinned extends ScaleContinuous {
 
   /** Position of the axis (e.g., 'bottom', 'top', 'left', 'right') */
@@ -60,14 +61,30 @@ abstract class ScaleBinned extends ScaleContinuous {
    */
   protected void applyBinnedParams(Map params) {
     // Handle standard scale parameters
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
-    if (params.guide) this.guide = params.guide
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
+    if (params.guide) {
+      this.guide = params.guide
+    }
 
     // Handle binned-specific parameters
     if (params.bins != null) {
@@ -137,15 +154,21 @@ abstract class ScaleBinned extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
 
     // Apply coordinate transformation if present (BEFORE binning)
     v = applyCoordTransform(v)
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
 
     // Find which bin this value belongs to
     int binIndex = findBinIndex(v)
-    if (binIndex < 0) return null  // Out of bounds
+    if (binIndex < 0) {
+      return null  // Out of bounds
+    }
 
     // Get the bin center in data space
     BigDecimal binCenter = binCenters[binIndex]
@@ -176,10 +199,14 @@ abstract class ScaleBinned extends ScaleContinuous {
    * @return the bin index [0, bins-1], or -1 if value is out of bounds
    */
   private int findBinIndex(BigDecimal value) {
-    if (value == null) return -1
+    if (value == null) {
+      return -1
+    }
 
     // Handle empty bins
-    if (binBoundaries.isEmpty() || binCenters.isEmpty()) return -1
+    if (binBoundaries.isEmpty() || binCenters.isEmpty()) {
+      return -1
+    }
 
     // Handle out-of-bounds
     BigDecimal minBoundary = binBoundaries[0]
@@ -196,18 +223,26 @@ abstract class ScaleBinned extends ScaleContinuous {
 
       if (right) {
         // Bins are (lower, upper] - closed on right
-        if (value > lower && value <= upper) return i
+        if (value > lower && value <= upper) {
+          return i
+        }
       } else {
         // Bins are [lower, upper) - closed on left
-        if (value >= lower && value < upper) return i
+        if (value >= lower && value < upper) {
+          return i
+        }
       }
     }
 
     // Edge case: minimum value with right=true
-    if (right && value == binBoundaries[0]) return 0
+    if (right && value == binBoundaries[0]) {
+      return 0
+    }
 
     // Edge case: maximum value with right=false
-    if (!right && value == binBoundaries[binBoundaries.size() - 1]) return actualBins - 1
+    if (!right && value == binBoundaries[binBoundaries.size() - 1]) {
+      return actualBins - 1
+    }
 
     return -1
   }
@@ -220,7 +255,9 @@ abstract class ScaleBinned extends ScaleContinuous {
    */
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks  // User-specified breaks take precedence
+    if (breaks) {
+      return breaks  // User-specified breaks take precedence
+    }
 
     List<BigDecimal> result = []
 

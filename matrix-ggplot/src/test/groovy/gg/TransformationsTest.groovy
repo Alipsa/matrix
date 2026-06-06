@@ -11,6 +11,7 @@ import se.alipsa.matrix.gg.coord.Transformations
  * Unit tests for coordinate transformation functions (Trans interface implementations).
  * Tests mathematical correctness, inverse relationships, edge cases, and break generation.
  */
+@SuppressWarnings('ClosureAsLastMethodParameter')
 class TransformationsTest {
 
   private static final double EPSILON = 1e-9
@@ -57,11 +58,11 @@ class TransformationsTest {
     assertEquals('log10', trans.name)
 
     // Test known values
-    assertEquals(0.0, trans.transform(1).doubleValue(), EPSILON, "log10(1) = 0")
-    assertEquals(1.0, trans.transform(10).doubleValue(), EPSILON, "log10(10) = 1")
-    assertEquals(2.0, trans.transform(100).doubleValue(), EPSILON, "log10(100) = 2")
-    assertEquals(3.0, trans.transform(1000).doubleValue(), EPSILON, "log10(1000) = 3")
-    assertEquals(-1.0, trans.transform(0.1).doubleValue(), EPSILON, "log10(0.1) = -1")
+    assertEquals(0.0, trans.transform(1).doubleValue(), EPSILON, 'log10(1) = 0')
+    assertEquals(1.0, trans.transform(10).doubleValue(), EPSILON, 'log10(10) = 1')
+    assertEquals(2.0, trans.transform(100).doubleValue(), EPSILON, 'log10(100) = 2')
+    assertEquals(3.0, trans.transform(1000).doubleValue(), EPSILON, 'log10(1000) = 3')
+    assertEquals(-1.0, trans.transform(0.1).doubleValue(), EPSILON, 'log10(0.1) = -1')
   }
 
   @Test
@@ -69,10 +70,10 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('log10')
 
     // Test known values: 10^x
-    assertEquals(1.0, trans.inverse(0).doubleValue(), EPSILON, "10^0 = 1")
-    assertEquals(10.0, trans.inverse(1).doubleValue(), EPSILON, "10^1 = 10")
-    assertEquals(100.0, trans.inverse(2).doubleValue(), EPSILON, "10^2 = 100")
-    assertEquals(0.1, trans.inverse(-1).doubleValue(), EPSILON, "10^-1 = 0.1")
+    assertEquals(1.0, trans.inverse(0).doubleValue(), EPSILON, '10^0 = 1')
+    assertEquals(10.0, trans.inverse(1).doubleValue(), EPSILON, '10^1 = 10')
+    assertEquals(100.0, trans.inverse(2).doubleValue(), EPSILON, '10^2 = 100')
+    assertEquals(0.1, trans.inverse(-1).doubleValue(), EPSILON, '10^-1 = 0.1')
   }
 
   @Test
@@ -93,13 +94,13 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('log10')
 
     // Null input
-    assertNull(trans.transform(null), "transform(null) should return null")
-    assertNull(trans.inverse(null), "inverse(null) should return null")
+    assertNull(trans.transform(null), 'transform(null) should return null')
+    assertNull(trans.inverse(null), 'inverse(null) should return null')
 
     // Non-positive values should return null (log undefined)
-    assertNull(trans.transform(0), "log10(0) should return null")
-    assertNull(trans.transform(-1), "log10(-1) should return null")
-    assertNull(trans.transform(-100), "log10(-100) should return null")
+    assertNull(trans.transform(0), 'log10(0) should return null')
+    assertNull(trans.transform(-1), 'log10(-1) should return null')
+    assertNull(trans.transform(-100), 'log10(-100) should return null')
   }
 
   @Test
@@ -111,11 +112,11 @@ class TransformationsTest {
     assertTrue(breaks.size() > 0)
 
     // Should contain powers of 10
-    List<Double> breakValues = breaks.collect { it.doubleValue() }
-    assertTrue(breakValues.any { Math.abs(it - 1.0) < 0.01 }, "Should contain 1")
-    assertTrue(breakValues.any { Math.abs(it - 10.0) < 0.01 }, "Should contain 10")
-    assertTrue(breakValues.any { Math.abs(it - 100.0) < 0.01 }, "Should contain 100")
-    assertTrue(breakValues.any { Math.abs(it - 1000.0) < 0.01 }, "Should contain 1000")
+    List<Double> breakValues = breaks*.doubleValue()
+    assertTrue(breakValues.any { Math.abs(it - 1.0) < 0.01 }, 'Should contain 1')
+    assertTrue(breakValues.any { Math.abs(it - 10.0) < 0.01 }, 'Should contain 10')
+    assertTrue(breakValues.any { Math.abs(it - 100.0) < 0.01 }, 'Should contain 100')
+    assertTrue(breakValues.any { Math.abs(it - 1000.0) < 0.01 }, 'Should contain 1000')
   }
 
   // ==================== Natural Log Transformation ====================
@@ -126,9 +127,9 @@ class TransformationsTest {
     assertEquals('log', trans.name)
 
     // Test known values
-    assertEquals(0.0, trans.transform(1).doubleValue(), EPSILON, "ln(1) = 0")
-    assertEquals(1.0, trans.transform(Math.E).doubleValue(), EPSILON, "ln(e) = 1")
-    assertEquals(2.0, trans.transform(Math.E * Math.E).doubleValue(), EPSILON, "ln(e^2) = 2")
+    assertEquals(0.0, trans.transform(1).doubleValue(), EPSILON, 'ln(1) = 0')
+    assertEquals(1.0, trans.transform(Math.E).doubleValue(), EPSILON, 'ln(e) = 1')
+    assertEquals(2.0, trans.transform(Math.E * Math.E).doubleValue(), EPSILON, 'ln(e^2) = 2')
   }
 
   @Test
@@ -136,9 +137,9 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('log')
 
     // Test known values: e^x
-    assertEquals(1.0, trans.inverse(0).doubleValue(), EPSILON, "e^0 = 1")
-    assertEquals(Math.E, trans.inverse(1).doubleValue(), EPSILON, "e^1 = e")
-    assertEquals(Math.E * Math.E, trans.inverse(2).doubleValue(), 1e-6, "e^2")
+    assertEquals(1.0, trans.inverse(0).doubleValue(), EPSILON, 'e^0 = 1')
+    assertEquals(Math.E, trans.inverse(1).doubleValue(), EPSILON, 'e^1 = e')
+    assertEquals(Math.E * Math.E, trans.inverse(2).doubleValue(), 1e-6, 'e^2')
   }
 
   @Test
@@ -158,8 +159,8 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('log')
 
     assertNull(trans.transform(null))
-    assertNull(trans.transform(0), "ln(0) should return null")
-    assertNull(trans.transform(-1), "ln(-1) should return null")
+    assertNull(trans.transform(0), 'ln(0) should return null')
+    assertNull(trans.transform(-1), 'ln(-1) should return null')
   }
 
   // ==================== Sqrt Transformation ====================
@@ -169,11 +170,11 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('sqrt')
     assertEquals('sqrt', trans.name)
 
-    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, "sqrt(0) = 0")
-    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, "sqrt(1) = 1")
-    assertEquals(2.0, trans.transform(4).doubleValue(), EPSILON, "sqrt(4) = 2")
-    assertEquals(3.0, trans.transform(9).doubleValue(), EPSILON, "sqrt(9) = 3")
-    assertEquals(10.0, trans.transform(100).doubleValue(), EPSILON, "sqrt(100) = 10")
+    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, 'sqrt(0) = 0')
+    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, 'sqrt(1) = 1')
+    assertEquals(2.0, trans.transform(4).doubleValue(), EPSILON, 'sqrt(4) = 2')
+    assertEquals(3.0, trans.transform(9).doubleValue(), EPSILON, 'sqrt(9) = 3')
+    assertEquals(10.0, trans.transform(100).doubleValue(), EPSILON, 'sqrt(100) = 10')
   }
 
   @Test
@@ -181,10 +182,10 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('sqrt')
 
     // Inverse is x^2
-    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, "0^2 = 0")
-    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, "1^2 = 1")
-    assertEquals(4.0, trans.inverse(2).doubleValue(), EPSILON, "2^2 = 4")
-    assertEquals(9.0, trans.inverse(3).doubleValue(), EPSILON, "3^2 = 9")
+    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, '0^2 = 0')
+    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, '1^2 = 1')
+    assertEquals(4.0, trans.inverse(2).doubleValue(), EPSILON, '2^2 = 4')
+    assertEquals(9.0, trans.inverse(3).doubleValue(), EPSILON, '3^2 = 9')
   }
 
   @Test
@@ -204,9 +205,9 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('sqrt')
 
     assertNull(trans.transform(null))
-    assertNull(trans.transform(-1), "sqrt(-1) should return null")
-    assertNull(trans.transform(-100), "sqrt(-100) should return null")
-    assertNotNull(trans.transform(0), "sqrt(0) should be valid")
+    assertNull(trans.transform(-1), 'sqrt(-1) should return null')
+    assertNull(trans.transform(-100), 'sqrt(-100) should return null')
+    assertNotNull(trans.transform(0), 'sqrt(0) should be valid')
   }
 
   // ==================== Reverse Transformation ====================
@@ -249,11 +250,11 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('reciprocal')
     assertEquals('reciprocal', trans.name)
 
-    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, "1/1 = 1")
-    assertEquals(0.5, trans.transform(2).doubleValue(), EPSILON, "1/2 = 0.5")
-    assertEquals(0.25, trans.transform(4).doubleValue(), EPSILON, "1/4 = 0.25")
-    assertEquals(2.0, trans.transform(0.5).doubleValue(), EPSILON, "1/0.5 = 2")
-    assertEquals(-1.0, trans.transform(-1).doubleValue(), EPSILON, "1/-1 = -1")
+    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, '1/1 = 1')
+    assertEquals(0.5, trans.transform(2).doubleValue(), EPSILON, '1/2 = 0.5')
+    assertEquals(0.25, trans.transform(4).doubleValue(), EPSILON, '1/4 = 0.25')
+    assertEquals(2.0, trans.transform(0.5).doubleValue(), EPSILON, '1/0.5 = 2')
+    assertEquals(-1.0, trans.transform(-1).doubleValue(), EPSILON, '1/-1 = -1')
   }
 
   @Test
@@ -283,8 +284,8 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('reciprocal')
 
     assertNull(trans.transform(null))
-    assertNull(trans.transform(0), "1/0 should return null")
-    assertNull(trans.inverse(0), "inverse(0) should return null")
+    assertNull(trans.transform(0), '1/0 should return null')
+    assertNull(trans.inverse(0), 'inverse(0) should return null')
   }
 
   @Test
@@ -303,21 +304,21 @@ class TransformationsTest {
     assertEquals('power', trans.name)
 
     // Default exponent is 2
-    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, "0^2 = 0")
-    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, "1^2 = 1")
-    assertEquals(4.0, trans.transform(2).doubleValue(), EPSILON, "2^2 = 4")
-    assertEquals(9.0, trans.transform(3).doubleValue(), EPSILON, "3^2 = 9")
+    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, '0^2 = 0')
+    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, '1^2 = 1')
+    assertEquals(4.0, trans.transform(2).doubleValue(), EPSILON, '2^2 = 4')
+    assertEquals(9.0, trans.transform(3).doubleValue(), EPSILON, '3^2 = 9')
   }
 
   @Test
   void testPowerTransformCustomExponent() {
     Trans trans = Transformations.getTrans('power', [exponent: 3])
 
-    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, "0^3 = 0")
-    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, "1^3 = 1")
-    assertEquals(8.0, trans.transform(2).doubleValue(), EPSILON, "2^3 = 8")
-    assertEquals(27.0, trans.transform(3).doubleValue(), EPSILON, "3^3 = 27")
-    assertEquals(-8.0, trans.transform(-2).doubleValue(), EPSILON, "(-2)^3 = -8")
+    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, '0^3 = 0')
+    assertEquals(1.0, trans.transform(1).doubleValue(), EPSILON, '1^3 = 1')
+    assertEquals(8.0, trans.transform(2).doubleValue(), EPSILON, '2^3 = 8')
+    assertEquals(27.0, trans.transform(3).doubleValue(), EPSILON, '3^3 = 27')
+    assertEquals(-8.0, trans.transform(-2).doubleValue(), EPSILON, '(-2)^3 = -8')
   }
 
   @Test
@@ -325,10 +326,10 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('power', [exponent: 2])
 
     // For exponent 2, inverse is sqrt
-    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, "sqrt(0) = 0")
-    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, "sqrt(1) = 1")
-    assertEquals(2.0, trans.inverse(4).doubleValue(), EPSILON, "sqrt(4) = 2")
-    assertEquals(3.0, trans.inverse(9).doubleValue(), EPSILON, "sqrt(9) = 3")
+    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, 'sqrt(0) = 0')
+    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, 'sqrt(1) = 1')
+    assertEquals(2.0, trans.inverse(4).doubleValue(), EPSILON, 'sqrt(4) = 2')
+    assertEquals(3.0, trans.inverse(9).doubleValue(), EPSILON, 'sqrt(9) = 3')
   }
 
   @Test
@@ -336,12 +337,12 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('power', [exponent: 3])
 
     // For exponent 3, inverse is cube root
-    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, "cbrt(0) = 0")
-    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, "cbrt(1) = 1")
-    assertEquals(2.0, trans.inverse(8).doubleValue(), EPSILON, "cbrt(8) = 2")
-    assertEquals(3.0, trans.inverse(27).doubleValue(), EPSILON, "cbrt(27) = 3")
+    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, 'cbrt(0) = 0')
+    assertEquals(1.0, trans.inverse(1).doubleValue(), EPSILON, 'cbrt(1) = 1')
+    assertEquals(2.0, trans.inverse(8).doubleValue(), EPSILON, 'cbrt(8) = 2')
+    assertEquals(3.0, trans.inverse(27).doubleValue(), EPSILON, 'cbrt(27) = 3')
     // Negative values with odd exponent
-    assertEquals(-2.0, trans.inverse(-8).doubleValue(), EPSILON, "cbrt(-8) = -2")
+    assertEquals(-2.0, trans.inverse(-8).doubleValue(), EPSILON, 'cbrt(-8) = -2')
   }
 
   @Test
@@ -362,7 +363,7 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('power', [exponent: 2])
 
     // Even exponent with negative values - transform should return null
-    assertNull(trans.transform(-2), "(-2)^2 would lose sign information")
+    assertNull(trans.transform(-2), '(-2)^2 would lose sign information')
     // Note: Forward transform is defined for negatives, but inverse is not
     // Actually for even exponents, we should allow forward but not inverse for negatives
     // Let me check the current implementation...
@@ -379,7 +380,7 @@ class TransformationsTest {
     assertNull(trans.inverse(null))
 
     // Negative inverse for even exponent should return null
-    assertNull(trans.inverse(-4), "sqrt(-4) should return null")
+    assertNull(trans.inverse(-4), 'sqrt(-4) should return null')
   }
 
   // ==================== ASN (Arcsine Square Root) Transformation ====================
@@ -391,16 +392,16 @@ class TransformationsTest {
 
     // asn(x) = asin(sqrt(x))
     // asn(0) = asin(0) = 0
-    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, "asn(0) = 0")
+    assertEquals(0.0, trans.transform(0).doubleValue(), EPSILON, 'asn(0) = 0')
 
     // asn(1) = asin(1) = pi/2
-    assertEquals(Math.PI / 2, trans.transform(1).doubleValue(), EPSILON, "asn(1) = pi/2")
+    assertEquals(Math.PI / 2, trans.transform(1).doubleValue(), EPSILON, 'asn(1) = pi/2')
 
     // asn(0.5) = asin(sqrt(0.5)) = asin(1/sqrt(2)) = pi/4
-    assertEquals(Math.PI / 4, trans.transform(0.5).doubleValue(), EPSILON, "asn(0.5) = pi/4")
+    assertEquals(Math.PI / 4, trans.transform(0.5).doubleValue(), EPSILON, 'asn(0.5) = pi/4')
 
     // asn(0.25) = asin(0.5) = pi/6
-    assertEquals(Math.PI / 6, trans.transform(0.25).doubleValue(), EPSILON, "asn(0.25) = pi/6")
+    assertEquals(Math.PI / 6, trans.transform(0.25).doubleValue(), EPSILON, 'asn(0.25) = pi/6')
   }
 
   @Test
@@ -408,9 +409,9 @@ class TransformationsTest {
     Trans trans = Transformations.getTrans('asn')
 
     // inverse of asn(x) = sin(x)^2
-    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, "sin(0)^2 = 0")
-    assertEquals(1.0, trans.inverse(Math.PI / 2).doubleValue(), EPSILON, "sin(pi/2)^2 = 1")
-    assertEquals(0.5, trans.inverse(Math.PI / 4).doubleValue(), EPSILON, "sin(pi/4)^2 = 0.5")
+    assertEquals(0.0, trans.inverse(0).doubleValue(), EPSILON, 'sin(0)^2 = 0')
+    assertEquals(1.0, trans.inverse(Math.PI / 2).doubleValue(), EPSILON, 'sin(pi/2)^2 = 1')
+    assertEquals(0.5, trans.inverse(Math.PI / 4).doubleValue(), EPSILON, 'sin(pi/4)^2 = 0.5')
   }
 
   @Test
@@ -434,10 +435,10 @@ class TransformationsTest {
     assertNull(trans.inverse(null))
 
     // Values outside [0, 1] should return null
-    assertNull(trans.transform(-0.1), "asn(-0.1) should return null")
-    assertNull(trans.transform(1.1), "asn(1.1) should return null")
-    assertNull(trans.transform(-1), "asn(-1) should return null")
-    assertNull(trans.transform(2), "asn(2) should return null")
+    assertNull(trans.transform(-0.1), 'asn(-0.1) should return null')
+    assertNull(trans.transform(1.1), 'asn(1.1) should return null')
+    assertNull(trans.transform(-1), 'asn(-1) should return null')
+    assertNull(trans.transform(2), 'asn(2) should return null')
   }
 
   @Test

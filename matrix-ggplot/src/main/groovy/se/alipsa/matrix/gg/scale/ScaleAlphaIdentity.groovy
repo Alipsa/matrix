@@ -15,21 +15,32 @@ import groovy.transform.CompileStatic
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class ScaleAlphaIdentity extends Scale {
   String aesthetic = 'alpha'
   BigDecimal naValue = 1.0
 
   ScaleAlphaIdentity(Map params = [:]) {
-    if (params.naValue) this.naValue = params.naValue as BigDecimal
-    if (params.name) this.name = params.name as String
-    if (params.guide) this.guide = params.guide
+    if (params.naValue) {
+      this.naValue = params.naValue as BigDecimal
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.guide) {
+      this.guide = params.guide
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
+    if (value == null) {
+      return naValue
+    }
     BigDecimal alpha = ScaleUtils.coerceToNumber(value)
-    if (alpha == null) return naValue
+    if (alpha == null) {
+      return naValue
+    }
     // Clamp to [0, 1] range
     BigDecimal zero = 0.0
     BigDecimal one = 1.0

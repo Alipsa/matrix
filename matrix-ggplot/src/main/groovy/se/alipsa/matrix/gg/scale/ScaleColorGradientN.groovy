@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Continuous color scale using multiple colors.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 class ScaleColorGradientN extends ScaleContinuous {
 
   /** Colors to interpolate between. */
@@ -42,24 +43,52 @@ class ScaleColorGradientN extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.colors) this.colors = params.colors as List<String>
-    if (params.colours) this.colors = params.colours as List<String>
-    if (params.values) this.values = params.values as List<BigDecimal>
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.guide) this.guideType = params.guide as String
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.colors) {
+      this.colors = params.colors as List<String>
+    }
+    if (params.colours) {
+      this.colors = params.colours as List<String>
+    }
+    if (params.values) {
+      this.values = params.values as List<BigDecimal>
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.guide) {
+      this.guideType = params.guide as String
+    }
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (!(value instanceof Number)) return naValue
-    if (colors == null || colors.isEmpty()) return naValue
+    if (value == null) {
+      return naValue
+    }
+    if (!(value instanceof Number)) {
+      return naValue
+    }
+    if (colors == null || colors.isEmpty()) {
+      return naValue
+    }
 
     BigDecimal v = value as BigDecimal
     BigDecimal dMin = computedDomain[0]

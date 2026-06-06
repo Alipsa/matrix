@@ -88,7 +88,7 @@ class GgChart {
       (PositionType.FILL): ['reverse'] as Set<String>,
       (PositionType.JITTER): ['width', 'height', 'seed'] as Set<String>,
       (PositionType.NUDGE): ['x', 'y'] as Set<String>
-  ] as Map<PositionType, Set<String>>
+  ]
 
   /**
    * Create a new chart with data and global aesthetics.
@@ -417,10 +417,18 @@ class GgChart {
       this.labels = labels
       return this
     }
-    if (labels.title) this.labels.title = labels.title
-    if (labels.subTitle) this.labels.subTitle = labels.subTitle
-    if (labels.caption) this.labels.caption = labels.caption
-    if (labels.legendTitle) this.labels.legendTitle = labels.legendTitle
+    if (labels.title) {
+      this.labels.title = labels.title
+    }
+    if (labels.subTitle) {
+      this.labels.subTitle = labels.subTitle
+    }
+    if (labels.caption) {
+      this.labels.caption = labels.caption
+    }
+    if (labels.legendTitle) {
+      this.labels.legendTitle = labels.legendTitle
+    }
     if (labels.xSet) {
       this.labels.x = labels.x
       this.labels.xSet = true

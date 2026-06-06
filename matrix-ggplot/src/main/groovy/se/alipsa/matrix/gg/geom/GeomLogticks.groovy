@@ -63,24 +63,50 @@ class GeomLogticks extends Geom {
   GeomLogticks() {
     defaultStat = StatType.IDENTITY
     requiredAes = []
-    defaultAes = [:] as Map<String, Object>
+    defaultAes = [:]
   }
 
   GeomLogticks(Map params) {
     this()
-    if (params.base != null) this.base = params.base as int
-    if (params.sides) this.sides = params.sides as String
-    if (params.outside != null) this.outside = params.outside as boolean
-    if (params.scaled != null) this.scaled = params.scaled as boolean
-    if (params.short != null) this.shortLength = params.short as BigDecimal
-    if (params.mid != null) this.midLength = params.mid as BigDecimal
-    if (params.long != null) this.longLength = params.long as BigDecimal
-    if (params.colour) this.colour = ColorUtil.normalizeColor(params.colour as String)
-    if (params.color) this.colour = ColorUtil.normalizeColor(params.color as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.base != null) {
+      this.base = params.base as int
+    }
+    if (params.sides) {
+      this.sides = params.sides as String
+    }
+    if (params.outside != null) {
+      this.outside = params.outside as boolean
+    }
+    if (params.scaled != null) {
+      this.scaled = params.scaled as boolean
+    }
+    if (params.short != null) {
+      this.shortLength = params.short as BigDecimal
+    }
+    if (params.mid != null) {
+      this.midLength = params.mid as BigDecimal
+    }
+    if (params.long != null) {
+      this.longLength = params.long as BigDecimal
+    }
+    if (params.colour) {
+      this.colour = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.color) {
+      this.colour = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.params = params
   }
 

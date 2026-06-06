@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
  * and creating a panel for each subset.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 abstract class Facet {
 
   /** Whether scales should be free or fixed across panels */
@@ -53,7 +54,9 @@ abstract class Facet {
    * @return Filtered matrix for this panel
    */
   Matrix filterDataForPanel(Matrix data, Map<String, Object> panelValues) {
-    if (panelValues.isEmpty()) return data
+    if (panelValues.isEmpty()) {
+      return data
+    }
 
     Matrix result = data
     panelValues.each { String varName, Object value ->

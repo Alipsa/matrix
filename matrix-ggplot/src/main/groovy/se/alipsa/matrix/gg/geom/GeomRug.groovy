@@ -15,6 +15,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_rug(sides: 'bl') - both bottom and left
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRug extends Geom {
 
   /** Which sides to draw: 't'=top, 'b'=bottom, 'l'=left, 'r'=right */
@@ -38,19 +39,35 @@ class GeomRug extends Geom {
   GeomRug() {
     defaultStat = StatType.IDENTITY
     requiredAes = []  // x and/or y depending on sides
-    defaultAes = [color: 'black', alpha: 0.5] as Map<String, Object>
+    defaultAes = [color: 'black', alpha: 0.5]
   }
 
   GeomRug(Map params) {
     this()
-    if (params.sides) this.sides = params.sides as String
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.length != null) this.length = params.length as Number
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.outside != null) this.outside = params.outside as boolean
+    if (params.sides) {
+      this.sides = params.sides as String
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.length != null) {
+      this.length = params.length as Number
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.outside != null) {
+      this.outside = params.outside as boolean
+    }
     this.params = params
   }
 

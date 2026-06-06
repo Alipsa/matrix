@@ -11,6 +11,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Polygon map geometry that joins data to map polygons via map_id.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateStringLiteral', 'UnusedPrivateField'])
 class GeomMap extends Geom {
 
   private static final Logger log = Logger.getLogger(GeomMap)
@@ -46,7 +47,7 @@ class GeomMap extends Geom {
   GeomMap() {
     defaultStat = StatType.IDENTITY
     requiredAes = []
-    defaultAes = [fill: 'gray', color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [fill: 'gray', color: 'black', size: 1, linetype: 'solid']
   }
 
   GeomMap(Map params) {
@@ -55,24 +56,46 @@ class GeomMap extends Geom {
       this.map = params.get('map') as Matrix
     }
     Object mapId = params.get('map_id_col') ?: params.get('mapIdCol')
-    if (mapId != null) this.mapIdCol = mapId.toString()
+    if (mapId != null) {
+      this.mapIdCol = mapId
+    }
     Object xVal = params.get('x')
-    if (xVal != null) this.xCol = xVal.toString()
+    if (xVal != null) {
+      this.xCol = xVal
+    }
     Object yVal = params.get('y')
-    if (yVal != null) this.yCol = yVal.toString()
+    if (yVal != null) {
+      this.yCol = yVal
+    }
     Object groupVal = params.get('group')
-    if (groupVal != null) this.groupCol = groupVal.toString()
+    if (groupVal != null) {
+      this.groupCol = groupVal
+    }
     Object fillVal = params.get('fill')
-    if (fillVal != null) this.fill = ColorUtil.normalizeColor(fillVal as String)
+    if (fillVal != null) {
+      this.fill = ColorUtil.normalizeColor(fillVal as String)
+    }
     Object colorVal = params.get('color')
-    if (colorVal != null) this.color = ColorUtil.normalizeColor(colorVal as String)
+    if (colorVal != null) {
+      this.color = ColorUtil.normalizeColor(colorVal as String)
+    }
     Object colourVal = params.get('colour')
-    if (colourVal != null) this.color = ColorUtil.normalizeColor(colourVal as String)
-    if (params.get('size') != null) this.size = params.get('size') as Number
-    if (params.get('linewidth') != null) this.size = params.get('linewidth') as Number
+    if (colourVal != null) {
+      this.color = ColorUtil.normalizeColor(colourVal as String)
+    }
+    if (params.get('size') != null) {
+      this.size = params.get('size') as Number
+    }
+    if (params.get('linewidth') != null) {
+      this.size = params.get('linewidth') as Number
+    }
     Object linetypeVal = params.get('linetype')
-    if (linetypeVal != null) this.linetype = linetypeVal as String
-    if (params.get('alpha') != null) this.alpha = params.get('alpha') as Number
+    if (linetypeVal != null) {
+      this.linetype = linetypeVal as String
+    }
+    if (params.get('alpha') != null) {
+      this.alpha = params.get('alpha') as Number
+    }
     this.params = params
   }
 

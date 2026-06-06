@@ -37,9 +37,15 @@ class ScaleColorDistiller extends ScaleColorGradientN {
   }
 
   private void applyParams(Map params) {
-    if (params.palette != null) this.palette = params.palette.toString()
-    if (params.type) this.type = params.type as String
-    if (params.direction != null) this.direction = (params.direction as Number).intValue()
+    if (params.palette != null) {
+      this.palette = params.palette
+    }
+    if (params.type) {
+      this.type = params.type as String
+    }
+    if (params.direction != null) {
+      this.direction = (params.direction as Number).intValue()
+    }
   }
 
   private void applyPalette() {

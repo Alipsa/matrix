@@ -20,6 +20,7 @@ import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.export.GgExport
 
 @Slow
+@SuppressWarnings('BooleanGetBoolean')
 class ChartToJfxTest {
 
   @BeforeAll
@@ -39,13 +40,13 @@ class ChartToJfxTest {
 
   @Test
   void testExportFromString() {
-    String svgContent = """<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+    String svgContent = '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
       <rect width="200" height="100" style="fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)" />
-    </svg>"""
+    </svg>'''
 
     SVGImage svgImage = ChartToJfx.export(svgContent)
-    assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
+    assertNotNull(svgImage, 'SVGImage should not be null')
+    assertNotNull(svgImage.getSVGContent(), 'SVG content should not be null')
   }
 
   @Test
@@ -58,8 +59,8 @@ class ChartToJfxTest {
 
     SVGImage svgImage = ChartToJfx.export(svg)
 
-    assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
+    assertNotNull(svgImage, 'SVGImage should not be null')
+    assertNotNull(svgImage.getSVGContent(), 'SVG content should not be null')
   }
 
   @Test
@@ -72,33 +73,33 @@ class ChartToJfxTest {
 
     SVGImage svgImage = GgExport.toJfx(chart)
 
-    assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
+    assertNotNull(svgImage, 'SVGImage should not be null')
+    assertNotNull(svgImage.getSVGContent(), 'SVG content should not be null')
   }
 
   @Test
   void testExportWithNullString() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToJfx.export((String) null)
-    })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    }
+    assertEquals('svgChart must not be null', exception.getMessage())
   }
 
   @Test
   void testExportWithNullSvg() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToJfx.export((Svg) null)
-    })
+    }
     assertNotNull(exception)
-    assertEquals("chart must not be null", exception.getMessage())
+    assertEquals('chart must not be null', exception.getMessage())
   }
 
   @Test
   void testExportWithNullGgChart() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       GgExport.toJfx(null)
-    })
-    assertEquals("chart must not be null", exception.getMessage())
+    }
+    assertEquals('chart must not be null', exception.getMessage())
   }
 
   @Test
@@ -106,8 +107,8 @@ class ChartToJfxTest {
     CharmChart chart = buildCharmChart()
 
     SVGImage svgImage = ChartToJfx.export(chart)
-    assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
+    assertNotNull(svgImage, 'SVGImage should not be null')
+    assertNotNull(svgImage.getSVGContent(), 'SVG content should not be null')
   }
 
   private static CharmChart buildCharmChart() {

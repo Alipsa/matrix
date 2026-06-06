@@ -49,8 +49,8 @@ class ThemeTestTest {
     def theme = chart.theme
 
     // Grid lines should be explicitly null
-    assertNull(theme.panelGridMajor, "Major grid should be null")
-    assertNull(theme.panelGridMinor, "Minor grid should be null")
+    assertNull(theme.panelGridMajor, 'Major grid should be null')
+    assertNull(theme.panelGridMinor, 'Minor grid should be null')
     assertTrue(theme.explicitNulls.contains('panelGridMajor'))
     assertTrue(theme.explicitNulls.contains('panelGridMinor'))
   }
@@ -67,8 +67,8 @@ class ThemeTestTest {
     def theme = chart.theme
 
     // Axis lines should be explicitly null
-    assertNull(theme.axisLineX, "X-axis line should be null")
-    assertNull(theme.axisLineY, "Y-axis line should be null")
+    assertNull(theme.axisLineX, 'X-axis line should be null')
+    assertNull(theme.axisLineY, 'Y-axis line should be null')
     assertTrue(theme.explicitNulls.contains('axisLineX'))
     assertTrue(theme.explicitNulls.contains('axisLineY'))
   }
@@ -84,14 +84,14 @@ class ThemeTestTest {
     def theme = chart.theme
 
     // Ticks should be present
-    assertNotNull(theme.axisTicksX, "X-axis ticks should exist")
-    assertNotNull(theme.axisTicksY, "Y-axis ticks should exist")
+    assertNotNull(theme.axisTicksX, 'X-axis ticks should exist')
+    assertNotNull(theme.axisTicksY, 'Y-axis ticks should exist')
 
     // Text elements should be present
-    assertNotNull(theme.axisTextX, "X-axis text should exist")
-    assertNotNull(theme.axisTextY, "Y-axis text should exist")
-    assertNotNull(theme.axisTitleX, "X-axis title should exist")
-    assertNotNull(theme.axisTitleY, "Y-axis title should exist")
+    assertNotNull(theme.axisTextX, 'X-axis text should exist')
+    assertNotNull(theme.axisTextY, 'Y-axis text should exist')
+    assertNotNull(theme.axisTitleX, 'X-axis title should exist')
+    assertNotNull(theme.axisTitleY, 'Y-axis title should exist')
   }
 
   @Test

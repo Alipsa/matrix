@@ -24,39 +24,39 @@ class ChartToSwingTest {
   @Test
   void testExportFromString() {
     // Create a simple SVG string
-    String svgContent = """<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+    String svgContent = '''<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="40" fill="blue" />
-    </svg>"""
+    </svg>'''
 
     // Export to SvgPanel
     SvgPanel panel = ChartToSwing.export(svgContent)
 
     // Verify panel is not null
-    assertNotNull(panel, "SvgPanel should not be null")
+    assertNotNull(panel, 'SvgPanel should not be null')
 
     // Verify panel has preferred size set
-    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
-    assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")
-    assertTrue(panel.getPreferredSize().height > 0, "Panel height should be greater than 0")
+    assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
+    assertTrue(panel.getPreferredSize().width > 0, 'Panel width should be greater than 0')
+    assertTrue(panel.getPreferredSize().height > 0, 'Panel height should be greater than 0')
   }
 
   @Test
   void testExportFromSvg() {
     // Create an Svg object
-    Svg svg = SvgReader.parse("""<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+    Svg svg = SvgReader.parse('''<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
       <rect x="10" y="10" width="180" height="130" fill="red" />
-    </svg>""")
+    </svg>''')
 
     // Export to SvgPanel
     SvgPanel panel = ChartToSwing.export(svg)
 
     // Verify panel is not null
-    assertNotNull(panel, "SvgPanel should not be null")
+    assertNotNull(panel, 'SvgPanel should not be null')
 
     // Verify panel has preferred size set
-    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
-    assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")
-    assertTrue(panel.getPreferredSize().height > 0, "Panel height should be greater than 0")
+    assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
+    assertTrue(panel.getPreferredSize().width > 0, 'Panel width should be greater than 0')
+    assertTrue(panel.getPreferredSize().height > 0, 'Panel height should be greater than 0')
   }
 
   @Test
@@ -71,48 +71,48 @@ class ChartToSwingTest {
     SvgPanel panel = GgExport.toSwing(chart)
 
     // Verify panel is not null
-    assertNotNull(panel, "SvgPanel should not be null")
+    assertNotNull(panel, 'SvgPanel should not be null')
 
     // Verify panel has preferred size set
-    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
-    assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")
-    assertTrue(panel.getPreferredSize().height > 0, "Panel height should be greater than 0")
+    assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
+    assertTrue(panel.getPreferredSize().width > 0, 'Panel width should be greater than 0')
+    assertTrue(panel.getPreferredSize().height > 0, 'Panel height should be greater than 0')
   }
 
   @Test
   void testExportWithNullString() {
     String svgContent = null
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToSwing.export(svgContent)
-    })
+    }
     assertTrue(exception.getMessage().contains('must not be null'))
   }
 
   @Test
   void testExportWithNullSvg() {
     Svg svg = null
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToSwing.export(svg)
-    })
+    }
     assertTrue(exception.getMessage().contains('must not be null'))
   }
 
   @Test
   void testExportWithNullGgChart() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       GgExport.toSwing(null)
-    })
-    assertEquals("chart must not be null", exception.getMessage())
+    }
+    assertEquals('chart must not be null', exception.getMessage())
   }
 
   @Test
   void testExportWithEmptyString() {
-    String svgContent = ""
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    String svgContent = ''
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToSwing.export(svgContent)
-    })
+    }
     // The exception will be thrown by SvgPanel constructor
-    assertTrue(exception.getMessage().contains("cannot be null or empty"))
+    assertTrue(exception.getMessage().contains('cannot be null or empty'))
   }
 
   @Test
@@ -121,11 +121,11 @@ class ChartToSwingTest {
     // Redirect stderr to "nowhere"
     System.setErr(new PrintStream(OutputStream.nullOutputStream()))
     try {
-      Exception exception = assertThrows(IllegalArgumentException.class, {
-        ChartToSwing.export("This is not valid SVG content")
-      })
+      Exception exception = assertThrows(IllegalArgumentException) {
+        ChartToSwing.export('This is not valid SVG content')
+      }
       // The exception will be thrown by SvgPanel constructor when it fails to load
-      assertTrue(exception.getMessage().contains("Failed to load SVG content"))
+      assertTrue(exception.getMessage().contains('Failed to load SVG content'))
     } finally {
       System.setErr(originalErr)
     }
@@ -136,8 +136,8 @@ class ChartToSwingTest {
     CharmChart chart = buildCharmChart()
 
     SvgPanel panel = ChartToSwing.export(chart)
-    assertNotNull(panel, "SvgPanel should not be null")
-    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
+    assertNotNull(panel, 'SvgPanel should not be null')
+    assertNotNull(panel.getPreferredSize(), 'Panel should have preferred size')
     assertTrue(panel.getPreferredSize().width > 0)
     assertTrue(panel.getPreferredSize().height > 0)
   }
@@ -147,7 +147,7 @@ class ChartToSwingTest {
     CharmChart chart = buildCharmChart()
 
     SvgPanel panel = ChartToSwing.export(chart)
-    assertNotNull(panel, "SvgPanel should not be null via typed dispatch")
+    assertNotNull(panel, 'SvgPanel should not be null via typed dispatch')
   }
 
   @Test
@@ -155,7 +155,7 @@ class ChartToSwingTest {
     CharmChart chart = buildCharmChart()
 
     SvgPanel panel = ChartToSwing.export((Object) chart)
-    assertNotNull(panel, "SvgPanel should not be null via Object dispatch")
+    assertNotNull(panel, 'SvgPanel should not be null via Object dispatch')
   }
 
   private static CharmChart buildCharmChart() {

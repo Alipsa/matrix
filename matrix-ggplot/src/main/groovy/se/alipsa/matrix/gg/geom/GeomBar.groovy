@@ -12,6 +12,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * For pre-computed heights, use GeomCol instead.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomBar extends Geom {
 
   /** Bar fill color */
@@ -33,7 +34,7 @@ class GeomBar extends Geom {
     defaultStat = StatType.COUNT
     defaultPosition = PositionType.STACK
     requiredAes = ['x']
-    defaultAes = [fill: '#595959', alpha: 1.0] as Map<String, Object>
+    defaultAes = [fill: '#595959', alpha: 1.0]
   }
 
   GeomBar(Map params) {

@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_pointrange(color: 'blue', size: 3)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomPointrange extends Geom {
 
   /** Point and line color */
@@ -40,16 +41,24 @@ class GeomPointrange extends Geom {
   GeomPointrange() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y', 'ymin', 'ymax']
-    defaultAes = [color: 'black', size: 4, linewidth: 1] as Map<String, Object>
+    defaultAes = [color: 'black', size: 4, linewidth: 1]
   }
 
   GeomPointrange(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.size != null) this.size = params.size as BigDecimal
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.shape != null) this.shape = params.shape as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.shape != null) {
+      this.shape = params.shape as BigDecimal
+    }
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.params = params
   }

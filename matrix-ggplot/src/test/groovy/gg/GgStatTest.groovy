@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.stat.GgStat
 
+@SuppressWarnings(['ClassSize', 'UnnecessaryCallForLastElement'])
 class GgStatTest {
 
   @Test
@@ -151,9 +152,9 @@ class GgStatTest {
     assertTrue(result.columnNames().containsAll(['group', 'value', 'ymin', 'ymax']))
     assertEquals(2, result.rowCount())
 
-    def means = result['value'] as List<Number>
-    def ymin = result['ymin'] as List<Number>
-    def ymax = result['ymax'] as List<Number>
+    def means = result['value']
+    def ymin = result['ymin']
+    def ymax = result['ymax']
 
     assertEquals(2.0d, means[0] as double, 0.0001d)
     assertEquals(4.0d, means[1] as double, 0.0001d)
@@ -186,9 +187,9 @@ class GgStatTest {
     assertTrue(result.columnNames().containsAll(['group', 'value', 'ymin', 'ymax']))
     assertEquals(2, result.rowCount())
 
-    def medians = result['value'] as List<Number>
-    def ymin = result['ymin'] as List<Number>
-    def ymax = result['ymax'] as List<Number>
+    def medians = result['value']
+    def ymin = result['ymin']
+    def ymax = result['ymax']
 
     assertEquals(2.5d, medians[0] as double, 0.0001d)
     assertEquals(25.0d, medians[1] as double, 0.0001d)
@@ -256,19 +257,19 @@ class GgStatTest {
 
     Map<String, Integer> countByKey = [:]
     Map<String, BigDecimal> percentByKey = [:]
-    List<Object> classes = result['class'] as List<Object>
-    List<Object> drvs = result['drv'] as List<Object>
-    List<Integer> counts = result['count'] as List<Integer>
-    List<BigDecimal> percents = result['percent'] as List<BigDecimal>
+    List<Object> classes = result['class']
+    List<Object> drvs = result['drv']
+    List<Integer> counts = result['count']
+    List<BigDecimal> percents = result['percent']
     for (int i = 0; i < result.rowCount(); i++) {
       String key = "${classes[i]}|${drvs[i]}"
       countByKey[key] = counts[i]
       percentByKey[key] = percents[i]
     }
 
-    BigDecimal sixtySix = new BigDecimal('66.67')
-    BigDecimal thirtyThree = new BigDecimal('33.33')
-    BigDecimal fifty = new BigDecimal('50.00')
+    BigDecimal sixtySix = 66.67G
+    BigDecimal thirtyThree = 33.33G
+    BigDecimal fifty = 50.00G
     assertEquals(2, countByKey['compact|f'])
     assertEquals(1, countByKey['compact|r'])
     assertEquals(1, countByKey['suv|f'])
@@ -295,18 +296,18 @@ class GgStatTest {
         "Result should have x and density columns, got: ${result.columnNames()}")
 
     // Should have default 512 evaluation points
-    assertEquals(512, result.rowCount(), "Should have 512 evaluation points by default")
+    assertEquals(512, result.rowCount(), 'Should have 512 evaluation points by default')
 
     // All density values should be non-negative
-    List<Double> densities = result['density'] as List<Double>
+    List<Double> densities = result['density']
     densities.each { d ->
-      assertTrue(d >= 0, "Density should be non-negative")
+      assertTrue(d >= 0, 'Density should be non-negative')
     }
 
     // X values should be increasing
-    List<Double> xVals = result['x'] as List<Double>
+    List<Double> xVals = result['x']
     for (int i = 1; i < xVals.size(); i++) {
-      assertTrue(xVals[i] > xVals[i-1], "X values should be increasing")
+      assertTrue(xVals[i] > xVals[i-1], 'X values should be increasing')
     }
   }
 
@@ -342,11 +343,11 @@ class GgStatTest {
     def result1 = GgStat.density(data, aes, [adjust: 0.5, n: 100])
     def result2 = GgStat.density(data, aes, [adjust: 2.0, n: 100])
 
-    double max1 = (result1['density'] as List<Double>).max()
-    double max2 = (result2['density'] as List<Double>).max()
+    double max1 = (result1['density']).max()
+    double max2 = (result2['density']).max()
 
     // Lower adjust should give higher peak (more detail)
-    assertTrue(max1 > max2, "Lower adjust should give higher peak density")
+    assertTrue(max1 > max2, 'Lower adjust should give higher peak density')
   }
 
   @Test
@@ -365,13 +366,13 @@ class GgStatTest {
 
     // Should have x, density, and group columns
     assertTrue(result.columnNames().containsAll(['x', 'density', 'group']),
-        "Grouped result should have x, density, group columns")
+        'Grouped result should have x, density, group columns')
 
     // Should have 50 points per group = 100 total
-    assertEquals(100, result.rowCount(), "Should have 50 points per group")
+    assertEquals(100, result.rowCount(), 'Should have 50 points per group')
 
     // Check that both groups are present
-    def groups = result['group'] as List<Object>
+    def groups = result['group']
     assertTrue(groups.contains('A'))
     assertTrue(groups.contains('B'))
   }
@@ -387,7 +388,7 @@ class GgStatTest {
     def aes = new Aes(x: 'value')
     def result = GgStat.density(data, aes, [from: 0.0, to: 6.0, n: 61])
 
-    List<Double> xVals = result['x'] as List<Double>
+    List<Double> xVals = result['x']
     assertEquals(0.0, xVals[0], 0.001, "Should start at 'from' value")
     assertEquals(6.0, xVals[xVals.size()-1], 0.001, "Should end at 'to' value")
   }
@@ -403,7 +404,7 @@ class GgStatTest {
     def aes = new Aes(x: 'value')
     def result = GgStat.density(data, aes)
 
-    assertEquals(0, result.rowCount(), "Empty data should return empty result")
+    assertEquals(0, result.rowCount(), 'Empty data should return empty result')
   }
 
   @Test
@@ -417,7 +418,7 @@ class GgStatTest {
     def aes = new Aes(x: 'value')
     def result = GgStat.density(data, aes)
 
-    assertEquals(0, result.rowCount(), "Single point should return empty result")
+    assertEquals(0, result.rowCount(), 'Single point should return empty result')
   }
 
   @Test
@@ -634,9 +635,9 @@ class GgStatTest {
 
     assertTrue(result.columnNames().containsAll(['x', 'y']))
     assertEquals(4, result.rowCount())
-    List<Number> yValues = result['y'] as List<Number>
+    List<Number> yValues = result['y']
     assertEquals([1, 2, 3, 4], yValues.collect { it as int })
-    List<Number> xValues = result['x'] as List<Number>
+    List<Number> xValues = result['x']
     assertTrue((xValues.first() as double) < (xValues.last() as double))
   }
 
@@ -653,7 +654,7 @@ class GgStatTest {
 
     assertTrue(result.columnNames().containsAll(['x', 'y']))
     assertEquals(2, result.rowCount())
-    List<Number> xValues = result['x'] as List<Number>
+    List<Number> xValues = result['x']
     assertTrue((xValues.first() as double) < (xValues.last() as double))
   }
 
@@ -681,17 +682,17 @@ class GgStatTest {
         "Result should have x, y, count columns, got: ${result.columnNames()}")
 
     // Should have bins (exact count depends on hexagonal grid layout)
-    assertTrue(result.rowCount() > 0, "Should have at least one hex bin")
+    assertTrue(result.rowCount() > 0, 'Should have at least one hex bin')
 
     // All counts should be positive
-    List<Integer> counts = result['count'] as List<Integer>
+    List<Integer> counts = result['count']
     counts.each { count ->
-      assertTrue(count > 0, "All bin counts should be positive")
+      assertTrue(count > 0, 'All bin counts should be positive')
     }
 
     // Total count should equal input points
     int totalCount = counts.sum() as int
-    assertEquals(16, totalCount, "Total count should equal number of input points")
+    assertEquals(16, totalCount, 'Total count should equal number of input points')
   }
 
   @Test
@@ -719,8 +720,8 @@ class GgStatTest {
     assertTrue(result10.columnNames().containsAll(['x', 'y', 'count']))
 
     // Total count should be preserved
-    assertEquals(20, (result5['count'] as List<Integer>).sum() as int)
-    assertEquals(20, (result10['count'] as List<Integer>).sum() as int)
+    assertEquals(20, (result5['count']).sum() as int)
+    assertEquals(20, (result10['count']).sum() as int)
   }
 
   @Test
@@ -739,11 +740,11 @@ class GgStatTest {
     def result = GgStat.binHex(data, aes, [binwidth: 1.5])
 
     assertTrue(result.columnNames().containsAll(['x', 'y', 'count']))
-    assertTrue(result.rowCount() > 0, "Should have hex bins with specified binwidth")
+    assertTrue(result.rowCount() > 0, 'Should have hex bins with specified binwidth')
 
     // Total count should equal input
-    List<Integer> counts = result['count'] as List<Integer>
-    assertEquals(9, counts.sum() as int, "Total count should match input size")
+    List<Integer> counts = result['count']
+    assertEquals(9, counts.sum() as int, 'Total count should match input size')
   }
 
   @Test
@@ -757,7 +758,7 @@ class GgStatTest {
     def aes = new Aes(x: 'x', y: 'y')
     def result = GgStat.binHex(data, aes)
 
-    assertEquals(0, result.rowCount(), "Empty data should produce empty result")
+    assertEquals(0, result.rowCount(), 'Empty data should produce empty result')
     assertTrue(result.columnNames().containsAll(['x', 'y', 'count']))
   }
 
@@ -772,8 +773,8 @@ class GgStatTest {
     def aes = new Aes(x: 'x', y: 'y')
     def result = GgStat.binHex(data, aes)
 
-    assertEquals(1, result.rowCount(), "Single point should create one hex bin")
-    assertEquals(1, result['count'][0], "Count should be 1")
+    assertEquals(1, result.rowCount(), 'Single point should create one hex bin')
+    assertEquals(1, result['count'][0], 'Count should be 1')
   }
 
   @Test
@@ -793,9 +794,9 @@ class GgStatTest {
 
     // Points are close but may fall in adjacent hexes depending on alignment
     // Just verify total count is preserved
-    List<Integer> counts = result['count'] as List<Integer>
-    assertEquals(5, counts.sum() as int, "Total count should equal input size")
-    assertTrue(result.rowCount() > 0, "Should have at least one hex bin")
+    List<Integer> counts = result['count']
+    assertEquals(5, counts.sum() as int, 'Total count should equal input size')
+    assertTrue(result.rowCount() > 0, 'Should have at least one hex bin')
   }
 
   @Test
@@ -836,14 +837,14 @@ class GgStatTest {
         "Result should have x, y, value columns, got: ${result.columnNames()}")
 
     // Should have 2 hex bins
-    assertEquals(2, result.rowCount(), "Should have 2 hex bins")
+    assertEquals(2, result.rowCount(), 'Should have 2 hex bins')
 
     // Check mean values
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
-    assertEquals(15.0, sortedValues[0] as double, 0.001, "First hex mean should be 15")
-    assertEquals(150.0, sortedValues[1] as double, 0.001, "Second hex mean should be 150")
+    assertEquals(15.0, sortedValues[0] as double, 0.001, 'First hex mean should be 15')
+    assertEquals(150.0, sortedValues[1] as double, 0.001, 'Second hex mean should be 150')
   }
 
   @Test
@@ -861,10 +862,10 @@ class GgStatTest {
     def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'median'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
-    assertEquals(2.5, sortedValues[0] as double, 0.001, "Median should handle outliers")
+    assertEquals(2.5, sortedValues[0] as double, 0.001, 'Median should handle outliers')
     assertEquals(15.0, sortedValues[1] as double, 0.001)
   }
 
@@ -883,8 +884,8 @@ class GgStatTest {
     def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'sum'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
     assertEquals(15.0, sortedValues[0] as double, 0.001)
     assertEquals(60.0, sortedValues[1] as double, 0.001)
@@ -905,7 +906,7 @@ class GgStatTest {
     def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'min'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     assertTrue(values.contains(5 as BigDecimal))
     assertTrue(values.contains(50 as BigDecimal))
   }
@@ -925,7 +926,7 @@ class GgStatTest {
     def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'max'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     assertTrue(values.contains(30 as BigDecimal))
     assertTrue(values.contains(200 as BigDecimal))
   }
@@ -951,10 +952,10 @@ class GgStatTest {
     def result = GgStat.summaryHex(data, aes, [bins: 2, 'fun.data': customFun])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
 
     // Both hexes should have count=2
-    assertTrue(values.every { it == 2 as BigDecimal }, "Custom function should return count")
+    assertTrue(values.every { it == 2 as BigDecimal }, 'Custom function should return count')
   }
 
   @Test
@@ -987,7 +988,7 @@ class GgStatTest {
     def aes = new Aes(x: 'x', y: 'y', fill: 'z')
     def result = GgStat.summaryHex(data, aes)
 
-    assertEquals(0, result.rowCount(), "Empty data should produce empty result")
+    assertEquals(0, result.rowCount(), 'Empty data should produce empty result')
     assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
   }
 
@@ -1025,9 +1026,9 @@ class GgStatTest {
     assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
 
     // Verify all values are computed correctly
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     values.each { value ->
-      assertTrue(value > 0, "All summary values should be positive")
+      assertTrue(value > 0, 'All summary values should be positive')
     }
   }
 
@@ -1052,7 +1053,7 @@ class GgStatTest {
       GgStat.summaryHex(data, aes, [bins: 2, 'fun.data': badFun])
     }
     assertTrue(ex.message.contains('y') || ex.message.contains('value'),
-        "Error message should mention required keys")
+        'Error message should mention required keys')
   }
 
   // ============== Parameter Validation Tests ==============
@@ -1187,9 +1188,9 @@ class GgStatTest {
     // Check that we have all three quantiles
     def quantileValues = result['quantile'].unique()
     assertEquals(3, quantileValues.size())
-    assertTrue(quantileValues.contains(0.1 as BigDecimal))
-    assertTrue(quantileValues.contains(0.5 as BigDecimal))
-    assertTrue(quantileValues.contains(0.9 as BigDecimal))
+    assertTrue(quantileValues.contains(0.1))
+    assertTrue(quantileValues.contains(0.5))
+    assertTrue(quantileValues.contains(0.9))
 
     // Check that we have 3 groups (one per quantile)
     def groupValues = result['group'].unique()
@@ -1231,10 +1232,10 @@ class GgStatTest {
     assertTrue(group1Rows.size() > 0)
 
     // All rows in group 0 should have quantile = 0.25
-    assertTrue(group0Rows.every { it['quantile'] == 0.25 as BigDecimal })
+    assertTrue(group0Rows.every { it['quantile'] == 0.25 })
 
     // All rows in group 1 should have quantile = 0.75
-    assertTrue(group1Rows.every { it['quantile'] == 0.75 as BigDecimal })
+    assertTrue(group1Rows.every { it['quantile'] == 0.75 })
   }
 
   @Test

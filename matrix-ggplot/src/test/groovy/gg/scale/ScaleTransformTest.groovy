@@ -27,7 +27,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXLog10Train() {
     ScaleXLog10 scale = new ScaleXLog10()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train([1, 10, 100, 1000])
 
     assertTrue(scale.isTrained())
@@ -44,7 +44,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXLog10Inverse() {
     ScaleXLog10 scale = new ScaleXLog10()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.expand = null  // Disable expansion for exact test
     scale.train([1, 10, 100, 1000])
 
@@ -59,7 +59,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXLog10FiltersNonPositive() {
     ScaleXLog10 scale = new ScaleXLog10()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train([-5, 0, 1, 10, 100])
 
     // Non-positive values should return null when transformed
@@ -102,7 +102,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testLog10BreaksGeneration() {
     ScaleXLog10 scale = new ScaleXLog10()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train([1, 1000])
 
     List breaks = scale.getComputedBreaks()
@@ -110,9 +110,9 @@ class ScaleTransformTest extends BaseTest {
     assertTrue(breaks.size() > 0)
     // Should contain powers of 10 (check using doubles for comparison)
     List<Double> breakValues = breaks.collect { (it as Number).doubleValue() }
-    assertTrue(breakValues.any { Math.abs(it - 1.0) < 0.01 }, "Should contain 1")
-    assertTrue(breakValues.any { Math.abs(it - 10.0) < 0.01 }, "Should contain 10")
-    assertTrue(breakValues.any { Math.abs(it - 100.0) < 0.01 }, "Should contain 100")
+    assertTrue(breakValues.any { Math.abs(it - 1.0) < 0.01 }, 'Should contain 1')
+    assertTrue(breakValues.any { Math.abs(it - 10.0) < 0.01 }, 'Should contain 10')
+    assertTrue(breakValues.any { Math.abs(it - 100.0) < 0.01 }, 'Should contain 100')
   }
 
   // ============ ScaleXSqrt / ScaleYSqrt Tests ============
@@ -127,7 +127,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXSqrtTrain() {
     ScaleXSqrt scale = new ScaleXSqrt()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train([0, 4, 16, 100])
 
     assertTrue(scale.isTrained())
@@ -142,7 +142,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXSqrtInverse() {
     ScaleXSqrt scale = new ScaleXSqrt()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.expand = null  // Disable expansion for exact test
     scale.train([0, 4, 16, 100])
 
@@ -157,7 +157,7 @@ class ScaleTransformTest extends BaseTest {
   @Test
   void testScaleXSqrtFiltersNegative() {
     ScaleXSqrt scale = new ScaleXSqrt()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train([-5, 0, 4, 16])
 
     // Negative values should return null when transformed
@@ -225,14 +225,14 @@ class ScaleTransformTest extends BaseTest {
     def transformedLow = scale.transform(0) as double
     def transformedHigh = scale.transform(30) as double
 
-    assertEquals(100.0, transformedLow, 0.1, "Low value should map to high end of range")
-    assertEquals(0.0, transformedHigh, 0.1, "High value should map to low end of range")
+    assertEquals(100.0, transformedLow, 0.1, 'Low value should map to high end of range')
+    assertEquals(0.0, transformedHigh, 0.1, 'High value should map to low end of range')
   }
 
   @Test
   void testScaleXReverseInverse() {
     ScaleXReverse scale = new ScaleXReverse()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.expand = null  // Disable expansion for exact test
     scale.train([0, 10, 20, 30])
 

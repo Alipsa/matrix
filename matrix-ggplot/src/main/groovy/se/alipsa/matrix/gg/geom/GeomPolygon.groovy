@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_polygon(fill: 'blue', color: 'black', linewidth: 2) - styled polygon
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomPolygon extends Geom {
 
   /** Fill color */
@@ -45,17 +46,23 @@ class GeomPolygon extends Geom {
   GeomPolygon() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'gray', color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [fill: 'gray', color: 'black', size: 1, linetype: 'solid']
   }
 
   GeomPolygon(Map params) {
     this()
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.size != null) this.size = params.size as BigDecimal
-    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
+    if (params.linewidth != null) {
+      this.size = params.linewidth as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.lineend = params.lineend as String ?: this.lineend
     this.linejoin = params.linejoin as String ?: this.linejoin
     this.params = params

@@ -18,6 +18,7 @@ import groovy.transform.CompileStatic
  * scale_color_viridis_c(direction: -1)  // Reverse direction
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorViridisC extends ScaleContinuous {
 
   /** Palette option: 'viridis' (D), 'magma' (A), 'inferno' (B), 'plasma' (C),
@@ -86,13 +87,21 @@ class ScaleColorViridisC extends ScaleContinuous {
 
   private void applyParams(Map params) {
     this.option = params.option ? normalizeOption(params.option as String) : this.option
-    if (params.begin != null) this.begin = validateRange(params.begin as BigDecimal, 'begin')
-    if (params.end != null) this.end = validateRange(params.end as BigDecimal, 'end')
+    if (params.begin != null) {
+      this.begin = validateRange(params.begin as BigDecimal, 'begin')
+    }
+    if (params.end != null) {
+      this.end = validateRange(params.end as BigDecimal, 'end')
+    }
     if (this.begin > this.end) {
       throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
     }
-    if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
-    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    if (params.direction != null) {
+      this.direction = normalizeDirection(params.direction as int)
+    }
+    if (params.alpha != null) {
+      this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    }
     this.name = params.name as String ?: this.name
     this.limits = params.limits as List ?: this.limits
     this.breaks = params.breaks as List ?: this.breaks
@@ -100,8 +109,12 @@ class ScaleColorViridisC extends ScaleContinuous {
     this.naValue = params.naValue as String ?: this.naValue
     this.guideType = params.guide as String ?: this.guideType
     // Support 'colour' British spelling
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   private BigDecimal normalizeAlpha(BigDecimal a) {
@@ -135,15 +148,21 @@ class ScaleColorViridisC extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (!(value instanceof Number)) return naValue
+    if (value == null) {
+      return naValue
+    }
+    if (!(value instanceof Number)) {
+      return naValue
+    }
 
     BigDecimal v = value as BigDecimal
     BigDecimal dMin = computedDomain[0] as BigDecimal
     BigDecimal dMax = computedDomain[1] as BigDecimal
 
     // Handle edge case
-    if (dMax == dMin) return interpolatePalette(0.5)
+    if (dMax == dMin) {
+      return interpolatePalette(0.5)
+    }
 
     // Normalize to 0-1
     BigDecimal normalized = (v - dMin) / (dMax - dMin)
@@ -219,11 +238,17 @@ class ScaleColorViridisC extends ScaleContinuous {
    * Apply alpha transparency if needed.
    */
   private String applyAlpha(String color) {
-    if (color == null) return null
-    if (alpha >= 1.0) return color
+    if (color == null) {
+      return null
+    }
+    if (alpha >= 1.0) {
+      return color
+    }
 
     String hex = color.startsWith('#') ? color.substring(1) : color
-    if (hex.length() != 6) return color
+    if (hex.length() != 6) {
+      return color
+    }
 
     BigDecimal clampedAlpha = 0.0.max(1.0.min(alpha))
     int alphaInt = (clampedAlpha * 255.0).round() as int

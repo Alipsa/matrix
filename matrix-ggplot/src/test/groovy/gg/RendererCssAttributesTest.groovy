@@ -29,11 +29,11 @@ class RendererCssAttributesTest {
 
     // Axis components should have CSS classes (independent of css_attributes config)
     assertTrue(svgString.contains('gg-axis-line') || svgString.contains('charm-axis-line'),
-        "SVG should contain axis line CSS class")
+        'SVG should contain axis line CSS class')
     assertTrue(svgString.contains('gg-axis-tick') || svgString.contains('charm-axis-tick'),
-        "SVG should contain axis tick CSS class")
+        'SVG should contain axis tick CSS class')
     assertTrue(svgString.contains('gg-axis-label') || svgString.contains('charm-axis-label'),
-        "SVG should contain axis label CSS class")
+        'SVG should contain axis label CSS class')
   }
 
   @Test
@@ -55,7 +55,7 @@ class RendererCssAttributesTest {
     assertTrue(svgString.contains('gg-grid-major') ||
                svgString.contains('gg-grid-minor') ||
                svgString.contains('charm-grid'),
-        "SVG should contain grid CSS classes")
+        'SVG should contain grid CSS classes')
   }
 
   @Test
@@ -78,7 +78,7 @@ class RendererCssAttributesTest {
 
     // Legend components should have CSS classes
     assertTrue(svgString.contains('gg-legend-'),
-        "SVG should contain legend CSS classes")
+        'SVG should contain legend CSS classes')
   }
 
   @Test
@@ -99,7 +99,7 @@ class RendererCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('gg-legend-key'),
-        "SVG should contain gg-legend-key CSS class for legend symbols")
+        'SVG should contain gg-legend-key CSS class for legend symbols')
   }
 
   @Test
@@ -120,7 +120,7 @@ class RendererCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('gg-legend-label'),
-        "SVG should contain gg-legend-label CSS class for legend labels")
+        'SVG should contain gg-legend-label CSS class for legend labels')
   }
 
   @Test
@@ -142,7 +142,7 @@ class RendererCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('gg-legend-colorbar'),
-        "SVG should contain gg-legend-colorbar CSS class for continuous legends")
+        'SVG should contain gg-legend-colorbar CSS class for continuous legends')
   }
 
   @Test
@@ -162,8 +162,8 @@ class RendererCssAttributesTest {
 
     // Even with flipped coordinates, axis CSS classes should be present
     assertTrue(svgString.contains('gg-axis-line') || svgString.contains('charm-axis-line'),
-        "Flipped chart should contain axis line CSS class")
+        'Flipped chart should contain axis line CSS class')
     assertTrue(svgString.contains('gg-axis-tick') || svgString.contains('charm-axis-tick'),
-        "Flipped chart should contain axis tick CSS class")
+        'Flipped chart should contain axis tick CSS class')
   }
 }

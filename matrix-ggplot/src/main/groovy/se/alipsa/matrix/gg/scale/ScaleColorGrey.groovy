@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Discrete greyscale for categorical data.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorGrey extends ScaleDiscrete {
 
   /** Start grey value (0-1). */
@@ -41,16 +42,36 @@ class ScaleColorGrey extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.start != null) this.start = params.start as Number
-    if (params.end != null) this.end = params.end as Number
-    if (params.direction != null) this.direction = params.direction as int
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.start != null) {
+      this.start = params.start as Number
+    }
+    if (params.end != null) {
+      this.end = params.end as Number
+    }
+    if (params.direction != null) {
+      this.direction = params.direction as int
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   @Override
@@ -86,7 +107,9 @@ class ScaleColorGrey extends ScaleDiscrete {
   }
 
   private List<String> buildGreyPalette(int n) {
-    if (n <= 0) return []
+    if (n <= 0) {
+      return []
+    }
     BigDecimal startVal = start as BigDecimal
     BigDecimal endVal = end as BigDecimal
     if (direction < 0) {

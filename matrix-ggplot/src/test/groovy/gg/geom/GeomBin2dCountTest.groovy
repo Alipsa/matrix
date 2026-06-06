@@ -82,7 +82,7 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rectangle elements")
+    assertTrue(content.contains('<rect'), 'Should contain rectangle elements')
 
     File outputFile = new File('build/bin2d_simple.svg')
     write(svg, outputFile)
@@ -239,7 +239,7 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain circle elements")
+    assertTrue(content.contains('<circle'), 'Should contain circle elements')
 
     File outputFile = new File('build/count_simple.svg')
     write(svg, outputFile)
@@ -272,7 +272,7 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rectangle elements")
+    assertTrue(content.contains('<rect'), 'Should contain rectangle elements')
 
     File outputFile = new File('build/count_squares.svg')
     write(svg, outputFile)
@@ -304,7 +304,7 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain path elements for triangles")
+    assertTrue(content.contains('<path'), 'Should contain path elements for triangles')
 
     File outputFile = new File('build/count_triangles.svg')
     write(svg, outputFile)
@@ -390,8 +390,8 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain bin rectangles")
-    assertTrue(content.contains('<circle'), "Should contain point circles")
+    assertTrue(content.contains('<rect'), 'Should contain bin rectangles')
+    assertTrue(content.contains('<circle'), 'Should contain point circles')
 
     File outputFile = new File('build/bin2d_with_points.svg')
     write(svg, outputFile)

@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_ribbon(fill: 'blue', alpha: 0.3) - semi-transparent blue ribbon
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRibbon extends Geom {
 
   /** Fill color for the ribbon */
@@ -37,16 +38,22 @@ class GeomRibbon extends Geom {
   GeomRibbon() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'ymin', 'ymax']
-    defaultAes = [fill: 'gray', alpha: 0.5] as Map<String, Object>
+    defaultAes = [fill: 'gray', alpha: 0.5]
   }
 
   GeomRibbon(Map params) {
     this()
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.color = params.color ? ColorUtil.normalizeColor((params.color ?: params.colour) as String) : this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
     this.params = params
   }

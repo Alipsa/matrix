@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_text(size: 12, color: 'red') - styled text
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'PropertyName'])
 class GeomText extends Geom {
 
   /** Text color */
@@ -52,21 +53,35 @@ class GeomText extends Geom {
   GeomText() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', size: 10] as Map<String, Object>
+    defaultAes = [color: 'black', size: 10]
   }
 
   GeomText(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
     this.family = params.family as String ?: this.family
     this.fontface = params.fontface as String ?: this.fontface
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.hjust != null) this.hjust = params.hjust as BigDecimal
-    if (params.vjust != null) this.vjust = params.vjust as BigDecimal
-    if (params.angle != null) this.angle = params.angle as BigDecimal
-    if (params.nudge_x != null) this.nudge_x = params.nudge_x as BigDecimal
-    if (params.nudge_y != null) this.nudge_y = params.nudge_y as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.hjust != null) {
+      this.hjust = params.hjust as BigDecimal
+    }
+    if (params.vjust != null) {
+      this.vjust = params.vjust as BigDecimal
+    }
+    if (params.angle != null) {
+      this.angle = params.angle as BigDecimal
+    }
+    if (params.nudge_x != null) {
+      this.nudge_x = params.nudge_x as BigDecimal
+    }
+    if (params.nudge_y != null) {
+      this.nudge_y = params.nudge_y as BigDecimal
+    }
     this.label = params.label as String ?: this.label
     this.params = params
   }

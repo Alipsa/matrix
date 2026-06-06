@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  * Available linetypes: solid, dashed, dotted, dotdash, longdash, twodash
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleLinetype extends ScaleDiscrete {
 
   List<String> linetypes = [
@@ -35,11 +36,21 @@ class ScaleLinetype extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.linetypes) this.linetypes = params.linetypes as List<String>
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.linetypes) {
+      this.linetypes = params.linetypes as List<String>
+    }
   }
 
   /**
@@ -50,9 +61,13 @@ class ScaleLinetype extends ScaleDiscrete {
    */
   @Override
   Object transform(Object value) {
-    if (value == null || levels.isEmpty()) return null
+    if (value == null || levels.isEmpty()) {
+      return null
+    }
     int index = levels.indexOf(value)
-    if (index < 0) return null
+    if (index < 0) {
+      return null
+    }
     return linetypes[index % linetypes.size()]
   }
 }

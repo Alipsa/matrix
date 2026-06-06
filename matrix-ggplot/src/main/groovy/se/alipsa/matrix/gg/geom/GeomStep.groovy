@@ -24,6 +24,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_step(color: 'blue', linewidth: 2) - styled step
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomStep extends Geom {
 
   /** Line color */
@@ -44,16 +45,22 @@ class GeomStep extends Geom {
   GeomStep() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [color: 'black', size: 1, linetype: 'solid']
   }
 
   GeomStep(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.size != null) this.size = params.size as BigDecimal
-    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
+    if (params.linewidth != null) {
+      this.size = params.linewidth as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.direction = params.direction as String ?: this.direction
     this.params = params
   }

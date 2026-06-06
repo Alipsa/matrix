@@ -70,7 +70,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain path element for ribbon")
+    assertTrue(content.contains('<path'), 'Should contain path element for ribbon')
 
     File outputFile = new File('build/ribbon_chart.svg')
     write(svg, outputFile)
@@ -136,7 +136,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements for tiles")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements for tiles')
 
     File outputFile = new File('build/tile_heatmap.svg')
     write(svg, outputFile)
@@ -192,7 +192,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements')
 
     File outputFile = new File('build/rect_chart.svg')
     write(svg, outputFile)
@@ -253,7 +253,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain path element")
+    assertTrue(content.contains('<path'), 'Should contain path element')
 
     File outputFile = new File('build/path_chart.svg')
     write(svg, outputFile)
@@ -349,7 +349,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain path element for step")
+    assertTrue(content.contains('<path'), 'Should contain path element for step')
 
     File outputFile = new File('build/step_chart_hv.svg')
     write(svg, outputFile)
@@ -466,8 +466,8 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain circle elements for points")
-    assertTrue(content.contains('<line'), "Should contain line elements for ranges")
+    assertTrue(content.contains('<circle'), 'Should contain circle elements for points')
+    assertTrue(content.contains('<line'), 'Should contain line elements for ranges')
 
     File outputFile = new File('build/pointrange_chart.svg')
     write(svg, outputFile)
@@ -524,7 +524,7 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     File outputFile = new File('build/linerange_chart.svg')
     write(svg, outputFile)
@@ -583,8 +583,8 @@ class GeomPhase1Test {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements for boxes")
-    assertTrue(content.contains('<line'), "Should contain line elements for middle bars")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements for boxes')
+    assertTrue(content.contains('<line'), 'Should contain line elements for middle bars')
 
     File outputFile = new File('build/crossbar_chart.svg')
     write(svg, outputFile)

@@ -30,15 +30,15 @@ class GgPlotFullTest {
 
     @Test
     void testStatisticalTransformation() {
-        ggplot(mtcars, aes('hp', 'mpg')) + geom_point(color: "blue") \
-        + stat_summary('fun.y': "mean", geom: "line", linetype: "dashed")
+        ggplot(mtcars, aes('hp', 'mpg')) + geom_point(color: 'blue') \
+        + stat_summary('fun.y': 'mean', geom: 'line', linetype: 'dashed')
     }
 
     @Test
     void testRuggedLinePlot() {
-        ggplot(mtcars, aes('hp', 'mpg')) + geom_point(color: "blue") \
-        + geom_rug('show.legend': false) +stat_summary('fun.y': "mean",
-                geom: "line", linetype: "dashed")
+        ggplot(mtcars, aes('hp', 'mpg')) + geom_point(color: 'blue') \
+        + geom_rug('show.legend': false) +stat_summary('fun.y': 'mean',
+                geom: 'line', linetype: 'dashed')
     }
 
     @Test
@@ -63,7 +63,7 @@ class GgPlotFullTest {
 
         // Use direct object access - no serialization needed
         def rects = svg.descendants().findAll { it instanceof Rect }
-        assertTrue(rects.size() > 0, "Should render bars for factor(1)")
+        assertTrue(rects.size() > 0, 'Should render bars for factor(1)')
     }
 
     @Test
@@ -77,27 +77,27 @@ class GgPlotFullTest {
         Svg svg = chart.render()
 
         // Verify SVG was created
-        assertNotNull(svg, "SVG should not be null")
+        assertNotNull(svg, 'SVG should not be null')
 
         // Use direct object access for assertions
         def circles = svg.descendants().findAll { it instanceof Circle }
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
 
         def textElements = svg.descendants().findAll { it instanceof Text }
-        def allText = textElements.collect { it.content }.join(' ')
-        assertTrue(allText.contains('Iris Scatter Plot'), "Should contain the title")
+        def allText = textElements*.content.join(' ')
+        assertTrue(allText.contains('Iris Scatter Plot'), 'Should contain the title')
 
         // Verify dimensions
-        assertTrue(svg.width != null && svg.height != null, "Should have width and height")
+        assertTrue(svg.width != null && svg.height != null, 'Should have width and height')
         int widthValue = svg.width as int
         int heightValue = svg.height as int
-        assertTrue(widthValue >= 800, "Width should be at least the base 800px")
-        assertEquals(600, heightValue, "Height should remain at 600px")
+        assertTrue(widthValue >= 800, 'Width should be at least the base 800px')
+        assertEquals(600, heightValue, 'Height should remain at 600px')
 
         // Write to file for manual inspection
         File outputFile = new File('build/iris_scatter.svg')
         write(svg, outputFile)
-        assertTrue(outputFile.exists(), "Output file should exist")
+        assertTrue(outputFile.exists(), 'Output file should exist')
     }
 
     @Test
@@ -118,7 +118,7 @@ class GgPlotFullTest {
 
         // Use direct object access to find text elements
         def textElements = svg.descendants().findAll { it instanceof Text }
-        def allText = textElements.collect { it.content }.join(' ')
+        def allText = textElements*.content.join(' ')
 
         assertTrue(allText.contains('Horsepower vs MPG'))
         assertTrue(allText.contains('Horsepower'))
@@ -143,10 +143,10 @@ class GgPlotFullTest {
         def lines = svg.descendants().findAll { it instanceof Line }
 
         // Verify points are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
 
         // Verify smooth line is rendered
-        assertTrue(lines.size() > 0, "Should contain line elements for geom_lm")
+        assertTrue(lines.size() > 0, 'Should contain line elements for geom_lm')
     }
 
     @Test
@@ -167,8 +167,8 @@ class GgPlotFullTest {
         def lines = svg.descendants().findAll { it instanceof Line }
 
         // Verify points and line are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-        assertTrue(lines.size() > 0, "Should contain line elements for polynomial fit")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
+        assertTrue(lines.size() > 0, 'Should contain line elements for polynomial fit')
     }
 
     @Test
@@ -188,7 +188,7 @@ class GgPlotFullTest {
         def circles = svg.descendants().findAll { it instanceof Circle }
 
         // Verify points are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
     }
 
     @Test
@@ -209,8 +209,8 @@ class GgPlotFullTest {
         def lines = svg.descendants().findAll { it instanceof Line }
 
         // Verify both points and regression line are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-        assertTrue(lines.size() > 0, "Should contain line elements for regression")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
+        assertTrue(lines.size() > 0, 'Should contain line elements for regression')
     }
 
     @Test
@@ -231,8 +231,8 @@ class GgPlotFullTest {
         def lines = svg.descendants().findAll { it instanceof Line }
 
         // Verify both points and regression line are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-        assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
+        assertTrue(lines.size() > 0, 'Should contain line elements for polynomial')
     }
 
     @Test
@@ -254,8 +254,8 @@ class GgPlotFullTest {
         // Verify points and line are rendered
         def circles = svg.descendants().findAll { it instanceof Circle }
         def lines = svg.descendants().findAll { it instanceof Line }
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-        assertTrue(lines.size() > 0, "Should contain line elements for polynomial fit")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
+        assertTrue(lines.size() > 0, 'Should contain line elements for polynomial fit')
 
     }
 
@@ -276,8 +276,8 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         def lines = svg.descendants().findAll { it instanceof Line }
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-        assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for points')
+        assertTrue(lines.size() > 0, 'Should contain line elements for polynomial')
     }
 
     @Test
@@ -296,7 +296,7 @@ class GgPlotFullTest {
         assertNotNull(svg)
 
         def paths = svg.descendants().findAll { it instanceof Path }
-        assertTrue(paths.size() > 0, "Should contain path elements for hexagons")
+        assertTrue(paths.size() > 0, 'Should contain path elements for hexagons')
 
         File outputFile = new File('build/test_geom_hex.svg')
         write(svg, outputFile)
@@ -313,7 +313,7 @@ class GgPlotFullTest {
         assertNotNull(svg)
 
         def circles = svg.descendants().findAll { it instanceof Circle }
-        assertTrue(circles.size() > 0, "Should contain circle elements for dots")
+        assertTrue(circles.size() > 0, 'Should contain circle elements for dots')
     }
 
     @Test
@@ -327,7 +327,7 @@ class GgPlotFullTest {
         assertNotNull(svg)
 
         def paths = svg.descendants().findAll { it instanceof Path }
-        assertTrue(paths.size() > 0, "Should contain path elements for contours")
+        assertTrue(paths.size() > 0, 'Should contain path elements for contours')
     }
 
     @Test
@@ -341,7 +341,7 @@ class GgPlotFullTest {
         assertNotNull(svg)
 
         def rects = svg.descendants().findAll { it instanceof Rect }
-        assertTrue(rects.size() > 0, "Should contain rect elements for filled regions")
+        assertTrue(rects.size() > 0, 'Should contain rect elements for filled regions')
     }
 
     @Test
@@ -359,7 +359,7 @@ class GgPlotFullTest {
         def circles = descendants.findAll { it instanceof Circle }
         def paths = descendants.findAll { it instanceof Path }
         assertTrue(circles.size() > 0 || paths.size() > 0,
-                   "Should contain points or path elements")
+                   'Should contain points or path elements')
     }
 
     @Test
@@ -380,7 +380,7 @@ class GgPlotFullTest {
 
         def paths = svg.descendants().findAll { it instanceof Path }
         assertTrue(paths.size() > 0,
-                   "Should contain path elements for ellipses")
+                   'Should contain path elements for ellipses')
 
         File outputFile = new File('build/test_stat_ellipse_levels.svg')
         write(svg, outputFile)
@@ -443,7 +443,7 @@ class GgPlotFullTest {
 
         // The test generates SVG successfully, verifying stat_unique runs without error
         def circles = svg.descendants().findAll { it instanceof Circle }
-        assertTrue(circles.size() > 0, "Should contain circle elements")
+        assertTrue(circles.size() > 0, 'Should contain circle elements')
     }
 
     @Test
@@ -461,7 +461,7 @@ class GgPlotFullTest {
         def lines = descendants.findAll { it instanceof Line }
         def paths = descendants.findAll { it instanceof Path }
         assertTrue(lines.size() > 0 || paths.size() > 0,
-                   "Should contain line or path elements")
+                   'Should contain line or path elements')
     }
 
     @Test
@@ -489,7 +489,7 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0,
-                   "Should contain points")
+                   'Should contain points')
     }
 
     @Test
@@ -515,7 +515,7 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0,
-                   "Should contain points")
+                   'Should contain points')
     }
 
     @Test
@@ -583,7 +583,7 @@ class GgPlotFullTest {
         def circles = descendants.findAll { it instanceof Circle }
         def lines = descendants.findAll { it instanceof Line }
         assertTrue(circles.size() > 0 || lines.size() > 0,
-                   "Should contain points or lines")
+                   'Should contain points or lines')
     }
 
     @Test
@@ -611,7 +611,7 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0,
-                   "Should contain points")
+                   'Should contain points')
     }
 
     @Test
@@ -639,7 +639,7 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0,
-                   "Should contain points")
+                   'Should contain points')
     }
 
     @Test
@@ -667,7 +667,7 @@ class GgPlotFullTest {
 
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0,
-                   "Should contain points")
+                   'Should contain points')
     }
 
     @Test
@@ -690,7 +690,7 @@ class GgPlotFullTest {
         def paths = descendants.findAll { it instanceof Path }
         def circles = descendants.findAll { it instanceof Circle }
         assertTrue(paths.size() > 0 || circles.size() > 0,
-                   "Should contain path elements for hexagons or circle elements for points")
+                   'Should contain path elements for hexagons or circle elements for points')
     }
 
     @Test

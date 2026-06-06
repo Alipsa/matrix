@@ -36,7 +36,7 @@ class ScaleColorIdentityTest {
     def scale = new ScaleColorIdentity()
     // grey50 may be normalised to a hex value by the color pipeline
     assertNotNull(scale.transform(null))
-    assertTrue(scale.transform(null).toString().startsWith('#') ||
+    assertTrue(scale.transform(null).startsWith('#') ||
                scale.transform(null) == 'grey50')
   }
 
@@ -73,11 +73,11 @@ class ScaleColorIdentityTest {
     def scale = new ScaleColorIdentity()
     def grey50 = scale.transform('grey50')
     assertNotNull(grey50)
-    assertTrue(grey50.toString().startsWith('#'))
+    assertTrue(grey50.startsWith('#'))
 
     def gray75 = scale.transform('gray75')
     assertNotNull(gray75)
-    assertTrue(gray75.toString().startsWith('#'))
+    assertTrue(gray75.startsWith('#'))
   }
 
   @Test

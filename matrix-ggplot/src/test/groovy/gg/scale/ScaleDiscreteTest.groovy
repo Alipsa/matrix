@@ -56,7 +56,7 @@ class ScaleDiscreteTest {
   @Test
   void testTransformMapsToPositions() {
     ScaleDiscrete scale = new ScaleDiscrete()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train(['A', 'B', 'C'])
 
     // With 3 levels, bandwidth is 100/3 ≈ 33.33
@@ -82,7 +82,7 @@ class ScaleDiscreteTest {
   @Test
   void testInverseFindsCorrectLevel() {
     ScaleDiscrete scale = new ScaleDiscrete()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train(['A', 'B', 'C'])
 
     assertEquals('A', scale.inverse(10))
@@ -93,7 +93,7 @@ class ScaleDiscreteTest {
   @Test
   void testGetBandwidth() {
     ScaleDiscrete scale = new ScaleDiscrete()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train(['A', 'B', 'C', 'D'])
 
     assertEquals(25.0, scale.getBandwidth(), 0.01)
@@ -136,7 +136,7 @@ class ScaleDiscreteTest {
   @Test
   void testSingleLevel() {
     ScaleDiscrete scale = new ScaleDiscrete()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.train(['Only'])
 
     // Single level should be centered
@@ -175,13 +175,13 @@ class ScaleDiscreteTest {
   @Test
   void testScaleXDiscreteAppliesExpansion() {
     ScaleXDiscrete scale = new ScaleXDiscrete()
-    scale.range = [0, 300] as List<Number>
-    scale.discreteExpand = [0, 0.5] as List<Number>
+    scale.range = [0, 300]
+    scale.discreteExpand = [0, 0.5]
     scale.train(['A', 'B', 'C'])
 
     // With expansion, the usable range is smaller
     double bandwidth = scale.getBandwidth()
-    assertTrue(bandwidth < 100, "Bandwidth should be less than 100 due to expansion")
+    assertTrue(bandwidth < 100, 'Bandwidth should be less than 100 due to expansion')
   }
 
   @Test
@@ -208,7 +208,7 @@ class ScaleDiscreteTest {
   void testScaleYDiscreteHandlesInvertedRange() {
     // SVG has y=0 at top, so range is typically [height, 0]
     ScaleYDiscrete scale = new ScaleYDiscrete()
-    scale.range = [300, 0] as List<Number>  // Inverted for SVG
+    scale.range = [300, 0]  // Inverted for SVG
     scale.train(['A', 'B', 'C'])
 
     // First level should be near bottom (higher y value)
@@ -216,7 +216,7 @@ class ScaleDiscreteTest {
     double posA = scale.transform('A') as double
     double posC = scale.transform('C') as double
 
-    assertTrue(posA > posC, "A should have higher y position than C in inverted coords")
+    assertTrue(posA > posC, 'A should have higher y position than C in inverted coords')
   }
 
   @Test

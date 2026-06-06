@@ -22,6 +22,7 @@ import java.util.stream.Stream
  * Replaces: testName, testAesthetic, testNullValue, testCustomNaValue,
  *           testFactoryMethod, testFactoryMethodWithParams in each individual file.
  */
+@SuppressWarnings(['UnnecessaryDefInMethodDeclaration', 'UnusedMethodParameter'])
 class ScaleIdentityContractTest {
 
   // ---- helpers -------------------------------------------------------

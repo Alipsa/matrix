@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Discrete ColorBrewer scale for categorical data.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorBrewer extends ScaleDiscrete {
 
   /** Palette name (e.g. Set1, Blues, Spectral). */
@@ -46,17 +47,39 @@ class ScaleColorBrewer extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.palette != null) this.palette = params.palette.toString()
-    if (params.type) this.type = params.type as String
-    if (params.n != null) this.n = params.n as Integer
-    if (params.direction != null) this.direction = (params.direction as Number).intValue()
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.palette != null) {
+      this.palette = params.palette
+    }
+    if (params.type) {
+      this.type = params.type as String
+    }
+    if (params.n != null) {
+      this.n = params.n as Integer
+    }
+    if (params.direction != null) {
+      this.direction = (params.direction as Number).intValue()
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   @Override

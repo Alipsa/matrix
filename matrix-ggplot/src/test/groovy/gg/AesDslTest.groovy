@@ -16,6 +16,7 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 
+@SuppressWarnings('UnnecessarySelfAssignment')
 class AesDslTest {
 
   @Test

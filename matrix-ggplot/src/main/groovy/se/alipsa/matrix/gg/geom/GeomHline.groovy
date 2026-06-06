@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - With data mapping: aes(yintercept: 'threshold_column')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomHline extends Geom {
 
   /** Y-intercept value(s) for the horizontal line(s) */
@@ -34,18 +35,32 @@ class GeomHline extends Geom {
   GeomHline() {
     defaultStat = StatType.IDENTITY
     requiredAes = []  // yintercept can be specified as parameter
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomHline(Map params) {
     this()
-    if (params.yintercept != null) this.yintercept = params.yintercept
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.yintercept != null) {
+      this.yintercept = params.yintercept
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

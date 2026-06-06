@@ -28,7 +28,7 @@ class AfterStat implements CharmExpression {
 
   AfterStat(String stat) {
     if (!stat) {
-      throw new IllegalArgumentException("stat name cannot be null or empty")
+      throw new IllegalArgumentException('stat name cannot be null or empty')
     }
     this.stat = stat
   }

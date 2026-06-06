@@ -107,11 +107,11 @@ class ScaleColorGradientTest {
 
     // At 25%, should be between red and white (pinkish)
     String at25 = scale.transform(25) as String
-    assertTrue(at25.startsWith('#FF'), "Should have high red component")
+    assertTrue(at25.startsWith('#FF'), 'Should have high red component')
 
     // At 75%, should be between white and blue (light blue)
     String at75 = scale.transform(75) as String
-    assertTrue(at75.endsWith('FF'), "Should have high blue component")
+    assertTrue(at75.endsWith('FF'), 'Should have high blue component')
   }
 
   @Test

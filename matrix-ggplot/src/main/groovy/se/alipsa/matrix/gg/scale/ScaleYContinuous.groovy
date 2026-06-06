@@ -10,6 +10,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Note: Y-axis range is typically inverted in SVG coordinates (0 at top).
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYContinuous extends ScaleContinuous {
 
   /** Position of the y-axis: 'left' (default) or 'right' */
@@ -28,14 +29,30 @@ class ScaleYContinuous extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
-    if (params.guide != null) this.guide = params.guide
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
+    if (params.guide != null) {
+      this.guide = params.guide
+    }
 
     // Handle secondary axis specification
     if (params.sec_axis || params.secAxis || params['sec.axis']) {
@@ -143,11 +160,21 @@ class ScaleYContinuous extends ScaleContinuous {
    */
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.continuous()
-    if (limits) s.params['limits'] = limits
-    if (expand) s.params['expand'] = expand
-    if (breaks) s.params['breaks'] = breaks
-    if (labels) s.params['labels'] = labels
-    if (nBreaks != 7) s.params['nBreaks'] = nBreaks
+    if (limits) {
+      s.params['limits'] = limits
+    }
+    if (expand) {
+      s.params['expand'] = expand
+    }
+    if (breaks) {
+      s.params['breaks'] = breaks
+    }
+    if (labels) {
+      s.params['labels'] = labels
+    }
+    if (nBreaks != 7) {
+      s.params['nBreaks'] = nBreaks
+    }
     s
   }
 }

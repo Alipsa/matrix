@@ -65,8 +65,8 @@ class GuideColorStepsTest {
 
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('id="legend"'), "Should contain legend")
-    assertTrue(content.contains('<rect'), "Should contain rectangles for color steps")
+    assertTrue(content.contains('id="legend"'), 'Should contain legend')
+    assertTrue(content.contains('<rect'), 'Should contain rectangles for color steps')
   }
 
   @Test

@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Uses stat_qq_line to compute line endpoints.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomQqLine extends Geom {
 
   /** Line color */
@@ -30,7 +31,7 @@ class GeomQqLine extends Geom {
   GeomQqLine() {
     defaultStat = StatType.QQ_LINE
     requiredAes = ['x']
-    defaultAes = [color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [color: 'black', size: 1, linetype: 'solid']
   }
 
   /**
@@ -40,12 +41,24 @@ class GeomQqLine extends Geom {
    */
   GeomQqLine(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size) this.size = params.size as Number
-    if (params.linewidth) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype
-    if (params.alpha) this.alpha = params.alpha as Number
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.size) {
+      this.size = params.size as Number
+    }
+    if (params.linewidth) {
+      this.size = params.linewidth as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype
+    }
+    if (params.alpha) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

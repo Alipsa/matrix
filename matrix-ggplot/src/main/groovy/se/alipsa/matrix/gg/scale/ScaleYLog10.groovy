@@ -13,6 +13,7 @@ import groovy.transform.CompileStatic
  * Note: Values <= 0 are filtered out since log10 is undefined for non-positive numbers.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYLog10 extends ScaleXLog10 {
 
   ScaleYLog10() {

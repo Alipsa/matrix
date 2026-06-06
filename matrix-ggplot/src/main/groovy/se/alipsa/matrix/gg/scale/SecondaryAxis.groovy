@@ -13,6 +13,7 @@ import groovy.transform.CompileStatic
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class SecondaryAxis {
 
   /** Transformation function applied to primary axis values */

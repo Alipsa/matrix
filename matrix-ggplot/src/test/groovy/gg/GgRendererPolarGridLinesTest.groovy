@@ -34,7 +34,7 @@ class GgRendererPolarGridLinesTest {
     assertEquals(3, grid.line.size())
     assertTrue(grid.circle.size() >= 1)
 
-    def labels = xml.'**'.findAll { it.name() == 'text' }.collect { it.text() }
+    def labels = xml.'**'.findAll { it.name() == 'text' }*.text()
     assertTrue(labels.containsAll(['A', 'B', 'C']))
   }
 

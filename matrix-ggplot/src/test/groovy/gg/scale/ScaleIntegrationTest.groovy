@@ -43,9 +43,9 @@ class ScaleIntegrationTest {
 
     String content = SvgWriter.toXml(svg)
     // Should have axis labels for categories
-    assertTrue(content.contains('>A<'), "Should contain label A")
-    assertTrue(content.contains('>B<'), "Should contain label B")
-    assertTrue(content.contains('>C<'), "Should contain label C")
+    assertTrue(content.contains('>A<'), 'Should contain label A')
+    assertTrue(content.contains('>B<'), 'Should contain label B')
+    assertTrue(content.contains('>C<'), 'Should contain label C')
   }
 
   @Test
@@ -57,7 +57,7 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -80,9 +80,9 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('>First<'), "Should use custom label")
-    assertTrue(content.contains('>Second<'), "Should use custom label")
-    assertTrue(content.contains('>Third<'), "Should use custom label")
+    assertTrue(content.contains('>First<'), 'Should use custom label')
+    assertTrue(content.contains('>Second<'), 'Should use custom label')
+    assertTrue(content.contains('>Third<'), 'Should use custom label')
   }
 
   @Test
@@ -96,7 +96,7 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -109,9 +109,9 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
     // Points should have fill colors
-    assertTrue(content.contains('fill="#'), "Points should have colors")
+    assertTrue(content.contains('fill="#'), 'Points should have colors')
   }
 
   @Test
@@ -125,7 +125,7 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -172,8 +172,8 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('Mixed Scales Test'), "Should contain title")
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('Mixed Scales Test'), 'Should contain title')
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -246,8 +246,8 @@ class ScaleIntegrationTest {
 
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('Fuel Economy by Class'))
-    assertTrue(content.contains('<circle'), "Should contain scatter points")
-    assertTrue(content.contains('<line'), "Should contain smooth line")
+    assertTrue(content.contains('<circle'), 'Should contain scatter points')
+    assertTrue(content.contains('<line'), 'Should contain smooth line')
   }
 
   @Test
@@ -260,9 +260,9 @@ class ScaleIntegrationTest {
     File outputFile = new File('build/iris_manual_colors.svg')
     ggsave(chart, outputFile.path)
 
-    assertTrue(outputFile.exists(), "Output file should exist")
+    assertTrue(outputFile.exists(), 'Output file should exist')
     String content = outputFile.text
-    assertTrue(content.contains('<svg'), "Should be valid SVG")
+    assertTrue(content.contains('<svg'), 'Should be valid SVG')
     assertTrue(content.contains('Iris with Manual Colors'))
   }
 
@@ -298,8 +298,8 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
-    assertTrue(content.contains('fill="#'), "Points should have colors")
+    assertTrue(content.contains('<circle'), 'Should contain points')
+    assertTrue(content.contains('fill="#'), 'Points should have colors')
     assertTrue(content.contains('MPG with Viridis Colors'))
   }
 
@@ -329,9 +329,9 @@ class ScaleIntegrationTest {
     assertEquals(3, cividisColors.size())
 
     // Different palettes should produce different color sets
-    assertNotEquals(magmaColors, plasmaColors, "Magma and plasma should produce different colors")
-    assertNotEquals(plasmaColors, cividisColors, "Plasma and cividis should produce different colors")
-    assertNotEquals(magmaColors, cividisColors, "Magma and cividis should produce different colors")
+    assertNotEquals(magmaColors, plasmaColors, 'Magma and plasma should produce different colors')
+    assertNotEquals(plasmaColors, cividisColors, 'Plasma and cividis should produce different colors')
+    assertNotEquals(magmaColors, cividisColors, 'Magma and cividis should produce different colors')
 
     // Verify that rendering still works with these palettes
     def chart1 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
@@ -380,8 +380,8 @@ class ScaleIntegrationTest {
     assertEquals(3, reversedColors.size())
 
     // Verify the first and last colors are swapped
-    assertEquals(normalColors[0], reversedColors[2], "First normal color should match last reversed color")
-    assertEquals(normalColors[2], reversedColors[0], "Last normal color should match first reversed color")
+    assertEquals(normalColors[0], reversedColors[2], 'First normal color should match last reversed color')
+    assertEquals(normalColors[2], reversedColors[0], 'Last normal color should match first reversed color')
 
     // Also verify rendering works
     def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
@@ -489,7 +489,7 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -503,7 +503,7 @@ class ScaleIntegrationTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
   }
 
   @Test
@@ -559,8 +559,8 @@ class ScaleIntegrationTest {
     String content2 = SvgWriter.toXml(svg2)
 
     // Both should produce histograms with bars (rect elements)
-    assertTrue(content1.contains('<rect'), "Chart 1 should contain histogram bars")
-    assertTrue(content2.contains('<rect'), "Chart 2 should contain histogram bars")
+    assertTrue(content1.contains('<rect'), 'Chart 1 should contain histogram bars')
+    assertTrue(content2.contains('<rect'), 'Chart 2 should contain histogram bars')
 
     // Extract the histogram group content from both SVGs
     // Both should have identical histogram content since they're rendering the same data
@@ -568,18 +568,18 @@ class ScaleIntegrationTest {
     String histogramContent2 = extractHistogramGroupContent(content2)
 
     // Verify both have histogram content
-    assertFalse(histogramContent1.isEmpty(), "Chart 1 should have histogram content")
-    assertFalse(histogramContent2.isEmpty(), "Chart 2 should have histogram content")
+    assertFalse(histogramContent1.isEmpty(), 'Chart 1 should have histogram content')
+    assertFalse(histogramContent2.isEmpty(), 'Chart 2 should have histogram content')
 
     // The histogram group content should be identical
     assertEquals(histogramContent1, histogramContent2,
-        "Both charts should produce identical histogram content")
+        'Both charts should produce identical histogram content')
 
     // Verify both have histogram class (legacy gg or delegated charm)
     assertTrue(content1.contains('class="geomhistogram"') || content1.contains('charm-histogram'),
-        "Chart 1 should have histogram class")
+        'Chart 1 should have histogram class')
     assertTrue(content2.contains('class="geomhistogram"') || content2.contains('charm-histogram'),
-        "Chart 2 should have histogram class")
+        'Chart 2 should have histogram class')
   }
 
   /**
@@ -590,11 +590,11 @@ class ScaleIntegrationTest {
   private String extractHistogramGroupContent(String svgContent) {
     def svg = new XmlSlurper().parseText(svgContent)
     def matches = svg.depthFirst().findAll { node ->
-      String classAttr = node.@class?.toString()
+      String classAttr = node.@class
       classAttr?.contains('geomhistogram') || classAttr?.contains('charm-histogram')
     }
     if (matches.isEmpty()) {
-      return ""
+      return ''
     }
     // Prefer a wrapping <g> if present; otherwise collect all matching elements
     def wrapper = matches.find { it.name() == 'g' }
