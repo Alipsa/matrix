@@ -37,9 +37,9 @@ class MatrixParquetTest {
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
 
-    assertEquals(data, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(data, matrix, 'Data read from Parquet file does not match original data')
     assertEquals(data.types(), matrix.types(),
-        "Types read from Parquet file do not match expected types")
+        'Types read from Parquet file do not match expected types')
   }
 
   @Test
@@ -52,38 +52,38 @@ class MatrixParquetTest {
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
 
-    assertEquals(data, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(data, matrix, 'Data read from Parquet file does not match original data')
     assertEquals(data.types(), matrix.types(),
-        "Types read from Parquet file do not match expected types")
+        'Types read from Parquet file do not match expected types')
   }
 
   @Test
   void testMatrixParquetComplexData() {
     def empData = Matrix.builder('empData').columns(
         emp_id: 1..5,
-        emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
         salary: [623.3, 515.2, 611.0, 729.0, 843.25],
         score: toDoubles([0.5, 0.6, 0.7, 0.8, 0.9]),
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27'))
         .types([int, String, BigDecimal, Double, LocalDate]).build()
     File file = tempDir.resolve('empData.parquet').toFile()
     MatrixParquetWriter.write(empData, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
     //println matrix.content()
-    assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(empData, matrix, 'Data read from Parquet file does not match original data')
     assertEquals([Integer, String, BigDecimal, Double, LocalDate], matrix.types(),
-        "Types read from Parquet file do not match expected types")
+        'Types read from Parquet file do not match expected types')
   }
 
   @Test
   void testMatrixParquetComplexDataInferredPrecision() {
     def empData = Matrix.builder('empData').columns(
         emp_id: 1..5,
-        emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
         salary: [623.3, 515.2, 611.0, 729.0, 843.25],
         score: toBigDecimals([0.5123, 0.6321, 0.7190, 0.8452, 0.9198]),
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27'))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
     File file = tempDir.resolve('empData.parquet').toFile()
     MatrixParquetWriter.write(empData, file, true)
@@ -91,9 +91,9 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
     //println matrix.content()
     //println Stat.str(matrix)
-    assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(empData, matrix, 'Data read from Parquet file does not match original data')
     assertIterableEquals([Integer, String, BigDecimal, BigDecimal, LocalDate], matrix.types(),
-        "Types read from Parquet file do not match expected types")
+        'Types read from Parquet file do not match expected types')
   }
 
   @Test
@@ -103,10 +103,10 @@ class MatrixParquetTest {
     // which satisfies the assertion for precision 5.
     def empData = Matrix.builder('empData').columns(
         emp_id: 1..5,
-        emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+        emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
         salary: [623.3, 515.2, 611, 729.0, 843.25],
-        score: toBigDecimals(["1.2345", 0.6321, 0.7190, 0.8452, 0.9198]),
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        score: toBigDecimals(['1.2345', 0.6321, 0.7190, 0.8452, 0.9198]),
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27'))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
     File file = tempDir.resolve('empData_valid.parquet').toFile()
     MatrixParquetWriter.write(empData, file, [salary: [5,2], score: [5,4]])
@@ -114,9 +114,9 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
     //println matrix.content()
     //println Stat.str(matrix)
-    assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(empData, matrix, 'Data read from Parquet file does not match original data')
     assertIterableEquals([Integer, String, BigDecimal, BigDecimal, LocalDate], matrix.types(),
-        "Types read from Parquet file do not match expected types")
+        'Types read from Parquet file do not match expected types')
 
     // This value (623.30) has an unscaled value of 62330 (5 digits), so precision is 5.
     assertEquals(5, matrix.salary[0].precision())
@@ -145,8 +145,8 @@ class MatrixParquetTest {
     }
 
     // Assert that the exception message indicates a precision overflow error
-    String message = exception.getMessage() ?: ""
-    assertTrue(message.contains("exceeds the configured precision"),
+    String message = exception.getMessage() ?: ''
+    assertTrue(message.contains('exceeds the configured precision'),
         "Expected an exception indicating a precision overflow, but got: ${message}")
   }
 
@@ -223,7 +223,7 @@ class MatrixParquetTest {
 
     // Verify types are preserved
     assertEquals([Integer, LocalDateTime, Time, Timestamp], matrix.types(),
-        "Time types should be preserved")
+        'Time types should be preserved')
 
     // Verify LocalDateTime values (note: precision may be reduced to microseconds due to storage)
     // The reader reconstructs LocalDateTime from microseconds, so nanosecond precision below microseconds is lost
@@ -234,18 +234,18 @@ class MatrixParquetTest {
     assertEquals(dateTime3, matrix.local_datetime[2], 'LocalDateTime midnight should round-trip exactly')
 
     // Verify Time values (millisecond precision)
-    assertEquals(time1.toString(), matrix.sql_time[0].toString(), "Time 10:30:45 should round-trip")
-    assertEquals(time2.toString(), matrix.sql_time[1].toString(), "Time 23:59:59 should round-trip")
-    assertEquals(time3.toString(), matrix.sql_time[2].toString(), "Time 00:00:00 should round-trip")
+    assertEquals(time1.toString(), matrix.sql_time[0].toString(), 'Time 10:30:45 should round-trip')
+    assertEquals(time2.toString(), matrix.sql_time[1].toString(), 'Time 23:59:59 should round-trip')
+    assertEquals(time3.toString(), matrix.sql_time[2].toString(), 'Time 00:00:00 should round-trip')
 
     // Verify Timestamp values are preserved (type is stored in metadata)
-    assertEquals(Timestamp, matrix.types()[3], "Timestamp type should be preserved")
+    assertEquals(Timestamp, matrix.types()[3], 'Timestamp type should be preserved')
 
     // Verify the actual timestamp values round-trip correctly
     // Timestamps are stored with microsecond precision in Parquet (MICROS)
-    assertEquals(timestamp1.time, matrix.sql_timestamp[0].time, "Timestamp1 should round-trip")
-    assertEquals(timestamp2.time, matrix.sql_timestamp[1].time, "Timestamp2 should round-trip")
-    assertEquals(timestamp3.time, matrix.sql_timestamp[2].time, "Timestamp3 should round-trip")
+    assertEquals(timestamp1.time, matrix.sql_timestamp[0].time, 'Timestamp1 should round-trip')
+    assertEquals(timestamp2.time, matrix.sql_timestamp[1].time, 'Timestamp2 should round-trip')
+    assertEquals(timestamp3.time, matrix.sql_timestamp[2].time, 'Timestamp3 should round-trip')
   }
 
   @Test
@@ -269,21 +269,21 @@ class MatrixParquetTest {
     def nullMatrixEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(null, file)
     }
-    assertTrue(nullMatrixEx.message.contains("Matrix cannot be null"))
+    assertTrue(nullMatrixEx.message.contains('Matrix cannot be null'))
 
     // Test empty matrix (no columns)
     def emptyMatrix = Matrix.builder('empty').build()
     def emptyMatrixEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(emptyMatrix, file)
     }
-    assertTrue(emptyMatrixEx.message.contains("at least one column"))
+    assertTrue(emptyMatrixEx.message.contains('at least one column'))
 
     // Test null file
     def validMatrix = Matrix.builder('test').columns(id: [1, 2, 3]).types([Integer]).build()
     def nullFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(validMatrix, null)
     }
-    assertTrue(nullFileEx.message.contains("File or directory cannot be null"))
+    assertTrue(nullFileEx.message.contains('File or directory cannot be null'))
   }
 
   @Test
@@ -292,21 +292,21 @@ class MatrixParquetTest {
     def nullFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read((File) null)
     }
-    assertTrue(nullFileEx.message.contains("File cannot be null"))
+    assertTrue(nullFileEx.message.contains('File cannot be null'))
 
     // Test non-existent file
     def nonExistentFile = tempDir.resolve('does_not_exist.parquet').toFile()
     def noFileEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(nonExistentFile)
     }
-    assertTrue(noFileEx.message.contains("does not exist"))
+    assertTrue(noFileEx.message.contains('does not exist'))
 
     // Test directory instead of file
     def dir = tempDir.toFile()
     def dirEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(dir)
     }
-    assertTrue(dirEx.message.contains("directory"))
+    assertTrue(dirEx.message.contains('directory'))
   }
 
   @Test
@@ -326,9 +326,9 @@ class MatrixParquetTest {
       matrix = MatrixParquetReader.read(input)
     }
 
-    assertEquals(data, matrix, "Data read from InputStream does not match original data")
+    assertEquals(data, matrix, 'Data read from InputStream does not match original data')
     assertIterableEquals(data.types(), matrix.types(),
-        "Types read from InputStream do not match expected types")
+        'Types read from InputStream do not match expected types')
   }
 
   @Test
@@ -349,33 +349,33 @@ class MatrixParquetTest {
 
     // Test read(byte[] content)
     def matrix1 = MatrixParquetReader.read(content)
-    assertEquals(data, matrix1, "Data read from byte array does not match original data")
+    assertEquals(data, matrix1, 'Data read from byte array does not match original data')
     assertIterableEquals(data.types(), matrix1.types(),
-        "Types read from byte array do not match expected types")
+        'Types read from byte array do not match expected types')
 
     // Test read(byte[] content, String matrixName)
     def matrix2 = MatrixParquetReader.read(content, 'customName')
-    assertEquals('customName', matrix2.matrixName, "Custom matrix name should be applied")
-    assertIterableEquals(data.columnNames(), matrix2.columnNames(), "Column names should match")
-    assertEquals(data.rowCount(), matrix2.rowCount(), "Row count should match")
-    assertIterableEquals(data.types(), matrix2.types(), "Types should match")
+    assertEquals('customName', matrix2.matrixName, 'Custom matrix name should be applied')
+    assertIterableEquals(data.columnNames(), matrix2.columnNames(), 'Column names should match')
+    assertEquals(data.rowCount(), matrix2.rowCount(), 'Row count should match')
+    assertIterableEquals(data.types(), matrix2.types(), 'Types should match')
 
     // Test read(byte[] content, ZoneId zoneId)
-    def matrix3 = MatrixParquetReader.read(content, ZoneId.of("UTC"))
-    assertEquals(data, matrix3, "Data should match when using timezone")
+    def matrix3 = MatrixParquetReader.read(content, ZoneId.of('UTC'))
+    assertEquals(data, matrix3, 'Data should match when using timezone')
 
     // Test read(byte[] content, String matrixName, ZoneId zoneId)
-    def matrix4 = MatrixParquetReader.read(content, 'customName2', ZoneId.of("America/New_York"))
-    assertEquals('customName2', matrix4.matrixName, "Custom matrix name should be applied with timezone")
-    assertIterableEquals(data.columnNames(), matrix4.columnNames(), "Column names should match")
-    assertEquals(data.rowCount(), matrix4.rowCount(), "Row count should match")
-    assertIterableEquals(data.types(), matrix4.types(), "Types should match")
+    def matrix4 = MatrixParquetReader.read(content, 'customName2', ZoneId.of('America/New_York'))
+    assertEquals('customName2', matrix4.matrixName, 'Custom matrix name should be applied with timezone')
+    assertIterableEquals(data.columnNames(), matrix4.columnNames(), 'Column names should match')
+    assertEquals(data.rowCount(), matrix4.rowCount(), 'Row count should match')
+    assertIterableEquals(data.types(), matrix4.types(), 'Types should match')
 
     // Test null content validation
     def nullContentEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read((byte[]) null)
     }
-    assertTrue(nullContentEx.message.contains("Content cannot be null"))
+    assertTrue(nullContentEx.message.contains('Content cannot be null'))
   }
 
   @Test
@@ -391,14 +391,14 @@ class MatrixParquetTest {
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
 
     def fromPath = MatrixParquetReader.read(file.toPath())
-    assertEquals(data, fromPath, "Data read from Path does not match original data")
+    assertEquals(data, fromPath, 'Data read from Path does not match original data')
 
     def fromFilePath = MatrixParquetReader.readFile(file.absolutePath)
-    assertEquals(data, fromFilePath, "Data read from file path does not match original data")
+    assertEquals(data, fromFilePath, 'Data read from file path does not match original data')
 
     def url = file.toURI().toURL()
     def fromUrl = MatrixParquetReader.read(url)
-    assertEquals(data, fromUrl, "Data read from URL does not match original data")
+    assertEquals(data, fromUrl, 'Data read from URL does not match original data')
   }
 
   @Test
@@ -414,16 +414,16 @@ class MatrixParquetTest {
     File file = tempDir.resolve('tzTest.parquet').toFile()
 
     // Write with UTC timezone
-    ZoneId utcZone = ZoneId.of("UTC")
+    ZoneId utcZone = ZoneId.of('UTC')
     MatrixParquetWriter.write(data, file, utcZone)
-    assertTrue(file.exists(), "Parquet file was not created")
+    assertTrue(file.exists(), 'Parquet file was not created')
 
     // Read back with the same timezone
     Matrix readUtc = MatrixParquetReader.read(file, utcZone)
-    assertEquals(dateTime, readUtc.event_time[0], "LocalDateTime should round-trip with same timezone")
+    assertEquals(dateTime, readUtc.event_time[0], 'LocalDateTime should round-trip with same timezone')
 
     // Read with a different timezone (e.g., 5 hours behind UTC)
-    ZoneId nyZone = ZoneId.of("America/New_York")
+    ZoneId nyZone = ZoneId.of('America/New_York')
 
     // Write with NY timezone
     File fileNy = tempDir.resolve('tzTestNy.parquet').toFile()
@@ -431,19 +431,19 @@ class MatrixParquetTest {
 
     // Read back with same NY timezone
     Matrix readNy = MatrixParquetReader.read(fileNy, nyZone)
-    assertEquals(dateTime, readNy.event_time[0], "LocalDateTime should round-trip with NY timezone")
+    assertEquals(dateTime, readNy.event_time[0], 'LocalDateTime should round-trip with NY timezone')
 
     // Test null ZoneId validation in writer
     def writerNullEx = assertThrows(IllegalArgumentException) {
       MatrixParquetWriter.write(data, file, (ZoneId) null)
     }
-    assertTrue(writerNullEx.message.contains("ZoneId cannot be null"))
+    assertTrue(writerNullEx.message.contains('ZoneId cannot be null'))
 
     // Test null ZoneId validation in reader
     def readerNullEx = assertThrows(IllegalArgumentException) {
       MatrixParquetReader.read(file, (ZoneId) null)
     }
-    assertTrue(readerNullEx.message.contains("ZoneId cannot be null"))
+    assertTrue(readerNullEx.message.contains('ZoneId cannot be null'))
   }
 
   @Test
@@ -462,10 +462,10 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
 
     assertIterableEquals(emptyRows.columnNames(), matrix.columnNames(),
-        "Column names should round-trip for an empty matrix")
+        'Column names should round-trip for an empty matrix')
     assertIterableEquals(emptyRows.types(), matrix.types(),
-        "Column types should round-trip for an empty matrix")
-    assertEquals(0, matrix.rowCount(), "Empty matrix should have zero rows")
+        'Column types should round-trip for an empty matrix')
+    assertEquals(0, matrix.rowCount(), 'Empty matrix should have zero rows')
   }
 
   @Test
@@ -483,8 +483,8 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
 
     assertIterableEquals(data.types(), matrix.types(),
-        "Column types should be preserved when a column contains only nulls")
-    assertEquals([null, null, null], matrix['notes'], "Null-only column should round-trip")
+        'Column types should be preserved when a column contains only nulls')
+    assertEquals([null, null, null], matrix['notes'], 'Null-only column should round-trip')
   }
 
   @Test
@@ -504,9 +504,9 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
 
     assertIterableEquals(data.columnNames(), matrix.columnNames(),
-        "Special character column names should be preserved")
+        'Special character column names should be preserved')
     assertIterableEquals(data.types(), matrix.types(),
-        "Column types should be preserved for special character columns")
+        'Column types should be preserved for special character columns')
     assertEquals([1, 2], matrix['col with space'])
     assertEquals(['a', 'b'], matrix['col-name'])
     assertEquals([true, false], matrix['col.name'])
@@ -516,8 +516,8 @@ class MatrixParquetTest {
   @Test
   void testLargeBigDecimalValues() {
     def largeValues = toBigDecimals([
-        "12345678901234567890.123456789012345678",
-        "99999999999999999999.999999999999999999"
+        '12345678901234567890.123456789012345678',
+        '99999999999999999999.999999999999999999'
     ])
 
     def data = Matrix.builder('large_decimals').columns(
@@ -533,21 +533,21 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
 
     assertIterableEquals(data.types(), matrix.types(),
-        "BigDecimal column types should be preserved for large values")
-    assertEquals(largeValues, matrix.amount, "Large BigDecimal values should round-trip")
+        'BigDecimal column types should be preserved for large values')
+    assertEquals(largeValues, matrix.amount, 'Large BigDecimal values should round-trip')
   }
 
   @Test
   void testWriteBytesBasic() {
     def data = Matrix.builder('ByteTest').columns(
         id: [1, 2, 3],
-        name: ["Alice", "Bob", "Charlie"],
+        name: ['Alice', 'Bob', 'Charlie'],
         value: toBigDecimals([10.5, 20.5, 30.5])
     ).types([Integer, String, BigDecimal]).build()
 
     byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, true)
     assert parquetBytes != null
-    assert parquetBytes.length > 0 : "Byte array should not be empty"
+    assert parquetBytes.length > 0 : 'Byte array should not be empty'
   }
 
   @Test
@@ -575,7 +575,7 @@ class MatrixParquetTest {
         timestamp: [LocalDateTime.of(2024, 1, 1, 12, 0, 0)]
     ).types([LocalDateTime]).build()
 
-    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, ZoneId.of("America/New_York"))
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, ZoneId.of('America/New_York'))
     assert parquetBytes != null
     assert parquetBytes.length > 0
   }
@@ -687,7 +687,7 @@ class MatrixParquetTest {
     def data = Matrix.builder('empData').columns(
         emp_id: 1..5,
         salary: [623.3, 515.2, 611, 729.0, 843.25],
-        score: toBigDecimals(["1.2345", 0.6321, 0.7190, 0.8452, 0.9198])
+        score: toBigDecimals(['1.2345', 0.6321, 0.7190, 0.8452, 0.9198])
     ).types([int, BigDecimal, BigDecimal]).build()
 
     File file = tempDir.resolve('builder_precision.parquet').toFile()
@@ -729,7 +729,7 @@ class MatrixParquetTest {
 
     File file = tempDir.resolve('builder_tz.parquet').toFile()
 
-    ZoneId utcZone = ZoneId.of("UTC")
+    ZoneId utcZone = ZoneId.of('UTC')
     MatrixParquetWriter.builder(data)
         .zoneId(utcZone)
         .write(file)
@@ -744,7 +744,7 @@ class MatrixParquetTest {
   void testWriterBuilderWriteBytes() {
     def data = Matrix.builder('bytesBuilder').columns(
         id: [1, 2, 3],
-        name: ["Alice", "Bob", "Charlie"]
+        name: ['Alice', 'Bob', 'Charlie']
     ).types([Integer, String]).build()
 
     byte[] bytes = MatrixParquetWriter.builder(data).writeBytes()
@@ -874,7 +874,7 @@ class MatrixParquetTest {
 
     File file = tempDir.resolve('reader_tz.parquet').toFile()
 
-    ZoneId utc = ZoneId.of("UTC")
+    ZoneId utc = ZoneId.of('UTC')
     MatrixParquetWriter.write(data, file, utc)
 
     Matrix result = MatrixParquetReader.builder()
@@ -911,10 +911,10 @@ class MatrixParquetTest {
 
     File file = tempDir.resolve('reader_tz_str.parquet').toFile()
 
-    MatrixParquetWriter.builder(data).zoneId("UTC").write(file)
+    MatrixParquetWriter.builder(data).zoneId('UTC').write(file)
 
     Matrix result = MatrixParquetReader.builder()
-        .zoneId("UTC")
+        .zoneId('UTC')
         .read(file)
     assertEquals(dateTime, result.event_time[0])
   }
