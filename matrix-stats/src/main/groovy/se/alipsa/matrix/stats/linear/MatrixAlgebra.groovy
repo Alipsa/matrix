@@ -13,6 +13,9 @@ final class MatrixAlgebra {
   private static final double SYMMETRY_THRESHOLD = 1e-10
   private static final double JACOBI_CONVERGENCE_THRESHOLD = 1e-10
   private static final int MAX_JACOBI_SWEEPS = 100
+  private static final String LEFT_MATRIX_LABEL = 'left matrix'
+  private static final String MATRIX_LABEL = 'matrix'
+  private static final String RIGHT_MATRIX_LABEL = 'right matrix'
   private static final Logger log = Logger.getLogger(MatrixAlgebra)
 
   private MatrixAlgebra() {
@@ -26,7 +29,7 @@ final class MatrixAlgebra {
    * @throws IllegalArgumentException if the matrix is null, empty, or ragged
    */
   static double[][] transpose(double[][] matrix) {
-    int[] shape = validateRectangular(matrix, 'matrix')
+    int[] shape = validateRectangular(matrix, MATRIX_LABEL)
     int rows = shape[0]
     int columns = shape[1]
     double[][] result = new double[columns][rows]
@@ -47,8 +50,8 @@ final class MatrixAlgebra {
    * @throws IllegalArgumentException if either matrix is invalid or the inner dimensions do not match
    */
   static double[][] multiply(double[][] left, double[][] right) {
-    int[] leftShape = validateRectangular(left, 'left matrix')
-    int[] rightShape = validateRectangular(right, 'right matrix')
+    int[] leftShape = validateRectangular(left, LEFT_MATRIX_LABEL)
+    int[] rightShape = validateRectangular(right, RIGHT_MATRIX_LABEL)
     if (leftShape[1] != rightShape[0]) {
       throw new IllegalArgumentException(
           "Matrix dimension mismatch: ${leftShape[0]}x${leftShape[1]} cannot be multiplied by ${rightShape[0]}x${rightShape[1]}"
@@ -80,8 +83,8 @@ final class MatrixAlgebra {
    * @throws IllegalArgumentException if the matrices are invalid or shapes differ
    */
   static double[][] subtract(double[][] left, double[][] right) {
-    int[] leftShape = validateRectangular(left, 'left matrix')
-    int[] rightShape = validateRectangular(right, 'right matrix')
+    int[] leftShape = validateRectangular(left, LEFT_MATRIX_LABEL)
+    int[] rightShape = validateRectangular(right, RIGHT_MATRIX_LABEL)
     if (leftShape[0] != rightShape[0] || leftShape[1] != rightShape[1]) {
       throw new IllegalArgumentException(
           "Matrix dimension mismatch: ${leftShape[0]}x${leftShape[1]} does not match ${rightShape[0]}x${rightShape[1]}"
@@ -107,7 +110,7 @@ final class MatrixAlgebra {
    * @throws IllegalArgumentException if the matrix is invalid or the result contains non-finite values
    */
   static double[][] scale(double[][] matrix, double scalar) {
-    int[] shape = validateRectangular(matrix, 'matrix')
+    int[] shape = validateRectangular(matrix, MATRIX_LABEL)
     double[][] result = new double[shape[0]][shape[1]]
     for (int i = 0; i < shape[0]; i++) {
       for (int j = 0; j < shape[1]; j++) {
@@ -127,10 +130,10 @@ final class MatrixAlgebra {
    * @throws SingularMatrixException if the matrix is singular
    */
   static double[][] inverse(double[][] matrix) {
-    int[] shape = validateRectangular(matrix, 'matrix')
+    int[] shape = validateRectangular(matrix, MATRIX_LABEL)
     int n = shape[0]
     if (n != shape[1]) {
-      throw new IllegalArgumentException("Only square matrices can be inverted")
+      throw new IllegalArgumentException('Only square matrices can be inverted')
     }
 
     double[][] augmented = new double[n][2 * n]
@@ -187,10 +190,10 @@ final class MatrixAlgebra {
    * @throws SingularMatrixException if the matrix is not positive definite
    */
   static double[][] cholesky(double[][] matrix) {
-    int[] shape = validateRectangular(matrix, 'matrix')
+    int[] shape = validateRectangular(matrix, MATRIX_LABEL)
     int n = shape[0]
     if (n != shape[1]) {
-      throw new IllegalArgumentException("Cholesky decomposition requires a square matrix")
+      throw new IllegalArgumentException('Cholesky decomposition requires a square matrix')
     }
     validateSymmetric(matrix)
 
@@ -205,7 +208,7 @@ final class MatrixAlgebra {
         if (i == j) {
           if (sum <= SINGULARITY_THRESHOLD) {
             log.warn("Non-positive diagonal at row $i during Cholesky decomposition")
-            throw new SingularMatrixException("Matrix is not positive definite")
+            throw new SingularMatrixException('Matrix is not positive definite')
           }
           lower[i][j] = Math.sqrt(sum)
         } else {
@@ -225,10 +228,10 @@ final class MatrixAlgebra {
    * @throws IllegalArgumentException if the matrix is invalid or non-symmetric
    */
   static double[] symmetricEigenvalues(double[][] matrix) {
-    int[] shape = validateRectangular(matrix, 'matrix')
+    int[] shape = validateRectangular(matrix, MATRIX_LABEL)
     int n = shape[0]
     if (n != shape[1]) {
-      throw new IllegalArgumentException("Eigenvalue decomposition requires a square matrix")
+      throw new IllegalArgumentException('Eigenvalue decomposition requires a square matrix')
     }
     validateSymmetric(matrix)
 
@@ -286,7 +289,7 @@ final class MatrixAlgebra {
     }
 
     log.warn("Jacobi eigenvalue iteration did not converge after $MAX_JACOBI_SWEEPS sweeps")
-    throw new IllegalArgumentException("Jacobi eigenvalue iteration failed to converge")
+    throw new IllegalArgumentException('Jacobi eigenvalue iteration failed to converge')
   }
 
   private static int[] validateRectangular(double[][] matrix, String label) {
@@ -308,7 +311,7 @@ final class MatrixAlgebra {
         double difference = Math.abs(matrix[i][j] - matrix[j][i])
         double scale = Math.max(1.0d, Math.max(Math.abs(matrix[i][j]), Math.abs(matrix[j][i])))
         if (difference > SYMMETRY_THRESHOLD * scale) {
-          throw new IllegalArgumentException("Matrix must be symmetric")
+          throw new IllegalArgumentException('Matrix must be symmetric')
         }
       }
     }

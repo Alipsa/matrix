@@ -10,6 +10,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution implements ContinuousDistribution {
+  private static final String GROUP_LABEL = 'group'
 
   private final BigDecimal dfNumerator
   private final BigDecimal dfDenominator
@@ -133,7 +134,7 @@ class FDistribution implements ContinuousDistribution {
       groups,
       { List<?> g -> oneWayAnovaFValueArrays(g as List<double[]>) },
       { List<?> g -> oneWayAnovaFValueFromLists(g as Collection<? extends List<? extends Number>>) },
-      'group'
+      GROUP_LABEL
     )
   }
 
@@ -160,7 +161,7 @@ class FDistribution implements ContinuousDistribution {
   private static double oneWayAnovaFValueInternal(List<double[]> groups) {
     int k = groups.size()  // number of groups
     double grandSum = 0.0
-    List<Integer> groupSizes = groups.collect { double[] group -> group.length }
+    List<Integer> groupSizes = groups*.length
     int n = groupSizes.sum() as int  // total observations
     double[] groupMeans = new double[k]
     groups.eachWithIndex { double[] group, int i ->
@@ -215,7 +216,7 @@ class FDistribution implements ContinuousDistribution {
       groups,
       { List<?> g -> oneWayAnovaPValueArrays(g as List<double[]>) },
       { List<?> g -> oneWayAnovaPValueFromLists(g as Collection<? extends List<? extends Number>>) },
-      'group'
+      GROUP_LABEL
     )
   }
 
@@ -275,7 +276,7 @@ class FDistribution implements ContinuousDistribution {
       return []
     }
     groups.collect { List<? extends Number> group ->
-      NumericConversion.toDoubleArray(group, 'group')
+      NumericConversion.toDoubleArray(group, GROUP_LABEL)
     }
   }
 }

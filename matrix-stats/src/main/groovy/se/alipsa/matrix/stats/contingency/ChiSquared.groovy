@@ -79,7 +79,7 @@ class ChiSquared {
       testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
-      testType: "Pearson"
+      testType: 'Pearson'
     )
   }
 
@@ -126,7 +126,7 @@ class ChiSquared {
       testStatistic: BigDecimal.valueOf(gStatistic),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
-      testType: "G-test"
+      testType: 'G-test'
     )
   }
 
@@ -182,13 +182,13 @@ class ChiSquared {
       testStatistic: BigDecimal.valueOf(chiSquared),
       degreesOfFreedom: degreesOfFreedom,
       pValue: BigDecimal.valueOf(pValue),
-      testType: "Yates"
+      testType: 'Yates'
     )
   }
 
   private static void validateTable(Matrix table) {
     if (table == null) {
-      throw new IllegalArgumentException("Table cannot be null")
+      throw new IllegalArgumentException('Table cannot be null')
     }
     if (table.rowCount() < 2 || table.columnCount() < 2) {
       throw new IllegalArgumentException("Table must be at least 2×2 (got ${table.rowCount()}×${table.columnCount()})")

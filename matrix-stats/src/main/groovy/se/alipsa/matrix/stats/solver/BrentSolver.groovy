@@ -36,16 +36,16 @@ final class BrentSolver {
       int maxIterations
   ) {
     if (function == null) {
-      throw new IllegalArgumentException("Function cannot be null")
+      throw new IllegalArgumentException('Function cannot be null')
     }
     if (min >= max) {
       throw new IllegalArgumentException("min ($min) must be smaller than max ($max)")
     }
     if (relativeAccuracy <= 0.0d || absoluteAccuracy <= 0.0d) {
-      throw new IllegalArgumentException("Accuracies must be positive")
+      throw new IllegalArgumentException('Accuracies must be positive')
     }
     if (maxIterations < 1) {
-      throw new IllegalArgumentException("maxIterations must be positive")
+      throw new IllegalArgumentException('maxIterations must be positive')
     }
 
     double a = min
@@ -61,7 +61,7 @@ final class BrentSolver {
       return new SolverResult(root: b, evaluations: evaluations, iterations: 0, lowerBound: b, upperBound: b)
     }
     if (fa * fb > 0.0d) {
-      throw new IllegalArgumentException("Function values at the interval endpoints must bracket a root")
+      throw new IllegalArgumentException('Function values at the interval endpoints must bracket a root')
     }
 
     double c = a

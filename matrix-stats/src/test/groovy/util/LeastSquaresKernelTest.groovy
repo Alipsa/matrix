@@ -87,6 +87,6 @@ class LeastSquaresKernelTest {
       LeastSquaresKernel.calculateResidualSumOfSquares(response, predictors, coefficients)
     }
 
-    assertEquals("Design matrix rows must all have the same length", exception.message)
+    assertEquals('Design matrix rows must all have the same length', exception.message)
   }
 }

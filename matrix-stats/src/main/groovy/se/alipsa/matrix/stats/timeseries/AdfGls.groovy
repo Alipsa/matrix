@@ -66,15 +66,15 @@ class AdfGls {
    * @return AdfGlsResult containing test statistic and conclusion
    */
   @SuppressWarnings('MethodSize')
-  static AdfGlsResult test(double[] data, Integer lags = null, String type = "drift") {
+  static AdfGlsResult test(double[] data, Integer lags = null, String type = 'drift') {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.length < 10) {
       throw new IllegalArgumentException("Data must have at least 10 observations (got ${data.length})")
     }
 
-    if (type != "drift" && type != "trend") {
+    if (type != 'drift' && type != 'trend') {
       throw new IllegalArgumentException("Type must be 'drift' or 'trend' (got '${type}')")
     }
 
@@ -93,7 +93,7 @@ class AdfGls {
     }
 
     if (Math.abs(yMax - yMin) < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant series)")
+      throw new IllegalArgumentException('Data has no variation (constant series)')
     }
 
     // Auto-select lags if not provided
@@ -101,7 +101,7 @@ class AdfGls {
 
     // GLS detrending parameter: α = 1 + c/n
     // c = -7 for drift, c = -13.5 for trend
-    double c = type == "drift" ? -7.0 : -13.5
+    double c = type == 'drift' ? -7.0 : -13.5
     double alpha = 1.0 + c / n
 
     // GLS-detrend the data
@@ -119,7 +119,7 @@ class AdfGls {
     // Prepare regression
     int nObs = n - p - 1
     if (nObs < 10) {
-      throw new IllegalArgumentException("Insufficient observations after accounting for lags")
+      throw new IllegalArgumentException('Insufficient observations after accounting for lags')
     }
 
     // Build design matrix: [ỹ_{t-1}, Δỹ_{t-1}, ..., Δỹ_{t-p}]
@@ -201,8 +201,8 @@ class AdfGls {
   /**
    * Performs the ADF-GLS test on a List of numbers.
    */
-  static AdfGlsResult test(List<? extends Number> data, Integer lags = null, String type = "drift") {
-    double[] array = data.collect { it.doubleValue() } as double[]
+  static AdfGlsResult test(List<? extends Number> data, Integer lags = null, String type = 'drift') {
+    double[] array = data*.doubleValue() as double[]
     test(array, lags, type)
   }
 
@@ -222,7 +222,7 @@ class AdfGls {
     }
 
     // Build quasi-differenced deterministic terms
-    double[][] X = new double[n][type == "drift" ? 1 : 2]
+    double[][] X = new double[n][type == 'drift' ? 1 : 2]
 
     // Constant term
     X[0][0] = 1.0
@@ -231,7 +231,7 @@ class AdfGls {
     }
 
     // Trend term (if needed)
-    if (type == "trend") {
+    if (type == 'trend') {
       X[0][1] = 1.0
       for (int i = 1; i < n; i++) {
         X[i][1] = (i + 1.0) - alpha * i
@@ -245,7 +245,7 @@ class AdfGls {
     double[] fitted = new double[n]
     for (int i = 0; i < n; i++) {
       fitted[i] = beta[0]  // Constant
-      if (type == "trend") {
+      if (type == 'trend') {
         fitted[i] += beta[1] * (i + 1.0)  // Trend
       }
     }
@@ -316,7 +316,7 @@ class AdfGls {
 
     double[] params
 
-    if (type == "drift") {
+    if (type == 'drift') {
       if (significance == 0.01) {
         params = [-2.64, -1.95, -0.80, 0.00] as double[]
       } else if (significance == 0.05) {
@@ -383,9 +383,8 @@ class AdfGls {
 
       if (statistic < cv) {
         return "Reject H0: Series appears stationary (ADF-GLS = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
-      } else {
-        return "Fail to reject H0: Unit root likely present, series appears non-stationary (ADF-GLS = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
       }
+      return "Fail to reject H0: Unit root likely present, series appears non-stationary (ADF-GLS = ${String.format('%.4f', statistic)}, CV = ${String.format('%.4f', cv)})"
     }
 
     /**
@@ -393,16 +392,16 @@ class AdfGls {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
+      String conclusion = statistic < criticalValue5pct ? 'stationary' : 'non-stationary (unit root present)'
 
       String.format(
-        "ADF-GLS test:\\n" +
-        "Test type: %s\\n" +
-        "Lags: %d\\n" +
-        "ADF-GLS statistic: %.4f\\n" +
-        "Critical values: 1%% = %.4f, 5%% = %.4f, 10%% = %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Conclusion: Series appears %s at %.0f%% significance level",
+        'ADF-GLS test:\\n' +
+        'Test type: %s\\n' +
+        'Lags: %d\\n' +
+        'ADF-GLS statistic: %.4f\\n' +
+        'Critical values: 1%% = %.4f, 5%% = %.4f, 10%% = %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Conclusion: Series appears %s at %.0f%% significance level',
         testType, lags, statistic, criticalValue1pct, criticalValue5pct, criticalValue10pct,
         sampleSize, conclusion, (alphaValue * 100) as double
       )

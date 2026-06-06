@@ -184,7 +184,7 @@ class CochranArmitage {
 
   private static void validateInput(int[] cases, int[] controls, double[] scores) {
     if (cases == null || controls == null) {
-      throw new IllegalArgumentException("Cases and controls cannot be null")
+      throw new IllegalArgumentException('Cases and controls cannot be null')
     }
     if (cases.length != controls.length) {
       throw new IllegalArgumentException(
@@ -264,11 +264,10 @@ class CochranArmitage {
     String interpret(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toBigDecimal(alpha, 'alpha')
       if (pValue < alphaValue) {
-        String direction = statistic > 0 ? "increasing" : "decreasing"
+        String direction = statistic > 0 ? 'increasing' : 'decreasing'
         return "Reject H0: Significant ${direction} trend detected (Z = ${String.format('%.4f', statistic as double)}, p = ${String.format('%.4f', pValue as double)})"
-      } else {
-        return "Fail to reject H0: No significant trend detected (Z = ${String.format('%.4f', statistic as double)}, p = ${String.format('%.4f', pValue as double)})"
       }
+      return "Fail to reject H0: No significant trend detected (Z = ${String.format('%.4f', statistic as double)}, p = ${String.format('%.4f', pValue as double)})"
     }
 
     /**
@@ -278,15 +277,15 @@ class CochranArmitage {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toBigDecimal(alpha, 'alpha')
-      String direction = statistic > 0 ? "increasing" : "decreasing"
-      String significance = pValue < alphaValue ? "significant" : "not significant"
+      String direction = statistic > 0 ? 'increasing' : 'decreasing'
+      String significance = pValue < alphaValue ? 'significant' : 'not significant'
 
       String.format(
-        "Cochran-Armitage trend test:\n" +
-        "Z-statistic: %.4f (direction: %s)\n" +
-        "p-value: %.4f\n" +
-        "Sample: n=%d (%d cases, %d controls across %d categories)\n" +
-        "Conclusion: Trend is %s at %.0f%% significance level",
+        'Cochran-Armitage trend test:\n' +
+        'Z-statistic: %.4f (direction: %s)\n' +
+        'p-value: %.4f\n' +
+        'Sample: n=%d (%d cases, %d controls across %d categories)\n' +
+        'Conclusion: Trend is %s at %.0f%% significance level',
         statistic as double, direction, pValue as double, sampleSize, cases, controls, categories, significance, alphaValue * 100
       )
     }

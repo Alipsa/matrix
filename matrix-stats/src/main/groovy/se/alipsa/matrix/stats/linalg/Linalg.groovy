@@ -27,6 +27,9 @@ final class Linalg {
 
   private static final double SINGULARITY_TOLERANCE = 1e-12
   private static final double IMAGINARY_TOLERANCE = 1e-10
+  private static final String MATRIX_LABEL = 'matrix'
+  private static final String MATRIX_TYPE_LABEL = 'Matrix'
+  private static final String VECTOR_LABEL = 'vector'
 
   private Linalg() {
   }
@@ -136,9 +139,9 @@ final class Linalg {
    * @param matrix the matrix to decompose
    * @return the singular value decomposition result
    * @throws IllegalArgumentException if the matrix is null, empty, or ragged
-   */
+  */
   private static SvdResult svdValues(double[][] matrix) {
-    LinalgAdapters.validateRectangular(matrix, 'matrix')
+    LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
     SimpleSVD<SimpleMatrix> decomposition = dense(matrix).svd()
     SimpleMatrix u = decomposition.getU()
     SimpleMatrix w = decomposition.getW()
@@ -178,38 +181,38 @@ final class Linalg {
   }
 
   private static double[][] inverseValues(double[][] matrix) {
-    int[] shape = LinalgAdapters.validateRectangular(matrix, 'matrix')
-    requireSquare(shape, 'Matrix')
+    int[] shape = LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
+    requireSquare(shape, MATRIX_TYPE_LABEL)
 
     SimpleMatrix dense = dense(matrix)
-    requireNonSingular(dense, 'Matrix')
+    requireNonSingular(dense, MATRIX_TYPE_LABEL)
     LinalgAdapters.toDoubleArray(dense.invert())
   }
 
   private static double detValue(double[][] matrix) {
-    int[] shape = LinalgAdapters.validateRectangular(matrix, 'matrix')
-    requireSquare(shape, 'Matrix')
+    int[] shape = LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
+    requireSquare(shape, MATRIX_TYPE_LABEL)
     dense(matrix).determinant()
   }
 
   private static double[] solveValues(double[][] matrix, List<? extends Number> vector) {
-    solveValues(matrix, NumericConversion.toDoubleArray(vector, 'vector'))
+    solveValues(matrix, NumericConversion.toDoubleArray(vector, VECTOR_LABEL))
   }
 
   private static double[] solveValues(double[][] matrix, double[] vector) {
-    int[] shape = LinalgAdapters.validateRectangular(matrix, 'matrix')
-    requireSquare(shape, 'Matrix')
-    double[] rhs = validateVector(vector, shape[0], 'vector')
+    int[] shape = LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
+    requireSquare(shape, MATRIX_TYPE_LABEL)
+    double[] rhs = validateVector(vector, shape[0], VECTOR_LABEL)
 
     SimpleMatrix dense = dense(matrix)
-    requireNonSingular(dense, 'Matrix')
+    requireNonSingular(dense, MATRIX_TYPE_LABEL)
     SimpleMatrix solution = dense.solve(new SimpleMatrix(rhs.length, 1, true, rhs))
     toVector(solution)
   }
 
   private static double[] eigenvaluesValues(double[][] matrix) {
-    int[] shape = LinalgAdapters.validateRectangular(matrix, 'matrix')
-    requireSquare(shape, 'Matrix')
+    int[] shape = LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
+    requireSquare(shape, MATRIX_TYPE_LABEL)
 
     SimpleEVD<SimpleMatrix> decomposition = dense(matrix).eig()
     List<Double> values = []

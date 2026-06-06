@@ -267,7 +267,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.1 Audit
 
-- [ ] **4.1.1 Generate fresh reports and read them**
+- [x] **4.1.1 Generate fresh reports and read them**
 
   ```bash
   # Generate reports (ignoreFailures is still true so both tasks succeed)
@@ -288,19 +288,25 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
   Cross-reference against the counts in the scope table above to confirm alignment; discrepancies indicate the source changed since this plan was written.
 
+  Completed verification:
+  ```bash
+  ./gradlew :matrix-stats:codenarcMain :matrix-stats:codenarcTest
+  ```
+  Initial report counts were 615 main violations and 394 test violations.
+
 ### 4.2 Fix UnnecessaryGString (430 main + 380 test)
 
-- [ ] **4.2.1 Fix in main sources**
+- [x] **4.2.1 Fix in main sources**
 
   For each file, replace uninterpolated `"string"` → `'string'`. Use the HTML report (`matrix-stats/build/reports/codenarc/main.html`) to navigate to exact line numbers.
 
-- [ ] **4.2.2 Fix in test sources**
+- [x] **4.2.2 Fix in test sources**
 
   Same mechanical change across all test files.
 
 ### 4.3 Fix UnnecessaryObjectReferences (46 main)
 
-- [ ] **4.3.1 Consolidate repeated property assignments using `with()`**
+- [x] **4.3.1 Consolidate repeated property assignments using `with()`**
 
   CodeNarc fires when consecutive statements call methods or set properties on the same object. Refactor to a `with()` block:
   ```groovy
@@ -352,7 +358,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.4 Fix DuplicateStringLiteral (46 main)
 
-- [ ] **4.4.1 Extract repeated string labels to `static final` constants**
+- [x] **4.4.1 Extract repeated string labels to `static final` constants**
 
   For each file, identify which string is repeated and extract to a constant at the top of the class:
   ```groovy
@@ -362,7 +368,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.5 Fix UnnecessaryElseStatement (39 main)
 
-- [ ] **4.5.1 Remove unnecessary else branches**
+- [x] **4.5.1 Remove unnecessary else branches**
 
   ```groovy
   // Before
@@ -380,7 +386,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.6 Fix UnnecessaryCollectCall (30 main + 14 test)
 
-- [ ] **4.6.1 Remove no-op collect calls**
+- [x] **4.6.1 Remove no-op collect calls**
 
   ```groovy
   // Before
@@ -391,7 +397,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.7 Fix DuplicateNumberLiteral (22 main)
 
-- [ ] **4.7.1 Extract repeated numeric literals to named constants**
+- [x] **4.7.1 Extract repeated numeric literals to named constants**
 
   Statistical and mathematical constants all have meaningful names. Extract each repeated literal to a `private static final` (or shared constants class for cross-file values):
   ```groovy
@@ -403,7 +409,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
 
 ### 4.8 Fix DuplicateListLiteral (2 main)
 
-- [ ] **4.8.1 Extract the repeated list to a constant or inline it**
+- [x] **4.8.1 Extract the repeated list to a constant or inline it**
 
   ```groovy
   // Before - same literal twice
@@ -413,7 +419,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
   // After — either extract to constant or use a single definition
   ```
 
-- [ ] **4.9 Remove the codenarc override from matrix-stats/build.gradle**
+- [x] **4.9 Remove the codenarc override from matrix-stats/build.gradle**
 
   Delete lines 16–19:
   ```groovy
@@ -423,7 +429,7 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
   }
   ```
 
-- [ ] **4.10 Verify — confirm 0 violations remain**
+- [x] **4.10 Verify — confirm 0 violations remain**
 
   ```bash
   ./gradlew :matrix-stats:codenarcMain
@@ -431,6 +437,19 @@ matrix-stats has `ignoreFailures = true` on the entire `codenarc` block. The vio
   ./gradlew :matrix-stats:test
   ```
   Expected: all tasks pass.
+
+  Completed verification:
+  ```bash
+  ./gradlew :matrix-stats:compileGroovy
+  ./gradlew :matrix-stats:codenarcMain
+  ./gradlew :matrix-stats:codenarcTest
+  ./gradlew :matrix-stats:spotlessCheck
+  ./gradlew :matrix-stats:test --tests 'StudentTest' --tests 'ttest.StudentEqualVarianceTest' --tests 'ttest.WelchTest'
+  ./gradlew :matrix-stats:test
+  ./gradlew test
+  git diff --check
+  ```
+  Final CodeNarc XML reports contain 0 main violations and 0 test violations.
 
 - [ ] **4.11 Commit (after user confirmation)**
 

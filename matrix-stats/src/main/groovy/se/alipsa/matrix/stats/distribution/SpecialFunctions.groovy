@@ -24,6 +24,19 @@ class SpecialFunctions {
   private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
   private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
   private static final BigDecimal BETA_TINY = new BigDecimal('1e-40')
+  private static final String A_LABEL = 'a'
+  private static final String X_LABEL = 'x'
+  private static final List<BigDecimal> LANCZOS_COEFFICIENTS = [
+      0.99999999999980993,
+      676.5203681218851,
+      -1259.1392167224028,
+      771.32342877765313,
+      -176.61502916214059,
+      12.507343278686905,
+      -0.13857109526572012,
+      9.9843695780195716e-6,
+      1.5056327351493116e-7
+  ].asImmutable() as List<BigDecimal>
 
   /**
    * Computes the regularized incomplete beta function I_x(a, b).
@@ -79,8 +92,8 @@ class SpecialFunctions {
    */
   static BigDecimal regularizedIncompleteBeta(Number x, Number a, Number b) {
     BigDecimal.valueOf(regularizedIncompleteBeta(
-      NumericConversion.toFiniteDouble(x, 'x'),
-      NumericConversion.toFiniteDouble(a, 'a'),
+      NumericConversion.toFiniteDouble(x, X_LABEL),
+      NumericConversion.toFiniteDouble(a, A_LABEL),
       NumericConversion.toFiniteDouble(b, 'b')
     ))
   }
@@ -235,18 +248,7 @@ class SpecialFunctions {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
 
-    // Lanczos coefficients for g=7, n=9
-    double[] coef = [
-        0.99999999999980993,
-        676.5203681218851,
-        -1259.1392167224028,
-        771.32342877765313,
-        -176.61502916214059,
-        12.507343278686905,
-        -0.13857109526572012,
-        9.9843695780195716e-6,
-        1.5056327351493116e-7
-    ] as double[]
+    double[] coef = LANCZOS_COEFFICIENTS*.doubleValue() as double[]
 
     if (x < 0.5d) {
       // Use reflection formula
@@ -268,18 +270,7 @@ class SpecialFunctions {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
 
-    // Lanczos coefficients for g=7, n=9
-    BigDecimal[] coef = [
-        0.99999999999980993,
-        676.5203681218851,
-        -1259.1392167224028,
-        771.32342877765313,
-        -176.61502916214059,
-        12.507343278686905,
-        -0.13857109526572012,
-        9.9843695780195716e-6,
-        1.5056327351493116e-7
-    ] as BigDecimal[]
+    BigDecimal[] coef = LANCZOS_COEFFICIENTS as BigDecimal[]
 
     if (x < 0.5) {
       // Use reflection formula
@@ -356,8 +347,8 @@ class SpecialFunctions {
    */
   static BigDecimal regularizedIncompleteGammaP(Number a, Number x) {
     BigDecimal.valueOf(regularizedIncompleteGammaP(
-      NumericConversion.toFiniteDouble(a, 'a'),
-      NumericConversion.toFiniteDouble(x, 'x')
+      NumericConversion.toFiniteDouble(a, A_LABEL),
+      NumericConversion.toFiniteDouble(x, X_LABEL)
     ))
   }
 
@@ -397,8 +388,8 @@ class SpecialFunctions {
    */
   static BigDecimal regularizedIncompleteGammaQ(Number a, Number x) {
     BigDecimal.valueOf(regularizedIncompleteGammaQ(
-      NumericConversion.toFiniteDouble(a, 'a'),
-      NumericConversion.toFiniteDouble(x, 'x')
+      NumericConversion.toFiniteDouble(a, A_LABEL),
+      NumericConversion.toFiniteDouble(x, X_LABEL)
     ))
   }
 

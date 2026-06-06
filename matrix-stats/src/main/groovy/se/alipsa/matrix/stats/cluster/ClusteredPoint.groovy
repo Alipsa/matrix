@@ -122,6 +122,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * @see KMeans
  */
 class ClusteredPoint {
+  private static final String POINT_LABEL = 'point'
+
   final int clusterId
   final double[] point
 
@@ -131,13 +133,13 @@ class ClusteredPoint {
   }
 
   ClusteredPoint(int clusterId, List<? extends Number> point) {
-    this(clusterId, NumericConversion.toDoubleArray(point, 'point'))
+    this(clusterId, NumericConversion.toDoubleArray(point, POINT_LABEL))
   }
 
   int getClusterId() { clusterId }
   double[] getPoint() { point }
 
   List<BigDecimal> getPointValues() {
-    NumericConversion.toBigDecimalList(point, 'point')
+    NumericConversion.toBigDecimalList(point, POINT_LABEL)
   }
 }

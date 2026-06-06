@@ -104,6 +104,12 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * testing with estimated parameters.</p>
  */
 class KolmogorovSmirnov {
+  private static final double ASYMPTOTIC_CORRECTION_BASE = 0.12d
+  private static final double ASYMPTOTIC_CORRECTION_SCALE = 0.11d
+  private static final double PROBABILITY_LOWER_BOUND = 0.0d
+  private static final double PROBABILITY_UPPER_BOUND = 1.0d
+  private static final double SERIES_MULTIPLIER = 2.0d
+
 
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
 
@@ -118,7 +124,7 @@ class KolmogorovSmirnov {
   static KSResult testNormality(List<? extends Number> data) {
     validateData(data)
 
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
 
     // Calculate sample mean and standard deviation
     double mean = values.sum() / values.length
@@ -131,7 +137,7 @@ class KolmogorovSmirnov {
     // Create normal distribution with sample mean and std dev
     NormalDistribution normalDist = new NormalDistribution(mean, stdDev)
 
-    testAgainstDistribution(data, normalDist, "Normality")
+    testAgainstDistribution(data, normalDist, 'Normality')
   }
 
   /**
@@ -144,7 +150,7 @@ class KolmogorovSmirnov {
   static KSResult testStandardNormality(List<? extends Number> data) {
     validateData(data)
     NormalDistribution standardNormal = new NormalDistribution(0, 1)
-    testAgainstDistribution(data, standardNormal, "Standard Normality")
+    testAgainstDistribution(data, standardNormal, 'Standard Normality')
   }
 
   /**
@@ -156,10 +162,10 @@ class KolmogorovSmirnov {
    * @return KSResult containing the D statistic and p-value
    * @throws IllegalArgumentException if data is null or has fewer than 2 observations
    */
-  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = "K-S Test") {
+  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = 'K-S Test') {
     validateData(data)
 
-    double[] values = (data.collect { it.doubleValue() } as List<Double>).sort() as double[]
+    double[] values = (data*.doubleValue() as List<Double>).sort() as double[]
     double dStatistic = calculateOneSampleStatistic(values, distribution)
     double pValue = calculateOneSamplePValue(dStatistic, values.length)
 
@@ -183,8 +189,8 @@ class KolmogorovSmirnov {
     validateData(sample1)
     validateData(sample2)
 
-    double[] values1 = sample1.collect { it.doubleValue() } as double[]
-    double[] values2 = sample2.collect { it.doubleValue() } as double[]
+    double[] values1 = sample1*.doubleValue() as double[]
+    double[] values2 = sample2*.doubleValue() as double[]
 
     // Calculate D statistic
     double dStatistic = calculateTwoSampleStatistic(values1, values2)
@@ -196,14 +202,14 @@ class KolmogorovSmirnov {
       dStatistic: BigDecimal.valueOf(dStatistic),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: values1.length + values2.length,
-      testType: "Two-Sample K-S"
+      testType: 'Two-Sample K-S'
     )
   }
 
   private static double calculateOneSampleStatistic(double[] sortedValues, ContinuousDistribution distribution) {
     int n = sortedValues.length
-    double dPlus = 0.0d
-    double dMinus = 0.0d
+    double dPlus = PROBABILITY_LOWER_BOUND
+    double dMinus = PROBABILITY_LOWER_BOUND
 
     for (int i = 0; i < n; i++) {
       double theoretical = distribution.cumulativeProbability(sortedValues[i])
@@ -217,14 +223,14 @@ class KolmogorovSmirnov {
   }
 
   private static double calculateOneSamplePValue(double dStatistic, int sampleSize) {
-    if (dStatistic <= 0.0d) {
-      return 1.0d
+    if (dStatistic <= PROBABILITY_LOWER_BOUND) {
+      return PROBABILITY_UPPER_BOUND
     }
 
     // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
     // so callers and tests should not expect exact agreement with finite-sample reference tables.
     double sqrtN = Math.sqrt(sampleSize)
-    double lambda = (sqrtN + 0.12d + 0.11d / sqrtN) * dStatistic
+    double lambda = (sqrtN + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / sqrtN) * dStatistic
     kolmogorovProbability(lambda)
   }
 
@@ -264,8 +270,8 @@ class KolmogorovSmirnov {
   }
 
   private static double calculateTwoSamplePValue(double dStatistic, int sampleSize1, int sampleSize2) {
-    if (dStatistic <= 0.0d) {
-      return 1.0d
+    if (dStatistic <= PROBABILITY_LOWER_BOUND) {
+      return PROBABILITY_UPPER_BOUND
     }
     if ((sampleSize1 as long) * sampleSize2 <= EXACT_TWO_SAMPLE_MAX_PRODUCT) {
       long differenceCount = Math.round(dStatistic * sampleSize1 * sampleSize2)
@@ -273,7 +279,7 @@ class KolmogorovSmirnov {
     }
 
     double effectiveSize = Math.sqrt((sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
-    double lambda = (effectiveSize + 0.12d + 0.11d / effectiveSize) * dStatistic
+    double lambda = (effectiveSize + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / effectiveSize) * dStatistic
     kolmogorovProbability(lambda)
   }
 
@@ -282,8 +288,8 @@ class KolmogorovSmirnov {
     BigInteger totalPathCount = binomial(sampleSize1 + sampleSize2, sampleSize1)
     BigDecimal cdf = new BigDecimal(validPathCount)
       .divide(new BigDecimal(totalPathCount), java.math.MathContext.DECIMAL128)
-    double pValue = 1.0d - cdf.doubleValue()
-    Math.max(0.0d, Math.min(1.0d, pValue))
+    double pValue = PROBABILITY_UPPER_BOUND - cdf.doubleValue()
+    Math.max(PROBABILITY_LOWER_BOUND, Math.min(PROBABILITY_UPPER_BOUND, pValue))
   }
 
   private static BigInteger countValidPaths(int sampleSize1, int sampleSize2, long thresholdCount) {
@@ -322,29 +328,29 @@ class KolmogorovSmirnov {
   }
 
   private static double kolmogorovProbability(double lambda) {
-    double sum = 0.0d
+    double sum = PROBABILITY_LOWER_BOUND
 
     for (int j = 1; j <= 100; j++) {
-      double term = Math.exp(-2.0d * j * j * lambda * lambda)
-      sum += (j % 2 != 0 ? 1.0d : -1.0d) * term
+      double term = Math.exp(-SERIES_MULTIPLIER * j * j * lambda * lambda)
+      sum += (j % SERIES_MULTIPLIER != 0 ? PROBABILITY_UPPER_BOUND : -PROBABILITY_UPPER_BOUND) * term
       if (term < 1e-12d) {
         break
       }
     }
 
-    Math.max(0.0d, Math.min(1.0d, 2.0d * sum))
+    Math.max(PROBABILITY_LOWER_BOUND, Math.min(PROBABILITY_UPPER_BOUND, SERIES_MULTIPLIER * sum))
   }
 
   private static void validateData(List<? extends Number> data) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (data.size() < 2) {
       throw new IllegalArgumentException("Kolmogorov-Smirnov test requires at least 2 observations (got ${data.size()})")
     }
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data cannot contain null values")
+        throw new IllegalArgumentException('Data cannot contain null values')
       }
     }
   }
@@ -385,10 +391,10 @@ class KolmogorovSmirnov {
     @Override
     String toString() {
       String result
-      if (testType.contains("Normality")) {
-        result = isNormal() ? "Data appears normally distributed" : "Data does NOT appear normally distributed"
+      if (testType.contains('Normality')) {
+        result = isNormal() ? 'Data appears normally distributed' : 'Data does NOT appear normally distributed'
       } else {
-        result = evaluate() ? "Samples appear to differ" : "Samples do not significantly differ"
+        result = evaluate() ? 'Samples appear to differ' : 'Samples do not significantly differ'
       }
 
       """Kolmogorov-Smirnov Test Result (${testType}):

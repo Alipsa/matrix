@@ -42,7 +42,7 @@ class CcmTest {
 
     // X drives Y, so Y|M(X) should show cross-map skill
     // Note: Due to randomness in library selection, exact causality detection may vary
-    assertFalse(result.ymapX.isEmpty(), "Should compute cross-map skills")
+    assertFalse(result.ymapX.isEmpty(), 'Should compute cross-map skills')
   }
 
   @Test
@@ -281,11 +281,11 @@ class CcmTest {
     String interpretation = result.interpret()
 
     assertNotNull(interpretation)
-    assertTrue(interpretation.contains("Convergent Cross Mapping"))
-    assertTrue(interpretation.contains("Embedding dimension"))
-    assertTrue(interpretation.contains("Time lag"))
-    assertTrue(interpretation.contains("Library sizes"))
-    assertTrue(interpretation.contains("Cross-map Skills"))
+    assertTrue(interpretation.contains('Convergent Cross Mapping'))
+    assertTrue(interpretation.contains('Embedding dimension'))
+    assertTrue(interpretation.contains('Time lag'))
+    assertTrue(interpretation.contains('Library sizes'))
+    assertTrue(interpretation.contains('Cross-map Skills'))
   }
 
   @Test
@@ -327,7 +327,7 @@ class CcmTest {
     // Library sizes should be sorted
     for (int i = 0; i < result.librarySizes.size() - 1; i++) {
       assertTrue(result.librarySizes[i] < result.librarySizes[i + 1],
-                 "Library sizes should be increasing")
+                 'Library sizes should be increasing')
     }
   }
 
@@ -448,8 +448,8 @@ class CcmTest {
 
     assertNotNull(result)
     // White noise should show low cross-map skills
-    assertFalse(result.xCausesY(0.8), "White noise should not show strong causality")
-    assertFalse(result.yCausesX(0.8), "White noise should not show strong causality")
+    assertFalse(result.xCausesY(0.8), 'White noise should not show strong causality')
+    assertFalse(result.yCausesX(0.8), 'White noise should not show strong causality')
   }
 
   @Test

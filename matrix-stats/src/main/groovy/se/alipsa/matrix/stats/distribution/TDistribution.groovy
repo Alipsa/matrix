@@ -11,6 +11,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class TDistribution {
+  private static final String T_LABEL = 't'
 
   private final BigDecimal degreesOfFreedom
 
@@ -42,9 +43,8 @@ class TDistribution {
 
     if (t >= 0) {
       return 1.0d - 0.5d * beta
-    } else {
-      return 0.5d * beta
     }
+    return 0.5d * beta
   }
 
   BigDecimal cdf(BigDecimal t) {
@@ -54,13 +54,12 @@ class TDistribution {
 
     if (t >= 0) {
       return BigDecimal.ONE - 0.5 * beta
-    } else {
-      return 0.5 * beta
     }
+    return 0.5 * beta
   }
 
   BigDecimal cdf(Number t) {
-    cdf(NumericConversion.toBigDecimal(t, 't'))
+    cdf(NumericConversion.toBigDecimal(t, T_LABEL))
   }
 
   /**
@@ -81,7 +80,7 @@ class TDistribution {
   }
 
   BigDecimal twoTailedPValue(Number t) {
-    twoTailedPValue(NumericConversion.toBigDecimal(t, 't'))
+    twoTailedPValue(NumericConversion.toBigDecimal(t, T_LABEL))
   }
 
   /**
@@ -96,7 +95,7 @@ class TDistribution {
   }
 
   BigDecimal oneTailedPValueUpper(Number t) {
-    oneTailedPValueUpper(NumericConversion.toBigDecimal(t, 't'))
+    oneTailedPValueUpper(NumericConversion.toBigDecimal(t, T_LABEL))
   }
 
   double oneTailedPValueUpper(double t) {
@@ -115,7 +114,7 @@ class TDistribution {
   }
 
   BigDecimal oneTailedPValueLower(Number t) {
-    cdf(NumericConversion.toBigDecimal(t, 't'))
+    cdf(NumericConversion.toBigDecimal(t, T_LABEL))
   }
 
   /**

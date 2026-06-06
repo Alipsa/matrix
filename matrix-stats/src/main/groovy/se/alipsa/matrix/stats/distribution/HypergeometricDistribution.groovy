@@ -7,6 +7,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class HypergeometricDistribution {
+  private static final String X_LABEL = 'x'
 
   private final int populationSize
   private final int numberOfSuccesses
@@ -43,7 +44,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal probability(Number x) {
-    BigDecimal.valueOf(probability(NumericConversion.toExactInt(x, 'x')))
+    BigDecimal.valueOf(probability(NumericConversion.toExactInt(x, X_LABEL)))
   }
 
   @Deprecated
@@ -60,7 +61,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal cumulativeProbability(Number x) {
-    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toExactInt(x, 'x')))
+    BigDecimal.valueOf(cumulativeProbability(NumericConversion.toExactInt(x, X_LABEL)))
   }
 
   @Deprecated
@@ -80,7 +81,7 @@ class HypergeometricDistribution {
   }
 
   BigDecimal upperCumulativeProbability(Number x) {
-    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toExactInt(x, 'x')))
+    BigDecimal.valueOf(upperCumulativeProbability(NumericConversion.toExactInt(x, X_LABEL)))
   }
 
   @Deprecated

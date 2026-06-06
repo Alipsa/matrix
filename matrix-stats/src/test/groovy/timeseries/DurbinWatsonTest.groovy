@@ -78,17 +78,17 @@ class DurbinWatsonTest {
     List<Double> residuals = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
 
     // Test with different alternatives
-    def resultTwoSided = DurbinWatson.test(residuals, "two.sided")
-    def resultGreater = DurbinWatson.test(residuals, "greater")
-    def resultLess = DurbinWatson.test(residuals, "less")
+    def resultTwoSided = DurbinWatson.test(residuals, 'two.sided')
+    def resultGreater = DurbinWatson.test(residuals, 'greater')
+    def resultLess = DurbinWatson.test(residuals, 'less')
 
-    assertEquals("two.sided", resultTwoSided.alternative, 'Two-sided alternative')
-    assertEquals("greater", resultGreater.alternative, 'Greater alternative')
-    assertEquals("less", resultLess.alternative, 'Less alternative')
+    assertEquals('two.sided', resultTwoSided.alternative, 'Two-sided alternative')
+    assertEquals('greater', resultGreater.alternative, 'Greater alternative')
+    assertEquals('less', resultLess.alternative, 'Less alternative')
 
     // Invalid alternative
     assertThrows(IllegalArgumentException) {
-      DurbinWatson.test(residuals, "invalid")
+      DurbinWatson.test(residuals, 'invalid')
     }
   }
 

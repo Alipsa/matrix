@@ -44,10 +44,10 @@ class EllipseTest {
 
     def result = Ellipse.calculate(xVals, yVals, 0.95, 't', 51)
 
-    assertFalse(result.x.isEmpty(), "Should generate ellipse with 3 points")
-    assertFalse(result.y.isEmpty(), "Should generate ellipse with 3 points")
-    assertEquals(51, result.x.size(), "Should generate 51 points")
-    assertEquals(51, result.y.size(), "Should generate 51 points")
+    assertFalse(result.x.isEmpty(), 'Should generate ellipse with 3 points')
+    assertFalse(result.y.isEmpty(), 'Should generate ellipse with 3 points')
+    assertEquals(51, result.x.size(), 'Should generate 51 points')
+    assertEquals(51, result.y.size(), 'Should generate 51 points')
   }
 
   @Test
@@ -62,8 +62,8 @@ class EllipseTest {
     double dx = Math.abs((result.x[0] - result.x[-1]) as double)
     double dy = Math.abs((result.y[0] - result.y[-1]) as double)
 
-    assertTrue(dx < TOLERANCE, "Ellipse X should be closed (first ≈ last)")
-    assertTrue(dy < TOLERANCE, "Ellipse Y should be closed (first ≈ last)")
+    assertTrue(dx < TOLERANCE, 'Ellipse X should be closed (first ≈ last)')
+    assertTrue(dy < TOLERANCE, 'Ellipse Y should be closed (first ≈ last)')
   }
 
   @Test
@@ -91,9 +91,9 @@ class EllipseTest {
     def maxRadius99 = calculateMaxRadius(result99.x, result99.y)
 
     // Higher confidence levels should produce larger ellipses
-    assertTrue(maxRadius50 < maxRadius90, "50% ellipse should be smaller than 90%")
-    assertTrue(maxRadius90 < maxRadius95, "90% ellipse should be smaller than 95%")
-    assertTrue(maxRadius95 < maxRadius99, "95% ellipse should be smaller than 99%")
+    assertTrue(maxRadius50 < maxRadius90, '50% ellipse should be smaller than 90%')
+    assertTrue(maxRadius90 < maxRadius95, '90% ellipse should be smaller than 95%')
+    assertTrue(maxRadius95 < maxRadius99, '95% ellipse should be smaller than 99%')
   }
 
   @Test
@@ -122,7 +122,7 @@ class EllipseTest {
     // Euclid should produce smaller ellipse than t/norm
     def maxRadiusT = calculateMaxRadius(resultT.x, resultT.y)
     def maxRadiusEuclid = calculateMaxRadius(resultEuclid.x, resultEuclid.y)
-    assertTrue(maxRadiusEuclid < maxRadiusT, "Euclid ellipse should be smaller than t-type")
+    assertTrue(maxRadiusEuclid < maxRadiusT, 'Euclid ellipse should be smaller than t-type')
   }
 
   @Test
@@ -134,8 +134,8 @@ class EllipseTest {
     def result10 = Ellipse.calculate(xVals, yVals, 0.95, 't', 10)
     def result100 = Ellipse.calculate(xVals, yVals, 0.95, 't', 100)
 
-    assertEquals(10, result10.x.size(), "Should generate 10 segments")
-    assertEquals(100, result100.x.size(), "Should generate 100 segments")
+    assertEquals(10, result10.x.size(), 'Should generate 10 segments')
+    assertEquals(100, result100.x.size(), 'Should generate 100 segments')
   }
 
   @Test
@@ -168,10 +168,10 @@ class EllipseTest {
 
     // All points should be at or very near the mean
     result.x.each { x ->
-      assertTrue(Math.abs((x - 5G) as double) < 1e-6, "X values should be near mean")
+      assertTrue(Math.abs((x - 5G) as double) < 1e-6, 'X values should be near mean')
     }
     result.y.each { y ->
-      assertTrue(Math.abs((y - 10G) as double) < 1e-6, "Y values should be near mean")
+      assertTrue(Math.abs((y - 10G) as double) < 1e-6, 'Y values should be near mean')
     }
   }
 
@@ -192,9 +192,9 @@ class EllipseTest {
 
     // Ellipse center should be very close to data mean
     assertTrue(Math.abs((ellipseCenterX - meanX) as double) < 0.1,
-               "Ellipse center X should be near data mean X")
+               'Ellipse center X should be near data mean X')
     assertTrue(Math.abs((ellipseCenterY - meanY) as double) < 0.1,
-               "Ellipse center Y should be near data mean Y")
+               'Ellipse center Y should be near data mean Y')
   }
 
   @Test
@@ -272,13 +272,13 @@ class EllipseTest {
   private void assertAllFinite(List<BigDecimal> xVals, List<BigDecimal> yVals) {
     xVals.each { x ->
       double d = x as double
-      assertFalse(Double.isNaN(d), "X value should not be NaN")
-      assertFalse(Double.isInfinite(d), "X value should not be infinite")
+      assertFalse(Double.isNaN(d), 'X value should not be NaN')
+      assertFalse(Double.isInfinite(d), 'X value should not be infinite')
     }
     yVals.each { y ->
       double d = y as double
-      assertFalse(Double.isNaN(d), "Y value should not be NaN")
-      assertFalse(Double.isInfinite(d), "Y value should not be infinite")
+      assertFalse(Double.isNaN(d), 'Y value should not be NaN')
+      assertFalse(Double.isInfinite(d), 'Y value should not be infinite')
     }
   }
 }

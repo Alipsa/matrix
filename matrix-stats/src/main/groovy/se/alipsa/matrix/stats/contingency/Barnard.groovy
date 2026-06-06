@@ -86,7 +86,7 @@ class Barnard {
     int n = n1 + n2  // Grand total
 
     if (n == 0) {
-      throw new IllegalArgumentException("Table cannot have zero total count")
+      throw new IllegalArgumentException('Table cannot have zero total count')
     }
 
     // Calculate observed Wald score statistic
@@ -258,7 +258,7 @@ class Barnard {
 
   private static void validateTable(int[][] table) {
     if (table == null) {
-      throw new IllegalArgumentException("Table cannot be null")
+      throw new IllegalArgumentException('Table cannot be null')
     }
 
     if (table.length != 2) {
@@ -307,9 +307,8 @@ class Barnard {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: No significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: No significant association detected (T = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -319,15 +318,15 @@ class Barnard {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
-      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
+      String significance = pValue < normalizedAlpha ? 'significant' : 'not significant'
 
       String.format(
         "Barnard's exact test:\\n" +
-        "Wald score statistic: %.4f\\n" +
-        "p-value: %.4f\\n" +
-        "Nuisance parameter (π): %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Conclusion: Association is %s at %.0f%% significance level",
+        'Wald score statistic: %.4f\\n' +
+        'p-value: %.4f\\n' +
+        'Nuisance parameter (π): %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Conclusion: Association is %s at %.0f%% significance level',
         statistic, pValue, nuisanceParameter, sampleSize, significance, normalizedAlpha * 100
       )
     }

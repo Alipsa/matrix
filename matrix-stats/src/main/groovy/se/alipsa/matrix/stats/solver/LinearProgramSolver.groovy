@@ -45,7 +45,7 @@ final class LinearProgramSolver {
     PhaseState phaseOne = buildPhaseOne(normalizedConstraints, normalizedRhs)
     iterateSimplex(phaseOne, phaseOne.objective, maxIterations)
     if (phaseOne.currentObjective() < -EPSILON) {
-      throw new IllegalStateException("Linear program is infeasible")
+      throw new IllegalStateException('Linear program is infeasible')
     }
 
     PhaseState phaseTwo = removeArtificialVariables(phaseOne, variableCount)
@@ -161,7 +161,7 @@ final class LinearProgramSolver {
       }
       int leaving = selectLeavingRow(state, entering)
       if (leaving < 0) {
-        throw new IllegalStateException("Linear program is unbounded")
+        throw new IllegalStateException('Linear program is unbounded')
       }
       pivot(state.tableau, leaving, entering, state.rhsColumn)
       state.basis[leaving] = entering
@@ -222,16 +222,16 @@ final class LinearProgramSolver {
 
   private static void validateInputs(double[] objective, double[][] constraints, double[] rhs, int maxIterations) {
     if (objective == null || objective.length == 0) {
-      throw new IllegalArgumentException("Objective must contain at least one variable")
+      throw new IllegalArgumentException('Objective must contain at least one variable')
     }
     if (constraints == null || rhs == null || constraints.length == 0 || constraints.length != rhs.length) {
-      throw new IllegalArgumentException("Constraints and right-hand side must have matching non-empty sizes")
+      throw new IllegalArgumentException('Constraints and right-hand side must have matching non-empty sizes')
     }
     if (!constraints.every { double[] row -> row.length == objective.length }) {
-      throw new IllegalArgumentException("Constraint rows must match the objective dimension")
+      throw new IllegalArgumentException('Constraint rows must match the objective dimension')
     }
     if (maxIterations < 1) {
-      throw new IllegalArgumentException("maxIterations must be positive")
+      throw new IllegalArgumentException('maxIterations must be positive')
     }
   }
 

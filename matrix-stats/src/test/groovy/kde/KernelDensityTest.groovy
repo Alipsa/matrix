@@ -31,41 +31,41 @@ class KernelDensityTest {
   @Test
   void testKernelEvaluation() {
     // Gaussian at u=0 should be 1/sqrt(2*pi) ≈ 0.3989
-    assertEquals(0.3989422804, Kernel.GAUSSIAN.evaluate(0) as double, 1e-6, "Gaussian at u=0")
-    assertEquals(0.2419707245, Kernel.GAUSSIAN.evaluate(1) as double, 1e-6, "Gaussian at u=1")
+    assertEquals(0.3989422804, Kernel.GAUSSIAN.evaluate(0) as double, 1e-6, 'Gaussian at u=0')
+    assertEquals(0.2419707245, Kernel.GAUSSIAN.evaluate(1) as double, 1e-6, 'Gaussian at u=1')
 
     // Epanechnikov at u=0 should be 0.75
-    assertEquals(0.75, Kernel.EPANECHNIKOV.evaluate(0) as double, TOLERANCE, "Epanechnikov at u=0")
-    assertEquals(0.0, Kernel.EPANECHNIKOV.evaluate(1.5) as double, TOLERANCE, "Epanechnikov at u=1.5")
+    assertEquals(0.75, Kernel.EPANECHNIKOV.evaluate(0) as double, TOLERANCE, 'Epanechnikov at u=0')
+    assertEquals(0.0, Kernel.EPANECHNIKOV.evaluate(1.5) as double, TOLERANCE, 'Epanechnikov at u=1.5')
 
     // Uniform at u=0 should be 0.5
-    assertEquals(0.5, Kernel.UNIFORM.evaluate(0) as double, TOLERANCE, "Uniform at u=0")
-    assertEquals(0.0, Kernel.UNIFORM.evaluate(1.5) as double, TOLERANCE, "Uniform at u=1.5")
+    assertEquals(0.5, Kernel.UNIFORM.evaluate(0) as double, TOLERANCE, 'Uniform at u=0')
+    assertEquals(0.0, Kernel.UNIFORM.evaluate(1.5) as double, TOLERANCE, 'Uniform at u=1.5')
 
     // Triangular at u=0 should be 1.0
-    assertEquals(1.0, Kernel.TRIANGULAR.evaluate(0) as double, TOLERANCE, "Triangular at u=0")
-    assertEquals(0.5, Kernel.TRIANGULAR.evaluate(0.5) as double, TOLERANCE, "Triangular at u=0.5")
-    assertEquals(0.0, Kernel.TRIANGULAR.evaluate(1.5) as double, TOLERANCE, "Triangular at u=1.5")
+    assertEquals(1.0, Kernel.TRIANGULAR.evaluate(0) as double, TOLERANCE, 'Triangular at u=0')
+    assertEquals(0.5, Kernel.TRIANGULAR.evaluate(0.5) as double, TOLERANCE, 'Triangular at u=0.5')
+    assertEquals(0.0, Kernel.TRIANGULAR.evaluate(1.5) as double, TOLERANCE, 'Triangular at u=1.5')
   }
 
   @Test
   void testKernelFromString() {
-    assertEquals(Kernel.GAUSSIAN, Kernel.fromString("gaussian"))
-    assertEquals(Kernel.GAUSSIAN, Kernel.fromString("GAUSSIAN"))
-    assertEquals(Kernel.GAUSSIAN, Kernel.fromString("normal"))
-    assertEquals(Kernel.EPANECHNIKOV, Kernel.fromString("epanechnikov"))
-    assertEquals(Kernel.EPANECHNIKOV, Kernel.fromString("epan"))
-    assertEquals(Kernel.UNIFORM, Kernel.fromString("uniform"))
-    assertEquals(Kernel.UNIFORM, Kernel.fromString("rectangular"))
-    assertEquals(Kernel.TRIANGULAR, Kernel.fromString("triangular"))
-    assertEquals(Kernel.TRIANGULAR, Kernel.fromString("triangle"))
+    assertEquals(Kernel.GAUSSIAN, Kernel.fromString('gaussian'))
+    assertEquals(Kernel.GAUSSIAN, Kernel.fromString('GAUSSIAN'))
+    assertEquals(Kernel.GAUSSIAN, Kernel.fromString('normal'))
+    assertEquals(Kernel.EPANECHNIKOV, Kernel.fromString('epanechnikov'))
+    assertEquals(Kernel.EPANECHNIKOV, Kernel.fromString('epan'))
+    assertEquals(Kernel.UNIFORM, Kernel.fromString('uniform'))
+    assertEquals(Kernel.UNIFORM, Kernel.fromString('rectangular'))
+    assertEquals(Kernel.TRIANGULAR, Kernel.fromString('triangular'))
+    assertEquals(Kernel.TRIANGULAR, Kernel.fromString('triangle'))
 
     // Default for null
     assertEquals(Kernel.GAUSSIAN, Kernel.fromString(null))
 
     // Unknown kernel should throw
     assertThrows(IllegalArgumentException) {
-      Kernel.fromString("unknown")
+      Kernel.fromString('unknown')
     }
   }
 
@@ -99,14 +99,14 @@ class KernelDensityTest {
   void testBasicKDE() {
     def kde = new KernelDensity(TEST_DATA)
 
-    assertEquals(Kernel.GAUSSIAN, kde.kernel, "Default kernel should be Gaussian")
-    assertEquals(512, kde.n, "Default n should be 512")
-    assertTrue(kde.bandwidth > 0, "Bandwidth should be positive")
-    assertEquals(TEST_DATA.size(), kde.dataCount, "Data count should match")
+    assertEquals(Kernel.GAUSSIAN, kde.kernel, 'Default kernel should be Gaussian')
+    assertEquals(512, kde.n, 'Default n should be 512')
+    assertTrue(kde.bandwidth > 0, 'Bandwidth should be positive')
+    assertEquals(TEST_DATA.size(), kde.dataCount, 'Data count should match')
 
     // Density should be non-negative everywhere
     for (BigDecimal d : kde.density) {
-      assertTrue(d >= 0, "Density should be non-negative")
+      assertTrue(d >= 0, 'Density should be non-negative')
     }
 
     // Density should integrate to approximately 1 (within reason)
@@ -146,7 +146,7 @@ class KernelDensityTest {
     def kde2 = new KernelDensity(TEST_DATA, [adjust: 2.0])
 
     assertEquals((kde1.bandwidth * 2) as double, kde2.bandwidth as double, TOLERANCE,
-        "Adjust=2 should double bandwidth")
+        'Adjust=2 should double bandwidth')
   }
 
   @Test
@@ -156,12 +156,12 @@ class KernelDensityTest {
     // Density at mean should be relatively high
     BigDecimal mean = TEST_DATA.sum() / TEST_DATA.size()
     BigDecimal densityAtMean = kde.density(mean)
-    assertTrue(densityAtMean > 0, "Density at mean should be positive")
+    assertTrue(densityAtMean > 0, 'Density at mean should be positive')
 
     // Density far from data should be low
     BigDecimal densityFarAway = kde.density(100.0)
     assertTrue(densityFarAway < densityAtMean / 100,
-        "Density far from data should be much lower than at mean")
+        'Density far from data should be much lower than at mean')
   }
 
   @Test
@@ -170,16 +170,16 @@ class KernelDensityTest {
     List<BigDecimal> points = [1.0, 2.0, 3.0]
     List<BigDecimal> densities = kde.density(points)
 
-    assertEquals(points.size(), densities.size(), "Should return same number of densities as points")
+    assertEquals(points.size(), densities.size(), 'Should return same number of densities as points')
     for (BigDecimal d : densities) {
-      assertTrue(d >= 0, "All densities should be non-negative")
+      assertTrue(d >= 0, 'All densities should be non-negative')
     }
   }
 
   @Test
   void testFromMatrix() {
     Matrix m = Matrix.builder()
-        .matrixName("test")
+        .matrixName('test')
         .columns([
             'values': TEST_DATA,
             'other': [1, 2, 3, 4, 5, 6]
@@ -188,8 +188,8 @@ class KernelDensityTest {
         .build()
 
     def kde = new KernelDensity(m, 'values')
-    assertEquals(TEST_DATA.size(), kde.dataCount, "Data count should match column length")
-    assertTrue(kde.bandwidth > 0, "Bandwidth should be positive")
+    assertEquals(TEST_DATA.size(), kde.dataCount, 'Data count should match column length')
+    assertTrue(kde.bandwidth > 0, 'Bandwidth should be positive')
   }
 
   @Test
@@ -209,13 +209,13 @@ class KernelDensityTest {
     def kde = new KernelDensity(TEST_DATA, [n: 100])
     Matrix result = kde.toMatrix()
 
-    assertEquals(100, result.rowCount(), "Result should have n rows")
-    assertEquals(['x', 'density'], result.columnNames(), "Should have x and density columns")
+    assertEquals(100, result.rowCount(), 'Result should have n rows')
+    assertEquals(['x', 'density'], result.columnNames(), 'Should have x and density columns')
 
     // Verify x values are increasing
     for (int i = 1; i < result.rowCount(); i++) {
       assertTrue((result[i, 'x'] as BigDecimal) > (result[i - 1, 'x'] as BigDecimal),
-          "X values should be increasing")
+          'X values should be increasing')
     }
   }
 
@@ -224,10 +224,10 @@ class KernelDensityTest {
     def kde = new KernelDensity(TEST_DATA, [n: 50])
     List<List<BigDecimal>> points = kde.toPointList()
 
-    assertEquals(50, points.size(), "Should return n points")
+    assertEquals(50, points.size(), 'Should return n points')
     for (List<BigDecimal> pt : points) {
-      assertEquals(2, pt.size(), "Each point should be [x, density]")
-      assertTrue(pt[1] >= 0, "Density should be non-negative")
+      assertEquals(2, pt.size(), 'Each point should be [x, density]')
+      assertTrue(pt[1] >= 0, 'Density should be non-negative')
     }
   }
 
@@ -238,15 +238,15 @@ class KernelDensityTest {
 
     // Without trim, evaluation range should extend beyond data
     assertTrue(kdeNoTrim.x[0] < kdeNoTrim.dataMin,
-        "Without trim, evaluation should start before data min")
+        'Without trim, evaluation should start before data min')
     assertTrue(kdeNoTrim.x[kdeNoTrim.n - 1] > kdeNoTrim.dataMax,
-        "Without trim, evaluation should end after data max")
+        'Without trim, evaluation should end after data max')
 
     // With trim, evaluation range should match data range
     assertTrue((kdeTrim.x[0] - kdeTrim.dataMin).abs() < 0.01,
-        "With trim, evaluation should start at data min")
+        'With trim, evaluation should start at data min')
     assertTrue((kdeTrim.x[kdeTrim.n - 1] - kdeTrim.dataMax).abs() < 0.01,
-        "With trim, evaluation should end at data max")
+        'With trim, evaluation should end at data max')
   }
 
   @Test
@@ -262,8 +262,8 @@ class KernelDensityTest {
     List<BigDecimal> dataWithNulls = [1.2, null, 2.3, null, 1.8, 2.1]
     def kde = new KernelDensity(dataWithNulls)
 
-    assertEquals(4, kde.dataCount, "Should filter out nulls")
-    assertTrue(kde.bandwidth > 0, "Should compute valid bandwidth with filtered data")
+    assertEquals(4, kde.dataCount, 'Should filter out nulls')
+    assertTrue(kde.bandwidth > 0, 'Should compute valid bandwidth with filtered data')
   }
 
   @Test
@@ -287,8 +287,8 @@ class KernelDensityTest {
     // All same values - bandwidth computation should handle this
     def kde = new KernelDensity([2.0, 2.0, 2.0, 2.0, 2.0])
 
-    assertTrue(kde.bandwidth > 0, "Bandwidth should be positive even with identical values")
-    assertTrue(kde.density(2.0) > 0, "Density at the repeated value should be positive")
+    assertTrue(kde.bandwidth > 0, 'Bandwidth should be positive even with identical values')
+    assertTrue(kde.density(2.0) > 0, 'Density at the repeated value should be positive')
   }
 
   @Test
@@ -296,9 +296,9 @@ class KernelDensityTest {
     def kde = new KernelDensity(TEST_DATA)
     String summary = kde.summary()
 
-    assertTrue(summary.contains("Kernel"), "Summary should contain kernel info")
-    assertTrue(summary.contains("Bandwidth"), "Summary should contain bandwidth")
-    assertTrue(summary.contains("Data points"), "Summary should contain data count")
+    assertTrue(summary.contains('Kernel'), 'Summary should contain kernel info')
+    assertTrue(summary.contains('Bandwidth'), 'Summary should contain bandwidth')
+    assertTrue(summary.contains('Data points'), 'Summary should contain data count')
   }
 
   @Test
@@ -306,8 +306,8 @@ class KernelDensityTest {
     def kde = new KernelDensity(TEST_DATA, [kernel: Kernel.EPANECHNIKOV])
     String str = kde
 
-    assertTrue(str.contains("EPANECHNIKOV"), "toString should contain kernel name")
-    assertTrue(str.contains("bandwidth"), "toString should contain bandwidth")
+    assertTrue(str.contains('EPANECHNIKOV'), 'toString should contain kernel name')
+    assertTrue(str.contains('bandwidth'), 'toString should contain bandwidth')
   }
 
   @Test
@@ -320,7 +320,7 @@ class KernelDensityTest {
     xCopy[0] = 999.0
 
     assertEquals(originalFirst, kde.getX()[0],
-        "Modifying returned list should not affect internal state")
+        'Modifying returned list should not affect internal state')
   }
 
   @Test
@@ -328,10 +328,10 @@ class KernelDensityTest {
     def kde = new KernelDensity(TEST_DATA)
 
     BigDecimal bw4 = kde.getBandwidth(4)
-    assertEquals(4, bw4.scale(), "Bandwidth should have 4 decimal places")
+    assertEquals(4, bw4.scale(), 'Bandwidth should have 4 decimal places')
 
     BigDecimal bw2 = kde.getBandwidth(2)
-    assertEquals(2, bw2.scale(), "Bandwidth should have 2 decimal places")
+    assertEquals(2, bw2.scale(), 'Bandwidth should have 2 decimal places')
   }
 
   @Test

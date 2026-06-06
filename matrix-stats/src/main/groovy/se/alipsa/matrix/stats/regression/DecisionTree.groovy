@@ -268,18 +268,18 @@ class DecisionTree {
   private static void validateInputs(List<? extends Number> xValues, List<? extends Number> yValues,
                                      int maxDepth, int minSamplesLeaf) {
     if (xValues == null || yValues == null) {
-      throw new IllegalArgumentException("Input data cannot be null")
+      throw new IllegalArgumentException('Input data cannot be null')
     }
 
     if (xValues.size() != yValues.size()) {
       throw new IllegalArgumentException(
-        "Must have equal number of X and Y data points. " +
+        'Must have equal number of X and Y data points. ' +
         "Got ${xValues.size()} X values and ${yValues.size()} Y values."
       )
     }
 
     if (xValues.isEmpty()) {
-      throw new IllegalArgumentException("Input data cannot be empty")
+      throw new IllegalArgumentException('Input data cannot be empty')
     }
 
     if (xValues.size() < 2) {
@@ -661,21 +661,23 @@ class DecisionTree {
    */
   String summary() {
     StringBuilder sb = new StringBuilder()
-    sb.append("Decision Tree Regression\n")
-    sb.append("========================\n\n")
-    sb.append("Parameters:\n")
-    sb.append("  maxDepth: ${maxDepth}\n")
-    sb.append("  minSamplesLeaf: ${minSamplesLeaf}\n\n")
-    sb.append("Tree Structure:\n")
-    sb.append("  Actual depth: ${depth}\n")
-    sb.append("  Number of leaves: ${leafCount}\n\n")
-    sb.append("Training Metrics:\n")
-    sb.append("  R²:   ${getRSquared(4)}\n")
-    sb.append("  MSE:  ${getMse(4)}\n")
-    sb.append("  RMSE: ${getRmse(4)}\n")
-    sb.append("  MAE:  ${getMae(4)}\n\n")
-    sb.append("Tree Rules:\n")
-    appendTreeRules(sb, root, "  ", "root")
+    sb.with {
+      append('Decision Tree Regression\n')
+      append('========================\n\n')
+      append('Parameters:\n')
+      append("  maxDepth: ${maxDepth}\n")
+      append("  minSamplesLeaf: ${minSamplesLeaf}\n\n")
+      append('Tree Structure:\n')
+      append("  Actual depth: ${depth}\n")
+      append("  Number of leaves: ${leafCount}\n\n")
+      append('Training Metrics:\n')
+      append("  R²:   ${getRSquared(4)}\n")
+      append("  MSE:  ${getMse(4)}\n")
+      append("  RMSE: ${getRmse(4)}\n")
+      append("  MAE:  ${getMae(4)}\n\n")
+      append('Tree Rules:\n')
+    }
+    appendTreeRules(sb, root, '  ', 'root')
     sb.toString()
   }
 
@@ -687,8 +689,8 @@ class DecisionTree {
       sb.append("${indent}${condition}: predict ${node.value.setScale(4, RoundingMode.HALF_EVEN)}\n")
     } else {
       sb.append("${indent}${condition}:\n")
-      appendTreeRules(sb, node.left, indent + "  ", "${x} <= ${node.threshold}")
-      appendTreeRules(sb, node.right, indent + "  ", "${x} > ${node.threshold}")
+      appendTreeRules(sb, node.left, indent + '  ', "${x} <= ${node.threshold}")
+      appendTreeRules(sb, node.right, indent + '  ', "${x} > ${node.threshold}")
     }
   }
 }

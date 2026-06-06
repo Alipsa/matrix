@@ -110,7 +110,7 @@ class KMeans {
 
   KMeans(Matrix matrix) {
     if (matrix == null || matrix.rowCount() == 0 || matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must contain data")
+      throw new IllegalArgumentException('Matrix must contain data')
     }
     this.matrix = matrix
   }
@@ -130,7 +130,7 @@ class KMeans {
     points
   }
 
-  Matrix fit(List<String> columnNames, int k, int iterations, String columnName = "Group", boolean mutate = true) {
+  Matrix fit(List<String> columnNames, int k, int iterations, String columnName = 'Group', boolean mutate = true) {
     double[][] points = extractPoints(columnNames)
     clustering = new KMeansPlusPlus.Builder(k, points)
         .iterations(iterations)
@@ -140,7 +140,7 @@ class KMeans {
     addClusterColumn(clustering, columnName, mutate)
   }
 
-  Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = "Group", boolean mutate = true) {
+  Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = 'Group', boolean mutate = true) {
     double[][] points = extractPoints(columnNames)
     clustering = new KMeansPlusPlus.Builder(points, method)
         .iterations(iterations)
@@ -154,13 +154,12 @@ class KMeans {
     List<Integer> clusterIds = clustering.assignment*.clusterId
     if (mutate) {
       return matrix.addColumn(columnName, Integer, clusterIds)
-    } else {
-      return matrix.clone().addColumn(columnName, Integer, clusterIds)
     }
+    return matrix.clone().addColumn(columnName, Integer, clusterIds)
   }
 
   String reportTime() {
-    clustering?.timing ?: "No clustering performed yet, call fit() first."
+    clustering?.timing ?: 'No clustering performed yet, call fit() first.'
   }
 
   int getExecutionTimeMillis() {

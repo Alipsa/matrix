@@ -4,6 +4,9 @@ package se.alipsa.matrix.stats.formula
  * Base type for parsed formula expressions.
  */
 abstract class FormulaExpression {
+  private static final char DOT_CHAR = '.' as char
+  private static final char UNDERSCORE_CHAR = '_' as char
+  private static final String DOT_IDENTIFIER = '.'
 
   final int start
   final int end
@@ -95,7 +98,7 @@ abstract class FormulaExpression {
 
     @Override
     String asFormulaString() {
-      "${name}(${arguments.collect { FormulaExpression arg -> arg.asFormulaString() }.join(', ')})"
+      "${name}(${arguments*.asFormulaString().join(', ')})"
     }
   }
 
@@ -179,19 +182,19 @@ abstract class FormulaExpression {
   }
 
   private static boolean isSimpleIdentifier(String name) {
-    if (name == '.') {
+    if (name == DOT_IDENTIFIER) {
       return false
     }
     char first = name.charAt(0)
-    if (!(Character.isLetter(first) || first == '_' || first == '.')) {
+    if (!(Character.isLetter(first) || first == UNDERSCORE_CHAR || first == DOT_CHAR)) {
       return false
     }
-    if (first == '.' && name.length() > 1 && Character.isDigit(name.charAt(1))) {
+    if (first == DOT_CHAR && name.length() > 1 && Character.isDigit(name.charAt(1))) {
       return false
     }
     for (int i = 1; i < name.length(); i++) {
       char value = name.charAt(i)
-      if (!(Character.isLetterOrDigit(value) || value == '_' || value == '.')) {
+      if (!(Character.isLetterOrDigit(value) || value == UNDERSCORE_CHAR || value == DOT_CHAR)) {
         return false
       }
     }

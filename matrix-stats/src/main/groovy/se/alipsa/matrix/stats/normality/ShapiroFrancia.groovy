@@ -116,14 +116,14 @@ class ShapiroFrancia {
     validateData(data)
 
     int n = data.size()
-    double[] sorted = data.collect { it.doubleValue() }.sort() as double[]
+    double[] sorted = data*.doubleValue().sort() as double[]
 
     // Calculate sample mean and variance
     double mean = StatUtils.mean(sorted)
     double variance = StatUtils.variance(sorted, mean)
 
     if (variance < 1e-10) {
-      throw new IllegalArgumentException("Data has zero variance - values are too similar or identical")
+      throw new IllegalArgumentException('Data has zero variance - values are too similar or identical')
     }
 
     // Calculate W' statistic
@@ -143,7 +143,7 @@ class ShapiroFrancia {
 
   private static void validateData(List<? extends Number> data) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (data.size() < MIN_SAMPLE_SIZE) {
       throw new IllegalArgumentException(
@@ -159,7 +159,7 @@ class ShapiroFrancia {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -234,29 +234,28 @@ class ShapiroFrancia {
       // So we need upper tail
       double pValue = 1.0 - normalDist.cumulativeProbability(z)
       return Math.max(0.0, Math.min(1.0, pValue))
-    } else {
-      // Larger sample approximation (based on Royston 1993)
-      double lnN = Math.log(n)
-
-      // Approximate mean of log(1-W') under H0 (normality)
-      // These parameters are calibrated so that under H0, the transformed
-      // statistic follows approximately N(0,1)
-      double mu = -1.5861 - 0.31082 * lnN - 0.083751 * lnN * lnN
-
-      // Approximate standard deviation
-      double sigma = Math.exp(-0.4803 - 0.082676 * lnN + 0.0030302 * lnN * lnN)
-
-      // Normalize: under H0 (normality), this should be approximately N(0,1)
-      double z = (logOneMinusW - mu) / sigma
-
-      // For this transformation, smaller W' → larger (less negative) log(1-W') → larger z → larger CDF
-      // We want smaller W' (non-normal) → smaller p-value
-      // So we use upper tail: p = P(Z > z) = 1 - Φ(z)
-      double pValue = normalDist.cumulativeProbability(z)
-
-      // Ensure p-value is in valid range
-      return Math.max(0.0, Math.min(1.0, pValue))
     }
+    // Larger sample approximation (based on Royston 1993)
+    double lnN = Math.log(n)
+
+    // Approximate mean of log(1-W') under H0 (normality)
+    // These parameters are calibrated so that under H0, the transformed
+    // statistic follows approximately N(0,1)
+    double mu = -1.5861 - 0.31082 * lnN - 0.083751 * lnN * lnN
+
+    // Approximate standard deviation
+    double sigma = Math.exp(-0.4803 - 0.082676 * lnN + 0.0030302 * lnN * lnN)
+
+    // Normalize: under H0 (normality), this should be approximately N(0,1)
+    double z = (logOneMinusW - mu) / sigma
+
+    // For this transformation, smaller W' → larger (less negative) log(1-W') → larger z → larger CDF
+    // We want smaller W' (non-normal) → smaller p-value
+    // So we use upper tail: p = P(Z > z) = 1 - Φ(z)
+    double pValue = normalDist.cumulativeProbability(z)
+
+    // Ensure p-value is in valid range
+    return Math.max(0.0, Math.min(1.0, pValue))
   }
 
   /**
@@ -289,9 +288,8 @@ class ShapiroFrancia {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: Data does not appear to be normally distributed (W' = ${String.format('%.4f', W)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: Data appears to be consistent with a normal distribution (W' = ${String.format('%.4f', W)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: Data appears to be consistent with a normal distribution (W' = ${String.format('%.4f', W)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -302,14 +300,14 @@ class ShapiroFrancia {
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = pValue < alphaValue ?
-        "not normally distributed" :
-        "consistent with a normal distribution"
+        'not normally distributed' :
+        'consistent with a normal distribution'
 
       String.format(
         "Shapiro-Francia W' statistic: %.4f\n" +
-        "p-value: %.4f\n" +
-        "Sample: n=%d, mean=%.4f, sd=%.4f\n" +
-        "Conclusion at %.0f%% level: Data appears %s",
+        'p-value: %.4f\n' +
+        'Sample: n=%d, mean=%.4f, sd=%.4f\n' +
+        'Conclusion at %.0f%% level: Data appears %s',
         W, pValue, sampleSize, mean, stdDev, alphaValue * 100, conclusion
       )
     }

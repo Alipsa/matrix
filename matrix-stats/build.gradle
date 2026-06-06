@@ -13,11 +13,6 @@ group = 'se.alipsa.matrix'
 version = '2.4.1-SNAPSHOT'
 description = "Statistical hypothesis tests based on Matrix data."
 
-codenarc {
-  // TODO: Fix ~1000 CodeNarc violations and remove this override
-  ignoreFailures = true
-}
-
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"

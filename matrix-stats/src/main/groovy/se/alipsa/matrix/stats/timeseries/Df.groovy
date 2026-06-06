@@ -66,7 +66,7 @@ class Df {
    * @param type The type of test: "none" (no intercept/trend), "drift" (intercept only), or "trend" (intercept and trend)
    * @return DfResult containing test statistic and conclusion
    */
-  static DfResult test(double[] data, String type = "drift") {
+  static DfResult test(double[] data, String type = 'drift') {
     validateInput(data, type)
     int n = data.length
     ensureVariation(data)
@@ -120,12 +120,12 @@ class Df {
 
   private static void validateInput(double[] data, String type) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.length < 10) {
       throw new IllegalArgumentException("Data must have at least 10 observations (got ${data.length})")
     }
-    if (!(type in ["none", "drift", "trend"])) {
+    if (!(type in ['none', 'drift', 'trend'])) {
       throw new IllegalArgumentException("Type must be 'none', 'drift', or 'trend' (got '${type}')")
     }
   }
@@ -142,7 +142,7 @@ class Df {
       }
     }
     if (Math.abs(yMax - yMin) < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant series)")
+      throw new IllegalArgumentException('Data has no variation (constant series)')
     }
   }
 
@@ -156,10 +156,10 @@ class Df {
 
   private static int predictorCount(String type) {
     int count = 1
-    if (type == "drift" || type == "trend") {
+    if (type == 'drift' || type == 'trend') {
       count++
     }
-    if (type == "trend") {
+    if (type == 'trend') {
       count++
     }
     count
@@ -169,10 +169,10 @@ class Df {
     double[][] designMatrix = new double[nObs][nPredictors]
     for (int i = 0; i < nObs; i++) {
       int column = 0
-      if (type == "drift" || type == "trend") {
+      if (type == 'drift' || type == 'trend') {
         designMatrix[i][column++] = 1.0
       }
-      if (type == "trend") {
+      if (type == 'trend') {
         designMatrix[i][column++] = i + 1.0
       }
       designMatrix[i][column] = data[i]
@@ -222,8 +222,8 @@ class Df {
   /**
    * Performs the Dickey-Fuller test on a List of numbers.
    */
-  static DfResult test(List<? extends Number> data, String type = "drift") {
-    double[] array = data.collect { it.doubleValue() } as double[]
+  static DfResult test(List<? extends Number> data, String type = 'drift') {
+    double[] array = data*.doubleValue() as double[]
     test(array, type)
   }
 
@@ -236,7 +236,7 @@ class Df {
     // Using MacKinnon (1996) approximation
     double[] params
 
-    if (type == "none") {
+    if (type == 'none') {
       if (significance == 0.01) {
         params = [-2.66, -2.62, -1.26, 0.00] as double[]
       } else if (significance == 0.05) {
@@ -244,7 +244,7 @@ class Df {
       } else {
         params = [-1.60, -1.62, -0.88, 0.00] as double[]  // 10%
       }
-    } else if (type == "drift") {
+    } else if (type == 'drift') {
       if (significance == 0.01) {
         params = [-3.75, -3.52, -1.79, -0.38] as double[]
       } else if (significance == 0.05) {
@@ -308,9 +308,8 @@ class Df {
 
       if (statistic != null && statistic < cv) {
         return "Reject H0: Series appears stationary (DF = ${format(statistic, '%.4f')}, CV = ${format(cv, '%.4f')})"
-      } else {
-        return "Fail to reject H0: Unit root likely present, series appears non-stationary (DF = ${format(statistic, '%.4f')}, CV = ${format(cv, '%.4f')})"
       }
+      return "Fail to reject H0: Unit root likely present, series appears non-stationary (DF = ${format(statistic, '%.4f')}, CV = ${format(cv, '%.4f')})"
     }
 
     /**
@@ -318,15 +317,15 @@ class Df {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = statistic != null && statistic < criticalValue5pct ? "stationary" : "non-stationary (unit root present)"
+      String conclusion = statistic != null && statistic < criticalValue5pct ? 'stationary' : 'non-stationary (unit root present)'
 
       String.format(
-        "Dickey-Fuller test:\\n" +
-        "Test type: %s\\n" +
-        "DF statistic: %.4f\\n" +
-        "Critical values: 1%% = %.4f, 5%% = %.4f, 10%% = %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Conclusion: Series appears %s at %.0f%% significance level",
+        'Dickey-Fuller test:\\n' +
+        'Test type: %s\\n' +
+        'DF statistic: %.4f\\n' +
+        'Critical values: 1%% = %.4f, 5%% = %.4f, 10%% = %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Conclusion: Series appears %s at %.0f%% significance level',
         testType, statistic ?: Double.NaN, criticalValue1pct, criticalValue5pct, criticalValue10pct,
         sampleSize, conclusion, (alphaValue * 100) as double
       )

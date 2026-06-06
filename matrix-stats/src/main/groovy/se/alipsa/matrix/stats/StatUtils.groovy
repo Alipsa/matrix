@@ -8,6 +8,7 @@ package se.alipsa.matrix.stats
  * {@link se.alipsa.matrix.core.Stat} instead.</p>
  */
 final class StatUtils {
+  private static final double ZERO_VALUE = 0.0d
 
   private StatUtils() {
   }
@@ -22,8 +23,8 @@ final class StatUtils {
   static double mean(double[] values) {
     validateNotEmpty(values, 'Mean')
 
-    double sum = 0.0d
-    double compensation = 0.0d
+    double sum = ZERO_VALUE
+    double compensation = ZERO_VALUE
     for (double value : values) {
       double adjusted = value - compensation
       double nextSum = sum + adjusted
@@ -55,7 +56,7 @@ final class StatUtils {
   static double variance(double[] values, double mean) {
     validateForVariance(values)
 
-    double sumSquaredDeviation = 0.0d
+    double sumSquaredDeviation = ZERO_VALUE
     for (double value : values) {
       double deviation = value - mean
       sumSquaredDeviation += deviation * deviation
@@ -71,7 +72,7 @@ final class StatUtils {
 
   private static void validateForVariance(double[] values) {
     if (values == null || values.length < 2) {
-      throw new IllegalArgumentException("Variance requires at least two observations")
+      throw new IllegalArgumentException('Variance requires at least two observations')
     }
   }
 }

@@ -416,9 +416,9 @@ final class ModelFrame {
 
   private static List<List<FormulaExpression>> cartesianProduct(List<List<FormulaExpression>> lists) {
     if (lists.isEmpty()) {
-      return [[]]
+      return emptyProduct()
     }
-    List<List<FormulaExpression>> result = [[]]
+    List<List<FormulaExpression>> result = emptyProduct()
     for (List<FormulaExpression> list : lists) {
       List<List<FormulaExpression>> newResult = []
       for (List<FormulaExpression> existing : result) {
@@ -431,6 +431,10 @@ final class ModelFrame {
       result = newResult
     }
     result
+  }
+
+  private static List<List<FormulaExpression>> emptyProduct() {
+    [[]]
   }
 
   private List<String> computeDotColumns(

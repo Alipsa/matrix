@@ -38,7 +38,7 @@ class AndersonDarling {
     int n = data.size()
 
     // Calculate sample mean and standard deviation
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
     double mean = values.sum() / n
     double variance = 0.0
     for (double val : values) {
@@ -110,21 +110,22 @@ class AndersonDarling {
   private static double calculatePValue(double adjustedASquared) {
     if (adjustedASquared < 0.2) {
       return 1.0 - Math.exp(-13.436 + 101.14 * adjustedASquared - 223.73 * adjustedASquared * adjustedASquared)
-    } else if (adjustedASquared < 0.34) {
-      return 1.0 - Math.exp(-8.318 + 42.796 * adjustedASquared - 59.938 * adjustedASquared * adjustedASquared)
-    } else if (adjustedASquared < 0.6) {
-      return Math.exp(0.9177 - 4.279 * adjustedASquared - 1.38 * adjustedASquared * adjustedASquared)
-    } else {
-      return Math.exp(1.2937 - 5.709 * adjustedASquared + 0.0186 * adjustedASquared * adjustedASquared)
     }
+    if (adjustedASquared < 0.34) {
+      return 1.0 - Math.exp(-8.318 + 42.796 * adjustedASquared - 59.938 * adjustedASquared * adjustedASquared)
+    }
+    if (adjustedASquared < 0.6) {
+      return Math.exp(0.9177 - 4.279 * adjustedASquared - 1.38 * adjustedASquared * adjustedASquared)
+    }
+    return Math.exp(1.2937 - 5.709 * adjustedASquared + 0.0186 * adjustedASquared * adjustedASquared)
   }
 
   private static void validateInput(List<? extends Number> data) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 3) {
       throw new IllegalArgumentException("Anderson-Darling test requires at least 3 observations, got ${data.size()}")
@@ -132,7 +133,7 @@ class AndersonDarling {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -170,23 +171,22 @@ class AndersonDarling {
      */
     String evaluate() {
       if (pValue < alpha) {
-        return String.format("Reject H0: Data does not appear to be normally distributed (p = %.4f < α = %.2f)",
-                             pValue, alpha)
-      } else {
-        return String.format("Fail to reject H0: Data appears to be normally distributed (p = %.4f >= α = %.2f)",
+        return String.format('Reject H0: Data does not appear to be normally distributed (p = %.4f < α = %.2f)',
                              pValue, alpha)
       }
+      return String.format('Fail to reject H0: Data appears to be normally distributed (p = %.4f >= α = %.2f)',
+                           pValue, alpha)
     }
 
     @Override
     String toString() {
       """Anderson-Darling Normality Test
   Sample size: ${sampleSize}
-  Sample mean: ${String.format("%.4f", mean)}
-  Sample SD: ${String.format("%.4f", stdDev)}
-  Test statistic (A²): ${String.format("%.4f", statistic)}
-  Adjusted statistic (A²*): ${String.format("%.4f", adjustedStatistic)}
-  P-value: ${String.format("%.4f", pValue)}
+  Sample mean: ${String.format('%.4f', mean)}
+  Sample SD: ${String.format('%.4f', stdDev)}
+  Test statistic (A²): ${String.format('%.4f', statistic)}
+  Adjusted statistic (A²*): ${String.format('%.4f', adjustedStatistic)}
+  P-value: ${String.format('%.4f', pValue)}
 
   ${evaluate()}"""
     }

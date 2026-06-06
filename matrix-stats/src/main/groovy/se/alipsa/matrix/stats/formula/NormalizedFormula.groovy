@@ -29,7 +29,7 @@ final class NormalizedFormula {
    */
   String asFormulaString() {
     List<String> parts = [includeIntercept ? '1' : '0']
-    parts.addAll(predictorTerms.collect { FormulaTerm term -> term.asFormulaString() })
+    parts.addAll(predictorTerms*.asFormulaString())
     "${response.asFormulaString()} ~ ${parts.join(' + ')}"
   }
 

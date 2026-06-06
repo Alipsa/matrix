@@ -27,7 +27,7 @@ class AdfTest {
     assertNotNull(result, 'Result should not be null')
     assertEquals(50, result.sampleSize, 'Sample size')
     assertEquals(0, result.lag, 'Default lag')
-    assertEquals("drift", result.type, 'Default type')
+    assertEquals('drift', result.type, 'Default type')
     assertTrue(result.statistic != 0, 'Statistic should be non-zero')
   }
 
@@ -88,7 +88,7 @@ class AdfTest {
 
     // Invalid type
     assertThrows(IllegalArgumentException) {
-      Adf.test(validData, 0, "invalid")
+      Adf.test(validData, 0, 'invalid')
     }
   }
 
@@ -101,13 +101,13 @@ class AdfTest {
       data.add(i * 0.5 + rnd.nextGaussian() * 2.0)
     }
 
-    def resultDrift = Adf.test(data, 0, "drift")
-    def resultTrend = Adf.test(data, 0, "trend")
-    def resultNone = Adf.test(data, 0, "none")
+    def resultDrift = Adf.test(data, 0, 'drift')
+    def resultTrend = Adf.test(data, 0, 'trend')
+    def resultNone = Adf.test(data, 0, 'none')
 
-    assertEquals("drift", resultDrift.type, 'Type should be drift')
-    assertEquals("trend", resultTrend.type, 'Type should be trend')
-    assertEquals("none", resultNone.type, 'Type should be none')
+    assertEquals('drift', resultDrift.type, 'Type should be drift')
+    assertEquals('trend', resultTrend.type, 'Type should be trend')
+    assertEquals('none', resultNone.type, 'Type should be none')
 
     // Critical values should be different for different types
     assertTrue(resultNone.criticalValue > resultDrift.criticalValue,
@@ -152,10 +152,10 @@ class AdfTest {
       data.add(value)
     }
 
-    def result = Adf.test(data, 1, "trend")
+    def result = Adf.test(data, 1, 'trend')
 
     assertEquals(1, result.lag, 'Lag')
-    assertEquals("trend", result.type, 'Type')
+    assertEquals('trend', result.type, 'Type')
     assertEquals(50, result.sampleSize, 'Sample size')
     assertNotNull(result.statistic, 'Statistic should not be null')
     assertNotNull(result.gammaCoefficient, 'Gamma coefficient should not be null')
@@ -265,8 +265,8 @@ class AdfTest {
       largeSample.add(val)
     }
 
-    def resultSmall = Adf.test(smallSample, 0, "drift")
-    def resultLarge = Adf.test(largeSample, 0, "drift")
+    def resultSmall = Adf.test(smallSample, 0, 'drift')
+    def resultLarge = Adf.test(largeSample, 0, 'drift')
 
     // Small sample should have more negative critical value
     assertTrue(resultSmall.criticalValue < resultLarge.criticalValue,

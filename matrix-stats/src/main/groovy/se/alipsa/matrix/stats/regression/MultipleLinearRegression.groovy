@@ -149,10 +149,10 @@ class MultipleLinearRegression {
 
   private static void validateInputs(double[] response, double[][] predictors) {
     if (response == null || predictors == null) {
-      throw new IllegalArgumentException("Response vector and design matrix cannot be null")
+      throw new IllegalArgumentException('Response vector and design matrix cannot be null')
     }
     if (response.length == 0) {
-      throw new IllegalArgumentException("Response vector cannot be empty")
+      throw new IllegalArgumentException('Response vector cannot be empty')
     }
     if (predictors.length != response.length) {
       throw new IllegalArgumentException(
@@ -160,7 +160,7 @@ class MultipleLinearRegression {
       )
     }
     if (predictors.length == 0 || predictors[0].length == 0) {
-      throw new IllegalArgumentException("Design matrix must contain at least one predictor")
+      throw new IllegalArgumentException('Design matrix must contain at least one predictor')
     }
 
     int columnCount = predictors[0].length
@@ -171,7 +171,7 @@ class MultipleLinearRegression {
     }
     for (double[] row : predictors) {
       if (row.length != columnCount) {
-        throw new IllegalArgumentException("Design matrix rows must all have the same length")
+        throw new IllegalArgumentException('Design matrix rows must all have the same length')
       }
     }
   }

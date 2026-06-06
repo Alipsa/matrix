@@ -221,7 +221,7 @@ class Section45BenchmarkTest {
     int columnCount = values[0].length
     Matrix.builder()
       .columnNames((0..<columnCount).collect { int idx -> "c${idx}" })
-      .rows(values.collect { double[] row -> row.toList() })
+      .rows(values*.toList())
       .types((0..<columnCount).collect { Double })
       .build()
   }

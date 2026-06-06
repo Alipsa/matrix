@@ -29,10 +29,10 @@ class KMeansComparisonTest {
     def matrixGroups = matrixKMeans.assignment.toList().countBy { it.clusterId }
     def matrixWCSS = matrixKMeans.WCSS
 
-    println "\nMatrix KMeans:"
+    println '\nMatrix KMeans:'
     println "Group sizes: $matrixGroups"
     println "WCSS: $matrixWCSS"
-    println "Centroids: ${matrixCentroids.collect { it.toList() }}"
+    println "Centroids: ${matrixCentroids*.toList()}"
 
     // ✅ Use Smile's built-in fit method for KMeans
     def smileKMeans = KMeans.fit(points, k, 100)
@@ -41,10 +41,10 @@ class KMeansComparisonTest {
     def smileGroups = smileLabels.countBy { it }
     def smileWCSS = smileKMeans.distortion()
 
-    println "\nSMILE KMeans:"
+    println '\nSMILE KMeans:'
     println "Group sizes: $smileGroups"
     println "WCSS: $smileWCSS"
-    println "Centroids: ${smileCentroids.collect { it.toList() }}"
+    println "Centroids: ${smileCentroids*.toList()}"
 
     List<double[]> matchedSmileCentroids = []
 

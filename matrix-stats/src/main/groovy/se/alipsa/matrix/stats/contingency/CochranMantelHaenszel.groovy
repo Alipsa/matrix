@@ -140,7 +140,7 @@ class CochranMantelHaenszel {
       int n = a + b + c + d  // Total for this stratum
 
       if (n == 0) {
-        throw new IllegalArgumentException("Stratum has zero total count")
+        throw new IllegalArgumentException('Stratum has zero total count')
       }
 
       int r1 = a + b  // Row 1 total
@@ -170,7 +170,7 @@ class CochranMantelHaenszel {
     }
 
     if (sumVariance < 1e-10) {
-      throw new IllegalArgumentException("Total variance is too small - data may have no variation")
+      throw new IllegalArgumentException('Total variance is too small - data may have no variation')
     }
 
     // Calculate CMH statistic
@@ -197,7 +197,7 @@ class CochranMantelHaenszel {
 
   private static void validateInput(List<int[][]> strata) {
     if (strata == null || strata.isEmpty()) {
-      throw new IllegalArgumentException("Strata list cannot be null or empty")
+      throw new IllegalArgumentException('Strata list cannot be null or empty')
     }
 
     for (int i = 0; i < strata.size(); i++) {
@@ -264,9 +264,8 @@ class CochranMantelHaenszel {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected across strata (χ² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: No significant association detected across strata (χ² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: No significant association detected across strata (χ² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -276,32 +275,32 @@ class CochranMantelHaenszel {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
-      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
+      String significance = pValue < normalizedAlpha ? 'significant' : 'not significant'
       String oddsRatioStr = commonOddsRatio == null ?
-        "undefined" :
-        String.format("%.4f", commonOddsRatio)
+        'undefined' :
+        String.format('%.4f', commonOddsRatio)
 
-      String direction = ""
+      String direction = ''
       if (commonOddsRatio != null) {
         if (commonOddsRatio > 1) {
-          direction = " (positive association)"
+          direction = ' (positive association)'
         } else if (commonOddsRatio < 1) {
-          direction = " (negative association)"
+          direction = ' (negative association)'
         } else {
-          direction = " (no association)"
+          direction = ' (no association)'
         }
       }
 
       String.format(
-        "Cochran-Mantel-Haenszel test:\n" +
-        "χ² statistic: %.4f\n" +
-        "p-value: %.4f\n" +
-        "Common odds ratio: %s%s\n" +
-        "Strata: %d\n" +
-        "Continuity correction: %s\n" +
-        "Conclusion: Association is %s at %.0f%% significance level",
+        'Cochran-Mantel-Haenszel test:\n' +
+        'χ² statistic: %.4f\n' +
+        'p-value: %.4f\n' +
+        'Common odds ratio: %s%s\n' +
+        'Strata: %d\n' +
+        'Continuity correction: %s\n' +
+        'Conclusion: Association is %s at %.0f%% significance level',
         statistic, pValue, oddsRatioStr, direction, strata,
-        continuityCorrection ? "yes" : "no",
+        continuityCorrection ? 'yes' : 'no',
         significance, normalizedAlpha * 100
       )
     }
@@ -309,7 +308,7 @@ class CochranMantelHaenszel {
     @Override
     String toString() {
       String oddsRatioStr = commonOddsRatio == null ?
-        "undefined" :
+        'undefined' :
         String.format('%.4f', commonOddsRatio)
 
       """Cochran-Mantel-Haenszel Test

@@ -69,7 +69,7 @@ class Chow {
    */
   static ChowResult test(double[] y, double[][] X, int breakPoint) {
     if (y == null || X == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
 
     int n = y.length
@@ -118,7 +118,7 @@ class Chow {
     double denominator = (rss1 + rss2) / (n - 2 * k)
 
     if (denominator < 1e-10) {
-      throw new IllegalArgumentException("Denominator too small - perfect fit in sub-models")
+      throw new IllegalArgumentException('Denominator too small - perfect fit in sub-models')
     }
 
     double fStatistic = numerator / denominator
@@ -145,8 +145,8 @@ class Chow {
    * Performs the Chow test with automatic conversion of List inputs.
    */
   static ChowResult test(List<? extends Number> y, List<List<? extends Number>> X, int breakPoint) {
-    double[] yArray = y.collect { it.doubleValue() } as double[]
-    double[][] XArray = X.collect { row -> row.collect { it.doubleValue() } as double[] } as double[][]
+    double[] yArray = y*.doubleValue() as double[]
+    double[][] XArray = X.collect { row -> row*.doubleValue() as double[] } as double[][]
     test(yArray, XArray, breakPoint)
   }
 
@@ -194,9 +194,8 @@ class Chow {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: Structural break detected at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: No evidence of structural break at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: No evidence of structural break at observation ${breakPoint} (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -204,19 +203,19 @@ class Chow {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < alphaValue ? "structural break present" : "no structural break detected"
+      String conclusion = pValue < alphaValue ? 'structural break present' : 'no structural break detected'
 
       String.format(
-        "Chow test:\\n" +
-        "Break point: %d\\n" +
-        "F-statistic: %.4f\\n" +
-        "p-value: %.4f\\n" +
-        "Degrees of freedom: (%d, %d)\\n" +
-        "RSS full model: %.4f\\n" +
-        "RSS sub-models: %.4f + %.4f = %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Number of parameters: %d\\n" +
-        "Conclusion: %s at %.0f%% significance level",
+        'Chow test:\\n' +
+        'Break point: %d\\n' +
+        'F-statistic: %.4f\\n' +
+        'p-value: %.4f\\n' +
+        'Degrees of freedom: (%d, %d)\\n' +
+        'RSS full model: %.4f\\n' +
+        'RSS sub-models: %.4f + %.4f = %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Number of parameters: %d\\n' +
+        'Conclusion: %s at %.0f%% significance level',
         breakPoint, statistic, pValue, df1, df2,
         rssFull, rss1, rss2, rss1 + rss2,
         sampleSize, numParameters,

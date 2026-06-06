@@ -293,7 +293,7 @@ class KMeansPlusPlus {
      */
     Builder(double[][] points, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW) {
       if (points == null || points.length == 0 || points[0].length == 0) {
-        throw new IllegalArgumentException("Input data must be non-null and contain at least one point with one dimension.")
+        throw new IllegalArgumentException('Input data must be non-null and contain at least one point with one dimension.')
       }
 
       this.points = points
@@ -321,7 +321,7 @@ class KMeansPlusPlus {
      */
     Builder(int k, double[][] points) {
       if (points == null || points.length == 0 || points[0].length == 0) {
-        throw new IllegalArgumentException("Input data must be non-null and contain at least one point with one dimension.")
+        throw new IllegalArgumentException('Input data must be non-null and contain at least one point with one dimension.')
       }
 
       if (k > points.length) {
@@ -364,7 +364,7 @@ class KMeansPlusPlus {
      */
     Builder iterations(int iterations) {
       if (iterations < 1) {
-        throw new IllegalArgumentException("Required: non-negative number of iterations. Ex: 50")
+        throw new IllegalArgumentException('Required: non-negative number of iterations. Ex: 50')
       }
       this.iterations = iterations
       this
@@ -401,7 +401,7 @@ class KMeansPlusPlus {
     Builder epsilon(Number epsilon) {
       double normalizedEpsilon = NumericConversion.toFiniteDouble(epsilon, 'epsilon')
       if (normalizedEpsilon < 0.0d) {
-        throw new IllegalArgumentException("Required: non-negative value of epsilon. Ex: .001")
+        throw new IllegalArgumentException('Required: non-negative value of epsilon. Ex: .001')
       }
 
       this.epsilon = normalizedEpsilon
@@ -691,9 +691,8 @@ class KMeansPlusPlus {
   private boolean stop(double prevWCSS) {
     if (useEpsilon) {
       return epsilonTest(prevWCSS)
-    } else {
-      return prevWCSS == wcss
     }
+    return prevWCSS == wcss
   }
 
   /**
@@ -734,7 +733,7 @@ class KMeansPlusPlus {
      */
     static double manhattanDistance(double[] x, double[] y) {
       if (x.length != y.length) {
-        throw new IllegalArgumentException("dimension error")
+        throw new IllegalArgumentException('dimension error')
       }
       double dist = 0
       for (int i = 0; i < x.length; i++) {
@@ -752,7 +751,7 @@ class KMeansPlusPlus {
      */
     static double euclideanDistance(double[] x, double[] y) {
       if (x.length != y.length) {
-        throw new IllegalArgumentException("dimension error")
+        throw new IllegalArgumentException('dimension error')
       }
       double dist = 0
       for (int i = 0; i < x.length; i++) {
@@ -814,7 +813,7 @@ class KMeansPlusPlus {
 
     Map<Integer, Matrix> result = [:]
     grouped.each { Integer clusterId, List<double[]> pointList ->
-      List<List<Double>> rows = pointList.collect { double[] row -> row.toList() }
+      List<List<Double>> rows = pointList*.toList()
       result[clusterId] = Matrix.builder("Cluster $clusterId").data(rows).build()
     }
     result
@@ -872,7 +871,7 @@ class KMeansPlusPlus {
    * @return a string indicating the time taken for KMeans++ clustering
    */
   String getTiming() {
-    "KMeans++ took: " + getExecutionTimeMillis() / 1000.0 + " seconds"
+    'KMeans++ took: ' + getExecutionTimeMillis() / 1000.0 + ' seconds'
   }
 
   /**

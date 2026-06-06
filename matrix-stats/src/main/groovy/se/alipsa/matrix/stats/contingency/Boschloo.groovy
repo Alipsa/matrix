@@ -100,7 +100,7 @@ class Boschloo {
     int n = n1 + n2  // Grand total
 
     if (n == 0) {
-      throw new IllegalArgumentException("Table cannot have zero total count")
+      throw new IllegalArgumentException('Table cannot have zero total count')
     }
 
     // Calculate Fisher's exact p-value for the observed table
@@ -273,7 +273,7 @@ class Boschloo {
 
   private static void validateTable(int[][] table) {
     if (table == null) {
-      throw new IllegalArgumentException("Table cannot be null")
+      throw new IllegalArgumentException('Table cannot be null')
     }
 
     if (table.length != 2) {
@@ -322,9 +322,8 @@ class Boschloo {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
       if (pValue < normalizedAlpha) {
         return "Reject H0: Significant association detected (p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: No significant association detected (p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: No significant association detected (p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -334,15 +333,15 @@ class Boschloo {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal normalizedAlpha = NumericConversion.toAlpha(alpha)
-      String significance = pValue < normalizedAlpha ? "significant" : "not significant"
+      String significance = pValue < normalizedAlpha ? 'significant' : 'not significant'
 
       String.format(
         "Boschloo's exact test:\\n" +
-        "p-value: %.4f\\n" +
+        'p-value: %.4f\\n' +
         "Fisher's p-value: %.4f\\n" +
-        "Nuisance parameter (π): %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Conclusion: Association is %s at %.0f%% significance level",
+        'Nuisance parameter (π): %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Conclusion: Association is %s at %.0f%% significance level',
         pValue, fisherPValue, nuisanceParameter, sampleSize, significance, normalizedAlpha * 100
       )
     }

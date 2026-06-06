@@ -40,7 +40,7 @@ class CramerVonMises {
     int n = data.size()
 
     // Convert to array and calculate sample mean and standard deviation
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
 
     double mean = 0.0
     for (double val : values) {
@@ -57,7 +57,7 @@ class CramerVonMises {
     double stdDev = Math.sqrt(variance)
 
     if (stdDev < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant or near-constant values)")
+      throw new IllegalArgumentException('Data has no variation (constant or near-constant values)')
     }
 
     // Sort the data
@@ -117,22 +117,26 @@ class CramerVonMises {
     } else if (wSquared < 0.051) {
       // Linear interpolation in the lower range
       return 1.0 - (wSquared - 0.0275) / (0.051 - 0.0275) * 0.75
-    } else if (wSquared < 0.093) {
-      return 0.25 - (wSquared - 0.051) / (0.093 - 0.051) * 0.15
-    } else if (wSquared < 0.158) {
-      return 0.10 - (wSquared - 0.093) / (0.158 - 0.093) * 0.05
-    } else if (wSquared < 0.241) {
-      return 0.05 - (wSquared - 0.158) / (0.241 - 0.158) * 0.025
-    } else if (wSquared < 0.347) {
-      return 0.025 - (wSquared - 0.241) / (0.347 - 0.241) * 0.015
-    } else if (wSquared < 0.461) {
-      return 0.01 - (wSquared - 0.347) / (0.461 - 0.347) * 0.005
-    } else {
-      // For very large values, use asymptotic approximation
-      // P ≈ exp(-W²*/2) for large W²*
-      double p = Math.exp(-wSquared / 2.0)
-      return Math.max(0.001, p)
     }
+    if (wSquared < 0.093) {
+      return 0.25 - (wSquared - 0.051) / (0.093 - 0.051) * 0.15
+    }
+    if (wSquared < 0.158) {
+      return 0.10 - (wSquared - 0.093) / (0.158 - 0.093) * 0.05
+    }
+    if (wSquared < 0.241) {
+      return 0.05 - (wSquared - 0.158) / (0.241 - 0.158) * 0.025
+    }
+    if (wSquared < 0.347) {
+      return 0.025 - (wSquared - 0.241) / (0.347 - 0.241) * 0.015
+    }
+    if (wSquared < 0.461) {
+      return 0.01 - (wSquared - 0.347) / (0.461 - 0.347) * 0.005
+    }
+    // For very large values, use asymptotic approximation
+    // P ≈ exp(-W²*/2) for large W²*
+    double p = Math.exp(-wSquared / 2.0)
+    return Math.max(0.001, p)
   }
 
   /**
@@ -143,25 +147,28 @@ class CramerVonMises {
   private static double getCriticalValue(double alpha) {
     if (alpha >= 0.25) {
       return 0.051
-    } else if (alpha >= 0.10) {
-      return 0.093
-    } else if (alpha >= 0.05) {
-      return 0.158
-    } else if (alpha >= 0.025) {
-      return 0.241
-    } else if (alpha >= 0.01) {
-      return 0.347
-    } else {
-      return 0.461  // alpha = 0.005
     }
+    if (alpha >= 0.10) {
+      return 0.093
+    }
+    if (alpha >= 0.05) {
+      return 0.158
+    }
+    if (alpha >= 0.025) {
+      return 0.241
+    }
+    if (alpha >= 0.01) {
+      return 0.347
+    }
+    return 0.461  // alpha = 0.005
   }
 
   private static void validateInput(List<? extends Number> data) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 3) {
       throw new IllegalArgumentException("Cramér-von Mises test requires at least 3 observations, got ${data.size()}")
@@ -169,7 +176,7 @@ class CramerVonMises {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -210,9 +217,8 @@ class CramerVonMises {
     String interpret() {
       if (statistic > criticalValue) {
         return "Reject H0: Data does not appear to be normally distributed (p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: Data appears to be consistent with a normal distribution (p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: Data appears to be consistent with a normal distribution (p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -222,14 +228,14 @@ class CramerVonMises {
      */
     String evaluate() {
       String conclusion = statistic > criticalValue ?
-        "not normally distributed" :
-        "consistent with a normal distribution"
+        'not normally distributed' :
+        'consistent with a normal distribution'
 
       String.format(
-        "Cramér-von Mises W²*: %.4f (critical value: %.3f at %.0f%% level)\n" +
-        "p-value: %.4f\n" +
-        "Sample: n=%d, mean=%.4f, sd=%.4f\n" +
-        "Conclusion: Data appears %s",
+        'Cramér-von Mises W²*: %.4f (critical value: %.3f at %.0f%% level)\n' +
+        'p-value: %.4f\n' +
+        'Sample: n=%d, mean=%.4f, sd=%.4f\n' +
+        'Conclusion: Data appears %s',
         statistic, criticalValue, alpha * 100, pValue,
         sampleSize, mean, stdDev, conclusion
       )

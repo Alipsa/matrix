@@ -67,9 +67,9 @@ class LillieforsTest {
   @Test
   void testDifferentSampleSizes() {
     // Test with different sample sizes
-    List<Double> small = (1..10).collect { it.doubleValue() }
-    List<Double> medium = (1..50).collect { it.doubleValue() }
-    List<Double> large = (1..100).collect { it.doubleValue() }
+    List<Double> small = (1..10)*.doubleValue()
+    List<Double> medium = (1..50)*.doubleValue()
+    List<Double> large = (1..100)*.doubleValue()
 
     def resultSmall = Lilliefors.testNormality(small)
     def resultMedium = Lilliefors.testNormality(medium)

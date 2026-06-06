@@ -82,7 +82,7 @@ class TurningPoint {
    */
   static TurningPointResult test(double[] data) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
 
     int n = data.length
@@ -138,7 +138,7 @@ class TurningPoint {
    * Performs the Turning Point test with List input.
    */
   static TurningPointResult test(List<? extends Number> data) {
-    double[] array = data.collect { it.doubleValue() } as double[]
+    double[] array = data*.doubleValue() as double[]
     test(array)
   }
 
@@ -182,11 +182,10 @@ class TurningPoint {
     String interpret(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
-        String direction = turningPoints > expectedTurningPoints ? "more" : "fewer"
+        String direction = turningPoints > expectedTurningPoints ? 'more' : 'fewer'
         return "Reject H0: Data shows ${direction} turning points than expected under randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: Data is consistent with randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: Data is consistent with randomness (Z = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -194,24 +193,24 @@ class TurningPoint {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < alphaValue ? "data is not random" : "data is consistent with randomness"
-      String direction = turningPoints > expectedTurningPoints ? "cyclicity" : "trend"
+      String conclusion = pValue < alphaValue ? 'data is not random' : 'data is consistent with randomness'
+      String direction = turningPoints > expectedTurningPoints ? 'cyclicity' : 'trend'
 
       String.format(
-        "Turning Point test:\\n" +
-        "Sample size: %d\\n" +
-        "Turning points observed: %d (peaks: %d, troughs: %d)\\n" +
-        "Expected under H0: %.4f\\n" +
-        "Variance: %.4f\\n" +
-        "Z-statistic: %.4f\\n" +
-        "p-value: %.4f\\n" +
-        "Conclusion: %s at %.0f%% significance level\\n" +
-        "Note: %s turning points may suggest %s",
+        'Turning Point test:\\n' +
+        'Sample size: %d\\n' +
+        'Turning points observed: %d (peaks: %d, troughs: %d)\\n' +
+        'Expected under H0: %.4f\\n' +
+        'Variance: %.4f\\n' +
+        'Z-statistic: %.4f\\n' +
+        'p-value: %.4f\\n' +
+        'Conclusion: %s at %.0f%% significance level\\n' +
+        'Note: %s turning points may suggest %s',
         sampleSize, turningPoints, peaks, troughs,
         expectedTurningPoints, variance,
         statistic, pValue,
         conclusion, (alphaValue * 100) as double,
-        turningPoints > expectedTurningPoints ? "More" : "Fewer",
+        turningPoints > expectedTurningPoints ? 'More' : 'Fewer',
         direction
       )
     }

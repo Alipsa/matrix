@@ -39,17 +39,17 @@ class StudentEqualVarianceTest {
     assertEquals("Student's two sample t-test", result.description)
 
     // Verify degrees of freedom (n1 + n2 - 2 = 8 + 8 - 2 = 14)
-    assertEquals(14, result.df as int, "Degrees of freedom")
+    assertEquals(14, result.df as int, 'Degrees of freedom')
 
     // Verify t-statistic (from R reference)
-    assertEquals(0.84731855, result.getT(8), "t-statistic")
+    assertEquals(0.84731855, result.getT(8), 't-statistic')
 
     // Verify p-value (from R reference: 0.4111, allowing small tolerance for numerical precision)
-    assertEquals(0.4111, result.pVal, 0.001, "p-value")
+    assertEquals(0.4111, result.pVal, 0.001, 'p-value')
 
     // Verify means
-    assertEquals(5.0, result.getMean1(1), "mean1")
-    assertEquals(4.0, result.getMean2(1), "mean2")
+    assertEquals(5.0, result.getMean1(1), 'mean1')
+    assertEquals(4.0, result.getMean2(1), 'mean2')
   }
 
   /**
@@ -79,19 +79,19 @@ class StudentEqualVarianceTest {
     assertEquals("Student's two sample t-test", result.description)
 
     // Verify degrees of freedom
-    assertEquals(6, result.df as int, "df should be n1+n2-2 = 4+4-2 = 6")
+    assertEquals(6, result.df as int, 'df should be n1+n2-2 = 4+4-2 = 6')
 
     // Both groups have equal variance (approximately 2.666667)
-    assertEquals(2.66666667, result.getVar1(8), "var1")
-    assertEquals(2.66666667, result.getVar2(8), "var2")
+    assertEquals(2.66666667, result.getVar1(8), 'var1')
+    assertEquals(2.66666667, result.getVar2(8), 'var2')
 
     // Verify t-statistic is negative (group1 mean < group2 mean)
-    assertTrue(result.t < 0, "t should be negative")
+    assertTrue(result.t < 0, 't should be negative')
 
     // With equal variances and equal sample sizes, the pooled variance
     // should equal the individual variances
     // t = (10-15) / sqrt(2.666667 * (1/4 + 1/4)) = -5 / sqrt(1.333333) = -4.33
-    assertEquals(-4.33012702, result.getT(8), "t-statistic")
+    assertEquals(-4.33012702, result.getT(8), 't-statistic')
   }
 
   /**
@@ -115,7 +115,7 @@ class StudentEqualVarianceTest {
     assertEquals("Welch's two sample t-test", welchResult.description)
 
     // With truly equal variances, t-statistics should be very close
-    assertEquals(studentResult.t, welchResult.t, 0.01, "t-statistics should be similar")
+    assertEquals(studentResult.t, welchResult.t, 0.01, 't-statistics should be similar')
 
     // But degrees of freedom will differ
     assertTrue(Math.abs(studentResult.df - welchResult.df) < 0.5,
@@ -135,9 +135,9 @@ class StudentEqualVarianceTest {
     def result = Student.tTest(group1, group2, null)
 
     // Should detect equal variance and use Student's t-test
-    assertTrue(result.description.contains("equal variance") ||
+    assertTrue(result.description.contains('equal variance') ||
                result.df == (group1.size() + group2.size() - 2),
-               "Should auto-detect equal variance")
+               'Should auto-detect equal variance')
   }
 
   /**
@@ -152,9 +152,9 @@ class StudentEqualVarianceTest {
     def result = Student.tTest(group1, group2, true)
 
     // Verify df = n1 + n2 - 2 = 3 + 5 - 2 = 6
-    assertEquals(6, result.df as int, "df should be n1+n2-2 = 6")
-    assertEquals(3, result.n1, "n1")
-    assertEquals(5, result.n2, "n2")
+    assertEquals(6, result.df as int, 'df should be n1+n2-2 = 6')
+    assertEquals(3, result.n1, 'n1')
+    assertEquals(5, result.n2, 'n2')
     assertEquals("Student's two sample t-test", result.description)
   }
 
@@ -169,13 +169,13 @@ class StudentEqualVarianceTest {
     def result = Student.tTest(group1, group2, true)
 
     // Verify result is both Student.Result and TtestResult
-    assertTrue(result instanceof Student.Result, "Should be Student.Result")
-    assertTrue(result instanceof TtestResult, "Should also be TtestResult (via inheritance)")
+    assertTrue(result instanceof Student.Result, 'Should be Student.Result')
+    assertTrue(result instanceof TtestResult, 'Should also be TtestResult (via inheritance)')
 
     // Verify backwards compatibility - Student.Result can be assigned to TtestResult
     TtestResult ttestResult = result
-    assertNotNull(ttestResult, "Should be assignable to TtestResult")
-    assertEquals(result.tVal, ttestResult.tVal, "tVal should match")
+    assertNotNull(ttestResult, 'Should be assignable to TtestResult')
+    assertEquals(result.tVal, ttestResult.tVal, 'tVal should match')
   }
 
   /**
@@ -191,10 +191,10 @@ class StudentEqualVarianceTest {
       Student.tTest(group1, group2, false)
     }
 
-    assertTrue(exception.message.contains("Welch.tTest()"),
-               "Exception should direct user to Welch.tTest()")
-    assertTrue(exception.message.contains("equal variances"),
-               "Exception should mention equal variance requirement")
+    assertTrue(exception.message.contains('Welch.tTest()'),
+               'Exception should direct user to Welch.tTest()')
+    assertTrue(exception.message.contains('equal variances'),
+               'Exception should mention equal variance requirement')
   }
 
   /**
@@ -210,9 +210,9 @@ class StudentEqualVarianceTest {
       Student.tTest(group1, group2, null)
     }
 
-    assertTrue(exception.message.contains("Welch.tTest()"),
-               "Exception should direct user to Welch.tTest()")
-    assertTrue(exception.message.contains("differ significantly"),
-               "Exception should mention variances differ")
+    assertTrue(exception.message.contains('Welch.tTest()'),
+               'Exception should direct user to Welch.tTest()')
+    assertTrue(exception.message.contains('differ significantly'),
+               'Exception should mention variances differ')
   }
 }

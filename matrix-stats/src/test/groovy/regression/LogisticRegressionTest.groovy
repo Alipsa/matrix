@@ -234,8 +234,8 @@ class LogisticRegressionTest {
 
   private static double[] apacheLogisticFit(List<? extends Number> xValues, List<? extends Number> yValues) {
     int n = xValues.size()
-    double[] x = xValues.collect { it.doubleValue() } as double[]
-    double[] y = yValues.collect { it.doubleValue() } as double[]
+    double[] x = xValues*.doubleValue() as double[]
+    double[] y = yValues*.doubleValue() as double[]
 
     MultivariateFunction negativeLogLikelihood = new MultivariateFunction() {
       @Override

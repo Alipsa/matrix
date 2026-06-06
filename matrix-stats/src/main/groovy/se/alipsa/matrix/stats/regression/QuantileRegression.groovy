@@ -197,7 +197,7 @@ class QuantileRegression {
     // Validation
     if (xValues.size() != yValues.size()) {
       throw new IllegalArgumentException(
-        "Must have equal number of X and Y data points for quantile regression. " +
+        'Must have equal number of X and Y data points for quantile regression. ' +
         "Got ${xValues.size()} X values and ${yValues.size()} Y values."
       )
     }
@@ -288,7 +288,7 @@ class QuantileRegression {
     } catch (Exception e) {
       throw new IllegalStateException(
         "Failed to solve quantile regression for tau=${tau}. " +
-        "This may be due to numerical instability or degenerate data. " +
+        'This may be due to numerical instability or degenerate data. ' +
         "Error: ${e.message}", e
       )
     }

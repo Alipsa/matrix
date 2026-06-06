@@ -64,14 +64,14 @@ class NormalizeTest {
 
   @Test
   void testLogNormZeroes() {
-    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], Byte)), "Byte should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], Short)), "Short should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.toIntegers([0, 0, 0])), "Integer should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm([0f, 0f, 0f]), "Float should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm([0l, 0l, 0l]), "Long should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm([0.0d, 0d, 0d]), "Double should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], BigInteger)), "BigInteger should be null")
-    assertIterableEquals([null]*3, Normalize.logNorm([0.0g, 0.0g, 0.0g]), "BigDecimal should be null")
+    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm([0f, 0f, 0f]), 'Float should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm([0l, 0l, 0l]), 'Long should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm([0.0d, 0d, 0d]), 'Double should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.logNorm(ListConverter.convert([0, 0, 0], BigInteger)), 'BigInteger should be null')
+    assertIterableEquals([null]*3, Normalize.logNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }
 
   @Test
@@ -114,14 +114,14 @@ class NormalizeTest {
 
   @Test
   void testMinMaxNormZeroes() {
-    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Byte)) : "Byte should be NaN"
-    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Short)) : "Short should be NaN"
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0i, 0i, 0i]) : "Integer should be NaN"
-    assert [Float.NaN]*3 == Normalize.minMaxNorm([0f, 0f, 0f]) : "Float should be NaN"
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0d, 0d, 0d]) : "Double should be NaN"
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0l, 0l, 0l]) : "Long should be NaN"
-    assert [null]*3 == Normalize.minMaxNorm([0G, 0G, 0G]) : "BigInteger should be null"
-    assert [null]*3 == Normalize.minMaxNorm([0.0g, 0.0g, 0.0g]) : "BigDecimal should be null"
+    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Byte)) : 'Byte should be NaN'
+    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Short)) : 'Short should be NaN'
+    assert [Double.NaN]*3 == Normalize.minMaxNorm([0i, 0i, 0i]) : 'Integer should be NaN'
+    assert [Float.NaN]*3 == Normalize.minMaxNorm([0f, 0f, 0f]) : 'Float should be NaN'
+    assert [Double.NaN]*3 == Normalize.minMaxNorm([0d, 0d, 0d]) : 'Double should be NaN'
+    assert [Double.NaN]*3 == Normalize.minMaxNorm([0l, 0l, 0l]) : 'Long should be NaN'
+    assert [null]*3 == Normalize.minMaxNorm([0G, 0G, 0G]) : 'BigInteger should be null'
+    assert [null]*3 == Normalize.minMaxNorm([0.0g, 0.0g, 0.0g]) : 'BigDecimal should be null'
   }
 
   @Test
@@ -194,14 +194,14 @@ class NormalizeTest {
 
   @Test
   void testStdScaleNormZeroes() {
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], Byte)), "Byte should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], Short)), "Short should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.toIntegers([0, 0, 0])), "Integer should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0f, 0f, 0f]), "Float should be null")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0.0d, 0d, 0d]), "Double should be null")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0l, 0l, 0l]), "Long should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], BigInteger)), "BigInteger should be null")
-    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0.0g, 0.0g, 0.0g]), "BigDecimal should be null")
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0f, 0f, 0f]), 'Float should be null')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0.0d, 0d, 0d]), 'Double should be null')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0l, 0l, 0l]), 'Long should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm(ListConverter.convert([0, 0, 0], BigInteger)), 'BigInteger should be null')
+    assertIterableEquals([null]*3, Normalize.stdScaleNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }
 
   @Test
@@ -245,14 +245,14 @@ class NormalizeTest {
 
   @Test
   void testMeanNormZeroes() {
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Byte)), "Byte should be -Infinity")
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Short)), "Short should be -Infinity")
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), "Integer should be -Infinity")
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0f, 0f, 0f]), "Float should be null")
-    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0.0d, 0d, 0d]), "Double should be null")
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0l, 0l, 0l]), "Long should be -Infinity")
-    assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], BigInteger)), "BigInteger should be null")
-    assertIterableEquals([null]*3, Normalize.meanNorm([0.0g, 0.0g, 0.0g]), "BigDecimal should be null")
+    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be -Infinity')
+    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be -Infinity')
+    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
+    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0f, 0f, 0f]), 'Float should be null')
+    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0.0d, 0d, 0d]), 'Double should be null')
+    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0l, 0l, 0l]), 'Long should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], BigInteger)), 'BigInteger should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }
 
   @Test

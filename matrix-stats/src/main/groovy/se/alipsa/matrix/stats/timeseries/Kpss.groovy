@@ -27,11 +27,11 @@ class Kpss {
    * @param lags The number of lags for long-run variance estimation (default: auto-selected based on sample size)
    * @return KpssResult containing test statistic and conclusion
    */
-  static KpssResult test(List<? extends Number> data, String type = "level", Integer lags = null) {
+  static KpssResult test(List<? extends Number> data, String type = 'level', Integer lags = null) {
     validateInput(data, type)
 
     int n = data.size()
-    double[] y = data.collect { it.doubleValue() } as double[]
+    double[] y = data*.doubleValue() as double[]
 
     // Auto-select lags if not specified
     // Rule of thumb: l = floor(4 * (T/100)^(1/4))
@@ -78,7 +78,7 @@ class Kpss {
   private static double[] detrend(double[] y, String type, int n) {
     double[] residuals = new double[n]
 
-    if (type == "level") {
+    if (type == 'level') {
       // Remove mean
       double mean = 0.0
       for (double val : y) {
@@ -151,19 +151,18 @@ class Kpss {
    * Values from Kwiatkowski et al. (1992).
    */
   private static double getCriticalValue(String type) {
-    if (type == "level") {
+    if (type == 'level') {
       return 0.463  // 5% critical value for level stationarity
-    } else { // trend
-      return 0.146  // 5% critical value for trend stationarity
     }
+    return 0.146  // 5% critical value for trend stationarity
   }
 
   private static void validateInput(List<? extends Number> data, String type) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 10) {
       throw new IllegalArgumentException("KPSS test requires at least 10 observations, got ${data.size()}")
@@ -174,7 +173,7 @@ class Kpss {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -205,10 +204,9 @@ class Kpss {
      */
     String interpret() {
       if (statistic > criticalValue) {
-        return "Reject H0: Series appears to have a unit root (non-stationary)"
-      } else {
-        return "Fail to reject H0: Series appears to be ${type}-stationary"
+        return 'Reject H0: Series appears to have a unit root (non-stationary)'
       }
+      return "Fail to reject H0: Series appears to be ${type}-stationary"
     }
 
     /**
@@ -218,10 +216,10 @@ class Kpss {
      */
     String evaluate() {
       String conclusion = statistic > criticalValue ?
-        "non-stationary (unit root present)" :
+        'non-stationary (unit root present)' :
         "${type}-stationary"
 
-      String.format("KPSS statistic: %.4f (critical value: %.3f at 5%% level)\nLags used: %d\nConclusion: Series appears %s",
+      String.format('KPSS statistic: %.4f (critical value: %.3f at 5%% level)\nLags used: %d\nConclusion: Series appears %s',
                            statistic, criticalValue, lags, conclusion)
     }
 
@@ -231,8 +229,8 @@ class Kpss {
   Type: ${type}
   Sample size: ${sampleSize}
   Lags: ${lags}
-  KPSS statistic: ${String.format("%.4f", statistic)}
-  Critical value (5%%): ${String.format("%.3f", criticalValue)}
+  KPSS statistic: ${String.format('%.4f', statistic)}
+  Critical value (5%%): ${String.format('%.3f', criticalValue)}
 
   ${interpret()}"""
     }

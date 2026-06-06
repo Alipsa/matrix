@@ -76,7 +76,7 @@ class Ccm {
    */
   static CcmResult test(double[] x, double[] y, int E = 3, int tau = 1, List<Integer> librarySizes = null) {
     if (x == null || y == null) {
-      throw new IllegalArgumentException("Time series cannot be null")
+      throw new IllegalArgumentException('Time series cannot be null')
     }
 
     if (x.length != y.length) {
@@ -454,45 +454,47 @@ class Ccm {
      */
     String interpret() {
       StringBuilder sb = new StringBuilder()
-      sb.append("Convergent Cross Mapping Results:\n")
-      sb.append("=" * 60).append("\n\n")
+      sb.with {
+        append('Convergent Cross Mapping Results:\n')
+        append('=' * 60).append('\n\n')
 
-      sb.append("Configuration:\n")
-      sb.append("  Embedding dimension (E): ${embeddingDim}\n")
-      sb.append("  Time lag (tau): ${timeLag}\n")
-      sb.append("  Series length: ${seriesLength}\n")
-      sb.append("  Library sizes: ${librarySizes.join(', ')}\n\n")
+        append('Configuration:\n')
+        append("  Embedding dimension (E): ${embeddingDim}\n")
+        append("  Time lag (tau): ${timeLag}\n")
+        append("  Series length: ${seriesLength}\n")
+        append("  Library sizes: ${librarySizes.join(', ')}\n\n")
 
-      sb.append("Cross-map Skills:\n")
-      sb.append("-" * 60).append("\n")
-      sb.append(String.format("%-15s %-20s %-20s\n", "Library Size", "X|M(Y) (Y→X)", "Y|M(X) (X→Y)"))
-      sb.append("-" * 60).append("\n")
+        append('Cross-map Skills:\n')
+        append('-' * 60).append('\n')
+        append(String.format('%-15s %-20s %-20s\n', 'Library Size', 'X|M(Y) (Y→X)', 'Y|M(X) (X→Y)'))
+        append('-' * 60).append('\n')
+      }
 
       for (int i = 0; i < librarySizes.size(); i++) {
         String xVal = xmapY[i] != null ? String.format('%.4f', xmapY[i]) : 'NaN'
         String yVal = ymapX[i] != null ? String.format('%.4f', ymapX[i]) : 'NaN'
-        sb.append(String.format("%-15d %-20s %-20s\n", librarySizes[i], xVal, yVal))
+        sb.append(String.format('%-15d %-20s %-20s\n', librarySizes[i], xVal, yVal))
       }
 
-      sb.append("\n")
-      sb.append("Interpretation:\n")
-      sb.append("-" * 60).append("\n")
+      sb.append('\n')
+      sb.append('Interpretation:\n')
+      sb.append('-' * 60).append('\n')
 
       boolean xToY = xCausesY()
       boolean yToX = yCausesX()
 
       if (xToY && yToX) {
-        sb.append("Bidirectional causality: Both X and Y appear to causally influence each other\n")
+        sb.append('Bidirectional causality: Both X and Y appear to causally influence each other\n')
       } else if (xToY) {
-        sb.append("Unidirectional causality: X appears to causally drive Y\n")
+        sb.append('Unidirectional causality: X appears to causally drive Y\n')
       } else if (yToX) {
-        sb.append("Unidirectional causality: Y appears to causally drive X\n")
+        sb.append('Unidirectional causality: Y appears to causally drive X\n')
       } else {
-        sb.append("No clear causal relationship detected\n")
+        sb.append('No clear causal relationship detected\n')
       }
 
-      sb.append("\nNote: CCM detects causality via state space reconstruction.\n")
-      sb.append("Positive, increasing cross-map skill indicates causal influence.\n")
+      sb.append('\nNote: CCM detects causality via state space reconstruction.\n')
+      sb.append('Positive, increasing cross-map skill indicates causal influence.\n')
 
       sb.toString()
     }

@@ -51,15 +51,15 @@ class Student {
    */
   static PairedResult pairedTTest(List<? extends Number> first, List<? extends Number> second) {
     if (first == null || second == null) {
-      throw new IllegalArgumentException("Input lists cannot be null")
+      throw new IllegalArgumentException('Input lists cannot be null')
     }
     if (first.isEmpty() || second.isEmpty()) {
-      throw new IllegalArgumentException("Input lists cannot be empty")
+      throw new IllegalArgumentException('Input lists cannot be empty')
     }
     Integer n1 = first.size()
     Integer n2 = second.size()
     if (n1 != n2) {
-      throw new IllegalArgumentException("The two lists of values are of different size")
+      throw new IllegalArgumentException('The two lists of values are of different size')
     }
     if (n1 < 2) {
       throw new IllegalArgumentException("Paired t-test requires at least 2 pairs of observations, got: $n1")
@@ -83,21 +83,31 @@ class Student {
 
     // Use native TDistribution for p-value calculation
     def p = TDistribution.pValue(t as double, df as double)
-    PairedResult result = new PairedResult()
-    result.description = "Paired t-test"
-    result.tVal = t
-    result.n1 = n1
-    result.n2 = n2
-    result.mean1 = mean1.stripTrailingZeros()
-    result.mean2 = mean2.stripTrailingZeros()
-    result.var1 = var1
-    result.var2 = var2
-    result.sd = sd
-    result.sd1 = sd1
-    result.sd2 = sd2
-    result.pVal = p
-    result.df = df
-    result
+    int firstCount = n1
+    int secondCount = n2
+    BigDecimal firstMean = mean1.stripTrailingZeros()
+    BigDecimal secondMean = mean2.stripTrailingZeros()
+    BigDecimal firstVariance = var1
+    BigDecimal secondVariance = var2
+    BigDecimal pooledSd = sd
+    BigDecimal firstSd = sd1
+    BigDecimal secondSd = sd2
+    BigDecimal degreesFreedom = df
+    new PairedResult(
+      description: 'Paired t-test',
+      tVal: t,
+      n1: firstCount,
+      n2: secondCount,
+      mean1: firstMean,
+      mean2: secondMean,
+      var1: firstVariance,
+      var2: secondVariance,
+      sd: pooledSd,
+      sd1: firstSd,
+      sd2: secondSd,
+      pVal: p,
+      df: degreesFreedom
+    )
   }
 
   /**
@@ -122,10 +132,10 @@ class Student {
    */
   static Result tTest(List<? extends Number> first, List<? extends Number> second, Boolean equalVariance = null) {
     if (first == null || second == null) {
-      throw new IllegalArgumentException("Input lists cannot be null")
+      throw new IllegalArgumentException('Input lists cannot be null')
     }
     if (first.isEmpty() || second.isEmpty()) {
-      throw new IllegalArgumentException("Input lists cannot be empty")
+      throw new IllegalArgumentException('Input lists cannot be empty')
     }
     if (first.size() < 2 || second.size() < 2) {
       throw new IllegalArgumentException("Each sample must have at least 2 observations, got: first=${first.size()}, second=${second.size()}")
@@ -148,39 +158,45 @@ class Student {
       if (!isEqualVariance) {
         throw new IllegalArgumentException(
           "Student's t-test requires equal variances. Variances differ significantly (var1=${var1}, var2=${var2}). " +
-          "Use se.alipsa.matrix.stats.ttest.Welch.tTest() instead for unequal variances."
+          'Use se.alipsa.matrix.stats.ttest.Welch.tTest() instead for unequal variances.'
         )
       }
     } else if (!equalVariance) {
       throw new IllegalArgumentException(
         "Student's t-test requires equal variances (equalVariance=true). " +
-        "Use se.alipsa.matrix.stats.ttest.Welch.tTest() instead for unequal variances."
+        'Use se.alipsa.matrix.stats.ttest.Welch.tTest() instead for unequal variances.'
       )
     } else {
       isEqualVariance = true
     }
 
-    Result result = new Result()
-
     // Student's t-test with pooled variance
-    result.description = "Student's two sample t-test"
     BigDecimal pooledVar = ((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2)
     BigDecimal t = (mean1 - mean2) / (pooledVar * (1.0/n1 + 1.0/n2)).sqrt()
-    result.tVal = t
-    result.df = n1 + n2 - 2
-
-    result.mean1 = mean1
-    result.mean2 = mean2
-    result.var1 = var1
-    result.var2 = var2
-    result.sd1 = sd1
-    result.sd2 = sd2
-    result.n1 = n1
-    result.n2 = n2
-
-    // Use native TDistribution for p-value calculation
-    result.pVal = TDistribution.pValue(result.tVal as double, result.df as double)
-    result
+    BigDecimal degreesFreedom = n1 + n2 - 2
+    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    int firstCount = n1
+    int secondCount = n2
+    BigDecimal firstMean = mean1
+    BigDecimal secondMean = mean2
+    BigDecimal firstVariance = var1
+    BigDecimal secondVariance = var2
+    BigDecimal firstSd = sd1
+    BigDecimal secondSd = sd2
+    new Result(
+      description: "Student's two sample t-test",
+      tVal: t,
+      df: degreesFreedom,
+      mean1: firstMean,
+      mean2: secondMean,
+      var1: firstVariance,
+      var2: secondVariance,
+      sd1: firstSd,
+      sd2: secondSd,
+      n1: firstCount,
+      n2: secondCount,
+      pVal: p
+    )
   }
 
   /**
@@ -201,13 +217,13 @@ class Student {
    */
   static SingleResult tTest(List<? extends Number> values, Number comparison) {
     if (values == null) {
-      throw new IllegalArgumentException("Input list cannot be null")
+      throw new IllegalArgumentException('Input list cannot be null')
     }
     if (values.isEmpty()) {
-      throw new IllegalArgumentException("Input list cannot be empty")
+      throw new IllegalArgumentException('Input list cannot be empty')
     }
     if (comparison == null) {
-      throw new IllegalArgumentException("Comparison value cannot be null")
+      throw new IllegalArgumentException('Comparison value cannot be null')
     }
 
     int n = values.size()
@@ -219,16 +235,23 @@ class Student {
     BigDecimal sd = variance.sqrt()
     BigDecimal dividend = mean - (comparison as BigDecimal)
     BigDecimal divisor = sd / (n as BigDecimal).sqrt()
-    SingleResult result = new SingleResult("One Sample t-test")
-    result.tVal = dividend / divisor
-    result.mean = mean
-    result.var = variance
-    result.sd = sd
-    result.n = n
-    result.df = n - 1
-    // Use native TDistribution for p-value calculation
-    result.pVal = TDistribution.pValue(result.tVal as double, result.df as double)
-    result
+    BigDecimal t = dividend / divisor
+    int degreesFreedom = n - 1
+    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    BigDecimal sampleMean = mean
+    BigDecimal sampleVariance = variance
+    BigDecimal sampleSd = sd
+    int sampleSize = n
+    new SingleResult(
+      description: 'One Sample t-test',
+      tVal: t,
+      mean: sampleMean,
+      var: sampleVariance,
+      sd: sampleSd,
+      n: sampleSize,
+      df: degreesFreedom,
+      pVal: p
+    )
   }
 
   /**
@@ -248,6 +271,9 @@ class Student {
     BigDecimal pVal
     Integer df
     String description
+
+    SingleResult() {
+    }
 
     SingleResult(String description) {
       this.description = description
