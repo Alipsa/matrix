@@ -5,7 +5,7 @@ package se.alipsa.matrix.stats.solver
  */
 class GoalSeek {
   private static final double MIDPOINT_DIVISOR = 2.0d
-  private static final double ZERO_VALUE = 0.0d
+  private static final double ROOT_TARGET = 0.0d
 
   /**
    * Provides similar functionality to the excel/calc goal seek function.
@@ -82,10 +82,10 @@ class GoalSeek {
     double lowValue = function.value(low)
     double highValue = function.value(high)
 
-    if (lowValue == ZERO_VALUE) {
+    if (lowValue == ROOT_TARGET) {
       return low
     }
-    if (highValue == ZERO_VALUE) {
+    if (highValue == ROOT_TARGET) {
       return high
     }
 
@@ -95,7 +95,7 @@ class GoalSeek {
         candidate = low + (high - low) / MIDPOINT_DIVISOR
       }
       double candidateValue = function.value(candidate)
-      if (candidateValue == ZERO_VALUE) {
+      if (candidateValue == ROOT_TARGET) {
         return candidate
       }
       if (Math.signum(candidateValue) == Math.signum(lowValue)) {
