@@ -12,25 +12,25 @@ class CsvExporterTest {
   void exportCsv() {
     StringWriter writer = new StringWriter()
     CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.DEFAULT, writer)
-    def content = writer.toString().split("\r\n")
+    def content = writer.toString().split('\r\n')
     assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
-    assertEquals('Volvo 142E,21.4,4,121,109,4.11,2.78,18.6,1,1,4,2', content[content.length -1])
+    assertEquals('Volvo 142E,21.4,4,121,109,4.11,2.78,18.6,1,1,4,2', content.last())
   }
 
   @Test
   void exportToFile() {
     File file = File.createTempFile('mtcars', '.csv')
     CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.MYSQL, file)
-    def content = file.text.split("\n")
+    def content = file.text.split('\n')
     assertEquals('model\tmpg\tcyl\tdisp\thp\tdrat\twt\tqsec\tvs\tam\tgear\tcarb', content[0])
-    assertEquals('Volvo 142E\t21.4\t4\t121\t109\t4.11\t2.78\t18.6\t1\t1\t4\t2', content[content.length -1])
+    assertEquals('Volvo 142E\t21.4\t4\t121\t109\t4.11\t2.78\t18.6\t1\t1\t4\t2', content.last())
     file.delete()
 
     file = File.createTempFile('mtcars', '.csv')
     CsvExporter.exportToCsv(Dataset.mtcars(), file)
-    content = file.text.split("\r\n")
+    content = file.text.split('\r\n')
     assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
-    assertEquals('Volvo 142E,21.4,4,121,109,4.11,2.78,18.6,1,1,4,2', content[content.length -1])
+    assertEquals('Volvo 142E,21.4,4,121,109,4.11,2.78,18.6,1,1,4,2', content.last())
     file.delete()
   }
 
@@ -57,7 +57,7 @@ class CsvExporterTest {
     CsvExporter.exportToCsv(matrix, writer)
 
     def content = writer.toString().trim()
-    assertEquals('id,name', content, "Should export just headers for empty matrix")
+    assertEquals('id,name', content, 'Should export just headers for empty matrix')
   }
 
   // Phase 2c: Export Variations
@@ -66,10 +66,10 @@ class CsvExporterTest {
   void testExportWithoutHeader() {
     StringWriter writer = new StringWriter()
     CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.DEFAULT, writer, false)
-    def content = writer.toString().split("\r\n")
+    def content = writer.toString().split('\r\n')
     // First line should be data, not headers
-    assertTrue(content[0].startsWith('Mazda'), "First line should be data when withHeader=false")
-    assertFalse(content[0].contains('model'), "Should not contain header row")
+    assertTrue(content[0].startsWith('Mazda'), 'First line should be data when withHeader=false')
+    assertFalse(content[0].contains('model'), 'Should not contain header row')
   }
 
   @Test
@@ -81,13 +81,13 @@ class CsvExporterTest {
 
       // Check the file exists
       File[] files = tempDir.listFiles()
-      assertNotNull(files, "Directory should contain files")
-      assertTrue(files.length > 0, "Directory should not be empty")
+      assertNotNull(files, 'Directory should contain files')
+      assertTrue(files.length > 0, 'Directory should not be empty')
 
       File exportedFile = new File(tempDir, 'mtcars.csv')
-      assertTrue(exportedFile.exists(), "File should be created in directory with matrix name")
+      assertTrue(exportedFile.exists(), 'File should be created in directory with matrix name')
 
-      def content = exportedFile.text.split("\r\n")
+      def content = exportedFile.text.split('\r\n')
       assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
     } finally {
       tempDir.deleteDir()
@@ -106,7 +106,7 @@ class CsvExporterTest {
       File exportedFile = new File(tempDir, 'custom-name.csv')
       assertTrue(exportedFile.exists(), "File should use matrix name: ${tempDir.listFiles()*.name}")
 
-      def content = exportedFile.text.split("\r\n")
+      def content = exportedFile.text.split('\r\n')
       assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
     } finally {
       tempDir.deleteDir()
@@ -121,7 +121,7 @@ class CsvExporterTest {
     CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.DEFAULT, printWriter)
     printWriter.flush()
 
-    def content = stringWriter.toString().split("\r\n")
+    def content = stringWriter.toString().split('\r\n')
     assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
   }
 
@@ -133,8 +133,8 @@ class CsvExporterTest {
         .build()
 
     CsvExporter.exportToCsv(Dataset.mtcars(), format, writer)
-    def content = writer.toString().split("\r\n")
-    assertTrue(content[0].contains(';'), "Should use semicolon delimiter")
+    def content = writer.toString().split('\r\n')
+    assertTrue(content[0].contains(';'), 'Should use semicolon delimiter')
     assertEquals('model;mpg;cyl;disp;hp;drat;wt;qsec;vs;am;gear;carb', content[0])
   }
 
@@ -156,7 +156,7 @@ class CsvExporterTest {
 
     CsvExporter.exportToCsv(matrix, format, writer)
     def content = writer.toString()
-    assertTrue(content.contains("'"), "Should use single quote character")
+    assertTrue(content.contains("'"), 'Should use single quote character')
   }
 
   @Test
@@ -184,11 +184,11 @@ class CsvExporterTest {
     File file = File.createTempFile('excel', '.csv')
     try {
       CsvExporter.exportToExcelCsv(Dataset.mtcars(), file)
-      def content = file.text.split("\r\n")
+      def content = file.text.split('\r\n')
       // Excel format uses comma delimiter and CRLF line endings
-      assertTrue(content[0].contains(','), "Should use comma delimiter")
+      assertTrue(content[0].contains(','), 'Should use comma delimiter')
       assertEquals('"model","mpg","cyl","disp","hp","drat","wt","qsec","vs","am","gear","carb"', content[0])
-      assertTrue(content[content.length - 1].startsWith('"Volvo 142E"'), "Last row should be Volvo")
+      assertTrue(content.last().startsWith('"Volvo 142E"'), 'Last row should be Volvo')
     } finally {
       file.delete()
     }
@@ -201,10 +201,10 @@ class CsvExporterTest {
       CsvExporter.exportToTsv(Dataset.mtcars(), file)
       def content = file.text
       // TDF format uses tab delimiter
-      assertTrue(content.contains('\t'), "Should use tab delimiter")
+      assertTrue(content.contains('\t'), 'Should use tab delimiter')
       assertTrue(content.startsWith('model\tmpg\tcyl\tdisp\thp\tdrat\twt\tqsec\tvs\tam\tgear\tcarb'),
-          "Should start with header row")
-      assertTrue(content.contains('Volvo 142E'), "Should contain Volvo data")
+          'Should start with header row')
+      assertTrue(content.contains('Volvo 142E'), 'Should contain Volvo data')
     } finally {
       file.delete()
     }
@@ -215,10 +215,10 @@ class CsvExporterTest {
     File file = File.createTempFile('excel-noheader', '.csv')
     try {
       CsvExporter.exportToExcelCsv(Dataset.mtcars(), file, false)
-      def content = file.text.split("\r\n")
+      def content = file.text.split('\r\n')
       // First line should be data, not headers
-      assertTrue(content[0].startsWith('"Mazda'), "First line should be data when withHeader=false")
-      assertFalse(content[0].contains('model'), "Should not contain header row")
+      assertTrue(content[0].startsWith('"Mazda'), 'First line should be data when withHeader=false')
+      assertFalse(content[0].contains('model'), 'Should not contain header row')
     } finally {
       file.delete()
     }

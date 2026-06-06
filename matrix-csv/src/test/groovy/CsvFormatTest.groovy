@@ -28,9 +28,9 @@ Bob,25'''
 
     Matrix matrix = CsvReader.read().fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], matrix.columnNames(), "Column names")
-    assertEquals(['Alice', '30'], matrix.row(0), "first row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], matrix.columnNames(), 'Column names')
+    assertEquals(['Alice', '30'], matrix.row(0), 'first row')
   }
 
   @Test
@@ -43,9 +43,9 @@ Bob,25'''
         .delimiter(';')
         .fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), "Column names")
-    assertEquals(['2', 'Bob', '200.00'], matrix.row(1), "last row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), 'Column names')
+    assertEquals(['2', 'Bob', '200.00'], matrix.row(1), 'last row')
   }
 
   @Test
@@ -57,52 +57,52 @@ Bob,25'''
         .firstRowAsHeader(false)
         .fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['c0', 'c1', 'c2'], matrix.columnNames(), "Auto-generated column names")
-    assertEquals(['1', 'Alice', '100.00'], matrix.row(0), "first row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['c0', 'c1', 'c2'], matrix.columnNames(), 'Auto-generated column names')
+    assertEquals(['1', 'Alice', '100.00'], matrix.row(0), 'first row')
   }
 
   @Test
   void readFromFile() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
 
     Matrix matrix = CsvReader.read().from(file)
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
-    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], matrix.row(3), "last row")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], matrix.row(3), 'last row')
   }
 
   @Test
   void readFromPath() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
 
     Matrix matrix = CsvReader.read().from(file.toPath())
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
   void readFromUrl() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
 
     Matrix matrix = CsvReader.read().from(url)
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
   void readFromUrlString() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
 
     Matrix matrix = CsvReader.read().fromUrl(url.toString())
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -114,9 +114,9 @@ Bob,25'''
     InputStream is = new ByteArrayInputStream(csvContent.bytes)
     Matrix matrix = CsvReader.read().from(is)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], matrix.columnNames(), "Column names")
-    assertEquals(['Bob', '25'], matrix.row(1), "last row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], matrix.columnNames(), 'Column names')
+    assertEquals(['Bob', '25'], matrix.row(1), 'last row')
   }
 
   @Test
@@ -128,36 +128,36 @@ Bob,25'''
     StringReader reader = new StringReader(csvContent)
     Matrix matrix = CsvReader.read().from(reader)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'age'], matrix.columnNames(), "Column names")
-    assertEquals(['Alice', '30'], matrix.row(0), "first row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'age'], matrix.columnNames(), 'Column names')
+    assertEquals(['Alice', '30'], matrix.row(0), 'first row')
   }
 
   @Test
   void readFromFilePath() {
-    URL url = getClass().getResource("/basic.csv")
+    URL url = getClass().getResource('/basic.csv')
     File file = new File(url.toURI())
 
     Matrix matrix = CsvReader.read().fromFile(file.absolutePath)
 
-    assertEquals(4, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
+    assertEquals(4, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), 'Column names')
   }
 
   @Test
   void readEmptyCsv() {
     Matrix matrix = CsvReader.read().fromString('')
 
-    assertNotNull(matrix, "Matrix should not be null")
-    assertEquals(0, matrix.rowCount(), "Empty CSV should have 0 rows")
-    assertEquals(0, matrix.columnCount(), "Empty CSV should have 0 columns")
+    assertNotNull(matrix, 'Matrix should not be null')
+    assertEquals(0, matrix.rowCount(), 'Empty CSV should have 0 rows')
+    assertEquals(0, matrix.columnCount(), 'Empty CSV should have 0 columns')
   }
 
   // ── Read: presets ──────────────────────────────────────────
 
   @Test
   void readWithTsvPreset() {
-    String tsvContent = "name\tage\nAlice\t30\nBob\t25"
+    String tsvContent = 'name\tage\nAlice\t30\nBob\t25'
 
     Matrix matrix = CsvReader.read().tsv().fromString(tsvContent)
 
@@ -168,7 +168,7 @@ Bob,25'''
 
   @Test
   void readWithExcelPreset() {
-    String csvContent = "name,age\r\nAlice,30\r\nBob,25"
+    String csvContent = 'name,age\r\nAlice,30\r\nBob,25'
 
     Matrix matrix = CsvReader.read().excel().fromString(csvContent)
 
@@ -178,7 +178,7 @@ Bob,25'''
 
   @Test
   void readWithExcelPresetAllowsMissingHeaderNames() {
-    String csvContent = "id,,amount\r\n1,2,3\r\n"
+    String csvContent = 'id,,amount\r\n1,2,3\r\n'
 
     Matrix matrix = CsvReader.read().excel().fromString(csvContent)
 
@@ -188,7 +188,7 @@ Bob,25'''
 
   @Test
   void readWithRfc4180Preset() {
-    String csvContent = "name,age\r\nAlice,30\r\nBob,25"
+    String csvContent = 'name,age\r\nAlice,30\r\nBob,25'
 
     Matrix matrix = CsvReader.read().rfc4180().fromString(csvContent)
 
@@ -198,7 +198,7 @@ Bob,25'''
 
   @Test
   void readWithRfc4180PresetRejectsMissingHeaderNames() {
-    String csvContent = "id,,amount\r\n1,2,3\r\n"
+    String csvContent = 'id,,amount\r\n1,2,3\r\n'
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       CsvReader.read().rfc4180().fromString(csvContent)
@@ -266,12 +266,12 @@ Alice,30'''
     File outputFile = tempDir.resolve('output.csv').toFile()
     CsvWriter.write(matrix).to(outputFile)
 
-    assertTrue(outputFile.exists(), "Output file should exist")
+    assertTrue(outputFile.exists(), 'Output file should exist')
 
     Matrix result = CsvReader.read().from(outputFile)
-    assertEquals(2, result.rowCount(), "Number of rows")
-    assertEquals(['id', 'name', 'amount'], result.columnNames(), "Column names")
-    assertEquals(['2', 'Bob', '200.00'], result.row(1), "Last row")
+    assertEquals(2, result.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name', 'amount'], result.columnNames(), 'Column names')
+    assertEquals(['2', 'Bob', '200.00'], result.row(1), 'Last row')
   }
 
   @Test
@@ -284,7 +284,7 @@ Alice,30'''
     Path outputPath = tempDir.resolve('output_path.csv')
     CsvWriter.write(matrix).to(outputPath)
 
-    assertTrue(outputPath.toFile().exists(), "Output file should exist")
+    assertTrue(outputPath.toFile().exists(), 'Output file should exist')
   }
 
   @Test
@@ -297,7 +297,7 @@ Alice,30'''
     String filePath = tempDir.resolve('output_strpath.csv').toFile().path
     CsvWriter.write(matrix).toFile(filePath)
 
-    assertTrue(new File(filePath).exists(), "Output file should exist")
+    assertTrue(new File(filePath).exists(), 'Output file should exist')
   }
 
   @Test
@@ -312,10 +312,10 @@ Alice,30'''
 
     String csvContent = CsvWriter.write(matrix).asString()
 
-    assertNotNull(csvContent, "CSV content should not be null")
-    assertTrue(csvContent.contains('name,age'), "Should contain header")
-    assertTrue(csvContent.contains('Alice,30'), "Should contain first row")
-    assertTrue(csvContent.contains('Bob,25'), "Should contain second row")
+    assertNotNull(csvContent, 'CSV content should not be null')
+    assertTrue(csvContent.contains('name,age'), 'Should contain header')
+    assertTrue(csvContent.contains('Alice,30'), 'Should contain first row')
+    assertTrue(csvContent.contains('Bob,25'), 'Should contain second row')
   }
 
   @Test
@@ -327,9 +327,9 @@ Alice,30'''
 
     String csvContent = CsvWriter.write(matrix).withHeader(false).asString()
 
-    assertFalse(csvContent.contains('x,y'), "Should not contain header")
-    assertTrue(csvContent.contains('1,2'), "Should contain first row")
-    assertTrue(csvContent.contains('3,4'), "Should contain second row")
+    assertFalse(csvContent.contains('x,y'), 'Should not contain header')
+    assertTrue(csvContent.contains('1,2'), 'Should contain first row')
+    assertTrue(csvContent.contains('3,4'), 'Should contain second row')
   }
 
   @Test
@@ -343,8 +343,8 @@ Alice,30'''
         .delimiter(';')
         .asString()
 
-    assertTrue(csvContent.contains('name;value'), "Should use semicolon delimiter")
-    assertTrue(csvContent.contains('Alice;100'), "Data should use semicolon delimiter")
+    assertTrue(csvContent.contains('name;value'), 'Should use semicolon delimiter')
+    assertTrue(csvContent.contains('Alice;100'), 'Data should use semicolon delimiter')
   }
 
   @Test
@@ -358,9 +358,9 @@ Alice,30'''
     CsvWriter.write(matrix).to(writer)
 
     String csvContent = writer.buffer
-    assertTrue(csvContent.contains('col1,col2'), "Should contain header")
-    assertTrue(csvContent.contains('a,b'), "Should contain first row")
-    assertTrue(csvContent.contains('c,d'), "Should contain second row")
+    assertTrue(csvContent.contains('col1,col2'), 'Should contain header')
+    assertTrue(csvContent.contains('a,b'), 'Should contain first row')
+    assertTrue(csvContent.contains('c,d'), 'Should contain second row')
   }
 
   // ── Write: presets ─────────────────────────────────────────
@@ -374,7 +374,7 @@ Alice,30'''
 
     String csvContent = CsvWriter.write(matrix).excel().asString()
 
-    assertTrue(csvContent.contains('\r\n'), "Excel preset should use CRLF")
+    assertTrue(csvContent.contains('\r\n'), 'Excel preset should use CRLF')
   }
 
   @Test
@@ -436,8 +436,8 @@ Alice,30'''
 
     String csvContent = CsvWriter.write(matrix).tsv().asString()
 
-    assertTrue(csvContent.contains("name\tvalue"), "TSV preset should use tab delimiter")
-    assertTrue(csvContent.contains("Alice\t100"), "Data should use tab delimiter")
+    assertTrue(csvContent.contains('name\tvalue'), 'TSV preset should use tab delimiter')
+    assertTrue(csvContent.contains('Alice\t100'), 'Data should use tab delimiter')
   }
 
   @Test
@@ -449,7 +449,7 @@ Alice,30'''
 
     String csvContent = CsvWriter.write(matrix).rfc4180().asString()
 
-    assertTrue(csvContent.contains('\r\n'), "RFC 4180 preset should use CRLF")
+    assertTrue(csvContent.contains('\r\n'), 'RFC 4180 preset should use CRLF')
   }
 
   // ── Round-trip tests ───────────────────────────────────────
@@ -468,8 +468,8 @@ Alice,30'''
     String csvContent = CsvWriter.write(original).asString()
     Matrix result = CsvReader.read().fromString(csvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }
@@ -488,8 +488,8 @@ Alice,30'''
     String csvContent = CsvWriter.write(original).delimiter(';').asString()
     Matrix result = CsvReader.read().delimiter(';').fromString(csvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }
@@ -505,8 +505,8 @@ Alice,30'''
     String tsvContent = CsvWriter.write(original).tsv().asString()
     Matrix result = CsvReader.read().tsv().fromString(tsvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
   }
 
   @Test
@@ -519,8 +519,8 @@ Alice,30'''
     String csvContent = CsvWriter.write(original).excel().asString()
     Matrix result = CsvReader.read().excel().fromString(csvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
   }
 
   @Test
@@ -539,8 +539,8 @@ Alice,30'''
 
     Matrix result = CsvReader.read().from(outputFile)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }
@@ -554,8 +554,8 @@ Alice,30'''
 
     Matrix matrix = CsvReader.read().fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals('Line one\nLine two', matrix.row(0)[1], "Embedded newline should be preserved")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals('Line one\nLine two', matrix.row(0)[1], 'Embedded newline should be preserved')
   }
 
   @Test
@@ -566,8 +566,8 @@ Alice,30'''
 
     Matrix matrix = CsvReader.read().fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals('Contains, a comma', matrix.row(0)[1], "Embedded delimiter should be preserved")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals('Contains, a comma', matrix.row(0)[1], 'Embedded delimiter should be preserved')
   }
 
   @Test
@@ -578,9 +578,9 @@ Alice,30'''
 
     Matrix matrix = CsvReader.read().fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['1', '', '3'], matrix.row(0), "Empty fields should be empty strings")
-    assertEquals(['', '2', ''], matrix.row(1), "Empty fields should be empty strings")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['1', '', '3'], matrix.row(0), 'Empty fields should be empty strings')
+    assertEquals(['', '2', ''], matrix.row(1), 'Empty fields should be empty strings')
   }
 
   @Test
@@ -593,9 +593,9 @@ Bob,100'''
         .nullString('NA')
         .fromString(csvContent)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertNull(matrix.row(0)[1], "NA should be converted to null")
-    assertEquals('100', matrix.row(1)[1], "Non-NA values should remain")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertNull(matrix.row(0)[1], 'NA should be converted to null')
+    assertEquals('100', matrix.row(1)[1], 'Non-NA values should remain')
   }
 
   @Test
@@ -606,8 +606,8 @@ Bob,100'''
 
     String csvContent = CsvWriter.write(matrix).asString()
 
-    assertTrue(csvContent.contains('a,b,c'), "Should contain header even for empty matrix")
-    assertFalse(csvContent.contains('null'), "Should not contain null values")
+    assertTrue(csvContent.contains('a,b,c'), 'Should contain header even for empty matrix')
+    assertFalse(csvContent.contains('null'), 'Should not contain null values')
   }
 
   @Test
@@ -624,8 +624,8 @@ Bob,100'''
     String csvContent = CsvWriter.write(original).asString()
     Matrix result = CsvReader.read().fromString(csvContent)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }
@@ -644,9 +644,9 @@ Bob,100'''
         .fromString(csvContent)
 
     assertEquals(2, matrix.rowCount())
-    assertEquals(Integer, matrix.type(0), "id column type")
-    assertEquals(String, matrix.type(1), "name column type")
-    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(Integer, matrix.type(0), 'id column type')
+    assertEquals(String, matrix.type(1), 'name column type')
+    assertEquals(BigDecimal, matrix.type(2), 'amount column type')
     assertEquals(1, matrix.row(0)[0])
     assertEquals(200.75, matrix.row(1)[2])
   }
@@ -661,10 +661,10 @@ Bob,100'''
         .fromString(csvContent)
 
     assertEquals(2, matrix.rowCount())
-    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), "Column names from columns()")
-    assertEquals(Integer, matrix.type(0), "id column type")
-    assertEquals(String, matrix.type(1), "name column type")
-    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), 'Column names from columns()')
+    assertEquals(Integer, matrix.type(0), 'id column type')
+    assertEquals(String, matrix.type(1), 'name column type')
+    assertEquals(BigDecimal, matrix.type(2), 'amount column type')
     assertEquals(2, matrix.row(1)[0])
     assertEquals('Bob', matrix.row(1)[1])
   }
@@ -681,7 +681,7 @@ Bob,100'''
         .fromString(csvContent)
 
     assertEquals(2, matrix.rowCount())
-    assertEquals(LocalDate, matrix.type(2), "date column type")
+    assertEquals(LocalDate, matrix.type(2), 'date column type')
     assertEquals(LocalDate.of(2023, 1, 15), matrix.row(0)[2])
     assertEquals(LocalDate.of(2023, 6, 20), matrix.row(1)[2])
   }
@@ -699,7 +699,7 @@ Bob,100'''
         .fromString(csvContent)
 
     assertEquals(2, matrix.rowCount())
-    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(BigDecimal, matrix.type(2), 'amount column type')
     assertEquals(1234.56, (matrix.row(0)[2] as BigDecimal).doubleValue(), 0.01)
   }
 
@@ -710,9 +710,9 @@ Bob,100'''
 
     Matrix matrix = CsvReader.read().fromString(csvContent)
 
-    assertEquals(String, matrix.type(0), "id should remain String")
-    assertEquals(String, matrix.type(1), "name should remain String")
-    assertEquals(String, matrix.type(2), "amount should remain String")
+    assertEquals(String, matrix.type(0), 'id should remain String')
+    assertEquals(String, matrix.type(1), 'name should remain String')
+    assertEquals(String, matrix.type(2), 'amount should remain String')
   }
 
   @Test
