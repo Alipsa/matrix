@@ -44,11 +44,6 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
 }
 
-codenarcTest {
-  // TODO: Fix UnnecessaryGString violations in test sources and remove this override
-  ignoreFailures = true
-}
-
 test {
   testLogging.showStandardStreams = true
   useJUnitPlatform()

@@ -22,11 +22,11 @@ class JsonWriterTest {
 
     String json = JsonWriter.writeString(matrix)
 
-    assertNotNull(json, "JSON string should not be null")
-    assertTrue(json.contains('"id":1'), "Should contain id field")
-    assertTrue(json.contains('"name":"Alice"'), "Should contain name field")
-    assertTrue(json.startsWith('['), "Should be a JSON array")
-    assertTrue(json.endsWith(']'), "Should be a JSON array")
+    assertNotNull(json, 'JSON string should not be null')
+    assertTrue(json.contains('"id":1'), 'Should contain id field')
+    assertTrue(json.contains('"name":"Alice"'), 'Should contain name field')
+    assertTrue(json.startsWith('['), 'Should be a JSON array')
+    assertTrue(json.endsWith(']'), 'Should be a JSON array')
   }
 
   @Test
@@ -37,8 +37,8 @@ class JsonWriterTest {
 
     String json = JsonWriter.writeString(matrix, true)
 
-    assertTrue(json.contains('\n'), "Indented JSON should contain newlines")
-    assertTrue(json.contains('  '), "Indented JSON should contain spaces")
+    assertTrue(json.contains('\n'), 'Indented JSON should contain newlines')
+    assertTrue(json.contains('  '), 'Indented JSON should contain spaces')
   }
 
   @Test
@@ -50,12 +50,12 @@ class JsonWriterTest {
     File outputFile = tempDir.resolve('output.json').toFile()
     JsonWriter.write(matrix, outputFile)
 
-    assertTrue(outputFile.exists(), "Output file should exist")
+    assertTrue(outputFile.exists(), 'Output file should exist')
 
     // Read it back and verify
     Matrix result = JsonReader.read(outputFile)
-    assertEquals(2, result.rowCount(), "Number of rows should match")
-    assertEquals(matrix.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(2, result.rowCount(), 'Number of rows should match')
+    assertEquals(matrix.columnNames(), result.columnNames(), 'Column names should match')
   }
 
   @Test
@@ -67,7 +67,7 @@ class JsonWriterTest {
     Path outputPath = tempDir.resolve('path_output.json')
     JsonWriter.write(matrix, outputPath)
 
-    assertTrue(outputPath.toFile().exists(), "Output file should exist")
+    assertTrue(outputPath.toFile().exists(), 'Output file should exist')
   }
 
   @Test
@@ -79,7 +79,7 @@ class JsonWriterTest {
     String filePath = tempDir.resolve('string_path.json') as String
     JsonWriter.write(matrix, filePath)
 
-    assertTrue(new File(filePath).exists(), "Output file should exist")
+    assertTrue(new File(filePath).exists(), 'Output file should exist')
   }
 
   @Test
@@ -92,8 +92,8 @@ class JsonWriterTest {
     JsonWriter.write(matrix, writer)
 
     String json = writer as String
-    assertTrue(json.contains('"key":"value1"'), "Should contain data")
-    assertTrue(json.contains('"key":"value2"'), "Should contain data")
+    assertTrue(json.contains('"key":"value1"'), 'Should contain data')
+    assertTrue(json.contains('"key":"value2"'), 'Should contain data')
   }
 
   @Test
@@ -111,10 +111,10 @@ class JsonWriterTest {
     JsonWriter.write(matrix, writer, formatters)
 
     String json = writer as String
-    assertTrue(json.contains('10000'), "Should apply salary formatter")
-    assertTrue(json.contains('20000'), "Should apply salary formatter")
-    assertTrue(json.contains('500'), "Should apply bonus formatter")
-    assertTrue(json.contains('1000'), "Should apply bonus formatter")
+    assertTrue(json.contains('10000'), 'Should apply salary formatter')
+    assertTrue(json.contains('20000'), 'Should apply salary formatter')
+    assertTrue(json.contains('500'), 'Should apply bonus formatter')
+    assertTrue(json.contains('1000'), 'Should apply bonus formatter')
   }
 
   @Test
@@ -133,16 +133,16 @@ class JsonWriterTest {
     // Read it back
     Matrix result = JsonReader.read(json)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
-    assertEquals(original.columnNames().sort(), result.columnNames().sort(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match')
+    assertEquals(original.columnNames().sort(), result.columnNames().sort(), 'Column names should match')
 
     // JSON round-trip converts types, so we check values are present rather than exact equality
-    assertTrue(result.columnNames().contains('id'), "Should have id column")
-    assertTrue(result.columnNames().contains('name'), "Should have name column")
-    assertTrue(result.columnNames().contains('score'), "Should have score column")
+    assertTrue(result.columnNames().contains('id'), 'Should have id column')
+    assertTrue(result.columnNames().contains('name'), 'Should have name column')
+    assertTrue(result.columnNames().contains('score'), 'Should have score column')
 
     // Verify row count matches
-    assertEquals(3, result.rowCount(), "Should have 3 rows")
+    assertEquals(3, result.rowCount(), 'Should have 3 rows')
   }
 
   @Test
@@ -153,7 +153,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.writeString(matrix)
 
-    assertEquals('[]', json, "Empty matrix should produce empty JSON array")
+    assertEquals('[]', json, 'Empty matrix should produce empty JSON array')
   }
 
   @Test
@@ -168,7 +168,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.writeString(matrix, 'MM/dd/yyyy')
 
-    assertTrue(json.contains('01/15/2023'), "Should format date with custom pattern")
+    assertTrue(json.contains('01/15/2023'), 'Should format date with custom pattern')
   }
 
   @Test
@@ -186,7 +186,7 @@ class JsonWriterTest {
     JsonWriter.write(matrix, outputFile, formatters)
 
     String content = outputFile.text
-    assertTrue(content.contains('"price":"$99.99"'), "Should apply formatter to file output")
+    assertTrue(content.contains('"price":"$99.99"'), 'Should apply formatter to file output')
   }
 
   @Test
@@ -201,7 +201,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.writeString(matrix)
 
-    assertTrue(json.contains('null'), "Should include null values in JSON")
+    assertTrue(json.contains('null'), 'Should include null values in JSON')
   }
 
   @Test
@@ -238,8 +238,8 @@ class JsonWriterTest {
     String prettyJson = JsonWriter.writeString(original, true)
     Matrix result = JsonReader.read(prettyJson)
 
-    assertEquals(original.rowCount(), result.rowCount(), "Row count should match after pretty print")
-    assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
+    assertEquals(original.rowCount(), result.rowCount(), 'Row count should match after pretty print')
+    assertEquals(original.columnNames(), result.columnNames(), 'Column names should match')
   }
 
   @Test
@@ -252,8 +252,8 @@ class JsonWriterTest {
     JsonWriter.write(matrix, outputPath, [price: { it * 10 }])
 
     String content = outputPath.toFile().text
-    assertTrue(content.contains('1000'), "Should apply formatter via Path overload")
-    assertTrue(content.contains('2000'), "Should apply formatter via Path overload")
+    assertTrue(content.contains('1000'), 'Should apply formatter via Path overload')
+    assertTrue(content.contains('2000'), 'Should apply formatter via Path overload')
   }
 
   @Test
@@ -266,7 +266,7 @@ class JsonWriterTest {
     JsonWriter.write(matrix, filePath, [value: { it * 3 }])
 
     String content = new File(filePath).text
-    assertTrue(content.contains('15'), "Should apply formatter via String path overload")
+    assertTrue(content.contains('15'), 'Should apply formatter via String path overload')
   }
 
   @Test
@@ -276,12 +276,12 @@ class JsonWriterTest {
         .build()
 
     File outputFile = tempDir.resolve('sub/dir/output.json').toFile()
-    assertFalse(outputFile.getParentFile().exists(), "Parent dir should not exist yet")
+    assertFalse(outputFile.getParentFile().exists(), 'Parent dir should not exist yet')
 
     JsonWriter.write(matrix, outputFile, [x: { it + 1 }])
 
-    assertTrue(outputFile.exists(), "File should be created with parent dirs")
-    assertTrue(outputFile.text.contains('2'), "Should apply formatter")
+    assertTrue(outputFile.exists(), 'File should be created with parent dirs')
+    assertTrue(outputFile.text.contains('2'), 'Should apply formatter')
   }
 
   @Test
@@ -307,7 +307,7 @@ class JsonWriterTest {
 
     JsonWriter.write(matrix).to(file)
 
-    assertTrue(file.exists(), "File should exist")
+    assertTrue(file.exists(), 'File should exist')
     Matrix result = JsonReader.read(file)
     assertEquals(2, result.rowCount())
   }
@@ -319,7 +319,7 @@ class JsonWriterTest {
 
     JsonWriter.write(matrix).to(path)
 
-    assertTrue(path.toFile().exists(), "File should exist via Path")
+    assertTrue(path.toFile().exists(), 'File should exist via Path')
   }
 
   @Test
@@ -329,7 +329,7 @@ class JsonWriterTest {
 
     JsonWriter.write(matrix).to(filePath)
 
-    assertTrue(new File(filePath).exists(), "File should exist via String path")
+    assertTrue(new File(filePath).exists(), 'File should exist via String path')
   }
 
   @Test
@@ -339,7 +339,7 @@ class JsonWriterTest {
 
     JsonWriter.write(matrix).to(sw)
 
-    assertTrue(sw.toString().contains('"k"'), "Writer output should contain field")
+    assertTrue(sw.toString().contains('"k"'), 'Writer output should contain field')
   }
 
   @Test
@@ -348,8 +348,8 @@ class JsonWriterTest {
 
     String json = JsonWriter.write(matrix).asString()
 
-    assertTrue(json.contains('"id"'), "asString should contain field name")
-    assertTrue(json.contains('1'), "asString should contain value")
+    assertTrue(json.contains('"id"'), 'asString should contain field name')
+    assertTrue(json.contains('1'), 'asString should contain value')
   }
 
   @Test
@@ -358,7 +358,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.write(matrix).indent().asString()
 
-    assertTrue(json.contains('\n'), "Indented output should contain newlines")
+    assertTrue(json.contains('\n'), 'Indented output should contain newlines')
   }
 
   @Test
@@ -368,8 +368,8 @@ class JsonWriterTest {
     String compact = JsonWriter.write(matrix).indent(false).asString()
     String indented = JsonWriter.write(matrix).indent(true).asString()
 
-    assertFalse(compact.contains('\n'), "Compact should not contain newlines")
-    assertTrue(indented.contains('\n'), "Indented should contain newlines")
+    assertFalse(compact.contains('\n'), 'Compact should not contain newlines')
+    assertTrue(indented.contains('\n'), 'Indented should contain newlines')
   }
 
   @Test
@@ -381,7 +381,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.write(matrix).dateFormat('dd/MM/yyyy').asString()
 
-    assertTrue(json.contains('15/06/2024'), "Should format date with custom pattern")
+    assertTrue(json.contains('15/06/2024'), 'Should format date with custom pattern')
   }
 
   @Test
@@ -390,7 +390,7 @@ class JsonWriterTest {
 
     String json = JsonWriter.write(matrix).formatter('price') { it * 2 }.asString()
 
-    assertTrue(json.contains('200'), "Should apply single formatter")
+    assertTrue(json.contains('200'), 'Should apply single formatter')
   }
 
   @Test
@@ -402,8 +402,8 @@ class JsonWriterTest {
         .formatter('b') { it * 20 }
         .asString()
 
-    assertTrue(json.contains('10'), "Should apply formatter to column a")
-    assertTrue(json.contains('40'), "Should apply formatter to column b")
+    assertTrue(json.contains('10'), 'Should apply formatter to column a')
+    assertTrue(json.contains('40'), 'Should apply formatter to column b')
   }
 
   @Test
@@ -414,7 +414,7 @@ class JsonWriterTest {
         .columnFormatters([x: { it * 100 }, y: { it * 200 }])
         .asString()
 
-    assertTrue(json.contains('300'), "Should apply column formatters map")
-    assertTrue(json.contains('800'), "Should apply column formatters map")
+    assertTrue(json.contains('300'), 'Should apply column formatters map')
+    assertTrue(json.contains('800'), 'Should apply column formatters map')
   }
 }

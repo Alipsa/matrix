@@ -40,9 +40,9 @@ class JsonReaderTest {
 
     Matrix empData = Matrix.builder().data(
         emp_id: 1..3,
-        emp_name: ["Rick","Dan","Michelle"],
+        emp_name: ['Rick','Dan','Michelle'],
         salary: [623.3,515.2,611.0],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
       .types(int, String, Number, LocalDate)
       .build()
 
@@ -58,10 +58,10 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(jsonFile)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['id', 'name'], matrix.columnNames(), "Column names")
-    assertEquals([1, 'Alice'], matrix.row(0).toList(), "First row")
-    assertEquals([2, 'Bob'], matrix.row(1).toList(), "Second row")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id', 'name'], matrix.columnNames(), 'Column names')
+    assertEquals([1, 'Alice'], matrix.row(0).toList(), 'First row')
+    assertEquals([2, 'Bob'], matrix.row(1).toList(), 'Second row')
   }
 
   @Test
@@ -73,8 +73,8 @@ class JsonReaderTest {
     String filePath = jsonFile.absolutePath
     Matrix matrix = JsonReader.readFile(filePath)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['x', 'y'], matrix.columnNames(), "Column names")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['x', 'y'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -84,8 +84,8 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(reader)
 
-    assertEquals(3, matrix.rowCount(), "Number of rows")
-    assertEquals(['a'], matrix.columnNames(), "Column names")
+    assertEquals(3, matrix.rowCount(), 'Number of rows')
+    assertEquals(['a'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -95,9 +95,9 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(is)
 
-    assertEquals(1, matrix.rowCount(), "Number of rows")
-    assertEquals(['name', 'value'], matrix.columnNames(), "Column names")
-    assertEquals(['test', 123], matrix.row(0).toList(), "Row content")
+    assertEquals(1, matrix.rowCount(), 'Number of rows')
+    assertEquals(['name', 'value'], matrix.columnNames(), 'Column names')
+    assertEquals(['test', 123], matrix.row(0).toList(), 'Row content')
   }
 
   @Test
@@ -108,7 +108,7 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(jsonPath)
 
-    assertEquals(1, matrix.rowCount(), "Number of rows")
+    assertEquals(1, matrix.rowCount(), 'Number of rows')
   }
 
   @Test
@@ -120,8 +120,8 @@ class JsonReaderTest {
     URL url = jsonFile.toURI().toURL()
     Matrix matrix = JsonReader.read(url)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertEquals(['id'], matrix.columnNames(), "Column names")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertEquals(['id'], matrix.columnNames(), 'Column names')
   }
 
   @Test
@@ -133,7 +133,7 @@ class JsonReaderTest {
     String urlString = jsonFile.toURI().toURL() as String
     Matrix matrix = JsonReader.readUrl(urlString)
 
-    assertEquals(1, matrix.rowCount(), "Number of rows")
+    assertEquals(1, matrix.rowCount(), 'Number of rows')
   }
 
   @Test
@@ -157,10 +157,10 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(json)
 
-    assertEquals(2, matrix.rowCount(), "Number of rows")
-    assertTrue(matrix.columnNames().contains('person.name'), "Should flatten nested objects")
-    assertTrue(matrix.columnNames().contains('person.age'), "Should flatten nested objects")
-    assertEquals('Alice', matrix.row(0)[matrix.columnNames().indexOf('person.name')], "Nested value")
+    assertEquals(2, matrix.rowCount(), 'Number of rows')
+    assertTrue(matrix.columnNames().contains('person.name'), 'Should flatten nested objects')
+    assertTrue(matrix.columnNames().contains('person.age'), 'Should flatten nested objects')
+    assertEquals('Alice', matrix.row(0)[matrix.columnNames().indexOf('person.name')], 'Nested value')
   }
 
   @Test
@@ -171,10 +171,10 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(json)
 
-    assertEquals(1, matrix.rowCount(), "Number of rows")
-    assertTrue(matrix.columnNames().contains('items[0]'), "Should flatten arrays")
-    assertTrue(matrix.columnNames().contains('items[1]'), "Should flatten arrays")
-    assertTrue(matrix.columnNames().contains('items[2]'), "Should flatten arrays")
+    assertEquals(1, matrix.rowCount(), 'Number of rows')
+    assertTrue(matrix.columnNames().contains('items[0]'), 'Should flatten arrays')
+    assertTrue(matrix.columnNames().contains('items[1]'), 'Should flatten arrays')
+    assertTrue(matrix.columnNames().contains('items[2]'), 'Should flatten arrays')
   }
 
   @Test
@@ -183,8 +183,8 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(json)
 
-    assertEquals(0, matrix.rowCount(), "Empty array should produce empty matrix")
-    assertEquals(0, matrix.columnCount(), "Empty array should have no columns")
+    assertEquals(0, matrix.rowCount(), 'Empty array should produce empty matrix')
+    assertEquals(0, matrix.columnCount(), 'Empty array should have no columns')
   }
 
   @Test
@@ -198,16 +198,16 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(json)
 
-    assertEquals(3, matrix.rowCount(), "Number of rows")
-    assertEquals(3, matrix.columnCount(), "Should have all unique keys as columns")
+    assertEquals(3, matrix.rowCount(), 'Number of rows')
+    assertEquals(3, matrix.columnCount(), 'Should have all unique keys as columns')
     assertTrue(matrix.columnNames().contains('a'), "Should have column 'a'")
     assertTrue(matrix.columnNames().contains('b'), "Should have column 'b'")
     assertTrue(matrix.columnNames().contains('c'), "Should have column 'c'")
 
     // Check nulls for missing values
-    assertNull(matrix.row(0)[matrix.columnNames().indexOf('c')], "Missing value should be null")
-    assertNull(matrix.row(1)[matrix.columnNames().indexOf('b')], "Missing value should be null")
-    assertNull(matrix.row(2)[matrix.columnNames().indexOf('a')], "Missing value should be null")
+    assertNull(matrix.row(0)[matrix.columnNames().indexOf('c')], 'Missing value should be null')
+    assertNull(matrix.row(1)[matrix.columnNames().indexOf('b')], 'Missing value should be null')
+    assertNull(matrix.row(2)[matrix.columnNames().indexOf('a')], 'Missing value should be null')
   }
 
   @Test
@@ -233,8 +233,8 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(jsonFile, java.nio.charset.StandardCharsets.UTF_8)
 
-    assertEquals(1, matrix.rowCount(), "Number of rows")
-    assertEquals("Grüße", matrix.row(0)[matrix.columnNames().indexOf('text')], "Should handle UTF-8 characters")
+    assertEquals(1, matrix.rowCount(), 'Number of rows')
+    assertEquals('Grüße', matrix.row(0)[matrix.columnNames().indexOf('text')], 'Should handle UTF-8 characters')
   }
 
   @Test
@@ -245,7 +245,7 @@ class JsonReaderTest {
 
     Matrix matrix = JsonReader.read(jsonFile)
 
-    assertEquals('employees', matrix.matrixName, "Matrix name should be derived from filename without extension")
+    assertEquals('employees', matrix.matrixName, 'Matrix name should be derived from filename without extension')
   }
 
   @Test
@@ -257,7 +257,7 @@ class JsonReaderTest {
     URL url = jsonFile.toURI().toURL()
     Matrix matrix = JsonReader.read(url)
 
-    assertEquals('people', matrix.matrixName, "Matrix name should be derived from URL filename")
+    assertEquals('people', matrix.matrixName, 'Matrix name should be derived from URL filename')
   }
 
   @Test
@@ -266,7 +266,7 @@ class JsonReaderTest {
     Matrix fromRead = JsonReader.read(json)
     Matrix fromReadString = JsonReader.readString(json)
 
-    assertEquals(fromRead.rowCount(), fromReadString.rowCount(), "readString should produce same row count as read")
-    assertEquals(fromRead.columnNames(), fromReadString.columnNames(), "readString should produce same columns as read")
+    assertEquals(fromRead.rowCount(), fromReadString.rowCount(), 'readString should produce same row count as read')
+    assertEquals(fromRead.columnNames(), fromReadString.columnNames(), 'readString should produce same columns as read')
   }
 }
