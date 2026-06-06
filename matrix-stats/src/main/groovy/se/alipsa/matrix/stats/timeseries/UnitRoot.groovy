@@ -101,7 +101,7 @@ class UnitRoot {
    */
   static UnitRootResult test(double[] data, String type = 'drift', Integer lags = 0) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
 
     if (data.length < 10) {
@@ -144,7 +144,7 @@ class UnitRoot {
    * Runs unit root testing with List input.
    */
   static UnitRootResult test(List<? extends Number> data, String type = 'drift', Integer lags = 0) {
-    double[] array = data.collect { it.doubleValue() } as double[]
+    double[] array = data*.doubleValue() as double[]
     test(array, type, lags)
   }
 
@@ -179,44 +179,46 @@ class UnitRoot {
     String summary(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       StringBuilder sb = new StringBuilder()
-      sb.append("Unit Root Test Summary\n")
-      sb.append("=" * 60).append("\n")
+      sb.append('Unit Root Test Summary\n')
+      sb.append('=' * 60).append('\n')
       sb.append("Sample size: ${sampleSize}\n")
       sb.append("Type: ${type}\n")
       sb.append("Significance level: ${alphaValue * 100}%\n")
-      sb.append("=" * 60).append("\n\n")
+      sb.append('=' * 60).append('\n\n')
 
       // DF Test
-      sb.append("1. Dickey-Fuller Test:\n")
-      sb.append("   Statistic: ${String.format('%.4f', dfResult.statistic)}\n")
-      sb.append("   Critical value (5%): ${String.format('%.4f', dfResult.criticalValue5pct)}\n")
-      sb.append("   Conclusion: ${dfResult.interpret(alphaValue)}\n\n")
+      sb.with {
+        append('1. Dickey-Fuller Test:\n')
+        append("   Statistic: ${String.format('%.4f', dfResult.statistic)}\n")
+        append("   Critical value (5%): ${String.format('%.4f', dfResult.criticalValue5pct)}\n")
+        append("   Conclusion: ${dfResult.interpret(alphaValue)}\n\n")
 
-      // ADF Test
-      sb.append("2. Augmented Dickey-Fuller Test:\n")
-      sb.append("   Lags: ${adfResult.lag}\n")
-      sb.append("   Statistic: ${String.format('%.4f', adfResult.statistic)}\n")
-      sb.append("   Critical value (5%): ${String.format('%.4f', adfResult.criticalValue)}\n")
-      sb.append("   Conclusion: ${adfResult.interpret()}\n\n")
+        // ADF Test
+        append('2. Augmented Dickey-Fuller Test:\n')
+        append("   Lags: ${adfResult.lag}\n")
+        append("   Statistic: ${String.format('%.4f', adfResult.statistic)}\n")
+        append("   Critical value (5%): ${String.format('%.4f', adfResult.criticalValue)}\n")
+        append("   Conclusion: ${adfResult.interpret()}\n\n")
 
-      // ADF-GLS Test
-      sb.append("3. ADF-GLS Test:\n")
-      sb.append("   Lags: ${adfGlsResult.lags}\n")
-      sb.append("   Statistic: ${String.format('%.4f', adfGlsResult.statistic)}\n")
-      sb.append("   Critical value (5%): ${String.format('%.4f', adfGlsResult.criticalValue5pct)}\n")
-      sb.append("   Conclusion: ${adfGlsResult.interpret(alphaValue)}\n\n")
+        // ADF-GLS Test
+        append('3. ADF-GLS Test:\n')
+        append("   Lags: ${adfGlsResult.lags}\n")
+        append("   Statistic: ${String.format('%.4f', adfGlsResult.statistic)}\n")
+        append("   Critical value (5%): ${String.format('%.4f', adfGlsResult.criticalValue5pct)}\n")
+        append("   Conclusion: ${adfGlsResult.interpret(alphaValue)}\n\n")
 
-      // KPSS Test (note: opposite null hypothesis)
-      sb.append("4. KPSS Test (tests stationarity, opposite null):\n")
-      sb.append("   Lags: ${kpssResult.lags}\n")
-      sb.append("   Statistic: ${String.format('%.4f', kpssResult.statistic)}\n")
-      sb.append("   Critical value (5%): ${String.format('%.4f', kpssResult.criticalValue)}\n")
-      sb.append("   Conclusion: ${kpssResult.interpret()}\n\n")
+        // KPSS Test (note: opposite null hypothesis)
+        append('4. KPSS Test (tests stationarity, opposite null):\n')
+        append("   Lags: ${kpssResult.lags}\n")
+        append("   Statistic: ${String.format('%.4f', kpssResult.statistic)}\n")
+        append("   Critical value (5%): ${String.format('%.4f', kpssResult.criticalValue)}\n")
+        append("   Conclusion: ${kpssResult.interpret()}\n\n")
+      }
 
       // Overall assessment
-      sb.append("=" * 60).append("\n")
-      sb.append("Overall Assessment:\n")
-      sb.append("=" * 60).append("\n")
+      sb.append('=' * 60).append('\n')
+      sb.append('Overall Assessment:\n')
+      sb.append('=' * 60).append('\n')
       sb.append(getConsensus(alphaValue))
 
       sb.toString()
@@ -255,30 +257,30 @@ class UnitRoot {
       StringBuilder consensus = new StringBuilder()
 
       if (unitRootTests >= 2 && !kpssRejectsStationarity) {
-        consensus.append("Strong evidence of STATIONARITY:\n")
+        consensus.append('Strong evidence of STATIONARITY:\n')
         consensus.append("- ${unitRootTests}/3 unit root tests reject the null hypothesis\n")
-        consensus.append("- KPSS test does not reject stationarity\n")
-        consensus.append("Conclusion: Series appears to be stationary")
+        consensus.append('- KPSS test does not reject stationarity\n')
+        consensus.append('Conclusion: Series appears to be stationary')
       } else if (unitRootTests == 0 && kpssRejectsStationarity) {
-        consensus.append("Strong evidence of UNIT ROOT (non-stationarity):\n")
-        consensus.append("- All unit root tests fail to reject the null hypothesis\n")
-        consensus.append("- KPSS test rejects stationarity\n")
-        consensus.append("Conclusion: Series appears to have a unit root")
+        consensus.append('Strong evidence of UNIT ROOT (non-stationarity):\n')
+        consensus.append('- All unit root tests fail to reject the null hypothesis\n')
+        consensus.append('- KPSS test rejects stationarity\n')
+        consensus.append('Conclusion: Series appears to have a unit root')
       } else if (unitRootTests >= 2) {
-        consensus.append("Mixed evidence, leaning toward STATIONARITY:\n")
+        consensus.append('Mixed evidence, leaning toward STATIONARITY:\n')
         consensus.append("- ${unitRootTests}/3 unit root tests reject the null hypothesis\n")
-        consensus.append("- But KPSS suggests non-stationarity\n")
-        consensus.append("Conclusion: Results are conflicting, but majority suggests stationarity")
+        consensus.append('- But KPSS suggests non-stationarity\n')
+        consensus.append('Conclusion: Results are conflicting, but majority suggests stationarity')
       } else if (kpssRejectsStationarity) {
-        consensus.append("Mixed evidence, leaning toward UNIT ROOT:\n")
+        consensus.append('Mixed evidence, leaning toward UNIT ROOT:\n')
         consensus.append("- ${unitRootTests}/3 unit root tests reject the null hypothesis\n")
-        consensus.append("- KPSS test rejects stationarity\n")
-        consensus.append("Conclusion: Results are conflicting, but evidence suggests unit root")
+        consensus.append('- KPSS test rejects stationarity\n')
+        consensus.append('Conclusion: Results are conflicting, but evidence suggests unit root')
       } else {
-        consensus.append("INCONCLUSIVE evidence:\n")
+        consensus.append('INCONCLUSIVE evidence:\n')
         consensus.append("- ${unitRootTests}/3 unit root tests reject the null hypothesis\n")
-        consensus.append("- KPSS test does not reject stationarity\n")
-        consensus.append("Conclusion: Results are mixed, consider additional analysis")
+        consensus.append('- KPSS test does not reject stationarity\n')
+        consensus.append('Conclusion: Results are mixed, consider additional analysis')
       }
 
       consensus.toString()
@@ -287,11 +289,11 @@ class UnitRoot {
     private static double getCriticalValue(AdfGls.AdfGlsResult adfGlsRes, double alpha) {
       if (alpha <= 0.01) {
         return adfGlsRes.criticalValue1pct
-      } else if (alpha <= 0.05) {
-        return adfGlsRes.criticalValue5pct
-      } else {
-        return adfGlsRes.criticalValue10pct
       }
+      if (alpha <= 0.05) {
+        return adfGlsRes.criticalValue5pct
+      }
+      return adfGlsRes.criticalValue10pct
     }
 
     private static double getCriticalValue(Adf.AdfResult adfRes) {
@@ -302,11 +304,11 @@ class UnitRoot {
     private static double getCriticalValue(Df.DfResult dfRes, double alpha) {
       if (alpha <= 0.01) {
         return dfRes.criticalValue1pct
-      } else if (alpha <= 0.05) {
-        return dfRes.criticalValue5pct
-      } else {
-        return dfRes.criticalValue10pct
       }
+      if (alpha <= 0.05) {
+        return dfRes.criticalValue5pct
+      }
+      return dfRes.criticalValue10pct
     }
 
     /**

@@ -20,11 +20,11 @@ class AdfGlsTest {
       125, 124, 126, 128, 130, 132, 131, 133, 135, 137
     ] as double[]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(30, result.sampleSize)
-    assertEquals("drift", result.testType)
+    assertEquals('drift', result.testType)
     assertEquals(0, result.lags)
 
     // Random walk should fail to reject unit root
@@ -41,7 +41,7 @@ class AdfGlsTest {
       99, 100, 102, 98, 100, 101, 99, 100, 101, 99
     ] as double[]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.statistic <= 0, 'ADF-GLS statistic should be negative')
@@ -55,10 +55,10 @@ class AdfGlsTest {
       data[i] = 100 + i * 0.5 + Math.sin(i * 0.3) * 2
     }
 
-    def result = AdfGls.test(data, 0, "trend")
+    def result = AdfGls.test(data, 0, 'trend')
 
     assertNotNull(result, 'Result should not be null')
-    assertEquals("trend", result.testType)
+    assertEquals('trend', result.testType)
     assertTrue(result.statistic <= 0, 'ADF-GLS statistic should be negative')
   }
 
@@ -71,7 +71,7 @@ class AdfGlsTest {
       data[i] = 100 + Math.sin(i * 0.2) * 10 + (rnd.nextDouble() - 0.5) * 3
     }
 
-    def result = AdfGls.test(data, 2, "drift")
+    def result = AdfGls.test(data, 2, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(2, result.lags, 'Lags should be 2')
@@ -85,7 +85,7 @@ class AdfGlsTest {
       data[i] = 100 + i * 0.3 + Math.sin(i * 0.2) * 5
     }
 
-    def result = AdfGls.test(data, null as Integer, "drift")
+    def result = AdfGls.test(data, null as Integer, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertTrue(result.lags >= 0, 'Lags should be non-negative')
@@ -99,7 +99,7 @@ class AdfGlsTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(20, result.sampleSize)
@@ -109,13 +109,13 @@ class AdfGlsTest {
   void testValidation() {
     // Null data
     assertThrows(IllegalArgumentException) {
-      AdfGls.test(null as double[], 0, "drift")
+      AdfGls.test(null as double[], 0, 'drift')
     }
 
     // Too few observations
     double[] tooSmall = [1, 2, 3, 4, 5, 6, 7, 8, 9] as double[]
     assertThrows(IllegalArgumentException) {
-      AdfGls.test(tooSmall, 0, "drift")
+      AdfGls.test(tooSmall, 0, 'drift')
     }
 
     // Constant series
@@ -124,13 +124,13 @@ class AdfGlsTest {
       constant[i] = 100.0
     }
     assertThrows(IllegalArgumentException) {
-      AdfGls.test(constant, 0, "drift")
+      AdfGls.test(constant, 0, 'drift')
     }
 
     // Invalid type
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as double[]
     assertThrows(IllegalArgumentException) {
-      AdfGls.test(data, 0, "invalid")
+      AdfGls.test(data, 0, 'invalid')
     }
   }
 
@@ -142,7 +142,7 @@ class AdfGlsTest {
     }
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      AdfGls.test(data, null as Integer, "trend")
+      AdfGls.test(data, null as Integer, 'trend')
     }
 
     assertTrue(exception.message.contains('Unable to select ADF-GLS lag'))
@@ -156,7 +156,7 @@ class AdfGlsTest {
       data[i] = 100 + i * 0.1 + Math.sin(i * 0.2) * 2
     }
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     // Critical values should be negative and ordered: 1% < 5% < 10%
     assertTrue(result.criticalValue1pct < result.criticalValue5pct,
@@ -174,7 +174,7 @@ class AdfGlsTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ] as double[]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     String interpretation = result.interpret(0.05)
     assertNotNull(interpretation, 'Interpretation should not be null')
@@ -190,7 +190,7 @@ class AdfGlsTest {
       data[i] = 100 + i + Math.sin(i * 0.3) * 3
     }
 
-    def result = AdfGls.test(data, 0, "trend")
+    def result = AdfGls.test(data, 0, 'trend')
 
     String evaluation = result.evaluate()
     assertNotNull(evaluation, 'Evaluation should not be null')
@@ -207,7 +207,7 @@ class AdfGlsTest {
       data[i] = 100 + Math.sin(i * 0.5) * 10
     }
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     String str = result
     assertTrue(str.contains('ADF-GLS'), 'Should contain test name')
@@ -225,14 +225,14 @@ class AdfGlsTest {
     }
 
     // Test both types
-    def driftResult = AdfGls.test(data, 0, "drift")
-    def trendResult = AdfGls.test(data, 0, "trend")
+    def driftResult = AdfGls.test(data, 0, 'drift')
+    def trendResult = AdfGls.test(data, 0, 'trend')
 
     assertNotNull(driftResult)
     assertNotNull(trendResult)
 
-    assertEquals("drift", driftResult.testType)
-    assertEquals("trend", trendResult.testType)
+    assertEquals('drift', driftResult.testType)
+    assertEquals('trend', trendResult.testType)
 
     // Critical values should differ by type
     // Trend critical values are more negative
@@ -250,7 +250,7 @@ class AdfGlsTest {
       randomWalk[i] = randomWalk[i - 1] + (rnd.nextDouble() - 0.5)
     }
 
-    def result = AdfGls.test(randomWalk, 0, "drift")
+    def result = AdfGls.test(randomWalk, 0, 'drift')
 
     // Gamma should be small (close to 0) for unit root process
     assertTrue(Math.abs(result.gamma) < 0.5,
@@ -267,7 +267,7 @@ class AdfGlsTest {
     ]
 
     for (double[] data : testData) {
-      def result = AdfGls.test(data, 0, "drift")
+      def result = AdfGls.test(data, 0, 'drift')
 
       // Statistics should be finite and in a reasonable range
       assertFalse(Double.isNaN(result.statistic), 'Statistic should not be NaN')
@@ -284,7 +284,7 @@ class AdfGlsTest {
     // Test with minimum allowed sample size (15 to account for lag computations)
     double[] data = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114] as double[]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     assertNotNull(result, 'Should handle minimum sample size')
     assertEquals(15, result.sampleSize)
@@ -297,7 +297,7 @@ class AdfGlsTest {
       data[i] = 100 + Math.sin(i * 0.2) * 10
     }
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     String interp01 = result.interpret(0.01)
     String interp05 = result.interpret(0.05)
@@ -315,7 +315,7 @@ class AdfGlsTest {
       data[i] = 100 + i + Math.sin(i * 0.3) * 2
     }
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     // Standard error should be positive
     assertTrue(result.standardError > 0,
@@ -334,9 +334,9 @@ class AdfGlsTest {
       data[i] = 100 + i * 0.2 + Math.sin(i * 0.3) * 5
     }
 
-    def result0 = AdfGls.test(data, 0, "drift")
-    def result1 = AdfGls.test(data, 1, "drift")
-    def result2 = AdfGls.test(data, 2, "drift")
+    def result0 = AdfGls.test(data, 0, 'drift')
+    def result1 = AdfGls.test(data, 1, 'drift')
+    def result2 = AdfGls.test(data, 2, 'drift')
 
     assertEquals(0, result0.lags)
     assertEquals(1, result1.lags)
@@ -359,7 +359,7 @@ class AdfGlsTest {
       trendSeries[i] = 100 + i * 2 + Math.sin(i * 0.5) * 3
     }
 
-    def result = AdfGls.test(trendSeries, 0, "trend")
+    def result = AdfGls.test(trendSeries, 0, 'trend')
 
     assertNotNull(result, 'Result should not be null')
     // For trend-stationary series, should generally reject unit root
@@ -373,7 +373,7 @@ class AdfGlsTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ] as double[]
 
-    def result = AdfGls.test(data, 0, "drift")
+    def result = AdfGls.test(data, 0, 'drift')
 
     assertNotNull(result.interpret(0.10G))
     assertNotNull(result.evaluate(0.10G))

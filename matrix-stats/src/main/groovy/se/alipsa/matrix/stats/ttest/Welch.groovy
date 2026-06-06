@@ -34,10 +34,10 @@ class Welch {
    */
   static TtestResult tTest(List<? extends Number> first, List<? extends Number> second) {
     if (first == null || second == null) {
-      throw new IllegalArgumentException("Input lists cannot be null")
+      throw new IllegalArgumentException('Input lists cannot be null')
     }
     if (first.isEmpty() || second.isEmpty()) {
-      throw new IllegalArgumentException("Input lists cannot be empty")
+      throw new IllegalArgumentException('Input lists cannot be empty')
     }
     if (first.size() < 2 || second.size() < 2) {
       throw new IllegalArgumentException("Each sample must have at least 2 observations, got: first=${first.size()}, second=${second.size()}")
@@ -52,12 +52,8 @@ class Welch {
     int n1 = first.size()
     int n2 = second.size()
 
-    TtestResult result = new TtestResult()
-    result.description = "Welch's two sample t-test"
-
     // Welch's t-statistic
     BigDecimal t = (mean1 - mean2) / ((var1 / n1) + (var2 / n2)).sqrt()
-    result.tVal = t
 
     // Welch-Satterthwaite degrees of freedom
     BigDecimal dividend = ((var1/n1) + (var2/n2)) ** 2
@@ -65,19 +61,30 @@ class Welch {
     BigDecimal n2Sq = (n2 as BigDecimal) ** 2
     BigDecimal divisor1 = ((var1 ** 2) as BigDecimal).divide(n1Sq * (n1-1), SCALE, RoundingMode.HALF_UP)
     BigDecimal divisor2 = ((var2 ** 2) as BigDecimal).divide(n2Sq * (n2 -1), SCALE, RoundingMode.HALF_UP)
-    result.df = dividend.divide(divisor1 + divisor2, SCALE, RoundingMode.HALF_UP)
 
-    result.mean1 = mean1
-    result.mean2 = mean2
-    result.var1 = var1
-    result.var2 = var2
-    result.sd1 = sd1
-    result.sd2 = sd2
-    result.n1 = n1
-    result.n2 = n2
-
-    // Use native TDistribution for p-value calculation
-    result.pVal = TDistribution.pValue(t as double, result.df as double)
-    result
+    BigDecimal degreesFreedom = dividend.divide(divisor1 + divisor2, SCALE, RoundingMode.HALF_UP)
+    def p = TDistribution.pValue(t as double, degreesFreedom as double)
+    BigDecimal firstMean = mean1
+    BigDecimal secondMean = mean2
+    BigDecimal firstVariance = var1
+    BigDecimal secondVariance = var2
+    BigDecimal firstSd = sd1
+    BigDecimal secondSd = sd2
+    int firstCount = n1
+    int secondCount = n2
+    new TtestResult(
+      description: "Welch's two sample t-test",
+      tVal: t,
+      df: degreesFreedom,
+      mean1: firstMean,
+      mean2: secondMean,
+      var1: firstVariance,
+      var2: secondVariance,
+      sd1: firstSd,
+      sd2: secondSd,
+      n1: firstCount,
+      n2: secondCount,
+      pVal: p
+    )
   }
 }

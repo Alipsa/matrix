@@ -18,6 +18,9 @@ final class TimeSeriesUtils {
 
   /** Threshold below which a pivot is treated as numerically singular. */
   private static final double SINGULARITY_THRESHOLD = 1e-14
+  private static final int AUGMENTED_MATRIX_FACTOR = 2
+  private static final String NON_EMPTY_MATRIX_MESSAGE = 'Matrix must contain at least one row and one column'
+  private static final String RECTANGULAR_MATRIX_MESSAGE = 'Matrix rows must all have the same length'
   private static final Logger log = Logger.getLogger(TimeSeriesUtils)
 
   private TimeSeriesUtils() {
@@ -37,10 +40,10 @@ final class TimeSeriesUtils {
    */
   static double[] solveLinearSystem(double[][] A, double[] b) {
     if (A == null || b == null) {
-      throw new IllegalArgumentException("Matrix and vector cannot be null")
+      throw new IllegalArgumentException('Matrix and vector cannot be null')
     }
     if (A.length == 0 || A[0].length == 0) {
-      throw new IllegalArgumentException("Matrix must contain at least one row and one column")
+      throw new IllegalArgumentException(NON_EMPTY_MATRIX_MESSAGE)
     }
     if (A.length != b.length) {
       throw new IllegalArgumentException("Matrix row count (${A.length}) must match vector length (${b.length})")
@@ -49,7 +52,7 @@ final class TimeSeriesUtils {
     int rowCount = A.length
     int columnCount = A[0].length
     if (A.any { double[] row -> row.length != columnCount }) {
-      throw new IllegalArgumentException("Matrix rows must all have the same length")
+      throw new IllegalArgumentException(RECTANGULAR_MATRIX_MESSAGE)
     }
     if (rowCount < columnCount) {
       throw new IllegalArgumentException("Underdetermined system: ${rowCount} rows for ${columnCount} columns")
@@ -116,22 +119,22 @@ final class TimeSeriesUtils {
    * @return the inverted matrix
    * @throws IllegalArgumentException if the input is invalid, the matrix is singular,
    * or the computed inverse contains non-finite values
-   */
+  */
   static double[][] invertMatrix(double[][] A) {
     if (A == null || A.length == 0 || A[0].length == 0) {
-      throw new IllegalArgumentException("Matrix must contain at least one row and one column")
+      throw new IllegalArgumentException(NON_EMPTY_MATRIX_MESSAGE)
     }
     if (A.length != A[0].length) {
-      throw new IllegalArgumentException("Only square matrices can be inverted")
+      throw new IllegalArgumentException('Only square matrices can be inverted')
     }
 
     int n = A.length
     if (A.any { double[] row -> row.length != n }) {
-      throw new IllegalArgumentException("Matrix rows must all have the same length")
+      throw new IllegalArgumentException(RECTANGULAR_MATRIX_MESSAGE)
     }
 
     double[][] result = new double[n][n]
-    double[][] augmented = new double[n][2 * n]
+    double[][] augmented = new double[n][AUGMENTED_MATRIX_FACTOR * n]
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         augmented[i][j] = A[i][j]
@@ -149,14 +152,14 @@ final class TimeSeriesUtils {
         log.warn("Singular pivot at column $k while inverting ${n}x${n} matrix")
         throw new IllegalArgumentException("Singular matrix at column ${k} - cannot invert matrix")
       }
-      for (int j = 0; j < 2 * n; j++) {
+      for (int j = 0; j < AUGMENTED_MATRIX_FACTOR * n; j++) {
         augmented[k][j] /= pivot
       }
 
       for (int i = 0; i < n; i++) {
         if (i != k) {
           double factor = augmented[i][k]
-          for (int j = 0; j < 2 * n; j++) {
+          for (int j = 0; j < AUGMENTED_MATRIX_FACTOR * n; j++) {
             augmented[i][j] -= factor * augmented[k][j]
           }
         }

@@ -10,6 +10,8 @@ import groovy.transform.CompileDynamic
  * support is not required for the operator DSL.</p>
  */
 class GroovyFormulaDsl {
+  private static final String INTERACTION_ARITY_MESSAGE = 'interaction(...) requires at least two terms'
+  private static final String SMOOTH_FUNCTION = 's'
 
   /**
    * Evaluates a Groovy formula closure.
@@ -124,7 +126,7 @@ class GroovyFormulaDsl {
    * @return the smooth term
    */
   TermExpr smooth(TermExpr expression) {
-    new FunctionTermExpr('s', [expression])
+    new FunctionTermExpr(SMOOTH_FUNCTION, [expression])
   }
 
   /**
@@ -138,7 +140,7 @@ class GroovyFormulaDsl {
     if (df == null) {
       throw new IllegalArgumentException('df cannot be null')
     }
-    new FunctionTermExpr('s', [expression, df])
+    new FunctionTermExpr(SMOOTH_FUNCTION, [expression, df])
   }
 
   /**
@@ -203,7 +205,7 @@ class GroovyFormulaDsl {
    */
   @SuppressWarnings('UnusedMethodParameter')
   TermExpr interaction(TermExpr first) {
-    throw new IllegalArgumentException('interaction(...) requires at least two terms')
+    throw new IllegalArgumentException(INTERACTION_ARITY_MESSAGE)
   }
 
   /**
@@ -212,6 +214,6 @@ class GroovyFormulaDsl {
    * @return never returns normally
    */
   TermExpr interaction() {
-    throw new IllegalArgumentException('interaction(...) requires at least two terms')
+    throw new IllegalArgumentException(INTERACTION_ARITY_MESSAGE)
   }
 }

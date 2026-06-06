@@ -324,7 +324,7 @@ final class FormulaSupport {
   private static Set<FormulaTerm> powerTerms(FormulaExpression left, FormulaExpression right) {
     if (containsDot(left)) {
       throw new FormulaParseException(
-        "Dot expansion with interaction power (^) cannot be normalized before model-frame expansion",
+        'Dot expansion with interaction power (^) cannot be normalized before model-frame expansion',
         left.start
       )
     }

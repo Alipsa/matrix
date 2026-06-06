@@ -23,7 +23,7 @@ class FisherTest {
     assertNotNull(result.pValue)
     assertNotNull(result.oddsRatio)
     assertNotNull(result.confidenceInterval)
-    assertEquals("two.sided", result.alternative)
+    assertEquals('two.sided', result.alternative)
 
     // Odds ratio = (3*3)/(1*1) = 9
     assertEquals(9.0, result.oddsRatio, 0.001)
@@ -40,8 +40,8 @@ class FisherTest {
 
     assertNotNull(result)
     // This should show significant association
-    assertTrue(result.pValue < 0.05, "Should detect significant association")
-    assertTrue(result.oddsRatio > 1.0, "Odds ratio should indicate positive association")
+    assertTrue(result.pValue < 0.05, 'Should detect significant association')
+    assertTrue(result.oddsRatio > 1.0, 'Odds ratio should indicate positive association')
   }
 
   @Test
@@ -54,30 +54,30 @@ class FisherTest {
     // No association: odds ratio should be 1
     assertEquals(1.0, result.oddsRatio, 0.001)
     // p-value should be high (not significant)
-    assertTrue(result.pValue > 0.9, "Should not detect association")
+    assertTrue(result.pValue > 0.9, 'Should not detect association')
   }
 
   @Test
   void testOneSidedGreater() {
     def table = [[12, 5], [9, 11]]
-    def result = Fisher.test(table, "greater")
+    def result = Fisher.test(table, 'greater')
 
     assertNotNull(result)
-    assertEquals("greater", result.alternative)
+    assertEquals('greater', result.alternative)
     assertNotNull(result.pValue)
 
     // One-sided test should have different p-value than two-sided
-    def twoSided = Fisher.test(table, "two.sided")
+    def twoSided = Fisher.test(table, 'two.sided')
     assertNotEquals(result.pValue, twoSided.pValue)
   }
 
   @Test
   void testOneSidedLess() {
     def table = [[12, 5], [9, 11]]
-    def result = Fisher.test(table, "less")
+    def result = Fisher.test(table, 'less')
 
     assertNotNull(result)
-    assertEquals("less", result.alternative)
+    assertEquals('less', result.alternative)
     assertNotNull(result.pValue)
   }
 
@@ -90,9 +90,9 @@ class FisherTest {
     assertNotNull(result)
     assertNotNull(result.oddsRatio)
     // Should use continuity correction for odds ratio
-    assertTrue(result.oddsRatio > 0, "Odds ratio should be positive")
-    assertTrue(result.confidenceInterval[0] > 0, "Lower CI should be positive")
-    assertTrue(result.confidenceInterval[1] > 0, "Upper CI should be positive")
+    assertTrue(result.oddsRatio > 0, 'Odds ratio should be positive')
+    assertTrue(result.confidenceInterval[0] > 0, 'Lower CI should be positive')
+    assertTrue(result.confidenceInterval[1] > 0, 'Upper CI should be positive')
   }
 
   @Test
@@ -132,10 +132,10 @@ class FisherTest {
       .matrixName('test')
       .rows([[8, 4], [3, 7]])
       .build()
-    def result = Fisher.test(matrix, "greater")
+    def result = Fisher.test(matrix, 'greater')
 
     assertNotNull(result)
-    assertEquals("greater", result.alternative)
+    assertEquals('greater', result.alternative)
   }
 
   @Test
@@ -178,14 +178,14 @@ class FisherTest {
     // Significant result
     def table1 = [[18, 2], [4, 16]]
     def result1 = Fisher.test(table1)
-    assertTrue(result1.evaluate(0.05), "Should reject null at 5% level")
-    assertTrue(result1.evaluate(0.05G), "Should reject null at 5% level with BigDecimal alpha")
-    assertTrue(result1.evaluate(), "Should reject null with default alpha")
+    assertTrue(result1.evaluate(0.05), 'Should reject null at 5% level')
+    assertTrue(result1.evaluate(0.05G), 'Should reject null at 5% level with BigDecimal alpha')
+    assertTrue(result1.evaluate(), 'Should reject null with default alpha')
 
     // Non-significant result
     def table2 = [[10, 10], [10, 10]]
     def result2 = Fisher.test(table2)
-    assertFalse(result2.evaluate(0.05), "Should not reject null at 5% level")
+    assertFalse(result2.evaluate(0.05), 'Should not reject null at 5% level')
   }
 
   @Test
@@ -200,11 +200,11 @@ class FisherTest {
     BigDecimal upper = result.confidenceInterval[1]
 
     // Lower bound should be less than odds ratio
-    assertTrue(lower < result.oddsRatio, "Lower CI bound should be < odds ratio")
+    assertTrue(lower < result.oddsRatio, 'Lower CI bound should be < odds ratio')
     // Upper bound should be greater than odds ratio
-    assertTrue(upper > result.oddsRatio, "Upper CI bound should be > odds ratio")
+    assertTrue(upper > result.oddsRatio, 'Upper CI bound should be > odds ratio')
     // Lower should be less than upper
-    assertTrue(lower < upper, "Lower CI should be < upper CI")
+    assertTrue(lower < upper, 'Lower CI should be < upper CI')
   }
 
   @Test
@@ -215,10 +215,10 @@ class FisherTest {
 
     assertNotNull(str)
     assertTrue(str.contains("Fisher's Exact Test"))
-    assertTrue(str.contains("p-value"))
-    assertTrue(str.contains("odds ratio"))
-    assertTrue(str.contains("95% CI"))
-    assertTrue(str.contains("alternative"))
+    assertTrue(str.contains('p-value'))
+    assertTrue(str.contains('odds ratio'))
+    assertTrue(str.contains('95% CI'))
+    assertTrue(str.contains('alternative'))
   }
 
   @Test
@@ -255,7 +255,7 @@ class FisherTest {
     def table2 = [[10, 0], [0, 10]]
     def result2 = Fisher.test(table2)
     assertNotNull(result2)
-    assertTrue(result2.oddsRatio > 100, "Odds ratio should be very large for perfect association")
+    assertTrue(result2.oddsRatio > 100, 'Odds ratio should be very large for perfect association')
   }
 
   @Test
@@ -291,8 +291,8 @@ class FisherTest {
 
     for (def table : tables) {
       def result = Fisher.test(table)
-      assertTrue(result.pValue >= 0.0, "p-value should be >= 0")
-      assertTrue(result.pValue <= 1.0, "p-value should be <= 1")
+      assertTrue(result.pValue >= 0.0, 'p-value should be >= 0')
+      assertTrue(result.pValue <= 1.0, 'p-value should be <= 1')
     }
   }
 
@@ -300,9 +300,9 @@ class FisherTest {
   void testDifferentAlternatives() {
     def table = [[10, 5], [3, 12]]
 
-    def twoSided = Fisher.test(table, "two.sided")
-    def greater = Fisher.test(table, "greater")
-    def less = Fisher.test(table, "less")
+    def twoSided = Fisher.test(table, 'two.sided')
+    def greater = Fisher.test(table, 'greater')
+    def less = Fisher.test(table, 'less')
 
     // All should have same odds ratio
     assertEquals(twoSided.oddsRatio, greater.oddsRatio, 1e-10)
@@ -322,8 +322,8 @@ class FisherTest {
     def table = [[5, 5], [5, 5]]
     def result = Fisher.test(table)
 
-    assertEquals(1.0, result.oddsRatio, 0.001, "Symmetric table should have OR = 1")
-    assertTrue(result.pValue > 0.9, "Symmetric table should have high p-value")
+    assertEquals(1.0, result.oddsRatio, 0.001, 'Symmetric table should have OR = 1')
+    assertTrue(result.pValue > 0.9, 'Symmetric table should have high p-value')
   }
 
   @Test
@@ -335,8 +335,8 @@ class FisherTest {
     double upper = result.confidenceInterval[1]
 
     // CI should contain the point estimate
-    assertTrue(lower <= result.oddsRatio, "Lower CI should be <= odds ratio")
-    assertTrue(upper >= result.oddsRatio, "Upper CI should be >= odds ratio")
+    assertTrue(lower <= result.oddsRatio, 'Lower CI should be <= odds ratio')
+    assertTrue(upper >= result.oddsRatio, 'Upper CI should be >= odds ratio')
   }
 
   @Test
@@ -350,7 +350,7 @@ class FisherTest {
     assertNotNull(result)
     // Strong association: OR = (30*30)/(10*10) = 9
     assertEquals(9.0, result.oddsRatio, 0.001)
-    assertTrue(result.pValue < 0.05, "Should detect significant association")
+    assertTrue(result.pValue < 0.05, 'Should detect significant association')
   }
 
   @Test
@@ -361,7 +361,7 @@ class FisherTest {
 
     assertNotNull(result)
     // Odds ratio ≈ relative risk for rare diseases
-    assertTrue(result.oddsRatio > 1.5, "Should show increased risk")
+    assertTrue(result.oddsRatio > 1.5, 'Should show increased risk')
   }
 
   @Test
@@ -404,7 +404,7 @@ class FisherTest {
     def table = [[12, 5], [9, 11]]
     def result = Fisher.test(table)
 
-    assertEquals(2.933, result.oddsRatio, 0.01, "Odds ratio should match expected")
+    assertEquals(2.933, result.oddsRatio, 0.01, 'Odds ratio should match expected')
     // Two-sided p-value should be reasonable (not extremely small or large)
     assertTrue(result.pValue > 0.1 && result.pValue < 0.3,
                "p-value should be in reasonable range (got ${result.pValue})")
@@ -414,8 +414,8 @@ class FisherTest {
   void testAlternativeHypothesesConsistency() {
     def table = [[15, 5], [8, 12]]
 
-    def greater = Fisher.test(table, "greater")
-    def less = Fisher.test(table, "less")
+    def greater = Fisher.test(table, 'greater')
+    def less = Fisher.test(table, 'less')
 
     // For one-sided tests, p(greater) + p(less) should be approximately 1 + p(observed)
     // This is because they overlap at the observed value

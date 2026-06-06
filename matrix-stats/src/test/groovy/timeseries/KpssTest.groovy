@@ -22,10 +22,10 @@ class KpssTest {
       data.add(y + 10.0)  // Add constant level
     }
 
-    def result = Kpss.test(data, "level")
+    def result = Kpss.test(data, 'level')
 
     assertNotNull(result, 'Result should not be null')
-    assertEquals("level", result.type, 'Type should be level')
+    assertEquals('level', result.type, 'Type should be level')
     assertEquals(100, result.sampleSize, 'Sample size')
     assertTrue(result.statistic >= 0, 'KPSS statistic should be non-negative')
   }
@@ -39,10 +39,10 @@ class KpssTest {
       data.add(i * 0.5 + rnd.nextGaussian())  // Linear trend + noise
     }
 
-    def result = Kpss.test(data, "trend")
+    def result = Kpss.test(data, 'trend')
 
     assertNotNull(result, 'Result should not be null')
-    assertEquals("trend", result.type, 'Type should be trend')
+    assertEquals('trend', result.type, 'Type should be trend')
     assertTrue(result.statistic >= 0, 'KPSS statistic should be non-negative')
   }
 
@@ -57,7 +57,7 @@ class KpssTest {
       data.add(value)
     }
 
-    def result = Kpss.test(data, "level")
+    def result = Kpss.test(data, 'level')
 
     assertNotNull(result, 'Result should not be null')
     // For random walk, we expect higher KPSS statistic
@@ -84,7 +84,7 @@ class KpssTest {
     // Invalid type
     List<Double> validData = (1..50).collect { it + Math.random() }
     assertThrows(IllegalArgumentException) {
-      Kpss.test(validData, "invalid")
+      Kpss.test(validData, 'invalid')
     }
   }
 
@@ -96,11 +96,11 @@ class KpssTest {
       data.add(i * 0.3 + rnd.nextGaussian())
     }
 
-    def resultLevel = Kpss.test(data, "level")
-    def resultTrend = Kpss.test(data, "trend")
+    def resultLevel = Kpss.test(data, 'level')
+    def resultTrend = Kpss.test(data, 'trend')
 
-    assertEquals("level", resultLevel.type, 'Level type')
-    assertEquals("trend", resultTrend.type, 'Trend type')
+    assertEquals('level', resultLevel.type, 'Level type')
+    assertEquals('trend', resultTrend.type, 'Trend type')
 
     // Critical values should be different
     assertTrue(resultLevel.criticalValue > resultTrend.criticalValue,
@@ -117,8 +117,8 @@ class KpssTest {
       data.add(y)
     }
 
-    def result1 = Kpss.test(data, "level", 1)
-    def result2 = Kpss.test(data, "level", 5)
+    def result1 = Kpss.test(data, 'level', 1)
+    def result2 = Kpss.test(data, 'level', 5)
 
     assertEquals(1, result1.lags, 'Should use 1 lag')
     assertEquals(5, result2.lags, 'Should use 5 lags')
@@ -134,7 +134,7 @@ class KpssTest {
       data.add(y)
     }
 
-    def result = Kpss.test(data, "level")
+    def result = Kpss.test(data, 'level')
 
     assertTrue(result.lags > 0, 'Auto-selected lags should be positive')
     assertTrue(result.lags < 100, 'Auto-selected lags should be reasonable')
@@ -225,9 +225,9 @@ class KpssTest {
       data.add(y)
     }
 
-    def kpssResult = Kpss.test(data, "level")
+    def kpssResult = Kpss.test(data, 'level')
 
     assertNotNull(kpssResult, 'KPSS result should not be null')
-    assertEquals("level", kpssResult.type, 'Type should be level')
+    assertEquals('level', kpssResult.type, 'Type should be level')
   }
 }

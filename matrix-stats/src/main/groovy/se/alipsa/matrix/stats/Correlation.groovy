@@ -60,9 +60,9 @@ package se.alipsa.matrix.stats
 @SuppressWarnings('DuplicateNumberLiteral')
 class Correlation {
 
-  static final String PEARSON = "pearson"
-  static final String SPEARMAN = "spearman"
-  static final String KENDALL = "kendall"
+  static final String PEARSON = 'pearson'
+  static final String SPEARMAN = 'spearman'
+  static final String KENDALL = 'kendall'
 
   static BigDecimal cor(List<? extends Number> valuesX, List<? extends Number> valuesY, String method = PEARSON) {
     if (method == PEARSON) {
@@ -87,7 +87,7 @@ class Correlation {
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corPearson(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    validateCorrelationInputs(numbersX, numbersY, "Pearson correlation")
+    validateCorrelationInputs(numbersX, numbersY, 'Pearson correlation')
 
     BigDecimal sumX = 0
     BigDecimal sumY = 0
@@ -128,7 +128,7 @@ class Correlation {
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corSpearman(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    validateCorrelationInputs(numbersX, numbersY, "Spearman correlation")
+    validateCorrelationInputs(numbersX, numbersY, 'Spearman correlation')
 
     List<BigDecimal> ranksX = rank(numbersX)
     List<BigDecimal> ranksY = rank(numbersY)
@@ -143,7 +143,7 @@ class Correlation {
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corKendall(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    validateCorrelationInputs(numbersX, numbersY, "Kendall correlation")
+    validateCorrelationInputs(numbersX, numbersY, 'Kendall correlation')
 
     final int n = numbersX.size()
     final long numPairs = sumN(n - 1)

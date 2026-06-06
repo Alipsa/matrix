@@ -25,7 +25,7 @@ class Sampler {
    */
   static List<Matrix> split(Matrix data, BigDecimal ratio) {
     if (ratio > 1.0 || ratio <= 0) {
-      throw new IllegalArgumentException("Ratio must be greater than 0 and at most 1")
+      throw new IllegalArgumentException('Ratio must be greater than 0 and at most 1')
     }
     int size = (int) (data.rowCount() * ratio)
     if (size == 0) {

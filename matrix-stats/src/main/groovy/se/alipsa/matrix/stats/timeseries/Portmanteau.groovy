@@ -44,7 +44,7 @@ class Portmanteau {
     validateInput(data, lags, fitdf)
 
     int n = data.size()
-    double[] y = data.collect { it.doubleValue() } as double[]
+    double[] y = data*.doubleValue() as double[]
 
     // Auto-select lags if not specified
     // Common rule: min(10, n/5) or sqrt(n)
@@ -71,7 +71,7 @@ class Portmanteau {
     variance /= n
 
     if (variance < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant or near-constant series)")
+      throw new IllegalArgumentException('Data has no variation (constant or near-constant series)')
     }
 
     // Calculate autocorrelations for lags 1 to h
@@ -99,7 +99,7 @@ class Portmanteau {
     int degreesOfFreedom = h - fitdf
     if (degreesOfFreedom <= 0) {
       throw new IllegalArgumentException(
-        "Degrees of freedom must be positive. " +
+        'Degrees of freedom must be positive. ' +
         "Number of lags (${h}) must be greater than fit df (${fitdf})"
       )
     }
@@ -121,10 +121,10 @@ class Portmanteau {
 
   private static void validateInput(List<? extends Number> data, Integer lags, int fitdf) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 10) {
       throw new IllegalArgumentException("Ljung-Box test requires at least 10 observations, got ${data.size()}")
@@ -138,7 +138,7 @@ class Portmanteau {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -178,9 +178,8 @@ class Portmanteau {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: Series shows significant autocorrelation (p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: No significant autocorrelation detected (p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: No significant autocorrelation detected (p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -191,16 +190,16 @@ class Portmanteau {
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       String conclusion = pValue < alphaValue ?
-        "significant autocorrelation present" :
-        "no significant autocorrelation"
+        'significant autocorrelation present' :
+        'no significant autocorrelation'
 
       StringBuilder sb = new StringBuilder()
-      sb.append(String.format("Ljung-Box Q statistic: %.4f (df: %d, p-value: %.4f)\n", statistic, degreesOfFreedom, pValue))
-      sb.append(String.format("Lags tested: %d\n", lags))
+      sb.append(String.format('Ljung-Box Q statistic: %.4f (df: %d, p-value: %.4f)\n', statistic, degreesOfFreedom, pValue))
+      sb.append(String.format('Lags tested: %d\n', lags))
       if (fitdf > 0) {
-        sb.append(String.format("Model fit df: %d\n", fitdf))
+        sb.append(String.format('Model fit df: %d\n', fitdf))
       }
-      sb.append(String.format("Conclusion: %s at %.0f%% significance level", conclusion, (alphaValue * 100) as double))
+      sb.append(String.format('Conclusion: %s at %.0f%% significance level', conclusion, (alphaValue * 100) as double))
 
       sb.toString()
     }
@@ -221,7 +220,7 @@ class Portmanteau {
     @Override
     String toString() {
       StringBuilder sb = new StringBuilder()
-      sb.append("Ljung-Box Portmanteau Test\n")
+      sb.append('Ljung-Box Portmanteau Test\n')
       sb.append("Sample size: ${sampleSize}\n")
       sb.append("Lags tested: ${lags}\n")
       if (fitdf > 0) {
@@ -231,9 +230,9 @@ class Portmanteau {
       sb.append("Degrees of freedom: ${degreesOfFreedom}\n")
       sb.append("p-value: ${String.format('%.4f', pValue)}\n")
       sb.append("\n${interpret()}\n")
-      sb.append("\nAutocorrelations:\n")
+      sb.append('\nAutocorrelations:\n')
       for (int i = 0; i < Math.min(lags, 10); i++) {
-        sb.append(String.format("  Lag %2d: %7.4f\n", i + 1, autocorrelations[i]))
+        sb.append(String.format('  Lag %2d: %7.4f\n', i + 1, autocorrelations[i]))
       }
       if (lags > 10) {
         sb.append("  ... (${lags - 10} more lags)\n")

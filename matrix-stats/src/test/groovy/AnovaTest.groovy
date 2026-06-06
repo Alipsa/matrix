@@ -24,7 +24,7 @@ class AnovaTest {
     // Residuals  147  38.96   0.265
 
     def iris = Dataset.iris()
-    def speciesIdx = iris.columnIndex("Species")
+    def speciesIdx = iris.columnIndex('Species')
 
     // Group by species using subset
     def setosa = iris.subset { it[speciesIdx] == 'setosa' }['Sepal Length'] as List<Number>
@@ -51,7 +51,7 @@ class AnovaTest {
     // Residuals  147  16.96   0.115
 
     def iris = Dataset.iris()
-    def speciesIdx = iris.columnIndex("Species")
+    def speciesIdx = iris.columnIndex('Species')
 
     def setosa = iris.subset { it[speciesIdx] == 'setosa' }['Sepal Width'] as List<Number>
     def versicolor = iris.subset { it[speciesIdx] == 'versicolor' }['Sepal Width'] as List<Number>

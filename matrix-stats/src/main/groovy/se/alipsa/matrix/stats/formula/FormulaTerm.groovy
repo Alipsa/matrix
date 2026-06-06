@@ -50,7 +50,7 @@ final class FormulaTerm {
    * @return the term label
    */
   String asFormulaString() {
-    factors.collect { FormulaExpression factor -> factor.asFormulaString() }.join(':')
+    factors*.asFormulaString().join(':')
   }
 
   /**

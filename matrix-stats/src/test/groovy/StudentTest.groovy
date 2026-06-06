@@ -26,7 +26,7 @@ class StudentTest {
   @Test
   void testTwoSample() {
     def iris = Dataset.iris()
-    def speciesIdx = iris.columnIndex("Species")
+    def speciesIdx = iris.columnIndex('Species')
     def setosa = iris.subset {
       it[speciesIdx] == 'setosa'
     }
@@ -36,12 +36,12 @@ class StudentTest {
     // R's t.test defaults to Welch's t-test, so we use Welch class
     TtestResult result = Welch.tTest(setosa['Petal Length'], virginica['Petal Length'])
     // println(result)
-    assertEquals(-49.98618626, result.getT(8), "t value")
+    assertEquals(-49.98618626, result.getT(8), 't value')
     // println("var1 = ${result.var1}, var2 = ${result.var2}")
-    assertEquals(58.60939455, result.getDf(8), "Degrees of freedom")
-    assertEquals(0.17366400, result.getSd1(8), "sd1")
-    assertEquals(0.55189470, result.getSd2(8), "sd2")
-    assertEquals(0.55189470, result.getSd2(8), "sd2")
+    assertEquals(58.60939455, result.getDf(8), 'Degrees of freedom')
+    assertEquals(0.17366400, result.getSd1(8), 'sd1')
+    assertEquals(0.55189470, result.getSd2(8), 'sd2')
+    assertEquals(0.55189470, result.getSd2(8), 'sd2')
     assertEquals(9.269628E-50, result.p, 0.0000001)
   }
 

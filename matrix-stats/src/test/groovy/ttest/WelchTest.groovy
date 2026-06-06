@@ -17,7 +17,7 @@ class WelchTest {
   void testWelchTwoSample() {
     // Same test as StudentTest but using Welch class with simpler API
     def iris = Dataset.iris()
-    def speciesIdx = iris.columnIndex("Species")
+    def speciesIdx = iris.columnIndex('Species')
     def setosa = iris.subset {
       it[speciesIdx] == 'setosa'
     }
@@ -29,10 +29,10 @@ class WelchTest {
     def result = Welch.tTest(setosa['Petal Length'], virginica['Petal Length'])
 
     // Verify same results as Student.tTest with equalVariance=false
-    assertEquals(-49.98618626, result.getT(8), "t value")
-    assertEquals(58.60939455, result.getDf(8), "Degrees of freedom")
-    assertEquals(0.17366400, result.getSd1(8), "sd1")
-    assertEquals(0.55189470, result.getSd2(8), "sd2")
+    assertEquals(-49.98618626, result.getT(8), 't value')
+    assertEquals(58.60939455, result.getDf(8), 'Degrees of freedom')
+    assertEquals(0.17366400, result.getSd1(8), 'sd1')
+    assertEquals(0.55189470, result.getSd2(8), 'sd2')
     assertEquals(9.269628E-50, result.p, 0.0000001)
     assertEquals("Welch's two sample t-test", result.description)
   }
@@ -47,8 +47,8 @@ class WelchTest {
     // Should handle different sample sizes correctly
     assertEquals(5, result.n1)
     assertEquals(7, result.n2)
-    assertTrue(result.pVal < 0.05, "Should detect difference")
-    assertTrue(result.df > 0, "df should be positive")
+    assertTrue(result.pVal < 0.05, 'Should detect difference')
+    assertTrue(result.df > 0, 'df should be positive')
     // Welch-Satterthwaite df should be fractional
     assertNotEquals(result.df as int, result.df, "df should be fractional for Welch's test")
   }
@@ -90,8 +90,8 @@ class WelchTest {
     def welchResult = Welch.tTest(sample1, sample2)
 
     // With equal variance and equal sample sizes, results should be very close
-    assertTrue(welchResult.pVal < 0.001, "Should detect clear difference")
-    assertTrue(Math.abs(welchResult.t) > 10, "t-statistic should be large")
+    assertTrue(welchResult.pVal < 0.001, 'Should detect clear difference')
+    assertTrue(Math.abs(welchResult.t) > 10, 't-statistic should be large')
   }
 
   @Test
@@ -112,14 +112,14 @@ class WelchTest {
     def result = Welch.tTest(sample1, sample2)
 
     // Verify result is TtestResult type
-    assertTrue(result instanceof TtestResult, "Welch.tTest() should return TtestResult")
+    assertTrue(result instanceof TtestResult, 'Welch.tTest() should return TtestResult')
 
     // Verify all expected properties are accessible
-    assertNotNull(result.tVal, "tVal should be set")
-    assertNotNull(result.pVal, "pVal should be set")
-    assertNotNull(result.df, "df should be set")
-    assertNotNull(result.mean1, "mean1 should be set")
-    assertNotNull(result.mean2, "mean2 should be set")
-    assertNotNull(result.description, "description should be set")
+    assertNotNull(result.tVal, 'tVal should be set')
+    assertNotNull(result.pVal, 'pVal should be set')
+    assertNotNull(result.df, 'df should be set')
+    assertNotNull(result.mean1, 'mean1 should be set')
+    assertNotNull(result.mean2, 'mean2 should be set')
+    assertNotNull(result.description, 'description should be set')
   }
 }

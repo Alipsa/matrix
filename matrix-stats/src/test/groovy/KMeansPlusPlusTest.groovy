@@ -40,10 +40,10 @@ class KMeansPlusPlusTest {
 
     def groupCounts = clustering.getAssignment().toList().countBy { it.clusterId }
     //println("Assignments: " + groupCounts)
-    assertEquals(750, groupCounts[0], "Cluster 0 should have 750 points")
-    assertEquals(750, groupCounts[1], "Cluster 1 should have 750 points")
-    assertEquals(750, groupCounts[2], "Cluster 2 should have 750 points")
-    assertEquals(750, groupCounts[3], "Cluster 3 should have 750 points")
+    assertEquals(750, groupCounts[0], 'Cluster 0 should have 750 points')
+    assertEquals(750, groupCounts[1], 'Cluster 1 should have 750 points')
+    assertEquals(750, groupCounts[2], 'Cluster 2 should have 750 points')
+    assertEquals(750, groupCounts[3], 'Cluster 3 should have 750 points')
 
     Map<Integer, Matrix> clusters = clustering.getClustersById()
     clusters.each { id, matrix ->
@@ -53,10 +53,10 @@ class KMeansPlusPlusTest {
 
     // print centeroids
     // for (int i = 0; i < k; i++) println("(" + centroids[i][0] + ", " + centroids[i][1] + ")")
-    assertEquals(4, centroids.length, "Centroids should be 4")
+    assertEquals(4, centroids.length, 'Centroids should be 4')
 
-    println("The within-cluster sum-of-squares (WCSS) = " + wcss)
-    assertTrue(wcss < 250 && wcss > 230, "WCSS should be approximately 240")
+    println('The within-cluster sum-of-squares (WCSS) = ' + wcss)
+    assertTrue(wcss < 250 && wcss > 230, 'WCSS should be approximately 240')
   }
 
   @Test

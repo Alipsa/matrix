@@ -7,8 +7,8 @@ package se.alipsa.matrix.stats
  * for numerical stability. For BigDecimal / List-based mean and variance, use
  * {@link se.alipsa.matrix.core.Stat} instead.</p>
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 final class StatUtils {
-
   private StatUtils() {
   }
 
@@ -71,7 +71,7 @@ final class StatUtils {
 
   private static void validateForVariance(double[] values) {
     if (values == null || values.length < 2) {
-      throw new IllegalArgumentException("Variance requires at least two observations")
+      throw new IllegalArgumentException('Variance requires at least two observations')
     }
   }
 }

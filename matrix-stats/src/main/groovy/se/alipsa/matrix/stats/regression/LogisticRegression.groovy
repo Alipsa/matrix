@@ -188,7 +188,7 @@ class LogisticRegression {
     // Validation
     if (xValues.size() != yValues.size()) {
       throw new IllegalArgumentException(
-        "Must have equal number of X and Y data points for logistic regression. " +
+        'Must have equal number of X and Y data points for logistic regression. ' +
         "Got ${xValues.size()} X values and ${yValues.size()} Y values."
       )
     }
@@ -227,8 +227,8 @@ class LogisticRegression {
     int n = xValues.size()
 
     // Convert to double arrays
-    double[] x = xValues.collect { it.doubleValue() } as double[]
-    double[] y = yValues.collect { it.doubleValue() } as double[]
+    double[] x = xValues*.doubleValue() as double[]
+    double[] y = yValues*.doubleValue() as double[]
 
     MultivariateObjective negativeLogLikelihood = { double[] coefficients ->
       double beta0 = coefficients[0]
@@ -269,8 +269,8 @@ class LogisticRegression {
 
     } catch (Exception e) {
       throw new IllegalStateException(
-        "Failed to fit logistic regression model. " +
-        "This may be due to numerical instability or perfect separation in the data. " +
+        'Failed to fit logistic regression model. ' +
+        'This may be due to numerical instability or perfect separation in the data. ' +
         "Error: ${e.message}", e
       )
     }
@@ -283,10 +283,9 @@ class LogisticRegression {
     // Use numerically stable sigmoid
     if (z >= 0) {
       return 1.0 / (1.0 + Math.exp(-z))
-    } else {
-      double expZ = Math.exp(z)
-      return expZ / (1.0 + expZ)
     }
+    double expZ = Math.exp(z)
+    return expZ / (1.0 + expZ)
   }
 
   /**

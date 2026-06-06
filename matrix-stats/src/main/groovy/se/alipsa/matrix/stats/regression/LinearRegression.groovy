@@ -43,7 +43,7 @@ class LinearRegression {
 
   LinearRegression(List<? extends Number> x, List<? extends Number> y) {
     if (x.size() != y.size()) {
-      throw new IllegalArgumentException("Must have equal number of X and Y data points for a linear regression")
+      throw new IllegalArgumentException('Must have equal number of X and Y data points for a linear regression')
     }
 
     Integer numberOfDataValues = x.size()

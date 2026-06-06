@@ -106,7 +106,7 @@ class JarqueBera {
     validateData(data)
 
     int n = data.size()
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
 
     // Calculate mean
     double mean = 0
@@ -156,7 +156,7 @@ class JarqueBera {
 
   private static void validateData(List<? extends Number> data) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (data.size() < MIN_SAMPLE_SIZE) {
       throw new IllegalArgumentException("Jarque-Bera test requires at least ${MIN_SAMPLE_SIZE} observations (got ${data.size()})")
@@ -166,7 +166,7 @@ class JarqueBera {
     double first = data[0].doubleValue()
     boolean allSame = data.every { it.doubleValue() == first }
     if (allSame) {
-      throw new IllegalArgumentException("Data has zero variance - all values are identical")
+      throw new IllegalArgumentException('Data has zero variance - all values are identical')
     }
   }
 

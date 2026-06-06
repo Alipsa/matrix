@@ -36,7 +36,7 @@ class Lilliefors {
     int n = data.size()
 
     // Calculate sample mean and standard deviation
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
     double mean = values.sum() / n
     double variance = 0.0
     for (double val : values) {
@@ -117,35 +117,34 @@ class Lilliefors {
       // Approximation based on simulation studies
       if (z < 0.2) {
         return 1.0
-      } else if (z > 1.0) {
+      }
+      if (z > 1.0) {
         // For large D values, use exponential approximation
         return Math.exp(-7.01256 * z * z + 4.8 * z)
-      } else {
-        // Linear interpolation for moderate D values
-        return Math.max(0.0, 1.0 - Math.exp(-7.01256 * z * z + 4.8 * z))
       }
-    } else {
-      // For larger samples, use a different approximation
-      // Based on the asymptotic distribution
-      double sqrtN = Math.sqrt(n)
-      double zScore = d * (sqrtN - 0.01 + 0.85 / sqrtN)
-
-      if (zScore < 0.3) {
-        return 1.0
-      } else if (zScore > 1.0) {
-        return Math.exp(-2.0 * zScore * zScore)
-      } else {
-        return Math.max(0.0, 1.0 - Math.exp(-2.0 * zScore * zScore))
-      }
+      // Linear interpolation for moderate D values
+      return Math.max(0.0, 1.0 - Math.exp(-7.01256 * z * z + 4.8 * z))
     }
+    // For larger samples, use a different approximation
+    // Based on the asymptotic distribution
+    double sqrtN = Math.sqrt(n)
+    double zScore = d * (sqrtN - 0.01 + 0.85 / sqrtN)
+
+    if (zScore < 0.3) {
+      return 1.0
+    }
+    if (zScore > 1.0) {
+      return Math.exp(-2.0 * zScore * zScore)
+    }
+    return Math.max(0.0, 1.0 - Math.exp(-2.0 * zScore * zScore))
   }
 
   private static void validateInput(List<? extends Number> data) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 4) {
       throw new IllegalArgumentException("Lilliefors test requires at least 4 observations, got ${data.size()}")
@@ -153,7 +152,7 @@ class Lilliefors {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -188,22 +187,21 @@ class Lilliefors {
      */
     String evaluate() {
       if (pValue < alpha) {
-        return String.format("Reject H0: Data does not appear to be normally distributed (p = %.4f < α = %.2f)",
-                             pValue, alpha)
-      } else {
-        return String.format("Fail to reject H0: Data appears to be normally distributed (p = %.4f >= α = %.2f)",
+        return String.format('Reject H0: Data does not appear to be normally distributed (p = %.4f < α = %.2f)',
                              pValue, alpha)
       }
+      return String.format('Fail to reject H0: Data appears to be normally distributed (p = %.4f >= α = %.2f)',
+                           pValue, alpha)
     }
 
     @Override
     String toString() {
       """Lilliefors Normality Test
   Sample size: ${sampleSize}
-  Sample mean: ${String.format("%.4f", mean)}
-  Sample SD: ${String.format("%.4f", stdDev)}
-  Test statistic (D): ${String.format("%.4f", statistic)}
-  P-value: ${String.format("%.4f", pValue)}
+  Sample mean: ${String.format('%.4f', mean)}
+  Sample SD: ${String.format('%.4f', stdDev)}
+  Test statistic (D): ${String.format('%.4f', statistic)}
+  P-value: ${String.format('%.4f', pValue)}
 
   ${evaluate()}"""
     }

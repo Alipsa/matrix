@@ -33,7 +33,7 @@ class Fisher {
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(List<List<Integer>> table, String alternative = "two.sided") {
+  static FisherResult test(List<List<Integer>> table, String alternative = 'two.sided') {
     validateTable(table)
 
     int a = table[0][0]
@@ -52,7 +52,7 @@ class Fisher {
    * @return FisherResult containing p-value, odds ratio, and confidence interval
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
-  static FisherResult test(Matrix table, String alternative = "two.sided") {
+  static FisherResult test(Matrix table, String alternative = 'two.sided') {
     if (table.rowCount() != 2 || table.columnCount() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table.rowCount()}×${table.columnCount()})")
     }
@@ -75,7 +75,7 @@ class Fisher {
     for (List<Integer> row : table) {
       for (Integer val : row) {
         if (val == null || val < 0) {
-          throw new IllegalArgumentException("Table values must be non-negative integers")
+          throw new IllegalArgumentException('Table values must be non-negative integers')
         }
       }
     }

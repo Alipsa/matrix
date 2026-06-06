@@ -4,6 +4,8 @@ package se.alipsa.matrix.stats.solver
  * Root-finding utility that mirrors spreadsheet "goal seek" behavior for one-dimensional functions.
  */
 class GoalSeek {
+  private static final double MIDPOINT_DIVISOR = 2.0d
+  private static final double ROOT_TARGET = 0.0d
 
   /**
    * Provides similar functionality to the excel/calc goal seek function.
@@ -80,20 +82,20 @@ class GoalSeek {
     double lowValue = function.value(low)
     double highValue = function.value(high)
 
-    if (lowValue == 0.0d) {
+    if (lowValue == ROOT_TARGET) {
       return low
     }
-    if (highValue == 0.0d) {
+    if (highValue == ROOT_TARGET) {
       return high
     }
 
     for (int iteration = 0; iteration < 128 && (high - low) > absoluteAccuracy; iteration++) {
       double candidate = low - lowValue * (high - low) / (highValue - lowValue)
       if (!Double.isFinite(candidate) || candidate <= low || candidate >= high) {
-        candidate = low + (high - low) / 2.0d
+        candidate = low + (high - low) / MIDPOINT_DIVISOR
       }
       double candidateValue = function.value(candidate)
-      if (candidateValue == 0.0d) {
+      if (candidateValue == ROOT_TARGET) {
         return candidate
       }
       if (Math.signum(candidateValue) == Math.signum(lowValue)) {
@@ -104,6 +106,6 @@ class GoalSeek {
         highValue = candidateValue
       }
     }
-    low + (high - low) / 2.0d
+    low + (high - low) / MIDPOINT_DIVISOR
   }
 }

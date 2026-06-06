@@ -104,7 +104,7 @@ class KSquared {
    */
   static KSquaredResult test(List<? extends Number> data) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.size() < 8) {
       throw new IllegalArgumentException("Sample size must be at least 8 (got ${data.size()})")
@@ -140,7 +140,7 @@ class KSquared {
     double sd = Math.sqrt(m2)
 
     if (sd < 1e-10) {
-      throw new IllegalArgumentException("Data has zero variance")
+      throw new IllegalArgumentException('Data has zero variance')
     }
 
     // Calculate sample skewness (b1) and kurtosis (b2)
@@ -195,7 +195,7 @@ class KSquared {
    */
   static KSquaredResult test(Matrix matrix, String columnName) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException('Matrix cannot be null')
     }
 
     List<?> column = matrix.column(columnName)
@@ -211,7 +211,7 @@ class KSquared {
    */
   static KSquaredResult test(Matrix matrix, int columnIndex) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException('Matrix cannot be null')
     }
 
     List<?> column = matrix.column(columnIndex)
@@ -254,9 +254,8 @@ class KSquared {
       if (pValue < alphaValue) {
         String reason = determineReason()
         return "Reject H0: Data significantly departs from normality (K² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)}) - ${reason}"
-      } else {
-        return "Fail to reject H0: Data is consistent with normality (K² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: Data is consistent with normality (K² = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -267,12 +266,12 @@ class KSquared {
       BigDecimal absZKurt = zKurtosis.abs()
 
       if (absZSkew > 1.96 && absZKurt > 1.96) {
-        return "both skewness and kurtosis"
-      } else if (absZSkew > absZKurt) {
-        return skewness > 0 ? "positive skewness (right tail)" : "negative skewness (left tail)"
-      } else {
-        return kurtosis > 3 ? "heavy tails (leptokurtic)" : "light tails (platykurtic)"
+        return 'both skewness and kurtosis'
       }
+      if (absZSkew > absZKurt) {
+        return skewness > 0 ? 'positive skewness (right tail)' : 'negative skewness (left tail)'
+      }
+      return kurtosis > 3 ? 'heavy tails (leptokurtic)' : 'light tails (platykurtic)'
     }
 
     /**
@@ -283,16 +282,16 @@ class KSquared {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < alphaValue ? "significant departure from normality" : "consistent with normality"
+      String conclusion = pValue < alphaValue ? 'significant departure from normality' : 'consistent with normality'
 
       String.format(
         "D'Agostino's K² test:\\n" +
-        "K² statistic: %.4f\\n" +
-        "p-value: %.4f\\n" +
-        "Sample size: %d\\n" +
-        "Skewness: %.4f (Z = %.4f)\\n" +
-        "Kurtosis: %.4f (Z = %.4f)\\n" +
-        "Conclusion: Data shows %s at %.0f%% significance level",
+        'K² statistic: %.4f\\n' +
+        'p-value: %.4f\\n' +
+        'Sample size: %d\\n' +
+        'Skewness: %.4f (Z = %.4f)\\n' +
+        'Kurtosis: %.4f (Z = %.4f)\\n' +
+        'Conclusion: Data shows %s at %.0f%% significance level',
         statistic, pValue, sampleSize, skewness, zSkewness, kurtosis, zKurtosis,
         conclusion, alphaValue * 100
       )

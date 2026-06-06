@@ -22,7 +22,7 @@ class PolynomialRegressionTest {
     assertEquals(36.0, poly.predict(6).doubleValue(), 0.5)  // Extrapolation
 
     // R-squared should be very high for perfect fit
-    assertTrue(poly.rsquared > 0.99, "R-squared should be > 0.99 for perfect fit")
+    assertTrue(poly.rsquared > 0.99, 'R-squared should be > 0.99 for perfect fit')
 
     // Check degree
     assertEquals(2, poly.degree)
@@ -94,9 +94,9 @@ class PolynomialRegressionTest {
     def poly = new PolynomialRegression(x, y, 2)
     def summary = poly.summary()
 
-    assertTrue(summary.contains('Polynomial Regression'), "Summary should contain title")
-    assertTrue(summary.contains('R-squared'), "Summary should contain R-squared")
-    assertTrue(summary.contains('degree 2'), "Summary should mention degree")
+    assertTrue(summary.contains('Polynomial Regression'), 'Summary should contain title')
+    assertTrue(summary.contains('R-squared'), 'Summary should contain R-squared')
+    assertTrue(summary.contains('degree 2'), 'Summary should mention degree')
   }
 
   @Test

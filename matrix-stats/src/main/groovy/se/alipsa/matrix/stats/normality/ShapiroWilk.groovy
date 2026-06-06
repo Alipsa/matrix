@@ -119,7 +119,7 @@ class ShapiroWilk {
     validateData(data)
 
     int n = data.size()
-    double[] sorted = data.collect { it.doubleValue() }.sort() as double[]
+    double[] sorted = data*.doubleValue().sort() as double[]
 
     // Calculate sample mean and variance
     double mean = StatUtils.mean(sorted)
@@ -140,7 +140,7 @@ class ShapiroWilk {
 
   private static void validateData(List<? extends Number> data) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (data.size() < MIN_SAMPLE_SIZE) {
       throw new IllegalArgumentException("Shapiro-Wilk test requires at least ${MIN_SAMPLE_SIZE} observations (got ${data.size()})")
@@ -153,7 +153,7 @@ class ShapiroWilk {
     double first = data[0].doubleValue()
     boolean allSame = data.every { it.doubleValue() == first }
     if (allSame) {
-      throw new IllegalArgumentException("Data has zero variance - all values are identical")
+      throw new IllegalArgumentException('Data has zero variance - all values are identical')
     }
   }
 

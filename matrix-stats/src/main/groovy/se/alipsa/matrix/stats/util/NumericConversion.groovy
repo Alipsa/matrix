@@ -125,7 +125,7 @@ final class NumericConversion {
    * @since 2.4.0
    */
   static double[][] toDoubleArray(Grid<?> grid) {
-    int[] shape = validateRectangular(grid, 'grid')
+    int[] shape = validateRectangular(grid, GRID_LABEL)
     Grid<BigDecimal> numericGrid = toBigDecimalGrid(grid)
     double[][] values = new double[shape[0]][shape[1]]
     for (int row = 0; row < shape[0]; row++) {

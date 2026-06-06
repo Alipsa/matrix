@@ -96,7 +96,7 @@ class ShapiroFranciaTest {
     }
 
     // Too many observations
-    List<Double> tooManyData = (1..6000).collect { it.doubleValue() }
+    List<Double> tooManyData = (1..6000)*.doubleValue()
     assertThrows(IllegalArgumentException) {
       ShapiroFrancia.test(tooManyData)
     }

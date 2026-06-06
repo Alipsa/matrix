@@ -64,7 +64,7 @@ class LinearRegressionTest {
 
     assertEquals(-0.98130982, model.getIntercept(8), 'Estimate intercept')
     assertEquals(1.88939547, model.getSlope(8), 'Estimate X')
-    assertEquals("Y = 1.89X - 0.98", model.toString(), 'Formula')
+    assertEquals('Y = 1.89X - 0.98', model.toString(), 'Formula')
     assertEquals(0.98034908, model.getRsquared(8), 'Multiple R-squared')
     assertEquals(0.99577407, model.getInterceptStdErr(8), 'Std error intercept')
     assertEquals(0.11962969, model.getSlopeStdErr(8), 'Stc err X')

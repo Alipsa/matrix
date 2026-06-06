@@ -34,7 +34,7 @@ class DurbinWatson {
     validateInput(residuals)
 
     int n = residuals.size()
-    double[] res = residuals.collect { it.doubleValue() } as double[]
+    double[] res = residuals*.doubleValue() as double[]
 
     // Calculate the Durbin-Watson statistic
     double numerator = 0.0
@@ -80,10 +80,10 @@ class DurbinWatson {
 
   private static void validateInput(List<? extends Number> residuals) {
     if (residuals == null) {
-      throw new IllegalArgumentException("Residuals cannot be null")
+      throw new IllegalArgumentException('Residuals cannot be null')
     }
     if (residuals.isEmpty()) {
-      throw new IllegalArgumentException("Residuals cannot be empty")
+      throw new IllegalArgumentException('Residuals cannot be empty')
     }
     if (residuals.size() < 3) {
       throw new IllegalArgumentException("Durbin-Watson test requires at least 3 observations, got ${residuals.size()}")
@@ -91,7 +91,7 @@ class DurbinWatson {
     // Check for non-null values
     for (Number value : residuals) {
       if (value == null) {
-        throw new IllegalArgumentException("Residuals contains null values")
+        throw new IllegalArgumentException('Residuals contains null values')
       }
     }
   }
@@ -116,7 +116,7 @@ class DurbinWatson {
     int sampleSize
 
     /** The alternative hypothesis */
-    String alternative = "two.sided"
+    String alternative = 'two.sided'
 
     /**
      * Interprets the Durbin-Watson statistic.
@@ -125,16 +125,18 @@ class DurbinWatson {
      */
     String interpret() {
       if (statistic < 1.5) {
-        return "Strong positive autocorrelation (DW < 1.5)"
-      } else if (statistic < 1.8) {
-        return "Moderate positive autocorrelation (1.5 ≤ DW < 1.8)"
-      } else if (statistic < 2.2) {
-        return "No significant autocorrelation (1.8 ≤ DW ≤ 2.2)"
-      } else if (statistic < 2.5) {
-        return "Moderate negative autocorrelation (2.2 < DW ≤ 2.5)"
-      } else {
-        return "Strong negative autocorrelation (DW > 2.5)"
+        return 'Strong positive autocorrelation (DW < 1.5)'
       }
+      if (statistic < 1.8) {
+        return 'Moderate positive autocorrelation (1.5 ≤ DW < 1.8)'
+      }
+      if (statistic < 2.2) {
+        return 'No significant autocorrelation (1.8 ≤ DW ≤ 2.2)'
+      }
+      if (statistic < 2.5) {
+        return 'Moderate negative autocorrelation (2.2 < DW ≤ 2.5)'
+      }
+      return 'Strong negative autocorrelation (DW > 2.5)'
     }
 
     /**
@@ -145,14 +147,14 @@ class DurbinWatson {
     String evaluate() {
       String autocorrType
       if (autocorrelation > 0.3) {
-        autocorrType = "positive"
+        autocorrType = 'positive'
       } else if (autocorrelation < -0.3) {
-        autocorrType = "negative"
+        autocorrType = 'negative'
       } else {
-        autocorrType = "negligible"
+        autocorrType = 'negligible'
       }
 
-      String.format("Durbin-Watson statistic: %.4f (ρ ≈ %.4f, %s autocorrelation)\n%s",
+      String.format('Durbin-Watson statistic: %.4f (ρ ≈ %.4f, %s autocorrelation)\n%s',
                            statistic, autocorrelation, autocorrType, interpret())
     }
 
@@ -160,8 +162,8 @@ class DurbinWatson {
     String toString() {
       """Durbin-Watson Test
   Sample size: ${sampleSize}
-  Test statistic (DW): ${String.format("%.4f", statistic)}
-  Autocorrelation (ρ): ${String.format("%.4f", autocorrelation)}
+  Test statistic (DW): ${String.format('%.4f', statistic)}
+  Autocorrelation (ρ): ${String.format('%.4f', autocorrelation)}
   Alternative: ${alternative}
 
   ${interpret()}"""

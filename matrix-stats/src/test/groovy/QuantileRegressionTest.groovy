@@ -153,7 +153,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, 0.0)
     }
 
-    assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
+    assertTrue(exception.message.contains('must be in the open interval (0, 1)'))
   }
 
   @Test
@@ -165,7 +165,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, 1.0)
     }
 
-    assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
+    assertTrue(exception.message.contains('must be in the open interval (0, 1)'))
   }
 
   @Test
@@ -177,7 +177,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, -0.5)
     }
 
-    assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
+    assertTrue(exception.message.contains('must be in the open interval (0, 1)'))
   }
 
   @Test
@@ -189,7 +189,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, 1.5)
     }
 
-    assertTrue(exception.message.contains("must be in the open interval (0, 1)"))
+    assertTrue(exception.message.contains('must be in the open interval (0, 1)'))
   }
 
   @Test
@@ -201,7 +201,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, 0.5)
     }
 
-    assertTrue(exception.message.contains("Need at least 2 data points"))
+    assertTrue(exception.message.contains('Need at least 2 data points'))
   }
 
   @Test
@@ -213,7 +213,7 @@ class QuantileRegressionTest {
       new QuantileRegression(x, y, 0.5)
     }
 
-    assertTrue(exception.message.contains("Must have equal number"))
+    assertTrue(exception.message.contains('Must have equal number'))
   }
 
   @Test
@@ -225,9 +225,9 @@ class QuantileRegressionTest {
 
     String str = qr
     assertNotNull(str)
-    assertTrue(str.contains("Y"))
-    assertTrue(str.contains("X"))
-    assertTrue(str.contains("τ=0.5") || str.contains("τ=0.50"))
+    assertTrue(str.contains('Y'))
+    assertTrue(str.contains('X'))
+    assertTrue(str.contains('τ=0.5') || str.contains('τ=0.50'))
   }
 
   @Test

@@ -27,17 +27,17 @@ class Adf {
    * @param type The type of test: "none" (no intercept/trend), "drift" (intercept only), or "trend" (intercept and trend)
    * @return AdfResult containing test statistic and conclusion
    */
-  static AdfResult test(List<? extends Number> data, int lags = 0, String type = "drift") {
+  static AdfResult test(List<? extends Number> data, int lags = 0, String type = 'drift') {
     validateInput(data, lags, type)
 
     int n = data.size()
-    double[] y = data.collect { it.doubleValue() } as double[]
+    double[] y = data*.doubleValue() as double[]
 
     // Check for constant series
     double yMin = y.min()
     double yMax = y.max()
     if (Math.abs(yMax - yMin) < 1e-10) {
-      throw new IllegalArgumentException("Data has no variation (constant series). Cannot perform ADF test.")
+      throw new IllegalArgumentException('Data has no variation (constant series). Cannot perform ADF test.')
     }
 
     // Calculate first differences
@@ -74,7 +74,7 @@ class Adf {
       responseVar += (r - responseMean) * (r - responseMean)
     }
     if (responseVar < 1e-10) {
-      throw new IllegalArgumentException("First differences have no variation. Cannot perform ADF test.")
+      throw new IllegalArgumentException('First differences have no variation. Cannot perform ADF test.')
     }
 
     try {
@@ -110,8 +110,8 @@ class Adf {
       )
     } catch (Exception e) {
       throw new IllegalStateException(
-        "Failed to perform ADF test. This may be due to perfect collinearity in the data " +
-        "(e.g., perfect linear trend or constant differences). " +
+        'Failed to perform ADF test. This may be due to perfect collinearity in the data ' +
+        '(e.g., perfect linear trend or constant differences). ' +
         "Try using a different lag order or test type. Error: ${e.message}", e
       )
     }
@@ -124,10 +124,10 @@ class Adf {
   private static double[][] buildDesignMatrix(double[] y, double[] dy, int lags, String type, int nObs, int n) {
     // Determine number of predictors
     int nPredictors = 1 // y_{t-1}
-    if (type == "drift" || type == "trend") {
+    if (type == 'drift' || type == 'trend') {
       nPredictors++ // constant
     }
-    if (type == "trend") {
+    if (type == 'trend') {
       nPredictors++ // time trend
     }
     nPredictors += lags // lagged differences
@@ -138,12 +138,12 @@ class Adf {
       int col = 0
 
       // Add constant if drift or trend
-      if (type == "drift" || type == "trend") {
+      if (type == 'drift' || type == 'trend') {
         X[i][col++] = 1.0
       }
 
       // Add time trend if trend (centered to reduce collinearity)
-      if (type == "trend") {
+      if (type == 'trend') {
         // Center the time trend around its mean
         double t = (lags + i + 1) - (n / 2.0)
         X[i][col++] = t
@@ -172,13 +172,13 @@ class Adf {
    * Gets the index of the γ coefficient (y_{t-1}) in the regression parameters.
    */
   private static int getGammaIndex(String type) {
-    if (type == "none") {
+    if (type == 'none') {
       return 0 // y_{t-1} is first
-    } else if (type == "drift") {
-      return 1 // constant, then y_{t-1}
-    } else { // trend
-      return 2 // constant, trend, then y_{t-1}
     }
+    if (type == 'drift') {
+      return 1 // constant, then y_{t-1}
+    }
+    return 2 // constant, trend, then y_{t-1}
   }
 
   /**
@@ -187,39 +187,41 @@ class Adf {
    */
   private static double getCriticalValue(String type, int n) {
     // Approximate 5% critical values (more accurate for larger samples)
-    if (type == "none") {
+    if (type == 'none') {
       return -1.95 // No intercept, no trend
-    } else if (type == "drift") {
+    }
+    if (type == 'drift') {
       // Use size-adjusted critical value
       if (n < 25) {
         return -3.00
-      } else if (n < 50) {
+      }
+      if (n < 50) {
         return -2.93
-      } else if (n < 100) {
+      }
+      if (n < 100) {
         return -2.89
-      } else {
-        return -2.86
       }
-    } else { // trend
-      // Use size-adjusted critical value
-      if (n < 25) {
-        return -3.60
-      } else if (n < 50) {
-        return -3.50
-      } else if (n < 100) {
-        return -3.45
-      } else {
-        return -3.41
-      }
+      return -2.86
     }
+    // trend
+    if (n < 25) {
+      return -3.60
+    }
+    if (n < 50) {
+      return -3.50
+    }
+    if (n < 100) {
+      return -3.45
+    }
+    return -3.41
   }
 
   private static void validateInput(List<? extends Number> data, int lags, String type) {
     if (data == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
     if (data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be empty")
+      throw new IllegalArgumentException('Data cannot be empty')
     }
     if (data.size() < 12) {
       throw new IllegalArgumentException("ADF test requires at least 12 observations, got ${data.size()}")
@@ -236,7 +238,7 @@ class Adf {
     // Check for non-null values
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data contains null values")
+        throw new IllegalArgumentException('Data contains null values')
       }
     }
   }
@@ -276,10 +278,9 @@ class Adf {
      */
     String interpret() {
       if (statistic < criticalValue) {
-        return "Reject H0: Series appears to be stationary (no unit root)"
-      } else {
-        return "Fail to reject H0: Series appears to have a unit root (non-stationary)"
+        return 'Reject H0: Series appears to be stationary (no unit root)'
       }
+      return 'Fail to reject H0: Series appears to have a unit root (non-stationary)'
     }
 
     /**
@@ -289,10 +290,10 @@ class Adf {
      */
     String evaluate() {
       String conclusion = statistic < criticalValue ?
-        "stationary (no unit root)" :
-        "non-stationary (unit root present)"
+        'stationary (no unit root)' :
+        'non-stationary (unit root present)'
 
-      String.format("ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s",
+      String.format('ADF statistic: %.4f (critical value: %.2f at 5%% level)\nγ coefficient: %.6f (SE: %.6f)\nConclusion: Series appears %s',
                            statistic, criticalValue, gammaCoefficient, gammaStandardError, conclusion)
     }
 
@@ -302,10 +303,10 @@ class Adf {
   Type: ${type}
   Lags: ${lag}
   Sample size: ${sampleSize} (effective: ${effectiveSize})
-  ADF statistic: ${String.format("%.4f", statistic)}
-  Critical value (5%%): ${String.format("%.2f", criticalValue)}
-  γ coefficient: ${String.format("%.6f", gammaCoefficient)}
-  Standard error: ${String.format("%.6f", gammaStandardError)}
+  ADF statistic: ${String.format('%.4f', statistic)}
+  Critical value (5%%): ${String.format('%.2f', criticalValue)}
+  γ coefficient: ${String.format('%.6f', gammaCoefficient)}
+  Standard error: ${String.format('%.6f', gammaStandardError)}
 
   ${interpret()}"""
     }

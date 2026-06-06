@@ -270,7 +270,7 @@ class JohansenTest {
     // Eigenvalues should be sorted in descending order
     for (int i = 0; i < result.eigenvalues.size() - 1; i++) {
       assertTrue(result.eigenvalues[i] >= result.eigenvalues[i+1],
-                 "Eigenvalues should be in descending order")
+                 'Eigenvalues should be in descending order')
     }
   }
 
@@ -294,7 +294,7 @@ class JohansenTest {
     // Trace statistics should decrease as r increases
     for (int i = 0; i < result.traceStatistics.size() - 1; i++) {
       assertTrue(result.traceStatistics[i] >= result.traceStatistics[i+1],
-                 "Trace statistics should be non-increasing")
+                 'Trace statistics should be non-increasing')
     }
   }
 
@@ -389,7 +389,7 @@ class JohansenTest {
 
     assertEquals(5, result.lags)
     assertNotNull(result.eigenvalues)
-    assertTrue(result.sampleSize < n, "Effective sample size should be less than n")
+    assertTrue(result.sampleSize < n, 'Effective sample size should be less than n')
   }
 
   @Test

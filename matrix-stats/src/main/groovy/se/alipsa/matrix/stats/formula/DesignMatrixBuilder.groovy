@@ -143,7 +143,7 @@ final class DesignMatrixBuilder {
     FormulaExpression degreeExpr = call.arguments[1]
 
     if (!(degreeExpr instanceof FormulaExpression.NumberLiteral)) {
-      throw new IllegalArgumentException("poly() degree must be a numeric literal")
+      throw new IllegalArgumentException('poly() degree must be a numeric literal')
     }
 
     BigDecimal degreeValue = (degreeExpr as FormulaExpression.NumberLiteral).value

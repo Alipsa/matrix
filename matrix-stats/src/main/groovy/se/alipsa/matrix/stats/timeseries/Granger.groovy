@@ -83,7 +83,7 @@ class Granger {
    */
   static GrangerResult test(double[] x, double[] y, Integer maxLag = null) {
     if (x == null || y == null) {
-      throw new IllegalArgumentException("Data cannot be null")
+      throw new IllegalArgumentException('Data cannot be null')
     }
 
     if (x.length != y.length) {
@@ -147,7 +147,7 @@ class Granger {
     double denominator = rssUnrestricted / (nObs - 2 * p - 1)
 
     if (denominator < 1e-10) {
-      throw new IllegalArgumentException("Unrestricted model has perfect fit (RSS ≈ 0)")
+      throw new IllegalArgumentException('Unrestricted model has perfect fit (RSS ≈ 0)')
     }
 
     double fStatistic = numerator / denominator
@@ -175,8 +175,8 @@ class Granger {
    * Performs the Granger causality test with List inputs.
    */
   static GrangerResult test(List<? extends Number> x, List<? extends Number> y, Integer maxLag = null) {
-    double[] xArray = x.collect { it.doubleValue() } as double[]
-    double[] yArray = y.collect { it.doubleValue() } as double[]
+    double[] xArray = x*.doubleValue() as double[]
+    double[] yArray = y*.doubleValue() as double[]
     test(xArray, yArray, maxLag)
   }
 
@@ -265,9 +265,8 @@ class Granger {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
       if (pValue < alphaValue) {
         return "Reject H0: X Granger-causes Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
-      } else {
-        return "Fail to reject H0: X does not Granger-cause Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
       }
+      return "Fail to reject H0: X does not Granger-cause Y (F = ${String.format('%.4f', statistic)}, p = ${String.format('%.4f', pValue)})"
     }
 
     /**
@@ -275,18 +274,18 @@ class Granger {
      */
     String evaluate(Number alpha = 0.05) {
       BigDecimal alphaValue = NumericConversion.toAlpha(alpha)
-      String conclusion = pValue < alphaValue ? "X Granger-causes Y" : "X does not Granger-cause Y"
+      String conclusion = pValue < alphaValue ? 'X Granger-causes Y' : 'X does not Granger-cause Y'
 
       String.format(
-        "Granger causality test:\\n" +
-        "Lags: %d\\n" +
-        "F-statistic: %.4f\\n" +
-        "p-value: %.4f\\n" +
-        "Degrees of freedom: (%d, %d)\\n" +
-        "RSS restricted: %.4f\\n" +
-        "RSS unrestricted: %.4f\\n" +
-        "Sample size: %d (effective: %d)\\n" +
-        "Conclusion: %s at %.0f%% significance level",
+        'Granger causality test:\\n' +
+        'Lags: %d\\n' +
+        'F-statistic: %.4f\\n' +
+        'p-value: %.4f\\n' +
+        'Degrees of freedom: (%d, %d)\\n' +
+        'RSS restricted: %.4f\\n' +
+        'RSS unrestricted: %.4f\\n' +
+        'Sample size: %d (effective: %d)\\n' +
+        'Conclusion: %s at %.0f%% significance level',
         lags, statistic, pValue, df1, df2,
         rssRestricted, rssUnrestricted,
         sampleSize, effectiveSampleSize,

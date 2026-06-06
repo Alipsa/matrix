@@ -19,11 +19,11 @@ class DfTest {
       111, 113, 115, 114, 116, 118, 120, 122, 121, 123
     ] as double[]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(20, result.sampleSize)
-    assertEquals("drift", result.testType)
+    assertEquals('drift', result.testType)
 
     // Random walk should fail to reject unit root
     assertTrue(result.statistic > result.criticalValue5pct,
@@ -38,7 +38,7 @@ class DfTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ] as double[]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     assertNotNull(result, 'Result should not be null')
 
@@ -55,10 +55,10 @@ class DfTest {
       data[i] = 100 + i * 0.5 + Math.sin(i * 0.3) * 2
     }
 
-    def result = Df.test(data, "trend")
+    def result = Df.test(data, 'trend')
 
     assertNotNull(result, 'Result should not be null')
-    assertEquals("trend", result.testType)
+    assertEquals('trend', result.testType)
     assertTrue(result.statistic <= 0, 'DF statistic should be negative')
   }
 
@@ -70,10 +70,10 @@ class DfTest {
       1.1, 0.9, 1.0, 1.2, 0.8, 1.0, 1.1, 0.9, 1.0, 1.1
     ] as double[]
 
-    def result = Df.test(data, "none")
+    def result = Df.test(data, 'none')
 
     assertNotNull(result, 'Result should not be null')
-    assertEquals("none", result.testType)
+    assertEquals('none', result.testType)
     assertTrue(result.statistic <= 0, 'DF statistic should be negative')
   }
 
@@ -85,7 +85,7 @@ class DfTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     assertNotNull(result, 'Result should not be null')
     assertEquals(20, result.sampleSize)
@@ -95,13 +95,13 @@ class DfTest {
   void testValidation() {
     // Null data
     assertThrows(IllegalArgumentException) {
-      Df.test(null as double[], "drift")
+      Df.test(null as double[], 'drift')
     }
 
     // Too few observations
     double[] tooSmall = [1, 2, 3, 4, 5, 6, 7, 8, 9] as double[]
     assertThrows(IllegalArgumentException) {
-      Df.test(tooSmall, "drift")
+      Df.test(tooSmall, 'drift')
     }
 
     // Constant series
@@ -110,13 +110,13 @@ class DfTest {
       constant[i] = 100.0
     }
     assertThrows(IllegalArgumentException) {
-      Df.test(constant, "drift")
+      Df.test(constant, 'drift')
     }
 
     // Invalid type
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as double[]
     assertThrows(IllegalArgumentException) {
-      Df.test(data, "invalid")
+      Df.test(data, 'invalid')
     }
   }
 
@@ -128,7 +128,7 @@ class DfTest {
       data[i] = 100 + i * 0.1
     }
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     // Critical values should be negative and ordered: 1% < 5% < 10%
     assertTrue(result.criticalValue1pct < result.criticalValue5pct,
@@ -146,7 +146,7 @@ class DfTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ] as double[]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     String interpretation = result.interpret(0.05)
     assertNotNull(interpretation, 'Interpretation should not be null')
@@ -162,7 +162,7 @@ class DfTest {
       data[i] = 100 + i
     }
 
-    def result = Df.test(data, "trend")
+    def result = Df.test(data, 'trend')
 
     String evaluation = result.evaluate()
     assertNotNull(evaluation, 'Evaluation should not be null')
@@ -179,7 +179,7 @@ class DfTest {
       data[i] = 100 + Math.sin(i * 0.5) * 10
     }
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     String str = result
     assertTrue(str.contains('Dickey-Fuller'), 'Should contain test name')
@@ -196,17 +196,17 @@ class DfTest {
     }
 
     // Test all three types
-    def noneResult = Df.test(data, "none")
-    def driftResult = Df.test(data, "drift")
-    def trendResult = Df.test(data, "trend")
+    def noneResult = Df.test(data, 'none')
+    def driftResult = Df.test(data, 'drift')
+    def trendResult = Df.test(data, 'trend')
 
     assertNotNull(noneResult)
     assertNotNull(driftResult)
     assertNotNull(trendResult)
 
-    assertEquals("none", noneResult.testType)
-    assertEquals("drift", driftResult.testType)
-    assertEquals("trend", trendResult.testType)
+    assertEquals('none', noneResult.testType)
+    assertEquals('drift', driftResult.testType)
+    assertEquals('trend', trendResult.testType)
 
     // Critical values should differ by type
     // Trend is most negative, none is least negative
@@ -224,7 +224,7 @@ class DfTest {
       randomWalk[i] = randomWalk[i - 1] + (rnd.nextDouble() - 0.5)
     }
 
-    def result = Df.test(randomWalk, "drift")
+    def result = Df.test(randomWalk, 'drift')
 
     // Gamma should be small (close to 0) for unit root process
     assertTrue(Math.abs(result.gamma) < 0.5,
@@ -242,7 +242,7 @@ class DfTest {
     ]
 
     for (double[] data : testData) {
-      def result = Df.test(data, "drift")
+      def result = Df.test(data, 'drift')
 
       // DF statistic should be negative
       assertTrue(result.statistic <= 0,
@@ -259,7 +259,7 @@ class DfTest {
     // Test with minimum allowed sample size (10)
     double[] data = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109] as double[]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     assertNotNull(result, 'Should handle minimum sample size')
     assertEquals(10, result.sampleSize)
@@ -272,7 +272,7 @@ class DfTest {
       data[i] = 100 + Math.sin(i * 0.2) * 10
     }
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     String interp01 = result.interpret(0.01)
     String interp05 = result.interpret(0.05)
@@ -290,7 +290,7 @@ class DfTest {
       data[i] = 100 + i + Math.sin(i * 0.3) * 2
     }
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     // Standard error should be positive
     assertTrue(result.standardError > 0,
@@ -308,7 +308,7 @@ class DfTest {
       101, 99, 100, 102, 98, 100, 101, 99, 100, 101
     ] as double[]
 
-    def result = Df.test(data, "drift")
+    def result = Df.test(data, 'drift')
 
     assertNotNull(result.interpret(0.10G))
     assertNotNull(result.evaluate(0.10G))

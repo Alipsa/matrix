@@ -18,7 +18,7 @@ class InteractionExpr extends TermExpr {
 
   @Override
   String render() {
-    terms.collect { TermExpr term -> term.render() }.join(':')
+    terms*.render().join(':')
   }
 
   private static List<TermExpr> copyTerms(List<? extends TermExpr> terms) {

@@ -17,6 +17,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  */
 @PackageScope
 final class LinalgAdapters {
+  private static final String VALUES_LABEL = 'values'
+
 
   private static final String SYNTHETIC_COLUMN_PREFIX = 'c'
 
@@ -44,9 +46,9 @@ final class LinalgAdapters {
    *
    * @param values the dense numeric array
    * @return a matrix containing the supplied values
-   */
+  */
   static Matrix toMatrix(double[][] values) {
-    int[] shape = validateRectangular(values, 'values')
+    int[] shape = validateRectangular(values, VALUES_LABEL)
     List<String> columnNames = syntheticColumnNames(shape[1])
     List<List> rows = []
     for (int row = 0; row < shape[0]; row++) {
@@ -70,7 +72,7 @@ final class LinalgAdapters {
    * @return a grid containing the supplied values
    */
   static Grid<BigDecimal> toGrid(double[][] values) {
-    int[] shape = validateRectangular(values, 'values')
+    int[] shape = validateRectangular(values, VALUES_LABEL)
     List<List<BigDecimal>> rows = []
     for (int row = 0; row < shape[0]; row++) {
       List<BigDecimal> currentRow = []

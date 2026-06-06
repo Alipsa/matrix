@@ -6,6 +6,7 @@ import groovy.transform.CompileDynamic
  * Base type for Groovy-native formula DSL term expressions.
  */
 abstract class TermExpr {
+  private static final String OTHER_LABEL = 'other'
 
   /**
    * Adds a term to this expression.
@@ -14,7 +15,7 @@ abstract class TermExpr {
    * @return a combined term expression
    */
   TermExpr plus(TermExpr other) {
-    new BinaryTermExpr(this, '+', requireTerm(other, 'other'))
+    new BinaryTermExpr(this, '+', requireTerm(other, OTHER_LABEL))
   }
 
   /**
@@ -24,7 +25,7 @@ abstract class TermExpr {
    * @return a subtraction term expression
    */
   TermExpr minus(TermExpr other) {
-    new BinaryTermExpr(this, '-', requireTerm(other, 'other'))
+    new BinaryTermExpr(this, '-', requireTerm(other, OTHER_LABEL))
   }
 
   /**
@@ -35,7 +36,7 @@ abstract class TermExpr {
    * @return an interaction term expression
    */
   TermExpr remainder(TermExpr other) {
-    new InteractionExpr([this, requireTerm(other, 'other')])
+    new InteractionExpr([this, requireTerm(other, OTHER_LABEL)])
   }
 
   /**

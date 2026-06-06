@@ -103,8 +103,10 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * Lilliefors test instead, which provides a corrected version of the K-S test specifically for normality
  * testing with estimated parameters.</p>
  */
+@SuppressWarnings('DuplicateNumberLiteral')
 class KolmogorovSmirnov {
-
+  private static final double ASYMPTOTIC_CORRECTION_BASE = 0.12d
+  private static final double ASYMPTOTIC_CORRECTION_SCALE = 0.11d
   private static final int EXACT_TWO_SAMPLE_MAX_PRODUCT = 10_000
 
   /**
@@ -118,7 +120,7 @@ class KolmogorovSmirnov {
   static KSResult testNormality(List<? extends Number> data) {
     validateData(data)
 
-    double[] values = data.collect { it.doubleValue() } as double[]
+    double[] values = data*.doubleValue() as double[]
 
     // Calculate sample mean and standard deviation
     double mean = values.sum() / values.length
@@ -131,7 +133,7 @@ class KolmogorovSmirnov {
     // Create normal distribution with sample mean and std dev
     NormalDistribution normalDist = new NormalDistribution(mean, stdDev)
 
-    testAgainstDistribution(data, normalDist, "Normality")
+    testAgainstDistribution(data, normalDist, 'Normality')
   }
 
   /**
@@ -144,7 +146,7 @@ class KolmogorovSmirnov {
   static KSResult testStandardNormality(List<? extends Number> data) {
     validateData(data)
     NormalDistribution standardNormal = new NormalDistribution(0, 1)
-    testAgainstDistribution(data, standardNormal, "Standard Normality")
+    testAgainstDistribution(data, standardNormal, 'Standard Normality')
   }
 
   /**
@@ -156,10 +158,10 @@ class KolmogorovSmirnov {
    * @return KSResult containing the D statistic and p-value
    * @throws IllegalArgumentException if data is null or has fewer than 2 observations
    */
-  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = "K-S Test") {
+  static KSResult testAgainstDistribution(List<? extends Number> data, ContinuousDistribution distribution, String testName = 'K-S Test') {
     validateData(data)
 
-    double[] values = (data.collect { it.doubleValue() } as List<Double>).sort() as double[]
+    double[] values = (data*.doubleValue() as List<Double>).sort() as double[]
     double dStatistic = calculateOneSampleStatistic(values, distribution)
     double pValue = calculateOneSamplePValue(dStatistic, values.length)
 
@@ -183,8 +185,8 @@ class KolmogorovSmirnov {
     validateData(sample1)
     validateData(sample2)
 
-    double[] values1 = sample1.collect { it.doubleValue() } as double[]
-    double[] values2 = sample2.collect { it.doubleValue() } as double[]
+    double[] values1 = sample1*.doubleValue() as double[]
+    double[] values2 = sample2*.doubleValue() as double[]
 
     // Calculate D statistic
     double dStatistic = calculateTwoSampleStatistic(values1, values2)
@@ -196,7 +198,7 @@ class KolmogorovSmirnov {
       dStatistic: BigDecimal.valueOf(dStatistic),
       pValue: BigDecimal.valueOf(pValue),
       sampleSize: values1.length + values2.length,
-      testType: "Two-Sample K-S"
+      testType: 'Two-Sample K-S'
     )
   }
 
@@ -224,7 +226,7 @@ class KolmogorovSmirnov {
     // Use Stephens' asymptotic correction for the one-sample test. This is intentionally approximate,
     // so callers and tests should not expect exact agreement with finite-sample reference tables.
     double sqrtN = Math.sqrt(sampleSize)
-    double lambda = (sqrtN + 0.12d + 0.11d / sqrtN) * dStatistic
+    double lambda = (sqrtN + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / sqrtN) * dStatistic
     kolmogorovProbability(lambda)
   }
 
@@ -273,7 +275,7 @@ class KolmogorovSmirnov {
     }
 
     double effectiveSize = Math.sqrt((sampleSize1 * sampleSize2) / (double) (sampleSize1 + sampleSize2))
-    double lambda = (effectiveSize + 0.12d + 0.11d / effectiveSize) * dStatistic
+    double lambda = (effectiveSize + ASYMPTOTIC_CORRECTION_BASE + ASYMPTOTIC_CORRECTION_SCALE / effectiveSize) * dStatistic
     kolmogorovProbability(lambda)
   }
 
@@ -337,14 +339,14 @@ class KolmogorovSmirnov {
 
   private static void validateData(List<? extends Number> data) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (data.size() < 2) {
       throw new IllegalArgumentException("Kolmogorov-Smirnov test requires at least 2 observations (got ${data.size()})")
     }
     for (Number value : data) {
       if (value == null) {
-        throw new IllegalArgumentException("Data cannot contain null values")
+        throw new IllegalArgumentException('Data cannot contain null values')
       }
     }
   }
@@ -385,10 +387,10 @@ class KolmogorovSmirnov {
     @Override
     String toString() {
       String result
-      if (testType.contains("Normality")) {
-        result = isNormal() ? "Data appears normally distributed" : "Data does NOT appear normally distributed"
+      if (testType.contains('Normality')) {
+        result = isNormal() ? 'Data appears normally distributed' : 'Data does NOT appear normally distributed'
       } else {
-        result = evaluate() ? "Samples appear to differ" : "Samples do not significantly differ"
+        result = evaluate() ? 'Samples appear to differ' : 'Samples do not significantly differ'
       }
 
       """Kolmogorov-Smirnov Test Result (${testType}):

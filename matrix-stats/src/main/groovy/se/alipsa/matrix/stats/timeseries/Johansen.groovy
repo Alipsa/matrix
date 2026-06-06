@@ -175,7 +175,7 @@ class Johansen {
 
   private static void validateInputs(List<double[]> data, int lags, String type) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data cannot be null or empty")
+      throw new IllegalArgumentException('Data cannot be null or empty')
     }
     if (lags < 1) {
       throw new IllegalArgumentException("Lags must be at least 1 (got ${lags})")
@@ -187,7 +187,7 @@ class Johansen {
     int n = data[0].length
     for (int i = 1; i < data.size(); i++) {
       if (data[i].length != n) {
-        throw new IllegalArgumentException("All series must have the same length")
+        throw new IllegalArgumentException('All series must have the same length')
       }
     }
     if (n < lags + 20) {
@@ -259,7 +259,7 @@ class Johansen {
     try {
       ztZInv = MatrixAlgebra.inverse(ztZ)
     } catch (SingularMatrixException ignored) {
-      throw new IllegalArgumentException("Singular matrix in short-run regression - cannot perform Johansen test")
+      throw new IllegalArgumentException('Singular matrix in short-run regression - cannot perform Johansen test')
     }
 
     double[][] projection = MatrixAlgebra.multiply(
@@ -337,7 +337,8 @@ class Johansen {
         [0.00, 0.00, 0.00, 3.76, 15.41],     // r = 3
         [0.00, 0.00, 0.00, 0.00, 3.76]       // r = 4
       ] as double[][]
-    } else if (type == 'trend') {
+    }
+    if (type == 'trend') {
       return [
         [10.49, 22.76, 39.06, 59.14, 83.20],
         [0.00, 6.50, 22.76, 39.06, 59.14],
@@ -345,15 +346,14 @@ class Johansen {
         [0.00, 0.00, 0.00, 6.50, 22.76],
         [0.00, 0.00, 0.00, 0.00, 6.50]
       ] as double[][]
-    } else {  // 'none'
-      return [
-        [2.71, 13.33, 26.79, 44.49, 66.23],
-        [0.00, 2.71, 13.33, 26.79, 44.49],
-        [0.00, 0.00, 2.71, 13.33, 26.79],
-        [0.00, 0.00, 0.00, 2.71, 13.33],
-        [0.00, 0.00, 0.00, 0.00, 2.71]
-      ] as double[][]
     }
+    return [
+      [2.71, 13.33, 26.79, 44.49, 66.23],
+      [0.00, 2.71, 13.33, 26.79, 44.49],
+      [0.00, 0.00, 2.71, 13.33, 26.79],
+      [0.00, 0.00, 0.00, 2.71, 13.33],
+      [0.00, 0.00, 0.00, 0.00, 2.71]
+    ] as double[][]
   }
 
   /**
@@ -388,7 +388,7 @@ class Johansen {
      */
     String interpret() {
       StringBuilder sb = new StringBuilder()
-      sb.append("Johansen Cointegration Test Results:\n")
+      sb.append('Johansen Cointegration Test Results:\n')
 
       int cointRank = 0
       for (int r = 0; r < numVariables; r++) {

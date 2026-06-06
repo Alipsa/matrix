@@ -79,8 +79,8 @@ class NumericConversionTest {
       [3.0, 4.0],
     ])
 
-    assertEquals([[1.0d, 2.0d], [3.0d, 4.0d]], NumericConversion.toDoubleArray(matrix).collect { it.toList() })
-    assertEquals([[1.0d, 2.0d], [3.0d, 4.0d]], NumericConversion.toDoubleArray(grid).collect { it.toList() })
+    assertEquals([[1.0d, 2.0d], [3.0d, 4.0d]], NumericConversion.toDoubleArray(matrix)*.toList())
+    assertEquals([[1.0d, 2.0d], [3.0d, 4.0d]], NumericConversion.toDoubleArray(grid)*.toList())
   }
 
   @Test

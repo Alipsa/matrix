@@ -13,6 +13,8 @@ import se.alipsa.matrix.stats.formula.dsl.GroovyFormulaSpec
  * usage such as {@code lm(data) { y | x + group }}.</p>
  */
 final class FitDsl {
+  private static final String GAM_METHOD = 'gam'
+  private static final String LOESS_METHOD = 'loess'
 
   private FitDsl() {
   }
@@ -44,7 +46,7 @@ final class FitDsl {
     @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<GroovyFormulaSpec> formula
   ) {
-    fit('loess', data, formula)
+    fit(LOESS_METHOD, data, formula)
   }
 
   /**
@@ -61,7 +63,7 @@ final class FitDsl {
     @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<GroovyFormulaSpec> formula
   ) {
-    fit('loess', data, formula, options)
+    fit(LOESS_METHOD, data, formula, options)
   }
 
   /**
@@ -76,7 +78,7 @@ final class FitDsl {
     @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<GroovyFormulaSpec> formula
   ) {
-    fit('gam', data, formula)
+    fit(GAM_METHOD, data, formula)
   }
 
   /**
@@ -93,7 +95,7 @@ final class FitDsl {
     @DelegatesTo(value = GroovyFormulaDsl, strategy = Closure.DELEGATE_FIRST)
     Closure<GroovyFormulaSpec> formula
   ) {
-    fit('gam', data, formula, options)
+    fit(GAM_METHOD, data, formula, options)
   }
 
   private static FitResult fit(

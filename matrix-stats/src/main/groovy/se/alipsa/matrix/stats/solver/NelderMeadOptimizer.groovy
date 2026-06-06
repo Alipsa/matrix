@@ -40,16 +40,16 @@ final class NelderMeadOptimizer {
       double absoluteThreshold
   ) {
     if (objective == null) {
-      throw new IllegalArgumentException("Objective function cannot be null")
+      throw new IllegalArgumentException('Objective function cannot be null')
     }
     if (initialGuess == null || initialGuess.length == 0) {
-      throw new IllegalArgumentException("Initial guess must contain at least one dimension")
+      throw new IllegalArgumentException('Initial guess must contain at least one dimension')
     }
     if (stepSizes == null || stepSizes.length != initialGuess.length) {
-      throw new IllegalArgumentException("Step sizes must match the initial guess length")
+      throw new IllegalArgumentException('Step sizes must match the initial guess length')
     }
     if (maxEvaluations < initialGuess.length + 1) {
-      throw new IllegalArgumentException("maxEvaluations is too small for the simplex dimension")
+      throw new IllegalArgumentException('maxEvaluations is too small for the simplex dimension')
     }
 
     int dimension = initialGuess.length

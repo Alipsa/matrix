@@ -57,7 +57,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.solveLinearSystem(a, b)
     }
 
-    assertEquals("Singular matrix at column 1 - cannot solve linear system", exception.message)
+    assertEquals('Singular matrix at column 1 - cannot solve linear system', exception.message)
   }
 
   @Test
@@ -74,7 +74,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.solveLinearSystem(a, b)
     }
 
-    assertEquals("Singular matrix at column 1 - cannot solve linear system", exception.message)
+    assertEquals('Singular matrix at column 1 - cannot solve linear system', exception.message)
   }
 
   @Test
@@ -103,7 +103,7 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.invertMatrix(a)
     }
 
-    assertEquals("Singular matrix at column 1 - cannot invert matrix", exception.message)
+    assertEquals('Singular matrix at column 1 - cannot invert matrix', exception.message)
   }
 
   @Test
@@ -179,6 +179,6 @@ class TimeSeriesUtilsTest {
       TimeSeriesUtils.calculateRSS(y, x, beta)
     }
 
-    assertEquals("Design matrix rows must all have the same length", exception.message)
+    assertEquals('Design matrix rows must all have the same length', exception.message)
   }
 }

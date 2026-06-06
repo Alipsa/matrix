@@ -196,7 +196,7 @@ enum Kernel {
       case 'uniform', 'rectangular', 'rect' -> UNIFORM
       case 'triangular', 'triangle' -> TRIANGULAR
       default -> throw new IllegalArgumentException("Unknown kernel type: ${name}. " +
-          "Supported kernels: gaussian, epanechnikov, uniform, triangular")
+          'Supported kernels: gaussian, epanechnikov, uniform, triangular')
     }
   }
 

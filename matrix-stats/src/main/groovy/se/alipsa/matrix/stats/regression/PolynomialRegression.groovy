@@ -45,7 +45,7 @@ class PolynomialRegression {
 
   PolynomialRegression(List<? extends Number> x, List<? extends Number> y, int degree) {
     if (x.size() != y.size()) {
-      throw new IllegalArgumentException("Must have equal number of X and Y data points")
+      throw new IllegalArgumentException('Must have equal number of X and Y data points')
     }
     if (degree < 1) {
       throw new IllegalArgumentException("Polynomial degree must be at least 1, got: $degree")
@@ -84,7 +84,7 @@ class PolynomialRegression {
     } catch (SingularMatrixException ignored) {
       int[] selectedColumns = selectIndependentColumns(design)
       if (selectedColumns.length == 0) {
-        throw new IllegalStateException("Polynomial design matrix has no independent columns")
+        throw new IllegalStateException('Polynomial design matrix has no independent columns')
       }
       double[][] reducedDesign = new double[design.length][selectedColumns.length]
       for (int row = 0; row < design.length; row++) {
@@ -254,16 +254,16 @@ class PolynomialRegression {
 
   @Override
   String toString() {
-    StringBuilder sb = new StringBuilder("Y = ")
+    StringBuilder sb = new StringBuilder('Y = ')
     for (int i = 0; i <= degree; i++) {
       BigDecimal coef = getCoefficient(i).setScale(3, RoundingMode.HALF_EVEN)
       if (i == 0) {
         sb.append(coef)
       } else {
-        sb.append(coef >= 0 ? " + " : " - ")
+        sb.append(coef >= 0 ? ' + ' : ' - ')
         sb.append(coef.abs())
         if (i == 1) {
-          sb.append("X")
+          sb.append('X')
         } else {
           sb.append("X^$i")
         }
@@ -276,9 +276,9 @@ class PolynomialRegression {
     StringBuilder sb = new StringBuilder()
     sb.append("Polynomial Regression (degree $degree)\n")
     sb.append("Equation: ${this}\n")
-    sb.append("\nCoefficients:\n")
+    sb.append('\nCoefficients:\n')
     for (int i = 0; i <= degree; i++) {
-      String term = i == 0 ? "(Intercept)" : (i == 1 ? x : "${x}^$i")
+      String term = i == 0 ? '(Intercept)' : (i == 1 ? x : "${x}^$i")
       sb.append("  $term: ${getCoefficient(i).setScale(6, RoundingMode.HALF_EVEN)}\n")
     }
     sb.append("\nR-squared: ${getRsquared(4)}\n")
