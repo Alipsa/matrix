@@ -19,16 +19,7 @@ import java.time.LocalDate
  * Note the calls to content() is a decent way to check the integrity of the matrix and is there to ensure
  * there is no exception from doing that
  */
-@SuppressWarnings([
-    'ConsecutiveBlankLines',
-    'UnnecessaryGString',
-    'SpaceAfterComma',
-    'SpaceAroundOperator',
-    'SpaceAfterCommentDelimiter',
-    'MethodSize',
-    'ClassStartsWithBlankLine',
-    'ClassEndsWithBlankLine'
-])
+@SuppressWarnings(['UnnecessaryGString', 'MethodSize'])
 class MatrixBuilderTest {
 
 

@@ -12,7 +12,6 @@ import se.alipsa.matrix.core.ValueConverter
  */
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('DuplicateNumberLiteral')
-@SuppressWarnings('Instanceof')
 class ViolinRenderer {
 
   /**

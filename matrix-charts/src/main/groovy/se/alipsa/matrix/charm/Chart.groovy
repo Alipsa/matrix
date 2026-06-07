@@ -13,7 +13,7 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Immutable compiled Charm chart.
  */
-@SuppressWarnings(value = ['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'IfStatementBraces', 'Instanceof', 'ParameterCount', 'UnnecessaryCollectCall', 'UnnecessaryGString'])
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'IfStatementBraces', 'ParameterCount', 'UnnecessaryCollectCall', 'UnnecessaryGString'])
 class Chart {
 
   private final Matrix data

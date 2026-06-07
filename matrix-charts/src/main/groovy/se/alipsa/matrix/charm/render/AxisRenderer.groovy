@@ -24,9 +24,7 @@ import java.math.RoundingMode
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('MethodSize')
-@SuppressWarnings('NestedForLoop')
 @SuppressWarnings('ParameterCount')
 @SuppressWarnings('UnnecessaryToString')
 class AxisRenderer {

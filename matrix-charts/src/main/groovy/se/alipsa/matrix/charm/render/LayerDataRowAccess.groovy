@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Lightweight row access helpers for LayerData metadata.
  */
-@SuppressWarnings('Instanceof')
 class LayerDataRowAccess {
 
   private LayerDataRowAccess() {

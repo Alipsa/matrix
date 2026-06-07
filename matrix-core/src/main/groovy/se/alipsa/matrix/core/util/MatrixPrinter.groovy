@@ -59,7 +59,6 @@ class MatrixPrinter {
   /**
    * Used to pretty print (e.g. to console) a row
    */
-  @SuppressWarnings('Instanceof')
   static List<String> padRow(Matrix m, List row, List<Integer> columnLengths) {
     List<String> stringRow = []
     for (int c = 0; c < m.columns().size(); c++) {

@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test
  * usual `test.alipsa.matrix.bigquery` package so it can access the `@PackageScope`
  * helpers added for query configuration verification.</p>
  */
-@SuppressWarnings('ClassEndsWithBlankLine')
 @CompileStatic
 class GetTableInfoQueryConfigurationTest {
 

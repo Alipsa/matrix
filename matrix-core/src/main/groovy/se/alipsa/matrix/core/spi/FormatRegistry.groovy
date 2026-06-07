@@ -225,7 +225,6 @@ class FormatRegistry {
     }
   }
 
-  @SuppressWarnings('NestedForLoop')
   private Map<String, MatrixFormatProvider> loadProviders() {
     Map<String, MatrixFormatProvider> loadedProviders = [:]
     ServiceLoader<MatrixFormatProvider> loader = ServiceLoader.load(MatrixFormatProvider)

@@ -15,7 +15,7 @@ import java.util.stream.Stream
  * Provides read access to Excel (.xlsx) workbook metadata such as sheet names, row counts,
  * and column counts using the FastExcel reader library.
  */
-@SuppressWarnings(['UnusedObject', 'CloseWithoutCloseable'])
+@SuppressWarnings('UnusedObject')
 class FExcelReader implements SpreadsheetReader {
 
   private static final int NOT_FOUND = -1

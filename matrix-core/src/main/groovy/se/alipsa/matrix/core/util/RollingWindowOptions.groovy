@@ -88,7 +88,6 @@ class RollingWindowOptions {
     new RollingWindowOptions(window, minPeriods, center, by)
   }
 
-  @SuppressWarnings('Instanceof')
   private static int intValue(Object value, String name) {
     if (!(value instanceof Number)) {
       throw new IllegalArgumentException("rolling ${name} must be a number but was ${value}")
@@ -100,7 +99,6 @@ class RollingWindowOptions {
     }
   }
 
-  @SuppressWarnings('Instanceof')
   private static boolean booleanValue(Object value, String name) {
     if (!(value instanceof Boolean)) {
       throw new IllegalArgumentException("rolling ${name} must be a boolean but was ${value}")

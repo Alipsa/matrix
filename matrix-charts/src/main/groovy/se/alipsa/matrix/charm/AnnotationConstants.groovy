@@ -5,9 +5,7 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Shared constants and utility methods for annotation implementations.
  */
-@SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
-@SuppressWarnings('UnnecessaryCast')
+@SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryCast'])
 class AnnotationConstants {
 
   /**

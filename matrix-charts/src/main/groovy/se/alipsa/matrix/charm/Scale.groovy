@@ -7,7 +7,6 @@ import groovy.transform.stc.SimpleType
  * Scale configuration for one aesthetic axis/channel.
  */
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
 class Scale {
 
   private ScaleType type = ScaleType.CONTINUOUS

@@ -235,7 +235,7 @@ class Joiner {
     indices
   }
 
-  @SuppressWarnings(['Instanceof', 'DuplicateStringLiteral'])
+  @SuppressWarnings('DuplicateStringLiteral')
   private static List<List<String>> normalizeKeys(Map<String, Object> by) {
     if (!by.containsKey('x') || !by.containsKey('y')) {
       throw new IllegalArgumentException("Join key map must contain both 'x' and 'y' entries")

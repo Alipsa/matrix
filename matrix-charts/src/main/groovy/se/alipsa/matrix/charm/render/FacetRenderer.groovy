@@ -15,8 +15,6 @@ import se.alipsa.matrix.core.Matrix
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')
 @SuppressWarnings('ImplementationAsType')
-@SuppressWarnings('Instanceof')
-@SuppressWarnings('NestedForLoop')
 @SuppressWarnings('ParameterCount')
 @SuppressWarnings('UnnecessaryCast')
 @SuppressWarnings('UnnecessaryCollectCall')

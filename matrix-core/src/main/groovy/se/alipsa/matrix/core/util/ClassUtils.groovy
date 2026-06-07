@@ -131,7 +131,6 @@ class ClassUtils {
     return NEAREST_TYPE_MAP.get(key, Number)
   }
 
-  @SuppressWarnings('Instanceof')
   static GroovyClassLoader findGroovyClassLoader(Object obj) {
     ClassLoader cl = obj.class.classLoader
     while (cl != null && !(cl instanceof GroovyClassLoader)) {

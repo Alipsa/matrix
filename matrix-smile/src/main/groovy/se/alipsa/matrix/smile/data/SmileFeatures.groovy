@@ -159,7 +159,6 @@ class SmileFeatures {
    * @param columns the column names to transform
    * @return a new Matrix with log-transformed columns
    */
-  @SuppressWarnings('NestedForLoop')
   static Matrix logTransform(Matrix matrix, List<String> columns) {
     Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
@@ -208,7 +207,6 @@ class SmileFeatures {
    * @param columns the column names to transform
    * @return a new Matrix with sqrt-transformed columns
    */
-  @SuppressWarnings('NestedForLoop')
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
     Map<String, List<?>> newData = [:]
     List<Class<?>> newTypes = []
@@ -974,7 +972,6 @@ class SmileFeatures {
      * @throws IllegalStateException if the encoder has not been fitted
      * @throws IllegalArgumentException if a value is unseen or null, or if generated column names collide
      */
-    @SuppressWarnings('NestedForLoop')
     Matrix transform(Matrix matrix, String column, boolean dropOriginal = true) {
       if (!fitted) {
         throw new IllegalStateException('Encoder must be fitted before transforming')

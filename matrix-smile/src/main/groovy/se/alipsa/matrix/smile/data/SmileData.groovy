@@ -315,7 +315,6 @@ class SmileData {
    * @param random the Random instance to use
    * @return a list of n bootstrap sample matrices
    */
-  @SuppressWarnings('NestedForLoop')
   static List<Matrix> bootstrap(Matrix matrix, int n, int sampleSize, Random random) {
     if (n < 1) {
       throw new IllegalArgumentException("n must be at least 1: was $n")

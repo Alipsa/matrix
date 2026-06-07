@@ -7,7 +7,6 @@ package se.alipsa.matrix.charm
  * compile-time safety. Absolute positioning via {@code [x, y]} lists is
  * supported by the separate {@link Theme#legendPositionCoords} field.</p>
  */
-@SuppressWarnings('Instanceof')
 enum LegendPosition {
 
   RIGHT, LEFT, TOP, BOTTOM, NONE

@@ -749,7 +749,6 @@ class SmileStats {
    * @param method correlation method
    * @return a Map with "correlation" and "pvalue" matrices
    */
-  @SuppressWarnings('NestedForLoop')
   static Map<String, Matrix> correlationWithSignificance(Matrix matrix, List<String> columns = null, CorrelationMethod method = CorrelationMethod.PEARSON) {
     List<String> numericCols = columns ?: SmileUtil.getNumericColumnNames(matrix)
     int n = numericCols.size()
@@ -995,7 +994,6 @@ class SmileStats {
     buf
   }
 
-  @SuppressWarnings('NestedForLoop')
   private static Matrix matrixFromCorrelation(List<String> columnNames, double[][] data) {
     Map<String, List<?>> matrixData = [:]
 

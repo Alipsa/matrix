@@ -15,7 +15,6 @@ import se.alipsa.matrix.core.ValueConverter
 @SuppressWarnings('CyclomaticComplexity')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('MethodSize')
 class BoxplotRenderer {
 

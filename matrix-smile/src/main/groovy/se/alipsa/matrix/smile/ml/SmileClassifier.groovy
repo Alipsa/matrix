@@ -165,7 +165,6 @@ class SmileClassifier {
    * @param testMatrix the test data with actual labels
    * @return a Matrix representing the confusion matrix
    */
-  @SuppressWarnings('NestedForLoop')
   Matrix confusionMatrix(Matrix testMatrix) {
     SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)
@@ -204,7 +203,6 @@ class SmileClassifier {
    * @param testMatrix the test data with actual labels
    * @return a Matrix with precision, recall, f1 for each class
    */
-  @SuppressWarnings('NestedForLoop')
   Matrix evaluate(Matrix testMatrix) {
     SmileUtil.validateTestMatrix(testMatrix, targetColumn)
     int[] actual = extractTargetAsInt(testMatrix, targetColumn, classLabels)

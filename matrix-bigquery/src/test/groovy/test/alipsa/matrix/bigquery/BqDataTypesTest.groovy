@@ -27,18 +27,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @Tag("external")
-@SuppressWarnings([
-    'BlockEndsWithBlankLine',
-    'ClassEndsWithBlankLine',
-    'ConsecutiveBlankLines',
-    'NestedForLoop',
-    'SpaceAfterComma',
-    'SpaceAfterCommentDelimiter',
-    'SpaceAroundOperator',
-    'UnnecessaryBigDecimalInstantiation',
-    'UnnecessaryBigIntegerInstantiation',
-    'UnnecessaryGString'
-])
+@SuppressWarnings(['UnnecessaryBigDecimalInstantiation', 'UnnecessaryBigIntegerInstantiation', 'UnnecessaryGString'])
 @CompileStatic
 class BqDataTypesTest {
 

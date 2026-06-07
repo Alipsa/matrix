@@ -6,7 +6,6 @@ import java.math.RoundingMode
 /** Utility methods for color conversion and parsing. */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
 class ColorUtil {
 
     static String asHexString(Color color, String defaultIfNull='none') {

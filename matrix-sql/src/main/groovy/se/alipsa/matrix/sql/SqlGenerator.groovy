@@ -6,7 +6,6 @@ import se.alipsa.matrix.core.Row
 /**
  * Generates prepared SQL statements (INSERT, UPDATE) for {@link Matrix} and {@link Row} data.
  */
-@SuppressWarnings('SpaceInsideParentheses')
 class SqlGenerator {
 
   private static final String COMMA_SEP = ', '

@@ -14,14 +14,7 @@ import java.math.RoundingMode
  * For statistical test functions, see the matrix-stat-tests library
  *
  */
-@SuppressWarnings([
-    'JavadocEmptyLastLine',
-    'MissingBlankLineBeforeAnnotatedField',
-    'UnnecessaryGString',
-    'Instanceof',
-    'NestedForLoop',
-    'UnnecessaryNullCheckBeforeInstanceOf'
-])
+@SuppressWarnings(['JavadocEmptyLastLine', 'MissingBlankLineBeforeAnnotatedField', 'UnnecessaryGString', 'UnnecessaryNullCheckBeforeInstanceOf'])
 class Stat {
 
     private static final Logger log = Logger.getLogger(Stat)

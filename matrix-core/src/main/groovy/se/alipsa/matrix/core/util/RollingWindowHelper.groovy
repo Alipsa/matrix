@@ -85,7 +85,6 @@ class RollingWindowHelper {
    * @param values the raw window values
    * @return the numeric values
    */
-  @SuppressWarnings('Instanceof')
   static List<Number> nonNullNumbers(List<?> values) {
     values.findAll { it instanceof Number } as List<Number>
   }
@@ -96,7 +95,6 @@ class RollingWindowHelper {
    * @param column the column to inspect
    * @return true when the column is numeric
    */
-  @SuppressWarnings('Instanceof')
   static boolean isNumericColumn(Column column) {
     if (column == null) {
       return false

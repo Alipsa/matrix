@@ -155,7 +155,6 @@ class SmileUtil {
    * @return 2D array of double values
    * @throws IllegalArgumentException if any column contains a null value
    */
-  @SuppressWarnings('NestedForLoop')
   static double[][] matrixToArray(Matrix matrix) {
     int rows = matrix.rowCount()
     int cols = matrix.columnCount()

@@ -6,7 +6,6 @@ import groovy.transform.stc.SimpleType
 /**
  * Transformation strategy for Charm scales.
  */
-@SuppressWarnings('Instanceof')
 interface ScaleTransform {
 
   /**

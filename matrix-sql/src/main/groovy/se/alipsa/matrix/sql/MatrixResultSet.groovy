@@ -172,7 +172,6 @@ class MatrixResultSet implements ResultSet {
    *
    * @throws SQLException if a database access error occurs
    */
-  @SuppressWarnings('CloseWithoutCloseable')
   @Override
   void close() throws SQLException {
     matrix = null

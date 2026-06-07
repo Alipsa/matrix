@@ -180,7 +180,6 @@ class GroupedMatrix {
    * @param aggregations map of source column name to aggregation closure
    * @return a new Matrix with group columns and aggregated values
    */
-  @SuppressWarnings('NestedForLoop')
   Matrix agg(Map<String, Closure> aggregations) {
     if (aggregations == null) {
       throw new IllegalArgumentException('aggregations must not be null')

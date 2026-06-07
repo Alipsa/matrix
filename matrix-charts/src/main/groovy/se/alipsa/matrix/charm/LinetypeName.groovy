@@ -6,7 +6,6 @@ package se.alipsa.matrix.charm
  * <p>Use these in {@code geomLine().linetype(LinetypeName.DASHED)} or inside
  * the {@code layers {}} DSL where the constants are directly available.</p>
  */
-@SuppressWarnings('Instanceof')
 enum LinetypeName {
 
   SOLID, DASHED, DOTTED, DOTDASH, LONGDASH, TWODASH

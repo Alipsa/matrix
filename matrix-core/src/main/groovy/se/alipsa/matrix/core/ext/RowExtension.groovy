@@ -6,7 +6,6 @@ import se.alipsa.matrix.core.Row
  * Overrides DefaultGroovyMethods so we can define our own getAt and putAt
  * see resources/META-INF.groovy
  */
-@SuppressWarnings('Instanceof')
 class RowExtension {
 
   static Object getAt(Row self, String[] colNames) {

@@ -21,7 +21,7 @@ import se.alipsa.matrix.core.Matrix
  * geom-specific fluent setters. Common concerns (mapping, position,
  * inherit-mapping) are handled here.</p>
  */
-@SuppressWarnings(['Instanceof', 'DuplicateStringLiteral'])
+@SuppressWarnings('DuplicateStringLiteral')
 abstract class LayerBuilder {
 
   protected Mapping layerMapping
