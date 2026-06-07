@@ -10,9 +10,7 @@ import se.alipsa.matrix.charm.theme.ElementText
  * Replaces the previous map-based approach with strongly typed element classes
  * for plot, panel, axis, legend, strip, and text styling.
  */
-@SuppressWarnings('AbcMetric')
-@SuppressWarnings('DuplicateNumberLiteral')
-@SuppressWarnings('UnnecessaryObjectReferences')
+@SuppressWarnings(['AbcMetric', 'DuplicateNumberLiteral', 'UnnecessaryObjectReferences'])
 class Theme {
 
   // ============ Plot-level elements ============

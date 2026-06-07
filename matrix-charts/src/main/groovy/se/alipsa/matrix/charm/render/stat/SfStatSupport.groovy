@@ -8,8 +8,7 @@ import se.alipsa.matrix.charm.sf.WktReader
 /**
  * Shared helpers for SF-related stats.
  */
-@SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('UnnecessaryToString')
+@SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryToString'])
 class SfStatSupport {
 
   private SfStatSupport() {
