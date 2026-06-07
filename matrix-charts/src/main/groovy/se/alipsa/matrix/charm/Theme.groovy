@@ -12,7 +12,6 @@ import se.alipsa.matrix.charm.theme.ElementText
  */
 @SuppressWarnings('AbcMetric')
 @SuppressWarnings('DuplicateNumberLiteral')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('UnnecessaryObjectReferences')
 class Theme {
 

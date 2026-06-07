@@ -6,7 +6,6 @@ package se.alipsa.matrix.charm
  * <p>Use these in {@code geomPoint().shape(ShapeName.CIRCLE)} or inside
  * the {@code layers {}} DSL where the constants are directly available.</p>
  */
-@SuppressWarnings('Instanceof')
 enum ShapeName {
 
   CIRCLE, SQUARE, TRIANGLE, DIAMOND, PLUS, X, CROSS

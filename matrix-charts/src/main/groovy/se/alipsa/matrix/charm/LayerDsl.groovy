@@ -11,7 +11,7 @@ import groovy.transform.CompileDynamic
  * {@code method}, {@code se}, {@code bins}) still fall through to
  * {@link LayerParams#propertyMissing(String, Object) propertyMissing}.</p>
  */
-@SuppressWarnings(['IfStatementBraces', 'Instanceof', 'UnnecessaryOverridingMethod'])
+@SuppressWarnings(['IfStatementBraces', 'UnnecessaryOverridingMethod'])
 class LayerDsl extends LayerParams {
 
   /** Point/line size. */

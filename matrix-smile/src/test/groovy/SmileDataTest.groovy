@@ -168,7 +168,6 @@ class SmileDataTest {
     assertEquals(2.0d, firstFold.validation.row(1)[0])
   }
 
-  @SuppressWarnings('NestedForLoop')
   @Test
   void testKFoldWithSeed() {
     Matrix data = createTestMatrix()
@@ -218,7 +217,6 @@ class SmileDataTest {
     }
   }
 
-  @SuppressWarnings('NestedForLoop')
   @Test
   void testKFoldCoverageComplete() {
     Matrix data = createTestMatrix()
@@ -342,7 +340,6 @@ class SmileDataTest {
     }
   }
 
-  @SuppressWarnings('NestedForLoop')
   @Test
   void testBootstrapWithSeed() {
     Matrix data = createTestMatrix()

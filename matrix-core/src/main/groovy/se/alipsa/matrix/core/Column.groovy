@@ -20,7 +20,6 @@ import se.alipsa.matrix.core.util.ShiftHelper
  *       preserved from the source.</li>
  * </ul>
  */
-@SuppressWarnings('Instanceof')
 class Column extends ArrayList {
 
   String name

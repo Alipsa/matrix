@@ -3,7 +3,6 @@ package se.alipsa.matrix.charm
 /**
  * Typed legend direction constants.
  */
-@SuppressWarnings('Instanceof')
 enum LegendDirection {
 
   VERTICAL, HORIZONTAL

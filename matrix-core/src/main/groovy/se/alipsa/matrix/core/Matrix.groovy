@@ -44,31 +44,7 @@ import java.time.LocalDateTime
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
  *
  */
-@SuppressWarnings([
-    'JavadocEmptyLastLine',
-    'ClassSize',
-    'ClassStartsWithBlankLine',
-    'SpaceAroundOperator',
-    'SpaceAfterMethodCallName',
-    'UnnecessaryGString',
-    'Instanceof',
-    'NestedForLoop',
-    'UnnecessaryCollectCall',
-    'SpaceAfterOpeningBrace',
-    'SpaceBeforeClosingBrace',
-    'SpaceBeforeOpeningBrace',
-    'JavadocMissingParamDescription',
-    'JavadocEmptyReturnTag',
-    'JavadocEmptyFirstLine',
-    'ConsecutiveBlankLines',
-    'BlockStartsWithBlankLine',
-    'SpaceAfterComma',
-    'UnnecessaryElseStatement',
-    'SpaceAfterCommentDelimiter',
-    'DuplicateListLiteral',
-    'DuplicateNumberLiteral',
-    'MethodCount'
-])
+@SuppressWarnings(['JavadocEmptyLastLine', 'ClassSize', 'UnnecessaryGString', 'UnnecessaryCollectCall', 'SpaceBeforeOpeningBrace', 'JavadocMissingParamDescription', 'JavadocEmptyReturnTag', 'JavadocEmptyFirstLine', 'UnnecessaryElseStatement', 'DuplicateListLiteral', 'DuplicateNumberLiteral', 'MethodCount'])
 class Matrix implements Iterable<Row>, Cloneable {
   private static final String ANONYMOUS_COLUMN_PREFIX = 'c'
   private static final String FILE_CANNOT_BE_NULL = 'file cannot be null'
@@ -1655,7 +1631,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
-  @SuppressWarnings('Instanceof')
   private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
     if (entry instanceof Number) {
       if (thatVal instanceof Number) {

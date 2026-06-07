@@ -14,7 +14,6 @@ import javax.xml.stream.XMLStreamReader
 /**
  * Extract various information from a Calc (ods) file using fastods streaming.
  */
-@SuppressWarnings('CloseWithoutCloseable')
 class FOdsReader implements SpreadsheetReader {
 
   private static final int NOT_FOUND = -1

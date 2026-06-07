@@ -26,7 +26,6 @@ class ListConverter {
     convert(list, type, valueIfNull, dateTimeFormat, NumberFormat.getInstance(numberFormat))
   }
 
-  @SuppressWarnings('Instanceof')
   static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, T valueIfNull = null,
                              String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<T> c = []

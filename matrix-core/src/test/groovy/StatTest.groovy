@@ -15,13 +15,7 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.YearMonth
 
-@SuppressWarnings([
-    'UnnecessaryGString',
-    'SpaceAfterComma',
-    'SpaceAroundOperator',
-    'SpaceAfterCommentDelimiter',
-    'ClassEndsWithBlankLine'
-])
+@SuppressWarnings('UnnecessaryGString')
 class StatTest {
 
   @Test

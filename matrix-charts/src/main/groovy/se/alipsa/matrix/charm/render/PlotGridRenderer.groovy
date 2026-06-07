@@ -21,7 +21,6 @@ import java.util.regex.Pattern
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('NestedForLoop')
 @SuppressWarnings('UnnecessaryCast')
 class PlotGridRenderer {
 

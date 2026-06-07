@@ -24,7 +24,6 @@ class ColumnExtension {
     self
   }
 
-  @SuppressWarnings('Instanceof')
   static Object getAt(Column self, Collection indices) {
     if (indices.size() == 2 && indices[1] instanceof Class) {
       return self.getAt(indices[0] as Number, indices[1] as Class)

@@ -11,7 +11,6 @@ import se.alipsa.matrix.core.ValueConverter
  * Renders bar/col geometry.
  */
 @SuppressWarnings('AbcMetric')
-@SuppressWarnings('Instanceof')
 class BarRenderer {
 
   /**

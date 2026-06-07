@@ -13,10 +13,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.bigquery.Bq
 
-@SuppressWarnings([
-    'ClassEndsWithBlankLine',
-    'UnnecessaryGString'
-])
+@SuppressWarnings('UnnecessaryGString')
 @CompileStatic
 class SanitizeStringTest {
 

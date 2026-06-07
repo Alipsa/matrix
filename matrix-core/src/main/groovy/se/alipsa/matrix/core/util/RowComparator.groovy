@@ -40,7 +40,6 @@ class RowComparator<T> implements Comparator<List<T>> {
     return 0
   }
 
-  @SuppressWarnings('Instanceof')
   private static int compareValues(Object v1, Object v2) {
     if (v1 == v2) {
       return 0

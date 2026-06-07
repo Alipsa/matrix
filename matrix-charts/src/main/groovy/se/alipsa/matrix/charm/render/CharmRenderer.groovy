@@ -39,7 +39,6 @@ import java.math.RoundingMode
 @SuppressWarnings('CyclomaticComplexity')
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('DuplicateStringLiteral')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('MethodSize')
 @SuppressWarnings('UnnecessaryCollectCall')
 @SuppressWarnings('UnnecessaryObjectReferences')

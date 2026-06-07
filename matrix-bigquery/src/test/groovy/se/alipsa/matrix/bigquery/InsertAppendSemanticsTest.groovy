@@ -35,7 +35,6 @@ import java.lang.reflect.Method
  * These tests live in `se.alipsa.matrix.bigquery` so they can exercise package-scope
  * routing helpers without invoking the real BigQuery write channel.
  */
-@SuppressWarnings('ClassEndsWithBlankLine')
 @CompileStatic
 class InsertAppendSemanticsTest {
 
@@ -216,7 +215,7 @@ class InsertAppendSemanticsTest {
     }
   }
 
-  @SuppressWarnings(['ClassName', 'ClassStartsWithBlankLine', 'ClassEndsWithBlankLine'])
+  @SuppressWarnings('ClassName')
   private static class RecordingInsertClient extends Bq {
     boolean throwConnectionError
     Boolean lastAppendValue
@@ -236,7 +235,7 @@ class InsertAppendSemanticsTest {
     }
   }
 
-  @SuppressWarnings(['ClassName', 'ClassStartsWithBlankLine', 'ClassEndsWithBlankLine'])
+  @SuppressWarnings('ClassName')
   private static final class InsertAllTestState {
     final TableId tableId
     boolean initializeTable = true

@@ -796,7 +796,7 @@ Confirmed redundant suppressions found in the codebase (representative list; ste
 | `matrix-spreadsheet/src/test/groovy/spreadsheet/SpreadsheetFormatProviderTest.groovy:244` | `@SuppressWarnings('CloseWithoutCloseable')` → remove whole annotation |
 | `matrix-tablesaw/src/main/groovy/.../Gtable.groovy:348` | `['unchecked', 'Instanceof']` → remove only `Instanceof`, keep `unchecked` |
 
-- [ ] **6.1 Find all redundant suppressions (multiline-aware)**
+- [x] **6.1 Find all redundant suppressions (multiline-aware)**
 
   `@SuppressWarnings` annotations in this codebase sometimes span multiple lines (e.g. `Matrix.groovy:47`, `Stat.groovy:17` put the rule names on separate lines), so a simple two-stage grep misses them. Use the Python script below which reads each file as a whole and matches across newlines:
 
@@ -846,7 +846,7 @@ Confirmed redundant suppressions found in the codebase (representative list; ste
   EOF
   ```
 
-- [ ] **6.2 For each hit: remove only the globally-excluded rule from the annotation**
+- [x] **6.2 For each hit: remove only the globally-excluded rule from the annotation**
 
   - If the annotation suppresses only globally-excluded rules: delete the whole `@SuppressWarnings(...)` line.
   - If the annotation is a list that mixes excluded and still-active rules: remove only the excluded entries from the list. When a list is reduced to a single entry, convert from list syntax to string syntax:
@@ -857,7 +857,7 @@ Confirmed redundant suppressions found in the codebase (representative list; ste
     @SuppressWarnings('DuplicateStringLiteral')
     ```
 
-- [ ] **6.3 Verify CodeNarc passes on each affected module**
+- [x] **6.3 Verify CodeNarc passes on each affected module**
 
   ```bash
   ./gradlew :matrix-smile:codenarcMain :matrix-smile:codenarcTest
@@ -919,8 +919,28 @@ Confirmed redundant suppressions found in the codebase (representative list; ste
   EOF
   ```
 
-- [ ] **6.4 Verify tests pass for affected modules**
+  Completed verification:
+  ```bash
+  ./gradlew :matrix-smile:codenarcMain :matrix-smile:codenarcTest :matrix-core:codenarcMain :matrix-core:codenarcTest :matrix-charts:codenarcMain :matrix-charts:codenarcTest
+  ./gradlew :matrix-pict:codenarcMain :matrix-pict:codenarcTest :matrix-bigquery:codenarcMain :matrix-bigquery:codenarcTest :matrix-sql:codenarcMain :matrix-sql:codenarcTest :matrix-spreadsheet:codenarcMain :matrix-spreadsheet:codenarcTest :matrix-tablesaw:codenarcMain :matrix-tablesaw:codenarcTest
+  python - << 'EOF'
+  # Full Step 6.1 redundant-suppression audit script from this section
+  EOF
+  # Output: OK — no redundant @SuppressWarnings remaining.
+  ./gradlew :matrix-smile:spotlessCheck :matrix-core:spotlessCheck :matrix-charts:spotlessCheck :matrix-pict:spotlessCheck :matrix-bigquery:spotlessCheck :matrix-sql:spotlessCheck :matrix-spreadsheet:spotlessCheck :matrix-tablesaw:spotlessCheck
+  git diff --check
+  ```
 
+- [x] **6.4 Verify tests pass for affected modules**
+
+  ```bash
+  ./gradlew :matrix-smile:test :matrix-core:test
+  ./gradlew :matrix-charts:test -Pheadless=true
+  ./gradlew :matrix-pict:test :matrix-sql:test
+  ./gradlew :matrix-bigquery:test :matrix-spreadsheet:test :matrix-tablesaw:test
+  ```
+
+  Completed verification:
   ```bash
   ./gradlew :matrix-smile:test :matrix-core:test
   ./gradlew :matrix-charts:test -Pheadless=true

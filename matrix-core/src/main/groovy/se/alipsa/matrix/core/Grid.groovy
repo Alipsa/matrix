@@ -13,7 +13,6 @@ import java.text.NumberFormat
  *
  * @param <T> the grid element type
  */
-@SuppressWarnings(['Instanceof', 'NestedForLoop'])
 class Grid<T> implements Iterable<List<T>> {
 
   List<List<T>> data

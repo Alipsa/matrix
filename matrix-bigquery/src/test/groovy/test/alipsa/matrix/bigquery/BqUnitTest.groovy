@@ -20,12 +20,7 @@ import java.time.ZonedDateTime
  * Unit tests for Bq utility methods that don't require BigQuery connections.
  * These tests can run in CI without external dependencies.
  */
-@SuppressWarnings([
-    'ClassEndsWithBlankLine',
-    'UnnecessaryBigDecimalInstantiation',
-    'UnnecessaryBigIntegerInstantiation',
-    'UnnecessaryGString'
-])
+@SuppressWarnings(['UnnecessaryBigDecimalInstantiation', 'UnnecessaryBigIntegerInstantiation', 'UnnecessaryGString'])
 @CompileStatic
 class BqUnitTest {
 

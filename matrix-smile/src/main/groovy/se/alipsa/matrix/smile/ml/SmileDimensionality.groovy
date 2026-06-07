@@ -151,7 +151,6 @@ class SmileDimensionality {
    *
    * @return a Matrix with loadings (features x components)
    */
-  @SuppressWarnings('NestedForLoop')
   Matrix getLoadingsMatrix() {
     double[][] loadings = getLoadings()
 
@@ -236,7 +235,6 @@ class SmileDimensionality {
 
   // Helper methods
 
-  @SuppressWarnings('NestedForLoop')
   private static Matrix arrayToMatrix(double[][] data, int numComponents) {
     Map<String, List<?>> result = [:]
     List<Class<?>> types = []

@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Shared parameter resolution for spoke stat/geom behavior.
  */
-@SuppressWarnings('Instanceof')
 class SpokeSupport {
 
   /**

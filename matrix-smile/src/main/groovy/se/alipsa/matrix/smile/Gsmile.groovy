@@ -222,7 +222,6 @@ class Gsmile {
    * @param args the slicing arguments (first is row range, rest are column names)
    * @return a new DataFrame with the selected subset
    */
-  @SuppressWarnings('Instanceof')
   static DataFrame getAt(DataFrame self, Collection args) {
     if (args.isEmpty()) {
       return self

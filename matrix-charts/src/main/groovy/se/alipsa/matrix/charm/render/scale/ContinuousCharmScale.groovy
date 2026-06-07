@@ -16,8 +16,6 @@ import java.math.RoundingMode
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')
-@SuppressWarnings('Instanceof')
-@SuppressWarnings('NestedForLoop')
 @SuppressWarnings('UnnecessaryCast')
 @SuppressWarnings('UnnecessaryToString')
 class ContinuousCharmScale extends CharmScale {

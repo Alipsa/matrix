@@ -67,7 +67,6 @@ class RollingNumericAccumulator {
     numericCount--
   }
 
-  @SuppressWarnings('Instanceof')
   private static BigDecimal numericValue(Object value) {
     value instanceof Number ? ValueConverter.asBigDecimal(value as Number) : null
   }

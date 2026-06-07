@@ -9,7 +9,6 @@ import se.alipsa.matrix.stats.regression.QuantileRegression
  * Quantile regression stat producing fitted lines for one or more quantiles.
  */
 @SuppressWarnings('DuplicateNumberLiteral')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('UnnecessaryCast')
 class QuantileStat {
 

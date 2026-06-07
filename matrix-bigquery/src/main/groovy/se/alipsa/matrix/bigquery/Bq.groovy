@@ -94,7 +94,7 @@ import java.time.temporal.ChronoUnit
  * @see Matrix
  * @see TypeMapper
  */
-@SuppressWarnings(['ClassSize', 'Instanceof', 'NestedForLoop'])
+@SuppressWarnings('ClassSize')
 @CompileStatic
 class Bq {
 

@@ -6,7 +6,6 @@ import se.alipsa.matrix.core.Row
 /**
  * Static DSL entry points for Charm chart specifications.
  */
-@SuppressWarnings('Instanceof')
 class Charts {
 
   /**

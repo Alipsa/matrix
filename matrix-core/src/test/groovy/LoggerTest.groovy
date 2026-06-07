@@ -8,7 +8,7 @@ import se.alipsa.matrix.core.util.Logger
 
 import java.lang.reflect.Method
 
-@SuppressWarnings(['UnnecessaryGroovyImport', 'UnnecessaryGString', 'ClassEndsWithBlankLine'])
+@SuppressWarnings(['UnnecessaryGroovyImport', 'UnnecessaryGString'])
 class LoggerTest {
 
   private static final Method FORMAT_MESSAGE = Logger.getDeclaredMethod('formatMessage', String, Object[])

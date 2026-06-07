@@ -174,7 +174,6 @@ class SmileCluster {
    * @return a Matrix containing the cluster centroids
    * @throws UnsupportedOperationException if the algorithm does not produce centroids
    */
-  @SuppressWarnings('NestedForLoop')
   Matrix getCentroidsMatrix() {
     double[][] centroids = getCentroids()
 
@@ -250,7 +249,6 @@ class SmileCluster {
 
   // Helper methods
 
-  @SuppressWarnings('NestedForLoop')
   private static double calculateSilhouette(double[][] data, int[] labels) {
     int n = data.length
     if (n < MIN_CLUSTERS) { return ZERO }
@@ -298,7 +296,6 @@ class SmileCluster {
     validPoints > 0 ? totalSilhouette / validPoints : 0.0d
   }
 
-  @SuppressWarnings('NestedForLoop')
   private static double meanDistanceToCluster(double[][] data, int[] labels, int pointIndex, int cluster) {
     double sumDist = ZERO
     int count = 0

@@ -18,7 +18,6 @@ import se.alipsa.matrix.core.ValueConverter
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('IfStatementBraces')
 @SuppressWarnings('ImplementationAsType')
-@SuppressWarnings('Instanceof')
 @SuppressWarnings('ParameterCount')
 @SuppressWarnings('UnnecessaryCollectCall')
 class ScaleEngine {

@@ -21,11 +21,7 @@ import java.time.ZonedDateTime
  * Unit tests for TypeMapper conversion logic.
  * These tests do not require external BigQuery connections and can run in CI.
  */
-@SuppressWarnings([
-    'ClassEndsWithBlankLine',
-    'UnnecessaryBigDecimalInstantiation',
-    'UnnecessaryGString'
-])
+@SuppressWarnings(['UnnecessaryBigDecimalInstantiation', 'UnnecessaryGString'])
 @CompileStatic
 class TypeMapperTest {
 

@@ -3,7 +3,6 @@ package se.alipsa.matrix.charm
 /**
  * Utility methods for normalizing guide configuration values.
  */
-@SuppressWarnings('Instanceof')
 final class GuideUtils {
 
   private GuideUtils() {

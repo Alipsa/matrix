@@ -11,7 +11,6 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Coordinate transform applying named transforms to x/y.
  */
-@SuppressWarnings('Instanceof')
 class TransCoord {
 
   static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {

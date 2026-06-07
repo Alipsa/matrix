@@ -26,15 +26,7 @@ import se.alipsa.matrix.datasets.Dataset
  * Performance optimization: Uses shared dataset and Bq instance to minimize network round-trips.
  */
 @Tag("external")
-@SuppressWarnings([
-    'ClassEndsWithBlankLine',
-    'SpaceAfterComma',
-    'SpaceAfterCommentDelimiter',
-    'SpaceAfterOpeningBrace',
-    'SpaceBeforeClosingBrace',
-    'SpaceBeforeOpeningBrace',
-    'UnnecessaryGString'
-])
+@SuppressWarnings(['SpaceBeforeOpeningBrace', 'UnnecessaryGString'])
 @CompileStatic
 class BqTest {
 

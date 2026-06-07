@@ -8,8 +8,6 @@ import java.math.RoundingMode
 /** Histogram chart for visualizing the frequency distribution of numerical data. */
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('ExplicitCallToCompareToMethod')
-@SuppressWarnings('Instanceof')
-@SuppressWarnings('NestedForLoop')
 class Histogram extends Chart<Histogram> {
 
   List<? extends Number> originalData = []
