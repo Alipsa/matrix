@@ -283,7 +283,7 @@ class FacetGrid extends Facet {
           }
         } else if (!rows.isEmpty()) {
           // Fallback: associate the first row with the string representation of the value
-          valMap[rows[0]] = val?.toString()
+          valMap[rows[0]] = val.toString()
         }
         return lab.label(valMap)
       }
@@ -293,7 +293,7 @@ class FacetGrid extends Facet {
     if (labeller == 'both' && rows.size() == 1) {
       return "${rows[0]}: ${val}"
     }
-    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val?.toString()
+    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val.toString()
   }
 
   /**
@@ -321,7 +321,7 @@ class FacetGrid extends Facet {
           }
         } else if (!cols.isEmpty()) {
           // Fallback: associate the first column with the string representation of the value
-          valMap[cols[0]] = val?.toString()
+          valMap[cols[0]] = val.toString()
         }
         return lab.label(valMap)
       }
@@ -331,6 +331,6 @@ class FacetGrid extends Facet {
     if (labeller == 'both' && cols.size() == 1) {
       return "${cols[0]}: ${val}"
     }
-    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val?.toString()
+    return val instanceof List ? (val as List).collect { it?.toString() ?: '' }.join(', ') : val.toString()
   }
 }

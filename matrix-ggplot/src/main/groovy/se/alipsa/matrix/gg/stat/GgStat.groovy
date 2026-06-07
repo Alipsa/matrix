@@ -29,9 +29,11 @@ import java.util.regex.Pattern
  * All methods are static and delegate to matrix-core Stat or matrix-stats where possible.
  */
 @CompileStatic
-@SuppressWarnings(['AbcMetric', 'BooleanGetBoolean', 'BrokenOddnessCheck', 'ClassSize', 'CyclomaticComplexity', 'DuplicateListLiteral', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'ExplicitTreeSetInstantiation', 'MethodSize', 'UnnecessaryElseStatement', 'UnnecessaryObjectReferences', 'UnnecessaryToString', 'UnusedMethodParameter', 'VariableName'])
+@SuppressWarnings(['AbcMetric', 'ClassSize', 'CyclomaticComplexity', 'DuplicateListLiteral', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'ExplicitTreeSetInstantiation', 'MethodSize', 'UnnecessaryElseStatement', 'UnnecessaryObjectReferences', 'UnnecessaryToString', 'UnusedMethodParameter', 'VariableName'])
 class GgStat {
 
+  // Reads a JVM system property, not a Boolean object lookup.
+  @SuppressWarnings('BooleanGetBoolean')
   private static final boolean VALIDATE_SORTED_QUANTILES =
       Boolean.getBoolean('matrix.gg.validateQuantiles')
 
@@ -2240,7 +2242,7 @@ class GgStat {
     BigDecimal hexY = yMin + row * dy
 
     // Offset every other row
-    if (row % 2 == 1) {
+    if (isOddRow(row)) {
       hexX = hexX + dx / 2
     }
 
@@ -2314,11 +2316,16 @@ class GgStat {
     int col = (relX / dx).round() as int
 
     // Adjust column for odd rows
-    if (row % 2 == 1) {
+    if (isOddRow(row)) {
       col = ((relX - dx / 2) / dx).round() as int
     }
 
     return [col, row] as int[]
+  }
+
+  @SuppressWarnings('BrokenOddnessCheck')
+  private static boolean isOddRow(int row) {
+    row % 2 == 1
   }
 
   /**

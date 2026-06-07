@@ -54,6 +54,7 @@ class Expression implements CharmExpression {
    * @throws RuntimeException if the closure throws an exception
    */
   @CompileDynamic
+  @SuppressWarnings('UnnecessaryToString')
   Number evaluate(Row row) {
     try {
       def result = closure.call(row)
@@ -63,8 +64,8 @@ class Expression implements CharmExpression {
       if (result instanceof Number) {
         return (Number) result
       }
-      // Try to convert string to number
-      String str = result
+      // Keep explicit toString() so GString closure results are safely coerced.
+      String str = result.toString()
       try {
         if (str.contains('.')) {
           return new BigDecimal(str)

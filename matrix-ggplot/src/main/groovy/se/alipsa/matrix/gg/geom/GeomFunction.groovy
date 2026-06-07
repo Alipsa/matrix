@@ -3,7 +3,6 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
-import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.layer.StatType
 
 /**
@@ -39,10 +38,8 @@ import se.alipsa.matrix.gg.layer.StatType
  * @see se.alipsa.matrix.gg.stat.StatsFunction
  */
 @CompileStatic
-@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnusedPrivateField'])
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomFunction extends Geom {
-
-  private static final Logger log = Logger.getLogger(GeomFunction)
 
   /** Line color */
   String color = 'black'

@@ -161,6 +161,19 @@ class ExpressionTest {
   }
 
   @Test
+  void testExpressionConvertsGStringResult() {
+    def data = Matrix.builder()
+        .columnNames(['x'])
+        .rows([[4]])
+        .build()
+
+    def expr = new Expression({ "${it.x}5" })
+    def values = expr.evaluateAll(data)
+
+    assertEquals(45, values[0] as int)
+  }
+
+  @Test
   void testExpressionWithInvalidNumericConversion() {
     def data = Matrix.builder()
         .columnNames(['x'])

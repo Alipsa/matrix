@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleColorFermenter
 
+import java.util.logging.Handler
+import java.util.logging.Level
+import java.util.logging.LogRecord
+
 class ScaleColorFermenterTest {
 
   @Test
@@ -128,32 +132,43 @@ class ScaleColorFermenterTest {
   @Test
   void testWarningWhenNBreaksExceedsPaletteSize() {
     // Test: Warning is issued when nBreaks exceeds palette size
-    // Capture stderr output
-    def originalErr = System.err
-    def errStream = new ByteArrayOutputStream()
+    List<String> messages = []
+    Handler handler = new Handler() {
+      @Override
+      void publish(LogRecord record) {
+        if (record.level.intValue() >= Level.WARNING.intValue()) {
+          messages << record.message
+        }
+      }
+
+      @Override
+      void flush() {
+      }
+
+      @Override
+      void close() {
+      }
+    }
+    java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ScaleColorFermenter.name)
+    Level originalLevel = logger.level
     def scale = null
-    def errOutput = null
 
     try {
-      System.err = new PrintStream(errStream)
+      logger.addHandler(handler)
+      logger.level = Level.WARNING
 
       // Blues palette has 9 colors - request 15 breaks
       scale = new ScaleColorFermenter([palette: 'Blues', 'n.breaks': 15])
-
-      // Convert stderr output to string
-      errOutput = errStream
-
     } finally {
-      // Restore stderr BEFORE assertions
-      System.err = originalErr
+      logger.removeHandler(handler)
+      logger.level = originalLevel
     }
 
-    // Perform assertions after System.err is restored
-    // This ensures proper cleanup even if assertions fail
-    assertTrue(errOutput.toString().contains('Warning'), 'Should contain warning message')
-    assertTrue(errOutput.toString().contains('Number of breaks (15)'), 'Should mention requested 15 breaks')
-    assertTrue(errOutput.toString().contains('palette size (9)'), 'Should mention palette size of 9')
-    assertTrue(errOutput.toString().contains('Using maximum of 9 colors'), 'Should mention using maximum of 9 colors')
+    String warning = messages.join('\n')
+    assertTrue(warning.contains('Warning'), 'Should contain warning message')
+    assertTrue(warning.contains('Number of breaks (15)'), 'Should mention requested 15 breaks')
+    assertTrue(warning.contains('palette size (9)'), 'Should mention palette size of 9')
+    assertTrue(warning.contains('Using maximum of 9 colors'), 'Should mention using maximum of 9 colors')
 
     // Should still work correctly - using max palette size
     def colors = scale.getColors()

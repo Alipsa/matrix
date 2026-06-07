@@ -4,17 +4,14 @@ import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.layer.StatType
 
 /**
  * Polygon map geometry that joins data to map polygons via map_id.
  */
 @CompileStatic
-@SuppressWarnings(['DuplicateStringLiteral', 'UnusedPrivateField'])
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomMap extends Geom {
-
-  private static final Logger log = Logger.getLogger(GeomMap)
 
   /** Map polygon data */
   Matrix map

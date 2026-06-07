@@ -74,7 +74,7 @@ class Factor implements CharmExpression {
       }
       return list
     }
-    if (value instanceof CharSequence && data.columnNames().contains(value)) {
+    if (value instanceof CharSequence && data.columnNames().contains(value.toString())) {
       return data[value.toString()]
     }
     int rows = data.rowCount()

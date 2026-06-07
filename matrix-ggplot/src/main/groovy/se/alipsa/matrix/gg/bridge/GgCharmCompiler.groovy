@@ -949,14 +949,18 @@ class GgCharmCompiler {
       case 'alpha' -> spec.alpha = charmScale
       case 'linetype' -> spec.linetype = charmScale
       case 'group' -> spec.group = charmScale
-      default -> reasons.add("Scale ${idx} aesthetic '${aesthetic}' is not delegated".toString())
+      default -> {
+        String msg = "Scale ${idx} aesthetic '${aesthetic}' is not delegated"
+        reasons.add(msg)
+      }
     }
   }
 
   private Coord mapCoord(se.alipsa.matrix.gg.coord.Coord source, List<String> reasons) {
     CharmCoordType type = mappingRegistry.mapCoordType(source)
     if (type == null) {
-      reasons << ("Coord '${source?.class?.simpleName}' is not delegated").toString()
+      String msg = "Coord '${source?.class?.simpleName}' is not delegated"
+      reasons << msg
       return null
     }
 
@@ -1028,7 +1032,8 @@ class GgCharmCompiler {
       )
     }
 
-    reasons << ("Facet '${source.class.simpleName}' is not delegated").toString()
+    String msg = "Facet '${source.class.simpleName}' is not delegated"
+    reasons << msg
     null
   }
 
@@ -1084,7 +1089,7 @@ class GgCharmCompiler {
     Map<String, Object> copy = [:]
     (map ?: [:]).each { Object key, Object value ->
       if (key != null) {
-        copy[key as String] = deepCopyValue(value)
+        copy[key.toString()] = deepCopyValue(value)
       }
     }
     copy
@@ -1439,7 +1444,7 @@ class GgCharmCompiler {
     Map<String, Object> result = [:]
     (params ?: [:]).each { Object key, Object value ->
       if (key != null) {
-        result[key as String] = convertGuideParamValue(value)
+        result[key.toString()] = convertGuideParamValue(value)
       }
     }
     result

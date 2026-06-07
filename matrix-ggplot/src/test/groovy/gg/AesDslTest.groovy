@@ -36,6 +36,15 @@ class AesDslTest {
   }
 
   @Test
+  void testGStringColumnNameExtraction() {
+    String column = 'mpg'
+    Aes mapping = new Aes()
+    mapping.setAesthetic('x', "${column}")
+
+    assertEquals('mpg', mapping.xColName)
+  }
+
+  @Test
   void testMixedQuotedAndUnquotedMappings() {
     Aes mapping = aes { x = displ; y = 'Highway MPG' }
 

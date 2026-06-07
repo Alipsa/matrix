@@ -562,7 +562,7 @@ class Aes {
     if (value instanceof Closure) {
       return null
     }
-    return value
+    return value.toString()
   }
 
   /**
