@@ -739,10 +739,10 @@ class GgCharmCompiler {
     }
     Object value = aes.getAestheticValue(aesthetic)
     if (value instanceof CharSequence) {
-      return value
+      return value.toString()
     }
     if (value instanceof Factor && (value as Factor).value instanceof CharSequence) {
-      return (value as Factor).value
+      return (value as Factor).value.toString()
     }
     null
   }

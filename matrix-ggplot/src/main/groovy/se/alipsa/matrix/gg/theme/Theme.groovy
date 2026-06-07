@@ -297,9 +297,11 @@ class ElementText {
 
   ElementText() {}
 
+  @SuppressWarnings('UnnecessaryToString')
   ElementText(Map params) {
     params.each { key, value ->
-      String k = key as String
+      // Accept non-String map keys while preserving existing String-key behavior.
+      String k = key.toString()
       if (k == 'colour') {
         k = 'color'
       }
@@ -323,9 +325,11 @@ class ElementLine {
 
   ElementLine() {}
 
+  @SuppressWarnings('UnnecessaryToString')
   ElementLine(Map params) {
     params.each { key, value ->
-      String k = key as String
+      // Accept non-String map keys while preserving existing String-key behavior.
+      String k = key.toString()
       // Handle aliases
       if (k == 'colour') {
         k = 'color'

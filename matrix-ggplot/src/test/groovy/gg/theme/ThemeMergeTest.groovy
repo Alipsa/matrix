@@ -1,5 +1,6 @@
 package gg.theme
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
 
@@ -34,5 +35,16 @@ class ThemeMergeTest {
 
     assertTrue(content.contains('fill="#EBEBEB"'),
         'Expected default panel background when only plotTitle is customized')
+  }
+
+  @Test
+  void testThemeElementsAcceptNonStringParamKeys() {
+    def text = element_text([(new StringBuilder('color')): 'red', (new StringBuilder('size')): 12])
+    def line = element_line([(new StringBuilder('color')): 'blue', (new StringBuilder('linewidth')): 2])
+
+    assertEquals('red', text.color)
+    assertEquals(12, text.size)
+    assertEquals('blue', line.color)
+    assertEquals(2, line.size)
   }
 }
