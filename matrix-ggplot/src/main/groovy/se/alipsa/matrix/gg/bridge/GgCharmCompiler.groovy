@@ -91,7 +91,7 @@ class GgCharmCompiler {
       'x', 'y', 'color', 'fill', 'size', 'shape', 'group',
       'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax',
       'alpha', 'linetype', 'label', 'tooltip', 'weight'
-  ] as List<String>
+  ]
   private static final Set<String> PARAM_COLUMN_AESTHETICS = [
       'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'tooltip', 'weight'
   ] as Set<String>
@@ -949,14 +949,18 @@ class GgCharmCompiler {
       case 'alpha' -> spec.alpha = charmScale
       case 'linetype' -> spec.linetype = charmScale
       case 'group' -> spec.group = charmScale
-      default -> reasons.add("Scale ${idx} aesthetic '${aesthetic}' is not delegated".toString())
+      default -> {
+        String msg = "Scale ${idx} aesthetic '${aesthetic}' is not delegated"
+        reasons.add(msg)
+      }
     }
   }
 
   private Coord mapCoord(se.alipsa.matrix.gg.coord.Coord source, List<String> reasons) {
     CharmCoordType type = mappingRegistry.mapCoordType(source)
     if (type == null) {
-      reasons << "Coord '${source?.class?.simpleName}' is not delegated".toString()
+      String msg = "Coord '${source?.class?.simpleName}' is not delegated"
+      reasons << msg
       return null
     }
 
@@ -1028,7 +1032,8 @@ class GgCharmCompiler {
       )
     }
 
-    reasons << "Facet '${source.class.simpleName}' is not delegated".toString()
+    String msg = "Facet '${source.class.simpleName}' is not delegated"
+    reasons << msg
     null
   }
 
@@ -1048,7 +1053,7 @@ class GgCharmCompiler {
     PARAM_COLUMN_AESTHETICS.each { String key ->
       Object value = params[key]
       if (value instanceof CharSequence) {
-        mapped[key] = value.toString()
+        mapped[key] = value
       }
     }
     if (!mapped.isEmpty()) {
@@ -1122,7 +1127,7 @@ class GgCharmCompiler {
         continue
       }
       if (value instanceof CharSequence) {
-        mapped[key] = value.toString()
+        mapped[key] = value
         continue
       }
       if (value instanceof Factor) {
@@ -1369,11 +1374,17 @@ class GgCharmCompiler {
 
     // Extract per-scale guide params
     (scales ?: []).each { GgScale scale ->
-      if (scale?.guide == null) return
+      if (scale?.guide == null) {
+        return
+      }
       String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
-      if (aesthetic == null || aesthetic.isBlank()) return
+      if (aesthetic == null || aesthetic.isBlank()) {
+        return
+      }
       // Don't override if already set from explicit guides
-      if (result.getSpec(aesthetic) != null) return
+      if (result.getSpec(aesthetic) != null) {
+        return
+      }
 
       GuideSpec mapped = mapSingleGuide(scale.guide)
       if (mapped != null) {
@@ -1385,12 +1396,16 @@ class GgCharmCompiler {
   }
 
   private static GuideSpec mapSingleGuide(Object spec) {
-    if (spec == null) return null
+    if (spec == null) {
+      return null
+    }
 
     if (spec instanceof Guide) {
       Guide guide = spec as Guide
       GuideType type = GuideType.fromString(guide.type)
-      if (type == null) return null
+      if (type == null) {
+        return null
+      }
       Map<String, Object> params = guide.params ? convertGuideParams(guide.params) : [:]
       return new GuideSpec(type, params)
     }
@@ -1411,7 +1426,9 @@ class GgCharmCompiler {
       Map map = spec as Map
       String typeStr = map['type']?.toString()
       GuideType type = GuideType.fromString(typeStr)
-      if (type == null) return null
+      if (type == null) {
+        return null
+      }
       Map<String, Object> params = convertGuideParams(map.findAll { k, v -> k != 'type' })
       return new GuideSpec(type, params)
     }
@@ -1436,10 +1453,12 @@ class GgCharmCompiler {
   private static Object convertGuideParamValue(Object value) {
     if (value instanceof Guide) {
       GuideSpec mapped = mapSingleGuide(value)
-      if (mapped != null) return mapped
+      if (mapped != null) {
+        return mapped
+      }
       // Fallback: convert to map when guide type is unrecognized
       Guide guideValue = value as Guide
-      log.warn("convertGuideParamValue: falling back to map conversion for unmapped Guide " +
+      log.warn('convertGuideParamValue: falling back to map conversion for unmapped Guide ' +
           "with type='${guideValue.type}'")
       return [type: guideValue.type, params: deepCopyMap(guideValue.params)]
     }
@@ -1464,7 +1483,7 @@ class GgCharmCompiler {
       return deepCopyMap(guideSpec as Map)
     }
     if (guideSpec instanceof CharSequence) {
-      return guideSpec.toString()
+      return guideSpec
     }
     guideSpec
   }

@@ -23,6 +23,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_curve(curvature: 1.0, color: 'blue')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomCurve extends Geom {
 
   /** Line color */
@@ -43,18 +44,32 @@ class GeomCurve extends Geom {
   GeomCurve() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y', 'xend', 'yend']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomCurve(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.curvature != null) this.curvature = params.curvature as Number
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.curvature != null) {
+      this.curvature = params.curvature as Number
+    }
     this.params = params
   }
 

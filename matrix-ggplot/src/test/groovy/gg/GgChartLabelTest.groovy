@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.GgPlot
 import se.alipsa.matrix.gg.Label
 
+@SuppressWarnings('ExplicitCallToPlusMethod')
 class GgChartLabelTest {
 
   @Test

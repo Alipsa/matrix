@@ -28,45 +28,45 @@ class ScaleColorViridisTest {
 
   @Test
   void testBeginLessThanZeroThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(begin: -0.1)
-    })
+    }
     assertTrue(exception.message.contains('begin'))
     assertTrue(exception.message.contains('[0, 1]'))
   }
 
   @Test
   void testBeginGreaterThanOneThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(begin: 1.5)
-    })
+    }
     assertTrue(exception.message.contains('begin'))
     assertTrue(exception.message.contains('[0, 1]'))
   }
 
   @Test
   void testEndLessThanZeroThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(end: -0.1)
-    })
+    }
     assertTrue(exception.message.contains('end'))
     assertTrue(exception.message.contains('[0, 1]'))
   }
 
   @Test
   void testEndGreaterThanOneThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(end: 1.2)
-    })
+    }
     assertTrue(exception.message.contains('end'))
     assertTrue(exception.message.contains('[0, 1]'))
   }
 
   @Test
   void testBeginGreaterThanEndThrowsException() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(begin: 0.8, end: 0.2)
-    })
+    }
     assertTrue(exception.message.contains('begin'))
     assertTrue(exception.message.contains('end'))
     assertTrue(exception.message.toLowerCase().contains('less than or equal'))
@@ -216,8 +216,8 @@ class ScaleColorViridisTest {
 
     // When reversed, first item should get color similar to last item in forward direction
     // and vice versa (allowing for interpolation differences)
-    assertNotEquals(forwardA, reverseA, "Direction should affect color mapping")
-    assertNotEquals(forwardC, reverseC, "Direction should affect color mapping")
+    assertNotEquals(forwardA, reverseA, 'Direction should affect color mapping')
+    assertNotEquals(forwardC, reverseC, 'Direction should affect color mapping')
   }
 
   @Test
@@ -372,9 +372,9 @@ class ScaleColorViridisTest {
   @Test
   void testOnlyBeginProvidedInvalidIfGreaterThanDefaultEnd() {
     // begin > default end (1.0) should fail
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(begin: 1.1)
-    })
+    }
     // Should fail on range validation, not begin<=end validation
     assertTrue(exception.message.contains('begin'))
     assertTrue(exception.message.contains('[0, 1]'))
@@ -384,9 +384,9 @@ class ScaleColorViridisTest {
   void testOnlyEndProvidedInvalidIfLessThanDefaultBegin() {
     // This would never happen since default begin is 0.0 and end must be >= 0
     // But we can test that end < 0 fails
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       new ScaleColorViridis(end: -0.1)
-    })
+    }
     assertTrue(exception.message.contains('end'))
     assertTrue(exception.message.contains('[0, 1]'))
   }

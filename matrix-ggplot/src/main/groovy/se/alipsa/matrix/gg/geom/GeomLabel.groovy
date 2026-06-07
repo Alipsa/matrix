@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_label(fill: 'white', color: 'black') - white background with black border
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'PropertyName'])
 class GeomLabel extends Geom {
 
   /** Text color */
@@ -64,25 +65,45 @@ class GeomLabel extends Geom {
   GeomLabel() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', fill: 'white', size: 10] as Map<String, Object>
+    defaultAes = [color: 'black', fill: 'white', size: 10]
   }
 
   GeomLabel(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
-    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.size != null) {
+      this.size = params.size as BigDecimal
+    }
     this.family = params.family as String ?: this.family
     this.fontface = params.fontface as String ?: this.fontface
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.hjust != null) this.hjust = params.hjust as BigDecimal
-    if (params.vjust != null) this.vjust = params.vjust as BigDecimal
-    if (params.angle != null) this.angle = params.angle as BigDecimal
-    if (params.nudge_x != null) this.nudge_x = params.nudge_x as BigDecimal
-    if (params.nudge_y != null) this.nudge_y = params.nudge_y as BigDecimal
-    if (params.label_padding != null) this.label_padding = params.label_padding as BigDecimal
-    if (params.label_r != null) this.label_r = params.label_r as BigDecimal
-    if (params.label_size != null) this.label_size = params.label_size as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.hjust != null) {
+      this.hjust = params.hjust as BigDecimal
+    }
+    if (params.vjust != null) {
+      this.vjust = params.vjust as BigDecimal
+    }
+    if (params.angle != null) {
+      this.angle = params.angle as BigDecimal
+    }
+    if (params.nudge_x != null) {
+      this.nudge_x = params.nudge_x as BigDecimal
+    }
+    if (params.nudge_y != null) {
+      this.nudge_y = params.nudge_y as BigDecimal
+    }
+    if (params.label_padding != null) {
+      this.label_padding = params.label_padding as BigDecimal
+    }
+    if (params.label_r != null) {
+      this.label_r = params.label_r as BigDecimal
+    }
+    if (params.label_size != null) {
+      this.label_size = params.label_size as BigDecimal
+    }
     this.label = params.label as String ?: this.label
     this.params = params
   }

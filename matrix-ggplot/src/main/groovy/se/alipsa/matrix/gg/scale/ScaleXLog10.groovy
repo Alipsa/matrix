@@ -21,6 +21,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * - Break generation produces exact BigDecimal values (powers of 10: 1, 10, 100, etc.)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXLog10 extends ScaleContinuous {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
@@ -36,27 +37,47 @@ class ScaleXLog10 extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
-    if (params.guide) this.guide = params.guide
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
+    if (params.guide) {
+      this.guide = params.guide
+    }
   }
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Filter to positive numeric values (log10 is undefined for <= 0)
     List<BigDecimal> numericData = data.findResults { coerceToPositiveNumber(it) } as List<BigDecimal>
 
-    if (numericData.isEmpty()) return
+    if (numericData.isEmpty()) {
+      return
+    }
 
     // Transform to log space and convert to BigDecimal
-    List<BigDecimal> logData = numericData.collect { it.log10() }
+    List<BigDecimal> logData = numericData*.log10()
 
     // Compute min/max in log space as BigDecimal
     BigDecimal min = logData.min()
@@ -88,7 +109,9 @@ class ScaleXLog10 extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal numeric = coerceToPositiveNumber(value)
-    if (numeric == null) return null
+    if (numeric == null) {
+      return null
+    }
 
     // Transform to log space, then perform linear interpolation
     BigDecimal logValue = numeric.log10()
@@ -98,11 +121,15 @@ class ScaleXLog10 extends ScaleContinuous {
   @Override
   Object inverse(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
 
     // Inverse linear interpolation in log space
     BigDecimal logValue = ScaleUtils.linearInverse(v, computedDomain[0], computedDomain[1], range[0], range[1])
-    if (logValue == null) return null
+    if (logValue == null) {
+      return null
+    }
 
     // Transform back from log space using Groovy power operator
     return (10 ** logValue) as BigDecimal
@@ -110,7 +137,9 @@ class ScaleXLog10 extends ScaleContinuous {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
 
     BigDecimal logMin = computedDomain[0]
     BigDecimal logMax = computedDomain[1]
@@ -158,7 +187,9 @@ class ScaleXLog10 extends ScaleContinuous {
 
   @Override
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
     return getComputedBreaks().collect { formatLogNumber(it as Number) }
   }
 
@@ -176,7 +207,9 @@ class ScaleXLog10 extends ScaleContinuous {
    * @return formatted string representation
    */
   private String formatLogNumber(Number n) {
-    if (n == null) return ''
+    if (n == null) {
+      return ''
+    }
 
     // Convert to BigDecimal for consistent processing
     BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
@@ -184,7 +217,7 @@ class ScaleXLog10 extends ScaleContinuous {
     // Check if it's an integer value (after removing trailing zeros)
     if (bd.stripTrailingZeros().scale() <= 0) {
       // Format as integer
-      return bd.toBigInteger().toString()
+      return bd.toBigInteger()
     }
 
     // For fractional values (< 1), use general format
@@ -198,8 +231,12 @@ class ScaleXLog10 extends ScaleContinuous {
 
   private static BigDecimal coerceToPositiveNumber(Object value) {
     BigDecimal num = ScaleUtils.coerceToNumber(value)
-    if (num == null) return null
-    if (num <= 0) return null
+    if (num == null) {
+      return null
+    }
+    if (num <= 0) {
+      return null
+    }
     return num
   }
 
@@ -210,8 +247,12 @@ class ScaleXLog10 extends ScaleContinuous {
    */
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.transform('log10')
-    if (limits) s.params['limits'] = limits
-    if (expand) s.params['expand'] = expand
+    if (limits) {
+      s.params['limits'] = limits
+    }
+    if (expand) {
+      s.params['expand'] = expand
+    }
     s
   }
 }

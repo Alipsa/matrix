@@ -22,6 +22,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - annotate('label', x: 5, y: 10, label: 'Label text')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateStringLiteral', 'MethodSize', 'UnnecessaryElseStatement'])
 class Annotate {
 
   /** The geom type for this annotation */
@@ -93,8 +94,8 @@ class Annotate {
         return new GeomStep(styleParams)
       default:
         throw new IllegalArgumentException("Unknown annotation geom type: $type. " +
-            "Supported types: text, label, rect, segment, point, line, hline, vline, " +
-            "pointrange, linerange, crossbar, ribbon, tile, path, step")
+            'Supported types: text, label, rect, segment, point, line, hline, vline, ' +
+            'pointrange, linerange, crossbar, ribbon, tile, path, step')
     }
   }
 
@@ -239,7 +240,7 @@ class Annotate {
     }
 
     if (columns.isEmpty()) {
-      throw new IllegalArgumentException("Annotation requires at least one coordinate parameter (x, y, xmin, xmax, ymin, ymax, etc.)")
+      throw new IllegalArgumentException('Annotation requires at least one coordinate parameter (x, y, xmin, xmax, ymin, ymax, etc.)')
     }
 
     // Find the maximum length of any list value to handle vectorized annotations
@@ -260,7 +261,7 @@ class Annotate {
           // Repeat the single value
           return (0..<nRows).collect { list[0] }
         } else {
-          throw new IllegalArgumentException("Inconsistent annotation vector lengths")
+          throw new IllegalArgumentException('Inconsistent annotation vector lengths')
         }
       } else {
         return (0..<nRows).collect { val }

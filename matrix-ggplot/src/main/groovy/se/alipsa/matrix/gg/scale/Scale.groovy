@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.coord.CoordTrans
  * Subclasses should override these methods to provide actual implementations.
  */
 @CompileStatic
+@SuppressWarnings('UnnecessaryDefInFieldDeclaration')
 class Scale {
 
   /** The aesthetic this scale applies to (x, y, color, fill, size, etc.) */
@@ -96,7 +97,9 @@ class Scale {
    * @return List of label strings
    */
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
     return getComputedBreaks().collect { it?.toString() ?: '' }
   }
 

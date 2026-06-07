@@ -10,13 +10,14 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Note: Y-axis range is typically inverted in SVG coordinates (0 at top).
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleYDiscrete extends ScaleDiscrete {
 
   /** Position of the y-axis: 'left' (default) or 'right' */
   String position = 'left'
 
   /** Expansion factor for adding padding at the ends */
-  List<Number> discreteExpand = [0, 0.6] as List<Number>
+  List<Number> discreteExpand = [0, 0.6]
 
   ScaleYDiscrete() {
     aesthetic = 'y'
@@ -33,17 +34,25 @@ class ScaleYDiscrete extends ScaleDiscrete {
     this.breaks = params.breaks as List ?: this.breaks
     this.labels = params.labels as List<String> ?: this.labels
     this.position = params.position as String ?: this.position
-    if (params.drop != null) this.drop = params.drop as boolean
+    if (params.drop != null) {
+      this.drop = params.drop as boolean
+    }
     this.discreteExpand = params.expand as List<Number> ?: this.discreteExpand
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return null
-    if (levels.isEmpty()) return null
+    if (value == null) {
+      return null
+    }
+    if (levels.isEmpty()) {
+      return null
+    }
 
     int index = levels.indexOf(value)
-    if (index < 0) return null
+    if (index < 0) {
+      return null
+    }
 
     // Map to position within range with discrete expansion
     // Note: For y-axis, range[0] is typically the bottom (larger pixel value)
@@ -80,7 +89,9 @@ class ScaleYDiscrete extends ScaleDiscrete {
    * Get bandwidth without expansion applied.
    */
   private BigDecimal getBandwidthUnexpanded() {
-    if (levels.isEmpty()) return 0
+    if (levels.isEmpty()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
     return (rMax - rMin).abs() / (levels.size() + 1)
@@ -88,7 +99,9 @@ class ScaleYDiscrete extends ScaleDiscrete {
 
   @Override
   BigDecimal getBandwidth() {
-    if (levels.isEmpty()) return 0
+    if (levels.isEmpty()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
 
@@ -133,8 +146,12 @@ class ScaleYDiscrete extends ScaleDiscrete {
    */
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.discrete()
-    if (limits) s.params['limits'] = limits
-    if (discreteExpand) s.params['expand'] = discreteExpand
+    if (limits) {
+      s.params['limits'] = limits
+    }
+    if (discreteExpand) {
+      s.params['expand'] = discreteExpand
+    }
     s
   }
 }

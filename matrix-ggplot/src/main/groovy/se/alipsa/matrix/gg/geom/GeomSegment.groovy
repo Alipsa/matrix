@@ -13,6 +13,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - With data mapping: aes(x: 'x1', y: 'y1', xend: 'x2', yend: 'y2')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomSegment extends Geom {
 
   /** Starting x coordinate */
@@ -48,22 +49,40 @@ class GeomSegment extends Geom {
   GeomSegment() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y', 'xend', 'yend']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomSegment(Map params) {
     this()
-    if (params.x != null) this.x = params.x as BigDecimal
-    if (params.y != null) this.y = params.y as BigDecimal
-    if (params.xend != null) this.xend = params.xend as BigDecimal
-    if (params.yend != null) this.yend = params.yend as BigDecimal
+    if (params.x != null) {
+      this.x = params.x as BigDecimal
+    }
+    if (params.y != null) {
+      this.y = params.y as BigDecimal
+    }
+    if (params.xend != null) {
+      this.xend = params.xend as BigDecimal
+    }
+    if (params.yend != null) {
+      this.yend = params.yend as BigDecimal
+    }
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.arrow != null) this.arrow = params.arrow as boolean
-    if (params.arrowSize != null) this.arrowSize = params.arrowSize as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.arrow != null) {
+      this.arrow = params.arrow as boolean
+    }
+    if (params.arrowSize != null) {
+      this.arrowSize = params.arrowSize as BigDecimal
+    }
     this.params = params
   }
 

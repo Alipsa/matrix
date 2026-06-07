@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Uses stat_qq to compute theoretical quantiles for comparison.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomQq extends Geom {
 
   /** Default point color */
@@ -33,7 +34,7 @@ class GeomQq extends Geom {
   GeomQq() {
     defaultStat = StatType.QQ
     requiredAes = ['x']
-    defaultAes = [color: 'black', size: 3, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', size: 3, alpha: 1.0]
   }
 
   /**
@@ -43,12 +44,24 @@ class GeomQq extends Geom {
    */
   GeomQq(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.size) this.size = params.size as Number
-    if (params.shape) this.shape = params.shape
-    if (params.alpha) this.alpha = params.alpha as Number
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.fill) {
+      this.fill = ColorUtil.normalizeColor(params.fill as String)
+    }
+    if (params.size) {
+      this.size = params.size as Number
+    }
+    if (params.shape) {
+      this.shape = params.shape
+    }
+    if (params.alpha) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

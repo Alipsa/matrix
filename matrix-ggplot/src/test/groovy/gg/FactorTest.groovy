@@ -55,6 +55,19 @@ class FactorTest {
   }
 
   @Test
+  void testAddToMatrixGStringColumnReference() {
+    def data = Matrix.builder()
+        .columnNames(['col'])
+        .rows([['a'], ['b']])
+        .build()
+    String column = 'col'
+    def factor = new Factor("${column}")
+    String colName = factor.addToMatrix(data)
+
+    assertEquals(['a', 'b'], data[colName])
+  }
+
+  @Test
   void testNameCollisionAddsSuffix() {
     def data = Matrix.builder()
         .columnNames(['factor_blank'])

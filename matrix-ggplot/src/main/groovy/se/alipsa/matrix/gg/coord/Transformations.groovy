@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
  * Common coordinate transformations.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'GetterMethodCouldBeProperty', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryElseStatement'])
 class Transformations {
 
   /**
@@ -14,20 +15,23 @@ class Transformations {
   static class IdentityTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       return x as BigDecimal
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       return x as BigDecimal
     }
 
     @Override
     String getName() {
-      return "identity"
+      return 'identity'
     }
 
     @Override
@@ -42,26 +46,34 @@ class Transformations {
   static class Log10Trans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val <= 0) return null
+      if (val <= 0) {
+        return null
+      }
       return val.log10()
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       return 10 ** (x as BigDecimal)
     }
 
     @Override
     String getName() {
-      return "log10"
+      return 'log10'
     }
 
     @Override
     List<BigDecimal> breaks(List<Number> limits, int n) {
-      if (limits == null || limits.size() < 2) return null
+      if (limits == null || limits.size() < 2) {
+        return null
+      }
 
       BigDecimal min = (limits[0] as BigDecimal).max(0.0000000001).log10()
       BigDecimal max = (limits[1] as BigDecimal).log10()
@@ -85,22 +97,28 @@ class Transformations {
   static class LogTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val <= 0) return null
+      if (val <= 0) {
+        return null
+      }
       return val.log()
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
       return val.exp()
     }
 
     @Override
     String getName() {
-      return "log"
+      return 'log'
     }
 
     @Override
@@ -115,22 +133,28 @@ class Transformations {
   static class SqrtTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val < 0) return null
+      if (val < 0) {
+        return null
+      }
       return val ** 0.5
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
       return val ** 2
     }
 
     @Override
     String getName() {
-      return "sqrt"
+      return 'sqrt'
     }
 
     @Override
@@ -145,19 +169,23 @@ class Transformations {
   static class ReverseTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       return -(x as BigDecimal)
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       return -(x as BigDecimal)
     }
 
     @Override
     String getName() {
-      return "reverse"
+      return 'reverse'
     }
 
     @Override
@@ -198,7 +226,9 @@ class Transformations {
 
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
       // For odd integer exponents, negative values are allowed
       if (val < 0 && !isOddInteger) {
@@ -209,7 +239,9 @@ class Transformations {
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
 
       // For odd integer exponents, handle negative values specially
@@ -228,7 +260,7 @@ class Transformations {
 
     @Override
     String getName() {
-      return "power"
+      return 'power'
     }
 
     @Override
@@ -246,22 +278,28 @@ class Transformations {
   static class AsnTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val < 0 || val > 1) return null
+      if (val < 0 || val > 1) {
+        return null
+      }
       return val.sqrt().asin()
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal sinVal = (x as BigDecimal).sin()
       return sinVal * sinVal
     }
 
     @Override
     String getName() {
-      return "asn"
+      return 'asn'
     }
 
     @Override
@@ -276,23 +314,31 @@ class Transformations {
   static class ReciprocalTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val == 0) return null
+      if (val == 0) {
+        return null
+      }
       return 1 / val
     }
 
     @Override
     BigDecimal inverse(Number x) {
-      if (x == null) return null
+      if (x == null) {
+        return null
+      }
       BigDecimal val = x as BigDecimal
-      if (val == 0) return null
+      if (val == 0) {
+        return null
+      }
       return 1 / val
     }
 
     @Override
     String getName() {
-      return "reciprocal"
+      return 'reciprocal'
     }
 
     @Override
@@ -308,7 +354,9 @@ class Transformations {
    * @return Trans instance
    */
   static Trans getTrans(String name, Map params = [:]) {
-    if (name == null) return new IdentityTrans()
+    if (name == null) {
+      return new IdentityTrans()
+    }
 
     switch (name.toLowerCase()) {
       case 'identity':
@@ -350,21 +398,25 @@ class Transformations {
     return new Trans() {
       @Override
       BigDecimal transform(Number x) {
-        if (x == null) return null
+        if (x == null) {
+          return null
+        }
         Number result = forward.call(x)
         return result as BigDecimal
       }
 
       @Override
       BigDecimal inverse(Number x) {
-        if (x == null) return null
+        if (x == null) {
+          return null
+        }
         Number result = inverse.call(x)
         return result as BigDecimal
       }
 
       @Override
       String getName() {
-        return "custom"
+        return 'custom'
       }
 
       @Override

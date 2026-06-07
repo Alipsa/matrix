@@ -15,14 +15,14 @@ class AfterScale implements CharmExpression {
 
   AfterScale(String aesthetic) {
     if (aesthetic == null) {
-      throw new IllegalArgumentException("aesthetic name cannot be null")
+      throw new IllegalArgumentException('aesthetic name cannot be null')
     }
     if (aesthetic.isEmpty()) {
-      throw new IllegalArgumentException("aesthetic name cannot be empty")
+      throw new IllegalArgumentException('aesthetic name cannot be empty')
     }
     String trimmed = aesthetic.trim()
     if (trimmed.isEmpty()) {
-      throw new IllegalArgumentException("aesthetic name cannot be whitespace-only")
+      throw new IllegalArgumentException('aesthetic name cannot be whitespace-only')
     }
     this.aesthetic = trimmed
   }

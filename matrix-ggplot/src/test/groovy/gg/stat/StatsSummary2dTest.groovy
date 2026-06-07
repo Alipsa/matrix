@@ -33,14 +33,14 @@ class StatsSummary2dTest {
         "Result should have x, y, value columns, got: ${result.columnNames()}")
 
     // Should have 2 bins
-    assertEquals(2, result.rowCount(), "Should have 2 bins")
+    assertEquals(2, result.rowCount(), 'Should have 2 bins')
 
     // Check mean values
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
-    assertEquals(15.0, sortedValues[0] as double, 0.001, "First bin mean should be 15")
-    assertEquals(150.0, sortedValues[1] as double, 0.001, "Second bin mean should be 150")
+    assertEquals(15.0, sortedValues[0] as double, 0.001, 'First bin mean should be 15')
+    assertEquals(150.0, sortedValues[1] as double, 0.001, 'Second bin mean should be 150')
   }
 
   @Test
@@ -58,10 +58,10 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 2, fun: 'median'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
-    assertEquals(2.5, sortedValues[0] as double, 0.001, "Median should handle outliers")
+    assertEquals(2.5, sortedValues[0] as double, 0.001, 'Median should handle outliers')
     assertEquals(15.0, sortedValues[1] as double, 0.001)
   }
 
@@ -80,8 +80,8 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 2, fun: 'sum'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
-    List<BigDecimal> sortedValues = values.sort()
+    List<BigDecimal> values = result['value']
+    List<BigDecimal> sortedValues = values.toSorted()
 
     assertEquals(15.0, sortedValues[0] as double, 0.001)
     assertEquals(60.0, sortedValues[1] as double, 0.001)
@@ -102,7 +102,7 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 2, fun: 'min'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     assertTrue(values.contains(5 as BigDecimal))
     assertTrue(values.contains(50 as BigDecimal))
   }
@@ -122,7 +122,7 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 2, fun: 'max'])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     assertTrue(values.contains(30 as BigDecimal))
     assertTrue(values.contains(200 as BigDecimal))
   }
@@ -148,10 +148,10 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 2, 'fun.data': customFun])
 
     assertEquals(2, result.rowCount())
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
 
     // Both bins should have count=2
-    assertTrue(values.every { it == 2 as BigDecimal }, "Custom function should return count")
+    assertTrue(values.every { it == 2 as BigDecimal }, 'Custom function should return count')
   }
 
   @Test
@@ -184,7 +184,7 @@ class StatsSummary2dTest {
     def aes = new Aes(x: 'x', y: 'y', fill: 'z')
     def result = GgStat.summary2d(data, aes)
 
-    assertEquals(0, result.rowCount(), "Empty data should produce empty result")
+    assertEquals(0, result.rowCount(), 'Empty data should produce empty result')
     assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
   }
 
@@ -245,9 +245,9 @@ class StatsSummary2dTest {
     assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
 
     // Verify all values are computed correctly
-    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> values = result['value']
     values.each { value ->
-      assertTrue(value > 0, "All summary values should be positive")
+      assertTrue(value > 0, 'All summary values should be positive')
     }
   }
 
@@ -320,7 +320,7 @@ class StatsSummary2dTest {
       GgStat.summary2d(data, aes, [bins: 2, 'fun.data': badFun])
     }
     assertTrue(ex.message.contains('y') || ex.message.contains('value'),
-        "Error message should mention required keys")
+        'Error message should mention required keys')
   }
 
   @Test
@@ -338,7 +338,7 @@ class StatsSummary2dTest {
     def result = GgStat.summary2d(data, aes, [bins: 1])  // No fun specified
 
     assertEquals(1, result.rowCount())
-    assertEquals(20.0, result['value'][0] as double, 0.001, "Default should be mean")
+    assertEquals(20.0, result['value'][0] as double, 0.001, 'Default should be mean')
   }
 
   @Test
@@ -352,8 +352,8 @@ class StatsSummary2dTest {
     def aes = new Aes(x: 'x', y: 'y', fill: 'z')
     def result = GgStat.summary2d(data, aes)
 
-    assertEquals(1, result.rowCount(), "Single point should create one bin")
-    assertEquals(100.0, result['value'][0] as double, 0.001, "Single point should have its own value")
+    assertEquals(1, result.rowCount(), 'Single point should create one bin')
+    assertEquals(100.0, result['value'][0] as double, 0.001, 'Single point should have its own value')
   }
 
   @Test
@@ -374,14 +374,14 @@ class StatsSummary2dTest {
     assertEquals(2, result.rowCount())
 
     // Bin centers should be within the data range
-    List<BigDecimal> xVals = result['x'] as List<BigDecimal>
-    List<BigDecimal> yVals = result['y'] as List<BigDecimal>
+    List<BigDecimal> xVals = result['x']
+    List<BigDecimal> yVals = result['y']
 
     xVals.each { x ->
-      assertTrue(x >= 0 && x <= 10, "X center should be within data range")
+      assertTrue(x >= 0 && x <= 10, 'X center should be within data range')
     }
     yVals.each { y ->
-      assertTrue(y >= 0 && y <= 10, "Y center should be within data range")
+      assertTrue(y >= 0 && y <= 10, 'Y center should be within data range')
     }
   }
 

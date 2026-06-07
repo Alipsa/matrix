@@ -7,10 +7,11 @@ import groovy.transform.CompileStatic
  * Maps categorical values to positions, colors, or other aesthetic values.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class ScaleDiscrete extends Scale {
 
   /** Output range [min, max] for position scales */
-  List<Number> range = [0, 1] as List<Number>
+  List<Number> range = [0, 1]
 
   /** The unique levels in the data (in order) */
   protected List<Object> levels = []
@@ -25,7 +26,9 @@ class ScaleDiscrete extends Scale {
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Get unique values while preserving first occurrence order
     List<Object> uniqueValues = []
@@ -64,11 +67,17 @@ class ScaleDiscrete extends Scale {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return null
-    if (levels.isEmpty()) return null
+    if (value == null) {
+      return null
+    }
+    if (levels.isEmpty()) {
+      return null
+    }
 
     int index = levels.indexOf(value)
-    if (index < 0) return null
+    if (index < 0) {
+      return null
+    }
 
     // Map to position within range
     BigDecimal rMin = range[0] as BigDecimal
@@ -86,15 +95,23 @@ class ScaleDiscrete extends Scale {
 
   @Override
   Object inverse(Object value) {
-    if (value == null) return null
-    if (!(value instanceof Number)) return null
-    if (levels.isEmpty()) return null
+    if (value == null) {
+      return null
+    }
+    if (!(value instanceof Number)) {
+      return null
+    }
+    if (levels.isEmpty()) {
+      return null
+    }
 
     BigDecimal v = value as BigDecimal
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
 
-    if (rMax == rMin) return levels[0]
+    if (rMax == rMin) {
+      return levels[0]
+    }
 
     // Find which band this value falls into
     BigDecimal bandWidth = (rMax - rMin) / levels.size()
@@ -107,13 +124,17 @@ class ScaleDiscrete extends Scale {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
     return levels
   }
 
   @Override
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
     return getComputedBreaks().collect { it?.toString() ?: '' }
   }
 
@@ -122,7 +143,9 @@ class ScaleDiscrete extends Scale {
    * Useful for bar chart width calculations.
    */
   BigDecimal getBandwidth() {
-    if (levels.isEmpty()) return 0
+    if (levels.isEmpty()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
     return (rMax - rMin).abs() / levels.size()
@@ -132,7 +155,9 @@ class ScaleDiscrete extends Scale {
    * Get the position of a level by index.
    */
   BigDecimal getPositionByIndex(int index) {
-    if (index < 0 || index >= levels.size()) return 0
+    if (index < 0 || index >= levels.size()) {
+      return 0
+    }
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal bandWidth = getBandwidth()
     return rMin + bandWidth * (index + 0.5)
@@ -170,7 +195,7 @@ class ScaleDiscrete extends Scale {
       return [:]
     }
     return domain.withIndex().collectEntries { value, idx ->
-      [(value.toString()): colors[idx % colors.size()]]
+      [(value?.toString()): colors[idx % colors.size()]]
     } as Map<String, String>
   }
 
@@ -183,8 +208,10 @@ class ScaleDiscrete extends Scale {
    * @return the color or naValue if not found
    */
   protected String lookupColor(Map<String, String> palette, Object value, String naValue) {
-    if (value == null) return naValue
-    String key = value.toString()
+    if (value == null) {
+      return naValue
+    }
+    String key = value
     return palette.containsKey(key) ? palette[key] : naValue
   }
 
@@ -196,9 +223,11 @@ class ScaleDiscrete extends Scale {
    * @return list of colors in level order
    */
   protected List<String> getColorsFromPalette(Map<String, String> palette, String naValue) {
-    if (levels.isEmpty()) return []
+    if (levels.isEmpty()) {
+      return []
+    }
     return levels.collect { Object level ->
-      palette.get(level.toString()) ?: naValue
+      palette.get(level?.toString()) ?: naValue
     }
   }
 
@@ -208,7 +237,7 @@ class ScaleDiscrete extends Scale {
   }
 
   void setRange(List<? extends Number> vals) {
-    this.range = vals.collect{ it as Number }
+    this.range = vals.collect { it as Number }
   }
 
   List<Number> getRange() {

@@ -15,6 +15,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - With grouping: aes(fill: 'category') for stacked areas
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomArea extends Geom {
 
   /** Fill color for the area */
@@ -38,7 +39,7 @@ class GeomArea extends Geom {
   GeomArea() {
     defaultStat = StatType.ALIGN
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'gray', color: 'black', alpha: 0.7] as Map<String, Object>
+    defaultAes = [fill: 'gray', color: 'black', alpha: 0.7]
   }
 
   GeomArea(Map params) {

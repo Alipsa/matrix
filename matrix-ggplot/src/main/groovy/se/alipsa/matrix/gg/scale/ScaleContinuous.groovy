@@ -7,6 +7,7 @@ import groovy.transform.CompileStatic
  * Maps numeric values from a data domain to a range (e.g., pixel positions).
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleContinuous extends Scale {
 
   static final BigDecimal DEFAULT_EXPAND_MULT = 0.05
@@ -25,12 +26,16 @@ class ScaleContinuous extends Scale {
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Filter to numeric values (including numeric strings)
     List<BigDecimal> numericData = data.findResults { ScaleUtils.coerceToNumber(it) } as List<BigDecimal>
 
-    if (numericData.isEmpty()) return
+    if (numericData.isEmpty()) {
+      return
+    }
 
     // Compute min/max
     BigDecimal min = numericData.min()
@@ -40,8 +45,12 @@ class ScaleContinuous extends Scale {
     if (limits && limits.size() >= 2) {
       BigDecimal limitMin = ScaleUtils.coerceToNumber(limits[0])
       BigDecimal limitMax = ScaleUtils.coerceToNumber(limits[1])
-      if (limitMin != null) min = limitMin
-      if (limitMax != null) max = limitMax
+      if (limitMin != null) {
+        min = limitMin
+      }
+      if (limitMax != null) {
+        max = limitMax
+      }
     }
 
     // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
@@ -75,7 +84,9 @@ class ScaleContinuous extends Scale {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
 
     // If there's a coordinate transformation, apply it to the data value
     // before the linear scale transformation. This ensures the scale works
@@ -86,7 +97,9 @@ class ScaleContinuous extends Scale {
       } else if (aesthetic == 'y' && coordTrans.hasYTransformation()) {
         v = coordTrans.transformY(v)
       }
-      if (v == null) return null  // Transformation failed (e.g., log of negative)
+      if (v == null) {
+        return null  // Transformation failed (e.g., log of negative)
+      }
     }
 
     return ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
@@ -109,7 +122,9 @@ class ScaleContinuous extends Scale {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
 
     BigDecimal min = computedDomain[0]
     BigDecimal max = computedDomain[1]
@@ -120,7 +135,9 @@ class ScaleContinuous extends Scale {
 
   @Override
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
     // If there's a coordinate transformation, inverse-transform breaks to show original values
     return getComputedBreaks().collect { breakVal ->
       Number displayVal = breakVal as Number
@@ -146,7 +163,9 @@ class ScaleContinuous extends Scale {
    * @return list of break values (as BigDecimal)
    */
   private List<Number> generateNiceBreaks(BigDecimal min, BigDecimal max, int n) {
-    if (max == min) return [min] as List<Number>
+    if (max == min) {
+      return [min]
+    }
 
     // Calculate nice spacing directly from the data range
     BigDecimal rawRange = max - min
@@ -176,7 +195,9 @@ class ScaleContinuous extends Scale {
    * @return formatted string representation
    */
   protected String formatNumber(Number n) {
-    if (n == null) return ''
+    if (n == null) {
+      return ''
+    }
 
     // Convert to BigDecimal for consistent formatting
     BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
@@ -184,7 +205,7 @@ class ScaleContinuous extends Scale {
     // Check if it's an integer value (after removing trailing zeros)
     if (bd.stripTrailingZeros().scale() <= 0) {
       // Format as integer
-      return bd.toBigInteger().toString()
+      return bd.toBigInteger()
     }
 
     // Format with 2 significant digits for non-integers

@@ -13,6 +13,7 @@ import groovy.transform.CompileStatic
  * Available linetypes: solid, dashed, dotted, dotdash, longdash, twodash
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleLinetypeManual extends ScaleDiscrete {
 
   /** List of linetypes or map of value -> linetype */
@@ -42,24 +43,38 @@ class ScaleLinetypeManual extends ScaleDiscrete {
     if (params.values) {
       def v = params.values
       if (v instanceof List) {
-        this.values = v.collect { it?.toString() }
+        this.values = v*.toString()
       } else if (v instanceof Map) {
         this.namedValues = (v as Map).collectEntries { k, val ->
           [k, val?.toString()]
         } as Map<Object, String>
       }
     }
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
+    if (value == null) {
+      return naValue
+    }
+    if (levels.isEmpty()) {
+      return naValue
+    }
 
     // Check named mapping first
     if (namedValues.containsKey(value)) {
@@ -68,7 +83,9 @@ class ScaleLinetypeManual extends ScaleDiscrete {
 
     // Fall back to positional mapping
     int index = levels.indexOf(value)
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
 
     // Get linetype from values list or default linetypes
     if (!values.isEmpty()) {
@@ -90,11 +107,15 @@ class ScaleLinetypeManual extends ScaleDiscrete {
   @Override
   Object inverse(Object value) {
     // Find the level that maps to this linetype
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
     // Check named values
     def namedEntry = namedValues.find { k, v -> v == value }
-    if (namedEntry) return namedEntry.key
+    if (namedEntry) {
+      return namedEntry.key
+    }
 
     // Iterate through all levels to find the first one that transforms to this linetype
     // This correctly handles cycled linetypes
@@ -111,7 +132,9 @@ class ScaleLinetypeManual extends ScaleDiscrete {
    * Get the linetype for a specific level index.
    */
   String getLinetypeForIndex(int index) {
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
     if (!values.isEmpty()) {
       return values[index % values.size()]
     }

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Expression
 
+@SuppressWarnings('ThrowRuntimeException')
 class ExpressionTest {
 
   @Test
@@ -58,7 +59,7 @@ class ExpressionTest {
         .build()
 
     // Closure that throws an exception
-    def expr = new Expression({ throw new RuntimeException("Test error") })
+    def expr = new Expression({ throw new RuntimeException('Test error') })
 
     // Should throw wrapped exception
     def ex = assertThrows(RuntimeException) {
@@ -129,7 +130,7 @@ class ExpressionTest {
 
   @Test
   void testExpressionOf() {
-    def expr = Expression.of({ it.x })
+    def expr = Expression.of { it.x }
     assertNotNull(expr)
     assertTrue(expr.name.startsWith('.expr.'))
 
@@ -157,6 +158,19 @@ class ExpressionTest {
     assertEquals(10, values[0] as int)
     assertEquals(20, values[1] as int)
     assertEquals(30, values[2] as int)
+  }
+
+  @Test
+  void testExpressionConvertsGStringResult() {
+    def data = Matrix.builder()
+        .columnNames(['x'])
+        .rows([[4]])
+        .build()
+
+    def expr = new Expression({ "${it.x}5" })
+    def values = expr.evaluateAll(data)
+
+    assertEquals(45, values[0] as int)
   }
 
   @Test

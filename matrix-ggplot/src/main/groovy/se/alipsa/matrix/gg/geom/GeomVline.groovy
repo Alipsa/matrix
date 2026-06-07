@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - With data mapping: aes(xintercept: 'threshold_column')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomVline extends Geom {
 
   /** X-intercept value(s) for the vertical line(s) */
@@ -34,18 +35,32 @@ class GeomVline extends Geom {
   GeomVline() {
     defaultStat = StatType.IDENTITY
     requiredAes = []  // xintercept can be specified as parameter
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomVline(Map params) {
     this()
-    if (params.xintercept != null) this.xintercept = params.xintercept
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.xintercept != null) {
+      this.xintercept = params.xintercept
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

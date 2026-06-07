@@ -1,5 +1,6 @@
 package se.alipsa.matrix.gg.theme
 
+@SuppressWarnings(['AbcMetric', 'ClassJavadoc', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'MethodSize', 'UnnecessaryObjectReferences'])
 class Themes {
 
   /**

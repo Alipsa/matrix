@@ -17,6 +17,7 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * - Grid data with x, y, z columns
  */
 @CompileStatic
+@SuppressWarnings('DuplicateNumberLiteral')
 class GeomContourFilled extends GeomContour {
 
   /** Fill alpha transparency (0-1) */
@@ -30,14 +31,20 @@ class GeomContourFilled extends GeomContour {
 
   GeomContourFilled() {
     super()
-    defaultAes = [fill: 'blue', alpha: 0.8] as Map<String, Object>
+    defaultAes = [fill: 'blue', alpha: 0.8]
   }
 
   GeomContourFilled(Map params) {
     super(params)
-    if (params.fillAlpha != null) this.fillAlpha = params.fillAlpha as Number
-    if (params.fill_colors) this.fillColors = params.fill_colors as List<String>
-    if (params.fillColors) this.fillColors = params.fillColors as List<String>
+    if (params.fillAlpha != null) {
+      this.fillAlpha = params.fillAlpha as Number
+    }
+    if (params.fill_colors) {
+      this.fillColors = params.fill_colors as List<String>
+    }
+    if (params.fillColors) {
+      this.fillColors = params.fillColors as List<String>
+    }
     this.fillColors = this.fillColors.collect { ColorUtil.normalizeColor(it) }
   }
 

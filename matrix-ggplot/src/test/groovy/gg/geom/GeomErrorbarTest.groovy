@@ -34,6 +34,6 @@ class GeomErrorbarTest {
     assertNotNull(svg)
 
     String svgContent = SvgWriter.toXml(svg)
-    assertTrue(svgContent.contains('<line'), "Should render error bar line segments")
+    assertTrue(svgContent.contains('<line'), 'Should render error bar line segments')
   }
 }

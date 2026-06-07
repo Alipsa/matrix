@@ -5,7 +5,6 @@ import static se.alipsa.matrix.ext.NumberExtension.PI
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
-import java.util.Locale
 
 /**
  * Polar coordinate system for creating pie charts, rose diagrams, and other circular plots.
@@ -25,6 +24,7 @@ import java.util.Locale
  *     coord_polar(theta: 'y')
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CoordPolar extends Coord {
 
   /** Which variable to map to angle: 'x' or 'y' (default: 'x') */
@@ -58,11 +58,21 @@ class CoordPolar extends Coord {
   }
 
   CoordPolar(Map params) {
-    if (params.theta) this.theta = params.theta as String
-    if (params.start != null) this.start = params.start as BigDecimal
-    if (params.containsKey('clockwise')) this.clockwise = params.clockwise as boolean
-    if (params.direction != null) this.clockwise = (params.direction as int) == 1
-    if (params.containsKey('clip')) this.clip = params.clip as boolean
+    if (params.theta) {
+      this.theta = params.theta as String
+    }
+    if (params.start != null) {
+      this.start = params.start as BigDecimal
+    }
+    if (params.containsKey('clockwise')) {
+      this.clockwise = params.clockwise as boolean
+    }
+    if (params.direction != null) {
+      this.clockwise = (params.direction as int) == 1
+    }
+    if (params.containsKey('clip')) {
+      this.clip = params.clip as boolean
+    }
   }
 
   /**
@@ -129,21 +139,29 @@ class CoordPolar extends Coord {
    */
   @CompileDynamic
   private BigDecimal getNormalizedValue(Number value, def scale) {
-    if (scale == null) return value as BigDecimal
+    if (scale == null) {
+      return value as BigDecimal
+    }
 
     // Get the transformed pixel value
     def transformed = scale.transform(value)
-    if (transformed == null) return 0
+    if (transformed == null) {
+      return 0
+    }
 
     // Get the range to normalize
     def range = scale.range
-    if (range == null || range.size() < 2) return transformed as BigDecimal
+    if (range == null || range.size() < 2) {
+      return transformed as BigDecimal
+    }
 
     BigDecimal min = range[0] as BigDecimal
     BigDecimal max = range[1] as BigDecimal
     BigDecimal rangeSize = (max - min).abs()
 
-    if (rangeSize == 0) return 0
+    if (rangeSize == 0) {
+      return 0
+    }
 
     // Normalize to 0-1
     return ((transformed as BigDecimal) - min.min(max)) / rangeSize
@@ -170,8 +188,12 @@ class CoordPolar extends Coord {
     angle = angle - start
 
     // Normalize angle to 0-2π
-    while (angle < 0) angle += 2 * PI
-    while (angle >= 2 * PI) angle -= 2 * PI
+    while (angle < 0) {
+      angle += 2 * PI
+    }
+    while (angle >= 2 * PI) {
+      angle -= 2 * PI
+    }
 
     BigDecimal thetaNorm = angle / (2 * PI)
     BigDecimal rNorm = radius / getMaxRadius()
@@ -241,16 +263,16 @@ class CoordPolar extends Coord {
       path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " L ${formatNumber(x3)} ${formatNumber(y3)}"
       path << " A ${formatNumber(innerR)} ${formatNumber(innerR)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
-      path << " Z"
+      path << ' Z'
     } else {
       // Pie slice
       path << "M ${formatNumber(cx)} ${formatNumber(cy)}"
       path << " L ${formatNumber(x1)} ${formatNumber(y1)}"
       path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
-      path << " Z"
+      path << ' Z'
     }
 
-    return path.toString()
+    return path
   }
 
   /**
@@ -265,6 +287,6 @@ class CoordPolar extends Coord {
    * @return formatted string with 3 decimal places
    */
   private static String formatNumber(Number value) {
-    return String.format(Locale.US, "%.3f", value as double)
+    return String.format(Locale.US, '%.3f', value as double)
   }
 }

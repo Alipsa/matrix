@@ -24,6 +24,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomQuantile extends Geom {
 
   /** Line color */
@@ -47,18 +48,32 @@ class GeomQuantile extends Geom {
   GeomQuantile() {
     defaultStat = StatType.QUANTILE
     requiredAes = ['x', 'y']
-    defaultAes = [color: '#3366FF', size: 1.0] as Map<String, Object>
+    defaultAes = [color: '#3366FF', size: 1.0]
   }
 
   GeomQuantile(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size) this.size = params.size as Number
-    if (params.linetype) this.linetype = params.linetype
-    if (params.alpha) this.alpha = params.alpha as Number
-    if (params.quantiles) this.quantiles = params.quantiles as List<Number>
-    if (params.n) this.n = params.n as int
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.size) {
+      this.size = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype
+    }
+    if (params.alpha) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.quantiles) {
+      this.quantiles = params.quantiles as List<Number>
+    }
+    if (params.n) {
+      this.n = params.n as int
+    }
     this.params = params
   }
 

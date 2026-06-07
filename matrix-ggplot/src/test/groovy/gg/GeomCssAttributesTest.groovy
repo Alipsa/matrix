@@ -30,15 +30,15 @@ class GeomCssAttributesTest {
 
     // Should contain CSS classes
     assertTrue(svgString.contains('class="gg-point"'),
-        "SVG should contain gg-point CSS class")
+        'SVG should contain gg-point CSS class')
 
     // Should contain element IDs
     assertTrue(svgString.contains('id="gg-layer-0-point-0"'),
-        "SVG should contain first point ID")
+        'SVG should contain first point ID')
     assertTrue(svgString.contains('id="gg-layer-0-point-1"'),
-        "SVG should contain second point ID")
+        'SVG should contain second point ID')
     assertTrue(svgString.contains('id="gg-layer-0-point-2"'),
-        "SVG should contain third point ID")
+        'SVG should contain third point ID')
   }
 
   @Test
@@ -58,9 +58,9 @@ class GeomCssAttributesTest {
 
     // Should NOT contain CSS classes or IDs for points
     assertFalse(svgString.contains('class="gg-point"'),
-        "SVG should not contain gg-point CSS class when disabled")
+        'SVG should not contain gg-point CSS class when disabled')
     assertFalse(svgString.contains('id="gg-layer-0-point-0"'),
-        "SVG should not contain point IDs when disabled")
+        'SVG should not contain point IDs when disabled')
   }
 
   @Test
@@ -79,9 +79,9 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('class="gg-bar"'),
-        "SVG should contain gg-bar CSS class")
+        'SVG should contain gg-bar CSS class')
     assertTrue(svgString.contains('id="gg-layer-0-bar-'),
-        "SVG should contain bar element IDs")
+        'SVG should contain bar element IDs')
   }
 
   @Test
@@ -100,7 +100,7 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('class="gg-line"'),
-        "SVG should contain gg-line CSS class")
+        'SVG should contain gg-line CSS class')
   }
 
   @Test
@@ -119,9 +119,9 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('id="iris-layer-0-point-0"'),
-        "SVG should use custom chart ID prefix")
+        'SVG should use custom chart ID prefix')
     assertTrue(svgString.contains('id="iris-layer-0-point-1"'),
-        "SVG should use custom chart ID prefix for all elements")
+        'SVG should use custom chart ID prefix for all elements')
   }
 
   @Test
@@ -142,11 +142,11 @@ class GeomCssAttributesTest {
 
     // Layer 0 (points)
     assertTrue(svgString.contains('id="gg-layer-0-point-'),
-        "SVG should contain layer 0 point IDs")
+        'SVG should contain layer 0 point IDs')
 
     // Layer 1 (line)
     assertTrue(svgString.contains('id="gg-layer-1-line-'),
-        "SVG should contain layer 1 line IDs")
+        'SVG should contain layer 1 line IDs')
   }
 
   @Test
@@ -165,9 +165,9 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('class="gg-point"'),
-        "SVG should contain CSS classes")
+        'SVG should contain CSS classes')
     assertFalse(svgString.contains('id="gg-layer-0-point-'),
-        "SVG should not contain element IDs when disabled")
+        'SVG should not contain element IDs when disabled')
   }
 
   @Test
@@ -186,9 +186,9 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertFalse(svgString.contains('class="gg-point"'),
-        "SVG should not contain CSS classes when disabled")
+        'SVG should not contain CSS classes when disabled')
     assertTrue(svgString.contains('id="gg-layer-0-point-'),
-        "SVG should contain element IDs")
+        'SVG should contain element IDs')
   }
 
   @Test
@@ -207,7 +207,7 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('class="gg-histogram"'),
-        "SVG should contain gg-histogram CSS class")
+        'SVG should contain gg-histogram CSS class')
   }
 
   @Test
@@ -226,7 +226,7 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('class="gg-area"'),
-        "SVG should contain gg-area CSS class")
+        'SVG should contain gg-area CSS class')
   }
 
   @Test
@@ -245,15 +245,15 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('data-x="1"') || svgString.contains('data-x="2"'),
-        "SVG should include data-x attributes")
+        'SVG should include data-x attributes')
     assertTrue(svgString.contains('data-y="2"') || svgString.contains('data-y="3"'),
-        "SVG should include data-y attributes")
+        'SVG should include data-y attributes')
     assertTrue(svgString.contains('data-row="0"'),
-        "SVG should include data-row attributes")
+        'SVG should include data-row attributes')
     assertTrue(svgString.contains('data-layer="0"'),
-        "SVG should include data-layer attributes")
+        'SVG should include data-layer attributes')
     assertFalse(svgString.contains('data-panel='),
-        "Non-faceted charts should not include data-panel")
+        'Non-faceted charts should not include data-panel')
   }
 
   @Test
@@ -272,7 +272,7 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('id="custom-layer-0-point-0"'),
-        "Invalid chartIdPrefix should fall back to idPrefix")
+        'Invalid chartIdPrefix should fall back to idPrefix')
   }
 
   @Test
@@ -291,10 +291,10 @@ class GeomCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('data-row="0"'),
-        "First source row should emit data-row=0")
+        'First source row should emit data-row=0')
     assertTrue(svgString.contains('data-row="1"'),
-        "Second source row should emit data-row=1")
+        'Second source row should emit data-row=1')
     assertFalse(svgString.contains('data-row="2"') || svgString.contains('data-row="3"'),
-        "Multi-element point shapes should not use element index as data-row")
+        'Multi-element point shapes should not use element index as data-row')
   }
 }

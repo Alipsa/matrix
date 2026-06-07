@@ -29,6 +29,7 @@ import groovy.transform.CompileStatic
  * @param colors Custom color palette (overrides low/high; bin count = color count)
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorSteps extends ScaleContinuous {
   String aesthetic = 'color'
   int bins = 5
@@ -53,10 +54,16 @@ class ScaleColorSteps extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
-    if (!colors || colors.isEmpty()) return naValue
-    if (colors.size() == 1) return colors[0]
+    if (!colors || colors.isEmpty()) {
+      return naValue
+    }
+    if (colors.size() == 1) {
+      return colors[0]
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
@@ -72,7 +79,9 @@ class ScaleColorSteps extends ScaleContinuous {
 
     // Calculate bin index using color count for consistency
     int binsCount = 1.max(colors.size()) as int
-    if (binsCount == 1) return colors[0]
+    if (binsCount == 1) {
+      return colors[0]
+    }
 
     BigDecimal scaled = normalized * binsCount
     int binIndex = scaled.floor() as int
@@ -93,9 +102,15 @@ class ScaleColorSteps extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
-    if (params.bins != null) this.bins = (params.bins as Number).intValue()
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
+    if (params.bins != null) {
+      this.bins = (params.bins as Number).intValue()
+    }
     if (params.containsKey('colors')) {
       this.colors = params.colors as List<String>
       this.customColors = true
@@ -104,14 +119,30 @@ class ScaleColorSteps extends ScaleContinuous {
       this.colors = params.colours as List<String>
       this.customColors = true
     }
-    if (params.low) this.low = params.low as String
-    if (params.high) this.high = params.high as String
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.guide) this.guideType = params.guide as String
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
+    if (params.low) {
+      this.low = params.low as String
+    }
+    if (params.high) {
+      this.high = params.high as String
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.guide) {
+      this.guideType = params.guide as String
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
   }
 
   // Fluent API

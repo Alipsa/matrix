@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Mirrors ggplot2's geom_errorbar contract as closely as possible.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomErrorbar extends Geom {
 
   /** Bar width as fraction of bandwidth (discrete) or data units (continuous) */
@@ -30,7 +31,7 @@ class GeomErrorbar extends Geom {
   GeomErrorbar() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'ymin', 'ymax']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomErrorbar(Map params) {

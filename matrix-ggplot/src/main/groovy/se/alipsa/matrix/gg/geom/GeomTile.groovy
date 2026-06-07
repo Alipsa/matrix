@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_tile(aes(fill: 'value')) - tiles colored by value
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomTile extends Geom {
 
   /** Fill color for tiles */
@@ -41,18 +42,28 @@ class GeomTile extends Geom {
   GeomTile() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'gray', color: 'white', alpha: 1.0] as Map<String, Object>
+    defaultAes = [fill: 'gray', color: 'white', alpha: 1.0]
   }
 
   GeomTile(Map params) {
     this()
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.width != null) this.width = params.width as BigDecimal
-    if (params.height != null) this.height = params.height as BigDecimal
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.width != null) {
+      this.width = params.width as BigDecimal
+    }
+    if (params.height != null) {
+      this.height = params.height as BigDecimal
+    }
     this.params = params
   }
 

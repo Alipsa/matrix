@@ -23,9 +23,15 @@ class CoordMap extends CoordTrans {
 
   CoordMap(Map params) {
     super()
-    if (params.projection) this.projection = params.projection as String
-    if (params.xlim) this.xlim = params.xlim as List<Number>
-    if (params.ylim) this.ylim = params.ylim as List<Number>
+    if (params.projection) {
+      this.projection = params.projection as String
+    }
+    if (params.xlim) {
+      this.xlim = params.xlim as List<Number>
+    }
+    if (params.ylim) {
+      this.ylim = params.ylim as List<Number>
+    }
     applyProjection(this.projection)
   }
 

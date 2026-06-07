@@ -43,6 +43,7 @@ import se.alipsa.matrix.core.util.Logger
  * @see BrewerPalettes
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 class ScaleColorFermenter extends ScaleContinuous {
 
   private static final Logger log = Logger.getLogger(ScaleColorFermenter)
@@ -96,11 +97,17 @@ class ScaleColorFermenter extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
 
     // Handle type first (needed for numeric palette resolution)
-    if (params.type) this.type = params.type as String
+    if (params.type) {
+      this.type = params.type as String
+    }
 
     // Handle palette parameter (string name or numeric index)
     if (params.palette != null) {
@@ -116,11 +123,13 @@ class ScaleColorFermenter extends ScaleContinuous {
         }
       } else {
         // String palette name
-        this.palette = params.palette.toString()
+        this.palette = params.palette
       }
     }
 
-    if (params.direction != null) this.direction = (params.direction as Number).intValue()
+    if (params.direction != null) {
+      this.direction = (params.direction as Number).intValue()
+    }
 
     // Handle na.value parameter (support both dot notation and camelCase)
     if (params.containsKey('na.value')) {
@@ -129,11 +138,21 @@ class ScaleColorFermenter extends ScaleContinuous {
       this.naValue = params.naValue as String
     }
 
-    if (params.guide) this.guideType = params.guide as String
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
+    if (params.guide) {
+      this.guideType = params.guide as String
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
 
     // Handle n.breaks parameter (overrides default from parent class)
     if (params.containsKey('n.breaks')) {
@@ -209,7 +228,9 @@ class ScaleColorFermenter extends ScaleContinuous {
    * Compute bin boundaries based on domain and number of bins.
    */
   private void computeBinBoundaries() {
-    if (computedDomain.size() < 2) return
+    if (computedDomain.size() < 2) {
+      return
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
@@ -229,18 +250,24 @@ class ScaleColorFermenter extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
     if (paletteColors.isEmpty()) {
       loadPalette()
     }
-    if (paletteColors.isEmpty()) return naValue
+    if (paletteColors.isEmpty()) {
+      return naValue
+    }
 
     // Ensure bins are computed
     if (binBoundaries.isEmpty()) {
       computeBinBoundaries()
     }
-    if (binBoundaries.size() < 2) return paletteColors[0]
+    if (binBoundaries.size() < 2) {
+      return paletteColors[0]
+    }
 
     // Find which bin this value falls into
     int binIndex = findBinIndex(v)
@@ -260,7 +287,9 @@ class ScaleColorFermenter extends ScaleContinuous {
    * This matches ggplot2's binning behavior for scale_*_fermenter().
    */
   private int findBinIndex(BigDecimal value) {
-    if (value <= binBoundaries[0]) return 0
+    if (value <= binBoundaries[0]) {
+      return 0
+    }
     if (value >= binBoundaries[binBoundaries.size() - 1]) {
       return binBoundaries.size() - 2
     }

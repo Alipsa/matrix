@@ -14,7 +14,7 @@ class ScaleContinuousTest {
   @Test
   void testTrainComputesDomain() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>  // No expansion for cleaner tests
+    scale.expand = [0, 0]  // No expansion for cleaner tests
     scale.train([10, 20, 30, 40, 50])
 
     assertTrue(scale.isTrained())
@@ -23,7 +23,7 @@ class ScaleContinuousTest {
   @Test
   void testTrainFiltersNonNumeric() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
+    scale.expand = [0, 0]
     scale.train([10, 'not a number', 20, null, 30])
 
     assertTrue(scale.isTrained())
@@ -35,8 +35,8 @@ class ScaleContinuousTest {
   @Test
   void testTransformLinearInterpolation() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 100] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 100]
     scale.train([0, 100])
 
     assertEquals(0.0, scale.transform(0) as double, 0.01)
@@ -60,8 +60,8 @@ class ScaleContinuousTest {
   @Test
   void testTransformWithNegativeValues() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 200] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 200]
     scale.train([-50, 50])
 
     assertEquals(0.0, scale.transform(-50) as double, 0.01)
@@ -100,8 +100,8 @@ class ScaleContinuousTest {
   @Test
   void testInverseRoundTrip() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 400] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 400]
     scale.train([10, 90])
 
     double original = 45.0
@@ -114,9 +114,9 @@ class ScaleContinuousTest {
   @Test
   void testExplicitLimitsOverrideData() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
+    scale.expand = [0, 0]
     scale.limits = [0, 100]
-    scale.range = [0, 200] as List<Number>
+    scale.range = [0, 200]
     scale.train([20, 30, 40])  // Data within narrower range
 
     // Limits should override, so domain is [0, 100]
@@ -128,8 +128,8 @@ class ScaleContinuousTest {
   @Test
   void testExpansionExpandsDomain() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0.1, 0] as List<Number>  // 10% expansion on each side
-    scale.range = [0, 100] as List<Number>
+    scale.expand = [0.1, 0]  // 10% expansion on each side
+    scale.range = [0, 100]
     scale.train([0, 100])
 
     // With 10% expansion: domain becomes [-10, 110] (roughly)
@@ -137,14 +137,14 @@ class ScaleContinuousTest {
     double at0 = scale.transform(0) as double
     double at100 = scale.transform(100) as double
 
-    assertTrue(at0 > 0, "Value at 0 should be offset due to expansion")
-    assertTrue(at100 < 100, "Value at 100 should be offset due to expansion")
+    assertTrue(at0 > 0, 'Value at 0 should be offset due to expansion')
+    assertTrue(at100 < 100, 'Value at 100 should be offset due to expansion')
   }
 
   @Test
   void testGetComputedBreaksGeneratesNiceNumbers() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
+    scale.expand = [0, 0]
     scale.train([0, 100])
 
     List breaks = scale.getComputedBreaks()
@@ -166,7 +166,7 @@ class ScaleContinuousTest {
   @Test
   void testGetComputedLabels() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
+    scale.expand = [0, 0]
     scale.train([0, 100])
 
     List<String> labels = scale.getComputedLabels()
@@ -187,8 +187,8 @@ class ScaleContinuousTest {
   @Test
   void testMapBatchTransform() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 100] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 100]
     scale.train([0, 100])
 
     List result = scale.map([0, 25, 50, 75, 100])
@@ -204,8 +204,8 @@ class ScaleContinuousTest {
   @Test
   void testHandlesEqualMinMax() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 100] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 100]
     scale.train([50, 50, 50])  // All same value
 
     // Should return midpoint of range
@@ -261,8 +261,8 @@ class ScaleContinuousTest {
   void testScaleYContinuousWithInvertedRange() {
     // SVG has y=0 at top, so typical range is [height, 0]
     ScaleYContinuous scale = new ScaleYContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [400, 0] as List<Number>  // Inverted
+    scale.expand = [0, 0]
+    scale.range = [400, 0]  // Inverted
     scale.train([0, 100])
 
     // Higher data values should map to lower y pixel values

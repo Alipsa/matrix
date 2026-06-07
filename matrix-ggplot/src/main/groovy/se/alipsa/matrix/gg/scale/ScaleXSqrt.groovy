@@ -19,6 +19,7 @@ import groovy.transform.CompileStatic
  * - Break generation uses exact BigDecimal arithmetic in data space
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXSqrt extends ScaleContinuous {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
@@ -34,23 +35,41 @@ class ScaleXSqrt extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
   }
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Filter to non-negative numeric values
     List<Double> numericData = data.findResults { coerceToNonNegativeNumber(it) } as List<Double>
 
-    if (numericData.isEmpty()) return
+    if (numericData.isEmpty()) {
+      return
+    }
 
     // Transform to sqrt space and convert to BigDecimal
     List<BigDecimal> sqrtData = numericData.collect { (it as BigDecimal).sqrt() }
@@ -85,7 +104,9 @@ class ScaleXSqrt extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal numeric = coerceToNonNegativeNumber(value)
-    if (numeric == null) return null
+    if (numeric == null) {
+      return null
+    }
 
     // Transform to sqrt space, then perform linear interpolation
     BigDecimal sqrtValue = (numeric as BigDecimal).sqrt()
@@ -95,11 +116,15 @@ class ScaleXSqrt extends ScaleContinuous {
   @Override
   Object inverse(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
+    if (v == null) {
+      return null
+    }
 
     // Inverse linear interpolation in sqrt space
     BigDecimal sqrtValue = ScaleUtils.linearInverse(v, computedDomain[0], computedDomain[1], range[0], range[1])
-    if (sqrtValue == null) return null
+    if (sqrtValue == null) {
+      return null
+    }
 
     // Transform back from sqrt space (square the value)
     return sqrtValue * sqrtValue
@@ -107,7 +132,9 @@ class ScaleXSqrt extends ScaleContinuous {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
 
     BigDecimal sqrtMin = computedDomain[0]
     BigDecimal sqrtMax = computedDomain[1]
@@ -123,7 +150,9 @@ class ScaleXSqrt extends ScaleContinuous {
    * Generate nice breaks in data space.
    */
   private static List<Number> generateNiceDataBreaks(BigDecimal min, BigDecimal max, int n) {
-    if (max == min) return [min] as List<Number>
+    if (max == min) {
+      return [min]
+    }
 
     BigDecimal rawRange = max - min
     BigDecimal spacing = ScaleUtils.niceNum(rawRange / (n - 1), true)
@@ -148,8 +177,12 @@ class ScaleXSqrt extends ScaleContinuous {
 
   private static BigDecimal coerceToNonNegativeNumber(Object value) {
     BigDecimal num = ScaleUtils.coerceToNumber(value)
-    if (num == null) return null
-    if (num < 0) return null
+    if (num == null) {
+      return null
+    }
+    if (num < 0) {
+      return null
+    }
     return num
   }
 }

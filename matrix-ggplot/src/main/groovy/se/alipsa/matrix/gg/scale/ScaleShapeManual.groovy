@@ -11,6 +11,7 @@ import groovy.transform.CompileStatic
  * scale_shape_manual(values: [cat1: 'circle', cat2: 'square'])  // Map by name
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleShapeManual extends ScaleDiscrete {
 
   /** List of shapes or map of value -> shape */
@@ -40,24 +41,38 @@ class ScaleShapeManual extends ScaleDiscrete {
     if (params.values) {
       def v = params.values
       if (v instanceof List) {
-        this.values = v.collect { it?.toString() }
+        this.values = v*.toString()
       } else if (v instanceof Map) {
         this.namedValues = (v as Map).collectEntries { k, val ->
           [k, val?.toString()]
         } as Map<Object, String>
       }
     }
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
+    if (value == null) {
+      return naValue
+    }
+    if (levels.isEmpty()) {
+      return naValue
+    }
 
     // Check named mapping first
     if (namedValues.containsKey(value)) {
@@ -66,7 +81,9 @@ class ScaleShapeManual extends ScaleDiscrete {
 
     // Fall back to positional mapping
     int index = levels.indexOf(value)
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
 
     // Get shape from values list or default shapes
     if (!values.isEmpty()) {
@@ -88,11 +105,15 @@ class ScaleShapeManual extends ScaleDiscrete {
   @Override
   Object inverse(Object value) {
     // Find the level that maps to this shape
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
     // Check named values
     def namedEntry = namedValues.find { k, v -> v == value }
-    if (namedEntry) return namedEntry.key
+    if (namedEntry) {
+      return namedEntry.key
+    }
 
     // Iterate through all levels to find the first one that transforms to this shape
     // This correctly handles cycled shapes
@@ -109,7 +130,9 @@ class ScaleShapeManual extends ScaleDiscrete {
    * Get the shape for a specific level index.
    */
   String getShapeForIndex(int index) {
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
     if (!values.isEmpty()) {
       return values[index % values.size()]
     }

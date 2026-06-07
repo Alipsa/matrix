@@ -31,17 +31,17 @@ class ChartToImageTest {
 
     BufferedImage image = GgExport.toImage(chart)
 
-    assertNotNull(image, "BufferedImage should not be null")
-    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
-    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+    assertNotNull(image, 'BufferedImage should not be null')
+    assertTrue(image.getWidth() > 0, 'Image width should be greater than 0')
+    assertTrue(image.getHeight() > 0, 'Image height should be greater than 0')
   }
 
   @Test
   void testExportWithNullSvgChart() {
-    Exception exception = assertThrows(IllegalArgumentException.class, {
+    Exception exception = assertThrows(IllegalArgumentException) {
       ChartToImage.export((Svg) null)
-    })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    }
+    assertEquals('svgChart must not be null', exception.getMessage())
   }
 
   @Test
@@ -49,9 +49,9 @@ class ChartToImageTest {
     CharmChart chart = buildCharmChart()
 
     BufferedImage image = ChartToImage.export(chart)
-    assertNotNull(image, "BufferedImage should not be null")
-    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
-    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+    assertNotNull(image, 'BufferedImage should not be null')
+    assertTrue(image.getWidth() > 0, 'Image width should be greater than 0')
+    assertTrue(image.getHeight() > 0, 'Image height should be greater than 0')
   }
 
   private static CharmChart buildCharmChart() {

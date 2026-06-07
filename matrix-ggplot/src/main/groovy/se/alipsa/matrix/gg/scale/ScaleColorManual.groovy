@@ -13,6 +13,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * scale_color_manual(values: [cat1: 'red', cat2: 'blue'])  // Map by name
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorManual extends ScaleDiscrete {
 
   /** List of colors or map of value -> color */
@@ -39,7 +40,7 @@ class ScaleColorManual extends ScaleDiscrete {
     if (params.values) {
       def v = params.values
       if (v instanceof List) {
-        this.values = v.collect { it?.toString() }
+        this.values = v*.toString()
         this.computedPalette = []
       } else if (v instanceof Map) {
         this.namedValues = (v as Map).collectEntries { k, val ->
@@ -48,14 +49,28 @@ class ScaleColorManual extends ScaleDiscrete {
         this.computedPalette = []
       }
     }
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
     // Support 'colour' British spelling
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   @Override
@@ -70,8 +85,12 @@ class ScaleColorManual extends ScaleDiscrete {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
+    if (value == null) {
+      return naValue
+    }
+    if (levels.isEmpty()) {
+      return naValue
+    }
 
     // Check named mapping first
     if (namedValues.containsKey(value)) {
@@ -80,7 +99,9 @@ class ScaleColorManual extends ScaleDiscrete {
 
     // Fall back to positional mapping
     int index = levels.indexOf(value)
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
 
     // Get color from values list or computed palette
     if (!values.isEmpty()) {
@@ -90,18 +111,24 @@ class ScaleColorManual extends ScaleDiscrete {
       computedPalette = generateHuePalette(levels.size())
     }
     // Guard against empty or stale palettes even if levels are populated.
-    if (index >= computedPalette.size()) return naValue
+    if (index >= computedPalette.size()) {
+      return naValue
+    }
     return computedPalette[index]
   }
 
   @Override
   Object inverse(Object value) {
     // Find the level that maps to this color
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
     // Check named values
     def namedEntry = namedValues.find { k, v -> v == value }
-    if (namedEntry) return namedEntry.key
+    if (namedEntry) {
+      return namedEntry.key
+    }
 
     // Check positional mapping
     if (!values.isEmpty()) {
@@ -126,14 +153,18 @@ class ScaleColorManual extends ScaleDiscrete {
    * Get the color for a specific level index.
    */
   String getColorForIndex(int index) {
-    if (index < 0) return naValue
+    if (index < 0) {
+      return naValue
+    }
     if (!values.isEmpty()) {
       return values[index % values.size()]
     }
     if (computedPalette.isEmpty()) {
       computedPalette = generateHuePalette(levels.size())
     }
-    if (index >= computedPalette.size()) return naValue
+    if (index >= computedPalette.size()) {
+      return naValue
+    }
     return computedPalette[index]
   }
 
@@ -176,8 +207,12 @@ class ScaleColorManual extends ScaleDiscrete {
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.discrete()
     s.params['colorType'] = 'manual'
-    if (!values.isEmpty()) s.params['values'] = values
-    if (!namedValues.isEmpty()) s.params['namedValues'] = namedValues
+    if (!values.isEmpty()) {
+      s.params['values'] = values
+    }
+    if (!namedValues.isEmpty()) {
+      s.params['namedValues'] = namedValues
+    }
     s.params['naValue'] = naValue
     s
   }
@@ -189,7 +224,9 @@ class ScaleColorManual extends ScaleDiscrete {
    * @return list of hex RGB colors
    */
   private static List<String> generateHuePalette(int n) {
-    if (n <= 0) return []
+    if (n <= 0) {
+      return []
+    }
     // ggplot2 hue palette defaults: h = [15, 375], c = 100, l = 65.
     BigDecimal start = 15.0
     BigDecimal end = 375.0

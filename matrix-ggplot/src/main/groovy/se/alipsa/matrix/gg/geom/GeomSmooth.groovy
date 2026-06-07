@@ -11,6 +11,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Renders a fitted line through the data points.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomSmooth extends Geom {
 
   /** Line color */
@@ -43,20 +44,38 @@ class GeomSmooth extends Geom {
   GeomSmooth() {
     defaultStat = StatType.SMOOTH
     requiredAes = ['x', 'y']
-    defaultAes = [color: '#3366FF', size: 1.5] as Map<String, Object>
+    defaultAes = [color: '#3366FF', size: 1.5]
   }
 
   GeomSmooth(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size) this.size = params.size as Number
-    if (params.linetype) this.linetype = params.linetype
-    if (params.alpha) this.alpha = params.alpha as Number
-    if (params.method) this.method = params.method
-    if (params.n) this.n = params.n as int
-    if (params.containsKey('se')) this.se = params.se
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.size) {
+      this.size = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype
+    }
+    if (params.alpha) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.method) {
+      this.method = params.method
+    }
+    if (params.n) {
+      this.n = params.n as int
+    }
+    if (params.containsKey('se')) {
+      this.se = params.se
+    }
+    if (params.fill) {
+      this.fill = ColorUtil.normalizeColor(params.fill as String)
+    }
     this.params = params
   }
 

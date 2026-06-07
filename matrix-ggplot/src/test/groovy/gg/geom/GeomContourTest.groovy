@@ -80,7 +80,7 @@ class GeomContourTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain contour line elements")
+    assertTrue(content.contains('<line'), 'Should contain contour line elements')
 
     File outputFile = new File('build/simple_contour.svg')
     write(svg, outputFile)
@@ -148,7 +148,7 @@ class GeomContourTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('stroke-dasharray'), "Should contain dashed lines")
+    assertTrue(content.contains('stroke-dasharray'), 'Should contain dashed lines')
 
     File outputFile = new File('build/contour_dashed.svg')
     write(svg, outputFile)
@@ -210,8 +210,8 @@ class GeomContourTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain filled path elements")
-    assertTrue(content.contains('fill='), "Paths should have fill attribute")
+    assertTrue(content.contains('<path'), 'Should contain filled path elements')
+    assertTrue(content.contains('fill='), 'Paths should have fill attribute')
 
     File outputFile = new File('build/filled_contour.svg')
     write(svg, outputFile)

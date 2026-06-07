@@ -28,7 +28,9 @@ class ScaleSizeArea extends ScaleSizeContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return naValue
+    if (v == null) {
+      return naValue
+    }
 
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]

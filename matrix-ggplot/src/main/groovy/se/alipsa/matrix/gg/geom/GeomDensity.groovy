@@ -15,6 +15,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_density(adjust: 0.5) - narrower bandwidth for more detail
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomDensity extends Geom {
 
   /**
@@ -61,7 +62,7 @@ class GeomDensity extends Geom {
   GeomDensity() {
     defaultStat = StatType.IDENTITY  // We compute density internally
     requiredAes = ['x']
-    defaultAes = [color: 'black', linewidth: 1] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1]
   }
 
   GeomDensity(Map params) {
@@ -74,7 +75,9 @@ class GeomDensity extends Geom {
     this.adjust = params.adjust as BigDecimal ?: this.adjust
     this.kernel = params.kernel as String ?: this.kernel
     this.n = params.n as Integer ?: this.n
-    if (params.trim != null) this.trim = params.trim as boolean
+    if (params.trim != null) {
+      this.trim = params.trim as boolean
+    }
     this.params = params
   }
 

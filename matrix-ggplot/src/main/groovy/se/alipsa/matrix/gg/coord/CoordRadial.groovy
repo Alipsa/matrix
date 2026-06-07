@@ -5,7 +5,6 @@ import static se.alipsa.matrix.ext.NumberExtension.PI
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
-import java.util.Locale
 
 /**
  * Radial coordinate system for circular plots with support for partial arcs and inner radius.
@@ -16,6 +15,7 @@ import java.util.Locale
  * - Automatic label rotation
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CoordRadial extends Coord {
 
   /** Which variable to map to angle: 'x' or 'y' (default: 'x') */
@@ -57,12 +57,24 @@ class CoordRadial extends Coord {
   CoordRadial() {}
 
   CoordRadial(Map params) {
-    if (params.theta) this.theta = params.theta as String
-    if (params.start != null) this.start = params.start as BigDecimal
-    if (params.containsKey('end')) this.end = params.end != null ? params.end as BigDecimal : null
-    if (params.containsKey('expand')) this.expand = params.expand as boolean
-    if (params.containsKey('direction')) this.clockwise = (params.direction as int) == 1
-    if (params.containsKey('clockwise')) this.clockwise = params.clockwise as boolean
+    if (params.theta) {
+      this.theta = params.theta as String
+    }
+    if (params.start != null) {
+      this.start = params.start as BigDecimal
+    }
+    if (params.containsKey('end')) {
+      this.end = params.end != null ? params.end as BigDecimal : null
+    }
+    if (params.containsKey('expand')) {
+      this.expand = params.expand as boolean
+    }
+    if (params.containsKey('direction')) {
+      this.clockwise = (params.direction as int) == 1
+    }
+    if (params.containsKey('clockwise')) {
+      this.clockwise = params.clockwise as boolean
+    }
     if (params.containsKey('clip')) {
       def clipParam = params.clip
       if (clipParam instanceof CharSequence) {
@@ -77,10 +89,18 @@ class CoordRadial extends Coord {
     if (params.containsKey('inner.radius')) {
       this.innerRadius = params['inner.radius'] != null ? params['inner.radius'] as BigDecimal : 0
     }
-    if (params.containsKey('rotateAngle')) this.rotateAngle = params.rotateAngle as boolean
-    if (params.containsKey('rotate.angle')) this.rotateAngle = params['rotate.angle'] as boolean
-    if (params.containsKey('rAxisInside')) this.rAxisInside = params.rAxisInside as Boolean
-    if (params.containsKey('r.axis.inside')) this.rAxisInside = params['r.axis.inside'] as Boolean
+    if (params.containsKey('rotateAngle')) {
+      this.rotateAngle = params.rotateAngle as boolean
+    }
+    if (params.containsKey('rotate.angle')) {
+      this.rotateAngle = params['rotate.angle'] as boolean
+    }
+    if (params.containsKey('rAxisInside')) {
+      this.rAxisInside = params.rAxisInside as Boolean
+    }
+    if (params.containsKey('r.axis.inside')) {
+      this.rAxisInside = params['r.axis.inside'] as Boolean
+    }
 
     if (theta != 'x' && theta != 'y') {
       theta = 'x'
@@ -189,8 +209,12 @@ class CoordRadial extends Coord {
     BigDecimal spanVal = getAngularSpan()
     BigDecimal fullCircle = 2 * PI
 
-    while (angle < 0) angle += fullCircle
-    while (angle >= fullCircle) angle -= fullCircle
+    while (angle < 0) {
+      angle += fullCircle
+    }
+    while (angle >= fullCircle) {
+      angle -= fullCircle
+    }
 
     BigDecimal thetaNorm = spanVal == 0 ? 0 : angle / spanVal
     thetaNorm = thetaNorm.min(1).max(0)
@@ -263,22 +287,24 @@ class CoordRadial extends Coord {
       path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " L ${formatNumber(x3)} ${formatNumber(y3)}"
       path << " A ${formatNumber(innerR)} ${formatNumber(innerR)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
-      path << " Z"
+      path << ' Z'
     } else {
       path << "M ${formatNumber(cx)} ${formatNumber(cy)}"
       path << " L ${formatNumber(x1)} ${formatNumber(y1)}"
       path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
-      path << " Z"
+      path << ' Z'
     }
 
-    return path.toString()
+    return path
   }
 
   /**
    * Calculate text rotation angle for a given theta position.
    */
   BigDecimal getTextRotation(Number thetaNorm) {
-    if (!rotateAngle) return 0
+    if (!rotateAngle) {
+      return 0
+    }
 
     BigDecimal span = getAngularSpan()
     BigDecimal angle = clockwise ? (start + (thetaNorm as BigDecimal) * span) : (start - (thetaNorm as BigDecimal) * span)
@@ -296,19 +322,27 @@ class CoordRadial extends Coord {
    */
   @CompileDynamic
   private BigDecimal getNormalizedValue(Number value, def scale) {
-    if (scale == null) return value as BigDecimal
+    if (scale == null) {
+      return value as BigDecimal
+    }
 
     def transformed = scale.transform(value)
-    if (!(transformed instanceof Number)) return 0
+    if (!(transformed instanceof Number)) {
+      return 0
+    }
 
     def range = scale.range
-    if (range == null || range.size() < 2) return transformed as BigDecimal
+    if (range == null || range.size() < 2) {
+      return transformed as BigDecimal
+    }
 
     BigDecimal min = range[0] as BigDecimal
     BigDecimal max = range[1] as BigDecimal
     BigDecimal rangeSize = (max - min).abs()
 
-    if (rangeSize == 0) return 0
+    if (rangeSize == 0) {
+      return 0
+    }
 
     BigDecimal low = min.min(max)
     return ((transformed as BigDecimal) - low) / rangeSize
@@ -318,6 +352,6 @@ class CoordRadial extends Coord {
    * Format numeric SVG coordinates with fixed precision.
    */
   private static String formatNumber(Number value) {
-    return String.format(Locale.US, "%.3f", value as double)
+    return String.format(Locale.US, '%.3f', value as double)
   }
 }

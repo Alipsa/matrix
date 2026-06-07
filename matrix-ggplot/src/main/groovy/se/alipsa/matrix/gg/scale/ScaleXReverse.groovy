@@ -13,6 +13,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * - scale_x_reverse(limits: [0, 100]) - with explicit limits
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleXReverse extends ScaleContinuous {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
@@ -28,13 +29,27 @@ class ScaleXReverse extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.expand) {
+      this.expand = params.expand as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
   }
 
   @Override
@@ -63,8 +78,12 @@ class ScaleXReverse extends ScaleContinuous {
    */
   CharmScale toCharmScale() {
     CharmScale s = CharmScale.transform('reverse')
-    if (limits) s.params['limits'] = limits
-    if (expand) s.params['expand'] = expand
+    if (limits) {
+      s.params['limits'] = limits
+    }
+    if (expand) {
+      s.params['expand'] = expand
+    }
     s
   }
 }

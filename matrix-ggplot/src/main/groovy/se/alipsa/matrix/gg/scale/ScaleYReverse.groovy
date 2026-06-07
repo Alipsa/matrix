@@ -11,6 +11,7 @@ import groovy.transform.CompileStatic
  * - scale_y_reverse(limits: [0, 100]) - with explicit limits
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class ScaleYReverse extends ScaleXReverse {
 
   ScaleYReverse() {

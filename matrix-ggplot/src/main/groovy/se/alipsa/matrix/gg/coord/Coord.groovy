@@ -12,6 +12,7 @@ import se.alipsa.matrix.core.Matrix
  * Coordinate systems define how data coordinates are mapped to pixel positions.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateStringLiteral', 'UnusedMethodParameter'])
 abstract class Coord {
 
   /**

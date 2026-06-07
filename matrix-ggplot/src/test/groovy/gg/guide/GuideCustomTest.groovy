@@ -9,6 +9,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 
+@SuppressWarnings(['ClosureAsLastMethodParameter', 'ThrowRuntimeException'])
 class GuideCustomTest {
 
   @Test
@@ -23,10 +24,10 @@ class GuideCustomTest {
   @Test
   void testGuideCustomRequiresClosure() {
     // Should throw IllegalArgumentException when renderClosure is null
-    def exception = assertThrows(IllegalArgumentException.class) {
+    def exception = assertThrows(IllegalArgumentException) {
       guide_custom(null)
     }
-    assertTrue(exception.message.contains("guide_custom requires a renderClosure parameter"))
+    assertTrue(exception.message.contains('guide_custom requires a renderClosure parameter'))
   }
 
   @Test
@@ -265,7 +266,7 @@ class GuideCustomTest {
 
     // Closure that throws an error
     def brokenGuide = guide_custom({ context ->
-      throw new RuntimeException("Intentional error")
+      throw new RuntimeException('Intentional error')
     }, [width: 30, height: 30])
 
     def chart = ggplot(data, aes(x: 'x', y: 'y')) +

@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleColorFermenter
 
+import java.util.logging.Handler
+import java.util.logging.Level
+import java.util.logging.LogRecord
+
 class ScaleColorFermenterTest {
 
   @Test
@@ -29,7 +33,7 @@ class ScaleColorFermenterTest {
     assertNotNull(colors)
     assertFalse(colors.isEmpty())
     // Blues palette has 9 colors
-    assertEquals(9, colors.size(), "Blues palette should have exactly 9 colors")
+    assertEquals(9, colors.size(), 'Blues palette should have exactly 9 colors')
   }
 
   @Test
@@ -65,7 +69,7 @@ class ScaleColorFermenterTest {
     scale.train([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     def colors = scale.getColors()
 
-    assertEquals(5, colors.size(), "Should use exactly 5 colors when n.breaks=5")
+    assertEquals(5, colors.size(), 'Should use exactly 5 colors when n.breaks=5')
   }
 
   @Test
@@ -77,11 +81,11 @@ class ScaleColorFermenterTest {
     // Values in first bin
     String color1 = scale.transform(0)
     String color2 = scale.transform(5)
-    assertEquals(color1, color2, "Values in same bin should have same color")
+    assertEquals(color1, color2, 'Values in same bin should have same color')
 
     // Values in different bins
     String color3 = scale.transform(15)
-    assertNotEquals(color1, color3, "Values in different bins should have different colors")
+    assertNotEquals(color1, color3, 'Values in different bins should have different colors')
   }
 
   @Test
@@ -128,36 +132,47 @@ class ScaleColorFermenterTest {
   @Test
   void testWarningWhenNBreaksExceedsPaletteSize() {
     // Test: Warning is issued when nBreaks exceeds palette size
-    // Capture stderr output
-    def originalErr = System.err
-    def errStream = new ByteArrayOutputStream()
+    List<String> messages = []
+    Handler handler = new Handler() {
+      @Override
+      void publish(LogRecord record) {
+        if (record.level.intValue() >= Level.WARNING.intValue()) {
+          messages << record.message
+        }
+      }
+
+      @Override
+      void flush() {
+      }
+
+      @Override
+      void close() {
+      }
+    }
+    java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ScaleColorFermenter.name)
+    Level originalLevel = logger.level
     def scale = null
-    def errOutput = null
 
     try {
-      System.err = new PrintStream(errStream)
+      logger.addHandler(handler)
+      logger.level = Level.WARNING
 
       // Blues palette has 9 colors - request 15 breaks
       scale = new ScaleColorFermenter([palette: 'Blues', 'n.breaks': 15])
-
-      // Convert stderr output to string
-      errOutput = errStream.toString()
-
     } finally {
-      // Restore stderr BEFORE assertions
-      System.err = originalErr
+      logger.removeHandler(handler)
+      logger.level = originalLevel
     }
 
-    // Perform assertions after System.err is restored
-    // This ensures proper cleanup even if assertions fail
-    assertTrue(errOutput.contains('Warning'), "Should contain warning message")
-    assertTrue(errOutput.contains('Number of breaks (15)'), "Should mention requested 15 breaks")
-    assertTrue(errOutput.contains('palette size (9)'), "Should mention palette size of 9")
-    assertTrue(errOutput.contains('Using maximum of 9 colors'), "Should mention using maximum of 9 colors")
+    String warning = messages.join('\n')
+    assertTrue(warning.contains('Warning'), 'Should contain warning message')
+    assertTrue(warning.contains('Number of breaks (15)'), 'Should mention requested 15 breaks')
+    assertTrue(warning.contains('palette size (9)'), 'Should mention palette size of 9')
+    assertTrue(warning.contains('Using maximum of 9 colors'), 'Should mention using maximum of 9 colors')
 
     // Should still work correctly - using max palette size
     def colors = scale.getColors()
-    assertEquals(9, colors.size(), "Should use maximum palette size (9) instead of requested 15")
+    assertEquals(9, colors.size(), 'Should use maximum palette size (9) instead of requested 15')
   }
 
   @Test

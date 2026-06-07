@@ -12,7 +12,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.scale.NewScaleMarker
 
-import java.util.Locale
 
 /**
  * Tests for gg compatibility of per-layer scale overrides via new_scale_color/new_scale_fill.

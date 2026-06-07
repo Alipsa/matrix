@@ -49,15 +49,23 @@ class CoordFixed extends CoordCartesian {
 
   CoordFixed(Map params) {
     super(params)
-    if (params.ratio != null) this.ratio = params.ratio as BigDecimal
+    if (params.ratio != null) {
+      this.ratio = params.ratio as BigDecimal
+    }
   }
 
   @Override
   CoordSpec toCharmCoordSpec() {
     Map<String, Object> p = [:]
-    if (xlim) p.xlim = xlim
-    if (ylim) p.ylim = ylim
-    if (ratio != null) p.ratio = ratio
+    if (xlim) {
+      p.xlim = xlim
+    }
+    if (ylim) {
+      p.ylim = ylim
+    }
+    if (ratio != null) {
+      p.ratio = ratio
+    }
     new CoordSpec(type: CharmCoordType.FIXED, params: p)
   }
 }

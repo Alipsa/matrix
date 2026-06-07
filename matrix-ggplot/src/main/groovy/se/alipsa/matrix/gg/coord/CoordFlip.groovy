@@ -19,6 +19,7 @@ import se.alipsa.matrix.charm.CoordSpec
  *     coord_flip()  // Creates horizontal bars
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class CoordFlip extends Coord {
 
   /** X-axis limits [min, max] - null means auto-detect from data */
@@ -39,15 +40,23 @@ class CoordFlip extends Coord {
   CoordFlip() {}
 
   CoordFlip(Map params) {
-    if (params.xlim) this.xlim = params.xlim as List<Number>
-    if (params.ylim) this.ylim = params.ylim as List<Number>
+    if (params.xlim) {
+      this.xlim = params.xlim as List<Number>
+    }
+    if (params.ylim) {
+      this.ylim = params.ylim as List<Number>
+    }
   }
 
   @Override
   CoordSpec toCharmCoordSpec() {
     Map<String, Object> p = [:]
-    if (xlim) p.xlim = xlim
-    if (ylim) p.ylim = ylim
+    if (xlim) {
+      p.xlim = xlim
+    }
+    if (ylim) {
+      p.ylim = ylim
+    }
     new CoordSpec(type: CharmCoordType.FLIP, params: p)
   }
 

@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Uses stat_bin to compute counts per bin and draws a line through the bin centers.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class GeomFreqpoly extends Geom {
 
   /** Line color */
@@ -30,7 +31,7 @@ class GeomFreqpoly extends Geom {
   GeomFreqpoly() {
     defaultStat = StatType.BIN
     requiredAes = ['x']
-    defaultAes = [color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [color: 'black', size: 1, linetype: 'solid']
   }
 
   /**
@@ -40,12 +41,24 @@ class GeomFreqpoly extends Geom {
    */
   GeomFreqpoly(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.linewidth != null) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.size != null) {
+      this.size = params.size as Number
+    }
+    if (params.linewidth != null) {
+      this.size = params.linewidth as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

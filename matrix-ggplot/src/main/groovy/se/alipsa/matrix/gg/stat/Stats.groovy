@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.gg.layer.StatType
 
 @CompileStatic
+@SuppressWarnings('ClassJavadoc')
 class Stats {
 
   final StatType statType

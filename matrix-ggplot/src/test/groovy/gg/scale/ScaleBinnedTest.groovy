@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.scale.ScaleYBinned
  * Each test runs for both 'x' and 'y' aesthetics.
  * Replaces ScaleXBinnedTest and ScaleYBinnedTest.
  */
+@SuppressWarnings('UnnecessaryDefInMethodDeclaration')
 class ScaleBinnedTest {
 
   private def newScale(String aesthetic, Map params = [:]) {

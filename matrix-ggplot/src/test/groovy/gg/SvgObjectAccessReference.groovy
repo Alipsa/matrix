@@ -26,6 +26,7 @@ import se.alipsa.matrix.datasets.Dataset
  * - No string parsing overhead
  * - Better memory efficiency
  */
+@SuppressWarnings(['DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class SvgObjectAccessReference {
 
     private static final Logger log = Logger.getLogger(SvgObjectAccessReference)
@@ -43,18 +44,18 @@ class SvgObjectAccessReference {
 
         // Pattern 1: Get all descendants (most common)
         def allDescendants = svg.descendants()
-        assertTrue(allDescendants.size() > 0, "Should have descendant elements")
+        assertTrue(allDescendants.size() > 0, 'Should have descendant elements')
 
         // Pattern 2: Filter by element type
         def circles = allDescendants.findAll { it instanceof Circle }
-        assertTrue(circles.size() > 0, "Should find circle elements")
+        assertTrue(circles.size() > 0, 'Should find circle elements')
 
         def rects = allDescendants.findAll { it instanceof Rect }
         // Rects exist for background, etc.
 
         // Pattern 3: Direct children only (when needed)
         def children = svg.getChildren()
-        assertTrue(children.size() > 0, "Should have direct children")
+        assertTrue(children.size() > 0, 'Should have direct children')
 
         // Pattern 4: Multiple element types
         def lines = allDescendants.findAll { it instanceof Line }
@@ -66,8 +67,8 @@ class SvgObjectAccessReference {
         // Text elements contain labels, titles, etc.
 
         // Pattern 6: SVG properties
-        assertNotNull(svg.width, "Should have width")
-        assertNotNull(svg.height, "Should have height")
+        assertNotNull(svg.width, 'Should have width')
+        assertNotNull(svg.height, 'Should have height')
     }
 
     /**
@@ -105,7 +106,7 @@ class SvgObjectAccessReference {
         long serialTimeNs = System.nanoTime() - startSerial
 
         // Validate both methods work
-        assertEquals(hasCirclesDirect, hasCirclesSerial, "Both methods should find circles")
+        assertEquals(hasCirclesDirect, hasCirclesSerial, 'Both methods should find circles')
 
         // Document timing (informational - no strict assertion to avoid flakiness)
         log.info("Direct access: ${directTimeNs / 1_000_000}ms, Serialization: ${serialTimeNs / 1_000_000}ms")

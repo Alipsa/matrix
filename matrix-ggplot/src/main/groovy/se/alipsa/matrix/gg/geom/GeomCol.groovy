@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - GeomCol: stat = IDENTITY, requires both x and y aesthetics
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateListLiteral', 'DuplicateStringLiteral'])
 class GeomCol extends GeomBar {
 
   GeomCol() {

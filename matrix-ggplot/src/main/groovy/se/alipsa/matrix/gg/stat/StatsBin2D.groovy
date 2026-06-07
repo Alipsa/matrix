@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.gg.layer.StatType
 
 @CompileStatic
+@SuppressWarnings('ClassJavadoc')
 class StatsBin2D extends Stats {
 
   StatsBin2D(Map params = [:]) {

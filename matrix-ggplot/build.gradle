@@ -13,11 +13,6 @@ group = 'se.alipsa.matrix'
 version = '0.5.0-SNAPSHOT'
 description = "Groovy ggplot2-style charting API for matrix"
 
-codenarc {
-  // TODO: Fix ~3000 CodeNarc violations and remove this override
-  ignoreFailures = true
-}
-
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"

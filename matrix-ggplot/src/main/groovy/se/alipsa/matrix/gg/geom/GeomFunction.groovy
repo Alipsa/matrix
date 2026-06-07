@@ -3,7 +3,6 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
-import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.layer.StatType
 
 /**
@@ -39,9 +38,8 @@ import se.alipsa.matrix.gg.layer.StatType
  * @see se.alipsa.matrix.gg.stat.StatsFunction
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomFunction extends Geom {
-
-  private static final Logger log = Logger.getLogger(GeomFunction)
 
   /** Line color */
   String color = 'black'
@@ -64,19 +62,35 @@ class GeomFunction extends Geom {
   GeomFunction() {
     defaultStat = StatType.FUNCTION
     requiredAes = ['x', 'y']
-    defaultAes = [color: 'black', size: 0.5, linetype: 'solid'] as Map<String, Object>
+    defaultAes = [color: 'black', size: 0.5, linetype: 'solid']
   }
 
   GeomFunction(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.linewidth != null) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.lineend) this.lineend = params.lineend as String
-    if (params.linejoin) this.linejoin = params.linejoin as String
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.size != null) {
+      this.size = params.size as Number
+    }
+    if (params.linewidth != null) {
+      this.size = params.linewidth as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.lineend) {
+      this.lineend = params.lineend as String
+    }
+    if (params.linejoin) {
+      this.linejoin = params.linejoin as String
+    }
     this.params = params
   }
 

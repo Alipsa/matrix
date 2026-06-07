@@ -254,7 +254,7 @@ class ScaleColorManualTest {
 
   @Test
   void testGenerateHuePaletteSizes() {
-    def method = ScaleColorManual.class.getDeclaredMethod('generateHuePalette', int)
+    def method = ScaleColorManual.getDeclaredMethod('generateHuePalette', int)
     method.accessible = true
 
     List<String> empty = method.invoke(null, 0) as List<String>

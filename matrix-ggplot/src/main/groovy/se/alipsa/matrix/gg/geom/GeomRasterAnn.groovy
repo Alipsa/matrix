@@ -25,6 +25,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * }</pre>
  */
 @CompileStatic
+@SuppressWarnings('UnnecessaryToString')
 class GeomRasterAnn extends Geom {
 
   /** Pre-colored raster data: 2D list of color strings */
@@ -40,7 +41,7 @@ class GeomRasterAnn extends Geom {
   GeomRasterAnn() {
     defaultStat = StatType.IDENTITY
     requiredAes = []
-    defaultAes = [:] as Map<String, Object>
+    defaultAes = [:]
   }
 
   GeomRasterAnn(Map params) {
@@ -62,7 +63,11 @@ class GeomRasterAnn extends Geom {
     (source as List).each { Object row ->
       if (row instanceof List) {
         normalized << (row as List).collect { Object cell ->
-          cell == null ? null : ColorUtil.normalizeColor(cell.toString()) ?: cell.toString()
+          if (cell == null) {
+            return null
+          }
+          String cellText = cell.toString()
+          ColorUtil.normalizeColor(cellText) ?: cellText
         }
       }
     }

@@ -75,12 +75,12 @@ class GeomHistogramTest {
     //  println "  x=${row['x']}, xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
     //}
 
-    assertTrue(binned.columnNames().contains('x'), "Should have x column")
-    assertTrue(binned.columnNames().contains('xmin'), "Should have xmin column")
-    assertTrue(binned.columnNames().contains('xmax'), "Should have xmax column")
-    assertTrue(binned.columnNames().contains('count'), "Should have count column")
-    assertTrue(binned.columnNames().contains('density'), "Should have density column")
-    assertEquals(5, binned.rowCount(), "Should have 5 bins")
+    assertTrue(binned.columnNames().contains('x'), 'Should have x column')
+    assertTrue(binned.columnNames().contains('xmin'), 'Should have xmin column')
+    assertTrue(binned.columnNames().contains('xmax'), 'Should have xmax column')
+    assertTrue(binned.columnNames().contains('count'), 'Should have count column')
+    assertTrue(binned.columnNames().contains('density'), 'Should have density column')
+    assertEquals(5, binned.rowCount(), 'Should have 5 bins')
   }
 
   @Test
@@ -103,7 +103,7 @@ class GeomHistogramTest {
     }*/
 
     // With binwidth=2 over range 0-9, we expect 5 bins
-    assertEquals(5, binned.rowCount(), "Should have 5 bins with binwidth=2")
+    assertEquals(5, binned.rowCount(), 'Should have 5 bins with binwidth=2')
   }
 
   // ============== Full Chart Tests ==============
@@ -135,8 +135,8 @@ class GeomHistogramTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements")
-    assertTrue(content.contains('Simple Histogram'), "Should contain title")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements')
+    assertTrue(content.contains('Simple Histogram'), 'Should contain title')
 
     // Write for visual inspection
     File outputFile = new File('build/simple_histogram.svg')
@@ -163,7 +163,7 @@ class GeomHistogramTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill=\"steelblue\"'), "Should have steelblue fill")
+    assertTrue(content.contains('fill=\"steelblue\"'), 'Should have steelblue fill')
 
     File outputFile = new File('build/histogram_10bins.svg')
     write(svg, outputFile)
@@ -212,7 +212,7 @@ class GeomHistogramTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill-opacity'), "Should have fill-opacity attribute")
+    assertTrue(content.contains('fill-opacity'), 'Should have fill-opacity attribute')
   }
 
   @Slow

@@ -8,14 +8,11 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path
-import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.coord.CoordPolar
 
 class GgPlotTest {

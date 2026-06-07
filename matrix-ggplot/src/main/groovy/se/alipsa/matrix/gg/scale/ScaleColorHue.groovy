@@ -17,6 +17,7 @@ import groovy.transform.CompileStatic
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorHue extends ScaleDiscrete {
 
   /** Range of hues to use [min, max] in degrees (0-360) */
@@ -69,11 +70,21 @@ class ScaleColorHue extends ScaleDiscrete {
       BigDecimal span = (hueRange[1] as BigDecimal) - (hueRange[0] as BigDecimal)
       this.hueRange = [start, start + span]
     }
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.limits = params.limits as List
+    }
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
   }
 
   @Override
@@ -100,7 +111,9 @@ class ScaleColorHue extends ScaleDiscrete {
    * Generate n evenly-spaced colors from the HCL color wheel.
    */
   private List<String> generateHueColors(int n) {
-    if (n == 0) return []
+    if (n == 0) {
+      return []
+    }
     if (n == 1) {
       BigDecimal hue = hueRange[0] as BigDecimal
       return [ColorSpaceUtil.hclToHex(hue, chroma, luminance)]
@@ -120,7 +133,9 @@ class ScaleColorHue extends ScaleDiscrete {
       }
       // Normalize to 0-360
       hue = hue % 360
-      if (hue < 0) hue += 360
+      if (hue < 0) {
+        hue += 360
+      }
 
       String color = ColorSpaceUtil.hclToHex(hue, chroma, luminance)
       colors.add(color)
@@ -136,7 +151,9 @@ class ScaleColorHue extends ScaleDiscrete {
 
   @Override
   Object inverse(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
     // Find the level that maps to this color
     def entry = palette.find { k, v -> v == value }
     return entry?.key

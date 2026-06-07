@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gg.scale.ScaleColorSteps2
 
+@SuppressWarnings('BrokenOddnessCheck')
 class ScaleColorSteps2Test {
 
   @Test
@@ -39,8 +40,8 @@ class ScaleColorSteps2Test {
     def scale = new ScaleColorSteps2(bins: 6)  // Even number
     assertNotNull(scale.colors)
     // Should auto-adjust from 6 to 7 for symmetric diverging
-    assertEquals(7, scale.colors.size(), "Even bin count 6 should be adjusted to 7")
-    assertTrue(scale.colors.size() % 2 == 1, "Color count should be odd for diverging scale")
+    assertEquals(7, scale.colors.size(), 'Even bin count 6 should be adjusted to 7')
+    assertTrue(scale.colors.size() % 2 == 1, 'Color count should be odd for diverging scale')
   }
 
   @Test

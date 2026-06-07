@@ -71,8 +71,8 @@ class GeomRugViolinDensityTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain point elements")
-    assertTrue(content.contains('<line'), "Should contain rug lines")
+    assertTrue(content.contains('<circle'), 'Should contain point elements')
+    assertTrue(content.contains('<line'), 'Should contain rug lines')
 
     File outputFile = new File('build/rug_scatter.svg')
     write(svg, outputFile)
@@ -175,7 +175,7 @@ class GeomRugViolinDensityTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<path'), "Should contain violin path elements")
+    assertTrue(content.contains('<path'), 'Should contain violin path elements')
 
     File outputFile = new File('build/simple_violin.svg')
     write(svg, outputFile)
@@ -271,7 +271,7 @@ class GeomRugViolinDensityTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line') || content.contains('<path'), "Should contain density curve")
+    assertTrue(content.contains('<line') || content.contains('<path'), 'Should contain density curve')
 
     File outputFile = new File('build/simple_density.svg')
     write(svg, outputFile)

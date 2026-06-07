@@ -12,6 +12,7 @@ import se.alipsa.matrix.gg.aes.Aes
  * or stack them appropriately.
  */
 @CompileStatic
+@SuppressWarnings(['AbcMetric', 'CyclomaticComplexity', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'MethodSize', 'ReturnNullFromCatchBlock', 'UnnecessaryNullCheck', 'UnusedMethodParameter'])
 class GgPosition {
 
   /**
@@ -280,7 +281,9 @@ class GgPosition {
    */
   private static List<Integer> findXOverlaps(List<Map<String, Object>> rows) {
     int n = rows.size()
-    if (n == 0) return []
+    if (n == 0) {
+      return []
+    }
 
     List<BigDecimal> start = new ArrayList<>(n)
     List<BigDecimal> end = new ArrayList<>(n)

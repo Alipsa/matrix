@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
 
-import java.util.Locale
 
 /**
  * Wrapper for binning continuous data into fixed-width intervals.
@@ -22,6 +21,7 @@ import java.util.Locale
  * </pre>
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'UnnecessaryElseStatement'])
 class CutWidth implements CharmExpression {
   private static final String DEFAULT_PREFIX = 'cut_width'
 
@@ -61,10 +61,10 @@ class CutWidth implements CharmExpression {
    */
   CutWidth(String column, Number width, Number center, Number boundary, boolean closedRight) {
     if (column == null || column.isBlank()) {
-      throw new IllegalArgumentException("Column name cannot be null or empty")
+      throw new IllegalArgumentException('Column name cannot be null or empty')
     }
     if (width == null || width <= 0) {
-      throw new IllegalArgumentException("Width must be a positive number")
+      throw new IllegalArgumentException('Width must be a positive number')
     }
     this.column = column
     this.width = width
@@ -84,7 +84,7 @@ class CutWidth implements CharmExpression {
       throw new IllegalArgumentException("Column '${column}' not found in data")
     }
 
-    List<?> values = data[column] as List<?>
+    List<?> values = data[column]
     List<String> binLabels = computeBins(values)
 
     String colName = generateColumnName(data)
@@ -110,7 +110,7 @@ class CutWidth implements CharmExpression {
     // Calculate the starting boundary
     // ggplot2's default: boundary = width/2, which offsets bin boundaries by half the bin width
     if (boundary != null && center != null) {
-      throw new IllegalArgumentException("Only one of boundary and center may be specified")
+      throw new IllegalArgumentException('Only one of boundary and center may be specified')
     }
 
     BigDecimal boundaryValue
@@ -209,7 +209,7 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
       return String.valueOf(bd as long)
     }
     // Round to avoid floating point artifacts
-    String s = String.format(Locale.US, "%.2f", bd)
+    String s = String.format(Locale.US, '%.2f', bd)
     if (s.contains('.')) {
       // Remove trailing zeros after the decimal point
       s = s.replaceAll(/0+$/, '')

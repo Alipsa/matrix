@@ -5,12 +5,8 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.SvgElement
-import se.alipsa.groovy.svg.io.SvgReader
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.scale.Scale
 
 /**
  * Custom graphical object (grob) geometry.
@@ -42,12 +38,14 @@ class GeomCustom extends Geom {
   GeomCustom() {
     defaultStat = StatType.IDENTITY
     requiredAes = []
-    defaultAes = [:] as Map<String, Object>
+    defaultAes = [:]
   }
 
   GeomCustom(Map params) {
     this()
-    if (params.grob) this.grob = params.grob
+    if (params.grob) {
+      this.grob = params.grob
+    }
     this.params = params
   }
 

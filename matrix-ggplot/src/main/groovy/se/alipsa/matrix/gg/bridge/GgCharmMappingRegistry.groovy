@@ -62,7 +62,7 @@ class GgCharmMappingRegistry {
       (GeomBar)      : CharmGeomType.BAR,
       (GeomHistogram): CharmGeomType.HISTOGRAM,
       (GeomBoxplot)  : CharmGeomType.BOXPLOT
-  ] as Map<Class<? extends GgGeom>, CharmGeomType>
+  ]
 
   private final Map<StatType, CharmStatType> statMappings = [
       (StatType.IDENTITY)  : CharmStatType.IDENTITY,
@@ -92,7 +92,7 @@ class GgCharmMappingRegistry {
       (StatType.SF_COORDINATES): CharmStatType.SF_COORDINATES,
       (StatType.SPOKE)     : CharmStatType.SPOKE,
       (StatType.ALIGN)     : CharmStatType.ALIGN
-  ] as Map<StatType, CharmStatType>
+  ]
 
   private final Map<PositionType, CharmPositionType> positionMappings = [
       (PositionType.IDENTITY): CharmPositionType.IDENTITY,
@@ -102,7 +102,7 @@ class GgCharmMappingRegistry {
       (PositionType.FILL)    : CharmPositionType.FILL,
       (PositionType.JITTER)  : CharmPositionType.JITTER,
       (PositionType.NUDGE)   : CharmPositionType.NUDGE
-  ] as Map<PositionType, CharmPositionType>
+  ]
 
   // Subclasses must appear before parent classes so isInstance checks match the most specific type first.
   private final Map<Class<? extends GgCoord>, CharmCoordType> coordMappings = [
@@ -115,7 +115,7 @@ class GgCharmMappingRegistry {
       (CoordCartesian): CharmCoordType.CARTESIAN,
       (CoordFlip)     : CharmCoordType.FLIP,
       (CoordPolar)    : CharmCoordType.POLAR
-  ] as Map<Class<? extends GgCoord>, CharmCoordType>
+  ]
 
   /**
    * Maps a gg geom instance to a canonical Charm geom type.

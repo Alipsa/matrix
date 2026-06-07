@@ -20,6 +20,7 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * scale_color_viridis_d(direction: -1)  // Reverse direction
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorViridis extends ScaleDiscrete {
 
   /** Palette option: 'viridis' (D), 'magma' (A), 'inferno' (B), 'plasma' (C),
@@ -106,22 +107,34 @@ class ScaleColorViridis extends ScaleDiscrete {
 
   private void applyParams(Map params) {
     this.option = params.option ? normalizeOption(params.option as String) : this.option
-    if (params.begin != null) this.begin = validateRange(params.begin as BigDecimal, 'begin')
-    if (params.end != null) this.end = validateRange(params.end as BigDecimal, 'end')
+    if (params.begin != null) {
+      this.begin = validateRange(params.begin as BigDecimal, 'begin')
+    }
+    if (params.end != null) {
+      this.end = validateRange(params.end as BigDecimal, 'end')
+    }
     // Validate that begin <= end after both are set
     if (this.begin > this.end) {
       throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
     }
-    if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
-    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    if (params.direction != null) {
+      this.direction = normalizeDirection(params.direction as int)
+    }
+    if (params.alpha != null) {
+      this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    }
     this.name = params.name as String ?: this.name
     this.limits = params.limits as List ?: this.limits
     this.breaks = params.breaks as List ?: this.breaks
     this.labels = params.labels as List<String> ?: this.labels
     this.naValue = params.naValue as String ?: this.naValue
     // Support 'colour' British spelling
-    if (params.aesthetic == 'colour') this.aesthetic = 'color'
-    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') {
+      this.aesthetic = 'color'
+    }
+    else if (params.aesthetic) {
+      this.aesthetic = params.aesthetic as String
+    }
   }
 
   /**
@@ -165,7 +178,9 @@ class ScaleColorViridis extends ScaleDiscrete {
    * Generate n evenly spaced colors from the palette.
    */
   private List<String> generateColors(int n) {
-    if (n <= 0) return []
+    if (n <= 0) {
+      return []
+    }
 
     List<String> palette = PALETTES[option] ?: PALETTES['viridis']
     List<String> result = []
@@ -275,7 +290,9 @@ class ScaleColorViridis extends ScaleDiscrete {
 
   @Override
   Object inverse(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
     // Find the level that maps to this color
     def entry = paletteMap.find { k, v -> v == value }
     return entry?.key
@@ -286,7 +303,9 @@ class ScaleColorViridis extends ScaleDiscrete {
    * Supports wrapping (index % levels.size()) for indices beyond range.
    */
   String getColorForIndex(int index) {
-    if (index < 0 || levels.isEmpty()) return naValue
+    if (index < 0 || levels.isEmpty()) {
+      return naValue
+    }
     // Support wrapping for indices beyond range
     int wrappedIndex = index % levels.size()
     return transform(levels[wrappedIndex]) as String

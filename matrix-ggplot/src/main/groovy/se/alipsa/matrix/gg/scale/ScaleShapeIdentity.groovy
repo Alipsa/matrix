@@ -23,14 +23,22 @@ class ScaleShapeIdentity extends Scale {
   String naValue = 'circle'
 
   ScaleShapeIdentity(Map params = [:]) {
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.name) this.name = params.name as String
-    if (params.guide) this.guide = params.guide
+    if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.guide) {
+      this.guide = params.guide
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
+    if (value == null) {
+      return naValue
+    }
     return value.toString()
   }
 }

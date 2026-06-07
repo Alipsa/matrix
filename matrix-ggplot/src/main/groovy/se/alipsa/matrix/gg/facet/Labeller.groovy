@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
  *             This class extends the charm package implementation for backward compatibility.
  */
 @CompileStatic
+@SuppressWarnings('ClassNameSameAsSuperclass')
 class Labeller extends se.alipsa.matrix.charm.facet.Labeller {
 
   /**

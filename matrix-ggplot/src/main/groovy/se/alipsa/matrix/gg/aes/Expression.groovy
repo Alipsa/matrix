@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * The closure receives a Row object and should return a numeric value.
  */
 @CompileStatic
+@SuppressWarnings(['ReturnNullFromCatchBlock', 'ThrowRuntimeException'])
 class Expression implements CharmExpression {
 
   private static final AtomicInteger NAME_COUNTER = new AtomicInteger(0)
@@ -41,7 +42,7 @@ class Expression implements CharmExpression {
 
   Expression(Closure<Number> closure, String name) {
     if (closure == null) {
-      throw new IllegalArgumentException("Expression closure cannot be null")
+      throw new IllegalArgumentException('Expression closure cannot be null')
     }
     this.closure = closure
     this.name = name ?: ".expr.${NAME_COUNTER.incrementAndGet()}"
@@ -53,6 +54,7 @@ class Expression implements CharmExpression {
    * @throws RuntimeException if the closure throws an exception
    */
   @CompileDynamic
+  @SuppressWarnings('UnnecessaryToString')
   Number evaluate(Row row) {
     try {
       def result = closure.call(row)
@@ -62,7 +64,7 @@ class Expression implements CharmExpression {
       if (result instanceof Number) {
         return (Number) result
       }
-      // Try to convert string to number
+      // Keep explicit toString() so GString closure results are safely coerced.
       String str = result.toString()
       try {
         if (str.contains('.')) {

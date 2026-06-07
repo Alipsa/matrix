@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_linerange(color: 'blue', linewidth: 2)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomLinerange extends Geom {
 
   /** Line color */
@@ -35,16 +36,22 @@ class GeomLinerange extends Geom {
   GeomLinerange() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'ymin', 'ymax']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomLinerange(Map params) {
     this()
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
     this.linetype = params.linetype as String ?: this.linetype
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
     this.params = params
   }
 

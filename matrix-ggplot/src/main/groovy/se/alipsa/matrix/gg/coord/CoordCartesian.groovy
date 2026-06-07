@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.CoordSpec
  * Maps x and y data values to pixel positions using linear transformation.
  */
 @CompileStatic
+@SuppressWarnings('DuplicateStringLiteral')
 class CoordCartesian extends Coord {
 
   /** X-axis limits [min, max] - null means auto-detect from data */
@@ -28,15 +29,23 @@ class CoordCartesian extends Coord {
   CoordCartesian() {}
 
   CoordCartesian(Map params) {
-    if (params.xlim) this.xlim = params.xlim as List<Number>
-    if (params.ylim) this.ylim = params.ylim as List<Number>
+    if (params.xlim) {
+      this.xlim = params.xlim as List<Number>
+    }
+    if (params.ylim) {
+      this.ylim = params.ylim as List<Number>
+    }
   }
 
   @Override
   CoordSpec toCharmCoordSpec() {
     Map<String, Object> p = [:]
-    if (xlim) p.xlim = xlim
-    if (ylim) p.ylim = ylim
+    if (xlim) {
+      p.xlim = xlim
+    }
+    if (ylim) {
+      p.ylim = ylim
+    }
     new CoordSpec(type: CharmCoordType.CARTESIAN, params: p)
   }
 

@@ -329,8 +329,8 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
-    assertTrue(content.contains('panel-'), "Should contain panel groups")
+    assertTrue(content.contains('<circle'), 'Should contain points')
+    assertTrue(content.contains('panel-'), 'Should contain panel groups')
 
     File outputFile = new File('build/facet_wrap_scatter.svg')
     write(svg, outputFile)
@@ -357,7 +357,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain bar rectangles")
+    assertTrue(content.contains('<rect'), 'Should contain bar rectangles')
 
     File outputFile = new File('build/facet_wrap_bar.svg')
     write(svg, outputFile)
@@ -386,7 +386,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/facet_grid_scatter.svg')
     write(svg, outputFile)
@@ -415,8 +415,8 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line segments")
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<line'), 'Should contain line segments')
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/facet_wrap_line.svg')
     write(svg, outputFile)
@@ -491,7 +491,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain histogram bars")
+    assertTrue(content.contains('<rect'), 'Should contain histogram bars')
 
     File outputFile = new File('build/facet_grid_histogram.svg')
     write(svg, outputFile)
@@ -650,8 +650,8 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
-    assertTrue(content.contains('panel-'), "Should contain panel groups")
+    assertTrue(content.contains('<circle'), 'Should contain points')
+    assertTrue(content.contains('panel-'), 'Should contain panel groups')
 
     File outputFile = new File('build/facet_grid_cols_only_formula.svg')
     write(svg, outputFile)
@@ -671,7 +671,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/facet_grid_rows_only_formula.svg')
     write(svg, outputFile)
@@ -691,7 +691,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/facet_grid_two_vars_formula.svg')
     write(svg, outputFile)
@@ -779,7 +779,7 @@ class FacetTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/facet_grid_year_drv.svg')
     write(svg, outputFile)

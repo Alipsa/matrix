@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit
  * - scale_x_time(time_breaks: '1 hour') - breaks every hour
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ReturnNullFromCatchBlock'])
 class ScaleXTime extends ScaleContinuous {
 
   /** Position of the x-axis: 'bottom' (default) or 'top' */
@@ -57,8 +58,12 @@ class ScaleXTime extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.timeLimits = params.limits as List
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.limits) {
+      this.timeLimits = params.limits as List
+    }
     if (params.containsKey('expand')) {
       def expandValue = params.expand
       if (expandValue != null) {
@@ -73,28 +78,56 @@ class ScaleXTime extends ScaleContinuous {
         this.expand = null
       }
     }
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
-    if (params.time_format) this.timeFormat = params.time_format as String
-    if (params.timeFormat) this.timeFormat = params.timeFormat as String
-    if (params.date_format) this.timeFormat = params.date_format as String  // Alias for compatibility
-    if (params.dateFormat) this.timeFormat = params.dateFormat as String    // Alias for compatibility
-    if (params.time_breaks) this.timeBreaks = params.time_breaks as String
-    if (params.timeBreaks) this.timeBreaks = params.timeBreaks as String
-    if (params.date_breaks) this.timeBreaks = params.date_breaks as String  // Alias for compatibility
-    if (params.dateBreaks) this.timeBreaks = params.dateBreaks as String    // Alias for compatibility
-    if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.breaks) {
+      this.breaks = params.breaks as List
+    }
+    if (params.labels) {
+      this.labels = params.labels as List<String>
+    }
+    if (params.position) {
+      this.position = params.position as String
+    }
+    if (params.time_format) {
+      this.timeFormat = params.time_format as String
+    }
+    if (params.timeFormat) {
+      this.timeFormat = params.timeFormat as String
+    }
+    if (params.date_format) {
+      this.timeFormat = params.date_format as String  // Alias for compatibility
+    }
+    if (params.dateFormat) {
+      this.timeFormat = params.dateFormat as String    // Alias for compatibility
+    }
+    if (params.time_breaks) {
+      this.timeBreaks = params.time_breaks as String
+    }
+    if (params.timeBreaks) {
+      this.timeBreaks = params.timeBreaks as String
+    }
+    if (params.date_breaks) {
+      this.timeBreaks = params.date_breaks as String  // Alias for compatibility
+    }
+    if (params.dateBreaks) {
+      this.timeBreaks = params.dateBreaks as String    // Alias for compatibility
+    }
+    if (params.nBreaks) {
+      this.nBreaks = params.nBreaks as int
+    }
   }
 
   @Override
   void train(List data) {
-    if (data == null || data.isEmpty()) return
+    if (data == null || data.isEmpty()) {
+      return
+    }
 
     // Convert all time values to seconds since midnight
     List<Long> secondsValues = data.findResults { toSecondsSinceMidnight(it) } as List<Long>
 
-    if (secondsValues.isEmpty()) return
+    if (secondsValues.isEmpty()) {
+      return
+    }
 
     // Compute min/max
     long min = secondsValues.min() as long
@@ -104,11 +137,15 @@ class ScaleXTime extends ScaleContinuous {
     if (timeLimits && timeLimits.size() >= 2) {
       if (timeLimits[0] != null) {
         Long limMin = toSecondsSinceMidnight(timeLimits[0])
-        if (limMin != null) min = limMin
+        if (limMin != null) {
+          min = limMin
+        }
       }
       if (timeLimits[1] != null) {
         Long limMax = toSecondsSinceMidnight(timeLimits[1])
-        if (limMax != null) max = limMax
+        if (limMax != null) {
+          max = limMax
+        }
       }
     }
 
@@ -133,7 +170,9 @@ class ScaleXTime extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     Long seconds = toSecondsSinceMidnight(value)
-    if (seconds == null) return null
+    if (seconds == null) {
+      return null
+    }
 
     double v = seconds
     double dMin = minSecondsSinceMidnight
@@ -141,7 +180,9 @@ class ScaleXTime extends ScaleContinuous {
     double rMin = range[0] as double
     double rMax = range[1] as double
 
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax == dMin) {
+      return (rMin + rMax) / 2
+    }
 
     // Linear interpolation
     double normalized = (v - dMin) / (dMax - dMin)
@@ -151,7 +192,9 @@ class ScaleXTime extends ScaleContinuous {
   @Override
   Object inverse(Object value) {
     Double numeric = value instanceof Number ? value as double : null
-    if (numeric == null) return null
+    if (numeric == null) {
+      return null
+    }
 
     double v = numeric
     double dMin = minSecondsSinceMidnight
@@ -159,7 +202,9 @@ class ScaleXTime extends ScaleContinuous {
     double rMin = range[0] as double
     double rMax = range[1] as double
 
-    if (rMax == rMin) return LocalTime.ofSecondOfDay(((dMin + dMax) / 2) as long)
+    if (rMax == rMin) {
+      return LocalTime.ofSecondOfDay(((dMin + dMax) / 2) as long)
+    }
 
     // Inverse linear interpolation
     double normalized = (v - rMin) / (rMax - rMin)
@@ -171,7 +216,9 @@ class ScaleXTime extends ScaleContinuous {
 
   @Override
   List getComputedBreaks() {
-    if (breaks) return breaks
+    if (breaks) {
+      return breaks
+    }
 
     // Generate time breaks
     LocalTime minTime = LocalTime.ofSecondOfDay(minSecondsSinceMidnight)
@@ -182,7 +229,9 @@ class ScaleXTime extends ScaleContinuous {
 
   @Override
   List<String> getComputedLabels() {
-    if (labels) return labels
+    if (labels) {
+      return labels
+    }
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeFormat)
     return getComputedBreaks().collect { value ->
@@ -336,15 +385,21 @@ class ScaleXTime extends ScaleContinuous {
     switch (unit) {
       case ChronoUnit.SECONDS:
         long newSeconds = time.toSecondOfDay() + step
-        if (newSeconds >= 86400) return null  // Exceeds valid time range
+        if (newSeconds >= 86400) {
+          return null  // Exceeds valid time range
+        }
         return LocalTime.ofSecondOfDay(newSeconds)
       case ChronoUnit.MINUTES:
         long totalSeconds = time.toSecondOfDay() + (step * 60L)
-        if (totalSeconds >= 86400) return null  // Would wrap past midnight
+        if (totalSeconds >= 86400) {
+          return null  // Would wrap past midnight
+        }
         return LocalTime.ofSecondOfDay(totalSeconds)
       case ChronoUnit.HOURS:
         long secondsFromHours = time.toSecondOfDay() + (step * 3600L)
-        if (secondsFromHours >= 86400) return null  // Would wrap past midnight
+        if (secondsFromHours >= 86400) {
+          return null  // Would wrap past midnight
+        }
         return LocalTime.ofSecondOfDay(secondsFromHours)
       default:
         throw new IllegalArgumentException("Unsupported ChronoUnit: ${unit}")
@@ -355,7 +410,9 @@ class ScaleXTime extends ScaleContinuous {
    * Convert various time types to seconds since midnight.
    */
   private static Long toSecondsSinceMidnight(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
     if (value instanceof LocalTime) {
       return (value as LocalTime).toSecondOfDay() as long
@@ -376,7 +433,9 @@ class ScaleXTime extends ScaleContinuous {
 
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
-      if (s.isEmpty()) return null
+      if (s.isEmpty()) {
+        return null
+      }
       try {
         // Try parsing as ISO time (HH:mm:ss or HH:mm)
         LocalTime lt = LocalTime.parse(s)

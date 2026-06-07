@@ -21,6 +21,7 @@ import groovy.transform.CompileStatic
  * @see ScaleBinned
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryNullCheck'])
 class ScaleXBinned extends ScaleBinned {
 
   ScaleXBinned() {

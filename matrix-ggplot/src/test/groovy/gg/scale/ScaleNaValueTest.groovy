@@ -18,39 +18,39 @@ class ScaleNaValueTest {
   @Test
   void testNaValueCoercionForAlphaScales() {
     def cases = [
-        [new ScaleAlphaContinuous(naValue: 0.5d), new BigDecimal('0.5')],
-        [new ScaleAlphaBinned(naValue: 0.25f), new BigDecimal('0.25')],
-        [new ScaleAlphaDiscrete(naValue: 1), new BigDecimal('1')],
-        [new ScaleAlphaContinuous(naValue: '0.75'), new BigDecimal('0.75')]
+        [new ScaleAlphaContinuous(naValue: 0.5d), 0.5G],
+        [new ScaleAlphaBinned(naValue: 0.25f), 0.25G],
+        [new ScaleAlphaDiscrete(naValue: 1), 1G],
+        [new ScaleAlphaContinuous(naValue: '0.75'), 0.75G]
     ]
 
     cases.each { scale, expected ->
       assertTrue(scale.naValue instanceof BigDecimal)
-      assertTrue(scale.naValue.compareTo(expected) == 0)
+      assertTrue((scale.naValue <=> expected) == 0)
     }
   }
 
   @Test
   void testNaValueCoercionForSizeScales() {
     def cases = [
-        [new ScaleSizeContinuous(naValue: 2.5d), new BigDecimal('2.5')],
-        [new ScaleSizeBinned(naValue: 3.25f), new BigDecimal('3.25')],
-        [new ScaleSizeDiscrete(naValue: 4), new BigDecimal('4')],
-        [new ScaleSizeContinuous(naValue: '6.75'), new BigDecimal('6.75')]
+        [new ScaleSizeContinuous(naValue: 2.5d), 2.5G],
+        [new ScaleSizeBinned(naValue: 3.25f), 3.25G],
+        [new ScaleSizeDiscrete(naValue: 4), 4G],
+        [new ScaleSizeContinuous(naValue: '6.75'), 6.75G]
     ]
 
     cases.each { scale, expected ->
       assertTrue(scale.naValue instanceof BigDecimal)
-      assertTrue(scale.naValue.compareTo(expected) == 0)
+      assertTrue((scale.naValue <=> expected) == 0)
     }
   }
 
   @Test
   void testScaleUtilsCoerceToNumber() {
-    assertTrue(ScaleUtils.coerceToNumber(1.5d).compareTo(new BigDecimal('1.5')) == 0)
-    assertTrue(ScaleUtils.coerceToNumber(2.25f).compareTo(new BigDecimal('2.25')) == 0)
-    assertTrue(ScaleUtils.coerceToNumber(3).compareTo(new BigDecimal('3')) == 0)
-    assertTrue(ScaleUtils.coerceToNumber('4.125').compareTo(new BigDecimal('4.125')) == 0)
+    assertTrue((ScaleUtils.coerceToNumber(1.5d) <=> 1.5G) == 0)
+    assertTrue((ScaleUtils.coerceToNumber(2.25f) <=> 2.25G) == 0)
+    assertTrue((ScaleUtils.coerceToNumber(3) <=> 3G) == 0)
+    assertTrue((ScaleUtils.coerceToNumber('4.125') <=> 4.125G) == 0)
     assertNull(ScaleUtils.coerceToNumber('NA'))
     assertNull(ScaleUtils.coerceToNumber('null'))
     assertNull(ScaleUtils.coerceToNumber('NULL'))

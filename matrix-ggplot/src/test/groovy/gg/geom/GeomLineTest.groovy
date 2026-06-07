@@ -76,8 +76,8 @@ class GeomLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
-    assertTrue(content.contains('Simple Line Chart'), "Should contain title")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
+    assertTrue(content.contains('Simple Line Chart'), 'Should contain title')
 
     // Write for visual inspection
     File outputFile = new File('build/simple_line_chart.svg')
@@ -106,8 +106,8 @@ class GeomLineTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('stroke="steelblue"'), "Should have steelblue stroke")
-    assertTrue(content.contains('stroke-width="2"'), "Should have stroke-width 2")
+    assertTrue(content.contains('stroke="steelblue"'), 'Should have steelblue stroke')
+    assertTrue(content.contains('stroke-width="2"'), 'Should have stroke-width 2')
   }
 
   @Slow
@@ -131,7 +131,7 @@ class GeomLineTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('stroke-dasharray="8,4"'), "Should have dashed line pattern")
+    assertTrue(content.contains('stroke-dasharray="8,4"'), 'Should have dashed line pattern')
   }
 
   @Slow
@@ -161,7 +161,7 @@ class GeomLineTest {
 
     String content = SvgWriter.toXml(svg)
     // Should have multiple lines (one per group)
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
 
     // Write for visual inspection
     File outputFile = new File('build/grouped_line_chart.svg')
@@ -194,7 +194,7 @@ class GeomLineTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
   }
 
   @Slow
@@ -218,7 +218,7 @@ class GeomLineTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('stroke-opacity'), "Should have stroke-opacity attribute")
+    assertTrue(content.contains('stroke-opacity'), 'Should have stroke-opacity attribute')
   }
 
   @Slow
@@ -246,8 +246,8 @@ class GeomLineTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('<line'), "Should contain line elements")
-    assertTrue(content.contains('<circle'), "Should contain circle elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
+    assertTrue(content.contains('<circle'), 'Should contain circle elements')
 
     // Write for visual inspection
     File outputFile = new File('build/line_with_points.svg')
@@ -318,7 +318,7 @@ class GeomLineTest {
     String content = SvgWriter.toXml(svg)
 
     // Should render successfully even with unsorted data
-    assertTrue(content.contains('<line'), "Should contain line elements")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
   }
 
   @Slow
@@ -347,8 +347,8 @@ class GeomLineTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<line'), "Should contain line elements")
-    assertTrue(content.contains('Jan'), "Should have month labels")
+    assertTrue(content.contains('<line'), 'Should contain line elements')
+    assertTrue(content.contains('Jan'), 'Should have month labels')
 
     File outputFile = new File('build/discrete_x_line.svg')
     write(svg, outputFile)

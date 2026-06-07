@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_crossbar(fill: 'lightblue', color: 'blue', width: 0.5)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomCrossbar extends Geom {
 
   /** Fill color for the box */
@@ -41,18 +42,28 @@ class GeomCrossbar extends Geom {
   GeomCrossbar() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y', 'ymin', 'ymax']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomCrossbar(Map params) {
     this()
     this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
-    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
-    if (params.size != null) this.linewidth = params.size as BigDecimal
-    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
-    if (params.width != null) this.width = params.width as BigDecimal
-    if (params.fatten != null) this.fatten = params.fatten as BigDecimal
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as BigDecimal
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as BigDecimal
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as BigDecimal
+    }
+    if (params.width != null) {
+      this.width = params.width as BigDecimal
+    }
+    if (params.fatten != null) {
+      this.fatten = params.fatten as BigDecimal
+    }
     this.params = params
   }
 

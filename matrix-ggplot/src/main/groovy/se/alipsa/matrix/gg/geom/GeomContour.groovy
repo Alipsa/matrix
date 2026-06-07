@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - Or use stat_contour to compute from density
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomContour extends Geom {
 
   /** Line color */
@@ -42,19 +43,35 @@ class GeomContour extends Geom {
   GeomContour() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y', 'z']
-    defaultAes = [color: 'black', linewidth: 0.5] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 0.5]
   }
 
   GeomContour(Map params) {
     this()
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.bins != null) this.bins = params.bins as int
-    if (params.binwidth != null) this.binwidth = params.binwidth as Number
+    if (params.color) {
+      this.color = params.color as String
+    }
+    if (params.colour) {
+      this.color = params.colour as String
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.bins != null) {
+      this.bins = params.bins as int
+    }
+    if (params.binwidth != null) {
+      this.binwidth = params.binwidth as Number
+    }
     this.color = ColorUtil.normalizeColor(this.color)
     this.params = params
   }

@@ -61,7 +61,7 @@ class CoordSystemTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain bar rectangles")
+    assertTrue(content.contains('<rect'), 'Should contain bar rectangles')
 
     File outputFile = new File('build/coord_flip_horizontal_bar.svg')
     write(svg, outputFile)
@@ -91,7 +91,7 @@ class CoordSystemTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain point circles")
+    assertTrue(content.contains('<circle'), 'Should contain point circles')
 
     File outputFile = new File('build/coord_flip_scatter.svg')
     write(svg, outputFile)
@@ -545,7 +545,7 @@ class CoordSystemTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/coord_fixed_scatter.svg')
     write(svg, outputFile)
@@ -599,7 +599,7 @@ class CoordSystemTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/coord_fixed_example.svg')
     write(svg, outputFile)
@@ -631,7 +631,7 @@ class CoordSystemTest {
 
     // The chart should render without error and maintain aspect ratio
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     // Extract circle positions to verify scaling
     // With equal data ranges and ratio=1.0, the diagonal should be at 45 degrees
@@ -643,7 +643,7 @@ class CoordSystemTest {
     }
 
     // Should have 3 points
-    assertEquals(3, points.size(), "Should have 3 points")
+    assertEquals(3, points.size(), 'Should have 3 points')
 
     File outputFile = new File('build/coord_fixed_equal_scaling.svg')
     write(svg, outputFile)
@@ -682,8 +682,8 @@ class CoordSystemTest {
     String contentFixed = SvgWriter.toXml(svgFixed)
     String contentCartesian = SvgWriter.toXml(svgCartesian)
 
-    assertTrue(contentFixed.contains('<circle'), "Fixed should contain points")
-    assertTrue(contentCartesian.contains('<circle'), "Cartesian should contain points")
+    assertTrue(contentFixed.contains('<circle'), 'Fixed should contain points')
+    assertTrue(contentCartesian.contains('<circle'), 'Cartesian should contain points')
 
     File outputFixed = new File('build/coord_fixed_different_ranges.svg')
     File outputCartesian = new File('build/coord_cartesian_different_ranges.svg')
@@ -739,8 +739,8 @@ class CoordSystemTest {
     }
 
     // Both should have 2 points
-    assertEquals(2, points1.size(), "Ratio 1.0 should have 2 points")
-    assertEquals(2, points2.size(), "Ratio 2.0 should have 2 points")
+    assertEquals(2, points1.size(), 'Ratio 1.0 should have 2 points')
+    assertEquals(2, points2.size(), 'Ratio 2.0 should have 2 points')
 
     // With different ratios, the x dimension should be scaled differently
     // The aspect ratio adjustment modifies the effective width to maintain the ratio
@@ -784,7 +784,7 @@ class CoordSystemTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('<circle'), 'Should contain points')
 
     File outputFile = new File('build/coord_fixed_with_limits.svg')
     write(svg, outputFile)
@@ -839,8 +839,8 @@ class CoordSystemTest {
     }
 
     // Both should have 2 points
-    assertEquals(2, pointsNoLimits.size(), "No limits should have 2 points")
-    assertEquals(2, pointsWithLimits.size(), "With limits should have 2 points")
+    assertEquals(2, pointsNoLimits.size(), 'No limits should have 2 points')
+    assertEquals(2, pointsWithLimits.size(), 'With limits should have 2 points')
 
     // The scaling should be different because the x range is different
     if (pointsNoLimits.size() == 2 && pointsWithLimits.size() == 2) {

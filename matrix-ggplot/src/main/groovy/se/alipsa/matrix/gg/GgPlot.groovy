@@ -177,6 +177,7 @@ import se.alipsa.matrix.gg.theme.Themes
  * An api very similar to ggplot2 making ports from R code using ggplot2 simple.
  */
 @CompileStatic
+@SuppressWarnings(['ClassForName', 'ClassSize', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'MethodCount', 'MethodName', 'UnnecessaryDefInFieldDeclaration', 'UnnecessaryElseStatement'])
 class GgPlot {
 
   /** Constants for convenience when converting R code */
@@ -219,6 +220,7 @@ class GgPlot {
   // ============ Quick plot ============
 
   /** Geom name to constructor mapping for qplot geom inference. */
+  @SuppressWarnings('UnnecessaryCast')
   private static final Map<String, Closure<Geom>> GEOM_FACTORIES = (Map<String, Closure<Geom>>) [
       point    : { Map p -> new GeomPoint(p) },
       line     : { Map p -> new GeomLine(p) },
@@ -289,14 +291,28 @@ class GgPlot {
 
     // Build aesthetics from recognized aes params
     Map aesParams = [x: xCol]
-    if (yCol) aesParams.y = yCol
+    if (yCol) {
+      aesParams.y = yCol
+    }
     def colorCol = params.color ?: params.colour ?: params.col
-    if (colorCol != null) aesParams.color = colorCol
-    if (params.fill) aesParams.fill = params.fill
-    if (params.size) aesParams.size = params.size
-    if (params.shape) aesParams.shape = params.shape
-    if (params.alpha != null) aesParams.alpha = params.alpha
-    if (params.linetype) aesParams.linetype = params.linetype
+    if (colorCol != null) {
+      aesParams.color = colorCol
+    }
+    if (params.fill) {
+      aesParams.fill = params.fill
+    }
+    if (params.size) {
+      aesParams.size = params.size
+    }
+    if (params.shape) {
+      aesParams.shape = params.shape
+    }
+    if (params.alpha != null) {
+      aesParams.alpha = params.alpha
+    }
+    if (params.linetype) {
+      aesParams.linetype = params.linetype
+    }
     Aes mapping = new Aes(aesParams)
 
     // Build geom params (e.g. bins for histogram)
@@ -317,9 +333,15 @@ class GgPlot {
 
     // Assemble chart
     GgChart chart = new GgChart(data, mapping) + geom
-    if (params.title) chart = chart + ggtitle(params.title as String)
-    if (params.xlab) chart = chart + xlab(params.xlab as String)
-    if (params.ylab) chart = chart + ylab(params.ylab as String)
+    if (params.title) {
+      chart = chart + ggtitle(params.title as String)
+    }
+    if (params.xlab) {
+      chart = chart + xlab(params.xlab as String)
+    }
+    if (params.ylab) {
+      chart = chart + ylab(params.ylab as String)
+    }
     chart
   }
 
@@ -385,9 +407,15 @@ class GgPlot {
     }
     Geom geom = inferGeom(safeParams.geom as String, data, xCol, mapping.y as String, geomParams)
     GgChart chart = new GgChart(data, mapping) + geom
-    if (safeParams.title) chart = chart + ggtitle(safeParams.title as String)
-    if (safeParams.xlab) chart = chart + xlab(safeParams.xlab as String)
-    if (safeParams.ylab) chart = chart + ylab(safeParams.ylab as String)
+    if (safeParams.title) {
+      chart = chart + ggtitle(safeParams.title as String)
+    }
+    if (safeParams.xlab) {
+      chart = chart + xlab(safeParams.xlab as String)
+    }
+    if (safeParams.ylab) {
+      chart = chart + ylab(safeParams.ylab as String)
+    }
     chart
   }
 
@@ -680,7 +708,7 @@ class GgPlot {
   static List<Number> expansion(Map params = [:]) {
     Number mult = params.mult as Number
     Number add = params.add as Number
-    return [mult, add] as List<Number>
+    return [mult, add]
   }
 
   /**
@@ -691,7 +719,7 @@ class GgPlot {
    * @return list with [mult, add]
    */
   static List<Number> expansion(Number mult, Number add = null) {
-    return [mult, add] as List<Number>
+    return [mult, add]
   }
 
   /**
@@ -701,7 +729,9 @@ class GgPlot {
    * @return list of variable names
    */
   static List<String> vars(Object... vars) {
-    if (vars == null) return []
+    if (vars == null) {
+      return []
+    }
     List<Object> flattened = []
     vars.each { value ->
       if (value instanceof Collection) {
@@ -710,7 +740,7 @@ class GgPlot {
         flattened << value
       }
     }
-    return flattened.findAll { it != null }.collect { it.toString() }
+    return flattened.findAll { it != null }*.toString()
   }
 
   /**
@@ -813,9 +843,15 @@ class GgPlot {
    */
   static Label labs(Map params) {
     Label label = new Label()
-    if (params.title) label.title = params.title
-    if (params.subtitle) label.subTitle = params.subtitle
-    if (params.caption) label.caption = params.caption
+    if (params.title) {
+      label.title = params.title
+    }
+    if (params.subtitle) {
+      label.subTitle = params.subtitle
+    }
+    if (params.caption) {
+      label.caption = params.caption
+    }
     if (params.containsKey('x')) {
       label.x = params.x?.toString()
       label.xSet = true
@@ -824,8 +860,12 @@ class GgPlot {
       label.y = params.y?.toString()
       label.ySet = true
     }
-    if (params.colour || params.color) label.legendTitle = params.colour ?: params.color
-    if (params.fill) label.legendTitle = params.fill
+    if (params.colour || params.color) {
+      label.legendTitle = params.colour ?: params.color
+    }
+    if (params.fill) {
+      label.legendTitle = params.fill
+    }
     return label
   }
 
@@ -917,8 +957,12 @@ class GgPlot {
    * @param params values for width, height, and quality (for jpg) are supported
    */
   static void ggsave(Map params = [:], GgChart chart, String filePath) {
-    if (params.width) chart.width = params.width as int
-    if (params.height) chart.height = params.height as int
+    if (params.width) {
+      chart.width = params.width as int
+    }
+    if (params.height) {
+      chart.height = params.height as int
+    }
     BigDecimal quality = (params.quality ?: 1.0) as BigDecimal
     saveBasedOnExtension(chart.render(), filePath, quality)
   }
@@ -934,7 +978,7 @@ class GgPlot {
    */
   static void ggsave(String filePath, Svg... svgs) {
     if (svgs == null || svgs.length == 0) {
-      throw new IllegalArgumentException("At least one SVG object must be provided")
+      throw new IllegalArgumentException('At least one SVG object must be provided')
     }
 
     Svg finalSvg
@@ -974,7 +1018,7 @@ class GgPlot {
 // Extract and validate file extension
     int dotIndex = filePath.lastIndexOf('.')
     if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
-      throw new IllegalArgumentException("File path must have a valid extension (.svg, .png or .jpg)")
+      throw new IllegalArgumentException('File path must have a valid extension (.svg, .png or .jpg)')
     }
     String extension = filePath.substring(dotIndex + 1).toLowerCase()
     extension
@@ -992,11 +1036,11 @@ class GgPlot {
    */
   static void ggsave(String filePath, GgChart... charts) {
     if (charts == null || charts.length == 0) {
-      throw new IllegalArgumentException("At least one GgChart object must be provided")
+      throw new IllegalArgumentException('At least one GgChart object must be provided')
     }
 
     // Render each chart to SVG
-    Svg[] svgs = charts.collect { it.render() } as Svg[]
+    Svg[] svgs = charts*.render() as Svg[]
 
     // Delegate to SVG version
     ggsave(filePath, svgs)
@@ -1373,7 +1417,7 @@ class GgPlot {
    */
   static Guide guide_custom(Closure renderClosure, Map params = [:]) {
     if (renderClosure == null) {
-      throw new IllegalArgumentException("guide_custom requires a renderClosure parameter")
+      throw new IllegalArgumentException('guide_custom requires a renderClosure parameter')
     }
     return new Guide('custom', [renderClosure: renderClosure] + params)
   }
@@ -1800,8 +1844,8 @@ class GgPlot {
    * @param clip : Should drawing be clipped to the extent of the plot panel? A setting of "on"
    * (the default) means yes, and a setting of "off" means no.
    */
-  static CoordPolar coord_polar(String theta = "x", BigDecimal start = 0, Integer direction = 1, String clip = "on") {
-    return new CoordPolar(theta, start, 1 == direction, "on" == clip)
+  static CoordPolar coord_polar(String theta = 'x', BigDecimal start = 0, Integer direction = 1, String clip = 'on') {
+    return new CoordPolar(theta, start, 1 == direction, 'on' == clip)
   }
 
   static CoordPolar coord_polar(Map params) {
@@ -3867,7 +3911,9 @@ class GgPlot {
    */
   static ScaleColorGradient scale_color_gradient2(Map params = [:]) {
     // gradient2 is typically a diverging scale
-    if (!params.mid) params.mid = 'white'
+    if (!params.mid) {
+      params.mid = 'white'
+    }
     return new ScaleColorGradient(params)
   }
 
@@ -4810,7 +4856,7 @@ class GgPlot {
    */
   private static List<se.alipsa.matrix.charm.Chart> compileCharts(List<?> rawCharts) {
     if (rawCharts == null) {
-      throw new IllegalArgumentException("plot_grid requires a non-null list of charts")
+      throw new IllegalArgumentException('plot_grid requires a non-null list of charts')
     }
     se.alipsa.matrix.gg.bridge.GgCharmCompiler compiler = new se.alipsa.matrix.gg.bridge.GgCharmCompiler()
     rawCharts.collect { Object item ->

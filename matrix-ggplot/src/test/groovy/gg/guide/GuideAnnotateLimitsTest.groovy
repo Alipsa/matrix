@@ -237,12 +237,12 @@ class GuideAnnotateLimitsTest {
 
     // The chart should render without errors
     Svg svgOverlap = chartOverlap.render()
-    assertNotNull(svgOverlap, "Chart with check.overlap should render successfully")
+    assertNotNull(svgOverlap, 'Chart with check.overlap should render successfully')
 
     String contentOverlap = SvgWriter.toXml(svgOverlap)
     // Verify basic structure
-    assertTrue(contentOverlap.contains('<svg'), "Should contain SVG root element")
-    assertTrue(contentOverlap.contains('id="x-axis"'), "Should contain x-axis")
+    assertTrue(contentOverlap.contains('<svg'), 'Should contain SVG root element')
+    assertTrue(contentOverlap.contains('id="x-axis"'), 'Should contain x-axis')
 
     // The feature is working if the SVG renders correctly with the guide parameters
     // (Actual label reduction is implementation-dependent and tested via visual inspection)
@@ -282,9 +282,9 @@ class GuideAnnotateLimitsTest {
     // Should render successfully with SVG root element
     assertTrue(content.contains('<svg'))
     // Since guide_bins currently renders as legend, verify legend is present
-    assertTrue(content.contains('id="legend"'), "guide_bins should render a legend (current implementation)")
+    assertTrue(content.contains('id="legend"'), 'guide_bins should render a legend (current implementation)')
     // Verify the chart has points
-    assertTrue(content.contains('<circle'), "Chart should contain point elements")
+    assertTrue(content.contains('<circle'), 'Chart should contain point elements')
   }
 
   @Test
@@ -309,14 +309,14 @@ class GuideAnnotateLimitsTest {
     String content = SvgWriter.toXml(svg)
 
     // Verify x-axis labels are rotated
-    assertTrue(content.contains('rotate(45'), "X-axis labels should be rotated 45 degrees")
+    assertTrue(content.contains('rotate(45'), 'X-axis labels should be rotated 45 degrees')
     // Verify a legend is present (color aesthetic)
-    assertTrue(content.contains('id="legend"'), "Legend should be present for color aesthetic")
+    assertTrue(content.contains('id="legend"'), 'Legend should be present for color aesthetic')
     // The legend should show color categories (A, B, C)
     assertTrue(content.contains('>A<') || content.contains('>B<') || content.contains('>C<'),
-        "Legend should contain category labels")
+        'Legend should contain category labels')
     // Verify that the size scale is not shown (guide_none was used)
     // (Can't easily verify absence without more complex parsing, but rendering should work)
-    assertTrue(content.contains('<svg'), "Chart should render successfully")
+    assertTrue(content.contains('<svg'), 'Chart should render successfully')
   }
 }

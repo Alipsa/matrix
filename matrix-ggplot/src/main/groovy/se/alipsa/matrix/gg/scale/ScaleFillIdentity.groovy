@@ -26,14 +26,20 @@ class ScaleFillIdentity extends Scale {
     if (params.naValue) {
       this.naValue = ColorUtil.normalizeColor(params.naValue as String) ?: params.naValue as String
     }
-    if (params.name) this.name = params.name as String
-    if (params.guide) this.guide = params.guide
+    if (params.name) {
+      this.name = params.name as String
+    }
+    if (params.guide) {
+      this.guide = params.guide
+    }
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    String colorValue = value.toString()
+    if (value == null) {
+      return naValue
+    }
+    String colorValue = value
     return ColorUtil.normalizeColor(colorValue) ?: colorValue
   }
 

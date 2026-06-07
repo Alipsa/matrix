@@ -39,7 +39,7 @@ class GgPositionTest {
     Aes aes = new Aes(x: 'x', y: 'y', group: 'group')
 
     Matrix result = GgPosition.dodge(data, aes, [width: 0.9])
-    List<Number> xValues = result['x'] as List<Number>
+    List<Number> xValues = result['x']
 
     assertEquals(0.775d, xValues[0] as double, 1e-9)
     assertEquals(1.225d, xValues[1] as double, 1e-9)
@@ -127,8 +127,8 @@ class GgPositionTest {
     Aes aes = new Aes(x: 'x', y: 'y', group: 'group')
 
     Matrix result = GgPosition.nudge(data, aes, [x: 0.5, y: -1.0])
-    List<Number> xValues = result['x'] as List<Number>
-    List<Number> yValues = result['y'] as List<Number>
+    List<Number> xValues = result['x']
+    List<Number> yValues = result['y']
 
     assertEquals(1.5d, xValues[0] as double, 1e-9)
     assertEquals(2.5d, xValues[2] as double, 1e-9)
@@ -158,8 +158,8 @@ class GgPositionTest {
       expected << [(row['x'] as double) + jitterX, (row['y'] as double) + jitterY]
     }
 
-    List<Number> xValues = result['x'] as List<Number>
-    List<Number> yValues = result['y'] as List<Number>
+    List<Number> xValues = result['x']
+    List<Number> yValues = result['y']
 
     assertEquals(expected[0][0], xValues[0] as double, 1e-9)
     assertEquals(expected[0][1], yValues[0] as double, 1e-9)
@@ -213,10 +213,10 @@ class GgPositionTest {
 
     // Each category should have numeric xmin/xmax
     result.each { row ->
-      assertNotNull(row['xmin'], "xmin should not be null")
-      assertNotNull(row['xmax'], "xmax should not be null")
-      assertTrue(row['xmin'] instanceof Number, "xmin should be numeric")
-      assertTrue(row['xmax'] instanceof Number, "xmax should be numeric")
+      assertNotNull(row['xmin'], 'xmin should not be null')
+      assertNotNull(row['xmax'], 'xmax should not be null')
+      assertTrue(row['xmin'] instanceof Number, 'xmin should be numeric')
+      assertTrue(row['xmax'] instanceof Number, 'xmax should be numeric')
     }
   }
 
@@ -239,7 +239,7 @@ class GgPositionTest {
     // After dodging, the two boxes should have different x positions
     double x1 = (result['x'][0] as Number).doubleValue()
     double x2 = (result['x'][1] as Number).doubleValue()
-    assertTrue(Math.abs(x1 - x2) > 0.001, "Overlapping intervals should be dodged to different positions")
+    assertTrue(Math.abs(x1 - x2) > 0.001, 'Overlapping intervals should be dodged to different positions')
   }
 
   @Test

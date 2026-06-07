@@ -11,6 +11,7 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Tests for CSS attributes in faceted charts.
  */
+@SuppressWarnings('UnnecessaryGString')
 class FacetedCssAttributesTest {
 
   @Test
@@ -36,7 +37,7 @@ class FacetedCssAttributesTest {
 
     // Should contain panel coordinates in IDs
     assertTrue(svgString.contains('id="gg-panel-0-0-layer-0-point-'),
-        "SVG should contain panel coordinates in IDs for facet_wrap")
+        'SVG should contain panel coordinates in IDs for facet_wrap')
   }
 
   @Test
@@ -64,7 +65,7 @@ class FacetedCssAttributesTest {
 
     // Should contain panel coordinates
     assertTrue(svgString.contains('id="gg-panel-') && svgString.contains('-layer-0-point-'),
-        "SVG should contain panel coordinates in IDs for facet_grid")
+        'SVG should contain panel coordinates in IDs for facet_grid')
   }
 
   @Test
@@ -88,7 +89,7 @@ class FacetedCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('id="custom-panel-'),
-        "SVG should use custom prefix in faceted charts")
+        'SVG should use custom prefix in faceted charts')
   }
 
   @Test
@@ -113,7 +114,7 @@ class FacetedCssAttributesTest {
     String svgString = svg.toXml()
 
     // Extract all IDs
-    def idPattern = ~/id="([^"]+)"/
+    def idPattern = ~/id=['"]([^'"]+)['"]/
     def ids = []
     svgString.findAll(idPattern) { match ->
       ids << match[1]
@@ -153,8 +154,8 @@ class FacetedCssAttributesTest {
     String svgString = svg.toXml()
 
     assertTrue(svgString.contains('data-panel="0-0"'),
-        "Faceted charts should include data-panel for first panel")
+        'Faceted charts should include data-panel for first panel')
     assertTrue(svgString.contains('data-panel="0-1"') || svgString.contains('data-panel="1-0"'),
-        "Faceted charts should include data-panel for additional panels")
+        'Faceted charts should include data-panel for additional panels')
   }
 }

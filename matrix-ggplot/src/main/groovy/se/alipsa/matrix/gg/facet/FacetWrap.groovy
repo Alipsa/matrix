@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.Matrix
  *     facet_wrap('category', ncol: 2)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryElseStatement'])
 class FacetWrap extends Facet {
 
   /** The faceting variable(s) */
@@ -53,18 +54,26 @@ class FacetWrap extends Facet {
     } else if (params.facets instanceof List) {
       this.facets = params.facets as List<String>
     }
-    if (params.ncol != null) this.ncol = params.ncol as Integer
-    if (params.nrow != null) this.nrow = params.nrow as Integer
+    if (params.ncol != null) {
+      this.ncol = params.ncol as Integer
+    }
+    if (params.nrow != null) {
+      this.nrow = params.nrow as Integer
+    }
     this.scales = params.scales as String ?: this.scales
     this.dir = params.dir as String ?: this.dir
-    if (params.containsKey('drop')) this.drop = params.drop as boolean
+    if (params.containsKey('drop')) {
+      this.drop = params.drop as boolean
+    }
     if (params.labeller) {
       // Accept String, gg Labeller, and charm Labeller objects
       if (params.labeller instanceof se.alipsa.matrix.charm.facet.Labeller || params.labeller instanceof String) {
         this.labeller = params.labeller
       }
     }
-    if (params.containsKey('strip')) this.strip = params.strip as boolean
+    if (params.containsKey('strip')) {
+      this.strip = params.strip as boolean
+    }
   }
 
   @Override

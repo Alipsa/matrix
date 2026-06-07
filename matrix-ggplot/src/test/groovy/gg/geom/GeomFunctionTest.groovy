@@ -52,7 +52,9 @@ class GeomFunctionTest {
       }
     }
 
-    if (pathCoords.isEmpty()) return []
+    if (pathCoords.isEmpty()) {
+      return []
+    }
 
     // Return coordinates from the path with the most points (the function curve)
     return pathCoords.values().max { it.size() }
@@ -74,7 +76,7 @@ class GeomFunctionTest {
 
     // Extract and verify path coordinates
     List<double[]> coords = extractPathCoordinates(svgContent)
-    assertEquals(101, coords.size(), "Expected 101 points (default n=101)")
+    assertEquals(101, coords.size(), 'Expected 101 points (default n=101)')
 
     // The coordinates in SVG are already transformed through scales and coord system
     // We can verify that we have a reasonable distribution of y values for a sine wave
@@ -308,7 +310,7 @@ class GeomFunctionTest {
     // Verify we have variation in y values (not a flat line)
     double minY = yValues.min()
     double maxY = yValues.max()
-    assertTrue(maxY - minY > 1, "Cubic function should show significant variation in y values")
+    assertTrue(maxY - minY > 1, 'Cubic function should show significant variation in y values')
   }
 
   @Test
@@ -384,7 +386,7 @@ class GeomFunctionTest {
 
     // Verify number of points matches 'n' parameter
     List<double[]> coords = extractPathCoordinates(svgContent)
-    assertEquals(20, coords.size(), "Expected exactly 20 points as specified by n parameter")
+    assertEquals(20, coords.size(), 'Expected exactly 20 points as specified by n parameter')
   }
 
   @Test
@@ -404,7 +406,7 @@ class GeomFunctionTest {
 
     // Verify number of points matches 'n' parameter
     List<double[]> coords = extractPathCoordinates(svgContent)
-    assertEquals(500, coords.size(), "Expected exactly 500 points as specified by n parameter")
+    assertEquals(500, coords.size(), 'Expected exactly 500 points as specified by n parameter')
   }
 
   @Test

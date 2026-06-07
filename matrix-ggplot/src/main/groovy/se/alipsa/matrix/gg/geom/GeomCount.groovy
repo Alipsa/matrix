@@ -16,6 +16,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * The n (count) aesthetic is computed automatically.
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomCount extends Geom {
 
   /** Point color */
@@ -42,7 +43,7 @@ class GeomCount extends Geom {
   GeomCount() {
     defaultStat = StatType.IDENTITY  // We compute counts internally
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'steelblue', color: 'black', alpha: 0.7] as Map<String, Object>
+    defaultAes = [fill: 'steelblue', color: 'black', alpha: 0.7]
   }
 
   GeomCount(Map params) {

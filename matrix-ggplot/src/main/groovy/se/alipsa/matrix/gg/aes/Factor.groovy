@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
  * Converts values to Strings and adds a discrete column to the data.
  */
 @CompileStatic
+@SuppressWarnings('UnnecessaryGString')
 class Factor implements CharmExpression {
   private static final String DEFAULT_NAME = 'factor'
 
@@ -53,7 +54,7 @@ class Factor implements CharmExpression {
       }
       colName = "${colName}_${suffix}"
     }
-    data.addColumn(colName, values.collect { it?.toString() })
+    data.addColumn(colName, values*.toString())
     return colName
   }
 
@@ -74,7 +75,7 @@ class Factor implements CharmExpression {
       return list
     }
     if (value instanceof CharSequence && data.columnNames().contains(value.toString())) {
-      return data[value.toString()] as List<?>
+      return data[value.toString()]
     }
     int rows = data.rowCount()
     List<Object> result = new ArrayList<>(rows)

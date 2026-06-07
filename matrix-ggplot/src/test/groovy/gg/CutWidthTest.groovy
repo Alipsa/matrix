@@ -29,7 +29,7 @@ class CutWidthTest {
 
     def cutWidth = new CutWidth('x', 1)
     String colName = cutWidth.addToMatrix(data)
-    def labels = data[colName] as List<String>
+    def labels = data[colName]
 
     // For closed-right, value 2.5 is included in the bin ending at 2.5 (right boundary included).
     // The first bin uses [a,b] notation (both closed) as a special case to include the minimum.
@@ -55,7 +55,7 @@ class CutWidthTest {
 
     def cutWidth = new CutWidth('x', 1, null, null, false)
     String colName = cutWidth.addToMatrix(data)
-    def labels = data[colName] as List<String>
+    def labels = data[colName]
 
     assertEquals('[2.5,3.5)', labels[1], '2.5 should be in the upper bin')
     assertEquals('[3.5,4.5)', labels[2], '3.5 should be in the upper bin')
@@ -75,7 +75,7 @@ class CutWidthTest {
     // Verify all values get binned (no null labels)
     assertEquals(7, labels.size())
     labels.each { label ->
-      assert label != null : "All values should be binned"
+      assert label != null : 'All values should be binned'
     }
 
     // Verify bin format
@@ -124,8 +124,8 @@ class CutWidthTest {
     assertEquals(6, labels.size())
     // All values should be binned
     labels.each { label ->
-      assert label != null : "All values should be binned"
-      assert label.contains(',') : "Label should contain a comma"
+      assert label != null : 'All values should be binned'
+      assert label.contains(',') : 'Label should contain a comma'
     }
 
     // Check first and last
@@ -146,7 +146,7 @@ class CutWidthTest {
 
     assertEquals(6, labels.size())
     labels.each { label ->
-      assert label != null : "All values should be binned"
+      assert label != null : 'All values should be binned'
     }
 
     // Verify negative bins are formatted correctly
@@ -167,7 +167,7 @@ class CutWidthTest {
 
     assertEquals(6, labels.size())
     labels.each { label ->
-      assert label != null : "All values should be binned"
+      assert label != null : 'All values should be binned'
     }
 
     // With width 0.5, we should have bins like [0.75,1.25], (1.25,1.75], etc.
@@ -230,7 +230,7 @@ class CutWidthTest {
 
     assertEquals(4, labels.size())
     labels.each { label ->
-      assert label != null : "All values should be binned without error"
+      assert label != null : 'All values should be binned without error'
     }
   }
 
@@ -255,8 +255,8 @@ class CutWidthTest {
     // If we get here without error, binIndex array access works
     assertEquals(100, labels.size())
     labels.each { label ->
-      assert label != null : "All 100 values should be successfully binned"
-      assert label.contains(',') : "Each label should be a valid interval"
+      assert label != null : 'All 100 values should be successfully binned'
+      assert label.contains(',') : 'Each label should be a valid interval'
     }
   }
 }

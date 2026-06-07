@@ -78,8 +78,8 @@ class GeomBarColTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements")
-    assertTrue(content.contains('Simple Bar Chart'), "Should contain title")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements')
+    assertTrue(content.contains('Simple Bar Chart'), 'Should contain title')
 
     // Write for visual inspection
     File outputFile = new File('build/simple_bar_chart.svg')
@@ -108,8 +108,8 @@ class GeomBarColTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill=\"steelblue\"'), "Should have steelblue fill")
-    assertTrue(content.contains('stroke=\"black\"'), "Should have black stroke")
+    assertTrue(content.contains('fill=\"steelblue\"'), 'Should have steelblue fill')
+    assertTrue(content.contains('stroke=\"black\"'), 'Should have black stroke')
   }
 
   @Slow
@@ -132,7 +132,7 @@ class GeomBarColTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill-opacity'), "Should have fill-opacity attribute")
+    assertTrue(content.contains('fill-opacity'), 'Should have fill-opacity attribute')
   }
 
   // ============== GeomCol Tests ==============
@@ -185,8 +185,8 @@ class GeomBarColTest {
     assertNotNull(svg)
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<rect'), "Should contain rect elements")
-    assertTrue(content.contains('Simple Column Chart'), "Should contain title")
+    assertTrue(content.contains('<rect'), 'Should contain rect elements')
+    assertTrue(content.contains('Simple Column Chart'), 'Should contain title')
 
     // Write for visual inspection
     File outputFile = new File('build/simple_column_chart.svg')
@@ -217,8 +217,8 @@ class GeomBarColTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    assertTrue(content.contains('fill=\"forestgreen\"'), "Should have forestgreen fill")
-    assertTrue(content.contains('stroke=\"darkgreen\"'), "Should have darkgreen stroke")
+    assertTrue(content.contains('fill=\"forestgreen\"'), 'Should have forestgreen fill')
+    assertTrue(content.contains('stroke=\"darkgreen\"'), 'Should have darkgreen stroke')
 
     File outputFile = new File('build/colored_column_chart.svg')
     write(svg, outputFile)

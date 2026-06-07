@@ -13,14 +13,14 @@ class ScaleUtilsTest extends BaseTest {
 
   @Test
   void testCoerceToNumberWithBigDecimal() {
-    BigDecimal result = ScaleUtils.coerceToNumber(new BigDecimal('42.5'))
-    assertEquals(new BigDecimal('42.5'), result)
+    BigDecimal result = ScaleUtils.coerceToNumber(42.5G)
+    assertEquals(42.5G, result)
   }
 
   @Test
   void testCoerceToNumberWithInteger() {
     BigDecimal result = ScaleUtils.coerceToNumber(42)
-    assertEquals(new BigDecimal('42'), result)
+    assertEquals(42G, result)
   }
 
   @Test
@@ -32,7 +32,7 @@ class ScaleUtilsTest extends BaseTest {
   @Test
   void testCoerceToNumberWithString() {
     BigDecimal result = ScaleUtils.coerceToNumber('42.5')
-    assertEquals(new BigDecimal('42.5'), result)
+    assertEquals(42.5G, result)
   }
 
   @Test

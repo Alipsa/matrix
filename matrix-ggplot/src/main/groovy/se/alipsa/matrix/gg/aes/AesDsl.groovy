@@ -16,6 +16,7 @@ import groovy.transform.CompileStatic
  * strings (for example {@code 'mpg'}).</p>
  */
 @CompileStatic
+@SuppressWarnings(['CyclomaticComplexity', 'PropertyName'])
 class AesDsl {
 
   // Known aesthetics kept as explicit fields for IDE completion.
@@ -142,21 +143,51 @@ class AesDsl {
   @CompileDynamic
   Aes toAes() {
     Aes aes = new Aes()
-    if (this.@x != null) aes.x = this.@x
-    if (this.@y != null) aes.y = this.@y
-    if (this.@color != null) aes.color = this.@color
-    if (this.@fill != null) aes.fill = this.@fill
-    if (this.@size != null) aes.size = this.@size
-    if (this.@shape != null) aes.shape = this.@shape
-    if (this.@alpha != null) aes.alpha = this.@alpha
-    if (this.@linetype != null) aes.linetype = this.@linetype
-    if (this.@linewidth != null) aes.linewidth = this.@linewidth
-    if (this.@group != null) aes.group = this.@group
-    if (this.@label != null) aes.label = this.@label
-    if (this.@tooltip != null) aes.tooltip = this.@tooltip
-    if (this.@weight != null) aes.weight = this.@weight
-    if (this.@geometry != null) aes.geometry = this.@geometry
-    if (this.@map_id != null) aes.map_id = this.@map_id
+    if (this.@x != null) {
+      aes.x = this.@x
+    }
+    if (this.@y != null) {
+      aes.y = this.@y
+    }
+    if (this.@color != null) {
+      aes.color = this.@color
+    }
+    if (this.@fill != null) {
+      aes.fill = this.@fill
+    }
+    if (this.@size != null) {
+      aes.size = this.@size
+    }
+    if (this.@shape != null) {
+      aes.shape = this.@shape
+    }
+    if (this.@alpha != null) {
+      aes.alpha = this.@alpha
+    }
+    if (this.@linetype != null) {
+      aes.linetype = this.@linetype
+    }
+    if (this.@linewidth != null) {
+      aes.linewidth = this.@linewidth
+    }
+    if (this.@group != null) {
+      aes.group = this.@group
+    }
+    if (this.@label != null) {
+      aes.label = this.@label
+    }
+    if (this.@tooltip != null) {
+      aes.tooltip = this.@tooltip
+    }
+    if (this.@weight != null) {
+      aes.weight = this.@weight
+    }
+    if (this.@geometry != null) {
+      aes.geometry = this.@geometry
+    }
+    if (this.@map_id != null) {
+      aes.map_id = this.@map_id
+    }
     aes
   }
 

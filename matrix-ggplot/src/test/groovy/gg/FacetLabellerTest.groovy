@@ -13,6 +13,7 @@ import se.alipsa.matrix.gg.facet.Labeller
 /**
  * Tests for facet labeller functions.
  */
+@SuppressWarnings('UnnecessaryCallForLastElement')
 class FacetLabellerTest {
 
   @Test
@@ -97,10 +98,10 @@ class FacetLabellerTest {
 
     // Long label - should wrap
     String longLabel = labeller.label([cat: 'This is a very long label that should wrap'])
-    assertTrue(longLabel.contains('\n'), "Long label should be wrapped")
+    assertTrue(longLabel.contains('\n'), 'Long label should be wrapped')
     // Each line should be <= 10 characters (approximately, depending on word breaks)
     String[] lines = longLabel.split('\n')
-    assertTrue(lines.length > 1, "Long label should be split into multiple lines")
+    assertTrue(lines.length > 1, 'Long label should be split into multiple lines')
   }
 
   @Test
@@ -109,13 +110,13 @@ class FacetLabellerTest {
 
     // Word longer than width - should break the word
     String longWord = labeller.label([cat: 'Supercalifragilisticexpialidocious'])
-    assertTrue(longWord.contains('\n'), "Long word should be broken into chunks")
+    assertTrue(longWord.contains('\n'), 'Long word should be broken into chunks')
     String[] lines = longWord.split('\n')
     // Each line should be exactly 10 characters (except possibly the last one)
     for (int i = 0; i < lines.length - 1; i++) {
       assertTrue(lines[i].length() <= 10, "Line ${i} should be <= 10 characters: '${lines[i]}'")
     }
-    assertTrue(lines[lines.length - 1].length() <= 10, "Last line should be <= 10 characters")
+    assertTrue(lines[lines.length - 1].length() <= 10, 'Last line should be <= 10 characters')
   }
 
   @Test
@@ -124,7 +125,7 @@ class FacetLabellerTest {
 
     // Mix of normal words and long words
     String mixed = labeller.label([cat: 'Short words and Supercalifragilisticexpialidocious combined'])
-    assertTrue(mixed.contains('\n'), "Mixed content should wrap")
+    assertTrue(mixed.contains('\n'), 'Mixed content should wrap')
     String[] lines = mixed.split('\n')
     // Verify no line exceeds the width
     for (int i = 0; i < lines.length; i++) {
@@ -306,7 +307,7 @@ class FacetLabellerTest {
     assertTrue(content.contains('cyl: 4') || content.contains('cyl: 6'), "Row labels should have 'cyl:' prefix")
 
     // gear should NOT have "gear:" prefix (just values)
-    assertTrue(content.contains('>3<') || content.contains('>4<'), "Column labels should be value only")
+    assertTrue(content.contains('>3<') || content.contains('>4<'), 'Column labels should be value only')
   }
 
   @Test
@@ -348,10 +349,10 @@ class FacetLabellerTest {
         facet_wrap(facets: 'category', labeller: label_wrap_gen(15))
 
     Svg svg = chart.render()
-    assertNotNull(svg, "Chart should render successfully")
+    assertNotNull(svg, 'Chart should render successfully')
 
     String content = SvgWriter.toXml(svg)
-    assertTrue(content.contains('<svg'), "Should contain SVG root element")
+    assertTrue(content.contains('<svg'), 'Should contain SVG root element')
     // Note: SVG text wrapping is complex and depends on implementation
     // This test just verifies the labeller is applied without errors
   }

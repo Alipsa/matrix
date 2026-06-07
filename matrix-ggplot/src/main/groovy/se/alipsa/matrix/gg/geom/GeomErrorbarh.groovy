@@ -13,6 +13,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * Optional aesthetics: color, size/linewidth, linetype, alpha, height
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomErrorbarh extends Geom {
 
   /** Bar height as fraction of bandwidth (discrete) or data units (continuous) */
@@ -33,18 +34,32 @@ class GeomErrorbarh extends Geom {
   GeomErrorbarh() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['y', 'xmin', 'xmax']
-    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0] as Map<String, Object>
+    defaultAes = [color: 'black', linewidth: 1, alpha: 1.0]
   }
 
   GeomErrorbarh(Map params) {
     this()
-    if (params.height != null) this.height = params.height as Number
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.height != null) {
+      this.height = params.height as Number
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
     this.params = params
   }
 

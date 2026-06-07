@@ -273,30 +273,60 @@ class Aes {
   Aes(Map params) {
     // Handle both old-style (xCol, yCol) and new-style (x, y) parameter names
     def xValue = firstNonNull([params.x, params.xCol])
-    if (xValue != null) assignAesthetic('x', xValue)
+    if (xValue != null) {
+      assignAesthetic('x', xValue)
+    }
 
     def yValue = firstNonNull([params.y, params.yCol])
-    if (yValue != null) assignAesthetic('y', yValue)
+    if (yValue != null) {
+      assignAesthetic('y', yValue)
+    }
 
     def colorValue = firstNonNull([params.color, params.col, params.colour, params.colorCol])
-    if (colorValue != null) assignAesthetic('color', colorValue)
-    if (params.fill != null) assignAesthetic('fill', params.fill)
-    if (params.size != null) assignAesthetic('size', params.size)
-    if (params.shape != null) assignAesthetic('shape', params.shape)
-    if (params.alpha != null) assignAesthetic('alpha', params.alpha)
-    if (params.linetype != null) assignAesthetic('linetype', params.linetype)
+    if (colorValue != null) {
+      assignAesthetic('color', colorValue)
+    }
+    if (params.fill != null) {
+      assignAesthetic('fill', params.fill)
+    }
+    if (params.size != null) {
+      assignAesthetic('size', params.size)
+    }
+    if (params.shape != null) {
+      assignAesthetic('shape', params.shape)
+    }
+    if (params.alpha != null) {
+      assignAesthetic('alpha', params.alpha)
+    }
+    if (params.linetype != null) {
+      assignAesthetic('linetype', params.linetype)
+    }
 
     def linewidthValue = firstNonNull([params.linewidth, params.lineWidth])
-    if (linewidthValue != null) assignAesthetic('linewidth', linewidthValue)
+    if (linewidthValue != null) {
+      assignAesthetic('linewidth', linewidthValue)
+    }
 
-    if (params.group != null) assignAesthetic('group', params.group)
-    if (params.label != null) assignAesthetic('label', params.label)
-    if (params.tooltip != null) assignAesthetic('tooltip', params.tooltip)
-    if (params.weight != null) assignAesthetic('weight', params.weight)
-    if (params.geometry != null) assignAesthetic('geometry', params.geometry)
+    if (params.group != null) {
+      assignAesthetic('group', params.group)
+    }
+    if (params.label != null) {
+      assignAesthetic('label', params.label)
+    }
+    if (params.tooltip != null) {
+      assignAesthetic('tooltip', params.tooltip)
+    }
+    if (params.weight != null) {
+      assignAesthetic('weight', params.weight)
+    }
+    if (params.geometry != null) {
+      assignAesthetic('geometry', params.geometry)
+    }
 
     def mapIdValue = firstNonNull([params.map_id, params.mapId])
-    if (mapIdValue != null) assignAesthetic('map_id', mapIdValue)
+    if (mapIdValue != null) {
+      assignAesthetic('map_id', mapIdValue)
+    }
   }
 
   /**
@@ -508,14 +538,30 @@ class Aes {
    * Extract column name from a value (returns null for Identity, AfterStat, AfterScale, Expression, Factor, and CutWidth wrappers).
    */
   private static String extractColName(def value) {
-    if (value == null) return null
-    if (value instanceof Identity) return null
-    if (value instanceof AfterStat) return null
-    if (value instanceof AfterScale) return null
-    if (value instanceof Expression) return null
-    if (value instanceof Factor) return null
-    if (value instanceof CutWidth) return null
-    if (value instanceof Closure) return null
+    if (value == null) {
+      return null
+    }
+    if (value instanceof Identity) {
+      return null
+    }
+    if (value instanceof AfterStat) {
+      return null
+    }
+    if (value instanceof AfterScale) {
+      return null
+    }
+    if (value instanceof Expression) {
+      return null
+    }
+    if (value instanceof Factor) {
+      return null
+    }
+    if (value instanceof CutWidth) {
+      return null
+    }
+    if (value instanceof Closure) {
+      return null
+    }
     return value.toString()
   }
 
@@ -530,7 +576,9 @@ class Aes {
    * @return A new Aes with merged values
    */
   Aes merge(Aes base) {
-    if (base == null) return this
+    if (base == null) {
+      return this
+    }
     Aes result = new Aes()
     // Start with base values
     result.@x = base.x
@@ -600,15 +648,33 @@ class Aes {
   @Override
   String toString() {
     def parts = []
-    if (x != null) parts << "xCol=$x"
-    if (y != null) parts << "yCol=$y"
-    if (color != null) parts << "colorCol=$color"
-    if (fill != null) parts << "fillCol=$fill"
-    if (size != null) parts << "size=$size"
-    if (group != null) parts << "group=$group"
-    if (tooltip != null) parts << "tooltip=$tooltip"
-    if (geometry != null) parts << "geometry=$geometry"
-    if (map_id != null) parts << "map_id=$map_id"
+    if (x != null) {
+      parts << "xCol=$x"
+    }
+    if (y != null) {
+      parts << "yCol=$y"
+    }
+    if (color != null) {
+      parts << "colorCol=$color"
+    }
+    if (fill != null) {
+      parts << "fillCol=$fill"
+    }
+    if (size != null) {
+      parts << "size=$size"
+    }
+    if (group != null) {
+      parts << "group=$group"
+    }
+    if (tooltip != null) {
+      parts << "tooltip=$tooltip"
+    }
+    if (geometry != null) {
+      parts << "geometry=$geometry"
+    }
+    if (map_id != null) {
+      parts << "map_id=$map_id"
+    }
     return "Aes(${parts.join(', ')})"
   }
 }

@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_rect(fill: 'blue', alpha: 0.3)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRect extends Geom {
 
   /** Fill color for rectangles */
@@ -37,18 +38,32 @@ class GeomRect extends Geom {
   GeomRect() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['xmin', 'xmax', 'ymin', 'ymax']
-    defaultAes = [fill: 'gray', color: 'black', alpha: 1.0] as Map<String, Object>
+    defaultAes = [fill: 'gray', color: 'black', alpha: 1.0]
   }
 
   GeomRect(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
+    if (params.fill) {
+      this.fill = ColorUtil.normalizeColor(params.fill as String)
+    }
+    if (params.color) {
+      this.color = ColorUtil.normalizeColor(params.color as String)
+    }
+    if (params.colour) {
+      this.color = ColorUtil.normalizeColor(params.colour as String)
+    }
+    if (params.linewidth != null) {
+      this.linewidth = params.linewidth as Number
+    }
+    if (params.size != null) {
+      this.linewidth = params.size as Number
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.linetype) {
+      this.linetype = params.linetype as String
+    }
     this.params = params
   }
 

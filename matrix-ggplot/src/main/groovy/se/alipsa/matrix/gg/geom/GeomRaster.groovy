@@ -24,6 +24,7 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_raster(interpolate: true) - smooth interpolation (future enhancement)
  */
 @CompileStatic
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRaster extends Geom {
 
   /** Fill color for raster cells */
@@ -44,16 +45,26 @@ class GeomRaster extends Geom {
   GeomRaster() {
     defaultStat = StatType.IDENTITY
     requiredAes = ['x', 'y']
-    defaultAes = [fill: 'gray', alpha: 1.0] as Map<String, Object>
+    defaultAes = [fill: 'gray', alpha: 1.0]
   }
 
   GeomRaster(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.width != null) this.width = params.width as Number
-    if (params.height != null) this.height = params.height as Number
-    if (params.interpolate != null) this.interpolate = params.interpolate as boolean
+    if (params.fill) {
+      this.fill = ColorUtil.normalizeColor(params.fill as String)
+    }
+    if (params.alpha != null) {
+      this.alpha = params.alpha as Number
+    }
+    if (params.width != null) {
+      this.width = params.width as Number
+    }
+    if (params.height != null) {
+      this.height = params.height as Number
+    }
+    if (params.interpolate != null) {
+      this.interpolate = params.interpolate as boolean
+    }
     this.params = params
   }
 
