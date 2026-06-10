@@ -4,6 +4,8 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
+import java.util.Locale
+
 /**
  * Fisher's exact test is a statistical significance test used in the analysis of contingency tables.
  * Although in practice it is employed when sample sizes are small, it is valid for all sample sizes.
@@ -68,7 +70,10 @@ class Fisher {
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
   static FisherResult test(List<List<Integer>> table, Alternative alternative) {
-    test(table, alternative?.label)
+    if (alternative == null) {
+      throw new IllegalArgumentException('Alternative must not be null')
+    }
+    test(table, alternative.label)
   }
 
   /**
@@ -101,7 +106,10 @@ class Fisher {
    * @throws IllegalArgumentException if table is not 2×2 or contains negative values
    */
   static FisherResult test(Matrix table, Alternative alternative) {
-    test(table, alternative?.label)
+    if (alternative == null) {
+      throw new IllegalArgumentException('Alternative must not be null')
+    }
+    test(table, alternative.label)
   }
 
   private static void validateTable(List<List<Integer>> table) {
@@ -121,8 +129,6 @@ class Fisher {
   }
 
   private static FisherResult calculateFisherTest(int a, int b, int c, int d, String alternative) {
-    validateAlternative(alternative)
-
     int n = a + b + c + d
     int rowSum1 = a + b
     int colSum1 = a + c
@@ -136,7 +142,8 @@ class Fisher {
     // with colSum1 successes
     HypergeometricDistribution dist = new HypergeometricDistribution(n, colSum1, rowSum1)
 
-    double pValue = switch (alternative.toLowerCase()) {
+    String normalizedAlternative = alternative == null ? '' : alternative.toLowerCase(Locale.ROOT)
+    double pValue = switch (normalizedAlternative) {
       case 'greater' -> dist.upperCumulativeProbability(a)       // P(X >= a)
       case 'less' -> dist.cumulativeProbability(a)               // P(X <= a)
       case 'two.sided' -> calculateTwoSidedPValue(dist, a)       // two-sided
@@ -152,12 +159,6 @@ class Fisher {
       confidenceInterval: NumericConversion.toBigDecimalList(confInt, 'confidenceInterval'),
       alternative: alternative
     )
-  }
-
-  private static void validateAlternative(String alternative) {
-    if (!(alternative in ['two.sided', 'greater', 'less'])) {
-      throw new IllegalArgumentException("Alternative must be 'two.sided', 'greater', or 'less', got: ${alternative}")
-    }
   }
 
   private static double calculateOddsRatio(int a, int b, int c, int d) {
