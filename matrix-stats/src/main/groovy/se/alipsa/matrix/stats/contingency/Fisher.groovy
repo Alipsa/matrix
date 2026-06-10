@@ -26,6 +26,21 @@ import se.alipsa.matrix.stats.util.NumericConversion
 class Fisher {
 
   /**
+   * Alternative hypothesis options for Fisher's exact test.
+   */
+  enum Alternative {
+    TWO_SIDED('two.sided'),
+    GREATER('greater'),
+    LESS('less')
+
+    final String label
+
+    private Alternative(String label) {
+      this.label = label
+    }
+  }
+
+  /**
    * Performs Fisher's exact test on a 2×2 contingency table.
    *
    * @param table A 2×2 contingency table as a List of Lists: [[a, b], [c, d]]
@@ -42,6 +57,18 @@ class Fisher {
     int d = table[1][1]
 
     calculateFisherTest(a, b, c, d, alternative)
+  }
+
+  /**
+   * Performs Fisher's exact test on a 2×2 contingency table.
+   *
+   * @param table A 2×2 contingency table as a List of Lists: [[a, b], [c, d]]
+   * @param alternative The alternative hypothesis
+   * @return FisherResult containing p-value, odds ratio, and confidence interval
+   * @throws IllegalArgumentException if table is not 2×2 or contains negative values
+   */
+  static FisherResult test(List<List<Integer>> table, Alternative alternative) {
+    test(table, alternative?.label)
   }
 
   /**
@@ -65,6 +92,18 @@ class Fisher {
     calculateFisherTest(a, b, c, d, alternative)
   }
 
+  /**
+   * Performs Fisher's exact test on a Matrix (2×2 contingency table).
+   *
+   * @param table A 2×2 Matrix
+   * @param alternative The alternative hypothesis
+   * @return FisherResult containing p-value, odds ratio, and confidence interval
+   * @throws IllegalArgumentException if table is not 2×2 or contains negative values
+   */
+  static FisherResult test(Matrix table, Alternative alternative) {
+    test(table, alternative?.label)
+  }
+
   private static void validateTable(List<List<Integer>> table) {
     if (table == null || table.size() != 2) {
       throw new IllegalArgumentException("Fisher's exact test requires a 2×2 table (got ${table?.size() ?: 0} rows)")
@@ -82,6 +121,8 @@ class Fisher {
   }
 
   private static FisherResult calculateFisherTest(int a, int b, int c, int d, String alternative) {
+    validateAlternative(alternative)
+
     int n = a + b + c + d
     int rowSum1 = a + b
     int colSum1 = a + c
@@ -98,7 +139,8 @@ class Fisher {
     double pValue = switch (alternative.toLowerCase()) {
       case 'greater' -> dist.upperCumulativeProbability(a)       // P(X >= a)
       case 'less' -> dist.cumulativeProbability(a)               // P(X <= a)
-      default -> calculateTwoSidedPValue(dist, a)                // two-sided
+      case 'two.sided' -> calculateTwoSidedPValue(dist, a)       // two-sided
+      default -> throw new IllegalArgumentException("Alternative must be 'two.sided', 'greater', or 'less', got: ${alternative}")
     }
 
     // Calculate confidence interval for odds ratio (95% by default)
@@ -112,12 +154,24 @@ class Fisher {
     )
   }
 
+  private static void validateAlternative(String alternative) {
+    if (!(alternative in ['two.sided', 'greater', 'less'])) {
+      throw new IllegalArgumentException("Alternative must be 'two.sided', 'greater', or 'less', got: ${alternative}")
+    }
+  }
+
   private static double calculateOddsRatio(int a, int b, int c, int d) {
     if (b == 0 || c == 0) {
       // Avoid division by zero - add 0.5 to all cells (Haldane-Anscombe correction)
       return ((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))
     }
-    (a * d) / (b * c) as double
+    productRatio(a, d, b, c)
+  }
+
+  private static double productRatio(int numeratorLeft, int numeratorRight, int denominatorLeft, int denominatorRight) {
+    long numerator = (long) numeratorLeft * (long) numeratorRight
+    long denominator = (long) denominatorLeft * (long) denominatorRight
+    (numerator as double) / (denominator as double)
   }
 
   private static double calculateTwoSidedPValue(HypergeometricDistribution dist, int observed) {
@@ -152,7 +206,7 @@ class Fisher {
     }
 
     // Normal approximation for non-zero cells
-    double logOddsRatio = Math.log((a * d) / (b * c) as double)
+    double logOddsRatio = Math.log(productRatio(a, d, b, c))
     double se = Math.sqrt(1.0/a + 1.0/b + 1.0/c + 1.0/d)
     double alpha = 1.0 - confidenceLevel
     double z = getZScore(alpha / 2.0)
