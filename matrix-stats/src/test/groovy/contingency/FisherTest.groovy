@@ -94,21 +94,21 @@ class FisherTest {
   @Test
   void testUppercaseAlternativesRemainAccepted() {
     def table = [[12, 5], [9, 11]]
+    def expectedListResult = Fisher.test(table, 'greater')
     def listResult = Fisher.test(table, 'GREATER')
 
-    assertNotNull(listResult)
+    assertEquals(expectedListResult.pValue, listResult.pValue)
     assertEquals('GREATER', listResult.alternative)
-    assertNotNull(listResult.pValue)
 
     def matrix = Matrix.builder()
       .matrixName('test')
       .rows(table)
       .build()
+    def expectedMatrixResult = Fisher.test(matrix, 'two.sided')
     def matrixResult = Fisher.test(matrix, 'TWO.SIDED')
 
-    assertNotNull(matrixResult)
+    assertEquals(expectedMatrixResult.pValue, matrixResult.pValue)
     assertEquals('TWO.SIDED', matrixResult.alternative)
-    assertNotNull(matrixResult.pValue)
   }
 
   @Test
