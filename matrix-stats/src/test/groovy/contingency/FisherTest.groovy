@@ -220,6 +220,16 @@ class FisherTest {
     }
     assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: invalid", matrixException.message)
 
+    IllegalArgumentException listNullStringException = assertThrows(IllegalArgumentException) {
+      Fisher.test([[1, 2], [3, 4]], null as String)
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: null", listNullStringException.message)
+
+    IllegalArgumentException matrixNullStringException = assertThrows(IllegalArgumentException) {
+      Fisher.test(matrix, null as String)
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: null", matrixNullStringException.message)
+
     IllegalArgumentException listEnumException = assertThrows(IllegalArgumentException) {
       Fisher.test([[1, 2], [3, 4]], null as Fisher.Alternative)
     }
