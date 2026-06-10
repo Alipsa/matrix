@@ -1,6 +1,7 @@
 package solver
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import groovy.transform.CompileStatic
@@ -41,6 +42,32 @@ class SolverApiTest {
     )
 
     assertEquals(2, result.pointValues.size())
+    assertEquals(1.0d, result.pointValues[0] as double, 1e-10d)
+    assertEquals(0.0d, result.pointValues[1] as double, 1e-10d)
+    assertEquals(1.0d, result.objectiveValue as double, 1e-10d)
+  }
+
+  @Test
+  void testLinearProgramSolverRejectsInfeasibleEqualityConstraints() {
+    IllegalStateException exception = assertThrows(IllegalStateException) {
+      LinearProgramSolver.minimize(
+        [1.0],
+        [[1.0], [1.0]],
+        [1.0, 2.0]
+      )
+    }
+
+    assertEquals('Linear program is infeasible', exception.message)
+  }
+
+  @Test
+  void testLinearProgramSolverHandlesFeasibleRedundantConstraints() {
+    LinearProgramSolver.Solution result = LinearProgramSolver.minimize(
+      [1.0, 2.0],
+      [[1.0, 1.0], [2.0, 2.0]],
+      [1.0, 2.0]
+    )
+
     assertEquals(1.0d, result.pointValues[0] as double, 1e-10d)
     assertEquals(0.0d, result.pointValues[1] as double, 1e-10d)
     assertEquals(1.0d, result.objectiveValue as double, 1e-10d)

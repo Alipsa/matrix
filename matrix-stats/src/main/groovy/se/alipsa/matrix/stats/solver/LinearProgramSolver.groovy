@@ -107,7 +107,14 @@ final class LinearProgramSolver {
       objective[variableCount + i] = -1.0d
     }
 
-    new PhaseState(tableau: tableau, basis: basis, rhsColumn: rhsColumn, iterations: 0, objective: objective)
+    new PhaseState(
+      tableau: tableau,
+      basis: basis,
+      originalVariableCount: variableCount,
+      rhsColumn: rhsColumn,
+      iterations: 0,
+      objective: objective
+    )
   }
 
   private static PhaseState removeArtificialVariables(PhaseState phaseOne, int originalVariableCount) {
@@ -141,7 +148,13 @@ final class LinearProgramSolver {
       reducedBasis[newRow] = basis[originalRow]
     }
 
-    new PhaseState(tableau: reducedTableau, basis: reducedBasis, rhsColumn: originalVariableCount, iterations: phaseOne.iterations)
+    new PhaseState(
+      tableau: reducedTableau,
+      basis: reducedBasis,
+      originalVariableCount: originalVariableCount,
+      rhsColumn: originalVariableCount,
+      iterations: phaseOne.iterations
+    )
   }
 
   private static int findReplacementColumn(double[] row, int originalVariableCount) {
@@ -263,6 +276,7 @@ final class LinearProgramSolver {
   private static class PhaseState {
     double[][] tableau
     int[] basis
+    int originalVariableCount
     int rhsColumn
     int iterations
     double[] objective
@@ -270,7 +284,7 @@ final class LinearProgramSolver {
     double currentObjective() {
       double value = 0.0d
       for (int i = 0; i < basis.length; i++) {
-        if (basis[i] >= rhsColumn) {
+        if (basis[i] >= originalVariableCount && basis[i] < rhsColumn) {
           value -= tableau[i][rhsColumn]
         }
       }
