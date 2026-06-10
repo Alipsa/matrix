@@ -45,7 +45,6 @@ class SolverApiTest {
     assertEquals(1.0d, result.pointValues[0] as double, 1e-10d)
     assertEquals(0.0d, result.pointValues[1] as double, 1e-10d)
     assertEquals(1.0d, result.objectiveValue as double, 1e-10d)
-    assertTrue(result.iterations > 0)
   }
 
   @Test
@@ -72,6 +71,7 @@ class SolverApiTest {
     assertEquals(1.0d, result.pointValues[0] as double, 1e-10d)
     assertEquals(0.0d, result.pointValues[1] as double, 1e-10d)
     assertEquals(1.0d, result.objectiveValue as double, 1e-10d)
+    assertTrue(result.iterations > 0)
   }
 
   @Test
