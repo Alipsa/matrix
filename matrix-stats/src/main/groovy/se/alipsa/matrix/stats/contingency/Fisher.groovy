@@ -4,8 +4,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.distribution.HypergeometricDistribution
 import se.alipsa.matrix.stats.util.NumericConversion
 
-import java.util.Locale
-
 /**
  * Fisher's exact test is a statistical significance test used in the analysis of contingency tables.
  * Although in practice it is employed when sample sizes are small, it is valid for all sample sizes.
@@ -170,8 +168,8 @@ class Fisher {
   }
 
   private static double productRatio(int numeratorLeft, int numeratorRight, int denominatorLeft, int denominatorRight) {
-    long numerator = (long) numeratorLeft * (long) numeratorRight
-    long denominator = (long) denominatorLeft * (long) denominatorRight
+    long numerator = (numeratorLeft as long) * (numeratorRight as long)
+    long denominator = (denominatorLeft as long) * (denominatorRight as long)
     (numerator as double) / (denominator as double)
   }
 
