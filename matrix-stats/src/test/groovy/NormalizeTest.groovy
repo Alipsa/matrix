@@ -332,6 +332,7 @@ class NormalizeTest {
   void testListNormalizationPreservesNonnumericValuesWithLeadingNulls() {
     List values = [null, 'alpha', 'beta']
 
+    assertIterableEquals(values, Normalize.logNorm(values))
     assertIterableEquals(values, Normalize.minMaxNorm(values))
     assertIterableEquals(values, Normalize.meanNorm(values))
     assertIterableEquals(values, Normalize.stdScaleNorm(values))

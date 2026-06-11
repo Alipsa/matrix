@@ -385,19 +385,13 @@ class Normalize {
   }
 
   private static List normalizeList(List values, Normalization normalization, int... decimals) {
-    if (normalization == Normalization.LOG) {
-      return logNorm(values, decimals)
+    switch (normalization) {
+      case LOG -> logNorm(values, decimals)
+      case MIN_MAX -> minMaxNorm(values, decimals)
+      case MEAN -> meanNorm(values, decimals)
+      case STD_SCALE -> stdScaleNorm(values, decimals)
+      default -> throw new IllegalArgumentException("Unsupported normalization: $normalization")
     }
-    if (normalization == Normalization.MIN_MAX) {
-      return minMaxNorm(values, decimals)
-    }
-    if (normalization == Normalization.MEAN) {
-      return meanNorm(values, decimals)
-    }
-    if (normalization == Normalization.STD_SCALE) {
-      return stdScaleNorm(values, decimals)
-    }
-    throw new IllegalArgumentException("Unsupported normalization: $normalization")
   }
 
   private static boolean isNumericColumn(Column col) {
