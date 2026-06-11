@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 
@@ -260,5 +261,79 @@ class NormalizeTest {
     def mtcars = Dataset.mtcars()
     def m = Normalize.stdScaleNorm(mtcars)
     assert mtcars['model'] == m['model']
+  }
+
+  @Test
+  void testMatrixNormalizationPreservesNonnumericColumnsWithLeadingNulls() {
+    Matrix source = Matrix.builder('leadingNullCategory')
+        .columnNames(['category', 'value'])
+        .columns([
+          [null, 'alpha', 'beta'],
+          [1d, 2d, 4d]
+        ])
+        .types([String, Double])
+        .build()
+
+    [Normalize.logNorm(source, 4),
+     Normalize.minMaxNorm(source, 4),
+     Normalize.meanNorm(source, 4),
+     Normalize.stdScaleNorm(source, 4)].each { Matrix normalized ->
+      assertIterableEquals(source['category'], normalized['category'])
+      assertEquals(String, normalized.type('category'))
+      assertEquals(Double, normalized.type('value'))
+    }
+  }
+
+  @Test
+  void testMatrixNormalizationUpdatesIntegerColumnType() {
+    Matrix source = Matrix.builder('integerMetadata')
+        .columnNames(['count', 'category'])
+        .columns([
+          [10, 20, 30],
+          ['low', 'medium', 'high']
+        ])
+        .types([Integer, String])
+        .build()
+
+    Matrix normalized = Normalize.minMaxNorm(source, 2)
+
+    assertIterableEquals([0.0f, 0.5f, 1.0f], normalized['count'])
+    assertEquals(Float, normalized.type('count'))
+    assertIterableEquals(source['category'], normalized['category'])
+    assertEquals(String, normalized.type('category'))
+  }
+
+  @Test
+  void testMatrixNormalizationHandlesMixedNumericAndCategoricalColumns() {
+    Matrix source = Matrix.builder('mixedColumns')
+        .columnNames(['group', 'score', 'amount', 'note'])
+        .columns([
+          ['a', 'b', 'c'],
+          [1, 2, 3],
+          [2.0g, 4.0g, 8.0g],
+          [null, 'keep', 'also keep']
+        ])
+        .types([String, Integer, BigDecimal, String])
+        .build()
+
+    Matrix normalized = Normalize.stdScaleNorm(source, 6)
+
+    assertIterableEquals(source['group'], normalized['group'])
+    assertIterableEquals(source['note'], normalized['note'])
+    assertEquals(String, normalized.type('group'))
+    assertEquals(String, normalized.type('note'))
+    assertEquals(Float, normalized.type('score'))
+    assertEquals(BigDecimal, normalized.type('amount'))
+    assertTrue(normalized['score'].every { it instanceof Float })
+    assertTrue(normalized['amount'].every { it instanceof BigDecimal })
+  }
+
+  @Test
+  void testListNormalizationPreservesNonnumericValuesWithLeadingNulls() {
+    List values = [null, 'alpha', 'beta']
+
+    assertIterableEquals(values, Normalize.minMaxNorm(values))
+    assertIterableEquals(values, Normalize.meanNorm(values))
+    assertIterableEquals(values, Normalize.stdScaleNorm(values))
   }
 }

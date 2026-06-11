@@ -63,12 +63,10 @@ class Normalize {
    * Apply logarithmic normalization to a list of values.
    */
   static List logNorm(List values, int... decimals) {
-    List result = values.collect { val ->
-      if (val instanceof String) {
-        return val
-      }
-      logNorm(val as Number, decimals)
+    if (!containsOnlyNumbers(values)) {
+      return values
     }
+    List result = values.collect { val -> logNorm(val as Number, decimals) }
     // Force BigDecimal preservation - if any input was BigDecimal, ensure outputs stay BigDecimal
     if (values.any { it instanceof BigDecimal }) {
       result = result.collect { val ->
@@ -103,15 +101,7 @@ class Normalize {
    * Apply logarithmic normalization to all numeric columns in a Matrix.
    */
   static Matrix logNorm(Matrix table, int... decimals) {
-    List<List> columns = []
-    for (Column col in table.columns()) {
-      columns << logNorm(col as List, decimals)
-    }
-    Matrix.builder(table.matrixName)
-        .columnNames(table.columnNames())
-        .columns(columns)
-        .types(table.types())
-        .build()
+    normalizeMatrix(table, Normalization.LOG, decimals)
   }
 
   // ===== MIN-MAX NORMALIZATION =====
@@ -171,12 +161,13 @@ class Normalize {
     if (values.isEmpty()) {
       return []
     }
-    if (values[0] instanceof String) {
-      return values  // Return strings as-is
+    if (!containsOnlyNumbers(values)) {
+      return values
     }
 
-    Number min = values.min() as Number
-    Number max = values.max() as Number
+    List<Number> numbers = numericValues(values)
+    Number min = numbers.min()
+    Number max = numbers.max()
 
     values.collect { minMaxNorm(it as Number, min, max, decimals) }
   }
@@ -192,15 +183,7 @@ class Normalize {
    * Apply min-max normalization to all numeric columns in a Matrix.
    */
   static Matrix minMaxNorm(Matrix table, int... decimals) {
-    List<List> columns = []
-    for (Column col in table.columns()) {
-      columns << minMaxNorm(col as List, decimals)
-    }
-    Matrix.builder(table.matrixName)
-        .columnNames(table.columnNames())
-        .columns(columns)
-        .types(table.types())
-        .build()
+    normalizeMatrix(table, Normalization.MIN_MAX, decimals)
   }
 
   // ===== MEAN NORMALIZATION =====
@@ -264,13 +247,14 @@ class Normalize {
     if (values.isEmpty()) {
       return []
     }
-    if (values[0] instanceof String) {
-      return values  // Return strings as-is
+    if (!containsOnlyNumbers(values)) {
+      return values
     }
 
-    BigDecimal mean = Stat.mean(values)
-    Number min = values.min() as Number
-    Number max = values.max() as Number
+    List<Number> numbers = numericValues(values)
+    BigDecimal mean = Stat.mean(numbers)
+    Number min = numbers.min()
+    Number max = numbers.max()
 
     values.collect { meanNorm(it as Number, mean, min, max, decimals) }
   }
@@ -286,12 +270,7 @@ class Normalize {
    * Apply mean normalization to all numeric columns in a Matrix.
    */
   static Matrix meanNorm(Matrix table, int... decimals) {
-    List<List> columns = table.columns().collect { Column col -> meanNorm(col as List, decimals) }
-    Matrix.builder(table.matrixName)
-        .columnNames(table.columnNames())
-        .columns(columns)
-        .types(table.types())
-        .build()
+    normalizeMatrix(table, Normalization.MEAN, decimals)
   }
 
   // ===== STANDARD DEVIATION NORMALIZATION (Z-SCORE) =====
@@ -351,12 +330,13 @@ class Normalize {
     if (values.isEmpty()) {
       return []
     }
-    if (values[0] instanceof String) {
-      return values  // Return strings as-is
+    if (!containsOnlyNumbers(values)) {
+      return values
     }
 
-    BigDecimal mean = Stat.mean(values)
-    BigDecimal stdDev = Stat.sd(values)
+    List<Number> numbers = numericValues(values)
+    BigDecimal mean = Stat.mean(numbers)
+    BigDecimal stdDev = Stat.sd(numbers)
 
     values.collect { stdScaleNorm(it as Number, mean, stdDev, decimals) }
   }
@@ -372,18 +352,78 @@ class Normalize {
    * Apply standard deviation normalization to all numeric columns in a Matrix.
    */
   static Matrix stdScaleNorm(Matrix table, int... decimals) {
+    normalizeMatrix(table, Normalization.STD_SCALE, decimals)
+  }
+
+  // ===== HELPER METHODS =====
+
+  private enum Normalization {
+    LOG,
+    MIN_MAX,
+    MEAN,
+    STD_SCALE
+  }
+
+  private static Matrix normalizeMatrix(Matrix table, Normalization normalization, int... decimals) {
     List<List> columns = []
+    List<Class> types = []
     for (Column col in table.columns()) {
-      columns << stdScaleNorm(col as List, decimals)
+      if (isNumericColumn(col)) {
+        List normalized = normalizeList(col as List, normalization, decimals)
+        columns << normalized
+        types << transformedType(normalized, col.type)
+      } else {
+        columns << col.collect()
+        types << col.type
+      }
     }
     Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
         .columns(columns)
-        .types(table.types())
+        .types(types)
         .build()
   }
 
-  // ===== HELPER METHODS =====
+  private static List normalizeList(List values, Normalization normalization, int... decimals) {
+    if (normalization == Normalization.LOG) {
+      return logNorm(values, decimals)
+    }
+    if (normalization == Normalization.MIN_MAX) {
+      return minMaxNorm(values, decimals)
+    }
+    if (normalization == Normalization.MEAN) {
+      return meanNorm(values, decimals)
+    }
+    if (normalization == Normalization.STD_SCALE) {
+      return stdScaleNorm(values, decimals)
+    }
+    throw new IllegalArgumentException("Unsupported normalization: $normalization")
+  }
+
+  private static boolean isNumericColumn(Column col) {
+    List nonNullValues = col.findAll { it != null }
+    if (!nonNullValues.every { it instanceof Number }) {
+      return false
+    }
+    if (col.type != null && Number.isAssignableFrom(col.type)) {
+      return true
+    }
+    (col.type == null || col.type == Object) && !nonNullValues.isEmpty()
+  }
+
+  private static boolean containsOnlyNumbers(List values) {
+    List nonNullValues = values.findAll { it != null }
+    !nonNullValues.isEmpty() && nonNullValues.every { it instanceof Number }
+  }
+
+  private static List<Number> numericValues(List values) {
+    values.findAll { it instanceof Number } as List<Number>
+  }
+
+  private static Class transformedType(List values, Class fallbackType) {
+    def transformedValue = values.find { it != null }
+    transformedValue == null ? fallbackType : transformedValue.class
+  }
 
   /**
    * Returns null/NaN for minMaxNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
