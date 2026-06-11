@@ -82,6 +82,36 @@ class FisherTest {
   }
 
   @Test
+  void testAlternativeEnumOverload() {
+    def table = [[12, 5], [9, 11]]
+    def result = Fisher.test(table, Fisher.Alternative.GREATER)
+
+    assertNotNull(result)
+    assertEquals('greater', result.alternative)
+    assertNotNull(result.pValue)
+  }
+
+  @Test
+  void testUppercaseAlternativesRemainAccepted() {
+    def table = [[12, 5], [9, 11]]
+    def expectedListResult = Fisher.test(table, 'greater')
+    def listResult = Fisher.test(table, 'GREATER')
+
+    assertEquals(expectedListResult.pValue, listResult.pValue)
+    assertEquals('GREATER', listResult.alternative)
+
+    def matrix = Matrix.builder()
+      .matrixName('test')
+      .rows(table)
+      .build()
+    def expectedMatrixResult = Fisher.test(matrix, 'two.sided')
+    def matrixResult = Fisher.test(matrix, 'TWO.SIDED')
+
+    assertEquals(expectedMatrixResult.pValue, matrixResult.pValue)
+    assertEquals('TWO.SIDED', matrixResult.alternative)
+  }
+
+  @Test
   void testWithZeroCell() {
     // Table with one zero cell
     def table = [[10, 0], [5, 8]]
@@ -174,6 +204,44 @@ class FisherTest {
   }
 
   @Test
+  void testInvalidAlternativesRejected() {
+    IllegalArgumentException listException = assertThrows(IllegalArgumentException) {
+      Fisher.test([[1, 2], [3, 4]], 'invalid')
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: invalid", listException.message)
+
+    def matrix = Matrix.builder()
+      .matrixName('test')
+      .rows([[1, 2], [3, 4]])
+      .build()
+
+    IllegalArgumentException matrixException = assertThrows(IllegalArgumentException) {
+      Fisher.test(matrix, 'invalid')
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: invalid", matrixException.message)
+
+    IllegalArgumentException listNullStringException = assertThrows(IllegalArgumentException) {
+      Fisher.test([[1, 2], [3, 4]], null as String)
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: null", listNullStringException.message)
+
+    IllegalArgumentException matrixNullStringException = assertThrows(IllegalArgumentException) {
+      Fisher.test(matrix, null as String)
+    }
+    assertEquals("Alternative must be 'two.sided', 'greater', or 'less', got: null", matrixNullStringException.message)
+
+    IllegalArgumentException listEnumException = assertThrows(IllegalArgumentException) {
+      Fisher.test([[1, 2], [3, 4]], null as Fisher.Alternative)
+    }
+    assertEquals('Alternative must not be null', listEnumException.message)
+
+    IllegalArgumentException matrixEnumException = assertThrows(IllegalArgumentException) {
+      Fisher.test(matrix, null as Fisher.Alternative)
+    }
+    assertEquals('Alternative must not be null', matrixEnumException.message)
+  }
+
+  @Test
   void testEvaluateMethod() {
     // Significant result
     def table1 = [[18, 2], [4, 16]]
@@ -242,6 +310,18 @@ class FisherTest {
     assertNotNull(result)
     assertNotNull(result.pValue)
     assertNotNull(result.oddsRatio)
+  }
+
+  @Test
+  void testLargeCountOddsRatioDoesNotOverflow() {
+    def table = [[50_000, 1], [1, 50_000]]
+    def result = Fisher.test(table, 'greater')
+
+    assertNotNull(result)
+    assertEquals(2_500_000_000.0d, result.oddsRatio as double, 0.5d)
+    assertTrue(result.confidenceInterval[0] > 0G)
+    assertTrue(result.confidenceInterval[1] > result.oddsRatio)
+    assertTrue(result.pValue >= 0G && result.pValue <= 1G)
   }
 
   @Test
