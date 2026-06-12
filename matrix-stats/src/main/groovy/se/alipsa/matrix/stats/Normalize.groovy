@@ -229,12 +229,17 @@ class Normalize {
       return []
     }
 
-    List<T> list = values.toList()
-    BigDecimal mean = Stat.mean(list)
-    T min = list.min()
-    T max = list.max()
+    List<T> numbers = values.findAll { it != null } as List<T>
+    Class arrayComponentType = values.getClass().getComponentType()
+    if (numbers.isEmpty()) {
+      return values.collect { meanNormNullValue(arrayComponentType) as T }
+    }
+    BigDecimal mean = Stat.mean(numbers)
+    T min = numbers.min()
+    T max = numbers.max()
+    Class nullValueType = numbers.first().class
 
-    values.collect { meanNorm(it, mean, min, max, decimals) }
+    values.collect { it == null ? meanNormNullValue(nullValueType) as T : meanNorm(it, mean, min, max, decimals) }
   }
 
   /**
@@ -248,13 +253,14 @@ class Normalize {
       return values
     }
 
-    // nulls are excluded from stats but preserved in output via scalar null-handling
+    // nulls are excluded from stats and yield NaN/null according to the non-null value type
     List<Number> numbers = numericValues(values)
     BigDecimal mean = Stat.mean(numbers)
     Number min = numbers.min()
     Number max = numbers.max()
+    Class nullValueType = numbers.first().class
 
-    values.collect { meanNorm(it as Number, mean, min, max, decimals) }
+    values.collect { it == null ? meanNormNullValue(nullValueType) : meanNorm(it as Number, mean, min, max, decimals) }
   }
 
   /**
@@ -413,8 +419,16 @@ class Normalize {
   }
 
   private static boolean containsOnlyNumbers(List values) {
-    List nonNullValues = values.findAll { it != null }
-    !nonNullValues.isEmpty() && nonNullValues.every { it instanceof Number }
+    boolean hasNonNullValue = false
+    boolean allValuesAreNumeric = values.every { value ->
+      if (value == null) {
+        true
+      } else {
+        hasNonNullValue = true
+        value instanceof Number
+      }
+    }
+    hasNonNullValue && allValuesAreNumeric
   }
 
   private static List<Number> numericValues(List values) {
@@ -454,6 +468,16 @@ class Normalize {
     }
     // Byte, Short, Integer, Long, Float
     Float.NaN as T
+  }
+
+  private static Number meanNormNullValue(Class sampleType) {
+    if (sampleType == BigDecimal || sampleType == BigInteger) {
+      return null
+    }
+    if (sampleType == Double) {
+      return Double.NaN
+    }
+    Float.NaN
   }
 
   /**

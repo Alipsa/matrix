@@ -346,8 +346,10 @@ class NormalizeTest {
 
     List meanResult = Normalize.meanNorm(values, 6)
     assertEquals(5, meanResult.size())
-    assertTrue((meanResult[0] as Number).floatValue().isNaN())
-    assertTrue((meanResult[3] as Number).floatValue().isNaN())
+    assertTrue(meanResult[0] instanceof Double)
+    assertTrue((meanResult[0] as Double).isNaN())
+    assertTrue(meanResult[3] instanceof Double)
+    assertTrue((meanResult[3] as Double).isNaN())
     // mean=20, min=10, max=30: (x-20)/(30-10)
     assertEquals(-0.5d, meanResult[1] as Double, 1e-6d)
     assertEquals(0.0d, meanResult[2] as Double, 1e-6d)
