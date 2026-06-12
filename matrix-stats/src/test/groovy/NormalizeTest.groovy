@@ -220,6 +220,32 @@ class NormalizeTest {
   }
 
   @Test
+  void testMeanNormDoubleArrayWithInterspersedNulls() {
+    Double[] values = [null, 10.0d, 20.0d, null, 30.0d] as Double[]
+
+    List<Double> meanResult = Normalize.meanNorm(values, 6)
+
+    assertEquals(5, meanResult.size())
+    assertTrue(meanResult[0] instanceof Double)
+    assertTrue(meanResult[0].isNaN())
+    assertTrue(meanResult[3] instanceof Double)
+    assertTrue(meanResult[3].isNaN())
+    assertEquals(-0.5d, meanResult[1], 1e-6d)
+    assertEquals(0.0d, meanResult[2], 1e-6d)
+    assertEquals(0.5d, meanResult[4], 1e-6d)
+  }
+
+  @Test
+  void testMeanNormAllNullDoubleArrayUsesComponentType() {
+    Double[] values = [null, null, null] as Double[]
+
+    List<Double> meanResult = Normalize.meanNorm(values, 6)
+
+    assertEquals(3, meanResult.size())
+    assertTrue(meanResult.every { it instanceof Double && it.isNaN() })
+  }
+
+  @Test
   void testMeanNormFloat() {
     assertEquals(-0.150526076f, Normalize.meanNorm(1211f, 6412.428571428572f, 12f, 34567f, 9 ))
 
