@@ -1,10 +1,12 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 
@@ -218,6 +220,32 @@ class NormalizeTest {
   }
 
   @Test
+  void testMeanNormDoubleArrayWithInterspersedNulls() {
+    Double[] values = [null, 10.0d, 20.0d, null, 30.0d] as Double[]
+
+    List<Double> meanResult = Normalize.meanNorm(values, 6)
+
+    assertEquals(5, meanResult.size())
+    assertTrue(meanResult[0] instanceof Double)
+    assertTrue(meanResult[0].isNaN())
+    assertTrue(meanResult[3] instanceof Double)
+    assertTrue(meanResult[3].isNaN())
+    assertEquals(-0.5d, meanResult[1], 1e-6d)
+    assertEquals(0.0d, meanResult[2], 1e-6d)
+    assertEquals(0.5d, meanResult[4], 1e-6d)
+  }
+
+  @Test
+  void testMeanNormAllNullDoubleArrayUsesComponentType() {
+    Double[] values = [null, null, null] as Double[]
+
+    List<Double> meanResult = Normalize.meanNorm(values, 6)
+
+    assertEquals(3, meanResult.size())
+    assertTrue(meanResult.every { it instanceof Double && it.isNaN() })
+  }
+
+  @Test
   void testMeanNormFloat() {
     assertEquals(-0.150526076f, Normalize.meanNorm(1211f, 6412.428571428572f, 12f, 34567f, 9 ))
 
@@ -260,5 +288,105 @@ class NormalizeTest {
     def mtcars = Dataset.mtcars()
     def m = Normalize.stdScaleNorm(mtcars)
     assert mtcars['model'] == m['model']
+  }
+
+  @Test
+  void testMatrixNormalizationPreservesNonnumericColumnsWithLeadingNulls() {
+    Matrix source = Matrix.builder('leadingNullCategory')
+        .columnNames(['category', 'value'])
+        .columns([
+          [null, 'alpha', 'beta'],
+          [1d, 2d, 4d]
+        ])
+        .types([String, Double])
+        .build()
+
+    [Normalize.logNorm(source, 4),
+     Normalize.minMaxNorm(source, 4),
+     Normalize.meanNorm(source, 4),
+     Normalize.stdScaleNorm(source, 4)].each { Matrix normalized ->
+      assertIterableEquals(source['category'], normalized['category'])
+      assertEquals(String, normalized.type('category'))
+      assertEquals(Double, normalized.type('value'))
+    }
+  }
+
+  @Test
+  void testMatrixNormalizationUpdatesIntegerColumnType() {
+    Matrix source = Matrix.builder('integerMetadata')
+        .columnNames(['count', 'category'])
+        .columns([
+          [10, 20, 30],
+          ['low', 'medium', 'high']
+        ])
+        .types([Integer, String])
+        .build()
+
+    Matrix normalized = Normalize.minMaxNorm(source, 2)
+
+    assertIterableEquals([0.0f, 0.5f, 1.0f], normalized['count'])
+    assertEquals(Float, normalized.type('count'))
+    assertIterableEquals(source['category'], normalized['category'])
+    assertEquals(String, normalized.type('category'))
+  }
+
+  @Test
+  void testMatrixNormalizationHandlesMixedNumericAndCategoricalColumns() {
+    Matrix source = Matrix.builder('mixedColumns')
+        .columnNames(['group', 'score', 'amount', 'note'])
+        .columns([
+          ['a', 'b', 'c'],
+          [1, 2, 3],
+          [2.0g, 4.0g, 8.0g],
+          [null, 'keep', 'also keep']
+        ])
+        .types([String, Integer, BigDecimal, String])
+        .build()
+
+    Matrix normalized = Normalize.stdScaleNorm(source, 6)
+
+    assertIterableEquals(source['group'], normalized['group'])
+    assertIterableEquals(source['note'], normalized['note'])
+    assertEquals(String, normalized.type('group'))
+    assertEquals(String, normalized.type('note'))
+    assertEquals(Float, normalized.type('score'))
+    assertEquals(BigDecimal, normalized.type('amount'))
+    assertTrue(normalized['score'].every { it instanceof Float })
+    assertTrue(normalized['amount'].every { it instanceof BigDecimal })
+  }
+
+  @Test
+  void testListNormalizationPreservesNonnumericValuesWithLeadingNulls() {
+    List values = [null, 'alpha', 'beta']
+
+    assertIterableEquals(values, Normalize.logNorm(values))
+    assertIterableEquals(values, Normalize.minMaxNorm(values))
+    assertIterableEquals(values, Normalize.meanNorm(values))
+    assertIterableEquals(values, Normalize.stdScaleNorm(values))
+  }
+
+  @Test
+  void testListMeanAndStdScaleNormWithInterspersedNulls() {
+    // Stats must be computed from non-null values only; nulls must not be treated as zero
+    List values = [null, 10.0d, 20.0d, null, 30.0d]
+
+    List meanResult = Normalize.meanNorm(values, 6)
+    assertEquals(5, meanResult.size())
+    assertTrue(meanResult[0] instanceof Double)
+    assertTrue((meanResult[0] as Double).isNaN())
+    assertTrue(meanResult[3] instanceof Double)
+    assertTrue((meanResult[3] as Double).isNaN())
+    // mean=20, min=10, max=30: (x-20)/(30-10)
+    assertEquals(-0.5d, meanResult[1] as Double, 1e-6d)
+    assertEquals(0.0d, meanResult[2] as Double, 1e-6d)
+    assertEquals(0.5d, meanResult[4] as Double, 1e-6d)
+
+    List stdResult = Normalize.stdScaleNorm(values, 6)
+    assertEquals(5, stdResult.size())
+    assertNull(stdResult[0])
+    assertNull(stdResult[3])
+    assertEquals(-1.0d, stdResult[1] as Double, 1e-6d)
+    assertEquals(0.0d, stdResult[2] as Double, 1e-6d)
+    assertEquals(1.0d, stdResult[4] as Double, 1e-6d)
   }
 }
