@@ -337,4 +337,23 @@ class NormalizeTest {
     assertIterableEquals(values, Normalize.meanNorm(values))
     assertIterableEquals(values, Normalize.stdScaleNorm(values))
   }
+
+  @Test
+  void testListMeanAndStdScaleNormWithInterspersedNulls() {
+    // Stats must be computed from non-null values only; nulls must not be treated as zero
+    List values = [null, 10.0d, 20.0d, null, 30.0d]
+
+    List meanResult = Normalize.meanNorm(values, 6)
+    assertEquals(5, meanResult.size())
+    // mean=20, min=10, max=30: (x-20)/(30-10)
+    assertEquals(-0.5d, meanResult[1] as Double, 1e-6d)
+    assertEquals(0.0d, meanResult[2] as Double, 1e-6d)
+    assertEquals(0.5d, meanResult[4] as Double, 1e-6d)
+
+    List stdResult = Normalize.stdScaleNorm(values, 6)
+    assertEquals(5, stdResult.size())
+    assertTrue(stdResult[1] instanceof Number)
+    assertTrue(stdResult[2] instanceof Number)
+    assertTrue(stdResult[4] instanceof Number)
+  }
 }

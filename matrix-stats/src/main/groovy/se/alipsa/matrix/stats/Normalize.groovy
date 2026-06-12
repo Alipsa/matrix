@@ -251,6 +251,7 @@ class Normalize {
       return values
     }
 
+    // nulls are excluded from stats but preserved in output via scalar null-handling
     List<Number> numbers = numericValues(values)
     BigDecimal mean = Stat.mean(numbers)
     Number min = numbers.min()
@@ -334,6 +335,7 @@ class Normalize {
       return values
     }
 
+    // nulls are excluded from stats but preserved in output via scalar null-handling
     List<Number> numbers = numericValues(values)
     BigDecimal mean = Stat.mean(numbers)
     BigDecimal stdDev = Stat.sd(numbers)
@@ -390,19 +392,21 @@ class Normalize {
       case MIN_MAX -> minMaxNorm(values, decimals)
       case MEAN -> meanNorm(values, decimals)
       case STD_SCALE -> stdScaleNorm(values, decimals)
-      default -> throw new IllegalArgumentException("Unsupported normalization: $normalization")
     }
   }
 
   private static boolean isNumericColumn(Column col) {
     List nonNullValues = col.findAll { it != null }
+    if (nonNullValues.isEmpty()) {
+      return false
+    }
     if (!nonNullValues.every { it instanceof Number }) {
       return false
     }
     if (col.type != null && Number.isAssignableFrom(col.type)) {
       return true
     }
-    (col.type == null || col.type == Object) && !nonNullValues.isEmpty()
+    col.type == null || col.type == Object
   }
 
   private static boolean containsOnlyNumbers(List values) {
@@ -414,6 +418,8 @@ class Normalize {
     values.findAll { it instanceof Number } as List<Number>
   }
 
+  // Scalar normalization functions preserve per-element type, so the first non-null value reliably
+  // represents the output type for the whole column.
   private static Class transformedType(List values, Class fallbackType) {
     def transformedValue = values.find { it != null }
     transformedValue == null ? fallbackType : transformedValue.class
