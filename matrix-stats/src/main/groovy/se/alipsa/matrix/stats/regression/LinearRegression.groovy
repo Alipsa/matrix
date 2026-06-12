@@ -234,8 +234,10 @@ Multiple R-squared: ${getRsquared(3)}
   }
 
   private static RegressionData listData(List<? extends Number> x, List<? extends Number> y) {
-    validateShape(x, y)
-    new RegressionData(numericValues(x, 'x'), numericValues(y, 'y'))
+    new RegressionData(
+      x == null ? null : numericValues(x, 'x'),
+      y == null ? null : numericValues(y, 'y')
+    )
   }
 
   private static RegressionData matrixData(Matrix table, String xColumn, String yColumn) {
@@ -264,8 +266,9 @@ Multiple R-squared: ${getRsquared(3)}
   }
 
   private static List<BigDecimal> columnValues(Matrix table, String columnName) {
+    List column = table.column(columnName)
     (0 ..< table.rowCount()).collect { int row ->
-      NumericConversion.toBigDecimal(table.column(columnName)[row], "matrix value at row ${row}, column '${columnName}'")
+      NumericConversion.toBigDecimal(column[row], "matrix value at row ${row}, column '${columnName}'")
     } as List<BigDecimal>
   }
 
