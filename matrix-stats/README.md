@@ -248,6 +248,7 @@ def frame = ModelFrame.of('y ~ x + group', data)
 
 def lm = FitRegistry.instance().get('lm').fit(frame)
 assert lm.fittedValues.length == data.rowCount()
+assert lm.fittedList.size() == data.rowCount()
 ```
 
 Supported fit methods through `FitRegistry`:
