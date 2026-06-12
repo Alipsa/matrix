@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.regression
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.util.NumericConversion
 
 import java.math.MathContext
 import java.math.RoundingMode
@@ -35,27 +36,44 @@ class LinearRegression {
   String x = 'X'
   String y = 'Y'
 
+  /**
+   * Fits a simple linear regression from two numeric matrix columns.
+   *
+   * @param table the source matrix
+   * @param x the predictor column name
+   * @param y the response column name
+   * @throws IllegalArgumentException if the columns are missing, nonnumeric, or not estimable
+   */
   LinearRegression(Matrix table, String x, String y) {
-    this(table[x] as List<? extends Number>, table[y] as List<? extends Number>)
+    this(columnValues(table, x), columnValues(table, y))
     this.x = x
     this.y = y
   }
 
+  /**
+   * Fits a simple linear regression from predictor and response values.
+   *
+   * @param x the predictor values
+   * @param y the response values
+   * @throws IllegalArgumentException if the inputs are invalid or not estimable
+   */
   LinearRegression(List<? extends Number> x, List<? extends Number> y) {
-    if (x.size() != y.size()) {
-      throw new IllegalArgumentException('Must have equal number of X and Y data points for a linear regression')
-    }
+    validateShape(x, y)
 
-    Integer numberOfDataValues = x.size()
+    List<BigDecimal> xValues = numericValues(x, 'x')
+    List<BigDecimal> yValues = numericValues(y, 'y')
+    validateVariation(xValues)
 
-    List<? extends Number> xSquared = x.collect {it * it }
+    Integer numberOfDataValues = xValues.size()
+
+    List<BigDecimal> xSquared = xValues.collect { BigDecimal value -> value * value }
 
     List<BigDecimal> xMultipliedByY = (0 ..< numberOfDataValues).collect {
-      i -> (x.get(i) * y.get(i)) as BigDecimal
+      i -> xValues[i] * yValues[i]
     }
 
-    BigDecimal xSummed = Stat.sum(x)
-    BigDecimal ySummed = Stat.sum(y)
+    BigDecimal xSummed = Stat.sum(xValues) as BigDecimal
+    BigDecimal ySummed = Stat.sum(yValues) as BigDecimal
     BigDecimal sumOfXSquared = Stat.sum(xSquared)
     BigDecimal sumOfXMultipliedByY = Stat.sum(xMultipliedByY)
 
@@ -74,15 +92,15 @@ class LinearRegression {
     BigDecimal rss = 0.0     // residual sum of squares
     BigDecimal ssr = 0.0     // regression sum of squares
     for (int i = 0; i < numberOfDataValues; i++) {
-      xxbar += (x[i] - xBar) ** 2
-      yybar += (y[i] - yBar) ** 2
-      xybar += (x[i] - xBar) * (y[i] - yBar)
-      BigDecimal fit = predict(x[i])
-      rss += (fit - y[i]) ** 2
+      xxbar += (xValues[i] - xBar) ** 2
+      yybar += (yValues[i] - yBar) ** 2
+      xybar += (xValues[i] - xBar) * (yValues[i] - yBar)
+      BigDecimal fit = predict(xValues[i])
+      rss += (fit - yValues[i]) ** 2
       ssr += (fit - yBar) ** 2
     }
     int degreesOfFreedom = numberOfDataValues - 2
-    r2 = ssr / yybar
+    r2 = yybar == 0 ? 1.0G : ssr / yybar
     BigDecimal svar  = rss / degreesOfFreedom
     BigDecimal slopeVar = svar / xxbar
     slopeStdErr = slopeVar.sqrt(MathContext.DECIMAL128)
@@ -210,5 +228,36 @@ ${coefficients.content()}
 
 Multiple R-squared: ${getRsquared(3)}
 """.stripIndent()
+  }
+
+  private static List<BigDecimal> columnValues(Matrix table, String columnName) {
+    NumericConversion.toBigDecimalColumn(table, columnName)
+  }
+
+  private static void validateShape(List<? extends Number> x, List<? extends Number> y) {
+    if (x == null || y == null) {
+      throw new IllegalArgumentException('X and Y data points cannot be null')
+    }
+    if (x.size() != y.size()) {
+      throw new IllegalArgumentException('Must have equal number of X and Y data points for a linear regression')
+    }
+    if (x.size() < 3) {
+      throw new IllegalArgumentException(
+        "Linear regression requires at least three observations, got ${x.size()}"
+      )
+    }
+  }
+
+  private static List<BigDecimal> numericValues(List<?> values, String label) {
+    values.withIndex().collect { Object value, int index ->
+      NumericConversion.toBigDecimal(value, "${label} value at index ${index}")
+    } as List<BigDecimal>
+  }
+
+  private static void validateVariation(List<BigDecimal> xValues) {
+    BigDecimal first = xValues[0]
+    if (xValues.every { BigDecimal value -> value == first }) {
+      throw new IllegalArgumentException('Linear regression requires at least two distinct X values')
+    }
   }
 }

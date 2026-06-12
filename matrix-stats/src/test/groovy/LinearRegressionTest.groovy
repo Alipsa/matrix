@@ -75,4 +75,79 @@ class LinearRegressionTest {
     assertEquals(23.58083123, model.predict(13, 8))
     assertEquals(model.predict([-1, 15])[0], model.predict(-1))
   }
+
+  @Test
+  void testRejectsEmptyInputs() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression([], [])
+    }
+
+    assertEquals('Linear regression requires at least three observations, got 0', exception.message)
+  }
+
+  @Test
+  void testRejectsMismatchedInputs() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression([1, 2, 3], [1, 2])
+    }
+
+    assertEquals('Must have equal number of X and Y data points for a linear regression', exception.message)
+  }
+
+  @Test
+  void testRejectsTwoObservationExactFit() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression([1, 2], [2, 4])
+    }
+
+    assertEquals('Linear regression requires at least three observations, got 2', exception.message)
+  }
+
+  @Test
+  void testRejectsConstantPredictor() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression([2, 2, 2], [1, 2, 3])
+    }
+
+    assertEquals('Linear regression requires at least two distinct X values', exception.message)
+  }
+
+  @Test
+  void testSupportsZeroVarianceResponse() {
+    def model = new LinearRegression([1, 2, 3], [5, 5, 5])
+
+    assertEquals(0.0, model.slope as double, 1e-12)
+    assertEquals(5.0, model.intercept as double, 1e-12)
+    assertEquals(1.0, model.r2 as double, 1e-12)
+    assertEquals(0.0, model.slopeStdErr as double, 1e-12)
+    assertEquals(0.0, model.interceptStdErr as double, 1e-12)
+  }
+
+  @Test
+  void testRejectsMissingMatrixColumnClearly() {
+    def table = Matrix.builder().data(
+      x: [1, 2, 3],
+      y: [2, 4, 6]
+    ).build()
+
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression(table, 'missing', 'y')
+    }
+
+    assertEquals("Matrix does not contain column 'missing'", exception.message)
+  }
+
+  @Test
+  void testRejectsNonnumericMatrixColumnClearly() {
+    def table = Matrix.builder().data(
+      x: [1, 2, 3],
+      y: ['a', 'b', 'c']
+    ).build()
+
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression(table, 'x', 'y')
+    }
+
+    assertEquals("Matrix value at row 0, column 'y' must be numeric", exception.message)
+  }
 }
