@@ -234,10 +234,10 @@ Multiple R-squared: ${getRsquared(3)}
   }
 
   private static RegressionData listData(List<? extends Number> x, List<? extends Number> y) {
-    new RegressionData(
-      x == null ? null : numericValues(x, 'x'),
-      y == null ? null : numericValues(y, 'y')
-    )
+    if (x == null || y == null) {
+      return new RegressionData(null, null)
+    }
+    new RegressionData(numericValues(x, 'x'), numericValues(y, 'y'))
   }
 
   private static RegressionData matrixData(Matrix table, String xColumn, String yColumn) {

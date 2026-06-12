@@ -95,6 +95,15 @@ class LinearRegressionTest {
   }
 
   @Test
+  void testRejectsNullInputsBeforeConvertingOtherValues() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression(null, ['a', 'b', 'c'])
+    }
+
+    assertEquals('X and Y data points cannot be null', exception.message)
+  }
+
+  @Test
   void testRejectsMismatchedInputs() {
     def exception = assertThrows(IllegalArgumentException) {
       new LinearRegression([1, 2, 3], [1, 2])
