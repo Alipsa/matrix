@@ -147,6 +147,7 @@
 #### DRY Refactoring
 - refactored Normalize.groovy: consolidated 4 functions × 6-7 overloads from 800+ lines to ~350 lines
 - extracted common normalization logic for logNorm, minMaxNorm, meanNorm, stdScaleNorm variants
+- note: logNorm(List) now returns mixed non-numeric lists unchanged, aligning it with minMaxNorm(List), meanNorm(List), and stdScaleNorm(List)
 - simplified Result class getters across Student.groovy
 
 #### Performance & Type Safety

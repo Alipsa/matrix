@@ -73,9 +73,6 @@ class Normalize {
         if (val == null) {
           return null
         }
-        if (val instanceof String) {
-          return val
-        }
         if (val instanceof BigInteger) {
           // Convert BigInteger back to BigDecimal (Groovy may have auto-converted)
           return new BigDecimal(val).setScale(decimals.length > 0 ? decimals[0] : 6, RoundingMode.HALF_EVEN)
@@ -392,15 +389,21 @@ class Normalize {
       case MIN_MAX -> minMaxNorm(values, decimals)
       case MEAN -> meanNorm(values, decimals)
       case STD_SCALE -> stdScaleNorm(values, decimals)
+      default -> throw new IllegalArgumentException("Unsupported normalization: $normalization")
     }
   }
 
   private static boolean isNumericColumn(Column col) {
-    List nonNullValues = col.findAll { it != null }
-    if (nonNullValues.isEmpty()) {
-      return false
+    boolean hasNonNullValue = false
+    boolean allValuesAreNumeric = col.every { value ->
+      if (value == null) {
+        true
+      } else {
+        hasNonNullValue = true
+        value instanceof Number
+      }
     }
-    if (!nonNullValues.every { it instanceof Number }) {
+    if (!hasNonNullValue || !allValuesAreNumeric) {
       return false
     }
     if (col.type != null && Number.isAssignableFrom(col.type)) {

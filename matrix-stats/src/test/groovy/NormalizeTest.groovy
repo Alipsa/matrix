@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -345,6 +346,8 @@ class NormalizeTest {
 
     List meanResult = Normalize.meanNorm(values, 6)
     assertEquals(5, meanResult.size())
+    assertTrue((meanResult[0] as Number).floatValue().isNaN())
+    assertTrue((meanResult[3] as Number).floatValue().isNaN())
     // mean=20, min=10, max=30: (x-20)/(30-10)
     assertEquals(-0.5d, meanResult[1] as Double, 1e-6d)
     assertEquals(0.0d, meanResult[2] as Double, 1e-6d)
@@ -352,8 +355,10 @@ class NormalizeTest {
 
     List stdResult = Normalize.stdScaleNorm(values, 6)
     assertEquals(5, stdResult.size())
-    assertTrue(stdResult[1] instanceof Number)
-    assertTrue(stdResult[2] instanceof Number)
-    assertTrue(stdResult[4] instanceof Number)
+    assertNull(stdResult[0])
+    assertNull(stdResult[3])
+    assertEquals(-1.0d, stdResult[1] as Double, 1e-6d)
+    assertEquals(0.0d, stdResult[2] as Double, 1e-6d)
+    assertEquals(1.0d, stdResult[4] as Double, 1e-6d)
   }
 }
