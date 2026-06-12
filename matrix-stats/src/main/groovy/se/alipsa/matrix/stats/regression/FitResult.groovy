@@ -86,6 +86,6 @@ final class FitResult {
    * @return the R-squared value
    */
   BigDecimal getRSquaredValue() {
-    BigDecimal.valueOf(rSquared)
+    NumericConversion.toBigDecimal(rSquared, 'rSquared')
   }
 }

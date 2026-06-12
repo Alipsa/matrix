@@ -107,4 +107,21 @@ class FitResultTest {
       result.coefficientList.add(1.0G)
     }
   }
+
+  @Test
+  void testRSquaredValueRejectsNonFiniteValues() {
+    FitResult result = new FitResult(
+      [] as double[],
+      [] as double[],
+      [] as double[],
+      [] as double[],
+      Double.NaN,
+      []
+    )
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      result.RSquaredValue
+    }
+    assertTrue(exception.message.contains('must be finite'))
+  }
 }
