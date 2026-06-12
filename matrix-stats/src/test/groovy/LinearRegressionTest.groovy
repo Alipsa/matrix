@@ -86,6 +86,15 @@ class LinearRegressionTest {
   }
 
   @Test
+  void testRejectsNullInputs() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression(null, [1, 2, 3])
+    }
+
+    assertEquals('X and Y data points cannot be null', exception.message)
+  }
+
+  @Test
   void testRejectsMismatchedInputs() {
     def exception = assertThrows(IllegalArgumentException) {
       new LinearRegression([1, 2, 3], [1, 2])
@@ -135,6 +144,21 @@ class LinearRegressionTest {
     }
 
     assertEquals("Matrix does not contain column 'missing'", exception.message)
+  }
+
+  @Test
+  void testRejectsEmptyMatrixWithObservationCountMessage() {
+    def table = Matrix.builder()
+      .columnNames('x', 'y')
+      .columns([[], []])
+      .types(BigDecimal, BigDecimal)
+      .build()
+
+    def exception = assertThrows(IllegalArgumentException) {
+      new LinearRegression(table, 'x', 'y')
+    }
+
+    assertEquals('Linear regression requires at least three observations, got 0', exception.message)
   }
 
   @Test

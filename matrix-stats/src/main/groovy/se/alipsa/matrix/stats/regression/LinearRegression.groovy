@@ -45,7 +45,7 @@ class LinearRegression {
    * @throws IllegalArgumentException if the columns are missing, nonnumeric, or not estimable
    */
   LinearRegression(Matrix table, String x, String y) {
-    this(columnValues(table, x), columnValues(table, y))
+    this(matrixData(table, x, y))
     this.x = x
     this.y = y
   }
@@ -58,10 +58,13 @@ class LinearRegression {
    * @throws IllegalArgumentException if the inputs are invalid or not estimable
    */
   LinearRegression(List<? extends Number> x, List<? extends Number> y) {
-    validateShape(x, y)
+    this(listData(x, y))
+  }
 
-    List<BigDecimal> xValues = numericValues(x, 'x')
-    List<BigDecimal> yValues = numericValues(y, 'y')
+  private LinearRegression(RegressionData data) {
+    validateShape(data.xValues, data.yValues)
+    List<BigDecimal> xValues = data.xValues
+    List<BigDecimal> yValues = data.yValues
     validateVariation(xValues)
 
     Integer numberOfDataValues = xValues.size()
@@ -230,8 +233,40 @@ Multiple R-squared: ${getRsquared(3)}
 """.stripIndent()
   }
 
+  private static RegressionData listData(List<? extends Number> x, List<? extends Number> y) {
+    validateShape(x, y)
+    new RegressionData(numericValues(x, 'x'), numericValues(y, 'y'))
+  }
+
+  private static RegressionData matrixData(Matrix table, String xColumn, String yColumn) {
+    validateMatrixColumns(table, xColumn, yColumn)
+    new RegressionData(
+      columnValues(table, xColumn),
+      columnValues(table, yColumn)
+    )
+  }
+
+  private static void validateMatrixColumns(Matrix table, String xColumn, String yColumn) {
+    if (table == null) {
+      throw new IllegalArgumentException('Matrix cannot be null')
+    }
+    validateMatrixColumn(table, xColumn)
+    validateMatrixColumn(table, yColumn)
+  }
+
+  private static void validateMatrixColumn(Matrix table, String columnName) {
+    if (columnName == null) {
+      throw new IllegalArgumentException('Column name cannot be null')
+    }
+    if (!table.columnNames().contains(columnName)) {
+      throw new IllegalArgumentException("Matrix does not contain column '${columnName}'")
+    }
+  }
+
   private static List<BigDecimal> columnValues(Matrix table, String columnName) {
-    NumericConversion.toBigDecimalColumn(table, columnName)
+    (0 ..< table.rowCount()).collect { int row ->
+      NumericConversion.toBigDecimal(table.column(columnName)[row], "matrix value at row ${row}, column '${columnName}'")
+    } as List<BigDecimal>
   }
 
   private static void validateShape(List<? extends Number> x, List<? extends Number> y) {
@@ -258,6 +293,16 @@ Multiple R-squared: ${getRsquared(3)}
     BigDecimal first = xValues[0]
     if (xValues.every { BigDecimal value -> value == first }) {
       throw new IllegalArgumentException('Linear regression requires at least two distinct X values')
+    }
+  }
+
+  private static class RegressionData {
+    final List<BigDecimal> xValues
+    final List<BigDecimal> yValues
+
+    RegressionData(List<BigDecimal> xValues, List<BigDecimal> yValues) {
+      this.xValues = xValues
+      this.yValues = yValues
     }
   }
 }
