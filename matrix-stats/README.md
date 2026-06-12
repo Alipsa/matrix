@@ -396,6 +396,7 @@ assert hyper.probability(10) > 0
 
 ```groovy
 import se.alipsa.matrix.stats.solver.BrentSolver
+import se.alipsa.matrix.stats.solver.GoalSeek
 import se.alipsa.matrix.stats.solver.LinearProgramSolver
 import se.alipsa.matrix.stats.solver.UnivariateObjective
 
@@ -408,6 +409,11 @@ def root = BrentSolver.solve(
     100
 )
 assert Math.abs((root.rootValue as double) - Math.sqrt(2.0d)) < 1e-10
+
+def goal = GoalSeek.solve(27000, 0, 100) { value ->
+    value * 100_000
+}
+assert (goal.computedValue - 0.27G).abs() < 1e-8G
 
 def solution = LinearProgramSolver.minimize([1.0, 2.0], [[1.0, 1.0]], [1.0])
 assert [1.0, 0.0] == solution.pointValues
