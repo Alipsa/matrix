@@ -129,9 +129,23 @@ class SolverApiTest {
       (50.0G + 80.0G + 60.0G + (grade as BigDecimal)) / 4.0G
     }
 
-    assertThrows(ReadOnlyPropertyException) {
-      result.setProperty('value', 0.0d)
+    ['value', 'result', 'diff', 'iterations'].each { String propertyName ->
+      assertThrows(ReadOnlyPropertyException) {
+        result.setProperty(propertyName, 0.0d)
+      }
     }
+  }
+
+  @Test
+  void testGoalSeekReportsZeroIterationsForExactEndpointRoot() {
+    GoalSeek.Result result = GoalSeek.solve(0.0G, 0.0G, 10.0G, 0.0001G, 100) { Number value ->
+      value
+    }
+
+    assertEquals(0.0d, result.value, 1e-8d)
+    assertEquals(0.0d, result.result, 1e-8d)
+    assertEquals(0.0d, result.diff, 1e-8d)
+    assertEquals(0, result.iterations)
   }
 
   @Test

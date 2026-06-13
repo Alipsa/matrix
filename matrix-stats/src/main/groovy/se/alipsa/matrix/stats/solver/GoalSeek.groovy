@@ -34,7 +34,8 @@ class GoalSeek {
    *  <li>value: the actual value needed to produce the result</li>
    *  <li>result: the result of the value put in the algorithm</li>
    *  <li>diff: the difference from the target value</li>
-   *  <li>iterations: the number of iterations it took to get to the conclusion</li>
+   *  <li>iterations: the number of solver iterations performed; this can be {@code 0}
+   *      when the root is found exactly at a bracket endpoint before iteration starts</li>
    * </ul>
    * @throws RuntimeException if the goal cannot be found within the maxIterations
    */
@@ -192,7 +193,7 @@ class GoalSeek {
     final double result
     /** Difference between target value and {@link #result}. */
     final double diff
-    /** Number of solver iterations performed. */
+    /** Number of solver iterations performed; can be {@code 0} for exact endpoint roots. */
     final int iterations
 
     /**
@@ -201,7 +202,7 @@ class GoalSeek {
      * @param value actual value needed to produce the requested result
      * @param result result of applying the algorithm to {@code value}
      * @param diff difference between target value and {@code result}
-     * @param iterations number of solver iterations performed
+     * @param iterations number of solver iterations performed; can be {@code 0} for exact endpoint roots
      */
     Result(double value, double result, double diff, int iterations) {
       this.value = value
