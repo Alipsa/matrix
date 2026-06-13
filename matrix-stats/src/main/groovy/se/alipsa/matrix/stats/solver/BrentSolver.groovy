@@ -110,21 +110,14 @@ final class BrentSolver {
           double r = fb / fc
           p = s * (2.0d * midpoint * qRatio * (qRatio - r) - (b - a) * (r - 1.0d))
           q = (qRatio - 1.0d) * (r - 1.0d) * (s - 1.0d)
-          if (p > 0.0d) {
-            q = -q
-          }
-          p = Math.abs(p)
         }
 
-        if (a == c) {
-          if (p < Math.min(3.0d * midpoint * q - Math.abs(tolerance * q), Math.abs(e * q))) {
-            e = d
-            d = p / q
-          } else {
-            d = midpoint
-            e = midpoint
-          }
-        } else if (p < Math.min(3.0d * midpoint * q - Math.abs(tolerance * q), Math.abs(e * q))) {
+        if (p > 0.0d) {
+          q = -q
+        }
+        p = Math.abs(p)
+
+        if (2.0d * p < Math.min(3.0d * midpoint * q - Math.abs(tolerance * q), Math.abs(e * q))) {
           e = d
           d = p / q
         } else {

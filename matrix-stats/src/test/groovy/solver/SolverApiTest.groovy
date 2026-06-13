@@ -112,6 +112,29 @@ class SolverApiTest {
   }
 
   @Test
+  void testGoalSeekNumberOverloadWithCustomThresholdAndDefaultMaxIterations() {
+    GoalSeek.Result result = GoalSeek.solve(70.0G, 0.0G, 100.0G, 0.0001G) { Number grade ->
+      (50.0G + 80.0G + 60.0G + (grade as BigDecimal)) / 4.0G
+    }
+
+    assertEquals(90.0d, result.value, 1e-8d)
+    assertEquals(70.0d, result.result, 1e-8d)
+    assertEquals(0.0d, result.diff, 1e-8d)
+    assertTrue(result.iterations > 0)
+  }
+
+  @Test
+  void testGoalSeekResultIsImmutable() {
+    GoalSeek.Result result = GoalSeek.solve(70.0G, 0.0G, 100.0G, 0.0001G, 100) { Number grade ->
+      (50.0G + 80.0G + 60.0G + (grade as BigDecimal)) / 4.0G
+    }
+
+    assertThrows(ReadOnlyPropertyException) {
+      result.setProperty('value', 0.0d)
+    }
+  }
+
+  @Test
   void testGoalSeekExplicitMapCoercion() {
     Map<String, Object> result = GoalSeek.solve(27000.0G, 0.0G, 100.0G) { Number value ->
       (value as BigDecimal) * 100_000.0G

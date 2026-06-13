@@ -28,7 +28,7 @@ class GoalSeekTest {
       it * 100_000
     } as Map
     println val
-    assertTrue(val.iterations > 0)
+    assertTrue(val.iterations < 37)
     assertEquals(0.270, val.value, delta)
   }
 

@@ -28,7 +28,7 @@ class GoalSeek {
    * @param maxValue the max value of the span to search for the value in
    * @param threshold the allowed diff to still be considered as "no difference"
    * @param maxIterations the maximum number of iterations allowed
-   * @param algorithm a closure containing the algoritm to apply
+   * @param algorithm a closure containing the algorithm to apply
    * @return a typed result with the following properties:
    * <ul>
    *  <li>value: the actual value needed to produce the result</li>
@@ -63,7 +63,7 @@ class GoalSeek {
     )
     double val = refineRoot(function, solverResult.root, solverResult.lowerBound, solverResult.upperBound, absoluteAccuracy)
     double result = algorithm.call(val) as double
-    new Result(value: val, result: result, diff: (targetValue - result), iterations: solverResult.evaluations)
+    new Result(val, result, targetValue - result, solverResult.iterations)
   }
 
   /**
@@ -74,6 +74,7 @@ class GoalSeek {
    * @param maxValue the max value of the span to search for the value in
    * @param algorithm a closure containing the algorithm to apply
    * @return the typed goal seek result
+   * @throws RuntimeException if the goal cannot be found within the maxIterations
    */
   static Result solve(
       final Number targetValue,
@@ -81,7 +82,7 @@ class GoalSeek {
       Number maxValue,
       Closure<? extends Number> algorithm
   ) {
-    solve(targetValue, minValue, maxValue, 1.0e-8G, DEFAULT_MAX_ITERATIONS, algorithm)
+    solve(targetValue, minValue, maxValue, 1.0e-8, DEFAULT_MAX_ITERATIONS, algorithm)
   }
 
   /**
@@ -93,6 +94,7 @@ class GoalSeek {
    * @param threshold the allowed diff to still be considered as "no difference"
    * @param algorithm a closure containing the algorithm to apply
    * @return the typed goal seek result
+   * @throws RuntimeException if the goal cannot be found within the maxIterations
    */
   static Result solve(
       final Number targetValue,
@@ -114,6 +116,7 @@ class GoalSeek {
    * @param maxIterations the maximum number of iterations allowed
    * @param algorithm a closure containing the algorithm to apply
    * @return the typed goal seek result
+   * @throws RuntimeException if the goal cannot be found within the maxIterations
    */
   static Result solve(
       final Number targetValue,
@@ -184,13 +187,28 @@ class GoalSeek {
    */
   static class Result {
     /** Actual value needed to produce the requested result. */
-    double value
+    final double value
     /** Result of applying the algorithm to {@link #value}. */
-    double result
+    final double result
     /** Difference between target value and {@link #result}. */
-    double diff
-    /** Number of solver evaluations performed. */
-    int iterations
+    final double diff
+    /** Number of solver iterations performed. */
+    final int iterations
+
+    /**
+     * Creates a goal seek result.
+     *
+     * @param value actual value needed to produce the requested result
+     * @param result result of applying the algorithm to {@code value}
+     * @param diff difference between target value and {@code result}
+     * @param iterations number of solver iterations performed
+     */
+    Result(double value, double result, double diff, int iterations) {
+      this.value = value
+      this.result = result
+      this.diff = diff
+      this.iterations = iterations
+    }
 
     /**
      * Returns the computed input value as {@code BigDecimal}.
