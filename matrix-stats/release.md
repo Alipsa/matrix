@@ -1,5 +1,27 @@
 # Matrix stats release history
 
+## v2.5.0, unreleased
+**Review follow-up fixes and typed result API cleanup**
+
+### Bug Fixes and Robustness
+- Fix `LinearProgramSolver` infeasible equality-form handling so contradictory constraints throw `IllegalStateException('Linear program is infeasible')` instead of leaking pivot-table errors.
+- Validate `Fisher.test(...)` alternatives and reject unsupported values instead of silently treating them as two-sided tests.
+- Avoid integer overflow in Fisher odds-ratio and confidence-interval arithmetic for large contingency tables.
+- Make matrix-level normalization consistently select numeric columns by declared/non-null numeric content, preserve nonnumeric columns, and update transformed numeric column metadata.
+- Harden `LinearRegression` input validation for empty, mismatched, underdetermined, and constant-predictor inputs with clearer `IllegalArgumentException` messages.
+- Correct Brent-Dekker interpolation acceptance in `BrentSolver` so secant and inverse quadratic steps use consistent sign normalization and the standard `2 * p` acceptance bound.
+
+### API Additions and Usability
+- Add BigDecimal/list convenience accessors to `FitResult`, including coefficient, standard-error, fitted-value, residual, and `rSquared` accessors.
+- Add Groovy-facing `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
+
+### Breaking Changes
+- Replace the raw `Map` return type of `GoalSeek.solve()` with typed `GoalSeek.Result`, including BigDecimal accessors for computed value, result, and difference. Existing callers can restore the previous map-shaped result with `GoalSeek.solve(...) as Map`.
+
+### Tests and Documentation
+- Add focused regression coverage for solver infeasibility, Fisher validation and large-count arithmetic, normalization column selection, linear-regression validation, FitResult accessors, GoalSeek typed result behavior, and Brent/GoalSeek iteration behavior.
+- Refresh solver README examples and GroovyDoc for typed GoalSeek result usage and iteration semantics.
+
 ## v2.4.0, 2026-04-23
 **Native runtime cleanup and idiomatic Groovy API expansion**
 
