@@ -13,9 +13,10 @@
 
 ### API Additions and Usability
 - Add BigDecimal/list convenience accessors to `FitResult`, including coefficient, standard-error, fitted-value, residual, and `rSquared` accessors.
-- Add typed `GoalSeek.Result` values with BigDecimal accessors for computed value, result, and difference.
-- Preserve explicit `GoalSeek.Result as Map` compatibility for callers migrating from the previous map-shaped result.
 - Add Groovy-facing `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
+
+### Breaking Changes
+- Replace the raw `Map` return type of `GoalSeek.solve()` with typed `GoalSeek.Result`, including BigDecimal accessors for computed value, result, and difference. Existing callers can restore the previous map-shaped result with `GoalSeek.solve(...) as Map`.
 
 ### Tests and Documentation
 - Add focused regression coverage for solver infeasibility, Fisher validation and large-count arithmetic, normalization column selection, linear-regression validation, FitResult accessors, GoalSeek typed result behavior, and Brent/GoalSeek iteration behavior.
