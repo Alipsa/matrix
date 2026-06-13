@@ -155,8 +155,8 @@ class SolverApiTest {
     } as Map<String, Object>
 
     assertEquals(0.270d, result.value as double, 1e-8d)
-    assertEquals(27000.0d, result.result as double, 1e-6d)
-    assertEquals(0.0d, result.diff as double, 1e-6d)
+    assertEquals(27000.0d, result.result as double, 1e-8d)
+    assertEquals(0.0d, result.diff as double, 1e-8d)
     assertTrue(result.iterations as int > 0)
   }
 
