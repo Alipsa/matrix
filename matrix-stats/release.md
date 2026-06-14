@@ -1,108 +1,27 @@
 # Matrix stats release history
 
 ## v2.5.0, unreleased
-**Review follow-up fixes and typed result API cleanup**
-
-### Bug Fixes and Robustness
-- Fix `LinearProgramSolver` infeasible equality-form handling so contradictory constraints throw `IllegalStateException('Linear program is infeasible')` instead of leaking pivot-table errors.
-- Validate `Fisher.test(...)` alternatives and reject unsupported values instead of silently treating them as two-sided tests.
-- Avoid integer overflow in Fisher odds-ratio and confidence-interval arithmetic for large contingency tables.
-- Make matrix-level normalization consistently select numeric columns by declared/non-null numeric content, preserve nonnumeric columns, and update transformed numeric column metadata.
-- Harden `LinearRegression` input validation for empty, mismatched, underdetermined, and constant-predictor inputs with clearer `IllegalArgumentException` messages.
-- Correct Brent-Dekker interpolation acceptance in `BrentSolver` so secant and inverse quadratic steps use consistent sign normalization and the standard `2 * p` acceptance bound.
-
-### API Additions and Usability
-- Add BigDecimal/list convenience accessors to `FitResult`, including coefficient, standard-error, fitted-value, residual, and `rSquared` accessors.
-- Add Groovy-facing `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
-
-### Breaking Changes
-- Replace the raw `Map` return type of `GoalSeek.solve()` with typed `GoalSeek.Result`, including BigDecimal accessors for computed value, result, and difference. Existing callers can restore the previous map-shaped result with `GoalSeek.solve(...) as Map`.
-
-### Tests and Documentation
-- Add focused regression coverage for solver infeasibility, Fisher validation and large-count arithmetic, normalization column selection, linear-regression validation, FitResult accessors, GoalSeek typed result behavior, and Brent/GoalSeek iteration behavior.
-- Refresh solver README examples and GroovyDoc for typed GoalSeek result usage and iteration semantics.
+- `GoalSeek.solve()` now returns a typed `GoalSeek.Result` with BigDecimal accessors for the computed value, result, and difference. Existing callers that need the previous map-shaped value can use `GoalSeek.solve(...) as Map`.
+- Add Groovy-friendly `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
+- Add convenience accessors to `FitResult` for coefficients, standard errors, fitted values, residuals, and `rSquared`.
+- Fix `LinearProgramSolver` infeasible equality-form handling so contradictory constraints fail with a clear `IllegalStateException`.
+- Validate `Fisher.test(...)` alternatives and reject unsupported values instead of treating them as two-sided tests.
+- Avoid integer overflow in Fisher odds-ratio and confidence-interval calculations for large contingency tables.
+- Fix matrix-level normalization so numeric columns are selected consistently, nonnumeric columns are preserved, and transformed numeric column metadata is updated.
+- Improve `LinearRegression` validation for empty, mismatched, underdetermined, and constant-predictor inputs.
+- Correct Brent-Dekker interpolation acceptance in `BrentSolver`, improving `GoalSeek` iteration behavior.
 
 ## v2.4.0, 2026-04-23
-**Native runtime cleanup and idiomatic Groovy API expansion**
-
-### Runtime and Dependency Changes
-- Remove Apache Commons Math from the runtime dependency surface. `commons-math3` is now test-only and used to validate native implementations.
-- Add EJML Simple as an internal `implementation` dependency for the public linear algebra facade.
-- Configure `matrix-stats` production Groovy compilation through the shared compile-static Gradle script.
-- Make CodeNarc fail the build instead of reporting non-blocking findings.
-
-### New Public APIs
-
-#### Linear Algebra
-- Add `se.alipsa.matrix.stats.linalg.Linalg` for dense matrix operations:
-  inverse, determinant, linear solves, real eigenvalues, and SVD.
-- Add Matrix and Grid adapters with Groovy-facing return types:
-  `Matrix`, `Grid<BigDecimal>`, `BigDecimal`, `List<BigDecimal>`, and `SvdResult`.
-- Add `LinalgSingularMatrixException` and shared adapter utilities for singular and invalid matrix input handling.
-- Add compatibility classes under `se.alipsa.matrix.stats.linear` for native matrix algebra support.
-
-#### Linear Interpolation
-- Add `se.alipsa.matrix.stats.interpolation.Interpolation` for public linear interpolation.
-- Support explicit `(x, y, targetX)` interpolation, evenly spaced series interpolation, and Matrix/Grid-backed column interpolation.
-- Reject extrapolation, unsorted domains, duplicate domain values, length mismatches, ragged grids, and non-numeric columns.
-- Keep spline logic internal to formula/GAM smooth-term support; public spline interpolation is not part of the 2.4.0 API.
-
-#### Formula and Model-Frame Pipeline
-- Add R-style formula parsing and normalization support, including additive terms, intercept control, interactions, shorthand expansion, quoted identifiers, numeric transformations, `poly(...)`, and `s(...)` smooth terms.
-- Add `ModelFrame` and `ModelFrameResult` for design-matrix construction from Matrix data.
-- Add a Groovy-native operator DSL for formulas using `|`, `noIntercept`, `interaction(...)`, `smooth(...)`, and `I { ... }`.
-- Add categorical treatment encoding, dot expansion, subset support, NA handling, weights, offsets, and external environment variable resolution.
-- Add `NaAction` and formula metadata classes to make downstream model fitting explicit.
-- Reject unsupported response forms, smooth-term interactions, and unsupported frame metadata instead of silently ignoring them.
-
-#### Fit Registry and Formula-Based Regression
-- Add `FitRegistry`, `FitMethod`, `FitOptions`, and `FitResult` for named fit-method dispatch.
-- Add built-in `lm`, `loess`, and `gam` fit methods.
-- Add `FitDsl` convenience entry points so Groovy callers can write `lm(data) { y | x + group }`, `loess(data) { y | x }`, and `gam(data) { y | smooth(time, 6) + group }`.
-- Add `MultipleLinearRegression`, `LmMethod`, `LoessMethod`, and `GamMethod`.
-- Add `LoessOptions` and `GamOptions` with Groovy-facing numeric option surfaces.
-
-#### Native Distributions
-- Add native `NormalDistribution`, `ChiSquaredDistribution`, and `HypergeometricDistribution`.
-- Extend `TDistribution`, `FDistribution`, and `SpecialFunctions` to remove Commons Math runtime usage.
-- Add Groovy-facing `Number` overloads returning `BigDecimal` for public scalar distribution APIs.
-- Add typed entry points for F-distribution ANOVA helpers to avoid unsafe generic overload dispatch.
-
-#### Native Solvers and Optimization
-- Replace Commons Math optimizer/solver runtime usage with native implementations.
-- Add `BrentSolver` for one-dimensional bracketing root finding.
-- Update `GoalSeek` to use the native Brent-Dekker solver.
-- Add `NelderMeadOptimizer` for derivative-free multivariate minimization.
-- Add `LinearProgramSolver` for equality-form linear programs with non-negative variables.
-- Add `UnivariateObjective` and `MultivariateObjective` interfaces with Groovy-facing numeric bridges.
-
-### Idiomatic Groovy Numeric API Cleanup
-- Move public scalar result values toward `BigDecimal` and public numeric inputs toward `Number`.
-- Add `NumericConversion` to centralize finite-value checks, BigDecimal conversion, array/list conversion, alpha validation, and exact integer validation.
-- Add `StatUtils` and `LeastSquaresKernel` for small internal double-precision kernels where performance or algorithm constraints justify primitive arrays.
-- Replace duplicate numeric coercion and conversion logic across regression, interpolation, distributions, time-series, KDE, and solver code.
-- Add typed compatibility entry points for `Johansen` and F-distribution list/array APIs where JVM erasure makes same-name generic overloads unsafe.
-- Deprecate primitive/double-style identity accessors in selected result classes where Groovy-facing properties are now preferred.
-
-### Time-Series and Statistical Robustness
-- Extract shared time-series utility logic into `TimeSeriesUtils`.
-- Improve singular-matrix handling and error messages in time-series code.
-- Harden Johansen critical-value handling for unsupported variable counts.
-- Improve CCM library-size validation by rejecting non-integral numeric inputs instead of truncating silently.
-- Update ANOVA and contingency result APIs to accept `Number` alpha inputs.
-
-### Tests and Quality
-- Add coverage for formula parsing, model-frame construction, design matrices, spline basis expansion, fit registry, `lm`, `loess`, `gam`, multiple linear regression, interpolation, linalg, SVD, native distributions, native solvers, numeric conversion, and least-squares kernels.
-- Add direct unit tests for `GroupEstimator.estimateNumberOfGroups` and `estimateKByElbow`, covering both the `double[][]` and Groovy-facing `List` overloads, custom `maxK`/`iterations`, and error cases (too few points, too few distinct points).
-- Add benchmark-oriented tests for selected Groovy-facing paths versus retained primitive kernels.
-- Update tests for BigDecimal/Groovy-friendly assertions and numeric API behavior.
-- Increase coverage around null handling, weights, offsets, subset filtering, categorical encoding, exact integer validation, singular matrices, and solver convergence.
-
-### Documentation
-- Refresh `matrix-stats` README, tutorial, and cookbook docs for the 2.4.0 API surface.
-- Document the Commons Math runtime removal and EJML implementation detail.
-- Add examples for `Linalg`, `Interpolation`, formula/model-frame fitting, the Groovy formula DSL, fit convenience helpers, native distributions, and native solvers.
-- Refresh broader tutorial setup snippets to use the current BOM and Groovy versions.
+- Remove Apache Commons Math from the runtime dependency surface; native implementations now cover the distributions, solvers, optimizers, and linear algebra paths that previously needed it.
+- Add `se.alipsa.matrix.stats.linalg.Linalg` for dense matrix operations, including inverse, determinant, linear solves, real eigenvalues, and SVD, with Matrix/Grid-friendly return types.
+- Add `se.alipsa.matrix.stats.interpolation.Interpolation` for linear interpolation over explicit series, evenly spaced series, Matrix columns, and Grid data.
+- Add R-style formula parsing, `ModelFrame`, and a Groovy formula DSL for design-matrix construction, including categorical encoding, dot expansion, NA handling, subsets, weights, offsets, interactions, `poly(...)`, and smooth terms.
+- Add formula-based fitting APIs through `FitRegistry`, `FitResult`, and `FitDsl`, with built-in `lm`, `loess`, and `gam` methods.
+- Add native `NormalDistribution`, `ChiSquaredDistribution`, and `HypergeometricDistribution`; extend the T and F distribution APIs with Groovy-facing `Number` inputs and `BigDecimal` scalar results.
+- Add native `BrentSolver`, `NelderMeadOptimizer`, and `LinearProgramSolver`; `GoalSeek` now uses the native Brent-Dekker solver.
+- Move public numeric APIs toward `Number` inputs and `BigDecimal` results, with typed compatibility entry points for Johansen and F-distribution ANOVA helpers where generic overload dispatch was unsafe.
+- Improve time-series error handling for singular matrices and unsupported Johansen critical-value dimensions.
+- Reject non-integral CCM library-size values instead of silently truncating them.
 
 ## v2.3.0, 2026-01-30
 **Major expansion with 26+ new statistical tests and comprehensive refactoring**
