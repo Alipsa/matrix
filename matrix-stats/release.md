@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.5.0, unreleased
+## v2.5.0, 2026-06-14
 - `GoalSeek.solve()` now returns a typed `GoalSeek.Result` with BigDecimal accessors for the computed value, result, and difference. Existing callers that need the previous map-shaped value can use `GoalSeek.solve(...) as Map`.
 - Add Groovy-friendly `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
 - Add convenience accessors to `FitResult` for coefficients, standard errors, fitted values, residuals, and `rSquared`.
