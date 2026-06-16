@@ -10,10 +10,10 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Exports a Matrix to a CSV using apache commons csv.
  *
- * @deprecated Use {@link CsvWriter} instead. This class will be removed in v2.0.
+ * @deprecated Use {@link CsvWriter} instead. This class will be removed in a future major release.
  * <p>Migration guide:</p>
  * <ul>
- *   <li>{@code CsvExporter.exportToCsv(matrix, file)} → {@code CsvWriter.write(matrix, file)}</li>
+ *   <li>{@code CsvExporter.exportToCsv(matrix, file)} → {@code CsvWriter.write(matrix).to(file)}</li>
  *   <li>{@code CsvExporter.exportToExcelCsv(matrix, file)} → {@code CsvWriter.writeExcelCsv(matrix, file)}</li>
  *   <li>{@code CsvExporter.exportToTsv(matrix, file)} → {@code CsvWriter.writeTsv(matrix, file)}</li>
  * </ul>
@@ -31,7 +31,7 @@ class CsvExporter {
    * @param table the matrix to export
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@link CsvWriter#write(Matrix, File, CSVFormat, boolean)} instead
+   * @deprecated Use {@code CsvWriter.write(table).withHeader(withHeader).to(out)} instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, File out, boolean withHeader = true) {
@@ -46,7 +46,7 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@link CsvWriter#write(Matrix, File, CSVFormat, boolean)} instead
+   * @deprecated Use {@code CsvWriter.write(table).to(out)} with fluent format configuration instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format, File out, boolean withHeader = true) {
@@ -60,7 +60,7 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the writer to write to
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@link CsvWriter#write(Matrix, Writer, CSVFormat, boolean)} instead
+   * @deprecated Use {@code CsvWriter.write(table).to(out)} with fluent format configuration instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, Writer out, boolean withHeader = true) {
@@ -74,7 +74,7 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the print writer to write to
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@link CsvWriter#write(Matrix, CSVFormat, PrintWriter, boolean)} instead
+   * @deprecated Use {@code CsvWriter.write(table).to(out)} with fluent format configuration instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, PrintWriter out, boolean withHeader = true) {
@@ -87,7 +87,7 @@ class CsvExporter {
    * @param table the matrix to export
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@link CsvWriter#write(Matrix, CSVPrinter, boolean)} instead
+   * @deprecated Use {@code CsvWriter.write(table).to(writer)} instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, CSVPrinter printer, boolean withHeader = true) {

@@ -9,6 +9,7 @@ import se.alipsa.matrix.csv.CsvReader
 import se.alipsa.matrix.csv.CsvWriter
 
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -151,6 +152,43 @@ Bob,25'''
     assertNotNull(matrix, 'Matrix should not be null')
     assertEquals(0, matrix.rowCount(), 'Empty CSV should have 0 rows')
     assertEquals(0, matrix.columnCount(), 'Empty CSV should have 0 columns')
+  }
+
+  @Test
+  void readHeaderOnlyCsvWithFluentApi() {
+    Matrix matrix = CsvReader.read().fromString('id,name,amount')
+
+    assertEquals('matrix', matrix.matrixName)
+    assertEquals(0, matrix.rowCount(), 'Header-only CSV should have 0 data rows')
+    assertEquals(3, matrix.columnCount(), 'Header-only CSV should preserve columns')
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), 'Column names')
+  }
+
+  @Test
+  void readHeaderOnlyCsvWithSpi() {
+    File file = tempDir.resolve('header-only.csv').toFile()
+    file.text = 'id,name,amount'
+
+    Matrix matrix = Matrix.read(file)
+
+    assertEquals(0, matrix.rowCount(), 'Header-only CSV should have 0 data rows')
+    assertEquals(3, matrix.columnCount(), 'Header-only CSV should preserve columns')
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), 'Column names')
+  }
+
+  @Test
+  void fluentStringReaderAndStreamReadsUseDefaultMatrixName() {
+    String csvContent = 'name,age\nAlice,30\n'
+
+    Matrix fromString = CsvReader.read().fromString(csvContent)
+    Matrix fromReader = CsvReader.read().from(new StringReader(csvContent))
+    Matrix fromStream = CsvReader.read().from(new ByteArrayInputStream(csvContent.bytes))
+    Matrix explicitName = CsvReader.read().matrixName('people').fromString(csvContent)
+
+    assertEquals('matrix', fromString.matrixName)
+    assertEquals('matrix', fromReader.matrixName)
+    assertEquals('matrix', fromStream.matrixName)
+    assertEquals('people', explicitName.matrixName)
   }
 
   // ── Read: presets ──────────────────────────────────────────
@@ -361,6 +399,32 @@ Alice,30'''
     assertTrue(csvContent.contains('col1,col2'), 'Should contain header')
     assertTrue(csvContent.contains('a,b'), 'Should contain first row')
     assertTrue(csvContent.contains('c,d'), 'Should contain second row')
+  }
+
+  @Test
+  void writeToFileWithFluentCharset() {
+    Matrix matrix = Matrix.builder()
+        .columnNames(['name'])
+        .rows([
+            ['Åsa'],
+            ['Élodie']
+        ])
+        .build()
+
+    File outputFile = tempDir.resolve('latin1.csv').toFile()
+    CsvWriter.write(matrix)
+        .charset('ISO-8859-1')
+        .to(outputFile)
+
+    String content = Files.readString(outputFile.toPath(), StandardCharsets.ISO_8859_1)
+    Matrix reloaded = CsvReader.read()
+        .charset(StandardCharsets.ISO_8859_1)
+        .from(outputFile)
+
+    assertTrue(content.contains('Åsa'))
+    assertTrue(content.contains('Élodie'))
+    assertEquals(['Åsa'], reloaded.row(0))
+    assertEquals(['Élodie'], reloaded.row(1))
   }
 
   // ── Write: presets ─────────────────────────────────────────
