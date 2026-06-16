@@ -213,7 +213,8 @@ class CsvWriter {
    * @param matrix the matrix to write
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row (default: true)
-   * @deprecated Use {@code CsvWriter.write(matrix).to(writer)} instead
+   * @deprecated Prefer {@code CsvWriter.write(matrix).to(writer)} when a Writer is available.
+   * Use this compatibility overload when an existing CSVPrinter must be reused.
    */
   @Deprecated
   static void write(Matrix matrix, CSVPrinter printer, boolean withHeader = true) {

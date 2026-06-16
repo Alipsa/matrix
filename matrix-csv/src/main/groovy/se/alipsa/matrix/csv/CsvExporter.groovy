@@ -87,7 +87,7 @@ class CsvExporter {
    * @param table the matrix to export
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row, default is true
-   * @deprecated Use {@code CsvWriter.write(table).to(writer)} instead
+   * @deprecated Use {@code CsvWriter.write(table, printer, withHeader)} instead
    */
   @Deprecated
   static void exportToCsv(Matrix table, CSVPrinter printer, boolean withHeader = true) {
