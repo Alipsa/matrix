@@ -276,6 +276,19 @@ Bob,Göteborg'''
   }
 
   @Test
+  void readFromFileWithStringCharset() {
+    File inputFile = tempDir.resolve('latin1-read.csv').toFile()
+    inputFile.write('name\nÅsa\nÉlodie\n', 'ISO-8859-1')
+
+    Matrix matrix = CsvReader.read()
+        .charset('ISO-8859-1')
+        .from(inputFile)
+
+    assertEquals(['Åsa'], matrix.row(0))
+    assertEquals(['Élodie'], matrix.row(1))
+  }
+
+  @Test
   void readWithMatrixName() {
     String csvContent = '''name,age
 Alice,30'''

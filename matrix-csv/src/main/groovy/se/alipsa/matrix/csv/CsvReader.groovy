@@ -696,7 +696,14 @@ class CsvReader {
     /** Sets the character encoding (default: UTF-8). */
     ReadBuilder charset(Charset cs) { charset = cs; this }
 
-    /** Sets the name for the resulting Matrix. */
+    /** Sets the character encoding by name (default: UTF-8). */
+    ReadBuilder charset(String cs) { charset = Charset.forName(cs); this }
+
+    /**
+     * Sets the name for the resulting Matrix.
+     * Defaults to the source-derived name for file and URL reads, or {@code matrix}
+     * for stream, reader, and string reads.
+     */
     ReadBuilder matrixName(String name) { matrixName = name; this }
 
     /** Sets how duplicate header names are handled when header parsing is enabled. */
