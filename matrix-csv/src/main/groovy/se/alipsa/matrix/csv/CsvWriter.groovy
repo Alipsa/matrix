@@ -10,6 +10,7 @@ import org.apache.commons.io.output.CloseShieldWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 /**
@@ -212,7 +213,8 @@ class CsvWriter {
    * @param matrix the matrix to write
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row (default: true)
-   * @deprecated Use {@code CsvWriter.write(matrix).to(writer)} instead
+   * @deprecated Prefer {@code CsvWriter.write(matrix).to(writer)} when a Writer is available.
+   * Use this compatibility overload when an existing CSVPrinter must be reused.
    */
   @Deprecated
   static void write(Matrix matrix, CSVPrinter printer, boolean withHeader = true) {
@@ -394,6 +396,7 @@ class CsvWriter {
     private QuoteMode quoteMode = null
     private boolean allowMissingColumnNames = false
     private boolean withHeaderValue = true
+    private Charset charset = StandardCharsets.UTF_8
 
     private WriteBuilder(Matrix matrix) {
       this.matrix = matrix
@@ -448,6 +451,12 @@ class CsvWriter {
     /** Sets whether to include column names in the first row (default: true). */
     WriteBuilder withHeader(boolean b) { withHeaderValue = b; this }
 
+    /** Sets the character encoding for File and Path output. */
+    WriteBuilder charset(Charset cs) { charset = cs; this }
+
+    /** Sets the character encoding by name for File and Path output. */
+    WriteBuilder charset(String cs) { charset = Charset.forName(cs); this }
+
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Apache Excel-compatible CSV format, including CRLF output and {@link QuoteMode#ALL_NON_NULL}. */
@@ -467,11 +476,7 @@ class CsvWriter {
      * @param out the file to write to (or a directory)
      */
     void to(File out) {
-      validateMatrix(matrix)
-      out = ensureFileOutput(matrix, out)
-      try (PrintWriter pw = new PrintWriter(out)) {
-        to(pw)
-      }
+      to(out, charset)
     }
 
     /**

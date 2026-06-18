@@ -1,1 +1,1 @@
-./gradlew dependencyUpdates -Drevision=release
+./gradlew dependencyUpdates -Drevision=release --no-configuration-cache

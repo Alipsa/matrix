@@ -13,12 +13,12 @@ import java.nio.file.Path
 /**
  * Imports CSV files into Matrix objects using Apache Commons CSV.
  *
- * @deprecated Use {@link CsvReader} instead. This class will be removed in v2.0.
+ * @deprecated Use {@link CsvReader} instead. This class will be removed in a future major release.
  * <p>Migration guide:</p>
  * <ul>
- *   <li>{@code CsvImporter.importCsv(file)} → {@code CsvReader.read(file)}</li>
- *   <li>{@code CsvImporter.importCsvString(content)} → {@code CsvReader.readString(content)}</li>
- *   <li>{@code CsvImporter.importCsvFromFile(path)} → {@code CsvReader.readFile(path)}</li>
+ *   <li>{@code CsvImporter.importCsv(file)} → {@code CsvReader.read().from(file)}</li>
+ *   <li>{@code CsvImporter.importCsvString(content)} → {@code CsvReader.read().fromString(content)}</li>
+ *   <li>{@code CsvImporter.importCsvFromFile(path)} → {@code CsvReader.read().fromFile(path)}</li>
  * </ul>
  *
  * <p>Provides flexible CSV parsing with support for multiple input sources
@@ -36,7 +36,7 @@ class CsvImporter {
   /**
    * Configuration options for CSV parsing.
    *
-   * @deprecated Use {@link CsvOption} instead. This enum will be removed in v2.0.
+   * @deprecated Use {@link CsvOption} instead. This enum will be removed in a future major release.
    */
   @Deprecated
   @SuppressWarnings('FieldName')
@@ -295,7 +295,7 @@ class CsvImporter {
    * @return Matrix containing the imported data with default settings
    * @throws IOException if reading the file fails or file not found
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link CsvReader#readFile(String)} instead
+   * @deprecated Use {@code CsvReader.read().fromFile(filePath)} instead
    */
   @Deprecated
   static Matrix importCsvFromFile(String filePath) throws IOException {

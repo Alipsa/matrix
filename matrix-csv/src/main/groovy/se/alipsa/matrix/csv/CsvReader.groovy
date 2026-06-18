@@ -436,9 +436,17 @@ class CsvReader {
    */
   private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader) {
     List<List<String>> rows = parser.records*.toList()
+    List<String> headerRow = parserHeaderRow(parser, rows.isEmpty() ? 0 : rows[0].size())
 
     // Handle empty CSV file
     if (rows.isEmpty()) {
+      if (!headerRow.isEmpty()) {
+        return Matrix.builder()
+            .matrixName(matrixName ?: DEFAULT_MATRIX_NAME)
+            .columnNames(headerRow)
+            .types([String] * headerRow.size())
+            .build()
+      }
       return Matrix.builder()
           .matrixName(matrixName ?: DEFAULT_MATRIX_NAME)
           .build()
@@ -452,24 +460,9 @@ class CsvReader {
       }
       rowCount++
     }
-    List<String> headerRow = []
-    if (parser.headerNames != null && parser.headerNames.size() > 0) {
-      headerRow = parser.headerNames
-      if (headerRow.size() != ncols) {
-        List<String> resolvedHeaderRow = [''] * ncols
-        Map<String, Integer> headerMap = parser.headerMap
-        if (headerMap != null) {
-          headerMap.each { String name, Integer index ->
-            if (index != null && index >= 0 && index < ncols) {
-              resolvedHeaderRow[index] = name ?: ''
-            }
-          }
-        }
-        headerRow = resolvedHeaderRow
-      }
-    } else if (firstRowAsHeader) {
+    if (headerRow.isEmpty() && firstRowAsHeader) {
       headerRow = rows.remove(0)
-    } else {
+    } else if (headerRow.isEmpty()) {
       for (int i = 0; i < ncols; i++) {
         headerRow << 'c' + i
       }
@@ -481,6 +474,26 @@ class CsvReader {
         .rows(rows)
         .types(types)
         .build()
+  }
+
+  private static List<String> parserHeaderRow(CSVParser parser, int ncols) {
+    if (parser.headerNames == null || parser.headerNames.isEmpty()) {
+      return []
+    }
+    List<String> headerRow = parser.headerNames
+    if (ncols == 0 || headerRow.size() == ncols) {
+      return headerRow
+    }
+    List<String> resolvedHeaderRow = [''] * ncols
+    Map<String, Integer> headerMap = parser.headerMap
+    if (headerMap != null) {
+      headerMap.each { String name, Integer index ->
+        if (index != null && index >= 0 && index < ncols) {
+          resolvedHeaderRow[index] = name ?: ''
+        }
+      }
+    }
+    resolvedHeaderRow
   }
 
   /**
@@ -592,7 +605,7 @@ class CsvReader {
     private boolean firstRowAsHeader = true
     private List<String> header = null
     private Charset charset = StandardCharsets.UTF_8
-    private String matrixName = ''
+    private String matrixName = null
     private List<Class> types = null
     private String dateTimeFormat = null
     private NumberFormat numberFormat = null
@@ -683,7 +696,14 @@ class CsvReader {
     /** Sets the character encoding (default: UTF-8). */
     ReadBuilder charset(Charset cs) { charset = cs; this }
 
-    /** Sets the name for the resulting Matrix (default: empty string). */
+    /** Sets the character encoding by name (default: UTF-8). */
+    ReadBuilder charset(String cs) { charset = Charset.forName(cs); this }
+
+    /**
+     * Sets the name for the resulting Matrix.
+     * Defaults to the source-derived name for file and URL reads, or {@code matrix}
+     * for stream, reader, and string reads.
+     */
     ReadBuilder matrixName(String name) { matrixName = name; this }
 
     /** Sets how duplicate header names are handled when header parsing is enabled. */
@@ -828,7 +848,7 @@ class CsvReader {
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), charset, apacheFormat)) {
-        convertIfNeeded(parse(matrixName, parser, firstRowAsHeader))
+        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader))
       }
     }
 
@@ -842,7 +862,7 @@ class CsvReader {
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), apacheFormat)) {
-        convertIfNeeded(parse(matrixName, parser, firstRowAsHeader))
+        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader))
       }
     }
 

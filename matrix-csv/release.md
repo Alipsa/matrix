@@ -1,5 +1,11 @@
 # Release history
 
+## v2.4.0, 2026-06-18
+- preserve column names when reading header-only CSV files through the fluent API and SPI
+- use the default matrix name `matrix` for fluent string, reader, and stream reads unless explicitly overridden
+- add fluent file/path charset support for `CsvWriter.write(matrix).charset(...).to(...)`
+- refresh deprecated `CsvImporter` and `CsvExporter` migration guidance for the current `CsvReader` / `CsvWriter` APIs
+
 ## v2.3.0, 2026-03-26
 - clean up deprecated `CsvImporter` dead code and suppress legacy enum naming violations without breaking backward compatibility
 - fix remaining CodeNarc priority 2 issues across `matrix-csv`, including builder field naming and deprecated Reader charset documentation

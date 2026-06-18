@@ -78,6 +78,7 @@ Write defaults:
 - quote defaults to `"`
 - header output is enabled by default
 - charset defaults to UTF-8 for file/path targets
+- fluent writes can set file/path encoding with `charset(...)`
 - `.tsv` and `.tab` targets auto-select tab delimiters for typed direct writes and SPI writes unless the delimiter was explicitly configured
 
 Preset behavior:
@@ -156,6 +157,10 @@ CsvWriter.write(matrix)
     .to(new File('data-no-header.csv'))
 
 CsvWriter.write(matrix)
+    .charset('ISO-8859-1')
+    .to(new File('latin1.csv'))
+
+CsvWriter.write(matrix)
     .excel()
     .to(new File('report.csv'))
 
@@ -171,6 +176,7 @@ Supported write-time fluent configuration is intentionally limited to options wi
 - `escapeCharacter(...)`
 - `nullString(...)`
 - `recordSeparator(...)`
+- `charset(...)`
 - `withHeader(...)`
 - preset helpers such as `excel()`, `tsv()`, and `rfc4180()`
 
@@ -341,6 +347,7 @@ def matrix = CsvReader.read().delimiter(';').from(file)
 
 | Method | Default | Notes |
 |--------|---------|-------|
+| `charset(...)` | `UTF-8` | File/Path output only |
 | `withHeader(...)` | `true` | Write only |
 
 ### Presets
