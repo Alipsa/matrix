@@ -606,23 +606,23 @@ class MatrixParquetWriter {
         .withExtraMetaData(extraMeta)
         .build()
 
-    def factory = new SimpleGroupFactory(schema)
-    def rowCount = matrix.rowCount()
-    def colNames = matrix.columnNames()
+    writer.withCloseable { parquetWriter ->
+      def factory = new SimpleGroupFactory(schema)
+      def rowCount = matrix.rowCount()
+      def colNames = matrix.columnNames()
 
-    (0..<rowCount).each { i ->
-      def group = factory.newGroup()
-      colNames.each { col ->
-        def value = matrix[i, col]
-        if (value != null) {
-          def fieldType = schema.getType(col)
-          writeValue(group, col, fieldType, value)
+      (0..<rowCount).each { i ->
+        def group = factory.newGroup()
+        colNames.each { col ->
+          def value = matrix[i, col]
+          if (value != null) {
+            def fieldType = schema.getType(col)
+            writeValue(group, col, fieldType, value)
+          }
         }
+        parquetWriter.write(group)
       }
-      writer.write(group)
     }
-
-    writer.close()
     return file
   }
 
@@ -661,23 +661,23 @@ class MatrixParquetWriter {
         .withExtraMetaData(extraMeta)
         .build()
 
-    def factory = new SimpleGroupFactory(schema)
-    def rowCount = matrix.rowCount()
-    def colNames = matrix.columnNames()
+    writer.withCloseable { parquetWriter ->
+      def factory = new SimpleGroupFactory(schema)
+      def rowCount = matrix.rowCount()
+      def colNames = matrix.columnNames()
 
-    (0..<rowCount).each { i ->
-      def group = factory.newGroup()
-      colNames.each { col ->
-        def value = matrix[i, col]
-        if (value != null) {
-          def fieldType = schema.getType(col)
-          writeValue(group, col, fieldType, value)
+      (0..<rowCount).each { i ->
+        def group = factory.newGroup()
+        colNames.each { col ->
+          def value = matrix[i, col]
+          if (value != null) {
+            def fieldType = schema.getType(col)
+            writeValue(group, col, fieldType, value)
+          }
         }
+        parquetWriter.write(group)
       }
-      writer.write(group)
     }
-
-    writer.close()
     return outputFile.getBytes()
   }
 
