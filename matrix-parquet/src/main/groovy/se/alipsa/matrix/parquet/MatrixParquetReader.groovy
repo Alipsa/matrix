@@ -114,7 +114,11 @@ class MatrixParquetReader {
   private static final String ERR_ZONE_ID_NULL = 'ZoneId cannot be null'
   private static final String DOT = '.'
   private static final String COMMA = ','
+  private static final long MILLIS_PER_SECOND = 1_000L
   private static final long MICROS_PER_SECOND = 1_000_000L
+  private static final long NANOS_PER_SECOND = 1_000_000_000L
+  private static final long NANOS_PER_MILLI = 1_000_000L
+  private static final long NANOS_PER_MICRO = 1_000L
 
   /**
    * Creates a new builder for reading Parquet data into a Matrix.
@@ -934,12 +938,12 @@ class MatrixParquetReader {
         return group.getInteger(fieldName, 0)
       case PrimitiveTypeName.INT64:
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-          long micros = group.getLong(fieldName, 0)
-          long epochSecond = Math.floorDiv(micros, MICROS_PER_SECOND)
-          int microOfSecond = (int) Math.floorMod(micros, MICROS_PER_SECOND)
-          Instant instant = Instant.ofEpochSecond(epochSecond, microOfSecond * 1_000L)
+          Instant instant = timestampInstant(group.getLong(fieldName, 0), logical.unit)
           if (expectedType == java.sql.Timestamp) {
             return java.sql.Timestamp.from(instant)
+          }
+          if (expectedType == Date) {
+            return Date.from(instant)
           }
           return LocalDateTime.ofInstant(instant, getZoneId())
         }
@@ -975,6 +979,22 @@ class MatrixParquetReader {
       default:
         return group.getString(fieldName, 0)
     }
+  }
+
+  private static Instant timestampInstant(long value, LogicalTypeAnnotation.TimeUnit unit) {
+    if (unit == LogicalTypeAnnotation.TimeUnit.MILLIS) {
+      return Instant.ofEpochSecond(
+          Math.floorDiv(value, MILLIS_PER_SECOND),
+          Math.floorMod(value, MILLIS_PER_SECOND) * NANOS_PER_MILLI)
+    }
+    if (unit == LogicalTypeAnnotation.TimeUnit.NANOS) {
+      return Instant.ofEpochSecond(
+          Math.floorDiv(value, NANOS_PER_SECOND),
+          Math.floorMod(value, NANOS_PER_SECOND))
+    }
+    Instant.ofEpochSecond(
+        Math.floorDiv(value, MICROS_PER_SECOND),
+        Math.floorMod(value, MICROS_PER_SECOND) * NANOS_PER_MICRO)
   }
 
   private static List readList(Group group, String fieldName, GroupType groupType) {

@@ -1,6 +1,10 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.parquet.hadoop.ParquetFileReader
+import org.apache.parquet.schema.LogicalTypeAnnotation
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -55,6 +59,16 @@ class MatrixParquetWriterLifecycleTest {
 
     File file = tempDir.resolve('java_util_date.parquet').toFile()
     MatrixParquetWriter.write(data, file)
+    def schema = ParquetFileReader
+        .readFooter(new Configuration(), new org.apache.hadoop.fs.Path(file.toURI()))
+        .fileMetaData.schema
+    def createdField = schema.getType('created').asPrimitiveType()
+
+    assertEquals(PrimitiveTypeName.INT64, createdField.primitiveTypeName)
+    assertEquals(
+        LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS),
+        createdField.logicalTypeAnnotation)
+
     Matrix matrix = MatrixParquetReader.read(file)
 
     assertEquals([Integer, Date], matrix.types())
