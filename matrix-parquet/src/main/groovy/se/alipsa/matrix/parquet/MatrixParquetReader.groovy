@@ -863,12 +863,12 @@ class MatrixParquetReader {
 
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
-      case PrimitiveTypeName.INT32: return Integer
-      case PrimitiveTypeName.INT64: return Long
-      case PrimitiveTypeName.FLOAT: return Float
-      case PrimitiveTypeName.DOUBLE: return Double
-      case PrimitiveTypeName.BOOLEAN: return Boolean
-      default: return String
+      case PrimitiveTypeName.INT32 -> Integer
+      case PrimitiveTypeName.INT64 -> Long
+      case PrimitiveTypeName.FLOAT -> Float
+      case PrimitiveTypeName.DOUBLE -> Double
+      case PrimitiveTypeName.BOOLEAN -> Boolean
+      default -> String
     }
   }
 
@@ -924,60 +924,59 @@ class MatrixParquetReader {
   private static Object readPrimitive(Group group, String fieldName, PrimitiveType fieldType, Class expectedType) {
     def logical = fieldType.logicalTypeAnnotation
     switch (fieldType.primitiveTypeName) {
-      case PrimitiveTypeName.INT32:
+      case PrimitiveTypeName.INT32 -> {
         if (logical == LogicalTypeAnnotation.dateType()) {
-          return LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
-        }
-        if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+          LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
+        } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
           int millis = group.getInteger(fieldName, 0)
-          return Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
+          Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
+        } else if (expectedType == java.sql.Date) {
+          java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
+        } else {
+          group.getInteger(fieldName, 0)
         }
-        if (expectedType == java.sql.Date) {
-          return java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
-        }
-        return group.getInteger(fieldName, 0)
-      case PrimitiveTypeName.INT64:
+      }
+      case PrimitiveTypeName.INT64 -> {
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
           Instant instant = timestampInstant(group.getLong(fieldName, 0), logical.unit)
           if (expectedType == java.sql.Timestamp) {
-            return java.sql.Timestamp.from(instant)
+            java.sql.Timestamp.from(instant)
+          } else if (expectedType == Date) {
+            Date.from(instant)
+          } else {
+            LocalDateTime.ofInstant(instant, getZoneId())
           }
-          if (expectedType == Date) {
-            return Date.from(instant)
+        } else {
+          def longValue = group.getLong(fieldName, 0)
+          if (expectedType == BigInteger) {
+            BigInteger.valueOf(longValue)
+          } else if (expectedType == Date) {
+            new Date(longValue)
+          } else {
+            longValue
           }
-          return LocalDateTime.ofInstant(instant, getZoneId())
         }
-        def longValue = group.getLong(fieldName, 0)
-        if (expectedType == BigInteger) {
-          return BigInteger.valueOf(longValue)
-        }
-        if (expectedType == Date) {
-          return new Date(longValue)
-        }
-        return longValue
-      case PrimitiveTypeName.FLOAT:
-        return group.getFloat(fieldName, 0)
-      case PrimitiveTypeName.DOUBLE:
-        return group.getDouble(fieldName, 0)
-      case PrimitiveTypeName.BOOLEAN:
-        return group.getBoolean(fieldName, 0)
-      case PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY:
-      case PrimitiveTypeName.BINARY:
+      }
+      case PrimitiveTypeName.FLOAT -> group.getFloat(fieldName, 0)
+      case PrimitiveTypeName.DOUBLE -> group.getDouble(fieldName, 0)
+      case PrimitiveTypeName.BOOLEAN -> group.getBoolean(fieldName, 0)
+      case PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, PrimitiveTypeName.BINARY -> {
         if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
           def scale = logical.scale
           def binary = group.getBinary(fieldName, 0)
           def unscaled = new BigInteger(binary.getBytes())
           if (expectedType == BigInteger) {
-            return unscaled
+            unscaled
+          } else {
+            new BigDecimal(unscaled, scale)
           }
-          return new BigDecimal(unscaled, scale)
+        } else if (expectedType == BigDecimal) {
+          new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
+        } else {
+          group.getBinary(fieldName, 0).toStringUsingUTF8()
         }
-        if (expectedType == BigDecimal) {
-          return new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
-        }
-        return group.getBinary(fieldName, 0).toStringUsingUTF8()
-      default:
-        return group.getString(fieldName, 0)
+      }
+      default -> group.getString(fieldName, 0)
     }
   }
 
