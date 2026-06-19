@@ -6,6 +6,13 @@ import static se.alipsa.matrix.core.ListConverter.toBigDecimals
 import static se.alipsa.matrix.core.ListConverter.toDoubles
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path as HadoopPath
+import org.apache.parquet.example.data.simple.SimpleGroupFactory
+import org.apache.parquet.hadoop.example.ExampleParquetWriter
+import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.PrimitiveType
+import org.apache.parquet.schema.Types
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -148,6 +155,29 @@ class MatrixParquetTest {
     String message = exception.getMessage() ?: ''
     assertTrue(message.contains('exceeds the configured precision'),
         "Expected an exception indicating a precision overflow, but got: ${message}")
+  }
+
+  @Test
+  void testBigDecimalFallbackFromPlainBinaryColumn() {
+    MessageType schema = Types.buildMessage()
+        .optional(PrimitiveType.PrimitiveTypeName.BINARY).named('amount')
+        .named('ExternalSchema')
+
+    File file = tempDir.resolve('external_plain_binary.parquet').toFile()
+    Map<String, String> extraMeta = [(MatrixParquetReader.METADATA_COLUMN_TYPES): 'java.math.BigDecimal']
+
+    def writer = ExampleParquetWriter.builder(new HadoopPath(file.toURI()))
+        .withConf(new Configuration())
+        .withType(schema)
+        .withExtraMetaData(extraMeta)
+        .build()
+    def group = new SimpleGroupFactory(schema).newGroup()
+    group.append('amount', '123.45')
+    writer.write(group)
+    writer.close()
+
+    Matrix matrix = MatrixParquetReader.read(file)
+    assertEquals(new BigDecimal('123.45'), matrix.amount[0])
   }
 
   @Test
