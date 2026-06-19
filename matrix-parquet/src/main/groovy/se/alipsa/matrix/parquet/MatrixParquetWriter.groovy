@@ -690,14 +690,61 @@ class MatrixParquetWriter {
    * @return the Parquet MessageType schema.
    */
   private static MessageType buildSchema(Matrix matrix, Map<String, int[]> explicitDecimalMeta) {
+    Map<String, int[]> decimalMeta = withBigIntegerPrecision(matrix, explicitDecimalMeta)
     def builder = Types.buildMessage()
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
-      def meta = explicitDecimalMeta?.get(col)
+      def meta = decimalMeta?.get(col)
       log.debug("Building schema for column '$col' of type $type with decimal meta: $meta")
       builder.addField(buildParquetType(col, matrix.column(col), type, meta))
     }
     return builder.named(matrix.matrixName ?: "MatrixSchema" )
+  }
+
+  /**
+   * Ensures every BigInteger column has decimal metadata {@code [precision, 0]}.
+   * Explicit caller-supplied metadata wins after validating its scale is 0
+   * and that its precision is large enough to hold every value in the column.
+   */
+  private static Map<String, int[]> withBigIntegerPrecision(Matrix matrix, Map<String, int[]> explicitDecimalMeta) {
+    Map<String, int[]> merged = explicitDecimalMeta != null ? new LinkedHashMap<>(explicitDecimalMeta) : new LinkedHashMap<>()
+    matrix.columnNames().each { col ->
+      if (matrix.type(col) != BigInteger) {
+        return
+      }
+      int[] existing = merged[col]
+      if (existing != null) {
+        if (existing[1] != 0) {
+          throw new IllegalArgumentException(
+              "decimalMeta['$col'] scale must be 0 for BigInteger columns but was ${existing[1]}")
+        }
+        int requiredPrecision = inferBigIntegerPrecision(matrix, col)
+        if (existing[0] < requiredPrecision) {
+          throw new IllegalArgumentException(
+              "decimalMeta['$col'] precision (${existing[0]}) is too small to hold the data in this " +
+              "column (requires at least $requiredPrecision digits)")
+        }
+      } else {
+        merged[col] = [inferBigIntegerPrecision(matrix, col), 0] as int[]
+      }
+    }
+    merged
+  }
+
+  /**
+   * Infers the minimum decimal precision needed to represent every BigInteger
+   * value in the given column as Parquet DECIMAL(precision, 0).
+   */
+  private static int inferBigIntegerPrecision(Matrix matrix, String col) {
+    int maxDigits = 1
+    (0..<matrix.rowCount()).each { i ->
+      def value = matrix[i, col]
+      if (value instanceof BigInteger) {
+        int digits = value.abs().toString().length()
+        maxDigits = Math.max(maxDigits, digits)
+      }
+    }
+    maxDigits
   }
 
   /**
@@ -751,6 +798,12 @@ class MatrixParquetWriter {
   }
 
   private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false) {
+    if (clazz == BigInteger) {
+      int precision = (decimalMeta != null && decimalMeta.length == 2 && decimalMeta[0] > 0) ? decimalMeta[0] : 38
+      def builder = required ? Types.required(PrimitiveTypeName.BINARY) : Types.optional(PrimitiveTypeName.BINARY)
+      return builder.as(LogicalTypeAnnotation.decimalType(0, precision)).named(name)
+    }
+
     if (clazz == BigDecimal) {
       if (decimalMeta != null && decimalMeta.length == 2) {
         int precision = decimalMeta[0]
@@ -788,7 +841,7 @@ class MatrixParquetWriter {
 
     switch (clazz) {
       case Integer, int -> primitive = PrimitiveTypeName.INT32
-      case Long, long, BigInteger -> primitive = PrimitiveTypeName.INT64
+      case Long, long -> primitive = PrimitiveTypeName.INT64
       case Float, float -> primitive = PrimitiveTypeName.FLOAT
       case Double, double -> primitive = PrimitiveTypeName.DOUBLE
       case Boolean, boolean -> primitive = PrimitiveTypeName.BOOLEAN
@@ -1010,7 +1063,8 @@ class MatrixParquetWriter {
   private static void writePrimitiveValue(Group group, String fieldName, PrimitiveType field, Object value) {
     switch (value.class) {
       case Integer, int -> group.append(fieldName, (int) value)
-      case Long, long, BigInteger -> group.append(fieldName, ((Number) value).longValue())
+      case Long, long -> group.append(fieldName, ((Number) value).longValue())
+      case BigInteger -> group.add(fieldName, Binary.fromConstantByteArray(((BigInteger) value).toByteArray()))
       case Float, float -> group.append(fieldName, ((Number) value).floatValue())
       case Double, double -> group.append(fieldName, ((Number) value).doubleValue())
       case BigDecimal -> {
