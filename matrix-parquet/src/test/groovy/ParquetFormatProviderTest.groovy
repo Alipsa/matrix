@@ -86,6 +86,15 @@ class ParquetFormatProviderTest {
   }
 
   @Test
+  void testWriteOptionsRejectDecimalMetaListNonNumber() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [8, '2']]])
+    }
+
+    assertTrue(exception.message.contains("decimalMeta['amount'][1] must be a Number"))
+  }
+
+  @Test
   void testSpiWriteAcceptsDecimalMetaListShape() {
     Matrix source = Matrix.builder('payments')
         .data(amount: [12.30, 45.67])

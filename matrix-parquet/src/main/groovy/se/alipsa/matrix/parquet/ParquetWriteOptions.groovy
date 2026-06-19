@@ -190,9 +190,9 @@ class ParquetWriteOptions {
         ps = meta as int[]
       } else if (meta instanceof Number[]) {
         Number[] numbers = meta as Number[]
-        ps = numbers*.intValue() as int[]
+        ps = decimalMetaNumbers(columnName, numbers.toList())
       } else if (meta instanceof List) {
-        ps = (meta as List).collect { (it as Number).intValue() } as int[]
+        ps = decimalMetaNumbers(columnName, meta as List<?>)
       } else {
         throw new IllegalArgumentException(
             "decimalMeta['$columnName'] must be an int[], Number[], or List<Number> of length 2 [precision, scale] but was ${meta?.class}")
@@ -213,6 +213,17 @@ class ParquetWriteOptions {
       normalized[columnName] = ps
     }
     normalized
+  }
+
+  private static int[] decimalMetaNumbers(String columnName, Iterable<?> values) {
+    List<Integer> result = []
+    values.eachWithIndex { value, int index ->
+      if (!(value instanceof Number)) {
+        throw new IllegalArgumentException("decimalMeta['$columnName'][$index] must be a Number but was ${value?.class}")
+      }
+      result << value.intValue()
+    }
+    result as int[]
   }
 
   static String describe() {

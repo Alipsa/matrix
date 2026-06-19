@@ -747,6 +747,17 @@ class MatrixParquetWriter {
     maxDigits
   }
 
+  private static int inferBigIntegerPrecision(List<?> values) {
+    int maxDigits = 1
+    values.each { value ->
+      if (value instanceof BigInteger) {
+        int digits = value.abs().toString().length()
+        maxDigits = Math.max(maxDigits, digits)
+      }
+    }
+    maxDigits
+  }
+
   /**
    * Builds the Parquet schema based on the matrix, inferring decimal precision/scale if requested.
    * This is for backward compatibility and delegates to the explicit map builder.
@@ -794,12 +805,19 @@ class MatrixParquetWriter {
     }
 
     Class<?> effectiveClass = inferClass(values, clazz)
-    return buildPrimitiveType(name, effectiveClass, decimalMeta, false)
+    int[] effectiveDecimalMeta = decimalMeta
+    if (effectiveClass == BigInteger && effectiveDecimalMeta == null) {
+      effectiveDecimalMeta = [inferBigIntegerPrecision(values), 0] as int[]
+    }
+    return buildPrimitiveType(name, effectiveClass, effectiveDecimalMeta, false)
   }
 
   private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false) {
     if (clazz == BigInteger) {
-      int precision = (decimalMeta != null && decimalMeta.length == 2 && decimalMeta[0] > 0) ? decimalMeta[0] : 38
+      if (decimalMeta == null || decimalMeta.length != 2 || decimalMeta[0] <= 0 || decimalMeta[1] != 0) {
+        throw new IllegalArgumentException("BigInteger field '$name' requires decimal metadata [precision, 0]")
+      }
+      int precision = decimalMeta[0]
       def builder = required ? Types.required(PrimitiveTypeName.BINARY) : Types.optional(PrimitiveTypeName.BINARY)
       return builder.as(LogicalTypeAnnotation.decimalType(0, precision)).named(name)
     }
