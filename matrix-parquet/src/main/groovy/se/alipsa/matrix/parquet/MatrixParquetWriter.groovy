@@ -880,9 +880,11 @@ class MatrixParquetWriter {
     def mapBuilder = Types.optionalMap()
     List<Map> maps = values.findAll { it instanceof Map } as List<Map>
 
-    Object keySample = findFirstNonNull(maps.collectMany { it?.keySet() ?: [] } as List)
-    Class<?> keyClass = inferClass([keySample], keySample?.class ?: String)
-    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, null, true)
+    List<Object> keySamples = maps.collectMany { it?.keySet() ?: [] } as List<Object>
+    Object keySample = findFirstNonNull(keySamples)
+    Class<?> keyClass = inferClass(keySamples, keySample?.class ?: String)
+    int[] keyDecimalMeta = keyClass == BigInteger ? [inferBigIntegerPrecision(keySamples), 0] as int[] : null
+    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, keyDecimalMeta, true)
     mapBuilder.key(keyType)
 
     List<Object> valueSamples = maps.collectMany { it?.values() ?: [] } as List<Object>

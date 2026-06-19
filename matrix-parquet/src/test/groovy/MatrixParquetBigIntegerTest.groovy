@@ -131,4 +131,32 @@ class MatrixParquetBigIntegerTest {
 
     assertEquals([huge as BigDecimal, BigInteger.ONE as BigDecimal], matrix.bigs[0])
   }
+
+  @Test
+  void testMapBigIntegerKeyPrecisionIsInferred() {
+    BigInteger key = BigInteger.TEN.pow(30)
+    def data = Matrix.builder('mapBigIntKey').data(
+        m: [[(key): 'a']]
+    ).types([Map]).build()
+
+    File file = tempDir.resolve('map_bigint_key.parquet').toFile()
+    MatrixParquetWriter.write(data, file)
+    def schema = ParquetFileReader
+        .readFooter(new Configuration(), new org.apache.hadoop.fs.Path(file.toURI()))
+        .fileMetaData.schema
+    def keyField = schema.getType('m')
+        .asGroupType()
+        .getType('key_value')
+        .asGroupType()
+        .getType('key')
+        .asPrimitiveType()
+    def logical = keyField.logicalTypeAnnotation as LogicalTypeAnnotation.DecimalLogicalTypeAnnotation
+
+    assertEquals(key.toString().length(), logical.precision)
+    assertEquals(0, logical.scale)
+
+    Matrix matrix = MatrixParquetReader.read(file)
+
+    assertEquals([(key as BigDecimal): 'a'], matrix.m[0])
+  }
 }
