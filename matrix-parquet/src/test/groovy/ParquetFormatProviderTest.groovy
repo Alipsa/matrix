@@ -1,7 +1,12 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path as HadoopPath
+import org.apache.parquet.hadoop.ParquetFileReader
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -47,6 +52,23 @@ class ParquetFormatProviderTest {
     assertEquals(source.columnNames(), matrix.columnNames())
     assertEquals(12.30, matrix[0, 'amount'])
     assertEquals(source[0, 'createdAt'], matrix[0, 'createdAt'])
+  }
+
+  @Test
+  void testCompressionCodecViaOptionsMap() {
+    Matrix source = Matrix.builder('compressedSpi')
+        .columns(id: [1, 2, 3], name: ['a', 'b', 'c'])
+        .types([Integer, String])
+        .build()
+
+    File file = tempDir.resolve('spi_compressed.parquet').toFile()
+    source.write([compressionCodec: 'GZIP'], file)
+
+    def footer = ParquetFileReader.readFooter(new Configuration(), new HadoopPath(file.toURI()))
+    assertEquals(CompressionCodecName.GZIP, footer.blocks[0].columns[0].codec)
+
+    Matrix matrix = Matrix.read(file)
+    assertIterableEquals(source.id, matrix.id)
   }
 
   @Test

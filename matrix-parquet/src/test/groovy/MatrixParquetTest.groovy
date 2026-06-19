@@ -9,7 +9,9 @@ import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path as HadoopPath
 import org.apache.parquet.example.data.simple.SimpleGroupFactory
+import org.apache.parquet.hadoop.ParquetFileReader
 import org.apache.parquet.hadoop.example.ExampleParquetWriter
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
 import org.apache.parquet.schema.Types
@@ -177,7 +179,7 @@ class MatrixParquetTest {
     writer.close()
 
     Matrix matrix = MatrixParquetReader.read(file)
-    assertEquals(new BigDecimal('123.45'), matrix.amount[0])
+    assertEquals(123.45G, matrix.amount[0])
   }
 
   @Test
@@ -233,6 +235,67 @@ class MatrixParquetTest {
 
     assertEquals(['a', 'b'], matrix.tags[0])
     assertEquals([], matrix.tags[1])
+  }
+
+  @Test
+  void testCompressionDefaultIsSnappy() {
+    def data = Matrix.builder('compressedDefault').data(
+        id: 1..50,
+        name: (1..50).collect { "name$it".toString() }
+    ).types([Integer, String]).build()
+
+    File file = tempDir.resolve('compressed_default.parquet').toFile()
+    MatrixParquetWriter.write(data, file)
+
+    def footer = ParquetFileReader.readFooter(new Configuration(), new HadoopPath(file.toURI()))
+    def codec = footer.blocks[0].columns[0].codec
+    assertEquals(CompressionCodecName.SNAPPY, codec)
+
+    Matrix matrix = MatrixParquetReader.read(file)
+    assertEquals(data.rowCount(), matrix.rowCount())
+    assertIterableEquals(data.id, matrix.id)
+    assertIterableEquals(data.name, matrix.name)
+  }
+
+  @Test
+  void testCompressionCodecOverrideViaBuilder() {
+    def data = Matrix.builder('gzipTest').data(
+        id: [1, 2, 3],
+        value: ['a', 'b', 'c']
+    ).types([Integer, String]).build()
+
+    File file = tempDir.resolve('gzip.parquet').toFile()
+    MatrixParquetWriter.builder(data)
+        .compressionCodec(CompressionCodecName.GZIP)
+        .write(file)
+
+    def footer = ParquetFileReader.readFooter(new Configuration(), new HadoopPath(file.toURI()))
+    assertEquals(CompressionCodecName.GZIP, footer.blocks[0].columns[0].codec)
+
+    Matrix matrix = MatrixParquetReader.read(file)
+    assertIterableEquals(data.id, matrix.id)
+    assertIterableEquals(data.value, matrix.value)
+  }
+
+  @Test
+  void testCompressionCodecUncompressedViaStringAndBytes() {
+    def data = Matrix.builder('uncompressedTest').data(id: [1, 2]).types([Integer]).build()
+
+    byte[] bytes = MatrixParquetWriter.builder(data)
+        .compressionCodec('UNCOMPRESSED')
+        .writeBytes()
+
+    Matrix matrix = MatrixParquetReader.read(bytes)
+    assertIterableEquals(data.id, matrix.id)
+  }
+
+  @Test
+  void testCompressionCodecRejectsInvalidName() {
+    def data = Matrix.builder('badCodec').data(id: [1]).types([Integer]).build()
+
+    assertThrows(IllegalArgumentException) {
+      MatrixParquetWriter.builder(data).compressionCodec('NOT_A_CODEC').writeBytes()
+    }
   }
 
   @Test

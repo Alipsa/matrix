@@ -6,6 +6,7 @@ import org.apache.parquet.example.data.Group
 import org.apache.parquet.example.data.simple.SimpleGroupFactory
 import org.apache.parquet.hadoop.ParquetFileWriter
 import org.apache.parquet.hadoop.example.ExampleParquetWriter
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import org.apache.parquet.io.api.Binary
 import org.apache.parquet.schema.GroupType
 import org.apache.parquet.schema.LogicalTypeAnnotation
@@ -255,6 +256,28 @@ class MatrixParquetWriter {
     }
 
     /**
+     * Sets the compression codec for the Parquet file (default: {@code SNAPPY}).
+     *
+     * @param value the compression codec
+     * @return this builder
+     */
+    WriterBuilder compressionCodec(CompressionCodecName value) {
+      options.compressionCodec(value)
+      this
+    }
+
+    /**
+     * Sets the compression codec for the Parquet file (default: {@code SNAPPY}).
+     *
+     * @param value the compression codec name, e.g. "GZIP", "SNAPPY", "ZSTD", "UNCOMPRESSED"
+     * @return this builder
+     */
+    WriterBuilder compressionCodec(String value) {
+      options.compressionCodec(value)
+      this
+    }
+
+    /**
      * Writes the matrix to the specified file or directory.
      *
      * @param fileOrDir the target file or directory; if a directory, the filename is derived from the matrix name
@@ -434,12 +457,12 @@ class MatrixParquetWriter {
     if (options.zoneId != null) {
       try {
         ZONE_ID_HOLDER.set(options.zoneId)
-        return writeInternal(matrix, file, schema)
+        return writeInternal(matrix, file, schema, options.compressionCodec)
       } finally {
         ZONE_ID_HOLDER.remove()
       }
     }
-    return writeInternal(matrix, file, schema)
+    return writeInternal(matrix, file, schema, options.compressionCodec)
   }
 
   /**
@@ -523,12 +546,12 @@ class MatrixParquetWriter {
     if (options.zoneId != null) {
       try {
         ZONE_ID_HOLDER.set(options.zoneId)
-        return writeBytesInternal(matrix, schema)
+        return writeBytesInternal(matrix, schema, options.compressionCodec)
       } finally {
         ZONE_ID_HOLDER.remove()
       }
     }
-    return writeBytesInternal(matrix, schema)
+    return writeBytesInternal(matrix, schema, options.compressionCodec)
   }
 
   private static File determineTargetFile(Matrix matrix, File fileOrDir) {
@@ -567,7 +590,7 @@ class MatrixParquetWriter {
    * @param schema the Parquet MessageType schema
    * @return the target file
    */
-  private static File writeInternal(Matrix matrix, File file, MessageType schema) {
+  private static File writeInternal(Matrix matrix, File file, MessageType schema, CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY) {
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
@@ -579,6 +602,7 @@ class MatrixParquetWriter {
         .withConf(conf)
         .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
         .withType(schema)
+        .withCompressionCodec(compressionCodec)
         .withExtraMetaData(extraMeta)
         .build()
 
@@ -620,7 +644,7 @@ class MatrixParquetWriter {
    * @param schema the Parquet MessageType schema
    * @return byte array containing Parquet data
    */
-  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema) {
+  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema, CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY) {
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
@@ -633,6 +657,7 @@ class MatrixParquetWriter {
     def writer = ExampleParquetWriter.builder(outputFile)
         .withConf(conf)
         .withType(schema)
+        .withCompressionCodec(compressionCodec)
         .withExtraMetaData(extraMeta)
         .build()
 
