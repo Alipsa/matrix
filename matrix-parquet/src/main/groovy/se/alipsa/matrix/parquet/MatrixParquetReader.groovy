@@ -835,10 +835,106 @@ class MatrixParquetReader {
    */
   private static Matrix restoreIndex(Matrix matrix, String indexString) {
     if (indexString != null && !indexString.trim().isEmpty()) {
-      String[] indexColumns = indexString.split(COMMA)*.trim() as String[]
-      matrix.createIndex(indexColumns)
+      matrix.createIndex(parseIndexColumns(indexString))
     }
     matrix
+  }
+
+  private static String[] parseIndexColumns(String indexString) {
+    String value = indexString.trim()
+    if (value.startsWith('[')) {
+      return parseJsonStringArray(value) as String[]
+    }
+    value.split(COMMA)*.trim() as String[]
+  }
+
+  private static List<String> parseJsonStringArray(String json) {
+    List<String> result = []
+    int pos = skipWhitespace(json, 0)
+    if (pos >= json.length() || json.charAt(pos) != '[' as char) {
+      throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+    }
+    pos = skipWhitespace(json, pos + 1)
+    if (pos < json.length() && json.charAt(pos) == ']' as char) {
+      return result
+    }
+    while (pos < json.length()) {
+      if (json.charAt(pos) != '"' as char) {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+      StringBuilder value = new StringBuilder()
+      pos++
+      while (pos < json.length()) {
+        char ch = json.charAt(pos)
+        if (ch == '"' as char) {
+          pos++
+          break
+        }
+        if (ch == '\\' as char) {
+          pos = appendEscapedJsonChar(json, pos + 1, value)
+        } else {
+          value.append(ch)
+          pos++
+        }
+      }
+      result << value.toString()
+      pos = skipWhitespace(json, pos)
+      if (pos < json.length() && json.charAt(pos) == ',' as char) {
+        pos = skipWhitespace(json, pos + 1)
+      } else if (pos < json.length() && json.charAt(pos) == ']' as char) {
+        return result
+      } else {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+    }
+    throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+  }
+
+  private static int appendEscapedJsonChar(String json, int pos, StringBuilder value) {
+    if (pos >= json.length()) {
+      throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+    }
+    char escaped = json.charAt(pos)
+    if (escaped == '"' as char || escaped == '\\' as char || escaped == '/' as char) {
+      value.append(escaped)
+      return pos + 1
+    }
+    if (escaped == 'b' as char) {
+      value.append('\b')
+      return pos + 1
+    }
+    if (escaped == 'f' as char) {
+      value.append('\f')
+      return pos + 1
+    }
+    if (escaped == 'n' as char) {
+      value.append('\n')
+      return pos + 1
+    }
+    if (escaped == 'r' as char) {
+      value.append('\r')
+      return pos + 1
+    }
+    if (escaped == 't' as char) {
+      value.append('\t')
+      return pos + 1
+    }
+    if (escaped == 'u' as char) {
+      if (pos + 4 >= json.length()) {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+      value.append((char) Integer.parseInt(json.substring(pos + 1, pos + 5), 16))
+      return pos + 5
+    }
+    throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+  }
+
+  private static int skipWhitespace(String value, int pos) {
+    int current = pos
+    while (current < value.length() && Character.isWhitespace(value.charAt(current))) {
+      current++
+    }
+    current
   }
 
   private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {

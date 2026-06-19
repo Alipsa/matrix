@@ -595,7 +595,7 @@ class MatrixParquetWriter {
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
     if (matrix.hasIndex()) {
-      extraMeta.put(METADATA_INDEX_COLUMNS, matrix.indexedColumns().join(','))
+      extraMeta.put(METADATA_INDEX_COLUMNS, toJsonStringArray(matrix.indexedColumns()))
     }
 
     def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
@@ -649,7 +649,7 @@ class MatrixParquetWriter {
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
     if (matrix.hasIndex()) {
-      extraMeta.put(METADATA_INDEX_COLUMNS, matrix.indexedColumns().join(','))
+      extraMeta.put(METADATA_INDEX_COLUMNS, toJsonStringArray(matrix.indexedColumns()))
     }
 
     InMemoryOutputFile outputFile = new InMemoryOutputFile()
@@ -679,6 +679,21 @@ class MatrixParquetWriter {
       }
     }
     return outputFile.getBytes()
+  }
+
+  private static String toJsonStringArray(List<String> values) {
+    "[${values.collect { String value -> "\"${escapeJson(value)}\"" }.join(',')}]"
+  }
+
+  private static String escapeJson(String value) {
+    String.valueOf(value)
+        .replace('\\', '\\\\')
+        .replace('"', '\\"')
+        .replace('\b', '\\b')
+        .replace('\f', '\\f')
+        .replace('\n', '\\n')
+        .replace('\r', '\\r')
+        .replace('\t', '\\t')
   }
 
   /**
