@@ -43,4 +43,22 @@ class MatrixParquetWriterLifecycleTest {
     Matrix matrix = MatrixParquetReader.read(bytes)
     assertEquals(valid, matrix)
   }
+
+  @Test
+  void testJavaUtilDateRoundTrip() {
+    Date first = new Date(1_700_000_000_123L)
+    Date second = new Date(1_700_000_100_456L)
+    def data = Matrix.builder('dateTest').data(
+        id: [1, 2],
+        created: [first, second]
+    ).types([Integer, Date]).build()
+
+    File file = tempDir.resolve('java_util_date.parquet').toFile()
+    MatrixParquetWriter.write(data, file)
+    Matrix matrix = MatrixParquetReader.read(file)
+
+    assertEquals([Integer, Date], matrix.types())
+    assertEquals(first, matrix.created[0])
+    assertEquals(second, matrix.created[1])
+  }
 }

@@ -857,6 +857,7 @@ class MatrixParquetWriter {
         primitive = PrimitiveTypeName.INT32
         logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
       }
+      case Date -> primitive = PrimitiveTypeName.INT64
       default -> primitive = PrimitiveTypeName.BINARY
     }
 

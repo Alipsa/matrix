@@ -947,6 +947,9 @@ class MatrixParquetReader {
         if (expectedType == BigInteger) {
           return BigInteger.valueOf(longValue)
         }
+        if (expectedType == Date) {
+          return new Date(longValue)
+        }
         return longValue
       case PrimitiveTypeName.FLOAT:
         return group.getFloat(fieldName, 0)
