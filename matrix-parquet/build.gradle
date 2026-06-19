@@ -10,11 +10,6 @@ group = 'se.alipsa.matrix'
 version = '0.6.0-SNAPSHOT'
 description = "Groovy library for importing and exporting parquet files to and from a Matrix"
 
-ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-
-
 JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
@@ -23,7 +18,6 @@ JavaCompile javaCompile = compileJava {
 
 compileGroovy {
     options.deprecation = true
-    groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
 dependencies {
@@ -111,7 +105,6 @@ publishing {
                     username = sonatypeUsername
                     password = sonatypePassword
                 }
-                url = nexusUrl
             }
         }
     }

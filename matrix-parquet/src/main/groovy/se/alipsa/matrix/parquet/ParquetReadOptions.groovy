@@ -1,7 +1,5 @@
 package se.alipsa.matrix.parquet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
@@ -10,7 +8,6 @@ import java.time.ZoneId
 /**
  * Typed options for Parquet read operations via the SPI.
  */
-@CompileStatic
 class ParquetReadOptions {
 
   String matrixName = null

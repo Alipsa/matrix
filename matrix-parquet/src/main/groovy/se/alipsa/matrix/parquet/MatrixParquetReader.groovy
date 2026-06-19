@@ -1,7 +1,5 @@
 package se.alipsa.matrix.parquet
 
-import groovy.transform.CompileStatic
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
@@ -86,7 +84,6 @@ import java.util.concurrent.ConcurrentHashMap
  * @see MatrixParquetWriter
  * @see Matrix
  */
-@CompileStatic
 class MatrixParquetReader {
 
   private static final Logger log = Logger.getLogger(MatrixParquetReader)
@@ -151,7 +148,6 @@ class MatrixParquetReader {
    *
    * <p>Obtain an instance via {@link MatrixParquetReader#builder()}.</p>
    */
-  @CompileStatic
   static class ReaderBuilder {
 
     private final ParquetReadOptions options = new ParquetReadOptions()

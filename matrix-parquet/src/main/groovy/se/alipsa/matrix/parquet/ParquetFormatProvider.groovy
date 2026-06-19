@@ -1,7 +1,5 @@
 package se.alipsa.matrix.parquet
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.spi.OptionDescriptor
 /**
  * SPI format provider for Parquet files.
  */
-@CompileStatic
 class ParquetFormatProvider extends AbstractFormatProvider {
 
   private static final Set<String> EXTENSIONS = ['parquet'] as Set<String>
