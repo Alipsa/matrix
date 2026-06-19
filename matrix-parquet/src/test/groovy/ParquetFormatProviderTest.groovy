@@ -79,12 +79,34 @@ class ParquetFormatProviderTest {
   }
 
   @Test
-  void testWriteOptionsRejectInvalidDecimalMetaShape() {
+  void testWriteOptionsAcceptDecimalMetaListShape() {
+    ParquetWriteOptions options = ParquetWriteOptions.fromMap([decimalMeta: [amount: [8, 2]]])
+    assertEquals(8, options.decimalMeta.amount[0])
+    assertEquals(2, options.decimalMeta.amount[1])
+  }
+
+  @Test
+  void testWriteOptionsRejectDecimalMetaListNonNumber() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      ParquetWriteOptions.fromMap([decimalMeta: [amount: [8, 2]]])
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [8, '2']]])
     }
 
-    assertTrue(exception.message.contains("decimalMeta['amount'] must be an int[] of length 2"))
+    assertTrue(exception.message.contains("decimalMeta['amount'][1] must be a Number"))
+  }
+
+  @Test
+  void testSpiWriteAcceptsDecimalMetaListShape() {
+    Matrix source = Matrix.builder('payments')
+        .data(amount: [12.30, 45.67])
+        .types([BigDecimal])
+        .build()
+
+    File file = tempDir.resolve('decimal_meta_list.parquet').toFile()
+    source.write([decimalMeta: [amount: [8, 2]]], file)
+    Matrix matrix = Matrix.read(file)
+
+    assertEquals(source, matrix)
+    assertEquals(2, matrix.amount[0].scale())
   }
 
   @Test

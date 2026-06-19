@@ -98,7 +98,7 @@ class ParquetWriteOptions {
         throw new IllegalArgumentException("scale ($scale) must not exceed precision ($precision)")
       }
     }
-    validateDecimalMeta(decimalMeta)
+    decimalMeta = normalizeDecimalMeta(decimalMeta)
     if (compressionCodec == null) {
       throw new IllegalArgumentException('compressionCodec cannot be null')
     }
@@ -147,7 +147,7 @@ class ParquetWriteOptions {
         if (!(value instanceof Map)) {
           throw new IllegalArgumentException("decimalMeta must be a Map<String, int[]> but was ${value?.class}")
         }
-        result.decimalMeta(validateDecimalMeta(value as Map))
+        result.decimalMeta(normalizeDecimalMeta(value as Map))
       }
     }
     if (normalized.containsKey('zoneid')) {
@@ -170,15 +170,37 @@ class ParquetWriteOptions {
     result
   }
 
-  private static Map<String, int[]> validateDecimalMeta(Map<?, ?> value) {
-    Map<String, int[]> validated = [:]
+  /**
+   * Normalizes and validates a raw {@code decimalMeta} map into {@code Map<String, int[]>}.
+   *
+   * <p>Accepts {@code int[]}, {@code Number[]}, or {@code List<Number>} values of length 2
+   * {@code [precision, scale]} per column, so both direct Groovy callers and SPI/options-map
+   * callers can use the same entry point.</p>
+   *
+   * @param value raw map of column name to a length-2 precision/scale value
+   * @return normalized map of column name to validated {@code int[2]} [precision, scale]
+   * @throws IllegalArgumentException if any entry has the wrong shape, type, or an out-of-range precision/scale
+   */
+  static Map<String, int[]> normalizeDecimalMeta(Map<?, ?> value) {
+    Map<String, int[]> normalized = [:]
     value.each { key, meta ->
       String columnName = String.valueOf(key)
-      if (!(meta instanceof int[]) || (meta as int[]).length != 2) {
+      int[] ps
+      if (meta instanceof int[]) {
+        ps = meta as int[]
+      } else if (meta instanceof Number[]) {
+        Number[] numbers = meta as Number[]
+        ps = decimalMetaNumbers(columnName, numbers.toList())
+      } else if (meta instanceof List) {
+        ps = decimalMetaNumbers(columnName, meta as List<?>)
+      } else {
+        throw new IllegalArgumentException(
+            "decimalMeta['$columnName'] must be an int[], Number[], or List<Number> of length 2 [precision, scale] but was ${meta?.class}")
+      }
+      if (ps.length != 2) {
         throw new IllegalArgumentException(
             "decimalMeta['$columnName'] must be an int[] of length 2 [precision, scale] but was ${meta?.class}")
       }
-      int[] ps = meta as int[]
       if (ps[0] <= 0) {
         throw new IllegalArgumentException("decimalMeta['$columnName'] precision must be > 0 but was ${ps[0]}")
       }
@@ -188,9 +210,20 @@ class ParquetWriteOptions {
       if (ps[1] > ps[0]) {
         throw new IllegalArgumentException("decimalMeta['$columnName'] scale (${ps[1]}) must not exceed precision (${ps[0]})")
       }
-      validated[columnName] = ps
+      normalized[columnName] = ps
     }
-    validated
+    normalized
+  }
+
+  private static int[] decimalMetaNumbers(String columnName, Iterable<?> values) {
+    List<Integer> result = []
+    values.eachWithIndex { value, int index ->
+      if (!(value instanceof Number)) {
+        throw new IllegalArgumentException("decimalMeta['$columnName'][$index] must be a Number but was ${value?.class}")
+      }
+      result << value.intValue()
+    }
+    result as int[]
   }
 
   static String describe() {

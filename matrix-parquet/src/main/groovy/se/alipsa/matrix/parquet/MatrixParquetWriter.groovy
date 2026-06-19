@@ -434,7 +434,7 @@ class MatrixParquetWriter {
     validateInput(matrix, fileOrDir)
     File file = determineTargetFile(matrix, fileOrDir)
 
-    def schema = buildSchema(matrix, decimalMeta)
+    def schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
     return writeInternal(matrix, file, schema)
   }
 
@@ -520,7 +520,7 @@ class MatrixParquetWriter {
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
-    MessageType schema = buildSchema(matrix, decimalMeta)
+    MessageType schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
     return writeBytesInternal(matrix, schema)
   }
 
@@ -747,6 +747,17 @@ class MatrixParquetWriter {
     maxDigits
   }
 
+  private static int inferBigIntegerPrecision(List<?> values) {
+    int maxDigits = 1
+    values.each { value ->
+      if (value instanceof BigInteger) {
+        int digits = value.abs().toString().length()
+        maxDigits = Math.max(maxDigits, digits)
+      }
+    }
+    maxDigits
+  }
+
   /**
    * Builds the Parquet schema based on the matrix, inferring decimal precision/scale if requested.
    * This is for backward compatibility and delegates to the explicit map builder.
@@ -794,12 +805,19 @@ class MatrixParquetWriter {
     }
 
     Class<?> effectiveClass = inferClass(values, clazz)
-    return buildPrimitiveType(name, effectiveClass, decimalMeta, false)
+    int[] effectiveDecimalMeta = decimalMeta
+    if (effectiveClass == BigInteger && effectiveDecimalMeta == null) {
+      effectiveDecimalMeta = [inferBigIntegerPrecision(values), 0] as int[]
+    }
+    return buildPrimitiveType(name, effectiveClass, effectiveDecimalMeta, false)
   }
 
   private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false) {
     if (clazz == BigInteger) {
-      int precision = (decimalMeta != null && decimalMeta.length == 2 && decimalMeta[0] > 0) ? decimalMeta[0] : 38
+      if (decimalMeta == null || decimalMeta.length != 2 || decimalMeta[0] <= 0 || decimalMeta[1] != 0) {
+        throw new IllegalArgumentException("BigInteger field '$name' requires decimal metadata [precision, 0]")
+      }
+      int precision = decimalMeta[0]
       def builder = required ? Types.required(PrimitiveTypeName.BINARY) : Types.optional(PrimitiveTypeName.BINARY)
       return builder.as(LogicalTypeAnnotation.decimalType(0, precision)).named(name)
     }
@@ -808,19 +826,6 @@ class MatrixParquetWriter {
       if (decimalMeta != null && decimalMeta.length == 2) {
         int precision = decimalMeta[0]
         int scale = decimalMeta[1]
-
-        // Add safeguards for invalid (0 or less) precision, which can be passed manually
-        // The inference method already ensures precision is at least 1.
-        if (precision <= 0) {
-          precision = 10 // Fallback to a default precision
-        }
-        // Add safeguards for invalid scale: must be non-negative and not greater than precision
-        if (scale < 0) {
-          scale = 0 // Fallback to a default scale
-        }
-        if (scale > precision) {
-          scale = precision // Clamp scale to precision
-        }
 
         def builder = required
             ? Types.required(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
@@ -857,7 +862,10 @@ class MatrixParquetWriter {
         primitive = PrimitiveTypeName.INT32
         logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
       }
-      case Date -> primitive = PrimitiveTypeName.INT64
+      case Date -> {
+        primitive = PrimitiveTypeName.INT64
+        logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
+      }
       default -> primitive = PrimitiveTypeName.BINARY
     }
 
@@ -872,9 +880,11 @@ class MatrixParquetWriter {
     def mapBuilder = Types.optionalMap()
     List<Map> maps = values.findAll { it instanceof Map } as List<Map>
 
-    Object keySample = findFirstNonNull(maps.collectMany { it?.keySet() ?: [] } as List)
-    Class<?> keyClass = inferClass([keySample], keySample?.class ?: String)
-    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, null, true)
+    List<Object> keySamples = maps.collectMany { it?.keySet() ?: [] } as List<Object>
+    Object keySample = findFirstNonNull(keySamples)
+    Class<?> keyClass = inferClass(keySamples, keySample?.class ?: String)
+    int[] keyDecimalMeta = keyClass == BigInteger ? [inferBigIntegerPrecision(keySamples), 0] as int[] : null
+    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, keyDecimalMeta, true)
     mapBuilder.key(keyType)
 
     List<Object> valueSamples = maps.collectMany { it?.values() ?: [] } as List<Object>

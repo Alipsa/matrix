@@ -114,7 +114,11 @@ class MatrixParquetReader {
   private static final String ERR_ZONE_ID_NULL = 'ZoneId cannot be null'
   private static final String DOT = '.'
   private static final String COMMA = ','
+  private static final long MILLIS_PER_SECOND = 1_000L
   private static final long MICROS_PER_SECOND = 1_000_000L
+  private static final long NANOS_PER_SECOND = 1_000_000_000L
+  private static final long NANOS_PER_MILLI = 1_000_000L
+  private static final long NANOS_PER_MICRO = 1_000L
 
   /**
    * Creates a new builder for reading Parquet data into a Matrix.
@@ -859,12 +863,12 @@ class MatrixParquetReader {
 
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
-      case PrimitiveTypeName.INT32: return Integer
-      case PrimitiveTypeName.INT64: return Long
-      case PrimitiveTypeName.FLOAT: return Float
-      case PrimitiveTypeName.DOUBLE: return Double
-      case PrimitiveTypeName.BOOLEAN: return Boolean
-      default: return String
+      case PrimitiveTypeName.INT32 -> Integer
+      case PrimitiveTypeName.INT64 -> Long
+      case PrimitiveTypeName.FLOAT -> Float
+      case PrimitiveTypeName.DOUBLE -> Double
+      case PrimitiveTypeName.BOOLEAN -> Boolean
+      default -> String
     }
   }
 
@@ -920,61 +924,76 @@ class MatrixParquetReader {
   private static Object readPrimitive(Group group, String fieldName, PrimitiveType fieldType, Class expectedType) {
     def logical = fieldType.logicalTypeAnnotation
     switch (fieldType.primitiveTypeName) {
-      case PrimitiveTypeName.INT32:
+      case PrimitiveTypeName.INT32 -> {
         if (logical == LogicalTypeAnnotation.dateType()) {
-          return LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
-        }
-        if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+          LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
+        } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
           int millis = group.getInteger(fieldName, 0)
-          return Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
+          Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
+        } else if (expectedType == java.sql.Date) {
+          java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
+        } else {
+          group.getInteger(fieldName, 0)
         }
-        if (expectedType == java.sql.Date) {
-          return java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
-        }
-        return group.getInteger(fieldName, 0)
-      case PrimitiveTypeName.INT64:
+      }
+      case PrimitiveTypeName.INT64 -> {
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-          long micros = group.getLong(fieldName, 0)
-          long epochSecond = Math.floorDiv(micros, MICROS_PER_SECOND)
-          int microOfSecond = (int) Math.floorMod(micros, MICROS_PER_SECOND)
-          Instant instant = Instant.ofEpochSecond(epochSecond, microOfSecond * 1_000L)
+          Instant instant = timestampInstant(group.getLong(fieldName, 0), logical.unit)
           if (expectedType == java.sql.Timestamp) {
-            return java.sql.Timestamp.from(instant)
+            java.sql.Timestamp.from(instant)
+          } else if (expectedType == Date) {
+            Date.from(instant)
+          } else {
+            LocalDateTime.ofInstant(instant, getZoneId())
           }
-          return LocalDateTime.ofInstant(instant, getZoneId())
+        } else {
+          def longValue = group.getLong(fieldName, 0)
+          if (expectedType == BigInteger) {
+            BigInteger.valueOf(longValue)
+          } else if (expectedType == Date) {
+            new Date(longValue)
+          } else {
+            longValue
+          }
         }
-        def longValue = group.getLong(fieldName, 0)
-        if (expectedType == BigInteger) {
-          return BigInteger.valueOf(longValue)
-        }
-        if (expectedType == Date) {
-          return new Date(longValue)
-        }
-        return longValue
-      case PrimitiveTypeName.FLOAT:
-        return group.getFloat(fieldName, 0)
-      case PrimitiveTypeName.DOUBLE:
-        return group.getDouble(fieldName, 0)
-      case PrimitiveTypeName.BOOLEAN:
-        return group.getBoolean(fieldName, 0)
-      case PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY:
-      case PrimitiveTypeName.BINARY:
+      }
+      case PrimitiveTypeName.FLOAT -> group.getFloat(fieldName, 0)
+      case PrimitiveTypeName.DOUBLE -> group.getDouble(fieldName, 0)
+      case PrimitiveTypeName.BOOLEAN -> group.getBoolean(fieldName, 0)
+      case PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, PrimitiveTypeName.BINARY -> {
         if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
           def scale = logical.scale
           def binary = group.getBinary(fieldName, 0)
           def unscaled = new BigInteger(binary.getBytes())
           if (expectedType == BigInteger) {
-            return unscaled
+            unscaled
+          } else {
+            new BigDecimal(unscaled, scale)
           }
-          return new BigDecimal(unscaled, scale)
+        } else if (expectedType == BigDecimal) {
+          new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
+        } else {
+          group.getBinary(fieldName, 0).toStringUsingUTF8()
         }
-        if (expectedType == BigDecimal) {
-          return new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
-        }
-        return group.getBinary(fieldName, 0).toStringUsingUTF8()
-      default:
-        return group.getString(fieldName, 0)
+      }
+      default -> group.getString(fieldName, 0)
     }
+  }
+
+  private static Instant timestampInstant(long value, LogicalTypeAnnotation.TimeUnit unit) {
+    if (unit == LogicalTypeAnnotation.TimeUnit.MILLIS) {
+      return Instant.ofEpochSecond(
+          Math.floorDiv(value, MILLIS_PER_SECOND),
+          Math.floorMod(value, MILLIS_PER_SECOND) * NANOS_PER_MILLI)
+    }
+    if (unit == LogicalTypeAnnotation.TimeUnit.NANOS) {
+      return Instant.ofEpochSecond(
+          Math.floorDiv(value, NANOS_PER_SECOND),
+          Math.floorMod(value, NANOS_PER_SECOND))
+    }
+    Instant.ofEpochSecond(
+        Math.floorDiv(value, MICROS_PER_SECOND),
+        Math.floorMod(value, MICROS_PER_SECOND) * NANOS_PER_MICRO)
   }
 
   private static List readList(Group group, String fieldName, GroupType groupType) {
