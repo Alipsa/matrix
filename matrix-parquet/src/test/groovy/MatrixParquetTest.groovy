@@ -191,6 +191,21 @@ class MatrixParquetTest {
   }
 
   @Test
+  void testEmptyListValueRoundTrip() {
+    def data = Matrix.builder('emptyListTest').data(
+        id: [1, 2],
+        tags: [['a', 'b'], []]
+    ).types([Integer, List]).build()
+
+    File file = tempDir.resolve('empty_list_value.parquet').toFile()
+    MatrixParquetWriter.write(data, file)
+    Matrix matrix = MatrixParquetReader.read(file)
+
+    assertEquals(['a', 'b'], matrix.tags[0])
+    assertEquals([], matrix.tags[1])
+  }
+
+  @Test
   void testTimePrecisionRoundTrip() {
     // Test LocalDateTime with microsecond precision (schema uses MICROS)
     def dateTime1 = LocalDateTime.of(2024, 6, 15, 10, 30, 45, 123_456_000) // 123.456 ms

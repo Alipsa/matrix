@@ -1,7 +1,5 @@
 package se.alipsa.matrix.parquet
 
-import groovy.transform.CompileStatic
-
 import org.apache.parquet.io.PositionOutputStream
 
 /**
@@ -28,7 +26,6 @@ import org.apache.parquet.io.PositionOutputStream
  * @see InMemoryOutputFile
  * @see org.apache.parquet.io.PositionOutputStream
  */
-@CompileStatic
 class InMemoryPositionOutputStream extends PositionOutputStream {
 
   private final ByteArrayOutputStream contents

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.parquet
 
-import groovy.transform.CompileStatic
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
@@ -86,7 +84,6 @@ import java.util.concurrent.ConcurrentHashMap
  * @see MatrixParquetReader
  * @see Matrix
  */
-@CompileStatic
 class MatrixParquetWriter {
 
   private static final Logger log = Logger.getLogger(MatrixParquetWriter)
@@ -180,7 +177,6 @@ class MatrixParquetWriter {
    *
    * <p>Obtain an instance via {@link MatrixParquetWriter#builder(Matrix)}.</p>
    */
-  @CompileStatic
   static class WriterBuilder {
 
     private final Matrix matrix
@@ -732,9 +728,6 @@ class MatrixParquetWriter {
   private static PrimitiveType buildPrimitiveType(String name, Class clazz, int[] decimalMeta = null, boolean required = false) {
     if (clazz == BigDecimal) {
       if (decimalMeta != null && decimalMeta.length == 2) {
-        // int precision = decimalMeta[0] ?: 10 // BUGGY: what if 0 is passed? (though inference prevents this)
-        // int scale = decimalMeta[1] ?: 2     // BUGGY: 0 ?: 2 becomes 2
-
         int precision = decimalMeta[0]
         int scale = decimalMeta[1]
 
@@ -1052,10 +1045,6 @@ class MatrixParquetWriter {
           "but got ${value.class.simpleName}. Value: ${truncateForError(value)}")
     }
     Collection<?> collection = (Collection<?>) value
-    if (collection.isEmpty()) {
-      group.addGroup(fieldName)
-      return
-    }
     Group listGroup = group.addGroup(fieldName)
     GroupType repeatedType = groupType.getType(0).asGroupType()
     Type elementType = repeatedType.getType(0)
