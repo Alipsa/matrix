@@ -30,7 +30,8 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 ## Default Behavior
 
 **Reading**
-- Matrix name: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
+- Matrix name for file reads: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
+- Matrix name for stream/byte-array/URL reads: `matrixName` option wins; otherwise the Parquet schema/message name when available
 - Timezone: system default; override with `zoneId` option
 
 **Writing**

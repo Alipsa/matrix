@@ -341,6 +341,13 @@ class MatrixParquetReader {
     }
   }
 
+  private static String defaultMatrixName(File file) {
+    if (file.name.contains(DOT)) {
+      return file.name.substring(0, file.name.lastIndexOf(DOT))
+    }
+    file.name
+  }
+
   /**
    * Read the Parquet file into a {@link Matrix} using the supplied name.
    *
@@ -350,8 +357,7 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file, String matrixName) {
-    validateFile(file)
-    read(file).withMatrixName(matrixName)
+    read(file, file == null ? null : defaultMatrixName(file), false, null).withMatrixName(matrixName)
   }
 
   /**
@@ -552,12 +558,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    try {
-      ZONE_ID_HOLDER.set(zoneId)
-      return read(file)
-    } finally {
-      ZONE_ID_HOLDER.remove()
-    }
+    read(file, file == null ? null : defaultMatrixName(file), false, zoneId)
   }
 
   /**
@@ -655,12 +656,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    try {
-      ZONE_ID_HOLDER.set(zoneId)
-      return read(file, matrixName)
-    } finally {
-      ZONE_ID_HOLDER.remove()
-    }
+    read(file, file == null ? null : defaultMatrixName(file), false, zoneId).withMatrixName(matrixName)
   }
 
   /**
@@ -758,6 +754,22 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file) {
+    read(file, file == null ? null : defaultMatrixName(file), false, null)
+  }
+
+  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName, ZoneId zoneId) {
+    if (zoneId == null) {
+      return read(file, fallbackMatrixName, preferSchemaName)
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return read(file, fallbackMatrixName, preferSchemaName)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
+  }
+
+  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName) {
     validateFile(file)
     log.debug("Reading Parquet file: ${file.absolutePath}")
     def path = new Path(file.toURI())
@@ -774,11 +786,10 @@ class MatrixParquetReader {
     }
 
     ParquetReader.builder(new GroupReadSupport(), path).build().withCloseable { reader ->
-      String matrixName
-      if (file.name.contains(DOT)) {
-        matrixName = file.name.substring(0, file.name.lastIndexOf(DOT))
-      } else {
-        matrixName = file.name
+      String schemaName = footer.getFileMetaData().getSchema().name
+      String matrixName = fallbackMatrixName
+      if (preferSchemaName && schemaName != null && !schemaName.trim().isEmpty()) {
+        matrixName = schemaName
       }
 
       Group row = reader.read()
@@ -819,7 +830,7 @@ class MatrixParquetReader {
    * Restores the index on a Matrix from the serialized index column names string.
    *
    * @param matrix the matrix to restore the index on
-   * @param indexString comma-separated index column names, or null if no index
+   * @param indexString JSON array or legacy comma-separated index column names, or null if no index
    * @return the matrix with index restored (or unchanged if no index metadata)
    */
   private static Matrix restoreIndex(Matrix matrix, String indexString) {
@@ -837,12 +848,8 @@ class MatrixParquetReader {
     java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', '.parquet')
     try {
       Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
-      Matrix result
-      if (zoneId != null) {
-        result = read(tempFile.toFile(), zoneId)
-      } else {
-        result = read(tempFile.toFile())
-      }
+      File file = tempFile.toFile()
+      Matrix result = read(file, defaultMatrixName(file), true, zoneId)
       if (matrixName != null && !matrixName.trim().isEmpty()) {
         result = result.withMatrixName(matrixName)
       }
