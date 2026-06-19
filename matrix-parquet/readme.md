@@ -63,6 +63,7 @@ Matrix stockholm = Matrix.read([matrixName: 'events', zoneId: 'Europe/Stockholm'
 
 data.write([inferPrecisionAndScale: true], new File('copy.parquet'))
 data.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], new File('money.parquet'))
+data.write([decimalMeta: [amount: [8, 2]]], new File('money.parquet'))
 
 println Matrix.listReadOptions('parquet')
 println Matrix.listWriteOptions('parquet')

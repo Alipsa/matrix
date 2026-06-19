@@ -434,7 +434,7 @@ class MatrixParquetWriter {
     validateInput(matrix, fileOrDir)
     File file = determineTargetFile(matrix, fileOrDir)
 
-    def schema = buildSchema(matrix, decimalMeta)
+    def schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
     return writeInternal(matrix, file, schema)
   }
 
@@ -520,7 +520,7 @@ class MatrixParquetWriter {
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
-    MessageType schema = buildSchema(matrix, decimalMeta)
+    MessageType schema = buildSchema(matrix, ParquetWriteOptions.normalizeDecimalMeta(decimalMeta ?: [:]))
     return writeBytesInternal(matrix, schema)
   }
 
@@ -808,19 +808,6 @@ class MatrixParquetWriter {
       if (decimalMeta != null && decimalMeta.length == 2) {
         int precision = decimalMeta[0]
         int scale = decimalMeta[1]
-
-        // Add safeguards for invalid (0 or less) precision, which can be passed manually
-        // The inference method already ensures precision is at least 1.
-        if (precision <= 0) {
-          precision = 10 // Fallback to a default precision
-        }
-        // Add safeguards for invalid scale: must be non-negative and not greater than precision
-        if (scale < 0) {
-          scale = 0 // Fallback to a default scale
-        }
-        if (scale > precision) {
-          scale = precision // Clamp scale to precision
-        }
 
         def builder = required
             ? Types.required(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
