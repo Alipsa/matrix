@@ -963,7 +963,7 @@ class MatrixParquetReader {
           return new BigDecimal(unscaled, scale)
         }
         if (expectedType == BigDecimal) {
-          return BigDecimal.valueOf(group.getDouble(fieldName, 0))
+          return new BigDecimal(group.getBinary(fieldName, 0).toStringUsingUTF8())
         }
         return group.getBinary(fieldName, 0).toStringUsingUTF8()
       default:

@@ -17,11 +17,11 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 
 **Direct API (recommended)**
 - `MatrixParquetReader.builder()` — fluent reader with `.matrixName()`, `.zoneId()`, `.read(File/Path/URL/InputStream/byte[])` 
-- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
+- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.compressionCodec()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
 
 **SPI (generic Matrix API)**
 - `Matrix.read(options, file)` — options map with keys `matrixName`, `zoneId`
-- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `zoneId`
+- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `compressionCodec`, `zoneId`
 
 **Typed options classes**
 - `ParquetReadOptions` — typed options for reading; use `ParquetReadOptions.describe()` for runtime discovery
@@ -36,6 +36,7 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 **Writing**
 - Parquet message type name: `matrix.matrixName` when present, otherwise `MatrixSchema`
 - BigDecimal: precision and scale are inferred from the data by default (`inferPrecisionAndScale = true`)
+- Compression: `SNAPPY` by default; override with the `compressionCodec` option (e.g. `GZIP`, `ZSTD`, `UNCOMPRESSED`)
 - Timezone: system default; override with `zoneId` option
 - Nested Map columns: stored as MAP when value types are homogeneous, as STRUCT when heterogeneous
 
@@ -236,6 +237,29 @@ Matrix matrix = MatrixParquetReader.read(file, "myData", ZoneId.of("Europe/Londo
 ```
 
 **Important:** For consistent round-trip behavior, use the same timezone for writing and reading. If files are shared across systems with different default timezones, explicitly specify the timezone.
+
+## Compression
+
+Parquet files are compressed with `SNAPPY` by default. Override per write:
+
+```groovy
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
+
+// Builder API
+MatrixParquetWriter.builder(data)
+    .compressionCodec(CompressionCodecName.GZIP)
+    .write(file)
+
+// String form (also accepted)
+MatrixParquetWriter.builder(data)
+    .compressionCodec('ZSTD')
+    .write(file)
+
+// SPI options map
+data.write([compressionCodec: 'UNCOMPRESSED'], file)
+```
+
+Supported codec names: `UNCOMPRESSED`, `SNAPPY`, `GZIP`, `ZSTD`, `LZ4_RAW` (any value of `org.apache.parquet.hadoop.metadata.CompressionCodecName`). Compression is transparent on read — `MatrixParquetReader` auto-detects the codec from the file footer, no reader-side configuration is needed.
 
 ## Known Limitations
 

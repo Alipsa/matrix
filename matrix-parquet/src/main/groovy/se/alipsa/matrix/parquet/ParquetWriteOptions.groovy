@@ -1,5 +1,7 @@
 package se.alipsa.matrix.parquet
 
+import org.apache.parquet.hadoop.metadata.CompressionCodecName
+
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
@@ -18,6 +20,7 @@ class ParquetWriteOptions {
   Integer scale = null
   Map<String, int[]> decimalMeta = [:]
   ZoneId zoneId = null
+  CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY
 
   ParquetWriteOptions inferPrecisionAndScale(boolean value) {
     this.inferPrecisionAndScale = value
@@ -49,6 +52,29 @@ class ParquetWriteOptions {
     this
   }
 
+  /**
+   * Sets the compression codec for the Parquet file (default: {@code SNAPPY}).
+   *
+   * @param value the compression codec
+   * @return this options instance
+   */
+  ParquetWriteOptions compressionCodec(CompressionCodecName value) {
+    this.compressionCodec = value
+    this
+  }
+
+  /**
+   * Sets the compression codec from its name (default: {@code "SNAPPY"}).
+   *
+   * @param value the codec name, e.g. "GZIP", "ZSTD", "UNCOMPRESSED"
+   * @return this options instance
+   * @throws IllegalArgumentException if value is not a recognized codec name
+   */
+  ParquetWriteOptions compressionCodec(String value) {
+    this.compressionCodec = CompressionCodecName.valueOf(value.toUpperCase())
+    this
+  }
+
   boolean hasUniformPrecisionAndScale() {
     precision != null && scale != null
   }
@@ -73,10 +99,13 @@ class ParquetWriteOptions {
       }
     }
     validateDecimalMeta(decimalMeta)
+    if (compressionCodec == null) {
+      throw new IllegalArgumentException('compressionCodec cannot be null')
+    }
   }
 
   Map<String, ?> toMap() {
-    Map<String, Object> result = [inferPrecisionAndScale: inferPrecisionAndScale]
+    Map<String, Object> result = [inferPrecisionAndScale: inferPrecisionAndScale, compressionCodec: compressionCodec.name()]
     if (precision != null) {
       result.precision = precision
       result.scale = scale
@@ -129,6 +158,14 @@ class ParquetWriteOptions {
         result.zoneId(String.valueOf(value))
       }
     }
+    if (normalized.containsKey('compressioncodec')) {
+      def value = normalized.compressioncodec
+      if (value instanceof CompressionCodecName) {
+        result.compressionCodec(value as CompressionCodecName)
+      } else if (value != null) {
+        result.compressionCodec(String.valueOf(value))
+      }
+    }
     result.validate()
     result
   }
@@ -166,7 +203,8 @@ class ParquetWriteOptions {
         new OptionDescriptor(KEY_PRECISION, Integer, null, 'Uniform precision for all BigDecimal columns'),
         new OptionDescriptor(KEY_SCALE, Integer, null, 'Uniform scale for all BigDecimal columns'),
         new OptionDescriptor('decimalMeta', Map, null, 'Map of column names to [precision, scale] arrays'),
-        new OptionDescriptor('zoneId', ZoneId, null, 'Time zone to use when writing timestamp values')
+        new OptionDescriptor('zoneId', ZoneId, null, 'Time zone to use when writing timestamp values'),
+        new OptionDescriptor('compressionCodec', CompressionCodecName, CompressionCodecName.SNAPPY.name(), 'Compression codec for the Parquet file (e.g. SNAPPY, GZIP, ZSTD, UNCOMPRESSED)')
     ]
   }
 }

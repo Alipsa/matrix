@@ -4,6 +4,7 @@
 - Upgrade dependencies
   - org.apache.parquet:parquet-column 1.17.0 -> 1.17.1
   - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1 
+- Add compression codec support: `ParquetWriteOptions.compressionCodec` / `WriterBuilder.compressionCodec(...)` / SPI `compressionCodec` option; default changed from `UNCOMPRESSED` to `SNAPPY`
 
 ## v0.5.0, 2026-04-29
 - Add SPI integration: `MatrixParquetFormatProvider` registers `.parquet` extension with Matrix SPI so `Matrix.read(file)` and `matrix.write(file)` work without explicit imports
