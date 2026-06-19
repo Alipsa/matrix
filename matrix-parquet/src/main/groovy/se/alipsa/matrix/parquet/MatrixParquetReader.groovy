@@ -960,6 +960,9 @@ class MatrixParquetReader {
           def scale = logical.scale
           def binary = group.getBinary(fieldName, 0)
           def unscaled = new BigInteger(binary.getBytes())
+          if (expectedType == BigInteger) {
+            return unscaled
+          }
           return new BigDecimal(unscaled, scale)
         }
         if (expectedType == BigDecimal) {

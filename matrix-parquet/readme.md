@@ -153,7 +153,7 @@ Matrix data = MatrixParquetReader.builder()
 |--------------------|--------------------------------|---------------------------------------------------|
 | Integer            | INT32                          |                                                   |
 | Long               | INT64                          |                                                   |
-| BigInteger         | INT64                          |                                                   |
+| BigInteger         | BINARY (DECIMAL, scale=0)      | Precision auto-inferred from data; no `Long` range limit |
 | Float              | FLOAT                          |                                                   |
 | Double             | DOUBLE                         |                                                   |
 | BigDecimal         | FIXED_LEN_BYTE_ARRAY (DECIMAL) | See [BigDecimal Precision](#bigdecimal-precision) |
@@ -286,6 +286,8 @@ This module requires **JDK 21** and is limited to JDK 21 maximum due to Hadoop 3
 Column type information is stored in Parquet file metadata. When reading files not created by `MatrixParquetWriter`:
 - Types are inferred from Parquet schema logical type annotations
 - Some type information may be lost (e.g., `java.sql.Timestamp` vs `LocalDateTime`)
+- `BigInteger` columns read without Matrix metadata (e.g. external files) are inferred as `BigDecimal` with scale 0, since both the Parquet schema and the inference logic only see a generic `DECIMAL` logical annotation
+- `BigInteger` values nested inside `List`/`Map` columns always get a declared precision of 38 regardless of their actual digit count (top-level column precision inference does not extend into nested structures), and round-trip back as numerically-equal `BigDecimal` values rather than `BigInteger` (nested elements carry no expected-type metadata, unlike top-level columns). This does not cause data loss or truncation, but external Parquet readers that validate `DECIMAL` precision against declared metadata rather than actual byte length may reject or misinterpret values with more than 38 digits
 
 ## Technical Notes
 
