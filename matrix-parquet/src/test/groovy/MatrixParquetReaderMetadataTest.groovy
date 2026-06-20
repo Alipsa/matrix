@@ -126,7 +126,7 @@ class MatrixParquetReaderMetadataTest {
 
   @Test
   void testJsonIndexMetadataEscapesGenericControlCharacters() {
-    String controlColumn = "control\u0001column"
+    String controlColumn = 'control\u0001column'
     def data = Matrix.builder('controlIndex').data(
         (controlColumn): ['A'],
         sales: [100]
