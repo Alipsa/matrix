@@ -30,7 +30,8 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 ## Default Behavior
 
 **Reading**
-- Matrix name: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
+- Matrix name for file reads: `matrixName` option wins; otherwise the file basename without extension (e.g. `data.parquet` → matrix named `data`)
+- Matrix name for stream/byte-array/URL reads: `matrixName` option wins; otherwise the Parquet schema/message name when available
 - Timezone: system default; override with `zoneId` option
 
 **Writing**
@@ -39,6 +40,7 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 - Compression: `SNAPPY` by default; override with the `compressionCodec` option (e.g. `GZIP`, `ZSTD`, `UNCOMPRESSED`)
 - Timezone: system default; override with `zoneId` option
 - Nested Map columns: stored as MAP when value types are homogeneous, as STRUCT when heterogeneous
+- Index columns: written to `matrix.indexColumns` metadata as a JSON string array so column names containing commas round-trip; readers also accept the legacy comma-delimited metadata form
 
 ## Installation
 

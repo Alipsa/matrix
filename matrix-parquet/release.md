@@ -6,6 +6,7 @@
   - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1 
 - Add compression codec support: `ParquetWriteOptions.compressionCodec` / `WriterBuilder.compressionCodec(...)` / SPI `compressionCodec` option; default changed from `UNCOMPRESSED` to `SNAPPY`
 - Fix bug: `BigInteger` columns silently truncated when their value exceeded `Long` range (mapped to `INT64` via `.longValue()`); now mapped to `BINARY` with a `DECIMAL(precision, 0)` logical annotation, with precision auto-inferred from the data
+- Breaking metadata-format change: indexed column names are now written to `matrix.indexColumns` as a JSON string array instead of comma-delimited text so names containing commas round-trip; the new reader accepts both JSON and legacy comma-delimited metadata, but older readers and external tools that split the metadata value on commas will not parse new files correctly
 
 ## v0.5.0, 2026-04-29
 - Add SPI integration: `MatrixParquetFormatProvider` registers `.parquet` extension with Matrix SPI so `Matrix.read(file)` and `matrix.write(file)` work without explicit imports

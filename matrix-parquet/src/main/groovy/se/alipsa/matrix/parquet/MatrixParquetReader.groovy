@@ -341,6 +341,13 @@ class MatrixParquetReader {
     }
   }
 
+  private static String defaultMatrixName(File file) {
+    if (file.name.contains(DOT)) {
+      return file.name.substring(0, file.name.lastIndexOf(DOT))
+    }
+    file.name
+  }
+
   /**
    * Read the Parquet file into a {@link Matrix} using the supplied name.
    *
@@ -350,8 +357,7 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file, String matrixName) {
-    validateFile(file)
-    read(file).withMatrixName(matrixName)
+    read(file, null, false, null).withMatrixName(matrixName)
   }
 
   /**
@@ -552,12 +558,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    try {
-      ZONE_ID_HOLDER.set(zoneId)
-      return read(file)
-    } finally {
-      ZONE_ID_HOLDER.remove()
-    }
+    read(file, file == null ? null : defaultMatrixName(file), false, zoneId)
   }
 
   /**
@@ -655,12 +656,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    try {
-      ZONE_ID_HOLDER.set(zoneId)
-      return read(file, matrixName)
-    } finally {
-      ZONE_ID_HOLDER.remove()
-    }
+    read(file, null, false, zoneId).withMatrixName(matrixName)
   }
 
   /**
@@ -758,6 +754,22 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file) {
+    read(file, file == null ? null : defaultMatrixName(file), false, null)
+  }
+
+  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName, ZoneId zoneId) {
+    if (zoneId == null) {
+      return read(file, fallbackMatrixName, preferSchemaName)
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return read(file, fallbackMatrixName, preferSchemaName)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
+  }
+
+  private static Matrix read(File file, String fallbackMatrixName, boolean preferSchemaName) {
     validateFile(file)
     log.debug("Reading Parquet file: ${file.absolutePath}")
     def path = new Path(file.toURI())
@@ -774,11 +786,10 @@ class MatrixParquetReader {
     }
 
     ParquetReader.builder(new GroupReadSupport(), path).build().withCloseable { reader ->
-      String matrixName
-      if (file.name.contains(DOT)) {
-        matrixName = file.name.substring(0, file.name.lastIndexOf(DOT))
-      } else {
-        matrixName = file.name
+      String schemaName = footer.getFileMetaData().getSchema().name
+      String matrixName = fallbackMatrixName
+      if (preferSchemaName && schemaName != null && !schemaName.trim().isEmpty()) {
+        matrixName = schemaName
       }
 
       Group row = reader.read()
@@ -819,15 +830,119 @@ class MatrixParquetReader {
    * Restores the index on a Matrix from the serialized index column names string.
    *
    * @param matrix the matrix to restore the index on
-   * @param indexString comma-separated index column names, or null if no index
+   * @param indexString JSON array or legacy comma-separated index column names, or null if no index
    * @return the matrix with index restored (or unchanged if no index metadata)
    */
   private static Matrix restoreIndex(Matrix matrix, String indexString) {
     if (indexString != null && !indexString.trim().isEmpty()) {
-      String[] indexColumns = indexString.split(COMMA)*.trim() as String[]
-      matrix.createIndex(indexColumns)
+      matrix.createIndex(parseIndexColumns(indexString))
     }
     matrix
+  }
+
+  private static String[] parseIndexColumns(String indexString) {
+    String value = indexString.trim()
+    if (value.startsWith('[')) {
+      try {
+        return parseJsonStringArray(value) as String[]
+      } catch (IllegalArgumentException ignored) {
+        return parseLegacyIndexColumns(value)
+      }
+    }
+    parseLegacyIndexColumns(value)
+  }
+
+  private static String[] parseLegacyIndexColumns(String value) {
+    value.split(COMMA)*.trim() as String[]
+  }
+
+  private static List<String> parseJsonStringArray(String json) {
+    List<String> result = []
+    int pos = skipWhitespace(json, 0)
+    if (pos >= json.length() || json.charAt(pos) != '[' as char) {
+      throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+    }
+    pos = skipWhitespace(json, pos + 1)
+    if (pos < json.length() && json.charAt(pos) == ']' as char) {
+      return result
+    }
+    while (pos < json.length()) {
+      if (json.charAt(pos) != '"' as char) {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+      StringBuilder value = new StringBuilder()
+      pos++
+      while (pos < json.length()) {
+        char ch = json.charAt(pos)
+        if (ch == '"' as char) {
+          pos++
+          break
+        }
+        if (ch == '\\' as char) {
+          pos = appendEscapedJsonChar(json, pos + 1, value)
+        } else {
+          value.append(ch)
+          pos++
+        }
+      }
+      result << value.toString()
+      pos = skipWhitespace(json, pos)
+      if (pos < json.length() && json.charAt(pos) == ',' as char) {
+        pos = skipWhitespace(json, pos + 1)
+      } else if (pos < json.length() && json.charAt(pos) == ']' as char) {
+        return result
+      } else {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+    }
+    throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+  }
+
+  private static int appendEscapedJsonChar(String json, int pos, StringBuilder value) {
+    if (pos >= json.length()) {
+      throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+    }
+    char escaped = json.charAt(pos)
+    if (escaped == '"' as char || escaped == '\\' as char || escaped == '/' as char) {
+      value.append(escaped)
+      return pos + 1
+    }
+    if (escaped == 'b' as char) {
+      value.append('\b')
+      return pos + 1
+    }
+    if (escaped == 'f' as char) {
+      value.append('\f')
+      return pos + 1
+    }
+    if (escaped == 'n' as char) {
+      value.append('\n')
+      return pos + 1
+    }
+    if (escaped == 'r' as char) {
+      value.append('\r')
+      return pos + 1
+    }
+    if (escaped == 't' as char) {
+      value.append('\t')
+      return pos + 1
+    }
+    if (escaped == 'u' as char) {
+      if (pos + 4 >= json.length()) {
+        throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+      }
+      value.append((char) Integer.parseInt(json.substring(pos + 1, pos + 5), 16))
+      return pos + 5
+    }
+    throw new IllegalArgumentException("Invalid index metadata JSON: $json")
+  }
+
+  private static int skipWhitespace(String value, int pos) {
+    int current = pos
+    while (current < value.length() && Character.isWhitespace(value.charAt(current))) {
+      current++
+    }
+    current
   }
 
   private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {
@@ -837,12 +952,8 @@ class MatrixParquetReader {
     java.nio.file.Path tempFile = Files.createTempFile('matrix-parquet-', '.parquet')
     try {
       Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
-      Matrix result
-      if (zoneId != null) {
-        result = read(tempFile.toFile(), zoneId)
-      } else {
-        result = read(tempFile.toFile())
-      }
+      File file = tempFile.toFile()
+      Matrix result = read(file, defaultMatrixName(file), true, zoneId)
       if (matrixName != null && !matrixName.trim().isEmpty()) {
         result = result.withMatrixName(matrixName)
       }
