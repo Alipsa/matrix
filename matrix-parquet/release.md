@@ -6,7 +6,14 @@
   - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1 
 - Add compression codec support: `ParquetWriteOptions.compressionCodec` / `WriterBuilder.compressionCodec(...)` / SPI `compressionCodec` option; default changed from `UNCOMPRESSED` to `SNAPPY`
 - Fix bug: `BigInteger` columns silently truncated when their value exceeded `Long` range (mapped to `INT64` via `.longValue()`); now mapped to `BINARY` with a `DECIMAL(precision, 0)` logical annotation, with precision auto-inferred from the data
-- Breaking metadata-format change: indexed column names are now written to `matrix.indexColumns` as a JSON string array instead of comma-delimited text so names containing commas round-trip; the new reader accepts both JSON and legacy comma-delimited metadata, but older readers and external tools that split the metadata value on commas will not parse new files correctly
+- Fix bug: reading a `BigDecimal`-typed column stored as plain `BINARY` with no `DECIMAL` annotation (e.g. an externally-written file) incorrectly called `getDouble` on binary data; now parses the UTF-8 string as a `BigDecimal`
+- Fix bug: Parquet writers are now closed if row writing fails, preventing leaked file handles on exceptions
+- Fix bug: documented `java.util.Date` support now stores epoch milliseconds as `INT64` and restores `Date` values when Matrix metadata is present
+- Improve usability: `decimalMeta` options now accept natural Groovy list syntax (`[precision, scale]`) and all write paths validate precision/scale consistently
+- Improve usability: stream, byte-array, and URL reads now derive the matrix name from the Parquet schema/message name when no explicit `matrixName` is supplied
+- Fix bug: index column metadata is now stored as JSON, so index column names containing commas round-trip correctly while legacy comma-delimited metadata remains readable
+- Breaking metadata-format change: indexed column names are now written to `matrix.indexColumns` as a JSON string array instead of comma-delimited text; older readers and external tools that split the metadata value on commas will not parse new files correctly
+- Remove dead/redundant code: unreachable commented-out lines in `MatrixParquetWriter.buildPrimitiveType`; redundant empty-collection special case in `writeList`
 
 ## v0.5.0, 2026-04-29
 - Add SPI integration: `MatrixParquetFormatProvider` registers `.parquet` extension with Matrix SPI so `Matrix.read(file)` and `matrix.write(file)` work without explicit imports
