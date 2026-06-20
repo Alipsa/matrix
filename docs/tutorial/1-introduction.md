@@ -132,7 +132,7 @@ The Matrix project consists of multiple modules, each providing specific functio
 
 9. **matrix-bom**: Bill of Materials for simplified dependency management.
 
-10. **matrix-parquet**: Parquet file format support (experimental).
+10. **matrix-parquet**: Apache Parquet import/export with compression, decimal metadata, nested values, and Matrix index preservation.
 
 11. **matrix-bigquery**: Google BigQuery integration (experimental).
 
