@@ -1,6 +1,6 @@
 # Matrix-parquet Release History
 
-## v0.6.0, 2026-06-19
+## v0.6.0, 2026-06-20
 - Upgrade dependencies
   - org.apache.parquet:parquet-column 1.17.0 -> 1.17.1
   - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1
