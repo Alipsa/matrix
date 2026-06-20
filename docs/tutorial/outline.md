@@ -85,9 +85,11 @@
 - Simplifying dependency configuration
 - Version management
 
-## 11. Experimental (early development) Modules
+## 11. Additional I/O and Integration Modules
 - [Matrix Parquet Module](11-matrix-parquet.md)
-  - Working with Parquet files
+  - Native Parquet read/write APIs and generic Matrix SPI
+  - Compression codecs, decimal metadata, BigInteger safety, and Date handling
+  - Schema-derived names for stream reads and JSON index metadata
 - [Matrix Avro Module](11b-matrix-avro.md)
   - Reading and writing Avro object container files
   - Options-first `AvroReadOptions` and `AvroWriteOptions` usage

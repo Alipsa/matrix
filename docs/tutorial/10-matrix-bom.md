@@ -186,7 +186,7 @@ The Matrix BOM includes version management for the following modules:
 - `matrix-json`: JSON serialization and deserialization
 - `matrix-xchart`: Chart creation using XChart
 - `matrix-sql`: Database interaction
-- `matrix-parquet`: Parquet file format support (experimental)
+- `matrix-parquet`: Apache Parquet import/export with compression, decimal metadata, nested values, and Matrix index preservation
 - `matrix-bigquery`: Google BigQuery integration (experimental)
 - `matrix-charts`: Charm rendering engine and export utilities (experimental)
 - `matrix-pict`: Chart-type-first API backed by the Charm engine (experimental)
