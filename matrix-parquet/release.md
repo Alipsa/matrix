@@ -3,7 +3,7 @@
 ## v0.6.0, 2026-06-19
 - Upgrade dependencies
   - org.apache.parquet:parquet-column 1.17.0 -> 1.17.1
-  - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1 
+  - org.apache.parquet:parquet-hadoop 1.17.0 -> 1.17.1
 - Add compression codec support: `ParquetWriteOptions.compressionCodec` / `WriterBuilder.compressionCodec(...)` / SPI `compressionCodec` option; default changed from `UNCOMPRESSED` to `SNAPPY`
 - Fix bug: `BigInteger` columns silently truncated when their value exceeded `Long` range (mapped to `INT64` via `.longValue()`); now mapped to `BINARY` with a `DECIMAL(precision, 0)` logical annotation, with precision auto-inferred from the data
 - Fix bug: reading a `BigDecimal`-typed column stored as plain `BINARY` with no `DECIMAL` annotation (e.g. an externally-written file) incorrectly called `getDouble` on binary data; now parses the UTF-8 string as a `BigDecimal`
