@@ -686,14 +686,31 @@ class MatrixParquetWriter {
   }
 
   private static String escapeJson(String value) {
-    String.valueOf(value)
-        .replace('\\', '\\\\')
-        .replace('"', '\\"')
-        .replace('\b', '\\b')
-        .replace('\f', '\\f')
-        .replace('\n', '\\n')
-        .replace('\r', '\\r')
-        .replace('\t', '\\t')
+    StringBuilder escaped = new StringBuilder()
+    String source = String.valueOf(value)
+    for (int i = 0; i < source.length(); i++) {
+      char ch = source.charAt(i)
+      if (ch == '\\' as char) {
+        escaped.append('\\\\')
+      } else if (ch == '"' as char) {
+        escaped.append('\\"')
+      } else if (ch == '\b' as char) {
+        escaped.append('\\b')
+      } else if (ch == '\f' as char) {
+        escaped.append('\\f')
+      } else if (ch == '\n' as char) {
+        escaped.append('\\n')
+      } else if (ch == '\r' as char) {
+        escaped.append('\\r')
+      } else if (ch == '\t' as char) {
+        escaped.append('\\t')
+      } else if (Character.isISOControl(ch)) {
+        escaped.append('\\').append('u').append(Integer.toHexString((int) ch).padLeft(4, '0'))
+      } else {
+        escaped.append(ch)
+      }
+    }
+    escaped.toString()
   }
 
   /**

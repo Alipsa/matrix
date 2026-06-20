@@ -357,7 +357,7 @@ class MatrixParquetReader {
    * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file, String matrixName) {
-    read(file, file == null ? null : defaultMatrixName(file), false, null).withMatrixName(matrixName)
+    read(file, null, false, null).withMatrixName(matrixName)
   }
 
   /**
@@ -656,7 +656,7 @@ class MatrixParquetReader {
     if (zoneId == null) {
       throw new IllegalArgumentException(ERR_ZONE_ID_NULL)
     }
-    read(file, file == null ? null : defaultMatrixName(file), false, zoneId).withMatrixName(matrixName)
+    read(file, null, false, zoneId).withMatrixName(matrixName)
   }
 
   /**
@@ -843,8 +843,16 @@ class MatrixParquetReader {
   private static String[] parseIndexColumns(String indexString) {
     String value = indexString.trim()
     if (value.startsWith('[')) {
-      return parseJsonStringArray(value) as String[]
+      try {
+        return parseJsonStringArray(value) as String[]
+      } catch (IllegalArgumentException ignored) {
+        return parseLegacyIndexColumns(value)
+      }
     }
+    parseLegacyIndexColumns(value)
+  }
+
+  private static String[] parseLegacyIndexColumns(String value) {
     value.split(COMMA)*.trim() as String[]
   }
 
