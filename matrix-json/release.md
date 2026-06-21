@@ -5,6 +5,7 @@
 - migrate all internal tests and the `matrix-bom` integration test from `JsonImporter`/`JsonExporter` to `JsonReader`/`JsonWriter`
 
 ## v2.2.0, 2026-04-29
+- add service registration (`JsonFormatProvider`) so `Matrix.read(file)` / `matrix.write(matrix, file)` auto-detect `.json` files via `ServiceLoader`
 - add fluent `WriteBuilder` API for `JsonWriter`: `JsonWriter.write(matrix).indent().to(file)`
 - add matrix name derivation from file/URL in `JsonReader`
 - add `matrixName` option to `JsonReadOptions` to override file-derived name
