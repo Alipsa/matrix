@@ -166,9 +166,9 @@ class JsonWriterTest {
     Matrix matrix = Matrix.builder()
         .data(
             name: ['Test'],
-            date: [java.time.LocalDate.parse('2023-01-15')]
+            date: [LocalDate.parse('2023-01-15')]
         )
-        .types(String, java.time.LocalDate)
+        .types(String, LocalDate)
         .build()
 
     String json = JsonWriter.writeString(matrix, 'MM/dd/yyyy')
@@ -380,8 +380,8 @@ class JsonWriterTest {
   @Test
   void testFluentWithDateFormat() {
     Matrix matrix = Matrix.builder()
-        .data(d: [java.time.LocalDate.of(2024, 6, 15)])
-        .types(java.time.LocalDate)
+        .data(d: [LocalDate.of(2024, 6, 15)])
+        .types(LocalDate)
         .build()
 
     String json = JsonWriter.write(matrix).dateFormat('dd/MM/yyyy').asString()
