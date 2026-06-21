@@ -1,5 +1,9 @@
 # Matrix-Json Release history
 
+## v2.3.0, <release date>
+- Breaking: remove deprecated `JsonImporter` and `JsonExporter` classes (deprecated since v2.1.2). These were source- and binary-incompatible removals; replace `JsonImporter.parse(...)` calls with `JsonReader.read(...)` and `new JsonExporter(matrix).toJson(...)` calls with `JsonWriter.write(matrix)...asString()`/`.to(...)`. The `new JsonExporter(Grid, List<String>)` constructor has no direct equivalent: build a `Matrix` first (`Matrix.builder().data(grid).columnNames(columnNames).build()`), then call `JsonWriter.write(matrix)`
+- migrate all internal tests and the `matrix-bom` integration test from `JsonImporter`/`JsonExporter` to `JsonReader`/`JsonWriter`
+
 ## v2.2.0, 2026-04-29
 - add fluent `WriteBuilder` API for `JsonWriter`: `JsonWriter.write(matrix).indent().to(file)`
 - add matrix name derivation from file/URL in `JsonReader`

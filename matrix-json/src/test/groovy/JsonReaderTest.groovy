@@ -1,6 +1,13 @@
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.NumericNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.ValueNode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -268,5 +275,118 @@ class JsonReaderTest {
 
     assertEquals(fromRead.rowCount(), fromReadString.rowCount(), 'readString should produce same row count as read')
     assertEquals(fromRead.columnNames(), fromReadString.columnNames(), 'readString should produce same columns as read')
+  }
+
+  @Test
+  void testNestedPojoSerialization() {
+    ObjectMapper mapper = new ObjectMapper()
+
+    Family f1 = new Family('Nyfelt-Wersäll')
+    f1.members.add(new Person('Per'))
+    f1.members.add(new Person('Louise'))
+
+    Family f2 = new Family('Nyfelt-Anselius')
+    f2.members.add(new Person('Jonas'))
+    f2.members.add(new Person('Kristin'))
+    f2.members.add(new Person('Frida'))
+    f2.members.add(new Person('Oliver'))
+
+    String json = mapper.writeValueAsString([f1, f2])
+    JsonNode root = mapper.readTree(json)
+    Matrix jacksonMatrix = toMatrix(root)
+
+    Matrix m = JsonReader.read(json)
+    assertEquals(jacksonMatrix, m, jacksonMatrix.diff(m))
+  }
+
+  Matrix toMatrix(JsonNode root) {
+    List<Map<String, String>> flatMaps = []
+    Set<String> keySet = new LinkedHashSet<>()
+    root.each {
+      Map<String, String> flatMap = [:]
+      addKeys('', it, flatMap)
+      flatMaps << flatMap
+      keySet.addAll(flatMap.keySet())
+    }
+    List rows = []
+    for (int i = 0; i < flatMaps.size(); i++) {
+      def m = flatMaps.get(i)
+      keySet.each {
+        if (!m.containsKey(it)) {
+          m.put(it, null)
+        }
+      }
+      rows << new ArrayList<>(m.values())
+    }
+    Matrix.builder()
+        .rows(rows)
+        .columnNames(keySet)
+        .build()
+  }
+
+  def addKeys(String currentPath, JsonNode jsonNode, Map<String, Object> map) {
+    if (jsonNode.isObject()) {
+      ObjectNode objectNode = (ObjectNode) jsonNode
+      Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields()
+      String pathPrefix = currentPath.isEmpty() ? '' : currentPath + '.'
+
+      while (iter.hasNext()) {
+        Map.Entry<String, JsonNode> entry = iter.next()
+        addKeys(pathPrefix + entry.getKey(), entry.getValue(), map)
+      }
+    } else if (jsonNode.isArray()) {
+      ArrayNode arrayNode = (ArrayNode) jsonNode
+      for (int i = 0; i < arrayNode.size(); i++) {
+        addKeys(currentPath + '[' + i + ']', arrayNode.get(i), map)
+      }
+    } else if (jsonNode.isValueNode()) {
+      if (jsonNode instanceof NumericNode) {
+        NumericNode node = jsonNode as NumericNode
+        map.put(currentPath, node.numberValue())
+      } else if (jsonNode instanceof BooleanNode) {
+        BooleanNode node = jsonNode as BooleanNode
+        map.put(currentPath, node.booleanValue())
+      } else {
+        ValueNode valueNode = (ValueNode) jsonNode
+        map.put(currentPath, valueNode.asText())
+      }
+    }
+  }
+
+  class Person {
+    Person(String name) {
+      this.name = name
+    }
+    String name
+  }
+
+  class Family {
+    Family(String name) {
+      this.name = name
+    }
+    String name
+    List<Person> members = []
+  }
+
+  @Test
+  void testReadObjectInsteadOfArrayThrows() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      JsonReader.read('{"not": "an array"}')
+    }
+    assertTrue(ex.message.contains('Expected JSON array'), 'Error should mention array expectation')
+  }
+
+  @Test
+  void testMalformedJsonThrows() {
+    assertThrows(Exception) {
+      JsonReader.read('[{"a": 1,}]')  // Trailing comma
+    }
+  }
+
+  @Test
+  void testReadNonexistentFileThrows() {
+    assertThrows(FileNotFoundException) {
+      JsonReader.read(new File('/nonexistent/path/file.json'))
+    }
   }
 }

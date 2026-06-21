@@ -19,8 +19,8 @@ import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.csv.CsvExporter
 import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.json.JsonExporter
-import se.alipsa.matrix.json.JsonImporter
+import se.alipsa.matrix.json.JsonReader
+import se.alipsa.matrix.json.JsonWriter
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
@@ -90,8 +90,8 @@ class MatrixModulesTest {
   @Test
   void testJson() {
     Matrix mtcars = Dataset.mtcars()
-    def exporter = new JsonExporter(mtcars)
-    Matrix m2 = JsonImporter.parse(exporter.toJson()).withMatrixName('mtcars')
+    String json = JsonWriter.write(mtcars).asString()
+    Matrix m2 = JsonReader.read(json).withMatrixName('mtcars')
     MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
   }
 
