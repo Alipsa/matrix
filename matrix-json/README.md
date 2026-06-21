@@ -124,6 +124,7 @@ You can apply column formatters and date format patterns via the builder:
 
 ```groovy
 import se.alipsa.matrix.json.JsonWriter
+import java.time.format.DateTimeFormatter
 
 // Custom date format
 String json = JsonWriter.write(empData)
@@ -132,7 +133,7 @@ String json = JsonWriter.write(empData)
     .asString()
 
 // Column formatters
-String json = JsonWriter.write(empData)
+String formattedJson = JsonWriter.write(empData)
     .formatter('salary') { it * 10 + ' kr' }
     .formatter('start_date') { DateTimeFormatter.ofPattern('yy/dd/MM').format(it) }
     .indent()
@@ -198,11 +199,6 @@ Nested objects are automatically flattened to dot-notation keys. Arrays use brac
 Matrix m = JsonReader.read('[{"person": {"name": "Alice"}, "scores": [90, 95]}]')
 println m.columnNames()  // [person.name, scores[0], scores[1]]
 ```
-
-## Deprecated API
-
-The `JsonExporter` and `JsonImporter` classes are deprecated since v2.1.2.
-Use `JsonWriter` and `JsonReader` instead.
 
 # Release version compatibility
 

@@ -1,6 +1,11 @@
 # Matrix-Json Release history
 
+## v2.3.0, <release date>
+- Breaking: remove deprecated `JsonImporter` and `JsonExporter` classes (deprecated since v2.1.2). These were source- and binary-incompatible removals; replace `JsonImporter.parse(...)` calls with `JsonReader.read(...)` and `new JsonExporter(matrix).toJson(...)` calls with `JsonWriter.write(matrix)...asString()`/`.to(...)`. The static `JsonExporter.toJson(matrix, ...)` becomes `JsonWriter.write(matrix).asString()` (add `.indent()` for pretty-printing), and the static `JsonExporter.toJsonFile(matrix, file, ...)` becomes `JsonWriter.write(matrix).to(file)` (again with `.indent()` as needed). The `new JsonExporter(Grid, List<String>)` constructor has no direct equivalent: build a `Matrix` first (`Matrix.builder().data(grid).columnNames(columnNames).build()`), then call `JsonWriter.write(matrix)`
+- migrate all internal tests and the `matrix-bom` integration test from `JsonImporter`/`JsonExporter` to `JsonReader`/`JsonWriter`
+
 ## v2.2.0, 2026-04-29
+- add service registration (`JsonFormatProvider`) so `Matrix.read(file)` / `matrix.write(matrix, file)` auto-detect `.json` files via `ServiceLoader`
 - add fluent `WriteBuilder` API for `JsonWriter`: `JsonWriter.write(matrix).indent().to(file)`
 - add matrix name derivation from file/URL in `JsonReader`
 - add `matrixName` option to `JsonReadOptions` to override file-derived name

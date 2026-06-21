@@ -34,7 +34,7 @@ JsonWriter.write(matrix).indent().to(new File('out.json'))
 String json = JsonWriter.write(matrix).asString()
 
 // With custom date format and column formatter
-String json = JsonWriter.write(matrix)
+String formattedJson = JsonWriter.write(matrix)
     .dateFormat('dd/MM/yyyy')
     .formatter('price') { "\$${it}" }
     .indent()

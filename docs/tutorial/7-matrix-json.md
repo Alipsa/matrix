@@ -119,12 +119,12 @@ String json = JsonWriter.write(empData)
     .asString()
 
 // Per-column formatters
-String json = JsonWriter.write(empData)
+String formattedJson = JsonWriter.write(empData)
     .formatter('salary') { it * 10 + ' kr' }
     .formatter('start_date') { DateTimeFormatter.ofPattern('yy/dd/MM').format(it) }
     .indent()
     .asString()
-println json
+println formattedJson
 ```
 
 The output with column formatters will be:
@@ -281,9 +281,5 @@ println data.head()
 4. **Nested JSON**: Nested objects and arrays are automatically flattened. For deeply nested structures, check the resulting column names after reading.
 
 5. **Memory Efficiency**: Both `JsonReader` and `JsonWriter` use Jackson streaming, keeping memory usage constant regardless of data size.
-
-## Deprecated API
-
-The `JsonImporter` and `JsonExporter` classes are deprecated since v2.1.2. Use `JsonReader` and `JsonWriter` instead.
 
 Go to [previous section](6-matrix-csv.md) | Go to [next section](8-matrix-xchart.md) | Back to [outline](outline.md)

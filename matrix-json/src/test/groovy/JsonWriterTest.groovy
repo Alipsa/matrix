@@ -1,13 +1,18 @@
 import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.json.JsonReader
 import se.alipsa.matrix.json.JsonWriter
 
 import java.nio.file.Path
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 
 class JsonWriterTest {
 
@@ -416,5 +421,78 @@ class JsonWriterTest {
 
     assertTrue(json.contains('300'), 'Should apply column formatters map')
     assertTrue(json.contains('800'), 'Should apply column formatters map')
+  }
+
+  @Test
+  void testWriteExactJsonOutput() {
+    Matrix empData = Matrix.builder().data(
+        emp_id: 1..3,
+        emp_name: ['Rick','Dan','Michelle'],
+        salary: [623.3,515.2,611.0],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
+        .types([int, String, Number, LocalDate])
+        .build()
+
+    assertEquals(
+        '[{"emp_id":1,"emp_name":"Rick","salary":623.3,"start_date":"2012-01-01"},{"emp_id":2,"emp_name":"Dan","salary":515.2,"start_date":"2013-09-23"},{"emp_id":3,"emp_name":"Michelle","salary":611.0,"start_date":"2014-11-15"}]',
+        JsonWriter.write(empData).asString()
+    )
+
+    assertEquals(
+        '[{"emp_id":1,"emp_name":"Rick","salary":623.3,"start_date":"2012/01/01"},{"emp_id":2,"emp_name":"Dan","salary":515.2,"start_date":"2013/09/23"},{"emp_id":3,"emp_name":"Michelle","salary":611.0,"start_date":"2014/11/15"}]',
+        JsonWriter.write(empData).dateFormat('yyyy/MM/dd').asString()
+    )
+  }
+
+  @Test
+  void testWriteWithFormattersExactOutput() {
+    Matrix empData = Matrix.builder().data(
+        emp_id: 1..3,
+        emp_name: ['Rick','Dan','Michelle'],
+        salary: [623.3,515.2,611.0],
+        start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15'))
+        .types([int, String, Number, LocalDate])
+        .build()
+    assertEquals(['start_date'], empData.columnNames(TemporalAccessor))
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern('yy/dd/MM')
+
+    String json = JsonWriter.write(empData)
+        .formatter('salary') { it * 10 + ' kr' }
+        .formatter('start_date') { dateTimeFormatter.format(it) }
+        .asString()
+
+    assertEquals(
+        '[{"emp_id":1,"emp_name":"Rick","salary":"6233.0 kr","start_date":"12/01/01"},{"emp_id":2,"emp_name":"Dan","salary":"5152.0 kr","start_date":"13/23/09"},{"emp_id":3,"emp_name":"Michelle","salary":"6110.0 kr","start_date":"14/15/11"}]',
+        json
+    )
+  }
+
+  @Test
+  void testRoundTripDatasets() {
+    Matrix ds = Dataset.mtcars()
+    String json = JsonWriter.write(ds).indent().asString()
+    Matrix m = JsonReader.read(json).convert(ds.types()).withMatrixName(ds.matrixName)
+    assertEquals(ds, m, ds.diff(m))
+
+    ds = Dataset.airquality()
+    json = JsonWriter.write(ds).asString()
+    m = JsonReader.read(json).convert(ds.types()).withMatrixName(ds.matrixName)
+    assertEquals(ds, m, ds.diff(m))
+
+    ds = Dataset.diamonds()
+    json = JsonWriter.write(ds).indent().asString()
+    m = JsonReader.read(json).convert(ds.types()).withMatrixName(ds.matrixName)
+    assertEquals(ds, m, ds.diff(m))
+  }
+
+  @Test
+  void testFluentWriteToFileWithIndent() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+    File outputFile = tempDir.resolve('indented.json').toFile()
+
+    JsonWriter.write(matrix).indent().to(outputFile)
+
+    String content = outputFile.text
+    assertTrue(content.contains('\n'), 'Should have pretty printing with newlines')
   }
 }

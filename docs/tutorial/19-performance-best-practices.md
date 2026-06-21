@@ -642,17 +642,18 @@ connection.commit()
 Optimize JSON operations:
 
 ```groovy
-import se.alipsa.matrix.json.JsonImporter
-import se.alipsa.matrix.json.JsonExporter
+import se.alipsa.matrix.json.JsonReader
+import se.alipsa.matrix.json.JsonWriter
 
-// For large JSON arrays, stream if possible
-// JsonImporter loads entire JSON into memory
+// JsonReader and JsonWriter use Jackson's streaming API, so reading/writing
+// never builds an intermediate JSON tree or string in memory
 
-// For export, write directly to file
-JsonExporter.exportToJson(matrix, new File("output.json"))
+// For export, write directly to file instead of building a String first
+JsonWriter.write(matrix).to(new File("output.json"))
 
-// Avoid: Creating string then writing
-// String json = JsonExporter.toJson(matrix)
+// Avoid: building a String then writing it, which holds the entire
+// serialized JSON in memory before it ever reaches disk
+// String json = JsonWriter.write(matrix).asString()
 // new File("output.json").text = json
 ```
 

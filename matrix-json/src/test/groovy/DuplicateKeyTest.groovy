@@ -3,7 +3,7 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.json.JsonImporter
+import se.alipsa.matrix.json.JsonReader
 
 class DuplicateKeyTest {
 
@@ -18,7 +18,7 @@ class DuplicateKeyTest {
 
     // Should throw an exception when duplicate keys are detected
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      JsonImporter.parse(json)
+      JsonReader.read(json)
     }
 
     assertTrue(exception.message.contains('Duplicate key detected'))
@@ -33,7 +33,7 @@ class DuplicateKeyTest {
 
     // Should throw an exception when duplicate keys are detected
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      JsonImporter.parse(json)
+      JsonReader.read(json)
     }
 
     assertTrue(exception.message.contains('Duplicate key detected'))
@@ -46,7 +46,7 @@ class DuplicateKeyTest {
       {"a": {"b": 1}, "c": 2}
     ]'''
 
-    Matrix m = JsonImporter.parse(json)
+    Matrix m = JsonReader.read(json)
 
     assertEquals(2, m.columnCount())
     assertEquals(['a.b', 'c'], m.columnNames())
