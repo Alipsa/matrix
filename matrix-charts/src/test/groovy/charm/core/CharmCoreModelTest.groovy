@@ -415,6 +415,44 @@ class CharmCoreModelTest {
   }
 
   @Test
+  void testGeomSpecDefaultAesAreDeepCopied() {
+    GeomSpec geomSpec = new GeomSpec(
+        CharmGeomType.POINT,
+        [:],
+        [],
+        [aesNested: [k: 'v']]
+    )
+    Layer layer = new Layer(geomSpec, StatSpec.of(CharmStatType.IDENTITY), null, true,
+        PositionSpec.of(CharmPositionType.IDENTITY), [:], null, [:])
+    Chart chart = new Chart(Dataset.mpg(), null, [layer], null, null, null, null, null, null, [])
+
+    GeomSpec geomCopy = chart.layers.first().geomSpec
+    (geomCopy.defaultAes.aesNested as Map).put('k', 'mutated')
+
+    assertEquals('v', (chart.layers.first().geomSpec.defaultAes.aesNested as Map).k)
+  }
+
+  @Test
+  void testCompiledChartDeepFreezesNestedGenericCollection() {
+    ArrayDeque<Object> nestedDeque = new ArrayDeque<Object>([1, 2, 3])
+
+    Chart chart = plot(Dataset.mpg()) {
+      addLayer(new PointBuilder()
+          .mapping(x: 'cty', y: 'hwy')
+          .params([wrapper: [deque: nestedDeque]]))
+    }.build()
+
+    nestedDeque << 4
+
+    Collection<Object> frozen = (chart.layers.first().params.wrapper as Map).deque as Collection<Object>
+    assertEquals([1, 2, 3], frozen.toList())
+
+    assertThrows(UnsupportedOperationException) {
+      frozen << 99
+    }
+  }
+
+  @Test
   void testCompiledLayerScaleParamsAreDeepCopied() {
     Chart chart = plot(Dataset.mpg()) {
       layers {

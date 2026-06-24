@@ -589,7 +589,7 @@ class Scale {
     new Scale(
         type: type,
         transformStrategy: transformStrategy,
-        breaks: new ArrayList(breaks),
+        breaks: new ArrayList<>(breaks),
         labels: new ArrayList<>(labels),
         params: copiedParams
     )
