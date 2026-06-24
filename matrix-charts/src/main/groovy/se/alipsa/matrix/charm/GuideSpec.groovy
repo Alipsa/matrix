@@ -84,11 +84,7 @@ class GuideSpec {
    * @return copy
    */
   GuideSpec copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams.put(key, SpecCopyUtil.deepCopyValue(value))
-    }
-    new GuideSpec(type, copiedParams)
+    new GuideSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
 }

@@ -582,16 +582,12 @@ class Scale {
    * @return copied scale
    */
   Scale copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
     new Scale(
         type: type,
         transformStrategy: transformStrategy,
-        breaks: new ArrayList<>(breaks),
-        labels: new ArrayList<>(labels),
-        params: copiedParams
+        breaks: [*breaks],
+        labels: [*labels],
+        params: SpecCopyUtil.deepCopyParams(params)
     )
   }
 

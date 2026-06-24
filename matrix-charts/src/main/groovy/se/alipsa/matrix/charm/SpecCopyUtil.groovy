@@ -52,4 +52,18 @@ class SpecCopyUtil {
     value
   }
 
+  /**
+   * Deep-copies every value in a params/defaultAes map via {@link #deepCopyValue}.
+   *
+   * @param params map to copy
+   * @return a new map with deep-copied values
+   */
+  static Map<String, Object> deepCopyParams(Map<String, Object> params) {
+    Map<String, Object> copied = [:]
+    params.each { String key, Object value ->
+      copied[key] = deepCopyValue(value)
+    }
+    copied
+  }
+
 }

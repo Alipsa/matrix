@@ -182,7 +182,8 @@ class Layer {
     if (!scales) {
       return Collections.<String, Scale>emptyMap()
     }
-    Map<String, Scale> copied = scales.collectEntries { String k, Scale v -> [(k): v?.copy()] } as Map<String, Scale>
+    Map<String, Scale> copied = scales.findAll { String k, Scale v -> v != null }
+        .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale>
     Collections.unmodifiableMap(copied)
   }
 
@@ -207,10 +208,7 @@ class Layer {
         scales.findAll { String k, Scale v -> v != null }
             .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
         [:]
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
+    Map<String, Object> copiedParams = SpecCopyUtil.deepCopyParams(params)
     new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), copiedParams, styleCallback, copiedScales)
   }
 

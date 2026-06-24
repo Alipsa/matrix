@@ -137,11 +137,7 @@ class CoordSpec extends Coord {
    */
   @Override
   CoordSpec copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
-    new CoordSpec(type: type, params: copiedParams)
+    new CoordSpec(type: type, params: SpecCopyUtil.deepCopyParams(params))
   }
 
 }

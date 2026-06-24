@@ -47,11 +47,7 @@ class StatSpec {
    * @return copied StatSpec
    */
   StatSpec copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
-    new StatSpec(type, copiedParams)
+    new StatSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
   @Override

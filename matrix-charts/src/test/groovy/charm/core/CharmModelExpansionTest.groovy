@@ -281,6 +281,25 @@ class CharmModelExpansionTest {
   }
 
   @Test
+  void testLayerSpecCopyIsolatesParams() {
+    GeomSpec geom = GeomSpec.of(CharmGeomType.POINT, [nested: [k: 'v']])
+    StatSpec stat = StatSpec.of(CharmStatType.IDENTITY, [nested: [a: 1]])
+    PositionSpec pos = PositionSpec.of(CharmPositionType.IDENTITY, [nested: [1, 2]])
+    LayerSpec layer = new LayerSpec(geom, stat, null, true, pos, [list: [1, 2, 3]])
+
+    LayerSpec copy = layer.copy()
+    (copy.geomSpec.params.nested as Map).put('k', 'mutated')
+    (copy.statSpec.params.nested as Map).put('a', 999)
+    (copy.positionSpec.params.nested as List) << 99
+    (copy.params.list as List) << 4
+
+    assertEquals('v', (layer.geomSpec.params.nested as Map).k)
+    assertEquals(1, (layer.statSpec.params.nested as Map).a)
+    assertEquals(2, (layer.positionSpec.params.nested as List).size())
+    assertEquals(3, (layer.params.list as List).size())
+  }
+
+  @Test
   void testCharmExpressionImplementedByGgExpressionTypes() {
     // Factor
     Factor factor = new Factor('cyl')

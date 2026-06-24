@@ -46,10 +46,7 @@ class LayerSpec extends Layer {
         rawScalesMap.findAll { String k, Scale v -> v != null }
             .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
         [:]
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
+    Map<String, Object> copiedParams = SpecCopyUtil.deepCopyParams(params)
     new LayerSpec(rawGeomSpec().copy(), rawStatSpec().copy(), layerMapping, inheritMapping, rawPositionSpec().copy(), copiedParams, styleCallback, copiedScales)
   }
 

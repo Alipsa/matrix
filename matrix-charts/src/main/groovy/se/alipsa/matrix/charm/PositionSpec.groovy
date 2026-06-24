@@ -47,11 +47,7 @@ class PositionSpec {
    * @return copied PositionSpec
    */
   PositionSpec copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
-    }
-    new PositionSpec(type, copiedParams)
+    new PositionSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
   /**
