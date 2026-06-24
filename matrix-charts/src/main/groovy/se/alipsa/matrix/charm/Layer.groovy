@@ -207,7 +207,11 @@ class Layer {
         scales.findAll { String k, Scale v -> v != null }
             .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
         [:]
-    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
+    Map<String, Object> copiedParams = [:]
+    params.each { String key, Object value ->
+      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
+    }
+    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), copiedParams, styleCallback, copiedScales)
   }
 
 }

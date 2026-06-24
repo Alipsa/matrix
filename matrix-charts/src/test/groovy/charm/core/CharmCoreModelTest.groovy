@@ -444,11 +444,15 @@ class CharmCoreModelTest {
 
     nestedDeque << 4
 
-    Collection<Object> frozen = (chart.layers.first().params.wrapper as Map).deque as Collection<Object>
+    Map<String, Object> wrapper = chart.layers.first().params.wrapper as Map<String, Object>
+    Collection<Object> frozen = wrapper.deque as Collection<Object>
     assertEquals([1, 2, 3], frozen.toList())
 
     assertThrows(UnsupportedOperationException) {
       frozen << 99
+    }
+    assertThrows(UnsupportedOperationException) {
+      wrapper.put('extra', 'value')
     }
   }
 
