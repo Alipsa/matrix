@@ -66,4 +66,19 @@ class SpecCopyUtil {
     copied
   }
 
+  /**
+   * Copies a per-layer scale overrides map, dropping any null-valued entries
+   * and deep-copying each remaining {@link Scale} via {@code Scale.copy()}.
+   *
+   * @param scales scale overrides map, possibly null or empty
+   * @return a new mutable map of copied, non-null scales
+   */
+  static Map<String, Scale> copyScales(Map<String, Scale> scales) {
+    if (!scales) {
+      return [:]
+    }
+    scales.findAll { String k, Scale v -> v != null }
+        .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale>
+  }
+
 }

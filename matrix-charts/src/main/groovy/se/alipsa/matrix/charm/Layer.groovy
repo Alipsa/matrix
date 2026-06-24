@@ -176,15 +176,10 @@ class Layer {
   /**
    * Returns per-layer scale overrides keyed by aesthetic name (e.g. 'color', 'x').
    *
-   * @return unmodifiable map of defensive scale copies, or empty map if none
+   * @return unmodifiable map of defensive copies of non-null scale overrides, or empty map if none
    */
   Map<String, Scale> getScales() {
-    if (!scales) {
-      return Collections.<String, Scale>emptyMap()
-    }
-    Map<String, Scale> copied = scales.findAll { String k, Scale v -> v != null }
-        .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale>
-    Collections.unmodifiableMap(copied)
+    Collections.unmodifiableMap(SpecCopyUtil.copyScales(scales))
   }
 
   /**
@@ -204,10 +199,7 @@ class Layer {
    * @return copied layer
    */
   Layer copy() {
-    Map<String, Scale> copiedScales = scales ?
-        scales.findAll { String k, Scale v -> v != null }
-            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
-        [:]
+    Map<String, Scale> copiedScales = SpecCopyUtil.copyScales(scales)
     Map<String, Object> copiedParams = SpecCopyUtil.deepCopyParams(params)
     new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), copiedParams, styleCallback, copiedScales)
   }

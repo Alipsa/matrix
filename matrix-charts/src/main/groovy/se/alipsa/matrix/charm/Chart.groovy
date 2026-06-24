@@ -221,11 +221,7 @@ class Chart {
     Map<String, Object> frozenParams = deepFreezeParams(value.params)
     // Read canonical values via the package-scope raw accessors rather than the
     // public getters (which return defensive copies) to avoid copying twice.
-    Map<String, Scale> rawScales = value.rawScales()
-    Map<String, Scale> copiedScales = rawScales ?
-        rawScales.findAll { String k, Scale v -> v != null }
-            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
-        [:]
+    Map<String, Scale> copiedScales = SpecCopyUtil.copyScales(value.rawScales())
     new LayerSpec(value.rawGeomSpec().copy(), value.rawStatSpec().copy(), value.mapping, value.inheritMapping, value.rawPositionSpec().copy(), frozenParams, value.styleCallback, copiedScales)
   }
 
