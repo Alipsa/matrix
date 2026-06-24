@@ -21,36 +21,7 @@ import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 
-import java.lang.reflect.Field
-
 class CharmRendererTest {
-
-  @Test
-  void testRenderExceptionIsNotDoubleWrapped() {
-    Matrix data = Matrix.builder()
-        .columnNames('x', 'y')
-        .rows([[1, 2]])
-        .build()
-
-    Chart chart = plot(data) {
-      mapping {
-        x = 'x'
-        y = 'y'
-      }
-      layers { geomPoint() }
-    }.build()
-
-    // GeomSpec.type is final; reflection is needed to force this renderer-only failure path.
-    setField(chart.layers[0].geomSpec, 'type', null)
-
-    CharmRenderException ex = assertThrows(CharmRenderException) {
-      chart.render()
-    }
-    assertFalse(
-        ex.cause instanceof CharmRenderException,
-        "render() must not double-wrap CharmRenderException; cause was: ${ex.cause?.getClass()?.name}"
-    )
-  }
 
   @Test
   void testPlotSpecStylesheetInjectsRawCss() {
@@ -116,12 +87,10 @@ class CharmRendererTest {
       chart.render()
     }
     assertTrue(ex.message.contains("Stylesheet must not contain ']]>'"))
-  }
-
-  private static void setField(Object target, String name, Object value) {
-    Field field = target.class.getDeclaredField(name)
-    field.accessible = true
-    field.set(target, value)
+    assertFalse(
+        ex.cause instanceof CharmRenderException,
+        "render() must not double-wrap CharmRenderException; cause was: ${ex.cause?.getClass()?.name}"
+    )
   }
 
   @Test

@@ -84,6 +84,10 @@ class Chart {
   /**
    * Returns source data.
    *
+   * <p>Note: unlike most other Chart getters, this returns the live source
+   * {@code Matrix} without a defensive copy. Facet params and annotation params
+   * also retain shallow-copy paths. These are accepted gaps for this release.</p>
+   *
    * @return source matrix
    */
   Matrix getData() {
@@ -215,11 +219,14 @@ class Chart {
 
   private static LayerSpec toLayerSpec(Layer value) {
     Map<String, Object> frozenParams = deepFreezeParams(value.params)
-    Map<String, Scale> copiedScales = value.scales ?
-        value.scales.findAll { String k, Scale v -> v != null }
+    // Read canonical values via the package-scope raw accessors rather than the
+    // public getters (which return defensive copies) to avoid copying twice.
+    Map<String, Scale> rawScales = value.rawScales()
+    Map<String, Scale> copiedScales = rawScales ?
+        rawScales.findAll { String k, Scale v -> v != null }
             .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
         [:]
-    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams, value.styleCallback, copiedScales)
+    new LayerSpec(value.rawGeomSpec().copy(), value.rawStatSpec().copy(), value.mapping, value.inheritMapping, value.rawPositionSpec().copy(), frozenParams, value.styleCallback, copiedScales)
   }
 
   private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {
@@ -251,6 +258,13 @@ class Chart {
         frozen << deepFreezeValue(v)
       }
       return Collections.unmodifiableSet(frozen)
+    }
+    if (value instanceof Collection) {
+      List<Object> frozen = []
+      value.each { Object v ->
+        frozen << deepFreezeValue(v)
+      }
+      return Collections.unmodifiableCollection(frozen)
     }
     value
   }

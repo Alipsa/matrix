@@ -737,7 +737,9 @@ class PlotSpec {
       return ''
     }
 
-    int threshold = Math.max(2, (int) Math.ceil(columnName.size() / 3.0))
+    // Allow roughly one edit per three characters of the typo, with a floor of 2 so
+    // short column names (e.g. 'x') still tolerate a single-character mismatch.
+    int threshold = (columnName.size() / 3).ceil().max(2) as int
     List<String> suggestions = ranked
         .findAll { ColumnSuggestion entry -> entry.distance <= threshold }
         .collect { ColumnSuggestion entry -> entry.name }

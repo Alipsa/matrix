@@ -14,8 +14,10 @@ import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.CustomScaleTransform
 import se.alipsa.matrix.charm.GeomSpec
+import se.alipsa.matrix.charm.Layer
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
@@ -358,6 +360,96 @@ class CharmCoreModelTest {
     assertThrows(UnsupportedOperationException) {
       (chart.layers.first().params.tags as Set) << 'z'
     }
+  }
+
+  @Test
+  void testCompiledChartDeepFreezesGenericCollectionLayerParams() {
+    ArrayDeque<Object> values = new ArrayDeque<Object>([1, 2, 3])
+
+    Chart chart = plot(Dataset.mpg()) {
+      addLayer(new PointBuilder()
+          .mapping(x: 'cty', y: 'hwy')
+          .params([deque: values]))
+    }.build()
+
+    values << 4
+
+    Collection<Object> frozen = chart.layers.first().params.deque as Collection<Object>
+    assertEquals([1, 2, 3], frozen.toList())
+
+    assertThrows(UnsupportedOperationException) {
+      frozen << 99
+    }
+  }
+
+  @Test
+  void testLayerSpecGettersReturnDefensiveCopies() {
+    // Constructed directly (rather than via the builder DSL) since GeomSpec/StatSpec/
+    // PositionSpec params are internal metadata not exposed through LayerBuilder.param().
+    GeomSpec geomSpec = new GeomSpec(CharmGeomType.POINT, [nestedMap: [k: 'v'], nestedList: [1, 2]])
+    StatSpec statSpec = new StatSpec(CharmStatType.IDENTITY, [statNested: [a: 1]])
+    PositionSpec positionSpec = new PositionSpec(CharmPositionType.IDENTITY, [posNested: [1, 2]])
+    Scale colorScale = Scale.manual([A: '#FF0000', B: '#00FF00'])
+    Layer layer = new Layer(geomSpec, statSpec, null, true, positionSpec, [:], null, [color: colorScale])
+
+    Chart chart = new Chart(Dataset.mpg(), null, [layer], null, null, null, null, null, null, [])
+    LayerSpec compiled = chart.layers.first()
+
+    GeomSpec geomCopy = compiled.geomSpec
+    (geomCopy.params.nestedMap as Map).put('k', 'mutated')
+    (geomCopy.params.nestedList as List) << 99
+    assertEquals('v', (compiled.geomSpec.params.nestedMap as Map).k)
+    assertEquals(2, (compiled.geomSpec.params.nestedList as List).size())
+
+    StatSpec statCopy = compiled.statSpec
+    (statCopy.params.statNested as Map).put('a', 999)
+    assertEquals(1, (compiled.statSpec.params.statNested as Map).a)
+
+    PositionSpec posCopy = compiled.positionSpec
+    (posCopy.params.posNested as List) << 99
+    assertEquals(2, (compiled.positionSpec.params.posNested as List).size())
+
+    Map<String, Scale> scalesCopy = compiled.scales
+    (scalesCopy['color'].params.namedValues as Map).put('A', '#000000')
+    assertEquals('#FF0000', (compiled.scales['color'].params.namedValues as Map).A)
+  }
+
+  @Test
+  void testCompiledLayerScaleParamsAreDeepCopied() {
+    Chart chart = plot(Dataset.mpg()) {
+      layers {
+        geomPoint()
+            .mapping(x: 'cty', y: 'hwy')
+            .scale('color', Scale.manual(['#FF0000', '#00FF00']))
+      }
+    }.build()
+
+    List<String> values = chart.layers.first().scales['color'].params.values as List<String>
+    values << '#0000FF'
+
+    assertEquals(2, (chart.layers.first().scales['color'].params.values as List).size())
+  }
+
+  @Test
+  void testCoordSpecGetterReturnsDefensiveCopy() {
+    Chart chart = plot(Dataset.mpg()) {
+      mapping { x = 'cty'; y = 'hwy' }
+      layers { geomPoint() }
+      coord {
+        xlim = [0, 10]
+        ylim = [0, 50]
+        nested = [a: 1]
+      }
+    }.build()
+
+    CoordSpec coordCopy = chart.coord
+    (coordCopy.xlim as List) << 99
+    (coordCopy.ylim as List) << 99
+    (coordCopy.params.nested as Map).put('a', 999)
+
+    assertEquals(2, chart.coord.xlim.size())
+    assertEquals(2, chart.coord.ylim.size())
+    assertEquals(1, (chart.coord.params.nested as Map).a)
   }
 
 }

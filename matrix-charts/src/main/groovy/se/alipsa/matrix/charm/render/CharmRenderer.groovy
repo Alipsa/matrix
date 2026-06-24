@@ -46,6 +46,17 @@ class CharmRenderer {
 
   private static final Logger log = Logger.getLogger(CharmRenderer)
 
+  /** Baseline y-position for the plot title text. */
+  private static final int TITLE_Y_OFFSET = 30
+  /** Distance from the left edge for the rotated y-axis title. */
+  private static final int Y_AXIS_LABEL_X_OFFSET = 18
+  /** Distance above the bottom edge for the x-axis title. */
+  private static final int X_AXIS_LABEL_BOTTOM_OFFSET = 10
+  /** Distance above the bottom edge for the plot caption. */
+  private static final int CAPTION_BOTTOM_OFFSET = 5
+  /** Distance above the strip bottom for a facet strip label baseline. */
+  private static final int STRIP_LABEL_BOTTOM_OFFSET = 7
+
   private final AxisRenderer axisRenderer = new AxisRenderer()
   private final GridRenderer gridRenderer = new GridRenderer()
   private final LegendRenderer legendRenderer = new LegendRenderer()
@@ -251,7 +262,7 @@ class CharmRenderer {
         if (drawStripText && colStripLabel) {
           def stripTextEl = panelGroup.addText(colStripLabel)
               .x(panelWidth / 2)
-              .y(stripHeight - 7)
+              .y(stripHeight - STRIP_LABEL_BOTTOM_OFFSET)
               .textAnchor('middle')
               .fontSize(stripTextSize)
               .fill(stripTextColor)
@@ -550,7 +561,7 @@ class CharmRenderer {
     String xLabelText = flipped ? context.chart.labels?.y : context.chart.labels?.x
     String yLabelText = flipped ? context.chart.labels?.x : context.chart.labels?.y
 
-    int titleY = 30
+    int titleY = TITLE_Y_OFFSET
     boolean titleRendered = false
     BigDecimal renderedTitleSize = defaultTitleSize
     if (context.chart.labels?.title && !context.chart.theme.explicitNulls.contains('plotTitle')) {
@@ -603,7 +614,7 @@ class CharmRenderer {
       BigDecimal xSize = (xTitleStyle?.size ?: defaultLabelSize) as BigDecimal
       context.svg.addText(xLabelText)
           .x(context.config.marginLeft + context.config.plotWidth() / 2)
-          .y(context.config.height - 10)
+          .y(context.config.height - X_AXIS_LABEL_BOTTOM_OFFSET)
           .textAnchor('middle')
           .fontSize(xSize)
           .fill(xColor)
@@ -614,9 +625,9 @@ class CharmRenderer {
       BigDecimal ySize = (yTitleStyle?.size ?: defaultLabelSize) as BigDecimal
       int yMid = context.config.marginTop + context.config.plotHeight().intdiv(2)
       context.svg.addText(yLabelText)
-          .x(18)
+          .x(Y_AXIS_LABEL_X_OFFSET)
           .y(yMid)
-          .transform("rotate(-90, 18, $yMid)")
+          .transform("rotate(-90, $Y_AXIS_LABEL_X_OFFSET, $yMid)")
           .textAnchor('middle')
           .fontSize(ySize)
           .fill(yColor)
@@ -626,7 +637,7 @@ class CharmRenderer {
     if (context.chart.labels?.caption && !context.chart.theme.explicitNulls.contains('plotCaption')) {
       String capColor = captionStyle?.color ?: '#666666'
       BigDecimal capSize = (captionStyle?.size ?: (defaultLabelSize * 0.8)) as BigDecimal
-      int capY = context.config.height - 5
+      int capY = context.config.height - CAPTION_BOTTOM_OFFSET
       int capX = context.config.width - context.config.marginRight
       def text = context.svg.addText(context.chart.labels.caption)
           .x(capX)

@@ -66,11 +66,19 @@ class GeomSpec {
    * @return copied GeomSpec
    */
   GeomSpec copy() {
+    Map<String, Object> copiedParams = [:]
+    params.each { String key, Object value ->
+      copiedParams[key] = SpecCopyUtil.deepCopyValue(value)
+    }
+    Map<String, Object> copiedDefaultAes = [:]
+    defaultAes.each { String key, Object value ->
+      copiedDefaultAes[key] = SpecCopyUtil.deepCopyValue(value)
+    }
     new GeomSpec(
         type,
-        new LinkedHashMap<>(params),
+        copiedParams,
         new ArrayList<>(requiredAes),
-        new LinkedHashMap<>(defaultAes),
+        copiedDefaultAes,
         defaultStat,
         defaultPosition
     )
