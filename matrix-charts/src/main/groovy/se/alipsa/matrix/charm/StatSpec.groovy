@@ -47,7 +47,7 @@ class StatSpec {
    * @return copied StatSpec
    */
   StatSpec copy() {
-    new StatSpec(type, [*:params])
+    new StatSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
   @Override

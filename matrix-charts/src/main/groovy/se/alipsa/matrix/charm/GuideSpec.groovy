@@ -84,33 +84,7 @@ class GuideSpec {
    * @return copy
    */
   GuideSpec copy() {
-    Map<String, Object> copiedParams = [:]
-    params.each { String key, Object value ->
-      copiedParams.put(key, deepCopy(value))
-    }
-    new GuideSpec(type, copiedParams)
-  }
-
-  /**
-   * Recursively deep-copies Map and List values.
-   * Non-collection values (including closures) are returned as-is.
-   */
-  private static Object deepCopy(Object value) {
-    if (value instanceof Map) {
-      Map<Object, Object> result = [:]
-      value.each { Object k, Object v ->
-        result[k] = deepCopy(v)
-      }
-      return result
-    }
-    if (value instanceof List) {
-      List<Object> result = []
-      value.each { Object element ->
-        result << deepCopy(element)
-      }
-      return result
-    }
-    return value
+    new GuideSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
 }

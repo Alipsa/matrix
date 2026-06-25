@@ -1,8 +1,8 @@
 package charm.render
 
 import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
@@ -14,9 +14,13 @@ import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.GeomSpec
+import se.alipsa.matrix.charm.Layer
+import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
@@ -26,7 +30,7 @@ import java.lang.reflect.Field
 class CharmRendererTest {
 
   @Test
-  void testRenderExceptionIsNotDoubleWrapped() {
+  void testUnsupportedGeomRenderExceptionIsNotDoubleWrapped() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 2]])
@@ -39,17 +43,14 @@ class CharmRendererTest {
       }
       layers { geomPoint() }
     }.build()
-
-    // GeomSpec.type is final; reflection is needed to force this renderer-only failure path.
-    setField(chart.layers[0].geomSpec, 'type', null)
+    setGeomType(chart.layers.first(), null)
 
     CharmRenderException ex = assertThrows(CharmRenderException) {
       chart.render()
     }
-    assertFalse(
-        ex.cause instanceof CharmRenderException,
-        "render() must not double-wrap CharmRenderException; cause was: ${ex.cause?.getClass()?.name}"
-    )
+
+    assertEquals('Unsupported geom type: null', ex.message)
+    assertNull(ex.cause, 'render() must not double-wrap CharmRenderException')
   }
 
   @Test
@@ -118,10 +119,14 @@ class CharmRendererTest {
     assertTrue(ex.message.contains("Stylesheet must not contain ']]>'"))
   }
 
-  private static void setField(Object target, String name, Object value) {
-    Field field = target.class.getDeclaredField(name)
-    field.accessible = true
-    field.set(target, value)
+  private static void setGeomType(LayerSpec layer, CharmGeomType geomType) {
+    Field geomSpecField = Layer.getDeclaredField('geomSpec')
+    geomSpecField.accessible = true
+    GeomSpec geomSpec = geomSpecField.get(layer) as GeomSpec
+
+    Field typeField = GeomSpec.getDeclaredField('type')
+    typeField.accessible = true
+    typeField.set(geomSpec, geomType)
   }
 
   @Test

@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.stat
 
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.util.Logger
 
@@ -22,8 +23,9 @@ class StatEngine {
    */
   static Map<String, Object> effectiveParams(LayerSpec layer) {
     Map<String, Object> merged = new LinkedHashMap<>(layer.params ?: [:])
-    if (layer.statSpec.params) {
-      merged.putAll(layer.statSpec.params)
+    StatSpec statSpec = layer.statSpec
+    if (statSpec.params) {
+      merged.putAll(statSpec.params)
     }
     merged
   }

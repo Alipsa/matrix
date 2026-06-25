@@ -582,16 +582,12 @@ class Scale {
    * @return copied scale
    */
   Scale copy() {
-    Map<String, Object> copiedParams = new LinkedHashMap<>(params)
-    if (copiedParams['guide'] instanceof GuideSpec) {
-      copiedParams['guide'] = copiedParams['guide'].copy()
-    }
     new Scale(
         type: type,
         transformStrategy: transformStrategy,
-        breaks: new ArrayList(breaks),
+        breaks: new ArrayList<>(breaks),
         labels: new ArrayList<>(labels),
-        params: copiedParams
+        params: SpecCopyUtil.deepCopyParams(params)
     )
   }
 

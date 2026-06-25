@@ -47,7 +47,7 @@ class PositionSpec {
    * @return copied PositionSpec
    */
   PositionSpec copy() {
-    new PositionSpec(type, new LinkedHashMap<>(params))
+    new PositionSpec(type, SpecCopyUtil.deepCopyParams(params))
   }
 
   /**

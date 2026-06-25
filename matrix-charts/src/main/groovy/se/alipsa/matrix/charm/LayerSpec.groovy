@@ -39,11 +39,11 @@ class LayerSpec extends Layer {
   @Override
   LayerSpec copy() {
     Mapping layerMapping = super.getMapping()
-    Map<String, Scale> copiedScales = scales ?
-        scales.findAll { String k, Scale v -> v != null }
-            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
-        [:]
-    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
+    // Read canonical values via the package-scope raw accessors rather than the
+    // public getters (which now return defensive copies) to avoid copying twice.
+    Map<String, Scale> copiedScales = SpecCopyUtil.copyScales(rawScales())
+    Map<String, Object> copiedParams = SpecCopyUtil.deepCopyParams(params)
+    new LayerSpec(rawGeomSpec().copy(), rawStatSpec().copy(), layerMapping, inheritMapping, rawPositionSpec().copy(), copiedParams, styleCallback, copiedScales)
   }
 
 }

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm
 
+import groovy.transform.PackageScope
+
 /**
  * Canonical layer specification in Charm.
  */
@@ -59,9 +61,21 @@ class Layer {
   /**
    * Returns the geometry specification.
    *
-   * @return geometry spec
+   * @return defensive copy of the geometry spec
    */
   GeomSpec getGeomSpec() {
+    geomSpec.copy()
+  }
+
+  /**
+   * Returns the canonical geometry specification without copying.
+   * Internal use only — callers in this package that already own a
+   * defensive copy of the enclosing {@code Layer} may read this directly.
+   *
+   * @return the stored geometry spec
+   */
+  @PackageScope
+  GeomSpec rawGeomSpec() {
     geomSpec
   }
 
@@ -77,9 +91,20 @@ class Layer {
   /**
    * Returns the stat specification.
    *
-   * @return stat spec
+   * @return defensive copy of the stat spec
    */
   StatSpec getStatSpec() {
+    statSpec.copy()
+  }
+
+  /**
+   * Returns the canonical stat specification without copying.
+   * Internal use only — see {@link #rawGeomSpec()}.
+   *
+   * @return the stored stat spec
+   */
+  @PackageScope
+  StatSpec rawStatSpec() {
     statSpec
   }
 
@@ -113,9 +138,20 @@ class Layer {
   /**
    * Returns the position specification.
    *
-   * @return position spec
+   * @return defensive copy of the position spec
    */
   PositionSpec getPositionSpec() {
+    positionSpec.copy()
+  }
+
+  /**
+   * Returns the canonical position specification without copying.
+   * Internal use only — see {@link #rawGeomSpec()}.
+   *
+   * @return the stored position spec
+   */
+  @PackageScope
+  PositionSpec rawPositionSpec() {
     positionSpec
   }
 
@@ -140,10 +176,21 @@ class Layer {
   /**
    * Returns per-layer scale overrides keyed by aesthetic name (e.g. 'color', 'x').
    *
-   * @return unmodifiable scale overrides map, or empty map if none
+   * @return unmodifiable map of defensive copies of non-null scale overrides, or empty map if none
    */
   Map<String, Scale> getScales() {
-    scales ? Collections.unmodifiableMap(scales) : Collections.<String, Scale>emptyMap()
+    Collections.unmodifiableMap(SpecCopyUtil.copyScales(scales))
+  }
+
+  /**
+   * Returns the canonical per-layer scale overrides map without copying.
+   * Internal use only — see {@link #rawGeomSpec()}.
+   *
+   * @return the stored scale overrides map
+   */
+  @PackageScope
+  Map<String, Scale> rawScales() {
+    scales
   }
 
   /**
@@ -152,11 +199,9 @@ class Layer {
    * @return copied layer
    */
   Layer copy() {
-    Map<String, Scale> copiedScales = scales ?
-        scales.findAll { String k, Scale v -> v != null }
-            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
-        [:]
-    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
+    Map<String, Scale> copiedScales = SpecCopyUtil.copyScales(scales)
+    Map<String, Object> copiedParams = SpecCopyUtil.deepCopyParams(params)
+    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), copiedParams, styleCallback, copiedScales)
   }
 
 }
