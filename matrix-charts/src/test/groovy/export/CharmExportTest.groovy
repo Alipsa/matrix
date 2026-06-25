@@ -351,6 +351,34 @@ class CharmExportTest {
     assertEquals(100, image.height)
   }
 
+  @Test
+  void testChartToPngScaleValidation(@TempDir Path tempDir) {
+    Svg svg = SvgReader.parse('''<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <rect width="100" height="100" fill="red" />
+    </svg>''')
+    File file = tempDir.resolve('scale-valid.png').toFile()
+    OutputStream os = new ByteArrayOutputStream()
+
+    assertEquals('scale must be > 0, but was null', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, null)
+    }.message)
+    assertEquals('scale must be > 0, but was 0', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, 0)
+    }.message)
+    assertEquals('scale must be > 0, but was -1', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, -1)
+    }.message)
+    assertEquals('scale must be > 0, but was null', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, null)
+    }.message)
+    assertEquals('scale must be > 0, but was 0', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, 0)
+    }.message)
+    assertEquals('scale must be > 0, but was -1', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, -1)
+    }.message)
+  }
+
   private static CharmChart buildCharmChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')

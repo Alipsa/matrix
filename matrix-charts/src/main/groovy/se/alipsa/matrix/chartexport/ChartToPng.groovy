@@ -102,6 +102,7 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
+    validateScale(scale)
     SvgRenderer.toPng(stripAnimationCss(svgChart), targetFile, [scale: scale])
   }
 
@@ -140,6 +141,7 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
+    validateScale(scale)
     SvgRenderer.toPng(stripAnimationCss(svgChart), os, [scale: scale])
   }
 
@@ -309,6 +311,12 @@ class ChartToPng {
       )
     }
     [width: width, height: height]
+  }
+
+  private static void validateScale(Number scale) {
+    if (scale == null || scale.doubleValue() <= 0) {
+      throw new IllegalArgumentException("scale must be > 0, but was $scale")
+    }
   }
 
   private static Svg stripAnimationCss(Svg svgChart) {
