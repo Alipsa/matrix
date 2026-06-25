@@ -1,6 +1,6 @@
 # Matrix-charts Release History
 
-## v0.5.0 (unreleased)
+## v0.5.0
 
 This release unifies all charting APIs under the Charm rendering engine and removes legacy backends.
 See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md) for the gg API guide.
@@ -18,6 +18,9 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
   - **Legacy backend packages removed:** `se.alipsa.matrix.charts.jfx`, `se.alipsa.matrix.charts.swing`, `se.alipsa.matrix.charts.png`, `se.alipsa.matrix.charts.svg`, and `se.alipsa.matrix.charts.util.StyleUtil`. Use `chartexport` classes (`ChartToPng`, `ChartToJfx`, `ChartToSwing`, `ChartToJpeg`, `ChartToImage`) instead.
   - **`org.knowm.xchart:xchart` dependency removed.** If you depended on xchart transitively, add it directly.
   - Public builder APIs now prefer typed overloads for mapping, layer `stat`, layer `position`, `fontface`, bin counts, and segment/curve arrows. Unsupported argument types now fail earlier through Groovy method dispatch instead of broad `Object` catch-all methods.
+  - **`ExportFormat.fromExtension()` now throws for unknown or empty extensions.** Previously any unrecognized extension silently returned SVG; now it throws `IllegalArgumentException` listing the supported extensions. Extensionless files (no dot) still default to SVG. Update any code that relied on the old silent-SVG fallback.
+  - **`PlotGrid` constructor now validates inputs eagerly.** Null chart entries, mismatched weight-list sizes, and null/zero/negative individual weight values now throw `IllegalArgumentException` at construction time instead of being silently patched by the renderer.
+  - **Faceted plots reject layer-specific data.** Combining `geomXxx().data(matrix)` with a non-`NONE` facet spec now throws `CharmValidationException` at `build()` time. Layer-specific data with facets was previously accepted but produced misleading charts.
 
 **New Features**
   - Charm closure DSL for idiomatic Groovy chart specifications (`Charts.plot(data) { ... }`).
@@ -30,6 +33,10 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
   - Segment and curve geoms now support rendered arrowheads through `ArrowSpec.start(...)`, `ArrowSpec.end(...)`, and `ArrowSpec.both(...)`.
   - Charm `stylesheet(String)` injects raw CSS into rendered SVG, and PICT `Style.css` now uses that path.
   - `verifyGgRegression` Gradle task for pre-merge gg test regression gating.
+  - `ChartToSvg.export(Svg, File)`, `export(Svg, OutputStream)`, and `export(Svg, Writer)` allow writing an already-rendered `Svg` without re-rendering the chart.
+  - `ChartToPng.export(Svg, File, Number scale)` and `export(Svg, OutputStream, Number scale)` export PNG at an explicit scale factor relative to the SVG's natural size.
+  - All file-based exporters (`ChartToSvg`, `ChartToPng`, `ChartToPdf`, `ChartToJpeg`) now create missing parent directories automatically; `chart.writeTo(…)` and `plotGrid.writeTo(…)` are consistent across all formats.
+  - `Charts.plot(Map)` and `chart(Map)` now accept `Map<String, ? extends List<?>>`, removing raw-type friction when passing typed column maps from Java or `@CompileStatic` Groovy.
 
 **Compatibility and Rendering Fixes**
   - PDF export now closes partially-created PDF documents if image embedding fails, and PDF page sizes now convert screen pixels to PDF points at 96 DPI.
@@ -37,6 +44,9 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
   - Temporal scale fallbacks and spatial geometry parse fallbacks now emit logger diagnostics instead of failing silently.
   - Legacy PICT `AxisScale`, `Style.yLabels`, and `Style.css` settings are applied by the Charm bridge.
   - Legacy histogram bin counting preserves exact internal bin boundaries and rounds labels only for display.
+  - Facet composite keys now correctly distinguish `null` from the string `"null"` and from values containing the `` separator; each distinct combination of facet variable values produces exactly one panel.
+  - Column validation in `PlotSpec` now checks each layer's mapping against the matrix that layer actually uses (layer-specific or root), so valid layer-local columns are no longer rejected because they are absent from an unused root matrix.
+  - `Chart.layers` getters (`geomSpec`, `statSpec`, `positionSpec`, `scales`) now return defensive copies; mutating the returned objects does not affect subsequent renders or reads.
 
 **Documentation**
   - Added [charm.md](docs/charm.md) with comprehensive Charm DSL guide and migration notes.
