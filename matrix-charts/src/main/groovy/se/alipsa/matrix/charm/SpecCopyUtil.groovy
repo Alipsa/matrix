@@ -77,6 +77,7 @@ class SpecCopyUtil {
    * @return a deep-copied mutable value, or the original immutable/shared value
    */
   static Object deepCopyValue(Object value) {
+    // @CompileStatic instanceof narrowing dispatches each branch to its typed overload above.
     if (value instanceof GuideSpec) {
       return deepCopyValue(value)
     }

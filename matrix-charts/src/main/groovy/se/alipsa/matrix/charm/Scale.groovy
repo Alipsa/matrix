@@ -585,8 +585,8 @@ class Scale {
     new Scale(
         type: type,
         transformStrategy: transformStrategy,
-        breaks: breaks,
-        labels: labels,
+        breaks: new ArrayList<>(breaks),
+        labels: new ArrayList<>(labels),
         params: SpecCopyUtil.deepCopyParams(params)
     )
   }
