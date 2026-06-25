@@ -25,7 +25,7 @@ class ChartToSwing {
    */
   static SvgPanel export(String svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     new SvgPanel(svgChart)
   }
@@ -38,7 +38,7 @@ class ChartToSwing {
    */
   static SvgPanel export(CharSequence svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     export(svgChart.toString())
   }
@@ -51,7 +51,7 @@ class ChartToSwing {
    */
   static SvgPanel export(Svg svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     export(svgChart.toXml())
   }
@@ -64,7 +64,7 @@ class ChartToSwing {
    */
   static SvgPanel export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     export(chart.render())
   }
@@ -92,7 +92,7 @@ class ChartToSwing {
   @CompileDynamic
   static SvgPanel export(Object chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)

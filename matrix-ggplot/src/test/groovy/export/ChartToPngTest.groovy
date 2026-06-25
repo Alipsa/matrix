@@ -84,7 +84,7 @@ class ChartToPngTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       GgExport.toPng(chart, null)
     }
-    assertEquals('targetFile must not be null', exception.getMessage())
+    assertEquals('targetFile cannot be null', exception.getMessage())
   }
 
   @Test

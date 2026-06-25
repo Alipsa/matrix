@@ -82,7 +82,7 @@ class ChartToJfxTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       ChartToJfx.export((String) null)
     }
-    assertEquals('svgChart must not be null', exception.getMessage())
+    assertEquals('svgChart cannot be null', exception.getMessage())
   }
 
   @Test
@@ -91,7 +91,7 @@ class ChartToJfxTest {
       ChartToJfx.export((Svg) null)
     }
     assertNotNull(exception)
-    assertEquals('chart must not be null', exception.getMessage())
+    assertEquals('chart cannot be null', exception.getMessage())
   }
 
   @Test
@@ -99,7 +99,7 @@ class ChartToJfxTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       GgExport.toJfx(null)
     }
-    assertEquals('chart must not be null', exception.getMessage())
+    assertEquals('chart cannot be null', exception.getMessage())
   }
 
   @Test

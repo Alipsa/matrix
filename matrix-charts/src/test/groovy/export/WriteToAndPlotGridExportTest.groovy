@@ -138,11 +138,37 @@ class WriteToAndPlotGridExportTest {
   @Test
   void testWriteToDefaultsToSvg(@TempDir Path tempDir) {
     Chart chart = buildChart()
-    File file = tempDir.resolve('chart.unknown').toFile()
+    File file = tempDir.resolve('chart').toFile()
     chart.writeTo(file)
     assertTrue(file.exists())
     String content = file.text
     assertTrue(content.contains('<svg'))
+  }
+
+  @Test
+  void testWriteToRejectsUnknownExtension(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart.unknown').toFile()
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      chart.writeTo(file)
+    }
+    assertTrue(exception.message.contains('.png'))
+    assertTrue(exception.message.contains('.jpg'))
+    assertTrue(exception.message.contains('.pdf'))
+    assertTrue(exception.message.contains('.svg'))
+  }
+
+  @Test
+  void testWriteToRejectsTrailingDot(@TempDir Path tempDir) {
+    Chart chart = buildChart()
+    File file = tempDir.resolve('chart.').toFile()
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      chart.writeTo(file)
+    }
+    assertTrue(exception.message.contains('.png'))
+    assertTrue(exception.message.contains('.jpg'))
+    assertTrue(exception.message.contains('.pdf'))
+    assertTrue(exception.message.contains('.svg'))
   }
 
   @Test

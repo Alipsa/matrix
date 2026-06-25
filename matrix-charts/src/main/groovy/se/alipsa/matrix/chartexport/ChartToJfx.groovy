@@ -29,7 +29,7 @@ class ChartToJfx {
    */
   static SVGImage export(String svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     SVGLoader.load(svgChart)
   }
@@ -43,7 +43,7 @@ class ChartToJfx {
    */
   static SVGImage export(Svg chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     SVGLoader.load(chart.toXml())
   }
@@ -58,7 +58,7 @@ class ChartToJfx {
    */
   static SVGImage export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     export(chart.render())
   }
@@ -86,7 +86,7 @@ class ChartToJfx {
   @CompileDynamic
   static SVGImage export(Object chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)

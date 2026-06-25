@@ -33,7 +33,7 @@ class GgExport {
    */
   static BufferedImage toImage(GgChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     ChartToImage.export(chart.render())
   }
@@ -48,10 +48,10 @@ class GgExport {
    */
   static void toPng(GgChart chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile must not be null')
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     ChartToPng.export(chart.render(), targetFile)
   }
@@ -66,10 +66,10 @@ class GgExport {
    */
   static void toJpeg(GgChart chart, File targetFile, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile must not be null')
+      throw new IllegalArgumentException('targetFile cannot be null')
     }
     ChartToJpeg.export(chart.render(), targetFile, quality)
   }
@@ -83,7 +83,7 @@ class GgExport {
    */
   static SvgPanel toSwing(GgChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     ChartToSwing.export(chart.render())
   }
@@ -97,7 +97,7 @@ class GgExport {
    */
   static SVGImage toJfx(GgChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     ChartToJfx.export(chart.render())
   }
