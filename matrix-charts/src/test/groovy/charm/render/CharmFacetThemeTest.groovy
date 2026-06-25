@@ -71,6 +71,41 @@ class CharmFacetThemeTest {
   }
 
   @Test
+  void testWrapDistinguishesNullFromNullString() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'facet')
+        .rows([
+            [1, null],
+            [2, 'null']
+        ])
+        .build()
+
+    List<PanelSpec> panels = new FacetRenderer().computePanels(
+        data, FacetType.WRAP,
+        [], [], [new ColumnRef('facet')],
+        null, null, [:]
+    )
+
+    assertEquals(2, panels.size())
+    assertEquals([0], panels.find { PanelSpec panel -> panel.facetValues.facet == null }.rowIndexes)
+    assertEquals([1], panels.find { PanelSpec panel -> panel.facetValues.facet == 'null' }.rowIndexes)
+  }
+
+  @Test
+  void testWrapDistinguishesCompositeValuesContainingUnitSeparator() {
+    Matrix data = delimiterCollisionData()
+
+    List<PanelSpec> panels = new FacetRenderer().computePanels(
+        data, FacetType.WRAP,
+        [], [], [new ColumnRef('first'), new ColumnRef('second')],
+        null, null, [:]
+    )
+
+    assertEquals(2, panels.size())
+    assertEquals([[0], [1]], panels*.rowIndexes)
+  }
+
+  @Test
   void testWrapWithNcol() {
     FacetRenderer renderer = new FacetRenderer()
     Matrix data = facetData()
@@ -159,6 +194,30 @@ class CharmFacetThemeTest {
   }
 
   @Test
+  void testGridDistinguishesNullAndDelimiterContainingCompositeValues() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'first', 'second')
+        .rows([
+            [1, null, 'x'],
+            [2, 'null', 'x'],
+            [3, 'a\u001Fb', 'c'],
+            [4, 'a', 'b\u001Fc']
+        ])
+        .build()
+
+    List<PanelSpec> panels = new FacetRenderer().computePanels(
+        data, FacetType.GRID,
+        [new ColumnRef('first'), new ColumnRef('second')], [],
+        [], null, null, [:]
+    )
+
+    assertEquals(4, panels.size())
+    assertEquals([[0], [1], [2], [3]], panels*.rowIndexes)
+    assertTrue(panels.any { PanelSpec panel -> panel.facetValues.first == null })
+    assertTrue(panels.any { PanelSpec panel -> panel.facetValues.first == 'null' })
+  }
+
+  @Test
   void testGridWithMargins() {
     FacetRenderer renderer = new FacetRenderer()
     Matrix data = facetData()
@@ -172,6 +231,51 @@ class CharmFacetThemeTest {
     // + 3 row margins + 2 col margins + 1 global = 6 margin panels
     assertTrue(panels.size() > 6, "With margins, should have more than 6 panels (got ${panels.size()})")
     assertTrue(panels.any { PanelSpec p -> p.label == '(all)' }, 'Should have margin panels')
+  }
+
+  @Test
+  void testGridMarginsPreserveTupleIdentityAndAggregateCorrectRows() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'first', 'second', 'columnFacet')
+        .rows([
+            [1, null, 'x', 'left\u001Fvalue'],
+            [2, 'null', 'x', 'left\u001Fvalue'],
+            [3, 'a\u001Fb', 'c', 'right'],
+            [4, 'a', 'b\u001Fc', 'right']
+        ])
+        .build()
+
+    List<PanelSpec> panels = new FacetRenderer().computePanels(
+        data, FacetType.GRID,
+        [new ColumnRef('first'), new ColumnRef('second')], [new ColumnRef('columnFacet')],
+        [], null, null, [margins: true]
+    )
+
+    List<PanelSpec> rowMargins = panels.findAll { PanelSpec panel -> panel.col == 2 && panel.row < 4 }
+    assertEquals(4, rowMargins.size())
+    assertEquals([[0], [1], [2], [3]], rowMargins*.rowIndexes)
+    assertTrue(rowMargins.any { PanelSpec panel -> panel.facetValues.first == null })
+    assertTrue(rowMargins.any { PanelSpec panel -> panel.facetValues.first == 'null' })
+
+    List<PanelSpec> columnMargins = panels.findAll { PanelSpec panel -> panel.row == 4 && panel.col < 2 }
+    assertEquals(2, columnMargins.size())
+    assertEquals([[0, 1], [2, 3]], columnMargins*.rowIndexes)
+  }
+
+  @Test
+  void testWrapRejectsNonPositiveDimensions() {
+    FacetRenderer renderer = new FacetRenderer()
+    Matrix data = facetData()
+
+    assertThrows(IllegalArgumentException) {
+      renderer.computePanels(data, FacetType.WRAP, [], [], [new ColumnRef('cat')], 0, null, [:])
+    }
+    assertThrows(IllegalArgumentException) {
+      renderer.computePanels(data, FacetType.WRAP, [], [], [new ColumnRef('cat')], null, 0, [:])
+    }
+    assertThrows(IllegalArgumentException) {
+      renderer.computePanels(data, FacetType.WRAP, [], [], [new ColumnRef('cat')], 2, 0, [:])
+    }
   }
 
   @Test
@@ -264,6 +368,16 @@ class CharmFacetThemeTest {
     String svgText = se.alipsa.groovy.svg.io.SvgWriter.toXml(svg)
     assertTrue(svgText.contains('#FF6600'), 'Custom strip background color should be in SVG')
     assertTrue(svgText.contains('monospace'), 'Custom strip font family should be in SVG')
+  }
+
+  private static Matrix delimiterCollisionData() {
+    Matrix.builder()
+        .columnNames('x', 'first', 'second')
+        .rows([
+            [1, 'a\u001Fb', 'c'],
+            [2, 'a', 'b\u001Fc']
+        ])
+        .build()
   }
 
 }

@@ -7,6 +7,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.facet.Labeller
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.charm.theme.CharmThemes
 import se.alipsa.matrix.core.Matrix
 
@@ -587,19 +588,24 @@ class PlotSpec {
   }
 
   private void validate() {
-    validateMapping('plot mapping', mapping)
     layers.eachWithIndex { LayerSpec layer, int idx ->
       Mapping layerMapping = layer.mapping
-      if (layerMapping != null) {
-        validateMapping("layer ${idx} mapping", layerMapping)
+      Object layerDataValue = layer.params[LayerBuilder.LAYER_DATA_PARAM]
+      boolean hasLayerData = layerDataValue instanceof Matrix
+      if (hasLayerData && facet.type != FacetType.NONE) {
+        throw new CharmValidationException(
+            "Layer ${idx} uses layer-specific data, which is not supported with facets"
+        )
       }
+      Matrix sourceData = hasLayerData ? layerDataValue as Matrix : data
       Mapping effective = effectiveMapping(layer, layerMapping)
       validateLayerSemantics(layer, idx)
       validateRequiredMappings(layer, effective, idx)
+      validateMapping("layer ${idx} effective mapping", effective, sourceData)
     }
-    facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
-    facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
-    facet.vars.each { ColumnExpr expr -> validateColumn(expr, 'facet.vars') }
+    facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows', data) }
+    facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols', data) }
+    facet.vars.each { ColumnExpr expr -> validateColumn(expr, 'facet.vars', data) }
   }
 
   private void validateLayerSemantics(LayerSpec layer, int idx) {
@@ -667,18 +673,18 @@ class PlotSpec {
     }
   }
 
-  private void validateMapping(String context, Mapping mappingValue) {
+  private static void validateMapping(String context, Mapping mappingValue, Matrix sourceData) {
     mappingValue.mappings().each { String key, ColumnExpr value ->
-      validateColumn(value, "${context}.${key}")
+      validateColumn(value, "${context}.${key}", sourceData)
     }
   }
 
-  private void validateColumn(ColumnExpr expr, String context) {
+  private static void validateColumn(ColumnExpr expr, String context, Matrix sourceData) {
     if (expr == null) {
       return
     }
     String columnName = expr.columnName()
-    List<String> names = data.columnNames()
+    List<String> names = sourceData.columnNames()
     if (!names.contains(columnName)) {
       String suggestion = columnSuggestion(columnName, names)
       String hint = semanticHintForUnknownColumn(context, columnName)

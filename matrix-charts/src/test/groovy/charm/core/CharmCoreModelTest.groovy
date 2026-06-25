@@ -129,6 +129,104 @@ class CharmCoreModelTest {
   }
 
   @Test
+  void testLayerSpecificDataValidatesAgainstLayerMatrix() {
+    Matrix rootData = matrix(['unused'], [[1]])
+    Matrix layerData = matrix(['layerX', 'layerY'], [[1, 2]])
+
+    Chart chart = plot(rootData) {
+      layers {
+        geomPoint()
+            .inheritMapping(false)
+            .mapping(x: 'layerX', y: 'layerY')
+            .data(layerData)
+      }
+    }.build()
+
+    assertEquals(1, chart.layers.size())
+  }
+
+  @Test
+  void testLayerSpecificDataRejectsMappingMissingFromLayerMatrix() {
+    Matrix rootData = matrix(['rootX', 'rootY'], [[1, 2]])
+    Matrix layerData = matrix(['layerX'], [[1]])
+
+    CharmValidationException exception = assertThrows(CharmValidationException) {
+      plot(rootData) {
+        layers {
+          geomPoint()
+              .inheritMapping(false)
+              .mapping(x: 'layerX', y: 'rootY')
+              .data(layerData)
+        }
+      }.build()
+    }
+
+    assertTrue(exception.message.contains("Unknown column 'rootY'"))
+    assertTrue(exception.message.contains('layer 0 effective mapping.y'))
+  }
+
+  @Test
+  void testLayerSpecificDataRejectsInheritedMappingMissingFromLayerMatrix() {
+    Matrix rootData = matrix(['rootX', 'rootY'], [[1, 2]])
+    Matrix layerData = matrix(['rootX'], [[1]])
+
+    CharmValidationException exception = assertThrows(CharmValidationException) {
+      plot(rootData) {
+        mapping { x = 'rootX'; y = 'rootY' }
+        layers { geomPoint().data(layerData) }
+      }.build()
+    }
+
+    assertTrue(exception.message.contains("Unknown column 'rootY'"))
+    assertTrue(exception.message.contains('layer 0 effective mapping.y'))
+  }
+
+  @Test
+  void testInheritedMappingMayExistOnlyInLayerSpecificData() {
+    Matrix rootData = matrix(['unused'], [[1]])
+    Matrix layerData = matrix(['x', 'y'], [[1, 2]])
+
+    Chart chart = plot(rootData) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint().data(layerData) }
+    }.build()
+
+    assertEquals(1, chart.layers.size())
+  }
+
+  @Test
+  void testUnusedPlotMappingIsNotValidatedForNonInheritingRootLayer() {
+    Matrix rootData = matrix(['x', 'y'], [[1, 2]])
+
+    Chart chart = plot(rootData) {
+      mapping { x = 'missingX'; y = 'missingY' }
+      layers { geomPoint().inheritMapping(false).mapping(x: 'x', y: 'y') }
+    }.build()
+
+    assertEquals(1, chart.layers.size())
+  }
+
+  @Test
+  void testFacetsRejectLayerSpecificData() {
+    Matrix rootData = matrix(['x', 'y', 'facet'], [[1, 2, 'A']])
+    Matrix layerData = matrix(['x', 'y'], [[3, 4]])
+
+    CharmValidationException exception = assertThrows(CharmValidationException) {
+      plot(rootData) {
+        mapping { x = 'x'; y = 'y' }
+        layers { geomPoint().data(layerData) }
+        facet {
+          wrap {
+            vars = ['facet']
+          }
+        }
+      }.build()
+    }
+
+    assertEquals('Layer 0 uses layer-specific data, which is not supported with facets', exception.message)
+  }
+
+  @Test
   void testSmoothAndTileDslMapToExpectedLayerModel() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
@@ -196,6 +294,13 @@ class CharmCoreModelTest {
     }.build()
 
     assertEquals(CharmPositionType.STACK, chart.layers.first().positionType)
+  }
+
+  private static Matrix matrix(List<String> columnNames, List<List<Object>> rows) {
+    Matrix.builder()
+        .columnNames(columnNames)
+        .rows(rows)
+        .build()
   }
 
   @Test

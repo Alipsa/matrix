@@ -15,6 +15,7 @@ import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.Scale
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.charm.render.annotation.AnnotationEngine
 import se.alipsa.matrix.charm.render.coord.CoordEngine
 import se.alipsa.matrix.charm.render.geom.GeomEngine
@@ -687,7 +688,7 @@ class CharmRenderer {
   }
 
   private static Matrix resolveLayerData(Matrix chartData, LayerSpec layer) {
-    Object layerData = layer.params['__layer_data']
+    Object layerData = layer.params[LayerBuilder.LAYER_DATA_PARAM]
     layerData instanceof Matrix ? layerData : chartData
   }
 

@@ -165,34 +165,13 @@ class PlotGridRenderer {
    * @return normalized weights summing to 1.0
    */
   private static List<BigDecimal> normalizeWeights(int count, List<BigDecimal> weights) {
-    if (weights == null || weights.isEmpty()) {
+    if (weights == null) {
       BigDecimal equal = 1.0 / count
       return (1..count).collect { equal }
     }
 
-    // Pad or truncate to match count, validating each provided weight
-    List<BigDecimal> effective = []
-    for (int i = 0; i < count; i++) {
-      if (i < weights.size()) {
-        BigDecimal value = weights[i] as BigDecimal
-        if (value == null) {
-          throw new IllegalArgumentException("Weight at index $i must not be null")
-        }
-        if (value < 0) {
-          throw new IllegalArgumentException("Weight at index $i must be >= 0 but was $value")
-        }
-        effective << value
-      } else {
-        effective << (1.0 as BigDecimal)
-      }
-    }
-
-    BigDecimal sum = effective.sum() as BigDecimal
-    if (sum == 0) {
-      BigDecimal equal = 1.0 / count
-      return (1..count).collect { equal }
-    }
-    effective.collect { BigDecimal w -> w / sum }
+    BigDecimal sum = weights.sum() as BigDecimal
+    weights.collect { BigDecimal weight -> weight / sum }
   }
 
   /**
