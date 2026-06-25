@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.position
 
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.util.Logger
 
@@ -22,8 +23,9 @@ class PositionEngine {
    */
   static Map<String, Object> effectiveParams(LayerSpec layer) {
     Map<String, Object> merged = new LinkedHashMap<>(layer.params ?: [:])
-    if (layer.positionSpec.params) {
-      merged.putAll(layer.positionSpec.params)
+    PositionSpec positionSpec = layer.positionSpec
+    if (positionSpec.params) {
+      merged.putAll(positionSpec.params)
     }
     merged
   }

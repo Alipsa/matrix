@@ -14,6 +14,7 @@ import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Mapping
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.annotation.AnnotationEngine
 import se.alipsa.matrix.charm.render.coord.CoordEngine
 import se.alipsa.matrix.charm.render.geom.GeomEngine
@@ -152,9 +153,10 @@ class CharmRenderer {
     context.linetypeScale = trained.linetype
 
     layerScaleData.each { LayerScaleTrainingData layerData ->
-      if (!layerData.layer.scales.isEmpty()) {
+      Map<String, Scale> layerScales = layerData.layer.scales
+      if (!layerScales.isEmpty()) {
         TrainedScales layerTrained = ScaleEngine.trainLayerScales(
-            layerData.layer.scales, context.config, layerData.pipelineData, context.chart)
+            layerScales, context.config, layerData.pipelineData, context.chart)
         context.layerScales[layerData.layerIndex] = layerTrained
         checkScaleDivergence(layerData.layerIndex, layerTrained, context)
       }

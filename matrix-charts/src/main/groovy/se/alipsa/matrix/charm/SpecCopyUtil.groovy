@@ -12,42 +12,85 @@ class SpecCopyUtil {
   private SpecCopyUtil() { }
 
   /**
-   * Deep-copies a single params/defaultAes map value. Maps, Lists, Sets, and
-   * other Collections are recursively copied into new mutable containers;
-   * {@link GuideSpec} values delegate to their own {@code copy()}; all other
-   * values (including Closures and other non-collection objects) are
-   * returned as-is since they are effectively immutable or shared by design.
+   * Deep-copies a guide specification.
+   *
+   * @param value guide specification to copy
+   * @return copied guide specification
+   */
+  static GuideSpec deepCopyValue(GuideSpec value) {
+    value?.copy()
+  }
+
+  /**
+   * Deep-copies a map and all nested values.
+   *
+   * @param value map to copy
+   * @return copied mutable map
+   */
+  static Map<Object, Object> deepCopyValue(Map<?, ?> value) {
+    Map<Object, Object> copied = [:]
+    value.each { Object key, Object nestedValue ->
+      copied[key] = deepCopyValue(nestedValue)
+    }
+    copied
+  }
+
+  /**
+   * Deep-copies a set and all nested values.
+   *
+   * @param value set to copy
+   * @return copied mutable set
+   */
+  static Set<Object> deepCopyValue(Set<?> value) {
+    Set<Object> copied = new LinkedHashSet<>()
+    value.each { Object nestedValue ->
+      copied << deepCopyValue(nestedValue)
+    }
+    copied
+  }
+
+  /**
+   * Deep-copies a list and all nested values.
+   *
+   * @param value list to copy
+   * @return copied mutable list
+   */
+  static List<Object> deepCopyValue(List<?> value) {
+    value.collect { Object nestedValue -> deepCopyValue(nestedValue) }
+  }
+
+  /**
+   * Deep-copies a generic collection and all nested values into a mutable list.
+   *
+   * @param value collection to copy
+   * @return copied mutable list
+   */
+  static List<Object> deepCopyValue(Collection<?> value) {
+    value.collect { Object nestedValue -> deepCopyValue(nestedValue) }
+  }
+
+  /**
+   * Fallback dispatcher for dynamically typed callers. Known mutable value
+   * types are routed to typed overloads; all other values are shared by design.
    *
    * @param value value to copy
-   * @return a deep-copied, still-mutable value
+   * @return a deep-copied mutable value, or the original immutable/shared value
    */
   static Object deepCopyValue(Object value) {
     if (value instanceof GuideSpec) {
-      return value.copy()
+      return deepCopyValue(value)
     }
     if (value instanceof Map) {
-      Map<Object, Object> copied = [:]
-      value.each { Object k, Object v ->
-        copied[k] = deepCopyValue(v)
-      }
-      return copied
+      return deepCopyValue(value)
     }
     if (value instanceof Set) {
-      Set<Object> copied = new LinkedHashSet<>()
-      value.each { Object v ->
-        copied << deepCopyValue(v)
-      }
-      return copied
+      return deepCopyValue(value)
     }
     if (value instanceof List) {
-      return value.collect { Object v -> deepCopyValue(v) }
+      return deepCopyValue(value)
     }
     if (value instanceof Collection) {
-      List<Object> copied = []
-      value.each { Object v ->
-        copied << deepCopyValue(v)
-      }
-      return copied
+      return deepCopyValue(value)
     }
     value
   }
