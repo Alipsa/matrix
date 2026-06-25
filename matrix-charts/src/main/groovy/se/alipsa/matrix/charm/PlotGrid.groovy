@@ -57,6 +57,11 @@ class PlotGrid {
     if (charts == null || charts.isEmpty()) {
       throw new IllegalArgumentException('charts cannot be null or empty')
     }
+    charts.eachWithIndex { Chart chart, int index ->
+      if (chart == null) {
+        throw new IllegalArgumentException("chart at index $index cannot be null")
+      }
+    }
     if (ncol < 1) {
       throw new IllegalArgumentException("ncol must be >= 1, got $ncol")
     }
@@ -70,13 +75,35 @@ class PlotGrid {
     if (nrow != null && nrow < minRows) {
       throw new IllegalArgumentException("nrow=$nrow is too small for ${charts.size()} charts with ncol=$ncol (need at least $minRows)")
     }
+    int resolvedNrow = nrow != null ? nrow : minRows
+    validateWeights('widths', widths, ncol)
+    validateWeights('heights', heights, resolvedNrow)
     this.charts = Collections.unmodifiableList(new ArrayList<>(charts))
     this.ncol = ncol
-    this.nrow = nrow != null ? nrow : minRows
+    this.nrow = resolvedNrow
     this.widths = widths != null ? Collections.unmodifiableList(new ArrayList<>(widths)) : null
     this.heights = heights != null ? Collections.unmodifiableList(new ArrayList<>(heights)) : null
     this.title = title
     this.spacing = spacing
+  }
+
+  private static void validateWeights(String name, List<BigDecimal> weights, int expectedSize) {
+    if (weights == null) {
+      return
+    }
+    if (weights.size() != expectedSize) {
+      throw new IllegalArgumentException(
+          "$name must contain exactly $expectedSize values, but contained ${weights.size()}"
+      )
+    }
+    weights.eachWithIndex { BigDecimal weight, int index ->
+      if (weight == null) {
+        throw new IllegalArgumentException("$name value at index $index cannot be null")
+      }
+      if (weight <= 0) {
+        throw new IllegalArgumentException("$name value at index $index must be > 0, but was $weight")
+      }
+    }
   }
 
   /**

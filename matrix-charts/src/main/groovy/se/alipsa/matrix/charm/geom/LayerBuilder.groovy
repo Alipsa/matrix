@@ -24,6 +24,9 @@ import se.alipsa.matrix.core.Matrix
 @SuppressWarnings('DuplicateStringLiteral')
 abstract class LayerBuilder {
 
+  /** Internal layer parameter key for a layer-specific source matrix. */
+  static final String LAYER_DATA_PARAM = '__layer_data'
+
   protected Mapping layerMapping
   protected boolean inheritMapping = true
   protected PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
@@ -180,7 +183,7 @@ abstract class LayerBuilder {
    * @return this builder
    */
   LayerBuilder data(Matrix value) {
-    params['__layer_data'] = value
+    params[LAYER_DATA_PARAM] = value
     this
   }
 

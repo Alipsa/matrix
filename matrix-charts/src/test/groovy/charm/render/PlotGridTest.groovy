@@ -185,6 +185,44 @@ class PlotGridTest {
   }
 
   @Test
+  void testNullChartEntryThrowsWithIndex() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new PlotGrid([buildSimpleChart(), null])
+    }
+    assertEquals('chart at index 1 cannot be null', exception.message)
+  }
+
+  @Test
+  void testMismatchedWeightCountsThrow() {
+    List<Chart> charts = [buildSimpleChart(), buildSimpleChart()]
+
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 2, null, [1.0])
+    }
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 1, 2, null, [1.0])
+    }
+  }
+
+  @Test
+  void testInvalidWeightValuesThrow() {
+    List<Chart> charts = [buildSimpleChart(), buildSimpleChart()]
+
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 2, null, [0.0, 0.0])
+    }
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 2, null, [1.0, null])
+    }
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 2, null, [1.0, 0.0])
+    }
+    assertThrows(IllegalArgumentException) {
+      new PlotGrid(charts, 2, null, [1.0, -1.0])
+    }
+  }
+
+  @Test
   void testNcolAutoComputesNrow() {
     List<Chart> charts = (1..5).collect { buildSimpleChart() }
     PlotGrid grid = plotGrid(charts, 3)
