@@ -174,6 +174,106 @@ class CharmExportTest {
     assertTrue(svg.contains('<svg'), 'Output should contain SVG content')
   }
 
+  @Test
+  void testChartToSvgRenderedSvgDestinations(@TempDir Path tempDir) {
+    Svg svg = buildCharmChart().render()
+
+    File file = tempDir.resolve('rendered.svg').toFile()
+    ChartToSvg.export(svg, file)
+    assertTrue(file.text.contains('<svg'))
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
+    ChartToSvg.export(svg, outputStream)
+    assertTrue(outputStream.toString('UTF-8').contains('<svg'))
+
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(svg, writer)
+    assertTrue(writer.toString().contains('<svg'))
+  }
+
+  @Test
+  void testChartToSvgObjectFallbackAcceptsRenderedSvg(@TempDir Path tempDir) {
+    Object svg = buildCharmChart().render()
+
+    File file = tempDir.resolve('object-rendered.svg').toFile()
+    ChartToSvg.export(svg, file)
+    assertTrue(file.text.contains('<svg'))
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
+    ChartToSvg.export(svg, outputStream)
+    assertTrue(outputStream.toString('UTF-8').contains('<svg'))
+
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(svg, writer)
+    assertTrue(writer.toString().contains('<svg'))
+  }
+
+  @Test
+  @CompileStatic
+  void testChartToSvgRenderedSvgNullValidation(@TempDir Path tempDir) {
+    Svg svg = buildCharmChart().render()
+    Svg nullSvg = null
+    File targetFile = tempDir.resolve('unused.svg').toFile()
+    File nullFile = null
+    OutputStream nullOutputStream = null
+    Writer nullWriter = null
+
+    assertEquals('svg cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(nullSvg, targetFile)
+    }.message)
+    assertEquals('targetFile cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(svg, nullFile)
+    }.message)
+    assertEquals('outputStream cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(svg, nullOutputStream)
+    }.message)
+    assertEquals('writer cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(svg, nullWriter)
+    }.message)
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
+    assertEquals('svg cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(nullSvg, outputStream)
+    }.message)
+    StringWriter writer = new StringWriter()
+    assertEquals('svg cannot be null', assertThrows(IllegalArgumentException) {
+      ChartToSvg.export(nullSvg, writer)
+    }.message)
+  }
+
+  @Test
+  void testWriteToCreatesMissingParentDirectories(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    Map<String, File> files = [
+        svg: tempDir.resolve('svg/nested/chart.svg').toFile(),
+        png: tempDir.resolve('png/nested/chart.png').toFile(),
+        pdf: tempDir.resolve('pdf/nested/chart.pdf').toFile(),
+        jpg: tempDir.resolve('jpg/nested/chart.jpg').toFile()
+    ]
+
+    files.each { String extension, File file ->
+      assertFalse(file.parentFile.exists())
+      chart.writeTo(file)
+      assertTrue(file.exists(), "Expected .$extension export to create its parent directories")
+      assertTrue(file.length() > 0, "Expected .$extension export to contain data")
+    }
+
+    assertNotNull(ImageIO.read(files.png))
+    assertNotNull(ImageIO.read(files.jpg))
+  }
+
+  @Test
+  void testPlotGridWriteToCreatesMissingSvgParentDirectories(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    PlotGrid grid = Charts.plotGrid([chart, chart], 2)
+    File file = tempDir.resolve('grid/nested/grid.svg').toFile()
+
+    assertFalse(file.parentFile.exists())
+    grid.writeTo(file)
+
+    assertTrue(file.exists())
+    assertTrue(file.text.contains('<svg'))
+  }
+
   private static CharmChart buildCharmChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')

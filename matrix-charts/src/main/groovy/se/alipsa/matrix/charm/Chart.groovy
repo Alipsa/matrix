@@ -1,12 +1,12 @@
 package se.alipsa.matrix.charm
 
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderBuilder
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPdf
 import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ExportFormat
 import se.alipsa.matrix.core.Matrix
 
@@ -402,7 +402,7 @@ class Chart {
       case ExportFormat.PNG -> ChartToPng.export(this, targetFile)
       case ExportFormat.JPEG -> ChartToJpeg.export(this, targetFile)
       case ExportFormat.PDF -> ChartToPdf.export(this, targetFile)
-      default -> targetFile.text = SvgWriter.toXmlPretty(render())
+      default -> ChartToSvg.export(this, targetFile)
     }
   }
 
@@ -437,7 +437,7 @@ class Chart {
       case ExportFormat.PNG -> ChartToPng.export(svg, targetFile)
       case ExportFormat.JPEG -> ChartToJpeg.export(svg, targetFile)
       case ExportFormat.PDF -> ChartToPdf.export(svg, targetFile)
-      default -> targetFile.text = SvgWriter.toXmlPretty(svg)
+      default -> ChartToSvg.export(svg, targetFile)
     }
   }
 
