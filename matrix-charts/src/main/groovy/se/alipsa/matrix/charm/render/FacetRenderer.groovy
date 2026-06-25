@@ -315,7 +315,7 @@ class FacetRenderer {
   ) {
     for (int v = 0; v < varNames.size(); v++) {
       Object actual = data[rowIndex, varNames[v]]
-      if (v >= compositeKey.size() || actual != compositeKey[v]) {
+      if (actual != compositeKey[v]) {
         return false
       }
     }
@@ -329,9 +329,7 @@ class FacetRenderer {
   private static Map<String, Object> tupleToFacetValues(List<Object> tuple, List<String> varNames) {
     Map<String, Object> facetValues = [:]
     varNames.eachWithIndex { String varName, int index ->
-      if (index < tuple.size()) {
-        facetValues[varName] = tuple[index]
-      }
+      facetValues[varName] = tuple[index]
     }
     facetValues
   }
