@@ -274,6 +274,33 @@ class CharmExportTest {
     assertTrue(file.text.contains('<svg'))
   }
 
+  @Test
+  void testWriteToSizedCreatesMissingSvgParentDirectories(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    File file = tempDir.resolve('sized/nested/chart.svg').toFile()
+
+    assertFalse(file.parentFile.exists())
+    chart.writeTo(file, 800, 600)
+
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    assertTrue(file.text.contains('<svg'))
+  }
+
+  @Test
+  void testPlotGridWriteToSizedCreatesMissingSvgParentDirectories(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    PlotGrid grid = Charts.plotGrid([chart, chart], 2)
+    File file = tempDir.resolve('grid-sized/nested/grid.svg').toFile()
+
+    assertFalse(file.parentFile.exists())
+    grid.writeTo(file, 800, 600)
+
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    assertTrue(file.text.contains('<svg'))
+  }
+
   private static CharmChart buildCharmChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
