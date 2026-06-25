@@ -13,6 +13,9 @@ import se.alipsa.matrix.charm.PlotGrid
  * <p>Accepts {@link Svg} objects and {@link CharmChart} instances.
  * All paths converge through SVG rendering.</p>
  *
+ * <p>File exports delegate to {@link SvgRenderer}, which creates missing
+ * parent directories before writing.</p>
+ *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 @SuppressWarnings('DuplicateStringLiteral')

@@ -12,7 +12,8 @@ import java.nio.charset.StandardCharsets
 /**
  * Exports charts as SVG files.
  *
- * <p>Accepts Charm {@link CharmChart} instances.</p>
+ * <p>Accepts rendered {@link Svg} objects, Charm {@link CharmChart} instances,
+ * and {@link PlotGrid} grids.</p>
  *
  * <pre>
  * // Export a Charm chart
@@ -21,6 +22,60 @@ import java.nio.charset.StandardCharsets
  */
 @SuppressWarnings('DuplicateStringLiteral')
 class ChartToSvg {
+
+  /**
+   * Export an already-rendered SVG as a file.
+   *
+   * @param svg the SVG to export
+   * @param targetFile the file to write the SVG to
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if svg or targetFile is null
+   */
+  static void export(Svg svg, File targetFile) throws IOException {
+    if (svg == null) {
+      throw new IllegalArgumentException('svg cannot be null')
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    writeSvg(svg, targetFile)
+  }
+
+  /**
+   * Export an already-rendered SVG to an {@link OutputStream}.
+   *
+   * @param svg the SVG to export
+   * @param os the output stream to write the SVG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if svg or os is null
+   */
+  static void export(Svg svg, OutputStream os) throws IOException {
+    if (svg == null) {
+      throw new IllegalArgumentException('svg cannot be null')
+    }
+    if (os == null) {
+      throw new IllegalArgumentException('outputStream cannot be null')
+    }
+    writeSvg(svg, os)
+  }
+
+  /**
+   * Export an already-rendered SVG to a {@link Writer}.
+   *
+   * @param svg the SVG to export
+   * @param writer the writer to write the SVG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if svg or writer is null
+   */
+  static void export(Svg svg, Writer writer) throws IOException {
+    if (svg == null) {
+      throw new IllegalArgumentException('svg cannot be null')
+    }
+    if (writer == null) {
+      throw new IllegalArgumentException('writer cannot be null')
+    }
+    writeSvg(svg, writer)
+  }
 
   /**
    * Export a Charm chart as an SVG file.
@@ -145,7 +200,7 @@ class ChartToSvg {
   /**
    * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
    *
-   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param chart a chart object (CharmChart, PlotGrid, or Svg)
    * @param targetFile the file to write the SVG to
    * @throws IllegalArgumentException if chart is null or of an unsupported type
    */
@@ -157,6 +212,7 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile)
       case CharmChart -> export(chart as CharmChart, targetFile)
+      case Svg -> export(chart as Svg, targetFile)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -164,7 +220,7 @@ class ChartToSvg {
   /**
    * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
    *
-   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param chart a chart object (CharmChart, PlotGrid, or Svg)
    * @param os the output stream to write the SVG to
    * @throws IllegalArgumentException if chart is null or of an unsupported type
    */
@@ -176,6 +232,7 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os)
       case CharmChart -> export(chart as CharmChart, os)
+      case Svg -> export(chart as Svg, os)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -183,7 +240,7 @@ class ChartToSvg {
   /**
    * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
    *
-   * @param chart a chart object (CharmChart, Chart, or PlotGrid)
+   * @param chart a chart object (CharmChart, PlotGrid, or Svg)
    * @param writer the writer to write the SVG to
    * @throws IllegalArgumentException if chart is null or of an unsupported type
    */
@@ -195,6 +252,7 @@ class ChartToSvg {
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, writer)
       case CharmChart -> export(chart as CharmChart, writer)
+      case Svg -> export(chart as Svg, writer)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }

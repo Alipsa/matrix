@@ -44,6 +44,7 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
+    targetFile.parentFile?.mkdirs()
     ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', targetFile)
   }
 
