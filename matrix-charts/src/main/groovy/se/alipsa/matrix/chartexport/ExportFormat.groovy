@@ -23,12 +23,20 @@ enum ExportFormat {
     if (ext == null) {
       return SVG
     }
+    if (ext.isEmpty()) {
+      throw new IllegalArgumentException(supportedExtensionsMessage())
+    }
     switch (ext.toLowerCase(Locale.ROOT)) {
       case 'png' -> PNG
       case 'jpg', 'jpeg' -> JPEG
       case 'pdf' -> PDF
-      default -> SVG
+      case 'svg' -> SVG
+      default -> throw new IllegalArgumentException(supportedExtensionsMessage())
     }
+  }
+
+  private static String supportedExtensionsMessage() {
+    'Supported extensions are .png, .jpg/.jpeg, .pdf, and .svg'
   }
 
 }

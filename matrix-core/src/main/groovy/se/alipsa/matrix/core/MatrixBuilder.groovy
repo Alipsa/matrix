@@ -133,7 +133,7 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder columns(Map<String, List> columData) {
+  MatrixBuilder columns(Map<String, ? extends List<?>> columData) {
     clearPendingIndexColumns()
     List<String> headers = []
     List<List> cols = []
@@ -374,7 +374,7 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder data(Map<String, List> columData) {
+  MatrixBuilder data(Map<String, ? extends List<?>> columData) {
     columns(columData)
   }
 

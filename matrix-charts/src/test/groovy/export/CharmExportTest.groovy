@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir
 import testutil.Slow
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.PlotGrid
@@ -299,6 +300,83 @@ class CharmExportTest {
     assertTrue(file.exists())
     assertTrue(file.length() > 0)
     assertTrue(file.text.contains('<svg'))
+  }
+
+  @Test
+  void testChartToPngScaledDimensions(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    File naturalFile = tempDir.resolve('natural.png').toFile()
+    File scaledFile = tempDir.resolve('scaled.png').toFile()
+
+    ChartToPng.export(chart, naturalFile)
+    ChartToPng.export(chart.render(), scaledFile, 2)
+
+    BufferedImage natural = ImageIO.read(naturalFile)
+    BufferedImage scaled = ImageIO.read(scaledFile)
+    assertNotNull(natural)
+    assertNotNull(scaled)
+    assertEquals(natural.width * 2, scaled.width)
+    assertEquals(natural.height * 2, scaled.height)
+  }
+
+  @Test
+  void testChartToPngNaturalFractionalDimensions(@TempDir Path tempDir) {
+    Svg svg = SvgReader.parse('''<svg xmlns="http://www.w3.org/2000/svg" width="100.5" height="50.3">
+      <rect width="100.5" height="50.3" fill="red" />
+    </svg>''')
+    File file = tempDir.resolve('fractional.png').toFile()
+
+    ChartToPng.export(svg, file)
+
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(101, image.width)
+    assertEquals(51, image.height)
+  }
+
+  @Test
+  void testChartToPngStringPathStillWorks(@TempDir Path tempDir) {
+    String svgContent = '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+      <rect width="200" height="100" fill="blue" />
+    </svg>'''
+    File file = tempDir.resolve('from-string.png').toFile()
+
+    ChartToPng.export(svgContent, file)
+
+    assertTrue(file.exists())
+    assertTrue(file.length() > 0)
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image)
+    assertEquals(200, image.width)
+    assertEquals(100, image.height)
+  }
+
+  @Test
+  void testChartToPngScaleValidation(@TempDir Path tempDir) {
+    Svg svg = SvgReader.parse('''<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <rect width="100" height="100" fill="red" />
+    </svg>''')
+    File file = tempDir.resolve('scale-valid.png').toFile()
+    OutputStream os = new ByteArrayOutputStream()
+
+    assertEquals('scale must be > 0, but was null', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, null)
+    }.message)
+    assertEquals('scale must be > 0, but was 0', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, 0)
+    }.message)
+    assertEquals('scale must be > 0, but was -1', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, file, -1)
+    }.message)
+    assertEquals('scale must be > 0, but was null', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, null)
+    }.message)
+    assertEquals('scale must be > 0, but was 0', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, 0)
+    }.message)
+    assertEquals('scale must be > 0, but was -1', assertThrows(IllegalArgumentException) {
+      ChartToPng.export(svg, os, -1)
+    }.message)
   }
 
   private static CharmChart buildCharmChart() {

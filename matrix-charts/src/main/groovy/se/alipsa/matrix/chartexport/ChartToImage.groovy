@@ -29,7 +29,7 @@ class ChartToImage {
    */
   static BufferedImage export(Svg svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     return SvgRenderer.toBufferedImage(AnimationCssStripper.stripFromSvg(svgChart))
   }
@@ -43,7 +43,7 @@ class ChartToImage {
    */
   static BufferedImage export(CharmChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     return export(chart.render())
   }
@@ -116,7 +116,7 @@ class ChartToImage {
   @CompileDynamic
   static BufferedImage export(Object chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid)
@@ -136,7 +136,7 @@ class ChartToImage {
   @CompileDynamic
   static String base64(Object chart) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> base64(chart as PlotGrid)

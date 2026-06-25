@@ -7,6 +7,7 @@ import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.PlotGrid
 
@@ -21,8 +22,8 @@ import javax.imageio.ImageIO
  * Exports charts as PNG images.
  *
  * <p>Accepts SVG strings, {@link Svg} objects,
- * and {@link CharmChart} instances. All paths converge through SVG rendering
- * via jsvg, with no JavaFX toolkit dependency.</p>
+ * and {@link CharmChart} instances. {@link Svg} and {@link CharmChart} paths converge through
+ * {@link SvgRenderer}, while legacy {@link String} paths continue to use jsvg directly.</p>
  *
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
@@ -67,7 +68,7 @@ class ChartToPng {
   }
 
   /**
-   * Export an {@link Svg} chart as a PNG image file.
+   * Export an {@link Svg} chart as a PNG image file at its natural size.
    *
    * @param svgChart the {@link Svg} object containing the chart
    * @param targetFile the {@link File} where the PNG image will be written
@@ -81,11 +82,32 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
-    export(svgChart.toXml(), targetFile)
+    Svg stripped = stripAnimationCss(svgChart)
+    SvgRenderer.toPng(stripped, targetFile, naturalDimensions(stripped))
   }
 
   /**
-   * Export an {@link Svg} chart as PNG to an {@link OutputStream}.
+   * Export an {@link Svg} chart as a PNG image file with the given scale.
+   *
+   * @param svgChart the {@link Svg} object containing the chart
+   * @param targetFile the {@link File} where the PNG image will be written
+   * @param scale scale factor applied to natural dimensions
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if svgChart or targetFile is null
+   */
+  static void export(Svg svgChart, File targetFile, Number scale) throws IOException {
+    if (svgChart == null) {
+      throw new IllegalArgumentException('svgChart cannot be null')
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException('targetFile cannot be null')
+    }
+    validateScale(scale)
+    SvgRenderer.toPng(stripAnimationCss(svgChart), targetFile, [scale: scale])
+  }
+
+  /**
+   * Export an {@link Svg} chart as PNG to an {@link OutputStream} at its natural size.
    *
    * @param svgChart the {@link Svg} object containing the chart
    * @param os the output stream to write the PNG to
@@ -99,11 +121,32 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
-    export(svgChart.toXml(), os)
+    Svg stripped = stripAnimationCss(svgChart)
+    SvgRenderer.toPng(stripped, os, naturalDimensions(stripped))
   }
 
   /**
-   * Export a Charm {@link CharmChart} as a PNG image file.
+   * Export an {@link Svg} chart as PNG to an {@link OutputStream} with the given scale.
+   *
+   * @param svgChart the {@link Svg} object containing the chart
+   * @param os the output stream to write the PNG to
+   * @param scale scale factor applied to natural dimensions
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if svgChart or os is null
+   */
+  static void export(Svg svgChart, OutputStream os, Number scale) throws IOException {
+    if (svgChart == null) {
+      throw new IllegalArgumentException('svgChart cannot be null')
+    }
+    if (os == null) {
+      throw new IllegalArgumentException('outputStream cannot be null')
+    }
+    validateScale(scale)
+    SvgRenderer.toPng(stripAnimationCss(svgChart), os, [scale: scale])
+  }
+
+  /**
+   * Export a Charm {@link CharmChart} as a PNG image file at its natural size.
    *
    * @param chart the Charm chart to export
    * @param targetFile the {@link File} where the PNG image will be written
@@ -117,11 +160,13 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
-    export(chart.render(), targetFile)
+    Svg svg = chart.render()
+    Svg stripped = stripAnimationCss(svg)
+    SvgRenderer.toPng(stripped, targetFile, naturalDimensions(stripped))
   }
 
   /**
-   * Export a Charm {@link CharmChart} as PNG to an {@link OutputStream}.
+   * Export a Charm {@link CharmChart} as PNG to an {@link OutputStream} at its natural size.
    *
    * @param chart the Charm chart to export
    * @param os the output stream to write the PNG to
@@ -135,11 +180,13 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
-    export(chart.render(), os)
+    Svg svg = chart.render()
+    Svg stripped = stripAnimationCss(svg)
+    SvgRenderer.toPng(stripped, os, naturalDimensions(stripped))
   }
 
   /**
-   * Export a {@link PlotGrid} as a PNG image file.
+   * Export a {@link PlotGrid} as a PNG image file at its natural size.
    *
    * @param grid the plot grid to export
    * @param targetFile the {@link File} where the PNG image will be written
@@ -152,11 +199,13 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
-    export(grid.render(), targetFile)
+    Svg svg = grid.render()
+    Svg stripped = stripAnimationCss(svg)
+    SvgRenderer.toPng(stripped, targetFile, naturalDimensions(stripped))
   }
 
   /**
-   * Export a {@link PlotGrid} as PNG to an {@link OutputStream}.
+   * Export a {@link PlotGrid} as PNG to an {@link OutputStream} at its natural size.
    *
    * @param grid the plot grid to export
    * @param os the output stream to write the PNG to
@@ -169,7 +218,51 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
-    export(grid.render(), os)
+    Svg svg = grid.render()
+    Svg stripped = stripAnimationCss(svg)
+    SvgRenderer.toPng(stripped, os, naturalDimensions(stripped))
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
+   * @param targetFile the {@link File} where the PNG image will be written
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, File targetFile) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, targetFile)
+      case CharmChart -> export(chart as CharmChart, targetFile)
+      case Svg -> export(chart as Svg, targetFile)
+      case CharSequence -> export(chart.toString(), targetFile)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
+  }
+
+  /**
+   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
+   *
+   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
+   * @param os the output stream to write the PNG to
+   * @throws IllegalArgumentException if chart is null or of an unsupported type
+   */
+  @CompileDynamic
+  static void export(Object chart, OutputStream os) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
+    switch (chart) {
+      case PlotGrid -> export(chart as PlotGrid, os)
+      case CharmChart -> export(chart as CharmChart, os)
+      case Svg -> export(chart as Svg, os)
+      case CharSequence -> export(chart.toString(), os)
+      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    }
   }
 
   /**
@@ -202,46 +295,32 @@ class ChartToPng {
     image
   }
 
-  /**
-   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
-   *
-   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
-   * @param targetFile the {@link File} where the PNG image will be written
-   * @throws IllegalArgumentException if chart is null or of an unsupported type
-   */
-  @CompileDynamic
-  static void export(Object chart, File targetFile) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+  private static Map<String, Integer> naturalDimensions(Svg svgChart) {
+    SVGLoader loader = new SVGLoader()
+    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.toXml().getBytes(StandardCharsets.UTF_8))
+    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
+    if (svgDocument == null) {
+      throw new IllegalArgumentException('Invalid SVG document')
     }
-    switch (chart) {
-      case PlotGrid -> export(chart as PlotGrid, targetFile)
-      case CharmChart -> export(chart as CharmChart, targetFile)
-      case Svg -> export(chart as Svg, targetFile)
-      case CharSequence -> export(chart.toString(), targetFile)
-      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
+    int width = (svgDocument.size().width as BigDecimal).ceil() as int
+    int height = (svgDocument.size().height as BigDecimal).ceil() as int
+    if (width <= 0 || height <= 0) {
+      throw new IllegalArgumentException(
+          "SVG document has non-positive dimensions (${width}x${height}); " +
+          'ensure the SVG specifies width/height attributes or a valid viewBox'
+      )
+    }
+    [width: width, height: height]
+  }
+
+  private static void validateScale(Number scale) {
+    if (scale == null || scale.doubleValue() <= 0) {
+      throw new IllegalArgumentException("scale must be > 0, but was $scale")
     }
   }
 
-  /**
-   * Fallback that accepts an untyped chart and dispatches to the appropriate typed overload.
-   *
-   * @param chart a chart object (CharmChart, Chart, PlotGrid, Svg, or CharSequence)
-   * @param os the output stream to write the PNG to
-   * @throws IllegalArgumentException if chart is null or of an unsupported type
-   */
-  @CompileDynamic
-  static void export(Object chart, OutputStream os) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
-    }
-    switch (chart) {
-      case PlotGrid -> export(chart as PlotGrid, os)
-      case CharmChart -> export(chart as CharmChart, os)
-      case Svg -> export(chart as Svg, os)
-      case CharSequence -> export(chart.toString(), os)
-      default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
-    }
+  private static Svg stripAnimationCss(Svg svgChart) {
+    AnimationCssStripper.stripFromSvg(svgChart)
   }
 
   private static String stripAnimationCss(String svgContent) {

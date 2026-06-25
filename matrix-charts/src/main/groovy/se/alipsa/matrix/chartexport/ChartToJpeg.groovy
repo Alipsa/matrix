@@ -31,7 +31,7 @@ class ChartToJpeg {
    */
   static void export(Svg svgChart, File targetFile, BigDecimal quality = 1.0) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
@@ -49,7 +49,7 @@ class ChartToJpeg {
    */
   static void export(CharmChart chart, File targetFile, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (targetFile == null) {
       throw new IllegalArgumentException('targetFile cannot be null')
@@ -67,7 +67,7 @@ class ChartToJpeg {
    */
   static void export(Svg svgChart, OutputStream os, BigDecimal quality = 1.0) {
     if (svgChart == null) {
-      throw new IllegalArgumentException('svgChart must not be null')
+      throw new IllegalArgumentException('svgChart cannot be null')
     }
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
@@ -85,7 +85,7 @@ class ChartToJpeg {
    */
   static void export(CharmChart chart, OutputStream os, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
@@ -140,7 +140,7 @@ class ChartToJpeg {
   @CompileDynamic
   static void export(Object chart, File targetFile, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile, quality)
@@ -161,7 +161,7 @@ class ChartToJpeg {
   @CompileDynamic
   static void export(Object chart, OutputStream os, BigDecimal quality = 1.0) {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os, quality)

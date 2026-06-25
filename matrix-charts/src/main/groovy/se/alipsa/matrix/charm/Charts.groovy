@@ -24,7 +24,7 @@ class Charts {
    * @param columns map of column name to values
    * @return mutable plot specification
    */
-  static PlotSpec plot(Map<String, List> columns) {
+  static PlotSpec plot(Map<String, ? extends List<?>> columns) {
     plot(toMatrix(columns))
   }
 
@@ -65,7 +65,7 @@ class Charts {
    * @return mutable plot specification
    */
   static PlotSpec plot(
-      Map<String, List> columns,
+      Map<String, ? extends List<?>> columns,
       @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = PlotSpec) Closure<?> configure
   ) {
     plot(toMatrix(columns), configure)
@@ -101,7 +101,7 @@ class Charts {
    * @param columns map of column name to values
    * @return mutable plot specification
    */
-  static PlotSpec chart(Map<String, List> columns) {
+  static PlotSpec chart(Map<String, ? extends List<?>> columns) {
     plot(columns)
   }
 
@@ -137,7 +137,7 @@ class Charts {
    * @return mutable plot specification
    */
   static PlotSpec chart(
-      Map<String, List> columns,
+      Map<String, ? extends List<?>> columns,
       @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = PlotSpec) Closure<?> configure
   ) {
     plot(columns, configure)
@@ -194,7 +194,7 @@ class Charts {
     new PlotGrid(charts, ncol)
   }
 
-  private static Matrix toMatrix(Map<String, List> columns) {
+  private static Matrix toMatrix(Map<String, ? extends List<?>> columns) {
     if (columns == null || columns.isEmpty()) {
       throw new IllegalArgumentException('columns cannot be null or empty')
     }

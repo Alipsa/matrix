@@ -172,7 +172,7 @@ class ChartToPdf {
   @CompileDynamic
   static void export(Object chart, File targetFile) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, targetFile)
@@ -193,7 +193,7 @@ class ChartToPdf {
   @CompileDynamic
   static void export(Object chart, OutputStream os) throws IOException {
     if (chart == null) {
-      throw new IllegalArgumentException('chart must not be null')
+      throw new IllegalArgumentException('chart cannot be null')
     }
     switch (chart) {
       case PlotGrid -> export(chart as PlotGrid, os)

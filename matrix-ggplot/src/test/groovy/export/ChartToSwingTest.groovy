@@ -85,7 +85,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       ChartToSwing.export(svgContent)
     }
-    assertTrue(exception.getMessage().contains('must not be null'))
+    assertTrue(exception.getMessage().contains('cannot be null'))
   }
 
   @Test
@@ -94,7 +94,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       ChartToSwing.export(svg)
     }
-    assertTrue(exception.getMessage().contains('must not be null'))
+    assertTrue(exception.getMessage().contains('cannot be null'))
   }
 
   @Test
@@ -102,7 +102,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException) {
       GgExport.toSwing(null)
     }
-    assertEquals('chart must not be null', exception.getMessage())
+    assertEquals('chart cannot be null', exception.getMessage())
   }
 
   @Test

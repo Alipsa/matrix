@@ -566,8 +566,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
    */
-  Matrix and(Map<String, List> columns) {
-    for (Map.Entry<String, List> entry : columns.entrySet()) {
+  Matrix and(Map<String, ? extends List<?>> columns) {
+    for (Map.Entry<String, ? extends List<?>> entry : columns.entrySet()) {
       String name = entry.key
       List list = entry.value
       Class type = Object

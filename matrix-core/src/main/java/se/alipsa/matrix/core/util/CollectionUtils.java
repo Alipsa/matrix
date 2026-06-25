@@ -35,14 +35,14 @@ public class CollectionUtils {
     return list;
   }
 
-  public static LinkedHashMap<String, List> m(String name, Object... values) {
-    LinkedHashMap<String, List> map = new LinkedHashMap<>();
+  public static LinkedHashMap<String, List<?>> m(String name, Object... values) {
+    LinkedHashMap<String, List<?>> map = new LinkedHashMap<>();
     map.put(name, Arrays.asList(values));
     return map;
   }
 
-  public static LinkedHashMap<String, List> m(String name, List values) {
-    LinkedHashMap<String, List> map = new LinkedHashMap<>();
+  public static LinkedHashMap<String, List<?>> m(String name, List<?> values) {
+    LinkedHashMap<String, List<?>> map = new LinkedHashMap<>();
     map.put(name, values);
     return map;
   }
