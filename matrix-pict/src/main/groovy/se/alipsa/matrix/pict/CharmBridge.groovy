@@ -368,14 +368,9 @@ class CharmBridge {
   }
 
   private static void applyYLabels(Scale scale, Map<String, String> yLabels) {
-    List<AbstractMap.SimpleEntry<BigDecimal, String>> entries = yLabels.collect { String value, String label ->
-      new AbstractMap.SimpleEntry<BigDecimal, String>(new BigDecimal(value), label)
-    }
-    entries.sort { AbstractMap.SimpleEntry<BigDecimal, String> entry ->
-      entry.key
-    }
-    scale.breaks = entries*.key
-    scale.labels = entries*.value
+    List<String> sortedKeys = yLabels.keySet().sort { String key -> new BigDecimal(key) } as List<String>
+    scale.breaks = sortedKeys.collect { String key -> new BigDecimal(key) }
+    scale.labels = sortedKeys.collect { String key -> yLabels[key] }
   }
 
   /**
