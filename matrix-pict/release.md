@@ -9,6 +9,8 @@ to `matrix-pict`. The package name `se.alipsa.matrix.pict` is unchanged.
 **Bug Fixes**
 - `DataType.sqlType(BigDecimal)` now returns `'DECIMAL'` instead of falling through
   to the `'BLOB'` default.
+- `DataType.sqlType(BigInteger)` now returns `'NUMERIC'` instead of falling through
+  to the `'BLOB'` default.
 - `Chart.toString()` no longer throws `NullPointerException` on a chart where the
   series fields have not yet been populated.
 
