@@ -37,6 +37,32 @@ class BubbleChart extends Chart<BubbleChart> {
   /** Optional grouping column name. */
   String groupColumn
 
+  private static BubbleChart fromMatrix(String title, Matrix data, String xCol, String yCol, String sizeCol) {
+    BubbleChart chart = new BubbleChart()
+    chart.title = title
+    chart.categorySeries = data.column(xCol) as List<?>
+    chart.valueSeries = [data.column(yCol) as List<?>]
+    chart.sizeSeries = data.column(sizeCol) as List<? extends Number>
+    chart.xAxisTitle = xCol
+    chart.yAxisTitle = yCol
+    chart.valueSeriesNames = [yCol]
+    chart
+  }
+
+  private static BubbleChart fromMatrixGrouped(
+      String title,
+      Matrix data,
+      String xCol,
+      String yCol,
+      String sizeCol,
+      String groupCol
+  ) {
+    BubbleChart chart = fromMatrix(title, data, xCol, yCol, sizeCol)
+    chart.groupColumn = groupCol
+    chart.groupSeries = data.column(groupCol) as List<?>
+    chart
+  }
+
   /**
    * Creates a bubble chart from a Matrix.
    *
@@ -50,15 +76,7 @@ class BubbleChart extends Chart<BubbleChart> {
    */
   @Deprecated
   static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol) {
-    BubbleChart chart = new BubbleChart()
-    chart.title = title
-    chart.categorySeries = data.column(xCol) as List<?>
-    chart.valueSeries = [data.column(yCol) as List<?>]
-    chart.sizeSeries = data.column(sizeCol) as List<? extends Number>
-    chart.xAxisTitle = xCol
-    chart.yAxisTitle = yCol
-    chart.valueSeriesNames = [yCol]
-    chart
+    fromMatrix(title, data, xCol, yCol, sizeCol)
   }
 
   /**
@@ -75,10 +93,7 @@ class BubbleChart extends Chart<BubbleChart> {
    */
   @Deprecated
   static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol, String groupCol) {
-    BubbleChart chart = create(title, data, xCol, yCol, sizeCol)
-    chart.groupColumn = groupCol
-    chart.groupSeries = data.column(groupCol) as List<?>
-    chart
+    fromMatrixGrouped(title, data, xCol, yCol, sizeCol, groupCol)
   }
 
   /**
@@ -136,8 +151,8 @@ class BubbleChart extends Chart<BubbleChart> {
       }
       String yCol = yCols[0]
       BubbleChart chart = groupCol
-          ? BubbleChart.create(this.@title, data, xCol, yCol, sizeCol, groupCol)
-          : BubbleChart.create(this.@title, data, xCol, yCol, sizeCol)
+          ? BubbleChart.fromMatrixGrouped(this.@title, data, xCol, yCol, sizeCol, groupCol)
+          : BubbleChart.fromMatrix(this.@title, data, xCol, yCol, sizeCol)
       applyTo(chart)
       chart
     }
