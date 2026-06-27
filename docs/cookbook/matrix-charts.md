@@ -240,6 +240,7 @@ You can also assign `yLabels` directly on `chart.style` after building:
 
 ```groovy
 import se.alipsa.matrix.pict.Style
+import se.alipsa.matrix.pict.Plot
 
 def style = new Style()
 style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
@@ -252,6 +253,8 @@ def chart = LineChart.builder(data)
     .yAxisScale(0, 100, 50)
     .style(style)
     .build()
+
+Plot.png(chart, new File('capacity.png'))
 ```
 
 ### Recipe: Export a Plot Grid with Dimensions
