@@ -134,6 +134,7 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `xAxisVisible(boolean)`                                         | Whether the x-axis is visible                      |
 | `yAxisVisible(boolean)`                                         | Whether the y-axis is visible                      |
 | `css(String)`                                                   | Custom CSS string injected into Charm-rendered SVG |
+| `yLabels(Map<String, String>)`                                  | Custom y-axis labels: map of break values as strings to display labels |
 | `build()`                                                       | Build the chart                                    |
 
 ### Chart-Specific Builder Methods
@@ -694,7 +695,16 @@ chart.style.css = 'stroke-width: 2; font-family: Arial;'
 ### Custom Y Labels
 
 ```groovy
-chart.style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
+// Via builder (preferred)
+def chart = LineChart.builder(data)
+    .title('Graded')
+    .x('month')
+    .y('revenue')
+    .yLabels(['10000': '10K', '20000': '20K', '30000': '30K'])
+    .build()
+
+// Or directly on the style after build
+chart.style.yLabels = ['10000': '10K', '20000': '20K', '30000': '30K']
 ```
 
 Custom y labels are applied by the Charm bridge. Map keys are parsed as numeric axis

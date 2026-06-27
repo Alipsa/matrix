@@ -560,4 +560,21 @@ class ChartBuilderTest {
     assertEquals('stroke-width: 2;', chart.style.css)
   }
 
+  @Test
+  void testBuilderYLabelsMethod() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 10], [2, 20], [3, 30]])
+        .types([int, int])
+        .build()
+    LineChart chart = LineChart.builder(data)
+        .title('Y Labels')
+        .x('x')
+        .y('y')
+        .yLabels(['10': 'Low', '20': 'Medium', '30': 'High'])
+        .build()
+    assertNotNull(chart.style)
+    assertEquals(['10': 'Low', '20': 'Medium', '30': 'High'], chart.style.yLabels)
+  }
+
 }
