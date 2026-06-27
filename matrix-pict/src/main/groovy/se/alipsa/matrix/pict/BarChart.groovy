@@ -67,6 +67,7 @@ class BarChart extends Chart<BarChart> {
   }
 
   /**
+   * Creates a horizontal bar chart.
    * Similar to Tablesaw ploty factory method i.e.
    *tech.tablesaw.plotly.api.HorizontalBarPlot.create(
    *     "Tornado Impact",
@@ -76,12 +77,22 @@ class BarChart extends Chart<BarChart> {
    *     "Sum [log injuries]",
    *     "Sum [Fatalities]",
    *   )
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param categoryColumnName category column name
+   * @param chartType bar chart type
+   * @param valueColumn value column names
+   * @return horizontal bar chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
    */
+  @Deprecated
   static BarChart createHorizontal(String title, Matrix data, String categoryColumnName, ChartType chartType, String... valueColumn) {
     return create(title, chartType, data, categoryColumnName, ChartDirection.HORIZONTAL, valueColumn)
   }
 
   /**
+   * Creates a vertical bar chart.
    * Similar to Tablesaw ploty factory method i.e.
    *tech.tablesaw.plotly.api.VerticalBarPlot.create(
    *     "Tornado Impact",
@@ -91,7 +102,16 @@ class BarChart extends Chart<BarChart> {
    *     "Sum [log injuries]",
    *     "Sum [Fatalities]",
    *   )
+   *
+   * @param title chart title
+   * @param data chart data
+   * @param categoryColumnName category column name
+   * @param chartType bar chart type
+   * @param valueColumn value column names
+   * @return vertical bar chart
+   * @deprecated Use {@link #builder(Matrix)} for new code.
    */
+  @Deprecated
   static BarChart createVertical(String title, Matrix data, String categoryColumnName, ChartType chartType = ChartType.BASIC, String... valueColumn) {
     return create(title, chartType, data, categoryColumnName, ChartDirection.VERTICAL, valueColumn)
   }
