@@ -583,16 +583,16 @@ class ChartBuilderTest {
   void testPlotPngMethodSignaturesUseInt() {
     def pngMethods = Plot.methods.findAll { it.name == 'png' }
     def hasFileIntOverload = pngMethods.any { method ->
-      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, File, int, int]
+      method.parameterTypes.toList() == [Chart, File, int, int]
     }
     def hasStreamIntOverload = pngMethods.any { method ->
-      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, OutputStream, int, int]
+      method.parameterTypes.toList() == [Chart, OutputStream, int, int]
     }
     def hasFileDoubleOverload = pngMethods.any { method ->
-      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, File, double, double]
+      method.parameterTypes.toList() == [Chart, File, double, double]
     }
     def hasStreamDoubleOverload = pngMethods.any { method ->
-      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, OutputStream, double, double]
+      method.parameterTypes.toList() == [Chart, OutputStream, double, double]
     }
 
     assertTrue(hasFileIntOverload, 'Plot.png(Chart, File, int, int) must exist')
