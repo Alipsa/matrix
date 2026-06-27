@@ -335,6 +335,15 @@ abstract class Chart<T extends Chart> {
      */
     B css(String css) { ensureStyle(); style.css = css; this as B }
 
+    /**
+     * Sets custom y-axis break labels applied by the Charm bridge.
+     * Keys are numeric break values as strings; values are the display labels.
+     *
+     * @param labels map of axis value strings to display labels
+     * @return this builder
+     */
+    B yLabels(Map<String, String> labels) { ensureStyle(); style.yLabels = labels; this as B }
+
     private void ensureStyle() {
       if (style == null) {
         style = new Style()
