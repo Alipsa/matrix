@@ -76,6 +76,8 @@ enum DataType {
       case Boolean -> 'BIT'
       case String -> "VARCHAR(${varcharSize.length > 0 ? varcharSize[0] : 8000})"
       case Double -> 'DOUBLE'
+      case BigDecimal -> 'DECIMAL'
+      case BigInteger -> 'NUMERIC'
       case LocalDate -> 'DATE'
       case LocalTime -> 'TIME'
       case LocalDateTime, Instant -> 'TIMESTAMP'
