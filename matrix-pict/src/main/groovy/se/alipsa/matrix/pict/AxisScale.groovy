@@ -25,14 +25,17 @@ class AxisScale {
     this.step = step
   }
 
+  /** Returns the start (minimum) value of this scale. */
   BigDecimal getStart() {
     return start
   }
 
+  /** Returns the end (maximum) value of this scale. */
   BigDecimal getEnd() {
     return end
   }
 
+  /** Returns the step size between consecutive axis breaks. */
   BigDecimal getStep() {
     return step
   }

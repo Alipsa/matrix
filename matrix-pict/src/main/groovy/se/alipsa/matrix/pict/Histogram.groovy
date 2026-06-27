@@ -180,6 +180,15 @@ class Histogram extends Chart<Histogram> {
 
 }
 
+/**
+ * Represents a bin range {@code [minValue, maxValue]} in a histogram.
+ *
+ * <p>The {@link #toString()} method formats the range as {@code "min-max"},
+ * with values rounded to the histogram's configured {@code binDecimals} decimal places.</p>
+ *
+ * <p>Instances are created by {@link Histogram} factory methods and builders;
+ * direct construction is not intended for regular use.</p>
+ */
 class MinMax {
 
   BigDecimal minValue
