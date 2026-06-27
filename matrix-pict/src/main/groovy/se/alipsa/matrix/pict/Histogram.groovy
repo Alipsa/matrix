@@ -42,7 +42,7 @@ class Histogram extends Chart<Histogram> {
     String columnName = params.columnName as String
     Integer bins = params.getOrDefault('bins', 9) as Integer
     int binDecimals = params.getOrDefault('binDecimals', 1) as int
-    return create(title, data, columnName, bins, binDecimals)
+    return fromData(title, data, columnName, bins, binDecimals)
   }
 
   /**
