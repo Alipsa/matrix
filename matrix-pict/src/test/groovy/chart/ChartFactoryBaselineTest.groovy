@@ -12,6 +12,7 @@ import org.junit.jupiter.api.function.Executable
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
+import se.alipsa.matrix.pict.AxisScale
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.BubbleChart
 import se.alipsa.matrix.pict.Chart
@@ -212,10 +213,19 @@ class ChartFactoryBaselineTest {
         .title('T').x('x').y('y')
         .xAxisTitle('X Title').yAxisTitle('Y Title')
         .build()
+    AxisScale xScale = new AxisScale(1.0G, 10.0G, 1.0G)
+    AxisScale yScale = new AxisScale(2.0G, 20.0G, 2.0G)
+    chart.setXAxisScale(xScale)
+    chart.setYAxisScale(yScale)
+
     assertEquals('X Title', chart.getXAxisTitle())
     assertEquals('Y Title', chart.getYAxisTitle())
     assertEquals('X Title', chart.xAxisTitle)
     assertEquals('Y Title', chart.yAxisTitle)
+    assertSame(xScale, chart.getXAxisScale())
+    assertSame(yScale, chart.getYAxisScale())
+    assertSame(xScale, chart.xAxisScale)
+    assertSame(yScale, chart.yAxisScale)
   }
 
   @Test
