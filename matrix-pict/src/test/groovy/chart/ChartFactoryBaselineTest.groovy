@@ -248,6 +248,7 @@ class ChartFactoryBaselineTest {
     assertEquals('TIMESTAMP', DataType.sqlType(LocalDateTime))
     assertEquals('TIMESTAMP', DataType.sqlType(Instant))
     assertEquals('DECIMAL', DataType.sqlType(BigDecimal))
+    assertEquals('NUMERIC', DataType.sqlType(BigInteger))
   }
 
   @Test
