@@ -70,6 +70,19 @@ def chart = BarChart.builder(data)
 Plot.png(chart, new File('fruit_sales.png'))
 ```
 
+### Custom Y-Axis Labels
+
+```groovy
+def chart = LineChart.builder(data)
+    .title('Revenue by Month')
+    .x('month')
+    .y('revenue')
+    .yLabels(['10000': '10K', '50000': '50K', '100000': '100K'])
+    .build()
+
+Plot.png(chart, new File('revenue.png'))
+```
+
 ## Chart Types
 
 - **AreaChart** — filled area charts for trends and cumulative values

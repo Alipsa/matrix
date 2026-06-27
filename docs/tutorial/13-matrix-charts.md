@@ -99,7 +99,7 @@ def empData = Matrix.builder().data(
 
 // Create different types of charts
 def areaChart = AreaChart.create("Salaries", empData, "emp_name", "salary")
-def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.NONE, "salary")
+def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.BASIC, "salary")
 def pieChart = PieChart.create("Salaries", empData, "emp_name", "salary")
 ```
 
@@ -166,7 +166,7 @@ Plot.png(horizontalBarChart, new File("horizontal_bar_chart.png"))
 ```
 
 The `ChartType` enum provides different styles for bar charts:
-- `ChartType.NONE`: Standard bars
+- `ChartType.BASIC`: Standard bars
 - `ChartType.GROUPED`: Groups bars for multiple series
 - `ChartType.STACKED`: Stacks bars for multiple series
 
@@ -328,30 +328,22 @@ You can customize chart titles and axis labels:
 // Create a chart with custom title and axis labels
 def barChart = BarChart.createVertical(
     "Product Sales 2023",  // Chart title
-    productData, 
-    "product", 
-    ChartType.NONE, 
+    productData,
+    "product",
+    ChartType.BASIC,
     "sales"
 )
-.setXAxisLabel("Products")  // X-axis label
-.setYAxisLabel("Sales (in thousands)")  // Y-axis label
+.setXAxisTitle("Products")  // X-axis label
+.setYAxisTitle("Sales (in thousands)")  // Y-axis label
 ```
 
 ### Customizing Colors
 
-You can customize the colors used in charts:
+Color customization in matrix-pict is done via `Style.css`, which injects raw CSS into
+the Charm-rendered SVG. Use the Charm DSL directly for full color control.
 
 ```groovy
-import javafx.scene.paint.Color
-
-// Create a pie chart with custom colors
-def pieChart = PieChart.create("Market Share", marketData, "company", "market_share")
-    .setColors([
-        Color.BLUE,
-        Color.GREEN,
-        Color.RED,
-        Color.ORANGE
-    ])
+chart.style.css = 'rect.bar { fill: steelblue; }'
 ```
 
 ### Adding Legends
@@ -359,10 +351,12 @@ def pieChart = PieChart.create("Market Share", marketData, "company", "market_sh
 You can control the display of legends:
 
 ```groovy
+import se.alipsa.matrix.pict.Legend
+import se.alipsa.matrix.pict.Style
+
 // Create a chart with a legend
 def lineChart = LineChart.create("Temperature Trends", temperatureData, "date", "city_a", "city_b")
-    .setLegendVisible(true)
-    .setLegendSide(javafx.geometry.Side.RIGHT)
+lineChart.legend = new Legend(visible: true, position: Style.Position.RIGHT)
 ```
 
 ## Complete Example
@@ -371,7 +365,6 @@ Here's a complete example that demonstrates creating and exporting multiple char
 
 ```groovy
 import java.time.LocalDate
-import javafx.scene.paint.Color
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.pict.*
 
