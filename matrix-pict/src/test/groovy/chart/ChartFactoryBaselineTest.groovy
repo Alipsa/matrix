@@ -262,6 +262,11 @@ class ChartFactoryBaselineTest {
         .columns([x: ['a', 'b'], y: [1, 2], z: [3, 4]])
         .types([String, int, int])
         .build()
+    Matrix invalidFirstColumnCount = Matrix.builder()
+        .matrixName('invalidFirst')
+        .columns([x: ['a', 'b']])
+        .types([String])
+        .build()
     Matrix invalidType = Matrix.builder()
         .matrixName('invalidType')
         .columns([x: [1, 2], y: [1, 2]])
@@ -272,6 +277,11 @@ class ChartFactoryBaselineTest {
       Chart.validateSeries([] as Matrix[])
     }
     assertEquals('The series contains no data', noData.message)
+
+    IllegalArgumentException badFirstCols = assertThrows(IllegalArgumentException) {
+      Chart.validateSeries([invalidFirstColumnCount] as Matrix[])
+    }
+    assertTrue(badFirstCols.message.contains('does not contain 2 columns.'))
 
     IllegalArgumentException badCols = assertThrows(IllegalArgumentException) {
       Chart.validateSeries([valid, invalidColumnCount] as Matrix[])
