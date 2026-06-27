@@ -1,5 +1,6 @@
 package chart
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertSame
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.function.Executable
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
@@ -184,6 +186,14 @@ class ChartFactoryBaselineTest {
     assertEquals(Style.Position.TOP, chart.legend.position)
     chart.legend.visible = true
     assertTrue(chart.legend.visible)
+  }
+
+  @Test
+  void testChartToStringWithNullSeriesDoesNotThrow() {
+    LineChart chart = new LineChart()
+    chart.title = 'Partial'
+    assertDoesNotThrow({ chart.toString() } as Executable)
+    assertEquals('Partial, 0 categories, 0 value series', chart.toString())
   }
 
   @Test

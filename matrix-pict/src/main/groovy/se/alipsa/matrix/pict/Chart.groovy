@@ -45,23 +45,19 @@ abstract class Chart<T extends Chart> {
   private static final int REQUIRED_COLUMN_COUNT = 2
 
   static void validateSeries(Matrix[] series) {
-    int idx = 0
     if (series == null || series.length == 0) {
       throw new IllegalArgumentException('The series contains no data')
     }
 
     Matrix firstTable = series[0]
+    if (firstTable.columnCount() != REQUIRED_COLUMN_COUNT) {
+      throw new IllegalArgumentException("Table 0(${firstTable.matrixName}) does not contain ${REQUIRED_COLUMN_COUNT} columns.")
+    }
     Class firstColumn = firstTable.type(0)
     Class secondColumn = firstTable.type(1)
-    if (firstTable.columnCount() != REQUIRED_COLUMN_COUNT) {
-      throw new IllegalArgumentException("Table ${idx}(${firstTable.matrixName}) does not contain ${REQUIRED_COLUMN_COUNT} columns.")
-    }
 
-    for (Matrix table in series) {
-      if (idx == 0) {
-        idx++
-        continue
-      }
+    for (int idx = 1; idx < series.length; idx++) {
+      Matrix table = series[idx]
       if (table.columnCount() != REQUIRED_COLUMN_COUNT) {
         throw new IllegalArgumentException("Table ${idx}(${table.matrixName}) does not contain ${REQUIRED_COLUMN_COUNT} columns.")
       }
@@ -75,7 +71,6 @@ abstract class Chart<T extends Chart> {
         throw new IllegalArgumentException("Column mismatch in series $idx. First series has type $secondColumn.name " +
                 "in the second column but this series has $col1Type")
       }
-      idx++
     }
   }
 
@@ -168,7 +163,7 @@ abstract class Chart<T extends Chart> {
 
   @Override
   String toString() {
-    "${title}, ${categorySeries.size()} categories, ${valueSeries.size()} value series"
+    "${title}, ${categorySeries?.size() ?: 0} categories, ${valueSeries?.size() ?: 0} value series"
   }
 
   /**
