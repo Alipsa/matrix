@@ -1,6 +1,6 @@
 # Matrix-pict Release History
 
-## v0.5.0
+## v0.5.0, 2026-06-27
 
 First standalone release of `matrix-pict`. The `se.alipsa.matrix.pict` package
 previously lived inside `matrix-charts`; update your dependency from `matrix-charts`
