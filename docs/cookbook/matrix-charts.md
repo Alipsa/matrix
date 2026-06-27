@@ -222,12 +222,29 @@ where arrowheads are rendered. Length and width are SVG user-unit pixels.
 
 ```groovy
 import se.alipsa.matrix.pict.LineChart
-import se.alipsa.matrix.pict.Style
 import se.alipsa.matrix.pict.Plot
+
+// Custom y-axis labels via builder (preferred)
+def chart = LineChart.builder(data)
+    .title('Capacity')
+    .x('month')
+    .y('capacity')
+    .yAxisScale(0, 100, 50)
+    .yLabels(['0': 'Low', '50': 'Target', '100': 'High'])
+    .build()
+
+Plot.png(chart, new File('capacity.png'))
+```
+
+You can also assign `yLabels` directly on `chart.style` after building:
+
+```groovy
+import se.alipsa.matrix.pict.Style
 
 def style = new Style()
 style.yLabels = ['0': 'Low', '50': 'Target', '100': 'High']
 
+// ... then pass the style to the builder:
 def chart = LineChart.builder(data)
     .title('Capacity')
     .x('month')
@@ -235,8 +252,6 @@ def chart = LineChart.builder(data)
     .yAxisScale(0, 100, 50)
     .style(style)
     .build()
-
-Plot.png(chart, new File('capacity.png'))
 ```
 
 ### Recipe: Export a Plot Grid with Dimensions
