@@ -189,6 +189,36 @@ class ChartFactoryBaselineTest {
   }
 
   @Test
+  void testChartJavaBeanGetterAliasesAdded() {
+    List<String> methods = Chart.methods*.name
+    assertTrue(methods.contains('getXAxisTitle'), 'getXAxisTitle alias must exist')
+    assertTrue(methods.contains('getYAxisTitle'), 'getYAxisTitle alias must exist')
+    assertTrue(methods.contains('getXAxisScale'), 'getXAxisScale alias must exist')
+    assertTrue(methods.contains('getYAxisScale'), 'getYAxisScale alias must exist')
+    assertTrue(methods.contains('getxAxisTitle'), 'getxAxisTitle must remain for chart.xAxisTitle property access')
+    assertTrue(methods.contains('getyAxisTitle'), 'getyAxisTitle must remain for chart.yAxisTitle property access')
+    assertTrue(methods.contains('getxAxisScale'), 'getxAxisScale must remain for chart.xAxisScale property access')
+    assertTrue(methods.contains('getyAxisScale'), 'getyAxisScale must remain for chart.yAxisScale property access')
+  }
+
+  @Test
+  void testChartJavaBeanAliasesReturnSameValueAsPropertyAccess() {
+    Matrix data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2]])
+        .types([int, int])
+        .build()
+    AreaChart chart = AreaChart.builder(data)
+        .title('T').x('x').y('y')
+        .xAxisTitle('X Title').yAxisTitle('Y Title')
+        .build()
+    assertEquals('X Title', chart.getXAxisTitle())
+    assertEquals('Y Title', chart.getYAxisTitle())
+    assertEquals('X Title', chart.xAxisTitle)
+    assertEquals('Y Title', chart.yAxisTitle)
+  }
+
+  @Test
   void testChartToStringWithNullSeriesDoesNotThrow() {
     LineChart chart = new LineChart()
     chart.title = 'Partial'

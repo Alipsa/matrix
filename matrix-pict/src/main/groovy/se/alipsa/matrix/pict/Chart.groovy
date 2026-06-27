@@ -78,12 +78,42 @@ abstract class Chart<T extends Chart> {
     return xAxisTitle
   }
 
+  /**
+   * Returns the x-axis title label.
+   * JavaBean-convention alias for {@link #getxAxisTitle()}.
+   *
+   * @return the x-axis title label
+   */
+  String getXAxisTitle() {
+    xAxisTitle
+  }
+
   String getyAxisTitle() {
     return yAxisTitle
   }
 
+  /**
+   * Returns the y-axis title label.
+   * JavaBean-convention alias for {@link #getyAxisTitle()}.
+   *
+   * @return the y-axis title label
+   */
+  String getYAxisTitle() {
+    yAxisTitle
+  }
+
   AxisScale getxAxisScale() {
     return xAxisScale
+  }
+
+  /**
+   * Returns the custom x-axis scale, or {@code null} if not set.
+   * JavaBean-convention alias for {@link #getxAxisScale()}.
+   *
+   * @return the custom x-axis scale, or {@code null} if not set
+   */
+  AxisScale getXAxisScale() {
+    xAxisScale
   }
 
   T setXAxisScale(AxisScale xAxisScale) {
@@ -98,6 +128,16 @@ abstract class Chart<T extends Chart> {
 
   AxisScale getyAxisScale() {
     return yAxisScale
+  }
+
+  /**
+   * Returns the custom y-axis scale, or {@code null} if not set.
+   * JavaBean-convention alias for {@link #getyAxisScale()}.
+   *
+   * @return the custom y-axis scale, or {@code null} if not set
+   */
+  AxisScale getYAxisScale() {
+    yAxisScale
   }
 
   T setYAxisScale(AxisScale yAxisScale) {
