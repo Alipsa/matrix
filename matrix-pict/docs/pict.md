@@ -785,7 +785,8 @@ chart.setValueSeriesNames(['CPU %', 'Memory %', 'Disk %'])
 ```groovy
 chart.categorySeries        // List -- category labels
 chart.valueSeries           // List<List> -- all value series
-chart.getValueSerie(0)      // List -- first value series
+chart.getValueSeries(0)     // List -- first value series (preferred)
+chart.getValueSerie(0)      // @Deprecated alias; use getValueSeries(int) instead
 chart.valueSeriesNames      // List<String> -- series names
 ```
 

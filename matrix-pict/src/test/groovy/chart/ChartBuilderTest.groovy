@@ -155,6 +155,24 @@ class ChartBuilderTest {
   }
 
   @Test
+  void testGetValueSeriesAtIndex() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([[1, 10, 100], [2, 20, 200]])
+        .types([int, int, int])
+        .build()
+    LineChart chart = LineChart.builder(data)
+        .title('Test')
+        .x('x')
+        .y('y', 'z')
+        .build()
+    assertEquals([10, 20], chart.getValueSeries(0))
+    assertEquals([100, 200], chart.getValueSeries(1))
+    assertEquals([10, 20], chart.getValueSerie(0))
+    assertEquals([100, 200], chart.getValueSerie(1))
+  }
+
+  @Test
   void testScatterChartBuilder() {
     def mtcars = Dataset.mtcars()
 
