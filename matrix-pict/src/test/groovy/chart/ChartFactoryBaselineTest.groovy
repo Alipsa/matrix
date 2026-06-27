@@ -12,6 +12,7 @@ import org.junit.jupiter.api.function.Executable
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.pict.AreaChart
+import se.alipsa.matrix.pict.AxisScale
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.BubbleChart
 import se.alipsa.matrix.pict.Chart
@@ -186,6 +187,45 @@ class ChartFactoryBaselineTest {
     assertEquals(Style.Position.TOP, chart.legend.position)
     chart.legend.visible = true
     assertTrue(chart.legend.visible)
+  }
+
+  @Test
+  void testChartJavaBeanGetterAliasesAdded() {
+    List<String> methods = Chart.methods*.name
+    assertTrue(methods.contains('getXAxisTitle'), 'getXAxisTitle alias must exist')
+    assertTrue(methods.contains('getYAxisTitle'), 'getYAxisTitle alias must exist')
+    assertTrue(methods.contains('getXAxisScale'), 'getXAxisScale alias must exist')
+    assertTrue(methods.contains('getYAxisScale'), 'getYAxisScale alias must exist')
+    assertTrue(methods.contains('getxAxisTitle'), 'getxAxisTitle must remain for chart.xAxisTitle property access')
+    assertTrue(methods.contains('getyAxisTitle'), 'getyAxisTitle must remain for chart.yAxisTitle property access')
+    assertTrue(methods.contains('getxAxisScale'), 'getxAxisScale must remain for chart.xAxisScale property access')
+    assertTrue(methods.contains('getyAxisScale'), 'getyAxisScale must remain for chart.yAxisScale property access')
+  }
+
+  @Test
+  void testChartJavaBeanAliasesReturnSameValueAsPropertyAccess() {
+    Matrix data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2]])
+        .types([int, int])
+        .build()
+    AreaChart chart = AreaChart.builder(data)
+        .title('T').x('x').y('y')
+        .xAxisTitle('X Title').yAxisTitle('Y Title')
+        .build()
+    AxisScale xScale = new AxisScale(1.0G, 10.0G, 1.0G)
+    AxisScale yScale = new AxisScale(2.0G, 20.0G, 2.0G)
+    chart.setXAxisScale(xScale)
+    chart.setYAxisScale(yScale)
+
+    assertEquals('X Title', chart.getXAxisTitle())
+    assertEquals('Y Title', chart.getYAxisTitle())
+    assertEquals('X Title', chart.xAxisTitle)
+    assertEquals('Y Title', chart.yAxisTitle)
+    assertSame(xScale, chart.getXAxisScale())
+    assertSame(yScale, chart.getYAxisScale())
+    assertSame(xScale, chart.xAxisScale)
+    assertSame(yScale, chart.yAxisScale)
   }
 
   @Test
