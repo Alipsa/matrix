@@ -175,8 +175,15 @@ abstract class Chart<T extends Chart> {
     this as T
   }
 
-  List<?> getValueSerie(int index) {
+  /** Returns the value series at the given zero-based index. */
+  List<?> getValueSeries(int index) {
     valueSeries[index]
+  }
+
+  /** @deprecated Use {@link #getValueSeries(int)}. */
+  @Deprecated
+  List<?> getValueSerie(int index) {
+    getValueSeries(index)
   }
 
   List<String> getValueSeriesNames() {
