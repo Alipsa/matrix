@@ -63,7 +63,10 @@ class Style {
   /** whether to show the title or not */
   Boolean titleVisible
 
+  /** Whether to render the x-axis. When {@code false}, the axis line, ticks, labels, and title are all hidden. */
   Boolean xAxisVisible
+
+  /** Whether to render the y-axis. When {@code false}, the axis line, ticks, labels, and title are all hidden. */
   Boolean yAxisVisible
 
   /** Maps numeric y-axis break values to custom display labels. */
