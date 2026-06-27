@@ -579,4 +579,26 @@ class ChartBuilderTest {
     assertEquals(['10': 'Low', '20': 'Medium', '30': 'High'], chart.style.yLabels)
   }
 
+  @Test
+  void testPlotPngMethodSignaturesUseInt() {
+    def pngMethods = Plot.methods.findAll { it.name == 'png' }
+    def hasFileIntOverload = pngMethods.any { method ->
+      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, File, int, int]
+    }
+    def hasStreamIntOverload = pngMethods.any { method ->
+      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, OutputStream, int, int]
+    }
+    def hasFileDoubleOverload = pngMethods.any { method ->
+      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, File, double, double]
+    }
+    def hasStreamDoubleOverload = pngMethods.any { method ->
+      method.parameterTypes.toList() == [se.alipsa.matrix.pict.Chart, OutputStream, double, double]
+    }
+
+    assertTrue(hasFileIntOverload, 'Plot.png(Chart, File, int, int) must exist')
+    assertTrue(hasStreamIntOverload, 'Plot.png(Chart, OutputStream, int, int) must exist')
+    assertTrue(hasFileDoubleOverload, 'Plot.png(Chart, File, double, double) must remain (deprecated)')
+    assertTrue(hasStreamDoubleOverload, 'Plot.png(Chart, OutputStream, double, double) must remain (deprecated)')
+  }
+
 }

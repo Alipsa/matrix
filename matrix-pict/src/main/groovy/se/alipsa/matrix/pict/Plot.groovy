@@ -45,7 +45,7 @@ class Plot {
    * @throws IllegalArgumentException if chart or file is null
    * @throws IOException if file writing fails
    */
-  static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
+  static void png(Chart chart, File file, int width = 800, int height = 600) throws IOException {
     requireChart(chart)
     try (OutputStream os = Files.newOutputStream(requireFile(file).toPath())) {
       png(chart, os, width, height)
@@ -61,11 +61,23 @@ class Plot {
    * @param height image height in pixels
    * @throws IllegalArgumentException if chart or output stream is null
    */
-  static void png(Chart chart, OutputStream os, double width = 800, double height = 600) {
+  static void png(Chart chart, OutputStream os, int width = 800, int height = 600) {
     requireChart(chart)
     requireOutputStream(os)
-    Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
+    Svg svg = CharmBridge.renderSvg(chart, width, height)
     ChartToPng.export(svg, os)
+  }
+
+  /** @deprecated Use {@link #png(Chart, File, int, int)}. Pixel dimensions must be integers. */
+  @Deprecated
+  static void png(Chart chart, File file, double width, double height) throws IOException {
+    png(chart, file, (int) width, (int) height)
+  }
+
+  /** @deprecated Use {@link #png(Chart, OutputStream, int, int)}. Pixel dimensions must be integers. */
+  @Deprecated
+  static void png(Chart chart, OutputStream os, double width, double height) {
+    png(chart, os, (int) width, (int) height)
   }
 
   /**
