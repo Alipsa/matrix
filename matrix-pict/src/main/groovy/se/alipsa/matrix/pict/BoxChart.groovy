@@ -7,6 +7,29 @@ import se.alipsa.matrix.core.Matrix
 @SuppressWarnings('UnnecessaryObjectReferences')
 class BoxChart extends Chart<BoxChart> {
 
+  private static BoxChart fromCategoryValue(String title, Matrix data, String categoryCol, String valueCol) {
+    Map<String, Matrix> groups = data.split(categoryCol).sort() as Map<String, Matrix>
+    BoxChart chart = new BoxChart()
+    chart.title = title
+    chart.categorySeries = ListConverter.toStrings(groups.keySet()) as List<?>
+    chart.valueSeries = groups.values().collect { Matrix m -> m[valueCol].removeNulls() as List<?> }
+    chart.valueSeriesNames = chart.categorySeries as List<String>
+    chart.xAxisTitle = categoryCol
+    chart.yAxisTitle = valueCol
+    chart
+  }
+
+  private static BoxChart fromColumns(String title, Matrix data, List<String> columnNames) {
+    BoxChart chart = new BoxChart()
+    chart.title = title
+    chart.categorySeries = columnNames as List<?>
+    chart.valueSeries = columnNames.collect { String col -> data[col] as List<?> }
+    chart.valueSeriesNames = columnNames
+    chart.xAxisTitle = 'X'
+    chart.yAxisTitle = 'Y'
+    chart
+  }
+
   /**
    * Creates a box chart from category and value columns.
    *
@@ -19,15 +42,7 @@ class BoxChart extends Chart<BoxChart> {
    */
   @Deprecated
   static BoxChart create(String title, Matrix data, String categoryColumnName, String valueColumn) {
-    Map<String, Matrix> groups = data.split(categoryColumnName).sort() as Map<String, Matrix>
-    BoxChart chart = new BoxChart()
-    chart.title = title
-    chart.categorySeries = ListConverter.toStrings(groups.keySet()) as List<?>
-    chart.valueSeries = groups.values().collect { Matrix m -> m[valueColumn].removeNulls() as List<?> }
-    chart.valueSeriesNames = chart.categorySeries as List<String>
-    chart.xAxisTitle = categoryColumnName
-    chart.yAxisTitle = valueColumn
-    return chart
+    fromCategoryValue(title, data, categoryColumnName, valueColumn)
   }
 
   /**
@@ -41,18 +56,7 @@ class BoxChart extends Chart<BoxChart> {
    */
   @Deprecated
   static BoxChart create(String title, Matrix data, List<String> columnNames) {
-    BoxChart chart = new BoxChart()
-    chart.title = title
-    chart.categorySeries = columnNames as List<?>
-    List<List<?>> valueColumns = []
-    columnNames.each { String col ->
-      valueColumns.add(data[col] as List<?>)
-    }
-    chart.valueSeries = valueColumns
-    chart.valueSeriesNames = columnNames
-    chart.xAxisTitle = 'X'
-    chart.yAxisTitle = 'Y'
-    return chart
+    fromColumns(title, data, columnNames)
   }
 
   /**
@@ -115,12 +119,9 @@ class BoxChart extends Chart<BoxChart> {
         }
       }
       String chartTitle = this.@title
-      BoxChart chart
-      if (columnNames) {
-        chart = BoxChart.create(chartTitle, data, columnNames)
-      } else {
-        chart = BoxChart.create(chartTitle, data, xCol, yCols[0])
-      }
+      BoxChart chart = columnNames
+          ? BoxChart.fromColumns(chartTitle, data, columnNames)
+          : BoxChart.fromCategoryValue(chartTitle, data, xCol, yCols[0])
       applyTo(chart)
       chart
     }

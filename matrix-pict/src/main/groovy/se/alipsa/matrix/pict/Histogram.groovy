@@ -14,6 +14,19 @@ class Histogram extends Chart<Histogram> {
   Map<MinMax, Integer> ranges
   Integer numberOfBins = 9
 
+  private static Histogram fromData(String title, Matrix data, String columnName, Integer bins, int binDecimals) {
+    Histogram chart = new Histogram()
+    chart.title = title
+    chart.numberOfBins = bins
+    if (Number.isAssignableFrom(data.type(columnName))) {
+      chart.originalData = data.column(columnName) as List<? extends Number>
+      chart.ranges = createRanges(chart.originalData, bins, binDecimals)
+    } else {
+      throw new IllegalArgumentException('Column must be numeric in a histogram (hint: you can Barplot a Frequency)')
+    }
+    chart
+  }
+
   /**
    * Creates a histogram from named parameters.
    *
@@ -29,7 +42,7 @@ class Histogram extends Chart<Histogram> {
     String columnName = params.columnName as String
     Integer bins = params.getOrDefault('bins', 9) as Integer
     int binDecimals = params.getOrDefault('binDecimals', 1) as int
-    return create(title, data, columnName, bins, binDecimals)
+    return fromData(title, data, columnName, bins, binDecimals)
   }
 
   /**
@@ -45,16 +58,7 @@ class Histogram extends Chart<Histogram> {
    */
   @Deprecated
   static Histogram create(String title, Matrix data, String columnName, Integer bins = 9, int binDecimals = 1) {
-    Histogram chart = new Histogram()
-    chart.title = title
-    chart.numberOfBins = bins
-    if (Number.isAssignableFrom(data.type(columnName))) {
-      chart.originalData = data.column(columnName) as List<? extends Number>
-      chart.ranges = createRanges(chart.originalData, bins, binDecimals)
-    } else {
-      throw new IllegalArgumentException('Column must be numeric in a histogram (hint: you can Barplot a Frequency)')
-    }
-    return chart
+    fromData(title, data, columnName, bins, binDecimals)
   }
 
   /**
@@ -167,7 +171,7 @@ class Histogram extends Chart<Histogram> {
       if (xCol == null) {
         throw new IllegalStateException('x(...) must be called before build()')
       }
-      Histogram chart = Histogram.create(this.@title, data, xCol, bins, binDecimals)
+      Histogram chart = Histogram.fromData(this.@title, data, xCol, bins, binDecimals)
       applyTo(chart)
       chart
     }

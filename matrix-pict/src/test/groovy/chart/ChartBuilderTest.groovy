@@ -246,6 +246,8 @@ class ChartBuilderTest {
     assertEquals(factory.title, builder.title)
     assertEquals(factory.categorySeries, builder.categorySeries)
     assertEquals(factory.valueSeries.size(), builder.valueSeries.size())
+    assertEquals('X', builder.xAxisTitle)
+    assertEquals('Y', builder.yAxisTitle)
   }
 
   @Test
