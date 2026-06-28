@@ -844,7 +844,7 @@ class GgPlot {
       if (value != null && !LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
         String aesthetic = normalizeAesthetic(name)
         if (aesthetic != null && !aesthetic.isBlank()) {
-          label.legendTitles[aesthetic] = value?.toString()
+          label.legendTitles[aesthetic] = value.toString()
         }
       }
     }
