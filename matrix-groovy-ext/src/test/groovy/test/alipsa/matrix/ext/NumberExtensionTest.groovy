@@ -882,4 +882,41 @@ class NumberExtensionTest {
     }
   }
 
+  @Test
+  void testAcos() {
+    // Test acos(0) = π/2
+    assertEquals(Math.PI / 2, (0.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(1) = 0
+    assertEquals(0.0, (1.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(-1) = π
+    assertEquals(Math.PI, (-1.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(0.5) = π/3
+    assertEquals(Math.PI / 3, (0.5).acos().doubleValue(), 1e-10)
+
+    // Test acos is inverse of cos
+    BigDecimal angle = Math.PI / 4 as BigDecimal
+    BigDecimal cosVal = angle.cos()
+    BigDecimal recovered = cosVal.acos()
+    assertEquals(angle.doubleValue(), recovered.doubleValue(), 1e-10)
+
+    // Test with Number type
+    assertEquals(Math.acos(0.5), NumberExtension.acos(0.5).doubleValue(), 1e-10)
+
+    // Test exact BigDecimal values
+    assert 1.0G.acos() == 0.0G
+    assert (-1.0G).acos() == NumberExtension.PI32
+    assert 0.0G.acos() == NumberExtension.PI32 / 2
+
+    // Test out of range throws
+    assertThrows(ArithmeticException) {
+      (1.5).acos()
+    }
+    assertThrows(ArithmeticException) {
+      (-1.5).acos()
+    }
+  }
+
 }

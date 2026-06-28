@@ -1044,6 +1044,54 @@ class NumberExtension {
     atan(self / denominator)
   }
 
+  /**
+   * Returns the arccosine (inverse cosine) of this Number value.
+   * <p>
+   * Convenience wrapper that converts the Number to BigDecimal.
+   *
+   * @param self the Number value (must be in [-1, 1])
+   * @return the arccosine of the value in radians
+   */
+  static BigDecimal acos(Number self) {
+    acos(self as BigDecimal)
+  }
+
+  /**
+   * Returns the arccosine (inverse cosine) of this BigDecimal value.
+   * <p>
+   * Uses the identity: acos(x) = π/2 - asin(x)
+   * The result is in the range [0, π].
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal val = 0.5
+   * val.acos()  // → π/3 (approximately 1.0472)
+   *
+   * BigDecimal one = 1.0
+   * one.acos()  // → 0
+   * }</pre>
+   *
+   * @param self the BigDecimal value (must be in [-1, 1])
+   * @return the arccosine of the value in radians as a BigDecimal
+   * @throws ArithmeticException if the value is outside [-1, 1]
+   */
+  static BigDecimal acos(BigDecimal self) {
+    if (self < -1 || self > 1) {
+      throw new ArithmeticException("acos undefined for value outside [-1, 1]: ${self}")
+    }
+    if (self == 1) {
+      return BigDecimal.ZERO
+    }
+    if (self == -1) {
+      return PI32
+    }
+    if (self == 0) {
+      return PI32 / 2
+    }
+    // acos(x) = π/2 - asin(x)
+    PI32 / 2 - asin(self)
+  }
+
   static BigDecimal atan2(Number y, Number x) {
     atan2(y as BigDecimal, x as BigDecimal)
   }
