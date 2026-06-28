@@ -17,6 +17,18 @@ class Aes {
   def x
   /** Y position - column name or I(value) */
   def y
+  /** X end position for segment and curve geoms - column name or I(value) */
+  def xend
+  /** Y end position for segment and curve geoms - column name or I(value) */
+  def yend
+  /** Minimum X boundary for rectangle and range geoms - column name or I(value) */
+  def xmin
+  /** Maximum X boundary for rectangle and range geoms - column name or I(value) */
+  def xmax
+  /** Minimum Y boundary for ribbon, errorbar, and rectangle geoms - column name or I(value) */
+  def ymin
+  /** Maximum Y boundary for ribbon, errorbar, and rectangle geoms - column name or I(value) */
+  def ymax
 
   // Color aesthetics
   /** Outline color - column name or I(value) */
@@ -78,6 +90,108 @@ class Aes {
   void setY(AfterScale scale) { this.@y = scale }
   void setY(CutWidth cut) { this.@y = cut }
   void setY(Closure expression) { this.@y = expression }
+
+  /** Set the x-end aesthetic used by segment and curve geoms. */
+  void setXend(String columnName) { this.@xend = columnName }
+  /** Set the x-end aesthetic to a constant identity value. */
+  void setXend(Identity constant) { this.@xend = constant }
+  /** Set the x-end aesthetic to a factor mapping. */
+  void setXend(Factor factor) { this.@xend = factor }
+  /** Set the x-end aesthetic to an expression mapping. */
+  void setXend(Expression expr) { this.@xend = expr }
+  /** Set the x-end aesthetic to an after-stat mapping. */
+  void setXend(AfterStat stat) { this.@xend = stat }
+  /** Set the x-end aesthetic to an after-scale mapping. */
+  void setXend(AfterScale scale) { this.@xend = scale }
+  /** Set the x-end aesthetic to a cut-width mapping. */
+  void setXend(CutWidth cut) { this.@xend = cut }
+  /** Set the x-end aesthetic to a closure expression. */
+  void setXend(Closure expression) { this.@xend = expression }
+
+  /** Set the y-end aesthetic used by segment and curve geoms. */
+  void setYend(String columnName) { this.@yend = columnName }
+  /** Set the y-end aesthetic to a constant identity value. */
+  void setYend(Identity constant) { this.@yend = constant }
+  /** Set the y-end aesthetic to a factor mapping. */
+  void setYend(Factor factor) { this.@yend = factor }
+  /** Set the y-end aesthetic to an expression mapping. */
+  void setYend(Expression expr) { this.@yend = expr }
+  /** Set the y-end aesthetic to an after-stat mapping. */
+  void setYend(AfterStat stat) { this.@yend = stat }
+  /** Set the y-end aesthetic to an after-scale mapping. */
+  void setYend(AfterScale scale) { this.@yend = scale }
+  /** Set the y-end aesthetic to a cut-width mapping. */
+  void setYend(CutWidth cut) { this.@yend = cut }
+  /** Set the y-end aesthetic to a closure expression. */
+  void setYend(Closure expression) { this.@yend = expression }
+
+  /** Set the minimum x-bound aesthetic used by rect and errorbarh geoms. */
+  void setXmin(String columnName) { this.@xmin = columnName }
+  /** Set the minimum x-bound aesthetic to a constant identity value. */
+  void setXmin(Identity constant) { this.@xmin = constant }
+  /** Set the minimum x-bound aesthetic to a factor mapping. */
+  void setXmin(Factor factor) { this.@xmin = factor }
+  /** Set the minimum x-bound aesthetic to an expression mapping. */
+  void setXmin(Expression expr) { this.@xmin = expr }
+  /** Set the minimum x-bound aesthetic to an after-stat mapping. */
+  void setXmin(AfterStat stat) { this.@xmin = stat }
+  /** Set the minimum x-bound aesthetic to an after-scale mapping. */
+  void setXmin(AfterScale scale) { this.@xmin = scale }
+  /** Set the minimum x-bound aesthetic to a cut-width mapping. */
+  void setXmin(CutWidth cut) { this.@xmin = cut }
+  /** Set the minimum x-bound aesthetic to a closure expression. */
+  void setXmin(Closure expression) { this.@xmin = expression }
+
+  /** Set the maximum x-bound aesthetic used by rect and errorbarh geoms. */
+  void setXmax(String columnName) { this.@xmax = columnName }
+  /** Set the maximum x-bound aesthetic to a constant identity value. */
+  void setXmax(Identity constant) { this.@xmax = constant }
+  /** Set the maximum x-bound aesthetic to a factor mapping. */
+  void setXmax(Factor factor) { this.@xmax = factor }
+  /** Set the maximum x-bound aesthetic to an expression mapping. */
+  void setXmax(Expression expr) { this.@xmax = expr }
+  /** Set the maximum x-bound aesthetic to an after-stat mapping. */
+  void setXmax(AfterStat stat) { this.@xmax = stat }
+  /** Set the maximum x-bound aesthetic to an after-scale mapping. */
+  void setXmax(AfterScale scale) { this.@xmax = scale }
+  /** Set the maximum x-bound aesthetic to a cut-width mapping. */
+  void setXmax(CutWidth cut) { this.@xmax = cut }
+  /** Set the maximum x-bound aesthetic to a closure expression. */
+  void setXmax(Closure expression) { this.@xmax = expression }
+
+  /** Set the minimum y-bound aesthetic used by ribbon, rect, and errorbar geoms. */
+  void setYmin(String columnName) { this.@ymin = columnName }
+  /** Set the minimum y-bound aesthetic to a constant identity value. */
+  void setYmin(Identity constant) { this.@ymin = constant }
+  /** Set the minimum y-bound aesthetic to a factor mapping. */
+  void setYmin(Factor factor) { this.@ymin = factor }
+  /** Set the minimum y-bound aesthetic to an expression mapping. */
+  void setYmin(Expression expr) { this.@ymin = expr }
+  /** Set the minimum y-bound aesthetic to an after-stat mapping. */
+  void setYmin(AfterStat stat) { this.@ymin = stat }
+  /** Set the minimum y-bound aesthetic to an after-scale mapping. */
+  void setYmin(AfterScale scale) { this.@ymin = scale }
+  /** Set the minimum y-bound aesthetic to a cut-width mapping. */
+  void setYmin(CutWidth cut) { this.@ymin = cut }
+  /** Set the minimum y-bound aesthetic to a closure expression. */
+  void setYmin(Closure expression) { this.@ymin = expression }
+
+  /** Set the maximum y-bound aesthetic used by ribbon, rect, and errorbar geoms. */
+  void setYmax(String columnName) { this.@ymax = columnName }
+  /** Set the maximum y-bound aesthetic to a constant identity value. */
+  void setYmax(Identity constant) { this.@ymax = constant }
+  /** Set the maximum y-bound aesthetic to a factor mapping. */
+  void setYmax(Factor factor) { this.@ymax = factor }
+  /** Set the maximum y-bound aesthetic to an expression mapping. */
+  void setYmax(Expression expr) { this.@ymax = expr }
+  /** Set the maximum y-bound aesthetic to an after-stat mapping. */
+  void setYmax(AfterStat stat) { this.@ymax = stat }
+  /** Set the maximum y-bound aesthetic to an after-scale mapping. */
+  void setYmax(AfterScale scale) { this.@ymax = scale }
+  /** Set the maximum y-bound aesthetic to a cut-width mapping. */
+  void setYmax(CutWidth cut) { this.@ymax = cut }
+  /** Set the maximum y-bound aesthetic to a closure expression. */
+  void setYmax(Closure expression) { this.@ymax = expression }
 
   void setColor(String columnName) { this.@color = columnName }
   void setColor(Identity constant) { this.@color = constant }
@@ -282,6 +396,25 @@ class Aes {
       assignAesthetic('y', yValue)
     }
 
+    if (params.xend != null) {
+      assignAesthetic('xend', params.xend)
+    }
+    if (params.yend != null) {
+      assignAesthetic('yend', params.yend)
+    }
+    if (params.xmin != null) {
+      assignAesthetic('xmin', params.xmin)
+    }
+    if (params.xmax != null) {
+      assignAesthetic('xmax', params.xmax)
+    }
+    if (params.ymin != null) {
+      assignAesthetic('ymin', params.ymin)
+    }
+    if (params.ymax != null) {
+      assignAesthetic('ymax', params.ymax)
+    }
+
     def colorValue = firstNonNull([params.color, params.col, params.colour, params.colorCol])
     if (colorValue != null) {
       assignAesthetic('color', colorValue)
@@ -352,6 +485,12 @@ class Aes {
       switch (name) {
         case 'x' -> this.@x = value
         case 'y' -> this.@y = value
+        case 'xend' -> this.@xend = value
+        case 'yend' -> this.@yend = value
+        case 'xmin' -> this.@xmin = value
+        case 'xmax' -> this.@xmax = value
+        case 'ymin' -> this.@ymin = value
+        case 'ymax' -> this.@ymax = value
         case 'color' -> this.@color = value
         case 'fill' -> this.@fill = value
         case 'size' -> this.@size = value
@@ -393,7 +532,8 @@ class Aes {
    * This method provides type-safe access to aesthetic values without dynamic property access.
    * <p>
    * Supported aesthetic names: x, y, color, colour, fill, size, shape, alpha,
-   * linetype, linewidth, group, label, tooltip, weight, geometry, map_id
+   * xend, yend, xmin, xmax, ymin, ymax, linetype, linewidth, group, label,
+   * tooltip, weight, geometry, map_id
    *
    * @param aesthetic the aesthetic name (e.g., 'x', 'y', 'color', 'fill', etc.)
    * @return the value of the aesthetic, or null if not found or unknown aesthetic name
@@ -402,6 +542,12 @@ class Aes {
     switch (aesthetic) {
       case 'x' -> x
       case 'y' -> y
+      case 'xend' -> xend
+      case 'yend' -> yend
+      case 'xmin' -> xmin
+      case 'xmax' -> xmax
+      case 'ymin' -> ymin
+      case 'ymax' -> ymax
       case 'color', 'colour' -> color
       case 'fill' -> fill
       case 'size' -> size
@@ -583,6 +729,12 @@ class Aes {
     // Start with base values
     result.@x = base.x
     result.@y = base.y
+    result.@xend = base.xend
+    result.@yend = base.yend
+    result.@xmin = base.xmin
+    result.@xmax = base.xmax
+    result.@ymin = base.ymin
+    result.@ymax = base.ymax
     result.@color = base.color
     result.@fill = base.fill
     result.@size = base.size
@@ -602,6 +754,24 @@ class Aes {
     }
     if (this.y != null) {
       result.@y = this.y
+    }
+    if (this.xend != null) {
+      result.@xend = this.xend
+    }
+    if (this.yend != null) {
+      result.@yend = this.yend
+    }
+    if (this.xmin != null) {
+      result.@xmin = this.xmin
+    }
+    if (this.xmax != null) {
+      result.@xmax = this.xmax
+    }
+    if (this.ymin != null) {
+      result.@ymin = this.ymin
+    }
+    if (this.ymax != null) {
+      result.@ymax = this.ymax
     }
     if (this.color != null) {
       result.@color = this.color
@@ -653,6 +823,24 @@ class Aes {
     }
     if (y != null) {
       parts << "yCol=$y"
+    }
+    if (xend != null) {
+      parts << "xend=$xend"
+    }
+    if (yend != null) {
+      parts << "yend=$yend"
+    }
+    if (xmin != null) {
+      parts << "xmin=$xmin"
+    }
+    if (xmax != null) {
+      parts << "xmax=$xmax"
+    }
+    if (ymin != null) {
+      parts << "ymin=$ymin"
+    }
+    if (ymax != null) {
+      parts << "ymax=$ymax"
     }
     if (color != null) {
       parts << "colorCol=$color"
