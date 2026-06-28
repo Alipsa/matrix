@@ -9,7 +9,7 @@ plugins {
   alias(libs.plugins.alipsaNexusRelease)
 }
 group = 'se.alipsa.matrix'
-version = '0.3.0-SNAPSHOT' // remember to change Extension module info if changing version
+version = '0.3.0' // remember to change Extension module info if changing version
 description = "Groovy extensions for the matrix library"
 
 JavaCompile javaCompile = compileJava {
