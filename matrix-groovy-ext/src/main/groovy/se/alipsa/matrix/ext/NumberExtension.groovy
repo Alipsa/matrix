@@ -633,15 +633,22 @@ class NumberExtension {
     }
     MathContext mc = MathContext.DECIMAL64
     BigDecimal absValue = self.abs()
+    // Scale the value by powers of 1000 so its magnitude falls in double range,
+    // compute the cube root, then scale back. This handles values far beyond
+    // Double.MAX_VALUE or smaller than Double.MIN_NORMAL.
+    int exponent = absValue.precision() - absValue.scale() - 1
+    int k = Math.floorDiv(exponent, 3)
+    BigDecimal scaled = absValue.movePointLeft(3 * k)
     // Seed from double-precision Math.cbrt, then refine with Newton-Raphson:
     // x_{n+1} = (2*x_n + a/x_n^2) / 3
-    BigDecimal x = BigDecimal.valueOf(Math.cbrt(absValue.doubleValue()))
+    BigDecimal x = BigDecimal.valueOf(Math.cbrt(scaled.doubleValue()))
     for (int i = 0; i < 8; i++) {
       BigDecimal xSquared = x * x
-      BigDecimal term = absValue.divide(xSquared, mc)
+      BigDecimal term = scaled.divide(xSquared, mc)
       x = (x * 2 + term).divide(3.0G, mc)
     }
-    self.signum() >= 0 ? x : x.negate()
+    BigDecimal root = x.movePointRight(k)
+    self.signum() >= 0 ? root : root.negate()
   }
 
   /**

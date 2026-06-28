@@ -446,6 +446,22 @@ class NumberExtensionTest {
     // Test with Number overload (Integer)
     assert 27.cbrt() == 3.0G
     assert (-27).cbrt() == -3.0G
+
+    // Values far outside double range should not throw
+    MathContext mc = MathContext.DECIMAL64
+    BigDecimal huge = new BigDecimal('1E+400')
+    BigDecimal hugeRoot = huge.cbrt()
+    assert hugeRoot > 0
+    BigDecimal hugeCube = hugeRoot ** 3
+    BigDecimal hugeRelError = (hugeCube - huge).abs().divide(huge.abs(), mc)
+    assert hugeRelError < 1e-12
+
+    BigDecimal tiny = new BigDecimal('1E-400')
+    BigDecimal tinyRoot = tiny.cbrt()
+    assert tinyRoot > 0
+    BigDecimal tinyCube = tinyRoot ** 3
+    BigDecimal tinyRelError = (tinyCube - tiny).abs().divide(tiny.abs(), mc)
+    assert tinyRelError < 1e-12
   }
 
   @Test
