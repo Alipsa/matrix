@@ -817,7 +817,8 @@ class GgStat {
   static Matrix summary(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     String yCol = aes.yColName
-    String fun = params.fun ?: params.'fun.y' ?: 'mean'
+    Closure summaryFun = params.fun instanceof Closure ? params.fun as Closure : null
+    String fun = summaryFun == null ? (params.fun ?: params.'fun.y' ?: 'mean') as String : null
     String funData = params.'fun.data'
     if (funData == null && params.funData) {
       funData = params.funData as String
@@ -857,6 +858,11 @@ class GgStat {
     }
 
     if (xCol != null) {
+      if (summaryFun != null) {
+        return Stat.funBy(data, yCol, xCol, { List<Number> values ->
+          applySummaryClosure(summaryFun, values)
+        }, BigDecimal)
+      }
       // Grouped summary
       switch (fun) {
         case 'mean':
@@ -872,27 +878,40 @@ class GgStat {
       // Single summary value
       List<Number> values = data[yCol]
       Number result
-      switch (fun) {
-        case 'mean':
-          result = Stat.mean(values)
-          break
-        case 'median':
-          result = Stat.median(values)
-          break
-        case 'sum':
-          result = Stat.sum(values)
-          break
-        case 'min':
-          result = Stat.min(values)
-          break
-        case 'max':
-          result = Stat.max(values)
-          break
-        default:
-          throw new IllegalArgumentException("Unknown summary function: $fun")
+      if (summaryFun != null) {
+        result = applySummaryClosure(summaryFun, values)
+      } else {
+        switch (fun) {
+          case 'mean':
+            result = Stat.mean(values)
+            break
+          case 'median':
+            result = Stat.median(values)
+            break
+          case 'sum':
+            result = Stat.sum(values)
+            break
+          case 'min':
+            result = Stat.min(values)
+            break
+          case 'max':
+            result = Stat.max(values)
+            break
+          default:
+            throw new IllegalArgumentException("Unknown summary function: $fun")
+        }
       }
       return Matrix.builder().data([y: [result]]).build()
     }
+  }
+
+  private static BigDecimal applySummaryClosure(Closure summaryFun, List<Number> values) {
+    Object result = summaryFun.call(values)
+    if (!(result instanceof Number)) {
+      String type = result == null ? 'null' : result.getClass().name
+      throw new IllegalArgumentException("stat_summary fun closure must return a Number but returned ${type}")
+    }
+    result as BigDecimal
   }
 
   private static Matrix meanClNormal(Matrix data, String xCol, String yCol, BigDecimal level) {

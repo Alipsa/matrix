@@ -219,38 +219,6 @@ class GgPlot {
 
   // ============ Quick plot ============
 
-  /** Geom name to constructor mapping for qplot geom inference. */
-  @SuppressWarnings('UnnecessaryCast')
-  private static final Map<String, Closure<Geom>> GEOM_FACTORIES = (Map<String, Closure<Geom>>) [
-      point    : { Map p -> new GeomPoint(p) },
-      line     : { Map p -> new GeomLine(p) },
-      bar      : { Map p -> new GeomBar(p) },
-      col      : { Map p -> new GeomCol(p) },
-      histogram: { Map p -> new GeomHistogram(p) },
-      boxplot  : { Map p -> new GeomBoxplot(p) },
-      density  : { Map p -> new GeomDensity(p) },
-      smooth   : { Map p -> new GeomSmooth(p) },
-      area     : { Map p -> new GeomArea(p) },
-      violin   : { Map p -> new GeomViolin(p) },
-      jitter   : { Map p -> new GeomJitter(p) },
-      dotplot  : { Map p -> new GeomDotplot(p) },
-      freqpoly : { Map p -> new GeomFreqpoly(p) },
-      step     : { Map p -> new GeomStep(p) },
-      rug      : { Map p -> new GeomRug(p) },
-      text     : { Map p -> new GeomText(p) },
-      label    : { Map p -> new GeomLabel(p) },
-      tile     : { Map p -> new GeomTile(p) },
-      hex      : { Map p -> new GeomHex(p) },
-      bin2d    : { Map p -> new GeomBin2d(p) },
-      segment  : { Map p -> new GeomSegment(p) },
-      path     : { Map p -> new GeomPath(p) },
-      polygon  : { Map p -> new GeomPolygon(p) },
-      ribbon   : { Map p -> new GeomRibbon(p) },
-      rect     : { Map p -> new GeomRect(p) },
-      contour  : { Map p -> new GeomContour(p) },
-      errorbar : { Map p -> new GeomErrorbar(p) },
-  ]
-
   /**
    * Quick plot -- convenience function for rapid exploratory charting.
    *
@@ -445,10 +413,10 @@ class GgPlot {
    */
   private static Geom inferGeom(String geomName, Matrix data, String xCol, String yCol, Map geomParams) {
     if (geomName) {
-      Closure<Geom> factory = GEOM_FACTORIES[geomName.toLowerCase(Locale.ROOT)]
+      Closure<Geom> factory = GeomRegistry.GEOM_REGISTRY[geomName.toLowerCase(Locale.ROOT)]
       if (factory == null) {
         throw new IllegalArgumentException(
-            "Unknown geom '${geomName}'. Available: ${GEOM_FACTORIES.keySet().sort()}")
+            "Unknown geom '${geomName}'. Available: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
       }
       return factory.call(geomParams)
     }
