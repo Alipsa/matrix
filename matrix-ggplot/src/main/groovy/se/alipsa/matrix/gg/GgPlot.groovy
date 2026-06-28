@@ -416,7 +416,7 @@ class GgPlot {
       Closure<Geom> factory = GeomRegistry.GEOM_REGISTRY[geomName.toLowerCase(Locale.ROOT)]
       if (factory == null) {
         throw new IllegalArgumentException(
-            "Unknown geom '${geomName}'. Available: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
+            "Unknown geom '${geomName}'. Known names: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
       }
       return factory.call(geomParams)
     }
