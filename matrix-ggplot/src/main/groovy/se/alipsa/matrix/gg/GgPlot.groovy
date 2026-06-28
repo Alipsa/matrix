@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.bridge.GgCharmMappingRegistry
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
@@ -190,6 +191,10 @@ class GgPlot {
   /** Global default theme (thread-local for thread safety) */
   private static final ThreadLocal<Theme> GLOBAL_THEME =
       ThreadLocal.withInitial { Themes.gray() }
+
+  private static final Set<String> LABEL_KEYS = [
+      'title', 'subtitle', 'caption', 'tag', 'x', 'y'
+  ] as Set<String>
 
   // ============ Core functions ============
 
@@ -828,11 +833,21 @@ class GgPlot {
       label.y = params.y?.toString()
       label.ySet = true
     }
-    if (params.colour || params.color) {
-      label.legendTitle = params.colour ?: params.color
+    def colorTitle = params.colour ?: params.color
+    if (colorTitle != null) {
+      label.legendTitles['color'] = colorTitle?.toString()
     }
-    if (params.fill) {
-      label.legendTitle = params.fill
+    if (params.fill != null) {
+      label.legendTitles['fill'] = params.fill?.toString()
+    }
+    params.each { key, value ->
+      String name = key
+      if (value != null && !LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(name)
+        if (aesthetic != null && !aesthetic.isBlank()) {
+          label.legendTitles[aesthetic] = value?.toString()
+        }
+      }
     }
     return label
   }

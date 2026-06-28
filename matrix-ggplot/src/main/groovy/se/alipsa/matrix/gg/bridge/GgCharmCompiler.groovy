@@ -1294,8 +1294,10 @@ class GgCharmCompiler {
     }
 
     Map<String, String> guideTitles = [:]
-    if (source?.legendTitle) {
-      guideTitles['color'] = source.legendTitle
+    source?.legendTitles?.each { String aesthetic, String title ->
+      if (title != null && !title.isBlank()) {
+        guideTitles[GgCharmMappingRegistry.normalizeAesthetic(aesthetic)] = title
+      }
     }
     guideTitles.putAll(extractGuideTitles(guides))
     guideTitles.putAll(extractGuideTitlesFromScales(scales))
