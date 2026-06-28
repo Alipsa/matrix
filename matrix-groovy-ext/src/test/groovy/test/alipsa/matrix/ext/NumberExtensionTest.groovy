@@ -426,6 +426,68 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testCbrt() {
+    // Test perfect cubes
+    assert 27.0G.cbrt() == 3.0G
+    assert 8.0G.cbrt() == 2.0G
+    assert (-8.0G).cbrt() == -2.0G
+
+    // Test zero
+    assert 0.0G.cbrt() == 0.0G
+
+    // Test one
+    assert 1.0G.cbrt() == 1.0G
+    assert (-1.0G).cbrt() == -1.0G
+
+    // Verify against Math.cbrt
+    BigDecimal value = 17.5G
+    assertEquals(Math.cbrt(value.doubleValue()), value.cbrt().doubleValue(), 1e-10)
+
+    // Test with Number overload (Integer)
+    assert 27.cbrt() == 3.0G
+    assert (-27).cbrt() == -3.0G
+
+    // Values far outside double range should not throw
+    MathContext mc = MathContext.DECIMAL64
+    BigDecimal huge = new BigDecimal('1E+400')
+    BigDecimal hugeRoot = huge.cbrt()
+    assert hugeRoot > 0
+    BigDecimal hugeCube = hugeRoot ** 3
+    BigDecimal hugeRelError = (hugeCube - huge).abs().divide(huge.abs(), mc)
+    assert hugeRelError < 1e-12
+
+    BigDecimal tiny = new BigDecimal('1E-400')
+    BigDecimal tinyRoot = tiny.cbrt()
+    assert tinyRoot > 0
+    BigDecimal tinyCube = tinyRoot ** 3
+    BigDecimal tinyRelError = (tinyCube - tiny).abs().divide(tiny.abs(), mc)
+    assert tinyRelError < 1e-12
+  }
+
+  @Test
+  void testHypot() {
+    // Classic 3-4-5 triangle
+    assert 3.0G.hypot(4.0G) == 5.0G
+
+    // Verify against Math.hypot
+    BigDecimal x = 12.5G
+    BigDecimal y = 7.3G
+    assertEquals(Math.hypot(x.doubleValue(), y.doubleValue()), x.hypot(y).doubleValue(), 1e-10)
+
+    // Zero side
+    assert 0.0G.hypot(5.0G) == 5.0G
+    assert 5.0G.hypot(0.0G) == 5.0G
+    assert 0.0G.hypot(0.0G) == 0.0G
+
+    // Negative sides (result is always non-negative)
+    assert (-3.0G).hypot(-4.0G) == 5.0G
+
+    // Number overloads
+    assert 3.hypot(4L) == 5.0G
+    assert 3L.hypot(4.0) == 5.0G
+  }
+
+  @Test
   void testNumberMinWithNumber() {
     // Test Integer with Integer
     Integer a = 100
@@ -817,6 +879,43 @@ class NumberExtensionTest {
     }
     assertThrows(ArithmeticException) {
       (-1.5).asin()
+    }
+  }
+
+  @Test
+  void testAcos() {
+    // Test acos(0) = π/2
+    assertEquals(Math.PI / 2, (0.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(1) = 0
+    assertEquals(0.0, (1.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(-1) = π
+    assertEquals(Math.PI, (-1.0).acos().doubleValue(), 1e-10)
+
+    // Test acos(0.5) = π/3
+    assertEquals(Math.PI / 3, (0.5).acos().doubleValue(), 1e-10)
+
+    // Test acos is inverse of cos
+    BigDecimal angle = Math.PI / 4 as BigDecimal
+    BigDecimal cosVal = angle.cos()
+    BigDecimal recovered = cosVal.acos()
+    assertEquals(angle.doubleValue(), recovered.doubleValue(), 1e-10)
+
+    // Test with Number type
+    assertEquals(Math.acos(0.5), NumberExtension.acos(0.5).doubleValue(), 1e-10)
+
+    // Test exact BigDecimal values
+    assert 1.0G.acos() == 0.0G
+    assert (-1.0G).acos() == NumberExtension.PI32
+    assert 0.0G.acos() == NumberExtension.PI32 / 2
+
+    // Test out of range throws
+    assertThrows(ArithmeticException) {
+      (1.5).acos()
+    }
+    assertThrows(ArithmeticException) {
+      (-1.5).acos()
     }
   }
 

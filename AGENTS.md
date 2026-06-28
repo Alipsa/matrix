@@ -776,6 +776,16 @@ x.exp()  // -> 2.718281828... (E)
 BigDecimal area = 25.0G
 area.sqrt()  // -> 5.0 (uses MathContext.DECIMAL64)
 
+// Cube root with default precision
+BigDecimal volume = 27.0G
+volume.cbrt()  // -> 3.0
+
+// Hypotenuse - sqrt(x² + y²) without overflow/underflow
+BigDecimal dx = 3.0
+BigDecimal dy = 4.0
+BigDecimal distance = dx.hypot(dy)  // -> 5.0
+// Instead of: Math.hypot(dx, dy)
+
 // Trigonometric functions (angles in radians)
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
@@ -793,6 +803,11 @@ radians.toDegrees()  // -> 180.0
 BigDecimal x = PI / 4
 x.tan()  // -> 1.0 (tan of 45°)
 x.atan()  // -> arctangent
+
+// Arcsine and arccosine (inverse trigonometric functions)
+BigDecimal half = 0.5G
+half.asin()  // -> 0.52359... (π/6)
+half.acos()  // -> 1.04719... (π/3)
 
 // Two-argument arctangent (atan2) - angle from rectangular to polar coordinates
 BigDecimal dy = 3.0

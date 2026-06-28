@@ -19,6 +19,8 @@ import java.math.RoundingMode
  *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log(base) - Custom-base logarithm, log10() - Base-10 logarithm, log1p() - Natural logarithm of (1 + x)</li>
  *   <li><b>Exponential:</b> exp() - Natural exponential function (e^x)</li>
  *   <li><b>Square Root:</b> sqrt() - Square root with default DECIMAL64 precision</li>
+ *   <li><b>Cube Root:</b> cbrt() - Cube root with default DECIMAL64 precision</li>
+ *   <li><b>Hypotenuse:</b> hypot(Number) - sqrt(x² + y²) without overflow/underflow</li>
  *   <li><b>Trigonometry:</b> sin(), cos(), tan() - Trigonometric functions for angles in radians</li>
  *   <li><b>Inverse Trigonometry:</b> asin(), atan(), atan2() - Inverse trig functions returning radians</li>
  *   <li><b>Angle Conversion:</b> toDegrees(), toRadians() - Convert between radians and degrees</li>
@@ -606,6 +608,108 @@ class NumberExtension {
   }
 
   /**
+   * Returns the cube root of this BigDecimal value using DECIMAL64 precision.
+   * <p>
+   * Computes the real cube root, including negative inputs
+   * (e.g. {@code (-8).cbrt() == -2}).
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal volume = 27.0G
+   * BigDecimal side = volume.cbrt()  // → 3.0
+   *
+   * // Negative values are supported
+   * BigDecimal negative = -8.0G
+   * BigDecimal root = negative.cbrt()  // → -2.0
+   * }</pre>
+   *
+   * @param self the BigDecimal value to take the cube root of
+   * @return the cube root as a BigDecimal with DECIMAL64 precision
+   * @see MathContext#DECIMAL64
+   */
+  static BigDecimal cbrt(BigDecimal self) {
+    if (self == BigDecimal.ZERO) {
+      return BigDecimal.ZERO
+    }
+    MathContext mc = MathContext.DECIMAL64
+    BigDecimal absValue = self.abs()
+    // Scale the value by powers of 1000 so its magnitude falls in double range,
+    // compute the cube root, then scale back. This handles values far beyond
+    // Double.MAX_VALUE or smaller than Double.MIN_NORMAL.
+    int exponent = absValue.precision() - absValue.scale() - 1
+    int k = Math.floorDiv(exponent, 3)
+    BigDecimal scaled = absValue.movePointLeft(3 * k)
+    // Seed from double-precision Math.cbrt, then refine with Newton-Raphson:
+    // x_{n+1} = (2*x_n + a/x_n^2) / 3
+    BigDecimal x = BigDecimal.valueOf(Math.cbrt(scaled.doubleValue()))
+    for (int i = 0; i < 8; i++) {
+      BigDecimal xSquared = x * x
+      BigDecimal term = scaled.divide(xSquared, mc)
+      x = (x * 2 + term).divide(3.0G, mc)
+    }
+    BigDecimal root = x.movePointRight(k)
+    self.signum() >= 0 ? root : root.negate()
+  }
+
+  /**
+   * Returns the cube root of this Number using DECIMAL64 precision.
+   *
+   * @param self the Number value to take the cube root of
+   * @return the cube root as a BigDecimal with DECIMAL64 precision
+   * @see #cbrt(BigDecimal)
+   */
+  static BigDecimal cbrt(Number self) {
+    cbrt(self as BigDecimal)
+  }
+
+  /**
+   * Returns the hypotenuse of a right-angled triangle with sides {@code x} and {@code y}
+   * without undue overflow or underflow.
+   * <p>
+   * Equivalent to {@code sqrt(x² + y²)} but scales the calculation to keep intermediate
+   * values within range.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal dx = 3.0G
+   * BigDecimal dy = 4.0G
+   * BigDecimal distance = dx.hypot(dy)  // → 5.0
+   * }</pre>
+   *
+   * @param x the first side
+   * @param y the second side
+   * @return sqrt(x² + y²) as a BigDecimal with DECIMAL64 precision
+   * @see MathContext#DECIMAL64
+   */
+  static BigDecimal hypot(BigDecimal x, BigDecimal y) {
+    BigDecimal ax = x.abs()
+    BigDecimal ay = y.abs()
+    if (ax == BigDecimal.ZERO) {
+      return ay
+    }
+    if (ay == BigDecimal.ZERO) {
+      return ax
+    }
+    BigDecimal larger = ax.max(ay)
+    BigDecimal smaller = ax.min(ay)
+    BigDecimal ratio = smaller.divide(larger, MathContext.DECIMAL64)
+    BigDecimal factor = sqrt(BigDecimal.ONE + ratio * ratio)
+    larger.multiply(factor, MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the hypotenuse of a right-angled triangle with sides {@code x} and {@code y}.
+   *
+   * @param x the first side
+   * @param y the second side
+   * @return sqrt(x² + y²) as a BigDecimal with DECIMAL64 precision
+   * @see #hypot(BigDecimal, BigDecimal)
+   */
+  static BigDecimal hypot(Number x, Number y) {
+    hypot(x as BigDecimal, y as BigDecimal)
+  }
+
+  /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
    * This method uses higher-precision range reduction followed by a Taylor series expansion
@@ -938,6 +1042,54 @@ class NumberExtension {
     BigDecimal xSquared = self ** 2
     BigDecimal denominator = sqrt(1 - xSquared)
     atan(self / denominator)
+  }
+
+  /**
+   * Returns the arccosine (inverse cosine) of this BigDecimal value.
+   * <p>
+   * Uses the identity: acos(x) = π/2 - asin(x)
+   * The result is in the range [0, π].
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal val = 0.5
+   * val.acos()  // → π/3 (approximately 1.0472)
+   *
+   * BigDecimal one = 1.0
+   * one.acos()  // → 0
+   * }</pre>
+   *
+   * @param self the BigDecimal value (must be in [-1, 1])
+   * @return the arccosine of the value in radians as a BigDecimal
+   * @throws ArithmeticException if the value is outside [-1, 1]
+   */
+  static BigDecimal acos(BigDecimal self) {
+    if (self < -1 || self > 1) {
+      throw new ArithmeticException("acos undefined for value outside [-1, 1]: ${self}")
+    }
+    if (self == 1) {
+      return BigDecimal.ZERO
+    }
+    if (self == -1) {
+      return PI32
+    }
+    if (self == 0) {
+      return PI32 / 2
+    }
+    // acos(x) = π/2 - asin(x)
+    PI32 / 2 - asin(self)
+  }
+
+  /**
+   * Returns the arccosine (inverse cosine) of this Number value.
+   * <p>
+   * Convenience wrapper that converts the Number to BigDecimal.
+   *
+   * @param self the Number value (must be in [-1, 1])
+   * @return the arccosine of the value in radians
+   */
+  static BigDecimal acos(Number self) {
+    acos(self as BigDecimal)
   }
 
   static BigDecimal atan2(Number y, Number x) {
