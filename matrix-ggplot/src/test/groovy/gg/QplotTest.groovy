@@ -164,9 +164,12 @@ class QplotTest {
 
   @Test
   void testUnknownGeomThrows() {
-    assertThrows(IllegalArgumentException) {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       qplot(data: numericData, x: 'x', geom: 'nonexistent')
     }
+
+    assertTrue(exception.message.contains("Unknown geom 'nonexistent'"))
+    assertTrue(exception.message.contains('Known names:'))
   }
 
   @Test

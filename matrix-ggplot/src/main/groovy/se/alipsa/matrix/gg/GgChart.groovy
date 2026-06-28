@@ -10,12 +10,6 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.geom.Geom
-import se.alipsa.matrix.gg.geom.GeomBar
-import se.alipsa.matrix.gg.geom.GeomCol
-import se.alipsa.matrix.gg.geom.GeomErrorbar
-import se.alipsa.matrix.gg.geom.GeomPoint
-import se.alipsa.matrix.gg.geom.GeomSegment
-import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -509,25 +503,13 @@ class GgChart {
   }
 
   private static Geom geomFromName(String name, Map params = [:]) {
-    if (name == null) {
-      return null
+    String key = name?.trim()?.toLowerCase(Locale.ROOT)
+    Closure<Geom> factory = GeomRegistry.GEOM_REGISTRY[key]
+    if (factory == null) {
+      throw new IllegalArgumentException(
+          "Unknown geom '${name}'. Known names: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
     }
-    switch (name) {
-      case 'point':
-        return new GeomPoint(params ?: [:])
-      case 'smooth':
-        return new GeomSmooth(params ?: [:])
-      case 'bar':
-        return new GeomBar(params ?: [:])
-      case 'col':
-        return new GeomCol(params ?: [:])
-      case 'errorbar':
-        return new GeomErrorbar(params ?: [:])
-      case 'segment':
-        return new GeomSegment(params ?: [:])
-      default:
-        return null
-    }
+    factory(params ?: [:])
   }
 
   /**
