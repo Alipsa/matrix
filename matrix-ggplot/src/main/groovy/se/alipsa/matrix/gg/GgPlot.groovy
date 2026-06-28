@@ -19,7 +19,6 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
-import se.alipsa.matrix.gg.bridge.GgCharmMappingRegistry
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
@@ -835,21 +834,29 @@ class GgPlot {
     }
     def colorTitle = params.colour ?: params.color
     if (colorTitle != null) {
-      label.legendTitles['color'] = colorTitle?.toString()
+      label.legendTitles['color'] = colorTitle.toString()
     }
     if (params.fill != null) {
-      label.legendTitles['fill'] = params.fill?.toString()
+      label.legendTitles['fill'] = params.fill.toString()
     }
     params.each { key, value ->
       String name = key
       if (value != null && !LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
-        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(name)
+        String aesthetic = normalizeAesthetic(name)
         if (aesthetic != null && !aesthetic.isBlank()) {
           label.legendTitles[aesthetic] = value?.toString()
         }
       }
     }
     return label
+  }
+
+  private static String normalizeAesthetic(String aesthetic) {
+    if (aesthetic == null) {
+      return null
+    }
+    String normalized = aesthetic.trim().toLowerCase(Locale.ROOT)
+    normalized == 'colour' ? 'color' : normalized
   }
 
   /**
