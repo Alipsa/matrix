@@ -19,9 +19,47 @@ import groovy.transform.CompileStatic
 @SuppressWarnings(['CyclomaticComplexity', 'PropertyName'])
 class AesDsl {
 
+  private static final String COLOR_FIELD = 'color'
+  private static final String LINEWIDTH_FIELD = 'linewidth'
+  private static final String MAP_ID_FIELD = 'map_id'
+
+  private static final Map<String, String> PROPERTY_FIELDS = [
+      x        : 'x',
+      y        : 'y',
+      xend     : 'xend',
+      yend     : 'yend',
+      xmin     : 'xmin',
+      xmax     : 'xmax',
+      ymin     : 'ymin',
+      ymax     : 'ymax',
+      color    : COLOR_FIELD,
+      colour   : COLOR_FIELD,
+      col      : COLOR_FIELD,
+      fill     : 'fill',
+      size     : 'size',
+      shape    : 'shape',
+      alpha    : 'alpha',
+      linetype : 'linetype',
+      linewidth: LINEWIDTH_FIELD,
+      lineWidth: LINEWIDTH_FIELD,
+      group    : 'group',
+      label    : 'label',
+      tooltip  : 'tooltip',
+      weight   : 'weight',
+      geometry : 'geometry',
+      map_id   : MAP_ID_FIELD,
+      mapId    : MAP_ID_FIELD
+  ]
+
   // Known aesthetics kept as explicit fields for IDE completion.
   def x
   def y
+  def xend
+  def yend
+  def xmin
+  def xmax
+  def ymin
+  def ymax
   def color
   def fill
   def size
@@ -79,48 +117,12 @@ class AesDsl {
    */
   @CompileDynamic
   def getProperty(String name) {
-    switch (name) {
-      case 'x':
-        return this.@x != null ? this.@x : 'x'
-      case 'y':
-        return this.@y != null ? this.@y : 'y'
-      case 'color':
-        return this.@color != null ? this.@color : 'color'
-      case 'colour':
-        return this.@color != null ? this.@color : 'colour'
-      case 'col':
-        return this.@color != null ? this.@color : 'col'
-      case 'fill':
-        return this.@fill != null ? this.@fill : 'fill'
-      case 'size':
-        return this.@size != null ? this.@size : 'size'
-      case 'shape':
-        return this.@shape != null ? this.@shape : 'shape'
-      case 'alpha':
-        return this.@alpha != null ? this.@alpha : 'alpha'
-      case 'linetype':
-        return this.@linetype != null ? this.@linetype : 'linetype'
-      case 'linewidth':
-        return this.@linewidth != null ? this.@linewidth : 'linewidth'
-      case 'lineWidth':
-        return this.@linewidth != null ? this.@linewidth : 'lineWidth'
-      case 'group':
-        return this.@group != null ? this.@group : 'group'
-      case 'label':
-        return this.@label != null ? this.@label : 'label'
-      case 'tooltip':
-        return this.@tooltip != null ? this.@tooltip : 'tooltip'
-      case 'weight':
-        return this.@weight != null ? this.@weight : 'weight'
-      case 'geometry':
-        return this.@geometry != null ? this.@geometry : 'geometry'
-      case 'map_id':
-        return this.@map_id != null ? this.@map_id : 'map_id'
-      case 'mapId':
-        return this.@map_id != null ? this.@map_id : 'mapId'
-      default:
-        return propertyMissing(name)
+    String fieldName = PROPERTY_FIELDS[name]
+    if (fieldName == null) {
+      return propertyMissing(name)
     }
+    def value = this.@"$fieldName"
+    value != null ? value : name
   }
 
   /**
@@ -148,6 +150,24 @@ class AesDsl {
     }
     if (this.@y != null) {
       aes.y = this.@y
+    }
+    if (this.@xend != null) {
+      aes.xend = this.@xend
+    }
+    if (this.@yend != null) {
+      aes.yend = this.@yend
+    }
+    if (this.@xmin != null) {
+      aes.xmin = this.@xmin
+    }
+    if (this.@xmax != null) {
+      aes.xmax = this.@xmax
+    }
+    if (this.@ymin != null) {
+      aes.ymin = this.@ymin
+    }
+    if (this.@ymax != null) {
+      aes.ymax = this.@ymax
     }
     if (this.@color != null) {
       aes.color = this.@color
@@ -197,6 +217,12 @@ class AesDsl {
   boolean hasMappings() {
     this.@x != null ||
         this.@y != null ||
+        this.@xend != null ||
+        this.@yend != null ||
+        this.@xmin != null ||
+        this.@xmax != null ||
+        this.@ymin != null ||
+        this.@ymax != null ||
         this.@color != null ||
         this.@fill != null ||
         this.@size != null ||

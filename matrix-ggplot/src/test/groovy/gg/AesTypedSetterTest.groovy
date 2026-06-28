@@ -5,13 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.I
+import static se.alipsa.matrix.gg.GgPlot.aes
 import static se.alipsa.matrix.gg.GgPlot.after_scale
 import static se.alipsa.matrix.gg.GgPlot.after_stat
 import static se.alipsa.matrix.gg.GgPlot.cut_width
 import static se.alipsa.matrix.gg.GgPlot.factor
+import static se.alipsa.matrix.gg.GgPlot.geom_segment
+import static se.alipsa.matrix.gg.GgPlot.ggplot
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.groovy.svg.Line
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
@@ -106,5 +111,72 @@ class AesTypedSetterTest {
     assertEquals('widthCol', aes.linewidth)
     assertEquals('idCol', aes.map_id)
     assertEquals('species', colourAlias.color)
+  }
+
+  @Test
+  void testMapConstructorSupportsRangePositionAesthetics() {
+    Aes aes = aes(xend: 'x2', yend: 'y2', xmin: 'x0', xmax: 'x3', ymin: 'y0', ymax: 'y3')
+
+    assertEquals('x2', aes.getAestheticValue('xend'))
+    assertEquals('y2', aes.getAestheticValue('yend'))
+    assertEquals('x0', aes.getAestheticValue('xmin'))
+    assertEquals('x3', aes.getAestheticValue('xmax'))
+    assertEquals('y0', aes.getAestheticValue('ymin'))
+    assertEquals('y3', aes.getAestheticValue('ymax'))
+  }
+
+  @Test
+  void testClosureDslSupportsRangePositionAesthetics() {
+    Aes aes = aes {
+      xend = x2
+      yend = y2
+      xmin = x0
+      xmax = x3
+      ymin = y0
+      ymax = y3
+    }
+
+    assertEquals('x2', aes.getAestheticValue('xend'))
+    assertEquals('y2', aes.getAestheticValue('yend'))
+    assertEquals('x0', aes.getAestheticValue('xmin'))
+    assertEquals('x3', aes.getAestheticValue('xmax'))
+    assertEquals('y0', aes.getAestheticValue('ymin'))
+    assertEquals('y3', aes.getAestheticValue('ymax'))
+  }
+
+  @Test
+  void testMergeSupportsRangePositionAesthetics() {
+    Aes base = new Aes(xend: 'a', yend: 'baseY')
+    Aes layer = new Aes(xend: 'b')
+    Aes merged = layer.merge(base)
+    Aes fallback = new Aes().merge(base)
+
+    assertEquals('b', merged.xend)
+    assertEquals('baseY', merged.yend)
+    assertEquals('a', fallback.xend)
+  }
+
+  @Test
+  void testToStringIncludesRangePositionAesthetics() {
+    Aes aes = new Aes(xend: 'col')
+
+    assertTrue(aes.toString().contains('xend=col'))
+  }
+
+  @Test
+  void testSegmentMappingUsesRangePositionAesthetics() {
+    Matrix data = Matrix.builder()
+        .columnNames(['x1', 'y1', 'x2', 'y2'])
+        .rows([
+            [1, 1, 2, 2],
+            [2, 1, 3, 2]
+        ])
+        .build()
+
+    def svg = (ggplot(data, aes(x: 'x1', y: 'y1')) +
+        geom_segment(mapping: aes(x: 'x1', y: 'y1', xend: 'x2', yend: 'y2'))).render()
+
+    def lines = svg.descendants().findAll { it instanceof Line }
+    assertTrue(lines.size() > 0, 'Segment mapping should render line elements')
   }
 }
