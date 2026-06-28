@@ -1045,18 +1045,6 @@ class NumberExtension {
   }
 
   /**
-   * Returns the arccosine (inverse cosine) of this Number value.
-   * <p>
-   * Convenience wrapper that converts the Number to BigDecimal.
-   *
-   * @param self the Number value (must be in [-1, 1])
-   * @return the arccosine of the value in radians
-   */
-  static BigDecimal acos(Number self) {
-    acos(self as BigDecimal)
-  }
-
-  /**
    * Returns the arccosine (inverse cosine) of this BigDecimal value.
    * <p>
    * Uses the identity: acos(x) = π/2 - asin(x)
@@ -1090,6 +1078,18 @@ class NumberExtension {
     }
     // acos(x) = π/2 - asin(x)
     PI32 / 2 - asin(self)
+  }
+
+  /**
+   * Returns the arccosine (inverse cosine) of this Number value.
+   * <p>
+   * Convenience wrapper that converts the Number to BigDecimal.
+   *
+   * @param self the Number value (must be in [-1, 1])
+   * @return the arccosine of the value in radians
+   */
+  static BigDecimal acos(Number self) {
+    acos(self as BigDecimal)
   }
 
   static BigDecimal atan2(Number y, Number x) {
