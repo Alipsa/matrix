@@ -59,7 +59,7 @@ class StatGeomNameTest {
           stat_summary(geom: 'not_a_geom', fun: 'mean')
     }
 
-    assertTrue(exception.message.contains("Unknown geom name: 'not_a_geom'"))
+    assertTrue(exception.message.contains("Unknown geom 'not_a_geom'"))
     assertTrue(exception.message.contains('Known names:'))
   }
 }

@@ -507,7 +507,7 @@ class GgChart {
     Closure<Geom> factory = GeomRegistry.GEOM_REGISTRY[key]
     if (factory == null) {
       throw new IllegalArgumentException(
-          "Unknown geom name: '${name}'. Known names: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
+          "Unknown geom '${name}'. Known names: ${GeomRegistry.GEOM_REGISTRY.keySet().sort()}")
     }
     factory(params ?: [:])
   }
