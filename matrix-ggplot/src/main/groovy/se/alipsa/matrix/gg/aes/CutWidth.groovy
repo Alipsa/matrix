@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.aes
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
@@ -20,7 +19,6 @@ import se.alipsa.matrix.core.Matrix
  *     geom_boxplot(aes(group: cut_width('displ', 1)))
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'UnnecessaryElseStatement'])
 class CutWidth implements CharmExpression {
   private static final String DEFAULT_PREFIX = 'cut_width'

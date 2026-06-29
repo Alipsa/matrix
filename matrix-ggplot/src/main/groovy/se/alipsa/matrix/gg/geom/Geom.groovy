@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
@@ -14,7 +13,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Base class for geometric objects (geoms).
  * Geoms determine how data is visually represented (points, lines, bars, etc.).
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class Geom {
 

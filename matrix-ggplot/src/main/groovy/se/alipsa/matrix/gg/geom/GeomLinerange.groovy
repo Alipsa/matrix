@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -17,7 +16,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_linerange(aes(ymin: 'lower', ymax: 'upper'))
  * - geom_linerange(color: 'blue', linewidth: 2)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomLinerange extends Geom {
 

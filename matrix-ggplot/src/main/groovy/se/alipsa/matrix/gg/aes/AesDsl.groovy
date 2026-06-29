@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Closure delegate for building {@link Aes} mappings with unquoted column names.
@@ -15,7 +14,6 @@ import groovy.transform.CompileStatic
  * resolved through {@link #propertyMissing(String)} and become column name
  * strings (for example {@code 'mpg'}).</p>
  */
-@CompileStatic
 @SuppressWarnings(['CyclomaticComplexity', 'PropertyName'])
 class AesDsl {
 

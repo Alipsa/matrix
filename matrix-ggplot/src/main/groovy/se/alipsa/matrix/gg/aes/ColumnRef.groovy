@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
@@ -16,7 +15,6 @@ import se.alipsa.matrix.core.Matrix
  * example scripts/tests or code annotated with {@code @CompileDynamic}).
  * In {@code @CompileStatic} code, use quoted column names instead.
  */
-@CompileStatic
 class ColumnRef {
 
   private final Set<String> columns

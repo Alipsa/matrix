@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -8,7 +7,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Discrete scale for the x-axis position aesthetic.
  * Used for categorical x-axis data (bar charts, etc.).
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXDiscrete extends ScaleDiscrete {
 

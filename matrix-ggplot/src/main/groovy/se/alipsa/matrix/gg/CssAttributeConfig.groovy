@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 /**
  * Configuration for CSS class and ID attributes on SVG elements.
@@ -47,7 +46,6 @@ import groovy.transform.CompileStatic
  *
  * @see <a href="https://github.com/Alipsa/matrix/blob/main/matrix-charts/ggCssAttributes.md">Implementation Plan</a>
  */
-@CompileStatic
 class CssAttributeConfig {
 
   /**

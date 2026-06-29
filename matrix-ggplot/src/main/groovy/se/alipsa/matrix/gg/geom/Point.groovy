@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 /**
  * Simple point representation with x and y coordinates.
  * Used for storing transformed coordinate positions in rendering pipeline.
  */
-@CompileStatic
 class Point {
   /** X coordinate */
   Number x

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Binned n-color scale - bins continuous values and maps to a custom color palette.
@@ -32,7 +31,6 @@ import groovy.transform.CompileStatic
  * @param colors Color palette defining the gradient (can be any size)
  * @param values Optional positions for each color in [0,1] range
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorStepsN extends ScaleContinuous {
   String aesthetic = 'color'

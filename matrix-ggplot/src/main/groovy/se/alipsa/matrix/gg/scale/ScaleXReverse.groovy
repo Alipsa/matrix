@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -12,7 +11,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * - scale_x_reverse() - reversed x-axis
  * - scale_x_reverse(limits: [0, 100]) - with explicit limits
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleXReverse extends ScaleContinuous {
 

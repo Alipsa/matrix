@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 
@@ -15,7 +14,6 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * - Meteorology: Wind speed visualization
  * - Engineering: Stress fields, displacement fields
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomMag extends Geom {
 

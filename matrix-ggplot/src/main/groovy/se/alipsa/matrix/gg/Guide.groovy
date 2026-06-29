@@ -1,11 +1,9 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 /**
  * Guide specification for legends and colorbars.
  */
-@CompileStatic
 class Guide {
 
   /** Guide type, e.g. 'legend' or 'colorbar'. */

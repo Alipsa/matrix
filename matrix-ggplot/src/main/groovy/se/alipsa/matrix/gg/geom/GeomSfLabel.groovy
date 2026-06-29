@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Label geometry with background for simple feature geometries.
  * Uses stat_sf_coordinates to compute label positions.
  */
-@CompileStatic
 class GeomSfLabel extends GeomLabel {
 
   GeomSfLabel() {

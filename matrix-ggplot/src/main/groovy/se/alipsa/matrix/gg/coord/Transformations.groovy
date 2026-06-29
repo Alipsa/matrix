@@ -1,11 +1,9 @@
 package se.alipsa.matrix.gg.coord
 
-import groovy.transform.CompileStatic
 
 /**
  * Common coordinate transformations.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'GetterMethodCouldBeProperty', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryElseStatement'])
 class Transformations {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Time-of-day scale for the y-axis.
@@ -11,7 +10,6 @@ import groovy.transform.CompileStatic
  * - scale_y_time(time_format: 'h:mm a') - 12-hour format with AM/PM
  * - scale_y_time(time_breaks: '1 hour') - breaks every hour
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYTime extends ScaleXTime {
 

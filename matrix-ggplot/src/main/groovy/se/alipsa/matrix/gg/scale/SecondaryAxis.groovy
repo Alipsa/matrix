@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Specification for a secondary axis.
@@ -12,7 +11,6 @@ import groovy.transform.CompileStatic
  *   scale_y_continuous(sec.axis: sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit"))
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class SecondaryAxis {
 

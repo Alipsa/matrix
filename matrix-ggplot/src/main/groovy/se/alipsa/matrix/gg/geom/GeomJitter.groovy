@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.layer.PositionType
 
@@ -8,7 +7,6 @@ import se.alipsa.matrix.gg.layer.PositionType
  * Jittered point geometry.
  * Convenience wrapper for points with position_jitter applied.
  */
-@CompileStatic
 class GeomJitter extends GeomPoint {
 
   /**

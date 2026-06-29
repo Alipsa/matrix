@@ -1,11 +1,9 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Discrete greyscale for categorical data.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorGrey extends ScaleDiscrete {
 

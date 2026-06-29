@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -9,7 +8,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Used for categorical y-axis data (horizontal bar charts, etc.).
  * Note: Y-axis range is typically inverted in SVG coordinates (0 at top).
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleYDiscrete extends ScaleDiscrete {
 

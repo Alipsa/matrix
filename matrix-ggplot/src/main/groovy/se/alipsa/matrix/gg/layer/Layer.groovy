@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.layer
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
@@ -11,7 +10,6 @@ import se.alipsa.matrix.gg.geom.Geom
  * Each layer combines data, aesthetics, a geometric representation,
  * statistical transformation, and position adjustment.
  */
-@CompileStatic
 class Layer {
     /** Optional per-layer data (overrides chart data if set) */
     Matrix data

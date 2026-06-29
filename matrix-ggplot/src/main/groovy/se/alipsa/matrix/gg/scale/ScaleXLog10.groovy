@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -20,7 +19,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * - For typical chart data (values between 1e-10 and 1e10), double precision is sufficient
  * - Break generation produces exact BigDecimal values (powers of 10: 1, 10, 100, etc.)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXLog10 extends ScaleContinuous {
 

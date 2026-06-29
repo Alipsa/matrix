@@ -3,7 +3,6 @@ package se.alipsa.matrix.gg.coord
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 
 /**
@@ -14,7 +13,6 @@ import groovy.transform.CompileStatic
  * - Inner radius for donut-style charts
  * - Automatic label rotation
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CoordRadial extends Coord {
 

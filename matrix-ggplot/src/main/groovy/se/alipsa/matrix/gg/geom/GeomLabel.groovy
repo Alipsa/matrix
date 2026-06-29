@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -13,7 +12,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_label(aes(label: 'name')) - labels from data column
  * - geom_label(fill: 'white', color: 'black') - white background with black border
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'PropertyName'])
 class GeomLabel extends Geom {
 

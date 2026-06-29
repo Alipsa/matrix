@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -19,7 +18,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * scale_color_viridis_d(begin: 0.2, end: 0.8)  // Use middle portion
  * scale_color_viridis_d(direction: -1)  // Reverse direction
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorViridis extends ScaleDiscrete {
 

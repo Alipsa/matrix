@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Q-Q plot points.
  * Uses stat_qq to compute theoretical quantiles for comparison.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomQq extends Geom {
 

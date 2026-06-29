@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 
@@ -8,7 +7,6 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * Point geometry for scatter plots.
  * Renders data points as circles.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomPoint extends Geom {
 

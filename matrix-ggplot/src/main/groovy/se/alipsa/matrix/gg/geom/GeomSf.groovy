@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Simple Features geometry for rendering WKT-based spatial data.
  * Routes POINTs to geom_point, LINESTRINGs to geom_path, and POLYGONs to geom_polygon.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomSf extends Geom {
 

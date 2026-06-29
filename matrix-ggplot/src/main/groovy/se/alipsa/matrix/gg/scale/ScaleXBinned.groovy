@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Binned position scale for the x-axis.
@@ -20,7 +19,6 @@ import groovy.transform.CompileStatic
  * @see ScaleYBinned
  * @see ScaleBinned
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryNullCheck'])
 class ScaleXBinned extends ScaleBinned {
 

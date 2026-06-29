@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
@@ -21,7 +20,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - annotate('point', x: 5, y: 5, size: 10, color: 'blue')
  * - annotate('label', x: 5, y: 10, label: 'Label text')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'MethodSize', 'UnnecessaryElseStatement'])
 class Annotate {
 

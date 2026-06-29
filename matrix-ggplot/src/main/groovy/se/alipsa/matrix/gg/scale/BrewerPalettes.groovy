@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.render.scale.BrewerPalettes as CharmBrewerPalettes
 
@@ -11,7 +10,6 @@ import se.alipsa.matrix.charm.render.scale.BrewerPalettes as CharmBrewerPalettes
  *             This stub delegates all calls to the charm implementation.
  */
 @Deprecated
-@CompileStatic
 class BrewerPalettes {
 
   /** @see CharmBrewerPalettes#getPalette(String) */

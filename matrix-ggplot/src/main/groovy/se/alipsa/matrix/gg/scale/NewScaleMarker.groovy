@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Marker object that signals a per-layer scale reset in a gg chart composition.
@@ -12,7 +11,6 @@ import groovy.transform.CompileStatic
  *
  * <p>Usage: {@code ggplot(...) + geom_point(...) + new_scale_color() + geom_line(...) + scale_color_manual(...)}</p>
  */
-@CompileStatic
 class NewScaleMarker {
 
   /** The aesthetic being reset (e.g. 'color', 'fill'). */

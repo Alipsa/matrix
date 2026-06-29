@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.facet
 
-import groovy.transform.CompileStatic
 
 /**
  * Labeller class for formatting facet strip labels.
@@ -8,7 +7,6 @@ import groovy.transform.CompileStatic
  * @deprecated Use {@link se.alipsa.matrix.charm.facet.Labeller} instead.
  *             This class extends the charm package implementation for backward compatibility.
  */
-@CompileStatic
 @SuppressWarnings('ClassNameSameAsSuperclass')
 class Labeller extends se.alipsa.matrix.charm.facet.Labeller {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -13,7 +12,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_vline(xintercept: [2, 4, 6]) - multiple vertical lines
  * - With data mapping: aes(xintercept: 'threshold_column')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomVline extends Geom {
 

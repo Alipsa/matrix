@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Transformed coordinate system.
@@ -29,7 +28,6 @@ import groovy.transform.CompileStatic
  * - "power" - power transformation (specify exponent parameter)
  * - "asn" or "asin" - arcsine square root (for proportions)
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class CoordTrans extends Coord {
 

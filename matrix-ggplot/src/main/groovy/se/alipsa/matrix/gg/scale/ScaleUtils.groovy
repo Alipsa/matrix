@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.render.scale.ScaleUtils as CharmScaleUtils
 
@@ -11,7 +10,6 @@ import se.alipsa.matrix.charm.render.scale.ScaleUtils as CharmScaleUtils
  *             This stub delegates all calls to the charm implementation.
  */
 @Deprecated
-@CompileStatic
 class ScaleUtils {
 
   /** @see CharmScaleUtils#coerceToNumber(Object) */

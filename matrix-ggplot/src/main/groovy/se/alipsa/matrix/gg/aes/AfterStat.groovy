@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.aes
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmExpression
 
@@ -20,7 +19,6 @@ import se.alipsa.matrix.charm.CharmExpression
  * Usage:
  * aes(x: 'displ', y: after_stat('count'))
  */
-@CompileStatic
 class AfterStat implements CharmExpression {
 
   /** The name of the computed statistic to reference */

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Identity scale for size aesthetic - uses data values directly without mapping.
@@ -14,7 +13,6 @@ import groovy.transform.CompileStatic
  * chart + geom_point(aes(size: 'pointSize')) + scale_size_identity()
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ScaleSizeIdentity extends Scale {
   String aesthetic = 'size'

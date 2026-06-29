@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.layer.StatType
 
@@ -13,7 +12,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - GeomBar: stat = COUNT, only requires x aesthetic, counts occurrences
  * - GeomCol: stat = IDENTITY, requires both x and y aesthetics
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateListLiteral', 'DuplicateStringLiteral'])
 class GeomCol extends GeomBar {
 

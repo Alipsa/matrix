@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.aes.Aes
@@ -24,7 +23,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - relvarwidth: relative width scaling factor (sqrt(n))
  * - xresolution: minimum non-zero x resolution for width calculation
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomBoxplot extends Geom {
 

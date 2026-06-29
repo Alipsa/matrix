@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Discrete linetype scale for line geometries.
@@ -8,7 +7,6 @@ import groovy.transform.CompileStatic
  *
  * Available linetypes: solid, dashed, dotted, dotdash, longdash, twodash
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleLinetype extends ScaleDiscrete {
 

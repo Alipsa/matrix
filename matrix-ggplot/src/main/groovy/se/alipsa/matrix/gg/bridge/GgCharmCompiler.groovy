@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.bridge
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.AnnotationSpec
@@ -78,7 +77,6 @@ import java.util.Locale
  * Adapter bridge that converts gg charts into Charm charts and renders
  * them through the Charm renderer pipeline when the mapped surface is supported.
  */
-@CompileStatic
 class GgCharmCompiler {
 
   private static final Logger log = Logger.getLogger(GgCharmCompiler)

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.geom.Geom
 import se.alipsa.matrix.gg.geom.GeomArea
@@ -48,7 +47,6 @@ import se.alipsa.matrix.gg.geom.GeomViolin
 /**
  * Shared geom name registry used by stat geom selection and qplot overrides.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateMapLiteral', 'DuplicateStringLiteral'])
 class GeomRegistry {
 

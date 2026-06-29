@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.position
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
@@ -11,7 +10,6 @@ import se.alipsa.matrix.gg.aes.Aes
  * Position adjustments modify the position of elements to avoid overlaps
  * or stack them appropriately.
  */
-@CompileStatic
 @SuppressWarnings(['AbcMetric', 'CyclomaticComplexity', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'MethodSize', 'ReturnNullFromCatchBlock', 'UnnecessaryNullCheck', 'UnusedMethodParameter'])
 class GgPosition {
 

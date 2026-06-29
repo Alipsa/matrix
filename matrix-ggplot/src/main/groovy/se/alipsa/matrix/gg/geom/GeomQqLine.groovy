@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Q-Q plot reference line.
  * Uses stat_qq_line to compute line endpoints.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomQqLine extends Geom {
 

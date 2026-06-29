@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.geom.GeomLogticks
 import se.alipsa.matrix.gg.layer.Layer
@@ -41,7 +40,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - linetype: Tick line type (default: 'solid')
  * - alpha: Transparency 0-1 (default: 1.0)
  */
-@CompileStatic
 class AnnotationLogticks {
 
   /** The geom that renders the log ticks */

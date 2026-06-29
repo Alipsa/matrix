@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.stat
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.layer.StatType
 
@@ -40,7 +39,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * stat_summary_2d('fun.data': { values -> [y: values.sum() / values.size()] })
  * </pre>
  */
-@CompileStatic
 class StatsSummary2d extends Stats {
 
   /**

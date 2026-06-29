@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
@@ -24,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * The closure receives a Row object and should return a numeric value.
  */
-@CompileStatic
 @SuppressWarnings(['ReturnNullFromCatchBlock', 'ThrowRuntimeException'])
 class Expression implements CharmExpression {
 

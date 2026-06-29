@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Evenly spaced colors from the HCL color wheel.
@@ -16,7 +15,6 @@ import groovy.transform.CompileStatic
  * scale_color_hue(h.start: 90, direction: -1)  // Start at 90°, counter-clockwise
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorHue extends ScaleDiscrete {
 

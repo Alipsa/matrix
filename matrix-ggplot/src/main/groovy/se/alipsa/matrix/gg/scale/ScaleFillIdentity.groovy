@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charm.util.ColorUtil
@@ -17,7 +16,6 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * chart + geom_bar(aes(fill: 'barFill')) + scale_fill_identity()
  * </pre>
  */
-@CompileStatic
 class ScaleFillIdentity extends Scale {
   String aesthetic = 'fill'
   String naValue = 'grey50'

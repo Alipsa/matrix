@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Error bar geometry for intervals (ymin to ymax) at each x position.
  * Mirrors ggplot2's geom_errorbar contract as closely as possible.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomErrorbar extends Geom {
 

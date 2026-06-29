@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import java.time.Duration
 import java.time.LocalTime
@@ -16,7 +15,6 @@ import java.time.temporal.ChronoUnit
  * - scale_x_time(time_format: 'h:mm a') - 12-hour format with AM/PM
  * - scale_x_time(time_breaks: '1 hour') - breaks every hour
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ReturnNullFromCatchBlock'])
 class ScaleXTime extends ScaleContinuous {
 

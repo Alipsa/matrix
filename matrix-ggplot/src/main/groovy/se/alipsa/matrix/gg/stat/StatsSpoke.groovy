@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.stat
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.layer.StatType
 
@@ -29,7 +28,6 @@ import se.alipsa.matrix.gg.layer.StatType
  *   geom_spoke(aes(angle: 'direction', radius: 'strength'))
  * </pre>
  */
-@CompileStatic
 class StatsSpoke extends Stats {
 
   /**

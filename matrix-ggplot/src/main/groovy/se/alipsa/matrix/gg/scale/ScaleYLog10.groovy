@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Log10-transformed continuous scale for the y-axis.
@@ -12,7 +11,6 @@ import groovy.transform.CompileStatic
  *
  * Note: Values <= 0 are filtered out since log10 is undefined for non-positive numbers.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYLog10 extends ScaleXLog10 {
 

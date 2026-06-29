@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 
 /**
@@ -17,7 +16,6 @@ import groovy.transform.CompileStatic
  * be rejected or treated differently. If stricter validation is required, consider
  * pre-filtering the data or using a custom scale implementation.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleAlphaBinned extends ScaleContinuous {
 

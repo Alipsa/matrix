@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -16,7 +15,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_pointrange(aes(ymin: 'lower', ymax: 'upper'))
  * - geom_pointrange(color: 'blue', size: 3)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomPointrange extends Geom {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.geom.GeomRasterAnn
@@ -61,7 +60,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - ymax: maximum y position in DATA coordinates (default: Inf, fills to top)
  * - interpolate: whether to smooth between pixels (default: false; limited browser support)
  */
-@CompileStatic
 class AnnotationRaster {
 
   /** The geom that renders the raster */

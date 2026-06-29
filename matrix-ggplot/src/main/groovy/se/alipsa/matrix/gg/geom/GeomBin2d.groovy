@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -16,7 +15,6 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * Similar to geom_tile() but computes counts automatically.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomBin2d extends Geom {
 

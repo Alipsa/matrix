@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.render.scale.ColorSpaceUtil as CharmColorSpaceUtil
 
@@ -11,7 +10,6 @@ import se.alipsa.matrix.charm.render.scale.ColorSpaceUtil as CharmColorSpaceUtil
  *             This stub delegates all calls to the charm implementation.
  */
 @Deprecated
-@CompileStatic
 class ColorSpaceUtil {
 
   /** @see CharmColorSpaceUtil#hclToHex(Number, Number, Number) */

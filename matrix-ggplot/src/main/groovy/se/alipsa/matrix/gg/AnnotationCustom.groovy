@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.geom.GeomCustom
@@ -63,7 +62,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Important: Position parameters (xmin, xmax, ymin, ymax) are specified in DATA coordinates.
  * The bounds map passed to closures contains the corresponding PIXEL coordinates after transformation.
  */
-@CompileStatic
 class AnnotationCustom {
 
   /** The custom graphical object */

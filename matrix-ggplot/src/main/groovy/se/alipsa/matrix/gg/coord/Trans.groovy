@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.coord
 
-import groovy.transform.CompileStatic
 
 /**
  * Interface for coordinate transformations.
  * Transformations convert coordinates in one space to another space.
  */
-@CompileStatic
 interface Trans {
   /**
    * Forward transformation function.

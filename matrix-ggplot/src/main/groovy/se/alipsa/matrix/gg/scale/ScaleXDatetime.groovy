@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -18,7 +17,6 @@ import java.time.temporal.Temporal
  * - scale_x_datetime(date_labels: 'yyyy-MM-dd HH:mm') - custom datetime format
  * - scale_x_datetime(date_breaks: '1 hour') - breaks every hour
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ReturnNullFromCatchBlock'])
 class ScaleXDatetime extends ScaleContinuous {
 

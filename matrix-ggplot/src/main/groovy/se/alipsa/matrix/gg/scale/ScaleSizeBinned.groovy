@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 
 /**
  * Binned size scale for continuous data.
  * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleSizeBinned extends ScaleContinuous {
 

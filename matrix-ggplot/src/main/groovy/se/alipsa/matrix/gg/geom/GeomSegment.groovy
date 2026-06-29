@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -12,7 +11,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_segment(x: 1, y: 1, xend: 5, yend: 5) - single segment
  * - With data mapping: aes(x: 'x1', y: 'y1', xend: 'x2', yend: 'y2')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomSegment extends Geom {
 

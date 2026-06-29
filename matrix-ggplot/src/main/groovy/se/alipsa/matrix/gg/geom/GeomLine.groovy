@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Line geometry for line charts.
  * Connects data points with lines, optionally grouped by a variable.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomLine extends Geom {
 

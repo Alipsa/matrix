@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 
@@ -16,7 +15,6 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * Data format:
  * - Grid data with x, y, z columns
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class GeomContourFilled extends GeomContour {
 

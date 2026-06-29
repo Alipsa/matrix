@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -8,7 +7,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Continuous color scale for numeric data.
  * Maps numeric values to colors along a gradient between two or more colors.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'UnnecessaryElseStatement', 'UnusedPrivateMethod'])
 class ScaleColorGradient extends ScaleContinuous {
 

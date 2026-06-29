@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -19,7 +18,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_spoke() - with data containing x, y, angle, radius columns
  * - geom_spoke(aes('x', 'y', angle: 'direction', radius: 'strength'))
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomSpoke extends Geom {
 

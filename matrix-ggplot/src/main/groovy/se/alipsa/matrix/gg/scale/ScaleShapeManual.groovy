@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Manual discrete shape scale.
@@ -10,7 +9,6 @@ import groovy.transform.CompileStatic
  * scale_shape_manual(values: ['circle', 'square', 'triangle'])  // Map by order
  * scale_shape_manual(values: [cat1: 'circle', cat2: 'square'])  // Map by name
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleShapeManual extends ScaleDiscrete {
 

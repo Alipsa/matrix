@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Continuous size scale.
  * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleSizeContinuous extends ScaleContinuous {
 

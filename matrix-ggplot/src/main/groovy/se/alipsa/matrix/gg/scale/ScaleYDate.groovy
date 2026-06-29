@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Date scale for the y-axis.
@@ -11,7 +10,6 @@ import groovy.transform.CompileStatic
  * - scale_y_date(date_labels: '%Y-%m') - custom date format
  * - scale_y_date(date_breaks: '1 month') - breaks every month
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYDate extends ScaleXDate {
 

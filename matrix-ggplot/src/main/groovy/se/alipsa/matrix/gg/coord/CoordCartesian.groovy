@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CoordSpec
@@ -10,7 +9,6 @@ import se.alipsa.matrix.charm.CoordSpec
  * Cartesian coordinate system (default).
  * Maps x and y data values to pixel positions using linear transformation.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class CoordCartesian extends Coord {
 

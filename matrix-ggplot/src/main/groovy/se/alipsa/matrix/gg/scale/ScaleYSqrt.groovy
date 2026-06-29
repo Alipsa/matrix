@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Square root-transformed continuous scale for the y-axis.
@@ -12,7 +11,6 @@ import groovy.transform.CompileStatic
  *
  * Note: Values < 0 are filtered out since sqrt is undefined for negative numbers.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYSqrt extends ScaleXSqrt {
 

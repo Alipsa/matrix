@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.aes
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
@@ -9,7 +8,6 @@ import se.alipsa.matrix.core.Matrix
  * Wrapper for categorical (factor) values in aesthetic mappings.
  * Converts values to Strings and adds a discrete column to the data.
  */
-@CompileStatic
 @SuppressWarnings('UnnecessaryGString')
 class Factor implements CharmExpression {
   private static final String DEFAULT_NAME = 'factor'

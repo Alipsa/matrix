@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import java.time.Instant
 import java.time.LocalDate
@@ -19,7 +18,6 @@ import java.time.temporal.Temporal
  * - scale_x_date(date_labels: '%Y-%m') - custom date format
  * - scale_x_date(date_breaks: '1 month') - breaks every month
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ReturnNullFromCatchBlock'])
 class ScaleXDate extends ScaleContinuous {
 

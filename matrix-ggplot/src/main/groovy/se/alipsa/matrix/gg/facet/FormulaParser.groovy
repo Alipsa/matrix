@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.facet
 
-import groovy.transform.CompileStatic
 
 /**
  * Parser for ggplot2-style formula strings.
@@ -8,7 +7,6 @@ import groovy.transform.CompileStatic
  * @deprecated Use {@link se.alipsa.matrix.charm.facet.FormulaParser} instead.
  *             This class delegates to the charm package implementation.
  */
-@CompileStatic
 class FormulaParser {
 
   /**

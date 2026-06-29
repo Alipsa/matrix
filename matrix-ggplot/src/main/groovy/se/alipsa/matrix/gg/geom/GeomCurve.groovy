@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -22,7 +21,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_curve(aes('x', 'y', xend: 'x2', yend: 'y2'))
  * - geom_curve(curvature: 1.0, color: 'blue')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomCurve extends Geom {
 

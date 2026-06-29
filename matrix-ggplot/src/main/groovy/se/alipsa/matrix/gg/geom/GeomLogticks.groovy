@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -24,7 +23,6 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * For bases 2 and 3, only major ticks are generated (no intermediate/minor ticks).
  */
-@CompileStatic
 class GeomLogticks extends Geom {
 
   /** Logarithmic base (default: 10) */

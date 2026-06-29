@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -15,7 +14,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_density_2d(h: [0.5, 0.5]) - specify bandwidth for KDE
  * - geom_density_2d(n: 100) - number of grid points
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomDensity2d extends Geom {
 

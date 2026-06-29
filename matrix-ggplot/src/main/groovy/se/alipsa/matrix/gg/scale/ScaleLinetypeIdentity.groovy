@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Identity scale for linetype aesthetic - uses data values directly without mapping.
@@ -18,7 +17,6 @@ import groovy.transform.CompileStatic
  * chart + geom_line(aes(linetype: 'lineStyle')) + scale_linetype_identity()
  * </pre>
  */
-@CompileStatic
 class ScaleLinetypeIdentity extends Scale {
   String aesthetic = 'linetype'
   String naValue = 'solid'

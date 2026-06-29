@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.position
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.PositionSpec
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.PositionType
 /**
  * Position adjustment specification with type and parameters.
  */
-@CompileStatic
 class Position {
 
   /** Position adjustment type. */

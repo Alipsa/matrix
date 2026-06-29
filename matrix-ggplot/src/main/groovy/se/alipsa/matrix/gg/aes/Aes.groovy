@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.aes
 
-import groovy.transform.CompileStatic
 
 /**
  * Aesthetic mappings for ggplot charts.
@@ -9,7 +8,6 @@ import groovy.transform.CompileStatic
  * All properties represent column names (String) or Identity wrappers for constants.
  * Use I(value) to specify a constant value instead of a column mapping.
  */
-@CompileStatic
 class Aes {
 
   // Position aesthetics

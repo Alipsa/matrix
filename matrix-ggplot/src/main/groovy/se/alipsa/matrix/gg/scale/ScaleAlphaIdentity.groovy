@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Identity scale for alpha aesthetic - uses data values directly without mapping.
@@ -14,7 +13,6 @@ import groovy.transform.CompileStatic
  * chart + geom_point(aes(alpha: 'transparency')) + scale_alpha_identity()
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ScaleAlphaIdentity extends Scale {
   String aesthetic = 'alpha'

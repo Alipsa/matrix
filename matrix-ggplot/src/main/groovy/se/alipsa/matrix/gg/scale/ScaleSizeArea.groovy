@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Size scale where area is proportional to the data.
  * Missing or invalid values map to naValue (BigDecimal, nullable) inherited from ScaleSizeContinuous.
  */
-@CompileStatic
 class ScaleSizeArea extends ScaleSizeContinuous {
 
   /**

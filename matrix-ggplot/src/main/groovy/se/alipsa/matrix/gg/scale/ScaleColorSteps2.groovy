@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Binned diverging color scale - splits at a midpoint with separate color bins on each side.
@@ -30,7 +29,6 @@ import groovy.transform.CompileStatic
  * @param high Color for maximum values (right side)
  * @param midpoint Data value at center (default: mean of data range)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorSteps2 extends ScaleContinuous {
   String aesthetic = 'color'

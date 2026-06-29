@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -24,7 +23,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * annotation_raster(raster: raster, xmin: 0, xmax: 10, ymin: 0, ymax: 5)
  * }</pre>
  */
-@CompileStatic
 @SuppressWarnings('UnnecessaryToString')
 class GeomRasterAnn extends Geom {
 

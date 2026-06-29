@@ -1,11 +1,9 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Continuous ColorBrewer scale for numeric data.
  */
-@CompileStatic
 class ScaleColorDistiller extends ScaleColorGradientN {
 
   /** Palette name (e.g. Blues, Spectral). */

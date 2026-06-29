@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.render.scale.ColorScaleUtil as CharmColorScaleUtil
 
@@ -11,7 +10,6 @@ import se.alipsa.matrix.charm.render.scale.ColorScaleUtil as CharmColorScaleUtil
  *             This stub delegates all calls to the charm implementation.
  */
 @Deprecated
-@CompileStatic
 class ColorScaleUtil {
 
   /** @see CharmColorScaleUtil#interpolateColor(String, String, BigDecimal) */

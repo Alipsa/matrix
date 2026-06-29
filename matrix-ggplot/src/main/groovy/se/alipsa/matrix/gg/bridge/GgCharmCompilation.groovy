@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.bridge
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Chart
 
 /**
  * Result of adapting a gg chart to a Charm chart.
  */
-@CompileStatic
 class GgCharmCompilation {
 
   final boolean delegated

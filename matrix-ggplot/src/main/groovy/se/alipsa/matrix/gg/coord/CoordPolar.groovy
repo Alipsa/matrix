@@ -3,7 +3,6 @@ package se.alipsa.matrix.gg.coord
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 
 /**
@@ -23,7 +22,6 @@ import groovy.transform.CompileStatic
  *     geom_bar(stat: 'identity', width: 1) +
  *     coord_polar(theta: 'y')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class CoordPolar extends Coord {
 

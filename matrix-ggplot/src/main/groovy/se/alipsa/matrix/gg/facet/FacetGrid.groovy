@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.facet
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
@@ -19,7 +18,6 @@ import se.alipsa.matrix.core.Matrix
  *     geom_point() +
  *     facet_grid(rows: 'cyl', cols: 'gear')
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateListLiteral', 'DuplicateStringLiteral', 'UnnecessaryElseStatement'])
 class FacetGrid extends Facet {
 

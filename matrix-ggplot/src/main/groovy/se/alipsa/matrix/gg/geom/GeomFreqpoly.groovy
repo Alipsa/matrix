@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Frequency polygon geometry.
  * Uses stat_bin to compute counts per bin and draws a line through the bin centers.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomFreqpoly extends Geom {
 

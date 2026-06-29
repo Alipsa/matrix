@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.PositionType
@@ -11,7 +10,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Uses stat_count by default to count observations in each category.
  * For pre-computed heights, use GeomCol instead.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomBar extends Geom {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -14,7 +13,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_area(fill: 'blue', alpha: 0.5) - semi-transparent blue area
  * - With grouping: aes(fill: 'category') for stacked areas
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomArea extends Geom {
 

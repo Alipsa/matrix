@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Discrete alpha scale.
  * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleAlphaDiscrete extends ScaleDiscrete {
 

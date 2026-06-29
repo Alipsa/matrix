@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.geom
 
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -10,7 +9,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Smooth geometry for trend lines (regression, loess, etc.).
  * Renders a fitted line through the data points.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomSmooth extends Geom {
 

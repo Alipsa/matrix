@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.bridge
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
@@ -50,7 +49,6 @@ import se.alipsa.matrix.gg.scale.ScaleYTime
  * The registry intentionally maps broad gg class families to parameterized Charm
  * model types, avoiding one adapter implementation per gg subtype.
  */
-@CompileStatic
 class GgCharmMappingRegistry {
 
   private final Map<Class<? extends GgGeom>, CharmGeomType> geomMappings = [

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Reversed continuous scale for the y-axis.
@@ -10,7 +9,6 @@ import groovy.transform.CompileStatic
  * - scale_y_reverse() - reversed y-axis
  * - scale_y_reverse(limits: [0, 100]) - with explicit limits
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYReverse extends ScaleXReverse {
 

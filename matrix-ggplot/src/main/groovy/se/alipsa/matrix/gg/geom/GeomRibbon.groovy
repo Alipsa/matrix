@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -16,7 +15,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_ribbon(aes(ymin: 'lower', ymax: 'upper')) - basic ribbon
  * - geom_ribbon(fill: 'blue', alpha: 0.3) - semi-transparent blue ribbon
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRibbon extends Geom {
 

@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.theme
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 /**
  * Theme configuration for ggplot charts.
  * Controls all visual styling aspects of the chart.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class Theme implements Cloneable {
 
@@ -282,7 +280,6 @@ class Theme implements Cloneable {
 /**
  * Text element styling.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementText {
   String family
@@ -315,7 +312,6 @@ class ElementText {
 /**
  * Line element styling.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementLine {
   String color = 'black'
@@ -348,7 +344,6 @@ class ElementLine {
 /**
  * Rectangle element styling.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementRect {
   String fill = 'white'
@@ -371,7 +366,6 @@ class ElementRect {
 /**
  * Blank element - removes the element entirely.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'ExplicitHashSetInstantiation', 'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryObjectReferences'])
 class ElementBlank {
   // Marker class - presence indicates element should not be drawn

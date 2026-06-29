@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -23,7 +22,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_step(direction: 'vh') - vertical first
  * - geom_step(color: 'blue', linewidth: 2) - styled step
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GeomStep extends Geom {
 

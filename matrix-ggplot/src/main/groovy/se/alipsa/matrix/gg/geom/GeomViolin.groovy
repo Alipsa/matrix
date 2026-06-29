@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.aes.Aes
@@ -15,14 +14,12 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_violin(fill: 'lightblue', alpha: 0.7)
  * - geom_violin(draw_quantiles: [0.25, 0.5, 0.75]) - with quantile lines
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'PropertyName', 'UnusedMethodParameter'])
 class GeomViolin extends Geom {
 
   /**
    * Data class to hold kernel density estimation points.
    */
-  @CompileStatic
   static class DensityPoint {
     final BigDecimal position
     final BigDecimal density

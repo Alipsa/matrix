@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Continuous viridis color scale for numeric data.
@@ -17,7 +16,6 @@ import groovy.transform.CompileStatic
  * scale_color_viridis_c(begin: 0.2, end: 0.8)  // Use middle portion
  * scale_color_viridis_c(direction: -1)  // Reverse direction
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleColorViridisC extends ScaleContinuous {
 

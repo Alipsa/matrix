@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Binned sequential color scale - divides continuous range into discrete color bins.
@@ -28,7 +27,6 @@ import groovy.transform.CompileStatic
  * @param high Ending color for auto-generated palette
  * @param colors Custom color palette (overrides low/high; bin count = color count)
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorSteps extends ScaleContinuous {
   String aesthetic = 'color'

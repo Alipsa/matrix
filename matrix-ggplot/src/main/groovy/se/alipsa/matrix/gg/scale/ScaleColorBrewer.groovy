@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Discrete ColorBrewer scale for categorical data.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorBrewer extends ScaleDiscrete {
 

@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Continuous color scale using multiple colors.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 class ScaleColorGradientN extends ScaleContinuous {
 

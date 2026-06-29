@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
@@ -177,7 +176,6 @@ import se.alipsa.matrix.gg.theme.Themes
 /**
  * An api very similar to ggplot2 making ports from R code using ggplot2 simple.
  */
-@CompileStatic
 @SuppressWarnings(['ClassForName', 'ClassSize', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'MethodCount', 'MethodName', 'UnnecessaryDefInFieldDeclaration', 'UnnecessaryElseStatement'])
 class GgPlot {
 

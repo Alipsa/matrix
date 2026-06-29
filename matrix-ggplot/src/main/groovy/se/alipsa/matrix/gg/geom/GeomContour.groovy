@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -18,7 +17,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - Grid data with x, y, z columns
  * - Or use stat_contour to compute from density
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomContour extends Geom {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -15,7 +14,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_dotplot(binwidth: 0.5) - specify bin width
  * - geom_dotplot(method: 'histodot') - histodot stacking method
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomDotplot extends Geom {
 

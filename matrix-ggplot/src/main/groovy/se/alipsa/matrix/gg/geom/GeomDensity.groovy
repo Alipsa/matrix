@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -14,14 +13,12 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_density(fill: 'lightblue', alpha: 0.5) - filled density
  * - geom_density(adjust: 0.5) - narrower bandwidth for more detail
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomDensity extends Geom {
 
   /**
    * Data class to hold kernel density estimation points.
    */
-  @CompileStatic
   static class DensityPoint {
     final BigDecimal position
     final BigDecimal density

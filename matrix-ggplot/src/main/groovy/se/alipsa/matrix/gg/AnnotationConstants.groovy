@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
@@ -9,7 +8,6 @@ import se.alipsa.matrix.core.Matrix
  *
  * The canonical implementation now lives in {@code se.alipsa.matrix.charm.AnnotationConstants}.
  */
-@CompileStatic
 class AnnotationConstants {
 
   /**

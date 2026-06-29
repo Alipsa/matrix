@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.export
 
-import groovy.transform.CompileStatic
 
 import org.girod.javafx.svgimage.SVGImage
 
@@ -20,7 +19,6 @@ import java.awt.image.BufferedImage
  * <p>Each method renders the chart to SVG and delegates to the
  * corresponding {@code ChartTo*} class in matrix-charts.</p>
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class GgExport {
 

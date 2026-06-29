@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -12,7 +11,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * scale_color_manual(values: ['red', 'green', 'blue'])  // Map by order
  * scale_color_manual(values: [cat1: 'red', cat2: 'blue'])  // Map by name
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleColorManual extends ScaleDiscrete {
 

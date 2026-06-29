@@ -1,13 +1,11 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Binned shape scale for continuous data.
  * Divides continuous data into discrete bins and maps each bin to a shape.
  * Missing or invalid values map to naValue.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleShapeBinned extends ScaleContinuous {
 

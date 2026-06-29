@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
@@ -23,7 +22,6 @@ import se.alipsa.matrix.gg.theme.Theme
  * Collects layers, scales, coordinates, themes, and facets,
  * then renders them to SVG on demand.
  */
-@CompileStatic
 class GgChart {
 
   /** Base dataset for the chart */

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 
@@ -25,7 +24,6 @@ import se.alipsa.matrix.charm.util.ColorUtil
  * chart + geom_point(aes(color: 'pointColor')) + scale_color_identity()
  * </pre>
  */
-@CompileStatic
 class ScaleColorIdentity extends Scale {
   String aesthetic = 'color'
   String naValue = 'grey50'

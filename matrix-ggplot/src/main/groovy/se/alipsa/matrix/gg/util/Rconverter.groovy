@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.util
 
-import groovy.transform.CompileStatic
 
 /**
  * Convert a subset of ggplot2 R expressions into the Groovy gg DSL.
  * The conversion is best-effort and focuses on common ggplot2 patterns.
  */
-@CompileStatic
 @SuppressWarnings(['CyclomaticComplexity', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'MethodSize'])
 class Rconverter {
 

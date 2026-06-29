@@ -2,15 +2,12 @@ package se.alipsa.matrix.gg.coord
 
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
-import groovy.transform.CompileStatic
-
 import java.util.Locale
 
 /**
  * Map projection coordinate system for lon/lat data.
  * Provides basic projections without external dependencies.
  */
-@CompileStatic
 class CoordMap extends CoordTrans {
 
   /** Projection name (mercator, equirectangular, identity) */

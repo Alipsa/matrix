@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Square root-transformed continuous scale for the x-axis.
@@ -18,7 +17,6 @@ import groovy.transform.CompileStatic
  * - For typical chart data, double precision sqrt is sufficient for visual display
  * - Break generation uses exact BigDecimal arithmetic in data space
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleXSqrt extends ScaleContinuous {
 

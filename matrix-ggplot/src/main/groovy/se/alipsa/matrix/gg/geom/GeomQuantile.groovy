@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.geom
 
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -23,7 +22,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * chart + geom_quantile(quantiles: [0.1, 0.5, 0.9], color: 'blue', linetype: 'dashed')
  * </pre>
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomQuantile extends Geom {
 

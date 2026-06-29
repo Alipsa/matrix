@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Abstract base class for binned position scales.
@@ -15,7 +14,6 @@ import groovy.transform.CompileStatic
  * @see ScaleXBinned
  * @see ScaleYBinned
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 abstract class ScaleBinned extends ScaleContinuous {
 

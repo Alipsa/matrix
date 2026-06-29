@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.Scale as CharmScale
 
@@ -9,7 +8,6 @@ import se.alipsa.matrix.charm.Scale as CharmScale
  * Provides y-axis specific defaults and configuration.
  * Note: Y-axis range is typically inverted in SVG coordinates (0 at top).
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleYContinuous extends ScaleContinuous {
 

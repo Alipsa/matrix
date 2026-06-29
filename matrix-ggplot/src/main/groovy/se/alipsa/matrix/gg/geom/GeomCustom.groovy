@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
@@ -29,7 +28,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Note: Position parameters (xmin, xmax, ymin, ymax) are specified in DATA coordinates.
  *       The bounds map passed to closures contains the transformed PIXEL coordinates.
  */
-@CompileStatic
 class GeomCustom extends Geom {
 
   /** The custom graphical object (Closure, SvgElement, or String) */

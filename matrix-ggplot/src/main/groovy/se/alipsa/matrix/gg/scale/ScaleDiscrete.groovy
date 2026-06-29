@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Discrete scale for categorical data.
  * Maps categorical values to positions, colors, or other aesthetic values.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateNumberLiteral')
 class ScaleDiscrete extends Scale {
 

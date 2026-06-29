@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.coord
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CoordSpec
@@ -21,7 +20,6 @@ import se.alipsa.matrix.charm.CoordSpec
  *     geom_point() +
  *     coord_fixed()  // ensures equal scaling on both axes
  */
-@CompileStatic
 class CoordFixed extends CoordCartesian {
 
   /**

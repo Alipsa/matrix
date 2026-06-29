@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.util.Logger
 
@@ -42,7 +41,6 @@ import se.alipsa.matrix.core.util.Logger
  * @see ScaleColorDistiller
  * @see BrewerPalettes
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'UnnecessaryCallForLastElement'])
 class ScaleColorFermenter extends ScaleContinuous {
 

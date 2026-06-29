@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.stat
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.render.scale.ScaleUtils
 import se.alipsa.matrix.charm.sf.SfGeometry
@@ -28,7 +27,6 @@ import java.util.regex.Pattern
  * Consolidated statistical transformation utilities for ggplot.
  * All methods are static and delegate to matrix-core Stat or matrix-stats where possible.
  */
-@CompileStatic
 @SuppressWarnings(['AbcMetric', 'ClassSize', 'CyclomaticComplexity', 'DuplicateListLiteral', 'DuplicateMapLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral', 'ExplicitLinkedHashMapInstantiation', 'ExplicitTreeSetInstantiation', 'MethodSize', 'UnnecessaryElseStatement', 'UnnecessaryObjectReferences', 'UnnecessaryToString', 'UnusedMethodParameter', 'VariableName'])
 class GgStat {
 

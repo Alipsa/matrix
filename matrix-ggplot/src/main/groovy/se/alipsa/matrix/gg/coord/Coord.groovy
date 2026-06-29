@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CoordSpec
@@ -11,7 +10,6 @@ import se.alipsa.matrix.core.Matrix
  * Base class for coordinate systems.
  * Coordinate systems define how data coordinates are mapped to pixel positions.
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'UnusedMethodParameter'])
 abstract class Coord {
 

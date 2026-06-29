@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -23,7 +22,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_raster(aes(fill: 'value')) - colored by value
  * - geom_raster(interpolate: true) - smooth interpolation (future enhancement)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRaster extends Geom {
 

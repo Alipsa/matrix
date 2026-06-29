@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.gg.coord.CoordTrans
 
@@ -9,7 +8,6 @@ import se.alipsa.matrix.gg.coord.CoordTrans
  * Scales map data values to aesthetic values (positions, colors, sizes, etc.).
  * Subclasses should override these methods to provide actual implementations.
  */
-@CompileStatic
 @SuppressWarnings('UnnecessaryDefInFieldDeclaration')
 class Scale {
 

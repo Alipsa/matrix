@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Discrete shape scale for point geometries.
  * Maps categorical levels to a repeating set of shape names.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class ScaleShape extends ScaleDiscrete {
 

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -13,7 +12,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_text(label: 'fixed text') - fixed label for all points
  * - geom_text(size: 12, color: 'red') - styled text
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral', 'PropertyName'])
 class GeomText extends Geom {
 

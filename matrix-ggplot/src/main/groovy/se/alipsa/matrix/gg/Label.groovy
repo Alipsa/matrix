@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg
 
-import groovy.transform.CompileStatic
 
 /**
  * Container for chart titles and axis labels.
  * Tracks whether axis labels were explicitly set to preserve intentional blanks.
  */
-@CompileStatic
 class Label {
 
   String title

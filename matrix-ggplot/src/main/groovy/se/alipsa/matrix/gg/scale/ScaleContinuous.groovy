@@ -1,12 +1,10 @@
 package se.alipsa.matrix.gg.scale
 
-import groovy.transform.CompileStatic
 
 /**
  * Continuous scale for numeric data.
  * Maps numeric values from a data domain to a range (e.g., pixel positions).
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class ScaleContinuous extends Scale {
 

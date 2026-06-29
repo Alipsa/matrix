@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.facet
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 
@@ -9,7 +8,6 @@ import se.alipsa.matrix.core.Matrix
  * Faceting creates small multiples by splitting data into subsets
  * and creating a panel for each subset.
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 abstract class Facet {
 

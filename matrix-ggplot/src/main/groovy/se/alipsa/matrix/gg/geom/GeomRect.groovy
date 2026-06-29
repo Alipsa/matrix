@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -16,7 +15,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * - geom_rect(aes(xmin: 'x1', xmax: 'x2', ymin: 'y1', ymax: 'y2'))
  * - geom_rect(fill: 'blue', alpha: 0.3)
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomRect extends Geom {
 

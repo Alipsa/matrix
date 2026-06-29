@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.geom
 
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
@@ -12,7 +11,6 @@ import se.alipsa.matrix.gg.layer.StatType
  * Required aesthetics: y, xmin, xmax
  * Optional aesthetics: color, size/linewidth, linetype, alpha, height
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class GeomErrorbarh extends Geom {
 
