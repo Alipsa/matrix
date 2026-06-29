@@ -106,6 +106,15 @@ class GgChartLabelTest {
   }
 
   @Test
+  void testWhitespaceLegendTitleDoesNotClobberExistingColorTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.labs(color: 'Category') +
+        GgPlot.labs(color: '   ')
+
+    assertEquals('Category', chart.labels.legendTitles['color'])
+  }
+
+  @Test
   void testBlankLegendTitleDoesNotClobberExistingFillTitle() {
     GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', fill: 'kind')) +
         GgPlot.labs(fill: 'Kind') +
@@ -119,6 +128,14 @@ class GgChartLabelTest {
     Label label = GgPlot.labs(color: 'Hue')
 
     assertEquals('Hue', label.legendTitles['color'])
+  }
+
+  @Test
+  void testBritishSpellingColourLegendTitleNormalizesToColor() {
+    Label label = GgPlot.labs(colour: 'Hue')
+
+    assertEquals('Hue', label.legendTitles['color'])
+    assertFalse(label.legendTitles.containsKey('colour'))
   }
 
   @Test
@@ -145,6 +162,15 @@ class GgChartLabelTest {
     }
 
     assertEquals("Unsupported labs() key: 'tag'", exception.message)
+  }
+
+  @Test
+  void testGroupLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(group: 'Grouping')
+    }
+
+    assertEquals("Unsupported labs() key: 'group'", exception.message)
   }
 
   @Test

@@ -197,7 +197,7 @@ class GgPlot {
   ] as Set<String>
 
   private static final Set<String> LEGEND_LABEL_AESTHETICS = [
-      'color', 'fill', 'size', 'shape', 'alpha', 'linetype', 'linewidth', 'group'
+      'color', 'fill', 'size', 'shape', 'alpha', 'linetype', 'linewidth'
   ] as Set<String>
 
   // ============ Core functions ============
@@ -854,7 +854,7 @@ class GgPlot {
 
   private static void setLegendTitle(Label label, String aesthetic, Object title) {
     String legendTitle = title
-    if (legendTitle) {
+    if (legendTitle?.trim()) {
       label.legendTitles[aesthetic] = legendTitle
     }
   }
