@@ -112,6 +112,7 @@ class DocExamplesTest {
     String text = svgText(svg)
     assertTrue(text.contains('Grouped results'), text)
     assertTrue(text.contains('Source'), text)
+    assertTrue(text.contains('Kind'), text)
   }
 
   @Test

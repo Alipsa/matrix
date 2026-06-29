@@ -1111,16 +1111,16 @@ class LegendRenderer {
   }
 
   private static String resolveLegendTitleForAesthetic(RenderContext context, String aesthetic, Object scaleObj) {
-    String labelTitle = context.chart.labels?.guides?.get(aesthetic)
-    if (labelTitle) {
-      return labelTitle
-    }
     if (scaleObj instanceof CharmScale) {
       CharmScale cs = scaleObj as CharmScale
       Object name = cs.scaleSpec?.params?.get('name')
       if (name instanceof CharSequence && !name.toString().isBlank()) {
         return name.toString()
       }
+    }
+    String labelTitle = context.chart.labels?.guides?.get(aesthetic)
+    if (labelTitle) {
+      return labelTitle
     }
     null
   }

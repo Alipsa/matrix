@@ -218,6 +218,20 @@ class GgChartLabelTest {
     assertFalse(text.contains('Labs Legend'), text)
   }
 
+  @Test
+  void testScaleLegendTitleWinsOverLabsTitleInMultiAestheticLegend() {
+    Svg svg = (GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y')) +
+        GgPlot.geom_col(GgPlot.aes(fill: 'kind')) +
+        GgPlot.geom_point(mapping: GgPlot.aes(color: 'group'), size: 4) +
+        GgPlot.labs(color: 'Labs Color', fill: 'Fill Legend') +
+        GgPlot.scale_color_manual(name: 'Scale Color', values: [one: '#336699', two: '#CC6633'])).render()
+
+    String text = svgText(svg)
+    assertTrue(text.contains('Scale Color'), text)
+    assertTrue(text.contains('Fill Legend'), text)
+    assertFalse(text.contains('Labs Color'), text)
+  }
+
   private static String svgText(Svg svg) {
     svg.descendants()
         .findAll { it instanceof Text }
