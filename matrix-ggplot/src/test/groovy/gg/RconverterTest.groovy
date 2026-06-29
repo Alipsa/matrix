@@ -1,6 +1,6 @@
 package gg
 
-import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
@@ -39,8 +39,89 @@ class RconverterTest {
   @Test
   void testExpressionConversion() {
     String input = 'ggplot(mpg, aes(x = displ, y = log(hwy))) + geom_point()'
-    String expected = "ggplot(mpg, aes(x: 'displ', y: expr { Math.log(it.hwy) })) + geom_point()"
+    String expected = "ggplot(mpg, aes(x: 'displ', y: expr { (it.hwy).log() })) + geom_point()"
     assertEquals(expected, Rconverter.convert(input))
+  }
+
+  @Test
+  void testMathFunctionsConvertToSuffixMethods() {
+    Map<String, String> expectedMethods = [
+        log    : 'log',
+        log10  : 'log10',
+        sqrt   : 'sqrt',
+        exp    : 'exp',
+        abs    : 'abs',
+        sin    : 'sin',
+        cos    : 'cos',
+        tan    : 'tan',
+        asin   : 'asin',
+        acos   : 'acos',
+        atan   : 'atan',
+        floor  : 'floor',
+        ceil   : 'ceil',
+        ceiling: 'ceil',
+        round  : 'round'
+    ]
+
+    expectedMethods.each { String rName, String groovyMethod ->
+      String input = "ggplot(mpg, aes(y = ${rName}(x)))"
+      String expected = "ggplot(mpg, aes(y: expr { (it.x).${groovyMethod}() }))"
+      assertEquals(expected, Rconverter.convert(input))
+    }
+  }
+
+  @Test
+  void testPiConvertsToNumberExtensionConstant() {
+    String input = 'ggplot(mpg, aes(y = x + pi))'
+    String expected = 'ggplot(mpg, aes(y: expr { it.x + se.alipsa.matrix.ext.NumberExtension.PI }))'
+
+    assertEquals(expected, Rconverter.convert(input))
+  }
+
+  @Test
+  void testNestedMathFunctionsConvertToSuffixMethods() {
+    String input = 'ggplot(mpg, aes(y = sqrt(abs(x))))'
+    String expected = 'ggplot(mpg, aes(y: expr { ((it.x).abs()).sqrt() }))'
+
+    assertEquals(expected, Rconverter.convert(input))
+  }
+
+  @Test
+  void testDeeplyNestedMathFunctionArgumentConvertsToSuffixMethod() {
+    String input = 'ggplot(mpg, aes(y = log((x + 1) * 2)))'
+    String expected = 'ggplot(mpg, aes(y: expr { ((it.x + 1) * 2).log() }))'
+
+    assertEquals(expected, Rconverter.convert(input))
+  }
+
+  @Test
+  void testTwoArgumentLogConvertsToSuffixMethodWithBase() {
+    String literalBaseInput = 'ggplot(mpg, aes(y = log(x, 10)))'
+    String literalBaseExpected = 'ggplot(mpg, aes(y: expr { (it.x).log(10) }))'
+    assertEquals(literalBaseExpected, Rconverter.convert(literalBaseInput))
+
+    String columnBaseInput = 'ggplot(mpg, aes(y = log(x, base_col)))'
+    String columnBaseExpected = 'ggplot(mpg, aes(y: expr { (it.x).log(it.base_col) }))'
+    assertEquals(columnBaseExpected, Rconverter.convert(columnBaseInput))
+  }
+
+  @Test
+  void testUnsupportedMultiArgumentMathFunctionThrows() {
+    UnsupportedOperationException exception = assertThrows(UnsupportedOperationException) {
+      Rconverter.convert('ggplot(mpg, aes(y = round(x, 2)))')
+    }
+
+    assertTrue(exception.message.contains('round'))
+    assertTrue(exception.message.contains('not supported'))
+  }
+
+  @Test
+  void testZeroArgumentMathFunctionThrowsAccurateMessage() {
+    UnsupportedOperationException exception = assertThrows(UnsupportedOperationException) {
+      Rconverter.convert('ggplot(mpg, aes(y = sin()))')
+    }
+
+    assertTrue(exception.message.contains('sin() requires exactly one argument'))
   }
 
   @Test

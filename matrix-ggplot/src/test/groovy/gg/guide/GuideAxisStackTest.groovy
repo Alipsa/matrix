@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.Guide
 
 class GuideAxisStackTest {
 
@@ -17,6 +18,26 @@ class GuideAxisStackTest {
     assertEquals('axis_stack', stacked.type)
     assertNotNull(stacked.params.first)
     assertNotNull(stacked.params.additional)
+  }
+
+  @Test
+  void testGuideAxisStackSingleGuideCompilesStatically() {
+    Guide axis = guide_axis()
+    Guide stacked = guide_axis_stack(axis)
+
+    assertEquals('axis_stack', stacked.type)
+    assertSame(axis, stacked.params.first)
+    assertNull(stacked.params.additional)
+  }
+
+  @Test
+  void testGuideAxisStackRejectsInvalidDynamicFirstArgument() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      guide_axis_stack(42)
+    }
+
+    assertTrue(exception.message.contains('first argument must be a Guide or String'))
+    assertTrue(exception.message.contains(Integer.name))
   }
 
   @Test

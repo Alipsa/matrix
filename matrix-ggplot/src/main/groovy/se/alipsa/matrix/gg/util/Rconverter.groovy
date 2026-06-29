@@ -15,21 +15,22 @@ class Rconverter {
       'ggplot2::aes': 'aes'
   ]
 
-  private static final Map<String, String> MATH_FUNCTIONS = [
-      'log': 'Math.log',
-      'log10': 'Math.log10',
-      'sqrt': 'Math.sqrt',
-      'exp': 'Math.exp',
-      'abs': 'Math.abs',
-      'sin': 'Math.sin',
-      'cos': 'Math.cos',
-      'tan': 'Math.tan',
-      'asin': 'Math.asin',
-      'acos': 'Math.acos',
-      'atan': 'Math.atan',
-      'floor': 'Math.floor',
-      'ceiling': 'Math.ceil',
-      'round': 'Math.round'
+  private static final Map<String, String> SUFFIX_METHODS = [
+      log    : 'log',
+      log10  : 'log10',
+      sqrt   : 'sqrt',
+      exp    : 'exp',
+      abs    : 'abs',
+      sin    : 'sin',
+      cos    : 'cos',
+      tan    : 'tan',
+      asin   : 'asin',
+      acos   : 'acos',
+      atan   : 'atan',
+      floor  : 'floor',
+      ceil   : 'ceil',
+      ceiling: 'ceil',
+      round  : 'round'
   ]
 
   static String convert(String expression) {
@@ -375,7 +376,7 @@ class Rconverter {
           continue
         }
         if (token == 'pi') {
-          out.append('Math.PI')
+          out.append('se.alipsa.matrix.ext.NumberExtension.PI')
           continue
         }
         int j = i
@@ -384,8 +385,18 @@ class Rconverter {
         }
         boolean isFunction = j < expr.length() && expr.charAt(j) == '('
         if (isFunction) {
-          String mapped = MATH_FUNCTIONS.get(token)
-          out.append(mapped != null ? mapped : token)
+          String suffixMethod = SUFFIX_METHODS.get(token)
+          if (suffixMethod == null) {
+            out.append(token)
+            continue
+          }
+          int matchingParenIndex = findMatchingParen(expr, j)
+          if (matchingParenIndex < 0) {
+            out.append(token)
+            continue
+          }
+          out.append(convertSuffixFunctionCall(token, suffixMethod, expr, j, matchingParenIndex))
+          i = matchingParenIndex + 1
           continue
         }
         if (token.contains('.')) {
@@ -399,6 +410,25 @@ class Rconverter {
       i++
     }
     return out
+  }
+
+  private static String convertSuffixFunctionCall(String token, String suffixMethod, String expr, int openParenIndex, int closeParenIndex) {
+    String inner = expr.substring(openParenIndex + 1, closeParenIndex)
+    List<String> args = splitTopLevel(inner, ',' as char)*.trim()
+    args = args.findAll { !it.isEmpty() }
+    if (args.isEmpty()) {
+      throw new UnsupportedOperationException("${token}() requires exactly one argument in R-to-Groovy conversion")
+    }
+    if (args.size() == 1) {
+      String convertedArg = convertExpression(args[0])
+      return "(${convertedArg}).${suffixMethod}()"
+    }
+    if (args.size() == 2 && token == 'log') {
+      String convertedArg = convertExpression(args[0])
+      String convertedBase = convertExpression(args[1])
+      return "(${convertedArg}).log(${convertedBase})"
+    }
+    throw new UnsupportedOperationException("Multi-argument ${token}() is not supported in R-to-Groovy conversion")
   }
 
   private static String normalizeFunctionName(String name) {
