@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.bridge.GgCharmMappingRegistry
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
@@ -192,7 +193,11 @@ class GgPlot {
       ThreadLocal.withInitial { Themes.gray() }
 
   private static final Set<String> LABEL_KEYS = [
-      'title', 'subtitle', 'caption', 'tag', 'x', 'y'
+      'title', 'subtitle', 'caption', 'x', 'y'
+  ] as Set<String>
+
+  private static final Set<String> LEGEND_LABEL_AESTHETICS = [
+      'color', 'fill', 'size', 'shape', 'alpha', 'linetype', 'linewidth', 'group'
   ] as Set<String>
 
   // ============ Core functions ============
@@ -832,31 +837,26 @@ class GgPlot {
       label.y = params.y?.toString()
       label.ySet = true
     }
-    def colorTitle = params.colour ?: params.color
-    if (colorTitle != null) {
-      label.legendTitles['color'] = colorTitle.toString()
-    }
-    if (params.fill != null) {
-      label.legendTitles['fill'] = params.fill.toString()
-    }
+    setLegendTitle(label, 'color', params.colour ?: params.color)
+    setLegendTitle(label, 'fill', params.fill)
     params.each { key, value ->
       String name = key
-      if (value != null && !LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
-        String aesthetic = normalizeAesthetic(name)
-        if (aesthetic != null && !aesthetic.isBlank()) {
-          label.legendTitles[aesthetic] = value.toString()
+      if (!LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(name)
+        if (!LEGEND_LABEL_AESTHETICS.contains(aesthetic)) {
+          throw new IllegalArgumentException("Unsupported labs() key: '${name}'")
         }
+        setLegendTitle(label, aesthetic, value)
       }
     }
     return label
   }
 
-  private static String normalizeAesthetic(String aesthetic) {
-    if (aesthetic == null) {
-      return null
+  private static void setLegendTitle(Label label, String aesthetic, Object title) {
+    String legendTitle = title
+    if (legendTitle) {
+      label.legendTitles[aesthetic] = legendTitle
     }
-    String normalized = aesthetic.trim().toLowerCase(Locale.ROOT)
-    normalized == 'colour' ? 'color' : normalized
   }
 
   /**

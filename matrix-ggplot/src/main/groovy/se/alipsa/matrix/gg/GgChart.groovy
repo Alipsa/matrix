@@ -421,7 +421,7 @@ class GgChart {
       this.labels.caption = labels.caption
     }
     if (labels.legendTitles) {
-      this.labels.legendTitles = (this.labels.legendTitles ?: [:]) + labels.legendTitles
+      this.labels.legendTitles = this.labels.legendTitles + labels.legendTitles
     }
     if (labels.xSet) {
       this.labels.x = labels.x

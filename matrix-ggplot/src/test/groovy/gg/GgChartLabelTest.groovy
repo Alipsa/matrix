@@ -97,10 +97,54 @@ class GgChartLabelTest {
   }
 
   @Test
+  void testBlankLegendTitleDoesNotClobberExistingColorTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.labs(color: 'Category') +
+        GgPlot.labs(color: '')
+
+    assertEquals('Category', chart.labels.legendTitles['color'])
+  }
+
+  @Test
+  void testBlankLegendTitleDoesNotClobberExistingFillTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', fill: 'kind')) +
+        GgPlot.labs(fill: 'Kind') +
+        GgPlot.labs(fill: '')
+
+    assertEquals('Kind', chart.labels.legendTitles['fill'])
+  }
+
+  @Test
   void testSingleAestheticLegendTitleStillWorks() {
     Label label = GgPlot.labs(color: 'Hue')
 
     assertEquals('Hue', label.legendTitles['color'])
+  }
+
+  @Test
+  void testAdditionalKnownAestheticLegendTitlesAreAccepted() {
+    Label label = GgPlot.labs(size: 'Area', linetype: 'Trend')
+
+    assertEquals('Area', label.legendTitles['size'])
+    assertEquals('Trend', label.legendTitles['linetype'])
+  }
+
+  @Test
+  void testUnknownLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(badParam: 'oops')
+    }
+
+    assertEquals("Unsupported labs() key: 'badParam'", exception.message)
+  }
+
+  @Test
+  void testUnsupportedTagLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(tag: 'Fig. 1')
+    }
+
+    assertEquals("Unsupported labs() key: 'tag'", exception.message)
   }
 
   @Test
