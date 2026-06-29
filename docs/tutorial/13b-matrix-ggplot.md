@@ -46,6 +46,64 @@ def chart = ggplot(mtcars, aes { x = mpg; y = wt; color = cyl }) +
 ggsave('ggplot-closure-aes.svg', chart)
 ```
 
+## Positional Range Aesthetics
+
+Use endpoint and range aesthetics in `aes()` when a geom needs more than `x` and `y`.
+`xend` and `yend` define segment endpoints. `ymin` and `ymax` define vertical ranges for
+error bars and ribbons, while `xmin` and `xmax` define horizontal ranges for rectangular geoms.
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.core.Matrix
+
+def data = Matrix.builder()
+    .columnNames(['x', 'y', 'xend', 'yend', 'lower', 'upper'])
+    .rows([
+        [1, 10, 2, 13, 8, 12],
+        [2, 14, 3, 16, 11, 17],
+        [3, 9, 4, 11, 7, 11]
+    ])
+    .build()
+
+def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+    geom_segment(mapping: aes(x: 'x', y: 'y', xend: 'xend', yend: 'yend'), linewidth: 1.2) +
+    geom_errorbar(mapping: aes(x: 'x', y: 'y', ymin: 'lower', ymax: 'upper'), width: 0.2) +
+    geom_point(size: 3)
+
+ggsave('ggplot-positional-ranges.svg', chart)
+```
+
+## Labels and Legend Titles
+
+`labs()` can set chart labels and independent legend titles for each mapped aesthetic.
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.core.Matrix
+
+def data = Matrix.builder()
+    .columnNames(['category', 'value', 'kind', 'source'])
+    .rows([
+        ['A', 10, 'baseline', 'observed'],
+        ['B', 14, 'target', 'model'],
+        ['C', 9, 'baseline', 'observed']
+    ])
+    .build()
+
+def chart = ggplot(data, aes(x: 'category', y: 'value')) +
+    geom_col(aes(fill: 'kind')) +
+    geom_point(mapping: aes(color: 'source'), size: 4) +
+    labs(
+        title: 'Grouped results',
+        x: 'Category',
+        y: 'Value',
+        color: 'Source',
+        fill: 'Kind'
+    )
+
+ggsave('ggplot-labels-and-legends.svg', chart)
+```
+
 ## Quick Exploratory Charts with `qplot()`
 
 ```groovy
