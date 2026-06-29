@@ -34,7 +34,7 @@ Before an implementation can be considered done, run these checks in order:
 ## Coding Style & Naming Conventions
 - Use Groovy 5.0.6 and target Java 21.
 - Follow the existing 2-space indentation and import style in each file.
-- Prefer `@CompileStatic` (enable by default through build script config) and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted.
+- Production code is compiled statically by default through the build script; do not add redundant `@CompileStatic` annotations. Use `@CompileDynamic` only on production classes or methods that require dynamic Groovy features.
 - Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`.
 - Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories.
 - Always add GroovyDoc for public classes and public methods.
@@ -580,7 +580,7 @@ Integration with the Smile ML library. Key classes:
 
 ## Code Style
 
-- Static compilation is enabled globally for production code via `config/groovy/compileStatic.groovy` (applied in the root `build.gradle`). Test code is compiled dynamically by default. Use `@CompileDynamic` on production classes or methods that require dynamic Groovy features, and `@CompileStatic` on test classes or methods that need static compilation.
+- Static compilation is enabled globally for production code via `config/groovy/compileStatic.groovy` (applied in the root `build.gradle` to `compileGroovy`). Do not add redundant `@CompileStatic` annotations to production code. Test code is compiled dynamically by default, so use `@CompileStatic` on test classes or methods that need static compilation. Use `@CompileDynamic` on production classes or methods that require dynamic Groovy features.
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
 - CodeNarc 3.7 cannot parse Groovy 5 arrow switch syntax, so the root `build.gradle` auto-excludes arrow-switch files from CodeNarc and warns about old-style switch syntax. Do not assume CodeNarc fully checks files containing arrow switch expressions until the project upgrades to CodeNarc 4+.
