@@ -7,7 +7,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import se.alipsa.matrix.gg.coord.Coord
-import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.geom.Geom
 import se.alipsa.matrix.gg.layer.Layer
@@ -518,10 +517,6 @@ class GgChart {
    * @return The rendered SVG object
    */
   Svg render() {
-    // Use default coordinate system if not set
-    if (coord == null) {
-      coord = new CoordCartesian()
-    }
     new GgCharmCompiler().render(this)
   }
 }
