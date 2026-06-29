@@ -111,22 +111,14 @@ class LegendRenderer {
     ElementText labelText = context.chart.theme.legendText
     BigDecimal defaultSize = (context.chart.theme.baseSize ?: 10) as BigDecimal
 
-    // Render legend title
-    String title = resolveLegendTitle(context, legendScales)
+    boolean renderSharedTitle = legendScales.size() == 1 && !legendScales.keySet().first().contains('_layer')
+
+    // Render one shared title for simple one-scale legends. Multi-scale legends
+    // render each aesthetic title immediately before that aesthetic's keys.
+    String title = renderSharedTitle ? resolveLegendTitle(context, legendScales) : null
     int currentY = 0
     if (title) {
-      String titleColor = titleText?.color ?: '#333333'
-      BigDecimal titleSize = (titleText?.size ?: defaultSize + 1) as BigDecimal
-      def titleEl = legend.addText(title)
-          .x(0).y(titleSize)
-          .fontSize(titleSize)
-          .fill(titleColor)
-          .addAttribute('font-weight', 'bold')
-          .styleClass('charm-legend-title gg-legend-title')
-      if (titleText?.family) {
-        titleEl.addAttribute('font-family', titleText.family)
-      }
-      currentY = (titleSize as int) + LEGEND_TITLE_SPACING
+      currentY = renderLegendTitle(legend, titleText, defaultSize, title, currentY, true)
     }
 
     // Determine if primary geom uses points
@@ -139,19 +131,12 @@ class LegendRenderer {
       String baseAesthetic = isPerLayer ? aesthetic.replaceAll(/_layer\d+$/, '') : aesthetic
       GuideType guideType = resolveGuideType(baseAesthetic, context, guides, scaleObj)
 
-      // Render per-layer legend title
-      if (isPerLayer) {
-        String layerTitle = resolvePerLayerLegendTitle(aesthetic, scaleObj)
-        if (layerTitle) {
-          ElementText ltText = context.chart.theme.legendText
-          BigDecimal ltSize = (ltText?.size ?: defaultSize) as BigDecimal
-          legend.addText(layerTitle)
-              .x(0).y(currentY + ltSize)
-              .fontSize(ltSize)
-              .fill(ltText?.color ?: '#333333')
-              .addAttribute('font-style', 'italic')
-              .styleClass('charm-legend-title charm-legend-layer-title')
-          currentY += (ltSize as int) + 5
+      if (!renderSharedTitle) {
+        String scaleTitle = isPerLayer
+            ? resolvePerLayerLegendTitle(context, aesthetic, scaleObj)
+            : resolveLegendTitleForAesthetic(context, baseAesthetic, scaleObj)
+        if (scaleTitle) {
+          currentY = renderLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY, false)
         }
       }
 
@@ -1107,8 +1092,41 @@ class LegendRenderer {
     }
   }
 
+  private static int renderLegendTitle(G legend, ElementText textStyle, BigDecimal defaultSize, String title,
+                                       int currentY, boolean sharedTitle) {
+    if (!title) {
+      return currentY
+    }
+    BigDecimal titleSize = (textStyle?.size ?: (sharedTitle ? defaultSize + 1 : defaultSize)) as BigDecimal
+    def titleEl = legend.addText(title)
+        .x(0).y(currentY + titleSize)
+        .fontSize(titleSize)
+        .fill(textStyle?.color ?: '#333333')
+        .addAttribute('font-weight', 'bold')
+        .styleClass(sharedTitle ? 'charm-legend-title gg-legend-title' : 'charm-legend-title charm-legend-scale-title')
+    if (textStyle?.family) {
+      titleEl.addAttribute('font-family', textStyle.family)
+    }
+    currentY + (titleSize as int) + (sharedTitle ? LEGEND_TITLE_SPACING : 5)
+  }
+
+  private static String resolveLegendTitleForAesthetic(RenderContext context, String aesthetic, Object scaleObj) {
+    String labelTitle = context.chart.labels?.guides?.get(aesthetic)
+    if (labelTitle) {
+      return labelTitle
+    }
+    if (scaleObj instanceof CharmScale) {
+      CharmScale cs = scaleObj as CharmScale
+      Object name = cs.scaleSpec?.params?.get('name')
+      if (name instanceof CharSequence && !name.toString().isBlank()) {
+        return name.toString()
+      }
+    }
+    null
+  }
+
   /** Resolves a per-layer legend title from the scale name param or a generated label. */
-  private static String resolvePerLayerLegendTitle(String key, Object scaleObj) {
+  private static String resolvePerLayerLegendTitle(RenderContext context, String key, Object scaleObj) {
     if (scaleObj instanceof CharmScale) {
       CharmScale cs = scaleObj as CharmScale
       Object name = cs.scaleSpec?.params?.get('name')
@@ -1120,6 +1138,10 @@ class LegendRenderer {
     def match = key =~ /^(.+)_layer(\d+)$/
     if (match.matches()) {
       String aesthetic = match.group(1)
+      String labelTitle = context.chart.labels?.guides?.get(aesthetic)
+      if (labelTitle) {
+        return labelTitle
+      }
       int idx = Integer.parseInt(match.group(2))
       return "${aesthetic} (layer ${idx + 1})"
     }

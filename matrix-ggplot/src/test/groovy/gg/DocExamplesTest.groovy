@@ -52,7 +52,6 @@ class DocExamplesTest {
   void testCookbookSeparateLegendTitlesPerAesthetic() {
     GgChart chart = separateLegendTitleChart()
     Svg svg = chart.render()
-    Svg fillSvg = fillLegendTitleChart().render()
 
     assertNotNull(svg)
     assertTrue(svg.descendants().findAll { it instanceof Rect }.size() > 0)
@@ -60,8 +59,7 @@ class DocExamplesTest {
     assertEquals('Kind', chart.labels.legendTitles['fill'])
     String text = svgText(svg)
     assertTrue(text.contains('Source'), text)
-    String fillText = svgText(fillSvg)
-    assertTrue(fillText.contains('Kind'), fillText)
+    assertTrue(text.contains('Kind'), text)
   }
 
   @Test
@@ -91,7 +89,7 @@ class DocExamplesTest {
             [1, 10, 2, 13, 8, 12],
             [2, 14, 3, 16, 11, 17],
             [3, 9, 4, 11, 7, 11]
-    ])
+        ])
         .build()
 
     Svg svg = (ggplot(data, aes(x: 'x', y: 'y')) +
@@ -151,21 +149,6 @@ class DocExamplesTest {
             color: 'Source',
             fill: 'Kind'
         )
-  }
-
-  private static GgChart fillLegendTitleChart() {
-    def data = Matrix.builder()
-        .columnNames(['category', 'value', 'kind'])
-        .rows([
-            ['A', 10, 'baseline'],
-            ['B', 14, 'target'],
-            ['C', 9, 'baseline']
-        ])
-        .build()
-
-    ggplot(data, aes(x: 'category', y: 'value', fill: 'kind')) +
-        geom_col() +
-        labs(title: 'Fill legend title', fill: 'Kind')
   }
 
   private static String svgText(Svg svg) {
