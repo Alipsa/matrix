@@ -1417,27 +1417,105 @@ class GgPlot {
    *
    * Example: scale_x_continuous(guide: guide_axis_stack(guide_axis(), guide_axis(angle: 45)))
    *
-   * @param first First guide (closest to panel), can be Guide object or string like 'axis'
+   * @param first First guide (closest to panel)
    * @param params optional parameters:
    *   - additional (List): Additional guides to stack outward
    *   - spacing (Number, default: 5): Pixel spacing between guides
    * @return a stacked axis guide specification
    */
-  static Guide guide_axis_stack(Object first, Map params = [:]) {
+  static Guide guide_axis_stack(Guide first, Map params = [:]) {
     return new Guide('axis_stack', [first: first] + params)
   }
 
   /**
-   * Create a stacked axis guide with multiple guides (overloaded version).
+   * Create a stacked axis guide that displays multiple axis guides on the same side.
+   *
+   * @param first First guide type name
+   * @param params optional parameters
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(String first, Map params = [:]) {
+    return new Guide('axis_stack', [first: first] + params)
+  }
+
+  /**
+   * Create a stacked axis guide with multiple guides.
    *
    * Example: guide_axis_stack(guide_axis(), guide_axis(angle: 45), guide_axis(angle: 90))
    *
    * @param first First guide
-   * @param additional Additional guides as varargs
+   * @param additional Additional guides
    * @return a stacked axis guide specification
    */
+  static Guide guide_axis_stack(Guide first, Guide... additional) {
+    return guideAxisStack(first, additional as List<Guide>)
+  }
+
+  /**
+   * Create a stacked axis guide with a guide object followed by guide type names.
+   *
+   * @param first First guide
+   * @param additional Additional guide type names
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(Guide first, String... additional) {
+    return guideAxisStack(first, additional as List<String>)
+  }
+
+  /**
+   * Create a stacked axis guide with a guide type name followed by guide objects.
+   *
+   * @param first First guide type name
+   * @param additional Additional guides
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(String first, Guide... additional) {
+    return guideAxisStack(first, additional as List<Guide>)
+  }
+
+  /**
+   * Create a stacked axis guide with guide type names.
+   *
+   * @param first First guide type name
+   * @param additional Additional guide type names
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(String first, String... additional) {
+    return guideAxisStack(first, additional as List<String>)
+  }
+
+  /**
+   * Fallback dispatcher for dynamically typed callers.
+   *
+   * @param first First guide or guide type name
+   * @param additional Additional guides or guide type names
+   * @return a stacked axis guide specification
+   */
+  @CompileDynamic
   static Guide guide_axis_stack(Object first, Object... additional) {
-    return new Guide('axis_stack', [first: first, additional: additional as List])
+    if (first instanceof Guide) {
+      return guideAxisStack(first, additional as List<?>)
+    }
+    if (first instanceof String) {
+      return guideAxisStack(first, additional as List<?>)
+    }
+    throw new IllegalArgumentException("guide_axis_stack first argument must be a Guide or String, got ${first?.getClass()?.name}")
+  }
+
+  private static Guide guideAxisStack(Guide first, List<?> additional) {
+    validateGuideAxisStackAdditional(additional)
+    return new Guide('axis_stack', [first: first, additional: additional])
+  }
+
+  private static Guide guideAxisStack(String first, List<?> additional) {
+    validateGuideAxisStackAdditional(additional)
+    return new Guide('axis_stack', [first: first, additional: additional])
+  }
+
+  private static void validateGuideAxisStackAdditional(List<?> additional) {
+    if (additional.any { !(it instanceof Guide || it instanceof String) }) {
+      throw new IllegalArgumentException('guide_axis_stack additional arguments must be Guide or String values')
+    }
   }
 
   // ============ Limit helpers ============

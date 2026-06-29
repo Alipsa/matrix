@@ -48,6 +48,15 @@ class ScaleColorFermenter extends ScaleContinuous {
 
   private static final Logger log = Logger.getLogger(ScaleColorFermenter)
 
+  private static final Map<String, String> PALETTE_DEFAULTS = [
+      div        : 'Spectral',
+      diverging  : 'Spectral',
+      qual       : 'Set1',
+      qualitative: 'Set1',
+      seq        : 'Blues',
+      sequential : 'Blues'
+  ]
+
   /** Which aesthetic this scale applies to ('color' or 'fill') */
   String aesthetic = 'color'
 
@@ -197,19 +206,7 @@ class ScaleColorFermenter extends ScaleContinuous {
       return palette
     }
 
-    // Use type-based defaults matching ggplot2
-    switch (type?.toLowerCase()) {
-      case 'div':
-      case 'diverging':
-        return 'Spectral'
-      case 'qual':
-      case 'qualitative':
-        return 'Set1'
-      case 'seq':
-      case 'sequential':
-      default:
-        return 'Blues'
-    }
+    PALETTE_DEFAULTS[type?.toLowerCase()] ?: 'Blues'
   }
 
   @Override
