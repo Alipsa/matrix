@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.GgPlot
@@ -11,6 +13,17 @@ import se.alipsa.matrix.gg.Label
 
 @SuppressWarnings('ExplicitCallToPlusMethod')
 class GgChartLabelTest {
+
+  private final Matrix legendData = Matrix.builder()
+      .columnNames(['x', 'y', 'group', 'kind'])
+      .rows([
+          [1, 2, 'one', 'alpha'],
+          [2, 4, 'two', 'beta'],
+          [3, 6, 'one', 'alpha'],
+          [4, 8, 'two', 'beta'],
+      ])
+      .types([int, int, String, String])
+      .build()
 
   @Test
   void testLabelSettersToggleFlags() {
@@ -63,5 +76,152 @@ class GgChartLabelTest {
     assertEquals('X', chart.labels.x)
     assertEquals('Y', chart.labels.y)
     assertEquals('Title', chart.labels.title)
+  }
+
+  @Test
+  void testLabsPreservesColorAndFillLegendTitles() {
+    Label label = GgPlot.labs(color: 'Speed', fill: 'Count')
+
+    assertEquals('Speed', label.legendTitles['color'])
+    assertEquals('Count', label.legendTitles['fill'])
+  }
+
+  @Test
+  void testSeparateLabsCallsPreserveLegendTitles() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group', fill: 'kind')) +
+        GgPlot.labs(color: 'Speed') +
+        GgPlot.labs(fill: 'Count')
+
+    assertEquals('Speed', chart.labels.legendTitles['color'])
+    assertEquals('Count', chart.labels.legendTitles['fill'])
+  }
+
+  @Test
+  void testBlankLegendTitleDoesNotClobberExistingColorTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.labs(color: 'Category') +
+        GgPlot.labs(color: '')
+
+    assertEquals('Category', chart.labels.legendTitles['color'])
+  }
+
+  @Test
+  void testWhitespaceLegendTitleDoesNotClobberExistingColorTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.labs(color: 'Category') +
+        GgPlot.labs(color: '   ')
+
+    assertEquals('Category', chart.labels.legendTitles['color'])
+  }
+
+  @Test
+  void testBlankLegendTitleDoesNotClobberExistingFillTitle() {
+    GgChart chart = GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', fill: 'kind')) +
+        GgPlot.labs(fill: 'Kind') +
+        GgPlot.labs(fill: '')
+
+    assertEquals('Kind', chart.labels.legendTitles['fill'])
+  }
+
+  @Test
+  void testSingleAestheticLegendTitleStillWorks() {
+    Label label = GgPlot.labs(color: 'Hue')
+
+    assertEquals('Hue', label.legendTitles['color'])
+  }
+
+  @Test
+  void testBritishSpellingColourLegendTitleNormalizesToColor() {
+    Label label = GgPlot.labs(colour: 'Hue')
+
+    assertEquals('Hue', label.legendTitles['color'])
+    assertFalse(label.legendTitles.containsKey('colour'))
+  }
+
+  @Test
+  void testAdditionalKnownAestheticLegendTitlesAreAccepted() {
+    Label label = GgPlot.labs(size: 'Area', linetype: 'Trend')
+
+    assertEquals('Area', label.legendTitles['size'])
+    assertEquals('Trend', label.legendTitles['linetype'])
+  }
+
+  @Test
+  void testUnknownLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(badParam: 'oops')
+    }
+
+    assertEquals("Unsupported labs() key: 'badParam'", exception.message)
+  }
+
+  @Test
+  void testUnsupportedTagLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(tag: 'Fig. 1')
+    }
+
+    assertEquals("Unsupported labs() key: 'tag'", exception.message)
+  }
+
+  @Test
+  void testGroupLabsKeyIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      GgPlot.labs(group: 'Grouping')
+    }
+
+    assertEquals("Unsupported labs() key: 'group'", exception.message)
+  }
+
+  @Test
+  void testAxisLabelAndLegendTitleAreIndependent() {
+    Label label = GgPlot.labs(x: 'X Axis', color: 'Speed')
+
+    assertEquals('X Axis', label.x)
+    assertEquals('Speed', label.legendTitles['color'])
+    assertFalse(label.legendTitles.containsKey('x'))
+  }
+
+  @Test
+  void testLabelLevelKeysAreNotStoredAsLegendTitles() {
+    Label label = GgPlot.labs(title: 'T', subtitle: 'S', caption: 'C', x: 'X', y: 'Y', color: 'Hue')
+
+    assertEquals('Hue', label.legendTitles['color'])
+    assertFalse(label.legendTitles.containsKey('title'))
+    assertFalse(label.legendTitles.containsKey('subtitle'))
+    assertFalse(label.legendTitles.containsKey('caption'))
+    assertFalse(label.legendTitles.containsKey('x'))
+    assertFalse(label.legendTitles.containsKey('y'))
+  }
+
+  @Test
+  void testGuideLegendTitleWinsOverLabsTitle() {
+    Svg svg = (GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.geom_point() +
+        GgPlot.labs(color: 'Labs Legend') +
+        GgPlot.guides(color: GgPlot.guide_legend(title: 'Guide Legend'))).render()
+
+    String text = svgText(svg)
+    assertTrue(text.contains('Guide Legend'), text)
+    assertFalse(text.contains('Labs Legend'), text)
+  }
+
+  @Test
+  void testScaleLegendTitleWinsOverLabsTitle() {
+    Svg svg = (GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y', color: 'group')) +
+        GgPlot.geom_point() +
+        GgPlot.labs(color: 'Labs Legend') +
+        GgPlot.scale_color_manual(name: 'Scale Legend', values: [one: '#336699', two: '#CC6633'])).render()
+
+    String text = svgText(svg)
+    assertTrue(text.contains('Scale Legend'), text)
+    assertFalse(text.contains('Labs Legend'), text)
+  }
+
+  private static String svgText(Svg svg) {
+    svg.descendants()
+        .findAll { it instanceof Text }
+        .collect { (it as Text).content }
+        .join(' ')
   }
 }

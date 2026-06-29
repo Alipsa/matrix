@@ -420,8 +420,8 @@ class GgChart {
     if (labels.caption) {
       this.labels.caption = labels.caption
     }
-    if (labels.legendTitle) {
-      this.labels.legendTitle = labels.legendTitle
+    if (labels.legendTitles) {
+      this.labels.legendTitles = this.labels.legendTitles + labels.legendTitles
     }
     if (labels.xSet) {
       this.labels.x = labels.x

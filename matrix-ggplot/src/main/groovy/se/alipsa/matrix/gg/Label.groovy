@@ -14,7 +14,8 @@ class Label {
   String caption
   String x
   String y
-  String legendTitle // called colour in ggplot2
+  /** Per-aesthetic legend titles keyed by normalized aesthetic name (e.g. 'color', 'fill', 'size'). colour is stored as 'color'. */
+  Map<String, String> legendTitles = [:]
 
   /** True when the x label was explicitly set via labs/xlab. */
   boolean xSet = false

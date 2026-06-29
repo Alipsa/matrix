@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.bridge.GgCharmMappingRegistry
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
@@ -190,6 +191,14 @@ class GgPlot {
   /** Global default theme (thread-local for thread safety) */
   private static final ThreadLocal<Theme> GLOBAL_THEME =
       ThreadLocal.withInitial { Themes.gray() }
+
+  private static final Set<String> LABEL_KEYS = [
+      'title', 'subtitle', 'caption', 'x', 'y'
+  ] as Set<String>
+
+  private static final Set<String> LEGEND_LABEL_AESTHETICS = [
+      'color', 'fill', 'size', 'shape', 'alpha', 'linetype', 'linewidth'
+  ] as Set<String>
 
   // ============ Core functions ============
 
@@ -828,13 +837,26 @@ class GgPlot {
       label.y = params.y?.toString()
       label.ySet = true
     }
-    if (params.colour || params.color) {
-      label.legendTitle = params.colour ?: params.color
-    }
-    if (params.fill) {
-      label.legendTitle = params.fill
+    setLegendTitle(label, 'color', params.colour ?: params.color)
+    setLegendTitle(label, 'fill', params.fill)
+    params.each { key, value ->
+      String name = key
+      if (!LABEL_KEYS.contains(name) && name !in ['color', 'colour', 'fill']) {
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(name)
+        if (!LEGEND_LABEL_AESTHETICS.contains(aesthetic)) {
+          throw new IllegalArgumentException("Unsupported labs() key: '${name}'")
+        }
+        setLegendTitle(label, aesthetic, value)
+      }
     }
     return label
+  }
+
+  private static void setLegendTitle(Label label, String aesthetic, Object title) {
+    String legendTitle = title
+    if (legendTitle?.trim()) {
+      label.legendTitles[aesthetic] = legendTitle
+    }
   }
 
   /**
