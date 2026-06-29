@@ -50,6 +50,17 @@ class GgPlotTest {
   }
 
   @Test
+  void testRenderDoesNotSetDefaultCoordOnChart() {
+    def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) + geom_point()
+    assertNull(chart.coord)
+
+    Svg svg = chart.render()
+
+    assertNotNull(svg)
+    assertNull(chart.coord)
+  }
+
+  @Test
   void testPoint() {
     ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', col: 'Species')) + geom_point()
 
