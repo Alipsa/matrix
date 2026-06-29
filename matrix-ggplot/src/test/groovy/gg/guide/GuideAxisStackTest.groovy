@@ -31,6 +31,16 @@ class GuideAxisStackTest {
   }
 
   @Test
+  void testGuideAxisStackRejectsInvalidDynamicFirstArgument() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      guide_axis_stack(42)
+    }
+
+    assertTrue(exception.message.contains('first argument must be a Guide or String'))
+    assertTrue(exception.message.contains(Integer.name))
+  }
+
+  @Test
   void testGuideAxisStackVarargs() {
     def stacked = guide_axis_stack(guide_axis(), guide_axis(angle: 45), guide_axis(angle: 90))
     assertEquals('axis_stack', stacked.type)

@@ -416,6 +416,9 @@ class Rconverter {
     String inner = expr.substring(openParenIndex + 1, closeParenIndex)
     List<String> args = splitTopLevel(inner, ',' as char)*.trim()
     args = args.findAll { !it.isEmpty() }
+    if (args.isEmpty()) {
+      throw new UnsupportedOperationException("${token}() requires exactly one argument in R-to-Groovy conversion")
+    }
     if (args.size() == 1) {
       String convertedArg = convertExpression(args[0])
       return "(${convertedArg}).${suffixMethod}()"

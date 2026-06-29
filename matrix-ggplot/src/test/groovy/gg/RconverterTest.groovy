@@ -116,6 +116,15 @@ class RconverterTest {
   }
 
   @Test
+  void testZeroArgumentMathFunctionThrowsAccurateMessage() {
+    UnsupportedOperationException exception = assertThrows(UnsupportedOperationException) {
+      Rconverter.convert('ggplot(mpg, aes(y = sin()))')
+    }
+
+    assertTrue(exception.message.contains('sin() requires exactly one argument'))
+  }
+
+  @Test
   void testThemeDotKey() {
     String input = 'ggplot(mpg, aes(x = displ, y = hwy)) + theme(axis.text = element_text(size = 12))'
     String expected = "ggplot(mpg, aes(x: 'displ', y: 'hwy')) + theme('axis.text': element_text(size: 12))"
