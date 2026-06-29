@@ -66,8 +66,8 @@ def data = Matrix.builder()
     .build()
 
 def chart = ggplot(data, aes(x: 'x', y: 'y')) +
-    geom_segment(mapping: aes(x: 'x', y: 'y', xend: 'xend', yend: 'yend'), linewidth: 1.2) +
-    geom_errorbar(mapping: aes(x: 'x', y: 'y', ymin: 'lower', ymax: 'upper'), width: 0.2) +
+    geom_segment(mapping: aes(xend: 'xend', yend: 'yend'), linewidth: 1.2) +
+    geom_errorbar(mapping: aes(ymin: 'lower', ymax: 'upper'), width: 0.2) +
     geom_point(size: 3)
 
 ggsave('ggplot-positional-ranges.svg', chart)

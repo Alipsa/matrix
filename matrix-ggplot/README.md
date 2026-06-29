@@ -13,12 +13,11 @@ port R plotting code to Groovy with minimal modifications. It delegates to the
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-ggplot'
-implementation 'se.alipsa.matrix:matrix-charts'
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'
 ```
 
-> `matrix-charts` is the Charm rendering engine used by `matrix-ggplot`.
+> Note: `matrix-charts` (the Charm rendering engine) is pulled in transitively via `matrix-ggplot`.
 
 ### Maven
 
@@ -38,10 +37,6 @@ implementation 'se.alipsa.matrix:matrix-stats'
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-ggplot</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-charts</artifactId>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
