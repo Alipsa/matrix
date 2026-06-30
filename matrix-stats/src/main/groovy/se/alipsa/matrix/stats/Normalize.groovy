@@ -31,8 +31,8 @@ class Normalize {
    * @return the natural logarithm (base e) of the x value, or null/NaN for invalid input
    */
   static <T extends Number> T logNorm(T x, int... decimals) {
-    if (x == null || x == 0) {
-      return null  // logNorm always returns null for zero/invalid
+    if (x == null || x <= 0) {
+      return null  // logNorm always returns null for zero/negative/invalid
     }
 
     if (x instanceof Float && (x as Float).isInfinite()) {

@@ -76,6 +76,29 @@ class NormalizeTest {
     assertIterableEquals([null]*3, Normalize.logNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }
 
+  /**
+   * Verifies logarithmic normalization returns null for non-positive scalar values.
+   */
+  @Test
+  void testLogNormNonPositiveScalarsReturnNull() {
+    assertNull(Normalize.logNorm(-5.0))
+    assertNull(Normalize.logNorm(-1G))
+    assertNull(Normalize.logNorm(0))
+  }
+
+  /**
+   * Verifies logarithmic normalization preserves list shape when non-positive values are present.
+   */
+  @Test
+  void testLogNormListWithNegativeValueReturnsNullSlot() {
+    List result = Normalize.logNorm([-1.0, 2.0, null])
+
+    assertEquals(3, result.size())
+    assertNull(result[0])
+    assertEquals(Math.log(2.0d), (result[1] as Number).doubleValue(), 1e-6d)
+    assertNull(result[2])
+  }
+
   @Test
   void testMinMaxNormDouble() {
 
