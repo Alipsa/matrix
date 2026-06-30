@@ -216,7 +216,7 @@ class LinearRegression {
     Matrix coefficients = Matrix.builder()
     .matrixName('Coefficients')
     .columnNames(['           ','Estimate','Std. Error' /*, 't value', 'Pr(>|t|)'*/])
-    .rows([
+    .columns([
             [interceptLab, xLab],
             [getIntercept(3), getSlope(3)],
             [getInterceptStdErr(3), getSlopeStdErr(3)]

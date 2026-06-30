@@ -183,4 +183,19 @@ class LinearRegressionTest {
 
     assertEquals("Matrix value at row 0, column 'y' must be numeric", exception.message)
   }
+
+  @Test
+  void testSummaryContainsInterceptSlopeAndNumericValue() {
+    def table = Matrix.builder().data(
+      x: [2, 3, 5, 7, 9, 11, 14],
+      y: [4.02, 5.44, 7.12, 10.88, 15.10, 20.91, 26.02]
+    ).build()
+    def model = new LinearRegression(table, 'x', 'y')
+    def summary = model.summary()
+
+    assertTrue(summary.contains('(Intercept)'), 'Summary should contain intercept label')
+    assertTrue(summary.contains('x'), 'Summary should contain slope label')
+    assertTrue(summary.contains('Std. Error'), 'Summary should contain std error column')
+    assertNotNull(summary.find(/\d+\.\d+/), 'Summary should contain a formatted numeric value')
+  }
 }
