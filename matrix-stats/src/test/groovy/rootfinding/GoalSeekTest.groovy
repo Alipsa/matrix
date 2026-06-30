@@ -68,6 +68,12 @@ class GoalSeekTest {
   }
 
   @Test
+  void testResultToString() {
+    def result = GoalSeek.solve(27000, 0, 100) { it * 100_000 }
+    assertTrue(result.toString() ==~ /.*\[value:.*, result:.*, diff:.*, iterations:\d+\].*/)
+  }
+
+  @Test
   void testMatchesApacheBrentReference() {
     double target = 27000.0d
     double minValue = 0.0d
