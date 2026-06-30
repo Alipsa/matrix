@@ -218,6 +218,9 @@ class GgChartLabelTest {
     assertFalse(text.contains('Labs Legend'), text)
   }
 
+  /**
+   * Verifies scale titles override labs titles when multiple legend aesthetics are rendered.
+   */
   @Test
   void testScaleLegendTitleWinsOverLabsTitleInMultiAestheticLegend() {
     Svg svg = (GgPlot.ggplot(legendData, GgPlot.aes(x: 'x', y: 'y')) +

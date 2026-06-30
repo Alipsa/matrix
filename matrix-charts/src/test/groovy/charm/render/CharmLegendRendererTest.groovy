@@ -6,6 +6,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
@@ -153,6 +154,34 @@ class CharmLegendRendererTest {
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('charm-legend-title'), 'Legend title should be present')
     assertTrue(content.contains('>Category<'), 'Legend title text should be "Category"')
+  }
+
+  @Test
+  void testMultiScaleLegendTitlesFallbackToAestheticNames() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'kind', 'source')
+        .rows([
+            ['A', 10, 'baseline', 'observed'],
+            ['B', 14, 'target', 'model'],
+            ['C', 9, 'baseline', 'observed']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomCol().mapping(fill: 'kind')
+        geomPoint().mapping(color: 'source')
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    List<String> text = svg.descendants()
+        .findAll { it instanceof Text }
+        .collect { (it as Text).content }
+
+    assertTrue(text.contains('fill'), text.join(' '))
+    assertTrue(text.contains('color'), text.join(' '))
   }
 
   @Test

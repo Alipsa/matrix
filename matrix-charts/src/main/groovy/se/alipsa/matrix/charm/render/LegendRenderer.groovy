@@ -17,6 +17,8 @@ import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.util.Logger
 
+import java.util.regex.Pattern
+
 /**
  * Renders guides and legends for all aesthetic channels.
  *
@@ -34,6 +36,7 @@ class LegendRenderer {
   private static final int COLORBAR_WIDTH_HORIZONTAL = 100
   private static final int COLORBAR_HEIGHT_HORIZONTAL = 15
   private static final int COLORBAR_STEPS = 20
+  private static final Pattern PER_LAYER_SCALE_KEY = ~/^(.+)_layer(\d+)$/
 
   /**
    * Renders guides/legends for all non-positional aesthetics with trained scales.
@@ -111,7 +114,7 @@ class LegendRenderer {
     ElementText labelText = context.chart.theme.legendText
     BigDecimal defaultSize = (context.chart.theme.baseSize ?: 10) as BigDecimal
 
-    boolean renderSharedTitle = legendScales.size() == 1 && !legendScales.keySet().first().contains('_layer')
+    boolean renderSharedTitle = legendScales.size() == 1 && !parseLegendScaleKey(legendScales.keySet().first()).perLayer()
 
     // Render one shared title for simple one-scale legends. Multi-scale legends
     // render each aesthetic title immediately before that aesthetic's keys.
@@ -127,16 +130,19 @@ class LegendRenderer {
     // Render each legend scale
     legendScales.each { String aesthetic, Object scaleObj ->
       // Per-layer scale entries have keys like "color_layer0" (0-based layer index)
-      boolean isPerLayer = aesthetic.contains('_layer')
-      String baseAesthetic = isPerLayer ? aesthetic.replaceAll(/_layer\d+$/, '') : aesthetic
+      LegendScaleKey legendScaleKey = parseLegendScaleKey(aesthetic)
+      boolean isPerLayer = legendScaleKey.perLayer()
+      String baseAesthetic = legendScaleKey.aesthetic
       GuideType guideType = resolveGuideType(baseAesthetic, context, guides, scaleObj)
 
       if (!renderSharedTitle) {
         String scaleTitle = isPerLayer
-            ? resolvePerLayerLegendTitle(context, aesthetic, scaleObj)
+            ? resolvePerLayerLegendTitle(legendScaleKey, scaleObj)
             : resolveLegendTitleForAesthetic(context, baseAesthetic, scaleObj)
         if (scaleTitle) {
-          currentY = renderLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY, false)
+          currentY = isPerLayer
+              ? renderPerLayerLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY)
+              : renderLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY, false)
         }
       }
 
@@ -1110,6 +1116,24 @@ class LegendRenderer {
     currentY + (titleSize as int) + (sharedTitle ? LEGEND_TITLE_SPACING : 5)
   }
 
+  private static int renderPerLayerLegendTitle(G legend, ElementText textStyle, BigDecimal defaultSize, String title,
+                                                int currentY) {
+    if (!title) {
+      return currentY
+    }
+    BigDecimal titleSize = (textStyle?.size ?: defaultSize) as BigDecimal
+    def titleEl = legend.addText(title)
+        .x(0).y(currentY + titleSize)
+        .fontSize(titleSize)
+        .fill(textStyle?.color ?: '#333333')
+        .addAttribute('font-style', 'italic')
+        .styleClass('charm-legend-title charm-legend-layer-title')
+    if (textStyle?.family) {
+      titleEl.addAttribute('font-family', textStyle.family)
+    }
+    currentY + (titleSize as int) + 5
+  }
+
   private static String resolveLegendTitleForAesthetic(RenderContext context, String aesthetic, Object scaleObj) {
     if (scaleObj instanceof CharmScale) {
       CharmScale cs = scaleObj as CharmScale
@@ -1122,11 +1146,11 @@ class LegendRenderer {
     if (labelTitle) {
       return labelTitle
     }
-    null
+    aesthetic
   }
 
   /** Resolves a per-layer legend title from the scale name param or a generated label. */
-  private static String resolvePerLayerLegendTitle(RenderContext context, String key, Object scaleObj) {
+  private static String resolvePerLayerLegendTitle(LegendScaleKey key, Object scaleObj) {
     if (scaleObj instanceof CharmScale) {
       CharmScale cs = scaleObj as CharmScale
       Object name = cs.scaleSpec?.params?.get('name')
@@ -1134,21 +1158,33 @@ class LegendRenderer {
         return name.toString()
       }
     }
-    // Generate label: "color_layer1" -> "color (layer 2)"
-    def match = key =~ /^(.+)_layer(\d+)$/
-    if (match.matches()) {
-      String aesthetic = match.group(1)
-      String labelTitle = context.chart.labels?.guides?.get(aesthetic)
-      if (labelTitle) {
-        return labelTitle
-      }
-      int idx = Integer.parseInt(match.group(2))
-      return "${aesthetic} (layer ${idx + 1})"
+    if (key.perLayer()) {
+      return "${key.aesthetic} (layer ${key.layerIndex + 1})"
     }
     null
   }
 
+  private static LegendScaleKey parseLegendScaleKey(String key) {
+    def match = PER_LAYER_SCALE_KEY.matcher(key)
+    if (!match.matches()) {
+      return new LegendScaleKey(aesthetic: key)
+    }
+    new LegendScaleKey(
+        aesthetic: match.group(1),
+        layerIndex: Integer.parseInt(match.group(2))
+    )
+  }
+
   // ---- Helpers ----
+
+  private static class LegendScaleKey {
+    String aesthetic
+    Integer layerIndex
+
+    boolean perLayer() {
+      layerIndex != null
+    }
+  }
 
   private Map<String, Object> collectLegendScales(RenderContext context, GuidesSpec guides) {
     Map<String, Object> result = [:]

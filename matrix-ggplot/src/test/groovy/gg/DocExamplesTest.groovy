@@ -15,8 +15,14 @@ import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 
+/**
+ * Verifies ggplot examples from user-facing documentation.
+ */
 class DocExamplesTest {
 
+  /**
+   * Verifies cookbook segment charts render line elements for endpoint aesthetics.
+   */
   @Test
   void testCookbookSegmentChartWithAesXendYend() {
     def data = Matrix.builder()
@@ -32,6 +38,9 @@ class DocExamplesTest {
     assertTrue(svg.descendants().findAll { it instanceof Line }.size() > 0)
   }
 
+  /**
+   * Verifies cookbook error-bar examples render line elements for ymin/ymax aesthetics.
+   */
   @Test
   void testCookbookErrorBarsWithAesYminYmax() {
     def data = Matrix.builder()
@@ -48,6 +57,9 @@ class DocExamplesTest {
     assertTrue(svg.descendants().findAll { it instanceof Line }.size() > 0)
   }
 
+  /**
+   * Verifies cookbook examples keep separate legend titles per aesthetic.
+   */
   @Test
   void testCookbookSeparateLegendTitlesPerAesthetic() {
     GgChart chart = separateLegendTitleChart()
@@ -62,6 +74,9 @@ class DocExamplesTest {
     assertTrue(text.contains('Kind'), text)
   }
 
+  /**
+   * Verifies cookbook stat-summary examples render the named geom.
+   */
   @Test
   void testCookbookStatSummaryWithNamedGeom() {
     def data = Matrix.builder()
@@ -81,6 +96,9 @@ class DocExamplesTest {
     assertTrue(svg.descendants().findAll { it instanceof Line }.size() > 0)
   }
 
+  /**
+   * Verifies tutorial examples render positional range aesthetics.
+   */
   @Test
   void testTutorialPositionalRangeAesthetics() {
     def data = Matrix.builder()
@@ -101,12 +119,16 @@ class DocExamplesTest {
     assertTrue(svg.descendants().findAll { it instanceof Line }.size() > 0)
   }
 
+  /**
+   * Verifies tutorial labels and legend title examples render structural marks and text.
+   */
   @Test
   void testTutorialLabelsAndLegendTitles() {
     GgChart chart = separateLegendTitleChart()
     Svg svg = chart.render()
 
     assertNotNull(svg)
+    assertTrue(svg.descendants().findAll { it instanceof Rect }.size() > 0)
     assertEquals('Source', chart.labels.legendTitles['color'])
     assertEquals('Kind', chart.labels.legendTitles['fill'])
     String text = svgText(svg)
@@ -115,6 +137,9 @@ class DocExamplesTest {
     assertTrue(text.contains('Kind'), text)
   }
 
+  /**
+   * Verifies README ribbon examples render path elements for range aesthetics.
+   */
   @Test
   void testReadmeRibbonRangeAesthetics() {
     def forecast = Matrix.builder()
