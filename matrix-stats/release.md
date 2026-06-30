@@ -1,5 +1,9 @@
 # Matrix stats release history
 
+## v2.5.1, 2026-06-30
+- Add toString to GoalSeek.Result for easier debugging and logging.
+- Fix `LinearRegression.summary()` matrix orientation so coefficient labels, estimates, and standard errors align with their column names.
+
 ## v2.5.0, 2026-06-14
 - `GoalSeek.solve()` now returns a typed `GoalSeek.Result` with BigDecimal accessors for the computed value, result, and difference. Existing callers that need the previous map-shaped value can use `GoalSeek.solve(...) as Map`.
 - Add Groovy-friendly `Number` overloads for `GoalSeek` target, bracket, threshold, and max-iteration arguments.
