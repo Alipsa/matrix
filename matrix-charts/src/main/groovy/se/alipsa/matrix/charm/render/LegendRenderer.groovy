@@ -1152,10 +1152,7 @@ class LegendRenderer {
     if (scaleName) {
       return scaleName
     }
-    if (key.perLayer()) {
-      return "${key.aesthetic} (layer ${key.layerIndex + 1})"
-    }
-    null
+    "${key.aesthetic} (layer ${key.layerIndex + 1})"
   }
 
   private static String resolveScaleName(Object scaleObj) {
