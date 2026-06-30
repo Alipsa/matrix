@@ -151,6 +151,9 @@ class PerLayerScaleTest {
     assertFalse(content.contains('per-layer colors'), 'Per-layer legend title should be suppressed when guide(false) is set')
   }
 
+  /**
+   * Verifies per-layer legend titles are generated and retain layer-title styling.
+   */
   @Test
   void testPerLayerLegendTitlesDoNotUsePrimaryGuideTitle() {
     Matrix data = Matrix.builder()

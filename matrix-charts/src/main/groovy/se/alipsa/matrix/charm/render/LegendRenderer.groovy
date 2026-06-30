@@ -142,7 +142,7 @@ class LegendRenderer {
         if (scaleTitle) {
           currentY = isPerLayer
               ? renderPerLayerLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY)
-              : renderLegendTitle(legend, labelText, defaultSize, scaleTitle, currentY, false)
+              : renderLegendTitle(legend, titleText, defaultSize, scaleTitle, currentY, false)
         }
       }
 
@@ -1135,12 +1135,9 @@ class LegendRenderer {
   }
 
   private static String resolveLegendTitleForAesthetic(RenderContext context, String aesthetic, Object scaleObj) {
-    if (scaleObj instanceof CharmScale) {
-      CharmScale cs = scaleObj as CharmScale
-      Object name = cs.scaleSpec?.params?.get('name')
-      if (name instanceof CharSequence && !name.toString().isBlank()) {
-        return name.toString()
-      }
+    String scaleName = resolveScaleName(scaleObj)
+    if (scaleName) {
+      return scaleName
     }
     String labelTitle = context.chart.labels?.guides?.get(aesthetic)
     if (labelTitle) {
@@ -1151,15 +1148,23 @@ class LegendRenderer {
 
   /** Resolves a per-layer legend title from the scale name param or a generated label. */
   private static String resolvePerLayerLegendTitle(LegendScaleKey key, Object scaleObj) {
+    String scaleName = resolveScaleName(scaleObj)
+    if (scaleName) {
+      return scaleName
+    }
+    if (key.perLayer()) {
+      return "${key.aesthetic} (layer ${key.layerIndex + 1})"
+    }
+    null
+  }
+
+  private static String resolveScaleName(Object scaleObj) {
     if (scaleObj instanceof CharmScale) {
       CharmScale cs = scaleObj as CharmScale
       Object name = cs.scaleSpec?.params?.get('name')
       if (name instanceof CharSequence && !name.toString().isBlank()) {
         return name.toString()
       }
-    }
-    if (key.perLayer()) {
-      return "${key.aesthetic} (layer ${key.layerIndex + 1})"
     }
     null
   }

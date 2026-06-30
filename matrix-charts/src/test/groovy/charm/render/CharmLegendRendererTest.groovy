@@ -11,6 +11,8 @@ import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
 class CharmLegendRendererTest {
@@ -156,6 +158,9 @@ class CharmLegendRendererTest {
     assertTrue(content.contains('>Category<'), 'Legend title text should be "Category"')
   }
 
+  /**
+   * Verifies multi-scale legends fall back to aesthetic names using legend title styling.
+   */
   @Test
   void testMultiScaleLegendTitlesFallbackToAestheticNames() {
     Matrix data = Matrix.builder()
@@ -167,21 +172,28 @@ class CharmLegendRendererTest {
         ])
         .build()
 
-    Chart chart = plot(data) {
+    PlotSpec spec = plot(data) {
       mapping { x = 'x'; y = 'y' }
       layers {
         geomCol().mapping(fill: 'kind')
         geomPoint().mapping(color: 'source')
       }
-    }.build()
+    }
+    spec.theme.legendTitle = new ElementText(size: 16, color: 'navy')
+    spec.theme.legendText = new ElementText(size: 7, color: 'gray')
+    Chart chart = spec.build()
 
     Svg svg = chart.render()
-    List<String> text = svg.descendants()
+    List<Text> textElements = svg.descendants()
         .findAll { it instanceof Text }
-        .collect { (it as Text).content }
+        .collect { it as Text }
+    List<String> text = textElements*.content
+    List<Text> headingText = textElements.findAll { it.content in ['fill', 'color'] }
 
     assertTrue(text.contains('fill'), text.join(' '))
     assertTrue(text.contains('color'), text.join(' '))
+    assertTrue(headingText.every { it.getAttribute('fill') == 'navy' })
+    assertTrue(headingText.every { it.getAttribute('font-size') == '16' })
   }
 
   @Test

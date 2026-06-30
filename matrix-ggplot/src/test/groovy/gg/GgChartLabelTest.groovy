@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.Matrix
@@ -229,6 +230,7 @@ class GgChartLabelTest {
         GgPlot.labs(color: 'Labs Color', fill: 'Fill Legend') +
         GgPlot.scale_color_manual(name: 'Scale Color', values: [one: '#336699', two: '#CC6633'])).render()
 
+    assertTrue(svg.descendants().findAll { it instanceof Rect }.size() > 0)
     String text = svgText(svg)
     assertTrue(text.contains('Scale Color'), text)
     assertTrue(text.contains('Fill Legend'), text)
