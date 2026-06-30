@@ -344,6 +344,8 @@ Commit messages in this repo are short, imperative summaries (e.g., “Fix …�
 
 **CRITICAL:** Always confirm with the user before committing and pushing to the main branch. When committing review fixes or follow-up changes, create a separate branch (e.g., `feature-followup`) rather than pushing directly to `main`.
 
+**Do not create git tags** as part of release preparation or any other step. Tags are created by GitHub during the release creation process; manually created tags will conflict with those GitHub-generated tags.
+
 ## Environment & Constraints
 JDK 21 is required. Some modules (parquet/avro, charts, smile) enforce a maximum JDK 21 due to upstream dependencies, so keep toolchains aligned with that constraint.
 

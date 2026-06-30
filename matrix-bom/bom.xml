@@ -39,7 +39,7 @@
     <matrixCoreVersion>3.8.0</matrixCoreVersion>
     <matrixCsvVersion>2.4.0</matrixCsvVersion>
     <matrixDatasetsVersion>2.2.0</matrixDatasetsVersion>
-    <matrixGgplotVersion>0.5.0-SNAPSHOT</matrixGgplotVersion>
+    <matrixGgplotVersion>0.5.0</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.3.0</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.2.0</matrixGsheetsVersion>
     <matrixJsonVersion>2.3.0</matrixJsonVersion>
@@ -49,7 +49,7 @@
     <matrixSmileVersion>0.2.0</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.4.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
-    <matrixStatsVersion>2.5.0</matrixStatsVersion>
+    <matrixStatsVersion>2.5.1</matrixStatsVersion>
     <matrixTablesawVersion>0.3.0</matrixTablesawVersion>
     <matrixXChartVersion>0.3.0</matrixXChartVersion>
   </properties>
