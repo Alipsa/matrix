@@ -250,5 +250,10 @@ class GoalSeek {
       }
       super.asType(targetType)
     }
+
+    @Override
+    String toString() {
+      "[value:$value, result:$result, diff:$diff, iterations:$iterations]"
+    }
   }
 }
