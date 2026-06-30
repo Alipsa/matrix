@@ -6,10 +6,13 @@ import static se.alipsa.matrix.charm.Charts.plot
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
 class CharmLegendRendererTest {
@@ -153,6 +156,44 @@ class CharmLegendRendererTest {
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('charm-legend-title'), 'Legend title should be present')
     assertTrue(content.contains('>Category<'), 'Legend title text should be "Category"')
+  }
+
+  /**
+   * Verifies multi-scale legends fall back to aesthetic names using legend title styling.
+   */
+  @Test
+  void testMultiScaleLegendTitlesFallbackToAestheticNames() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'kind', 'source')
+        .rows([
+            ['A', 10, 'baseline', 'observed'],
+            ['B', 14, 'target', 'model'],
+            ['C', 9, 'baseline', 'observed']
+        ])
+        .build()
+
+    PlotSpec spec = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomCol().mapping(fill: 'kind')
+        geomPoint().mapping(color: 'source')
+      }
+    }
+    spec.theme.legendTitle = new ElementText(size: 16, color: 'navy')
+    spec.theme.legendText = new ElementText(size: 7, color: 'gray')
+    Chart chart = spec.build()
+
+    Svg svg = chart.render()
+    List<Text> textElements = svg.descendants()
+        .findAll { it instanceof Text }
+        .collect { it as Text }
+    List<String> text = textElements*.content
+    List<Text> headingText = textElements.findAll { it.content in ['fill', 'color'] }
+
+    assertTrue(text.contains('fill'), text.join(' '))
+    assertTrue(text.contains('color'), text.join(' '))
+    assertTrue(headingText.every { it.getAttribute('fill') == 'navy' })
+    assertTrue(headingText.every { it.getAttribute('font-size') == '16' })
   }
 
   @Test

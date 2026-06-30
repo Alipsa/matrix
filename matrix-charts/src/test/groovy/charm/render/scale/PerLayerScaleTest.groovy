@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
@@ -148,6 +149,49 @@ class PerLayerScaleTest {
     String content = normalizeSvg(chart.render())
     assertTrue(content.contains('global colors'), 'Global legend title should be present')
     assertFalse(content.contains('per-layer colors'), 'Per-layer legend title should be suppressed when guide(false) is set')
+  }
+
+  /**
+   * Verifies per-layer legend titles are generated and retain layer-title styling.
+   */
+  @Test
+  void testPerLayerLegendTitlesDoNotUsePrimaryGuideTitle() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 4, 'B'],
+            [3, 6, 'A'],
+            [4, 8, 'B']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      labels {
+        guides['color'] = 'Plot Colors'
+      }
+      layers {
+        geomPoint().scale('color', Scale.manual([A: '#FF0000', B: '#00FF00']))
+        geomPoint().scale('color', Scale.manual([A: '#0000FF', B: '#FFFF00']))
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    List<Text> titleElements = svg.descendants()
+        .findAll { it instanceof Text }
+        .collect { it as Text }
+    List<String> text = titleElements*.content
+    List<Text> layerTitles = titleElements.findAll {
+      it.content in ['color (layer 1)', 'color (layer 2)']
+    }
+
+    assertTrue(text.contains('color (layer 1)'), text.join(' '))
+    assertTrue(text.contains('color (layer 2)'), text.join(' '))
+    assertEquals(1, text.count { it == 'Plot Colors' }, text.join(' '))
+    assertEquals(2, layerTitles.size(), text.join(' '))
+    assertTrue(layerTitles.every { it.getAttribute('class') == 'charm-legend-title charm-legend-layer-title' })
+    assertTrue(layerTitles.every { it.getAttribute('font-style') == 'italic' })
   }
 
   @Test

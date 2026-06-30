@@ -11,7 +11,7 @@ port R plotting code to Groovy with minimal modifications. It delegates to the
 ### Gradle
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.4.1'))
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-ggplot'
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'
@@ -27,7 +27,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-bom</artifactId>
-      <version>2.4.1</version>
+      <version>2.5.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -88,6 +88,68 @@ ggplot(Dataset.iris(), aes { x = 'Sepal Length'; y = 'Petal Width' }) + geom_poi
 ```
 
 Wrappers work in both styles, including `I()`, `factor()`, `expr {}`, `after_stat()`, `after_scale()`, and `cut_width()`.
+
+## Positional aesthetics in `aes()`
+
+Range and endpoint aesthetics can be mapped directly in `aes()`. Use `xend` and `yend`
+for segment-like geoms, `ymin` and `ymax` for vertical intervals, and `xmin`/`xmax` with
+`ymin`/`ymax` for ribbons or rectangles.
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.core.Matrix
+
+def segments = Matrix.builder()
+    .columnNames(['x', 'y', 'xend', 'yend'])
+    .rows([[1, 1, 2, 3], [2, 2, 3, 4], [3, 3, 4, 2]])
+    .build()
+
+def segmentChart = ggplot(segments, aes(x: 'x', y: 'y', xend: 'xend', yend: 'yend')) +
+    geom_segment(linewidth: 1.5)
+```
+
+```groovy
+def intervals = Matrix.builder()
+    .columnNames(['group', 'mean', 'lower', 'upper'])
+    .rows([['A', 10, 8, 12], ['B', 14, 11, 17], ['C', 9, 7, 11]])
+    .build()
+
+def errorbarChart = ggplot(intervals, aes(x: 'group', y: 'mean', ymin: 'lower', ymax: 'upper')) +
+    geom_errorbar(width: 0.25) +
+    geom_point(size: 3)
+```
+
+```groovy
+def forecast = Matrix.builder()
+    .columnNames(['week', 'value', 'low', 'high'])
+    .rows([[1, 12, 10, 14], [2, 16, 13, 19], [3, 15, 12, 18], [4, 20, 17, 23]])
+    .build()
+
+def ribbonChart = ggplot(forecast, aes(x: 'week', y: 'value', ymin: 'low', ymax: 'high')) +
+    geom_ribbon(fill: '#9ecae1', alpha: 0.45) +
+    geom_line()
+```
+
+Legend titles are per aesthetic:
+
+```groovy
+ggplot(mtcars, aes(x: 'mpg', y: 'wt', color: 'cyl', fill: 'gear')) +
+    geom_point(size: 3) +
+    labs(title: 'My Chart', color: 'Speed', fill: 'Count')
+```
+
+Axis guide stacks accept typed `Guide` arguments:
+
+```groovy
+import se.alipsa.matrix.gg.Guide
+
+Guide baseAxis = guide_axis()
+Guide angledAxis = guide_axis(angle: 45)
+
+ggplot(mtcars, aes(x: 'mpg', y: 'wt')) +
+    geom_point() +
+    scale_x_continuous(guide: guide_axis_stack(baseAxis, angledAxis))
+```
 
 ## Quick Plots with `qplot()`
 
