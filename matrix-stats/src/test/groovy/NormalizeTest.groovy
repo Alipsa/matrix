@@ -269,6 +269,36 @@ class NormalizeTest {
   }
 
   @Test
+  void testIntegerNullSentinelTypeMatchesForMinMaxAndMeanNorm() {
+    List<Integer> values = [1, null, 3]
+
+    List minMaxResult = Normalize.minMaxNorm(values, 6)
+    List meanResult = Normalize.meanNorm(values, 6)
+
+    assertEquals(Double, minMaxResult[1].class)
+    assertTrue((minMaxResult[1] as Double).isNaN())
+    assertEquals(Double, meanResult[1].class)
+    assertTrue((meanResult[1] as Double).isNaN())
+  }
+
+  @Test
+  void testIntegerAndLongZeroRangeNullSentinelsUseDoubleNaNForMinMaxAndMeanNorm() {
+    [([1, null, 1]): 'Integer', ([1L, null, 1L]): 'Long'].each { List values, String label ->
+      List minMaxResult = Normalize.minMaxNorm(values, 6)
+      List meanResult = Normalize.meanNorm(values, 6)
+
+      minMaxResult.each { value ->
+        assertEquals(Double, value.class, label)
+        assertTrue((value as Double).isNaN(), label)
+      }
+      meanResult.each { value ->
+        assertEquals(Double, value.class, label)
+        assertTrue((value as Double).isNaN(), label)
+      }
+    }
+  }
+
+  @Test
   void testMeanNormFloat() {
     assertEquals(-0.150526076f, Normalize.meanNorm(1211f, 6412.428571428572f, 12f, 34567f, 9 ))
 
@@ -298,10 +328,10 @@ class NormalizeTest {
   void testMeanNormZeroes() {
     assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be -Infinity')
     assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be -Infinity')
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
+    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
     assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0f, 0f, 0f]), 'Float should be null')
     assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0.0d, 0d, 0d]), 'Double should be null')
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0l, 0l, 0l]), 'Long should be -Infinity')
+    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0l, 0l, 0l]), 'Long should be -Infinity')
     assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], BigInteger)), 'BigInteger should be null')
     assertIterableEquals([null]*3, Normalize.meanNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }

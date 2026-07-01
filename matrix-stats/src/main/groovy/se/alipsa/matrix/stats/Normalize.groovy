@@ -165,8 +165,9 @@ class Normalize {
     List<Number> numbers = numericValues(values)
     Number min = numbers.min()
     Number max = numbers.max()
+    Class nullValueType = numbers.first().class
 
-    values.collect { minMaxNorm(it as Number, min, max, decimals) }
+    values.collect { it == null ? minMaxNormNullValue(nullValueType) : minMaxNorm(it as Number, min, max, decimals) }
   }
 
   /**
@@ -457,24 +458,34 @@ class Normalize {
   }
 
   /**
-   * Returns null/NaN for meanNorm: Float.NaN for Byte/Short/Integer/Long/Float, Double.NaN for Double, null for BigInteger/BigDecimal
+   * Returns null/NaN for meanNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
    */
   private static <T extends Number> T meanNormNullValue(T sample) {
     if (sample instanceof BigDecimal || sample instanceof BigInteger) {
       return null
     }
-    if (sample instanceof Double) {
+    if (sample instanceof Double || sample instanceof Integer || sample instanceof Long) {
       return Double.NaN as T
     }
-    // Byte, Short, Integer, Long, Float
+    // Byte, Short, Float
     Float.NaN as T
+  }
+
+  private static Number minMaxNormNullValue(Class sampleType) {
+    if (sampleType == BigDecimal || sampleType == BigInteger) {
+      return null
+    }
+    if (sampleType == Double || sampleType == Integer || sampleType == Long) {
+      return Double.NaN
+    }
+    Float.NaN
   }
 
   private static Number meanNormNullValue(Class sampleType) {
     if (sampleType == BigDecimal || sampleType == BigInteger) {
       return null
     }
-    if (sampleType == Double) {
+    if (sampleType == Double || sampleType == Integer || sampleType == Long) {
       return Double.NaN
     }
     Float.NaN
