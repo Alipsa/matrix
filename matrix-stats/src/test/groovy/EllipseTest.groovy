@@ -3,6 +3,8 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.stats.Ellipse
+import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * Unit tests for the Ellipse class, covering mathematical correctness,
@@ -111,7 +113,6 @@ class EllipseTest {
     assertEquals(51, resultNorm.x.size())
     assertAllFinite(resultNorm.x, resultNorm.y)
 
-    // 't' and 'norm' should produce same results for this implementation
     assertEquals(resultT.x.size(), resultNorm.x.size())
 
     // Test 'euclid' type (scale = 1.0, smaller ellipse)
@@ -123,6 +124,39 @@ class EllipseTest {
     def maxRadiusT = calculateMaxRadius(resultT.x, resultT.y)
     def maxRadiusEuclid = calculateMaxRadius(resultEuclid.x, resultEuclid.y)
     assertTrue(maxRadiusEuclid < maxRadiusT, 'Euclid ellipse should be smaller than t-type')
+  }
+
+  @Test
+  void testTTypeUsesFiniteSampleFDistributionScale() {
+    def xVals = [1G, 2G, 3G, 4G, 5G]
+    def yVals = [2G, 4G, 3G, 5G, 6G]
+    Number level = 0.95
+
+    def resultT = Ellipse.calculate(xVals, yVals, level, 't', 101)
+    def resultNorm = Ellipse.calculate(xVals, yVals, level, 'norm', 101)
+
+    double radiusT = calculateMaxRadiusFromMean(resultT.x, resultT.y, xVals, yVals)
+    double radiusNorm = calculateMaxRadiusFromMean(resultNorm.x, resultNorm.y, xVals, yVals)
+    double expectedRatio = Math.sqrt(
+        2.0d * (new FDistribution(2, xVals.size() - 1).inverseCumulativeProbability(level) as double)
+    ) / Math.sqrt(new ChiSquaredDistribution(2).inverseCumulativeProbability(level) as double)
+
+    assertTrue(radiusT > radiusNorm, 'Finite-sample t ellipse should be wider than norm ellipse')
+    assertEquals(expectedRatio, radiusT / radiusNorm, 1e-9d)
+  }
+
+  @Test
+  void testTTypeConvergesToNormTypeForLargeSamples() {
+    def xVals = (1..1000).collect { int i -> i as BigDecimal }
+    def yVals = xVals.collect { BigDecimal x -> (x * 0.75G + ((x as int) % 7)) as BigDecimal }
+
+    def resultT = Ellipse.calculate(xVals, yVals, 0.95, 't', 101)
+    def resultNorm = Ellipse.calculate(xVals, yVals, 0.95, 'norm', 101)
+
+    double radiusT = calculateMaxRadiusFromMean(resultT.x, resultT.y, xVals, yVals)
+    double radiusNorm = calculateMaxRadiusFromMean(resultNorm.x, resultNorm.y, xVals, yVals)
+
+    assertEquals(1.0d, radiusT / radiusNorm, 0.01d)
   }
 
   @Test
@@ -186,9 +220,11 @@ class EllipseTest {
     BigDecimal meanX = xVals.sum() / xVals.size()
     BigDecimal meanY = yVals.sum() / yVals.size()
 
-    // Calculate centroid of ellipse
-    BigDecimal ellipseCenterX = result.x.sum() / result.x.size()
-    BigDecimal ellipseCenterY = result.y.sum() / result.y.size()
+    // Calculate centroid of ellipse, excluding the duplicated closing point
+    List<BigDecimal> uniqueX = result.x[0..-2]
+    List<BigDecimal> uniqueY = result.y[0..-2]
+    BigDecimal ellipseCenterX = uniqueX.sum() / uniqueX.size()
+    BigDecimal ellipseCenterY = uniqueY.sum() / uniqueY.size()
 
     // Ellipse center should be very close to data mean
     assertTrue(Math.abs((ellipseCenterX - meanX) as double) < 0.1,
@@ -261,6 +297,23 @@ class EllipseTest {
     for (int i = 0; i < xVals.size(); i++) {
       double dx = (xVals[i] as double) - centerX
       double dy = (yVals[i] as double) - centerY
+      double dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist > maxDist) {
+        maxDist = dist
+      }
+    }
+    maxDist
+  }
+
+  private double calculateMaxRadiusFromMean(List<BigDecimal> ellipseX, List<BigDecimal> ellipseY,
+                                            List<BigDecimal> dataX, List<BigDecimal> dataY) {
+    double centerX = (dataX.sum() / dataX.size()) as double
+    double centerY = (dataY.sum() / dataY.size()) as double
+
+    double maxDist = 0
+    for (int i = 0; i < ellipseX.size(); i++) {
+      double dx = (ellipseX[i] as double) - centerX
+      double dy = (ellipseY[i] as double) - centerY
       double dist = Math.sqrt(dx * dx + dy * dy)
       if (dist > maxDist) {
         maxDist = dist
