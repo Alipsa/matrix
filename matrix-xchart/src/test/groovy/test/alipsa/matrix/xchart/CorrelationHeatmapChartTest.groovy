@@ -76,4 +76,16 @@ class CorrelationHeatmapChartTest {
     assertNotNull(chart.getSeries('Correlation'))
   }
 
+  @Test
+  void testCorrelationHeatmapAcceptsConstantNumericColumn() {
+    Matrix matrix = Matrix.builder()
+        .data(x: [1, 2, 3], constant: [5, 5, 5])
+        .types([Number, Number])
+        .build()
+
+    def chart = CorrelationHeatmapChart.create(matrix).addSeries('Correlation', ['x', 'constant'])
+
+    assertNotNull(chart.getSeries('Correlation'))
+  }
+
 }
