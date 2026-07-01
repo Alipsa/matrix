@@ -51,6 +51,7 @@ package se.alipsa.matrix.stats
  *   <li><b>+1</b>: Perfect positive correlation</li>
  *   <li><b>0</b>: No correlation</li>
  *   <li><b>-1</b>: Perfect negative correlation</li>
+ *   <li><b>null</b>: Undefined correlation, for example when an input has zero variance</li>
  * </ul>
  *
  * @see <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson Correlation</a>
@@ -83,7 +84,7 @@ class Correlation {
    * @param numbersX the first list of Numbers
    * @param numbersY the second list of Numbers
    * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
-   * and +1 represents X and Y are positively correlated
+   * and +1 represents X and Y are positively correlated, or null if either input has zero variance
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corPearson(List<? extends Number> numbersX, List<? extends Number> numbersY) {
@@ -111,7 +112,7 @@ class Correlation {
 
     BigDecimal bottomSquared = (size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY)
     if (bottomSquared == 0) {
-      return 0
+      return null
     }
     BigDecimal bottom = bottomSquared.sqrt()
     BigDecimal top = size * sumXY - sumX * sumY
@@ -124,7 +125,7 @@ class Correlation {
    * @param numbersX the first list of Numbers
    * @param numbersY the second list of Numbers
    * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
-   * and +1 represents X and Y are positively correlated
+   * and +1 represents X and Y are positively correlated, or null if either ranked input has zero variance
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corSpearman(List<? extends Number> numbersX, List<? extends Number> numbersY) {

@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static se.alipsa.matrix.stats.Correlation.*
 
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation
@@ -19,6 +20,21 @@ class CorrelationTest {
     assertEquals(
         0.95346258924560,
         cor([15, 18, 21, 24, 27], [25, 25, 27, 31, 32]).setScale(14, RoundingMode.HALF_EVEN))
+  }
+
+  @Test
+  void testPearsonCorrelationReturnsNullWhenXIsConstant() {
+    assertNull(corPearson([1, 1, 1], [2, 4, 6]))
+  }
+
+  @Test
+  void testPearsonCorrelationReturnsNullWhenYIsConstant() {
+    assertNull(corPearson([1, 2, 3], [5, 5, 5]))
+  }
+
+  @Test
+  void testPearsonCorrelationReturnsNullWhenBothInputsAreConstant() {
+    assertNull(corPearson([3, 3, 3], [7, 7, 7]))
   }
 
   /**
