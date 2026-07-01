@@ -130,7 +130,7 @@ class EllipseTest {
   void testTTypeUsesFiniteSampleFDistributionScale() {
     def xVals = [1G, 2G, 3G, 4G, 5G]
     def yVals = [2G, 4G, 3G, 5G, 6G]
-    double level = 0.95
+    Number level = 0.95
 
     def resultT = Ellipse.calculate(xVals, yVals, level, 't', 101)
     def resultNorm = Ellipse.calculate(xVals, yVals, level, 'norm', 101)

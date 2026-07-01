@@ -125,7 +125,7 @@ class Ellipse {
     new EllipseData(ellipseX, ellipseY)
   }
 
-  private static double scaleFor(String type, double level, int n) {
+  private static double scaleFor(String type, Number level, int n) {
     if (type == 't') {
       FDistribution fDist = new FDistribution(2, n - 1)
       return Math.sqrt(2.0d * (fDist.inverseCumulativeProbability(level) as double))
