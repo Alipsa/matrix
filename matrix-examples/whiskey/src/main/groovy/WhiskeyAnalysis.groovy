@@ -91,7 +91,8 @@ CorrelationHeatmapChart.create(m)
   .display()
 
 corr = [(size - 1)..0, 0..<size].combinations().collect { int i, int j ->
-  Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>) * 100 as int
+  def correlation = Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>)
+  correlation == null ? 0 : correlation * 100 as int
 }
 
 corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
