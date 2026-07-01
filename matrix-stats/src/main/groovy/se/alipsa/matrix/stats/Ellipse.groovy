@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats
 
 import se.alipsa.matrix.stats.distribution.ChiSquaredDistribution
+import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * Confidence ellipse calculations for bivariate normal data.
@@ -27,7 +28,9 @@ class Ellipse {
    * @param xValues X coordinates
    * @param yValues Y coordinates
    * @param level Confidence level (default 0.95)
-   * @param type Ellipse type: 't', 'norm', or 'euclid' (default 't')
+   * @param type Ellipse type: 't', 'norm', or 'euclid' (default 't'). The 't' type uses an
+   * F-distribution scale for finite samples, equivalent to ggplot2's {@code stat_ellipse(type = "t")}.
+   * The 'norm' type uses a chi-squared(2) scale for asymptotic normality.
    * @param segments Number of points to generate (default 51)
    * @return EllipseData containing x,y coordinates of the ellipse
    * @throws IllegalArgumentException if either input has fewer than 3 points or the input sizes differ
@@ -93,17 +96,7 @@ class Ellipse {
       theta = Math.atan2(lambda1 - varX, covXY)
     }
 
-    // Scale factor based on confidence level
-    double scale
-    if (type == 't' || type == 'norm') {
-      // Use chi-square quantile for multivariate normal (2 degrees of freedom)
-      // For bivariate normal, confidence ellipse is based on chi-square(2)
-      ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
-      double quantile = chiSq.inverseCumulativeProbability(level)
-      scale = Math.sqrt(quantile)
-    } else {
-      scale = 1.0
-    }
+    double scale = scaleFor(type, level, n)
 
     // Generate ellipse points
     List<BigDecimal> ellipseX = []
@@ -130,5 +123,17 @@ class Ellipse {
     }
 
     new EllipseData(ellipseX, ellipseY)
+  }
+
+  private static double scaleFor(String type, double level, int n) {
+    if (type == 't') {
+      FDistribution fDist = new FDistribution(2, n - 1)
+      return Math.sqrt(2.0d * (fDist.inverseCumulativeProbability(level) as double))
+    }
+    if (type == 'norm') {
+      ChiSquaredDistribution chiSq = new ChiSquaredDistribution(2)
+      return Math.sqrt(chiSq.inverseCumulativeProbability(level) as double)
+    }
+    1.0d
   }
 }

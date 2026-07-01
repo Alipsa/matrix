@@ -10,6 +10,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class FDistribution implements ContinuousDistribution {
+  private static final int MAX_INVERSE_ITERATIONS = 100
   private static final String GROUP_LABEL = 'group'
 
   private final BigDecimal dfNumerator
@@ -86,6 +87,65 @@ class FDistribution implements ContinuousDistribution {
   @Deprecated
   double cumulativeProbability(double f) {
     cdfValue(f)
+  }
+
+  /**
+   * Computes the inverse cumulative distribution function for the F-distribution.
+   *
+   * @param p probability in [0, 1]
+   * @return the F-value where {@code P(F <= f) = p}
+   */
+  BigDecimal inverseCumulativeProbability(Number p) {
+    BigDecimal.valueOf(inverseCumulativeProbabilityValue(NumericConversion.toFiniteDouble(p, 'p')))
+  }
+
+  /**
+   * Primitive compatibility bridge retained during the idiomatic API transition.
+   *
+   * @param p probability in [0, 1]
+   * @return the F-value where {@code P(F <= f) = p}
+   * @deprecated Prefer {@link #inverseCumulativeProbability(Number)}
+   */
+  @Deprecated
+  double inverseCumulativeProbability(double p) {
+    inverseCumulativeProbabilityValue(p)
+  }
+
+  private double inverseCumulativeProbabilityValue(double p) {
+    if (p < 0.0d || p > 1.0d) {
+      throw new IllegalArgumentException("p must be between 0 and 1, got: $p")
+    }
+    if (p == 0.0d) {
+      return 0.0d
+    }
+    if (p == 1.0d) {
+      return Double.POSITIVE_INFINITY
+    }
+
+    double low = 0.0d
+    double high = 1.0d
+    while (cdfValue(high) < p) {
+      low = high
+      high *= 2.0d
+      if (high > Double.MAX_VALUE / 4.0d) {
+        break
+      }
+    }
+
+    for (int i = 0; i < MAX_INVERSE_ITERATIONS; i++) {
+      double mid = 0.5d * (low + high)
+      double cdf = cdfValue(mid)
+      if (Math.abs(cdf - p) < 1e-12d || high - low < 1e-12d * Math.max(1.0d, mid)) {
+        return mid
+      }
+      if (cdf < p) {
+        low = mid
+      } else {
+        high = mid
+      }
+    }
+
+    0.5d * (low + high)
   }
 
   /**
