@@ -165,6 +165,9 @@ class TableUtil {
     if (column in DoubleColumn) {
       def dc = column as DoubleColumn
       for (int i = 0; i < dc.size(); i++) {
+        if (dc.isMissing(i)) {
+          continue
+        }
         double val = dc.getDouble(i)
         dc.set(i, round(val, numDecimals))
       }
@@ -173,6 +176,9 @@ class TableUtil {
     if (column in FloatColumn) {
       def fc = column as FloatColumn
       for (int i = 0; i < fc.size(); i++) {
+        if (fc.isMissing(i)) {
+          continue
+        }
         float val = fc.getFloat(i)
         fc.set(i, round(val, numDecimals))
       }
