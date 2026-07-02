@@ -70,8 +70,8 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
 
   /**
    * Add a correlation heatmap series computed from the specified numeric columns.
-   * The correlation matrix is calculated using Pearson correlation coefficients. Undefined correlations
-   * from zero-variance columns are rendered as 0-valued heatmap cells.
+   * The correlation matrix is calculated using Pearson correlation coefficients. Self-correlations are
+   * rendered as 1, and undefined non-diagonal correlations from zero-variance columns are rendered as 0.
    *
    * @param title the name for this series (displayed in legend)
    * @param columnNames the names of the numeric columns to compute correlations for
@@ -89,7 +89,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       (0..<size).collect { int j ->
         List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
         List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
-        roundCorrelation(Correlation.cor(xValues, yValues))
+        roundCorrelation(Correlation.cor(xValues, yValues), i == j)
       }
     }
     def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
@@ -131,7 +131,10 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     this
   }
 
-  private static BigDecimal roundCorrelation(BigDecimal correlation) {
+  private static BigDecimal roundCorrelation(BigDecimal correlation, boolean selfCorrelation) {
+    if (selfCorrelation) {
+      return 1G
+    }
     correlation == null ? 0G : correlation.round(CORRELATION_SCALE)
   }
 
