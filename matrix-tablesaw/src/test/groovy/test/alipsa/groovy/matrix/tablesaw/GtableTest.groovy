@@ -11,10 +11,12 @@ import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
+import tech.tablesaw.joining.JoinType
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
+import se.alipsa.matrix.tablesaw.gtable.GdataFrameJoiner
 import se.alipsa.matrix.tablesaw.gtable.Gtable
 
 class GtableTest {
@@ -162,6 +164,53 @@ class GtableTest {
     table.concat(table2)
     assertEquals(5, table.rowCount(), 'concat rowcount')
     assertEquals(6, table.columnCount(), 'concat columnCount')
+  }
+
+  @Test
+  void testFluentJoinReturnsGtable() {
+    Gtable employees = Gtable.create([
+        id: [1, 2, 3],
+        name: ['Rick', 'Dan', 'Michelle']
+    ])
+    Gtable performance = Gtable.create([
+        id: [1, 3, 4],
+        score: [0.76, 0.68, 0.91]
+    ])
+
+    def joined = employees.joinOn('id')
+        .type(JoinType.INNER)
+        .with(performance)
+        .join()
+
+    assertTrue(joined instanceof Gtable)
+    assertEquals(2, joined.rowCount())
+    assertEquals(['id', 'name', 'score'], joined.columnNames())
+  }
+
+  @Test
+  void testFluentJoinOptionsReturnGdataFrameJoiner() {
+    Gtable employees = Gtable.create([
+        emp_id: [1, 2, 3],
+        name: ['Rick', 'Dan', 'Michelle']
+    ])
+    Gtable performance = Gtable.create([
+        employee_id: [1, 3, 4],
+        score: [0.76, 0.68, 0.91]
+    ])
+
+    def joiner = employees.joinOn('emp_id')
+    assertTrue(joiner.type(JoinType.LEFT_OUTER) instanceof GdataFrameJoiner)
+    assertTrue(joiner.keepAllJoinKeyColumns(true) instanceof GdataFrameJoiner)
+    assertTrue(joiner.allowDuplicateColumnNames(true) instanceof GdataFrameJoiner)
+    assertTrue(joiner.rightJoinColumns('employee_id') instanceof GdataFrameJoiner)
+    assertTrue(joiner.with(performance) instanceof GdataFrameJoiner)
+
+    def joined = joiner.join()
+
+    assertTrue(joined instanceof Gtable)
+    assertEquals(3, joined.rowCount())
+    assertTrue(joined.columnNames().contains('employee_id'))
+    assertTrue(joined.columnNames().contains('score'))
   }
 
   @Test
