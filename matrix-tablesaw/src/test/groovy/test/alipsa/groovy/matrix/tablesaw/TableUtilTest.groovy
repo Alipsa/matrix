@@ -191,6 +191,28 @@ class TableUtilTest {
   }
 
   @Test
+  void testRoundDoubleColumnPreservesMissingValues() {
+    DoubleColumn col = DoubleColumn.create('values', [1.234d, Double.NaN, 5.678d] as double[])
+
+    TableUtil.round(col, 2)
+
+    assertEquals(1.23d, col.getDouble(0), 1e-9)
+    assertTrue(col.isMissing(1))
+    assertEquals(5.68d, col.getDouble(2), 1e-9)
+  }
+
+  @Test
+  void testRoundFloatColumnPreservesMissingValues() {
+    FloatColumn col = FloatColumn.create('values', [1.234f, Float.NaN, 5.678f] as float[])
+
+    TableUtil.round(col, 2)
+
+    assertEquals(1.23f, col.getFloat(0), 1e-6f)
+    assertTrue(col.isMissing(1))
+    assertEquals(5.68f, col.getFloat(2), 1e-6f)
+  }
+
+  @Test
   void testRoundRejectsNegativeDecimals() {
     assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0d, -1) }
     assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0f, -1) }
