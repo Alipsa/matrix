@@ -45,6 +45,17 @@ class NormalizeTest {
   }
 
   @Test
+  void testMinMaxNormZeroRangeFloatColumnsUseMissingValues() {
+    def doubleNorm = Normalizer.minMaxNorm(DoubleColumn.create('doubleValues', [7d, 7d, 7d] as double[]))
+    def floatNorm = Normalizer.minMaxNorm(FloatColumn.create('floatValues', [7f, 7f, 7f] as float[]))
+
+    (0..<3).each { int row ->
+      Assertions.assertTrue(doubleNorm.isMissing(row))
+      Assertions.assertTrue(floatNorm.isMissing(row))
+    }
+  }
+
+  @Test
   void testMinMaxNormBigDecimal() {
     def obs = BigDecimalColumn.create('values', [1200, 34567, 3456, 12, 3456, 985, 1211] as BigDecimal[])
     def norm = Normalizer.minMaxNorm(obs, 8)
@@ -90,6 +101,17 @@ class NormalizeTest {
     def norm = Normalizer.meanNorm(obs, 7)
     def exp = [ -0.1508444, 0.8147756, -0.0855572, -0.1852244, -0.0855572, -0.1570664, -0.1505261 ] as Float[]
     Assertions.assertArrayEquals(exp, norm.asFloatArray())
+  }
+
+  @Test
+  void testMeanNormZeroRangeFloatColumnsUseMissingValues() {
+    def doubleNorm = Normalizer.meanNorm(DoubleColumn.create('doubleValues', [7d, 7d, 7d] as double[]))
+    def floatNorm = Normalizer.meanNorm(FloatColumn.create('floatValues', [7f, 7f, 7f] as float[]))
+
+    (0..<3).each { int row ->
+      Assertions.assertTrue(doubleNorm.isMissing(row))
+      Assertions.assertTrue(floatNorm.isMissing(row))
+    }
   }
 
   @Test
