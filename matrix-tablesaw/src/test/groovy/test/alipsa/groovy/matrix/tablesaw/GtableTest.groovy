@@ -90,6 +90,36 @@ class GtableTest {
   }
 
   @Test
+  void testCsvReaderReturnsGtableForPathAndFile() {
+    File csv = new File(getClass().getResource('/glaciers.csv').toURI())
+
+    def fromPath = Gtable.read().csv(csv.absolutePath)
+    def fromFile = Gtable.read().csv(csv)
+
+    assertTrue(fromPath instanceof Gtable)
+    assertTrue(fromFile instanceof Gtable)
+    assertEquals(70, fromPath.rowCount())
+    assertEquals(70, fromFile.rowCount())
+  }
+
+  @Test
+  void testCsvReaderReturnsGtableForOptions() {
+    def csv = getClass().getResource('/glaciers.csv')
+    CsvReadOptions options = CsvReadOptions.builder(csv)
+        .separator(',' as Character)
+        .columnTypes([INTEGER, BigDecimalColumnType.instance(), INTEGER] as ColumnType[])
+        .build()
+
+    def fromOptions = Gtable.read().csv(options)
+    def fromBuilder = Gtable.read().csv(CsvReadOptions.builder(csv))
+
+    assertTrue(fromOptions instanceof Gtable)
+    assertTrue(fromBuilder instanceof Gtable)
+    assertEquals(1946, fromOptions[1, 0])
+    assertEquals(70, fromBuilder.rowCount())
+  }
+
+  @Test
   void testExportToCsv() {
     def empData = [
         emp_id: 1..5,
