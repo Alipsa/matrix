@@ -85,7 +85,16 @@ class CorrelationHeatmapChartTest {
 
     def chart = CorrelationHeatmapChart.create(matrix).addSeries('Correlation', ['x', 'constant'])
 
-    assertNotNull(chart.getSeries('Correlation'))
+    def series = chart.getSeries('Correlation')
+    assertNotNull(series)
+
+    Map<String, Number> heatData = series.heatData.collectEntries { Number[] point ->
+      [("${point[0]},${point[1]}".toString()): point[2]]
+    }
+    assertEquals(0G, heatData['0,0'])
+    assertEquals(1G, heatData['1,0'])
+    assertEquals(1G, heatData['0,1'])
+    assertEquals(0G, heatData['1,1'])
   }
 
 }
