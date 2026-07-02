@@ -153,6 +153,8 @@ class Normalize {
 
   /**
    * Apply min-max normalization to a list of values.
+   * For lists containing nulls, the null sentinel is inferred from the first non-null numeric value,
+   * assuming the list represents one homogeneous numeric column.
    */
   static List minMaxNorm(List values, int... decimals) {
     if (values.isEmpty()) {
@@ -245,6 +247,8 @@ class Normalize {
 
   /**
    * Apply mean normalization to a list of values.
+   * For lists containing nulls, the null sentinel is inferred from the first non-null numeric value,
+   * assuming the list represents one homogeneous numeric column.
    */
   static List meanNorm(List values, int... decimals) {
     if (values.isEmpty()) {
@@ -370,6 +374,18 @@ class Normalize {
     STD_SCALE
   }
 
+  private enum MissingValueType {
+    NULL(null),
+    DOUBLE_NAN(Double.NaN),
+    FLOAT_NAN(Float.NaN)
+
+    final Number sentinel
+
+    private MissingValueType(Number sentinel) {
+      this.sentinel = sentinel
+    }
+  }
+
   private static Matrix normalizeMatrix(Matrix table, Normalization normalization, int... decimals) {
     List<List> columns = []
     List<Class> types = []
@@ -447,48 +463,36 @@ class Normalize {
    * Returns null/NaN for minMaxNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
    */
   private static <T extends Number> T minMaxNormNullValue(T sample) {
-    if (sample instanceof BigDecimal || sample instanceof BigInteger) {
-      return null
-    }
-    if (sample instanceof Double || sample instanceof Integer || sample instanceof Long) {
-      return Double.NaN as T
-    }
-    // Byte, Short, Float
-    Float.NaN as T
+    nullSentinel(sample == null ? null : sample.class) as T
   }
 
   /**
    * Returns null/NaN for meanNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
    */
   private static <T extends Number> T meanNormNullValue(T sample) {
-    if (sample instanceof BigDecimal || sample instanceof BigInteger) {
-      return null
-    }
-    if (sample instanceof Double || sample instanceof Integer || sample instanceof Long) {
-      return Double.NaN as T
-    }
-    // Byte, Short, Float
-    Float.NaN as T
+    nullSentinel(sample == null ? null : sample.class) as T
   }
 
   private static Number minMaxNormNullValue(Class sampleType) {
-    if (sampleType == BigDecimal || sampleType == BigInteger) {
-      return null
-    }
-    if (sampleType == Double || sampleType == Integer || sampleType == Long) {
-      return Double.NaN
-    }
-    Float.NaN
+    nullSentinel(sampleType)
   }
 
   private static Number meanNormNullValue(Class sampleType) {
+    nullSentinel(sampleType)
+  }
+
+  private static Number nullSentinel(Class sampleType) {
+    missingValueType(sampleType).sentinel
+  }
+
+  private static MissingValueType missingValueType(Class sampleType) {
     if (sampleType == BigDecimal || sampleType == BigInteger) {
-      return null
+      return MissingValueType.NULL
     }
     if (sampleType == Double || sampleType == Integer || sampleType == Long) {
-      return Double.NaN
+      return MissingValueType.DOUBLE_NAN
     }
-    Float.NaN
+    MissingValueType.FLOAT_NAN
   }
 
   /**
