@@ -30,6 +30,7 @@ class TableUtil {
   private static final String COL_VALUE = 'Value'
   private static final String COL_FREQUENCY = 'Frequency'
   private static final String COL_PERCENT = 'Percent'
+  private static final String MISSING_VALUE = '<missing>'
   private static final String NUM_DECIMALS_ERROR = 'numDecimals cannot be a negative number: was '
 
   /**
@@ -37,7 +38,7 @@ class TableUtil {
    *
    * <p>Creates a table with three columns:
    * <ul>
-   *   <li>Value: distinct values from the column</li>
+   *   <li>Value: distinct values from the column, with missing values grouped as {@code <missing>}</li>
    *   <li>Frequency: count of occurrences for each value</li>
    *   <li>Percent: percentage of total (rounded to 2 decimals)</li>
    * </ul>
@@ -49,8 +50,9 @@ class TableUtil {
    */
   static Table frequency(Column<?> column) {
     Map<Object, AtomicInteger> freq = [:]
-    column.forEach { v ->
-      def counter = freq.computeIfAbsent(v) { k -> new AtomicInteger() }
+    for (int i = 0; i < column.size(); i++) {
+      Object value = column.isMissing(i) ? MISSING_VALUE : column.get(i)
+      def counter = freq.computeIfAbsent(value) { k -> new AtomicInteger() }
       counter.incrementAndGet()
     }
     int size = column.size()

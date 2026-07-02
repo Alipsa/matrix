@@ -48,6 +48,38 @@ class TableUtilTest {
   }
 
   @Test
+  void testFrequencyUsesExplicitMissingMarker() {
+    BooleanColumn column = BooleanColumn.create('flags')
+    column.append(true)
+    column.appendMissing()
+    column.append(false)
+    column.appendMissing()
+
+    def freq = TableUtil.frequency(column)
+    def counts = frequencyCounts(freq)
+
+    assertEquals(2, counts['<missing>'])
+    assertEquals(1, counts['true'])
+    assertEquals(1, counts['false'])
+    assertEquals(50.0d, frequencyPercent(freq, '<missing>'), 1e-9)
+  }
+
+  @Test
+  void testFrequencyDistinguishesStringNullFromMissing() {
+    StringColumn column = StringColumn.create('labels')
+    column.append('null')
+    column.appendMissing()
+    column.append('value')
+
+    def freq = TableUtil.frequency(column)
+    def counts = frequencyCounts(freq)
+
+    assertEquals(1, counts['null'])
+    assertEquals(1, counts['<missing>'])
+    assertEquals(1, counts['value'])
+  }
+
+  @Test
   void testRound() {
     def csv = getClass().getResource('/glaciers.csv')
     CsvReadOptions.Builder builder = CsvReadOptions.builder(csv)
@@ -216,6 +248,17 @@ class TableUtilTest {
   void testRoundRejectsNegativeDecimals() {
     assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0d, -1) }
     assertThrows(IllegalArgumentException) { -> TableUtil.round(1.0f, -1) }
+  }
+
+  private static Map<String, Integer> frequencyCounts(Table frequency) {
+    (0..<frequency.rowCount()).collectEntries { int i ->
+      [(frequency.get(i, 0) as String): (frequency.get(i, 1) as Number).intValue()]
+    } as Map<String, Integer>
+  }
+
+  private static double frequencyPercent(Table frequency, String value) {
+    int row = (0..<frequency.rowCount()).find { int i -> frequency.get(i, 0) == value } as int
+    (frequency.get(row, 2) as Number).doubleValue()
   }
 
 }
