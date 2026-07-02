@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.5.1, 2026-06-30
+## v2.5.1, 2026-07-02
 - Add toString to GoalSeek.Result for easier debugging and logging.
 - Fix `LinearRegression.summary()` matrix orientation so coefficient labels, estimates, and standard errors align with their column names.
 - Fix `Normalize.logNorm()` so negative values return `null` instead of throwing, matching the documented invalid-input behavior.
