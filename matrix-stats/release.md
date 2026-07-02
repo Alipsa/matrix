@@ -3,6 +3,11 @@
 ## v2.5.1, 2026-06-30
 - Add toString to GoalSeek.Result for easier debugging and logging.
 - Fix `LinearRegression.summary()` matrix orientation so coefficient labels, estimates, and standard errors align with their column names.
+- Fix `Normalize.logNorm()` so negative values return `null` instead of throwing, matching the documented invalid-input behavior.
+- Fix confidence ellipses with `type = 't'` to use the finite-sample F-distribution scale instead of the normal chi-squared scale.
+- Fix Pearson and Spearman correlation for zero-variance inputs by returning `null` for undefined correlations instead of `0`.
+- Fix `Normalize.meanNorm()` null-sentinel handling so Integer and Long inputs match `minMaxNorm()`.
+- Add explicit `Normalize.MissingValueType` support for min-max and mean normalization, defaulting undefined results to `null` while allowing callers such as `matrix-tablesaw` to opt into `Float.NaN` or `Double.NaN`.
 
 ## v2.5.0, 2026-06-14
 - `GoalSeek.solve()` now returns a typed `GoalSeek.Result` with BigDecimal accessors for the computed value, result, and difference. Existing callers that need the previous map-shaped value can use `GoalSeek.solve(...) as Map`.
