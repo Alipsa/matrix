@@ -2,6 +2,7 @@ package se.alipsa.matrix.tablesaw.gtable
 
 import tech.tablesaw.api.Table
 import tech.tablesaw.joining.DataFrameJoiner
+import tech.tablesaw.joining.JoinType
 
 /**
  * Groovy-friendly wrapper for Tablesaw's DataFrameJoiner that returns Gtable instances.
@@ -40,6 +41,76 @@ class GdataFrameJoiner extends DataFrameJoiner {
    */
   GdataFrameJoiner(Table table, String... joinColumnNames) {
     super(table, joinColumnNames)
+  }
+
+  /**
+   * Sets the join type for fluent join construction.
+   *
+   * @param joinType the type of join to perform
+   * @return this joiner for method chaining
+   */
+  @Override
+  GdataFrameJoiner type(JoinType joinType) {
+    super.type(joinType)
+    this
+  }
+
+  /**
+   * Configures whether all join-key columns should be retained.
+   *
+   * @param keep true to keep join-key columns from right tables
+   * @return this joiner for method chaining
+   */
+  @Override
+  GdataFrameJoiner keepAllJoinKeyColumns(boolean keep) {
+    super.keepAllJoinKeyColumns(keep)
+    this
+  }
+
+  /**
+   * Configures whether duplicate non-join column names are allowed.
+   *
+   * @param allow true to allow duplicate column names
+   * @return this joiner for method chaining
+   */
+  @Override
+  GdataFrameJoiner allowDuplicateColumnNames(boolean allow) {
+    super.allowDuplicateColumnNames(allow)
+    this
+  }
+
+  /**
+   * Sets the join columns for the right-side tables.
+   *
+   * @param rightJoinColumnNames the right-side join column names
+   * @return this joiner for method chaining
+   */
+  @Override
+  GdataFrameJoiner rightJoinColumns(String... rightJoinColumnNames) {
+    super.rightJoinColumns(rightJoinColumnNames)
+    this
+  }
+
+  /**
+   * Sets the right-side tables for fluent join construction.
+   *
+   * @param tables the right-side tables
+   * @return this joiner for method chaining
+   */
+  @Override
+  GdataFrameJoiner with(Table... tables) {
+    super.with(tables)
+    this
+  }
+
+  /**
+   * Performs a fluent join and returns a Gtable.
+   *
+   * @return a Gtable containing the join result
+   */
+  @Override
+  Gtable join() {
+    Gtable.create(super.join())
   }
 
   /**
