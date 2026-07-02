@@ -110,12 +110,15 @@ class Normalize {
    * @param x the value to normalize
    * @param min the minimum value in the dataset
    * @param max the maximum value in the dataset
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
    * @param decimals optional number of decimal places to round to
-   * @return the normalized value in [0, 1] range, or null/NaN for invalid input
+   * @return the normalized value in [0, 1] range, or the requested missing-value sentinel for invalid input
    */
-  static <T extends Number> T minMaxNorm(T x, Number min, Number max, int... decimals) {
+  static <T extends Number> T minMaxNorm(T x, Number min, Number max,
+                                         MissingValueType missingValueType = MissingValueType.NULL,
+                                         int... decimals) {
     if (x == null) {
-      return minMaxNormNullValue(x)
+      return nullSentinel(missingValueType) as T
     }
 
     double xVal = x.doubleValue()
@@ -124,7 +127,7 @@ class Normalize {
     double range = maxVal - minVal
 
     if (range == 0) {
-      return minMaxNormNullValue(x)
+      return nullSentinel(missingValueType) as T
     }
 
     double result = (xVal - minVal) / range
@@ -139,24 +142,38 @@ class Normalize {
 
   /**
    * Apply min-max normalization to an array of values.
+   *
+   * @param values the values to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized values
    */
-  static <T extends Number> List<T> minMaxNorm(T[] values, int... decimals) {
+  static <T extends Number> List<T> minMaxNorm(T[] values,
+                                               MissingValueType missingValueType = MissingValueType.NULL,
+                                               int... decimals) {
     if (values.length == 0) {
       return []
     }
 
-    T min = values.min()
-    T max = values.max()
+    List<T> numbers = values.findAll { it != null } as List<T>
+    if (numbers.isEmpty()) {
+      return values.collect { nullSentinel(missingValueType) as T }
+    }
+    T min = numbers.min()
+    T max = numbers.max()
 
-    values.collect { minMaxNorm(it, min, max, decimals) }
+    values.collect { minMaxNorm(it, min, max, missingValueType, decimals) }
   }
 
   /**
    * Apply min-max normalization to a list of values.
-   * For lists containing nulls, the null sentinel is inferred from the first non-null numeric value,
-   * assuming the list represents one homogeneous numeric column.
+   *
+   * @param values the values to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized values, or the original list if it contains non-numeric values
    */
-  static List minMaxNorm(List values, int... decimals) {
+  static List minMaxNorm(List values, MissingValueType missingValueType = MissingValueType.NULL, int... decimals) {
     if (values.isEmpty()) {
       return []
     }
@@ -167,23 +184,35 @@ class Normalize {
     List<Number> numbers = numericValues(values)
     Number min = numbers.min()
     Number max = numbers.max()
-    Class nullValueType = numbers.first().class
 
-    values.collect { it == null ? minMaxNormNullValue(nullValueType) : minMaxNorm(it as Number, min, max, decimals) }
+    values.collect { minMaxNorm(it as Number, min, max, missingValueType, decimals) }
   }
 
   /**
    * Apply min-max normalization to a specific column in a Matrix.
+   *
+   * @param table the Matrix containing the column
+   * @param columnName the column to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized column values
    */
-  static List<? extends Number> minMaxNorm(Matrix table, String columnName, int... decimals) {
-    minMaxNorm(table.column(columnName) as List, decimals)
+  static List<? extends Number> minMaxNorm(Matrix table, String columnName,
+                                           MissingValueType missingValueType = MissingValueType.NULL,
+                                           int... decimals) {
+    minMaxNorm(table.column(columnName) as List, missingValueType, decimals)
   }
 
   /**
    * Apply min-max normalization to all numeric columns in a Matrix.
+   *
+   * @param table the Matrix to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return a new Matrix with normalized numeric columns
    */
-  static Matrix minMaxNorm(Matrix table, int... decimals) {
-    normalizeMatrix(table, Normalization.MIN_MAX, decimals)
+  static Matrix minMaxNorm(Matrix table, MissingValueType missingValueType = MissingValueType.NULL, int... decimals) {
+    normalizeMatrix(table, Normalization.MIN_MAX, missingValueType, decimals)
   }
 
   // ===== MEAN NORMALIZATION =====
@@ -196,12 +225,15 @@ class Normalize {
    * @param mean the mean of the dataset
    * @param min the minimum value in the dataset
    * @param max the maximum value in the dataset
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
    * @param decimals optional number of decimal places to round to
-   * @return the normalized value, or null/NaN for invalid input
+   * @return the normalized value, or the requested missing-value sentinel for invalid input
    */
-  static <T extends Number> T meanNorm(T x, Number mean, Number min, Number max, int... decimals) {
+  static <T extends Number> T meanNorm(T x, Number mean, Number min, Number max,
+                                       MissingValueType missingValueType = MissingValueType.NULL,
+                                       int... decimals) {
     if (x == null) {
-      return meanNormNullValue(x)
+      return nullSentinel(missingValueType) as T
     }
 
     double xVal = x.doubleValue()
@@ -211,7 +243,7 @@ class Normalize {
     double range = maxVal - minVal
 
     if (range == 0) {
-      return meanNormNullValue(x)
+      return nullSentinel(missingValueType) as T
     }
 
     double result = (xVal - meanVal) / range
@@ -226,31 +258,39 @@ class Normalize {
 
   /**
    * Apply mean normalization to an array of values.
+   *
+   * @param values the values to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized values
    */
-  static <T extends Number> List<T> meanNorm(T[] values, int... decimals) {
+  static <T extends Number> List<T> meanNorm(T[] values,
+                                             MissingValueType missingValueType = MissingValueType.NULL,
+                                             int... decimals) {
     if (values.length == 0) {
       return []
     }
 
     List<T> numbers = values.findAll { it != null } as List<T>
-    Class arrayComponentType = values.getClass().getComponentType()
     if (numbers.isEmpty()) {
-      return values.collect { meanNormNullValue(arrayComponentType) as T }
+      return values.collect { nullSentinel(missingValueType) as T }
     }
     BigDecimal mean = Stat.mean(numbers)
     T min = numbers.min()
     T max = numbers.max()
-    Class nullValueType = numbers.first().class
 
-    values.collect { it == null ? meanNormNullValue(nullValueType) as T : meanNorm(it, mean, min, max, decimals) }
+    values.collect { meanNorm(it, mean, min, max, missingValueType, decimals) }
   }
 
   /**
    * Apply mean normalization to a list of values.
-   * For lists containing nulls, the null sentinel is inferred from the first non-null numeric value,
-   * assuming the list represents one homogeneous numeric column.
+   *
+   * @param values the values to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized values, or the original list if it contains non-numeric values
    */
-  static List meanNorm(List values, int... decimals) {
+  static List meanNorm(List values, MissingValueType missingValueType = MissingValueType.NULL, int... decimals) {
     if (values.isEmpty()) {
       return []
     }
@@ -258,28 +298,39 @@ class Normalize {
       return values
     }
 
-    // nulls are excluded from stats and yield NaN/null according to the non-null value type
     List<Number> numbers = numericValues(values)
     BigDecimal mean = Stat.mean(numbers)
     Number min = numbers.min()
     Number max = numbers.max()
-    Class nullValueType = numbers.first().class
 
-    values.collect { it == null ? meanNormNullValue(nullValueType) : meanNorm(it as Number, mean, min, max, decimals) }
+    values.collect { meanNorm(it as Number, mean, min, max, missingValueType, decimals) }
   }
 
   /**
    * Apply mean normalization to a specific column in a Matrix.
+   *
+   * @param table the Matrix containing the column
+   * @param columnName the column to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized column values
    */
-  static List<? extends Number> meanNorm(Matrix table, String columnName, int... decimals) {
-    meanNorm(table.column(columnName) as List, decimals)
+  static List<? extends Number> meanNorm(Matrix table, String columnName,
+                                         MissingValueType missingValueType = MissingValueType.NULL,
+                                         int... decimals) {
+    meanNorm(table.column(columnName) as List, missingValueType, decimals)
   }
 
   /**
    * Apply mean normalization to all numeric columns in a Matrix.
+   *
+   * @param table the Matrix to normalize
+   * @param missingValueType sentinel to return for null or undefined results; defaults to {@link MissingValueType#NULL}
+   * @param decimals optional number of decimal places to round to
+   * @return a new Matrix with normalized numeric columns
    */
-  static Matrix meanNorm(Matrix table, int... decimals) {
-    normalizeMatrix(table, Normalization.MEAN, decimals)
+  static Matrix meanNorm(Matrix table, MissingValueType missingValueType = MissingValueType.NULL, int... decimals) {
+    normalizeMatrix(table, Normalization.MEAN, missingValueType, decimals)
   }
 
   // ===== STANDARD DEVIATION NORMALIZATION (Z-SCORE) =====
@@ -374,10 +425,13 @@ class Normalize {
     STD_SCALE
   }
 
-  private enum MissingValueType {
+  /**
+   * Missing-value sentinel options for normalization methods that can produce undefined results.
+   */
+  enum MissingValueType {
     NULL(null),
-    DOUBLE_NAN(Double.NaN),
-    FLOAT_NAN(Float.NaN)
+    FLOAT_NAN(Float.NaN),
+    DOUBLE_NAN(Double.NaN)
 
     final Number sentinel
 
@@ -387,11 +441,16 @@ class Normalize {
   }
 
   private static Matrix normalizeMatrix(Matrix table, Normalization normalization, int... decimals) {
+    normalizeMatrix(table, normalization, MissingValueType.NULL, decimals)
+  }
+
+  private static Matrix normalizeMatrix(Matrix table, Normalization normalization,
+                                        MissingValueType missingValueType, int... decimals) {
     List<List> columns = []
     List<Class> types = []
     for (Column col in table.columns()) {
       if (isNumericColumn(col)) {
-        List normalized = normalizeList(col as List, normalization, decimals)
+        List normalized = normalizeList(col as List, normalization, missingValueType, decimals)
         columns << normalized
         types << transformedType(normalized, col.type)
       } else {
@@ -407,10 +466,15 @@ class Normalize {
   }
 
   private static List normalizeList(List values, Normalization normalization, int... decimals) {
+    normalizeList(values, normalization, MissingValueType.NULL, decimals)
+  }
+
+  private static List normalizeList(List values, Normalization normalization,
+                                    MissingValueType missingValueType, int... decimals) {
     switch (normalization) {
       case LOG -> logNorm(values, decimals)
-      case MIN_MAX -> minMaxNorm(values, decimals)
-      case MEAN -> meanNorm(values, decimals)
+      case MIN_MAX -> minMaxNorm(values, missingValueType, decimals)
+      case MEAN -> meanNorm(values, missingValueType, decimals)
       case STD_SCALE -> stdScaleNorm(values, decimals)
       default -> throw new IllegalArgumentException("Unsupported normalization: $normalization")
     }
@@ -459,40 +523,8 @@ class Normalize {
     transformedValue == null ? fallbackType : transformedValue.class
   }
 
-  /**
-   * Returns null/NaN for minMaxNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
-   */
-  private static <T extends Number> T minMaxNormNullValue(T sample) {
-    nullSentinel(sample == null ? null : sample.class) as T
-  }
-
-  /**
-   * Returns null/NaN for meanNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
-   */
-  private static <T extends Number> T meanNormNullValue(T sample) {
-    nullSentinel(sample == null ? null : sample.class) as T
-  }
-
-  private static Number minMaxNormNullValue(Class sampleType) {
-    nullSentinel(sampleType)
-  }
-
-  private static Number meanNormNullValue(Class sampleType) {
-    nullSentinel(sampleType)
-  }
-
-  private static Number nullSentinel(Class sampleType) {
-    missingValueType(sampleType).sentinel
-  }
-
-  private static MissingValueType missingValueType(Class sampleType) {
-    if (sampleType == BigDecimal || sampleType == BigInteger) {
-      return MissingValueType.NULL
-    }
-    if (sampleType == Double || sampleType == Integer || sampleType == Long) {
-      return MissingValueType.DOUBLE_NAN
-    }
-    MissingValueType.FLOAT_NAN
+  private static Number nullSentinel(MissingValueType missingValueType) {
+    missingValueType.sentinel
   }
 
   /**

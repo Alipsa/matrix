@@ -50,7 +50,7 @@
     <matrixSpreadsheetVersion>2.4.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
     <matrixStatsVersion>2.5.1</matrixStatsVersion>
-    <matrixTablesawVersion>0.3.0</matrixTablesawVersion>
+    <matrixTablesawVersion>0.3.1-SNAPSHOT</matrixTablesawVersion>
     <matrixXChartVersion>0.3.1-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>

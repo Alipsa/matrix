@@ -5,6 +5,7 @@ import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn
 
 import se.alipsa.matrix.stats.Normalize
+import se.alipsa.matrix.stats.Normalize.MissingValueType
 
 /**
  * This class provides various ways to normalize a Tablesaw column.
@@ -74,7 +75,7 @@ class Normalizer {
 
     List<Double> vals = []
     for (def x : column) {
-      vals.add(Normalize.minMaxNorm(x, min, max, decimals))
+      vals.add(Normalize.minMaxNorm(x, min, max, MissingValueType.DOUBLE_NAN, decimals))
     }
     DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
@@ -92,7 +93,7 @@ class Normalizer {
 
     List<Float> vals = []
     for (def x : column) {
-      vals.add(Normalize.minMaxNorm(x, min, max, decimals))
+      vals.add(Normalize.minMaxNorm(x, min, max, MissingValueType.FLOAT_NAN, decimals))
     }
     FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }
@@ -129,7 +130,7 @@ class Normalizer {
 
     List<Double> vals = []
     for (def x : column) {
-      vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
+      vals.add(Normalize.meanNorm(x, mean, min, max, MissingValueType.DOUBLE_NAN, decimals))
     }
     DoubleColumn.create(NORM_PREFIX + column.name(), vals as Double[])
   }
@@ -148,7 +149,7 @@ class Normalizer {
 
     List<Float> vals = []
     for (def x : column) {
-      vals.add(Normalize.meanNorm(x, mean, min, max, decimals))
+      vals.add(Normalize.meanNorm(x, mean, min, max, MissingValueType.FLOAT_NAN, decimals))
     }
     FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }

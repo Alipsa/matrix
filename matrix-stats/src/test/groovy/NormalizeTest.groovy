@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
+import se.alipsa.matrix.stats.Normalize.MissingValueType
 
 class NormalizeTest {
 
@@ -139,12 +140,12 @@ class NormalizeTest {
 
   @Test
   void testMinMaxNormZeroes() {
-    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Byte)) : 'Byte should be NaN'
-    assert [Float.NaN]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Short)) : 'Short should be NaN'
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0i, 0i, 0i]) : 'Integer should be NaN'
-    assert [Float.NaN]*3 == Normalize.minMaxNorm([0f, 0f, 0f]) : 'Float should be NaN'
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0d, 0d, 0d]) : 'Double should be NaN'
-    assert [Double.NaN]*3 == Normalize.minMaxNorm([0l, 0l, 0l]) : 'Long should be NaN'
+    assert [null]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Byte)) : 'Byte should be null'
+    assert [null]*3 == Normalize.minMaxNorm(ListConverter.convert([0, 0, 0], Short)) : 'Short should be null'
+    assert [null]*3 == Normalize.minMaxNorm([0i, 0i, 0i]) : 'Integer should be null'
+    assert [null]*3 == Normalize.minMaxNorm([0f, 0f, 0f]) : 'Float should be null'
+    assert [null]*3 == Normalize.minMaxNorm([0d, 0d, 0d]) : 'Double should be null'
+    assert [null]*3 == Normalize.minMaxNorm([0l, 0l, 0l]) : 'Long should be null'
     assert [null]*3 == Normalize.minMaxNorm([0G, 0G, 0G]) : 'BigInteger should be null'
     assert [null]*3 == Normalize.minMaxNorm([0.0g, 0.0g, 0.0g]) : 'BigDecimal should be null'
   }
@@ -249,10 +250,8 @@ class NormalizeTest {
     List<Double> meanResult = Normalize.meanNorm(values, 6)
 
     assertEquals(5, meanResult.size())
-    assertTrue(meanResult[0] instanceof Double)
-    assertTrue(meanResult[0].isNaN())
-    assertTrue(meanResult[3] instanceof Double)
-    assertTrue(meanResult[3].isNaN())
+    assertNull(meanResult[0])
+    assertNull(meanResult[3])
     assertEquals(-0.5d, meanResult[1], 1e-6d)
     assertEquals(0.0d, meanResult[2], 1e-6d)
     assertEquals(0.5d, meanResult[4], 1e-6d)
@@ -265,37 +264,45 @@ class NormalizeTest {
     List<Double> meanResult = Normalize.meanNorm(values, 6)
 
     assertEquals(3, meanResult.size())
-    assertTrue(meanResult.every { it instanceof Double && it.isNaN() })
+    assertEquals([null, null, null], meanResult)
   }
 
   @Test
-  void testIntegerNullSentinelTypeMatchesForMinMaxAndMeanNorm() {
+  void testDefaultNullSentinelMatchesForMinMaxAndMeanNorm() {
     List<Integer> values = [1, null, 3]
 
     List minMaxResult = Normalize.minMaxNorm(values, 6)
     List meanResult = Normalize.meanNorm(values, 6)
 
-    assertEquals(Double, minMaxResult[1].class)
-    assertTrue((minMaxResult[1] as Double).isNaN())
-    assertEquals(Double, meanResult[1].class)
-    assertTrue((meanResult[1] as Double).isNaN())
+    assertNull(minMaxResult[1])
+    assertNull(meanResult[1])
   }
 
   @Test
-  void testIntegerAndLongZeroRangeNullSentinelsUseDoubleNaNForMinMaxAndMeanNorm() {
+  void testIntegerAndLongZeroRangeUseDefaultNullForMinMaxAndMeanNorm() {
     [([1, null, 1]): 'Integer', ([1L, null, 1L]): 'Long'].each { List values, String label ->
       List minMaxResult = Normalize.minMaxNorm(values, 6)
       List meanResult = Normalize.meanNorm(values, 6)
 
       minMaxResult.each { value ->
-        assertEquals(Double, value.class, label)
-        assertTrue((value as Double).isNaN(), label)
+        assertNull(value, label)
       }
       meanResult.each { value ->
-        assertEquals(Double, value.class, label)
-        assertTrue((value as Double).isNaN(), label)
+        assertNull(value, label)
       }
     }
+  }
+
+  @Test
+  void testMissingValueTypeControlsMinMaxAndMeanNormSentinels() {
+    List<Integer> values = [1, null, 1]
+
+    assertEquals([null, null, null], Normalize.minMaxNorm(values))
+    assertEquals([null, null, null], Normalize.meanNorm(values))
+    assertEquals([Float.NaN, Float.NaN, Float.NaN], Normalize.minMaxNorm(values, MissingValueType.FLOAT_NAN))
+    assertEquals([Float.NaN, Float.NaN, Float.NaN], Normalize.meanNorm(values, MissingValueType.FLOAT_NAN))
+    assertEquals([Double.NaN, Double.NaN, Double.NaN], Normalize.minMaxNorm(values, MissingValueType.DOUBLE_NAN))
+    assertEquals([Double.NaN, Double.NaN, Double.NaN], Normalize.meanNorm(values, MissingValueType.DOUBLE_NAN))
   }
 
   @Test
@@ -326,12 +333,12 @@ class NormalizeTest {
 
   @Test
   void testMeanNormZeroes() {
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be -Infinity')
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be -Infinity')
-    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be -Infinity')
-    assertIterableEquals([Float.NaN]*3, Normalize.meanNorm([0f, 0f, 0f]), 'Float should be null')
-    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0.0d, 0d, 0d]), 'Double should be null')
-    assertIterableEquals([Double.NaN]*3, Normalize.meanNorm([0l, 0l, 0l]), 'Long should be -Infinity')
+    assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Byte)), 'Byte should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], Short)), 'Short should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.toIntegers([0, 0, 0])), 'Integer should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm([0f, 0f, 0f]), 'Float should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm([0.0d, 0d, 0d]), 'Double should be null')
+    assertIterableEquals([null]*3, Normalize.meanNorm([0l, 0l, 0l]), 'Long should be null')
     assertIterableEquals([null]*3, Normalize.meanNorm(ListConverter.convert([0, 0, 0], BigInteger)), 'BigInteger should be null')
     assertIterableEquals([null]*3, Normalize.meanNorm([0.0g, 0.0g, 0.0g]), 'BigDecimal should be null')
   }
@@ -425,10 +432,8 @@ class NormalizeTest {
 
     List meanResult = Normalize.meanNorm(values, 6)
     assertEquals(5, meanResult.size())
-    assertTrue(meanResult[0] instanceof Double)
-    assertTrue((meanResult[0] as Double).isNaN())
-    assertTrue(meanResult[3] instanceof Double)
-    assertTrue((meanResult[3] as Double).isNaN())
+    assertNull(meanResult[0])
+    assertNull(meanResult[3])
     // mean=20, min=10, max=30: (x-20)/(30-10)
     assertEquals(-0.5d, meanResult[1] as Double, 1e-6d)
     assertEquals(0.0d, meanResult[2] as Double, 1e-6d)
