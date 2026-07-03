@@ -1,5 +1,25 @@
 # Matrix-Tablesaw Version history
 
+## v0.3.1, 2026-07-03
+
+### Bug Fixes
+- **Preserve missing floating values during rounding**
+  - `TableUtil.round(NumberColumn, int)` now skips missing rows for `DoubleColumn` and `FloatColumn` before rounding non-missing values.
+  - Direct scalar rounding remains strict and does not special-case `NaN`.
+- **Return Gtable from CSV reader overloads**
+  - `GdataFrameReader.csv(...)` now wraps all public Tablesaw CSV read overloads in `Gtable`, including path, file, stream, URL, reader, and `CsvReadOptions` variants.
+- **Preserve Gtable through fluent joins**
+  - `GdataFrameJoiner` fluent builder methods now return `GdataFrameJoiner`, and terminal `join()` returns `Gtable`.
+  - Existing direct convenience joins continue to return `Gtable`.
+- **Render frequency-table missing values explicitly**
+  - `TableUtil.frequency(Column<?>)` now detects missing entries with `column.isMissing(i)` and groups them under the reserved `"<missing>"` marker.
+  - Literal string values such as `"null"` remain distinct from true missing values.
+  - A real non-missing value that would display as `"<missing>"` now fails with a clear `IllegalArgumentException` instead of silently merging with missing values.
+
+### Testing
+- Final matrix-tablesaw verification passed in repository-required order.
+- Full repository test suite passed.
+
 ## v0.3.0, 2026-05-05
 
 ### Breaking Changes
