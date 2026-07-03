@@ -80,6 +80,18 @@ class TableUtilTest {
   }
 
   @Test
+  void testFrequencyRejectsLiteralMissingMarker() {
+    StringColumn column = StringColumn.create('labels')
+    column.append('<missing>')
+    column.appendMissing()
+
+    def ex = assertThrows(IllegalArgumentException) { -> TableUtil.frequency(column) }
+
+    assertTrue(ex.message.contains("The value '<missing>' is reserved for missing values"))
+    assertTrue(ex.message.contains("column 'labels'"))
+  }
+
+  @Test
   void testRound() {
     def csv = getClass().getResource('/glaciers.csv')
     CsvReadOptions.Builder builder = CsvReadOptions.builder(csv)

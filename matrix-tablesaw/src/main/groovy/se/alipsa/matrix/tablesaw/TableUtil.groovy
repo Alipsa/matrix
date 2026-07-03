@@ -31,6 +31,7 @@ class TableUtil {
   private static final String COL_FREQUENCY = 'Frequency'
   private static final String COL_PERCENT = 'Percent'
   private static final String MISSING_VALUE = '<missing>'
+  private static final String MISSING_VALUE_ERROR = "The value '${MISSING_VALUE}' is reserved for missing values"
   private static final String NUM_DECIMALS_ERROR = 'numDecimals cannot be a negative number: was '
 
   /**
@@ -47,11 +48,16 @@ class TableUtil {
    *
    * @param column the column to analyze
    * @return a frequency table sorted by descending frequency
+   * @throws IllegalArgumentException if a non-missing value would collide with the missing-value marker
    */
   static Table frequency(Column<?> column) {
     Map<Object, AtomicInteger> freq = [:]
     for (int i = 0; i < column.size(); i++) {
-      Object value = column.isMissing(i) ? MISSING_VALUE : column.get(i)
+      boolean missing = column.isMissing(i)
+      Object value = missing ? MISSING_VALUE : column.get(i)
+      if (!missing && String.valueOf(value) == MISSING_VALUE) {
+        throw new IllegalArgumentException("${MISSING_VALUE_ERROR}: column '${column.name()}', row ${i}")
+      }
       def counter = freq.computeIfAbsent(value) { k -> new AtomicInteger() }
       counter.incrementAndGet()
     }
