@@ -101,14 +101,32 @@ def replaced = table.normalizeMinMax('value')
 
 ### Reading ODS, XLSX, CSV, XML, JSON
 
-```groovy
-import tech.tablesaw.api.Table
+Use `Gtable.read()` instead of `Table.read()` so every overload — path, `File`,
+`InputStream`, `URL`, `Reader`, or `CsvReadOptions` — returns a `Gtable`
+rather than a plain Tablesaw `Table`:
 
-Table odsTable = Table.read().ods('data.ods')
-Table xlsxTable = Table.read().xlsx('data.xlsx')
-Table csvTable = Table.read().csv('data.csv')
-Table xmlTable = Table.read().xml('data.xml')
-Table jsonTable = Table.read().json('data.json')
+```groovy
+import se.alipsa.matrix.tablesaw.gtable.Gtable
+
+Gtable odsTable = Gtable.read().ods('data.ods')
+Gtable xlsxTable = Gtable.read().xlsx('data.xlsx')
+Gtable csvTable = Gtable.read().csv('data.csv')
+Gtable xmlTable = Gtable.read().xml('data.xml')
+Gtable jsonTable = Gtable.read().json('data.json')
+```
+
+### Joining tables
+
+`Gtable.joinOn(...)` returns a `GdataFrameJoiner` whose fluent builder methods
+keep returning `GdataFrameJoiner`, and whose terminal `join()` returns a
+`Gtable`:
+
+```groovy
+def joined = employees.joinOn('id')
+    .type(JoinType.INNER)
+    .with(performance)
+    .join()
+// joined is a Gtable
 ```
 
 ## Documentation
