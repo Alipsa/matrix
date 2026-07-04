@@ -5,7 +5,7 @@
   <!-- deploy with mvn -Prelease -f bom.xml deploy -->
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom</artifactId>
-  <version>2.5.0</version>
+  <version>2.5.1-SNAPSHOT</version>
   <name>Matrix Bill of Materials</name>
   <description>bom file for simpler dependency management of Matrix libraries</description>
   <packaging>pom</packaging>
@@ -34,24 +34,24 @@
 
     <matrixArffVersion>0.2.1</matrixArffVersion>
     <matrixAvroVersion>0.3.0</matrixAvroVersion>
-    <matrixBigQueryVersion>0.6.1</matrixBigQueryVersion>
+    <matrixBigQueryVersion>0.6.2-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.0</matrixChartsVersion>
     <matrixCoreVersion>3.8.0</matrixCoreVersion>
     <matrixCsvVersion>2.4.0</matrixCsvVersion>
     <matrixDatasetsVersion>2.2.0</matrixDatasetsVersion>
     <matrixGgplotVersion>0.5.0</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.3.0</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.2.0</matrixGsheetsVersion>
-    <matrixJsonVersion>2.3.0</matrixJsonVersion>
-    <matrixLoggingVersion>0.1.0</matrixLoggingVersion>
+    <matrixGsheetsVersion>0.2.1-SNAPSHOT</matrixGsheetsVersion>
+    <matrixJsonVersion>2.3.1-SNAPSHOT</matrixJsonVersion>
+    <matrixLoggingVersion>0.1.1-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.6.0</matrixParquetVersion>
     <matrixPictVersion>0.5.0</matrixPictVersion>
     <matrixSmileVersion>0.2.0</matrixSmileVersion>
-    <matrixSpreadsheetVersion>2.4.0</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.4.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
-    <matrixStatsVersion>2.5.1</matrixStatsVersion>
-    <matrixTablesawVersion>0.3.1</matrixTablesawVersion>
-    <matrixXChartVersion>0.3.1</matrixXChartVersion>
+    <matrixStatsVersion>2.5.2-SNAPSHOT</matrixStatsVersion>
+    <matrixTablesawVersion>0.3.2-SNAPSHOT</matrixTablesawVersion>
+    <matrixXChartVersion>0.3.2-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
