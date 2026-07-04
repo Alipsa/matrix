@@ -1,5 +1,10 @@
 # Matrix XChart release history
 
+## v0.3.1, in progress
+- Fix xchart correlation heatmap diagonal
+- Handle undefined heatmap correlations
+- Use BigDecimal.ONE and ZERO instead of 1G and 0G which must be coerced to BigDecimal.
+
 ## v0.3.0, 2026-05-25
 - fix histogram default bin calculation so Scott's rule is treated as a bin width and converted to a bucket count from the data range
 - add clear validation for invalid histogram input and invalid heatmap shapes

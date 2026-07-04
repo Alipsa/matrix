@@ -133,9 +133,9 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
 
   private static BigDecimal roundCorrelation(BigDecimal correlation, boolean selfCorrelation) {
     if (selfCorrelation) {
-      return 1G
+      return BigDecimal.ONE
     }
-    correlation == null ? 0G : correlation.round(CORRELATION_SCALE)
+    correlation == null ? BigDecimal.ZERO : correlation.round(CORRELATION_SCALE)
   }
 
   private void validateColumns(List<String> columnNames) {
