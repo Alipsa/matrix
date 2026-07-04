@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-@Grab(group='se.alipsa.matrix', module='matrix-bom', version='2.4.0', type='pom')
+@Grab(group='se.alipsa.matrix', module='matrix-bom', version='2.5.0', type='pom')
 @Grab('se.alipsa.matrix:matrix-core')
 
 def userHome = System.getProperty("user.home")

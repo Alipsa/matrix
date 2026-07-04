@@ -19,12 +19,12 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.5</version>
+      <version>5.0.7</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.7.1</version>
+      <version>3.8.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>

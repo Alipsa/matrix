@@ -206,7 +206,7 @@ The simplest way to get compatible versions of all matrix modules is to use the
 [matrix-bom](https://github.com/Alipsa/matrix/tree/main/matrix-bom):
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-json'
 ```
