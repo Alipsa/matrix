@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.0-SNAPSHOT'
+version = '0.1.0'
 description = 'Convenience logging setup for Matrix Groovy scripts'
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -53,14 +53,14 @@ publishing {
       pom {
         name = 'Matrix Logging'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-logging"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-logging"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-logging/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/LICENSE'
           }
         }
         developers {
@@ -70,7 +70,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-logging/tree/master'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-logging'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
