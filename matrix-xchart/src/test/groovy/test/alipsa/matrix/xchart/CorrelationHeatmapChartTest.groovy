@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.CorrelationHeatmapChart
 
 class CorrelationHeatmapChartTest {
@@ -91,10 +92,45 @@ class CorrelationHeatmapChartTest {
     Map<String, Number> heatData = series.heatData.collectEntries { Number[] point ->
       [("${point[0]},${point[1]}".toString()): point[2]]
     }
-    assertEquals(0G, heatData['0,0'])
-    assertEquals(1G, heatData['1,0'])
-    assertEquals(1G, heatData['0,1'])
-    assertEquals(0G, heatData['1,1'])
+    // (0,0) = x vs x (self), (1,1) = constant vs constant (self)
+    assertEquals(1G, heatData['0,0'])
+    assertEquals(0G, heatData['1,0'])
+    assertEquals(0G, heatData['0,1'])
+    assertEquals(1G, heatData['1,1'])
+  }
+
+  @Test
+  void testCorrelationHeatmapCellsMatchColumnLabelsForThreeColumns() {
+    Matrix matrix = Matrix.builder().data(
+        A: [1, 2, 3, 4, 5],
+        B: [5, 3, 4, 1, 2],
+        C: [2, 1, 5, 3, 4]
+    ).types([Number] * 3).build()
+
+    def chart = CorrelationHeatmapChart.create(matrix).addSeries('Correlation', ['A', 'B', 'C'])
+    def series = chart.getSeries('Correlation')
+
+    BigDecimal corrAB = Correlation.cor(matrix['A'] as List, matrix['B'] as List).round(2)
+    BigDecimal corrAC = Correlation.cor(matrix['A'] as List, matrix['C'] as List).round(2)
+    BigDecimal corrBC = Correlation.cor(matrix['B'] as List, matrix['C'] as List).round(2)
+
+    List<?> xData = series.xData
+    List<?> yData = series.yData
+    Map<String, Number> cellByLabels = series.heatData.collectEntries { Number[] point ->
+      String x = xData[point[0].intValue()]
+      String y = yData[point[1].intValue()]
+      [("$x,$y".toString()): point[2]]
+    }
+
+    assertEquals(corrAB, cellByLabels['A,B'])
+    assertEquals(corrAB, cellByLabels['B,A'])
+    assertEquals(corrAC, cellByLabels['A,C'])
+    assertEquals(corrAC, cellByLabels['C,A'])
+    assertEquals(corrBC, cellByLabels['B,C'])
+    assertEquals(corrBC, cellByLabels['C,B'])
+    assertEquals(1G, cellByLabels['A,A'])
+    assertEquals(1G, cellByLabels['B,B'])
+    assertEquals(1G, cellByLabels['C,C'])
   }
 
 }

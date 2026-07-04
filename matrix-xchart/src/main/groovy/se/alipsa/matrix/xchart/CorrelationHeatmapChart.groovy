@@ -25,7 +25,6 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   private static final int CORRELATION_SCALE = 2
-  private static final int CORR_MATRIX_COLUMNS = 2
   final Number[] numberArray = new Number[]{}
 
   private CorrelationHeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -85,23 +84,14 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     validateColumns(columnNames)
     Matrix data = matrix.select(columnNames)
     int size = columnNames.size()
-    List<BigDecimal> corr = ((size - 1)..0).collectMany { int i ->
-      (0..<size).collect { int j ->
-        List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
-        List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
-        roundCorrelation(Correlation.cor(xValues, yValues), i == j)
+    List<List<Number>> corr = (0..<size).collect { int c ->
+      (0..<size).collect { int r ->
+        List<BigDecimal> xValues = ListConverter.toBigDecimals(data[c])
+        List<BigDecimal> yValues = ListConverter.toBigDecimals(data[r])
+        roundCorrelation(Correlation.cor(xValues, yValues), c == r) as Number
       }
     }
-    def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
-        .types([Number] * CORR_MATRIX_COLUMNS)
-        .matrixName('Heatmap')
-        .build()
-    addSeries(
-        title,
-        columnNames.reverse(),
-        columnNames,
-        corrMatrix['Heat'].collate(size)
-    )
+    addSeries(title, columnNames, columnNames, corr)
   }
 
   /**
@@ -127,15 +117,15 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       }
       tmpRows << tmpRow
     }
-    xchart.addSeries(seriesName, rowLabels, columnLabels, heatData)
+    xchart.addSeries(seriesName, columnLabels, rowLabels, heatData)
     this
   }
 
   private static BigDecimal roundCorrelation(BigDecimal correlation, boolean selfCorrelation) {
     if (selfCorrelation) {
-      return 1G
+      return BigDecimal.ONE
     }
-    correlation == null ? 0G : correlation.round(CORRELATION_SCALE)
+    correlation == null ? BigDecimal.ZERO : correlation.round(CORRELATION_SCALE)
   }
 
   private void validateColumns(List<String> columnNames) {

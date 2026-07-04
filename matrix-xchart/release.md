@@ -1,5 +1,11 @@
 # Matrix XChart release history
 
+## v0.3.1, in progress
+- Fix xchart correlation heatmap diagonal
+- Handle undefined heatmap correlations
+- Use BigDecimal.ONE and ZERO instead of 1G and 0G which must be coerced to BigDecimal.
+- Fix CorrelationHeatmapChart auto-series so heatmap cells are labeled with the correct row/column pair for 3+ columns (previously off-diagonal cells showed the correlation of a different, mirrored column pair)
+
 ## v0.3.0, 2026-05-25
 - fix histogram default bin calculation so Scott's rule is treated as a bin width and converted to a bucket count from the data range
 - add clear validation for invalid histogram input and invalid heatmap shapes
