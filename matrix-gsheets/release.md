@@ -1,5 +1,14 @@
 # Release history
 
+## 0.2.1, in progress
+
+### Dependency updates
+- com.google.apis:google-api-services-drive v3-rev20260428-2.0.0 -> v3-rev20260624-2.0.0
+- com.google.apis:google-api-services-sheets v4-rev20260213-2.0.0 -> v4-rev20260610-2.0.0
+- com.google.auth:google-auth-library-bom 1.46.0 -> 1.48.0
+- com.google.auth:google-auth-library-oauth2-http 1.46.0 -> 1.48.0
+- com.google.http-client:google-http-client-gson 2.1.0 -> 2.1.1
+
 ## 0.2.0, 2026-05-03
 
 ### Breaking Changes

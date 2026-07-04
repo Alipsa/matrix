@@ -1,5 +1,10 @@
 # Matrix-Tablesaw Version history
 
+## v0.3.2, in progress
+
+### Dependency updates
+- com.github.miachm.sods:SODS 1.8.3 -> 1.10.1
+
 ## v0.3.1, 2026-07-03
 
 ### Bug Fixes

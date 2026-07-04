@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.0'
+version = '0.2.1-SNAPSHOT'
 description = 'Google Sheets import/export'
 
 JavaCompile javaCompile = compileJava {
