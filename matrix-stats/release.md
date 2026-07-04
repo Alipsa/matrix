@@ -1,5 +1,8 @@
 # Matrix stats release history
 
+## v2.5.2, in progress
+- Dependency update: org.ejml:ejml-simple 0.43.1 -> 0.46.0
+
 ## v2.5.1, 2026-07-02
 - Add toString to GoalSeek.Result for easier debugging and logging.
 - Fix `LinearRegression.summary()` matrix orientation so coefficient labels, estimates, and standard errors align with their column names.

@@ -1,5 +1,8 @@
 # Matrix-Json Release history
 
+## v2.3.1, in progress
+- Dependency update: com.fasterxml.jackson:jackson-bom 2.21.2 -> 2.22.0
+
 ## v2.3.0, 2026-06-21
 - Breaking: remove deprecated `JsonImporter` and `JsonExporter` classes (deprecated since v2.1.2). These were source- and binary-incompatible removals; replace `JsonImporter.parse(...)` calls with `JsonReader.read(...)` and `new JsonExporter(matrix).toJson(...)` calls with `JsonWriter.write(matrix)...asString()`/`.to(...)`. The static `JsonExporter.toJson(matrix, ...)` becomes `JsonWriter.write(matrix).asString()` (add `.indent()` for pretty-printing), and the static `JsonExporter.toJsonFile(matrix, file, ...)` becomes `JsonWriter.write(matrix).to(file)` (again with `.indent()` as needed). The `new JsonExporter(Grid, List<String>)` constructor has no direct equivalent: build a `Matrix` first (`Matrix.builder().data(grid).columnNames(columnNames).build()`), then call `JsonWriter.write(matrix)`
 - migrate all internal tests and the `matrix-bom` integration test from `JsonImporter`/`JsonExporter` to `JsonReader`/`JsonWriter`

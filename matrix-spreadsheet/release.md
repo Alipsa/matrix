@@ -1,5 +1,12 @@
 # Release history
 
+## v2.4.1, in progress
+
+### Dependency updates
+- com.fasterxml:aalto-xml 1.3.4 -> 1.4.0
+- org.dhatim:fastexcel / fastexcel-reader 0.20.0 -> 0.20.2
+- com.github.javaparser:javaparser-core 3.28.0 -> 3.28.2
+
 ## v2.4.0, 2026-05-05
 **Refactoring, code quality, and usability improvements**
 
