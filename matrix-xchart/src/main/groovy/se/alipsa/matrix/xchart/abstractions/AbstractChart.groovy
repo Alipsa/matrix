@@ -3,6 +3,7 @@ package se.alipsa.matrix.xchart.abstractions
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.XChartPanel
+import org.knowm.xchart.internal.chartpart.AxesChart
 import org.knowm.xchart.internal.chartpart.Chart
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
@@ -165,7 +166,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return the series with the given name, or null if no such series exists
    */
   S getSeries(String name) {
-    xchart.getSeriesMap().get(name)
+    xchart.getSeries(name)
   }
 
   /**
@@ -175,7 +176,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return a map of all series in this chart (series name to series object)
    */
   Map<String, S> getSeries() {
-    xchart.getSeriesMap()
+    xchart.getSeriesCollection().collectEntries { S s -> [(s.name): s] }
   }
 
   /**
@@ -185,7 +186,9 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return this chart for method chaining
    */
   T setXLabel(String label) {
-    xchart.XAxisTitle = label
+    if (xchart instanceof AxesChart) {
+      (xchart as AxesChart).XAxisTitle = label
+    }
     return this as T
   }
 
@@ -196,7 +199,9 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return this chart for method chaining
    */
   T setYLabel(String label) {
-    xchart.YAxisTitle = label
+    if (xchart instanceof AxesChart) {
+      (xchart as AxesChart).YAxisTitle = label
+    }
     return this as T
   }
 
@@ -206,7 +211,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return the X-axis label text
    */
   String getXLabel() {
-    xchart.XAxisTitle
+    xchart instanceof AxesChart ? (xchart as AxesChart).XAxisTitle : null
   }
 
   /**
@@ -215,7 +220,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
    * @return the Y-axis label text
    */
   String getYLabel() {
-    xchart.YAxisTitle
+    xchart instanceof AxesChart ? (xchart as AxesChart).YAxisTitle : null
   }
 
   /**

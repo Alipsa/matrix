@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.3.0'
+version = '2.3.1-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
