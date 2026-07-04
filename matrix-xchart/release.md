@@ -1,6 +1,6 @@
 # Matrix XChart release history
 
-## v0.3.1, in progress
+## v0.3.1, 2026-07-04
 - Fix xchart correlation heatmap diagonal
 - Handle undefined heatmap correlations
 - Use BigDecimal.ONE and ZERO instead of 1G and 0G which must be coerced to BigDecimal.
