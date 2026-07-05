@@ -49,10 +49,10 @@ fi
 #  rm -r "$localRepo/se/alipsa/matrix"
 #fi
 
-#echo "Locally publish bom"
-#pushd matrix-bom
-#  mvn -f bom.xml install
-#popd
+echo "Locally publish bom"
+pushd matrix-bom
+  mvn -f bom.xml install
+popd
 
 echo "Building and locally publishing matrix"
 # Force a clean rebuild so cross-module Groovy syntax/compile issues are not hidden by incremental outputs.
