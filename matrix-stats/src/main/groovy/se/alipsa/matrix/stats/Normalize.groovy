@@ -550,18 +550,15 @@ class Normalize {
       }
       return result as T
     }
-    if (sample instanceof BigInteger) {
-      return (value instanceof BigInteger ? value : BigInteger.valueOf(value.longValue())) as T
-    }
     if (sample instanceof Double) {
       return value.doubleValue() as T
     }
     if (sample instanceof Float) {
       return value.floatValue() as T
     }
-    // Integer types (Long, Integer, Short, Byte) are upgraded to Float
+    // Integer types (BigInteger, Long, Integer, Short, Byte) are upgraded to Float
     // because normalization operations produce non-integer results
-    if (sample instanceof Long || sample instanceof Integer ||
+    if (sample instanceof BigInteger || sample instanceof Long || sample instanceof Integer ||
         sample instanceof Short || sample instanceof Byte) {
       return value.floatValue() as T
     }

@@ -120,7 +120,8 @@ class Student {
    * <ul>
    *   <li><b>true</b>: Performs Student's t-test with pooled variance (assumes equal variances)</li>
    *   <li><b>false</b>: Throws exception directing user to use {@link Welch#tTest}</li>
-   *   <li><b>null</b>: Auto-detect using rule of thumb |var1 - var2| < 4. If unequal variance detected, throws exception</li>
+   *   <li><b>null</b>: Auto-detect using rule of thumb max(var1, var2) / min(var1, var2) &lt; 4.
+   *       If unequal variance is detected, throws exception</li>
    * </ul>
    *
    * @param first the first sample
@@ -154,7 +155,7 @@ class Student {
     boolean isEqualVariance
     if (equalVariance == null) {
       // Auto-detect using rule of thumb: https://www.statology.org/equal-variance-assumption/
-      isEqualVariance = (var1 - var2).abs() < 4
+      isEqualVariance = hasEqualVariance(var1, var2)
       if (!isEqualVariance) {
         throw new IllegalArgumentException(
           "Student's t-test requires equal variances. Variances differ significantly (var1=${var1}, var2=${var2}). " +
@@ -252,6 +253,18 @@ class Student {
       df: degreesFreedom,
       pVal: p
     )
+  }
+
+  private static boolean hasEqualVariance(BigDecimal var1, BigDecimal var2) {
+    if (var1 == 0 && var2 == 0) {
+      return true
+    }
+    if (var1 == 0 || var2 == 0) {
+      return false
+    }
+    BigDecimal larger = var1 > var2 ? var1 : var2
+    BigDecimal smaller = var1 > var2 ? var2 : var1
+    larger.divide(smaller, SCALE, RoundingMode.HALF_EVEN) < 4
   }
 
   /**

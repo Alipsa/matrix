@@ -124,7 +124,7 @@ class StudentEqualVarianceTest {
 
   /**
    * Test auto-detection of equal variance (null parameter).
-   * Should use rule of thumb: |var1 - var2| < 4
+   * Should use rule of thumb: max(var1, var2) / min(var1, var2) < 4
    */
   @Test
   void testAutoDetectEqualVariance() {
@@ -138,6 +138,16 @@ class StudentEqualVarianceTest {
     assertTrue(result.description.contains('equal variance') ||
                result.df == (group1.size() + group2.size() - 2),
                'Should auto-detect equal variance')
+  }
+
+  @Test
+  void testAutoDetectEqualVarianceUsesVarianceRatioNotAbsoluteDifference() {
+    def group1 = [0, 10, 20, 30, 40]
+    def group2 = [0, 11, 22, 33, 44]
+
+    def result = Student.tTest(group1, group2, null)
+
+    assertEquals("Student's two sample t-test", result.description)
   }
 
   /**
@@ -205,6 +215,21 @@ class StudentEqualVarianceTest {
     // Create samples with very different variances (> 4)
     def group1 = [1, 1, 1, 1, 1]      // var ≈ 0
     def group2 = [1, 10, 20, 30, 40]  // var ≈ 247
+
+    def exception = assertThrows(IllegalArgumentException) {
+      Student.tTest(group1, group2, null)
+    }
+
+    assertTrue(exception.message.contains('Welch.tTest()'),
+               'Exception should direct user to Welch.tTest()')
+    assertTrue(exception.message.contains('differ significantly'),
+               'Exception should mention variances differ')
+  }
+
+  @Test
+  void testStudentRejectsSmallScaleUnequalVarianceByRatio() {
+    def group1 = [0.0g, 0.1g, 0.2g]
+    def group2 = [0.0g, 0.3g, 0.6g]
 
     def exception = assertThrows(IllegalArgumentException) {
       Student.tTest(group1, group2, null)

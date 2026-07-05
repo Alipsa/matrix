@@ -99,4 +99,19 @@ class CorrelationTest {
 
     assertEquals(apacheCor, corKendall(x, y) as double, 1e-14)
   }
+
+  @Test
+  void testKendallsCorrelationReturnsNullWhenXIsConstant() {
+    assertNull(corKendall([5, 5, 5, 5], [1, 2, 3, 4]))
+  }
+
+  @Test
+  void testKendallsCorrelationReturnsNullWhenYIsConstant() {
+    assertNull(corKendall([1, 2, 3, 4], [5, 5, 5, 5]))
+  }
+
+  @Test
+  void testKendallsCorrelationReturnsNullWhenBothInputsAreConstant() {
+    assertNull(corKendall([5, 5, 5, 5], [9, 9, 9, 9]))
+  }
 }

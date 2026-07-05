@@ -170,6 +170,16 @@ class NormalizeTest {
   }
 
   @Test
+  void testMinMaxNormBigIntegerPreservesFractionalResults() {
+    List result = Normalize.minMaxNorm([0G, 1G, 2G, 3G, 4G])
+
+    assertIterableEquals([0.0f, 0.25f, 0.5f, 0.75f, 1.0f], result)
+    result.each { value ->
+      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+    }
+  }
+
+  @Test
   void testStdScaleNormDouble() {
     assertEquals(-0.4175944d, Normalize.stdScaleNorm(1200d, 6412.428571428572d, 12482.037558790136d, 7 ))
 
@@ -216,6 +226,16 @@ class NormalizeTest {
 
     norm = Normalize.stdScaleNorm(obs, 7)
     assertIterableEquals(exp, norm)
+  }
+
+  @Test
+  void testStdScaleNormBigIntegerPreservesFractionalResults() {
+    List result = Normalize.stdScaleNorm([0G, 1G, 2G, 3G, 4G], 6)
+
+    assertIterableEquals([-1.264911f, -0.632456f, 0.0f, 0.632456f, 1.264911f], result)
+    result.each { value ->
+      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+    }
   }
 
   @Test
@@ -329,6 +349,16 @@ class NormalizeTest {
 
     norm = Normalize.meanNorm(obs, 7)
     assertIterableEquals(exp, norm)
+  }
+
+  @Test
+  void testMeanNormBigIntegerPreservesFractionalResults() {
+    List result = Normalize.meanNorm([0G, 1G, 2G, 3G, 4G])
+
+    assertIterableEquals([-0.5f, -0.25f, 0.0f, 0.25f, 0.5f], result)
+    result.each { value ->
+      assertTrue(value instanceof Float, "value is not Float but ${value.getClass().simpleName}")
+    }
   }
 
   @Test
