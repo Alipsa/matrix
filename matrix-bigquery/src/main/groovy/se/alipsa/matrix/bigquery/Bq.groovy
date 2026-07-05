@@ -8,6 +8,7 @@ import groovy.transform.PackageScope
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonGenerator
+import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.api.gax.paging.Page
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
@@ -146,6 +147,7 @@ class Bq {
   private final BigQuery bigQuery
   private final String projectId
   private final boolean useAsyncQueries
+  private final GoogleCredentials credentials
   private long waitForTableTimeoutMs = DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS
 
   /**
@@ -162,6 +164,7 @@ class Bq {
     bigQuery = options.getService()
     projectId = options.getProjectId()
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
   }
 
   @PackageScope
@@ -169,6 +172,7 @@ class Bq {
     this.bigQuery = bigQuery
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
   }
 
   /**
@@ -185,6 +189,7 @@ class Bq {
   Bq(GoogleCredentials credentials, String projectId, boolean useAsyncQueries = false) {
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    this.credentials = credentials
     bigQuery = BigQueryOptions.newBuilder()
         .setCredentials(credentials)
         .setProjectId(projectId)
@@ -210,6 +215,7 @@ class Bq {
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
@@ -234,6 +240,7 @@ class Bq {
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
@@ -345,7 +352,7 @@ class Bq {
     JobId jobId = JobId.newBuilder().setProject(projectId).build()
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
     // Wait for the query to complete.
-    queryJob = queryJob.waitFor()
+    queryJob = waitForQueryJob(queryJob)
 
     // Check for errors
     if (queryJob == null) {
@@ -354,6 +361,16 @@ class Bq {
       throw new BqException(queryJob.getStatus().getError().toString())
     }
     queryJob
+  }
+
+  @PackageScope
+  Job waitForQueryJob(Job queryJob) throws BqException {
+    try {
+      queryJob.waitFor()
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException('Interrupted while waiting for BigQuery query job', e)
+    }
   }
 
   /**
@@ -449,7 +466,8 @@ class Bq {
    * @throws BqException if the table is not ready within the timeout period
    * @see #setWaitForTableTimeoutMs
    */
-  private void waitForTable(TableId tableId, long timeoutMs) {
+  @PackageScope
+  void waitForTable(TableId tableId, long timeoutMs) {
     long start = System.currentTimeMillis()
     long backoff = 300L
     while (System.currentTimeMillis() - start < timeoutMs) {
@@ -457,7 +475,12 @@ class Bq {
       if (t?.exists()) {
         return
       }
-      Thread.sleep(backoff)
+      try {
+        Thread.sleep(backoff)
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt()
+        throw new BqException("Interrupted while waiting for table ${tableId} to be ready.", e)
+      }
       backoff = Math.min((long)(backoff * 1.7), 5000L)
     }
     throw new BqException("Timed out waiting for table ${tableId} to be ready.")
@@ -626,37 +649,46 @@ class Bq {
     JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
     TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
 
+    OutputStream out = null
+    JsonGenerator json = null
     try {
-      OutputStream out = Channels.newOutputStream(writer)
-      JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
-
-      List<String> columnNames = matrix.columnNames()
-      int rowCount = matrix.rowCount()
-      int stepSize = Math.max(1, (int) (rowCount * tickPercent))
-      ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
-
-      try {
-        for (Row row : matrix.rows()) {
-          rowIdx++
-          lastValue = writeRowAsJson(json, row, columnNames)
-
-          if (pb != null && rowIdx % stepSize == 0) {
-            pb.stepBy(stepSize)
-          }
-        }
-        if (pb != null) {
-          pb.stepTo(rowIdx)
-        }
-      } finally {
-        pb?.close()
-        json.flush()
-        json.close()
-      }
-
-      return waitForLoadJobAndGetStats(writer, tableId)
+      out = openWriterStream(writer)
+      json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
     } catch (Exception e) {
-      throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
+      closeOutputStream(out, e)
+      throw new BqException("Error opening BigQuery write channel for ${tableId}", e)
     }
+
+    List<String> columnNames = matrix.columnNames()
+    int rowCount = matrix.rowCount()
+    int stepSize = Math.max(1, (int) (rowCount * tickPercent))
+    ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
+
+    Exception rowFailure = null
+    try {
+      for (Row row : matrix.rows()) {
+        rowIdx++
+        lastValue = writeRowAsJson(json, row, columnNames)
+
+        if (pb != null && rowIdx % stepSize == 0) {
+          pb.stepBy(stepSize)
+        }
+      }
+      if (pb != null) {
+        pb.stepTo(rowIdx)
+      }
+    } catch (Exception e) {
+      rowFailure = e
+    } finally {
+      pb?.close()
+      closeJsonGenerator(json, tableId, rowFailure)
+    }
+
+    if (rowFailure != null) {
+      throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", rowFailure)
+    }
+
+    return waitForLoadJobAndGetStats(writer, tableId)
   }
 
   @PackageScope
@@ -724,6 +756,46 @@ class Bq {
   }
 
   /**
+   * Opens an output stream for a BigQuery table data write channel.
+   *
+   * @param writer the table data write channel
+   * @return output stream connected to the write channel
+   */
+  @PackageScope
+  OutputStream openWriterStream(TableDataWriteChannel writer) {
+    Channels.newOutputStream(writer)
+  }
+
+  private static void closeOutputStream(OutputStream out, Throwable primaryException) {
+    if (out == null) {
+      return
+    }
+
+    try {
+      out.close()
+    } catch (Exception closeException) {
+      primaryException.addSuppressed(closeException)
+    }
+  }
+
+  private static void closeJsonGenerator(JsonGenerator json, TableId tableId, Throwable rowFailure) throws BqException {
+    if (json == null) {
+      return
+    }
+
+    try {
+      json.flush()
+      json.close()
+    } catch (Exception closeException) {
+      if (rowFailure != null) {
+        rowFailure.addSuppressed(closeException)
+      } else {
+        throw new BqException("Error closing BigQuery write channel for ${tableId}", closeException)
+      }
+    }
+  }
+
+  /**
    * Waits for a load job to complete and returns the statistics.
    *
    * @param writer the table data write channel
@@ -731,8 +803,15 @@ class Bq {
    * @return load statistics from the completed job
    * @throws BqException if the job fails
    */
-  private JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
-    Job loadJob = writer.getJob().waitFor()
+  @PackageScope
+  JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
+    Job loadJob
+    try {
+      loadJob = writer.getJob().waitFor()
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException("Interrupted while waiting for BigQuery load job for ${tableId}", e)
+    }
 
     JobStatus status = loadJob.getStatus()
     BigQueryError primary = status?.getError()
@@ -811,7 +890,9 @@ class Bq {
         log.error("InsertAll failed: ${fallbackException.message}")
       }
       if (originalException != null) {
-        throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
+        BqException combined = new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", fallbackException)
+        combined.addSuppressed(originalException)
+        throw combined
       }
       throw new BqException("InsertAll failed: ${fallbackException.message}", fallbackException)
     }
@@ -1082,10 +1163,10 @@ class Bq {
   static Matrix convertToMatrix(TableResult result) {
     Schema schema = result.getSchema()
     List<String> colNames = []
-    List<StandardSQLTypeName> colTypes = []
+    List<Field> fields = []
     schema.fields.each {
       colNames << it.name
-      colTypes << it.type.standardType
+      fields << it
     }
 
     List<List> rows = []
@@ -1094,13 +1175,13 @@ class Bq {
       row = []
       int i = 0
       for (FieldValue fv : fvl.iterator()) {
-        row << convertFieldValue(fv, colTypes[i++])
+        row << convertFieldValue(fv, fields[i++])
       }
       rows << row
     }
     Matrix.builder()
         .rows(rows)
-        .types(colTypes.collect { convertType(it) })
+        .types(fields.collect { convertType(it) })
         .columnNames(colNames)
         .build()
   }
@@ -1115,7 +1196,7 @@ class Bq {
     try {
       Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(DEFAULT_PAGE_SIZE))
       if (datasets == null) {
-        log.debug('Dataset does not contain any models')
+        log.debug("Project ${projectId} does not contain any datasets")
         return []
       }
       return datasets
@@ -1137,12 +1218,23 @@ class Bq {
    * @throws BqException if the API call fails
    */
   List<Project> getProjects() throws BqException {
-    ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
-    try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
-      return pc.searchProjects('').iterateAll().collect()
-    } catch (BigQueryException e) {
+    try {
+      ProjectsSettings projectsSettings = createProjectsSettings()
+      ProjectsClient.create(projectsSettings).withCloseable { ProjectsClient pc ->
+        return pc.searchProjects('').iterateAll().collect()
+      }
+    } catch (Exception e) {
       throw new BqException(e)
     }
+  }
+
+  @PackageScope
+  ProjectsSettings createProjectsSettings() {
+    ProjectsSettings.Builder projectsSettingsBuilder = ProjectsSettings.newBuilder()
+    if (credentials != null) {
+      projectsSettingsBuilder.setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+    }
+    projectsSettingsBuilder.build()
   }
 
   /**

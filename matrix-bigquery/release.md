@@ -1,6 +1,18 @@
 # Matrix-bigquery Release History
 
-## v0.6.2, in progress
+## v0.7.0, 2026-07-05
+- Add support for converting BigQuery nested result values:
+  - `ARRAY`/repeated fields now convert to `List` values instead of being forced through primitive string access
+  - `STRUCT`/record fields now convert to `Map<String, Object>` values when field schema is available
+  - unsupported scalar fallback conversion now uses the raw BigQuery value instead of `FieldValue.getStringValue()`, avoiding `ClassCastException` for metadata columns returned by `INFORMATION_SCHEMA`
+- Preserve repeated BigQuery field types as `List` in the resulting `Matrix` column metadata.
+- Improve write-channel and InsertAll fallback error handling:
+  - load-job failures now keep the BigQuery load-job error as the top-level `BqException` message instead of being reported as an unrelated row/value serialization failure
+  - when write-channel insert fails and InsertAll fallback also fails, the fallback failure is now the exception cause and the original streaming failure is attached as suppressed
+  - interrupted load-job and table-propagation waits now restore interrupt status and are wrapped in `BqException`
+- Make `getProjects()` use explicit `GoogleCredentials` supplied to the `Bq` instance instead of always falling back to Application Default Credentials.
+- Clean up misleading `getDatasets()` debug logging.
+- Update the release script to tolerate missing local SDKMAN/JDK helper commands, abort when Java is not 21, and only enable external integration tests when `gclogin` is available.
 - Dependency updates:
   - com.google.auth:google-auth-library-bom 1.46.0 -> 1.48.0
   - com.google.auth:google-auth-library-oauth2-http 1.46.0 -> 1.48.0
