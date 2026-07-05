@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.7.0, in progress
+## v0.7.0, 2026-07-05
 - Add support for converting BigQuery nested result values:
   - `ARRAY`/repeated fields now convert to `List` values instead of being forced through primitive string access
   - `STRUCT`/record fields now convert to `Map<String, Object>` values when field schema is available

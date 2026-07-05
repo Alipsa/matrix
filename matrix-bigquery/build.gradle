@@ -10,12 +10,8 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.7.0-SNAPSHOT'
+version = '0.7.0'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
-
-ext.releaseNexusUrl = version.toString().endsWith("SNAPSHOT")
-    ? "https://oss.sonatype.org/cofntent/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
@@ -147,7 +143,6 @@ publishing {
           username = sonatypeUsername
           password = sonatypePassword
         }
-        url = releaseNexusUrl
       }
     }
   }
