@@ -62,6 +62,19 @@ class BqErrorHandlingTest {
   }
 
   @Test
+  void writeChannelSetupFailuresAreWrappedAsBqException() {
+    IllegalStateException setupFailure = new IllegalStateException('stream unavailable')
+    SetupFailureClient bq = new SetupFailureClient(fakeBigQueryForWriter(), 'matrix-project', setupFailure)
+
+    BqException ex = assertThrows(BqException) {
+      bq.insertViaWriteChannel(sampleMatrix(), Bq.tableId('matrix-project', 'analytics', 'events'), false)
+    }
+
+    assertTrue(ex.message.contains('Error opening BigQuery write channel'))
+    assertSame(setupFailure, ex.cause)
+  }
+
+  @Test
   void projectSettingsUseExplicitCredentialsWhenAvailable() {
     GoogleCredentials credentials = GoogleCredentials.create(new AccessToken('token-value', new Date(System.currentTimeMillis() + 60_000L)))
     Bq bq = new Bq(credentials, 'matrix-project')
@@ -124,6 +137,21 @@ class BqErrorHandlingTest {
     @Override
     JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
       throw loadFailure
+    }
+  }
+
+  @SuppressWarnings('ClassName')
+  private static final class SetupFailureClient extends Bq {
+    private final RuntimeException setupFailure
+
+    SetupFailureClient(BigQuery bigQuery, String projectId, RuntimeException setupFailure) {
+      super(bigQuery, projectId)
+      this.setupFailure = setupFailure
+    }
+
+    @Override
+    OutputStream openWriterStream(TableDataWriteChannel writer) {
+      throw setupFailure
     }
   }
 }

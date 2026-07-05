@@ -9,6 +9,7 @@ import com.google.cloud.bigquery.FieldValueList
 import com.google.cloud.bigquery.StandardSQLTypeName
 
 import se.alipsa.matrix.core.ValueConverter
+import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
 import java.nio.ByteBuffer
@@ -59,6 +60,8 @@ import java.time.ZonedDateTime
  */
 @CompileStatic
 class TypeMapper {
+
+  private static final Logger log = Logger.getLogger(TypeMapper)
 
   /**
    * Maps a Java class to a BigQuery StandardSQLTypeName.
@@ -244,6 +247,8 @@ class TypeMapper {
       }
       return record
     }
+
+    log.debug("Converting BigQuery RECORD ${field?.name ?: '<unknown>'} without matching schema; using synthetic field0... keys")
 
     Map<String, Object> record = [:]
     int index = 0

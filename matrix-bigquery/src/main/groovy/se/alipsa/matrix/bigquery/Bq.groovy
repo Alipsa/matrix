@@ -352,7 +352,7 @@ class Bq {
     JobId jobId = JobId.newBuilder().setProject(projectId).build()
     Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
     // Wait for the query to complete.
-    queryJob = queryJob.waitFor()
+    queryJob = waitForQueryJob(queryJob)
 
     // Check for errors
     if (queryJob == null) {
@@ -361,6 +361,16 @@ class Bq {
       throw new BqException(queryJob.getStatus().getError().toString())
     }
     queryJob
+  }
+
+  @PackageScope
+  Job waitForQueryJob(Job queryJob) throws BqException {
+    try {
+      queryJob.waitFor()
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException('Interrupted while waiting for BigQuery query job', e)
+    }
   }
 
   /**
@@ -639,14 +649,22 @@ class Bq {
     JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
     TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
 
-    OutputStream out = openWriterStream(writer)
-    JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+    OutputStream out = null
+    JsonGenerator json = null
+    try {
+      out = openWriterStream(writer)
+      json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+    } catch (Exception e) {
+      closeOutputStream(out, e)
+      throw new BqException("Error opening BigQuery write channel for ${tableId}", e)
+    }
 
     List<String> columnNames = matrix.columnNames()
     int rowCount = matrix.rowCount()
     int stepSize = Math.max(1, (int) (rowCount * tickPercent))
     ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
 
+    Exception rowFailure = null
     try {
       for (Row row : matrix.rows()) {
         rowIdx++
@@ -660,11 +678,14 @@ class Bq {
         pb.stepTo(rowIdx)
       }
     } catch (Exception e) {
-      throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
+      rowFailure = e
     } finally {
       pb?.close()
-      json.flush()
-      json.close()
+      closeJsonGenerator(json, tableId, rowFailure)
+    }
+
+    if (rowFailure != null) {
+      throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", rowFailure)
     }
 
     return waitForLoadJobAndGetStats(writer, tableId)
@@ -735,6 +756,46 @@ class Bq {
   }
 
   /**
+   * Opens an output stream for a BigQuery table data write channel.
+   *
+   * @param writer the table data write channel
+   * @return output stream connected to the write channel
+   */
+  @PackageScope
+  OutputStream openWriterStream(TableDataWriteChannel writer) {
+    Channels.newOutputStream(writer)
+  }
+
+  private static void closeOutputStream(OutputStream out, Throwable primaryException) {
+    if (out == null) {
+      return
+    }
+
+    try {
+      out.close()
+    } catch (Exception closeException) {
+      primaryException.addSuppressed(closeException)
+    }
+  }
+
+  private static void closeJsonGenerator(JsonGenerator json, TableId tableId, Throwable rowFailure) throws BqException {
+    if (json == null) {
+      return
+    }
+
+    try {
+      json.flush()
+      json.close()
+    } catch (Exception closeException) {
+      if (rowFailure != null) {
+        rowFailure.addSuppressed(closeException)
+      } else {
+        throw new BqException("Error closing BigQuery write channel for ${tableId}", closeException)
+      }
+    }
+  }
+
+  /**
    * Waits for a load job to complete and returns the statistics.
    *
    * @param writer the table data write channel
@@ -742,11 +803,6 @@ class Bq {
    * @return load statistics from the completed job
    * @throws BqException if the job fails
    */
-  @PackageScope
-  OutputStream openWriterStream(TableDataWriteChannel writer) {
-    Channels.newOutputStream(writer)
-  }
-
   @PackageScope
   JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
     Job loadJob
