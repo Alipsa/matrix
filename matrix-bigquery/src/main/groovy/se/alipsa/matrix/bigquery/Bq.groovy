@@ -164,7 +164,7 @@ class Bq {
     bigQuery = options.getService()
     projectId = options.getProjectId()
     this.useAsyncQueries = useAsyncQueries
-    credentials = options.getCredentials() instanceof GoogleCredentials ? options.getCredentials() as GoogleCredentials : null
+    credentials = null
   }
 
   @PackageScope

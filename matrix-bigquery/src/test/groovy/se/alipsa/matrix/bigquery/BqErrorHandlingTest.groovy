@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
+import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.NoCredentials
@@ -82,6 +83,20 @@ class BqErrorHandlingTest {
     ProjectsSettings settings = bq.createProjectsSettings()
 
     assertSame(credentials, settings.credentialsProvider.credentials)
+  }
+
+  @Test
+  void projectSettingsDoNotReuseBigQueryOptionsCredentials() {
+    GoogleCredentials credentials = GoogleCredentials.create(new AccessToken('token-value', new Date(System.currentTimeMillis() + 60_000L)))
+    BigQueryOptions options = BigQueryOptions.newBuilder()
+        .setProjectId('matrix-project')
+        .setCredentials(credentials)
+        .build()
+    Bq bq = new Bq(options)
+
+    ProjectsSettings settings = bq.createProjectsSettings()
+
+    assertFalse(settings.credentialsProvider instanceof FixedCredentialsProvider)
   }
 
   private static Matrix sampleMatrix() {
