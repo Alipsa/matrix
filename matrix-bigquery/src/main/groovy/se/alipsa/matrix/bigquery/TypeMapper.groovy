@@ -154,6 +154,16 @@ class TypeMapper {
   }
 
   /**
+   * Maps a BigQuery field schema to a Java class.
+   *
+   * @param field the BigQuery field schema to map
+   * @return List for repeated fields, otherwise the corresponding scalar Java class
+   */
+  static Class convertType(Field field) {
+    field.mode == Field.Mode.REPEATED ? List : convertType(field.type.standardType)
+  }
+
+  /**
    * Converts a BigQuery FieldValue to a Java object based on the column type,
    * using typed accessors for accurate and efficient conversion.
    *

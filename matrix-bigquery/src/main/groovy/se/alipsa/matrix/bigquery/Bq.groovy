@@ -1083,11 +1083,9 @@ class Bq {
     Schema schema = result.getSchema()
     List<String> colNames = []
     List<Field> fields = []
-    List<StandardSQLTypeName> colTypes = []
     schema.fields.each {
       colNames << it.name
       fields << it
-      colTypes << it.type.standardType
     }
 
     List<List> rows = []
@@ -1102,7 +1100,7 @@ class Bq {
     }
     Matrix.builder()
         .rows(rows)
-        .types(colTypes.collect { convertType(it) })
+        .types(fields.collect { convertType(it) })
         .columnNames(colNames)
         .build()
   }
