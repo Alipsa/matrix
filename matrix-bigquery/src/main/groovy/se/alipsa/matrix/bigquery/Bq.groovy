@@ -1082,9 +1082,11 @@ class Bq {
   static Matrix convertToMatrix(TableResult result) {
     Schema schema = result.getSchema()
     List<String> colNames = []
+    List<Field> fields = []
     List<StandardSQLTypeName> colTypes = []
     schema.fields.each {
       colNames << it.name
+      fields << it
       colTypes << it.type.standardType
     }
 
@@ -1094,7 +1096,7 @@ class Bq {
       row = []
       int i = 0
       for (FieldValue fv : fvl.iterator()) {
-        row << convertFieldValue(fv, colTypes[i++])
+        row << convertFieldValue(fv, fields[i++])
       }
       rows << row
     }

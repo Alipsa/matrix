@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*
 
 import groovy.transform.CompileStatic
 
+import com.google.cloud.bigquery.Field
+import com.google.cloud.bigquery.FieldValue
+import com.google.cloud.bigquery.FieldValueList
 import com.google.cloud.bigquery.StandardSQLTypeName
 import org.junit.jupiter.api.Test
 
@@ -190,6 +193,51 @@ class TypeMapperTest {
   void testConvertDefaultToString() {
     // Unknown/unsupported types default to string conversion
     assertEquals("someValue", TypeMapper.convert("someValue", StandardSQLTypeName.STRUCT))
+  }
+
+  @Test
+  void testConvertFieldValueArrayWithoutSchema() {
+    FieldValueList repeatedValues = FieldValueList.of([
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag1'),
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag2')
+    ] as List<FieldValue>)
+    FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.REPEATED, repeatedValues)
+
+    assertEquals(['tag1', 'tag2'], TypeMapper.convertFieldValue(fieldValue, StandardSQLTypeName.ARRAY))
+  }
+
+  @Test
+  void testConvertFieldValueRepeatedFieldWithSchema() {
+    Field field = Field.newBuilder('policy_tags', StandardSQLTypeName.STRING)
+        .setMode(Field.Mode.REPEATED)
+        .build()
+    FieldValueList repeatedValues = FieldValueList.of([
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag1'),
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag2')
+    ] as List<FieldValue>)
+    FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.REPEATED, repeatedValues)
+
+    assertEquals(['tag1', 'tag2'], TypeMapper.convertFieldValue(fieldValue, field))
+  }
+
+  @Test
+  void testConvertFieldValueStructWithSchema() {
+    Field field = Field.of(
+        'rounding',
+        StandardSQLTypeName.STRUCT,
+        Field.of('rounding_mode', StandardSQLTypeName.STRING),
+        Field.of('precision', StandardSQLTypeName.INT64)
+    )
+    FieldValueList recordValues = FieldValueList.of([
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'ROUND_HALF_AWAY_FROM_ZERO'),
+        FieldValue.of(FieldValue.Attribute.PRIMITIVE, '38')
+    ] as List<FieldValue>, field.subFields)
+    FieldValue fieldValue = FieldValue.of(FieldValue.Attribute.RECORD, recordValues)
+
+    Map<String, Object> converted = TypeMapper.convertFieldValue(fieldValue, field) as Map<String, Object>
+
+    assertEquals('ROUND_HALF_AWAY_FROM_ZERO', converted.rounding_mode)
+    assertEquals(38L, converted.precision)
   }
 
   // Tests for convertToInstant(Object)

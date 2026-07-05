@@ -2,7 +2,10 @@ package se.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
 
+import com.google.cloud.bigquery.Field
+import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.FieldValue
+import com.google.cloud.bigquery.FieldValueList
 import com.google.cloud.bigquery.StandardSQLTypeName
 
 import se.alipsa.matrix.core.ValueConverter
@@ -50,7 +53,6 @@ import java.time.ZonedDateTime
  *   <li><b>INTERVAL</b>: Duration type - could map to java.time.Duration</li>
  *   <li><b>JSON</b>: JSON documents - could map to Map or JsonNode</li>
  *   <li><b>RANGE</b>: Range of values - would require custom Range class</li>
- *   <li><b>STRUCT</b>: Nested structures - could map to Map&lt;String, Object&gt;</li>
  * </ul>
  *
  * @see Bq
@@ -120,6 +122,8 @@ class TypeMapper {
    *   <li>STRING → String</li>
    *   <li>TIMESTAMP → Instant</li>
    *   <li>TIME → LocalTime</li>
+   *   <li>ARRAY → List</li>
+   *   <li>STRUCT → Map</li>
    *   <li>Other → Object (default fallback)</li>
    * </ul>
    *
@@ -128,6 +132,7 @@ class TypeMapper {
    */
   static Class convertType(StandardSQLTypeName typeName) {
     switch (typeName) {
+      case StandardSQLTypeName.ARRAY -> List
       case StandardSQLTypeName.BIGNUMERIC -> BigDecimal
       case StandardSQLTypeName.BOOL -> Boolean
       case StandardSQLTypeName.BYTES -> byte[]
@@ -140,11 +145,29 @@ class TypeMapper {
         // JSON: Not yet supported - could map to Map or JsonNode
       case StandardSQLTypeName.NUMERIC -> BigDecimal
         // RANGE: Not yet supported - would require custom Range class
-        // STRUCT: Not yet supported - could map to Map<String, Object>
       case StandardSQLTypeName.STRING -> String
+      case StandardSQLTypeName.STRUCT -> Map
       case StandardSQLTypeName.TIMESTAMP -> Instant
       case StandardSQLTypeName.TIME -> LocalTime
       default -> Object
+    }
+  }
+
+  /**
+   * Converts a BigQuery FieldValue to a Java object based on the column type,
+   * using typed accessors for accurate and efficient conversion.
+   *
+   * @param fv the FieldValue from BigQuery
+   * @param field the BigQuery field schema for the value
+   * @return the converted Java object, or null if the field value is null
+   */
+  static Object convertFieldValue(FieldValue fv, Field field) {
+    if (fv.isNull()) return null
+
+    switch (fv.attribute) {
+      case FieldValue.Attribute.REPEATED -> convertRepeatedValue(fv, field)
+      case FieldValue.Attribute.RECORD -> convertRecordValue(fv.recordValue, field)
+      default -> convertPrimitiveFieldValue(fv, field.type.standardType)
     }
   }
 
@@ -159,6 +182,13 @@ class TypeMapper {
   static Object convertFieldValue(FieldValue fv, StandardSQLTypeName colType) {
     if (fv.isNull()) return null
 
+    if (fv.attribute == FieldValue.Attribute.REPEATED) return convertRepeatedValue(fv)
+    if (fv.attribute == FieldValue.Attribute.RECORD) return convertRecordValue(fv.recordValue)
+
+    convertPrimitiveFieldValue(fv, colType)
+  }
+
+  private static Object convertPrimitiveFieldValue(FieldValue fv, StandardSQLTypeName colType) {
     switch (colType) {
       case StandardSQLTypeName.BYTES -> convertBytesValue(fv)
       case StandardSQLTypeName.BIGNUMERIC, StandardSQLTypeName.NUMERIC -> fv.getNumericValue()
@@ -174,11 +204,61 @@ class TypeMapper {
         if (v instanceof CharSequence) {
           LocalTime.parse(v.toString(), Bq.BQ_TIME_FORMATTER)
         } else if (v instanceof Number) {
-          LocalTime.ofNanoOfDay(((Number) v).longValue() * 1_000L)
+          LocalTime.ofNanoOfDay(v.longValue() * 1_000L)
         }
       }
-      default -> fv.getStringValue()
+      case StandardSQLTypeName.RANGE -> fv.rangeValue
+      default -> convertRawFieldValue(fv)
     }
+  }
+
+  private static List convertRepeatedValue(FieldValue fv, Field field = null) {
+    StandardSQLTypeName elementType = field?.type?.standardType
+    fv.repeatedValue.collect { FieldValue repeatedValue ->
+      if (field != null && repeatedValue.attribute == FieldValue.Attribute.RECORD) {
+        convertRecordValue(repeatedValue.recordValue, field)
+      } else {
+        convertFieldValue(repeatedValue, elementType ?: StandardSQLTypeName.STRING)
+      }
+    }
+  }
+
+  private static Map<String, Object> convertRecordValue(FieldValueList recordValue, Field field = null) {
+    FieldList subFields = field?.subFields
+    if (subFields != null && subFields.size() == recordValue.size()) {
+      Map<String, Object> record = [:]
+      int index = 0
+      recordValue.each { FieldValue fieldValue ->
+        Field subField = subFields.get(index++)
+        record[subField.name] = convertFieldValue(fieldValue, subField)
+      }
+      return record
+    }
+
+    Map<String, Object> record = [:]
+    int index = 0
+    recordValue.each { FieldValue fieldValue ->
+      record["field${index}"] = convertNestedFieldValue(fieldValue)
+      index++
+    }
+    record
+  }
+
+  private static Object convertNestedFieldValue(FieldValue fv) {
+    if (fv.isNull()) return null
+
+    switch (fv.attribute) {
+      case FieldValue.Attribute.REPEATED -> convertRepeatedValue(fv)
+      case FieldValue.Attribute.RECORD -> convertRecordValue(fv.recordValue)
+      case FieldValue.Attribute.RANGE -> fv.rangeValue
+      default -> convertRawFieldValue(fv)
+    }
+  }
+
+  private static Object convertRawFieldValue(FieldValue fv) {
+    Object value = fv.value
+    if (value instanceof CharSequence) return value.toString()
+    value
   }
 
   private static byte[] convertBytesValue(FieldValue fv) {
