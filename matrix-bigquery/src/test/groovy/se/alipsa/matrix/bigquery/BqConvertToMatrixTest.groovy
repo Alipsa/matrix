@@ -30,12 +30,12 @@ class BqConvertToMatrixTest {
     FieldValue repeatedValue = FieldValue.of(FieldValue.Attribute.REPEATED, FieldValueList.of([
         FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag1'),
         FieldValue.of(FieldValue.Attribute.PRIMITIVE, 'tag2')
-    ] as List<FieldValue>))
-    FieldValueList row = FieldValueList.of([repeatedValue] as List<FieldValue>, schema.fields)
+    ]))
+    FieldValueList row = FieldValueList.of([repeatedValue], schema.fields)
     TableResult result = TableResult.newBuilder()
         .setSchema(schema)
         .setTotalRows(1L)
-        .setPageNoSchema(pageOf([row] as List<FieldValueList>))
+        .setPageNoSchema(pageOf([row]))
         .build()
 
     Matrix matrix = Bq.convertToMatrix(result)
@@ -46,19 +46,12 @@ class BqConvertToMatrixTest {
 
   private static Page<FieldValueList> pageOf(List<FieldValueList> values) {
     new Page<FieldValueList>() {
+      final String nextPageToken = null
+      final Page<FieldValueList> nextPage = null
+
       @Override
       boolean hasNextPage() {
         false
-      }
-
-      @Override
-      String getNextPageToken() {
-        null
-      }
-
-      @Override
-      Page<FieldValueList> getNextPage() {
-        null
       }
 
       @Override
