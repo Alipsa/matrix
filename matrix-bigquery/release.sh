@@ -11,6 +11,7 @@ javaVersion=$(java -version 2>&1 | head -1 | cut -d '"' -f2 | sed '/^1\./s///' |
 
 if [ ! "$javaVersion" = 21 ]; then
   echo "java must be 21 to release"
+  exit 1
 fi
 
 if (command -v gclogin >/dev/null 2>&1); then

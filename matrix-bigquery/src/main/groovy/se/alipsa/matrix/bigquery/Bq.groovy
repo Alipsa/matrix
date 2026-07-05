@@ -1164,11 +1164,8 @@ class Bq {
   List<Project> getProjects() throws BqException {
     try {
       ProjectsSettings projectsSettings = createProjectsSettings()
-      ProjectsClient pc = ProjectsClient.create(projectsSettings)
-      try {
+      ProjectsClient.create(projectsSettings).withCloseable { ProjectsClient pc ->
         return pc.searchProjects('').iterateAll().collect()
-      } finally {
-        pc.close()
       }
     } catch (Exception e) {
       throw new BqException(e)

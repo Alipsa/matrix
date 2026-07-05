@@ -12,7 +12,7 @@
   - interrupted load-job and table-propagation waits now restore interrupt status and are wrapped in `BqException`
 - Make `getProjects()` use explicit `GoogleCredentials` supplied to the `Bq` instance instead of always falling back to Application Default Credentials.
 - Clean up misleading `getDatasets()` debug logging.
-- Update the release script to tolerate missing local SDKMAN/JDK helper commands, validate Java 21, and only enable external integration tests when `gclogin` is available.
+- Update the release script to tolerate missing local SDKMAN/JDK helper commands, abort when Java is not 21, and only enable external integration tests when `gclogin` is available.
 - Dependency updates:
   - com.google.auth:google-auth-library-bom 1.46.0 -> 1.48.0
   - com.google.auth:google-auth-library-oauth2-http 1.46.0 -> 1.48.0
