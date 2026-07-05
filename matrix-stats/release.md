@@ -2,6 +2,9 @@
 
 ## v2.5.2, in progress
 - Dependency update: org.ejml:ejml-simple 0.43.1 -> 0.46.0
+- Fix `Correlation.corKendall()` so zero-variance inputs return `null` instead of throwing.
+- Fix `Normalize` handling of `BigInteger` inputs so min-max, mean, and standard-score normalization preserve fractional results instead of truncating back to integers.
+- Fix `Student.tTest(..., equalVariance = null)` auto-detection to use the documented variance ratio rule instead of an absolute variance difference.
 
 ## v2.5.1, 2026-07-02
 - Add toString to GoalSeek.Result for easier debugging and logging.

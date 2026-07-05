@@ -140,7 +140,7 @@ class Correlation {
    * Kendall Tau can be used as a metric to compare similarities between search results.
    * @param numbersX the first list of Numbers
    * @param numbersY the second list of Numbers
-   * @return a value between -1 to +1 representing the correlation
+   * @return a value between -1 to +1 representing the correlation, or null if either input has zero variance
    * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corKendall(List<? extends Number> numbersX, List<? extends Number> numbersY) {
@@ -213,6 +213,9 @@ class Correlation {
 
     final long concordantMinusDiscordant = numPairs - tiedXPairs - tiedYPairs + tiedXYPairs - 2 * swaps
     final BigDecimal nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (numPairs - tiedYPairs)
+    if (nonTiedPairsMultiplied == 0) {
+      return null
+    }
     concordantMinusDiscordant / nonTiedPairsMultiplied.sqrt()
   }
 
