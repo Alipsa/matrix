@@ -125,6 +125,22 @@ class InsertAppendSemanticsTest {
   }
 
   @Test
+  void fallbackFailureKeepsInsertAllFailureAsCauseAndStreamingFailureSuppressed() {
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    state.insertAllFailure = new IllegalStateException('InsertAll unavailable')
+    RecordingInsertClient bq = new RecordingInsertClient(fakeBigQueryFor(state), 'matrix-project', true)
+
+    BqException ex = assertThrows(BqException) {
+      bq.insert(sampleMatrix(), state.tableId, true)
+    }
+
+    assertSame(state.insertAllFailure, ex.cause)
+    assertEquals(1, ex.suppressed.length)
+    assertTrue(ex.suppressed[0].message.contains('Simulated write-channel failure'))
+    assertTrue(ex.message.contains('Fallback also failed: InsertAll unavailable'))
+  }
+
+  @Test
   void insertAllReplacementTableInfoPreservesWritableMetadata() {
     TableId tableId = tableId('events')
     TableInfo existingTable = TableInfo.newBuilder(tableId, sampleDefinition())
@@ -243,6 +259,7 @@ class InsertAppendSemanticsTest {
     int deleteCalls
     int createCalls
     int insertAllCalls
+    Exception insertAllFailure
     InsertAllRequest lastInsertRequest
     final List<String> events = []
 
@@ -281,6 +298,9 @@ class InsertAppendSemanticsTest {
           state.events << 'insertAll'
           state.insertAllCalls++
           state.lastInsertRequest = request
+          if (state.insertAllFailure != null) {
+            throw state.insertAllFailure
+          }
           emptyInsertAllResponse()
         }
     ] as BigQuery

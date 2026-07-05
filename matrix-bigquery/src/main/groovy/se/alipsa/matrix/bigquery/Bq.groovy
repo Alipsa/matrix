@@ -8,6 +8,7 @@ import groovy.transform.PackageScope
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonGenerator
+import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.api.gax.paging.Page
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
@@ -146,6 +147,7 @@ class Bq {
   private final BigQuery bigQuery
   private final String projectId
   private final boolean useAsyncQueries
+  private final GoogleCredentials credentials
   private long waitForTableTimeoutMs = DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS
 
   /**
@@ -162,6 +164,7 @@ class Bq {
     bigQuery = options.getService()
     projectId = options.getProjectId()
     this.useAsyncQueries = useAsyncQueries
+    credentials = options.getCredentials() instanceof GoogleCredentials ? options.getCredentials() as GoogleCredentials : null
   }
 
   @PackageScope
@@ -169,6 +172,7 @@ class Bq {
     this.bigQuery = bigQuery
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
   }
 
   /**
@@ -185,6 +189,7 @@ class Bq {
   Bq(GoogleCredentials credentials, String projectId, boolean useAsyncQueries = false) {
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    this.credentials = credentials
     bigQuery = BigQueryOptions.newBuilder()
         .setCredentials(credentials)
         .setProjectId(projectId)
@@ -210,6 +215,7 @@ class Bq {
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
@@ -234,6 +240,7 @@ class Bq {
     }
     this.projectId = projectId
     this.useAsyncQueries = useAsyncQueries
+    credentials = null
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
@@ -449,7 +456,8 @@ class Bq {
    * @throws BqException if the table is not ready within the timeout period
    * @see #setWaitForTableTimeoutMs
    */
-  private void waitForTable(TableId tableId, long timeoutMs) {
+  @PackageScope
+  void waitForTable(TableId tableId, long timeoutMs) {
     long start = System.currentTimeMillis()
     long backoff = 300L
     while (System.currentTimeMillis() - start < timeoutMs) {
@@ -457,7 +465,12 @@ class Bq {
       if (t?.exists()) {
         return
       }
-      Thread.sleep(backoff)
+      try {
+        Thread.sleep(backoff)
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt()
+        throw new BqException("Interrupted while waiting for table ${tableId} to be ready.", e)
+      }
       backoff = Math.min((long)(backoff * 1.7), 5000L)
     }
     throw new BqException("Timed out waiting for table ${tableId} to be ready.")
@@ -626,37 +639,35 @@ class Bq {
     JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
     TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
 
+    OutputStream out = openWriterStream(writer)
+    JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+
+    List<String> columnNames = matrix.columnNames()
+    int rowCount = matrix.rowCount()
+    int stepSize = Math.max(1, (int) (rowCount * tickPercent))
+    ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
+
     try {
-      OutputStream out = Channels.newOutputStream(writer)
-      JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+      for (Row row : matrix.rows()) {
+        rowIdx++
+        lastValue = writeRowAsJson(json, row, columnNames)
 
-      List<String> columnNames = matrix.columnNames()
-      int rowCount = matrix.rowCount()
-      int stepSize = Math.max(1, (int) (rowCount * tickPercent))
-      ProgressBar pb = createProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
-
-      try {
-        for (Row row : matrix.rows()) {
-          rowIdx++
-          lastValue = writeRowAsJson(json, row, columnNames)
-
-          if (pb != null && rowIdx % stepSize == 0) {
-            pb.stepBy(stepSize)
-          }
+        if (pb != null && rowIdx % stepSize == 0) {
+          pb.stepBy(stepSize)
         }
-        if (pb != null) {
-          pb.stepTo(rowIdx)
-        }
-      } finally {
-        pb?.close()
-        json.flush()
-        json.close()
       }
-
-      return waitForLoadJobAndGetStats(writer, tableId)
+      if (pb != null) {
+        pb.stepTo(rowIdx)
+      }
     } catch (Exception e) {
       throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
+    } finally {
+      pb?.close()
+      json.flush()
+      json.close()
     }
+
+    return waitForLoadJobAndGetStats(writer, tableId)
   }
 
   @PackageScope
@@ -731,8 +742,20 @@ class Bq {
    * @return load statistics from the completed job
    * @throws BqException if the job fails
    */
-  private JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
-    Job loadJob = writer.getJob().waitFor()
+  @PackageScope
+  OutputStream openWriterStream(TableDataWriteChannel writer) {
+    Channels.newOutputStream(writer)
+  }
+
+  @PackageScope
+  JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
+    Job loadJob
+    try {
+      loadJob = writer.getJob().waitFor()
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException("Interrupted while waiting for BigQuery load job for ${tableId}", e)
+    }
 
     JobStatus status = loadJob.getStatus()
     BigQueryError primary = status?.getError()
@@ -811,7 +834,9 @@ class Bq {
         log.error("InsertAll failed: ${fallbackException.message}")
       }
       if (originalException != null) {
-        throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
+        BqException combined = new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", fallbackException)
+        combined.addSuppressed(originalException)
+        throw combined
       }
       throw new BqException("InsertAll failed: ${fallbackException.message}", fallbackException)
     }
@@ -1115,7 +1140,7 @@ class Bq {
     try {
       Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(DEFAULT_PAGE_SIZE))
       if (datasets == null) {
-        log.debug('Dataset does not contain any models')
+        log.debug("Project ${projectId} does not contain any datasets")
         return []
       }
       return datasets
@@ -1137,12 +1162,26 @@ class Bq {
    * @throws BqException if the API call fails
    */
   List<Project> getProjects() throws BqException {
-    ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
-    try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
-      return pc.searchProjects('').iterateAll().collect()
-    } catch (BigQueryException e) {
+    try {
+      ProjectsSettings projectsSettings = createProjectsSettings()
+      ProjectsClient pc = ProjectsClient.create(projectsSettings)
+      try {
+        return pc.searchProjects('').iterateAll().collect()
+      } finally {
+        pc.close()
+      }
+    } catch (Exception e) {
       throw new BqException(e)
     }
+  }
+
+  @PackageScope
+  ProjectsSettings createProjectsSettings() {
+    ProjectsSettings.Builder projectsSettingsBuilder = ProjectsSettings.newBuilder()
+    if (credentials != null) {
+      projectsSettingsBuilder.setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+    }
+    projectsSettingsBuilder.build()
   }
 
   /**
