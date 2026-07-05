@@ -10,12 +10,8 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.5.2-SNAPSHOT'
+version = '2.5.2'
 description = "Statistical hypothesis tests based on Matrix data."
-
-ext.nexusUrl = version.contains("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
@@ -131,7 +127,6 @@ publishing {
           username = sonatypeUsername
           password = sonatypePassword
         }
-        url = nexusUrl
       }
     }
   }
