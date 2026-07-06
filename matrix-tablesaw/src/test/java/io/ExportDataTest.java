@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.DateTimeColumn;
+import tech.tablesaw.api.BigDecimalColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.ods.OdsWriteOptions;
 import tech.tablesaw.io.xml.XmlWriteOptions;
@@ -16,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -120,6 +122,33 @@ public class ExportDataTest {
       Row row2 = sheet.getRow(2);
       Cell cell2 = row2.getCell(0);
       assertEquals(CellType.BLANK, cell2.getCellType(), "Null DateTime should be blank");
+    }
+
+    destFile.deleteOnExit();
+  }
+
+  @Test
+  public void testXlsxExportBigDecimalAsNumericCell() throws IOException {
+    var table = Table.create("bigdecimal-test")
+        .addColumns(BigDecimalColumn.create("amount",
+            new BigDecimal[]{new BigDecimal("123.45"), null}));
+
+    File destFile = File.createTempFile("bigdecimal-test", ".xlsx");
+    try (FileOutputStream out = new FileOutputStream(destFile)) {
+      XlsxWriteOptions options = XlsxWriteOptions.builder(out).build();
+      table.write().usingOptions(options);
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(destFile))) {
+      XSSFSheet sheet = workbook.getSheetAt(0);
+      Row row1 = sheet.getRow(1);
+      Cell cell1 = row1.getCell(0);
+      assertEquals(CellType.NUMERIC, cell1.getCellType(), "BigDecimal should be numeric in Excel");
+      assertEquals(123.45d, cell1.getNumericCellValue());
+
+      Row row2 = sheet.getRow(2);
+      Cell cell2 = row2.getCell(0);
+      assertEquals(CellType.BLANK, cell2.getCellType(), "Null BigDecimal should be blank");
     }
 
     destFile.deleteOnExit();

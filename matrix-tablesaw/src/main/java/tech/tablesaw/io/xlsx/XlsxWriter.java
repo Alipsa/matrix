@@ -10,9 +10,11 @@ import tech.tablesaw.io.DataWriter;
 import tech.tablesaw.io.Destination;
 import tech.tablesaw.io.RuntimeIOException;
 import tech.tablesaw.io.WriterRegistry;
+import tech.tablesaw.column.numbers.BigDecimalColumnType;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -152,6 +154,11 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
             cell.setCellValue(row.getFloat(colName));
           } else if (ColumnType.DOUBLE.equals(type)) {
             cell.setCellValue(row.getDouble(colName));
+          } else if (BigDecimalColumnType.instance().equals(type)) {
+            BigDecimal value = (BigDecimal) row.getObject(colName);
+            if (value != null) {
+              cell.setCellValue(value.doubleValue());
+            }
           } else if (ColumnType.BOOLEAN.equals(type)) {
             cell.setCellValue(row.getBoolean(colName));
           } else {

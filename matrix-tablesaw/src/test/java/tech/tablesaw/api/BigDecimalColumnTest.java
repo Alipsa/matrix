@@ -694,6 +694,18 @@ public class BigDecimalColumnTest {
   }
 
   @Test
+  public void testAggregateFunctionsOnlyAcceptBigDecimalColumns() {
+    assertTrue(BigDecimalAggregateFunctions.mean.isCompatibleColumn(BigDecimalColumnType.instance()));
+    assertFalse(BigDecimalAggregateFunctions.mean.isCompatibleColumn(ColumnType.DOUBLE));
+    assertFalse(BigDecimalAggregateFunctions.median.isCompatibleColumn(ColumnType.FLOAT));
+    assertFalse(BigDecimalAggregateFunctions.cv.isCompatibleColumn(ColumnType.INTEGER));
+    assertFalse(BigDecimalAggregateFunctions.sum.isCompatibleColumn(ColumnType.SHORT));
+    assertFalse(BigDecimalAggregateFunctions.range.isCompatibleColumn(ColumnType.LONG));
+    assertFalse(BigDecimalAggregateFunctions.min.isCompatibleColumn(ColumnType.DOUBLE));
+    assertFalse(BigDecimalAggregateFunctions.max.isCompatibleColumn(ColumnType.DOUBLE));
+  }
+
+  @Test
   public void testCvZeroMean() {
     var col = BigDecimalColumn.create("zero",
         new BigDecimal[]{new BigDecimal("-1"), new BigDecimal("1")});
