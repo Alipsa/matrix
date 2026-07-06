@@ -26,12 +26,7 @@ public abstract class NumberAggregateFunction extends AggregateFunction<BigDecim
    */
   @Override
   public boolean isCompatibleColumn(ColumnType type) {
-    return type.equals(ColumnType.DOUBLE)
-        || type.equals(ColumnType.FLOAT)
-        || type.equals(ColumnType.INTEGER)
-        || type.equals(ColumnType.SHORT)
-        || type.equals(ColumnType.LONG)
-        || type.equals(BigDecimalColumnType.instance());
+    return BigDecimalColumnType.instance().equals(type);
   }
 
   /**

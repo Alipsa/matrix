@@ -1,6 +1,10 @@
 # Matrix-Tablesaw Version history
 
-## v0.3.2, in progress
+## v0.3.2, 2026-07-06
+- matrix-tablesaw/src/main/java/tech/tablesaw/api/NumberAggregateFunction.java: BigDecimal aggregate functions now only declare compatibility with BigDecimalColumnType,
+  preventing Tablesaw from dispatching them to DoubleColumn, IntColumn, etc.
+- matrix-tablesaw/src/main/java/tech/tablesaw/io/xlsx/XlsxWriter.java: BigDecimal values now export as numeric XLSX cells; null BigDecimal values remain blank.
+- Added regression tests in matrix-tablesaw/src/test/java/tech/tablesaw/api/BigDecimalColumnTest.java and matrix-tablesaw/src/test/java/io/ExportDataTest.java.
 
 ### Dependency updates
 - com.github.miachm.sods:SODS 1.8.3 -> 1.10.1
