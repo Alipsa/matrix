@@ -129,6 +129,10 @@ class GsUtilTest {
 
   @Test
   void testColumnCountForRangeWithInvalidFormat() {
+    // Missing row number
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('A'))
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('Sheet1!A'))
+
     // Invalid format - too many colons
     assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:B2:C3'))
   }

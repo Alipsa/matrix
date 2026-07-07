@@ -14,8 +14,8 @@ import se.alipsa.matrix.gsheets.GsheetsReader
 /**
  * Tests for GsheetsReader class.
  *
- * These tests verify input validation and method existence.
- * Actual read operations are tested via external/integration tests.
+ * These tests verify input validation and mocked read behavior.
+ * External integration tests cover reads against the Google Sheets API.
  */
 class GsheetsReaderTest {
 

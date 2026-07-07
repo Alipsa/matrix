@@ -127,7 +127,7 @@ class GsheetsReader {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
     Sheets sheetsService = buildSheetsService(credentials)
-    readAsObjectWithService(spreadsheetId, range, firstRowAsColumnNames, sheetsService, convertEmptyToNull)
+    readAsObjectValues(spreadsheetId, range, firstRowAsColumnNames, sheetsService, convertEmptyToNull)
   }
 
   /**
@@ -149,6 +149,10 @@ class GsheetsReader {
     if (sheetsService == null) {
       throw new IllegalArgumentException(SHEETS_SERVICE_ERROR)
     }
+    readAsObjectValues(spreadsheetId, range, firstRowAsColumnNames, sheetsService, convertEmptyToNull)
+  }
+
+  private static Matrix readAsObjectValues(String spreadsheetId, String range, boolean firstRowAsColumnNames, Sheets sheetsService, boolean convertEmptyToNull) {
     def response = sheetsService
         .spreadsheets()
         .values()
@@ -200,7 +204,7 @@ class GsheetsReader {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
     Sheets sheetsService = buildSheetsService(credentials)
-    readAsStringsWithService(spreadsheetId, range, firstRowAsColumnNames, sheetsService)
+    readAsStringValues(spreadsheetId, range, firstRowAsColumnNames, sheetsService)
   }
 
   /**
@@ -221,6 +225,10 @@ class GsheetsReader {
     if (sheetsService == null) {
       throw new IllegalArgumentException(SHEETS_SERVICE_ERROR)
     }
+    readAsStringValues(spreadsheetId, range, firstRowAsColumnNames, sheetsService)
+  }
+
+  private static Matrix readAsStringValues(String spreadsheetId, String range, boolean firstRowAsColumnNames, Sheets sheetsService) {
     def request = sheetsService
         .spreadsheets()
         .values()
