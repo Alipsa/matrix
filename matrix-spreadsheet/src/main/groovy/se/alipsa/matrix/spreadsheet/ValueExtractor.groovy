@@ -1,5 +1,7 @@
 package se.alipsa.matrix.spreadsheet
 
+import java.math.RoundingMode
+
 /**
  * A ValueExtractor is a helper class that makes it easier to get values from a spreadsheet.
  */
@@ -60,8 +62,8 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (Double.isInstance(objVal)) {
-         return (int)(Math.round((Double) objVal))
+      if (Number.isInstance(objVal)) {
+         return roundedBigDecimal((Number) objVal).intValueExact()
       }
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1 : 0
@@ -73,13 +75,18 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (Double.isInstance(objVal)) {
-         return (Math.round((Double) objVal))
+      if (Number.isInstance(objVal)) {
+         return roundedBigDecimal((Number) objVal).longValueExact()
       }
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1L : 0L
       }
       Long.parseLong(objVal.toString())
+   }
+
+   private static BigDecimal roundedBigDecimal(Number value) {
+      BigDecimal decimal = value instanceof BigDecimal ? value : new BigDecimal(value.toString())
+      return decimal.add(0.5G).setScale(0, RoundingMode.FLOOR)
    }
 
    @SuppressWarnings('BooleanMethodReturnsNull')
