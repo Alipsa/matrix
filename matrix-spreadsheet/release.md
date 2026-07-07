@@ -1,6 +1,6 @@
 # Release history
 
-## v2.4.1, in progress
+## v2.4.1, 2026-07-07
 
 ### Bug Fixes
 - fix XLSX append/replace of date values in existing workbooks by writing numeric Excel date serials with date styles instead of unsupported `t="d"` cells
