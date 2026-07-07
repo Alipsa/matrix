@@ -603,7 +603,7 @@ class FExcelAppender {
   }
 
   private static SheetTemplate mergeTemplate(ZipFile zip, Map<String, SheetInfo> existing, SheetTemplate template) {
-    if (template != null && template.sheetFormatXml && template.colsXml && template.pageMarginsXml && template.worksheetRootAttributes) {
+    if (template != null && template.sheetFormatXml && template.colsXml && template.pageMarginsXml && template.worksheetRootAttributes != null) {
       return template
     }
     String path = existing?.values()?.find { it.path }?.path ?: findFirstWorksheetPath(zip)
