@@ -50,6 +50,7 @@ class GsheetsReader {
 
   private static final String APP_NAME = 'Groovy Sheets Reader'
   private static final String SHEET_NAME_SEPARATOR = '!'
+  private static final String SHEETS_SERVICE_ERROR = 'sheetsService must not be null'
   private static final int RANGE_SPLIT_LIMIT = 2
 
   /**
@@ -125,21 +126,41 @@ class GsheetsReader {
   static Matrix readAsObject(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null, boolean convertEmptyToNull = false) {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
+    Sheets sheetsService = buildSheetsService(credentials)
+    readAsObjectWithService(spreadsheetId, range, firstRowAsColumnNames, sheetsService, convertEmptyToNull)
+  }
 
-    def sheetsService = buildSheetsService(credentials)
-
+  /**
+   * Reads unformatted object values using a provided Sheets service.
+   * This overload is useful for tests and callers that manage their own Sheets service.
+   *
+   * @param spreadsheetId The Google Sheets spreadsheet ID
+   * @param range The range in A1 notation
+   * @param firstRowAsColumnNames If true, uses first row as column names
+   * @param sheetsService The Sheets service to use
+   * @param convertEmptyToNull If true, converts empty string cells to null
+   * @return A Matrix containing the unformatted values
+   * @throws IllegalArgumentException if spreadsheetId, range, or sheetsService is null/empty or malformed
+   * @throws IOException if the Google Sheets API call fails
+   */
+  static Matrix readAsObjectWithService(String spreadsheetId, String range, boolean firstRowAsColumnNames, Sheets sheetsService, boolean convertEmptyToNull = false) {
+    GsUtil.validateSheetId(spreadsheetId)
+    GsUtil.validateRange(range)
+    if (sheetsService == null) {
+      throw new IllegalArgumentException(SHEETS_SERVICE_ERROR)
+    }
     def response = sheetsService
         .spreadsheets()
         .values()
         .get(spreadsheetId, range)
         .setValueRenderOption('UNFORMATTED_VALUE')
         .execute()
-    List<List<Object>> values = response.getValues()
+    List<List<Object>> values = copyRows(response.getValues())
     int ncol = GsUtil.columnCountForRange(range)
 
     List<String> headers
     if (firstRowAsColumnNames) {
-      List<Object> firstRow = values.remove(0)
+      List<Object> firstRow = values.isEmpty() ? [] : values.remove(0)
       headers = GsUtil.buildHeader(ncol, firstRow)
     } else {
       headers = Matrix.anonymousHeader(ncol)
@@ -178,9 +199,28 @@ class GsheetsReader {
   static Matrix readAsStrings(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
+    Sheets sheetsService = buildSheetsService(credentials)
+    readAsStringsWithService(spreadsheetId, range, firstRowAsColumnNames, sheetsService)
+  }
 
-    def sheetsService = buildSheetsService(credentials)
-
+  /**
+   * Reads formatted string values using a provided Sheets service.
+   * This overload is useful for tests and callers that manage their own Sheets service.
+   *
+   * @param spreadsheetId The Google Sheets spreadsheet ID
+   * @param range The range in A1 notation
+   * @param firstRowAsColumnNames If true, uses first row as column names
+   * @param sheetsService The Sheets service to use
+   * @return A Matrix containing the data as strings
+   * @throws IllegalArgumentException if spreadsheetId, range, or sheetsService is null/empty or malformed
+   * @throws IOException if the Google Sheets API call fails
+   */
+  static Matrix readAsStringsWithService(String spreadsheetId, String range, boolean firstRowAsColumnNames, Sheets sheetsService) {
+    GsUtil.validateSheetId(spreadsheetId)
+    GsUtil.validateRange(range)
+    if (sheetsService == null) {
+      throw new IllegalArgumentException(SHEETS_SERVICE_ERROR)
+    }
     def request = sheetsService
         .spreadsheets()
         .values()
@@ -188,12 +228,12 @@ class GsheetsReader {
         .setValueRenderOption('FORMATTED_VALUE')
 
     def response = request.execute()
-    List<List<Object>> values = response.getValues()
+    List<List<Object>> values = copyRows(response.getValues())
     int ncol = GsUtil.columnCountForRange(range)
 
     List<String> headers
     if (firstRowAsColumnNames) {
-      List<Object> firstRow = values.remove(0)
+      List<Object> firstRow = values.isEmpty() ? [] : values.remove(0)
       headers = GsUtil.buildHeader(ncol, firstRow)
     } else {
       headers = Matrix.anonymousHeader(ncol)
@@ -224,6 +264,17 @@ class GsheetsReader {
         .columnNames(headers)
         .types([String] * ncol)
         .build()
+  }
+
+  private static List<List<Object>> copyRows(List<List<Object>> values) {
+    if (values == null) {
+      return []
+    }
+    List<List<Object>> rows = []
+    values.each { List<Object> row ->
+      rows << new ArrayList<Object>(row)
+    }
+    rows
   }
 
   private static Sheets buildSheetsService(GoogleCredentials credentials) {

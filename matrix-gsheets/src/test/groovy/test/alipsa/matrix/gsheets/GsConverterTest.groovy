@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.gsheets.GsConverter
 
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -263,12 +264,22 @@ class GsConverterTest {
   }
 
   @Test
+  void testToSerialsWithDates() {
+    Date date = Timestamp.valueOf(LocalDateTime.parse('2022-01-14T12:33:20'))
+    def serials = GsConverter.toSerials([date])
+    assertEquals(1, serials.size())
+    assertEquals(asSerial(date), serials[0])
+  }
+
+  @Test
   void testToSerialsWithMixedDateTypes() {
-    def mixed = [LocalDate.parse('2024-06-24'), LocalDateTime.parse('2022-01-14T12:33:20')]
+    Date date = Timestamp.valueOf(LocalDateTime.parse('2022-01-14T12:33:20'))
+    def mixed = [LocalDate.parse('2024-06-24'), LocalDateTime.parse('2022-01-14T12:33:20'), date]
     def serials = GsConverter.toSerials(mixed)
-    assertEquals(2, serials.size())
+    assertEquals(3, serials.size())
     assertEquals(new BigDecimal(45467), serials[0])
     assertEquals(44575.5231481481, serials[1])
+    assertEquals(asSerial(date), serials[2])
   }
 
   @Test

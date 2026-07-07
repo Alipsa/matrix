@@ -212,6 +212,9 @@ class GsConverter {
     if (o in LocalTime) {
       return asSerial((LocalTime) o)
     }
+    if (o in Date) {
+      return asSerial((Date) o)
+    }
     throw new IllegalArgumentException("Cannot convert object of type ${o?.getClass()} to serial number")
   }
 

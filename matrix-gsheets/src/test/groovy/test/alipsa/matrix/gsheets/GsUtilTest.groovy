@@ -41,6 +41,9 @@ class GsUtilTest {
     columns = columnCountForRange(range)
     //println "The number of columns in the range is: ${columns}"
     assertEquals(12, columns)
+
+    assertEquals(1, columnCountForRange('A1'))
+    assertEquals(1, columnCountForRange('Sheet1!A1'))
   }
 
   @Test
@@ -126,10 +129,6 @@ class GsUtilTest {
 
   @Test
   void testColumnCountForRangeWithInvalidFormat() {
-    // Missing colon
-    assertThrows(IllegalArgumentException, () -> columnCountForRange('A1'))
-    assertThrows(IllegalArgumentException, () -> columnCountForRange('Sheet1!A1'))
-
     // Invalid format - too many colons
     assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:B2:C3'))
   }
