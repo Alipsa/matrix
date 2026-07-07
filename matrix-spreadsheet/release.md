@@ -2,10 +2,17 @@
 
 ## v2.4.1, in progress
 
+### Bug Fixes
+- fix XLSX append/replace of date values in existing workbooks by writing numeric Excel date serials with date styles instead of unsupported `t="d"` cells
+- fix `ValueExtractor.getInt()` and `getLong()` for spreadsheet numeric cells returned as `BigDecimal` values such as `42.00`
+
 ### Dependency updates
 - com.fasterxml:aalto-xml 1.3.4 -> 1.4.0
 - org.dhatim:fastexcel / fastexcel-reader 0.20.0 -> 0.20.2
 - com.github.javaparser:javaparser-core 3.28.0 -> 3.28.2
+
+### Test Coverage
+- add regression tests for appended XLSX date cells and `BigDecimal` integer/long extraction (136 tests passing)
 
 ## v2.4.0, 2026-05-05
 **Refactoring, code quality, and usability improvements**

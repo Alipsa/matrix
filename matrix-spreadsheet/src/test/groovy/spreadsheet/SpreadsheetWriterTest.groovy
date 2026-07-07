@@ -311,6 +311,34 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testAppendXlsxWithDatesUsesReadableDateCells() {
+    File file = File.createTempFile('matrix-append-dates', '.xlsx')
+    Matrix original = Matrix.builder().data(id: [1], name: ['existing']).build()
+    SpreadsheetWriter.write(original, file, 'Existing')
+
+    Matrix dates = Matrix.builder()
+        .data(
+            id: [1, 2],
+            day: [LocalDate.parse('2024-01-01'), LocalDate.parse('2024-02-02')],
+            timestamp: [
+                LocalDateTime.parse('2024-01-01T10:15:30'),
+                LocalDateTime.parse('2024-02-02T11:16:31')
+            ]
+        )
+        .types(Integer, LocalDate, LocalDateTime)
+        .build()
+
+    SpreadsheetWriter.write(dates, file, 'Dates')
+
+    String sheetXml = readXlsxSheetXml(file, 'Dates')
+    assertFalse(sheetXml.contains('t="d"'), 'Appended date cells must use numeric date serials')
+
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'Dates', 1, 3, 1, 3, true)
+    assertEquals(LocalDate.parse('2024-01-01'), imported[0, 'day'])
+    assertEquals(LocalDateTime.parse('2024-02-02T11:16:31'), imported[1, 'timestamp'])
+  }
+
+  @Test
   void testAppendXlsxInheritsBaseFormatting() {
     File file = copyResourceToTempFile('Book3.xlsx', '.xlsx')
     SpreadsheetWriter.write(table3, file, 'Appended')

@@ -60,8 +60,8 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (Double.isInstance(objVal)) {
-         return (int)(Math.round((Double) objVal))
+      if (Number.isInstance(objVal)) {
+         return (int) Math.round(((Number) objVal).doubleValue())
       }
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1 : 0
@@ -73,8 +73,8 @@ abstract class ValueExtractor {
       if (objVal == null) {
          return null
       }
-      if (Double.isInstance(objVal)) {
-         return (Math.round((Double) objVal))
+      if (Number.isInstance(objVal)) {
+         return Math.round(((Number) objVal).doubleValue())
       }
       if (Boolean.isInstance(objVal)) {
          return (boolean)objVal ? 1L : 0L

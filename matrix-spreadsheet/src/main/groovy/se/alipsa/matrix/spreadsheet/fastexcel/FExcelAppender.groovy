@@ -14,6 +14,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.ZipUtil
 
+import java.math.RoundingMode
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -22,7 +23,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -42,17 +43,28 @@ class FExcelAppender {
 
   private static final String WORKBOOK_PATH = 'xl/workbook.xml'
   private static final String RELS_PATH = 'xl/_rels/workbook.xml.rels'
+  private static final String STYLES_PATH = 'xl/styles.xml'
   private static final String CONTENT_TYPES = '[Content_Types].xml'
   private static final String APP_PATH = 'docProps/app.xml'
   private static final String WORKSHEET_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'
   private static final String WORKSHEET_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet'
+  private static final String STYLES_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml'
+  private static final String STYLES_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles'
   private static final String DEFAULT_START = 'A1'
   private static final String RELATIONSHIP_TAG = 'Relationship'
   private static final String ATTR_ID = 'Id'
   private static final String ATTR_NAME = 'name'
+  private static final String ATTR_COUNT = 'count'
+  private static final String ATTR_NUM_FMT_ID = 'numFmtId'
+  private static final String ATTR_FORMAT_CODE = 'formatCode'
   private static final String ATTR_SHEET_ID = 'sheetId'
   private static final String TAG_SHEETS = 'sheets'
   private static final String TAG_SHEET = 'sheet'
+  private static final String TAG_WORKBOOK_PR = 'workbookPr'
+  private static final String TAG_NUM_FMTS = 'numFmts'
+  private static final String TAG_NUM_FMT = 'numFmt'
+  private static final String TAG_CELL_XFS = 'cellXfs'
+  private static final String TAG_XF = 'xf'
   private static final String ATTR_R_ID = 'r:id'
   private static final String ATTR_TARGET = 'Target'
   private static final String TAG_VECTOR = 'vector'
@@ -61,12 +73,26 @@ class FExcelAppender {
   private static final String EMPTY_CELL = '<c/>'
   private static final String ROW_START = '<row r="'
   private static final String ROW_END = '"/>'
-  private static final String DATE_CELL_START = '<c t="d"><v>'
   private static final String VALUE_CELL_END = '</v></c>'
   private static final String INLINE_STR_END = '</t></is></c>'
   private static final String COLON = ':'
   private static final String SPACE = ' '
   private static final String DOUBLE_QUOTE = '"'
+  private static final String DATE_FORMAT = 'yyyy-MM-dd'
+  private static final String DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss.SSS'
+  private static final String DEFAULT_STYLES_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
+      '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
+      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      '</styleSheet>'
+  private static final LocalDate EXCEL_1900_EPOCH = LocalDate.of(1899, 12, 31)
+  private static final LocalDate EXCEL_1904_EPOCH = LocalDate.of(1904, 1, 1)
+  private static final LocalDate EXCEL_LEAP_BUG_START = LocalDate.of(1900, 3, 1)
+  private static final BigDecimal NANOS_PER_DAY = new BigDecimal(86_400_000_000_000L)
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
     return appendOrReplaceSheets(file, data, sheetNames, null)
@@ -146,8 +172,9 @@ class FExcelAppender {
     String workbookXml = readEntry(zip, WORKBOOK_PATH)
     String relsXml = readEntry(zip, RELS_PATH)
     String contentXml = readEntry(zip, CONTENT_TYPES)
-    String appXml = readEntry(zip, APP_PATH)
-    return new WorkbookState(workbookXml, relsXml, contentXml, appXml, zip)
+    String appXml = readOptionalEntry(zip, APP_PATH)
+    String stylesXml = readOptionalEntry(zip, STYLES_PATH)
+    return new WorkbookState(workbookXml, relsXml, contentXml, appXml, stylesXml, zip)
   }
 
   private static WorkbookPlan buildPlan(WorkbookState state, Map<String, Matrix> requested, Map<String, String> positions) {
@@ -155,6 +182,12 @@ class FExcelAppender {
     Document rels = parseXml(state.relsXml)
     Document types = parseXml(state.contentTypesXml)
     Document app = state.appXml ? parseXml(state.appXml) : null
+    boolean date1904 = workbookUsesDate1904(workbook)
+    StylePlan stylePlan = requested.values().any { Matrix matrix -> hasDateValues(matrix) } ? ensureDateStyles(state.stylesXml) : null
+    if (stylePlan != null) {
+      ensureStyleRelationship(rels)
+      ensureStyleContentType(types)
+    }
 
     Map<String, SheetInfo> existing = readSheets(workbook, rels)
     List<Integer> sheetIds = existing.values()*.sheetId
@@ -174,7 +207,7 @@ class FExcelAppender {
       SheetInfo info = existing.get(name)
       if (info != null) {
         SheetTemplate template = templateForPath(state.zip, templateCache, info.path) ?: baseTemplate
-        replacements.put(info.path, buildSheetXml(matrix, template, startPosition))
+        replacements.put(info.path, buildSheetXml(matrix, template, startPosition, stylePlan, date1904))
       } else {
         String sheetPath = "xl/worksheets/sheet${nextSheetIndex++}.xml"
         String relId = "rId${nextRelId++}"
@@ -182,7 +215,7 @@ class FExcelAppender {
         addSheet(workbook, name, sheetId, relId)
         addRelationship(rels, relId, sheetPath)
         addContentType(types, sheetPath)
-        additions.put(sheetPath, buildSheetXml(matrix, baseTemplate, startPosition))
+        additions.put(sheetPath, buildSheetXml(matrix, baseTemplate, startPosition, stylePlan, date1904))
         existing.put(name, new SheetInfo(name, sheetId, relId, sheetPath, sheetId, relIdNumber(relId), sheetNumberFromPath(sheetPath)))
       }
     }
@@ -191,6 +224,14 @@ class FExcelAppender {
     String relsXml = serialize(rels)
     String contentTypesXml = serialize(types)
     String appXml = app ? updateAppXml(app, existing.keySet().toList()) : null
+
+    if (stylePlan != null) {
+      if (state.stylesXml == null) {
+        additions.put(STYLES_PATH, stylePlan.stylesXml)
+      } else {
+        replacements.put(STYLES_PATH, stylePlan.stylesXml)
+      }
+    }
 
     return new WorkbookPlan(workbookXml, relsXml, contentTypesXml, appXml, replacements, additions)
   }
@@ -260,6 +301,35 @@ class FExcelAppender {
     Element override = types.createElement('Override')
     override.setAttribute('PartName', '/' + sheetPath)
     override.setAttribute('ContentType', WORKSHEET_CONTENT_TYPE)
+    types.documentElement.appendChild(override)
+  }
+
+  private static void ensureStyleRelationship(Document rels) {
+    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
+    for (int i = 0; i < relNodes.length; i++) {
+      Element rel = (Element) relNodes.item(i)
+      if (STYLES_REL_TYPE == rel.getAttribute('Type')) {
+        return
+      }
+    }
+    Element rel = rels.createElement(RELATIONSHIP_TAG)
+    rel.setAttribute(ATTR_ID, "rId${maxRelId(rels) + 1}")
+    rel.setAttribute('Type', STYLES_REL_TYPE)
+    rel.setAttribute(ATTR_TARGET, 'styles.xml')
+    rels.documentElement.appendChild(rel)
+  }
+
+  private static void ensureStyleContentType(Document types) {
+    NodeList overrides = types.getElementsByTagName('Override')
+    for (int i = 0; i < overrides.length; i++) {
+      Element override = (Element) overrides.item(i)
+      if ('/xl/styles.xml' == override.getAttribute('PartName')) {
+        return
+      }
+    }
+    Element override = types.createElement('Override')
+    override.setAttribute('PartName', '/xl/styles.xml')
+    override.setAttribute('ContentType', STYLES_CONTENT_TYPE)
     types.documentElement.appendChild(override)
   }
 
@@ -348,6 +418,16 @@ class FExcelAppender {
     }
   }
 
+  private static String readOptionalEntry(ZipFile zip, String name) {
+    ZipEntry entry = zip.getEntry(name)
+    if (entry == null) {
+      return null
+    }
+    zip.getInputStream(entry).withCloseable { InputStream is ->
+      new String(is.bytes, StandardCharsets.UTF_8)
+    }
+  }
+
   private static void writeEntry(ZipOutputStream zos, String name, String content) {
     ZipEntry entry = new ZipEntry(name)
     zos.putNextEntry(entry)
@@ -374,7 +454,7 @@ class FExcelAppender {
     out.toString()
   }
 
-  private static String buildSheetXml(Matrix matrix, SheetTemplate template, String startPosition) {
+  private static String buildSheetXml(Matrix matrix, SheetTemplate template, String startPosition, StylePlan stylePlan, boolean date1904) {
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     StringBuilder sb = new StringBuilder()
     sb.append('<?xml version="1.0" encoding="UTF-8"?>')
@@ -395,13 +475,13 @@ class FExcelAppender {
     }
     sb.append('<sheetData>')
     writeEmptyRows(sb, position.row - 1)
-    writeRow(sb, position.row, matrix.columnNames(), position.column)
+    writeRow(sb, position.row, matrix.columnNames(), position.column, stylePlan, date1904)
     List<Column> columns = matrix.columns()
     int rowCount = matrix.rowCount()
     int colCount = columns.size()
     for (int r = 0; r < rowCount; r++) {
       List<Object> row = collectRow(columns, colCount, r)
-      writeRow(sb, position.row + r + 1, row, position.column)
+      writeRow(sb, position.row + r + 1, row, position.column, stylePlan, date1904)
     }
     sb.append('</sheetData>')
     if (template?.pageMarginsXml) {
@@ -432,11 +512,11 @@ class FExcelAppender {
     return "${startColName}${startRow}:${lastColName}${lastRow}"
   }
 
-  private static void writeRow(StringBuilder sb, int rowNum, List<?> values, int startCol) {
+  private static void writeRow(StringBuilder sb, int rowNum, List<?> values, int startCol, StylePlan stylePlan, boolean date1904) {
     sb.append(ROW_START).append(rowNum).append('">')
     appendEmptyCells(sb, startCol - 1)
     values.each { Object value ->
-      appendCell(sb, value)
+      appendCell(sb, value, stylePlan, date1904)
     }
     sb.append('</row>')
   }
@@ -453,7 +533,7 @@ class FExcelAppender {
     }
   }
 
-  private static void appendCell(StringBuilder sb, Object value) {
+  private static void appendCell(StringBuilder sb, Object value, StylePlan stylePlan, boolean date1904) {
     if (value == null) {
       sb.append(EMPTY_CELL)
       return
@@ -464,13 +544,21 @@ class FExcelAppender {
         String v = ValueConverter.asBigDecimal(value).toPlainString()
         sb.append('<c t="n"><v>').append(v).append(VALUE_CELL_END)
       }
-      case LocalDate -> sb.append(DATE_CELL_START).append(((LocalDate) value).format(DateTimeFormatter.ISO_LOCAL_DATE)).append(VALUE_CELL_END)
-      case LocalDateTime -> sb.append(DATE_CELL_START).append(((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)).append(VALUE_CELL_END)
-      case ZonedDateTime -> sb.append(DATE_CELL_START).append(((ZonedDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
-      case OffsetDateTime -> sb.append(DATE_CELL_START).append(((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
-      case Date -> sb.append(DATE_CELL_START).append(((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).append(VALUE_CELL_END)
+      case LocalDate -> appendDateCell(sb, excelSerial((LocalDate) value, date1904), stylePlan?.dateStyleIndex)
+      case LocalDateTime -> appendDateCell(sb, excelSerial((LocalDateTime) value, date1904), stylePlan?.dateTimeStyleIndex)
+      case ZonedDateTime -> appendDateCell(sb, excelSerial(((ZonedDateTime) value).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
+      case OffsetDateTime -> appendDateCell(sb, excelSerial(((OffsetDateTime) value).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
+      case Date -> appendDateCell(sb, excelSerial(((Date) value).toInstant().atOffset(ZoneOffset.UTC).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
       default -> appendInlineString(sb, String.valueOf(value))
     }
+  }
+
+  private static void appendDateCell(StringBuilder sb, BigDecimal serial, Integer styleIndex) {
+    sb.append('<c')
+    if (styleIndex != null) {
+      sb.append(' s="').append(styleIndex).append(DOUBLE_QUOTE)
+    }
+    sb.append('><v>').append(serial.toPlainString()).append(VALUE_CELL_END)
   }
 
   private static void appendInlineString(StringBuilder sb, String value) {
@@ -644,19 +732,154 @@ class FExcelAppender {
     return candidates.first()
   }
 
+  private static boolean workbookUsesDate1904(Document workbook) {
+    Element workbookPr = firstElementByTag(workbook, TAG_WORKBOOK_PR)
+    if (workbookPr == null) {
+      return false
+    }
+    String value = workbookPr.getAttribute('date1904')
+    return value == 'true' || value == '1'
+  }
+
+  private static boolean hasDateValues(Matrix matrix) {
+    matrix.columns().any { Column column ->
+      column.type in [LocalDate, LocalDateTime, ZonedDateTime, OffsetDateTime, Date] ||
+          column.any { Object value -> value instanceof LocalDate || value instanceof LocalDateTime || value instanceof ZonedDateTime || value instanceof OffsetDateTime || value instanceof Date }
+    }
+  }
+
+  private static StylePlan ensureDateStyles(String stylesXml) {
+    Document styles = parseXml(stylesXml ?: DEFAULT_STYLES_XML)
+    int dateNumFmtId = ensureNumFmt(styles, DATE_FORMAT)
+    int dateTimeNumFmtId = ensureNumFmt(styles, DATETIME_FORMAT)
+    int dateStyleIndex = ensureCellXf(styles, dateNumFmtId)
+    int dateTimeStyleIndex = ensureCellXf(styles, dateTimeNumFmtId)
+    return new StylePlan(serialize(styles), dateStyleIndex, dateTimeStyleIndex)
+  }
+
+  private static int ensureNumFmt(Document styles, String formatCode) {
+    Element root = styles.documentElement
+    Element numFmts = firstDirectChild(root, TAG_NUM_FMTS)
+    if (numFmts != null) {
+      List<Element> formats = directChildren(numFmts, TAG_NUM_FMT)
+      Element existing = formats.find { Element numFmt -> formatCode == numFmt.getAttribute(ATTR_FORMAT_CODE) }
+      if (existing != null) {
+        return Integer.parseInt(existing.getAttribute(ATTR_NUM_FMT_ID))
+      }
+    } else {
+      numFmts = styles.createElement(TAG_NUM_FMTS)
+      root.insertBefore(numFmts, root.firstChild)
+    }
+
+    int nextId = nextNumFmtId(numFmts)
+    Element numFmt = styles.createElement(TAG_NUM_FMT)
+    numFmt.setAttribute(ATTR_NUM_FMT_ID, String.valueOf(nextId))
+    numFmt.setAttribute(ATTR_FORMAT_CODE, formatCode)
+    numFmts.appendChild(numFmt)
+    updateCount(numFmts)
+    return nextId
+  }
+
+  private static int nextNumFmtId(Element numFmts) {
+    int maxId = 163
+    directChildren(numFmts, TAG_NUM_FMT).each { Element numFmt ->
+      String id = numFmt.getAttribute(ATTR_NUM_FMT_ID)
+      if (id) {
+        maxId = Math.max(maxId, Integer.parseInt(id))
+      }
+    }
+    maxId + 1
+  }
+
+  private static int ensureCellXf(Document styles, int numFmtId) {
+    Element root = styles.documentElement
+    Element cellXfs = firstDirectChild(root, TAG_CELL_XFS)
+    if (cellXfs == null) {
+      cellXfs = styles.createElement(TAG_CELL_XFS)
+      Element defaultXf = styles.createElement(TAG_XF)
+      defaultXf.setAttribute(ATTR_NUM_FMT_ID, '0')
+      defaultXf.setAttribute('fontId', '0')
+      defaultXf.setAttribute('fillId', '0')
+      defaultXf.setAttribute('borderId', '0')
+      defaultXf.setAttribute('xfId', '0')
+      cellXfs.appendChild(defaultXf)
+      Element insertAfter = firstDirectChild(root, 'cellStyleXfs') ?: firstDirectChild(root, 'borders')
+      root.insertBefore(cellXfs, insertAfter?.nextSibling)
+    }
+    List<Element> xfs = directChildren(cellXfs, TAG_XF)
+    for (int i = 0; i < xfs.size(); i++) {
+      if (String.valueOf(numFmtId) == xfs[i].getAttribute(ATTR_NUM_FMT_ID)) {
+        return i
+      }
+    }
+    Element xf = styles.createElement(TAG_XF)
+    xf.setAttribute(ATTR_NUM_FMT_ID, String.valueOf(numFmtId))
+    xf.setAttribute('fontId', '0')
+    xf.setAttribute('fillId', '0')
+    xf.setAttribute('borderId', '0')
+    xf.setAttribute('xfId', '0')
+    xf.setAttribute('applyNumberFormat', '1')
+    cellXfs.appendChild(xf)
+    updateCount(cellXfs)
+    return xfs.size()
+  }
+
+  private static Element firstDirectChild(Element parent, String tagName) {
+    directChildren(parent, tagName).find()
+  }
+
+  private static List<Element> directChildren(Element parent, String tagName) {
+    List<Element> result = []
+    NodeList nodes = parent.childNodes
+    for (int i = 0; i < nodes.length; i++) {
+      Node node = nodes.item(i)
+      if (node instanceof Element && (tagName == '*' || localName((Element) node) == tagName)) {
+        result.add((Element) node)
+      }
+    }
+    result
+  }
+
+  private static String localName(Element element) {
+    element.localName ?: element.tagName
+  }
+
+  private static void updateCount(Element element) {
+    element.setAttribute(ATTR_COUNT, String.valueOf(directChildren(element, '*').size()))
+  }
+
+  private static BigDecimal excelSerial(LocalDate date, boolean date1904) {
+    if (date1904) {
+      return new BigDecimal(ChronoUnit.DAYS.between(EXCEL_1904_EPOCH, date))
+    }
+    long days = ChronoUnit.DAYS.between(EXCEL_1900_EPOCH, date)
+    if (!date.isBefore(EXCEL_LEAP_BUG_START)) {
+      days++
+    }
+    return new BigDecimal(days)
+  }
+
+  private static BigDecimal excelSerial(LocalDateTime dateTime, boolean date1904) {
+    BigDecimal wholeDays = excelSerial(dateTime.toLocalDate(), date1904)
+    BigDecimal fraction = new BigDecimal(dateTime.toLocalTime().toNanoOfDay()).divide(NANOS_PER_DAY, 12, RoundingMode.HALF_UP)
+    return wholeDays.add(fraction).stripTrailingZeros()
+  }
+
   private static class WorkbookState {
 
     final String workbookXml
     final String relsXml
     final String contentTypesXml
     final String appXml
+    final String stylesXml
     final ZipFile zip
 
-    WorkbookState(String workbookXml, String relsXml, String contentTypesXml, String appXml, ZipFile zip) {
+    WorkbookState(String workbookXml, String relsXml, String contentTypesXml, String appXml, String stylesXml, ZipFile zip) {
       this.workbookXml = workbookXml
       this.relsXml = relsXml
       this.contentTypesXml = contentTypesXml
       this.appXml = appXml
+      this.stylesXml = stylesXml
       this.zip = zip
     }
 
@@ -717,6 +940,20 @@ class FExcelAppender {
       this.sheetFormatXml = sheetFormatXml
       this.colsXml = colsXml
       this.pageMarginsXml = pageMarginsXml
+    }
+
+  }
+
+  private static class StylePlan {
+
+    final String stylesXml
+    final int dateStyleIndex
+    final int dateTimeStyleIndex
+
+    StylePlan(String stylesXml, int dateStyleIndex, int dateTimeStyleIndex) {
+      this.stylesXml = stylesXml
+      this.dateStyleIndex = dateStyleIndex
+      this.dateTimeStyleIndex = dateTimeStyleIndex
     }
 
   }
