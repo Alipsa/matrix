@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 - fix XLSX append/replace of date values in existing workbooks by writing numeric Excel date serials with date styles instead of unsupported `t="d"` cells
+- fix XLSX append/replace for Excel-generated workbooks whose copied worksheet formatting uses vendor-namespaced attributes such as `x14ac:dyDescent`
 - fix `ValueExtractor.getInt()` and `getLong()` for spreadsheet numeric cells returned as `BigDecimal` values such as `42.00`
 
 ### Dependency updates

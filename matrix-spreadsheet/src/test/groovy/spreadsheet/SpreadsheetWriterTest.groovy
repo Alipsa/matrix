@@ -360,6 +360,9 @@ class SpreadsheetWriterTest {
     String appendedLeftMargin = extractPageMargin(appendedXml, 'left')
     assertNotNull(baseLeftMargin)
     assertEquals(baseLeftMargin, appendedLeftMargin)
+
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'Appended', 1, 4, 1, 2, true)
+    assertEquals(table3, imported)
   }
 
   @Test

@@ -459,7 +459,9 @@ class FExcelAppender {
     StringBuilder sb = new StringBuilder()
     sb.append('<?xml version="1.0" encoding="UTF-8"?>')
     sb.append('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ')
-      .append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">')
+      .append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
+    appendWorksheetRootAttributes(sb, template?.worksheetRootAttributes)
+    sb.append('>')
     sb.append('<dimension ref="').append(sheetDimension(matrix, position)).append(ROW_END)
     if (template?.sheetFormatXml) {
       sb.append(template.sheetFormatXml)
@@ -601,7 +603,7 @@ class FExcelAppender {
   }
 
   private static SheetTemplate mergeTemplate(ZipFile zip, Map<String, SheetInfo> existing, SheetTemplate template) {
-    if (template != null && template.sheetFormatXml && template.colsXml && template.pageMarginsXml) {
+    if (template != null && template.sheetFormatXml && template.colsXml && template.pageMarginsXml && template.worksheetRootAttributes) {
       return template
     }
     String path = existing?.values()?.find { it.path }?.path ?: findFirstWorksheetPath(zip)
@@ -616,6 +618,7 @@ class FExcelAppender {
       return fallback
     }
     return new SheetTemplate(
+        template.worksheetRootAttributes ?: fallback.worksheetRootAttributes,
         template.sheetFormatAttributes ?: fallback.sheetFormatAttributes,
         template.sheetFormatXml ?: fallback.sheetFormatXml,
         template.colsXml ?: fallback.colsXml,
@@ -641,14 +644,45 @@ class FExcelAppender {
       return null
     }
     String sheetXml = readEntry(zip, sheetPath)
+    Map<String, String> worksheetRootAttributes = readWorksheetRootAttributesFallback(sheetXml)
     String sheetFormatXml = extractElementXml(sheetXml, 'sheetFormatPr')
     Map<String, String> sheetFormatAttributes = sheetFormatXml ? readSheetFormatAttributesFallback(sheetXml) : null
     String colsXml = extractElementXml(sheetXml, 'cols')
     String pageMarginsXml = extractElementXml(sheetXml, 'pageMargins')
-    if ((sheetFormatAttributes == null || sheetFormatAttributes.isEmpty()) && sheetFormatXml == null && colsXml == null && pageMarginsXml == null) {
+    if ((worksheetRootAttributes == null || worksheetRootAttributes.isEmpty()) && (sheetFormatAttributes == null || sheetFormatAttributes.isEmpty()) && sheetFormatXml == null && colsXml == null && pageMarginsXml == null) {
       return null
     }
-    return new SheetTemplate(sheetFormatAttributes, sheetFormatXml, colsXml, pageMarginsXml)
+    return new SheetTemplate(worksheetRootAttributes, sheetFormatAttributes, sheetFormatXml, colsXml, pageMarginsXml)
+  }
+
+  private static void appendWorksheetRootAttributes(StringBuilder sb, Map<String, String> attributes) {
+    if (attributes == null || attributes.isEmpty()) {
+      return
+    }
+    attributes.each { String name, String value ->
+      sb.append(SPACE).append(name).append('="').append(escapeXml(value)).append(DOUBLE_QUOTE)
+    }
+  }
+
+  private static Map<String, String> readWorksheetRootAttributesFallback(String sheetXml) {
+    Pattern pattern = Pattern.compile('<worksheet\\b([^>]*)>')
+    def matcher = pattern.matcher(sheetXml)
+    if (!matcher.find()) {
+      return null
+    }
+    String attrs = matcher.group(1)
+    Map<String, String> result = [:]
+    Pattern attrPattern = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
+    def attrMatcher = attrPattern.matcher(attrs)
+    while (attrMatcher.find()) {
+      String name = attrMatcher.group(1)
+      if (name.startsWith('xmlns:') && name != 'xmlns:r') {
+        result.put(name, attrMatcher.group(2))
+      } else if (name == 'mc:Ignorable') {
+        result.put(name, attrMatcher.group(2))
+      }
+    }
+    return result
   }
 
   /**
@@ -930,12 +964,14 @@ class FExcelAppender {
 
   private static class SheetTemplate {
 
+    final Map<String, String> worksheetRootAttributes
     final Map<String, String> sheetFormatAttributes
     final String sheetFormatXml
     final String colsXml
     final String pageMarginsXml
 
-    SheetTemplate(Map<String, String> sheetFormatAttributes, String sheetFormatXml, String colsXml, String pageMarginsXml) {
+    SheetTemplate(Map<String, String> worksheetRootAttributes, Map<String, String> sheetFormatAttributes, String sheetFormatXml, String colsXml, String pageMarginsXml) {
+      this.worksheetRootAttributes = worksheetRootAttributes
       this.sheetFormatAttributes = sheetFormatAttributes
       this.sheetFormatXml = sheetFormatXml
       this.colsXml = colsXml
