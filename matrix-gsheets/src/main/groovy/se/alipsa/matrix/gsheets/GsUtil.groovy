@@ -27,6 +27,7 @@ class GsUtil {
   private static final String RANGE_ERROR = 'range must not be null or empty'
   private static final String COLON = ':'
   private static final String COLUMN_PATTERN = '^([A-Z]+)'
+  private static final String SINGLE_CELL_PATTERN = '^[A-Z]+\\d+$'
   private static final int MAX_SHEET_NAME_LENGTH = 100
 
   static void deleteSheet(String spreadsheetId) {
@@ -86,11 +87,18 @@ class GsUtil {
     String[] parts = range.split('!')
     String cellRange = parts.size() > 1 ? parts[1] : parts[0]
 
-    // Split the range into start and end cells
     String[] cellParts = cellRange.split(COLON)
+    if (cellParts.size() == 1) {
+      if (!cellParts[0].matches(SINGLE_CELL_PATTERN)) {
+        throw new IllegalArgumentException(
+          "Invalid range format: '${range}'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
+        )
+      }
+      return 1
+    }
     if (cellParts.size() != 2) {
       throw new IllegalArgumentException(
-        "Invalid range format: '${range}'. Expected A1 notation with a range like 'Sheet1!A1:D10' or 'A1:D10'"
+        "Invalid range format: '${range}'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
       )
     }
 

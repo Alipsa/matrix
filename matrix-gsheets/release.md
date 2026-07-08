@@ -1,6 +1,11 @@
 # Release history
 
-## 0.2.1, in progress
+## 0.2.1, 2026-07-08
+
+### Bug Fixes
+- Fix `GsConverter.toSerials(List<Object>)` throwing for `java.util.Date` values by dispatching `Date` through `GsConverter.asSerial(Object)`
+- Fix `GsUtil.columnCountForRange` rejecting single-cell A1 ranges such as `Sheet1!A1`
+- Fix `GsheetsReader.readAsObject`/`readAsStrings` throwing `NullPointerException` on genuinely empty ranges; they now return an empty `Matrix` with generated headers
 
 ### Dependency updates
 - com.google.apis:google-api-services-drive v3-rev20260428-2.0.0 -> v3-rev20260624-2.0.0
