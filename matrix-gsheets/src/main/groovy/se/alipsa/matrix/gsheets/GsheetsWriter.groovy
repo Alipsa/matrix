@@ -6,6 +6,13 @@ import static se.alipsa.matrix.gsheets.GsAuthenticator.getSCOPES
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
+import com.google.api.services.sheets.v4.model.CellData
+import com.google.api.services.sheets.v4.model.CellFormat
+import com.google.api.services.sheets.v4.model.GridRange
+import com.google.api.services.sheets.v4.model.NumberFormat
+import com.google.api.services.sheets.v4.model.RepeatCellRequest
+import com.google.api.services.sheets.v4.model.Request
 import com.google.api.services.sheets.v4.model.Sheet
 import com.google.api.services.sheets.v4.model.SheetProperties
 import com.google.api.services.sheets.v4.model.Spreadsheet
@@ -94,6 +101,7 @@ class GsheetsWriter {
   private static final String APP_NAME = 'Matrix GSheets'
   private static final String ROWS_DIMENSION = 'ROWS'
   private static final String RAW_INPUT = 'RAW'
+  private static final String ZERO_DIGIT = '0'
 
   /**
    * Creates a new Google Spreadsheet and writes the Matrix data to it.
@@ -158,13 +166,14 @@ class GsheetsWriter {
     try {
       created = sheets.spreadsheets()
           .create(requestBody)
-          .setFields('spreadsheetId') // we only need the id here
+          .setFields('spreadsheetId,sheets.properties.sheetId') // we only need the ids here
           .execute()
     } catch (IOException e) {
       throw new SheetOperationException('create spreadsheet', "Failed to create spreadsheet '${spreadsheetTitle}': ${e.message}")
     }
 
     String spreadsheetId = created.getSpreadsheetId()
+    int sheetId = created.getSheets().get(0).getProperties().getSheetId()
 
     // 2) Build the data: header row + data rows
     List<String> headers = (List<String>) matrix.columnNames()
@@ -190,7 +199,69 @@ class GsheetsWriter {
       throw new SheetOperationException('write data', spreadsheetId, e)
     }
 
+    // 4) Force explicit decimal places on BigDecimal cells: Sheets' default automatic
+    // number format drops trailing zeros (e.g. 729.0 displays as "729"), which would
+    // otherwise lose scale information whenever the formatted value is read back.
+    List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId)
+    if (formatRequests) {
+      try {
+        sheets.spreadsheets()
+            .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(formatRequests))
+            .execute()
+      } catch (IOException e) {
+        throw new SheetOperationException('apply number formats', spreadsheetId, e)
+      }
+    }
+
     spreadsheetId
+  }
+
+  /**
+   * Builds one {@code RepeatCellRequest} per maximal run of consecutive rows in a column
+   * that share the same BigDecimal scale, forcing that many decimal places so Sheets
+   * preserves trailing zeros (e.g. 729.0) when the cell is later read as a formatted value.
+   * Columns/cells without a positive-scale BigDecimal value are left with Sheets' default
+   * formatting.
+   */
+  private static List<Request> buildNumberFormatRequests(Matrix matrix, int sheetId) {
+    List<Request> requests = []
+    int ncol = matrix.columnCount()
+    int nrow = matrix.rowCount()
+    for (int c = 0; c < ncol; c++) {
+      List column = matrix.column(c)
+      Integer runStart = null
+      Integer runScale = null
+      for (int r = 0; r <= nrow; r++) {
+        Object val = r < nrow ? column.get(r) : null
+        Integer scale = (val instanceof BigDecimal && ((BigDecimal) val).scale() > 0) ? ((BigDecimal) val).scale() : null
+        if (runStart != null && scale == runScale) {
+          continue
+        }
+        if (runStart != null) {
+          requests << numberFormatRequest(sheetId, c, runStart, r, runScale)
+        }
+        runStart = scale != null ? r : null
+        runScale = scale
+      }
+    }
+    requests
+  }
+
+  private static Request numberFormatRequest(int sheetId, int col, int startRow, int endRow, int scale) {
+    String pattern = ZERO_DIGIT + '.' + (ZERO_DIGIT * scale)
+    new Request().setRepeatCell(
+        new RepeatCellRequest()
+            .setRange(new GridRange()
+                .setSheetId(sheetId)
+                .setStartRowIndex(startRow + 1) // +1: header occupies sheet row 0
+                .setEndRowIndex(endRow + 1)
+                .setStartColumnIndex(col)
+                .setEndColumnIndex(col + 1))
+            .setCell(new CellData().setUserEnteredFormat(
+                new CellFormat().setNumberFormat(
+                    new NumberFormat().setType('NUMBER').setPattern(pattern))))
+            .setFields('userEnteredFormat.numberFormat')
+    )
   }
 
   /**

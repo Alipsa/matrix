@@ -31,14 +31,24 @@ class GsAuthUtils {
 
   private static final Logger log = Logger.getLogger(GsAuthUtils)
 
+  // The OAuth 2.0 "Desktop app" client registered for matrix-gsheets itself, bundled with
+  // the library so callers get a working interactive login out of the box instead of having
+  // to register their own client. Per Google's OAuth docs, installed-app client secrets are
+  // not confidential: https://developers.google.com/identity/protocols/oauth2/native-app
+  private static final String BUNDLED_CLIENT_SECRET_RESOURCE = '/se/alipsa/matrix/gsheets/oauth/client_secret.json'
+
   /**
    * Drop-in replacement for {@code gcloud auth application-default login}.
    * Writes {@code ~/.config/gcloud/application_default_credentials.json}.
    *
+   * <p>Uses matrix-gsheets' own bundled OAuth client by default. To use a different
+   * client instead (e.g. your own registered one), save it to
+   * {@link GsAuthenticator#CLIENT_SECRET_FILE} (~/client_secret_desktop.json) or call
+   * {@link #loginAndWriteAdc(File, List, String)} directly.
+   *
    * <p><strong>Usage:</strong>
    * <pre>{@code
    * def creds = loginAndWriteAdc(
-   *     new File("$HOME/client_secret_desktop.json"),
    *     [com.google.api.services.sheets.v4.SheetsScopes.SPREADSHEETS,
    *      'https://www.googleapis.com/auth/drive.file',
    *      'openid', 'email'],
@@ -46,21 +56,50 @@ class GsAuthUtils {
    * )
    * }</pre>
    */
+  static GoogleCredentials loginAndWriteAdc(List<String> scopes, String quotaProjectId = null) {
+    InputStream secretStream = resolveClientSecretStream()
+    try {
+      loginAndWriteAdc(new InputStreamReader(secretStream, 'UTF-8'), scopes, quotaProjectId)
+    } finally {
+      secretStream.close()
+    }
+  }
+
+  /**
+   * Same as {@link #loginAndWriteAdc(List, String)} but with an explicit OAuth client
+   * secret file, bypassing the bundled client and any {@code CLIENT_SECRET_FILE} override.
+   */
   static GoogleCredentials loginAndWriteAdc(File clientSecretJson, List<String> scopes, String quotaProjectId = null) {
+    if (!clientSecretJson.exists()) {
+      throw new IllegalStateException("Error: OAuth client secret file was not found at $clientSecretJson.absolutePath")
+    }
+    clientSecretJson.withReader('UTF-8') { Reader reader ->
+      loginAndWriteAdc(reader, scopes, quotaProjectId)
+    }
+  }
+
+  private static InputStream resolveClientSecretStream() {
+    File override = GsAuthenticator.CLIENT_SECRET_FILE
+    if (override.exists()) {
+      log.info("Using OAuth client override at ${override.absolutePath}")
+      return new FileInputStream(override)
+    }
+    InputStream bundled = GsAuthUtils.class.getResourceAsStream(BUNDLED_CLIENT_SECRET_RESOURCE)
+    if (bundled == null) {
+      throw new IllegalStateException(
+          "No OAuth client available: matrix-gsheets was built without its bundled OAuth " +
+          "client resource ($BUNDLED_CLIENT_SECRET_RESOURCE), and no override was found at " +
+          "$override.absolutePath. Provide your own client, or rebuild matrix-gsheets with " +
+          'the bundled resource present.'
+      )
+    }
+    bundled
+  }
+
+  private static GoogleCredentials loginAndWriteAdc(Reader clientSecretReader, List<String> scopes, String quotaProjectId) {
     def http = GoogleNetHttpTransport.newTrustedTransport()
     def json = GsonFactory.getDefaultInstance()
-    if (!clientSecretJson.exists()) {
-      log.info("Please create OAuth 2.0 credentials for a 'Desktop app' in the Google Cloud Console and save the downloaded JSON file to this location.")
-      log.info("""
-          1. Go to the Google Cloud Console (https://console.cloud.google.com/).
-          2. Navigate to APIs & Services > Credentials.
-          3. Click 'Create Credentials' and choose 'OAuth 2.0 Client ID'.
-          4. Select 'Desktop App' as the application type.
-          5. After creation, click the download icon to save the JSON file to $clientSecretJson.absolutePath.
-        """)
-      throw new IllegalStateException("Error: The 'client_secret_desktop.json' file was not found at $clientSecretJson.absolutePath")
-    }
-    GoogleClientSecrets secrets = GoogleClientSecrets.load(json, new FileReader(clientSecretJson))
+    GoogleClientSecrets secrets = GoogleClientSecrets.load(json, clientSecretReader)
 
     def flow = new GoogleAuthorizationCodeFlow.Builder(http, json, secrets, scopes)
         .setAccessType('offline')
