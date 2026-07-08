@@ -11,7 +11,6 @@ import com.google.auth.oauth2.GoogleCredentials
 import se.alipsa.matrix.core.util.Logger
 
 import java.security.GeneralSecurityException
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
@@ -32,7 +31,10 @@ class GsAuthenticator {
   static final String SCOPE_OPENID = 'openid'
   static final String SCOPE_USERINFO_EMAIL = 'https://www.googleapis.com/auth/userinfo.email'
 
-  private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false)
+  // Serializes login attempts within this JVM so concurrent callers wait for an in-flight
+  // login instead of failing immediately, and so a failed/cancelled attempt doesn't
+  // permanently prevent future retries (unlike a one-shot "already tried" flag would).
+  private static final Object LOGIN_LOCK = new Object()
 
   private GsAuthenticator() { }
 
@@ -219,41 +221,57 @@ class GsAuthenticator {
       }
       scopes = new ArrayList<>(effective)
     }
-    def creds = getCredentials(new ArrayList<>(scopes))
 
+    GoogleCredentials creds = getCredentials(new ArrayList<>(scopes))
     if (creds == null || !GsAuthUtils.hasAllScopes(creds, scopes)) {
-      // Do ONE interactive login (ADC or programmatic), then reload creds
-      if (LOGIN_ATTEMPTED.compareAndSet(false, true)) {
-        if (!performLogin(scopes, quotaProjectId)) {
-          return null
-        }
-        if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
-          new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
-              .inheritIO().start().waitFor()
-        }
-        // There can be a small delay between the login flow completing and the
-        // ADC file being fully written to disk. Retry a few times to handle this.
-        creds = waitForCredentials(scopes)
-      } else {
-        // We already attempted an interactive login in this JVM; don’t prompt again.
-        creds = getCredentials(scopes, false)
-      }
+      creds = loginAndGetCredentials(scopes, quotaProjectId)
     }
 
-    if (creds) {
-      // Only try userinfo if we actually asked for it
-      boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
-      if (wantEmail) {
-        def email = getUserEmail(creds)
-        log.info "Google Cloud is authenticated with email: ${email}"
-      } else {
-        log.info 'Google Cloud is authenticated.'
-      }
-      return creds
+    if (creds == null) {
+      log.error 'Authentication failed. Could not validate credentials after login, even after retrying.'
+      return null
+    }
+    if (!GsAuthUtils.hasAllScopes(creds, scopes)) {
+      log.error 'Authentication succeeded but the granted token is missing required scopes.'
+      return null
     }
 
-    log.error 'Authentication failed. Could not validate credentials after login, even after retrying.'
-    return null
+    // Only try userinfo if we actually asked for it
+    boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
+    if (wantEmail) {
+      def email = getUserEmail(creds)
+      log.info "Google Cloud is authenticated with email: ${email}"
+    } else {
+      log.info 'Google Cloud is authenticated.'
+    }
+    creds
+  }
+
+  /**
+   * Serializes interactive login within this JVM: only one login flow runs at a time, and
+   * concurrent callers block on {@link #LOGIN_LOCK} and then re-check credentials rather
+   * than failing immediately or racing the in-flight attempt. A failed or cancelled login
+   * does not leave any lasting state, so a later call will simply try again.
+   */
+  private static GoogleCredentials loginAndGetCredentials(List<String> scopes, String quotaProjectId) {
+    synchronized (LOGIN_LOCK) {
+      // Re-check: another thread may have completed login while we waited for the lock.
+      GoogleCredentials creds = getCredentials(new ArrayList<>(scopes), false)
+      if (creds != null && GsAuthUtils.hasAllScopes(creds, scopes)) {
+        return creds
+      }
+
+      if (!performLogin(scopes, quotaProjectId)) {
+        return null
+      }
+      if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
+        new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
+            .inheritIO().start().waitFor()
+      }
+      // There can be a small delay between the login flow completing and the
+      // ADC file being fully written to disk. Retry a few times to handle this.
+      waitForCredentials(scopes)
+    }
   }
 
   /**

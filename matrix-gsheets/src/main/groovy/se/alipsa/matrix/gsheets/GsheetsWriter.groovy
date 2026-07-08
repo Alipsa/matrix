@@ -102,6 +102,10 @@ class GsheetsWriter {
   private static final String ROWS_DIMENSION = 'ROWS'
   private static final String RAW_INPUT = 'RAW'
   private static final String ZERO_DIGIT = '0'
+  private static final String SINGLE_QUOTE = "'"
+  private static final String SHEET_NAME_SEPARATOR = '!'
+  private static final String APPLY_FORMATS_ERROR = 'apply number formats'
+  private static final int RANGE_SPLIT_LIMIT = 2
 
   /**
    * Creates a new Google Spreadsheet and writes the Matrix data to it.
@@ -154,6 +158,9 @@ class GsheetsWriter {
     String titleBase = matrix.matrixName ?: "Matrix ${LocalDateTime.now().toString().replace('T', '_')}"
     String sheetName = GsUtil.sanitizeSheetName(titleBase)
     String spreadsheetTitle = titleBase
+    // Sheet names containing spaces or special characters must be quoted in A1 notation
+    // (e.g. 'Employee Data'!A1); quoting is always valid, so it's applied unconditionally.
+    String quotedRange = "${GsUtil.quoteSheetName(sheetName)}!A1"
 
     // 1) Create an empty spreadsheet with one sheet named after the matrix
     Spreadsheet requestBody = new Spreadsheet()
@@ -186,13 +193,13 @@ class GsheetsWriter {
 
     // 3) Write all values starting at A1
     ValueRange vr = new ValueRange()
-        .setRange("${sheetName}!A1")
+        .setRange(quotedRange)
         .setMajorDimension(ROWS_DIMENSION)
         .setValues(values)
 
     try {
       sheets.spreadsheets().values()
-          .update(spreadsheetId, "${sheetName}!A1", vr)
+          .update(spreadsheetId, quotedRange, vr)
           .setValueInputOption(RAW_INPUT) // don't coerce; write exact values/strings
           .execute()
     } catch (IOException e) {
@@ -202,14 +209,15 @@ class GsheetsWriter {
     // 4) Force explicit decimal places on BigDecimal cells: Sheets' default automatic
     // number format drops trailing zeros (e.g. 729.0 displays as "729"), which would
     // otherwise lose scale information whenever the formatted value is read back.
-    List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId)
+    // Row offset 1 accounts for the header row; column offset 0 since we always start at A1.
+    List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId, 1, 0)
     if (formatRequests) {
       try {
         sheets.spreadsheets()
             .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(formatRequests))
             .execute()
       } catch (IOException e) {
-        throw new SheetOperationException('apply number formats', spreadsheetId, e)
+        throw new SheetOperationException(APPLY_FORMATS_ERROR, spreadsheetId, e)
       }
     }
 
@@ -222,8 +230,12 @@ class GsheetsWriter {
    * preserves trailing zeros (e.g. 729.0) when the cell is later read as a formatted value.
    * Columns/cells without a positive-scale BigDecimal value are left with Sheets' default
    * formatting.
+   *
+   * @param rowOffset sheet row (0-based) where the matrix's data rows begin (i.e. after
+   *        any header row and after the target range's own starting row)
+   * @param colOffset sheet column (0-based) where the matrix's first column begins
    */
-  private static List<Request> buildNumberFormatRequests(Matrix matrix, int sheetId) {
+  private static List<Request> buildNumberFormatRequests(Matrix matrix, int sheetId, int rowOffset, int colOffset) {
     List<Request> requests = []
     int ncol = matrix.columnCount()
     int nrow = matrix.rowCount()
@@ -238,7 +250,7 @@ class GsheetsWriter {
           continue
         }
         if (runStart != null) {
-          requests << numberFormatRequest(sheetId, c, runStart, r, runScale)
+          requests << numberFormatRequest(sheetId, colOffset + c, rowOffset + runStart, rowOffset + r, runScale)
         }
         runStart = scale != null ? r : null
         runScale = scale
@@ -247,14 +259,31 @@ class GsheetsWriter {
     requests
   }
 
+  /**
+   * True if the matrix has at least one BigDecimal cell whose scale would need an explicit
+   * number format applied (see {@link #buildNumberFormatRequests}). Used to skip the extra
+   * sheet-metadata lookup in {@link #update} when there's nothing to format.
+   */
+  private static boolean hasScaledDecimalCell(Matrix matrix) {
+    int ncol = matrix.columnCount()
+    for (int c = 0; c < ncol; c++) {
+      for (Object val : matrix.column(c)) {
+        if (val instanceof BigDecimal && ((BigDecimal) val).scale() > 0) {
+          return true
+        }
+      }
+    }
+    false
+  }
+
   private static Request numberFormatRequest(int sheetId, int col, int startRow, int endRow, int scale) {
     String pattern = ZERO_DIGIT + '.' + (ZERO_DIGIT * scale)
     new Request().setRepeatCell(
         new RepeatCellRequest()
             .setRange(new GridRange()
                 .setSheetId(sheetId)
-                .setStartRowIndex(startRow + 1) // +1: header occupies sheet row 0
-                .setEndRowIndex(endRow + 1)
+                .setStartRowIndex(startRow)
+                .setEndRowIndex(endRow)
                 .setStartColumnIndex(col)
                 .setEndColumnIndex(col + 1))
             .setCell(new CellData().setUserEnteredFormat(
@@ -327,7 +356,85 @@ class GsheetsWriter {
       throw new SheetOperationException('update data', spreadsheetId, e)
     }
 
+    // Same fix as write(): force explicit decimal places on BigDecimal cells so Sheets
+    // doesn't drop trailing zeros. Only resolves the target sheetId (an extra API call)
+    // when the matrix actually has a cell that would need it.
+    if (hasScaledDecimalCell(matrix)) {
+      int sheetId = resolveSheetId(sheets, spreadsheetId, range)
+      int[] startCell = parseStartCell(range)
+      List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId, startCell[0] + 1, startCell[1])
+      if (formatRequests) {
+        try {
+          sheets.spreadsheets()
+              .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(formatRequests))
+              .execute()
+        } catch (IOException e) {
+          throw new SheetOperationException(APPLY_FORMATS_ERROR, spreadsheetId, e)
+        }
+      }
+    }
+
     spreadsheetId
+  }
+
+  /**
+   * Resolves the numeric sheetId for the sheet targeted by an A1 range (e.g. {@code
+   * 'My Sheet'!C5:E10}). Ranges without a sheet-name prefix (e.g. {@code A1:D10}) default
+   * to the spreadsheet's first sheet, matching Google's own A1 notation convention.
+   */
+  private static int resolveSheetId(Sheets sheets, String spreadsheetId, String range) {
+    String sheetName = extractSheetName(range)
+    Spreadsheet meta
+    try {
+      meta = sheets.spreadsheets().get(spreadsheetId).setFields('sheets.properties').execute()
+    } catch (IOException e) {
+      throw new SheetOperationException('resolve sheet', spreadsheetId, e)
+    }
+    List<Sheet> sheetList = meta.getSheets()
+    if (sheetName == null) {
+      return sheetList.get(0).getProperties().getSheetId()
+    }
+    for (Sheet s : sheetList) {
+      if (s.getProperties().getTitle() == sheetName) {
+        return s.getProperties().getSheetId()
+      }
+    }
+    throw new IllegalArgumentException("Sheet '${sheetName}' not found in spreadsheet ${spreadsheetId}")
+  }
+
+  /**
+   * Extracts and unquotes the sheet-name prefix from an A1 range, or null if the range
+   * has no {@code !} prefix.
+   */
+  private static String extractSheetName(String range) {
+    String[] parts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
+    if (parts.size() <= 1) {
+      return null
+    }
+    String name = parts[0]
+    if (name != SINGLE_QUOTE && name.startsWith(SINGLE_QUOTE) && name.endsWith(SINGLE_QUOTE)) {
+      name = name.substring(1, name.length() - 1).replace(SINGLE_QUOTE + SINGLE_QUOTE, SINGLE_QUOTE)
+    }
+    name
+  }
+
+  /**
+   * Parses the 0-based [row, col] of the starting cell of an A1 range, e.g. {@code
+   * 'My Sheet'!C5:E10} -&gt; [4, 2].
+   */
+  private static int[] parseStartCell(String range) {
+    String[] parts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
+    String cellPart = parts.size() > 1 ? parts[1] : parts[0]
+    String startCell = cellPart.split(':')[0]
+    def m = startCell =~ /^([A-Z]+)\d+$/
+    if (!m.matches()) {
+      throw new IllegalArgumentException("Cannot parse starting cell from range '${range}'")
+    }
+    String colLetters = m.group(1)
+    String rowDigits = startCell.substring(colLetters.length())
+    int col = GsUtil.asColumnNumber(colLetters) - 1
+    int row = Integer.parseInt(rowDigits) - 1
+    [row, col] as int[]
   }
 
   private static Sheets buildSheetsService(GoogleCredentials credentials) {

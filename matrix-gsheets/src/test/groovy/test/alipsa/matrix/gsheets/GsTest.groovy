@@ -78,6 +78,35 @@ class GsTest {
   }
 
   @Test
+  void testExportWithSpaceInMatrixName() {
+    // Sheet names with spaces must be quoted in A1 notation ('Employee Data'!A1);
+    // regression test for GsheetsWriter.write() building an unquoted range internally.
+    Matrix spaced = empData.clone().withMatrixName('Employee Data')
+    String spreadsheetId = GsheetsWriter.write(spaced)
+    try {
+      Matrix m = GsheetsReader.readAsStrings(spreadsheetId, "'Employee Data'!A1:D6", true)
+      assertEquals(5, m.rowCount())
+      assertEquals(4, m.columnCount())
+    } finally {
+      GsUtil.deleteSheet(spreadsheetId)
+    }
+  }
+
+  @Test
+  void testUpdatePreservesDecimalScale() {
+    // Regression test: update() must apply the same BigDecimal number-format fix as
+    // write(), or values like 729.0 round-trip as "729" (losing the trailing zero).
+    String spreadsheetId = GsheetsWriter.write(empData)
+    try {
+      GsheetsWriter.update(spreadsheetId, "'empData'!A1", empData)
+      Matrix m = GsheetsReader.readAsStrings(spreadsheetId, 'empData!A1:D6', true)
+      assertEquals('729.0', m[3, 'salary'])
+    } finally {
+      GsUtil.deleteSheet(spreadsheetId)
+    }
+  }
+
+  @Test
   void testImportAsObjectWithNull() {
     Matrix ed = empData.clone().withMatrixName('empData')
     ed[2, 'salary'] = null

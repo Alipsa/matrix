@@ -28,7 +28,11 @@ class GsUtil {
   private static final String COLON = ':'
   private static final String COLUMN_PATTERN = '^([A-Z]+)'
   private static final String SINGLE_CELL_PATTERN = '^[A-Z]+\\d+$'
+  private static final String SINGLE_QUOTE = "'"
   private static final int MAX_SHEET_NAME_LENGTH = 100
+  // A double can represent any decimal with up to this many significant digits exactly;
+  // beyond it, Sheets (which stores all numbers as IEEE-754 doubles) may round the value.
+  private static final int MAX_DOUBLE_SAFE_PRECISION = 15
 
   static void deleteSheet(String spreadsheetId) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
@@ -201,9 +205,33 @@ class GsUtil {
     s.trim().isEmpty() ? 'Sheet1' : s
   }
 
+  /**
+   * Quotes a sheet name for use in an A1 range reference (e.g. {@code 'My Sheet'!A1:D10}).
+   * Google requires quoting for names containing spaces or special characters, and quoting
+   * is always valid even when not strictly required, so this is applied unconditionally.
+   * Embedded single quotes are doubled per Google's escaping rule.
+   *
+   * @see <a href="https://developers.google.com/workspace/sheets/api/guides/concepts">Sheets API concepts</a>
+   */
+  static String quoteSheetName(String sheetName) {
+    SINGLE_QUOTE + sheetName.replace(SINGLE_QUOTE, SINGLE_QUOTE + SINGLE_QUOTE) + SINGLE_QUOTE
+  }
+
   static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
     if (v == null) {
       return convertNullsToEmptyString ? '' : null
+    }
+    if (v in BigDecimal) {
+      BigDecimal bd = (BigDecimal) v
+      if (bd.precision() > MAX_DOUBLE_SAFE_PRECISION) {
+        throw new IllegalArgumentException(
+            "BigDecimal value ${bd} has ${bd.precision()} significant digits, which exceeds " +
+            'what Google Sheets can store exactly (Sheets stores all numbers as IEEE-754 ' +
+            "doubles, safe up to ${MAX_DOUBLE_SAFE_PRECISION} significant digits). Round the " +
+            'value before writing, or convert it to a String to preserve it verbatim as text.'
+        )
+      }
+      return bd
     }
     if (v in Number || v in Boolean) {
       return v
