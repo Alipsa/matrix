@@ -42,6 +42,17 @@ class GsheetsWriterTest {
   }
 
   @Test
+  void testWriteInvalidBigDecimalThrowsBeforeCreatingSpreadsheet() {
+    Matrix data = Matrix.builder('Invalid Precision')
+        .data(id: [1], amount: [new BigDecimal('999999999999999E10')])
+        .build()
+
+    assertThrows(IllegalArgumentException, () -> {
+      GsheetsWriter.write(data)
+    }, 'Should validate cell values before creating a spreadsheet')
+  }
+
+  @Test
   void testUpdateNullSpreadsheetIdThrows() {
     assertThrows(IllegalArgumentException, () -> {
       GsheetsWriter.update(null, 'Sheet1!A1', Matrix.builder().data(id: [1]).build())

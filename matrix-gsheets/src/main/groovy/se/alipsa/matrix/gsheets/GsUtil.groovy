@@ -30,9 +30,10 @@ class GsUtil {
   private static final String SINGLE_CELL_PATTERN = '^[A-Z]+\\d+$'
   private static final String SINGLE_QUOTE = "'"
   private static final int MAX_SHEET_NAME_LENGTH = 100
-  // A double can represent any decimal with up to this many significant digits exactly;
-  // beyond it, Sheets (which stores all numbers as IEEE-754 doubles) may round the value.
+  // Decimal values with more significant digits are outside the conservative precision
+  // envelope we allow for Google Sheets' IEEE-754 double storage.
   private static final int MAX_DOUBLE_SAFE_PRECISION = 15
+  private static final BigInteger MAX_EXACT_DOUBLE_INTEGER = 9007199254740992G
 
   static void deleteSheet(String spreadsheetId) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
@@ -223,12 +224,24 @@ class GsUtil {
     }
     if (v in BigDecimal) {
       BigDecimal bd = (BigDecimal) v
+      BigDecimal stripped = bd.stripTrailingZeros()
+      if (stripped.scale() <= 0) {
+        if (stripped.toBigIntegerExact().abs() > MAX_EXACT_DOUBLE_INTEGER) {
+          throw new IllegalArgumentException(
+              "BigDecimal integer value ${bd} exceeds the largest integer Google Sheets can " +
+              'store exactly (Sheets stores all numbers as IEEE-754 doubles, exact for ' +
+              "integers only up to ${MAX_EXACT_DOUBLE_INTEGER}). Round the value, or convert " +
+              'it to a String to preserve it verbatim as text.'
+          )
+        }
+        return bd
+      }
       if (bd.precision() > MAX_DOUBLE_SAFE_PRECISION) {
         throw new IllegalArgumentException(
-            "BigDecimal value ${bd} has ${bd.precision()} significant digits, which exceeds " +
-            'what Google Sheets can store exactly (Sheets stores all numbers as IEEE-754 ' +
-            "doubles, safe up to ${MAX_DOUBLE_SAFE_PRECISION} significant digits). Round the " +
-            'value before writing, or convert it to a String to preserve it verbatim as text.'
+            "BigDecimal value ${bd} has ${bd.precision()} significant digits, which is outside " +
+            'matrix-gsheets\' conservative exact-write guard for Google Sheets\' IEEE-754 ' +
+            "double storage (${MAX_DOUBLE_SAFE_PRECISION} significant digits). Round the value " +
+            'before writing, or convert it to a String to preserve it verbatim as text.'
         )
       }
       return bd

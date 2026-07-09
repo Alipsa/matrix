@@ -18,7 +18,3 @@ build/
 /matrix-bom/.flattened-pom.xml
 **/.remember/
 **/.codex
-
-# OAuth client secret is injected at build time from ~/client_secret_desktop.json
-# (see matrix-gsheets/docs/OAUTH-CLIENT.md) - never commit the real secret.
-/matrix-gsheets/src/main/resources/se/alipsa/matrix/gsheets/oauth/client_secret.json

@@ -247,9 +247,18 @@ class GsUtilTest {
 
   @Test
   void testToCellWithHighPrecisionBigDecimalThrows() {
-    // 16 significant digits exceeds double's guaranteed 15-digit safe precision
-    BigDecimal tooPrecise = new BigDecimal('1234567890123456')
+    // Fractional values with 16 significant digits exceed the conservative precision guard.
+    BigDecimal tooPrecise = new BigDecimal('123456789012345.6')
     assertThrows(IllegalArgumentException, () -> GsUtil.toCell(tooPrecise, true, false))
+  }
+
+  @Test
+  void testToCellWithCompactLargeIntegerBigDecimalThrows() {
+    // Precision alone is not enough: exponent notation can keep significant digits low
+    // while the integer value is still outside double's exact integer range.
+    BigDecimal tooLarge = new BigDecimal('999999999999999E10')
+    assertEquals(15, tooLarge.precision())
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(tooLarge, true, false))
   }
 
   @Test
@@ -257,6 +266,12 @@ class GsUtilTest {
     // Exactly 15 significant digits is still safe
     BigDecimal boundary = new BigDecimal('123456789012345')
     assertEquals(boundary, GsUtil.toCell(boundary, true, false))
+  }
+
+  @Test
+  void testToCellWithExactMaxDoubleIntegerBigDecimalPasses() {
+    BigDecimal maxExactInteger = new BigDecimal('9007199254740992')
+    assertEquals(maxExactInteger, GsUtil.toCell(maxExactInteger, true, false))
   }
 
   @Test

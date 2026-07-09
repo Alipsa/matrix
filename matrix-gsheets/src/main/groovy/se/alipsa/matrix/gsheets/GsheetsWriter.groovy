@@ -153,14 +153,18 @@ class GsheetsWriter {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
 
-    Sheets sheets = buildSheetsService(credentials)
-
     String titleBase = matrix.matrixName ?: "Matrix ${LocalDateTime.now().toString().replace('T', '_')}"
     String sheetName = GsUtil.sanitizeSheetName(titleBase)
     String spreadsheetTitle = titleBase
     // Sheet names containing spaces or special characters must be quoted in A1 notation
     // (e.g. 'Employee Data'!A1); quoting is always valid, so it's applied unconditionally.
     String quotedRange = "${GsUtil.quoteSheetName(sheetName)}!A1"
+
+    // Build the data before creating the spreadsheet so local validation errors cannot
+    // leave an empty spreadsheet orphaned in Drive.
+    List<List<Object>> values = buildValues(matrix, convertNullsToEmptyString, convertDatesToSerial)
+
+    Sheets sheets = buildSheetsService(credentials)
 
     // 1) Create an empty spreadsheet with one sheet named after the matrix
     Spreadsheet requestBody = new Spreadsheet()
@@ -181,15 +185,6 @@ class GsheetsWriter {
 
     String spreadsheetId = created.getSpreadsheetId()
     int sheetId = created.getSheets().get(0).getProperties().getSheetId()
-
-    // 2) Build the data: header row + data rows
-    List<String> headers = (List<String>) matrix.columnNames()
-    List<List<Object>> values = [new ArrayList<Object>(headers)]
-
-    // data rows
-    matrix.each { Row it ->
-      values << it.collect { GsUtil.toCell(it, convertNullsToEmptyString, convertDatesToSerial) }
-    }
 
     // 3) Write all values starting at A1
     ValueRange vr = new ValueRange()
@@ -276,6 +271,15 @@ class GsheetsWriter {
     false
   }
 
+  private static List<List<Object>> buildValues(Matrix matrix, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
+    List<String> headers = (List<String>) matrix.columnNames()
+    List<List<Object>> values = [new ArrayList<Object>(headers)]
+    matrix.each { Row it ->
+      values << it.collect { GsUtil.toCell(it, convertNullsToEmptyString, convertDatesToSerial) }
+    }
+    values
+  }
+
   private static Request numberFormatRequest(int sheetId, int col, int startRow, int endRow, int scale) {
     String pattern = ZERO_DIGIT + '.' + (ZERO_DIGIT * scale)
     new Request().setRepeatCell(
@@ -332,15 +336,10 @@ class GsheetsWriter {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
 
-    Sheets sheets = buildSheetsService(credentials)
-
     // Build data: header row + data rows
-    List<String> headers = (List<String>) matrix.columnNames()
-    List<List<Object>> values = [new ArrayList<Object>(headers)]
+    List<List<Object>> values = buildValues(matrix, convertNullsToEmptyString, convertDatesToSerial)
 
-    matrix.each { Row it ->
-      values << it.collect { GsUtil.toCell(it, convertNullsToEmptyString, convertDatesToSerial) }
-    }
+    Sheets sheets = buildSheetsService(credentials)
 
     ValueRange vr = new ValueRange()
         .setRange(range)

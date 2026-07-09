@@ -11,7 +11,7 @@
 - Fix `GsAuthenticator.authenticate()` returning credentials without verifying the granted token actually has the requested scopes
 - Fix `GsheetsWriter.write()` building an unquoted A1 range for sheet names containing spaces or special characters (e.g. `Employee Data` needs `'Employee Data'!A1`)
 - Fix `GsheetsWriter.write()`/`readAsStrings` round-trip losing trailing zeros on whole-number `BigDecimal` values (e.g. `729.0` read back as `729`) by forcing an explicit decimal-place number format on write; `update()` now applies the same fix
-- `GsUtil.toCell` now rejects `BigDecimal` values with more significant digits than a double can represent exactly, instead of silently losing precision
+- `GsUtil.toCell` now rejects `BigDecimal` values outside matrix-gsheets' conservative safe-write guard for Google Sheets' IEEE-754 double storage, including oversized integers beyond the exact `2^53` range
 
 ### Dependency updates
 - com.google.apis:google-api-services-drive v3-rev20260428-2.0.0 -> v3-rev20260624-2.0.0
