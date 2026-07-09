@@ -39,7 +39,14 @@ class JsonWriteOptions {
     JsonWriteOptions result = new JsonWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey(OPT_INDENT)) {
-      result.indent(normalized.get(OPT_INDENT) as boolean)
+      Object value = normalized.get(OPT_INDENT)
+      if (value instanceof Boolean) {
+        result.indent((boolean) value)
+      } else if (value instanceof CharSequence) {
+        result.indent(Boolean.parseBoolean(value.toString()))
+      } else if (value != null) {
+        throw new IllegalArgumentException("${OPT_INDENT} must be a Boolean or String but was ${value?.class}")
+      }
     }
     if (normalized.containsKey('dateformat')) {
       String dateFormat = OptionMaps.stringValueOrNull(normalized.dateformat)

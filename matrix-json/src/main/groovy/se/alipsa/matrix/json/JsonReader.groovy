@@ -273,6 +273,14 @@ class JsonReader {
       return Matrix.builder().build()
     }
 
+    if (columnNames.isEmpty()) {
+      // Every row flattened to zero key/value pairs (e.g. [{}], or objects containing only
+      // empty nested arrays/objects). Preserve the row count via MatrixBuilder's degenerate
+      // all-empty-rows handling instead of silently losing the rows.
+      List<List> emptyRows = (0..<rowCount).collect { [] }
+      return Matrix.builder().rows(emptyRows).build()
+    }
+
     Matrix.builder()
         .columnNames(columnNames)
         .columns(columns)

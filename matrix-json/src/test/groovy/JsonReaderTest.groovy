@@ -195,6 +195,42 @@ class JsonReaderTest {
   }
 
   @Test
+  void testEmptyObjectRowPreservesRowCount() {
+    Matrix matrix = JsonReader.read('[{}]')
+
+    assertEquals(1, matrix.rowCount(), 'A single empty object should still count as one row')
+    assertEquals(0, matrix.columnCount(), 'An empty object has no columns')
+  }
+
+  @Test
+  void testAllEmptyObjectRowsPreserveRowCount() {
+    Matrix matrix = JsonReader.read('[{}, {}, {}]')
+
+    assertEquals(3, matrix.rowCount(), 'Every row should be counted even though none has any keys')
+    assertEquals(0, matrix.columnCount(), 'No keys anywhere in the document means no columns')
+  }
+
+  @Test
+  void testRowWithOnlyEmptyNestedContainersPreservesRowCount() {
+    // Neither an empty array nor an empty object produces a leaf key/value pair after flattening
+    Matrix matrix = JsonReader.read('[{"a": [], "b": {}}]')
+
+    assertEquals(1, matrix.rowCount(), 'Row with only empty nested containers should still count as one row')
+    assertEquals(0, matrix.columnCount(), 'Empty nested containers do not produce any columns')
+  }
+
+  @Test
+  void testMixedEmptyAndNonEmptyObjectRows() {
+    // Regression guard: once a column exists, trailing/leading empty-object rows must still be
+    // backfilled with nulls rather than dropped - this already worked before the row-count fix.
+    Matrix matrix = JsonReader.read('[{"a":1},{},{}]')
+
+    assertEquals(3, matrix.rowCount(), 'Number of rows')
+    assertEquals(['a'], matrix.columnNames(), 'Column names')
+    assertEquals([1, null, null], matrix.column('a'), 'Empty rows should be backfilled with null')
+  }
+
+  @Test
   void testSparseData() {
     // Different rows have different keys
     String json = '''[
