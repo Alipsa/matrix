@@ -1,7 +1,10 @@
 # Matrix-Json Release history
 
-## v2.3.1, in progress
+## v2.3.1, 2026-07-09
 - Dependency update: com.fasterxml.jackson:jackson-bom 2.21.2 -> 2.22.0
+- fix `indent` write option being silently inverted when passed as a String (Groovy's truthy `as boolean` coercion treated `indent: "false"` as `true`); now validates Boolean/String values strictly and throws `IllegalArgumentException` unless the trimmed, case-insensitive value is `true` or `false`
+- fix `JsonReader` silently dropping rows when a JSON array's objects all flatten to zero key/value pairs (e.g. `[{}, {}, {}]` reported 0 rows instead of 3); row count is now preserved on the resulting zero-column `Matrix`
+- fix `JsonWriter` dropping rows when writing a zero-column `Matrix` that has a non-zero row count (the round-trip counterpart of the `JsonReader` fix above); it now writes one empty object per row instead of an empty array
 
 ## v2.3.0, 2026-06-21
 - Breaking: remove deprecated `JsonImporter` and `JsonExporter` classes (deprecated since v2.1.2). These were source- and binary-incompatible removals; replace `JsonImporter.parse(...)` calls with `JsonReader.read(...)` and `new JsonExporter(matrix).toJson(...)` calls with `JsonWriter.write(matrix)...asString()`/`.to(...)`. The static `JsonExporter.toJson(matrix, ...)` becomes `JsonWriter.write(matrix).asString()` (add `.indent()` for pretty-printing), and the static `JsonExporter.toJsonFile(matrix, file, ...)` becomes `JsonWriter.write(matrix).to(file)` (again with `.indent()` as needed). The `new JsonExporter(Grid, List<String>)` constructor has no direct equivalent: build a `Matrix` first (`Matrix.builder().data(grid).columnNames(columnNames).build()`), then call `JsonWriter.write(matrix)`
