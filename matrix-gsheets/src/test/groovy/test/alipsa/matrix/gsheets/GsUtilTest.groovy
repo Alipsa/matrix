@@ -248,7 +248,7 @@ class GsUtilTest {
   @Test
   void testToCellWithHighPrecisionBigDecimalThrows() {
     // Fractional values with 16 significant digits exceed the conservative precision guard.
-    BigDecimal tooPrecise = new BigDecimal('123456789012345.6')
+    BigDecimal tooPrecise = 123456789012345.6
     assertThrows(IllegalArgumentException, () -> GsUtil.toCell(tooPrecise, true, false))
   }
 
