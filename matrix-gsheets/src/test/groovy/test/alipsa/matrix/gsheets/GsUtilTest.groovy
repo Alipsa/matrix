@@ -216,6 +216,22 @@ class GsUtilTest {
   }
 
   @Test
+  void testQuoteSheetNamePlainName() {
+    assertEquals("'Sheet1'", GsUtil.quoteSheetName('Sheet1'))
+  }
+
+  @Test
+  void testQuoteSheetNameWithSpace() {
+    assertEquals("'Employee Data'", GsUtil.quoteSheetName('Employee Data'))
+  }
+
+  @Test
+  void testQuoteSheetNameWithEmbeddedQuote() {
+    // Google requires embedded single quotes to be doubled
+    assertEquals("'It''s a sheet'", GsUtil.quoteSheetName("It's a sheet"))
+  }
+
+  @Test
   void testToCellWithNull() {
     // Test null handling with convertNullsToEmptyString
     assertEquals('', GsUtil.toCell(null, true, false))
@@ -227,6 +243,41 @@ class GsUtilTest {
     assertEquals(42, GsUtil.toCell(42, true, false))
     assertEquals(3.14, GsUtil.toCell(3.14, true, false))
     assertEquals(123.45, GsUtil.toCell(123.45, true, false))
+  }
+
+  @Test
+  void testToCellWithHighPrecisionBigDecimalThrows() {
+    // Fractional values with 16 significant digits exceed the conservative precision guard.
+    BigDecimal tooPrecise = new BigDecimal('123456789012345.6')
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(tooPrecise, true, false))
+  }
+
+  @Test
+  void testToCellWithCompactLargeIntegerBigDecimalThrows() {
+    // Precision alone is not enough: exponent notation can keep significant digits low
+    // while the integer value is still outside double's exact integer range.
+    BigDecimal tooLarge = new BigDecimal('999999999999999E10')
+    assertEquals(15, tooLarge.precision())
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(tooLarge, true, false))
+  }
+
+  @Test
+  void testToCellWithBoundaryPrecisionBigDecimalPasses() {
+    // Exactly 15 significant digits is still safe
+    BigDecimal boundary = new BigDecimal('123456789012345')
+    assertEquals(boundary, GsUtil.toCell(boundary, true, false))
+  }
+
+  @Test
+  void testToCellWithExactMaxDoubleIntegerBigDecimalPasses() {
+    BigDecimal maxExactInteger = new BigDecimal('9007199254740992')
+    assertEquals(maxExactInteger, GsUtil.toCell(maxExactInteger, true, false))
+  }
+
+  @Test
+  void testToCellWithFirstUnsafeDoubleIntegerBigDecimalThrows() {
+    BigDecimal firstUnsafeInteger = new BigDecimal('9007199254740993')
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(firstUnsafeInteger, true, false))
   }
 
   @Test

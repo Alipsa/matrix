@@ -11,7 +11,6 @@ import com.google.auth.oauth2.GoogleCredentials
 import se.alipsa.matrix.core.util.Logger
 
 import java.security.GeneralSecurityException
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
@@ -32,7 +31,10 @@ class GsAuthenticator {
   static final String SCOPE_OPENID = 'openid'
   static final String SCOPE_USERINFO_EMAIL = 'https://www.googleapis.com/auth/userinfo.email'
 
-  private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false)
+  // Serializes login attempts within this JVM so concurrent callers wait for an in-flight
+  // login instead of failing immediately, and so a failed/cancelled attempt doesn't
+  // permanently prevent future retries (unlike a one-shot "already tried" flag would).
+  private static final Object LOGIN_LOCK = new Object()
 
   private GsAuthenticator() { }
 
@@ -40,6 +42,11 @@ class GsAuthenticator {
 
   // The location where gcloud stores Application Default Credentials
   static final File ADC_FILE_PATH = new File(System.getProperty(PROP_USER_HOME), '.config/gcloud/application_default_credentials.json')
+
+  // A caller-registered OAuth 2.0 "Desktop app" client, used in place of gcloud's shared
+  // default client. Google blocks sensitive scopes (e.g. spreadsheets, drive) for that
+  // shared client, so this is required for those scopes to keep working.
+  static final File CLIENT_SECRET_FILE = new File(System.getProperty(PROP_USER_HOME), 'client_secret_desktop.json')
 
   private static final String GCLOUD_CMD = 'gcloud'
   private static final String GCLOUD_AUTH = 'auth'
@@ -153,10 +160,9 @@ class GsAuthenticator {
 
   private static boolean runProgrammaticLogin(List<String> scopes, String quotaProjectId = null) {
     try {
-      def home = System.getProperty(PROP_USER_HOME)
-      def clientSecretFile = new File("$home/client_secret_desktop.json")
-
-      def credentials = GsAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, quotaProjectId)
+      // Uses matrix-gsheets' own bundled OAuth client, or CLIENT_SECRET_FILE if the
+      // caller has registered their own client and wants to override it.
+      def credentials = GsAuthUtils.loginAndWriteAdc(scopes, quotaProjectId)
 
       // If credentials are null, it means the process failed.
       return credentials != null
@@ -215,82 +221,93 @@ class GsAuthenticator {
       }
       scopes = new ArrayList<>(effective)
     }
-    def creds = getCredentials(new ArrayList<>(scopes))
 
+    GoogleCredentials creds = getCredentials(new ArrayList<>(scopes))
     if (creds == null || !GsAuthUtils.hasAllScopes(creds, scopes)) {
-      // Do ONE interactive login (ADC or programmatic), then reload creds
-      if (LOGIN_ATTEMPTED.compareAndSet(false, true)) {
-        boolean ok = isCommandAvailable(GCLOUD_CMD)
-            ? runGcloudLogin(scopes)
-            : runProgrammaticLogin(scopes, quotaProjectId)
-        if (!ok && isCommandAvailable(GCLOUD_CMD)) {
-          // one fallback try
-          ok = runProgrammaticLogin(scopes, quotaProjectId)
-        }
-        if (!ok) {
-          return null
-        }
-        if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
-          new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
-              .inheritIO().start().waitFor()
-        }
-        creds = getCredentials(scopes, true)
-      } else {
-        // We already attempted an interactive login in this JVM; don’t prompt again.
-        creds = getCredentials(scopes, false)
-      }
+      creds = loginAndGetCredentials(scopes, quotaProjectId)
     }
 
-    if (creds) {
-      // Only try userinfo if we actually asked for it
-      boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
-      if (wantEmail) {
-        def email = getUserEmail(creds)
-        log.info "Google Cloud is already authenticated with email: ${email}"
-      } else {
-        log.info 'Google Cloud is already authenticated.'
-      }
-      return creds
-    }
-
-    log.info 'Google Cloud is not authenticated. Initiating login flow...'
-    if (runGcloudLogin(scopes)) {
-      // After a successful login, we must get the newly created credentials
-      log.debug 'Re-checking credentials after login...'
-
-      // There can be a small delay between gcloud exiting and the ADC file being
-      // fully written to disk. We will retry a few times to handle this race condition.
-      def newCreds = null
-      int maxRetries = 5
-      int retryDelayMs = 1000 // 1 second
-
-      for (int attempt = 1; attempt <= maxRetries; attempt++) {
-        // Call with verbose=false to avoid noisy output during retries
-        newCreds = getCredentials(scopes, false)
-        if (newCreds) {
-          break // Success, exit the loop
-        }
-        if (attempt < maxRetries) {
-          log.debug "Login successful, but credentials not yet available. Retrying in ${retryDelayMs}ms..."
-          Thread.currentThread().sleep(retryDelayMs)
-        }
-      }
-
-      if (newCreds) {
-        def email = getUserEmail(newCreds)
-        if (email) {
-          log.info "Authentication successful for user: ${email}"
-        } else {
-          log.info 'Authentication successful after login.'
-        }
-        return newCreds
-      }
-
+    if (creds == null) {
       log.error 'Authentication failed. Could not validate credentials after login, even after retrying.'
       return null
     }
+    if (!GsAuthUtils.hasAllScopes(creds, scopes)) {
+      log.error 'Authentication succeeded but the granted token is missing required scopes.'
+      return null
+    }
 
-    return null
+    // Only try userinfo if we actually asked for it
+    boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
+    if (wantEmail) {
+      def email = getUserEmail(creds)
+      log.info "Google Cloud is authenticated with email: ${email}"
+    } else {
+      log.info 'Google Cloud is authenticated.'
+    }
+    creds
+  }
+
+  /**
+   * Serializes interactive login within this JVM: only one login flow runs at a time, and
+   * concurrent callers block on {@link #LOGIN_LOCK} and then re-check credentials rather
+   * than failing immediately or racing the in-flight attempt. A failed or cancelled login
+   * does not leave any lasting state, so a later call will simply try again.
+   */
+  private static GoogleCredentials loginAndGetCredentials(List<String> scopes, String quotaProjectId) {
+    synchronized (LOGIN_LOCK) {
+      // Re-check: another thread may have completed login while we waited for the lock.
+      GoogleCredentials creds = getCredentials(new ArrayList<>(scopes), false)
+      if (creds != null && GsAuthUtils.hasAllScopes(creds, scopes)) {
+        return creds
+      }
+
+      if (!performLogin(scopes, quotaProjectId)) {
+        return null
+      }
+      if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
+        new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
+            .inheritIO().start().waitFor()
+      }
+      // There can be a small delay between the login flow completing and the
+      // ADC file being fully written to disk. Retry a few times to handle this.
+      waitForCredentials(scopes)
+    }
+  }
+
+  /**
+   * Performs one interactive login, preferring matrix-gsheets' own bundled OAuth client
+   * (or a caller override at {@link #CLIENT_SECRET_FILE}) over gcloud's shared default
+   * client. Google blocks sensitive scopes (e.g. spreadsheets, drive) for the shared
+   * client, so relying on it for those scopes will hang waiting for a browser callback
+   * that never arrives, or be rejected outright.
+   *
+   * @return true if a login succeeded and ADC was written, false otherwise
+   */
+  private static boolean performLogin(List<String> scopes, String quotaProjectId) {
+    if (runProgrammaticLogin(scopes, quotaProjectId)) {
+      return true
+    }
+    if (isCommandAvailable(GCLOUD_CMD)) {
+      return runGcloudLogin(scopes)
+    }
+    return false
+  }
+
+  private static GoogleCredentials waitForCredentials(List<String> scopes) {
+    int maxRetries = 5
+    int retryDelayMs = 1000 // 1 second
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      // Call with verbose=false to avoid noisy output during retries
+      def creds = getCredentials(scopes, false)
+      if (creds) {
+        return creds
+      }
+      if (attempt < maxRetries) {
+        log.debug "Login successful, but credentials not yet available. Retrying in ${retryDelayMs}ms..."
+        Thread.currentThread().sleep(retryDelayMs)
+      }
+    }
+    null
   }
 
   private static boolean isCommandAvailable(String command) {

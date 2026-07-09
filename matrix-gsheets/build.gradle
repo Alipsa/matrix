@@ -24,6 +24,24 @@ compileGroovy {
   groovyOptions.configurationScript = rootProject.file('config/groovy/compileStatic.groovy')
 }
 
+// Bundle matrix-gsheets' own OAuth "Desktop app" client into the jar so callers get a
+// working interactive login without registering their own client (see GsAuthUtils.
+// loginAndWriteAdc). The secret is not committed to git (push protection rightly blocks
+// it); it's injected here from a local, gitignored file at build time. See
+// docs/OAUTH-CLIENT.md for how to provide it. Builds without that file simply ship
+// without a bundled client - GsAuthUtils falls back to its existing clear error message.
+tasks.named('processResources') {
+  def clientSecretFile = new File(System.getProperty('user.home'), 'client_secret_desktop.json')
+  if (clientSecretFile.exists()) {
+    from(clientSecretFile) {
+      into 'se/alipsa/matrix/gsheets/oauth'
+      rename { 'client_secret.json' }
+    }
+  } else {
+    logger.warn("matrix-gsheets: ${clientSecretFile.absolutePath} not found - building without a bundled OAuth client.")
+  }
+}
+
 configurations {
   mockitoAgent
 }

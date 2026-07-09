@@ -1,11 +1,18 @@
 # Release history
 
-## 0.2.1, 2026-07-08
+## 0.2.1, 2026-07-09
 
 ### Bug Fixes
 - Fix `GsConverter.toSerials(List<Object>)` throwing for `java.util.Date` values by dispatching `Date` through `GsConverter.asSerial(Object)`
 - Fix `GsUtil.columnCountForRange` rejecting single-cell A1 ranges such as `Sheet1!A1`
 - Fix `GsheetsReader.readAsObject`/`readAsStrings` throwing `NullPointerException` on genuinely empty ranges; they now return an empty `Matrix` with generated headers
+- Fix interactive login relying on gcloud's shared default OAuth client, which Google now blocks for sensitive scopes (spreadsheets, drive); `matrix-gsheets` now bundles its own OAuth client, injected at build time (see `docs/OAUTH-CLIENT.md`)
+- Fix `GsAuthenticator.authenticate()` permanently disabling further login attempts after one failed/cancelled login, and concurrent callers failing instead of waiting for an in-flight login
+- Fix `GsAuthenticator.authenticate()` returning credentials without verifying the granted token actually has the requested scopes
+- Fix `GsheetsWriter.write()` building an unquoted A1 range for sheet names containing spaces or special characters (e.g. `Employee Data` needs `'Employee Data'!A1`)
+- Fix `GsheetsWriter.write()` creating an empty spreadsheet before local cell validation could fail; values are now validated before the spreadsheet is created
+- Fix `GsheetsWriter.write()`/`readAsStrings` round-trip losing trailing zeros on whole-number `BigDecimal` values (e.g. `729.0` read back as `729`) by forcing an explicit decimal-place number format on write; `update()` now applies the same fix
+- `GsUtil.toCell` now rejects `BigDecimal` values outside matrix-gsheets' conservative safe-write guard for Google Sheets' IEEE-754 double storage, including oversized integers beyond the exact `2^53` range
 
 ### Dependency updates
 - com.google.apis:google-api-services-drive v3-rev20260428-2.0.0 -> v3-rev20260624-2.0.0
