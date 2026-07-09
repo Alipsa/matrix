@@ -42,7 +42,7 @@
     <matrixGgplotVersion>0.5.0</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.3.0</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.2.1</matrixGsheetsVersion>
-    <matrixJsonVersion>2.3.1-SNAPSHOT</matrixJsonVersion>
+    <matrixJsonVersion>2.3.1</matrixJsonVersion>
     <matrixLoggingVersion>0.1.1-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.6.0</matrixParquetVersion>
     <matrixPictVersion>0.5.0</matrixPictVersion>

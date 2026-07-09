@@ -1,4 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -62,6 +64,50 @@ class JsonFormatProviderTest {
 
     assertEquals('yyyy-MM-dd', options.dateFormat)
     assertTrue(options.columnFormatters.isEmpty())
+  }
+
+  @Test
+  void testWriteOptionsIndentAcceptsStringBoolean() {
+    assertFalse(JsonWriteOptions.fromMap([indent: 'false']).indent, "String 'false' should not be truthy-coerced")
+    assertTrue(JsonWriteOptions.fromMap([indent: 'true']).indent)
+    assertTrue(JsonWriteOptions.fromMap([indent: true]).indent, 'Boolean true should still work')
+    assertFalse(JsonWriteOptions.fromMap([indent: false]).indent, 'Boolean false should still work')
+  }
+
+  @Test
+  void testWriteOptionsIndentRejectsInvalidType() {
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: 123])
+    }
+  }
+
+  @Test
+  void testWriteOptionsIndentRejectsInvalidStringValues() {
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: 'yes'])
+    }
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: '0'])
+    }
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: 'treu'])
+    }
+  }
+
+  @Test
+  void testWriteOptionsIndentAcceptsTrimmedAndDifferentlyCasedStrings() {
+    assertTrue(JsonWriteOptions.fromMap([indent: ' TRUE ']).indent)
+    assertFalse(JsonWriteOptions.fromMap([indent: ' False ']).indent)
+  }
+
+  @Test
+  void testSpiWriteWithStringFalseIndentProducesCompactOutput() {
+    Matrix matrix = Matrix.builder().data(a: [1, 2]).build()
+    File file = tempDir.resolve('compact.json').toFile()
+
+    matrix.write([indent: 'false'], file)
+
+    assertFalse(file.text.contains('\n'), "indent: 'false' should not produce pretty-printed output")
   }
 
   @Test
