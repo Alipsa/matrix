@@ -453,13 +453,24 @@ class JsonWriter {
         gen.writeStartArray()
         List<String> colNames = t.columnNames()
         int colCount = colNames.size()
-        for (Row row : t) {
-          gen.writeStartObject()
-          for (int i = 0; i < colCount; i++) {
-            gen.writeFieldName(colNames[i])
-            writeValue(gen, row[i], dtf)
+        if (colCount == 0) {
+          // Zero-column matrices (e.g. produced by JsonReader from JSON like [{}, {}]) still
+          // carry a row count; Matrix.rows() is empty in that case, so iterate by rowCount()
+          // instead of relying on the Row iterator, writing one empty object per row.
+          int rowCount = t.rowCount()
+          for (int r = 0; r < rowCount; r++) {
+            gen.writeStartObject()
+            gen.writeEndObject()
           }
-          gen.writeEndObject()
+        } else {
+          for (Row row : t) {
+            gen.writeStartObject()
+            for (int i = 0; i < colCount; i++) {
+              gen.writeFieldName(colNames[i])
+              writeValue(gen, row[i], dtf)
+            }
+            gen.writeEndObject()
+          }
         }
         gen.writeEndArray()
       }

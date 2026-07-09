@@ -43,7 +43,14 @@ class JsonWriteOptions {
       if (value instanceof Boolean) {
         result.indent((boolean) value)
       } else if (value instanceof CharSequence) {
-        result.indent(Boolean.parseBoolean(value.toString()))
+        String normalizedValue = value.toString().trim().toLowerCase(Locale.ROOT)
+        if (normalizedValue == 'true') {
+          result.indent(true)
+        } else if (normalizedValue == DEFAULT_INDENT) {
+          result.indent(false)
+        } else {
+          throw new IllegalArgumentException("${OPT_INDENT} must be 'true' or 'false' but was '${value}'")
+        }
       } else if (value != null) {
         throw new IllegalArgumentException("${OPT_INDENT} must be a Boolean or String but was ${value?.class}")
       }

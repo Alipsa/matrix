@@ -162,6 +162,33 @@ class JsonWriterTest {
   }
 
   @Test
+  void testWriteZeroColumnMatrixWithRowCount() {
+    // A zero-column, non-zero-rowCount Matrix can result from reading JSON like [{}, {}, {}]
+    // (see JsonReaderTest#testAllEmptyObjectRowsPreserveRowCount). Matrix.rows() is empty for
+    // such matrices, so the writer must fall back to rowCount() rather than silently dropping rows.
+    Matrix matrix = JsonReader.read('[{}, {}, {}]')
+    assertEquals(3, matrix.rowCount())
+    assertEquals(0, matrix.columnCount())
+
+    String json = JsonWriter.write(matrix).asString()
+
+    assertEquals('[{},{},{}]', json, 'Should write one empty object per row')
+  }
+
+  @Test
+  void testRoundTripEmptyObjectRows() {
+    String original = '[{},{},{}]'
+
+    Matrix matrix = JsonReader.read(original)
+    String written = JsonWriter.write(matrix).asString()
+    Matrix reread = JsonReader.read(written)
+
+    assertEquals(original, written, 'Round-tripped JSON should match the original')
+    assertEquals(3, reread.rowCount())
+    assertEquals(0, reread.columnCount())
+  }
+
+  @Test
   void testWriteWithDateFormat() {
     Matrix matrix = Matrix.builder()
         .data(

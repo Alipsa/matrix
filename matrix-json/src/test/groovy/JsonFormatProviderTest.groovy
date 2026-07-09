@@ -82,6 +82,25 @@ class JsonFormatProviderTest {
   }
 
   @Test
+  void testWriteOptionsIndentRejectsInvalidStringValues() {
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: 'yes'])
+    }
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: '0'])
+    }
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([indent: 'treu'])
+    }
+  }
+
+  @Test
+  void testWriteOptionsIndentAcceptsTrimmedAndDifferentlyCasedStrings() {
+    assertTrue(JsonWriteOptions.fromMap([indent: ' TRUE ']).indent)
+    assertFalse(JsonWriteOptions.fromMap([indent: ' False ']).indent)
+  }
+
+  @Test
   void testSpiWriteWithStringFalseIndentProducesCompactOutput() {
     Matrix matrix = Matrix.builder().data(a: [1, 2]).build()
     File file = tempDir.resolve('compact.json').toFile()
