@@ -234,6 +234,7 @@ class GsUtil {
               'it to a String to preserve it verbatim as text.'
           )
         }
+        // Preserve the original scale for writer-side number formatting, e.g. 729.0.
         return bd
       }
       if (bd.precision() > MAX_DOUBLE_SAFE_PRECISION) {

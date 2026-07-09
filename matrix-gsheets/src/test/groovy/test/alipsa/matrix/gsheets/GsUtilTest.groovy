@@ -275,6 +275,12 @@ class GsUtilTest {
   }
 
   @Test
+  void testToCellWithFirstUnsafeDoubleIntegerBigDecimalThrows() {
+    BigDecimal firstUnsafeInteger = new BigDecimal('9007199254740993')
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(firstUnsafeInteger, true, false))
+  }
+
+  @Test
   void testToCellWithBoolean() {
     assertEquals(true, GsUtil.toCell(true, true, false))
     assertEquals(false, GsUtil.toCell(false, true, false))
