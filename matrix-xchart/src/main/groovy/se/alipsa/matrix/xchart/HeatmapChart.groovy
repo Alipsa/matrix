@@ -121,7 +121,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
-    addSeries(seriesName, 1..nRows, 1..nCols, columns)
+    addSeries(seriesName, 1..nCols, 1..nRows, columns)
   }
 
   /**
@@ -149,7 +149,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       tmpRows << tmpRow
     }
     heatMapMatrix = Matrix.builder().rows(tmpRows).build()
-    xchart.addSeries(seriesName, rowLabels, columnLabels, heatData)
+    xchart.addSeries(seriesName, columnLabels, rowLabels, heatData)
     this
   }
 
