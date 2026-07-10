@@ -9,7 +9,7 @@ The point is that, using the bom, you only need to define the version for the bo
 
 An example for matrix-core is as follows for Gradle
 ```groovy
-implementation(platform( 'se.alipsa.matrix:matrix-bom:2.2.3'))
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.5.1'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
 runtimeOnly('se.alipsa.matrix:matrix-logging') // optional script/small-tool logging default
@@ -23,7 +23,7 @@ runtimeOnly('se.alipsa.matrix:matrix-logging') // optional script/small-tool log
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.2.3</version>
+            <version>2.5.1</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
@@ -55,7 +55,7 @@ version (4.x or 5.x). Add the Groovy dependency explicitly in your build.
 Gradle:
 ```groovy
 implementation('org.apache.groovy:groovy-all:4.0.23') // or 5.x if you prefer
-implementation('se.alipsa.matrix:matrix-all:2.2.3')
+implementation('se.alipsa.matrix:matrix-all:2.5.1')
 ```
 
 Maven:
@@ -68,6 +68,6 @@ Maven:
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-all</artifactId>
-  <version>2.2.3</version>
+  <version>2.5.1</version>
 </dependency>
 ```

@@ -9,7 +9,7 @@ To use the matrix-datasets module, you need to add it as a dependency to your pr
 ### Gradle Configuration
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.0')
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
 implementation 'se.alipsa.matrix:matrix-datasets'
 ```
 
@@ -23,7 +23,7 @@ implementation 'se.alipsa.matrix:matrix-datasets'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.2.0</version>
+        <version>2.5.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

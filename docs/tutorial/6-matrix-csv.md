@@ -9,7 +9,7 @@ Use the Matrix BOM when you depend on multiple Matrix modules:
 ### Gradle
 
 ```groovy
-implementation platform("se.alipsa.matrix:matrix-bom:2.5.0-SNAPSHOT")
+implementation platform("se.alipsa.matrix:matrix-bom:2.5.1")
 implementation "se.alipsa.matrix:matrix-core"
 implementation "se.alipsa.matrix:matrix-csv"
 ```
@@ -23,7 +23,7 @@ implementation "se.alipsa.matrix:matrix-csv"
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.5.0-SNAPSHOT</version>
+        <version>2.5.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

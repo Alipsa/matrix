@@ -1,5 +1,20 @@
 # Maven-BOM release history
 
+## v2.5.1, 2026-07-10
+Pom files available at maven central
+- [matrix-bom](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.5.1/matrix-bom-2.5.1.pom)
+- [matrix-all](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-all/2.5.1/matrix-all-2.5.1.pom)
+
+Dependency changes:
+- Upgrade matrix-bigquery 0.6.1 -> 0.7.0
+- Upgrade matrix-gsheets 0.2.0 -> 0.2.1
+- Upgrade matrix-json 2.3.0 -> 2.3.1
+- Upgrade matrix-logging 0.1.0 -> 0.1.1
+- Upgrade matrix-spreadsheet 2.4.0 -> 2.4.1
+- Upgrade matrix-stats 2.5.1 -> 2.5.2
+- Upgrade matrix-tablesaw 0.3.1 -> 0.3.2
+- Upgrade matrix-xchart 0.3.1 -> 0.3.2
+
 ## v2.5.0, 2026-07-04
 Pom files available at maven central
 - [matrix-bom](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.5.0/matrix-bom-2.5.0.pom)

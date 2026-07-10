@@ -55,7 +55,7 @@ This guide reflects the current PICT implementation, including:
 ### Dependencies
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.5.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-pict'
 ```

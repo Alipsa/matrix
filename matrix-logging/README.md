@@ -31,7 +31,7 @@ import se.alipsa.matrix.core.Matrix
 
 ```groovy
 dependencies {
-  implementation(platform('se.alipsa.matrix:matrix-bom:2.5.0'))
+  implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
   implementation('se.alipsa.matrix:matrix-core')
   runtimeOnly('se.alipsa.matrix:matrix-logging')
 }
