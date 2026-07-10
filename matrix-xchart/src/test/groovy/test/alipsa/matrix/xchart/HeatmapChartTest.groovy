@@ -205,4 +205,37 @@ class HeatmapChartTest {
     assertTrue(file.exists())
   }
 
+  @Test
+  void testCustomLabelsMapToCorrectAxesForNonSquareGrid() {
+    Matrix matrix = Matrix.builder().data(
+        c1: [1, 2, 3],
+        c2: [4, 5, 6],
+        c3: [7, 8, 9],
+        c4: [10, 11, 12]
+    ).types([Number] * 4).build()
+
+    // 4 columns, 3 rows: nCols != nRows so a label swap would misalign the grid
+    List<String> columnLabels = ['w', 'x', 'y', 'z']
+    List<String> rowLabels = ['r1', 'r2', 'r3']
+
+    def hmc = HeatmapChart.create(matrix)
+        .addSeries('Custom', columnLabels, rowLabels, [matrix['c1'], matrix['c2'], matrix['c3'], matrix['c4']])
+
+    def series = hmc.getSeries('Custom')
+    assertEquals(columnLabels, series.xData, 'xData should be the column labels (X-axis)')
+    assertEquals(rowLabels, series.yData, 'yData should be the row labels (Y-axis)')
+
+    Map<String, Number> cellByLabel = series.heatData.collectEntries { Number[] point ->
+      String x = series.xData[point[0].intValue()] as String
+      String y = series.yData[point[1].intValue()] as String
+      [("$x,$y".toString()): point[2]]
+    }
+    assertEquals(1, cellByLabel['w,r1'])
+    assertEquals(2, cellByLabel['w,r2'])
+    assertEquals(3, cellByLabel['w,r3'])
+    assertEquals(4, cellByLabel['x,r1'])
+    assertEquals(10, cellByLabel['z,r1'])
+    assertEquals(12, cellByLabel['z,r3'])
+  }
+
 }
