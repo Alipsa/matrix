@@ -16,7 +16,7 @@ For Groovy scripts, the simplest option is to grab `matrix-logging` alongside
 the Matrix modules you use:
 
 ```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-core:3.8.0')
 @Grab('se.alipsa.matrix:matrix-logging:0.1.0')
 import se.alipsa.matrix.core.Matrix
 ```
@@ -49,14 +49,14 @@ dependencies {
   runtimeOnly 'ch.qos.logback:logback-classic:1.5.21'
 
   // Route Matrix System.Logger/JPL calls to SLF4J.
-  runtimeOnly 'org.slf4j:slf4j-jdk-platform-logging:2.0.17'
+  runtimeOnly 'org.slf4j:slf4j-jdk-platform-logging:2.0.18'
 
   // Route Log4j API calls from third-party libraries to SLF4J.
-  runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.25.3'
+  runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.26.1'
 
   // Optional: route JUL calls to SLF4J. Requires installing SLF4JBridgeHandler
   // at application startup.
-  runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.17'
+  runtimeOnly 'org.slf4j:jul-to-slf4j:2.0.18'
 }
 ```
 
@@ -82,20 +82,20 @@ Maven:
   <dependency>
     <groupId>org.slf4j</groupId>
     <artifactId>slf4j-jdk-platform-logging</artifactId>
-    <version>2.0.17</version>
+    <version>2.0.18</version>
     <scope>runtime</scope>
   </dependency>
   <dependency>
     <groupId>org.apache.logging.log4j</groupId>
     <artifactId>log4j-to-slf4j</artifactId>
-    <version>2.25.3</version>
+    <version>2.26.1</version>
     <scope>runtime</scope>
   </dependency>
   <!-- Optional: route JUL calls to SLF4J. Requires installing SLF4JBridgeHandler. -->
   <dependency>
     <groupId>org.slf4j</groupId>
     <artifactId>jul-to-slf4j</artifactId>
-    <version>2.0.17</version>
+    <version>2.0.18</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -111,7 +111,7 @@ Gradle:
 
 ```groovy
 dependencies {
-  runtimeOnly platform('org.apache.logging.log4j:log4j-bom:2.25.3')
+  runtimeOnly platform('org.apache.logging.log4j:log4j-bom:2.26.1')
 
   // Log4j implementation.
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
@@ -141,7 +141,7 @@ Maven:
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-bom</artifactId>
-      <version>2.25.3</version>
+      <version>2.26.1</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -185,10 +185,10 @@ Gradle:
 ```groovy
 dependencies {
   // Route SLF4J calls from third-party libraries to JUL.
-  runtimeOnly 'org.slf4j:slf4j-jdk14:2.0.17'
+  runtimeOnly 'org.slf4j:slf4j-jdk14:2.0.18'
 
   // Route Log4j API calls from third-party libraries to JUL.
-  runtimeOnly 'org.apache.logging.log4j:log4j-to-jul:2.25.3'
+  runtimeOnly 'org.apache.logging.log4j:log4j-to-jul:2.26.1'
 }
 ```
 
@@ -199,13 +199,13 @@ Maven:
   <dependency>
     <groupId>org.slf4j</groupId>
     <artifactId>slf4j-jdk14</artifactId>
-    <version>2.0.17</version>
+    <version>2.0.18</version>
     <scope>runtime</scope>
   </dependency>
   <dependency>
     <groupId>org.apache.logging.log4j</groupId>
     <artifactId>log4j-to-jul</artifactId>
-    <version>2.25.3</version>
+    <version>2.26.1</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>

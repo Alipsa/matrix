@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.1-SNAPSHOT'
+version = '0.1.1'
 description = 'Convenience logging setup for Matrix Groovy scripts'
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -30,6 +30,18 @@ dependencies {
 
   // Route Log4j API usage from third-party libraries to SLF4J.
   runtimeOnly libs.log4j.to.slf4j
+
+  testImplementation platform(libs.junit.bom)
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
+
+  // Log4j API only, to drive the log4j-to-slf4j routing smoke test.
+  testImplementation libs.log4j.api
+}
+
+test {
+  useJUnitPlatform()
 }
 
 tasks.register('javadocJar', Jar) {
