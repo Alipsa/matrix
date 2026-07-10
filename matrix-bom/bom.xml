@@ -51,7 +51,7 @@
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
     <matrixStatsVersion>2.5.2</matrixStatsVersion>
     <matrixTablesawVersion>0.3.2</matrixTablesawVersion>
-    <matrixXChartVersion>0.3.2-SNAPSHOT</matrixXChartVersion>
+    <matrixXChartVersion>0.3.2</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
