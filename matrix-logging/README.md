@@ -22,7 +22,7 @@ This module provides a simple SLF4J-based default:
 Grab this module alongside the Matrix modules you use:
 
 ```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-core:3.8.0')
 @Grab('se.alipsa.matrix:matrix-logging:0.1.0')
 import se.alipsa.matrix.core.Matrix
 ```
