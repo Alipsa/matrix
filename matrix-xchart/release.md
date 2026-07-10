@@ -1,6 +1,6 @@
 # Matrix XChart release history
 
-## v0.3.2, in progress
+## v0.3.2, 2026-07-10
 - Upgrade to xchart 4.0.2 (from 3.8.8)
   - `AbstractChart.getSeries(String)`/`getSeries()` now use xchart's new public `getSeries(String)`/`getSeriesCollection()` instead of the now package-private `getSeriesMap()`
   - `AbstractChart.setXLabel`/`setYLabel`/`getXLabel`/`getYLabel` now only apply to chart types that support axes (xchart moved `X/YAxisTitle` from `Chart` down to the new `AxesChart` subclass); calling them on `PieChart` or `RadarChart` is now a no-op (`getXLabel`/`getYLabel` return `null`) instead of silently storing an unused value

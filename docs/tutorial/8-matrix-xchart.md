@@ -428,9 +428,9 @@ import org.knowm.xchart.style.markers.SeriesMarkers
 LineChart chart = LineChart.create(matrix)
     .addSeries("Series 1", "X1", "Y1")
 
-// Access the underlying XChart to customize series
-chart.xchart.getSeriesMap().get("Series 1").setMarker(SeriesMarkers.CIRCLE)
-chart.xchart.getSeriesMap().get("Series 1").setLineColor(Color.RED)
+// Access a series to customize it
+chart.getSeries("Series 1").setMarker(SeriesMarkers.CIRCLE)
+chart.getSeries("Series 1").setLineColor(Color.RED)
 ```
 
 ## Advanced Usage
@@ -458,8 +458,8 @@ def chart = XyChart.create(matrix)
     .addSeries("Scatter Series", "X", "Scatter")
 
 // Set different render styles for each series
-chart.xchart.getSeriesMap().get("Line Series").setXYSeriesRenderStyle(XYSeriesRenderStyle.Line)
-chart.xchart.getSeriesMap().get("Scatter Series").setXYSeriesRenderStyle(XYSeriesRenderStyle.Scatter)
+chart.getSeries("Line Series").setXYSeriesRenderStyle(XYSeriesRenderStyle.Line)
+chart.getSeries("Scatter Series").setXYSeriesRenderStyle(XYSeriesRenderStyle.Scatter)
 
 // Export the chart
 chart.exportPng(new File("combinedChart.png"))
