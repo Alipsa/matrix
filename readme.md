@@ -14,28 +14,29 @@ The Matrix project consists of the following modules:
    convert data into various shapes and formats
    See [tests](https://github.com/Alipsa/matrix/blob/main/matrix-core/src/test/groovy/MatrixTest.groovy) for more usage examples or
    the [javadocs](https://javadoc.io/doc/se.alipsa.matrix/matrix-core/latest/index.html) for more info.
-1. _[matrix-stats](https://github.com/Alipsa/matrix/blob/main/matrix-stats/README.md)_ The stats library contains statistical methods and tests including
-   correlations, normalization, regression, formula/model-frame workflows, linear algebra, interpolation, t-tests, time-series diagnostics, numerical solvers, distributions, and clustering.
-1. _[matrix-datasets](https://github.com/Alipsa/matrix/blob/main/matrix-datasets/README.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.
-1. _[matrix-spreadsheet](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/README.md)_ provides ways to import and export between a Matrix and an Excel or OpenOffice Calc spreadsheet
-1. _[matrix-gsheets](https://github.com/Alipsa/matrix/blob/main/matrix-gsheets/readme.md)_ provides ways to import and export between a Matrix and a Google Sheets spreadsheet
+1. _[matrix-arff](https://github.com/Alipsa/matrix/blob/main/matrix-arff/README.md)_ provides reading and writing of ARFF (Attribute-Relation File Format) files.
+1. _[matrix-avro](https://github.com/Alipsa/matrix/blob/main/matrix-avro/README.md)_ provides ways to import and export between Matrix and [Avro](https://avro.apache.org/). 
+1. _[matrix-bigquery](https://github.com/Alipsa/matrix/blob/main/matrix-bigquery/readme.md)_
+   provides ways to import and export between Matrix and [Google Big Query](https://cloud.google.com/bigquery).
+1. _[matrix-bom](https://github.com/Alipsa/matrix/blob/main/matrix-bom/readme.md)_ Bill of materials for simpler dependency management.
+1. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ provides the Charm grammar-of-graphics rendering engine and export utilities for creating charts in various formats (file, JavaFX, SVG) based on Matrix data.
 1. _[matrix-csv](https://github.com/Alipsa/matrix/blob/main/matrix-csv/README.md)_ provides a more advanced way to import and export between a Matrix and a CSV file using commons-csv(matrix-core has basic support
    for doing this built in)
-1. _[matrix-arff](https://github.com/Alipsa/matrix/blob/main/matrix-arff/README.md)_ provides reading and writing of ARFF (Attribute-Relation File Format) files.
-1. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json
-1. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ provides the Charm grammar-of-graphics rendering engine and export utilities for creating charts in various formats (file, JavaFX, SVG) based on Matrix data.
+1. _[matrix-datasets](https://github.com/Alipsa/matrix/blob/main/matrix-datasets/README.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.
 1. _[matrix-ggplot](https://github.com/Alipsa/matrix/blob/main/matrix-ggplot/README.md)_ provides a ggplot2-style charting API (very close to the ggplot2 library in R). Delegates to the Charm engine in matrix-charts.
-1. _[matrix-pict](https://github.com/Alipsa/matrix/blob/main/matrix-pict/README.md)_ provides a familiar chart-type-first API for common visualizations such as bar, line, area, pie, scatter, bubble, histogram, and box charts. Delegates to the Charm engine in matrix-charts.
-1. _[matrix-xchart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/README.md)_ allows you to create charts in various formats (file, svg, swing) based on Matrix data and the [XChart library](https://github.com/knowm/XChart).
-1. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
-1. _[matrix-bom](https://github.com/Alipsa/matrix/blob/main/matrix-bom/readme.md)_ Bill of materials for simpler dependency management.
+1. _[matrix-groovy-ext](https://github.com/Alipsa/matrix/blob/main/matrix-groovy-ext/README.md)_ provides Groovy extensions for more idiomatic numeric operations with Matrix.
+1. _[matrix-gsheets](https://github.com/Alipsa/matrix/blob/main/matrix-gsheets/readme.md)_ provides ways to import and export between a Matrix and a Google Sheets spreadsheet
+1. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json
 1. _[matrix-logging](https://github.com/Alipsa/matrix/blob/main/matrix-logging/README.md)_ optional convenience logging setup for Groovy scripts and small tools.
 1. _[matrix-parquet](https://github.com/Alipsa/matrix/blob/main/matrix-parquet/readme.md)_ provides ways to import and export between Matrix and [Parquet](https://parquet.apache.org/). 
-1. _[matrix-avro](https://github.com/Alipsa/matrix/blob/main/matrix-avro/README.md)_ provides ways to import and export between Matrix and [Avro](https://avro.apache.org/). 
-2. _[matrix-bigquery](https://github.com/Alipsa/matrix/blob/main/matrix-bigquery/readme.md)_
-   provides ways to import and export between Matrix and [Google Big Query](https://cloud.google.com/bigquery).
+1. _[matrix-pict](https://github.com/Alipsa/matrix/blob/main/matrix-pict/README.md)_ provides a familiar chart-type-first API for common visualizations such as bar, line, area, pie, scatter, bubble, histogram, and box charts. Delegates to the Charm engine in matrix-charts.
 1. _[matrix-smile](https://github.com/Alipsa/matrix/blob/main/matrix-smile/README.md)_ Integration between Matrix and the Smile library (Statistical Machine Intelligence and Learning Engine).
+1. _[matrix-spreadsheet](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/README.md)_ provides ways to import and export between a Matrix and an Excel or OpenOffice Calc spreadsheet
+1. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
+1. _[matrix-stats](https://github.com/Alipsa/matrix/blob/main/matrix-stats/README.md)_ The stats library contains statistical methods and tests including
+   correlations, normalization, regression, formula/model-frame workflows, linear algebra, interpolation, t-tests, time-series diagnostics, numerical solvers, distributions, and clustering.
 1. _[matrix-tablesaw](https://github.com/Alipsa/matrix/blob/main/matrix-tablesaw/readme.md)_ interoperability between Matrix and the [Tablesaw](https://github.com/jtablesaw/tablesaw) library. Experimental
+1. _[matrix-xchart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/README.md)_ allows you to create charts in various formats (file, svg, swing) based on Matrix data and the [XChart library](https://github.com/knowm/XChart).
 
 ## Setup
 Matrix targets Groovy 5 and JDK 21. Binary builds can be downloaded
