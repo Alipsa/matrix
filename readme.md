@@ -71,6 +71,11 @@ implementation('se.alipsa.matrix:matrix-core')
          <groupId>se.alipsa.matrix</groupId>
          <artifactId>matrix-core</artifactId>
       </dependency>
+      <dependency>
+         <groupId>org.apache.groovy</groupId>
+         <artifactId>groovy-all</artifactId>
+         <version>5.0.7</version>
+      </dependency>
    </dependencies>
    ...
 </project>
@@ -88,6 +93,25 @@ Groovy version your application uses explicitly:
 ```groovy
 implementation('org.apache.groovy:groovy-all:5.0.7') 
 implementation('se.alipsa.matrix:matrix-all:2.5.1')
+```
+
+```xml
+<project>
+   ...
+   <dependencies>
+      <dependency>
+         <groupId>org.apache.groovy</groupId>
+         <artifactId>groovy-all</artifactId>
+         <version>5.0.7</version>
+      </dependency>
+      <dependency>
+         <groupId>se.alipsa.matrix</groupId>
+         <artifactId>matrix-all</artifactId>
+         <version>2.5.1</version>
+      </dependency>
+   </dependencies>
+   ...
+</project>
 ```
 
 ## Logging
