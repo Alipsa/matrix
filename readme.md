@@ -76,6 +76,20 @@ implementation('se.alipsa.matrix:matrix-core')
 </project>
 ```
 
+## Matrix-all convenience dependency
+
+When you want every Matrix module and its transitive dependencies, `matrix-all`
+is a convenient alternative to importing `matrix-bom` and selecting individual
+modules. It is simpler, but less flexible and brings in more dependencies.
+
+`matrix-all` intentionally does not include a Groovy runtime, so add the
+Groovy version your application uses explicitly:
+
+```groovy
+implementation('org.apache.groovy:groovy-all:5.0.7') 
+implementation('se.alipsa.matrix:matrix-all:2.5.1')
+```
+
 ## Logging
 
 Matrix itself does not require SLF4J, Log4j, JUL, or any other logging
