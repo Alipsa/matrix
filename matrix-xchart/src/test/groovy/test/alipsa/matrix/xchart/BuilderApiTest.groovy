@@ -36,6 +36,8 @@ class BuilderApiTest {
     def line = LineChart.builder(data).title('Line').size(640, 480).x('x').y('first', 'second').build()
     assertEquals('Line', line.title)
     assertEquals(2, line.series.size())
+    assertEquals(640, line.getXChart().width)
+    assertEquals(480, line.getXChart().height)
 
     def bar = BarChart.builder(data).x('x').y('first', 'second').stacked().build()
     assertTrue(bar.style.stacked)
@@ -55,23 +57,32 @@ class BuilderApiTest {
   @Test
   void supportsHeatmapBuilderOverloadsAndExportFacade() {
     Matrix data = numericData()
-    assertNotNull(HeatmapChart.builder(data).values('first', 2).build())
-    assertNotNull(HeatmapChart.builder(data).values(['first', 'second']).build())
+    assertEquals(1, HeatmapChart.builder(data).values('first', 2).build().series.size())
+    assertEquals(1, HeatmapChart.builder(data).values(['first', 'second']).build().series.size())
     ByteArrayOutputStream output = new ByteArrayOutputStream()
-    Plot.svg(LineChart.builder(data).x('x').y('first').build(), output)
+    def chart = LineChart.builder(data).x('x').y('first').build()
+    Plot.svg(chart, output)
     assertTrue(output.size() > 0)
+    ByteArrayOutputStream png = new ByteArrayOutputStream()
+    ByteArrayOutputStream pdf = new ByteArrayOutputStream()
+    Plot.png(chart, png)
+    Plot.pdf(chart, pdf)
+    assertTrue(png.size() > 0)
+    assertTrue(pdf.size() > 0)
   }
 
   @Test
   void buildsRemainingChartTypes() {
     Matrix data = numericData()
-    assertNotNull(ScatterChart.builder(data).x('x').y('first').build())
-    assertNotNull(StickChart.builder(data).x('x').y('first').build())
-    assertNotNull(BoxChart.builder(data).y('first', 'second').build())
-    assertNotNull(BubbleChart.builder(data).x('x').y('first').size('second').build())
-    assertNotNull(HistogramChart.builder(data).x('first').buckets(2).build())
-    assertNotNull(PieChart.builder(data).x('x').y('first').donut().build())
-    assertNotNull(CorrelationHeatmapChart.builder(data).seriesName('Correlation').columns('first', 'second').build())
+    assertEquals(1, ScatterChart.builder(data).x('x').y('first').build().series.size())
+    assertEquals(1, StickChart.builder(data).x('x').y('first').build().series.size())
+    assertEquals(2, BoxChart.builder(data).y('first', 'second').build().series.size())
+    assertEquals(1, BubbleChart.builder(data).x('x').y('first').size('second').build().series.size())
+    assertEquals(1, HistogramChart.builder(data).x('first').buckets(2).build().series.size())
+    def pie = PieChart.builder(data).x('x').y('first').donut().build()
+    assertEquals(4, pie.series.size())
+    assertEquals(org.knowm.xchart.PieSeries.PieSeriesRenderStyle.Donut, pie.style.defaultSeriesRenderStyle)
+    assertEquals(1, CorrelationHeatmapChart.builder(data).seriesName('Correlation').columns('first', 'second').build().series.size())
   }
 
   @Test
