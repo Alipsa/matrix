@@ -26,7 +26,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * hc.exportPng(file)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}
@@ -241,7 +240,9 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     Builder seriesName(String name) { seriesName = name; this }
     Builder values(String columnName, Integer columns = null) { vectorColumn = columnName; vectorColumns = columns; this }
     Builder values(List<String> columnNames) {
-      if (columnNames == null || columnNames.isEmpty()) throw new IllegalArgumentException('values requires at least one column')
+      if (columnNames == null || columnNames.isEmpty()) {
+        throw new IllegalArgumentException('values requires at least one column')
+      }
       valueColumns = columnNames; this
     }
     Builder rowLabels(List<?> labels) { rows = labels; this }
@@ -249,17 +250,27 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support yAxisTitle(...)') }
     HeatmapChart build() {
-      if (vectorColumn == null && valueColumns == null) throw new IllegalStateException('values(...) must be called before build()')
-      if (vectorColumn != null && valueColumns != null) throw new IllegalStateException('Specify either vector or matrix heatmap values, not both')
+      if (vectorColumn == null && valueColumns == null) {
+        throw new IllegalStateException('values(...) must be called before build()')
+      }
+      if (vectorColumn != null && valueColumns != null) {
+        throw new IllegalStateException('Specify either vector or matrix heatmap values, not both')
+      }
       HeatmapChart chart = HeatmapChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
       if (vectorColumn != null) {
-        if (rows != null || columns != null) throw new IllegalArgumentException('Labels are supported only for matrix-shaped heatmaps')
+        if (rows != null || columns != null) {
+          throw new IllegalArgumentException('Labels are supported only for matrix-shaped heatmaps')
+        }
         requireNumeric(vectorColumn)
         chart.addSeries(seriesName, vectorColumn, vectorColumns)
       } else {
         valueColumns.each { String column -> requireNumeric(column) }
-        if ((rows == null) != (columns == null)) throw new IllegalStateException('rowLabels(...) and columnLabels(...) must be provided together')
+        if ((rows == null) != (columns == null)) {
+          throw new IllegalStateException('rowLabels(...) and columnLabels(...) must be provided together')
+        }
         List<Column> selected = valueColumns.collect { String column -> data.column(column) }
         rows == null ? chart.addSeries(seriesName, selected) : chart.addSeries(seriesName, columns, rows, selected)
       }

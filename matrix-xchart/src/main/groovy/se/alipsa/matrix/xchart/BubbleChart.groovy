@@ -30,7 +30,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * File file = new File('build/testBubbleChart.png')
  * bc.exportPng(file)
  */
-@SuppressWarnings('IfStatementBraces')
 class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChart, BubbleStyler, BubbleSeries> {
 
   private int numSeries = 0
@@ -145,7 +144,9 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
     Builder size(String columnName) { sizeColumn = columnName; this }
     BubbleChart build() {
       requireXAndY()
-      if (yColumns.size() != 1 || sizeColumn == null) throw new IllegalStateException('BubbleChart requires one y(...) column and size(...)')
+      if (yColumns.size() != 1 || sizeColumn == null) {
+        throw new IllegalStateException('BubbleChart requires one y(...) column and size(...)')
+      }
       requireNumeric(xColumn); requireNumeric(yColumns[0]); requireNumeric(sizeColumn)
       BubbleChart chart = BubbleChart.create(data, chartWidth, chartHeight)
       applyTo(chart)

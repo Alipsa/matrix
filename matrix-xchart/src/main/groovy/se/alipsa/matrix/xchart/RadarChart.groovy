@@ -28,7 +28,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * radarChart.exportPng(file)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, RadarStyler, RadarSeries> {
 
   private int numSeries = 0
@@ -117,7 +116,9 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     Builder(Matrix data) { super(data) }
     Builder label(String column) { labelColumn = column; this }
     Builder values(String... columns) {
-      if (columns == null || columns.length == 0) throw new IllegalArgumentException('values requires at least one column')
+      if (columns == null || columns.length == 0) {
+        throw new IllegalArgumentException('values requires at least one column')
+      }
       radiusColumns = columns.toList(); this
     }
     @Override Builder x(String columnName) { throw new IllegalArgumentException('RadarChart does not support x(...)') }
@@ -125,11 +126,15 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support yAxisTitle(...)') }
     RadarChart build() {
-      if (labelColumn == null || radiusColumns == null) throw new IllegalStateException('label(...) and values(...) must be called before build()')
+      if (labelColumn == null || radiusColumns == null) {
+        throw new IllegalStateException('label(...) and values(...) must be called before build()')
+      }
       requireColumn(labelColumn)
       radiusColumns.each { String column -> requireNumeric(column) }
       RadarChart chart = RadarChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
       chart.addSeries(labelColumn, radiusColumns)
       chart
     }

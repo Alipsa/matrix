@@ -41,7 +41,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * ohlcChart.exportPng(file2)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeries> {
 
   private OhlcChart(Matrix matrix, Integer width = null, Integer height = null) {

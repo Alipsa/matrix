@@ -27,7 +27,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * pieChart.exportPng(file)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -161,11 +160,17 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('PieChart does not support yAxisTitle(...)') }
     PieChart build() {
       requireXAndY()
-      if (yColumns.size() != 1) throw new IllegalStateException('PieChart requires exactly one y(...) column')
+      if (yColumns.size() != 1) {
+        throw new IllegalStateException('PieChart requires exactly one y(...) column')
+      }
       requireColumn(xColumn); requireNumeric(yColumns[0])
       PieChart chart = PieChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
-      if (donut) applyDonutStyle(chart)
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
+      if (donut) {
+        applyDonutStyle(chart)
+      }
       chart.addSeries(xColumn, yColumns[0])
       chart
     }

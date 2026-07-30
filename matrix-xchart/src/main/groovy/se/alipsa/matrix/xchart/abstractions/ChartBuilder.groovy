@@ -8,7 +8,6 @@ import se.alipsa.matrix.core.Matrix
  *
  * @param <B> concrete builder type
  */
-@SuppressWarnings('IfStatementBraces')
 abstract class ChartBuilder<B extends ChartBuilder<B>> {
 
   protected final Matrix data
@@ -65,18 +64,28 @@ abstract class ChartBuilder<B extends ChartBuilder<B>> {
   }
 
   protected void applyTo(AbstractChart chart) {
-    if (chartTitle != null) chart.title = chartTitle
-    if (xLabel != null) chart.setXLabel(xLabel)
-    if (yLabel != null) chart.setYLabel(yLabel)
+    if (chartTitle != null) {
+      chart.title = chartTitle
+    }
+    if (xLabel != null) {
+      chart.setXLabel(xLabel)
+    }
+    if (yLabel != null) {
+      chart.setYLabel(yLabel)
+    }
   }
 
   private static int positive(String name, int value) {
-    if (value <= 0) throw new IllegalArgumentException("$name must be positive")
+    if (value <= 0) {
+      throw new IllegalArgumentException("$name must be positive")
+    }
     value
   }
 
   private static String requireName(String method, String name) {
-    if (name == null || name.isBlank()) throw new IllegalArgumentException("$method column cannot be blank")
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("$method column cannot be blank")
+    }
     name
   }
 }

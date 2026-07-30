@@ -20,7 +20,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * hc.exportPng(file)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class HistogramChart extends AbstractCategoryChart<HistogramChart> {
 
   private static final BigDecimal SCOTT_FACTOR = 3.49
@@ -181,9 +180,17 @@ class HistogramChart extends AbstractCategoryChart<HistogramChart> {
     private Integer bucketCount
     Builder(Matrix data) { super(data) }
     @Override Builder y(String... columnNames) { throw new IllegalArgumentException('HistogramChart does not support y(...)') }
-    Builder buckets(int count) { if (count <= 0) throw new IllegalArgumentException('bucket count must be positive'); bucketCount = count; this }
+    Builder buckets(int count) {
+      if (count <= 0) {
+        throw new IllegalArgumentException('bucket count must be positive')
+      }
+      bucketCount = count
+      this
+    }
     HistogramChart build() {
-      if (xColumn == null) throw new IllegalStateException('x(...) must be called before build()')
+      if (xColumn == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
       requireNumeric(xColumn)
       HistogramChart chart = HistogramChart.create(data, chartWidth, chartHeight)
       applyTo(chart)

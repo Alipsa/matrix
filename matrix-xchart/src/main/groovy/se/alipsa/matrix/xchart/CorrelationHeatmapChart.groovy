@@ -23,7 +23,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * chart.exportSvg(new File('build/correlationHeatmap.svg')
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   private static final int CORRELATION_SCALE = 2
@@ -157,7 +156,9 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       this
     }
     Builder columns(String... names) {
-      if (names == null || names.length == 0) throw new IllegalArgumentException('columns requires at least one column')
+      if (names == null || names.length == 0) {
+        throw new IllegalArgumentException('columns requires at least one column')
+      }
       names.each { String name -> requireNumeric(name) }
       selectedColumns = names.toList()
       this
@@ -165,11 +166,17 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support yAxisTitle(...)') }
     CorrelationHeatmapChart build() {
-      if (seriesName == null || seriesName.isBlank()) throw new IllegalStateException('seriesName(...) must be called before build()')
-      if (selectedColumns == null) throw new IllegalStateException('columns(...) must be called before build()')
+      if (seriesName == null || seriesName.isBlank()) {
+        throw new IllegalStateException('seriesName(...) must be called before build()')
+      }
+      if (selectedColumns == null) {
+        throw new IllegalStateException('columns(...) must be called before build()')
+      }
       selectedColumns.each { String column -> requireNumeric(column) }
       CorrelationHeatmapChart chart = CorrelationHeatmapChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
       chart.addSeries(seriesName, selectedColumns)
       chart
     }

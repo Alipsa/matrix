@@ -32,7 +32,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  * bc.exportPng(file)
  * </code></pre>
  */
-@SuppressWarnings('IfStatementBraces')
 class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxStyler, BoxSeries> {
 
   private BoxChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -146,10 +145,14 @@ class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxSty
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support yAxisTitle(...)') }
     BoxChart build() {
-      if (yColumns.isEmpty()) throw new IllegalStateException('y(...) must be called before build()')
+      if (yColumns.isEmpty()) {
+        throw new IllegalStateException('y(...) must be called before build()')
+      }
       yColumns.each { String column -> requireNumeric(column) }
       BoxChart chart = BoxChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
       yColumns.each { String column -> chart.addSeries(column) }
       chart
     }
