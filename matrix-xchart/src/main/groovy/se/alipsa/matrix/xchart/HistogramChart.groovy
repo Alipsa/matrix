@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A HistogramChart is a visual representation of the distribution of quantitative data.
@@ -170,6 +171,32 @@ class HistogramChart extends AbstractCategoryChart<HistogramChart> {
     def iqr = Stat.iqr(data)
     BigDecimal r = (FREEDMAN_DIACONIS_FACTOR * iqr / data.size() ** (1 / CUBE_ROOT_DENOMINATOR))
     r.abs()
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private Integer bucketCount
+    Builder(Matrix data) { super(data) }
+    @Override Builder y(String... columnNames) { throw new IllegalArgumentException('HistogramChart does not support y(...)') }
+    Builder buckets(int count) {
+      if (count <= 0) {
+        throw new IllegalArgumentException('bucket count must be positive')
+      }
+      bucketCount = count
+      this
+    }
+    HistogramChart build() {
+      if (xColumn == null) {
+        throw new IllegalStateException('x(...) must be called before build()')
+      }
+      requireNumeric(xColumn)
+      HistogramChart chart = HistogramChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      bucketCount == null ? chart.addSeries(xColumn) : chart.addSeries(xColumn, bucketCount)
+      chart
+    }
   }
 
 }

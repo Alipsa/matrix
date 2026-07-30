@@ -7,6 +7,7 @@ import org.knowm.xchart.style.OHLCStyler
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * Also known as a Candle Stick chart.
@@ -128,6 +129,41 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
       if (values.size() != xData.size()) {
         throw new IllegalArgumentException("OHLC series lists must have equal lengths; expected ${xData.size()} values but $columnName has ${values.size()}")
       }
+    }
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private String dateColumn
+    private String openColumn
+    private String highColumn
+    private String lowColumn
+    private String closeColumn
+    private String seriesName = 'OHLC'
+    Builder(Matrix data) { super(data) }
+    Builder seriesName(String name) { seriesName = name; this }
+    Builder date(String name) {
+      requireColumn(name)
+      if (!Date.isAssignableFrom(data.type(name))) {
+        throw new IllegalArgumentException("Column '$name' must contain java.util.Date values")
+      }
+      dateColumn = name
+      this
+    }
+    Builder open(String name) { requireNumeric(name); openColumn = name; this }
+    Builder high(String name) { requireNumeric(name); highColumn = name; this }
+    Builder low(String name) { requireNumeric(name); lowColumn = name; this }
+    Builder close(String name) { requireNumeric(name); closeColumn = name; this }
+    OhlcChart build() {
+      if ([dateColumn, openColumn, highColumn, lowColumn, closeColumn].any { it == null }) {
+        throw new IllegalStateException('date, open, high, low, and close must be set before build()')
+      }
+      OhlcChart chart = OhlcChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      chart.addSeries(seriesName, dateColumn, openColumn, highColumn, lowColumn, closeColumn)
+      chart
     }
   }
 

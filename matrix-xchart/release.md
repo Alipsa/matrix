@@ -1,8 +1,14 @@
 # Matrix XChart release history
 
-## v0.3.3, In progress
-- Dependency updates:
-  - org.knowm.xchart:xchart 4.0.2 -> 4.0.3
+## v0.4.0, In progress
+- Add deferred Pict-like `builder(Matrix)` convenience APIs for Line, Area, Scatter, Bar, Stick, Box, Bubble, Histogram, Pie, Radar, Heatmap, CorrelationHeatmap, and OHLC charts.
+  - Common chart builders support title, dimensions, mappings, and axis labels where XChart supports axes.
+  - Specialized builders use explicit mappings for bubble sizes, histogram buckets, pie donuts, radar radii, heatmap values/labels, correlation columns, and OHLC fields.
+- Add the `Plot` facade for PNG, SVG, PDF, Swing, and display operations.
+- Preserve existing `create(...)`, `addSeries(...)`, per-chart export methods, and native XChart styling/customization through `getXChart()`.
+- Add early validation for missing mappings, unknown/non-numeric columns, incompatible chart options, incomplete heatmap labels, and invalid OHLC date columns.
+- Apply semi-transparent fills to builder-created area series so overlapping regions remain visible.
+- Upgrade org.knowm.xchart:xchart from 4.0.2 to 4.0.3.
 
 ## v0.3.2, 2026-07-10
 - Upgrade to xchart 4.0.2 (from 3.8.8)

@@ -8,10 +8,9 @@ The se.alipsa.matrix.xchart package contains factory classes for each chart type
 
 To use it add the following to your gradle build script (or equivalent for maven etc)
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.7'
-implementation 'se.alipsa.matrix:matrix-core:3.8.0'
-implementation 'se.alipsa.matrix:matrix-stats:2.5.2'
-implementation 'se.alipsa.matrix:matrix-xchart:0.3.2'
+implementation(platform('se.alipsa.matrix:matrix-bom:2.5.2-SNAPSHOT'))
+implementation 'org.apache.groovy:groovy:5.0.6'
+implementation 'se.alipsa.matrix:matrix-xchart:0.4.0-SNAPSHOT'
 ```
 Here is an example usage for a Line Chart:
 
@@ -44,6 +43,38 @@ try (FileOutputStream fos = new FileOutputStream("./build/testLineChart2.svg")) 
   chart.addSeries('Third', matrix.X1, matrix.Y2).exportSvg(fos)
 }
 ```
+
+## Convenience builders
+
+Builders provide the Pict-like quick-start API while returning native XChart-backed
+objects. Dimensions are fixed when `build()` is called and can be further customized
+through `getXChart()` or `style`.
+
+```groovy
+def chart = LineChart.builder(matrix)
+    .title('Lines')
+    .size(800, 600)
+    .x('X1')
+    .y('Y1', 'Y2')
+    .xAxisTitle('Time')
+    .yAxisTitle('Value')
+    .build()
+
+Plot.png(chart, new File('lines.png'))
+Plot.svg(chart, new File('lines.svg'))
+```
+
+Use the specialized mappings for non-XY data:
+
+```groovy
+RadarChart.builder(scores).label('player').values('speed', 'power').build()
+HeatmapChart.builder(data).values(['jan', 'feb', 'mar']).build()
+CorrelationHeatmapChart.builder(data).seriesName('Correlation').columns('x', 'y').build()
+OhlcChart.builder(prices).date('date').open('open').high('high').low('low').close('close').build()
+```
+
+For OHLC data, convert `LocalDate` values before building: `Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant())`.
+The legacy `create(...).addSeries(...)` APIs remain available for incremental or advanced configuration.
 See the [tests](https://github.com/Alipsa/matrix/tree/main/matrix-xchart/src/test/groovy/test/alipsa/matrix/xchart) for more examples.
 
 You can easily export to png, svg or swing using one of the exportXXX methods but if you need something else you can always get the underlying XChart and use one of the encoders. E.g:

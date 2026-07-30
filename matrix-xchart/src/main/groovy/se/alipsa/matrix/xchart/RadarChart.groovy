@@ -7,6 +7,7 @@ import org.knowm.xchart.style.RadarStyler
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A RadarChart is a type of chart that displays multivariate data in a circular layout.
@@ -79,15 +80,64 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
    */
   RadarChart addSeries(String seriesNameColumn, Integer transparency = 150) {
     def labels = matrix.columnNames() - seriesNameColumn
-    xchart.radiiLabels = labels as String[]
+    addSeries(seriesNameColumn, labels, transparency)
+  }
+
+  /** Add all rows using explicitly selected numeric radius columns. */
+  RadarChart addSeries(String seriesNameColumn, List<String> radiusColumns, Integer transparency = 150) {
+    if (radiusColumns == null || radiusColumns.isEmpty()) {
+      throw new IllegalArgumentException('Radar chart requires at least one radius column')
+    }
+    radiusColumns.each { String column ->
+      if (matrix.columnIndex(column) < 0 || !Number.isAssignableFrom(matrix.type(column))) {
+        throw new IllegalArgumentException("Radar radius column '$column' must be numeric")
+      }
+    }
+    if (matrix.columnIndex(seriesNameColumn) < 0) {
+      throw new IllegalArgumentException("Radar label column '$seriesNameColumn' does not exist")
+    }
+    xchart.radiiLabels = radiusColumns as String[]
     matrix.rows().each { Row row ->
       def label = row[seriesNameColumn].toString()
-      def r = row - seriesNameColumn
-      def s = xchart.addSeries(label, r as double[])
+      double[] radii = radiusColumns.collect { String column -> (row[column] as Number).doubleValue() } as double[]
+      def s = xchart.addSeries(label, radii)
       makeFillTransparent(s, numSeries, transparency)
       numSeries++
     }
     this
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private String labelColumn
+    private List<String> radiusColumns
+    Builder(Matrix data) { super(data) }
+    Builder label(String column) { labelColumn = column; this }
+    Builder values(String... columns) {
+      if (columns == null || columns.length == 0) {
+        throw new IllegalArgumentException('values requires at least one column')
+      }
+      radiusColumns = columns.toList(); this
+    }
+    @Override Builder x(String columnName) { throw new IllegalArgumentException('RadarChart does not support x(...)') }
+    @Override Builder y(String... columnNames) { throw new IllegalArgumentException('RadarChart does not support y(...)') }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support yAxisTitle(...)') }
+    RadarChart build() {
+      if (labelColumn == null || radiusColumns == null) {
+        throw new IllegalStateException('label(...) and values(...) must be called before build()')
+      }
+      requireColumn(labelColumn)
+      radiusColumns.each { String column -> requireNumeric(column) }
+      RadarChart chart = RadarChart.create(data, chartWidth, chartHeight)
+      if (chartTitle != null) {
+        chart.title = chartTitle
+      }
+      chart.addSeries(labelColumn, radiusColumns)
+      chart
+    }
   }
 
 }

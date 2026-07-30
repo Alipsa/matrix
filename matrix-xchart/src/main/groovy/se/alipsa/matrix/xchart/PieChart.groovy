@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A PieChart is a circular statistical graphic that is divided into slices to illustrate numerical proportions.
@@ -76,11 +77,7 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
    */
   static PieChart createDonut(Matrix matrix, Integer width = null, Integer height = null) {
     def chart = new PieChart(matrix, width, height)
-    chart.style.setDefaultSeriesRenderStyle(PieSeries.PieSeriesRenderStyle.Donut)
-    chart.style.setLabelType(PieStyler.LabelType.NameAndValue)
-    chart.style.setLabelsDistance(.82d)
-    chart.style.setPlotContentSize(.9d)
-    chart.style.setSumVisible(true)
+    applyDonutStyle(chart)
     chart
   }
 
@@ -142,6 +139,39 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
       xchart.addSeries(ValueConverter.asString(name), yCol[i] as Number)
     }
     this
+  }
+
+  private static void applyDonutStyle(PieChart chart) {
+    chart.style.setDefaultSeriesRenderStyle(PieSeries.PieSeriesRenderStyle.Donut)
+    chart.style.setLabelType(PieStyler.LabelType.NameAndValue)
+    chart.style.setLabelsDistance(.82d)
+    chart.style.setPlotContentSize(.9d)
+    chart.style.setSumVisible(true)
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private boolean donut
+    Builder(Matrix data) { super(data) }
+    Builder donut() { donut = true; this }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('PieChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('PieChart does not support yAxisTitle(...)') }
+    PieChart build() {
+      requireXAndY()
+      if (yColumns.size() != 1) {
+        throw new IllegalStateException('PieChart requires exactly one y(...) column')
+      }
+      requireColumn(xColumn); requireNumeric(yColumns[0])
+      PieChart chart = PieChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      if (donut) {
+        applyDonutStyle(chart)
+      }
+      chart.addSeries(xColumn, yColumns[0])
+      chart
+    }
   }
 
 }

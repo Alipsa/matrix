@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A correlation heatmap chart is a graphical representation of the correlation matrix, where the values are
@@ -137,6 +138,47 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       if (columnType == null || !Number.isAssignableFrom(columnType)) {
         throw new IllegalArgumentException("Correlation heatmap column '$columnName' must be numeric, got ${columnType?.simpleName ?: 'null'}")
       }
+    }
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private String seriesName
+    private List<String> selectedColumns
+    Builder(Matrix data) { super(data) }
+    Builder seriesName(String name) {
+      if (name == null || name.isBlank()) {
+        throw new IllegalArgumentException('seriesName cannot be blank')
+      }
+      seriesName = name
+      this
+    }
+    Builder columns(String... names) {
+      if (names == null || names.length == 0) {
+        throw new IllegalArgumentException('columns requires at least one column')
+      }
+      names.each { String name -> requireNumeric(name) }
+      selectedColumns = names.toList()
+      this
+    }
+    @Override Builder x(String columnName) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support x(...)') }
+    @Override Builder y(String... columnNames) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support y(...)') }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support yAxisTitle(...)') }
+    CorrelationHeatmapChart build() {
+      if (seriesName == null || seriesName.isBlank()) {
+        throw new IllegalStateException('seriesName(...) must be called before build()')
+      }
+      if (selectedColumns == null) {
+        throw new IllegalStateException('columns(...) must be called before build()')
+      }
+      selectedColumns.each { String column -> requireNumeric(column) }
+      CorrelationHeatmapChart chart = CorrelationHeatmapChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      chart.addSeries(seriesName, selectedColumns)
+      chart
     }
   }
 

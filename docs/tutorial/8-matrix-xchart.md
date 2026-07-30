@@ -9,8 +9,8 @@ To use the matrix-xchart module, you need to add it as a dependency to your proj
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
+implementation 'org.apache.groovy:groovy:5.0.6'
+implementation platform('se.alipsa.matrix:matrix-bom:2.5.2-SNAPSHOT')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-xchart'
 ```
@@ -24,7 +24,7 @@ implementation 'se.alipsa.matrix:matrix-xchart'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.5.1</version>
+        <version>2.5.2-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -405,8 +405,8 @@ You can customize various aspects of the charts:
 ```groovy
 LineChart chart = LineChart.create(matrix, 600, 500)
     .setTitle("My Line Chart")
-    .setXAxisTitle("X Axis")
-    .setYAxisTitle("Y Axis")
+    .setXLabel("X Axis")
+    .setYLabel("Y Axis")
     .addSeries("Series 1", "X1", "Y1")
 ```
 
