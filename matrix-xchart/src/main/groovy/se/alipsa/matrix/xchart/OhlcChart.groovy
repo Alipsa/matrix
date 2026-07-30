@@ -145,18 +145,25 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
     private String seriesName = 'OHLC'
     Builder(Matrix data) { super(data) }
     Builder seriesName(String name) { seriesName = name; this }
-    Builder date(String name) { dateColumn = name; this }
-    Builder open(String name) { openColumn = name; this }
-    Builder high(String name) { highColumn = name; this }
-    Builder low(String name) { lowColumn = name; this }
-    Builder close(String name) { closeColumn = name; this }
+    Builder date(String name) {
+      requireColumn(name)
+      if (!Date.isAssignableFrom(data.type(name))) {
+        throw new IllegalArgumentException("Column '$name' must contain java.util.Date values")
+      }
+      dateColumn = name
+      this
+    }
+    Builder open(String name) { requireNumeric(name); openColumn = name; this }
+    Builder high(String name) { requireNumeric(name); highColumn = name; this }
+    Builder low(String name) { requireNumeric(name); lowColumn = name; this }
+    Builder close(String name) { requireNumeric(name); closeColumn = name; this }
     OhlcChart build() {
       if ([dateColumn, openColumn, highColumn, lowColumn, closeColumn].any { it == null }) throw new IllegalStateException('date, open, high, low, and close must be set before build()')
       requireColumn(dateColumn)
       if (!Date.isAssignableFrom(data.type(dateColumn))) throw new IllegalArgumentException("Column '$dateColumn' must contain java.util.Date values")
       [openColumn, highColumn, lowColumn, closeColumn].each { String column -> requireNumeric(column) }
       OhlcChart chart = OhlcChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) chart.title = chartTitle
+      applyTo(chart)
       chart.addSeries(seriesName, dateColumn, openColumn, highColumn, lowColumn, closeColumn)
       chart
     }

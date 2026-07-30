@@ -152,9 +152,12 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     Builder seriesName(String name) { seriesName = name; this }
     Builder columns(String... names) {
       if (names == null || names.length == 0) throw new IllegalArgumentException('columns requires at least one column')
+      names.each { String name -> requireNumeric(name) }
       selectedColumns = names.toList()
       this
     }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support yAxisTitle(...)') }
     CorrelationHeatmapChart build() {
       if (seriesName == null || seriesName.isBlank()) throw new IllegalStateException('seriesName(...) must be called before build()')
       if (selectedColumns == null) throw new IllegalStateException('columns(...) must be called before build()')

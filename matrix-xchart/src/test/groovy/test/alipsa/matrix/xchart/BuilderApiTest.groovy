@@ -9,11 +9,18 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.BarChart
+import se.alipsa.matrix.xchart.BoxChart
+import se.alipsa.matrix.xchart.BubbleChart
+import se.alipsa.matrix.xchart.CorrelationHeatmapChart
 import se.alipsa.matrix.xchart.HeatmapChart
+import se.alipsa.matrix.xchart.HistogramChart
 import se.alipsa.matrix.xchart.LineChart
+import se.alipsa.matrix.xchart.OhlcChart
 import se.alipsa.matrix.xchart.PieChart
 import se.alipsa.matrix.xchart.Plot
 import se.alipsa.matrix.xchart.RadarChart
+import se.alipsa.matrix.xchart.ScatterChart
+import se.alipsa.matrix.xchart.StickChart
 
 @CompileStatic
 class BuilderApiTest {
@@ -53,5 +60,31 @@ class BuilderApiTest {
     ByteArrayOutputStream output = new ByteArrayOutputStream()
     Plot.svg(LineChart.builder(data).x('x').y('first').build(), output)
     assertTrue(output.size() > 0)
+  }
+
+  @Test
+  void buildsRemainingChartTypes() {
+    Matrix data = numericData()
+    assertNotNull(ScatterChart.builder(data).x('x').y('first').build())
+    assertNotNull(StickChart.builder(data).x('x').y('first').build())
+    assertNotNull(BoxChart.builder(data).y('first', 'second').build())
+    assertNotNull(BubbleChart.builder(data).x('x').y('first').size('second').build())
+    assertNotNull(HistogramChart.builder(data).x('first').buckets(2).build())
+    assertNotNull(PieChart.builder(data).x('x').y('first').donut().build())
+    assertNotNull(CorrelationHeatmapChart.builder(data).seriesName('Correlation').columns('first', 'second').build())
+  }
+
+  @Test
+  void supportsRadarAndOhlcMappings() {
+    Matrix radarData = Matrix.builder().data(name: ['A', 'B'], speed: [0.2, 0.4], power: [0.3, 0.6])
+        .types(String, Number, Number).build()
+    List<String> radii = ['speed', 'power']
+    assertNotNull(RadarChart.builder(radarData).label('name').values(*radii).build())
+
+    Date today = new Date()
+    Date tomorrow = new Date(today.time + 86_400_000L)
+    Matrix ohlcData = Matrix.builder().data(date: [today, tomorrow], open: [1, 2], high: [2, 3], low: [0, 1], close: [1, 2])
+        .types(Date, Number, Number, Number, Number).build()
+    assertNotNull(OhlcChart.builder(ohlcData).date('date').open('open').high('high').low('low').close('close').build())
   }
 }

@@ -122,6 +122,8 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     }
     @Override Builder x(String columnName) { throw new IllegalArgumentException('RadarChart does not support x(...)') }
     @Override Builder y(String... columnNames) { throw new IllegalArgumentException('RadarChart does not support y(...)') }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('RadarChart does not support yAxisTitle(...)') }
     RadarChart build() {
       if (labelColumn == null || radiusColumns == null) throw new IllegalStateException('label(...) and values(...) must be called before build()')
       requireColumn(labelColumn)

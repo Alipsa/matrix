@@ -246,6 +246,8 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
     Builder rowLabels(List<?> labels) { rows = labels; this }
     Builder columnLabels(List<?> labels) { columns = labels; this }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support yAxisTitle(...)') }
     HeatmapChart build() {
       if (vectorColumn == null && valueColumns == null) throw new IllegalStateException('values(...) must be called before build()')
       if (vectorColumn != null && valueColumns != null) throw new IllegalStateException('Specify either vector or matrix heatmap values, not both')

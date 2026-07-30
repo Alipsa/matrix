@@ -9,7 +9,7 @@ import se.alipsa.matrix.core.Matrix
  * @param <B> concrete builder type
  */
 @SuppressWarnings('IfStatementBraces')
-abstract class ChartBuilder<B extends ChartBuilder> {
+abstract class ChartBuilder<B extends ChartBuilder<B>> {
 
   protected final Matrix data
   protected String chartTitle

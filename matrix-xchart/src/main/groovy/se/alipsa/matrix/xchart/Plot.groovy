@@ -1,7 +1,6 @@
 package se.alipsa.matrix.xchart
 
 import org.knowm.xchart.XChartPanel
-import org.knowm.xchart.internal.chartpart.Chart
 
 import se.alipsa.matrix.xchart.abstractions.MatrixXChart
 
@@ -15,7 +14,7 @@ class Plot {
   static void svg(MatrixXChart chart, OutputStream outputStream) { requireChart(chart).exportSvg(requireOutputStream(outputStream)) }
   static void pdf(MatrixXChart chart, File file) { requireChart(chart).exportPdf(requireFile(file)) }
   static void pdf(MatrixXChart chart, OutputStream outputStream) { requireChart(chart).exportPdf(requireOutputStream(outputStream)) }
-  static XChartPanel<Chart> swing(MatrixXChart<Chart> chart) { requireChart(chart).exportSwing() }
+  static XChartPanel swing(MatrixXChart chart) { requireChart(chart).exportSwing() }
   static void display(MatrixXChart chart) { requireChart(chart).display() }
 
   private static MatrixXChart requireChart(MatrixXChart chart) {
