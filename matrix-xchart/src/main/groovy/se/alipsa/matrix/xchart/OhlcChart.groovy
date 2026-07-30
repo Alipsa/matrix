@@ -158,10 +158,9 @@ class OhlcChart extends AbstractChart<OhlcChart, OHLCChart, OHLCStyler, OHLCSeri
     Builder low(String name) { requireNumeric(name); lowColumn = name; this }
     Builder close(String name) { requireNumeric(name); closeColumn = name; this }
     OhlcChart build() {
-      if ([dateColumn, openColumn, highColumn, lowColumn, closeColumn].any { it == null }) throw new IllegalStateException('date, open, high, low, and close must be set before build()')
-      requireColumn(dateColumn)
-      if (!Date.isAssignableFrom(data.type(dateColumn))) throw new IllegalArgumentException("Column '$dateColumn' must contain java.util.Date values")
-      [openColumn, highColumn, lowColumn, closeColumn].each { String column -> requireNumeric(column) }
+      if ([dateColumn, openColumn, highColumn, lowColumn, closeColumn].any { it == null }) {
+        throw new IllegalStateException('date, open, high, low, and close must be set before build()')
+      }
       OhlcChart chart = OhlcChart.create(data, chartWidth, chartHeight)
       applyTo(chart)
       chart.addSeries(seriesName, dateColumn, openColumn, highColumn, lowColumn, closeColumn)

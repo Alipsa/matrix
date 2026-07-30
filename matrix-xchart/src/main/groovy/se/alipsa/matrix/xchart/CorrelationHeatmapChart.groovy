@@ -149,7 +149,13 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     private String seriesName
     private List<String> selectedColumns
     Builder(Matrix data) { super(data) }
-    Builder seriesName(String name) { seriesName = name; this }
+    Builder seriesName(String name) {
+      if (name == null || name.isBlank()) {
+        throw new IllegalArgumentException('seriesName cannot be blank')
+      }
+      seriesName = name
+      this
+    }
     Builder columns(String... names) {
       if (names == null || names.length == 0) throw new IllegalArgumentException('columns requires at least one column')
       names.each { String name -> requireNumeric(name) }
