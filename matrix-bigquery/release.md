@@ -1,5 +1,14 @@
 # Matrix-bigquery Release History
 
+## v0.7.1, in progress
+- Dependency updates
+  - com.google.auth:google-auth-library-bom 1.48.0 -> 1.49.0 
+  - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.49.0 
+  - com.google.cloud:google-cloud-bigquery 2.67.0 -> 2.68.0 
+  - com.google.cloud:google-cloud-bigquerystorage 3.29.0 -> 3.30.0
+  - com.google.cloud:google-cloud-resourcemanager 1.95.0 -> 1.96.0
+
+
 ## v0.7.0, 2026-07-05
 - Add support for converting BigQuery nested result values:
   - `ARRAY`/repeated fields now convert to `List` values instead of being forced through primitive string access

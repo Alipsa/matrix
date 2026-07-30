@@ -1,5 +1,9 @@
 # Matrix XChart release history
 
+## v0.3.3, In progress
+- Dependency updates:
+  - org.knowm.xchart:xchart 4.0.2 -> 4.0.3
+
 ## v0.3.2, 2026-07-10
 - Upgrade to xchart 4.0.2 (from 3.8.8)
   - `AbstractChart.getSeries(String)`/`getSeries()` now use xchart's new public `getSeries(String)`/`getSeriesCollection()` instead of the now package-private `getSeriesMap()`

@@ -3,7 +3,7 @@ v_aalto-xml = "1.4.0"
 v_alipsa-maven-module = "0.2.0"
 v_alipsa-nexus-release = "2.2.0"
 v_avro = "1.12.1"
-v_ben-manes-versions = "0.54.0"
+v_ben-manes-versions = "0.57.0"
 v_codenarc = "3.7.0"
 v_commons-csv = "1.14.1"
 v_commons-io = "2.22.0"
@@ -16,44 +16,46 @@ v_fast-excel = "0.20.2"
 v_fxsvgimage = "1.5.1"
 v_gi-swing = "0.3.0"
 v_google-api-client = "2.9.0"
-v_google-api-services-drive = "v3-rev20260624-2.0.0"
+v_google-api-services-drive = "v3-rev20260720-2.0.0"
 v_google-api-services-oauth2 = "v2-rev20200213-2.0.0"
 v_google-api-services-sheets = "v4-rev20260610-2.0.0"
-v_google-auth-bom = "1.48.0"
-v_google-cloud-bigquery = "2.67.0"
-v_google-cloud-bigquerystorage = "3.29.0"
-v_google-cloud-resourcemanager = "1.95.0"
-v_google-http-client-gson = "2.1.1"
+v_google-auth-bom = "1.49.0"
+v_google-cloud-bigquery = "2.68.0"
+v_google-cloud-bigquerystorage = "3.30.0"
+v_google-cloud-resourcemanager = "1.96.0"
+v_google-http-client-gson = "2.2.0"
 v_google-oauth-client-jetty = "1.39.0"
 v_groovier-junit = "0.3.2"
 v_groovy = "5.0.7"
 v_gsvg = "1.1.0"
 v_h2 = "2.4.240"
 v_hadoop = "3.5.0"
-v_jackson = "2.22.0"
+v_jackson = "2.22.1"
 v_jacoco = "0.8.14"
 v_javafx = "23.0.2"
 v_javaparser = "3.28.2"
 v_jfinancials = "1.1.0"
-v_jsoup = "1.22.2"
+v_jsoup = "1.23.1"
 v_jsvg = "2.1.0"
-v_junit = "6.1.1"
+v_junit = "6.1.2"
 v_log4j = "2.26.1"
 v_maven-utils = "1.4.1"
 v_mockito = "5.23.0"
 v_opentest4j = "1.3.0"
 v_parquet = "1.17.1"
-v_pdfbox = "3.0.7"
+v_pdfbox = "3.0.8"
+v_pdfbox-graphics2d = "3.0.5"
 v_pebble = "2.4.0"
 v_poi-ooxml = "5.5.1"
 v_progressbar = "0.10.2"
 v_slf4j = "2.0.18"
 v_smile = "4.4.2"
 v_sods = "1.10.1"
-v_spotless-plugin = "8.4.0"
+v_spotless-plugin = "8.9.0"
 v_tablesaw = "0.44.4"
 v_testcontainers = "2.0.5"
-v_xchart = "4.0.2"
+v_vectorgraphics2d = "0.13"
+v_xchart = "4.0.3"
 
 [libraries]
 groovy-bom = { module = "org.apache.groovy:groovy-bom", version.ref = "v_groovy" }
@@ -109,9 +111,11 @@ mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter" }
 smile-core = { module = "com.github.haifengl:smile-core", version.ref = "v_smile" }
 smile-plot = { module = "com.github.haifengl:smile-plot", version.ref = "v_smile" }
 xchart = { module = "org.knowm.xchart:xchart", version.ref = "v_xchart" }
+vectorgraphics2d = { module = "de.erichseifert.vectorgraphics2d:VectorGraphics2D", version.ref = "v_vectorgraphics2d" }
 parquet-column = { module = "org.apache.parquet:parquet-column", version.ref = "v_parquet" }
 parquet-hadoop = { module = "org.apache.parquet:parquet-hadoop", version.ref = "v_parquet" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "v_pdfbox" }
+pdfbox-graphics2d = { module = "de.rototor.pdfbox:graphics2d", version.ref = "v_pdfbox-graphics2d" }
 hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "v_hadoop" }
 hadoop-mapreduce-client-core = { module = "org.apache.hadoop:hadoop-mapreduce-client-core", version.ref = "v_hadoop" }
 tablesaw-core = { module = "tech.tablesaw:tablesaw-core", version.ref = "v_tablesaw" }
@@ -136,7 +140,7 @@ pebble = { module = "com.mitchellbosecke:pebble", version.ref = "v_pebble" }
 jfinancials = { module = "se.alipsa:jfinancials", version.ref = "v_jfinancials" }
 
 [plugins]
-benManesVersions = { id = "com.github.ben-manes.versions", version.ref = "v_ben-manes-versions" }
+benManesVersions = { id = "io.github.ben-manes.versions", version.ref = "v_ben-manes-versions" }
 spotless = { id = "com.diffplug.spotless", version.ref = "v_spotless-plugin" }
 alipsaMavenModule = { id = "se.alipsa.gradle.maven-module", version.ref = "v_alipsa-maven-module" }
 alipsaNexusRelease = { id = "se.alipsa.nexus-release-plugin", version.ref = "v_alipsa-nexus-release" }

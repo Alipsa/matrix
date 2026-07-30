@@ -18,6 +18,28 @@ def majorOf = { String v ->
   m.find() ? (m.group(1) as int) : -1
 }
 
+def pluginUpdates = {
+  def catalog = extensions.getByType(org.gradle.api.artifacts.VersionCatalogsExtension).named('libs')
+  catalog.pluginAliases.collect { alias ->
+    def pluginProvider = catalog.findPlugin(alias).orElse(null)
+    def plugin = pluginProvider?.get()
+    if (plugin == null || !plugin.version) {
+      return null
+    }
+    def current = plugin.version.toString()
+
+    def markerArtifact = "${plugin.pluginId}:${plugin.pluginId}.gradle.plugin"
+    def markerGroupPath = plugin.pluginId.replace('.', '/')
+    def metadataUrl = URI.create(
+        "https://plugins.gradle.org/m2/${markerGroupPath}/${plugin.pluginId}.gradle.plugin/maven-metadata.xml"
+    ).toURL()
+    def metadata = new groovy.xml.XmlSlurper().parseText(metadataUrl.text)
+    def latest = metadata.versioning.release.text().toString()
+    latest && latest != current && !isNonStable(latest) ?
+        [alias: alias, artifact: markerArtifact, current: current, latest: latest] : null
+  }.findAll()
+}
+
 mavenModules {
   // ./gradlew mavenMatrixBomInstall
   matrixBom {
@@ -229,7 +251,7 @@ subprojects { Project p ->
     }
   }
 
-  apply plugin: "com.github.ben-manes.versions"
+  apply plugin: "io.github.ben-manes.versions"
   tasks.matching { it.name == "dependencyUpdates" }.configureEach {
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
@@ -296,10 +318,22 @@ tasks.register('dependencyUpdatesSummary') {
 // Running `./gradlew dependencyUpdates` resolves to this task, which delegates
 // to all subproject dependencyUpdates tasks and triggers the summary.
 tasks.register('dependencyUpdates') {
-  description = 'Runs dependency update checks for all subprojects'
+  description = 'Runs dependency and Gradle plugin update checks for all subprojects'
   group = 'Help'
   dependsOn subprojects.collect { p ->
     p.tasks.matching { it.name == 'dependencyUpdates' }
+  }
+  doLast {
+    def updates = pluginUpdates()
+    if (updates) {
+      def markerFile = layout.buildDirectory.file('dependencyUpdates/.outdated-plugins').get().asFile
+      markerFile.parentFile.mkdirs()
+      markerFile.text = updates.size().toString()
+      println 'Gradle plugins:'
+      updates.each { update ->
+        println "  ${update.artifact} ${update.current} -> ${update.latest}"
+      }
+    }
   }
   finalizedBy tasks.named('dependencyUpdatesSummary')
 }

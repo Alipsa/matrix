@@ -1,5 +1,9 @@
 # Release history
 
+## v.2.2.1, in progress
+- Dependency updates:
+  - org.jsoup:jsoup 1.22.2 -> 1.23.1
+
 ## v2.2.0, 2026-05-10
 - `Rdatasets.overview()` is now lazy — no network I/O on class loading; added `Rdatasets.refresh()` to clear the cache
 - Add `Rdatasets.fetchData(String packageSlashItem)` single-argument overload (e.g. `fetchData('datasets/iris')`)

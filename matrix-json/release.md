@@ -1,5 +1,11 @@
 # Matrix-Json Release history
 
+## v2.3.2, In progress
+- Upgrade dependencies:
+  - com.fasterxml.jackson:jackson-bom 2.22.0 -> 2.22.1
+  - com.fasterxml.jackson.core:jackson-core 2.22.0 -> 2.22.1
+  - com.fasterxml.jackson.core:jackson-databind 2.22.0 -> 2.22.1
+
 ## v2.3.1, 2026-07-09
 - Dependency update: com.fasterxml.jackson:jackson-bom 2.21.2 -> 2.22.0
 - fix `indent` write option being silently inverted when passed as a String (Groovy's truthy `as boolean` coercion treated `indent: "false"` as `true`); now validates Boolean/String values strictly and throws `IllegalArgumentException` unless the trimmed, case-insensitive value is `true` or `false`

@@ -1,5 +1,9 @@
 # Matrix-charts Release History
 
+## v0.5.1, in progress
+- Dependency upgrades
+  - org.apache.pdfbox:pdfbox 3.0.7 -> 3.0.8
+
 ## v0.5.0
 
 This release unifies all charting APIs under the Charm rendering engine and removes legacy backends.
