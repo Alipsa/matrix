@@ -163,6 +163,8 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       selectedColumns = names.toList()
       this
     }
+    @Override Builder x(String columnName) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support x(...)') }
+    @Override Builder y(String... columnNames) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support y(...)') }
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('CorrelationHeatmapChart does not support yAxisTitle(...)') }
     CorrelationHeatmapChart build() {
@@ -174,9 +176,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       }
       selectedColumns.each { String column -> requireNumeric(column) }
       CorrelationHeatmapChart chart = CorrelationHeatmapChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) {
-        chart.title = chartTitle
-      }
+      applyTo(chart)
       chart.addSeries(seriesName, selectedColumns)
       chart
     }

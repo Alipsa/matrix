@@ -247,6 +247,8 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
     Builder rowLabels(List<?> labels) { rows = labels; this }
     Builder columnLabels(List<?> labels) { columns = labels; this }
+    @Override Builder x(String columnName) { throw new IllegalArgumentException('HeatmapChart does not support x(...)') }
+    @Override Builder y(String... columnNames) { throw new IllegalArgumentException('HeatmapChart does not support y(...)') }
     @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support xAxisTitle(...)') }
     @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('HeatmapChart does not support yAxisTitle(...)') }
     HeatmapChart build() {

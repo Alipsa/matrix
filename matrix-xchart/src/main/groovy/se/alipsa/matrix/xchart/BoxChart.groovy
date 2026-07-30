@@ -150,9 +150,7 @@ class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxSty
       }
       yColumns.each { String column -> requireNumeric(column) }
       BoxChart chart = BoxChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) {
-        chart.title = chartTitle
-      }
+      applyTo(chart)
       yColumns.each { String column -> chart.addSeries(column) }
       chart
     }

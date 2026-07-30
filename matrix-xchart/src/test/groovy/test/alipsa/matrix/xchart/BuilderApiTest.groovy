@@ -52,6 +52,8 @@ class BuilderApiTest {
     assertThrows(IllegalStateException) { LineChart.builder(data).y('first').build() }
     assertThrows(IllegalArgumentException) { PieChart.builder(data).xAxisTitle('x') }
     assertThrows(IllegalArgumentException) { RadarChart.builder(data).values() }
+    assertThrows(IllegalArgumentException) { HeatmapChart.builder(data).x('first') }
+    assertThrows(IllegalArgumentException) { CorrelationHeatmapChart.builder(data).y('first') }
   }
 
   @Test

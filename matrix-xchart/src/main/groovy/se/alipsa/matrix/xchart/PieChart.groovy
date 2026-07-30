@@ -165,9 +165,7 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
       }
       requireColumn(xColumn); requireNumeric(yColumns[0])
       PieChart chart = PieChart.create(data, chartWidth, chartHeight)
-      if (chartTitle != null) {
-        chart.title = chartTitle
-      }
+      applyTo(chart)
       if (donut) {
         applyDonutStyle(chart)
       }
