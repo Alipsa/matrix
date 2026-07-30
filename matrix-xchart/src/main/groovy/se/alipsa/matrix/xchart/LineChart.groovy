@@ -4,6 +4,7 @@ import org.knowm.xchart.XYSeries
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A LineChart is a chart that displays data as a series of points connected by straight lines.
@@ -53,6 +54,22 @@ class LineChart extends AbstractXYChart<LineChart> {
     def chart = new LineChart(matrix, width, height)
     chart.title = title
     chart
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    Builder(Matrix data) { super(data) }
+    LineChart build() {
+      requireXAndY()
+      requireColumn(xColumn)
+      yColumns.each { String column -> requireNumeric(column) }
+      LineChart chart = LineChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      yColumns.each { String column -> chart.addSeries(xColumn, column) }
+      chart
+    }
   }
 
 }

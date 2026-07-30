@@ -1,5 +1,10 @@
 # Matrix XChart release history
 
+## v0.4.0, In progress
+- Add deferred Pict-like `builder(Matrix)` convenience APIs for XChart chart types.
+- Add `Plot` PNG, SVG, PDF, Swing, and display export facade.
+- Keep existing `create`/`addSeries` APIs and native XChart customization available.
+
 ## v0.3.3, In progress
 - Dependency updates:
   - org.knowm.xchart:xchart 4.0.2 -> 4.0.3

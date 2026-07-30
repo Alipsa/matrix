@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A heat map (or heatmap) is a 2-dimensional data visualization technique that represents the magnitude of
@@ -25,6 +26,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
+@SuppressWarnings('IfStatementBraces')
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}
@@ -222,6 +224,45 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       throw new IllegalArgumentException("Heatmap column '${col.name}' with ${col.size()} values has no integer square root; pass an explicit column count instead of relying on auto-detection")
     }
     nCols
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private String seriesName = 'Heatmap'
+    private String vectorColumn
+    private Integer vectorColumns
+    private List<String> valueColumns
+    private List<?> rows
+    private List<?> columns
+
+    Builder(Matrix data) { super(data) }
+    Builder seriesName(String name) { seriesName = name; this }
+    Builder values(String columnName, Integer columns = null) { vectorColumn = columnName; vectorColumns = columns; this }
+    Builder values(List<String> columnNames) {
+      if (columnNames == null || columnNames.isEmpty()) throw new IllegalArgumentException('values requires at least one column')
+      valueColumns = columnNames; this
+    }
+    Builder rowLabels(List<?> labels) { rows = labels; this }
+    Builder columnLabels(List<?> labels) { columns = labels; this }
+    HeatmapChart build() {
+      if (vectorColumn == null && valueColumns == null) throw new IllegalStateException('values(...) must be called before build()')
+      if (vectorColumn != null && valueColumns != null) throw new IllegalStateException('Specify either vector or matrix heatmap values, not both')
+      HeatmapChart chart = HeatmapChart.create(data, chartWidth, chartHeight)
+      if (chartTitle != null) chart.title = chartTitle
+      if (vectorColumn != null) {
+        if (rows != null || columns != null) throw new IllegalArgumentException('Labels are supported only for matrix-shaped heatmaps')
+        requireNumeric(vectorColumn)
+        chart.addSeries(seriesName, vectorColumn, vectorColumns)
+      } else {
+        valueColumns.each { String column -> requireNumeric(column) }
+        if ((rows == null) != (columns == null)) throw new IllegalStateException('rowLabels(...) and columnLabels(...) must be provided together')
+        List<Column> selected = valueColumns.collect { String column -> data.column(column) }
+        rows == null ? chart.addSeries(seriesName, selected) : chart.addSeries(seriesName, columns, rows, selected)
+      }
+      chart
+    }
   }
 
 }

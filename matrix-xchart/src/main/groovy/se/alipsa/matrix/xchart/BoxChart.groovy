@@ -7,6 +7,7 @@ import org.knowm.xchart.style.BoxStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A BoxChart is a chart that displays data in the form of box plots.
@@ -31,6 +32,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * bc.exportPng(file)
  * </code></pre>
  */
+@SuppressWarnings('IfStatementBraces')
 class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxStyler, BoxSeries> {
 
   private BoxChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -133,6 +135,24 @@ class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxSty
       }
     }
     this
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    Builder(Matrix data) { super(data) }
+    @Override Builder x(String columnName) { throw new IllegalArgumentException('BoxChart does not support x(...)') }
+    @Override Builder xAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support xAxisTitle(...)') }
+    @Override Builder yAxisTitle(String title) { throw new IllegalArgumentException('BoxChart does not support yAxisTitle(...)') }
+    BoxChart build() {
+      if (yColumns.isEmpty()) throw new IllegalStateException('y(...) must be called before build()')
+      yColumns.each { String column -> requireNumeric(column) }
+      BoxChart chart = BoxChart.create(data, chartWidth, chartHeight)
+      if (chartTitle != null) chart.title = chartTitle
+      yColumns.each { String column -> chart.addSeries(column) }
+      chart
+    }
   }
 
 }

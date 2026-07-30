@@ -4,6 +4,7 @@ import org.knowm.xchart.XYSeries
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * An area chart or area graph displays graphically quantitative data. It is based on an XY chart.
@@ -49,6 +50,25 @@ class AreaChart extends AbstractXYChart<AreaChart> {
     def chart = new AreaChart(matrix, width, height)
     chart.title = title
     chart
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    Builder(Matrix data) { super(data) }
+    AreaChart build() {
+      requireXAndY()
+      requireColumn(xColumn)
+      yColumns.each { String column -> requireNumeric(column) }
+      AreaChart chart = AreaChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      yColumns.eachWithIndex { String column, int index ->
+        chart.addSeries(xColumn, column)
+        chart.makeFillTransparent(chart.getSeries(column), index)
+      }
+      chart
+    }
   }
 
 }

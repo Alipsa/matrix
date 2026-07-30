@@ -4,6 +4,7 @@ import org.knowm.xchart.CategorySeries
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A StickChart is a type of chart that displays data points as vertical lines (sticks) extending from a baseline.
@@ -55,6 +56,22 @@ class StickChart extends AbstractCategoryChart<StickChart> {
     def chart = new StickChart(matrix, width, height)
     chart.title = title
     chart
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    Builder(Matrix data) { super(data) }
+    StickChart build() {
+      requireXAndY()
+      requireColumn(xColumn)
+      yColumns.each { String column -> requireNumeric(column) }
+      StickChart chart = StickChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      yColumns.each { String column -> chart.addSeries(xColumn, column) }
+      chart
+    }
   }
 
 }

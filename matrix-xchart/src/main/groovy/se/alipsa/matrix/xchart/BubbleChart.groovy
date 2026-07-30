@@ -7,6 +7,7 @@ import org.knowm.xchart.style.BubbleStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A bubble chart is a type of chart that displays three dimensions of data. Each entity with its triplet
@@ -29,6 +30,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * File file = new File('build/testBubbleChart.png')
  * bc.exportPng(file)
  */
+@SuppressWarnings('IfStatementBraces')
 class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChart, BubbleStyler, BubbleSeries> {
 
   private int numSeries = 0
@@ -132,6 +134,24 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
     makeFillTransparent(s, numSeries, transparency)
     numSeries++
     this
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private String sizeColumn
+    Builder(Matrix data) { super(data) }
+    Builder size(String columnName) { sizeColumn = columnName; this }
+    BubbleChart build() {
+      requireXAndY()
+      if (yColumns.size() != 1 || sizeColumn == null) throw new IllegalStateException('BubbleChart requires one y(...) column and size(...)')
+      requireNumeric(xColumn); requireNumeric(yColumns[0]); requireNumeric(sizeColumn)
+      BubbleChart chart = BubbleChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      chart.addSeries(xColumn, yColumns[0], sizeColumn)
+      chart
+    }
   }
 
 }

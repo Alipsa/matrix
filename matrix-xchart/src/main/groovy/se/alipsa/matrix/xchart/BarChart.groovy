@@ -4,6 +4,7 @@ import org.knowm.xchart.CategorySeries
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractCategoryChart
+import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 
 /**
  * A BarChart is a chart that displays data in the form of bars.
@@ -68,6 +69,24 @@ class BarChart extends AbstractCategoryChart<BarChart> {
     def bc = new BarChart(matrix, width, height, CategorySeries.CategorySeriesRenderStyle.Bar)
     bc.style.setStacked(true)
     bc
+  }
+
+  /** Creates a deferred convenience builder. */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  static class Builder extends ChartBuilder<Builder> {
+    private boolean stacked
+    Builder(Matrix data) { super(data) }
+    Builder stacked() { stacked = true; this }
+    BarChart build() {
+      requireXAndY()
+      requireColumn(xColumn)
+      yColumns.each { String column -> requireNumeric(column) }
+      BarChart chart = stacked ? BarChart.createStacked(data, chartWidth, chartHeight) : BarChart.create(data, chartWidth, chartHeight)
+      applyTo(chart)
+      yColumns.each { String column -> chart.addSeries(xColumn, column) }
+      chart
+    }
   }
 
 }
