@@ -1,15 +1,15 @@
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.NumericNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.ValueNode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.BooleanNode
+import tools.jackson.databind.node.NumericNode
+import tools.jackson.databind.node.ObjectNode
+import tools.jackson.databind.node.ValueNode
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.json.JsonReader
@@ -315,7 +315,7 @@ class JsonReaderTest {
 
   @Test
   void testNestedPojoSerialization() {
-    ObjectMapper mapper = new ObjectMapper()
+    JsonMapper mapper = JsonMapper.builder().build()
 
     Family f1 = new Family('Nyfelt-Wersäll')
     f1.members.add(new Person('Per'))
@@ -346,13 +346,12 @@ class JsonReaderTest {
     }
     List rows = []
     for (int i = 0; i < flatMaps.size(); i++) {
-      def m = flatMaps.get(i)
-      keySet.each {
-        if (!m.containsKey(it)) {
-          m.put(it, null)
-        }
+      Map<String, Object> m = flatMaps.get(i)
+      List<Object> row = []
+      keySet.each { String key ->
+        row.add(m.containsKey(key) ? m.get(key) : null)
       }
-      rows << new ArrayList<>(m.values())
+      rows << row
     }
     Matrix.builder()
         .rows(rows)
@@ -363,11 +362,9 @@ class JsonReaderTest {
   def addKeys(String currentPath, JsonNode jsonNode, Map<String, Object> map) {
     if (jsonNode.isObject()) {
       ObjectNode objectNode = (ObjectNode) jsonNode
-      Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields()
       String pathPrefix = currentPath.isEmpty() ? '' : currentPath + '.'
 
-      while (iter.hasNext()) {
-        Map.Entry<String, JsonNode> entry = iter.next()
+      for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
         addKeys(pathPrefix + entry.getKey(), entry.getValue(), map)
       }
     } else if (jsonNode.isArray()) {
