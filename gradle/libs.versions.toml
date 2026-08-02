@@ -30,7 +30,7 @@ v_groovy = "5.0.7"
 v_gsvg = "1.1.0"
 v_h2 = "2.4.240"
 v_hadoop = "3.5.0"
-v_jackson = "2.22.1"
+v_jackson = "3.1.5"
 v_jacoco = "0.8.14"
 v_javafx = "23.0.2"
 v_javaparser = "3.28.2"
@@ -87,9 +87,9 @@ opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "v_opentest4j
 h2 = { module = "com.h2database:h2", version.ref = "v_h2" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "v_jsoup" }
 avro = { module = "org.apache.avro:avro", version.ref = "v_avro" }
-jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "v_jackson" }
-jackson-core = { module = "com.fasterxml.jackson.core:jackson-core" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+jackson-bom = { module = "tools.jackson:jackson-bom", version.ref = "v_jackson" }
+jackson-core = { module = "tools.jackson.core:jackson-core" }
+jackson-databind = { module = "tools.jackson.core:jackson-databind" }
 google-auth-library-bom = { module = "com.google.auth:google-auth-library-bom", version.ref = "v_google-auth-bom" }
 google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http" }
 google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "v_google-cloud-bigquery" }

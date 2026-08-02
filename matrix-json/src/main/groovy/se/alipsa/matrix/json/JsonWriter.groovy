@@ -2,8 +2,10 @@ package se.alipsa.matrix.json
 
 import groovy.transform.CompileStatic
 
-import com.fasterxml.jackson.core.JsonFactory
-import com.fasterxml.jackson.core.JsonGenerator
+import tools.jackson.core.JsonGenerator
+import tools.jackson.core.json.JsonFactory
+import tools.jackson.databind.ObjectWriter
+import tools.jackson.databind.json.JsonMapper
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
@@ -32,7 +34,8 @@ import java.time.temporal.TemporalAccessor
 @CompileStatic
 class JsonWriter {
 
-  private static final JsonFactory FACTORY = new JsonFactory()
+  private static final JsonFactory FACTORY = JsonFactory.builder().build()
+  private static final JsonMapper MAPPER = JsonMapper.builder(FACTORY).build()
 
   private JsonWriter() {
   }
@@ -445,10 +448,10 @@ class JsonWriter {
       }
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormatValue)
 
-      JsonGenerator gen = FACTORY.createGenerator(writer)
-      if (indentValue) {
-        gen.useDefaultPrettyPrinter()
-      }
+      ObjectWriter objectWriter = indentValue
+          ? MAPPER.writer().withDefaultPrettyPrinter()
+          : MAPPER.writer()
+      JsonGenerator gen = objectWriter.createGenerator(writer)
       gen.withCloseable {
         gen.writeStartArray()
         List<String> colNames = t.columnNames()
@@ -466,7 +469,7 @@ class JsonWriter {
           for (Row row : t) {
             gen.writeStartObject()
             for (int i = 0; i < colCount; i++) {
-              gen.writeFieldName(colNames[i])
+              gen.writeName(colNames[i])
               writeValue(gen, row[i], dtf)
             }
             gen.writeEndObject()

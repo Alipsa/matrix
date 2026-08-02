@@ -2,11 +2,11 @@ package se.alipsa.matrix.json
 
 import groovy.transform.CompileStatic
 
-import com.fasterxml.jackson.core.JsonFactory
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.JsonToken
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.core.JsonParser
+import tools.jackson.core.JsonToken
+import tools.jackson.core.json.JsonFactory
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.json.JsonMapper
 
 import se.alipsa.matrix.core.Matrix
 
@@ -54,9 +54,11 @@ import java.nio.file.Path
 @CompileStatic
 class JsonReader {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper()
+  private static final JsonFactory FACTORY = JsonFactory.builder().build()
+  private static final JsonMapper MAPPER = JsonMapper.builder(FACTORY)
       .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
-  private static final JsonFactory FACTORY = MAPPER.getFactory()
+      .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+      .build()
   private static final String DOT = '.'
 
   private JsonReader() {

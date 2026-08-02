@@ -2,9 +2,11 @@
 
 ## v2.3.2, In progress
 - Upgrade dependencies:
-  - com.fasterxml.jackson:jackson-bom 2.22.0 -> 2.22.1
-  - com.fasterxml.jackson.core:jackson-core 2.22.0 -> 2.22.1
-  - com.fasterxml.jackson.core:jackson-databind 2.22.0 -> 2.22.1
+  - com.fasterxml.jackson:jackson-bom 2.22.1 -> tools.jackson:jackson-bom 3.1.5
+  - com.fasterxml.jackson.core:jackson-core 2.22.1 -> tools.jackson.core:jackson-core 3.1.5
+  - com.fasterxml.jackson.core:jackson-databind 2.22.1 -> tools.jackson.core:jackson-databind 3.1.5
+- Migrate matrix-json internals from Jackson 2 (`com.fasterxml.jackson.*`) to Jackson 3 (`tools.jackson.*`).
+  Production API (`JsonReader`/`JsonWriter`) is unchanged.
 
 ## v2.3.1, 2026-07-09
 - Dependency update: com.fasterxml.jackson:jackson-bom 2.21.2 -> 2.22.0
