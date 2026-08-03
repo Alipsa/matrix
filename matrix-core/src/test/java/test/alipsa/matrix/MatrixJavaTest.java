@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -108,6 +109,20 @@ class MatrixJavaTest {
     assertIterableEquals(c("Y1", "Y2", "Y3", "Y4", "Y5"), m.columnNames());
     assertIterableEquals(c(1, 2, 3, 4, 5), m.row(0));
     assertIterableEquals(c(10, 20, 30, 40, 50), m.row(1));
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void testJavaCanPassMapOfRawListsToBuilder() {
+    Map<String, List> columns = new LinkedHashMap<>();
+    columns.put("name", List.of("Alice", "Bob"));
+    columns.put("age", List.of(25, 30));
+
+    Matrix matrix = Matrix.builder().data(columns).build();
+
+    assertEquals(List.of("name", "age"), matrix.columnNames());
+    assertEquals("Alice", matrix.getAt(0, "name"));
+    assertEquals(30, matrix.getAt(1, "age", Integer.class));
   }
 
   @Test
