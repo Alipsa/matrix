@@ -1,5 +1,11 @@
 # Matrix Core Release History
 
+## 3.8.1, in progress
+
+### Fixes
+- Preserved Java source compatibility for `MatrixBuilder.columns`, `MatrixBuilder.data`, and `Matrix.and` callers using `Map<String, List>`, while continuing to accept typed list maps.
+- Added a Java compilation regression test covering `Matrix.builder().data(...)` with `Map<String, List>`.
+
 ## 3.8.0, 2026-05-22
 
 ### New Matrix methods
@@ -65,7 +71,6 @@
 - `MatrixAssertions` tolerance constants changed from `double` to `BigDecimal` to match the updated `equals()` signature.
 
 ### API changes
-- Preserved Java source compatibility for `MatrixBuilder.columns`, `MatrixBuilder.data`, and `Matrix.and` callers using `Map<String, List>`, while continuing to accept typed list maps.
 - `withColumn(String, Closure)` and `withColumn(int, Closure)` now return `Column` instead of `List`, preserving the source column's name and type. This enables fluent chaining with Column's arithmetic and cumulative methods.
 - `withColumns(List<String>, Closure)` and index-based `withColumns` variants now return `Column` instead of `List`. Because the operation spans multiple source columns, the returned Column has no name or type set (unlike `withColumn` which preserves the single source column's identity).
 - Added `select(String...)`, `select(List<String>)`, and `select(IntRange)` as shorter aliases for `selectColumns(...)`. The `selectColumns` methods are now deprecated in favor of `select`.
