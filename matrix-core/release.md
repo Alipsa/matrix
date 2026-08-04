@@ -8,7 +8,17 @@
 - Added Java compilation regression coverage for the builder APIs and Java-convenience helpers.
 
 ### Breaking Changes
-- `Columns` and `CollectionUtils.m(...)` intentionally use the pre-3.8.0 raw `List` shapes again. Java code written against the 3.8.0 `List<?>` return or inheritance types must update, in order to preserve compatibility with the established raw-map API used before 3.8.0.
+- `Columns` and `CollectionUtils.m(...)` intentionally use the pre-3.8.0 raw `List` shapes again, in order to preserve compatibility with the established raw-map API used before 3.8.0. Java code written against the 3.8.0 `List<?>` return or inheritance types must change `Map<String, List<?>>` and `LinkedHashMap<String, List<?>>` declarations back to the raw `List` form:
+
+  ```java
+  // 3.8.0
+  Map<String, List<?>> columns = new Columns();
+  LinkedHashMap<String, List<?>> created = CollectionUtils.m("name", values);
+
+  // 3.8.1
+  Map<String, List> columns = new Columns();
+  LinkedHashMap<String, List> created = CollectionUtils.m("name", values);
+  ```
 
 ## 3.8.0, 2026-05-22
 
