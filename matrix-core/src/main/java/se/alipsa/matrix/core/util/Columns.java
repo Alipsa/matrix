@@ -11,8 +11,8 @@ public class Columns extends LinkedHashMap<String, List> {
   }
 
   @SafeVarargs
-  public Columns(Map<String, List>... values) {
-    for (Map<String, List> vals : values) {
+  public Columns(Map<String, ? extends List>... values) {
+    for (Map<String, ? extends List> vals : values) {
       putAll(vals);
     }
   }

@@ -3,8 +3,12 @@
 ## 3.8.1, in progress
 
 ### Fixes
-- Preserved Java source compatibility for `MatrixBuilder.columns`, `MatrixBuilder.data`, and `Matrix.and` callers using `Map<String, List>`, while continuing to accept typed list maps.
-- Added a Java compilation regression test covering `Matrix.builder().data(...)` with `Map<String, List>`.
+- Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
+- Restored the Java-convenience helper shapes of `Columns` and `CollectionUtils.m(...)` so existing raw-map assignments and entry iteration continue to compile.
+- Added Java compilation regression coverage for the builder APIs and Java-convenience helpers.
+
+### Breaking Changes
+- `Columns` and `CollectionUtils.m(...)` intentionally use the pre-3.8.0 raw `List` shapes again. Java code written against the 3.8.0 `List<?>` return or inheritance types must update, in order to preserve compatibility with the established raw-map API used before 3.8.0.
 
 ## 3.8.0, 2026-05-22
 

@@ -124,6 +124,16 @@ class MatrixJavaTest {
     more.put("city", List.of("Stockholm", "Uppsala"));
     viaColumns.and(more);
 
+    assertEquals(List.of("name", "age"), matrix.columnNames());
+    assertEquals("Alice", matrix.getAt(0, "name"));
+    assertEquals(30, matrix.getAt(1, "age", Integer.class));
+    assertEquals(List.of("name", "age", "city"), viaColumns.columnNames());
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void testJavaConvenienceHelpersKeepRawMapShape() {
+    // These declarations are compile-compatibility coverage for the established Java API shape.
     Map<String, List> helperColumns = new Columns();
     helperColumns.put("country", List.of("Sweden"));
     for (Map.Entry<String, List> entry : helperColumns.entrySet()) {
@@ -131,15 +141,20 @@ class MatrixJavaTest {
     }
     LinkedHashMap<String, List> createdColumns = m("language", List.of("Groovy"));
 
+    Map<String, List<String>> typed = new LinkedHashMap<>();
+    typed.put("typed", List.of("value"));
+    Columns typedColumns = new Columns(typed);
+    assertEquals(List.of("value"), typedColumns.get("typed"));
+    assertEquals(List.of("Groovy"), createdColumns.get("language"));
+  }
+
+  @Test
+  void testJavaBuilderAcceptsTypedColumnMaps() {
     Map<String, List<String>> typedColumns = new LinkedHashMap<>();
     typedColumns.put("typed", List.of("value"));
     List<Class> types = List.of(String.class);
     Matrix typedBuilder = Matrix.builder(typedColumns, types, "typed").build();
 
-    assertEquals(List.of("name", "age"), matrix.columnNames());
-    assertEquals("Alice", matrix.getAt(0, "name"));
-    assertEquals(30, matrix.getAt(1, "age", Integer.class));
-    assertEquals(List.of("Groovy"), createdColumns.get("language"));
     assertEquals("value", typedBuilder.getAt(0, "typed"));
   }
 
