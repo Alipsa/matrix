@@ -119,10 +119,28 @@ class MatrixJavaTest {
     columns.put("age", List.of(25, 30));
 
     Matrix matrix = Matrix.builder().data(columns).build();
+    Matrix viaColumns = Matrix.builder().columns(columns).build();
+    Map<String, List> more = new LinkedHashMap<>();
+    more.put("city", List.of("Stockholm", "Uppsala"));
+    viaColumns.and(more);
+
+    Map<String, List> helperColumns = new Columns();
+    helperColumns.put("country", List.of("Sweden"));
+    for (Map.Entry<String, List> entry : helperColumns.entrySet()) {
+      assertEquals(List.of("Sweden"), entry.getValue());
+    }
+    LinkedHashMap<String, List> createdColumns = m("language", List.of("Groovy"));
+
+    Map<String, List<String>> typedColumns = new LinkedHashMap<>();
+    typedColumns.put("typed", List.of("value"));
+    List<Class> types = List.of(String.class);
+    Matrix typedBuilder = Matrix.builder(typedColumns, types, "typed").build();
 
     assertEquals(List.of("name", "age"), matrix.columnNames());
     assertEquals("Alice", matrix.getAt(0, "name"));
     assertEquals(30, matrix.getAt(1, "age", Integer.class));
+    assertEquals(List.of("Groovy"), createdColumns.get("language"));
+    assertEquals("value", typedBuilder.getAt(0, "typed"));
   }
 
   @Test
