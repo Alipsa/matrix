@@ -34,6 +34,8 @@
 
     <matrixArffVersion>0.2.1</matrixArffVersion>
     <matrixAvroVersion>0.3.0</matrixAvroVersion>
+    <!-- These modules have unreleased SNAPSHOT work in this repo; the BOM
+         intentionally pins the last released version until each is published. -->
     <!--matrixBigQueryVersion>0.7.1-SNAPSHOT</matrixBigQueryVersion-->
     <matrixBigQueryVersion>0.7.0</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.1-SNAPSHOT</matrixChartsVersion>
