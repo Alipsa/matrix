@@ -383,7 +383,7 @@ class MatrixBuilder {
 
   /**
    * Populate the Matrix from column-oriented map data.
-   * Both raw {@code Map<String, List>} and typed list maps are accepted for Java source compatibility.
+   * Delegates to {@link #columns(Map)}.
    *
    * @param columnData map of column names to column values
    * @return this builder

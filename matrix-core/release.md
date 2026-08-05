@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-## 3.8.1, in progress
+## 3.9.0, in progress
 
 ### Fixes
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
@@ -15,10 +15,12 @@
   Map<String, List<?>> columns = new Columns();
   LinkedHashMap<String, List<?>> created = CollectionUtils.m("name", values);
 
-  // 3.8.1
+  // 3.9.0
   Map<String, List> columns = new Columns();
   LinkedHashMap<String, List> created = CollectionUtils.m("name", values);
   ```
+
+  These intentionally raw `List` declarations may produce `rawtypes` warnings with `javac -Xlint:rawtypes`; suppress that warning or avoid `-Werror` for this migration.
 
 ## 3.8.0, 2026-05-22
 

@@ -120,6 +120,7 @@ class MatrixJavaTest {
 
     Matrix matrix = Matrix.builder().data(columns).build();
     Matrix viaColumns = Matrix.builder().columns(columns).build();
+    Matrix viaTypes = Matrix.builder(columns, List.of(String.class, Integer.class), "raw").build();
     Map<String, List> more = new LinkedHashMap<>();
     more.put("city", List.of("Stockholm", "Uppsala"));
     viaColumns.and(more);
@@ -127,6 +128,8 @@ class MatrixJavaTest {
     assertEquals(List.of("name", "age"), matrix.columnNames());
     assertEquals("Alice", matrix.getAt(0, "name"));
     assertEquals(30, matrix.getAt(1, "age", Integer.class));
+    assertEquals("raw", viaTypes.getMatrixName());
+    assertEquals(25, viaTypes.getAt(0, "age", Integer.class));
     assertEquals(List.of("name", "age", "city"), viaColumns.columnNames());
   }
 
