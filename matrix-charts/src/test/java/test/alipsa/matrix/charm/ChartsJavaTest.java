@@ -24,7 +24,7 @@ class ChartsJavaTest {
     PlotSpec chart = Charts.chart(columns);
     Closure<Object> configure = new Closure<Object>(null) {
       public Object doCall() {
-        return null;
+        return ((PlotSpec) getDelegate()).getLabels().title("configured");
       }
     };
     PlotSpec configuredPlot = Charts.plot(columns, configure);
@@ -34,5 +34,7 @@ class ChartsJavaTest {
     assertEquals(List.of("x", "y"), chart.getData().columnNames());
     assertEquals(List.of("x", "y"), configuredPlot.getData().columnNames());
     assertEquals(List.of("x", "y"), configuredChart.getData().columnNames());
+    assertEquals("configured", configuredPlot.getLabels().getTitle());
+    assertEquals("configured", configuredChart.getLabels().getTitle());
   }
 }
