@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -108,6 +109,56 @@ class MatrixJavaTest {
     assertIterableEquals(c("Y1", "Y2", "Y3", "Y4", "Y5"), m.columnNames());
     assertIterableEquals(c(1, 2, 3, 4, 5), m.row(0));
     assertIterableEquals(c(10, 20, 30, 40, 50), m.row(1));
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void testJavaCanPassMapOfRawListsToBuilder() {
+    Map<String, List> columns = new LinkedHashMap<>();
+    columns.put("name", List.of("Alice", "Bob"));
+    columns.put("age", List.of(25, 30));
+
+    Matrix matrix = Matrix.builder().data(columns).build();
+    Matrix viaColumns = Matrix.builder().columns(columns).build();
+    Matrix viaTypes = Matrix.builder(columns, List.of(String.class, Integer.class), "raw").build();
+    Map<String, List> more = new LinkedHashMap<>();
+    more.put("city", List.of("Stockholm", "Uppsala"));
+    viaColumns.and(more);
+
+    assertEquals(List.of("name", "age"), matrix.columnNames());
+    assertEquals("Alice", matrix.getAt(0, "name"));
+    assertEquals(30, matrix.getAt(1, "age", Integer.class));
+    assertEquals("raw", viaTypes.getMatrixName());
+    assertEquals(25, viaTypes.getAt(0, "age", Integer.class));
+    assertEquals(List.of("name", "age", "city"), viaColumns.columnNames());
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void testJavaConvenienceHelpersKeepRawMapShape() {
+    // These declarations are compile-compatibility coverage for the established Java API shape.
+    Map<String, List> helperColumns = new Columns();
+    helperColumns.put("country", List.of("Sweden"));
+    for (Map.Entry<String, List> entry : helperColumns.entrySet()) {
+      assertEquals(List.of("Sweden"), entry.getValue());
+    }
+    LinkedHashMap<String, List> createdColumns = m("language", List.of("Groovy"));
+
+    Map<String, List<String>> typed = new LinkedHashMap<>();
+    typed.put("typed", List.of("value"));
+    Columns typedColumns = new Columns(typed);
+    assertEquals(List.of("value"), typedColumns.get("typed"));
+    assertEquals(List.of("Groovy"), createdColumns.get("language"));
+  }
+
+  @Test
+  void testJavaBuilderAcceptsTypedColumnMaps() {
+    Map<String, List<String>> typedColumns = new LinkedHashMap<>();
+    typedColumns.put("typed", List.of("value"));
+    List<Class> types = List.of(String.class);
+    Matrix typedBuilder = Matrix.builder(typedColumns, types, "typed").build();
+
+    assertEquals("value", typedBuilder.getAt(0, "typed"));
   }
 
   @Test

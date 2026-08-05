@@ -106,7 +106,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     new MatrixBuilder(matrixName)
   }
 
-  static MatrixBuilder builder(Map<String, List> columnData, List<Class> types, String name = null) {
+  static MatrixBuilder builder(Map<String, ? extends List> columnData, List<Class> types, String name = null) {
     new MatrixBuilder(name).columns(columnData).types(types)
   }
 
@@ -566,8 +566,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
    */
-  Matrix and(Map<String, ? extends List<?>> columns) {
-    for (Map.Entry<String, ? extends List<?>> entry : columns.entrySet()) {
+  Matrix and(Map<String, ? extends List> columns) {
+    for (Map.Entry<String, ? extends List> entry : columns.entrySet()) {
       String name = entry.key
       List list = entry.value
       Class type = Object

@@ -34,15 +34,21 @@
 
     <matrixArffVersion>0.2.1</matrixArffVersion>
     <matrixAvroVersion>0.3.0</matrixAvroVersion>
-    <matrixBigQueryVersion>0.7.1-SNAPSHOT</matrixBigQueryVersion>
+    <!-- These modules have unreleased SNAPSHOT work in this repo; the BOM
+         intentionally pins the last released version until each is published. -->
+    <!--matrixBigQueryVersion>0.7.1-SNAPSHOT</matrixBigQueryVersion-->
+    <matrixBigQueryVersion>0.7.0</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.1-SNAPSHOT</matrixChartsVersion>
-    <matrixCoreVersion>3.8.0</matrixCoreVersion>
+    <matrixCoreVersion>3.9.0-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.4.0</matrixCsvVersion>
-    <matrixDatasetsVersion>2.2.1-SNAPSHOT</matrixDatasetsVersion>
+    <!--matrixDatasetsVersion>2.2.1-SNAPSHOT</matrixDatasetsVersion-->
+    <matrixDatasetsVersion>2.2.0</matrixDatasetsVersion>
     <matrixGgplotVersion>0.5.0</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.3.0</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.2.2-SNAPSHOT</matrixGsheetsVersion>
-    <matrixJsonVersion>2.3.2-SNAPSHOT</matrixJsonVersion>
+    <!--matrixGsheetsVersion>0.2.2-SNAPSHOT</matrixGsheetsVersion-->
+    <matrixGsheetsVersion>0.2.1</matrixGsheetsVersion>
+    <!--matrixJsonVersion>2.3.2-SNAPSHOT</matrixJsonVersion-->
+    <matrixJsonVersion>2.3.1</matrixJsonVersion>
     <matrixLoggingVersion>0.1.1</matrixLoggingVersion>
     <matrixParquetVersion>0.6.0</matrixParquetVersion>
     <matrixPictVersion>0.5.0</matrixPictVersion>
@@ -51,7 +57,8 @@
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
     <matrixStatsVersion>2.5.2</matrixStatsVersion>
     <matrixTablesawVersion>0.3.2</matrixTablesawVersion>
-    <matrixXChartVersion>0.4.0-SNAPSHOT</matrixXChartVersion>
+    <!--matrixXChartVersion>0.4.0-SNAPSHOT</matrixXChartVersion-->
+    <matrixXChartVersion>0.3.2</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>

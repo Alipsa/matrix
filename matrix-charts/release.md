@@ -3,6 +3,7 @@
 ## v0.5.1, in progress
 - Dependency upgrades
   - org.apache.pdfbox:pdfbox 3.0.7 -> 3.0.8
+- Preserved Java source compatibility for `Charts.plot` and `Charts.chart` callers using `Map<String, List>`, while continuing to accept typed list maps.
 
 ## v0.5.0
 

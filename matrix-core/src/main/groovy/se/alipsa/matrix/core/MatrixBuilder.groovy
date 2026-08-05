@@ -133,11 +133,18 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder columns(Map<String, ? extends List<?>> columData) {
+  /**
+   * Populate the Matrix from column-oriented map data.
+   * Both raw {@code Map<String, List>} and typed list maps are accepted for Java source compatibility.
+   *
+   * @param columnData map of column names to column values
+   * @return this builder
+   */
+  MatrixBuilder columns(Map<String, ? extends List> columnData) {
     clearPendingIndexColumns()
     List<String> headers = []
     List<List> cols = []
-    columData.each { k, v ->
+    columnData.each { k, v ->
       headers << String.valueOf(k)
       cols << v.collect()
     }
@@ -374,8 +381,15 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder data(Map<String, ? extends List<?>> columData) {
-    columns(columData)
+  /**
+   * Populate the Matrix from column-oriented map data.
+   * Delegates to {@link #columns(Map)}.
+   *
+   * @param columnData map of column names to column values
+   * @return this builder
+   */
+  MatrixBuilder data(Map<String, ? extends List> columnData) {
+    columns(columnData)
   }
 
   MatrixBuilder data(Grid grid) {
