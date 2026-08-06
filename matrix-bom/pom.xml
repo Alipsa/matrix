@@ -33,6 +33,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit-jupiter.version>6.1.2</junit-jupiter.version>
     <junitPlatformVersion.version>6.1.2</junitPlatformVersion.version>
+    <skipUnitTests>false</skipUnitTests>
+    <it.groups></it.groups>
+    <it.excludedGroups>external,jfx</it.excludedGroups>
+    <it.failIfNoTests>true</it.failIfNoTests>
+    <jacoco.version>0.8.14</jacoco.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -49,9 +54,14 @@
     <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>5.0.5</version>
+      <version>5.0.8</version>
       <type>pom</type>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-logging</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -143,6 +153,10 @@
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -150,12 +164,24 @@
       <artifactId>testcontainers-gcloud</artifactId>
       <version>2.0.5</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
       <version>2.0.5</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -167,6 +193,12 @@
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-launcher</artifactId>
       <version>${junitPlatformVersion.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.groovy</groupId>
+      <artifactId>groovier-junit</artifactId>
+      <version>0.3.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -247,9 +279,88 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.6</version>
+        <configuration>
+          <skipTests>${skipUnitTests}</skipTests>
+          <groups>${it.groups}</groups>
+          <excludedGroups>${it.excludedGroups}</excludedGroups>
+          <systemPropertyVariables>
+            <java.awt.headless>true</java.awt.headless>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>api-it</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco.version}</version>
+            <executions>
+              <execution>
+                <id>prepare-it-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+                <configuration>
+                  <propertyName>jacocoArgLine</propertyName>
+                  <destFile>${project.build.directory}/jacoco-it.exec</destFile>
+                  <includes>
+                    <include>se.alipsa.matrix.*</include>
+                    <include>tech.tablesaw.*</include>
+                  </includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.5.6</version>
+            <configuration>
+              <includes>
+                <include>**/*IT.class</include>
+              </includes>
+              <failIfNoTests>${it.failIfNoTests}</failIfNoTests>
+              <groups>${it.groups}</groups>
+              <excludedGroups>${it.excludedGroups}</excludedGroups>
+              <argLine>@{jacocoArgLine}</argLine>
+              <systemPropertyVariables>
+                <java.awt.headless>true</java.awt.headless>
+                <bom.file>${basedir}/bom.xml</bom.file>
+              </systemPropertyVariables>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>api-it-external</id>
+      <activation>
+        <property>
+          <name>env.RUN_EXTERNAL_TESTS</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <it.excludedGroups>jfx</it.excludedGroups>
+      </properties>
+    </profile>
     <profile>
       <id>release</id>
       <build>

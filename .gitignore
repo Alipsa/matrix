@@ -13,6 +13,9 @@ build/
 /matrix-charts/examples/gg/ggplot2/*.svg
 /matrix-charts/examples/gg/ggplot2/*.pdf
 /.gradle-user/
+.bom-verify-repo/
+/matrix-bom/japicmp/target/
+/matrix-bom/japicmp/pom.xml
 
 /agent-api.log
 /matrix-bom/.flattened-pom.xml
