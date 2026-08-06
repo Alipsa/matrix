@@ -541,8 +541,9 @@ The completed checkboxes below are backed by these successful commands:
   japicmp warnings were reported without failing; 20 per-module JaCoCo XMLs were generated.
 - `BOM_VERIFY_JAPICMP_OLD=3.8.0 BOM_VERIFY_FULL_WIPE=true ./matrix-bom/verifyBomApi.sh` — full-wipe
   isolated run passed with the same result.
-- `RUN_EXTERNAL_TESTS=true ./matrix-bom/verifyBomApi.sh` — external profile passed with 29 ITs,
-  including `GsheetsApiIT`; `BigQueryApiIT` had one known disabled test skipped.
+- `RUN_EXTERNAL_TESTS=true BOM_VERIFY_JAPICMP_OLD=3.8.0 ./matrix-bom/verifyBomApi.sh` — external profile passed with 29 ITs,
+  including `GsheetsApiIT` and the live `BigQueryApiIT` emulator round trip; Docker was available
+  and the `ghcr.io/goccy/bigquery-emulator:0.6.6` image was started.
 - `./gradlew :matrix-core:codenarcMain`
 - `./gradlew :matrix-core:spotlessCheck`
 - `./gradlew :matrix-core:test`
@@ -1391,11 +1392,12 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
 4.20 [x] `BigQueryApiIT` — `matrix-bigquery/readme.md`, `docs/cookbook/matrix-bigquery.md`,
      `docs/tutorial/12-matrix-bigquery.md`. `@Tag('external')` throughout. Move the testcontainers
      setup over from the existing `matrix-bom/src/test/groovy/test/alipsa/matrix/BiqQueryTest.groovy`,
-     including the `@Disabled` note about the emulator's `Short` handling — do not silently
-     re-enable it. **Delete `BiqQueryTest.groovy` in the same commit.** It is a `*Test`, so surefire
-     keeps running it; leaving it in place means two copies of the same `@Disabled` emulator
-     scaffolding drifting apart. This is the one deliberate exception to "the existing
-     `MatrixModulesTest` smoke test stays as-is" — `MatrixModulesTest` stays, `BiqQueryTest` does not.
+     using the `ghcr.io/goccy/bigquery-emulator:0.6.6` image and a supported Long/String
+     dataset/save/query round trip. Docker is required for this external check; it does not need
+     Google Cloud credentials. **Delete `BiqQueryTest.groovy` in the same commit.** It is a `*Test`,
+     so surefire keeps running it; leaving it in place means two copies of the emulator scaffolding
+     drifting apart. This is the one deliberate exception to "the existing `MatrixModulesTest`
+     smoke test stays as-is" — `MatrixModulesTest` stays, `BiqQueryTest` does not.
 
      **Its standalone verification command needs one override**, because the class is
      `external`-tagged:
@@ -1407,18 +1409,11 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
      ```
 
      `-Dit.excludedGroups=jfx` because the default `external,jfx` would otherwise exclude the very
-     class the `bigquery` tag selects (see the section preamble).
-
-     **No `-Dit.failIfNoTests=false` is needed** — keep the `@Disabled` on the *method*, as
-     `BiqQueryTest` has it today, and a skipped test still counts as a completed one. The repo
-     already answers this:
-     `matrix-bom/target/surefire-reports/test.alipsa.matrix.BiqQueryTest.txt` reads
-     `Tests run: 1, Failures: 0, Errors: 0, Skipped: 1` for that exact shape (see 1.2). Only moving
-     the `@Disabled` to class level would produce zero completed tests and force the override, which
-     is a second reason not to move it. If a future failsafe version does report zero here, add
-     `-Dit.failIfNoTests=false` to this one command only — the full runs (6.1, 6.2) keep
-     `failIfNoTests=true`, since other ITs execute there.
-     - Commands run: _(record here)_
+     class the `bigquery` tag selects (see the section preamble). Docker must be running before
+     this command; Testcontainers pulls and starts the emulator image automatically.
+     - Commands run: `mvn -s verify-settings.xml -gs verify-settings.xml
+       -Dmaven.repo.local="$REPO" -Papi-it -DskipUnitTests=true
+       -Dit.groups=bigquery -Dit.excludedGroups=jfx verify` — 1 test passed with Docker.
 
 ## 5. Coverage tracking
 
@@ -1490,21 +1485,17 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
     **First confirm the profile actually took effect.** `api-it-external` overriding
     `it.excludedGroups` depends on it being declared *after* `api-it` (see 1.6); declared before, the
     override is a silent no-op and the run excludes exactly what it was supposed to include, while
-    still exiting 0. Check the failsafe summary shows `GsheetsApiIT` tests **run**, not skipped and
-    not absent. A green build proves nothing here.
+    still exiting 0. Check the failsafe summary shows both `GsheetsApiIT` and `BigQueryApiIT` tests
+    **run**, not skipped and not absent. A green build proves nothing here.
 
-    **What this does and does not verify.** GSheets is genuinely exercised. BigQuery is **not**:
-    4.20 requires the carried-over emulator test to keep its `@Disabled`, so `BigQueryApiIT` is
-    *selected* by the tag filter and then *skipped* by JUnit. Do not record this task as
-    "BigQuery verified" — the honest claim is "the external suite ran; BigQuery remained skipped
-    for the known emulator `Short`-handling defect." Confirm that from the failsafe summary
-    (skipped count ≥ 1), not from the build being green: an `@Disabled` class and a class that
-    silently matched nothing both look like success otherwise.
-
-    Real BigQuery coverage needs credentials against the live service, which is out of scope here —
-    `matrix-bigquery/release.sh` is the existing path for that. If the emulator defect is ever
-    fixed, un-`@Disabled` the test and this task's claim strengthens on its own.
-    - Commands run: _(record here)_
+    **What this does and does not verify.** GSheets and BigQuery are both genuinely exercised:
+    `BigQueryApiIT` starts the emulator, creates a dataset, saves a Matrix, queries it back, and
+    verifies the round-trip contents. Docker is required, but Google Cloud credentials are not.
+    This validates the isolated emulator path; live BigQuery service coverage remains out of scope
+    here and continues to use `matrix-bigquery/release.sh`.
+    - Commands run: `RUN_EXTERNAL_TESTS=true BOM_VERIFY_JAPICMP_OLD=3.8.0
+      ./matrix-bom/verifyBomApi.sh` — 29 ITs passed, 0 skipped; Docker was available and the
+      BigQuery emulator container ran successfully.
 
 6.3 [x] Confirm `BomResolutionIT` reports the intended version set, in particular matrix-charts
     0.5.1 winning over matrix-ggplot 0.5.0's transitive 0.5.0 pin.

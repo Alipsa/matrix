@@ -120,8 +120,10 @@ The relevant switches are:
 - `RUN_EXTERNAL_TESTS=true ./matrix-bom/verifyBomApi.sh` activates the sibling
   `api-it-external` profile. That profile must remain declared after `api-it`; it changes the
   default exclusions from `external,jfx` to `jfx`, allowing the offline-safe external-tagged
-  checks to run. The BigQuery emulator test remains method-disabled for its known `Short` handling
-  defect and is reported as skipped, not as verified live coverage.
+  checks to run. The BigQuery check starts the `ghcr.io/goccy/bigquery-emulator:0.6.6`
+  Testcontainers image and performs a dataset/save/query round trip, so Docker must be installed
+  and its daemon must be available for this external run. It does not require Google Cloud
+  credentials; live-service coverage remains outside this isolated emulator check.
 - `BOM_VERIFY_JAPICMP_OLD=3.8.0` optionally overrides the baseline. Without it, the runner reads
   `matrixCoreBaselineVersion` from `bom.xml`. Compatibility findings are warnings: the japicmp
   report is retained and the release verification continues. A japicmp execution failure or a

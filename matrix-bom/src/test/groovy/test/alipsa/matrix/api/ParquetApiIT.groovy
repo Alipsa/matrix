@@ -41,6 +41,8 @@ class ParquetApiIT implements ApiItSupport {
     Matrix fromPath = MatrixParquetReader.read(file.toPath(), 'from_path')
     assertTrue(fromPath.rowCount() == data.rowCount())
     assertTrue(MatrixParquetReader.read(bytes, ZoneId.of('UTC')).rowCount() == data.rowCount())
+    File missingFile = Files.createTempDirectory('missing-parquet').resolve('missing.parquet').toFile()
+    assertThrows(IllegalArgumentException) { MatrixParquetReader.read(missingFile) }
     assertThrows(IllegalArgumentException) { MatrixParquetReader.read(Files.createTempDirectory('not-a-file').toFile()) }
   }
 }
