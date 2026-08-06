@@ -51,6 +51,9 @@ assert_safe_repo_path() {
   reject_dotdot "$REPO"
   if [[ -n "${USER_REPO_SET:-}" ]]; then
     reject_symlink_components "$REPO"
+  elif [[ -L "$REPO" ]]; then
+    echo "refusing: default repository path is a symlink: $REPO" >&2
+    exit 1
   fi
 
   REPO=$(canonicalize "$REPO")
