@@ -31,7 +31,12 @@ canonicalize() {
 
 reject_symlink_components() {
   local path=$1
-  while [[ "$path" != "/" && -n "$path" ]]; do
+  local stop_at=${2:-/}
+  while [[ "$path" != "$stop_at" ]]; do
+    [[ "$path" != "/" && -n "$path" ]] || {
+      echo "refusing: $path is outside $stop_at" >&2
+      exit 1
+    }
     [[ ! -L "$path" ]] || {
       echo "refusing: $path is a symlink" >&2
       exit 1
@@ -144,6 +149,7 @@ if [[ "${BOM_VERIFY_FULL_WIPE:-false}" == true ]]; then
   rm -rf "$REPO"
 else
   WIPE_MODE=scoped
+  reject_symlink_components "$REPO/se/alipsa/matrix" "$REPO"
   rm -rf "$REPO/se/alipsa/matrix"
 fi
 mkdir -p "$REPO"

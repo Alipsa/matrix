@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
@@ -24,6 +24,7 @@ fi
 cd "$SCRIPT_DIR"
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
+set -u
 ./gradlew :matrix-core:clean :matrix-core:build :matrix-core:release
 
 PROJECT=matrix-core
