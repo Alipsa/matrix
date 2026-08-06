@@ -6,6 +6,16 @@ if (( BASH_VERSINFO[0] < 4 )); then
   exit 1
 fi
 
+if ! command -v groovy >/dev/null 2>&1; then
+  echo "verifyBomApi.sh requires the Groovy CLI (groovy) on PATH" >&2
+  exit 1
+fi
+
+docker_available=false
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  docker_available=true
+fi
+
 BOM_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(dirname "$BOM_DIR")
 USER_REPO_SET=${BOM_VERIFY_REPO+x}
@@ -108,7 +118,7 @@ property_to_module() {
 }
 
 declare -A all_versions=()
-all_output=$(java "$BOM_DIR/BomSnapshots.java" bom.xml --all)
+all_output=$(groovy "$BOM_DIR/BomSnapshots.groovy" bom.xml --all)
 while IFS='=' read -r property value; do
   [[ -n "$property" ]] || continue
   all_versions["$property"]=$value
@@ -136,7 +146,7 @@ if (( $# > 0 )); then
     done
   fi
 else
-  detected_output=$(java "$BOM_DIR/BomSnapshots.java" bom.xml)
+  detected_output=$(groovy "$BOM_DIR/BomSnapshots.groovy" bom.xml)
   if [[ -n "$detected_output" ]]; then
     while IFS='=' read -r property value; do
       releasing+=("$property")
@@ -144,6 +154,15 @@ else
     done <<< "$detected_output"
   fi
 fi
+
+it_excluded_groups=(jfx)
+if [[ "${RUN_EXTERNAL_TESTS:-false}" != true ]]; then
+  it_excluded_groups+=(external)
+fi
+if [[ "$docker_available" != true ]]; then
+  it_excluded_groups+=(emulator)
+fi
+it_excluded_groups_csv=$(IFS=,; printf '%s' "${it_excluded_groups[*]}")
 
 assert_safe_repo_path
 
@@ -162,6 +181,11 @@ fi
 
 echo "BOM API verification ($WIPE_MODE)"
 echo "repository: $REPO"
+if [[ "$docker_available" == true ]]; then
+  echo "Docker: available — emulator API tests enabled"
+else
+  echo "Docker: unavailable — emulator API tests skipped"
+fi
 if (( ${#releasing[@]} == 0 )); then
   echo "no modules under release — all artifacts resolve from Central"
 else
@@ -228,7 +252,7 @@ fi
 
 MVN_ISOLATED=(-s "$BOM_DIR/verify-settings.xml" -gs "$BOM_DIR/verify-settings.xml" -Dmaven.repo.local="$REPO")
 mvn "${MVN_ISOLATED[@]}" -f bom.xml install
-mvn "${MVN_ISOLATED[@]}" -Papi-it clean verify
+mvn "${MVN_ISOLATED[@]}" -Papi-it -Dit.excludedGroups="$it_excluded_groups_csv" clean verify
 
 japicmp_new=
 for property in "${releasing[@]}"; do
@@ -260,7 +284,23 @@ else
   fi
   if rg -q -e 'binaryCompatible="false"|sourceCompatible="false"' "$japicmp_report"; then
     echo "japicmp: COMPATIBILITY CHANGES FOUND in matrix-core — review before releasing:"
-    sed -n '1,40p' japicmp/target/japicmp/cmp.diff
+    japicmp_diff=japicmp/target/japicmp/cmp.diff
+    if [[ -f "$japicmp_diff" ]]; then
+      changed_entries=$(
+        rg '^[[:space:]]*===\*' "$japicmp_diff" |
+          rg -v '===\* UNCHANGED CLASS:' |
+          sed -E \
+            -e 's/^[[:space:]]*===\* UNCHANGED (METHOD|CONSTRUCTOR|FIELD):/  AFFECTED \1:/' \
+            -e 's/^[[:space:]]*===\* /  /' || true
+      )
+      if [[ -n "$changed_entries" ]]; then
+        echo "affected API signatures (class summaries omitted):"
+        printf '%s\n' "$changed_entries"
+      else
+        echo "No concise changed-entry summary was generated."
+      fi
+    fi
+    echo "full reports: $japicmp_report and $japicmp_diff"
   else
     echo "japicmp: matrix-core $japicmp_old -> $japicmp_new is binary and source compatible"
   fi
@@ -287,11 +327,34 @@ for jar in "${api_jars[@]}"; do
     --xml "target/jacoco-per-module/$module.xml" >/dev/null
 done
 
-echo "JaCoCo per-module totals:"
+echo "JaCoCo per-module totals (BOM API integration tests):"
+printf '%-24s %35s %35s\n' "Module" "Instructions" "Branches"
+printf '%-24s %35s %35s\n' "" "covered / missed / total / coverage" "covered / missed / total / coverage"
+
+format_counter() {
+  local report=$1
+  local type=$2
+  local counter missed covered total tenths
+  counter=$(grep -o "<counter type=\"$type\"[^>]*/>" "$report" | tail -1 || true)
+  if [[ -z "$counter" ]]; then
+    printf '%s' 'n/a'
+    return
+  fi
+  missed=$(sed -nE 's/.*missed="([0-9]+)".*/\1/p' <<< "$counter")
+  covered=$(sed -nE 's/.*covered="([0-9]+)".*/\1/p' <<< "$counter")
+  total=$((missed + covered))
+  if (( total == 0 )); then
+    printf '%s' "$covered / $missed / $total (n/a)"
+  else
+    tenths=$(( (covered * 1000 + total / 2) / total ))
+    printf '%s / %s / %s (%d.%d%%)' \
+      "$covered" "$missed" "$total" "$((tenths / 10))" "$((tenths % 10))"
+  fi
+}
+
 for report in target/jacoco-per-module/*.xml; do
   module=$(basename "$report" .xml)
-  instruction=$(grep -o '<counter type="INSTRUCTION"[^>]*/>' "$report" | tail -1 || true)
-  branch=$(grep -o '<counter type="BRANCH"[^>]*/>' "$report" | tail -1 || true)
-  summary="$instruction | $branch"
-  echo "  $module: $summary"
+  instruction=$(format_counter "$report" INSTRUCTION)
+  branch=$(format_counter "$report" BRANCH)
+  printf '%-24s %35s %35s\n' "$module" "$instruction" "$branch"
 done

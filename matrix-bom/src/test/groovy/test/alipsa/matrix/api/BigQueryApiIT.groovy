@@ -17,10 +17,10 @@ import java.net.URI
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
-/** Exercises the documented BigQuery emulator path when external tests are explicitly enabled. */
+/** Exercises the documented BigQuery emulator path when Docker is available. */
 @Testcontainers
 @Tag('bigquery')
-@Tag('external')
+@Tag('emulator')
 class BigQueryApiIT implements ApiItSupport {
 
   @Container

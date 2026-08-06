@@ -403,64 +403,41 @@ A `grep`/regex scan of the file text would match those comments and wrongly trea
 matrix-datasets, matrix-gsheets, matrix-json and matrix-xchart as under release. Detection must
 therefore go through a real **XML parser**, which drops comment nodes for free.
 
-The parser must also be **guaranteed to exist**. Neither `xmllint` nor a `groovy` CLI qualifies:
-`xmllint` is not installed on the current dev machine (verified 2026-08-05), and Groovy being a
-Gradle build dependency says nothing about a `groovy` executable being on `PATH` — the build uses
-the Gradle wrapper and resolves Groovy as a jar. The one interpreter this project can rely on is
-`java`: `matrix-bom/pom.xml`'s enforcer already fails the build below JDK 21, and Java 11+ runs a
-single source file directly.
+The parser must also be **guaranteed to exist**. The verification runner therefore declares the
+Groovy CLI a developer prerequisite. Groovy is already a first-class project dependency and the
+repository's examples are Groovy scripts; the CLI must additionally be installed on `PATH`.
+`xmllint` is not required.
 
-So the canonical detector is `matrix-bom/BomSnapshots.java`, run with the single-file source
-launcher — no compile step, no dependencies, and the JDK's own DOM parser drops comment nodes:
+So the canonical detector is `matrix-bom/BomSnapshots.groovy`, run directly with the Groovy CLI.
+It uses `XmlSlurper`, whose XML parsing also drops comment nodes:
 
-```java
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.*;
+```groovy
+#!/usr/bin/env groovy
+import groovy.xml.XmlSlurper
 
-/** Prints "<property>=<version>" for every matrix*Version property in bom.xml whose value is a SNAPSHOT. */
-public class BomSnapshots {
-  public static void main(String[] args) throws Exception {
-    var f = DocumentBuilderFactory.newInstance();
-    f.setNamespaceAware(true);
-    Document d = f.newDocumentBuilder().parse(new java.io.File(args[0]));
-    NodeList props = d.getDocumentElement().getElementsByTagNameNS("*", "properties");
-    for (int i = 0; i < props.getLength(); i++) {
-      if (props.item(i).getParentNode() != d.getDocumentElement()) continue;   // top-level <properties> only
-      for (Node n = props.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
-        if (n.getNodeType() != Node.ELEMENT_NODE) continue;
-        String name = n.getLocalName(), val = n.getTextContent().trim();
-        if (name.startsWith("matrix") && name.endsWith("Version") && val.endsWith("-SNAPSHOT"))
-          System.out.println(name + "=" + val);
-      }
+def document = new XmlSlurper().parse(new File(args[0]))
+document.children().findAll { it.name().toString() == 'properties' }.each { properties ->
+  properties.children().each { property ->
+    String name = property.name().toString()
+    String value = property.text().trim()
+    if (name.startsWith('matrix') && name.endsWith('Version') && value.endsWith('-SNAPSHOT')) {
+      println "${name}=${value}"
     }
   }
 }
 ```
 
 ```bash
-java "$BOM_DIR/BomSnapshots.java" bom.xml     # -> matrixChartsVersion=0.5.1-SNAPSHOT
-                                              #    matrixCoreVersion=3.9.0-SNAPSHOT
+groovy "$BOM_DIR/BomSnapshots.groovy" bom.xml # -> matrixChartsVersion=0.5.1-SNAPSHOT
+                                               #    matrixCoreVersion=3.9.0-SNAPSHOT
 ```
 
-Verified against the current `bom.xml` on JDK 21.0.11: prints exactly those two lines.
+Verified against the current `bom.xml` with Groovy 5.0.6 on JDK 21.0.11: prints exactly those two
+lines.
 
 Note the **three** predicates that define "under release" — `matrix` prefix, `Version` suffix, and
 a `-SNAPSHOT` value. Any detector missing one of them is wrong, and this is where the two
 alternatives below go astray.
-
-*Groovy, where a CLI happens to be available* — equivalent, but only with the import, which is easy
-to omit because `XmlSlurper` moved to `groovy.xml` in Groovy 3 and is not in the default imports:
-
-```groovy
-import groovy.xml.XmlSlurper
-new XmlSlurper().parse(new File('bom.xml')).properties.children()
-    .findAll { it.name().startsWith('matrix') && it.name().endsWith('Version')
-               && it.text().endsWith('-SNAPSHOT') }
-    .each { println "${it.name()}=${it.text()}" }
-```
-
-(The `.properties` access is safe — `GPathResult` overrides `getProperty(String)`, so it resolves
-to the child element, not Groovy's meta-`properties` map.)
 
 *`xmllint`, where available* — the earlier draft of this plan carried an XPath that was **not**
 equivalent and must not be copied: it filtered on the `Version` suffix only, so it selected all 20
@@ -479,7 +456,7 @@ xmllint --xpath \
 `local-name()` avoids binding the POM default namespace; `substring(s, length-6)` takes the last 7
 characters (`Version`) and `substring(s, length-8)` the last 9 (`-SNAPSHOT`). **Untested** — no
 `xmllint` on this machine to run it against. Treat it as a sketch, and if you use it, diff its
-output against `BomSnapshots.java` before trusting it.
+output against `BomSnapshots.groovy` before trusting it.
 
 All three ignore commented-out elements because a comment is not an element. Do **not** regex `bom.xml`,
 and do not use `help:evaluate -Dexpression=project.properties`: the maven-help-plugin serializes a
@@ -519,7 +496,7 @@ sections 1–3, 6, and the section-5 tasks 6 consumes — 5.1a for those six mod
 | `matrix-bom/bom.xml` | add the non-managed `matrixCoreBaselineVersion` property used by japicmp (3.8.0 for this release) |
 | `matrix-core/release.sh` | after a non-SNAPSHOT release, wait for its POM and JAR on Maven Central, update `matrixCoreBaselineVersion`, and print a commit-ready message without committing |
 | `matrix-bom/verifyBomApi.sh` | new — isolated-repo runner (executable) |
-| `matrix-bom/BomSnapshots.java` | new — canonical SNAPSHOT detector, run via the single-file source launcher |
+| `matrix-bom/BomSnapshots.groovy` | new — canonical SNAPSHOT detector, run via the Groovy CLI |
 | `matrix-bom/verify-settings.xml` | new — minimal Maven settings: Central only, no mirrors, no active profiles (passed as both `-s` and `-gs`) |
 | `matrix-bom/japicmp/pom.xml.template` | new — template for the 6.6 binary/source-compatibility comparison; the runner fills in the version pair (2.12) |
 | `matrix-bom/japicmp/pom.xml` | generated at run time from the template — not committed |
@@ -611,7 +588,7 @@ for the relevant implementation or verification group.
 
 1.5 [x] Wire tag-based selection: `<groups>${it.groups}</groups>` and
     `<excludedGroups>${it.excludedGroups}</excludedGroups>`, with defaults
-    `it.groups` = empty and `it.excludedGroups` = `external,jfx`. Lets you run
+    `it.groups` = empty and `it.excludedGroups` = `external,emulator,jfx`. Lets you run
     `mvn -Papi-it -DskipUnitTests=true -Dit.groups=charts verify` for a single module. Note `swing`
     is deliberately **not** excluded — see 4.2. Confirm on first run that a blank `it.groups` means
     "no tag filter" and not "match nothing": combined with 1.2 a blank-means-nothing reading would
@@ -619,16 +596,17 @@ for the relevant implementation or verification group.
     discover it during a release.
 
     **Setting `it.groups` does not clear `it.excludedGroups`, and exclusion wins.** `-Dit.groups=X`
-    narrows the selection; the default `external,jfx` exclusion is then applied on top of it. For a
-    class tagged both `X` and `external` the two filters cancel out to zero tests, which 1.2 turns
-    into a build failure. That is by design for the default suite, but it means the per-module
-    command for an all-`external` class must pass `-Dit.excludedGroups=jfx` as well — 4.20 is the
-    case that exists today. Document the interaction in `matrix-bom/readme.md` (5.3).
+    narrows the selection; the default `external,emulator,jfx` exclusion is then applied on top of
+    it. For a class tagged both `X` and `external` the two filters cancel out to zero tests, which
+    1.2 turns into a build failure. The verifier removes `emulator` from the exclusions when Docker
+    is available, so the local BigQuery emulator test runs automatically. Document the interaction
+    in `matrix-bom/readme.md` (5.3).
 
 1.6 [x] Add a **sibling** profile (Maven has no nested profiles) with id `api-it-external`,
     activated by `<activation><property><name>env.RUN_EXTERNAL_TESTS</name><value>true</value></property></activation>`,
-    that overrides `it.excludedGroups` to just `jfx`. Matches the existing convention in the Gradle
-    build and `release.sh`.
+    that overrides `it.excludedGroups` to `emulator,jfx`, enabling live external-tagged tests while
+    leaving the Docker-dependent emulator test for the verifier's Docker check. Matches the existing
+    convention in the Gradle build and `release.sh`.
 
     **Declaration order is load-bearing: `api-it-external` must come *after* `api-it` in
     `<profiles>`.** When both are active their `<properties>` are merged in POM declaration order and
@@ -809,13 +787,12 @@ check) rather than quietly writing to `~/.m2`.
     `$REPO` in the run header — a report from a scoped run must not be readable as a
     fully-from-scratch resolution.
 
-2.5 [x] Add `matrix-bom/BomSnapshots.java` exactly as given in "Reading the modules under release"
+2.5 [x] Add `matrix-bom/BomSnapshots.groovy` exactly as given in "Reading the modules under release"
     above, and have the runner detect the modules under release with
-    `java "$BOM_DIR/BomSnapshots.java" bom.xml`. All three predicates must hold — `matrix` prefix,
+    `groovy "$BOM_DIR/BomSnapshots.groovy" bom.xml`. All three predicates must hold — `matrix` prefix,
     `Version` suffix, `-SNAPSHOT` value; a detector that drops any of them selects the wrong set.
-    Do not shell out to `groovy` or `xmllint`: neither is guaranteed present (verified — `xmllint`
-    is absent on the current dev machine, and Groovy is resolved as a Gradle-managed jar, not a
-    CLI), whereas `java` 21 is already enforced by `matrix-bom/pom.xml`. Do not regex `bom.xml`:
+    The Groovy CLI is a declared developer prerequisite; fail clearly if `groovy` is absent. Do not
+    regex `bom.xml`:
     the deferred modules' SNAPSHOT versions are present as XML comments and a text scan would
     falsely include matrix-bigquery, matrix-datasets, matrix-gsheets, matrix-json and
     matrix-xchart. Do not use `help:evaluate -Dexpression=project.properties` either — its output
@@ -1240,16 +1217,15 @@ mvn -s verify-settings.xml -gs verify-settings.xml -Dmaven.repo.local="$REPO" \
 ```
 
 **`-Dit.groups` does not lift `it.excludedGroups`, and exclusion beats inclusion.** The default
-`it.excludedGroups` from 1.5 is `external,jfx`, and JUnit Platform applies exclusion last — so for a
-class tagged `external` *at class level* the command above selects it by module tag and then
-excludes it again, running zero tests. With `failIfNoTests=true` (1.2) that is a build failure, not
-a pass; the loud direction, but it will look like the IT is broken when nothing is wrong with it.
-This affects 4.20 (`BigQueryApiIT`, `external` throughout), and would affect any future all-external
-class. Those tasks add the override:
+`it.excludedGroups` from 1.5 is `external,emulator,jfx`, and JUnit Platform applies exclusion last —
+so selecting the emulator test directly requires excluding `external,jfx` while Docker is running.
+With `failIfNoTests=true` (1.2) a missing Docker/emulator prerequisite is a build failure, not a
+pass. The verifier handles this automatically by checking Docker before selecting its exclusions.
+The standalone command for 4.20 is:
 
 ```bash
 mvn -s verify-settings.xml -gs verify-settings.xml -Dmaven.repo.local="$REPO" \
-    -Papi-it -DskipUnitTests=true -Dit.groups=bigquery -Dit.excludedGroups=jfx verify
+    -Papi-it -DskipUnitTests=true -Dit.groups=bigquery -Dit.excludedGroups=external,jfx verify
 ```
 
 Modules with a mix of tagged and untagged methods (4.19 `GsheetsApiIT`) need no override — the
@@ -1390,30 +1366,31 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
      - Commands run: _(record here)_
 
 4.20 [x] `BigQueryApiIT` — `matrix-bigquery/readme.md`, `docs/cookbook/matrix-bigquery.md`,
-     `docs/tutorial/12-matrix-bigquery.md`. `@Tag('external')` throughout. Move the testcontainers
+     `docs/tutorial/12-matrix-bigquery.md`. `@Tag('emulator')` throughout. Move the testcontainers
      setup over from the existing `matrix-bom/src/test/groovy/test/alipsa/matrix/BiqQueryTest.groovy`,
      using the `ghcr.io/goccy/bigquery-emulator:0.6.6` image and a supported Long/String
-     dataset/save/query round trip. Docker is required for this external check; it does not need
-     Google Cloud credentials. **Delete `BiqQueryTest.groovy` in the same commit.** It is a `*Test`,
+     dataset/save/query round trip. Docker is required for this local emulator check; it does not
+     need Google Cloud credentials or incur service charges. **Delete `BiqQueryTest.groovy` in the
+     same commit.** It is a `*Test`,
      so surefire keeps running it; leaving it in place means two copies of the emulator scaffolding
      drifting apart. This is the one deliberate exception to "the existing `MatrixModulesTest`
      smoke test stays as-is" — `MatrixModulesTest` stays, `BiqQueryTest` does not.
 
-     **Its standalone verification command needs one override**, because the class is
-     `external`-tagged:
+     **Its standalone verification command needs one override**, because the default exclusions
+     include `emulator`:
 
      ```bash
      mvn -s verify-settings.xml -gs verify-settings.xml -Dmaven.repo.local="$REPO" \
          -Papi-it -DskipUnitTests=true \
-         -Dit.groups=bigquery -Dit.excludedGroups=jfx verify
+         -Dit.groups=bigquery -Dit.excludedGroups=external,jfx verify
      ```
 
-     `-Dit.excludedGroups=jfx` because the default `external,jfx` would otherwise exclude the very
-     class the `bigquery` tag selects (see the section preamble). Docker must be running before
-     this command; Testcontainers pulls and starts the emulator image automatically.
+     `-Dit.excludedGroups=external,jfx` because the default `external,emulator,jfx` would otherwise
+     exclude the very class the `bigquery` tag selects (see the section preamble). Docker must be
+     running before this command; Testcontainers pulls and starts the emulator image automatically.
      - Commands run: `mvn -s verify-settings.xml -gs verify-settings.xml
        -Dmaven.repo.local="$REPO" -Papi-it -DskipUnitTests=true
-       -Dit.groups=bigquery -Dit.excludedGroups=jfx verify` — 1 test passed with Docker.
+       -Dit.groups=bigquery -Dit.excludedGroups=external,jfx verify` — 1 test passed with Docker.
 
 ## 5. Coverage tracking
 
@@ -1440,13 +1417,14 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
 
 5.3 [x] Update `matrix-bom/readme.md` with a "Verifying a release" section: `./verifyBomApi.sh`, the
     `-Papi-it` / `-DskipUnitTests=true` / `-Dit.groups=` / `-Dit.excludedGroups=` /
-    `-Dit.failIfNoTests=` / `RUN_EXTERNAL_TESTS=true` switches, `BOM_VERIFY_REPO`,
+    `-Dit.failIfNoTests=` / `RUN_EXTERNAL_TESTS=true` switches, automatic Docker/emulator detection,
+    `BOM_VERIFY_REPO`,
     `BOM_VERIFY_FULL_WIPE`, and the optional `BOM_VERIFY_JAPICMP_OLD` override (the normal
     baseline comes from `matrixCoreBaselineVersion` in `bom.xml`) (with the note that the default scoped wipe clears only
     `se/alipsa/matrix` and that this is what keeps repeat runs from re-downloading the whole
     third-party graph), the fact that a `bom.xml` with no `-SNAPSHOT` properties is a normal run in
-    which nothing is published locally, that `-Dit.groups=<tag>` does not lift `it.excludedGroups`
-    so an all-`external` class needs `-Dit.excludedGroups=jfx` too, and where the coverage output
+    which nothing is published locally, that `-Dit.groups=<tag>` does not lift `it.excludedGroups`,
+    and where the coverage output
     lands —
     `matrix-bom/target/site/jacoco-bom-api/index.html` for browsing by package, and
     `matrix-bom/target/jacoco-per-module/<module>.xml` for the per-module totals, with a sentence on
@@ -1479,8 +1457,9 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
     Central.
     - Commands run: _(record here)_
 
-6.2 [x] `BOM_VERIFY_JAPICMP_OLD=3.8.0 RUN_EXTERNAL_TESTS=true matrix-bom/verifyBomApi.sh` — runs the `external`-tagged ITs via the
-    `api-it-external` profile from 1.6.
+6.2 [x] `BOM_VERIFY_JAPICMP_OLD=3.8.0 RUN_EXTERNAL_TESTS=true matrix-bom/verifyBomApi.sh` — runs the
+    `external`-tagged ITs via the `api-it-external` profile from 1.6 and also runs the `emulator`-
+    tagged IT when Docker is available.
 
     **First confirm the profile actually took effect.** `api-it-external` overriding
     `it.excludedGroups` depends on it being declared *after* `api-it` (see 1.6); declared before, the
@@ -1488,7 +1467,8 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
     still exiting 0. Check the failsafe summary shows both `GsheetsApiIT` and `BigQueryApiIT` tests
     **run**, not skipped and not absent. A green build proves nothing here.
 
-    **What this does and does not verify.** GSheets and BigQuery are both genuinely exercised:
+    **What this does and does not verify.** GSheets and BigQuery are genuinely exercised when their
+    prerequisites are available:
     `BigQueryApiIT` starts the emulator, creates a dataset, saves a Matrix, queries it back, and
     verifies the round-trip contents. Docker is required, but Google Cloud credentials are not.
     This validates the isolated emulator path; live BigQuery service coverage remains out of scope
@@ -1636,7 +1616,18 @@ both test phases after 1.4; use `-DskipUnitTests=true` for an IT-only run.)
       fi
       if grep -Eq 'binaryCompatible="false"|sourceCompatible="false"' "$report"; then
         echo "japicmp: COMPATIBILITY CHANGES FOUND in matrix-core — review before releasing:"
-        sed -n '1,40p' japicmp/target/japicmp/cmp.diff
+        changed_entries=$(
+          rg '^[[:space:]]*===\*' japicmp/target/japicmp/cmp.diff |
+            rg -v '===\* UNCHANGED CLASS:' |
+            sed -E \
+              -e 's/^[[:space:]]*===\* UNCHANGED (METHOD|CONSTRUCTOR|FIELD):/  AFFECTED \1:/' \
+              -e 's/^[[:space:]]*===\* /  /' || true
+        )
+        [[ -n "$changed_entries" ]] && {
+          echo "affected API signatures (class summaries omitted):"
+          printf '%s\n' "$changed_entries"
+        }
+        echo "full reports: japicmp/target/japicmp/cmp.xml and japicmp/target/japicmp/cmp.diff"
       else
         echo "japicmp: matrix-core $japicmp_old -> $japicmp_new is binary and source compatible"
       fi                           # findings are reported; the release decision stays human

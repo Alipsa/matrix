@@ -3,26 +3,26 @@ v_aalto-xml = "1.4.0"
 v_alipsa-maven-module = "0.2.0"
 v_alipsa-nexus-release = "2.2.0"
 v_avro = "1.12.1"
-v_ben-manes-versions = "0.57.0"
-v_codenarc = "3.7.0"
+v_ben-manes-versions = "0.59.0"
+v_codenarc = "4.0.0"
 v_commons-csv = "1.14.1"
 v_commons-io = "2.22.0"
 v_commons-math3 = "3.6.1"
 v_commons-text = "1.15.0"
 v_data-utils = "2.0.6"
 v_dom4j = "2.2.0"
-v_ejml = "0.46.0"
+v_ejml = "0.46.1"
 v_fast-excel = "0.20.2"
 v_fxsvgimage = "1.5.1"
-v_gi-swing = "0.3.0"
+v_gi-swing = "0.4.0"
 v_google-api-client = "2.9.0"
 v_google-api-services-drive = "v3-rev20260720-2.0.0"
 v_google-api-services-oauth2 = "v2-rev20200213-2.0.0"
 v_google-api-services-sheets = "v4-rev20260610-2.0.0"
-v_google-auth-bom = "1.49.0"
-v_google-cloud-bigquery = "2.68.0"
-v_google-cloud-bigquerystorage = "3.30.0"
-v_google-cloud-resourcemanager = "1.96.0"
+v_google-auth-bom = "1.50.0"
+v_google-cloud-bigquery = "2.69.0"
+v_google-cloud-bigquerystorage = "3.31.0"
+v_google-cloud-resourcemanager = "1.97.0"
 v_google-http-client-gson = "2.2.0"
 v_google-oauth-client-jetty = "1.39.0"
 v_groovier-junit = "0.3.2"
@@ -30,8 +30,8 @@ v_groovy = "5.0.8"
 v_gsvg = "1.1.0"
 v_h2 = "2.4.240"
 v_hadoop = "3.5.0"
-v_jackson = "3.1.5"
-v_jacoco = "0.8.14"
+v_jackson = "3.2.1"
+v_jacoco = "0.8.15"
 v_javafx = "23.0.2"
 v_javaparser = "3.28.2"
 v_jfinancials = "1.1.0"
@@ -55,92 +55,92 @@ v_spotless-plugin = "8.9.0"
 v_tablesaw = "0.44.4"
 v_testcontainers = "2.0.5"
 v_vectorgraphics2d = "0.13"
-v_xchart = "4.0.3"
+v_xchart = "4.0.4"
 
 [libraries]
-groovy-bom = { module = "org.apache.groovy:groovy-bom", version.ref = "v_groovy" }
+aalto-xml = { module = "com.fasterxml:aalto-xml", version.ref = "v_aalto-xml" }
+avro = { module = "org.apache.avro:avro", version.ref = "v_avro" }
+commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "v_commons-csv" }
+commons-io = { module = "commons-io:commons-io", version.ref = "v_commons-io" }
+commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "v_commons-math3" }
+commons-text = { module = "org.apache.commons:commons-text", version.ref = "v_commons-text" }
+data-utils = { module = "se.alipsa.groovy:data-utils", version.ref = "v_data-utils" }
+dom4j = { module = "org.dom4j:dom4j", version.ref = "v_dom4j" }
+ejml-simple = { module = "org.ejml:ejml-simple", version.ref = "v_ejml" }
+fast-excel = { module = "org.dhatim:fastexcel", version.ref = "v_fast-excel" }
+fast-excel-reader = { module = "org.dhatim:fastexcel-reader", version.ref = "v_fast-excel" }
+fxsvgimage = { module = "se.alipsa:fxsvgimage", version.ref = "v_fxsvgimage" }
+gi-swing = { module = "se.alipsa.gi:gi-swing", version.ref = "v_gi-swing" }
+google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "v_google-api-client" }
+google-api-services-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "v_google-api-services-drive" }
+google-api-services-oauth2 = { module = "com.google.apis:google-api-services-oauth2", version.ref = "v_google-api-services-oauth2" }
+google-api-services-sheets = { module = "com.google.apis:google-api-services-sheets", version.ref = "v_google-api-services-sheets" }
+google-auth-library-bom = { module = "com.google.auth:google-auth-library-bom", version.ref = "v_google-auth-bom" }
+google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http" }
+google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "v_google-cloud-bigquery" }
+google-cloud-bigquery-storage = { module = "com.google.cloud:google-cloud-bigquerystorage", version.ref = "v_google-cloud-bigquerystorage" }
+google-cloud-resourcemanager = { module = "com.google.cloud:google-cloud-resourcemanager", version.ref = "v_google-cloud-resourcemanager" }
+google-http-client-gson = { module = "com.google.http-client:google-http-client-gson", version.ref = "v_google-http-client-gson" }
+google-oauth-client-jetty = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "v_google-oauth-client-jetty" }
+groovier-junit = { module = "se.alipsa.groovy:groovier-junit", version.ref = "v_groovier-junit" }
 groovy = { module = "org.apache.groovy:groovy" }
 groovy-ant = { module = "org.apache.groovy:groovy-ant" }
+groovy-bom = { module = "org.apache.groovy:groovy-bom", version.ref = "v_groovy" }
 groovy-doc = { module = "org.apache.groovy:groovy-groovydoc" }
 groovy-ginq = { module = "org.apache.groovy:groovy-ginq" }
 groovy-json = { module = "org.apache.groovy:groovy-json" }
 groovy-sql = { module = "org.apache.groovy:groovy-sql" }
 groovy-templates = { module = "org.apache.groovy:groovy-templates" }
 groovy-xml = { module = "org.apache.groovy:groovy-xml" }
-groovier-junit = { module = "se.alipsa.groovy:groovier-junit", version.ref = "v_groovier-junit" }
-junit-bom = { module = "org.junit:junit-bom", version.ref = "v_junit" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
-log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "v_log4j" }
-log4j-to-slf4j = { module = "org.apache.logging.log4j:log4j-to-slf4j", version.ref = "v_log4j" }
-slf4j-bom = { module = "org.slf4j:slf4j-bom", version.ref = "v_slf4j" }
-slf4j-jdk-platform-logging = { module = "org.slf4j:slf4j-jdk-platform-logging" }
-slf4j-simple = { module = "org.slf4j:slf4j-simple" }
-commons-text = { module = "org.apache.commons:commons-text", version.ref = "v_commons-text" }
-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "v_commons-csv" }
-commons-io = { module = "commons-io:commons-io", version.ref = "v_commons-io" }
-commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "v_commons-math3" }
-ejml-simple = { module = "org.ejml:ejml-simple", version.ref = "v_ejml" }
-opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "v_opentest4j" }
+gsvg = { module = "se.alipsa.groovy:gsvg", version.ref = "v_gsvg" }
+gsvg-export = { module = "se.alipsa.groovy:gsvg-export", version.ref = "v_gsvg" }
 h2 = { module = "com.h2database:h2", version.ref = "v_h2" }
-jsoup = { module = "org.jsoup:jsoup", version.ref = "v_jsoup" }
-avro = { module = "org.apache.avro:avro", version.ref = "v_avro" }
+hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "v_hadoop" }
+hadoop-mapreduce-client-core = { module = "org.apache.hadoop:hadoop-mapreduce-client-core", version.ref = "v_hadoop" }
 jackson-bom = { module = "tools.jackson:jackson-bom", version.ref = "v_jackson" }
 jackson-core = { module = "tools.jackson.core:jackson-core" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind" }
-google-auth-library-bom = { module = "com.google.auth:google-auth-library-bom", version.ref = "v_google-auth-bom" }
-google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http" }
-google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "v_google-cloud-bigquery" }
-google-cloud-bigquery-storage = { module = "com.google.cloud:google-cloud-bigquerystorage", version.ref = "v_google-cloud-bigquerystorage" }
-google-cloud-resourcemanager = { module = "com.google.cloud:google-cloud-resourcemanager", version.ref = "v_google-cloud-resourcemanager" }
-google-api-services-oauth2 = { module = "com.google.apis:google-api-services-oauth2", version.ref = "v_google-api-services-oauth2" }
-google-http-client-gson = { module = "com.google.http-client:google-http-client-gson", version.ref = "v_google-http-client-gson" }
-google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "v_google-api-client" }
-google-oauth-client-jetty = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "v_google-oauth-client-jetty" }
-google-api-services-sheets = { module = "com.google.apis:google-api-services-sheets", version.ref = "v_google-api-services-sheets" }
-google-api-services-drive = { module = "com.google.apis:google-api-services-drive", version.ref = "v_google-api-services-drive" }
-progressbar = { module = "me.tongfei:progressbar", version.ref = "v_progressbar" }
-testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "v_testcontainers" }
-testcontainers-gcloud = { module = "org.testcontainers:testcontainers-gcloud" }
-testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+javaparser-core = { module = "com.github.javaparser:javaparser-core", version.ref = "v_javaparser" }
+jfinancials = { module = "se.alipsa:jfinancials", version.ref = "v_jfinancials" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "v_jsoup" }
+jsvg = { module = "com.github.weisj:jsvg", version.ref = "v_jsvg" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "v_junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "v_log4j" }
+log4j-to-slf4j = { module = "org.apache.logging.log4j:log4j-to-slf4j", version.ref = "v_log4j" }
+maven-utils = { module = "se.alipsa:maven-utils", version.ref = "v_maven-utils" }
 mockito-bom = { module = "org.mockito:mockito-bom", version.ref = "v_mockito" }
 mockito-core = { module = "org.mockito:mockito-core" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter" }
-smile-core = { module = "com.github.haifengl:smile-core", version.ref = "v_smile" }
-smile-plot = { module = "com.github.haifengl:smile-plot", version.ref = "v_smile" }
-xchart = { module = "org.knowm.xchart:xchart", version.ref = "v_xchart" }
-vectorgraphics2d = { module = "de.erichseifert.vectorgraphics2d:VectorGraphics2D", version.ref = "v_vectorgraphics2d" }
+opentest4j = { module = "org.opentest4j:opentest4j", version.ref = "v_opentest4j" }
 parquet-column = { module = "org.apache.parquet:parquet-column", version.ref = "v_parquet" }
 parquet-hadoop = { module = "org.apache.parquet:parquet-hadoop", version.ref = "v_parquet" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "v_pdfbox" }
 pdfbox-graphics2d = { module = "de.rototor.pdfbox:graphics2d", version.ref = "v_pdfbox-graphics2d" }
-hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "v_hadoop" }
-hadoop-mapreduce-client-core = { module = "org.apache.hadoop:hadoop-mapreduce-client-core", version.ref = "v_hadoop" }
-tablesaw-core = { module = "tech.tablesaw:tablesaw-core", version.ref = "v_tablesaw" }
-tablesaw-json = { module = "tech.tablesaw:tablesaw-json", version.ref = "v_tablesaw" }
-tablesaw-excel = { module = "tech.tablesaw:tablesaw-excel", version.ref = "v_tablesaw" }
-tablesaw-aggregate = { module = "tech.tablesaw:tablesaw-aggregate", version.ref = "v_tablesaw" }
-poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "v_poi-ooxml" }
-sods = { module = "com.github.miachm.sods:SODS", version.ref = "v_sods" }
-dom4j = { module = "org.dom4j:dom4j", version.ref = "v_dom4j" }
-javaparser-core = { module = "com.github.javaparser:javaparser-core", version.ref = "v_javaparser" }
-fast-excel = { module = "org.dhatim:fastexcel", version.ref = "v_fast-excel" }
-fast-excel-reader = { module = "org.dhatim:fastexcel-reader", version.ref = "v_fast-excel" }
-aalto-xml = { module = "com.fasterxml:aalto-xml", version.ref = "v_aalto-xml" }
-gsvg = { module = "se.alipsa.groovy:gsvg", version.ref = "v_gsvg" }
-gsvg-export = { module = "se.alipsa.groovy:gsvg-export", version.ref = "v_gsvg" }
-fxsvgimage = { module = "se.alipsa:fxsvgimage", version.ref = "v_fxsvgimage" }
-jsvg = { module = "com.github.weisj:jsvg", version.ref = "v_jsvg" }
-data-utils = { module = "se.alipsa.groovy:data-utils", version.ref = "v_data-utils" }
-maven-utils = { module = "se.alipsa:maven-utils", version.ref = "v_maven-utils" }
-gi-swing = { module = "se.alipsa.gi:gi-swing", version.ref = "v_gi-swing" }
 pebble = { module = "com.mitchellbosecke:pebble", version.ref = "v_pebble" }
-jfinancials = { module = "se.alipsa:jfinancials", version.ref = "v_jfinancials" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "v_poi-ooxml" }
+progressbar = { module = "me.tongfei:progressbar", version.ref = "v_progressbar" }
+slf4j-bom = { module = "org.slf4j:slf4j-bom", version.ref = "v_slf4j" }
+slf4j-jdk-platform-logging = { module = "org.slf4j:slf4j-jdk-platform-logging" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple" }
+smile-core = { module = "com.github.haifengl:smile-core", version.ref = "v_smile" }
+smile-plot = { module = "com.github.haifengl:smile-plot", version.ref = "v_smile" }
+sods = { module = "com.github.miachm.sods:SODS", version.ref = "v_sods" }
+tablesaw-aggregate = { module = "tech.tablesaw:tablesaw-aggregate", version.ref = "v_tablesaw" }
+tablesaw-core = { module = "tech.tablesaw:tablesaw-core", version.ref = "v_tablesaw" }
+tablesaw-excel = { module = "tech.tablesaw:tablesaw-excel", version.ref = "v_tablesaw" }
+tablesaw-json = { module = "tech.tablesaw:tablesaw-json", version.ref = "v_tablesaw" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "v_testcontainers" }
+testcontainers-gcloud = { module = "org.testcontainers:testcontainers-gcloud" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+vectorgraphics2d = { module = "de.erichseifert.vectorgraphics2d:VectorGraphics2D", version.ref = "v_vectorgraphics2d" }
+xchart = { module = "org.knowm.xchart:xchart", version.ref = "v_xchart" }
 
 [plugins]
-benManesVersions = { id = "io.github.ben-manes.versions", version.ref = "v_ben-manes-versions" }
-spotless = { id = "com.diffplug.spotless", version.ref = "v_spotless-plugin" }
 alipsaMavenModule = { id = "se.alipsa.gradle.maven-module", version.ref = "v_alipsa-maven-module" }
 alipsaNexusRelease = { id = "se.alipsa.nexus-release-plugin", version.ref = "v_alipsa-nexus-release" }
+benManesVersions = { id = "io.github.ben-manes.versions", version.ref = "v_ben-manes-versions" }
+spotless = { id = "com.diffplug.spotless", version.ref = "v_spotless-plugin" }

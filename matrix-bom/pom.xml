@@ -35,7 +35,7 @@
     <junitPlatformVersion.version>6.1.2</junitPlatformVersion.version>
     <skipUnitTests>false</skipUnitTests>
     <it.groups></it.groups>
-    <it.excludedGroups>external,jfx</it.excludedGroups>
+    <it.excludedGroups>external,emulator,jfx</it.excludedGroups>
     <it.failIfNoTests>true</it.failIfNoTests>
     <jacoco.version>0.8.14</jacoco.version>
   </properties>
@@ -358,7 +358,7 @@
         </property>
       </activation>
       <properties>
-        <it.excludedGroups>jfx</it.excludedGroups>
+        <it.excludedGroups>emulator,jfx</it.excludedGroups>
       </properties>
     </profile>
     <profile>

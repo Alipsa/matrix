@@ -54,7 +54,7 @@ version (4.x or 5.x). Add the Groovy dependency explicitly in your build.
 
 Gradle:
 ```groovy
-implementation('org.apache.groovy:groovy-all:4.0.23') // or 5.x if you prefer
+implementation('org.apache.groovy:groovy-all:5.0.8')
 implementation('se.alipsa.matrix:matrix-all:2.5.1')
 ```
 
@@ -63,7 +63,7 @@ Maven:
 <dependency>
   <groupId>org.apache.groovy</groupId>
   <artifactId>groovy-all</artifactId>
-  <version>4.0.23</version>
+  <version>5.0.8</version>
 </dependency>
 <dependency>
   <groupId>se.alipsa.matrix</groupId>
@@ -75,6 +75,10 @@ Maven:
 ## Verifying a release
 
 The BOM consumer suite verifies the resolved, published artifacts from an isolated Maven repository.
+The verification runner requires Bash 4+, JDK 21+, Maven, and the Groovy CLI on `PATH` (matching the
+project's Groovy version, currently 5.0.8). The Groovy CLI is a developer prerequisite; the Gradle
+Groovy dependency alone is not sufficient.
+
 From the repository root, run:
 
 ```bash
@@ -115,15 +119,15 @@ The relevant switches are:
 - `-DskipUnitTests=true` skips the existing Surefire unit/smoke tests while retaining Failsafe ITs.
   Do not use `-DskipTests`, which skips both phases.
 - `-Dit.groups=<tag>` selects JUnit tags, and `-Dit.excludedGroups=<tags>` excludes them. Exclusion
-  wins over inclusion, so an all-external class needs `-Dit.excludedGroups=jfx` when selected.
+  wins over inclusion. The verifier automatically runs the `emulator`-tagged BigQuery API test
+  when `docker info` succeeds, and skips it when Docker is unavailable.
 - `-Dit.failIfNoTests=true` is the default and makes an incorrectly filtered IT run fail loudly.
 - `RUN_EXTERNAL_TESTS=true ./matrix-bom/verifyBomApi.sh` activates the sibling
   `api-it-external` profile. That profile must remain declared after `api-it`; it changes the
-  default exclusions from `external,jfx` to `jfx`, allowing the offline-safe external-tagged
-  checks to run. The BigQuery check starts the `ghcr.io/goccy/bigquery-emulator:0.6.6`
-  Testcontainers image and performs a dataset/save/query round trip, so Docker must be installed
-  and its daemon must be available for this external run. It does not require Google Cloud
-  credentials; live-service coverage remains outside this isolated emulator check.
+  default exclusions from `external,emulator,jfx` to `emulator,jfx`, allowing live external-tagged
+  checks to run. The BigQuery emulator check is separate from live external tests: it starts the
+  `ghcr.io/goccy/bigquery-emulator:0.6.6` Testcontainers image and performs a dataset/save/query
+  round trip without Google Cloud credentials or service charges.
 - `BOM_VERIFY_JAPICMP_OLD=3.8.0` optionally overrides the baseline. Without it, the runner reads
   `matrixCoreBaselineVersion` from `bom.xml`. Compatibility findings are warnings: the japicmp
   report is retained and the release verification continues. A japicmp execution failure or a
@@ -141,6 +145,12 @@ Coverage output is available at:
 - `target/jacoco-bom-api.xml` for the combined machine-readable report;
 - `target/jacoco-per-module/<module>.xml` for module-level instruction and branch totals;
 - `japicmp/target/japicmp/cmp.html` and `cmp.diff` for compatibility review.
+
+The JaCoCo per-module totals measure coverage from the BOM consumer API integration tests (`*ApiIT`)
+run by the `api-it` profile. They are not the coverage totals from each module's own unit-test task.
+When japicmp finds compatibility changes, the verifier prints only the changed public API entries
+to the console; unchanged entries are omitted. The complete XML and diff reports remain available
+at the paths above.
 
 The documented API checkpoints and the recorded baseline are in
 [`api-coverage.md`](api-coverage.md).
