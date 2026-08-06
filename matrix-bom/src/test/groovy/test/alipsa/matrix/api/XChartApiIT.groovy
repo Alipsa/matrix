@@ -8,6 +8,8 @@ import se.alipsa.matrix.xchart.BarChart
 import se.alipsa.matrix.xchart.LineChart
 import se.alipsa.matrix.xchart.PieChart
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -25,9 +27,15 @@ class XChartApiIT implements ApiItSupport {
     File pieFile = directory.resolve('pie.png').toFile()
     File barFile = directory.resolve('bar.png').toFile()
     File lineFile = directory.resolve('line.png').toFile()
+    File svgFile = directory.resolve('line.svg').toFile()
+    File pdfFile = directory.resolve('line.pdf').toFile()
     pie.exportPng(pieFile)
     bar.exportPng(barFile)
     line.exportPng(lineFile)
-    assertTrue([pieFile, barFile, lineFile].every { it.isFile() && it.length() > 0 })
+    line.exportSvg(svgFile)
+    line.exportPdf(pdfFile)
+    assertTrue([pieFile, barFile, lineFile, svgFile, pdfFile].every { it.isFile() && it.length() > 0 })
+    assertTrue(Files.readString(svgFile.toPath()).contains('<svg'))
+    assertTrue(new String(Files.readAllBytes(pdfFile.toPath()), StandardCharsets.US_ASCII).startsWith('%PDF-'))
   }
 }

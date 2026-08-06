@@ -100,7 +100,8 @@ list rather than a claim that one integration test replaces a module's unit-test
 - [x] Byte and file/path round trips preserve values, names, types, and nulls —
   `parquetRoundTripsValuesTypesNamesAndNulls`.
 - [x] Documented compression and missing-file validation —
-  `parquetRoundTripsValuesTypesNamesAndNulls`.
+  `parquetRoundTripsValuesTypesNamesAndNulls`; the test writes with explicit GZIP compression and
+  verifies the Parquet footer codec.
 
 ### matrix-avro (`AvroApiIT`)
 
@@ -147,8 +148,8 @@ list rather than a claim that one integration test replaces a module's unit-test
 
 - [x] The test-container/emulator wiring is retained and selected by `bigquery,external` tags —
   `bigQueryRoundTrip`.
-- [x] The emulator round trip remains method-disabled because of its documented `Short` handling
-  defect; the external verification records it as skipped rather than claiming live coverage.
+- [x] The external test creates a dataset, saves a Matrix, queries it back, and verifies the
+  round-trip content using the BigQuery emulator — `bigQueryRoundTrip`.
 
 ## JaCoCo baseline
 
