@@ -529,6 +529,27 @@ Output
 [6.066666667, 2.333333333, 3.047197551]
 ```
 
+Grid rows are rectangular: the first row establishes the width, and `add`,
+`addAll`, `leftShift`, indexed insertion, replacement, and row assignment reject
+rows with a different width. Both list-based constructors take a snapshot by
+copying the outer list and every row.
+
+The Grid remains mutable. Indexed value writes are live, while structural changes
+must use validated Grid methods:
+
+```groovy
+bar[0][1] = 4.5                 // writes through to bar
+assert bar[0, 1] == 4.5
+
+assertThrows(UnsupportedOperationException) { bar[0].add(99) }
+assertThrows(UnsupportedOperationException) { bar.data << [1, 2, 3] }
+```
+
+`getAt(int)`, iteration, and `data` return checked live row views. Their indexed
+`set` operation writes through, but row `add`/`remove`/`clear`/`addAll`, outer
+`data` mutations, and direct `data` reassignment are rejected. Use `add`,
+`addAll`, `replaceRow`, or `putAt` for validated structural updates.
+
 ### Grid Operations
 
 The Grid class provides several operations:

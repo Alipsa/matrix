@@ -22,6 +22,12 @@
 
   These intentionally raw `List` declarations may produce `rawtypes` warnings with `javac -Xlint:rawtypes`; suppress that warning or avoid `-Werror` for this migration.
 
+- Matrix default equality is now exact for numeric values; use `MatrixAssertions` or the tolerance-based equals overload for approximate comparisons.
+- Unknown column names in name-based lookup, mutation, movement, conversion, and rename paths now raise clear `IllegalArgumentException`s instead of exposing a `-1` index or silently targeting the last column.
+- `Row.subList(int, int)` remains a live checked view with write-through value replacement; structural row mutations and row sorting are rejected. The other subList overloads return copies.
+- Grid row writers enforce a rectangular width. List-based Grid constructors snapshot the supplied outer list and rows. The public `data` property is a read-only outer view with checked live rows: indexed value writes remain supported, while structural row/outer-list mutations and direct reassignment are rejected.
+- Adding or replacing Matrix columns now validates established width on zero-row schema matrices. This applies to `addColumn`, `upsertColumn`, `m['a'] = [...]`, `m[0] = [...]`, `m.a = [...]`, and the two-pass, order-independent null-list handling in `and(Map)`.
+
 ## 3.8.0, 2026-05-22
 
 ### New Matrix methods

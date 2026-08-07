@@ -810,28 +810,15 @@ class MatrixAvroWriterTest {
   }
 
   @Test
-  void testValidationExceptionForColumnSizeMismatch() {
+  void testBuilderRejectsColumnSizeMismatch() {
     Map<String, List<?>> cols = [:]
     cols['id'] = [1, 2, 3]
     cols['name'] = ['Alice', 'Bob']
 
-    Matrix m = Matrix.builder('Mismatch')
-        .columns(cols)
-        .types(Integer, String)
-        .build()
-
-    File tmp = Files.createTempFile('avro-test-', '.avro').toFile()
-    try {
-      def ex = assertThrows(AvroValidationException) {
-        MatrixAvroWriter.write(m, tmp)
-      }
-      assertEquals('matrix', ex.parameterName)
-      assertEquals(2, ex.rowNumber)
-      assertNotNull(ex.suggestion)
-      assertTrue(ex.message.contains('row: 2'))
-    } finally {
-      tmp.delete()
+    def ex = assertThrows(IllegalArgumentException) {
+      Matrix.builder('Mismatch').columns(cols).types(Integer, String).build()
     }
+    assertTrue(ex.message.contains("Column 'name' has 2 rows but previous columns have 3 rows"))
   }
 
   @Test

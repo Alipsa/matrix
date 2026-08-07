@@ -513,7 +513,7 @@ class CharmRenderer {
     if (data == null || rowIndex < 0 || rowIndex >= data.rowCount()) {
       return null
     }
-    columnName == null ? null : data[rowIndex, columnName]
+    columnName == null || !data.columnNames().contains(columnName) ? null : data[rowIndex, columnName]
   }
 
   private static List<LayerData> applyStat(LayerSpec layer, List<LayerData> mapped) {

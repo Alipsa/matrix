@@ -4,6 +4,8 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
+
+
 /**
  * A live row view backed by a parent {@link Matrix}.
  *
@@ -262,32 +264,32 @@ class Row implements GroovyObject, List<Object> {
 
     @Override
     ListIterator<Object> listIterator() {
-        return content.listIterator()
+        return new CheckedRowListIterator(this, 0)
     }
 
     @Override
     ListIterator<Object> listIterator(int index) {
-        return content.listIterator(index)
+        return new CheckedRowListIterator(this, index)
     }
 
     /**
-     * NOTE this method returns a disconnected list, no longer representing a row of the
-     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
-     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
+     * Returns a live view of the specified range of this row.
+     * Value changes made through {@link List#set(int, Object)} are reflected in the
+     * backing matrix; structural operations such as add or remove are rejected.
      *
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
-     * @return a list with the columns values specified in the range
+     * @return a live view of the columns values specified in the range
      */
     @Override
     List<Object> subList(int fromIndex, int toIndex) {
-        content.subList(fromIndex, toIndex)
+        new CheckedRowSubList(this, content.subList(fromIndex, toIndex), fromIndex)
     }
 
     /**
-     * NOTE this method returns a disconnected list, no longer representing a row of the
-     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
-     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
+     * Returns a disconnected copy selected by the range. Changes to the returned
+     * list do not update the backing matrix; mutable objects contained in the list
+     * are still shared.
      *
      * @param range (inclusive) of all the indexes to include
      * @return a new list with the values for the indices
@@ -461,13 +463,26 @@ class Row implements GroovyObject, List<Object> {
     }
 
     List<Object> minusColumn(String columnName) {
-        minusColumn(columnNames.indexOf(columnName))
+        int idx = columnNames.indexOf(columnName)
+        if (idx == COLUMN_NOT_FOUND) {
+            throw new IllegalArgumentException(UNKNOWN_COLUMN_MESSAGE_PREFIX + columnName)
+        }
+        minusColumn(idx)
     }
 
     List<Object> minusColumn(int index) {
         def result = new ArrayList(this)
         result.remove(index)
         result
+    }
+
+    /**
+     * Sorting a row is not supported because it would move values across columns
+     * and can violate their declared types.
+     */
+    @Override
+    void sort(Comparator<? super Object> c) {
+        throw new UnsupportedOperationException('Sorting a row is not supported because it would move values across columns and can violate their declared types.')
     }
 
     /**
@@ -532,6 +547,120 @@ class Row implements GroovyObject, List<Object> {
       set(i, entry)
     }
     this
+  }
+
+  /**
+   * A list iterator over a row whose {@code set} writes through to the parent matrix.
+   * Structural mutation ({@code add} and {@code remove}) is rejected.
+   */
+  private static class CheckedRowListIterator implements ListIterator<Object> {
+
+    private final Row row
+    private int cursor
+    private int lastReturned = -1
+
+    CheckedRowListIterator(Row row, int index) {
+      this.row = row
+      this.cursor = index
+    }
+
+    @Override
+    boolean hasNext() {
+      cursor < row.size()
+    }
+
+    @Override
+    Object next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException()
+      }
+      lastReturned = cursor
+      return row.get(cursor++)
+    }
+
+    @Override
+    boolean hasPrevious() {
+      cursor > 0
+    }
+
+    @Override
+    Object previous() {
+      if (!hasPrevious()) {
+        throw new NoSuchElementException()
+      }
+      lastReturned = --cursor
+      return row.get(cursor)
+    }
+
+    @Override
+    int nextIndex() {
+      cursor
+    }
+
+    @Override
+    int previousIndex() {
+      cursor - 1
+    }
+
+    @Override
+    void remove() {
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+    }
+
+    @Override
+    void set(Object e) {
+      if (lastReturned < 0) {
+        throw new IllegalStateException('set() can only be called after next() or previous()')
+      }
+      row.set(lastReturned, e)
+    }
+
+    @Override
+    void add(Object e) {
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+    }
+  }
+
+  /**
+   * A live sublist view of a row. Value writes are reflected in the parent matrix;
+   * structural operations are rejected.
+   */
+  private static class CheckedRowSubList extends AbstractList<Object> {
+
+    private final Row row
+    private final List<Object> delegate
+    private final int offset
+
+    CheckedRowSubList(Row row, List<Object> delegate, int offset) {
+      this.row = row
+      this.delegate = delegate
+      this.offset = offset
+    }
+
+    @Override
+    Object get(int index) {
+      delegate.get(index)
+    }
+
+    @Override
+    int size() {
+      delegate.size()
+    }
+
+    @Override
+    Object set(int index, Object element) {
+      row.set(offset + index, element)
+    }
+
+    @Override
+    void add(int index, Object element) {
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+    }
+
+    @Override
+    Object remove(int index) {
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+    }
   }
 
 }

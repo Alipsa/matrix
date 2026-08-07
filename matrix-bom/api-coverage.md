@@ -24,7 +24,8 @@ list rather than a claim that one integration test replaces a module's unit-test
   `columnArithmeticAndCoreViews`.
 - [x] Join, cross-join, grouping, rolling windows, and summary —
   `joinsGroupingRollingAndSummary`.
-- [x] Converter, value-converter, list-converter, and assertion APIs —
+- [x] Converter, value-converter, list-converter, assertion APIs, and the Grid
+  checked `data` view (write-through values, rejected structural mutation) —
   `convertersAndAssertionsRemainUsable`.
 
 ### matrix-charts (`ChartsApiIT`)

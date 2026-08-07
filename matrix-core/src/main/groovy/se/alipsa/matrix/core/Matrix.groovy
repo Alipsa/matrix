@@ -304,8 +304,20 @@ class Matrix implements Iterable<Row>, Cloneable {
     dataTypes = dataTypes ?: []
 
     if (dataTypes.size() > columns.size()) {
+      int dataRowCount = columns.isEmpty() ? 0 : columns[0].size()
       for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
-        columns.add([])
+        columns.add(new ArrayList(Collections.nCopies(dataRowCount, null)))
+      }
+    }
+
+    if (!columns.isEmpty()) {
+      int expectedSize = columns[0].size()
+      for (int i = 1; i < columns.size(); i++) {
+        if (columns[i].size() != expectedSize) {
+          throw new IllegalArgumentException(
+              "Column $i has ${columns[i].size()} rows but column 0 has $expectedSize rows; all columns must have the same size"
+          )
+        }
       }
     }
 
@@ -344,8 +356,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
-    if (rowCount() > 0 && column.size() != rowCount()) {
-      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix row count (${rowCount()})")
+    if (columnCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix width (${rowCount()})")
     }
     mColumns << new Column(name, column, type)
     return this
@@ -364,8 +376,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
-    if (rowCount() > 0 && column.size() != rowCount()) {
-      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix row count (${rowCount()})")
+    if (columnCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix width (${rowCount()})")
     }
     mColumns.add(index, new Column(name, column, type))
     return this
@@ -405,10 +417,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnSize != names.size() || columnSize != types.size()) {
       throw new IllegalArgumentException("List sizes of columns, names and types must match")
     }
-    if (rowCount() > 0) {
+    if (columnCount() > 0) {
       columns.eachWithIndex { List col, int i ->
         if (col.size() != rowCount()) {
-          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match matrix row count (${rowCount()})")
+          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match matrix width (${rowCount()})")
         }
       }
     }
@@ -467,6 +479,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (row == null) {
       throw new IllegalArgumentException(ROW_CANNOT_BE_NULL)
     }
+    int rows = rowCount()
+    if (position < 0 || position > rows) {
+      throw new IndexOutOfBoundsException("Row position $position is out of range [0, $rows]")
+    }
     if (row.size() != columnCount()) {
       throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
     }
@@ -486,6 +502,15 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix addRows(List<List> rows) {
     if (rows == null) {
       throw new IllegalArgumentException(ROW_CANNOT_BE_NULL)
+    }
+    int expectedWidth = columnCount()
+    rows.eachWithIndex { List row, int idx ->
+      if (row == null) {
+        throw new IllegalArgumentException("Row $idx cannot be null")
+      }
+      if (row.size() != expectedWidth) {
+        throw new IllegalArgumentException("The number of elements in row $idx (${row.size()}) does not match the number of columns ($expectedWidth)")
+      }
     }
     rows.each {
       addRow(it)
@@ -567,6 +592,22 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
    */
   Matrix and(Map<String, ? extends List> columns) {
+    int targetWidth = columnCount() > 0 ? rowCount() : -1
+    columns.each { String name, List list ->
+      if (list != null) {
+        if (targetWidth < 0) {
+          targetWidth = list.size()
+        } else if (list.size() != targetWidth) {
+          throw new IllegalArgumentException(
+              "Column '$name' has ${list.size()} rows but the target width is $targetWidth"
+          )
+        }
+      }
+    }
+    if (targetWidth < 0) {
+      targetWidth = 0
+    }
+
     for (Map.Entry<String, ? extends List> entry : columns.entrySet()) {
       String name = entry.key
       List list = entry.value
@@ -579,11 +620,8 @@ class Matrix implements Iterable<Row>, Cloneable {
           }
         }
       }
-      if (list == null) {
-        addColumn(name, type)
-      } else {
-        addColumn(name, type, list)
-      }
+      List expanded = list == null ? new ArrayList(Collections.nCopies(targetWidth, null)) : list
+      addColumn(name, type, expanded)
     }
     this
   }
@@ -658,7 +696,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, List<Integer> rows, Closure function) {
-    apply(columnIndex(columnName), rows, function)
+    apply(requireColumnIndex(columnName), rows, function)
   }
 
   /**
@@ -699,7 +737,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, Closure<Boolean> criteria, Closure function) {
-    apply(columnNames().indexOf(columnName), criteria, function)
+    apply(requireColumnIndex(columnName), criteria, function)
   }
 
   /**
@@ -1194,7 +1232,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix converted as specified
    */
   Matrix convert(String columnName, Class type, Closure converter) {
-    return convert(columnNames().indexOf(columnName), type, converter)
+    return convert(requireColumnIndex(columnName), type, converter)
   }
 
   /**
@@ -1208,6 +1246,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix with the types and column values converted
    */
   Matrix convert(Converter... converters) {
+    converters.each { Converter converter ->
+      requireColumnIndex(converter.columnName)
+    }
+
     List<Column> convertedColumns = []
     List<Class> convertedTypes = []
 
@@ -1338,6 +1380,21 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Resolve a column name to its index, throwing a clear exception if the name is missing.
+   *
+   * @param columnName the column name to resolve
+   * @return the column index
+   * @throws IllegalArgumentException if the column does not exist
+   */
+  private int requireColumnIndex(String columnName) {
+    int idx = columnIndex(columnName)
+    if (idx < 0) {
+      throw new IllegalArgumentException("There is no column called $columnName in this matrix")
+    }
+    return idx
+  }
+
+  /**
    * Return the column with the specified name.
    *
    * @param columnName the column name to retrieve
@@ -1439,7 +1496,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the column type
    */
   Class type(String columnName) {
-    return mColumns[columnIndex(columnName)].type
+    return mColumns[requireColumnIndex(columnName)].type
   }
 
 
@@ -1686,6 +1743,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix dropExcept(int ... columnIndices) {
     if (columnIndices.length == 0) {
       mColumns.clear()
+      resetIndex()
       return this
     }
     def retainColIndices = columnIndices as Set
@@ -1693,6 +1751,15 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int i = 0; i < columnCount(); i++) {
       if (retainColIndices.contains(i)) {
         columnsToKeep.add(mColumns[i])
+      }
+    }
+    if (!indexedColumnNames.isEmpty()) {
+      Set<String> retainedNames = columnsToKeep.collect { it.name } as Set<String>
+      for (String idxCol : indexedColumnNames) {
+        if (!retainedNames.contains(idxCol)) {
+          resetIndex()
+          break
+        }
       }
     }
     mColumns.clear()
@@ -1779,7 +1846,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   boolean equals(Object o) {
-    equals(o, true, true, false, 0.0001, false)
+    equals(o, true, true, false, BigDecimal.ZERO, false)
   }
 
 
@@ -1962,8 +2029,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the value corresponding to the row and column name supplied
    */
   <T> T getAt(Integer row, String columnName) {
-    Class<T> type = type(columnName) as Class<T>
-    Integer columnIdx = columnIndex(columnName)
+    int columnIdx = requireColumnIndex(columnName)
+    Class<T> type = type(columnIdx) as Class<T>
     def val = get(row, columnIdx)
     val == null ? null : val.asType(type)
   }
@@ -2050,7 +2117,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a value of the type specified
    */
   <T> T getAt(int row, String columnName, Class<T> type) {
-    return ValueConverter.convert(get(row, columnIndex(columnName)), type)
+    return ValueConverter.convert(get(row, requireColumnIndex(columnName)), type)
   }
 
   /**
@@ -2284,6 +2351,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix reorganized as specified
    */
   Matrix moveRow(int from, int to) {
+    if (from < 0 || from >= rowCount() || to < 0 || to >= rowCount()) {
+      throw new IndexOutOfBoundsException("Row indices must be within [0, ${rowCount() - 1}] but was moveRow($from, $to)")
+    }
+    if (from == to) {
+      return this
+    }
     mColumns.each {
       it.add(to, it.remove(from))
     }
@@ -2299,7 +2372,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this (mutated) matrix
    */
   Matrix moveColumn(String columnName, int index) {
-    int currentIndex = columnIndex(columnName)
+    int currentIndex = requireColumnIndex(columnName)
+    if (currentIndex == index) {
+      return this
+    }
+    if (index < 0 || index >= mColumns.size()) {
+      throw new IndexOutOfBoundsException("Destination column index $index is out of range [0, ${mColumns.size() - 1}]")
+    }
     Column col = mColumns.remove(currentIndex)
     mColumns.add(index, col)
     return this
@@ -2483,7 +2562,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param value the value to set
    */
   void putAt(Number rowIndex, String columnName, Object value) {
-    putAt(rowIndex, columnIndex(columnName), value)
+    putAt(rowIndex, requireColumnIndex(columnName), value)
   }
 
   /**
@@ -2537,8 +2616,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param column the list of values to add
    */
   void putAt(String columnName, Class type, Integer index = null, List column) {
-    if (rowCount() != column.size()) {
-      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match number of rows (${rowCount()}) in this matrix")
+    if (columnCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match matrix width (${rowCount()}) in this matrix")
     }
     if (columnNames().contains(columnName)) {
       replace(columnName, type, column)
@@ -2698,7 +2777,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the (mutated) table to allow for chaining
    */
   Matrix rename(String before, String after) {
-    rename(columnIndex(before), after)
+    rename(requireColumnIndex(before), after)
     this
   }
 
@@ -2820,7 +2899,22 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix removeRows(List<Integer> indexes) {
-    List<Integer> sortedIndexes = indexes.toSorted()
+    if (indexes == null || indexes.isEmpty()) {
+      return this
+    }
+    int rows = rowCount()
+    Set<Integer> seen = new LinkedHashSet<>()
+    for (Integer idx : indexes) {
+      if (idx == null) {
+        throw new IllegalArgumentException('Row index cannot be null')
+      }
+      if (idx < 0 || idx >= rows) {
+        throw new IndexOutOfBoundsException("Row index $idx is out of range [0, ${rows - 1}]")
+      }
+      seen.add(idx)
+    }
+    List<Integer> sortedIndexes = new ArrayList<>(seen)
+    Collections.sort(sortedIndexes)
     mColumns.each { col ->
       sortedIndexes.eachWithIndex { Number idx, int count ->
         col.remove((int) idx - count)
@@ -3150,9 +3244,10 @@ class Matrix implements Iterable<Row>, Cloneable {
   private void upsertColumn(String propertyName, List values) {
     if (columnNames().contains(propertyName)) {
       def col = column(propertyName)
-      if (values.size() != col.size() && !col.isEmpty()) {
-        // We only allow update when the row is empty or number of rows equals number of values
-        throw new IllegalArgumentException("The list of values is not the same as the number of rows")
+      if (values.size() != col.size()) {
+        throw new IllegalArgumentException(
+            "The list of values (${values.size()}) does not match the number of rows (${col.size()})"
+        )
       }
       col.clear()
       col.addAll(values)
@@ -4027,7 +4122,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow method chaining
    */
   Matrix moveValue(int rowIndex, String fromColumn, String toColumn) {
-    moveValue(rowIndex, columnIndex(fromColumn), columnIndex(toColumn))
+    moveValue(rowIndex, requireColumnIndex(fromColumn), requireColumnIndex(toColumn))
   }
 
   /**
@@ -4039,7 +4134,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow method chaining
    */
   Matrix moveValue(int rowIndex, int fromColumn, String toColumn) {
-    moveValue(rowIndex, fromColumn, columnIndex(toColumn))
+    moveValue(rowIndex, fromColumn, requireColumnIndex(toColumn))
   }
 
   /**
@@ -4051,7 +4146,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow method chaining
    */
   Matrix moveValue(int rowIndex, String fromColumn, int toColumn) {
-    moveValue(rowIndex, columnIndex(fromColumn), toColumn)
+    moveValue(rowIndex, requireColumnIndex(fromColumn), toColumn)
   }
 
   // ---- Index API ----

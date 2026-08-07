@@ -118,15 +118,14 @@ class NumericConversionTest {
   }
 
   @Test
-  void testRejectsRaggedGrid() {
+  void testGridRejectsRaggedRowBeforeValidation() {
     Grid<Number> grid = new Grid<Number>()
     grid << [1.0, 2.0]
-    grid << [3.0]
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      NumericConversion.validateRectangular(grid, 'grid')
+      grid << [3.0]
     }
 
-    assertTrue(exception.message.contains('same length'))
+    assertTrue(exception.message.contains('does not match grid width'))
   }
 }

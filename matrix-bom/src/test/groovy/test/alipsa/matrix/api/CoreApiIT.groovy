@@ -18,6 +18,7 @@ import se.alipsa.matrix.core.ValueConverter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertInstanceOf
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 /** Covers the documented matrix-core builders, transforms, joins, statistics, and converters. */
@@ -75,6 +76,10 @@ class CoreApiIT implements ApiItSupport {
     assertEquals('x', Converter.of('x', Integer) { it as Integer }.columnName)
     Matrix copy = mtcars().clone()
     MatrixAssertions.assertContentMatches(mtcars(), copy, mtcars().diff(copy))
-    assertEquals(2, new Grid([[1, 2], [3, 4]]).data.size())
+    Grid grid = new Grid([[1, 2], [3, 4]])
+    assertEquals(2, grid.data.size())
+    grid.data[0][1] = 9
+    assertEquals(9, grid[0, 1])
+    assertThrows(UnsupportedOperationException) { grid.data << [5, 6] }
   }
 }

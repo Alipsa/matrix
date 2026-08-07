@@ -685,7 +685,7 @@ class MatrixTest {
     def mismatchedRowCount = assertThrows(IllegalArgumentException) {
       empData.clone().addColumn('bonus', Integer, 1, [1, 2, 3])
     }
-    assertEquals('Column size (3) does not match matrix row count (5)', mismatchedRowCount.message)
+    assertEquals('Column size (3) does not match matrix width (5)', mismatchedRowCount.message)
 
     def upsertWithNullFirstValue = empData.clone()
     upsertWithNullFirstValue.optional_note = [null, 'late', 'ok', null, 'remote']
@@ -1622,13 +1622,10 @@ class MatrixTest {
     assertIterableEquals(table.column(2), table[2])
     assertIterableEquals(table.column("foo"), table["foo"])
 
-    Matrix m = Matrix.builder()
-        .columnNames(table.columnNames())
-        .types(table.types())
-        .build()
-
-    m[0..1] = table[0..1]
-    m[2] = table[2]
+    Matrix m = Matrix.builder().build()
+    m['firstname'] = table['firstname']
+    m['start'] = table['start']
+    m['foo'] = table['foo']
     assertEquals(table, m, table.diff(m))
 
     m[2, 2] = 4
