@@ -24,7 +24,7 @@ final class CategoricalEncoder {
    */
   Map<String, List<BigDecimal>> encode(String columnName, ContrastType contrastType) {
     List<Object> values = (0..<data.rowCount()).collect { int i -> data[i, columnName] }
-    List<Object> uniqueValues = (values.toUnique() as List<Object>).sort() as List<Object>
+    List<String> uniqueValues = orderedLevels(values)
 
     if (uniqueValues.size() <= 1) {
       return [:]
@@ -36,36 +36,36 @@ final class CategoricalEncoder {
       case ContrastType.TREATMENT -> {
         // First level is reference, omitted
         for (int k = 1; k < uniqueValues.size(); k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            val == level ? 1.0 : 0.0
+            String.valueOf(val) == level ? 1.0 : 0.0
           }
           result[indicatorName] = indicator
         }
       }
       case ContrastType.SUM -> {
         // Last level is omitted
-        Object omittedLevel = uniqueValues.last()
+        String omittedLevel = uniqueValues.last()
         for (int k = 0; k < uniqueValues.size() - 1; k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            contrastValue(val, level, omittedLevel, NEGATIVE_WEIGHT)
+            contrastValue(String.valueOf(val), level, omittedLevel, NEGATIVE_WEIGHT)
           }
           result[indicatorName] = indicator
         }
       }
       case ContrastType.DEVIATION -> {
         // Last level is omitted, with fractional negative weight
-        Object omittedLevel = uniqueValues.last()
+        String omittedLevel = uniqueValues.last()
         int levelCount = uniqueValues.size()
         BigDecimal omittedValue = NEGATIVE_WEIGHT / (levelCount - 1)
         for (int k = 0; k < levelCount - 1; k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            contrastValue(val, level, omittedLevel, omittedValue)
+            contrastValue(String.valueOf(val), level, omittedLevel, omittedValue)
           }
           result[indicatorName] = indicator
         }
@@ -87,21 +87,23 @@ final class CategoricalEncoder {
       return []
     }
     List<Object> values = (0..<data.rowCount()).collect { int i -> data[i, columnName] }
-    List<String> uniqueLevels = []
+    orderedLevels(values)
+  }
+
+  private static List<String> orderedLevels(List<Object> values) {
+    Set<String> seen = new LinkedHashSet<>()
     for (Object value : values) {
-      String level = String.valueOf(value)
-      if (!uniqueLevels.contains(level)) {
-        uniqueLevels << level
-      }
+      seen << String.valueOf(value)
     }
-    uniqueLevels.sort()
-    uniqueLevels
+    List<String> result = seen.toList()
+    result.sort()
+    result
   }
 
   private static BigDecimal contrastValue(
-    Object value,
-    Object level,
-    Object omittedLevel,
+    String value,
+    String level,
+    String omittedLevel,
     BigDecimal omittedValue
   ) {
     if (value == level) {
