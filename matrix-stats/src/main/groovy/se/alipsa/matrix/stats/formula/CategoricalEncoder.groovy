@@ -87,11 +87,15 @@ final class CategoricalEncoder {
       return []
     }
     List<Object> values = (0..<data.rowCount()).collect { int i -> data[i, columnName] }
-    List<String> result = []
-    for (Object value : (values.toUnique() as List<Object>).sort()) {
-      result << value.toString()
+    List<String> uniqueLevels = []
+    for (Object value : values) {
+      String level = String.valueOf(value)
+      if (!uniqueLevels.contains(level)) {
+        uniqueLevels << level
+      }
     }
-    result
+    uniqueLevels.sort()
+    uniqueLevels
   }
 
   private static BigDecimal contrastValue(

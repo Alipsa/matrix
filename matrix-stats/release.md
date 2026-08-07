@@ -3,6 +3,7 @@
 ## v2.5.3, in progress
 - Hoist Grid row views in numeric conversion loops to avoid repeated checked-view allocations without changing conversion results.
 - CodeNarc cleanup across the formula, contingency, and cluster packages without behavioral changes.
+- Preserve the string representation of null categorical levels in `CategoricalEncoder.levels()`.
 
 ## v2.5.2, 2026-07-06
 - Dependency update: org.ejml:ejml-simple 0.43.1 -> 0.46.0
