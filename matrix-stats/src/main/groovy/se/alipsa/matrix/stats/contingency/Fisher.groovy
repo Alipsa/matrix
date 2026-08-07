@@ -25,6 +25,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
 @SuppressWarnings('DuplicateNumberLiteral')
 class Fisher {
 
+  private static final String ALTERNATIVE_NULL_MESSAGE = 'Alternative must not be null'
+
   /**
    * Alternative hypothesis options for Fisher's exact test.
    */
@@ -69,7 +71,7 @@ class Fisher {
    */
   static FisherResult test(List<List<Integer>> table, Alternative alternative) {
     if (alternative == null) {
-      throw new IllegalArgumentException('Alternative must not be null')
+      throw new IllegalArgumentException(ALTERNATIVE_NULL_MESSAGE)
     }
     test(table, alternative.label)
   }
@@ -105,7 +107,7 @@ class Fisher {
    */
   static FisherResult test(Matrix table, Alternative alternative) {
     if (alternative == null) {
-      throw new IllegalArgumentException('Alternative must not be null')
+      throw new IllegalArgumentException(ALTERNATIVE_NULL_MESSAGE)
     }
     test(table, alternative.label)
   }

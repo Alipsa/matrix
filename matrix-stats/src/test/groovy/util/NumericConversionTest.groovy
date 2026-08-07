@@ -130,7 +130,7 @@ class NumericConversionTest {
     new Grid<Number>() {
       @Override
       List<List<Number>> getData() {
-        [[1.0, 2.0], [3.0]] as List<List<Number>>
+        [[1.0, 2.0], [3.0]]
       }
 
       @Override
