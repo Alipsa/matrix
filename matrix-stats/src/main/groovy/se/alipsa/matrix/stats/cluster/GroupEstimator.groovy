@@ -132,6 +132,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
 @SuppressWarnings('DuplicateNumberLiteral')
 class GroupEstimator {
 
+  private static final String POINTS_COLUMN_NAME = 'points'
+
   private final CalculationMethod method
 
   enum CalculationMethod {
@@ -161,7 +163,7 @@ class GroupEstimator {
    * @return the estimated number of groups
    */
   int estimateNumberOfGroups(List<? extends List<? extends Number>> points) {
-    estimateNumberOfGroups(NumericConversion.toDoubleMatrix(points, 'points'))
+    estimateNumberOfGroups(NumericConversion.toDoubleMatrix(points, POINTS_COLUMN_NAME))
   }
 
   static int estimateKByElbow(double[][] points, int maxK = 10, int iterations = 10) {
@@ -196,7 +198,7 @@ class GroupEstimator {
    * @return the estimated number of groups
    */
   static int estimateKByElbow(List<? extends List<? extends Number>> points, int maxK = 10, int iterations = 10) {
-    estimateKByElbow(NumericConversion.toDoubleMatrix(points, 'points'), maxK, iterations)
+    estimateKByElbow(NumericConversion.toDoubleMatrix(points, POINTS_COLUMN_NAME), maxK, iterations)
   }
 
   private static int ruleOfThumb(double[][] points) {

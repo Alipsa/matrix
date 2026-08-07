@@ -88,7 +88,7 @@ class Stat {
             log.error("The list of objects for addNumericSummary is null")
             return null
         }
-        List<Number> numbers = objects as List<Number>
+        List<Number> numbers = objects.findAll { it instanceof Number } as List<Number>
         def quarts = quartiles(numbers)
         Map<String, Object> result = [
             SUMMARY_TYPE: type.getSimpleName(),
@@ -546,7 +546,7 @@ class Stat {
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
         colNames.collect { colName ->
-            List<Number> numericValues = table.column(colName).findAll { it != null && it instanceof Number } as List<Number>
+            List<Number> numericValues = table.column(colName).findAll { it instanceof Number } as List<Number>
             median(numericValues)
         }
     }
@@ -595,13 +595,16 @@ class Stat {
 
     @SuppressWarnings('DuplicateNumberLiteral')
     static BigDecimal median(List<?> valueList) {
-        if (valueList == null || valueList.size() == 0) {
+        if (valueList == null) {
             return null
         }
-        if (valueList.size() == 1) {
-            return valueList[0] as BigDecimal
+        List<? extends Number> vals = valueList.findAll { it instanceof Number } as List<Number>
+        if (vals.isEmpty()) {
+            return null
         }
-        List<? extends Number> vals = new ArrayList(valueList)
+        if (vals.size() == 1) {
+            return vals[0] as BigDecimal
+        }
         vals.sort()
         if (vals.size() % 2 == 0) {
             def index = vals.size() / 2 as int
@@ -621,13 +624,17 @@ class Stat {
      */
     @SuppressWarnings('DuplicateNumberLiteral')
     static  List<Number> quartiles(List<?> values) {
-        if (values == null || values.size() == 0) {
-            throw new IllegalArgumentException("The list of values are either null or does not contain any data.")
+        if (values == null) {
+            throw new IllegalArgumentException("The list of values is null.")
         }
 
-        // Rank order the values
-        List<Number> v = values.collect() as List<Number>
+        // Rank order the numeric, non-null values
+        List<Number> v = values.findAll { it instanceof Number } as List<Number>
         v.sort()
+
+        if (v.isEmpty()) {
+            return [null, null]
+        }
 
         int q1 = ((v.size() - 1) * 25 / 100).round(0).intValue()
         int q3 = ((v.size() - 1) * 75 / 100).round(0).intValue()
@@ -644,6 +651,9 @@ class Stat {
      */
     static Number iqr(List<?> values) {
         def q = quartiles(values)
+        if (q[0] == null || q[1] == null) {
+            return null
+        }
         q[1] - q[0]
     }
 

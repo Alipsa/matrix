@@ -118,15 +118,25 @@ class NumericConversionTest {
   }
 
   @Test
-  void testRejectsRaggedGrid() {
-    Grid<Number> grid = new Grid<Number>()
-    grid << [1.0, 2.0]
-    grid << [3.0]
-
+  void testGridRejectsRaggedRowBeforeValidation() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      NumericConversion.validateRectangular(grid, 'grid')
+      NumericConversion.validateRectangular(raggedGrid())
     }
 
     assertTrue(exception.message.contains('same length'))
+  }
+
+  private static Grid<Number> raggedGrid() {
+    new Grid<Number>() {
+      @Override
+      List<List<Number>> getData() {
+        [[1.0, 2.0], [3.0]]
+      }
+
+      @Override
+      Map<String, Integer> dimensions() {
+        [observations: 2, variables: 2]
+      }
+    }
   }
 }

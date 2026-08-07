@@ -66,7 +66,7 @@ final class DesignMatrixBuilder {
       } else {
         boolean termIsCategorical = columns.any { ColumnInfo col -> col.isCategorical }
         List<String> allLevels = columns.collectMany { ColumnInfo col -> col.factorLevels }.unique()
-        List<String> colNames = columns.collect { ColumnInfo col -> col.name }
+        List<String> colNames = columns*.name
         boolean termIsSmooth = columns.any { ColumnInfo col -> col.isSmooth }
         termInfos << new Terms.TermInfo(
           term,
@@ -135,7 +135,7 @@ final class DesignMatrixBuilder {
   }
 
   private List<ColumnInfo> encodePoly(FormulaExpression.FunctionCall call) {
-    if (call.arguments.size() != 2) {
+    if (call.arguments.size() != POLY_ARGUMENTS) {
       throw new IllegalArgumentException("poly() requires exactly 2 arguments, got ${call.arguments.size()}")
     }
 
@@ -158,24 +158,24 @@ final class DesignMatrixBuilder {
     List<ColumnInfo> result = []
     for (int d = 1; d <= degree; d++) {
       String colName = "${baseName}_poly${d}"
-      List<BigDecimal> values = baseValues.collect { BigDecimal v ->
-        v.pow(d)
-      }
+      List<BigDecimal> values = baseValues*.pow(d)
       result << new ColumnInfo(colName, values, false, [])
     }
     result
   }
 
   private static final int DEFAULT_SMOOTH_DF = 4
+  private static final int MAX_SMOOTH_ARGUMENTS = 2
+  private static final int POLY_ARGUMENTS = 2
 
   private List<ColumnInfo> encodeSmooth(FormulaExpression.FunctionCall call) {
-    if (call.arguments.isEmpty() || call.arguments.size() > 2) {
+    if (call.arguments.isEmpty() || call.arguments.size() > MAX_SMOOTH_ARGUMENTS) {
       throw new IllegalArgumentException("s() requires 1 or 2 arguments (variable and optional df), got ${call.arguments.size()}")
     }
 
     FormulaExpression varExpr = call.arguments[0]
     int df = DEFAULT_SMOOTH_DF
-    if (call.arguments.size() == 2) {
+    if (call.arguments.size() == MAX_SMOOTH_ARGUMENTS) {
       FormulaExpression dfExpr = call.arguments[1]
       if (!(dfExpr instanceof FormulaExpression.NumberLiteral)) {
         throw new IllegalArgumentException('s() df must be a numeric literal')
@@ -221,9 +221,7 @@ final class DesignMatrixBuilder {
       factorColumns << cols
     }
 
-    List<List<Integer>> indexCombos = cartesianProductIndices(
-      factorColumns.collect { List<ColumnInfo> cols -> cols.size() }
-    )
+    List<List<Integer>> indexCombos = cartesianProductIndices(factorColumns*.size())
 
     List<ColumnInfo> result = []
     for (List<Integer> combo : indexCombos) {
@@ -323,8 +321,9 @@ final class DesignMatrixBuilder {
 
   private Matrix buildMatrix(List<String> names, List<List<BigDecimal>> columns) {
     if (names.isEmpty()) {
+      List<List> emptyRows = (0..<data.rowCount()).collect { [] }
       return Matrix.builder()
-        .rows((0..<data.rowCount()).collect { [] as List })
+        .rows(emptyRows)
         .build()
     }
     Map<String, List> columnMap = [:]

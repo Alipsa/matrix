@@ -102,7 +102,7 @@ class GsConverterTest {
         Converter.of('c3', BigDecimal, GsConverter.&asSerial)
     )
 
-    assert m == m3 :  "\nOriginal:\n${m.content()}\nAfter conversions:\n${m3.content()}"
+    MatrixAssertions.assertContentEquals(m, m3, "\nOriginal:\n${m.content()}\nAfter conversions:\n${m3.content()}")
   }
 
   @Test

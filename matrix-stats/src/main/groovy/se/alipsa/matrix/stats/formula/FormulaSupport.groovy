@@ -338,7 +338,7 @@ final class FormulaSupport {
     Set<FormulaTerm> result = [] as LinkedHashSet<FormulaTerm>
     int maxDegree = Math.min(exponent, orderedTerms.size())
     for (int degree = 1; degree <= maxDegree; degree++) {
-      appendCombinations(orderedTerms, degree, 0, [] as List<FormulaTerm>, result)
+      appendCombinations(orderedTerms, degree, 0, [], result)
     }
     result
   }
@@ -426,7 +426,7 @@ final class FormulaSupport {
   }
 
   private static List<FormulaExpression> removeFactors(List<FormulaExpression> leftFactors, List<FormulaExpression> rightFactors) {
-    Set<String> excluded = rightFactors.collect { FormulaExpression factor -> factor.asFormulaString() } as Set<String>
+    Set<String> excluded = rightFactors*.asFormulaString() as Set<String>
     leftFactors.findAll { FormulaExpression factor -> !excluded.contains(factor.asFormulaString()) }
   }
 
@@ -655,7 +655,7 @@ final class FormulaSupport {
       new ParsedFormula("${defaultResponse} ~ ${source}", response, firstSide)
     }
 
-    private FormulaExpression parseSideOnly() {
+    FormulaExpression parseSideOnly() {
       FormulaExpression expression = parseExpression()
       expect(TokenType.EOF, 'Unexpected trailing input in formula side')
       expression

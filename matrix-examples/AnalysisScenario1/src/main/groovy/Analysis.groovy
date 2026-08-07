@@ -225,11 +225,10 @@ Matrix analysisData = salesData.clone()
 println "\nAverage revenue per unit by product:"
 Matrix avgRevenueByProduct = Matrix.builder().data(
     product: uniqueProducts,
-    total_units: [],
-    total_revenue: [],
-    avg_revenue_per_unit: []
-).types(String, Integer, Double, Double)
-    .build()
+    total_units: [null] * uniqueProducts.size(),
+    total_revenue: [null] * uniqueProducts.size(),
+    avg_revenue_per_unit: [null] * uniqueProducts.size()
+).types(String, Integer, Double, Double).build()
 
 uniqueProducts.eachWithIndex { product, idx ->
   def productRows = analysisData.subset("product", product)
@@ -306,9 +305,8 @@ println "Created bar chart: analysis_results/sales_by_product.png"
 // 2. Bar chart - Sales by Region
 def salesByRegionMatrix = Matrix.builder().data(
     region: uniqueRegions,
-    total_units: []
-).types(String, Integer)
-    .build()
+    total_units: [null] * uniqueRegions.size()
+).types(String, Integer).build()
 
 uniqueRegions.eachWithIndex { region, idx ->
   def regionRows = analysisData.subset("region", region)

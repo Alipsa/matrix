@@ -7,15 +7,24 @@ import se.alipsa.matrix.core.util.ClassUtils
 import java.text.NumberFormat
 
 /**
- * A Grid is thin layer on top of a List<List<T>>.
+ * A Grid is a rectangular layer on top of a List<List<T>>.
  * Note than unlike a Matrix, the getAt and putAt methods with
  * a single argument refers to a row and not (as with a Matrix) to a column.
+ *
+ * <p>Grid enforces a uniform row width: rows added after the first row must match
+ * the established width. The constructors copy the supplied outer list and every
+ * row, so later mutations of the source lists do not bypass Grid validation.</p>
+ *
+ * <p>Indexed value assignment (e.g. {@code grid[0][1] = value}) remains write-through,
+ * but structural mutations of the public {@code data} view or its rows are rejected.</p>
  *
  * @param <T> the grid element type
  */
 class Grid<T> implements Iterable<List<T>> {
 
-  List<List<T>> data
+  private static final String UNSUPPORTED_STRUCTURE_MUTATION = 'Structural mutation of Grid rows is not supported; use validated Grid methods to change the row structure.'
+
+  private List<List<T>> data
   private final Class<?> elementType
 
   Grid() {
@@ -26,9 +35,9 @@ class Grid<T> implements Iterable<List<T>> {
   Grid(List<List<T>> data) {
     elementType = Object
     if (isValid(data)) {
-      this.data = data
-    } else if (data instanceof List) {
-      this.data = [data]
+      this.data = copyRows(data)
+    } else if (data instanceof List && isValid([data])) {
+      this.data = [new ArrayList<>(data as List<T>)]
     } else {
       throw new IllegalArgumentException('data is invalid')
     }
@@ -45,9 +54,9 @@ class Grid<T> implements Iterable<List<T>> {
   Grid(List<List<T>> data, Class<T> elementType) {
     this.elementType = safeElementType(elementType)
     if (isValid(data, this.elementType)) {
-      this.data = data
+      this.data = copyRows(data)
     } else if (data instanceof List && isValid([data], this.elementType)) {
-      this.data = [data]
+      this.data = [new ArrayList<>(data as List<T>)]
     } else {
       throw new IllegalArgumentException("data is invalid for element type ${this.elementType.simpleName}")
     }
@@ -79,21 +88,21 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   List<T> getAt(int row) {
-    data[row]
+    new CheckedGridRowView<>(data.get(row))
   }
 
   T getAt(int row, int column) {
-    data[row][column]
+    data.get(row).get(column)
   }
 
-  def leftShift(List<T> row) {
-    validateNewRow(row)
-    data << row
+  Grid<T> leftShift(List<T> row) {
+    add(row)
+    this
   }
 
   boolean add(List<T> row) {
     validateNewRow(row)
-    data.add(row)
+    data.add(new ArrayList<>(row))
   }
 
   /**
@@ -104,12 +113,30 @@ class Grid<T> implements Iterable<List<T>> {
    */
   void add(int position, List<T> row) {
     validateNewRow(row)
-    data.add(position, row)
+    data.add(position, new ArrayList<>(row))
   }
 
   boolean addAll(List<List<T>> grid) {
-    grid.each { List<T> row -> validateNewRow(row) }
-    data.addAll(grid)
+    if (grid == null) {
+      throw new IllegalArgumentException('Grid rows cannot be null')
+    }
+    if (grid.isEmpty()) {
+      return false
+    }
+    int expectedWidth = establishedWidth()
+    if (expectedWidth < 0) {
+      if (grid[0] == null) {
+        throw new IllegalArgumentException('Row 0 cannot be null')
+      }
+      expectedWidth = grid[0].size()
+    }
+    grid.eachWithIndex { List<T> row, int i ->
+      validateRow(row, expectedWidth, "Row $i")
+    }
+    grid.each { List<T> row ->
+      data.add(new ArrayList<>(row))
+    }
+    true
   }
 
   Grid plus(List<T> row) {
@@ -165,12 +192,12 @@ class Grid<T> implements Iterable<List<T>> {
     if (rowIdx < 0) {
       throw new IllegalArgumentException('Observation index cannot be less than zero')
     }
+    List<T> row = values.collect() as List<T>
     if (rowIdx < data.size()) {
-      replaceRow(rowIdx, values.collect())
+      replaceRow(rowIdx, row)
     } else if (rowIdx == data.size()) {
-      List<T> row = values.collect() as List<T>
       validateNewRow(row)
-      data << row
+      data << new ArrayList<>(row)
     } else {
       throw new IndexOutOfBoundsException("Index $rowIdx cannot be greater than ${data.size()}")
     }
@@ -193,11 +220,19 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
-   * @return the list of rows in the grid.
-   * Note that this enables mutability, i.e. changes to the result is reflected in the Grid
+   * @return a read-only outer view of the grid rows.
+   * Changes to values through {@link List#set(int, Object)} on a row are reflected in the Grid,
+   * but structural mutations of the outer list or any row are rejected.
    */
   List<List<T>> getData() {
-    data
+    new CheckedGridDataView<>(data)
+  }
+
+  /**
+   * Direct reassignment of the backing data list is not supported.
+   */
+  void setData(List<List<T>> data) {
+    throw new UnsupportedOperationException("${UNSUPPORTED_STRUCTURE_MUTATION}: attempted to assign ${data}")
   }
 
   /**
@@ -215,9 +250,10 @@ class Grid<T> implements Iterable<List<T>> {
 
   Grid replaceRow(int index, List<T> row) {
     validateNewRow(row)
+    List<T> replacement = new ArrayList<>(row)
     def r = data.get(index)
     r.clear()
-    r.addAll(row)
+    r.addAll(replacement)
     this
   }
 
@@ -240,7 +276,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Iterator<List<T>> iterator() {
-    data.iterator()
+    getData().iterator()
   }
 
   Grid<T> transpose() {
@@ -349,7 +385,7 @@ class Grid<T> implements Iterable<List<T>> {
    *
    * @param grid the Grid to validate
    * @param elementType the target element type to validate against
-   * @return true if the grid is valid for the supplied type, false otherwise
+   * @return true if the grid is valid for the supplied type
    */
   static boolean isValid(Grid grid, Class<?> elementType) {
     isValid(grid?.data, elementType)
@@ -431,18 +467,119 @@ class Grid<T> implements Iterable<List<T>> {
     data.collect { List<T> row -> row.collect() as List<T> }
   }
 
+  private static <T> List<List<T>> copyRows(List<List<T>> rows) {
+    rows.collect { List<T> row -> new ArrayList<>(row) }
+  }
+
+  private int establishedWidth() {
+    data.isEmpty() ? -1 : data[0].size()
+  }
+
   private void validateNewRow(List<T> row) {
     if (row == null) {
       throw new IllegalArgumentException('Row cannot be null')
+    }
+    int expectedWidth = establishedWidth()
+    if (expectedWidth >= 0 && row.size() != expectedWidth) {
+      throw new IllegalArgumentException("Row width (${row.size()}) does not match grid width ($expectedWidth)")
     }
     row.eachWithIndex { T value, int i ->
       validateValue(value, "Value at column $i")
     }
   }
 
+  private void validateRow(List<T> row, int expectedWidth, String context) {
+    if (row == null) {
+      throw new IllegalArgumentException("$context cannot be null")
+    }
+    if (row.size() != expectedWidth) {
+      throw new IllegalArgumentException("$context width (${row.size()}) does not match grid width ($expectedWidth)")
+    }
+    row.eachWithIndex { T value, int i ->
+      validateValue(value, "$context value at column $i")
+    }
+  }
+
   private void validateValue(T value, String context) {
     if (value != null && elementType != Object && !elementType.isInstance(value)) {
       throw new IllegalArgumentException("${context} is ${value.class.simpleName} but expected ${elementType.simpleName}")
+    }
+  }
+
+  /**
+   * A live view of a single Grid row. Value assignment writes through to the backing row;
+   * structural operations are rejected.
+   */
+  private static class CheckedGridRowView<T> extends AbstractList<T> {
+
+    private final List<T> backingRow
+
+    CheckedGridRowView(List<T> backingRow) {
+      this.backingRow = backingRow
+    }
+
+    @Override
+    T get(int index) {
+      backingRow.get(index)
+    }
+
+    @Override
+    int size() {
+      backingRow.size()
+    }
+
+    @Override
+    T set(int index, T element) {
+      backingRow.set(index, element)
+    }
+
+    @Override
+    void add(int index, T element) {
+      throw new UnsupportedOperationException(UNSUPPORTED_STRUCTURE_MUTATION)
+    }
+
+    @Override
+    T remove(int index) {
+      throw new UnsupportedOperationException(UNSUPPORTED_STRUCTURE_MUTATION)
+    }
+  }
+
+  /**
+   * A read-only outer view of a Grid. It returns checked row views that allow
+   * write-through value assignment but rejects structural mutation of the outer list
+   * and direct row reassignment.
+   */
+  private static class CheckedGridDataView<T> extends AbstractList<List<T>> {
+
+    private final List<List<T>> backingData
+
+    CheckedGridDataView(List<List<T>> backingData) {
+      this.backingData = backingData
+    }
+
+    @Override
+    List<T> get(int index) {
+      new CheckedGridRowView<>(backingData.get(index))
+    }
+
+    @Override
+    int size() {
+      backingData.size()
+    }
+
+    @Override
+    List<T> set(int index, List<T> element) {
+      throw new UnsupportedOperationException(UNSUPPORTED_STRUCTURE_MUTATION)
+    }
+
+    @Override
+    void add(int index, List<T> element) {
+      throw new UnsupportedOperationException(UNSUPPORTED_STRUCTURE_MUTATION)
+    }
+
+    @Override
+    List<T> remove(int index) {
+      throw new UnsupportedOperationException(UNSUPPORTED_STRUCTURE_MUTATION)
     }
   }
 

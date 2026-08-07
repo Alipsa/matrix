@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.util.ClassUtils
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.Logger
 
+import java.lang.reflect.Array as ReflectArray
 import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.nio.file.Path
@@ -35,9 +36,80 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.regex.Pattern
 
+/**
+ * Fluent builder for constructing matrices from rows, columns, files, streams, CSV text and JDBC results.
+ */
+@SuppressWarnings(['JavadocMissingParamDescription', 'JavadocEmptyReturnTag'])
 class MatrixBuilder {
 
   private static final Logger log = Logger.getLogger(MatrixBuilder)
+
+  private static final List<String> DEFAULT_NULL_STRINGS = ['NULL', 'null', 'NA']
+  private static final String PATH_SEPARATOR = '/'
+  private static final String DOT = '.'
+  private static final String COMMA = ','
+  private static final int PRESERVE_EMPTY_FIELDS = -1
+  private static final int UNKNOWN_SIZE = -1
+  private static final int ARRAY_CLASS_PREFIX_LENGTH = 2
+  private static final int ESCAPED_QUOTE_COUNT = 2
+  private static final String ARRAY_PREFIX = '['
+  private static final Map<String, Class> PRIMITIVE_ARRAY_COMPONENTS = [
+      Z: boolean,
+      B: byte,
+      C: char,
+      D: double,
+      F: float,
+      I: int,
+      J: long,
+      S: short
+  ]
+  private static final String NAME_DIRECTIVE = 'name:'
+  private static final String METADATA_DIRECTIVE = 'metadata.'
+  private static final String INDEX_DIRECTIVE = 'index:'
+  private static final String TYPES_DIRECTIVE = 'types:'
+  private static final String TRUE_TEXT = 'true'
+  private static final String FALSE_TEXT = 'false'
+  private static final Map<String, Class> TYPE_ALIASES = [
+      int           : Integer,
+      Integer       : Integer,
+      long          : Long,
+      Long          : Long,
+      short         : Short,
+      Short         : Short,
+      byte          : Byte,
+      Byte          : Byte,
+      float         : Float,
+      Float         : Float,
+      double        : Double,
+      Double        : Double,
+      char          : Character,
+      Character     : Character,
+      boolean       : Boolean,
+      Boolean       : Boolean,
+      String        : String,
+      BigDecimal    : BigDecimal,
+      BigInteger    : BigInteger,
+      Number        : Number,
+      Object        : Object,
+      LocalDate     : LocalDate,
+      LocalDateTime : LocalDateTime,
+      LocalTime     : LocalTime,
+      YearMonth     : YearMonth,
+      Year          : Year,
+      MonthDay      : MonthDay,
+      DayOfWeek     : DayOfWeek,
+      OffsetDateTime: OffsetDateTime,
+      OffsetTime    : OffsetTime,
+      ZonedDateTime : ZonedDateTime,
+      Instant       : Instant,
+      Duration      : Duration,
+      Period        : Period,
+      ZoneId        : ZoneId,
+      ZoneOffset    : ZoneOffset,
+      Date          : Date,
+      Time          : Time,
+      Timestamp     : Timestamp
+  ].asImmutable()
 
   String matrixName
   List<String> headerList
@@ -142,11 +214,22 @@ class MatrixBuilder {
    */
   MatrixBuilder columns(Map<String, ? extends List> columnData) {
     clearPendingIndexColumns()
+    int expectedSize = UNKNOWN_SIZE
+    columnData.each { k, v ->
+      int size = v == null ? 0 : v.size()
+      if (expectedSize < 0) {
+        expectedSize = size
+      } else if (size != expectedSize) {
+        throw new IllegalArgumentException(
+            "Column '$k' has $size rows but previous columns have $expectedSize rows; all columns must have the same size"
+        )
+      }
+    }
     List<String> headers = []
     List<List> cols = []
     columnData.each { k, v ->
       headers << String.valueOf(k)
-      cols << v.collect()
+      cols << (v == null ? [] : v.collect())
     }
     columnNames(headers)
     columns(cols)
@@ -287,7 +370,7 @@ class MatrixBuilder {
         columnNames(row.columnNames())
         types(row.types())
         rows(r)
-      } else if('NamedRecord' == row.class.simpleName) {
+      } else if ('NamedRecord' == row.class.simpleName) {
         // this happens when a select contains more than one named item
         List<String> colNames = row.getNameList()
         List<Class> t = []
@@ -321,7 +404,7 @@ class MatrixBuilder {
         columns([r])
       }
     } else {
-      throw new RuntimeException("Dont know what to do with $ginqResult.class")
+      throw new IllegalArgumentException("Dont know what to do with $ginqResult.class")
     }
   }
 
@@ -355,12 +438,12 @@ class MatrixBuilder {
    */
   MatrixBuilder data(List observations) {
     if (observations == null || observations.isEmpty()) {
-      throw new IllegalArgumentException("The list of observations contains no data")
+      throw new IllegalArgumentException('The list of observations contains no data')
     }
     Object o = observations.first()
     List<String> colNames = o.class.declaredFields
         .findAll { !it.synthetic && !Modifier.isStatic(it.modifiers) }
-        .collect { it.name }
+        *.name
         .sort()
     List<List> rowList = []
     List row
@@ -406,7 +489,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+  MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
       matrixName(stripExtension(file.name))
@@ -424,7 +507,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+  MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
       matrixName(stripExtension(file.getFileName().toString()))
@@ -443,14 +526,14 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+  MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     try (InputStream inputStream = url.openStream()) {
       String n = url.getFile() == null ? url.getPath() : url.getFile()
-      if (n.contains('/')) {
-        n = n.substring(n.lastIndexOf('/') + 1, n.length())
+      if (n.contains(PATH_SEPARATOR)) {
+        n = n.substring(n.lastIndexOf(PATH_SEPARATOR) + 1, n.length())
       }
-      if (n.contains('.')) {
-        n = n.substring(0, n.lastIndexOf('.'))
+      if (n.contains(DOT)) {
+        n = n.substring(0, n.lastIndexOf(DOT))
       }
       data(inputStream, delimiter, stringQuote, firstRowAsHeader, nullStrings)
       if (noName()) {
@@ -472,7 +555,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader if true, the first row is used as header, default is true
    * @return this builder
    */
-  MatrixBuilder data(String url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+  MatrixBuilder data(String url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     data(new URI(url).toURL(), delimiter, stringQuote, firstRowAsHeader, nullStrings)
   }
 
@@ -486,7 +569,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+  MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     try (InputStreamReader reader = new InputStreamReader(inputStream)) {
       parseDelimitedRows(reader.readLines(), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     }
@@ -504,6 +587,17 @@ class MatrixBuilder {
    *   <li>#metadata.key: value</li>
    * </ul>
    *
+   * <p><b>Comment-only input:</b> When {@code firstRowAsHeader} is {@code false}, a
+   * {@code #types:} directive establishes the schema width and generates forward column
+   * names ({@code c1}, {@code c2}, ...). A {@code #index:} directive names indexed columns
+   * but does not establish the column set. If no {@code #types:} directive is present the
+   * result has zero columns. A headerless {@code #index:} column that is not generated by
+   * the schema is rejected with an {@code IllegalArgumentException}.</p>
+   *
+   * <p>When {@code firstRowAsHeader} is {@code true} and no data row is available to supply
+   * a header, an {@code IllegalArgumentException} is thrown explaining that the header row
+   * is missing.</p>
+   *
    * <p><b>Metadata Parsing:</b> Metadata values are parsed and converted to the appropriate type:
    * <ul>
    *   <li>Boolean: true/false (case insensitive)</li>
@@ -516,16 +610,18 @@ class MatrixBuilder {
    * @param csvContent the CSV string to parse
    * @param options optional parameters:
    *   - quoteString (String) string quote, default '"'
-   *   - delimiter (String) column delimiter, default ', '
+   *   - delimiter (String) column delimiter, default ','
    *   - rowDelimiter (String) row delimiter, default '\\n'
    *   - lineComment (String) comment prefix, default '#'
    *   - firstRowAsHeader (boolean) default true
    *   - nullStrings (List<String>) list of strings to treat as null
    * @return this builder
+   * @throws IllegalArgumentException if the CSV content is empty, the header row is missing,
+   *         or an index column does not exist in the resolved column names
    */
   MatrixBuilder csvString(String content, Map options = [:]) {
     if (content == null || content.isEmpty()) {
-      throw new IllegalArgumentException('Clipboard content is empty')
+      throw new IllegalArgumentException('Empty CSV content')
     }
     String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
     String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ','
@@ -540,9 +636,9 @@ class MatrixBuilder {
         : true
     List<String> nullStrings = options.containsKey('nullStrings')
         ? options.nullStrings as List<String>
-        : ['NULL', 'null', 'NA']
+        : DEFAULT_NULL_STRINGS
 
-    List<String> lines = content.split(rowDelimiter, -1) as List<String>
+    List<String> lines = content.split(rowDelimiter, PRESERVE_EMPTY_FIELDS) as List<String>
     while (!lines.isEmpty() && lines.last().isEmpty()) {
       lines.remove(lines.size() - 1)
     }
@@ -552,17 +648,24 @@ class MatrixBuilder {
   /**
    * Populate the data of the Matrix from the system clipboard.
    *
+   * <p>This method delegates to {@link #csvString(String, Map)}. If the clipboard is empty,
+   * an {@code IllegalArgumentException} with a clipboard-specific message is thrown.</p>
+   *
    * @param options optional parameters:
    *   - quoteString (String) string quote, default '"'
-   *   - delimiter (String) column delimiter, default ', '
+   *   - delimiter (String) column delimiter, default ','
    *   - rowDelimiter (String) row delimiter, default '\\n'
    *   - lineComment (String) comment prefix, default '#'
    *   - firstRowAsHeader (boolean) default true
    *   - nullStrings (List<String>) list of strings to treat as null
    * @return this builder
+   * @throws IllegalArgumentException if the clipboard is empty or the CSV is malformed
    */
   MatrixBuilder clipboard(Map options = [:]) {
     String content = ClipboardUtil.readText()
+    if (content == null || content.isEmpty()) {
+      throw new IllegalArgumentException('Clipboard content is empty')
+    }
     return csvString(content, options)
   }
 
@@ -571,74 +674,122 @@ class MatrixBuilder {
   }
 
   private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings, String lineComment) {
-    // Parsing a new CSV input should not inherit index metadata from a previous parse on the same builder.
-    indexColumns = null
+    Map parsed = readDelimitedContent(lines, delimiter, stringQuote, nullStrings, lineComment)
+    List<List> data = parsed.data as List<List>
+    int maxCols = parsed.maxCols as int
+    List<Class> parsedTypes = parsed.types as List<Class>
+    String parsedName = parsed.name as String
+    List<String> parsedIndex = parsed.index as List<String>
+    Map<String, Object> parsedMetadata = parsed.metadata as Map<String, Object>
+
+    List<String> headerNames = firstRowAsHeader ? extractHeader(data) : generatedColumnNames(data, maxCols, parsedTypes)
+    validateParsedIndex(parsedIndex, headerNames)
+    convertParsedTypes(data, parsedTypes)
+    applyParsedContent(data, headerNames, parsedTypes, parsedName, parsedMetadata, parsedIndex)
+    this
+  }
+
+  private static Map readDelimitedContent(List<String> lines, String delimiter, String stringQuote, List<String> nullStrings, String lineComment) {
+    Map directives = [types: null, name: null, index: null, metadata: [:]]
     List<List> data = []
     int maxCols = 0
-    List<Class> parsedTypes = null
-    String parsedName = null
-    List<String> parsedIndex = null
-    Map<String, Object> parsedMetadata = [:]
-    for (String line in lines) {
-      if (lineComment != null && !lineComment.isEmpty()) {
-        String trimmed = line.trim()
-        if (trimmed.startsWith(lineComment)) {
-          String after = trimmed.substring(lineComment.length()).trim()
-          if (after.toLowerCase().startsWith('name:')) {
-            String nameSpec = after.substring('name:'.length()).trim()
-            if (!nameSpec.isEmpty()) {
-              parsedName = nameSpec
-            }
-          } else if (after.toLowerCase().startsWith('metadata.')) {
-            String metaSpec = after.substring('metadata.'.length())
-            int colonPos = metaSpec.indexOf(':')
-            if (colonPos > 0) {
-              String key = metaSpec.substring(0, colonPos).trim()
-              String value = metaSpec.substring(colonPos + 1).trim()
-              parsedMetadata[key] = parseMetadataValue(value)
-            }
-          } else if (after.toLowerCase().startsWith('index:')) {
-            String indexSpec = after.substring('index:'.length()).trim()
-            if (!indexSpec.isEmpty()) {
-              parsedIndex = indexSpec.split(',').collect { it.trim() }.findAll { !it.isEmpty() } as List<String>
-            }
-          } else if (after.toLowerCase().startsWith('types:')) {
-            String typeSpec = after.substring('types:'.length()).trim()
-            if (!typeSpec.isEmpty()) {
-              parsedTypes = typeSpec.split(',').collect { resolveTypeName(it) }
-            }
-          }
-          continue
-        }
+    lines.each { String line ->
+      if (!parseCommentLine(line, lineComment, directives)) {
+        List row = parseDelimitedDataRow(line, delimiter, stringQuote, nullStrings)
+        maxCols = Math.max(maxCols, row.size())
+        data << row
       }
-      List row = []
-      // if there are empty columns in the end, split does not take those into account unless we set the limit to -1
-      List<String> values = splitDelimitedLine(line, delimiter, stringQuote)
-      maxCols = Math.max(maxCols, values.size())
-      for (String val in values) {
-        String value = val.trim()
-        if (nullStrings.contains(value)) {
-          value = null
-        }
-        row.add(value)
-      }
-      data.add(row)
     }
-    List<String> headerNames
+    directives.data = data
+    directives.maxCols = maxCols
+    directives
+  }
 
-    if (firstRowAsHeader) {
-      headerNames = data.remove(0)
-    } else {
-      headerNames = (1..maxCols).collect { 'c' + it }
+  private static boolean parseCommentLine(String line, String lineComment, Map directives) {
+    if (lineComment == null || lineComment.isEmpty()) {
+      return false
     }
-    if (parsedTypes != null) {
-      data.each { List row ->
-        int limit = Math.min(row.size(), parsedTypes.size())
-        for (int i = 0; i < limit; i++) {
-          row[i] = ValueConverter.convert(row[i], parsedTypes[i])
-        }
+    String trimmed = line.trim()
+    if (!trimmed.startsWith(lineComment)) {
+      return false
+    }
+    String after = trimmed.substring(lineComment.length()).trim()
+    String lowerAfter = after.toLowerCase()
+    if (lowerAfter.startsWith(NAME_DIRECTIVE)) {
+      String nameSpec = after.substring(NAME_DIRECTIVE.length()).trim()
+      if (!nameSpec.isEmpty()) {
+        directives.name = nameSpec
+      }
+    } else if (lowerAfter.startsWith(METADATA_DIRECTIVE)) {
+      parseMetadataDirective(after.substring(METADATA_DIRECTIVE.length()), directives.metadata as Map<String, Object>)
+    } else if (lowerAfter.startsWith(INDEX_DIRECTIVE)) {
+      String indexSpec = after.substring(INDEX_DIRECTIVE.length()).trim()
+      if (!indexSpec.isEmpty()) {
+        directives.index = indexSpec.split(COMMA)*.trim().findAll { !it.isEmpty() } as List<String>
+      }
+    } else if (lowerAfter.startsWith(TYPES_DIRECTIVE)) {
+      String typeSpec = after.substring(TYPES_DIRECTIVE.length()).trim()
+      if (!typeSpec.isEmpty()) {
+        directives.types = typeSpec.split(COMMA).collect { resolveTypeName(it) }
       }
     }
+    true
+  }
+
+  private static void parseMetadataDirective(String metadataSpec, Map<String, Object> metadata) {
+    int colonPos = metadataSpec.indexOf(':')
+    if (colonPos > 0) {
+      String key = metadataSpec.substring(0, colonPos).trim()
+      String value = metadataSpec.substring(colonPos + 1).trim()
+      metadata[key] = parseMetadataValue(value)
+    }
+  }
+
+  private static List parseDelimitedDataRow(String line, String delimiter, String stringQuote, List<String> nullStrings) {
+    splitDelimitedLine(line, delimiter, stringQuote).collect { String value ->
+      String trimmed = value.trim()
+      nullStrings.contains(trimmed) ? null : trimmed
+    }
+  }
+
+  private static List<String> extractHeader(List<List> data) {
+    if (data.isEmpty()) {
+      throw new IllegalArgumentException('No data row available to use as header; CSV contained only comments or directives')
+    }
+    data.remove(0) as List<String>
+  }
+
+  private static List<String> generatedColumnNames(List<List> data, int maxCols, List<Class> parsedTypes) {
+    int columnCount = data.isEmpty() && parsedTypes != null ? parsedTypes.size() : maxCols
+    columnCount == 0 ? [] : (1..columnCount).collect { 'c' + it }
+  }
+
+  private static void validateParsedIndex(List<String> parsedIndex, List<String> headerNames) {
+    if (parsedIndex == null) {
+      return
+    }
+    List<String> missing = parsedIndex.findAll { !headerNames.contains(it) }
+    if (!missing.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Index column(s) do not exist in the resolved column names: ${missing.join(', ')}"
+      )
+    }
+  }
+
+  private static void convertParsedTypes(List<List> data, List<Class> parsedTypes) {
+    if (parsedTypes == null) {
+      return
+    }
+    data.each { List row ->
+      int limit = Math.min(row.size(), parsedTypes.size())
+      for (int i = 0; i < limit; i++) {
+        row[i] = ValueConverter.convert(row[i], parsedTypes[i])
+      }
+    }
+  }
+
+  private void applyParsedContent(List<List> data, List<String> headerNames, List<Class> parsedTypes,
+                                  String parsedName, Map<String, Object> parsedMetadata, List<String> parsedIndex) {
     if (noColumnNames()) {
       columnNames(headerNames)
     }
@@ -657,18 +808,15 @@ class MatrixBuilder {
       matrixName(parsedName)
     }
     if (!parsedMetadata.isEmpty()) {
-      parsedMetadata.each { key, value ->
-        metadata.put(key, value)
-      }
+      metadata.putAll(parsedMetadata)
     }
     if (parsedIndex != null) {
       indexColumns = parsedIndex
     }
-    this
   }
 
   private static void validateRowWidths(List<List> rows) {
-    int expectedSize = -1
+    int expectedSize = UNKNOWN_SIZE
     rows.eachWithIndex { List row, int index ->
       if (row == null) {
         throw new IllegalArgumentException("Row ${index} cannot be null")
@@ -690,7 +838,7 @@ class MatrixBuilder {
    */
   private static List<String> splitDelimitedLine(String line, String delimiter, String quoteString) {
     if (quoteString == null || quoteString.isEmpty()) {
-      return line.split(Pattern.quote(delimiter), -1) as List<String>
+      return line.split(Pattern.quote(delimiter), PRESERVE_EMPTY_FIELDS) as List<String>
     }
 
     List<String> values = []
@@ -702,7 +850,7 @@ class MatrixBuilder {
         int nextQuoteIndex = i + quoteString.length()
         if (inQuotes && line.startsWith(quoteString, nextQuoteIndex)) {
           current.append(quoteString)
-          i += quoteString.length() * 2
+          i += quoteString.length() * ESCAPED_QUOTE_COUNT
         } else {
           inQuotes = !inQuotes
           i += quoteString.length()
@@ -728,49 +876,15 @@ class MatrixBuilder {
     if (name.isEmpty()) {
       return String
     }
-    return switch (name) {
-      case 'int', 'Integer' -> Integer
-      case 'long', 'Long' -> Long
-      case 'short', 'Short' -> Short
-      case 'byte', 'Byte' -> Byte
-      case 'float', 'Float' -> Float
-      case 'double', 'Double' -> Double
-      case 'char', 'Character' -> Character
-      case 'boolean', 'Boolean' -> Boolean
-      case 'String' -> String
-      case 'BigDecimal' -> BigDecimal
-      case 'BigInteger' -> BigInteger
-      case 'Number' -> Number
-      case 'Object' -> Object
-      case 'LocalDate' -> LocalDate
-      case 'LocalDateTime' -> LocalDateTime
-      case 'LocalTime' -> LocalTime
-      case 'YearMonth' -> YearMonth
-      case 'Year' -> Year
-      case 'MonthDay' -> MonthDay
-      case 'DayOfWeek' -> DayOfWeek
-      case 'OffsetDateTime' -> OffsetDateTime
-      case 'OffsetTime' -> OffsetTime
-      case 'ZonedDateTime' -> ZonedDateTime
-      case 'Instant' -> Instant
-      case 'Duration' -> Duration
-      case 'Period' -> Period
-      case 'ZoneId' -> ZoneId
-      case 'ZoneOffset' -> ZoneOffset
-      case 'Date' -> Date
-      case 'Time' -> Time
-      case 'Timestamp' -> Timestamp
-      default -> {
-        if (name.contains('.')) {
-          Class.forName(name)
-        } else {
-          try {
-            Class.forName("java.time.${name}")
-          } catch (ClassNotFoundException ignored) {
-            throw new IllegalArgumentException("Unknown type '$name'. Use a fully qualified class name for non standard types.")
-          }
-        }
-      }
+    Class knownType = TYPE_ALIASES[name]
+    if (knownType != null) {
+      return knownType
+    }
+    try {
+      String qualifiedName = name.startsWith(ARRAY_PREFIX) || name.contains(DOT) ? name : "java.time.${name}"
+      loadClassName(qualifiedName)
+    } catch (ClassNotFoundException ignored) {
+      throw new IllegalArgumentException("Unknown type '$name'. Use a fully qualified class name for non standard types.")
     }
   }
 
@@ -780,10 +894,10 @@ class MatrixBuilder {
     }
 
     // Try boolean
-    if (value.equalsIgnoreCase('true')) {
+    if (value.equalsIgnoreCase(TRUE_TEXT)) {
       return true
     }
-    if (value.equalsIgnoreCase('false')) {
+    if (value.equalsIgnoreCase(FALSE_TEXT)) {
       return false
     }
 
@@ -808,15 +922,14 @@ class MatrixBuilder {
     // Try number
     try {
       // Check if it's an integer
-      if (!value.contains('.')) {
+      if (!value.contains(DOT)) {
         long longValue = Long.parseLong(value)
         if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
           return (int) longValue
         }
         return longValue
-      } else {
-        return new BigDecimal(value)
       }
+      return new BigDecimal(value)
     } catch (NumberFormatException ignored) {
       // Not a number, treat as string
     }
@@ -825,25 +938,43 @@ class MatrixBuilder {
     return value
   }
 
+  private static Class loadClassName(String className) {
+    if (!className.startsWith(ARRAY_PREFIX)) {
+      return MatrixBuilder.classLoader.loadClass(className)
+    }
+    if (className.startsWith('[L') && className.endsWith(';')) {
+      Class componentType = loadClassName(className.substring(ARRAY_CLASS_PREFIX_LENGTH, className.length() - 1))
+      return ReflectArray.newInstance(componentType, 0).class
+    }
+    if (className.startsWith('[[')) {
+      return ReflectArray.newInstance(loadClassName(className.substring(1)), 0).class
+    }
+    Class componentType = PRIMITIVE_ARRAY_COMPONENTS[className.substring(1)]
+    if (componentType != null) {
+      return ReflectArray.newInstance(componentType, 0).class
+    }
+    throw new ClassNotFoundException(className)
+  }
+
   MatrixBuilder data(ResultSet rs) {
     ResultSetMetaData rsmd = rs.getMetaData()
     int ncols = rsmd.getColumnCount()
     List<String> headers = []
     List<Class> columnTypes = []
     for (int i = 1; i <= ncols; i++) {
-      headers.add(rsmd.getColumnName(i))
+      headers.add(rsmd.getColumnLabel(i))
       String columnClassName = rsmd.getColumnClassName(i)
       if (columnClassName == null || columnClassName.isBlank()) {
         columnTypes.add(mapTypeToJavaClass(rsmd.getColumnType(i)))
       } else {
-        if (columnClassName == "byte[]") {
+        if (columnClassName == 'byte[]' || columnClassName == '[B') {
           columnTypes.add(byte[].class)
         } else {
           try {
-            columnTypes.add(Class.forName(columnClassName))
+            columnTypes.add(loadClassName(columnClassName))
           } catch (ClassNotFoundException e) {
             log.error("Failed to load class $columnClassName, setting type to Object: ${e.message}", e)
-            columnTypes.add(Object.class)
+            columnTypes.add(Object)
           }
         }
       }
@@ -906,10 +1037,6 @@ class MatrixBuilder {
     headerList == null || headerList.isEmpty()
   }
 
-  private boolean noColumns() {
-    columns == null || columns.isEmpty()
-  }
-
   private boolean noDataTypes() {
     dataTypes == null || dataTypes.isEmpty()
   }
@@ -942,7 +1069,7 @@ class MatrixBuilder {
   }
 
   private static String stripExtension(String fileName) {
-    int dot = fileName.lastIndexOf('.')
+    int dot = fileName.lastIndexOf(DOT)
     dot > 0 ? fileName.substring(0, dot) : fileName
   }
 }

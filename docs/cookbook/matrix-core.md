@@ -564,8 +564,13 @@ Semi and anti joins return only left-side columns.
 Self join: pass the same matrix as both arguments.
 
 ## Comparing data
-- boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)
+- boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true, BigDecimal allowedDiff = 0.0001, boolean throwException = false, String message = '')
 - String diff(Matrix other, boolean forceRowComparing = false)
+
+The no-argument `Matrix.equals(Object)` compares numeric values exactly; it does
+not apply a numeric tolerance. Use `MatrixAssertions` or the seven-argument
+`equals` overload when approximate comparison is intended. This keeps tolerance
+explicit at call sites and avoids treating near-equal matrices as equal by default.
 
 ## Short notations and arithmetics (operator overloads)
 The Matrix, Row and Column defines short notation and operators for common operations making the code more succinct.
@@ -643,6 +648,16 @@ Given that matrix.col1 contains the value [1,2,3,4]
 | []       | putAt       | Number              | update the value                                              | r[1] = 50000                           |
 
 Other operations are just like the groovy default behavior
+
+`Row` is a live view of its parent Matrix. Indexed value updates and
+`replaceAll` write through to the parent. Structural iterator operations and
+`sort` are rejected. Sorting is blocked so Groovy's implicit `sort()` cannot
+silently move values into columns with different declared types; explicit
+set-based reordering with `reverse(true)`, `shuffle()`, or
+`Collections.swap` remains the caller's responsibility. The `(int, int)`
+`subList` overload is a live checked view: indexed replacement writes through,
+while structural changes are rejected. The `IntRange`, `Collection`, and
+`String...` overloads return copies and are disconnected from the row.
 
 ## Rolling, cumulative, and shift operations
 

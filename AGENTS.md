@@ -52,7 +52,7 @@ Before an implementation can be considered done, run these checks in order:
 - Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories.
 - Always add GroovyDoc for public classes and public methods.
 - Formatting is enforced by Spotless (`./gradlew spotlessApply` to auto-format).
-- CodeNarc 3.7 cannot parse Groovy 5 arrow switch syntax, so the root `build.gradle` auto-excludes arrow-switch files from CodeNarc and warns about old-style switch syntax. Do not assume CodeNarc fully checks files containing arrow switch expressions until the project upgrades to CodeNarc 4+.
+- CodeNarc 4.0 parses the Groovy 5 arrow switch syntax used by this project. Arrow-switch files must be analyzed normally; the root `build.gradle` only warns about remaining old-style switch syntax.
 - Understand Groovy constructor dispatch ambiguity (especially with null arguments), `@CompileStatic` type requirements (e.g., explicit casts that look redundant but are required), and `int` vs `Integer` behavioral differences (e.g., `sample(int)` vs `sample(Integer)`).
 
 Core style rules — follow the [Groovy style guide](docs/agents/groovy-style-guide.md) for details and examples:

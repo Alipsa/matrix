@@ -87,9 +87,10 @@ class MatrixBuilderTest {
     // add individual data points to a column
     Matrix m5 = Matrix.builder()
         .matrixName("m5")
-        .columnNames(['id', 'name', 'salary', 'start'])
-        .types([int, String, Number, LocalDate]).build()
-    m5['id'] = [1,2,3]
+        .build()
+        .addColumn('id', int)
+        .addColumn('name', String)
+    m5.column('id').addAll([1,2,3])
     m5[1] << 'Rick'
     m5['name'] << 'Dan'
     m5.column(1).add('Michelle')

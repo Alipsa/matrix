@@ -811,14 +811,11 @@ class MatrixAvroWriterTest {
 
   @Test
   void testValidationExceptionForColumnSizeMismatch() {
-    Map<String, List<?>> cols = [:]
-    cols['id'] = [1, 2, 3]
-    cols['name'] = ['Alice', 'Bob']
-
     Matrix m = Matrix.builder('Mismatch')
-        .columns(cols)
+        .columns(id: [1, 2, 3], name: ['Alice', 'Bob', 'Carol'])
         .types(Integer, String)
         .build()
+    m.column('name').remove(2)
 
     File tmp = Files.createTempFile('avro-test-', '.avro').toFile()
     try {

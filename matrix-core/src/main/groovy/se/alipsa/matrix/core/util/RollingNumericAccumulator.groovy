@@ -2,18 +2,17 @@ package se.alipsa.matrix.core.util
 
 import se.alipsa.matrix.core.ValueConverter
 
-import java.math.RoundingMode
+import java.math.MathContext
 
 /**
  * Internal sliding-window accumulator for numeric rolling operations.
  */
 class RollingNumericAccumulator {
 
-  private static final int MEAN_SCALE = 16
+  private static final MathContext MEAN_CONTEXT = new MathContext(16)
 
   private final List<?> orderedValues
   private BigDecimal rawSum = BigDecimal.ZERO
-  private BigDecimal scaledSum = BigDecimal.ZERO.setScale(MEAN_SCALE, RoundingMode.HALF_UP)
   private int numericCount = 0
   private int currentStart = 0
   private int currentEnd = -1
@@ -41,10 +40,7 @@ class RollingNumericAccumulator {
     if (numericCount < minPeriods) {
       return null
     }
-    if (scaledSum == 0) {
-      return BigDecimal.ZERO.setScale(MEAN_SCALE, RoundingMode.HALF_UP)
-    }
-    scaledSum.divide(numericCount as BigDecimal, MEAN_SCALE, RoundingMode.HALF_UP)
+    rawSum.divide(numericCount as BigDecimal, MEAN_CONTEXT)
   }
 
   private void addValue(Object value) {
@@ -53,7 +49,6 @@ class RollingNumericAccumulator {
       return
     }
     rawSum = rawSum.add(numericValue)
-    scaledSum = scaledSum.add(numericValue.setScale(MEAN_SCALE, RoundingMode.HALF_UP))
     numericCount++
   }
 
@@ -63,7 +58,6 @@ class RollingNumericAccumulator {
       return
     }
     rawSum = rawSum.subtract(numericValue)
-    scaledSum = scaledSum.subtract(numericValue.setScale(MEAN_SCALE, RoundingMode.HALF_UP))
     numericCount--
   }
 

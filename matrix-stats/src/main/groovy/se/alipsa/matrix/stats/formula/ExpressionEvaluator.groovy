@@ -63,7 +63,7 @@ final class ExpressionEvaluator {
       }
       return value as BigDecimal
     }
-    if (env != null && env.containsKey(name)) {
+    if (env?.containsKey(name)) {
       Object value = env[name][rowIndex]
       if (value == null) {
         throw new IllegalArgumentException("Environment variable '${name}' contains null values")

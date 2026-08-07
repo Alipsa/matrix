@@ -7,6 +7,8 @@ import se.alipsa.matrix.core.Matrix
  */
 final class CategoricalEncoder {
 
+  private static final BigDecimal NEGATIVE_WEIGHT = -1.0
+
   private final Matrix data
 
   CategoricalEncoder(Matrix data) {
@@ -22,7 +24,7 @@ final class CategoricalEncoder {
    */
   Map<String, List<BigDecimal>> encode(String columnName, ContrastType contrastType) {
     List<Object> values = (0..<data.rowCount()).collect { int i -> data[i, columnName] }
-    List<Object> uniqueValues = (values.toUnique() as List<Object>).sort() as List<Object>
+    List<String> uniqueValues = orderedLevels(values)
 
     if (uniqueValues.size() <= 1) {
       return [:]
@@ -34,48 +36,36 @@ final class CategoricalEncoder {
       case ContrastType.TREATMENT -> {
         // First level is reference, omitted
         for (int k = 1; k < uniqueValues.size(); k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            val == level ? 1.0 as BigDecimal : 0.0 as BigDecimal
+            String.valueOf(val) == level ? 1.0 : 0.0
           }
           result[indicatorName] = indicator
         }
       }
       case ContrastType.SUM -> {
         // Last level is omitted
-        Object omittedLevel = uniqueValues[-1]
+        String omittedLevel = uniqueValues.last()
         for (int k = 0; k < uniqueValues.size() - 1; k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            if (val == level) {
-              return 1.0 as BigDecimal
-            }
-            if (val == omittedLevel) {
-              return -1.0 as BigDecimal
-            }
-            0.0 as BigDecimal
+            contrastValue(String.valueOf(val), level, omittedLevel, NEGATIVE_WEIGHT)
           }
           result[indicatorName] = indicator
         }
       }
       case ContrastType.DEVIATION -> {
         // Last level is omitted, with fractional negative weight
-        Object omittedLevel = uniqueValues[-1]
+        String omittedLevel = uniqueValues.last()
         int levelCount = uniqueValues.size()
-        BigDecimal omittedValue = (-1.0 / (levelCount - 1)) as BigDecimal
+        BigDecimal omittedValue = NEGATIVE_WEIGHT / (levelCount - 1)
         for (int k = 0; k < levelCount - 1; k++) {
-          Object level = uniqueValues[k]
+          String level = uniqueValues[k]
           String indicatorName = "${columnName}_${level}"
           List<BigDecimal> indicator = values.collect { Object val ->
-            if (val == level) {
-              return 1.0 as BigDecimal
-            }
-            if (val == omittedLevel) {
-              return omittedValue
-            }
-            0.0 as BigDecimal
+            contrastValue(String.valueOf(val), level, omittedLevel, omittedValue)
           }
           result[indicatorName] = indicator
         }
@@ -97,7 +87,32 @@ final class CategoricalEncoder {
       return []
     }
     List<Object> values = (0..<data.rowCount()).collect { int i -> data[i, columnName] }
-    (values.toUnique() as List<Object>).sort().collect { Object val -> val.toString() }
+    orderedLevels(values)
+  }
+
+  private static List<String> orderedLevels(List<Object> values) {
+    Set<String> seen = new LinkedHashSet<>()
+    for (Object value : values) {
+      seen << String.valueOf(value)
+    }
+    List<String> result = seen.toList()
+    result.sort()
+    result
+  }
+
+  private static BigDecimal contrastValue(
+    String value,
+    String level,
+    String omittedLevel,
+    BigDecimal omittedValue
+  ) {
+    if (value == level) {
+      return 1.0
+    }
+    if (value == omittedLevel) {
+      return omittedValue
+    }
+    0.0
   }
 
   /**

@@ -45,49 +45,55 @@ final class ExpressionDsl {
   }
 
   ExpressionFunctionExpr log(Object expression) {
-    new ExpressionFunctionExpr('log', [ExpressionExpr.coerce(expression, 'expression')])
+    new ExpressionFunctionExpr('log', [ExpressionExpr.coerce(expression, ExpressionExpr.EXPRESSION_LABEL)])
   }
 
   ExpressionFunctionExpr sqrt(Object expression) {
-    new ExpressionFunctionExpr('sqrt', [ExpressionExpr.coerce(expression, 'expression')])
+    new ExpressionFunctionExpr('sqrt', [ExpressionExpr.coerce(expression, ExpressionExpr.EXPRESSION_LABEL)])
   }
 
   ExpressionFunctionExpr exp(Object expression) {
-    new ExpressionFunctionExpr('exp', [ExpressionExpr.coerce(expression, 'expression')])
+    new ExpressionFunctionExpr('exp', [ExpressionExpr.coerce(expression, ExpressionExpr.EXPRESSION_LABEL)])
   }
 }
 
 @PackageScope
 abstract class ExpressionExpr {
 
+  static final String EXPRESSION_LABEL = 'expression'
+  static final String OTHER_LABEL = 'other'
+  static final String POWER_OPERATOR = '^'
+  static final String MINUS_OPERATOR = '-'
+
   ExpressionExpr plus(Object other) {
-    new ExpressionBinaryExpr(this, '+', coerce(other, 'other'))
+    new ExpressionBinaryExpr(this, '+', coerce(other, OTHER_LABEL))
   }
 
   ExpressionExpr minus(Object other) {
-    new ExpressionBinaryExpr(this, '-', coerce(other, 'other'))
+    new ExpressionBinaryExpr(this, MINUS_OPERATOR, coerce(other, OTHER_LABEL))
   }
 
   ExpressionExpr multiply(Object other) {
-    new ExpressionBinaryExpr(this, '*', coerce(other, 'other'))
+    new ExpressionBinaryExpr(this, '*', coerce(other, OTHER_LABEL))
   }
 
   ExpressionExpr div(Object other) {
-    new ExpressionBinaryExpr(this, '/', coerce(other, 'other'))
+    new ExpressionBinaryExpr(this, '/', coerce(other, OTHER_LABEL))
   }
 
   ExpressionExpr power(Object other) {
-    new ExpressionBinaryExpr(this, '^', coerce(other, 'other'))
+    new ExpressionBinaryExpr(this, POWER_OPERATOR, coerce(other, OTHER_LABEL))
   }
 
   ExpressionExpr negative() {
-    new ExpressionUnaryExpr('-', this)
+    new ExpressionUnaryExpr(MINUS_OPERATOR, this)
   }
 
   ExpressionExpr positive() {
     this
   }
 
+  @SuppressWarnings('UnusedMethodParameter')
   Object remainder(Object other) {
     throw new IllegalArgumentException("Unsupported arithmetic operator '%' in I { ... }")
   }
@@ -112,9 +118,9 @@ abstract class ExpressionExpr {
 
   static int precedence(String operator) {
     switch (operator) {
-      case '^' -> 3
+      case POWER_OPERATOR -> 3
       case '*', '/' -> 2
-      case '+', '-' -> 1
+      case '+', MINUS_OPERATOR -> 1
       default -> 0
     }
   }
@@ -163,7 +169,7 @@ final class ExpressionUnaryExpr extends ExpressionExpr {
 
   ExpressionUnaryExpr(String operator, ExpressionExpr expression) {
     this.operator = IdentifierRenderingSupport.requireNonBlank(operator, 'operator')
-    this.expression = ExpressionExpr.coerce(expression, 'expression')
+    this.expression = ExpressionExpr.coerce(expression, EXPRESSION_LABEL)
   }
 
   @Override
@@ -206,7 +212,7 @@ final class ExpressionBinaryExpr extends ExpressionExpr {
   }
 
   private static String requireOperator(String operator) {
-    if (!(operator in ['+', '-', '*', '/', '^'])) {
+    if (!(operator in ['+', MINUS_OPERATOR, '*', '/', POWER_OPERATOR])) {
       throw new IllegalArgumentException("Unsupported arithmetic operator: ${operator}")
     }
     operator
@@ -226,7 +232,7 @@ final class ExpressionFunctionExpr extends ExpressionExpr {
 
   @Override
   String render() {
-    "${name}(${arguments.collect { ExpressionExpr argument -> argument.render() }.join(', ')})"
+    "${name}(${arguments*.render().join(', ')})"
   }
 
   private static List<ExpressionExpr> copyArguments(List<ExpressionExpr> arguments) {
@@ -266,6 +272,7 @@ final class ExpressionNumberOperators {
     new ExpressionBinaryExpr(new ExpressionNumberExpr(self), '^', other)
   }
 
+  @SuppressWarnings('UnusedMethodParameter')
   static Object remainder(Number self, ExpressionExpr other) {
     throw new IllegalArgumentException("Unsupported arithmetic operator '%' in I { ... }")
   }

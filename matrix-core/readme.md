@@ -621,6 +621,29 @@ Grid<Number> bar = new Grid<>([
 
 Stat.means(bar)
 ```
+
+Grid rows must remain rectangular. The first row establishes the width, and
+`add`, `addAll`, `leftShift`, indexed insertion, replacement, and row assignment
+reject rows with another width. The list passed to either list-based constructor
+is copied, including each row, so later changes to the source lists do not change
+the Grid.
+
+Grid is mutable. Indexed value assignment remains write-through:
+
+```groovy
+bar[0][1] = 4.5
+assert bar[0, 1] == 4.5
+```
+
+`getAt(int)`, iteration, and `data` expose checked live row views. Value replacement
+is allowed, but structural row operations (`add`, `remove`, `clear`, and `addAll`)
+and structural changes to the outer `data` list throw
+`UnsupportedOperationException`. Use the validated Grid methods to add, replace,
+or remove rows. Direct `data` reassignment is also rejected.
+
+`data` remains available for read-only consumers and for write-through value access;
+it is not an unrestricted replacement for the Grid's row-management API.
+
 elements can be accessed using the simple square bracket notation grid[rowindex, columnIndex], e.g:
 ```groovy
 foo[0, 1] = 3.23

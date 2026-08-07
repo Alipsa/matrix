@@ -22,6 +22,16 @@
 
   These intentionally raw `List` declarations may produce `rawtypes` warnings with `javac -Xlint:rawtypes`; suppress that warning or avoid `-Werror` for this migration.
 
+- Matrix default equality is now exact for numeric values; use `MatrixAssertions` or the tolerance-based equals overload for approximate comparisons.
+- Unknown column names in name-based lookup, mutation, movement, conversion, and rename paths now raise clear `IllegalArgumentException`s instead of exposing a `-1` index or silently targeting the last column.
+- `Row.subList(int, int)` remains a live checked view with write-through value replacement; structural row mutations and row sorting are rejected. The other subList overloads return copies.
+- Grid row writers enforce a rectangular width. List-based Grid constructors snapshot the supplied outer list and rows. The public `data` property is a read-only outer view with checked live rows: indexed value writes remain supported, while structural row/outer-list mutations and direct reassignment are rejected.
+- `Grid.leftShift(List)` now returns the Grid itself for safe operator chaining; its erased return type changes from `Object` to `Grid`.
+- Adding or replacing Matrix columns now validates established width on zero-row schema matrices. This applies to `addColumn`, `upsertColumn`, `m['a'] = [...]`, `m[0] = [...]`, `m.a = [...]`, and the two-pass, order-independent null-list handling in `and(Map)`.
+- Numeric summary results now exclude null and non-numeric values from median and quartile calculations. `quartiles([])` returns `[null, null]` and `iqr([])` returns `null`.
+- Rolling mean output now follows a 16-significant-digit precision contract instead of always using scale 16.
+- ResultSet imports use JDBC column labels, so aliases can change the resulting Matrix column names from the physical names.
+
 ## 3.8.0, 2026-05-22
 
 ### New Matrix methods
@@ -79,7 +89,11 @@
 - Matrix's Groovy version guard now accepts qualified version strings such as `6.0.0-alpha-1` instead of failing during class initialization.
 - `Stat.sd(Matrix, List<String>)` was incorrectly collecting `Double` values via `.doubleValue()`; it now delegates to the existing `sd(List<?>, boolean)` overload, giving consistent BigDecimal-precision results.
 - `Stat.medians(List<List<?>>, List<Integer>)` now returns `null` for columns with no numeric values instead of throwing a null pointer exception.
+- `Stat.median`, `Stat.quartiles`, `Stat.iqr`, and numeric summaries now ignore null and non-numeric values consistently. Empty or all-non-numeric quartiles return `[null, null]`, and `iqr` returns `null`.
 - `Stat.mean()` no longer applies `setScale` to every summand before adding; scale is applied only at the final divide, producing more accurate intermediate sums.
+- Rolling means now use a 16-significant-digit `MathContext` instead of forcing every result to scale 16.
+- `MatrixBuilder.csvString(String, Map)` now reports `Empty CSV content` for direct empty input and handles comment-only metadata consistently; `clipboard(Map)` retains its clipboard-specific empty-content message.
+- `MatrixBuilder.data(ResultSet)` now uses JDBC column labels, so SQL aliases are preserved as Matrix column names.
 - `Stat.min(Matrix, List<String>)`, `Stat.max(Matrix, List<String>)`, and `Stat.max(Matrix, String)` now use direct columnar access instead of building a full row list, matching the columnar-access pattern used elsewhere in `Stat`.
 - `ValueConverter.convert(..., LocalDate, ..., Locale)` now honors the supplied locale for patterned date parsing.
 - `ValueConverter.asLong(String)` now avoids `Double` conversion so large integer strings do not lose precision.
