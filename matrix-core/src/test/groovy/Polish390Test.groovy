@@ -159,7 +159,8 @@ class Polish390Test {
   void rowSubListSortIsRejected() {
     def m = Matrix.builder().data(a: [3], b: [1], c: [2]).types(int, int, int).build()
     def row = m.row(0)
-    assertThrows(UnsupportedOperationException) { row.subList(0, 3).sort(null) }
+    def ex = assertThrows(UnsupportedOperationException) { row.subList(0, 3).sort(null) }
+    assertTrue(ex.message.contains('Sorting a row is not supported'))
     assertIterableEquals([3, 1, 2], m.row(0).toList())
   }
 

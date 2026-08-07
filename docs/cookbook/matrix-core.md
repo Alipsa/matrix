@@ -651,11 +651,13 @@ Other operations are just like the groovy default behavior
 
 `Row` is a live view of its parent Matrix. Indexed value updates and
 `replaceAll` write through to the parent. Structural iterator operations and
-`sort` are rejected because they could change the row width or move values into
-columns with different declared types. The `(int, int)` `subList` overload is a
-live checked view: indexed replacement writes through, while structural changes
-are rejected. The `IntRange`, `Collection`, and `String...` overloads return
-copies and are disconnected from the row.
+`sort` are rejected. Sorting is blocked so Groovy's implicit `sort()` cannot
+silently move values into columns with different declared types; explicit
+set-based reordering with `reverse(true)`, `shuffle()`, or
+`Collections.swap` remains the caller's responsibility. The `(int, int)`
+`subList` overload is a live checked view: indexed replacement writes through,
+while structural changes are rejected. The `IntRange`, `Collection`, and
+`String...` overloads return copies and are disconnected from the row.
 
 ## Rolling, cumulative, and shift operations
 

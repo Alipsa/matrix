@@ -16,10 +16,8 @@ import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
-import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
-import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.nio.file.Files
 import java.nio.file.Path
@@ -813,20 +811,11 @@ class MatrixAvroWriterTest {
 
   @Test
   void testValidationExceptionForColumnSizeMismatch() {
-    Map<String, List<?>> cols = [:]
-    cols['id'] = [1, 2, 3]
-    cols['name'] = ['Alice', 'Bob']
-
     Matrix m = Matrix.builder('Mismatch')
         .columns(id: [1, 2, 3], name: ['Alice', 'Bob', 'Carol'])
         .types(Integer, String)
         .build()
-    Field columnsField = Matrix.getDeclaredField('mColumns')
-    columnsField.accessible = true
-    columnsField.set(m, [
-        new Column('id', [1, 2, 3], Integer),
-        new Column('name', ['Alice', 'Bob'], String)
-    ])
+    m.column('name').remove(2)
 
     File tmp = Files.createTempFile('avro-test-', '.avro').toFile()
     try {

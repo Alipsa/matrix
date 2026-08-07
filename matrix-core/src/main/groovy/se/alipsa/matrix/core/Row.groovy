@@ -15,6 +15,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
 class Row implements GroovyObject, List<Object> {
 
     private static final String UNSUPPORTED_MUTATION_MESSAGE = 'Adding and deleting values from a row is not supported.'
+    private static final String UNSUPPORTED_SORT_MESSAGE = 'Sorting a row is not supported because it would move values across columns and can violate their declared types.'
     private static final String UNKNOWN_COLUMN_MESSAGE_PREFIX = 'Failed to find a column with the name '
 
     @PackageScope
@@ -482,7 +483,7 @@ class Row implements GroovyObject, List<Object> {
      */
     @Override
     void sort(Comparator<? super Object> c) {
-        throw new UnsupportedOperationException('Sorting a row is not supported because it would move values across columns and can violate their declared types.')
+        throw new UnsupportedOperationException(UNSUPPORTED_SORT_MESSAGE)
     }
 
     /**
@@ -654,7 +655,7 @@ class Row implements GroovyObject, List<Object> {
 
     @Override
     void sort(Comparator<? super Object> comparator) {
-      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_SORT_MESSAGE)
     }
 
     @Override

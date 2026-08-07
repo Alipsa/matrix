@@ -26,6 +26,7 @@
 - Unknown column names in name-based lookup, mutation, movement, conversion, and rename paths now raise clear `IllegalArgumentException`s instead of exposing a `-1` index or silently targeting the last column.
 - `Row.subList(int, int)` remains a live checked view with write-through value replacement; structural row mutations and row sorting are rejected. The other subList overloads return copies.
 - Grid row writers enforce a rectangular width. List-based Grid constructors snapshot the supplied outer list and rows. The public `data` property is a read-only outer view with checked live rows: indexed value writes remain supported, while structural row/outer-list mutations and direct reassignment are rejected.
+- `Grid.leftShift(List)` now returns the Grid itself for safe operator chaining; its erased return type changes from `Object` to `Grid`.
 - Adding or replacing Matrix columns now validates established width on zero-row schema matrices. This applies to `addColumn`, `upsertColumn`, `m['a'] = [...]`, `m[0] = [...]`, `m.a = [...]`, and the two-pass, order-independent null-list handling in `and(Map)`.
 - Numeric summary results now exclude null and non-numeric values from median and quartile calculations. `quartiles([])` returns `[null, null]` and `iqr([])` returns `null`.
 - Rolling mean output now follows a 16-significant-digit precision contract instead of always using scale 16.
