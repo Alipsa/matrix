@@ -4,6 +4,8 @@
 - Hoist Grid row views in numeric conversion loops to avoid repeated checked-view allocations without changing conversion results.
 - CodeNarc cleanup across the formula, contingency, and cluster packages without behavioral changes.
 - Fix `CategoricalEncoder.levels()` null handling and share string-based level ordering with `encode()`.
+- String-based ordering can change the treatment-contrast reference level for numeric-valued categorical columns.
+- Null categorical values are now encoded as their own `"null"` level instead of throwing.
 
 ## v2.5.2, 2026-07-06
 - Dependency update: org.ejml:ejml-simple 0.43.1 -> 0.46.0
