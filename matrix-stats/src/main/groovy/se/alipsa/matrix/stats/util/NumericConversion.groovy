@@ -128,9 +128,11 @@ final class NumericConversion {
     int[] shape = validateRectangular(grid, GRID_LABEL)
     Grid<BigDecimal> numericGrid = toBigDecimalGrid(grid)
     double[][] values = new double[shape[0]][shape[1]]
+    List<List<BigDecimal>> numericRows = numericGrid.data
     for (int row = 0; row < shape[0]; row++) {
+      List<BigDecimal> currentRow = numericRows[row]
       for (int col = 0; col < shape[1]; col++) {
-        values[row][col] = numericGrid.getAt(row, col) as double
+        values[row][col] = currentRow[col] as double
       }
     }
     values
@@ -332,9 +334,10 @@ final class NumericConversion {
     List<List<?>> rowData = grid.data
     List<List<BigDecimal>> rows = []
     for (int row = 0; row < shape[0]; row++) {
+      List<?> currentInputRow = rowData[row]
       List<BigDecimal> currentRow = []
       for (int col = 0; col < shape[1]; col++) {
-        currentRow << toBigDecimal(rowData[row][col], "grid value at row ${row}, column ${col}")
+        currentRow << toBigDecimal(currentInputRow[col], "grid value at row ${row}, column ${col}")
       }
       rows << currentRow
     }

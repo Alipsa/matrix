@@ -541,8 +541,18 @@ must use validated Grid methods:
 bar[0][1] = 4.5                 // writes through to bar
 assert bar[0, 1] == 4.5
 
-assertThrows(UnsupportedOperationException) { bar[0].add(99) }
-assertThrows(UnsupportedOperationException) { bar.data << [1, 2, 3] }
+try {
+  bar[0].add(99)
+  assert false
+} catch (UnsupportedOperationException ignored) {
+  assert true
+}
+try {
+  bar.data << [1, 2, 3]
+  assert false
+} catch (UnsupportedOperationException ignored) {
+  assert true
+}
 ```
 
 `getAt(int)`, iteration, and `data` return checked live row views. Their indexed

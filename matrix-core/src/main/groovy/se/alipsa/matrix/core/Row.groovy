@@ -653,6 +653,11 @@ class Row implements GroovyObject, List<Object> {
     }
 
     @Override
+    void sort(Comparator<? super Object> comparator) {
+      throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
+    }
+
+    @Override
     void add(int index, Object element) {
       throw new UnsupportedOperationException(Row.UNSUPPORTED_MUTATION_MESSAGE)
     }

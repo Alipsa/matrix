@@ -92,8 +92,6 @@ ruleset {
         exclude 'UnnecessarySetter'
         exclude 'UnnecessaryPublicModifier'
         exclude 'UnnecessaryReturnKeyword'
-        // CodeNarc 4.0 crashes on some Groovy 5 constructs (e.g. static imports in tests).
-        exclude 'UnnecessaryObjectReferences'
     }
 
     // Unused code

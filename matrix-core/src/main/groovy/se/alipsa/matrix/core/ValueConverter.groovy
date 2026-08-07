@@ -21,7 +21,7 @@ import java.time.format.DateTimeParseException
 import java.time.temporal.Temporal
 import java.time.temporal.TemporalAccessor
 import java.util.Date as UtilDate
-import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Converts matrix values between common Java, Groovy, numeric, date and time types.
@@ -49,8 +49,12 @@ class ValueConverter {
   // Threshold below which a Number is treated as yyyyMMdd date integer rather than epoch millis
   private static final long MAX_COMPACT_DATE_INT = 22991231L
 
-  static ConcurrentMap<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new java.util.concurrent.ConcurrentHashMap<>()
-  static ConcurrentMap<String, DateTimeFormatter> dateTimeFormatterCache = new java.util.concurrent.ConcurrentHashMap<>()
+  // Keep the concrete public field type for source compatibility with existing consumers.
+  @SuppressWarnings('ImplementationAsType')
+  static ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>> simpleDateCache = new ConcurrentHashMap<>()
+
+  @SuppressWarnings('ImplementationAsType')
+  static ConcurrentHashMap<String, DateTimeFormatter> dateTimeFormatterCache = new ConcurrentHashMap<>()
 
   static <E> E convert(Object o, Class<E> type,
                        String dateTimePattern = null,

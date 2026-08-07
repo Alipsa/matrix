@@ -685,7 +685,7 @@ class MatrixTest {
     def mismatchedRowCount = assertThrows(IllegalArgumentException) {
       empData.clone().addColumn('bonus', Integer, 1, [1, 2, 3])
     }
-    assertEquals('Column size (3) does not match matrix width (5)', mismatchedRowCount.message)
+    assertEquals('Column size (3) does not match row count (5)', mismatchedRowCount.message)
 
     def upsertWithNullFirstValue = empData.clone()
     upsertWithNullFirstValue.optional_note = [null, 'late', 'ok', null, 'remote']

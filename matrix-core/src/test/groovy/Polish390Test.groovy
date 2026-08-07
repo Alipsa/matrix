@@ -77,7 +77,7 @@ class Polish390Test {
     def ex = assertThrows(IllegalArgumentException) {
       m.addColumn('b', int, [1, 2])
     }
-    assertTrue(ex.message.contains('does not match matrix width'))
+    assertTrue(ex.message.contains('does not match row count'))
   }
 
   @Test
@@ -95,7 +95,7 @@ class Polish390Test {
     def ex = assertThrows(IllegalArgumentException) {
       m['a', Integer] = [1, 2, 3]
     }
-    assertTrue(ex.message.contains('does not match matrix width'))
+    assertTrue(ex.message.contains('does not match row count'))
   }
 
   @Test
@@ -153,6 +153,14 @@ class Polish390Test {
     def row = m.row(0)
     def ex = assertThrows(UnsupportedOperationException) { row.sort(null) }
     assertTrue(ex.message.contains('Sorting a row is not supported'))
+  }
+
+  @Test
+  void rowSubListSortIsRejected() {
+    def m = Matrix.builder().data(a: [3], b: [1], c: [2]).types(int, int, int).build()
+    def row = m.row(0)
+    assertThrows(UnsupportedOperationException) { row.subList(0, 3).sort(null) }
+    assertIterableEquals([3, 1, 2], m.row(0).toList())
   }
 
   @Test
@@ -325,7 +333,16 @@ class Polish390Test {
     def ex = assertThrows(IllegalArgumentException) {
       Matrix.builder().csvString('#index: id\n', [firstRowAsHeader: false]).build()
     }
-    assertTrue(ex.message.contains('Headerless index column(s) do not exist'))
+    assertTrue(ex.message.contains('Index column(s) do not exist'))
+  }
+
+  @Test
+  void csvStringHeaderedMissingIndexColumnUsesNeutralMessage() {
+    def ex = assertThrows(IllegalArgumentException) {
+      Matrix.builder().csvString('#index: zzz\nid,v\n1,2\n', [firstRowAsHeader: true]).build()
+    }
+    assertTrue(ex.message.contains('resolved column names'))
+    assertTrue(!ex.message.contains('Headerless'))
   }
 
   @Test
@@ -333,7 +350,7 @@ class Polish390Test {
     def ex = assertThrows(IllegalArgumentException) {
       Matrix.builder().csvString('#types: Integer\n', [firstRowAsHeader: true]).build()
     }
-    assertTrue(ex.message.contains('cannot extract a header row'))
+    assertTrue(ex.message.contains('No data row available to use as header'))
   }
 
   @Test
@@ -381,12 +398,51 @@ class Polish390Test {
   }
 
   @Test
+  void gridOneArgumentConstructorCopiesSourceLists() {
+    def outer = [[1, 2], [3, 4]]
+    def g = new Grid<Integer>(outer)
+    outer[0][0] = 99
+    outer << [5, 6]
+    assertEquals(1, g[0, 0])
+    assertEquals(2, g.dimensions().observations)
+  }
+
+  @Test
+  void gridReplaceRowCopiesAliasedCheckedViewBeforeClearing() {
+    def g = new Grid<Integer>([[1, 2], [3, 4]], Integer)
+    g.replaceRow(0, g[0])
+    assertEquals([[1, 2], [3, 4]], g.getRowList())
+  }
+
+  @Test
   void gridWidthIsEnforcedForRowMutators() {
     def g = new Grid<Integer>([[1, 2], [3, 4]], Integer)
     assertThrows(IllegalArgumentException) { g << [1, 2, 3] }
     assertThrows(IllegalArgumentException) { g.add(0, [1]) }
     assertThrows(IllegalArgumentException) { g.addAll([[1, 2], [3]]) }
     assertThrows(IllegalArgumentException) { g[0] = [1] }
+  }
+
+  @Test
+  void gridLeftShiftReturnsGridForChaining() {
+    def g = new Grid<Integer>()
+    g << [1, 2] << [3, 4]
+    assertEquals([[1, 2], [3, 4]], g.getRowList())
+  }
+
+  @Test
+  void gridAddAllRejectsNullRowsAndNullInput() {
+    def g = new Grid<Integer>()
+    assertThrows(IllegalArgumentException) { g.addAll([null]) }
+    assertThrows(IllegalArgumentException) { g.addAll(null) }
+  }
+
+  @Test
+  void gridIteratorRemovalIsRejected() {
+    def g = new Grid<Integer>([[1, 2]], Integer)
+    def iterator = g.iterator()
+    iterator.next()
+    assertThrows(UnsupportedOperationException) { iterator.remove() }
   }
 
   @Test

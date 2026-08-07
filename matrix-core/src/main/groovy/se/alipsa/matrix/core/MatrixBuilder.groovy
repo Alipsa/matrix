@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.util.ClassUtils
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.Logger
 
+import java.lang.reflect.Array as ReflectArray
 import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.nio.file.Path
@@ -48,6 +49,20 @@ class MatrixBuilder {
   private static final String DOT = '.'
   private static final String COMMA = ','
   private static final int PRESERVE_EMPTY_FIELDS = -1
+  private static final int UNKNOWN_SIZE = -1
+  private static final int ARRAY_CLASS_PREFIX_LENGTH = 2
+  private static final int ESCAPED_QUOTE_COUNT = 2
+  private static final String ARRAY_PREFIX = '['
+  private static final Map<String, Class> PRIMITIVE_ARRAY_COMPONENTS = [
+      Z: boolean,
+      B: byte,
+      C: char,
+      D: double,
+      F: float,
+      I: int,
+      J: long,
+      S: short
+  ]
   private static final String NAME_DIRECTIVE = 'name:'
   private static final String METADATA_DIRECTIVE = 'metadata.'
   private static final String INDEX_DIRECTIVE = 'index:'
@@ -199,7 +214,7 @@ class MatrixBuilder {
    */
   MatrixBuilder columns(Map<String, ? extends List> columnData) {
     clearPendingIndexColumns()
-    int expectedSize = PRESERVE_EMPTY_FIELDS
+    int expectedSize = UNKNOWN_SIZE
     columnData.each { k, v ->
       int size = v == null ? 0 : v.size()
       if (expectedSize < 0) {
@@ -602,7 +617,7 @@ class MatrixBuilder {
    *   - nullStrings (List<String>) list of strings to treat as null
    * @return this builder
    * @throws IllegalArgumentException if the CSV content is empty, the header row is missing,
-   *         or a headerless index column does not exist
+   *         or an index column does not exist in the resolved column names
    */
   MatrixBuilder csvString(String content, Map options = [:]) {
     if (content == null || content.isEmpty()) {
@@ -739,7 +754,7 @@ class MatrixBuilder {
 
   private static List<String> extractHeader(List<List> data) {
     if (data.isEmpty()) {
-      throw new IllegalArgumentException('CSV input is empty; cannot extract a header row')
+      throw new IllegalArgumentException('No data row available to use as header; CSV contained only comments or directives')
     }
     data.remove(0) as List<String>
   }
@@ -756,7 +771,7 @@ class MatrixBuilder {
     List<String> missing = parsedIndex.findAll { !headerNames.contains(it) }
     if (!missing.isEmpty()) {
       throw new IllegalArgumentException(
-          "Headerless index column(s) do not exist in the generated schema: ${missing.join(', ')}"
+          "Index column(s) do not exist in the resolved column names: ${missing.join(', ')}"
       )
     }
   }
@@ -801,7 +816,7 @@ class MatrixBuilder {
   }
 
   private static void validateRowWidths(List<List> rows) {
-    int expectedSize = PRESERVE_EMPTY_FIELDS
+    int expectedSize = UNKNOWN_SIZE
     rows.eachWithIndex { List row, int index ->
       if (row == null) {
         throw new IllegalArgumentException("Row ${index} cannot be null")
@@ -835,7 +850,7 @@ class MatrixBuilder {
         int nextQuoteIndex = i + quoteString.length()
         if (inQuotes && line.startsWith(quoteString, nextQuoteIndex)) {
           current.append(quoteString)
-          i += quoteString.length() * 2
+          i += quoteString.length() * ESCAPED_QUOTE_COUNT
         } else {
           inQuotes = !inQuotes
           i += quoteString.length()
@@ -866,8 +881,8 @@ class MatrixBuilder {
       return knownType
     }
     try {
-      String qualifiedName = name.contains(DOT) ? name : "java.time.${name}"
-      MatrixBuilder.classLoader.loadClass(qualifiedName)
+      String qualifiedName = name.startsWith(ARRAY_PREFIX) || name.contains(DOT) ? name : "java.time.${name}"
+      loadClassName(qualifiedName)
     } catch (ClassNotFoundException ignored) {
       throw new IllegalArgumentException("Unknown type '$name'. Use a fully qualified class name for non standard types.")
     }
@@ -879,10 +894,10 @@ class MatrixBuilder {
     }
 
     // Try boolean
-      if (value.equalsIgnoreCase(TRUE_TEXT)) {
+    if (value.equalsIgnoreCase(TRUE_TEXT)) {
       return true
     }
-      if (value.equalsIgnoreCase(FALSE_TEXT)) {
+    if (value.equalsIgnoreCase(FALSE_TEXT)) {
       return false
     }
 
@@ -923,6 +938,24 @@ class MatrixBuilder {
     return value
   }
 
+  private static Class loadClassName(String className) {
+    if (!className.startsWith(ARRAY_PREFIX)) {
+      return MatrixBuilder.classLoader.loadClass(className)
+    }
+    if (className.startsWith('[L') && className.endsWith(';')) {
+      Class componentType = loadClassName(className.substring(ARRAY_CLASS_PREFIX_LENGTH, className.length() - 1))
+      return ReflectArray.newInstance(componentType, 0).class
+    }
+    if (className.startsWith('[[')) {
+      return ReflectArray.newInstance(loadClassName(className.substring(1)), 0).class
+    }
+    Class componentType = PRIMITIVE_ARRAY_COMPONENTS[className.substring(1)]
+    if (componentType != null) {
+      return ReflectArray.newInstance(componentType, 0).class
+    }
+    throw new ClassNotFoundException(className)
+  }
+
   MatrixBuilder data(ResultSet rs) {
     ResultSetMetaData rsmd = rs.getMetaData()
     int ncols = rsmd.getColumnCount()
@@ -938,7 +971,7 @@ class MatrixBuilder {
           columnTypes.add(byte[].class)
         } else {
           try {
-            columnTypes.add(MatrixBuilder.classLoader.loadClass(columnClassName))
+            columnTypes.add(loadClassName(columnClassName))
           } catch (ClassNotFoundException e) {
             log.error("Failed to load class $columnClassName, setting type to Object: ${e.message}", e)
             columnTypes.add(Object)

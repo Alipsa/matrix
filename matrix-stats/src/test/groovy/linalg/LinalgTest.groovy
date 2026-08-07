@@ -208,14 +208,25 @@ class LinalgTest {
 
   @Test
   void testGridRejectsRaggedRowBeforeSvd() {
-    Grid<Number> grid = new Grid<Number>()
-    grid << [1.0, 2.0]
-
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      grid << [3.0]
+      Linalg.svd(raggedGrid())
     }
 
-    assertTrue(exception.message.contains('does not match grid width'))
+    assertTrue(exception.message.contains('same length'))
+  }
+
+  private static Grid<Number> raggedGrid() {
+    new Grid<Number>() {
+      @Override
+      List<List<Number>> getData() {
+        [[1.0, 2.0], [3.0]] as List<List<Number>>
+      }
+
+      @Override
+      Map<String, Integer> dimensions() {
+        [observations: 2, variables: 2]
+      }
+    }
   }
 
   @Test

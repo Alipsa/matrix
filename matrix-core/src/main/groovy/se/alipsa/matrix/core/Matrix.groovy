@@ -357,7 +357,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
     if (columnCount() > 0 && column.size() != rowCount()) {
-      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix width (${rowCount()})")
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match row count (${rowCount()})")
     }
     mColumns << new Column(name, column, type)
     return this
@@ -377,7 +377,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
     if (columnCount() > 0 && column.size() != rowCount()) {
-      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix width (${rowCount()})")
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match row count (${rowCount()})")
     }
     mColumns.add(index, new Column(name, column, type))
     return this
@@ -420,7 +420,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnCount() > 0) {
       columns.eachWithIndex { List col, int i ->
         if (col.size() != rowCount()) {
-          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match matrix width (${rowCount()})")
+          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match row count (${rowCount()})")
         }
       }
     }
@@ -2617,7 +2617,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   void putAt(String columnName, Class type, Integer index = null, List column) {
     if (columnCount() > 0 && column.size() != rowCount()) {
-      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match matrix width (${rowCount()}) in this matrix")
+      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match row count (${rowCount()}) in this matrix")
     }
     if (columnNames().contains(columnName)) {
       replace(columnName, type, column)

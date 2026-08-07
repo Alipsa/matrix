@@ -16,8 +16,10 @@ import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
+import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.nio.file.Files
 import java.nio.file.Path
@@ -810,15 +812,34 @@ class MatrixAvroWriterTest {
   }
 
   @Test
-  void testBuilderRejectsColumnSizeMismatch() {
+  void testValidationExceptionForColumnSizeMismatch() {
     Map<String, List<?>> cols = [:]
     cols['id'] = [1, 2, 3]
     cols['name'] = ['Alice', 'Bob']
 
-    def ex = assertThrows(IllegalArgumentException) {
-      Matrix.builder('Mismatch').columns(cols).types(Integer, String).build()
+    Matrix m = Matrix.builder('Mismatch')
+        .columns(id: [1, 2, 3], name: ['Alice', 'Bob', 'Carol'])
+        .types(Integer, String)
+        .build()
+    Field columnsField = Matrix.getDeclaredField('mColumns')
+    columnsField.accessible = true
+    columnsField.set(m, [
+        new Column('id', [1, 2, 3], Integer),
+        new Column('name', ['Alice', 'Bob'], String)
+    ])
+
+    File tmp = Files.createTempFile('avro-test-', '.avro').toFile()
+    try {
+      def ex = assertThrows(AvroValidationException) {
+        MatrixAvroWriter.write(m, tmp)
+      }
+      assertEquals('matrix', ex.parameterName)
+      assertEquals(2, ex.rowNumber)
+      assertNotNull(ex.suggestion)
+      assertTrue(ex.message.contains('row: 2'))
+    } finally {
+      tmp.delete()
     }
-    assertTrue(ex.message.contains("Column 'name' has 2 rows but previous columns have 3 rows"))
   }
 
   @Test

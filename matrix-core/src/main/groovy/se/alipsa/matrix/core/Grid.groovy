@@ -95,8 +95,9 @@ class Grid<T> implements Iterable<List<T>> {
     data.get(row).get(column)
   }
 
-  def leftShift(List<T> row) {
+  Grid<T> leftShift(List<T> row) {
     add(row)
+    this
   }
 
   boolean add(List<T> row) {
@@ -116,11 +117,17 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   boolean addAll(List<List<T>> grid) {
-    if (grid == null || grid.isEmpty()) {
+    if (grid == null) {
+      throw new IllegalArgumentException('Grid rows cannot be null')
+    }
+    if (grid.isEmpty()) {
       return false
     }
     int expectedWidth = establishedWidth()
     if (expectedWidth < 0) {
+      if (grid[0] == null) {
+        throw new IllegalArgumentException('Row 0 cannot be null')
+      }
       expectedWidth = grid[0].size()
     }
     grid.eachWithIndex { List<T> row, int i ->
@@ -243,9 +250,10 @@ class Grid<T> implements Iterable<List<T>> {
 
   Grid replaceRow(int index, List<T> row) {
     validateNewRow(row)
+    List<T> replacement = new ArrayList<>(row)
     def r = data.get(index)
     r.clear()
-    r.addAll(new ArrayList<>(row))
+    r.addAll(replacement)
     this
   }
 

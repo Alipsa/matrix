@@ -88,7 +88,7 @@ class Stat {
             log.error("The list of objects for addNumericSummary is null")
             return null
         }
-        List<Number> numbers = objects.findAll { it != null && it instanceof Number } as List<Number>
+        List<Number> numbers = objects.findAll { it instanceof Number } as List<Number>
         def quarts = quartiles(numbers)
         Map<String, Object> result = [
             SUMMARY_TYPE: type.getSimpleName(),
@@ -546,7 +546,7 @@ class Stat {
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
         colNames.collect { colName ->
-            List<Number> numericValues = table.column(colName).findAll { it != null && it instanceof Number } as List<Number>
+            List<Number> numericValues = table.column(colName).findAll { it instanceof Number } as List<Number>
             median(numericValues)
         }
     }
@@ -598,7 +598,7 @@ class Stat {
         if (valueList == null) {
             return null
         }
-        List<? extends Number> vals = valueList.findAll { it != null && it instanceof Number } as List<Number>
+        List<? extends Number> vals = valueList.findAll { it instanceof Number } as List<Number>
         if (vals.isEmpty()) {
             return null
         }
@@ -629,7 +629,7 @@ class Stat {
         }
 
         // Rank order the numeric, non-null values
-        List<Number> v = values.findAll { it != null && it instanceof Number } as List<Number>
+        List<Number> v = values.findAll { it instanceof Number } as List<Number>
         v.sort()
 
         if (v.isEmpty()) {

@@ -3,7 +3,7 @@ package se.alipsa.matrix.core
 /**
  * Assertion helpers for comparing matrices in tests and examples.
  *
- * <p>These wrappers delegate to {@link Matrix#equals(Object, boolean, boolean, boolean, Double, boolean, String)}
+ * <p>These wrappers delegate to {@link Matrix#equals(Object, boolean, boolean, boolean, BigDecimal, boolean, String)}
  * with repository-standard defaults for structure and numeric tolerance checks.</p>
  */
 class MatrixAssertions {

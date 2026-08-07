@@ -564,7 +564,7 @@ Semi and anti joins return only left-side columns.
 Self join: pass the same matrix as both arguments.
 
 ## Comparing data
-- boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)
+- boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true, BigDecimal allowedDiff = 0.0001, boolean throwException = false, String message = '')
 - String diff(Matrix other, boolean forceRowComparing = false)
 
 The no-argument `Matrix.equals(Object)` compares numeric values exactly; it does
