@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.5.2'
+version = '2.5.3-SNAPSHOT'
 description = "Statistical hypothesis tests based on Matrix data."
 
 JavaCompile javaCompile = compileJava {
