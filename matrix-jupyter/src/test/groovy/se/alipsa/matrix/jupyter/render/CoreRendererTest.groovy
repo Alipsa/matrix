@@ -48,6 +48,18 @@ class CoreRendererTest {
   }
 
   @Test
+  void truncatesRowsFromTheTailWhenRequested() {
+    Matrix matrix = Matrix.builder().columns(value: [1, 2, 3]).build()
+
+    MimeBundle bundle = new CoreRenderer().render(matrix, new RenderOptions(2, null, false))
+
+    assertFalse(bundle['text/html'].contains('>1</td>'))
+    assertTrue(bundle['text/html'].contains('>2</td>'))
+    assertTrue(bundle['text/html'].contains('>3</td>'))
+    assertTrue(bundle['text/html'].contains('showing 2 of 3 rows'))
+  }
+
+  @Test
   void wrapsGridRowsAndColumnsAsTables() {
     Matrix matrix = Matrix.builder().columns(name: ['Ada'], score: [42]).build()
     Grid grid = new Grid([[1, 2], [3, 4]])
