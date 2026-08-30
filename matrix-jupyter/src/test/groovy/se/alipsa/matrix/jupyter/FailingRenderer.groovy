@@ -79,3 +79,19 @@ class CustomMimeRenderer implements MatrixRenderer {
 class CustomMimeValue {
   final String description = 'custom MIME test value'
 }
+
+/** Test-only renderer that can disappear after it has been registered. */
+class DisappearingRenderer implements MatrixRenderer {
+  static boolean present = true
+
+  @Override String rendererName() { 'DisappearingRenderer' }
+  @Override boolean available() { present }
+  @Override Set<Class<?>> supportedTypes() { [DisappearingValue] as Set<Class<?>> }
+  @Override String unavailableReason() { 'test renderer was removed' }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>present</b>', 'present') }
+}
+
+/** Value handled by {@link DisappearingRenderer}. */
+class DisappearingValue {
+  final String description = 'disappearing renderer test value'
+}

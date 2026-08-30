@@ -1,6 +1,7 @@
 package se.alipsa.matrix.jupyter.kernel
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -17,7 +18,11 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.jupyter.CustomMimeValue
+import se.alipsa.matrix.jupyter.DisappearingRenderer
+import se.alipsa.matrix.jupyter.DisappearingValue
+import se.alipsa.matrix.jupyter.FailingValue
 import se.alipsa.matrix.jupyter.NullMimeValue
+import se.alipsa.matrix.jupyter.RendererRegistry
 
 import java.lang.reflect.Field
 import java.nio.charset.StandardCharsets
@@ -131,6 +136,45 @@ class MatrixJupyterExtensionTest {
 
     assertEquals('{"kind":"matrix-widget"}', rendered.getData(MIMEType.parse('application/vnd.matrix-widget+json')))
     extension.uninstall(kernel)
+  }
+
+  @Test
+  void keepsRendererFailuresOutOfRichMimeSlots() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    DisplayData rich = kernel.renderer.renderAs(new FailingValue(), 'text/html')
+    DisplayData plain = kernel.renderer.renderAs(new FailingValue(), 'text/plain')
+
+    assertNull(rich.getData(MIMEType.TEXT_HTML))
+    assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed in FailingRenderer: intentional failure'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void givesPlainTextRefreshGuidanceForStaleRegistrations() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    DisappearingRenderer.present = true
+    RendererRegistry.instance.reload()
+    extension.install(kernel)
+
+    try {
+      DisappearingRenderer.present = false
+      RendererRegistry.instance.reload()
+
+      DisplayData rich = kernel.renderer.renderAs(new DisappearingValue(), 'text/html')
+      DisplayData plain = kernel.renderer.renderAs(new DisappearingValue(), 'text/plain')
+
+      assertNull(rich.getData(MIMEType.TEXT_HTML))
+      assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('No Matrix renderer currently handles'))
+      assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('MatrixJupyterExtension.refresh()'))
+    } finally {
+      DisappearingRenderer.present = true
+      RendererRegistry.instance.reload()
+      extension.uninstall(kernel)
+    }
   }
 
   private static int registrationCount(Renderer renderer) {
