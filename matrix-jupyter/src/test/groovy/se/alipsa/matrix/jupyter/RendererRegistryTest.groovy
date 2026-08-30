@@ -3,6 +3,7 @@ package se.alipsa.matrix.jupyter
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -79,5 +80,16 @@ class RendererRegistryTest {
     assertTrue(!invalid.mimeUsable)
     assertEquals('<b>available</b>', bundle['text/html'])
     assertTrue(registry.describe().contains("unsupported-mime — 'not a MIME type'"))
+  }
+
+  @Test
+  void exposesImmutableDiscoveryAndShadowFacts() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+    ActiveRenderer duplicate = registry.active().find { it.renderer.rendererName() == 'DuplicateMatrixRenderer' }
+
+    assertThrows(UnsupportedOperationException) { registry.active().clear() }
+    assertThrows(UnsupportedOperationException) { duplicate.supportedTypes.clear() }
+    assertThrows(UnsupportedOperationException) { duplicate.shadowedBy.clear() }
   }
 }

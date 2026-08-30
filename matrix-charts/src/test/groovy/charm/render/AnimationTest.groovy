@@ -32,6 +32,7 @@ class AnimationTest {
     String xml = SvgWriter.toXml(chart.render())
     assertFalse(xml.contains('charm-animation'))
     assertFalse(xml.contains('@keyframes'))
+    assertFalse(xml.contains('id="charm-root"'))
   }
 
   @Test
