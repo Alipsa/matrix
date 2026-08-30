@@ -199,6 +199,47 @@ class MatrixJupyterExtensionTest {
     }
   }
 
+  @Test
+  void refreshBringsEarlierKernelsUpToDateWithoutReregisteringLaterOnes() {
+    TestKernel first = new TestKernel()
+    TestKernel second = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    DisappearingRenderer.present = false
+    RendererRegistry.instance.reload()
+    extension.install(first)
+
+    try {
+      DisappearingRenderer.present = true
+      RendererRegistry.instance.reload()
+      extension.install(second)
+
+      String description = MatrixJupyterExtension.describe()
+      List<String> status = rendererStatusLines(description, 'DisappearingRenderer')
+      assertEquals(2, status.size())
+      assertTrue(status.any { it.contains('NOT registered') })
+      assertTrue(status.any { it.endsWith(': registered') })
+      assertEquals(description, MatrixJupyterExtension.describe())
+
+      MatrixJupyterExtension.refresh()
+
+      assertEquals('<b>present</b>', first.renderer.renderAs(new DisappearingValue(), 'text/html').getData(MIMEType.TEXT_HTML))
+      assertEquals('<b>present</b>', second.renderer.renderAs(new DisappearingValue(), 'text/html').getData(MIMEType.TEXT_HTML))
+    } finally {
+      DisappearingRenderer.present = true
+      RendererRegistry.instance.reload()
+      extension.uninstall(first)
+      extension.uninstall(second)
+    }
+  }
+
+  private static List<String> rendererStatusLines(String description, String rendererName) {
+    int start = description.indexOf("  active:  ${rendererName}")
+    int nextActive = description.indexOf('\n  active:', start + 1)
+    int nextSkipped = description.indexOf('\n  skipped:', start + 1)
+    int end = [nextActive, nextSkipped].findAll { it >= 0 }.min() ?: description.length()
+    description.substring(start, end).readLines().findAll { it.contains('kernel#') }
+  }
+
   private static int registrationCount(Renderer renderer) {
     Field field = Renderer.getDeclaredField('renderFunctions')
     field.accessible = true
