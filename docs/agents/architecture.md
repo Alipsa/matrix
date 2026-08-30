@@ -30,6 +30,7 @@ visualization, and data I/O formats.
 | **matrix-smile**       | Smile ML library integration                                             |
 | **matrix-groovy-ext**  | Groovy extensions to Number and BigDecimal enabling more idiomatic Groovy |
 | **matrix-logging**     | Logging integration helpers                                              |
+| **matrix-jupyter**     | Jupyter MIME renderers for Matrix tables and SVG charts                  |
 | **matrix-bom**         | Bill of Materials for dependency management                              |
 | **matrix-examples**    | Runnable example subprojects                                             |
 

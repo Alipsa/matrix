@@ -1,0 +1,96 @@
+plugins {
+  id 'groovy'
+  id('java-library')
+  id('maven-publish')
+  id('signing')
+  alias(libs.plugins.alipsaNexusRelease)
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1.0-SNAPSHOT'
+description = 'Jupyter display renderers for Matrix tables and SVG charts'
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
+dependencies {
+  api project(':matrix-core')
+  compileOnly libs.groovy
+  compileOnly project(':matrix-charts')
+  compileOnly project(':matrix-ggplot')
+  compileOnly project(':matrix-pict')
+  compileOnly libs.gsvg
+  compileOnly libs.jjava.jupyter
+
+  testImplementation libs.junit.jupiter
+  testImplementation libs.groovier.junit
+  testRuntimeOnly libs.junit.platform.launcher
+  testImplementation libs.groovy
+  testImplementation project(':matrix-charts')
+  testImplementation project(':matrix-ggplot')
+  testImplementation project(':matrix-pict')
+  testImplementation libs.gsvg
+  testImplementation libs.jjava.jupyter
+}
+
+test { useJUnitPlatform() }
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      pom {
+        name = 'Matrix Jupyter renderers'
+        description = project.description
+        url = 'https://github.com/Alipsa/matrix/tree/main/matrix-jupyter'
+        properties = ['maven.compiler.release': "${javaCompile.options.release.get()}"]
+        licenses {
+          license {
+            name = 'MIT'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-jupyter/LICENSE'
+          }
+        }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
+        }
+        scm {
+          url = 'https://github.com/Alipsa/matrix'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
+    }
+  }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+      }
+    }
+  }
+}
+
+signing {
+  if (project.properties['signing.keyId'] != null) {
+    sign publishing.publications.maven
+  }
+}
+
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
+}

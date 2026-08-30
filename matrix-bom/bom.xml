@@ -50,6 +50,7 @@
     <matrixGsheetsVersion>0.2.1</matrixGsheetsVersion>
     <!--matrixJsonVersion>2.3.2-SNAPSHOT</matrixJsonVersion-->
     <matrixJsonVersion>2.3.1</matrixJsonVersion>
+    <matrixJupyterVersion>0.1.0-SNAPSHOT</matrixJupyterVersion>
     <matrixLoggingVersion>0.1.1</matrixLoggingVersion>
     <matrixParquetVersion>0.6.0</matrixParquetVersion>
     <matrixPictVersion>0.5.0</matrixPictVersion>
@@ -117,6 +118,11 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-json</artifactId>
         <version>${matrixJsonVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-jupyter</artifactId>
+        <version>${matrixJupyterVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>

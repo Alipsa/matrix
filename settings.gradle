@@ -5,6 +5,7 @@ pluginManagement {
     gradlePluginPortal()
   }
 }
+
 // Reserve 2 CPU cores for other work during parallel builds
 gradle.startParameter.maxWorkerCount = Math.max(1, Runtime.runtime.availableProcessors() - 2)
 
@@ -28,6 +29,7 @@ include 'matrix-tablesaw'
 include 'matrix-arff'
 include 'matrix-smile'
 include 'matrix-logging'
+include 'matrix-jupyter'
 include 'matrix-examples:candles'
 include 'matrix-examples:HousePrices'
 include 'matrix-examples:LinearRegression'

@@ -27,7 +27,8 @@ v_google-http-client-gson = "2.2.0"
 v_google-oauth-client-jetty = "1.39.0"
 v_groovier-junit = "0.3.2"
 v_groovy = "5.0.8"
-v_gsvg = "1.1.0"
+v_gsvg = "1.2.0-SNAPSHOT"
+v_jjava = "1.0-a8"
 v_h2 = "2.4.240"
 v_hadoop = "3.5.0"
 v_jackson = "3.2.1"
@@ -94,6 +95,7 @@ groovy-templates = { module = "org.apache.groovy:groovy-templates" }
 groovy-xml = { module = "org.apache.groovy:groovy-xml" }
 gsvg = { module = "se.alipsa.groovy:gsvg", version.ref = "v_gsvg" }
 gsvg-export = { module = "se.alipsa.groovy:gsvg-export", version.ref = "v_gsvg" }
+jjava-jupyter = { module = "org.dflib.jjava:jjava-jupyter", version.ref = "v_jjava" }
 h2 = { module = "com.h2database:h2", version.ref = "v_h2" }
 hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "v_hadoop" }
 hadoop-mapreduce-client-core = { module = "org.apache.hadoop:hadoop-mapreduce-client-core", version.ref = "v_hadoop" }

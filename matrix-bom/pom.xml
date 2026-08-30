@@ -89,6 +89,10 @@
     </dependency>
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-jupyter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-csv</artifactId>
     </dependency>
     <dependency>

@@ -96,8 +96,12 @@ allprojects { Project p ->
 
 subprojects { Project p ->
   repositories {
-    if (p.version.contains('SNAPSHOT')) {
-      mavenLocal()
+    // Subproject versions are assigned in their build scripts, after this shared configuration runs.
+    // Restrict Maven Local to SNAPSHOT artifacts so locally published snapshots remain resolvable.
+    mavenLocal {
+      mavenContent {
+        snapshotsOnly()
+      }
     }
     mavenCentral()
   }

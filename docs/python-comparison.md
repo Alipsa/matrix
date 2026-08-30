@@ -263,7 +263,7 @@ table.toClipboard()
 
 - **Interactive web ecosystem is smaller** - Python has richer notebook/web-native plotting stacks
 - **Animation is SVG-centric** - Charm animations are CSS-in-SVG (raster exports remain static)
-- **No Jupyter integration** - Python notebooks auto-display charts
+- **Jupyter integration requires the Groovy Jupyter kernel** - Matrix tables and SVG charts render through the optional `matrix-jupyter` extension
 
 ---
 

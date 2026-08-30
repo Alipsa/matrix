@@ -3643,7 +3643,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Render a subset of rows as an HTML table.
    *
-   * @param attr table attributes (e.g. id, class, align)
+   * @param attr table attributes (e.g. id, class, align, caption)
    * @param numRows number of rows to render
    * @param fromHead if true, render from the start; otherwise from the end
    * @param autoAlign if true, right-align numeric columns unless overridden by align attribute
@@ -3656,7 +3656,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Render all rows as an HTML table.
    *
-   * @param attr table attributes (e.g. id, class, align)
+   * @param attr table attributes (e.g. id, class, align, caption)
    * @param autoAlign if true, right-align numeric columns unless overridden by align attribute
    * @return HTML table string
    */
@@ -3721,6 +3721,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   @SuppressWarnings('DuplicateStringLiteral')
   String toHtml(Map<String, String> attr = [:], List<?> rows, boolean autoAlign=true) {
     Map alignment = [:]
+    String caption = null
     StringBuilder sb = new StringBuilder()
     sb.append('<table')
     if (attr.size() > 0) {
@@ -3732,6 +3733,8 @@ class Matrix implements Iterable<Row>, Cloneable {
             def value = a.substring(a.indexOf(':')+1).trim()
           alignment.put(key, value)
           }
+        } else if (k == 'caption') {
+          caption = v
         } else {
           sb.append(' ').append(k).append('="').append(v).append('"')
         }
@@ -3746,6 +3749,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
 
     sb.append('>\n')
+    if (caption != null) {
+      sb.append('  <caption>').append(escapeHtml(caption)).append('</caption>\n')
+    }
     if (mColumns.size() > 0) {
       sb.append('  <thead>\n')
       sb.append('    <tr>\n')

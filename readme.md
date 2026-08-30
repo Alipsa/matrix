@@ -27,6 +27,7 @@ The Matrix project consists of the following modules:
 1. _[matrix-groovy-ext](https://github.com/Alipsa/matrix/blob/main/matrix-groovy-ext/README.md)_ provides Groovy extensions for more idiomatic numeric operations with Matrix.
 1. _[matrix-gsheets](https://github.com/Alipsa/matrix/blob/main/matrix-gsheets/readme.md)_ provides ways to import and export between a Matrix and a Google Sheets spreadsheet
 1. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json
+1. _[matrix-jupyter](https://github.com/Alipsa/matrix/blob/main/matrix-jupyter/README.md)_ provides Jupyter MIME renderers for Matrix tables and SVG charts.
 1. _[matrix-logging](https://github.com/Alipsa/matrix/blob/main/matrix-logging/README.md)_ optional convenience logging setup for Groovy scripts and small tools.
 1. _[matrix-parquet](https://github.com/Alipsa/matrix/blob/main/matrix-parquet/readme.md)_ provides ways to import and export between Matrix and [Parquet](https://parquet.apache.org/). 
 1. _[matrix-pict](https://github.com/Alipsa/matrix/blob/main/matrix-pict/README.md)_ provides a familiar chart-type-first API for common visualizations such as bar, line, area, pie, scatter, bubble, histogram, and box charts. Delegates to the Charm engine in matrix-charts.
