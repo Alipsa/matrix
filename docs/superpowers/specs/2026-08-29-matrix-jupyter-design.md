@@ -1170,7 +1170,7 @@ Out of repo, prerequisites: gsvg 1.2.0 (§5.2) and the matrix-charts changes (§
 | Risk | Mitigation |
 |---|---|
 | `jjava-jupyter` alpha API churn | Confined to `MatrixJupyterExtension`; pinned to 1.0-a8; adapter kept dumb; §6 test 7 fails loudly on a bump |
-| Groovy 5-compiled classes on a Groovy 6 kernel runtime | The real risk is call-site/metaclass bytecode, not the JDK. §6 test 9 adds an opt-in Groovy 6 smoke check; until it runs, compatibility is **claimed only for Groovy 5** |
+| Groovy 5-compiled classes on a Groovy 6 kernel runtime | The real risk is call-site/metaclass bytecode, not the JDK. §6 test 9 provides an opt-in Groovy 6 smoke check. It passed locally with SDKMAN Groovy 6.0.0-beta-3; rerun it when upgrading either Groovy or Matrix. |
 | JDK: module built at `release = 21`, kernel targets JDK 25 | JDK 21 bytecode runs on 25; unproblematic and separate from the Groovy question above |
 | gsvg 1.2.0 and the charm changes not yet released | Hard prerequisite with the release order in §5.3; matrix-jupyter is not started before they land |
 | Untrusted-notebook sanitization removing styling | §6.1 spike, sequenced **first** in §5.3 — it can invalidate the CSS half of the gsvg and charm work before either is built |

@@ -11,3 +11,7 @@ se.alipsa.matrix.jupyter.CustomMimeRenderer
 se.alipsa.matrix.jupyter.DisappearingRenderer
 se.alipsa.matrix.jupyter.InterfaceRenderer
 se.alipsa.matrix.jupyter.ParentRenderer
+se.alipsa.matrix.jupyter.ThrowingConstructorRenderer
+se.alipsa.matrix.jupyter.ThrowingAvailabilityRenderer
+se.alipsa.matrix.jupyter.DedupeRenderer
+se.alipsa.matrix.jupyter.LazyRenderer

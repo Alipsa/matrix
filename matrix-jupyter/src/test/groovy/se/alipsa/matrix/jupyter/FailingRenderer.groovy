@@ -129,3 +129,75 @@ class ParentRenderer implements MatrixRenderer {
   @Override Set<Class<?>> supportedTypes() { [ParentValue] as Set<Class<?>> }
   @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>parent</b>', 'parent') }
 }
+
+/** Value whose renderer is advertised only by a temporary TCCL service resource. */
+class TcclOnlyValue {
+  final String description = 'TCCL-only renderer test value'
+}
+
+/** Test-only renderer discovered from a service resource visible only through the TCCL. */
+class TcclOnlyRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'TcclOnlyRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [TcclOnlyValue] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>tccl</b>', 'tccl') }
+}
+
+/** Value used to assert provider deduplication across discovery loaders. */
+class DedupeValue {
+  final String description = 'deduplicated renderer test value'
+}
+
+/** Test-only renderer whose instance count records ServiceLoader deduplication. */
+class DedupeRenderer implements MatrixRenderer {
+  static int instances
+
+  DedupeRenderer() {
+    instances++
+  }
+
+  @Override String rendererName() { 'DedupeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [DedupeValue] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>dedupe</b>', 'dedupe') }
+}
+
+/** Test-only provider that fails before a renderer instance is available. */
+class ThrowingConstructorRenderer implements MatrixRenderer {
+  ThrowingConstructorRenderer() {
+    throw new IllegalStateException('constructor failure')
+  }
+
+  @Override String rendererName() { 'ThrowingConstructorRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('unreachable') }
+}
+
+/** Test-only provider whose availability check fails. */
+class ThrowingAvailabilityRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'ThrowingAvailabilityRenderer' }
+  @Override boolean available() { throw new IllegalStateException('availability failure') }
+  @Override Set<Class<?>> supportedTypes() { [] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('unreachable') }
+}
+
+/** Value used to assert that plain-only rendering does not invoke rich rendering. */
+class LazyValue {
+  final String description = 'lazy renderer test value'
+}
+
+/** Test-only renderer that counts rich rendering calls. */
+class LazyRenderer implements MatrixRenderer {
+  static int renderCalls
+
+  @Override String rendererName() { 'LazyRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [LazyValue] as Set<Class<?>> }
+  @Override String preferredMime() { 'image/svg+xml' }
+  @Override String plainText(Object value) { 'lazy plain text' }
+  @Override MimeBundle render(Object value, RenderOptions options) {
+    renderCalls++
+    MimeBundle.svg('<svg/>', plainText(value))
+  }
+}

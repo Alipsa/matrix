@@ -35,7 +35,21 @@ class RendererRegistry {
       renderer.render(value, options ?: RenderOptions.defaults)
     } catch (Throwable error) {
       log.warn("Renderer ${renderer.rendererName()} failed for ${value.class.name}", error)
-      MimeBundle.plain("${value}\nRendering failed in ${renderer.rendererName()}: ${error.message ?: error.class.name}")
+      MimeBundle.plain(failureText(value, renderer, error))
+    }
+  }
+
+  /** Return a renderer's plain-text fallback without producing a rich payload. */
+  String plainText(Object value) {
+    if (value == null) return null
+    load()
+    MatrixRenderer renderer = findRenderer(value.class)
+    if (renderer == null) return null
+    try {
+      renderer.plainText(value)
+    } catch (Throwable error) {
+      log.warn("Renderer ${renderer.rendererName()} failed to produce plain text for ${value.class.name}", error)
+      failureText(value, renderer, error)
     }
   }
 
@@ -110,10 +124,16 @@ class RendererRegistry {
       }
       found << new ActiveRenderer(renderer, providerName, mime, usable, types, shadows)
     } catch (Throwable error) {
-      String reason = error.message ?: error.class.name
+      String reason = failureReason(error)
       log.warn("Could not load renderer ${providerName}", error)
       missed << new SkippedRenderer(display, providerName, null, null, reason)
     }
+  }
+
+  private static String failureReason(Throwable error) { error.cause?.message ?: error.message ?: error.class.name }
+
+  private static String failureText(Object value, MatrixRenderer renderer, Throwable error) {
+    "${value}\nRendering failed in ${renderer.rendererName()}: ${error.message ?: error.class.name}"
   }
 
   private static String normalize(String mime) { mime?.trim() ?: 'text/html' }

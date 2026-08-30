@@ -116,7 +116,7 @@ class MatrixJupyterExtension implements Extension {
         }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
-        Object plain = once()?.get('text/plain')
+        Object plain = bundle != null ? bundle.get('text/plain') : RendererRegistry.instance.plainText(value)
         plain != null ? plain : missingNote()
       } as Supplier<Object>)
     }

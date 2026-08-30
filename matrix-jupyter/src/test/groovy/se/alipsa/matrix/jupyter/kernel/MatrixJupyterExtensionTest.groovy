@@ -1,6 +1,7 @@
 package se.alipsa.matrix.jupyter.kernel
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
@@ -21,6 +22,8 @@ import se.alipsa.matrix.jupyter.CustomMimeValue
 import se.alipsa.matrix.jupyter.DisappearingRenderer
 import se.alipsa.matrix.jupyter.DisappearingValue
 import se.alipsa.matrix.jupyter.FailingValue
+import se.alipsa.matrix.jupyter.LazyRenderer
+import se.alipsa.matrix.jupyter.LazyValue
 import se.alipsa.matrix.jupyter.NullMimeValue
 import se.alipsa.matrix.jupyter.RendererRegistry
 
@@ -148,7 +151,22 @@ class MatrixJupyterExtensionTest {
     DisplayData plain = kernel.renderer.renderAs(new FailingValue(), 'text/plain')
 
     assertNull(rich.getData(MIMEType.TEXT_HTML))
-    assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed in FailingRenderer: intentional failure'))
+    assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('failing value'))
+    assertFalse(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void avoidsRichRenderingWhenOnlyPlainTextIsRequested() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    LazyRenderer.renderCalls = 0
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.renderAs(new LazyValue(), 'text/plain')
+
+    assertEquals('lazy plain text', rendered.getData(MIMEType.TEXT_PLAIN))
+    assertEquals(0, LazyRenderer.renderCalls)
     extension.uninstall(kernel)
   }
 

@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
 
+import java.nio.file.Files
+
 /** Tests for the host-neutral service registry's core dispatch path. */
 class RendererRegistryTest {
   @Test
@@ -50,6 +52,30 @@ class RendererRegistryTest {
     MimeBundle bundle = registry.render(new ChildValue())
 
     assertEquals('<b>parent</b>', bundle['text/html'])
+  }
+
+  @Test
+  void unionsTcclProvidersAndDeduplicatesProvidersVisibleToBothLoaders() {
+    File descriptor = Files.createTempFile('matrix-jupyter-renderers-', '.service').toFile()
+    descriptor.text = '''se.alipsa.matrix.jupyter.DedupeRenderer
+se.alipsa.matrix.jupyter.TcclOnlyRenderer
+'''
+    ClassLoader original = Thread.currentThread().contextClassLoader
+    DedupeRenderer.instances = 0
+    Thread.currentThread().contextClassLoader = new ServiceResourceClassLoader(original, descriptor.toURI().toURL())
+
+    try {
+      RendererRegistry registry = RendererRegistry.instance
+      registry.reload()
+
+      assertTrue(registry.active().any { it.renderer.rendererName() == 'TcclOnlyRenderer' })
+      assertEquals('<b>tccl</b>', registry.render(new TcclOnlyValue())['text/html'])
+      assertEquals(1, DedupeRenderer.instances)
+    } finally {
+      Thread.currentThread().contextClassLoader = original
+      descriptor.delete()
+      RendererRegistry.instance.reload()
+    }
   }
 
   @Test
@@ -116,6 +142,23 @@ class RendererRegistryTest {
   }
 
   @Test
+  void isolatesBrokenProvidersWithoutAbortingLaterDiscovery() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    SkippedRenderer constructorFailure = registry.skipped().find { it.providerClassName.endsWith('ThrowingConstructorRenderer') }
+    SkippedRenderer availabilityFailure = registry.skipped().find { it.providerClassName.endsWith('ThrowingAvailabilityRenderer') }
+
+    assertEquals('ThrowingConstructorRenderer', constructorFailure.rendererName)
+    assertEquals('constructor failure', constructorFailure.reason)
+    assertNull(constructorFailure.preferredMime)
+    assertNull(constructorFailure.mimeUsable)
+    assertEquals('ThrowingAvailabilityRenderer', availabilityFailure.rendererName)
+    assertEquals('availability failure', availabilityFailure.reason)
+    assertTrue(registry.active().any { it.renderer.rendererName() == 'DedupeRenderer' })
+  }
+
+  @Test
   void exposesImmutableDiscoveryAndShadowFacts() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()
@@ -124,5 +167,20 @@ class RendererRegistryTest {
     assertThrows(UnsupportedOperationException) { registry.active().clear() }
     assertThrows(UnsupportedOperationException) { duplicate.supportedTypes.clear() }
     assertThrows(UnsupportedOperationException) { duplicate.shadowedBy.clear() }
+  }
+
+  private static class ServiceResourceClassLoader extends ClassLoader {
+    private static final String SERVICE = 'META-INF/services/se.alipsa.matrix.jupyter.MatrixRenderer'
+    private final URL descriptor
+
+    ServiceResourceClassLoader(ClassLoader parent, URL descriptor) {
+      super(parent)
+      this.descriptor = descriptor
+    }
+
+    @Override
+    Enumeration<URL> getResources(String name) throws IOException {
+      name == SERVICE ? Collections.enumeration([descriptor]) : super.getResources(name)
+    }
   }
 }
