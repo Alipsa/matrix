@@ -42,6 +42,22 @@ dependencies {
 
 test { useJUnitPlatform() }
 
+def groovy6Executable = providers.gradleProperty('groovy6Executable')
+    .orElse(providers.environmentVariable('GROOVY_6_HOME').map { "${it}/bin/groovy" })
+    .orElse("${System.getProperty('user.home')}/.sdkman/candidates/groovy/6.0.0-beta-3/bin/groovy")
+File groovy6Binary = file(groovy6Executable.get())
+File groovy6SmokeScript = file('src/test/resources/groovy6-smoke.groovy')
+
+tasks.register('groovy6Smoke', Exec) {
+  group = 'verification'
+  description = 'Runs Matrix Jupyter core and Charm rendering with an SDKMAN Groovy 6 runtime.'
+  dependsOn testClasses
+  onlyIf { groovy6Binary.canExecute() }
+  executable groovy6Binary
+  environment 'GROOVY_HOME', groovy6Binary.parentFile.parentFile.absolutePath
+  args '-cp', sourceSets.test.runtimeClasspath.asPath, groovy6SmokeScript.absolutePath
+}
+
 publishing {
   publications {
     maven(MavenPublication) {

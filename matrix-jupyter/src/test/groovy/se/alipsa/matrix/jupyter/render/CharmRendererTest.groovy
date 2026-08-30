@@ -7,8 +7,8 @@ import static se.alipsa.matrix.charm.Charts.plotGrid
 
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.charm.PlotGrid
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.jupyter.MimeBundle
 import se.alipsa.matrix.jupyter.RenderOptions
 
