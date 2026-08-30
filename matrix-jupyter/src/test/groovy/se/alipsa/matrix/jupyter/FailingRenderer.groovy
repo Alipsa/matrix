@@ -195,9 +195,9 @@ class LazyRenderer implements MatrixRenderer {
   @Override boolean available() { true }
   @Override Set<Class<?>> supportedTypes() { [LazyValue] as Set<Class<?>> }
   @Override String preferredMime() { 'image/svg+xml' }
-  @Override String plainText(Object value) { 'lazy plain text' }
+  @Override String plainText(Object value, RenderOptions options) { 'lazy plain text' }
   @Override MimeBundle render(Object value, RenderOptions options) {
     renderCalls++
-    MimeBundle.svg('<svg/>', plainText(value))
+    MimeBundle.svg('<svg/>', plainText(value, options))
   }
 }

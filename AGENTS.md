@@ -44,7 +44,7 @@ Before an implementation can be considered done, run these checks in order:
 3. `./gradlew :<module>:test` — ensure all tests pass.
 
 ## Coding Style & Naming Conventions
-- Use Groovy 5.0.6 and target Java 21 (Java compilation target: release 21). MIT License.
+- Use Groovy 5.1.1 and target Java 21 (Java compilation target: release 21). MIT License.
 - Follow the existing 2-space indentation and import style in each file.
 - Static compilation is enabled globally for production code via `config/groovy/compileStatic.groovy`; do not add redundant `@CompileStatic` annotations to production code. Test code is compiled dynamically by default, so use `@CompileStatic` on test classes or methods that need static compilation. Use `@CompileDynamic` only on production classes or methods that require dynamic Groovy features.
 - Groovy compiles both .java and .groovy files (no separate Java srcDir).
@@ -131,7 +131,7 @@ Do not produce minimal stubs that require multiple rounds of refinement.
 
 ## Key Dependencies
 
-- **Groovy**: 5.0.6 (groovy, groovy-sql, groovy-ginq)
+- **Groovy**: 5.1.1 (groovy, groovy-sql, groovy-ginq)
 - **Testing**: JUnit Jupiter 6.0.3
 - **Charting**: gsvg 1.1.0, XChart 3.8.8, JavaFX 23.0.2
 - **Statistics**: Smile 4.4.2, commons-math3

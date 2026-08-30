@@ -24,7 +24,7 @@ class CoreRendererTest {
     assertEquals(['text/html', 'text/plain'], bundle.keySet().toList())
     assertTrue(bundle['text/html'].contains('&lt;script&gt;alert(1)&lt;/script&gt;'))
     assertFalse(bundle['text/html'].contains('<script>'))
-    assertEquals(bundle['text/plain'], new CoreRenderer().plainText(matrix))
+    assertEquals(bundle['text/plain'], new CoreRenderer().plainText(matrix, RenderOptions.defaults))
   }
 
   @Test

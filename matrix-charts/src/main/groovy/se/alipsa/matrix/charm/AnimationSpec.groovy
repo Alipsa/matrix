@@ -101,6 +101,7 @@ ${scopedSelector(targetSelector)} {
     int brackets = 0
     String quote = null
     selector.each { String character ->
+      boolean split = false
       if (quote != null) {
         if (character == quote) quote = null
       } else if (character in ['"', "'"]) quote = character
@@ -108,7 +109,8 @@ ${scopedSelector(targetSelector)} {
       else if (character == ')') parens--
       else if (character == '[') brackets++
       else if (character == ']') brackets--
-      else if (character == ',' && parens == 0 && brackets == 0) {
+      else if (character == ',' && parens == 0 && brackets == 0) split = true
+      if (split) {
         if (part.toString().trim()) result << part.toString().trim()
         part.setLength(0)
       } else part.append(character)
