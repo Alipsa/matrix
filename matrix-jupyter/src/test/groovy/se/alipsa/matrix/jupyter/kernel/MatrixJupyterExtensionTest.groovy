@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.jupyter.ActiveRenderer
 import se.alipsa.matrix.jupyter.CustomMimeValue
 import se.alipsa.matrix.jupyter.DisappearingRenderer
 import se.alipsa.matrix.jupyter.DisappearingValue
@@ -274,6 +275,21 @@ class MatrixJupyterExtensionTest {
     }
   }
 
+  @Test
+  void describesUnregisteredTypesWithoutANullOwner() {
+    ActiveRenderer source = new ActiveRenderer(new TestStatusRenderer(), TestStatusRenderer.name,
+        'text/html', true, [Matrix, FailingValue] as Set<Class<?>>)
+    Map<Class<?>, String> registered = [(Matrix): TestStatusRenderer.name]
+    def method = MatrixJupyterExtension.getDeclaredMethod('kernelStatus', String, Map, ActiveRenderer, List)
+    method.accessible = true
+
+    String status = method.invoke(null, 'kernel#test', registered, source, [source]) as String
+
+    assertTrue(status.contains('Matrix'))
+    assertTrue(status.contains('FailingValue not registered'))
+    assertFalse(status.contains('owned by null'))
+  }
+
   private static List<String> rendererStatusLines(String description, String rendererName) {
     int start = description.indexOf("  active:  ${rendererName}")
     int nextActive = description.indexOf('\n  active:', start + 1)
@@ -287,6 +303,15 @@ class MatrixJupyterExtensionTest {
     field.accessible = true
     Map<Class<?>, List<?>> registrations = field.get(renderer) as Map<Class<?>, List<?>>
     registrations.values()*.size().sum(0) as int
+  }
+
+  private static class TestStatusRenderer implements se.alipsa.matrix.jupyter.MatrixRenderer {
+    @Override String rendererName() { 'TestStatusRenderer' }
+    @Override boolean available() { true }
+    @Override Set<Class<?>> supportedTypes() { [Matrix, FailingValue] as Set<Class<?>> }
+    @Override se.alipsa.matrix.jupyter.MimeBundle render(Object value, se.alipsa.matrix.jupyter.RenderOptions options) {
+      se.alipsa.matrix.jupyter.MimeBundle.plain(value.toString())
+    }
   }
 
   private static class TestKernel extends BaseKernel {

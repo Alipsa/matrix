@@ -63,7 +63,7 @@ Following the assessment's minimalism principle (§4):
 | D6 | SVG id **and CSS** namespacing lives in gsvg + charm, not here | gsvg owns the dom4j tree and IDREF knowledge; see §5 |
 | D7 | Tables truncate rows **and columns** by default | A 100k-row or 500-column Matrix must not serialize into notebook JSON |
 | D8 | matrix-core is a normal (`api`) dependency; every other matrix module is `compileOnly` | The always-loaded registry uses `core.util.Logger` per AGENTS.md; matrix-jupyter is useless without matrix-core, so pretending it is optional buys nothing and risks `NoClassDefFoundError` from the registry itself |
-| D9 | Service discovery unions this jar's own loader, the TCCL and an explicit `reload(ClassLoader)`; optional-class probes use the TCCL | Service providers need both deployment views, while application servers require context-loader class resolution (§2.3.1) |
+| D9 | Service discovery unions this jar's own loader, the TCCL and an explicit `reload(ClassLoader)`; optional-class probes use defining-loader then TCCL fallback | Both discovery and optional targets need the grabbed and container deployment views (§2.3.1) |
 | D10 | Registry supports `reload()`, **and the extension supports `refresh()`** | A registry-only reload never reaches the notebook: jjava must also be told about the newly renderable types (§2.6.1) |
 
 ## 1. Architecture
@@ -170,11 +170,15 @@ precedence, and jjava's own `Renderer` already dispatches by registered type (§
 second-stage veto had no defined miss path in either consumer. `supportedTypes()` is the single
 authority.
 
-**Availability probing.** `AbstractRenderer.probe(String className)` uses
-`Thread.currentThread().contextClassLoader.loadClass(className)` inside `try`/`catch (Throwable)`.
-It treats a missing TCCL as unavailable. `Throwable`, rather than `Exception`, is required because a
-partially present module raises `NoClassDefFoundError`. Context-loader resolution is required for
-containers and application servers; it is the probing rule in D9.
+**Availability probing.** `AbstractRenderer.probe(String className)` tries the renderer's defining
+loader first, then the thread context class loader, using `loadClass(className)` inside
+`try`/`catch (Throwable)`. It identity-deduplicates the loaders and treats both being unavailable as
+missing. This is deliberately a fallback rather than `Class.forName`: the defining loader covers the
+grabbed deployment, where the renderer and its optional target are loaded into the notebook session
+while the TCCL remains the kernel application loader; the TCCL covers the static deployment in a
+container or application server. `Throwable`, rather than `Exception`, is required because a
+partially present module raises `NoClassDefFoundError`. `probe()` is synchronized so its diagnostic
+state always describes one completed probe.
 
 `AbstractRenderer.unavailableReason()` reports the failed probe as
 `<class name> not on classpath`. A third-party renderer that does not subclass it inherits the
@@ -221,10 +225,13 @@ wrong too, because **two deployments exist and they need opposite loaders**
 
 The two consumers of a loader need **different** rules:
 
-- **Optional-class probing — TCCL.** Resolve optional renderer targets through
-  `Thread.currentThread().contextClassLoader.loadClass(...)`. This is the loader a container exposes
-  for the active application; using `Class.forName` or a library defining loader can select the wrong
-  deployment and pin its classes.
+- **Optional-class probing — defining-loader then TCCL fallback.** Resolve optional renderer targets
+  with `renderer.classLoader.loadClass(...)`, then
+  `Thread.currentThread().contextClassLoader.loadClass(...)` if needed. This is a narrow availability
+  probe, never `Class.forName`, and it does not retain the resulting `Class`; it therefore avoids
+  class pinning while covering both deployment rows above. The defining-loader pass is necessary for
+  grabbed renderers whose TCCL remains the kernel application loader, while TCCL remains necessary
+  for a static extension used from a container session.
 - **`ServiceLoader` discovery — union, not fallback.** A fallback would never fire: the own-loader
   pass *always* succeeds, because `CoreRenderer` ships in this very jar. In the static deployment that
   would silently hide a third-party renderer jar grabbed into the session loader — the exact case the
@@ -1034,8 +1041,9 @@ Fast tests run in the normal suite (`./gradlew :matrix-jupyter:test`).
    throwable message, `preferredMime == null`, `mimeUsable == null`, and a `→ ?` report column; every
    later provider remains discovered.
 6. Loader resolution (§2.3.1), one case per rule, because the two rules differ:
-   - **context-classloader probe** — a probe class visible only via the TCCL resolves, while a null
-     TCCL fails cleanly with the missing-class diagnostic;
+   - **two-loader probe** — a probe class visible only via the TCCL resolves, a grabbed target visible
+     only via the renderer loader resolves, and both loaders missing the target report the
+     missing-class diagnostic;
    - **union discovery** — a provider jar visible only via the TCCL *is* discovered, which a fallback
      would have missed because the own-loader pass always succeeds;
    - **dedupe** — a provider visible through *both* loaders is registered once. Without this,

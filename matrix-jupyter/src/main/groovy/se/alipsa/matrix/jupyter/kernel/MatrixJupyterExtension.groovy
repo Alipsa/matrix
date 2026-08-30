@@ -139,7 +139,8 @@ class MatrixJupyterExtension implements Extension {
       List<String> missing = source.supportedTypes.findAll { !owned.contains(it) }.collect { Class<?> type ->
         String owner = registered[type]
         ActiveRenderer current = active.find { it.providerClassName == owner }
-        "${type.simpleName} owned by ${current?.renderer?.rendererName() ?: owner}".toString()
+        owner ? "${type.simpleName} owned by ${current?.renderer?.rendererName() ?: owner}".toString() :
+            "${type.simpleName} not registered".toString()
       }
       "${label}: partially registered — owns ${owned*.simpleName.join(LIST_SEPARATOR)}; ${missing.join(LIST_SEPARATOR)}"
     }

@@ -51,4 +51,19 @@ class CharmRendererTest {
     assertTrue(svg.contains('height="480"'))
     referencedIds.each { String id -> assertTrue(svg.contains("id=\"${id}\""), "Missing SVG ID ${id}") }
   }
+
+  @Test
+  void namespacesUserStylesheetCharmRootSelectors() {
+    Matrix data = Matrix.builder().columns(x: [1, 2], y: [2, 4]).build()
+    def chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      stylesheet('#charm-root .my-rule { stroke: red; }')
+    }.build()
+
+    String svg = new CharmRenderer().render(chart, new RenderOptions())['image/svg+xml']
+
+    assertTrue(svg ==~ /(?s).*#mjx\d+-charm-root \.my-rule.*/)
+    assertTrue(!svg.contains('#charm-root .my-rule'))
+  }
 }

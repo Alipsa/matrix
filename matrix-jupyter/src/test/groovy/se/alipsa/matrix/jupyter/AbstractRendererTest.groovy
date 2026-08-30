@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.jupyter.render.CharmRenderer
 
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+
 /** Tests optional-class probing through the thread context class loader. */
 class AbstractRendererTest {
   @Test
@@ -50,9 +53,27 @@ class AbstractRendererTest {
     }
   }
 
+  @Test
+  void synchronizesConcurrentProbesBeforeUpdatingTheDiagnostic() {
+    ProbeRenderer renderer = new ProbeRenderer()
+    def executor = Executors.newFixedThreadPool(2)
+    try {
+      def results = executor.invokeAll([
+          { renderer.probeClass('test.missing.First') } as Callable<Boolean>,
+          { renderer.probeClass('test.missing.Second') } as Callable<Boolean>
+      ])
+
+      assertFalse(results*.get().any())
+      assertTrue(renderer.unavailableReason() in ['test.missing.First not on classpath', 'test.missing.Second not on classpath'])
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
   private static class ProbeRenderer extends AbstractRenderer {
     @Override String rendererName() { 'ProbeRenderer' }
     @Override boolean available() { probe('test.tccl.VisibleOnly') }
+    boolean probeClass(String name) { probe(name) }
     @Override Set<Class<?>> supportedTypes() { [] as Set }
     @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain(value.toString()) }
   }

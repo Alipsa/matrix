@@ -4,7 +4,7 @@ package se.alipsa.matrix.jupyter
 abstract class AbstractRenderer implements MatrixRenderer {
   protected volatile String missingClass
 
-  protected boolean probe(String className) {
+  protected synchronized boolean probe(String className) {
     List<ClassLoader> loaders = []
     [getClass().classLoader, Thread.currentThread().contextClassLoader].each { ClassLoader loader ->
       if (loader != null && !loaders.any { ClassLoader known -> known.is(loader) }) {
