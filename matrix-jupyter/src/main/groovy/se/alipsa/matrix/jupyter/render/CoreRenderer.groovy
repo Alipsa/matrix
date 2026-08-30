@@ -34,12 +34,24 @@ class CoreRenderer extends AbstractRenderer {
       attributes.caption = [attributes.caption, notices.join(', ')].findAll { it }.join(' — ')
     }
     String html = rendered.toHtml(attributes, options.maxRows, options.fromHead)
-    MimeBundle.html(html, plainText(value))
+    MimeBundle.html(html, plainText(matrix, value, options))
   }
 
   @Override
   String plainText(Object value) {
-    value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid ? toMatrix(value).content() : value.toString()
+    plainText(value, RenderOptions.defaults)
+  }
+
+  @Override
+  String plainText(Object value, RenderOptions options) {
+    plainText(toMatrix(value), value, options)
+  }
+
+  private static String plainText(Matrix matrix, Object value, RenderOptions options) {
+    if (!(value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid)) return value.toString()
+    Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
+        matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
+    rendered.head(options.maxRows ?: rendered.rowCount()).content()
   }
 
   private static Matrix toMatrix(Object value) {

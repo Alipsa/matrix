@@ -63,10 +63,14 @@ class RendererRegistry {
    * @return diagnostic report
    */
   String describe(Closure<Collection<String>> annotations) {
+    List<ActiveRenderer> active
+    List<SkippedRenderer> skipped
     synchronized (lock) {
       load()
-      formatDescription(activeRenderers, skippedRenderers, annotations)
+      active = activeRenderers
+      skipped = skippedRenderers
     }
+    formatDescription(active, skipped, annotations)
   }
 
   private static String formatDescription(List<ActiveRenderer> active, List<SkippedRenderer> skipped,
@@ -102,16 +106,20 @@ class RendererRegistry {
     loaders.each { ClassLoader loader ->
       try {
         Iterator<ServiceLoader.Provider<MatrixRenderer>> providers = ServiceLoader.load(MatrixRenderer, loader).stream().iterator()
-        while (true) {
+        int consecutiveFailures = 0
+        while (consecutiveFailures < 100) {
           try {
             if (!providers.hasNext()) break
             ServiceLoader.Provider<MatrixRenderer> provider = providers.next()
             String name = provider.type().name
             if (seen.add(name)) discoverProvider(provider, name, found, missed, routes)
+            consecutiveFailures = 0
           } catch (ServiceConfigurationError error) {
+            consecutiveFailures++
             log.warn("Could not discover one matrix-jupyter renderer from ${loader}", error)
           }
         }
+        if (consecutiveFailures == 100) log.warn("Stopped renderer discovery from ${loader} after 100 consecutive service configuration failures")
       } catch (Throwable error) {
         log.warn("Could not discover matrix-jupyter renderers from ${loader}", error)
       }

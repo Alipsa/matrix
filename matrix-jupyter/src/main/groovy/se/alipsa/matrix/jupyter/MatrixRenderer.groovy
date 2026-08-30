@@ -14,6 +14,8 @@ interface MatrixRenderer {
   default String preferredMime() { 'text/html' }
   /** @return plain-text fallback without rendering the rich payload */
   default String plainText(Object value) { value.toString() }
+  /** @return options-aware plain-text fallback without rendering the rich payload */
+  default String plainText(Object value, RenderOptions options) { plainText(value) }
   /** Render a supported value. */
   MimeBundle render(Object value, RenderOptions options)
 }

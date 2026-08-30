@@ -89,10 +89,32 @@ ${scopedSelector(targetSelector)} {
   }
 
   private static String scopedSelector(String selector) {
-    selector.split(',').findAll { String part -> part.trim() }.collect { String part ->
-      String target = part.trim()
+    topLevelSelectors(selector).collect { String target ->
       target in ['svg', ':root', '#charm-root'] ? '#charm-root' : "#charm-root ${target}"
     }.join(', ')
+  }
+
+  private static List<String> topLevelSelectors(String selector) {
+    List<String> result = []
+    StringBuilder part = new StringBuilder()
+    int parens = 0
+    int brackets = 0
+    Character quote = null
+    selector.each { char character ->
+      if (quote != null) {
+        if (character == quote) quote = null
+      } else if (character in ['"', "'"]) quote = character
+      else if (character == '(') parens++
+      else if (character == ')') parens--
+      else if (character == '[') brackets++
+      else if (character == ']') brackets--
+      else if (character == ',' && parens == 0 && brackets == 0) {
+        if (part.toString().trim()) result << part.toString().trim()
+        part.setLength(0)
+      } else part.append(character)
+    }
+    if (part.toString().trim()) result << part.toString().trim()
+    result ?: ['#charm-root']
   }
 
   private void validateForCdata() {
