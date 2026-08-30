@@ -55,6 +55,27 @@ class MatrixJupyterExtensionTest {
     extension.uninstall(kernel)
   }
 
+  @Test
+  void keepsRegistrationsIndependentForEachKernel() {
+    TestKernel first = new TestKernel()
+    TestKernel second = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    Matrix matrix = Matrix.builder().columns(value: [1]).build()
+
+    extension.install(first)
+    extension.install(second)
+
+    assertTrue(first.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML).contains('>1</td>'))
+    assertTrue(second.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML).contains('>1</td>'))
+    String description = MatrixJupyterExtension.describe()
+    assertTrue(description.contains('kernel#1@'))
+    assertTrue(description.contains('kernel#2@'))
+
+    extension.uninstall(first)
+    assertTrue(second.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML).contains('>1</td>'))
+    extension.uninstall(second)
+  }
+
   private static class TestKernel extends BaseKernel {
     TestKernel() {
       super('test', '1', new LanguageInfo('Groovy', '5', 'text/x-groovy', '.groovy', 'groovy', null, 'script'), [],
