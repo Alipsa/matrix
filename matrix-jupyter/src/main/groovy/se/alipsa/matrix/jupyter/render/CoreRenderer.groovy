@@ -34,8 +34,12 @@ class CoreRenderer extends AbstractRenderer {
       attributes.caption = [attributes.caption, notices.join(', ')].findAll { it }.join(' — ')
     }
     String html = rendered.toHtml(attributes, options.maxRows, options.fromHead)
-    String plain = value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid ? matrix.content() : value.toString()
-    MimeBundle.html(html, plain)
+    MimeBundle.html(html, plainText(value))
+  }
+
+  @Override
+  String plainText(Object value) {
+    value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid ? toMatrix(value).content() : value.toString()
   }
 
   private static Matrix toMatrix(Object value) {

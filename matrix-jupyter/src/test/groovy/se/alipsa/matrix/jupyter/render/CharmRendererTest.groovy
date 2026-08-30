@@ -31,7 +31,7 @@ class CharmRendererTest {
 
     assertTrue(firstSvg.contains('id="mjx'))
     assertTrue(firstSvg.contains('-charm-root"'))
-    assertTrue(firstSvg.contains('#mjx'))
+    assertTrue(firstSvg ==~ /(?s).*#mjx\d+-charm-root \.charm-point.*/)
     assertNotEquals(firstSvg, secondSvg)
   }
 

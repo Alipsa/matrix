@@ -101,6 +101,10 @@ class PlotGridRenderer {
       nested.width(cellW)
       nested.height(cellH)
       nested.viewBox("0 0 $cellW $cellH")
+      String cellId = cellSvg.element.attributeValue('id')
+      if (cellId) {
+        nested.addAttribute('id', cellId)
+      }
 
       // Clone DOM children from cellSvg into nested SVG (avoids the
       // duplicate-element issue that SvgElementFactory.copyChildren can cause

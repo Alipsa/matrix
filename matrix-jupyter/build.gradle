@@ -44,18 +44,26 @@ test { useJUnitPlatform() }
 
 def groovy6Executable = providers.gradleProperty('groovy6Executable')
     .orElse(providers.environmentVariable('GROOVY_6_HOME').map { "${it}/bin/groovy" })
-    .orElse("${System.getProperty('user.home')}/.sdkman/candidates/groovy/6.0.0-beta-3/bin/groovy")
-File groovy6Binary = file(groovy6Executable.get())
-File groovy6SmokeScript = file('src/test/resources/groovy6-smoke.groovy')
+    .orElse(providers.systemProperty('user.home').map { "${it}/.sdkman/candidates/groovy/6.0.0-beta-3/bin/groovy" })
 
 tasks.register('groovy6Smoke', Exec) {
   group = 'verification'
   description = 'Runs Matrix Jupyter core and Charm rendering with an SDKMAN Groovy 6 runtime.'
   dependsOn testClasses
-  onlyIf { groovy6Binary.canExecute() }
-  executable groovy6Binary
-  environment 'GROOVY_HOME', groovy6Binary.parentFile.parentFile.absolutePath
-  args '-cp', sourceSets.test.runtimeClasspath.asPath, groovy6SmokeScript.absolutePath
+  args '-cp', sourceSets.test.runtimeClasspath.asPath, layout.projectDirectory.file('src/test/resources/groovy6-smoke.groovy').asFile.absolutePath
+  doFirst {
+    File groovy6Binary = new File(groovy6Executable.get())
+    if (!groovy6Binary.canExecute()) {
+      throw new GradleException("Groovy 6 executable is unavailable at ${groovy6Binary}. Set -Pgroovy6Executable or GROOVY_6_HOME.")
+    }
+    logger.lifecycle("Running Groovy 6 smoke test with ${groovy6Binary}")
+    executable groovy6Binary
+    environment.remove('GROOVY_HOME')
+    File groovyHome = groovy6Binary.parentFile.parentFile
+    if (new File(groovyHome, 'lib').isDirectory()) {
+      environment 'GROOVY_HOME', groovyHome.absolutePath
+    }
+  }
 }
 
 publishing {

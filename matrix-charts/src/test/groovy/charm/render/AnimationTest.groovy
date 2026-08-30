@@ -10,6 +10,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.chartexport.AnimationCssStripper
 import se.alipsa.matrix.chartexport.ChartToImage
@@ -55,6 +56,17 @@ class AnimationTest {
     assertTrue(xml.contains('@keyframes pulse'))
     assertTrue(xml.contains('#charm-root .charm-point'))
     assertTrue(xml.contains('animation-duration: 2s'))
+  }
+
+  @Test
+  void testAnimationScopesEverySelectorAndSupportsTheSvgRoot() {
+    AnimationSpec spec = new AnimationSpec(selector: '.charm-point, .charm-line')
+
+    String css = spec.toCss()
+
+    assertTrue(css.contains('#charm-root .charm-point, #charm-root .charm-line'))
+    assertTrue(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root {'))
+    assertFalse(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root svg {'))
   }
 
   @Test

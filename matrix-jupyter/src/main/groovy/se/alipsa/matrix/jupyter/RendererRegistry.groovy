@@ -54,18 +54,34 @@ class RendererRegistry {
   }
 
   /** Produce a host-neutral diagnostic report. */
-  String describe() {
-    load()
+  String describe() { describe(null) }
+
+  /**
+   * Produce a diagnostic report with optional lines for each active renderer.
+   *
+   * @param annotations receives an active renderer and the current active-renderer snapshot
+   * @return diagnostic report
+   */
+  String describe(Closure<Collection<String>> annotations) {
+    synchronized (lock) {
+      load()
+      formatDescription(activeRenderers, skippedRenderers, annotations)
+    }
+  }
+
+  private static String formatDescription(List<ActiveRenderer> active, List<SkippedRenderer> skipped,
+                                          Closure<Collection<String>> annotations) {
     StringBuilder result = new StringBuilder('matrix-jupyter renderers\n')
-    activeRenderers.each { ActiveRenderer source ->
+    active.each { ActiveRenderer source ->
       String types = source.supportedTypes.collect { it.simpleName }.join(', ')
       result.append("  active:  ${source.renderer.rendererName()} → ${source.preferredMime}      (${types})\n")
       if (!source.mimeUsable) result.append("             unsupported-mime — '${source.preferredMime}' is not a type/subtype string\n")
       source.shadowedBy.each { Class<?> type, String owner ->
         result.append("             shadowed for ${type.simpleName} by ${owner}\n")
       }
+      annotations?.call(source, active)?.each { String line -> result.append("             ${line}\n") }
     }
-    skippedRenderers.each { SkippedRenderer source ->
+    skipped.each { SkippedRenderer source ->
       result.append("  skipped: ${source.rendererName} → ${source.preferredMime ?: '?'} — ${source.reason}\n")
     }
     result.append('Grabbed a module after first render?\n  in a notebook:  MatrixJupyterExtension.refresh()\n  otherwise:      RendererRegistry.instance.reload()')
@@ -85,9 +101,16 @@ class RendererRegistry {
     }
     loaders.each { ClassLoader loader ->
       try {
-        ServiceLoader.load(MatrixRenderer, loader).stream().forEach { provider ->
-          String name = provider.type().name
-          if (seen.add(name)) discoverProvider(provider, name, found, missed, routes)
+        Iterator<ServiceLoader.Provider<MatrixRenderer>> providers = ServiceLoader.load(MatrixRenderer, loader).stream().iterator()
+        while (true) {
+          try {
+            if (!providers.hasNext()) break
+            ServiceLoader.Provider<MatrixRenderer> provider = providers.next()
+            String name = provider.type().name
+            if (seen.add(name)) discoverProvider(provider, name, found, missed, routes)
+          } catch (ServiceConfigurationError error) {
+            log.warn("Could not discover one matrix-jupyter renderer from ${loader}", error)
+          }
         }
       } catch (Throwable error) {
         log.warn("Could not discover matrix-jupyter renderers from ${loader}", error)
@@ -130,7 +153,12 @@ class RendererRegistry {
     }
   }
 
-  private static String failureReason(Throwable error) { error.cause?.message ?: error.message ?: error.class.name }
+  private static String failureReason(Throwable error) {
+    String message = error.message
+    String causeMessage = error.cause?.message
+    if (message && causeMessage && !message.contains(causeMessage)) return "${message}: ${causeMessage}"
+    message ?: causeMessage ?: error.class.name
+  }
 
   private static String failureText(Object value, MatrixRenderer renderer, Throwable error) {
     "${value}\nRendering failed in ${renderer.rendererName()}: ${error.message ?: error.class.name}"

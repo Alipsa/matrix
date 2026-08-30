@@ -15,6 +15,7 @@ import org.dflib.jjava.jupyter.kernel.display.DisplayData
 import org.dflib.jjava.jupyter.kernel.display.Renderer
 import org.dflib.jjava.jupyter.kernel.display.mime.MIMEType
 import org.dflib.jjava.jupyter.kernel.util.StringStyler
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
@@ -33,6 +34,16 @@ import java.util.function.Function
 
 /** Tests the jjava adapter against a real renderer without starting a Jupyter process. */
 class MatrixJupyterExtensionTest {
+  @AfterEach
+  void uninstallAttachedKernels() {
+    Field field = MatrixJupyterExtension.getDeclaredField('attached')
+    field.accessible = true
+    Map<BaseKernel, Map<Class<?>, String>> attached = field.get(null) as Map<BaseKernel, Map<Class<?>, String>>
+    synchronized (attached) {
+      attached.clear()
+    }
+  }
+
   @Test
   void installsHtmlRenderingAndReportsKernelRegistration() {
     TestKernel kernel = new TestKernel()
@@ -47,6 +58,19 @@ class MatrixJupyterExtensionTest {
     assertTrue(MatrixJupyterExtension.describe().contains('CoreRenderer'))
     extension.uninstall(kernel)
     assertEquals(MatrixJupyterExtension.describe(), se.alipsa.matrix.jupyter.RendererRegistry.instance.describe())
+  }
+
+  @Test
+  void preservesMatrixContentForPlainOnlyRequests() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    Matrix matrix = Matrix.builder().columns(value: [1, 2]).build()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.renderAs(matrix, 'text/plain')
+
+    assertEquals(matrix.content(), rendered.getData(MIMEType.TEXT_PLAIN))
+    extension.uninstall(kernel)
   }
 
   @Test

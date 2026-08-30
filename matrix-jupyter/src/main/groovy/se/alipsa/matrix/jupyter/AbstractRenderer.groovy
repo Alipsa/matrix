@@ -2,21 +2,26 @@ package se.alipsa.matrix.jupyter
 
 /** Common optional-class probing and plain-text fallback for renderers. */
 abstract class AbstractRenderer implements MatrixRenderer {
-  protected String missingClass
+  protected volatile String missingClass
 
   protected boolean probe(String className) {
-    try {
-      ClassLoader tccl = Thread.currentThread().contextClassLoader
-      if (tccl == null) {
-        missingClass = className
-        return false
+    List<ClassLoader> loaders = []
+    [getClass().classLoader, Thread.currentThread().contextClassLoader].each { ClassLoader loader ->
+      if (loader != null && !loaders.any { ClassLoader known -> known.is(loader) }) {
+        loaders << loader
       }
-      tccl.loadClass(className)
-      true
-    } catch (Throwable ignored) {
-      missingClass = className
-      false
     }
+    for (ClassLoader loader : loaders) {
+      try {
+        loader.loadClass(className)
+        missingClass = null
+        return true
+      } catch (Throwable ignored) {
+        // Try the remaining deployment loader.
+      }
+    }
+    missingClass = className
+    false
   }
 
   @Override

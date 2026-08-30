@@ -49,7 +49,7 @@ class AnimationSpec {
 @keyframes ${keyframeName} {
   ${keyframeBody}
 }
-#charm-root ${targetSelector} {
+${scopedSelector(targetSelector)} {
   animation-name: ${keyframeName};
   animation-duration: ${animationDuration};
   animation-timing-function: ${animationTiming};
@@ -86,6 +86,13 @@ class AnimationSpec {
   private static String normalized(String value, String fallback) {
     String trimmed = value?.trim()
     trimmed ? trimmed : fallback
+  }
+
+  private static String scopedSelector(String selector) {
+    selector.split(',').collect { String part ->
+      String target = part.trim()
+      target in ['svg', ':root', '#charm-root'] ? '#charm-root' : "#charm-root ${target}"
+    }.join(', ')
   }
 
   private void validateForCdata() {

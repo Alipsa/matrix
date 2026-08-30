@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.core.Matrix
@@ -97,6 +98,21 @@ class PlotGridTest {
     Set<String> unique = new HashSet<>(ids)
     assertEquals(unique.size(), ids.size(),
         "All IDs should be unique. Duplicates: ${ids.findAll { String id -> ids.count(id) > 1 }.unique()}")
+  }
+
+  @Test
+  void testNestedSvgRetainsThePrefixedCharmRootForAnimationCss() {
+    Matrix data = Matrix.builder().columns(x: [1, 2], y: [2, 4]).build()
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      animation { selector = '.charm-point'; name = 'pulse' }
+    }.build()
+
+    String xml = SvgWriter.toXml(plotGrid([chart, buildSimpleChart()], 2).render(800, 600))
+
+    assertTrue(xml.contains('id="g0c0-charm-root"'))
+    assertTrue(xml.contains('#g0c0-charm-root .charm-point'))
   }
 
   @Test

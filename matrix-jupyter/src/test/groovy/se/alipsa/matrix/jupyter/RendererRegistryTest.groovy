@@ -57,7 +57,8 @@ class RendererRegistryTest {
   @Test
   void unionsTcclProvidersAndDeduplicatesProvidersVisibleToBothLoaders() {
     File descriptor = Files.createTempFile('matrix-jupyter-renderers-', '.service').toFile()
-    descriptor.text = '''se.alipsa.matrix.jupyter.DedupeRenderer
+    descriptor.text = '''missing.renderer.Provider
+se.alipsa.matrix.jupyter.DedupeRenderer
 se.alipsa.matrix.jupyter.TcclOnlyRenderer
 '''
     ClassLoader original = Thread.currentThread().contextClassLoader
@@ -150,7 +151,8 @@ se.alipsa.matrix.jupyter.TcclOnlyRenderer
     SkippedRenderer availabilityFailure = registry.skipped().find { it.providerClassName.endsWith('ThrowingAvailabilityRenderer') }
 
     assertEquals('ThrowingConstructorRenderer', constructorFailure.rendererName)
-    assertEquals('constructor failure', constructorFailure.reason)
+    assertTrue(constructorFailure.reason.contains('could not be instantiated'))
+    assertTrue(constructorFailure.reason.contains('constructor failure'))
     assertNull(constructorFailure.preferredMime)
     assertNull(constructorFailure.mimeUsable)
     assertEquals('ThrowingAvailabilityRenderer', availabilityFailure.rendererName)

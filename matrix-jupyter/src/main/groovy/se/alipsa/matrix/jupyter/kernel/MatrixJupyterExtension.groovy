@@ -11,7 +11,6 @@ import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.jupyter.ActiveRenderer
 import se.alipsa.matrix.jupyter.MimeBundle
 import se.alipsa.matrix.jupyter.RendererRegistry
-import se.alipsa.matrix.jupyter.SkippedRenderer
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiConsumer
@@ -47,8 +46,6 @@ class MatrixJupyterExtension implements Extension {
 
   /** @return the registry report annotated with registration state for each attached kernel. */
   static String describe() {
-    List<ActiveRenderer> active = RendererRegistry.instance.active()
-    List<SkippedRenderer> skipped = RendererRegistry.instance.skipped()
     Map<BaseKernel, Map<Class<?>, String>> snapshot
     synchronized (attached) { snapshot = new LinkedHashMap<>(attached) }
     if (snapshot.isEmpty()) return RendererRegistry.instance.describe()
@@ -61,21 +58,9 @@ class MatrixJupyterExtension implements Extension {
       String label = "kernel#${index + 1}@${Integer.toHexString(System.identityHashCode(kernel))}"
       labels[kernel] = label
     }
-    StringBuilder result = new StringBuilder('matrix-jupyter renderers\n')
-    active.each { ActiveRenderer source ->
-      String types = source.supportedTypes*.simpleName.join(LIST_SEPARATOR)
-      result.append("  active:  ${source.renderer.rendererName()} → ${source.preferredMime}      (${types})\n")
-      if (!source.mimeUsable) result.append("             unsupported-mime — '${source.preferredMime}' is not a type/subtype string\n")
-      source.shadowedBy.each { Class<?> type, String owner ->
-        result.append("             shadowed for ${type.simpleName} by ${owner}\n")
-      }
-      kernels.each { BaseKernel kernel -> appendKernelStatus(result, labels[kernel], snapshot[kernel], source, active) }
+    RendererRegistry.instance.describe { ActiveRenderer source, List<ActiveRenderer> active ->
+      kernels.collect { BaseKernel kernel -> kernelStatus(labels[kernel], snapshot[kernel], source, active) }
     }
-    skipped.each { SkippedRenderer source ->
-      result.append("  skipped: ${source.rendererName} → ${source.preferredMime ?: '?'} — ${source.reason}\n")
-    }
-    result.append('Grabbed a module after first render?\n  in a notebook:  MatrixJupyterExtension.refresh()\n  otherwise:      RendererRegistry.instance.reload()')
-    result.toString()
   }
 
   private static void registerNewTypes(BaseKernel kernel, Map<Class<?>, String> registered) {
@@ -98,8 +83,15 @@ class MatrixJupyterExtension implements Extension {
     String preferredMime = source.preferredMime
     renderer.createRegistration(type).preferring(preferred).supporting(MIMEType.TEXT_PLAIN).register { T value, RenderContext context ->
       MimeBundle bundle = null
+      boolean attempted = false
       String missing = null
-      Closure<MimeBundle> once = { bundle != null ? bundle : (bundle = RendererRegistry.instance.render(value)) }
+      Closure<MimeBundle> once = {
+        if (!attempted) {
+          bundle = RendererRegistry.instance.render(value)
+          attempted = true
+        }
+        bundle
+      }
       Closure<String> missingNote = {
         if (missing == null) {
           missing = "${value}\nNo Matrix renderer currently handles ${value.class.name}; call MatrixJupyterExtension.refresh()"
@@ -108,15 +100,16 @@ class MatrixJupyterExtension implements Extension {
         missing
       }
       context.renderIfRequested(preferred, { MIMEType mime, DisplayData out ->
-        Object data = once()?.get(preferredMime)
-        if (data != null) {
-          out.putData(mime, data)
-        } else {
+        MimeBundle rendered = once()
+        if (rendered == null) {
           missingNote()
+        } else {
+          Object data = rendered.get(preferredMime)
+          if (data != null) out.putData(mime, data)
         }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
-        Object plain = bundle != null ? bundle.get('text/plain') : RendererRegistry.instance.plainText(value)
+        Object plain = attempted ? bundle?.get('text/plain') : RendererRegistry.instance.plainText(value)
         plain != null ? plain : missingNote()
       } as Supplier<Object>)
     }
@@ -135,20 +128,20 @@ class MatrixJupyterExtension implements Extension {
     }
   }
 
-  private static void appendKernelStatus(StringBuilder result, String label, Map<Class<?>, String> registered,
-                                         ActiveRenderer source, List<ActiveRenderer> active) {
+  private static String kernelStatus(String label, Map<Class<?>, String> registered,
+                                     ActiveRenderer source, List<ActiveRenderer> active) {
     List<Class<?>> owned = source.supportedTypes.findAll { registered[it] == source.providerClassName }.toList()
     if (owned.size() == source.supportedTypes.size()) {
-      result.append("             ${label}: registered\n")
+      "${label}: registered"
     } else if (owned.isEmpty()) {
-      result.append("             ${label}: NOT registered\n")
+      "${label}: NOT registered"
     } else {
       List<String> missing = source.supportedTypes.findAll { !owned.contains(it) }.collect { Class<?> type ->
         String owner = registered[type]
         ActiveRenderer current = active.find { it.providerClassName == owner }
         "${type.simpleName} owned by ${current?.renderer?.rendererName() ?: owner}".toString()
       }
-      result.append("             ${label}: partially registered — owns ${owned*.simpleName.join(LIST_SEPARATOR)}; ${missing.join(LIST_SEPARATOR)}\n")
+      "${label}: partially registered — owns ${owned*.simpleName.join(LIST_SEPARATOR)}; ${missing.join(LIST_SEPARATOR)}"
     }
   }
 }

@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.jupyter.render.CharmRenderer
+
 /** Tests optional-class probing through the thread context class loader. */
 class AbstractRendererTest {
   @Test
@@ -36,10 +38,36 @@ class AbstractRendererTest {
     }
   }
 
+  @Test
+  void probesTheRendererLoaderBeforeAContextLoaderThatHidesItsTarget() {
+    ClassLoader original = Thread.currentThread().contextClassLoader
+    Thread.currentThread().contextClassLoader = new HidingClassLoader(original)
+
+    try {
+      assertTrue(new CharmRenderer().available())
+    } finally {
+      Thread.currentThread().contextClassLoader = original
+    }
+  }
+
   private static class ProbeRenderer extends AbstractRenderer {
     @Override String rendererName() { 'ProbeRenderer' }
     @Override boolean available() { probe('test.tccl.VisibleOnly') }
     @Override Set<Class<?>> supportedTypes() { [] as Set }
     @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain(value.toString()) }
+  }
+
+  private static class HidingClassLoader extends ClassLoader {
+    HidingClassLoader(ClassLoader parent) {
+      super(parent)
+    }
+
+    @Override
+    Class<?> loadClass(String name) throws ClassNotFoundException {
+      if (name == 'se.alipsa.matrix.charm.Chart') {
+        throw new ClassNotFoundException(name)
+      }
+      super.loadClass(name)
+    }
   }
 }
