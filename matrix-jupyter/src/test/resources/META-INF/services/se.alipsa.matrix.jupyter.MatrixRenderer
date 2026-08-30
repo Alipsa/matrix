@@ -1,0 +1,5 @@
+se.alipsa.matrix.jupyter.render.CoreRenderer
+se.alipsa.matrix.jupyter.render.CharmRenderer
+se.alipsa.matrix.jupyter.render.GgRenderer
+se.alipsa.matrix.jupyter.render.PictRenderer
+se.alipsa.matrix.jupyter.FailingRenderer

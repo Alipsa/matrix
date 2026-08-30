@@ -2,6 +2,7 @@ package se.alipsa.matrix.jupyter
 
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -28,5 +29,16 @@ class RendererRegistryTest {
   @Test
   void returnsNullForValuesWithoutARenderer() {
     assertNull(RendererRegistry.instance.render(new Object()))
+  }
+
+  @Test
+  void degradesThrowingRenderersToPlainText() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    MimeBundle bundle = registry.render(new FailingValue())
+
+    assertEquals(['text/plain'], bundle.keySet().toList())
+    assertTrue(bundle['text/plain'].contains('Rendering failed in FailingRenderer: intentional failure'))
   }
 }
