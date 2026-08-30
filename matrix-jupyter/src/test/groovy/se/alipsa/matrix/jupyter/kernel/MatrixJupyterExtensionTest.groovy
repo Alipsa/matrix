@@ -177,6 +177,28 @@ class MatrixJupyterExtensionTest {
     }
   }
 
+  @Test
+  void refreshRegistersRenderersThatAppearAfterInstallation() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    DisappearingRenderer.present = false
+    RendererRegistry.instance.reload()
+    extension.install(kernel)
+
+    try {
+      DisappearingRenderer.present = true
+      MatrixJupyterExtension.refresh()
+
+      DisplayData rendered = kernel.renderer.renderAs(new DisappearingValue(), 'text/html')
+
+      assertEquals('<b>present</b>', rendered.getData(MIMEType.TEXT_HTML))
+    } finally {
+      DisappearingRenderer.present = true
+      RendererRegistry.instance.reload()
+      extension.uninstall(kernel)
+    }
+  }
+
   private static int registrationCount(Renderer renderer) {
     Field field = Renderer.getDeclaredField('renderFunctions')
     field.accessible = true
