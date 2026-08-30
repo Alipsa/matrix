@@ -51,7 +51,7 @@ class MatrixJupyterExtension implements Extension {
     if (snapshot.isEmpty()) return RendererRegistry.instance.describe()
 
     List<BaseKernel> kernels = snapshot.keySet().toList().sort { BaseKernel kernel ->
-      Integer.toUnsignedLong(System.identityHashCode(kernel))
+      Integer.toHexString(System.identityHashCode(kernel))
     }
     Map<BaseKernel, String> labels = [:]
     kernels.eachWithIndex { BaseKernel kernel, int index ->

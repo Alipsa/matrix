@@ -89,7 +89,8 @@ ${scopedSelector(targetSelector)} {
   }
 
   private static String scopedSelector(String selector) {
-    selector.split(',').collect { String part -> part.trim() }.findAll { it }.collect { String target ->
+    selector.split(',').findAll { String part -> part.trim() }.collect { String part ->
+      String target = part.trim()
       target in ['svg', ':root', '#charm-root'] ? '#charm-root' : "#charm-root ${target}"
     }.join(', ')
   }

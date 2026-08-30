@@ -27,7 +27,4 @@ abstract class AbstractRenderer implements MatrixRenderer {
   @Override
   String unavailableReason() { "${missingClass ?: 'required class'} not on classpath" }
 
-  protected MimeBundle failed(Object value, Throwable error) {
-    MimeBundle.plain("${value}\nRendering failed in ${rendererName()}: ${error.message ?: error.class.name}")
-  }
 }
