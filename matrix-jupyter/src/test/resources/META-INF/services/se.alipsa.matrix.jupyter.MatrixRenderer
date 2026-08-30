@@ -4,3 +4,4 @@ se.alipsa.matrix.jupyter.render.GgRenderer
 se.alipsa.matrix.jupyter.render.PictRenderer
 se.alipsa.matrix.jupyter.FailingRenderer
 se.alipsa.matrix.jupyter.UnavailableRenderer
+se.alipsa.matrix.jupyter.DuplicateMatrixRenderer

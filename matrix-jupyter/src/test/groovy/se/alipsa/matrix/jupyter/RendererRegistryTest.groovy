@@ -53,4 +53,17 @@ class RendererRegistryTest {
     assertEquals('optional test dependency missing', skipped.reason)
     assertTrue(registry.describe().contains('skipped: UnavailableRenderer → text/html — optional test dependency missing'))
   }
+
+  @Test
+  void retainsTheFirstRendererForDuplicateTypesAndReportsTheShadow() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    ActiveRenderer duplicate = registry.active().find { it.renderer.rendererName() == 'DuplicateMatrixRenderer' }
+
+    assertNotNull(duplicate)
+    assertEquals('se.alipsa.matrix.jupyter.render.CoreRenderer', duplicate.shadowedBy[Matrix])
+    assertTrue(registry.render(Matrix.builder().columns(value: [1]).build())['text/html'].contains('>1</td>'))
+    assertTrue(registry.describe().contains('shadowed for Matrix by se.alipsa.matrix.jupyter.render.CoreRenderer'))
+  }
 }

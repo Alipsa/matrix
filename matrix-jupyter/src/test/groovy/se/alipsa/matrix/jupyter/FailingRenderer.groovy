@@ -1,5 +1,7 @@
 package se.alipsa.matrix.jupyter
 
+import se.alipsa.matrix.core.Matrix
+
 /** Test-only renderer that exercises registry failure handling. */
 class FailingRenderer implements MatrixRenderer {
   @Override String rendererName() { 'FailingRenderer' }
@@ -20,4 +22,12 @@ class UnavailableRenderer implements MatrixRenderer {
   @Override Set<Class<?>> supportedTypes() { throw new AssertionError('must not be called') }
   @Override String unavailableReason() { 'optional test dependency missing' }
   @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain(value.toString()) }
+}
+
+/** Test-only duplicate renderer used to verify first-provider precedence. */
+class DuplicateMatrixRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'DuplicateMatrixRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [Matrix] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('duplicate') }
 }
