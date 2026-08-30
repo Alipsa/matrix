@@ -31,3 +31,15 @@ class DuplicateMatrixRenderer implements MatrixRenderer {
   @Override Set<Class<?>> supportedTypes() { [Matrix] as Set<Class<?>> }
   @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('duplicate') }
 }
+
+/** Test-only renderer with a malformed MIME declaration. */
+class InvalidMimeRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'InvalidMimeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [InvalidMimeValue] as Set<Class<?>> }
+  @Override String preferredMime() { 'not a MIME type' }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>available</b>', 'available') }
+}
+
+/** Value handled by {@link InvalidMimeRenderer}. */
+class InvalidMimeValue { }

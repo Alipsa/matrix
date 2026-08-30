@@ -21,7 +21,7 @@ class RendererRegistryTest {
 
     assertNotNull(bundle)
     assertTrue(registry.active().any { it.renderer.rendererName() == 'CoreRenderer' })
-    assertTrue(registry.active().every { it.mimeUsable })
+    assertTrue(registry.active().find { it.renderer.rendererName() == 'CoreRenderer' }.mimeUsable)
     assertTrue(bundle['text/html'].contains('>1</td>'))
     assertTrue(registry.describe().contains('active:  CoreRenderer → text/html'))
   }
@@ -65,5 +65,19 @@ class RendererRegistryTest {
     assertEquals('se.alipsa.matrix.jupyter.render.CoreRenderer', duplicate.shadowedBy[Matrix])
     assertTrue(registry.render(Matrix.builder().columns(value: [1]).build())['text/html'].contains('>1</td>'))
     assertTrue(registry.describe().contains('shadowed for Matrix by se.alipsa.matrix.jupyter.render.CoreRenderer'))
+  }
+
+  @Test
+  void retainsMalformedMimeRenderersForHostNeutralConsumers() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    ActiveRenderer invalid = registry.active().find { it.renderer.rendererName() == 'InvalidMimeRenderer' }
+    MimeBundle bundle = registry.render(new InvalidMimeValue())
+
+    assertNotNull(invalid)
+    assertTrue(!invalid.mimeUsable)
+    assertEquals('<b>available</b>', bundle['text/html'])
+    assertTrue(registry.describe().contains("unsupported-mime — 'not a MIME type'"))
   }
 }
