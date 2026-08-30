@@ -2,6 +2,7 @@ package se.alipsa.matrix.jupyter.kernel
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.plot
 
 import org.dflib.jjava.jupyter.kernel.BaseKernel
 import org.dflib.jjava.jupyter.kernel.JupyterIO
@@ -35,6 +36,23 @@ class MatrixJupyterExtensionTest {
     assertTrue(MatrixJupyterExtension.describe().contains('CoreRenderer'))
     extension.uninstall(kernel)
     assertEquals(MatrixJupyterExtension.describe(), se.alipsa.matrix.jupyter.RendererRegistry.instance.describe())
+  }
+
+  @Test
+  void installsSvgRenderingForCharmCharts() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    Matrix data = Matrix.builder().columns(x: [1, 2], y: [2, 4]).build()
+    def chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+    }.build()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.renderAs(chart, 'image/svg+xml')
+
+    assertTrue(rendered.getData(MIMEType.IMAGE_SVG).contains('<svg'))
+    extension.uninstall(kernel)
   }
 
   private static class TestKernel extends BaseKernel {
