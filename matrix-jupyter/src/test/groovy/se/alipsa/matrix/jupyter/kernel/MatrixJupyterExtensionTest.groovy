@@ -16,6 +16,7 @@ import org.dflib.jjava.jupyter.kernel.util.StringStyler
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.jupyter.CustomMimeValue
 import se.alipsa.matrix.jupyter.NullMimeValue
 
 import java.lang.reflect.Field
@@ -117,6 +118,18 @@ class MatrixJupyterExtensionTest {
     DisplayData rendered = kernel.renderer.renderAs(new NullMimeValue(), 'text/html')
 
     assertEquals('<b>normalized</b>', rendered.getData(MIMEType.TEXT_HTML))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void registersValidNonStandardMimeRenderers() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.renderAs(new CustomMimeValue(), 'application/vnd.matrix-widget+json')
+
+    assertEquals('{"kind":"matrix-widget"}', rendered.getData(MIMEType.parse('application/vnd.matrix-widget+json')))
     extension.uninstall(kernel)
   }
 

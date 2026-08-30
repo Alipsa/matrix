@@ -7,3 +7,4 @@ se.alipsa.matrix.jupyter.UnavailableRenderer
 se.alipsa.matrix.jupyter.DuplicateMatrixRenderer
 se.alipsa.matrix.jupyter.InvalidMimeRenderer
 se.alipsa.matrix.jupyter.NullMimeRenderer
+se.alipsa.matrix.jupyter.CustomMimeRenderer

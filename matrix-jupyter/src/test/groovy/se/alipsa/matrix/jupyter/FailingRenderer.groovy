@@ -59,3 +59,23 @@ class NullMimeRenderer implements MatrixRenderer {
 class NullMimeValue {
   final String description = 'null MIME test value'
 }
+
+/** Test-only renderer with a valid non-standard MIME declaration. */
+class CustomMimeRenderer implements MatrixRenderer {
+  static final String MIME = 'application/vnd.matrix-widget+json'
+
+  @Override String rendererName() { 'CustomMimeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [CustomMimeValue] as Set<Class<?>> }
+  @Override String preferredMime() { MIME }
+  @Override MimeBundle render(Object value, RenderOptions options) {
+    MimeBundle bundle = MimeBundle.plain('custom MIME value')
+    bundle.put(MIME, '{"kind":"matrix-widget"}')
+    bundle
+  }
+}
+
+/** Value handled by {@link CustomMimeRenderer}. */
+class CustomMimeValue {
+  final String description = 'custom MIME test value'
+}
