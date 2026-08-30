@@ -48,13 +48,14 @@ class CoreRenderer extends AbstractRenderer {
   }
 
   private static String plainText(Matrix matrix, Object value, RenderOptions options, List<String> notices) {
-    if (!(value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid)) return value.toString()
+    if (!(value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid || value instanceof Summary || value instanceof Structure)) return value.toString()
     Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
         matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
-    int rows = options.maxRows != null ? options.maxRows : rendered.rowCount()
+    int rows = Math.min(options.maxRows != null ? options.maxRows : rendered.rowCount(), rendered.rowCount())
     String title = rendered.toString() + '\n'
     String suffix = notices ? "\n${notices.join(', ')}" : ''
-    title + rendered.head(rows) + suffix
+    String body = options.fromHead ? rendered.head(rows) : rendered.tail(rows)
+    title + body + suffix
   }
 
   private static Matrix toMatrix(Object value) {

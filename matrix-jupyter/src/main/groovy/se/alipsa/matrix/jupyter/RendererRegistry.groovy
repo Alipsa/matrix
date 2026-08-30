@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 @SuppressWarnings(['PropertyName', 'IfStatementBraces', 'ExplicitLinkedHashMapInstantiation', 'UnnecessaryCollectCall'])
 class RendererRegistry {
   private static final Logger log = Logger.getLogger(RendererRegistry)
+  private static final int MAX_CONSECUTIVE_DISCOVERY_FAILURES = 100
   static final RendererRegistry instance = new RendererRegistry()
   private final Object lock = new Object()
   private volatile boolean loaded
@@ -107,7 +108,7 @@ class RendererRegistry {
       try {
         Iterator<ServiceLoader.Provider<MatrixRenderer>> providers = ServiceLoader.load(MatrixRenderer, loader).stream().iterator()
         int consecutiveFailures = 0
-        while (consecutiveFailures < 100) {
+        while (consecutiveFailures < MAX_CONSECUTIVE_DISCOVERY_FAILURES) {
           try {
             if (!providers.hasNext()) break
             ServiceLoader.Provider<MatrixRenderer> provider = providers.next()
@@ -119,7 +120,9 @@ class RendererRegistry {
             log.warn("Could not discover one matrix-jupyter renderer from ${loader}", error)
           }
         }
-        if (consecutiveFailures == 100) log.warn("Stopped renderer discovery from ${loader} after 100 consecutive service configuration failures")
+        if (consecutiveFailures == MAX_CONSECUTIVE_DISCOVERY_FAILURES) {
+          log.warn("Stopped renderer discovery from ${loader} after ${MAX_CONSECUTIVE_DISCOVERY_FAILURES} consecutive service configuration failures")
+        }
       } catch (Throwable error) {
         log.warn("Could not discover matrix-jupyter renderers from ${loader}", error)
       }

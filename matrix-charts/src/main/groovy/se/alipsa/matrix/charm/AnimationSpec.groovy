@@ -99,7 +99,7 @@ ${scopedSelector(targetSelector)} {
     StringBuilder part = new StringBuilder()
     int parens = 0
     int brackets = 0
-    Character quote = null
+    String quote = null
     selector.each { String character ->
       if (quote != null) {
         if (character == quote) quote = null
