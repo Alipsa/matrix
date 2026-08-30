@@ -2,8 +2,6 @@ package se.alipsa.matrix.jupyter
 
 import static org.junit.jupiter.api.Assertions.assertTrue
 
-import groovy.lang.GroovyClassLoader
-
 import org.junit.jupiter.api.Test
 
 /** Tests optional-class probing through the thread context class loader. */
@@ -18,6 +16,7 @@ class AbstractRendererTest {
       assertTrue(new ProbeRenderer().available())
     } finally {
       Thread.currentThread().contextClassLoader = original
+      tccl.close()
     }
   }
 

@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 
 import java.lang.reflect.Method
-import java.net.URL
-import java.net.URLClassLoader
 import java.util.regex.Pattern
 
 /** Verifies that the host-neutral renderer layer does not link against jjava. */

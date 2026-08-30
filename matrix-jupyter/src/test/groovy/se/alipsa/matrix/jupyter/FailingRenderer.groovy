@@ -42,4 +42,6 @@ class InvalidMimeRenderer implements MatrixRenderer {
 }
 
 /** Value handled by {@link InvalidMimeRenderer}. */
-class InvalidMimeValue { }
+class InvalidMimeValue {
+  final String description = 'invalid MIME test value'
+}
