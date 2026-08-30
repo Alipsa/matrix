@@ -1,5 +1,7 @@
 package se.alipsa.matrix.jupyter
 
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -17,6 +19,20 @@ class AbstractRendererTest {
     } finally {
       Thread.currentThread().contextClassLoader = original
       tccl.close()
+    }
+  }
+
+  @Test
+  void reportsMissingClassesWhenTheContextClassLoaderIsUnavailable() {
+    ClassLoader original = Thread.currentThread().contextClassLoader
+    ProbeRenderer renderer = new ProbeRenderer()
+    Thread.currentThread().contextClassLoader = null
+
+    try {
+      assertFalse(renderer.available())
+      assertEquals('test.tccl.VisibleOnly not on classpath', renderer.unavailableReason())
+    } finally {
+      Thread.currentThread().contextClassLoader = original
     }
   }
 
