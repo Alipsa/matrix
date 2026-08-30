@@ -1,22 +1,19 @@
 package se.alipsa.matrix.jupyter
 
 /** Common optional-class probing and plain-text fallback for renderers. */
-@SuppressWarnings('ClassForName') // false avoids class initialization while probing optional modules
 abstract class AbstractRenderer implements MatrixRenderer {
   protected String missingClass
 
   protected boolean probe(String className) {
     try {
-      Class.forName(className, false, MatrixRenderer.classLoader)
+      ClassLoader tccl = Thread.currentThread().contextClassLoader
+      if (tccl == null) {
+        missingClass = className
+        return false
+      }
+      tccl.loadClass(className)
       true
     } catch (Throwable ignored) {
-      try {
-        ClassLoader tccl = Thread.currentThread().contextClassLoader
-        if (tccl != null) {
-          Class.forName(className, false, tccl)
-          return true
-        }
-      } catch (Throwable ignoredAgain) { }
       missingClass = className
       false
     }

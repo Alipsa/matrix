@@ -21,6 +21,7 @@ import java.util.function.Supplier
 /** Thin jjava adapter for the host-neutral Matrix renderer registry. */
 @SuppressWarnings(['FieldName', 'IfStatementBraces'])
 class MatrixJupyterExtension implements Extension {
+  private static final String LIST_SEPARATOR = ', '
   private static final Logger log = Logger.getLogger(MatrixJupyterExtension)
   private static final Map<BaseKernel, Map<Class<?>, String>> attached = Collections.synchronizedMap(new WeakHashMap<>())
   private static final Map<String, MIMEType> mimeTypes = ['text/html': MIMEType.TEXT_HTML,
@@ -62,7 +63,7 @@ class MatrixJupyterExtension implements Extension {
     }
     StringBuilder result = new StringBuilder('matrix-jupyter renderers\n')
     active.each { ActiveRenderer source ->
-      String types = source.supportedTypes.collect { it.simpleName }.join(', ')
+      String types = source.supportedTypes*.simpleName.join(LIST_SEPARATOR)
       result.append("  active:  ${source.renderer.rendererName()} → ${source.preferredMime}      (${types})\n")
       if (!source.mimeUsable) result.append("             unsupported-mime — '${source.preferredMime}' is not a type/subtype string\n")
       source.shadowedBy.each { Class<?> type, String owner ->
@@ -108,8 +109,11 @@ class MatrixJupyterExtension implements Extension {
       }
       context.renderIfRequested(preferred, { MIMEType mime, DisplayData out ->
         Object data = once()?.get(preferredMime)
-        if (data != null) out.putData(mime, data)
-        else missingNote()
+        if (data != null) {
+          out.putData(mime, data)
+        } else {
+          missingNote()
+        }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
         Object plain = once()?.get('text/plain')
@@ -144,7 +148,7 @@ class MatrixJupyterExtension implements Extension {
         ActiveRenderer current = active.find { it.providerClassName == owner }
         "${type.simpleName} owned by ${current?.renderer?.rendererName() ?: owner}".toString()
       }
-      result.append("             ${label}: partially registered — owns ${owned*.simpleName.join(', ')}; ${missing.join(', ')}\n")
+      result.append("             ${label}: partially registered — owns ${owned*.simpleName.join(LIST_SEPARATOR)}; ${missing.join(LIST_SEPARATOR)}\n")
     }
   }
 }
