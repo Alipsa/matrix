@@ -100,7 +100,7 @@ ${scopedSelector(targetSelector)} {
     int parens = 0
     int brackets = 0
     Character quote = null
-    selector.each { char character ->
+    selector.each { String character ->
       if (quote != null) {
         if (character == quote) quote = null
       } else if (character in ['"', "'"]) quote = character

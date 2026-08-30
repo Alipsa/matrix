@@ -40,13 +40,13 @@ class RendererRegistry {
   }
 
   /** Return a renderer's plain-text fallback without producing a rich payload. */
-  String plainText(Object value) {
+  String plainText(Object value, RenderOptions options = RenderOptions.defaults) {
     if (value == null) return null
     load()
     MatrixRenderer renderer = findRenderer(value.class)
     if (renderer == null) return null
     try {
-      renderer.plainText(value)
+      renderer.plainText(value, options ?: RenderOptions.defaults)
     } catch (Throwable error) {
       log.warn("Renderer ${renderer.rendererName()} failed to produce plain text for ${value.class.name}", error)
       failureText(value, renderer, error)

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.charm.render
 
+import org.dom4j.Attribute
 import org.dom4j.Element
 
 import se.alipsa.groovy.svg.Svg
@@ -101,8 +102,8 @@ class PlotGridRenderer {
       nested.width(cellW)
       nested.height(cellH)
       nested.viewBox("0 0 $cellW $cellH")
-      cellSvg.element.attributes().each { def attribute ->
-        if (!(attribute.name in ['x', 'y', 'width', 'height', 'viewBox'])) nested.addAttribute(attribute.name, attribute.value)
+      cellSvg.element.attributes().each { Attribute attribute ->
+        if (attribute.qualifiedName in ['id', 'class', 'style']) nested.addAttribute(attribute.qualifiedName, attribute.value)
       }
 
       // Clone DOM children from cellSvg into nested SVG (avoids the

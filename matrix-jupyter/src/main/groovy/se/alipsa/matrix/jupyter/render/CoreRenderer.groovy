@@ -27,14 +27,14 @@ class CoreRenderer extends AbstractRenderer {
     if (columnsTruncated) rendered = matrix.selectColumns(matrix.columnNames().take(options.maxColumns))
     boolean rowsTruncated = options.maxRows != null && totalRows > options.maxRows
     Map<String, String> attributes = new LinkedHashMap<>(options.attr)
+    List<String> notices = []
     if (rowsTruncated || columnsTruncated) {
-      List<String> notices = []
       if (rowsTruncated) notices << "showing ${options.maxRows} of ${totalRows} rows".toString()
       if (columnsTruncated) notices << "${options.maxColumns} of ${totalColumns} columns".toString()
       attributes.caption = [attributes.caption, notices.join(', ')].findAll { it }.join(' — ')
     }
     String html = rendered.toHtml(attributes, options.maxRows, options.fromHead)
-    MimeBundle.html(html, plainText(matrix, value, options))
+    MimeBundle.html(html, plainText(matrix, value, options, notices))
   }
 
   @Override
@@ -44,14 +44,17 @@ class CoreRenderer extends AbstractRenderer {
 
   @Override
   String plainText(Object value, RenderOptions options) {
-    plainText(toMatrix(value), value, options)
+    plainText(toMatrix(value), value, options, [])
   }
 
-  private static String plainText(Matrix matrix, Object value, RenderOptions options) {
+  private static String plainText(Matrix matrix, Object value, RenderOptions options, List<String> notices) {
     if (!(value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid)) return value.toString()
     Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
         matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
-    rendered.head(options.maxRows ?: rendered.rowCount()).content()
+    int rows = options.maxRows != null ? options.maxRows : rendered.rowCount()
+    String title = rendered.toString() + '\n'
+    String suffix = notices ? "\n${notices.join(', ')}" : ''
+    title + rendered.head(rows) + suffix
   }
 
   private static Matrix toMatrix(Object value) {
