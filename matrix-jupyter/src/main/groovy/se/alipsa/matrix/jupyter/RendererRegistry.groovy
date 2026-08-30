@@ -66,7 +66,7 @@ class RendererRegistry {
     Map<Class<?>, MatrixRenderer> routes = new LinkedHashMap<>()
     Set<String> seen = new LinkedHashSet<>()
     List<ClassLoader> loaders = []
-    [MatrixRenderer.classLoader, extraLoader ?: Thread.currentThread().contextClassLoader].each { ClassLoader loader ->
+    [MatrixRenderer.classLoader, Thread.currentThread().contextClassLoader, extraLoader].each { ClassLoader loader ->
       if (loader != null && !loaders.any { it.is(loader) }) loaders << loader
     }
     loaders.each { ClassLoader loader ->

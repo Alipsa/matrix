@@ -49,9 +49,10 @@ class AnimationTest {
     }.build()
 
     String xml = SvgWriter.toXml(chart.render())
+    assertTrue(xml.contains('id="charm-root"'))
     assertTrue(xml.contains('/* charm-animation */'))
     assertTrue(xml.contains('@keyframes pulse'))
-    assertTrue(xml.contains('.charm-point'))
+    assertTrue(xml.contains('#charm-root .charm-point'))
     assertTrue(xml.contains('animation-duration: 2s'))
   }
 

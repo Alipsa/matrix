@@ -13,6 +13,18 @@ import se.alipsa.matrix.core.Matrix
 Matrix.builder().columns(city: ['Stockholm', 'Uppsala'], population: [984748, 245329]).build()
 ```
 
+With `matrix-charts` present, a returned Charm chart is rendered as inline SVG too:
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+
+def data = Matrix.builder().columns(x: [1, 2, 3], y: [2, 4, 3]).build()
+plot(data) {
+  mapping { x = 'x'; y = 'y' }
+  layers { geomPoint() }
+}.build()
+```
+
 `RenderOptions.defaults` controls tables and applicable chart sizes: `maxRows` and `maxColumns` default to `50` (use `null` for no limit), `fromHead` is `true`, `attr` is an empty map, and `width`/`height` are `800`/`600`. For example:
 
 ```groovy
@@ -21,6 +33,13 @@ RenderOptions.defaults = new RenderOptions(20, 10, true, [class: 'matrix-table']
 ```
 
 Tables report truncation in a caption. Attribute values other than `caption` are passed through to `Matrix.toHtml` and are not escaped. `GgChart` dimensions are not changed because doing so would mutate the chart object.
+
+Charm's built-in animation CSS is scoped to its SVG root. A stylesheet supplied through a chart is
+left unchanged, so scope custom rules yourself when several charts share a page:
+
+```groovy
+chart.stylesheet = '#charm-root .my-rule { stroke: tomato; }'
+```
 
 If a chart module is added after a first render, call:
 

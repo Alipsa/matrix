@@ -49,7 +49,7 @@ class AnimationSpec {
 @keyframes ${keyframeName} {
   ${keyframeBody}
 }
-${targetSelector} {
+#charm-root ${targetSelector} {
   animation-name: ${keyframeName};
   animation-duration: ${animationDuration};
   animation-timing-function: ${animationTiming};
