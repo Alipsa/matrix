@@ -111,3 +111,21 @@ class InterfaceRenderer implements MatrixRenderer {
 class InterfaceValue implements InterfaceRenderable {
   final String description = 'interface renderer test value'
 }
+
+/** Base value used to test superclass dispatch. */
+class ParentValue {
+  final String description = 'parent renderer test value'
+}
+
+/** Subclass rendered through its {@link ParentValue} superclass. */
+class ChildValue extends ParentValue {
+  final String childDescription = 'child renderer test value'
+}
+
+/** Test-only renderer registered for {@link ParentValue}. */
+class ParentRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'ParentRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [ParentValue] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>parent</b>', 'parent') }
+}

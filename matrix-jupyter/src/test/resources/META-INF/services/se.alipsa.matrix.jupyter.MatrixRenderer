@@ -10,3 +10,4 @@ se.alipsa.matrix.jupyter.NullMimeRenderer
 se.alipsa.matrix.jupyter.CustomMimeRenderer
 se.alipsa.matrix.jupyter.DisappearingRenderer
 se.alipsa.matrix.jupyter.InterfaceRenderer
+se.alipsa.matrix.jupyter.ParentRenderer

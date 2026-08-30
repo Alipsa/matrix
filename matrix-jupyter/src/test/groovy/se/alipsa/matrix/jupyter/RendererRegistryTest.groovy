@@ -43,6 +43,16 @@ class RendererRegistryTest {
   }
 
   @Test
+  void dispatchesSubclassValuesThroughTheirSuperclass() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    MimeBundle bundle = registry.render(new ChildValue())
+
+    assertEquals('<b>parent</b>', bundle['text/html'])
+  }
+
+  @Test
   void degradesThrowingRenderersToPlainText() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()
