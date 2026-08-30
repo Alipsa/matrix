@@ -33,6 +33,16 @@ class RendererRegistryTest {
   }
 
   @Test
+  void dispatchesValuesThroughTheirImplementedInterface() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    MimeBundle bundle = registry.render(new InterfaceValue())
+
+    assertEquals('<b>interface</b>', bundle['text/html'])
+  }
+
+  @Test
   void degradesThrowingRenderersToPlainText() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()

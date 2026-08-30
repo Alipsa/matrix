@@ -95,3 +95,19 @@ class DisappearingRenderer implements MatrixRenderer {
 class DisappearingValue {
   final String description = 'disappearing renderer test value'
 }
+
+/** Interface used to test registry interface dispatch. */
+interface InterfaceRenderable { }
+
+/** Test-only renderer registered for {@link InterfaceRenderable}. */
+class InterfaceRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'InterfaceRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [InterfaceRenderable] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>interface</b>', 'interface') }
+}
+
+/** Value handled through its {@link InterfaceRenderable} implementation. */
+class InterfaceValue implements InterfaceRenderable {
+  final String description = 'interface renderer test value'
+}
