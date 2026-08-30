@@ -83,6 +83,19 @@ class RendererRegistryTest {
   }
 
   @Test
+  void normalizesMissingMimeToHtmlForHostNeutralConsumers() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    ActiveRenderer normalized = registry.active().find { it.renderer.rendererName() == 'NullMimeRenderer' }
+    MimeBundle bundle = registry.render(new NullMimeValue())
+
+    assertEquals('text/html', normalized.preferredMime)
+    assertTrue(normalized.mimeUsable)
+    assertEquals('<b>normalized</b>', bundle['text/html'])
+  }
+
+  @Test
   void exposesImmutableDiscoveryAndShadowFacts() {
     RendererRegistry registry = RendererRegistry.instance
     registry.reload()

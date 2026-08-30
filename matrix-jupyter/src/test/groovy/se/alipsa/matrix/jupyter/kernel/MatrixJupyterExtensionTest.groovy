@@ -16,7 +16,9 @@ import org.dflib.jjava.jupyter.kernel.util.StringStyler
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.jupyter.NullMimeValue
 
+import java.lang.reflect.Field
 import java.nio.charset.StandardCharsets
 import java.util.function.Function
 
@@ -74,6 +76,55 @@ class MatrixJupyterExtensionTest {
     extension.uninstall(first)
     assertTrue(second.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML).contains('>1</td>'))
     extension.uninstall(second)
+  }
+
+  @Test
+  void skipsInvalidMimeRegistrationsWithoutAffectingCoreRendering() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    Matrix matrix = Matrix.builder().columns(value: [1]).build()
+
+    extension.install(kernel)
+
+    assertTrue(kernel.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML).contains('>1</td>'))
+    String description = MatrixJupyterExtension.describe()
+    assertTrue(description.contains('InvalidMimeRenderer'))
+    assertTrue(description.contains('unsupported-mime'))
+    assertTrue(description.contains('NOT registered'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void refreshDoesNotAppendDuplicateRenderFunctions() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    int registrations = registrationCount(kernel.renderer)
+    MatrixJupyterExtension.refresh()
+    MatrixJupyterExtension.refresh()
+
+    assertEquals(registrations, registrationCount(kernel.renderer))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void registersMissingMimeRenderersAsHtml() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.renderAs(new NullMimeValue(), 'text/html')
+
+    assertEquals('<b>normalized</b>', rendered.getData(MIMEType.TEXT_HTML))
+    extension.uninstall(kernel)
+  }
+
+  private static int registrationCount(Renderer renderer) {
+    Field field = Renderer.getDeclaredField('renderFunctions')
+    field.accessible = true
+    Map<Class<?>, List<?>> registrations = field.get(renderer) as Map<Class<?>, List<?>>
+    registrations.values()*.size().sum(0) as int
   }
 
   private static class TestKernel extends BaseKernel {

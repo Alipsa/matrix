@@ -45,3 +45,17 @@ class InvalidMimeRenderer implements MatrixRenderer {
 class InvalidMimeValue {
   final String description = 'invalid MIME test value'
 }
+
+/** Test-only renderer that relies on the default HTML MIME normalization. */
+class NullMimeRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'NullMimeRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [NullMimeValue] as Set<Class<?>> }
+  @Override String preferredMime() { null }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>normalized</b>', 'normalized') }
+}
+
+/** Value handled by {@link NullMimeRenderer}. */
+class NullMimeValue {
+  final String description = 'null MIME test value'
+}
