@@ -41,4 +41,16 @@ class RendererRegistryTest {
     assertEquals(['text/plain'], bundle.keySet().toList())
     assertTrue(bundle['text/plain'].contains('Rendering failed in FailingRenderer: intentional failure'))
   }
+
+  @Test
+  void reportsUnavailableProvidersWithoutInspectingTheirTypes() {
+    RendererRegistry registry = RendererRegistry.instance
+    registry.reload()
+
+    SkippedRenderer skipped = registry.skipped().find { it.rendererName == 'UnavailableRenderer' }
+
+    assertNotNull(skipped)
+    assertEquals('optional test dependency missing', skipped.reason)
+    assertTrue(registry.describe().contains('skipped: UnavailableRenderer → text/html — optional test dependency missing'))
+  }
 }
