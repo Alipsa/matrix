@@ -10,8 +10,10 @@ import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
@@ -346,6 +348,172 @@ class CharmLegendRendererTest {
       String content = SvgWriter.toXml(svg)
       assertTrue(content.contains('id="legend"'), "Legend should be present at ${pos} position")
     }
+  }
+
+  @Test
+  void testSizeLegendKeysFollowLegendOrientation() {
+    assertContinuousLegendKeyOrientation('size', LegendPosition.TOP, true)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.RIGHT, false)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
+    assertDiscreteLegendKeyOrientation('size', LegendPosition.TOP, true)
+  }
+
+  @Test
+  void testAlphaLegendKeysFollowLegendOrientation() {
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.TOP, true)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
+    assertDiscreteLegendKeyOrientation('alpha', LegendPosition.TOP, true)
+  }
+
+  @Test
+  void testBinnedSizeScaleDoesNotReserveAnEmptyLegendRow() {
+    Svg alphaLegend = renderAlphaLegendWithOptionalBinnedSize(false)
+    Svg alphaLegendWithBinnedSize = renderAlphaLegendWithOptionalBinnedSize(true)
+    List<BigDecimal> alphaKeyYs = legendKeyYs(alphaLegend)
+    List<BigDecimal> alphaKeyYsWithBinnedSize = legendKeyYs(alphaLegendWithBinnedSize)
+
+    assertEquals(alphaKeyYs, alphaKeyYsWithBinnedSize,
+        'A binned size scale must not shift alpha legend keys')
+    assertFalse(legendText(alphaLegendWithBinnedSize).contains('size'),
+        'A binned size scale must not render an orphaned legend title')
+  }
+
+  @Test
+  void testLinetypeScaleRendersLegendKeysAndTitle() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'linetype')
+        .rows([[1, 2, 'solid'], [2, 3, 'dashed'], [3, 4, 'dotted']])
+        .build()
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; linetype = 'linetype' }
+      layers { geomLine() }
+    }.build()
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('>linetype<'), 'Linetype legend title should be rendered')
+    assertEquals([null, '8,4', '2,2'], legendLinetypeDashArrays(svg),
+        'Linetype legend keys should retain their distinct dash patterns')
+  }
+
+  @Test
+  void testLinetypeLegendKeysFollowLegendOrientation() {
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.TOP, true)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.BOTTOM, true)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.RIGHT, false)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
+  }
+
+  private static List<BigDecimal> legendKeyYs(Svg svg) {
+    legendKeyCoordinates(svg)*.y.collect { it as BigDecimal }
+  }
+
+  private static List<String> legendText(Svg svg) {
+    svg.descendants()
+        .findAll { it instanceof Text }
+        .collect { (it as Text).content }
+  }
+
+  private static List<String> legendLinetypeDashArrays(Svg svg) {
+    svg.descendants()
+        .findAll { element ->
+          element.getAttribute('class')?.toString()?.contains('charm-legend-linetype-key')
+        }
+        .collect { element -> element.getAttribute('stroke-dasharray')?.toString() }
+  }
+
+  private static Svg renderAlphaLegendWithOptionalBinnedSize(boolean includeBinnedSize) {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'size', 'alpha')
+        .rows([[1, 2, 1, 0.2], [2, 3, 2, 0.5], [3, 4, 3, 0.8]])
+        .build()
+    PlotSpec spec = plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+        alpha = 'alpha'
+        if (includeBinnedSize) {
+          size = 'size'
+        }
+      }
+      layers { geomPoint() }
+      theme { legendPosition = TOP }
+    }
+    if (includeBinnedSize) {
+      spec.scale.size = Scale.binned()
+    }
+
+    spec.build().render()
+  }
+
+  private static void assertContinuousLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                            LegendDirection direction = null) {
+    assertLegendKeyOrientation(aesthetic, position, horizontal, null, direction)
+  }
+
+  private static void assertDiscreteLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                          LegendDirection direction = null) {
+    assertLegendKeyOrientation(aesthetic, position, horizontal, Scale.discrete(), direction)
+  }
+
+  private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                  Scale scale, LegendDirection direction = null) {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'value')
+        .rows([[1, 2, 1], [2, 3, 2], [3, 4, 3]])
+        .build()
+    PlotSpec spec = plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+        switch (aesthetic) {
+          case 'size' -> size = 'value'
+          case 'alpha' -> alpha = 'value'
+          case 'linetype' -> linetype = 'value'
+          default -> throw new IllegalArgumentException("Unsupported legend aesthetic: ${aesthetic}")
+        }
+      }
+      layers { geomPoint() }
+      theme {
+        legendPosition = position
+        if (direction != null) {
+          legendDirection = direction
+        }
+      }
+    }
+    if (scale != null) {
+      switch (aesthetic) {
+        case 'size' -> spec.scale.size = scale
+        case 'alpha' -> spec.scale.alpha = scale
+        case 'linetype' -> spec.scale.linetype = scale
+        default -> throw new IllegalArgumentException("Unsupported legend aesthetic: ${aesthetic}")
+      }
+    }
+    Chart chart = spec.build()
+
+    List<Map<String, String>> keys = legendKeyCoordinates(chart.render())
+    assertTrue(keys.size() > 1, "Expected multiple ${aesthetic} legend keys")
+    Set<String> xs = keys*.x as Set<String>
+    Set<String> ys = keys*.y as Set<String>
+    if (horizontal) {
+      assertTrue(xs.size() > 1, "Expected horizontal ${aesthetic} legend keys")
+      assertEquals(1, ys.size(), "Expected aligned ${aesthetic} legend keys")
+    } else {
+      assertEquals(1, xs.size(), "Expected aligned ${aesthetic} legend keys")
+      assertTrue(ys.size() > 1, "Expected vertical ${aesthetic} legend keys")
+    }
+  }
+
+  private static List<Map<String, String>> legendKeyCoordinates(Svg svg) {
+    svg.descendants()
+        .findAll { element -> element.getAttribute('class')?.toString()?.contains('charm-legend-key') }
+        .collect { element ->
+          [x: element.getAttribute('cx') ?: element.getAttribute('x') ?: element.getAttribute('x1'),
+           y: element.getAttribute('cy') ?: element.getAttribute('y') ?: element.getAttribute('y1')]
+        }
   }
 
 }

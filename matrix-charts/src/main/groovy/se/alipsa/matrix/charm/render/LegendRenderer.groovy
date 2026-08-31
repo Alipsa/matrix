@@ -9,6 +9,7 @@ import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
@@ -47,6 +48,8 @@ class LegendRenderer {
   private static final int COLORBAR_WIDTH_HORIZONTAL = 100
   private static final int COLORBAR_HEIGHT_HORIZONTAL = 15
   private static final int COLORBAR_STEPS = 20
+  private static final int LEGEND_KEY_LABEL_GAP = 8
+  private static final int LEGEND_LABEL_CHAR_WIDTH = 6
   private static final Pattern PER_LAYER_SCALE_KEY = ~/^(.+)_layer(\d+)$/
 
   /**
@@ -159,10 +162,13 @@ class LegendRenderer {
 
       switch (baseAesthetic) {
         case 'size' -> {
-          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
+          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
         }
         case 'alpha' -> {
-          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
+          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
+        }
+        case 'linetype' -> {
+          currentY = renderLinetypeLegendFromScale(legend, context, scaleObj as DiscreteCharmScale, currentY, isVertical)
         }
         default -> {
           switch (guideType) {
@@ -184,7 +190,8 @@ class LegendRenderer {
                   currentY = renderContinuousAsDiscreteFromScale(legend, context, baseAesthetic, cs, currentY, isVertical)
                 }
               } else if (baseAesthetic == 'shape') {
-                currentY = renderShapeLegendFromScale(legend, context, scaleObj, currentY, isVertical, usesPoints)
+                currentY = renderShapeLegendFromScale(legend, context, scaleObj as DiscreteCharmScale,
+                    currentY, isVertical, usesPoints)
               }
             }
             default -> {
@@ -249,7 +256,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     boolean isColorKey = isColorAesthetic(aesthetic)
     boolean isShapeKey = aesthetic == 'shape'
 
@@ -266,7 +273,6 @@ class LegendRenderer {
 
     int y = startY
     int x = 0
-
     levels.each { String level ->
       if (isColorKey) {
         ColorCharmScale cs = aesthetic == 'fill' ? context.fillScale : context.colorScale
@@ -318,11 +324,11 @@ class LegendRenderer {
       if (vertical) {
         y += keySize + spacing
       } else {
-        x += keySize + textOffset + level.length() * 6 + spacing
+        x = advanceKey(x, keySize, level, spacing)
       }
     }
 
-    vertical ? y : y + keySize + spacing
+    endOfRow(startY, !levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   // ---- Colorbar ----
@@ -343,7 +349,6 @@ class LegendRenderer {
     int barHeight = vertical ? COLORBAR_HEIGHT_VERTICAL : COLORBAR_HEIGHT_HORIZONTAL
     int x = 0
     int y = startY
-
     // Draw gradient as small rects, using rounding to tile without gaps or overlaps
     int tDenominator = (COLORBAR_STEPS - 1).max(1) as int
     for (int i = 0; i < COLORBAR_STEPS; i++) {
@@ -567,7 +572,7 @@ class LegendRenderer {
 
   // ---- Size Legend ----
 
-  private int renderSizeLegend(G group, RenderContext context, int startY) {
+  private int renderSizeLegend(G group, RenderContext context, int startY, boolean vertical) {
     CharmScale sizeScale = context.sizeScale
     if (sizeScale == null) {
       return startY
@@ -580,14 +585,16 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     BigDecimal maxRadius = keySize / 2.0
 
     int x = 0
     int y = startY
+    boolean rendered = false
 
     if (sizeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale disc = sizeScale as DiscreteCharmScale
+      rendered = !disc.levels.isEmpty()
       disc.levels.each { String level ->
         BigDecimal centerX = x + keySize / 2.0
         BigDecimal centerY = y + keySize / 2.0
@@ -602,7 +609,11 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) {
+          y += keySize + spacing
+        } else {
+          x = advanceKey(x, keySize, level, spacing)
+        }
       }
     } else if (sizeScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = sizeScale as ContinuousCharmScale
@@ -613,6 +624,7 @@ class LegendRenderer {
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
+        rendered = true
         // transform() returns values in the scale range (e.g. 2..10); normalize using range max
         BigDecimal radius = transformedMax > 0 ? (scaled / transformedMax * maxRadius).max(1.0) : maxRadius / 2.0
         BigDecimal centerX = x + keySize / 2.0
@@ -628,16 +640,20 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) {
+          y += keySize + spacing
+        } else {
+          x = advanceKey(x, keySize, label, spacing)
+        }
       }
     }
 
-    y
+    endOfRow(startY, rendered, vertical, keySize, spacing, y)
   }
 
   // ---- Alpha Legend ----
 
-  private int renderAlphaLegend(G group, RenderContext context, int startY) {
+  private int renderAlphaLegend(G group, RenderContext context, int startY, boolean vertical) {
     CharmScale alphaScale = context.alphaScale
     if (alphaScale == null) {
       return startY
@@ -650,13 +666,15 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
 
     int x = 0
     int y = startY
+    boolean rendered = false
 
     if (alphaScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale disc = alphaScale as DiscreteCharmScale
+      rendered = !disc.levels.isEmpty()
       disc.levels.each { String level ->
         BigDecimal alphaVal = 0.5  // Default alpha for discrete levels
         def rect = group.addRect(keySize, keySize)
@@ -669,7 +687,11 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) {
+          y += keySize + spacing
+        } else {
+          x = advanceKey(x, keySize, level, spacing)
+        }
       }
     } else if (alphaScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = alphaScale as ContinuousCharmScale
@@ -679,6 +701,7 @@ class LegendRenderer {
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
+        rendered = true
         // transform() already returns values in the alpha range (0.1..1.0); use directly
         BigDecimal alphaVal = scaled.min(1).max(0)
         def rect = group.addRect(keySize, keySize)
@@ -692,11 +715,56 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) {
+          y += keySize + spacing
+        } else {
+          x = advanceKey(x, keySize, label, spacing)
+        }
       }
     }
 
-    y
+    endOfRow(startY, rendered, vertical, keySize, spacing, y)
+  }
+
+  // ---- Linetype Legend ----
+
+  /** Renders a linetype legend from an explicit discrete scale. */
+  private int renderLinetypeLegendFromScale(G group, RenderContext context, DiscreteCharmScale scale,
+                                              int startY, boolean vertical) {
+    ElementText labelText = context.chart.theme.legendText
+    BigDecimal defaultSize = (context.chart.theme.baseSize ?: 10) as BigDecimal
+    BigDecimal labelSize = (labelText?.size ?: defaultSize) as BigDecimal
+    String labelColor = labelText?.color ?: '#333333'
+    String keyColor = context.chart.theme.legendKey?.color ?: '#999999'
+    int keySize = context.config.legendKeySize
+    int spacing = context.config.legendSpacing
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
+    int x = 0
+    int y = startY
+
+    scale.levels.each { String level ->
+      def key = group.addLine(x, y + keySize / 2, x + keySize, y + keySize / 2)
+          .stroke(keyColor)
+          .styleClass('charm-legend-key charm-legend-linetype-key gg-legend-key')
+      String dashArray = GeomUtils.dashArray(GeomUtils.resolveLinetype(scale, level))
+      if (dashArray != null) {
+        key.addAttribute('stroke-dasharray', dashArray)
+      }
+      def labelEl = group.addText(level)
+          .x(x + textOffset).y(y + keySize - 2)
+          .fontSize(labelSize).fill(labelColor)
+          .styleClass('charm-legend-label gg-legend-label')
+      if (labelText?.family) {
+        labelEl.addAttribute('font-family', labelText.family)
+      }
+      if (vertical) {
+        y += keySize + spacing
+      } else {
+        x = advanceKey(x, keySize, level, spacing)
+      }
+    }
+
+    endOfRow(startY, !scale.levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   // ---- Continuous as Discrete ----
@@ -714,7 +782,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
 
     List<Object> breakValues = []
     List<String> breakLabels = []
@@ -764,10 +832,11 @@ class LegendRenderer {
       if (vertical) {
         y += keySize + spacing
       } else {
-        x += keySize + textOffset + label.length() * 6 + spacing
+        x = advanceKey(x, keySize, label, spacing)
       }
     }
 
+    // A valid continuous scale always generates five break values above, so no empty-row guard is needed.
     vertical ? y : y + keySize + spacing
   }
 
@@ -952,7 +1021,7 @@ class LegendRenderer {
     BigDecimal labelSize = (labelText?.size ?: defaultSize) as BigDecimal
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     List<String> levels = cs?.levels ?: []
     int y = startY
     int x = 0
@@ -975,9 +1044,13 @@ class LegendRenderer {
       def labelEl = group.addText(level).x(x + textOffset).y(y + keySize - 2)
           .fontSize(labelSize).fill(labelColor).styleClass('charm-legend-label gg-legend-label')
       if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-      if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
+      if (vertical) {
+        y += keySize + spacing
+      } else {
+        x = advanceKey(x, keySize, level, spacing)
+      }
     }
-    vertical ? y : y + keySize + spacing
+    endOfRow(startY, !levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   /** Renders a colorbar from an explicit scale object (for per-layer or global). */
@@ -1064,42 +1137,39 @@ class LegendRenderer {
   }
 
   /** Renders a size legend from an explicit scale. */
-  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
+  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale, int startY, boolean vertical) {
     if (scale == null) {
-      return renderSizeLegend(group, context, startY)
+      return renderSizeLegend(group, context, startY, vertical)
     }
     CharmScale previous = context.sizeScale
     try {
       context.sizeScale = scale
-      return renderSizeLegend(group, context, startY)
+      return renderSizeLegend(group, context, startY, vertical)
     } finally {
       context.sizeScale = previous
     }
   }
 
   /** Renders an alpha legend from an explicit scale. */
-  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
+  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale, int startY, boolean vertical) {
     if (scale == null) {
-      return renderAlphaLegend(group, context, startY)
+      return renderAlphaLegend(group, context, startY, vertical)
     }
     CharmScale previous = context.alphaScale
     try {
       context.alphaScale = scale
-      return renderAlphaLegend(group, context, startY)
+      return renderAlphaLegend(group, context, startY, vertical)
     } finally {
       context.alphaScale = previous
     }
   }
 
-  /** Renders a shape legend from an explicit discrete scale when available. */
-  private int renderShapeLegendFromScale(G group, RenderContext context, Object scaleObj,
+  /** Renders a shape legend from an explicit discrete scale. */
+  private int renderShapeLegendFromScale(G group, RenderContext context, DiscreteCharmScale scale,
                                           int startY, boolean vertical, boolean usesPoints) {
-    if (!(scaleObj instanceof DiscreteCharmScale)) {
-      return renderDiscreteLegend(group, context, 'shape', startY, vertical, usesPoints, null)
-    }
     CharmScale previous = context.shapeScale
     try {
-      context.shapeScale = scaleObj as CharmScale
+      context.shapeScale = scale
       return renderDiscreteLegend(group, context, 'shape', startY, vertical, usesPoints, null)
     } finally {
       context.shapeScale = previous
@@ -1140,6 +1210,16 @@ class LegendRenderer {
       titleEl.addAttribute('font-family', textStyle.family)
     }
     currentY + (titleSize as int) + 5
+  }
+
+  /** Advances to the next horizontal key, preserving the established key-to-label gap. */
+  private static int advanceKey(int x, int keySize, String label, int spacing) {
+    x + keySize + (keySize + LEGEND_KEY_LABEL_GAP) + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing
+  }
+
+  /** Returns the y coordinate after a rendered legend row, preserving an empty row's starting point. */
+  private static int endOfRow(int startY, boolean rendered, boolean vertical, int keySize, int spacing, int y) {
+    rendered ? (vertical ? y : y + keySize + spacing) : startY
   }
 
   private static String resolveLegendTitleForAesthetic(RenderContext context, String aesthetic, Object scaleObj) {
@@ -1199,49 +1279,12 @@ class LegendRenderer {
   private Map<String, Object> collectLegendScales(RenderContext context, GuidesSpec guides) {
     Map<String, Object> result = [:]
 
-    if (context.colorScale != null && !context.colorScale.levels.isEmpty()) {
-      if (resolveGuideType('color', context, guides, context.colorScale) != GuideType.NONE) {
-        result['color'] = context.colorScale
-      }
-    } else if (context.colorScale != null && context.colorScale.domainMin != null) {
-      if (resolveGuideType('color', context, guides, context.colorScale) != GuideType.NONE) {
-        result['color'] = context.colorScale
-      }
-    }
-
-    if (context.fillScale != null && !context.fillScale.levels.isEmpty()) {
-      if (resolveGuideType('fill', context, guides, context.fillScale) != GuideType.NONE) {
-        result['fill'] = context.fillScale
-      }
-    } else if (context.fillScale != null && context.fillScale.domainMin != null) {
-      if (resolveGuideType('fill', context, guides, context.fillScale) != GuideType.NONE) {
-        result['fill'] = context.fillScale
-      }
-    }
-
-    if (context.sizeScale != null) {
-      if (resolveGuideType('size', context, guides, context.sizeScale) != GuideType.NONE) {
-        result['size'] = context.sizeScale
-      }
-    }
-
-    if (context.shapeScale != null) {
-      if (resolveGuideType('shape', context, guides, context.shapeScale) != GuideType.NONE) {
-        result['shape'] = context.shapeScale
-      }
-    }
-
-    if (context.alphaScale != null) {
-      if (resolveGuideType('alpha', context, guides, context.alphaScale) != GuideType.NONE) {
-        result['alpha'] = context.alphaScale
-      }
-    }
-
-    if (context.linetypeScale != null) {
-      if (resolveGuideType('linetype', context, guides, context.linetypeScale) != GuideType.NONE) {
-        result['linetype'] = context.linetypeScale
-      }
-    }
+    addLegendEntry(result, context, guides, 'color', context.colorScale)
+    addLegendEntry(result, context, guides, 'fill', context.fillScale)
+    addLegendEntry(result, context, guides, 'size', context.sizeScale)
+    addLegendEntry(result, context, guides, 'shape', context.shapeScale)
+    addLegendEntry(result, context, guides, 'alpha', context.alphaScale)
+    addLegendEntry(result, context, guides, 'linetype', context.linetypeScale)
 
     // Per-layer scale overrides produce additional legend entries
     context.layerScales.each { Integer idx, TrainedScales layerTrained ->
@@ -1258,25 +1301,39 @@ class LegendRenderer {
 
   private void addPerLayerLegendEntry(Map<String, Object> result, RenderContext context, GuidesSpec guides,
                                         String aesthetic, int layerIdx, CharmScale scale) {
-    if (scale == null) {
-      return
-    }
-    if (resolveGuideType(aesthetic, context, guides, scale) == GuideType.NONE) {
-      return
-    }
-    boolean hasContent = false
-    if (scale instanceof ColorCharmScale) {
-      ColorCharmScale cs = scale as ColorCharmScale
-      hasContent = !cs.levels.isEmpty() || cs.domainMin != null
-    } else if (scale instanceof DiscreteCharmScale) {
-      hasContent = !(scale as DiscreteCharmScale).levels.isEmpty()
-    } else if (scale instanceof ContinuousCharmScale) {
-      hasContent = true
-    }
-    if (hasContent) {
+    if (hasRenderableLegendContent(aesthetic, scale) &&
+        resolveGuideType(aesthetic, context, guides, scale) != GuideType.NONE) {
       String key = "${aesthetic}_layer${layerIdx}"
       result[key] = scale
     }
+  }
+
+  /** Adds a global scale only when this renderer can produce visible legend keys for it. */
+  private void addLegendEntry(Map<String, Object> result, RenderContext context, GuidesSpec guides,
+                              String aesthetic, CharmScale scale) {
+    if (hasRenderableLegendContent(aesthetic, scale) &&
+        resolveGuideType(aesthetic, context, guides, scale) != GuideType.NONE) {
+      result[aesthetic] = scale
+    }
+  }
+
+  /** Determines whether an aesthetic and scale combination has keys supported by this renderer. */
+  private static boolean hasRenderableLegendContent(String aesthetic, CharmScale scale) {
+    if (isColorAesthetic(aesthetic) && scale instanceof ColorCharmScale) {
+      ColorCharmScale colorScale = scale as ColorCharmScale
+      return !colorScale.levels.isEmpty() ||
+          (colorScale.domainMin != null && colorScale.domainMax != null)
+    }
+    if (aesthetic == 'size' || aesthetic == 'alpha') {
+      if (scale instanceof DiscreteCharmScale) {
+        return !(scale as DiscreteCharmScale).levels.isEmpty()
+      }
+      return scale instanceof ContinuousCharmScale
+    }
+    if (aesthetic == 'linetype') {
+      return scale instanceof DiscreteCharmScale && !(scale as DiscreteCharmScale).levels.isEmpty()
+    }
+    aesthetic == 'shape' && scale instanceof DiscreteCharmScale && !(scale as DiscreteCharmScale).levels.isEmpty()
   }
 
   private GuideType resolveGuideType(String aesthetic, RenderContext context, GuidesSpec guides, Object scaleObj = null) {
