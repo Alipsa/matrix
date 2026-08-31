@@ -343,7 +343,6 @@ class LegendRenderer {
     int barHeight = vertical ? COLORBAR_HEIGHT_VERTICAL : COLORBAR_HEIGHT_HORIZONTAL
     int x = 0
     int y = startY
-
     // Draw gradient as small rects, using rounding to tile without gaps or overlaps
     int tDenominator = (COLORBAR_STEPS - 1).max(1) as int
     for (int i = 0; i < COLORBAR_STEPS; i++) {
@@ -585,10 +584,12 @@ class LegendRenderer {
 
     int x = 0
     int y = startY
+    boolean rendered = false
 
     if (sizeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale disc = sizeScale as DiscreteCharmScale
       disc.levels.each { String level ->
+        rendered = true
         BigDecimal centerX = x + keySize / 2.0
         BigDecimal centerY = y + keySize / 2.0
         BigDecimal radius = maxRadius / 2.0  // Default radius for discrete
@@ -613,6 +614,7 @@ class LegendRenderer {
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
+        rendered = true
         // transform() returns values in the scale range (e.g. 2..10); normalize using range max
         BigDecimal radius = transformedMax > 0 ? (scaled / transformedMax * maxRadius).max(1.0) : maxRadius / 2.0
         BigDecimal centerX = x + keySize / 2.0
@@ -632,7 +634,7 @@ class LegendRenderer {
       }
     }
 
-    vertical ? y : y + keySize + spacing
+    rendered ? (vertical ? y : y + keySize + spacing) : startY
   }
 
   // ---- Alpha Legend ----
@@ -654,10 +656,12 @@ class LegendRenderer {
 
     int x = 0
     int y = startY
+    boolean rendered = false
 
     if (alphaScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale disc = alphaScale as DiscreteCharmScale
       disc.levels.each { String level ->
+        rendered = true
         BigDecimal alphaVal = 0.5  // Default alpha for discrete levels
         def rect = group.addRect(keySize, keySize)
             .x(x).y(y).fill(keyColor)
@@ -679,6 +683,7 @@ class LegendRenderer {
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
+        rendered = true
         // transform() already returns values in the alpha range (0.1..1.0); use directly
         BigDecimal alphaVal = scaled.min(1).max(0)
         def rect = group.addRect(keySize, keySize)
@@ -696,7 +701,7 @@ class LegendRenderer {
       }
     }
 
-    vertical ? y : y + keySize + spacing
+    rendered ? (vertical ? y : y + keySize + spacing) : startY
   }
 
   // ---- Continuous as Discrete ----
