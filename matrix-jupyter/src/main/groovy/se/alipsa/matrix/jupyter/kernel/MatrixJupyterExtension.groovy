@@ -13,6 +13,7 @@ import se.alipsa.matrix.jupyter.MimeBundle
 import se.alipsa.matrix.jupyter.RendererRegistry
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.BiConsumer
 import java.util.function.Function
 import java.util.function.Supplier
@@ -24,13 +25,19 @@ class MatrixJupyterExtension implements Extension {
   private static final String TEXT_PLAIN = 'text/plain'
   private static final Logger log = Logger.getLogger(MatrixJupyterExtension)
   private static final Map<BaseKernel, Map<Class<?>, String>> attached = Collections.synchronizedMap(new WeakHashMap<>())
+  // jjava registrations cannot be removed, so retain this state across uninstall/install cycles.
+  private static final Map<BaseKernel, Map<Class<?>, String>> registeredTypes = Collections.synchronizedMap(new WeakHashMap<>())
+  private static final Map<BaseKernel, Long> kernelOrders = Collections.synchronizedMap(new WeakHashMap<>())
+  private static final AtomicLong nextKernelOrder = new AtomicLong()
   private static final Map<String, MIMEType> mimeTypes = ['text/html': MIMEType.TEXT_HTML,
                                                           'image/svg+xml': MIMEType.IMAGE_SVG,
                                                           (TEXT_PLAIN): MIMEType.TEXT_PLAIN].asImmutable()
 
   @Override
   void install(BaseKernel kernel) {
-    Map<Class<?>, String> registered = attached.computeIfAbsent(kernel) { new ConcurrentHashMap<Class<?>, String>() }
+    Map<Class<?>, String> registered = registeredTypes.computeIfAbsent(kernel) { new ConcurrentHashMap<Class<?>, String>() }
+    attached[kernel] = registered
+    kernelOrders.computeIfAbsent(kernel) { nextKernelOrder.incrementAndGet() }
     registerNewTypes(kernel, registered)
   }
 
@@ -51,9 +58,7 @@ class MatrixJupyterExtension implements Extension {
     synchronized (attached) { snapshot = new LinkedHashMap<>(attached) }
     if (snapshot.isEmpty()) return RendererRegistry.instance.describe()
 
-    List<BaseKernel> kernels = snapshot.keySet().toList().sort { BaseKernel kernel ->
-      Integer.toHexString(System.identityHashCode(kernel))
-    }
+    List<BaseKernel> kernels = snapshot.keySet().toList().sort { BaseKernel kernel -> kernelOrders[kernel] }
     Map<BaseKernel, String> labels = [:]
     kernels.eachWithIndex { BaseKernel kernel, int index ->
       String label = "kernel#${index + 1}@${Integer.toHexString(System.identityHashCode(kernel))}"
@@ -67,25 +72,27 @@ class MatrixJupyterExtension implements Extension {
   private static void registerNewTypes(BaseKernel kernel, Map<Class<?>, String> registered) {
     Renderer renderer = kernel.renderer
     RendererRegistry.instance.active().each { ActiveRenderer source ->
-      source.supportedTypes.each { Class<?> type -> registerTypeIfAbsent(renderer, type, source, registered) }
+      source.supportedTypes.each { Class<?> type -> registerTypeIfAbsent(kernel, renderer, type, source, registered) }
     }
   }
 
-  private static <T> void registerTypeIfAbsent(Renderer renderer, Class<T> type, ActiveRenderer source,
+  private static <T> void registerTypeIfAbsent(BaseKernel kernel, Renderer renderer, Class<T> type, ActiveRenderer source,
                                                 Map<Class<?>, String> registered) {
     registered.computeIfAbsent(type, { Class<?> ignored ->
-      registerType(renderer, type, source) ? source.providerClassName : null
+      registerType(kernel, renderer, type, source) ? source.providerClassName : null
     } as Function<Class<?>, String>)
   }
 
-  private static <T> boolean registerType(Renderer renderer, Class<T> type, ActiveRenderer source) {
+  private static <T> boolean registerType(BaseKernel kernel, Renderer renderer, Class<T> type, ActiveRenderer source) {
     MIMEType preferred = toMimeType(source)
     if (preferred == null) return false
     String preferredMime = source.preferredMime
     renderer.createRegistration(type).preferring(preferred).supporting(MIMEType.TEXT_PLAIN).register { T value, RenderContext context ->
+      if (!attached.containsKey(kernel)) return
       MimeBundle bundle = null
       boolean attempted = false
       String missing = null
+      String staleMime = null
       Closure<MimeBundle> once = {
         if (!attempted) {
           bundle = RendererRegistry.instance.render(value)
@@ -93,7 +100,7 @@ class MatrixJupyterExtension implements Extension {
         }
         bundle
       }
-      Closure<String> missingNote = {
+      Closure<String> missingRendererNote = {
         if (missing == null) {
           missing = "${value}\nNo Matrix renderer currently handles ${value.class.name}; call MatrixJupyterExtension.refresh()"
           log.warn("Renderer registration for ${source.renderer.rendererName()} outlived its renderer for ${value.class.name}")
@@ -103,19 +110,20 @@ class MatrixJupyterExtension implements Extension {
       context.renderIfRequested(preferred, { MIMEType mime, DisplayData out ->
         MimeBundle rendered = once()
         if (rendered == null) {
-          missingNote()
+          missingRendererNote()
         } else {
           Object data = rendered.get(preferredMime)
           if (data != null) {
             out.putData(mime, data)
           } else {
-            missingNote()
+            staleMime = "${value}\nMatrix renderer for ${value.class.name} no longer produces its registered ${preferredMime} payload; restart the kernel to register its current MIME type"
+            log.warn("Renderer registration for ${source.renderer.rendererName()} uses ${preferredMime}, but the current renderer no longer produces that MIME for ${value.class.name}")
           }
         }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
-        Object plain = attempted ? bundle?.get(TEXT_PLAIN) : once()?.get(TEXT_PLAIN)
-        plain != null ? plain : missingNote()
+        Object plain = attempted ? staleMime ?: bundle?.get(TEXT_PLAIN) : RendererRegistry.instance.plainText(value)
+        plain != null ? plain : missingRendererNote()
       } as Supplier<Object>)
     }
     true

@@ -45,11 +45,9 @@ class CoreRenderer extends AbstractRenderer {
   private static String plainText(Matrix matrix, RenderOptions options, List<String> notices) {
     Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
         matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
-    int rows = (int) (options.maxRows != null ? options.maxRows : rendered.rowCount()).min(rendered.rowCount())
-    String title = rendered.toString() + '\n'
     String suffix = notices ? "\n${notices.join(', ')}" : ''
-    String body = options.fromHead ? rendered.head(rows) : rendered.tail(rows)
-    title + body + suffix
+    String body = options.maxRows == null ? rendered.content() : rendered.content(options.maxRows, options.fromHead)
+    body + suffix
   }
 
   private static boolean tabular(Object value) {

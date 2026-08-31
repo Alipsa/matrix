@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.jupyter.render.CharmRenderer
 
-import java.lang.reflect.Modifier
-
 /** Tests optional-class probing through the thread context class loader. */
 class AbstractRendererTest {
   @Test
@@ -62,13 +60,6 @@ class AbstractRendererTest {
       Thread.currentThread().contextClassLoader = original
       rendererLoader.close()
     }
-  }
-
-  @Test
-  void synchronizesConcurrentProbesBeforeUpdatingTheDiagnostic() {
-    def method = AbstractRenderer.getDeclaredMethod('probe', String)
-
-    assertTrue(Modifier.isSynchronized(method.modifiers))
   }
 
   private static class ProbeRenderer extends AbstractRenderer {

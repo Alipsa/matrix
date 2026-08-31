@@ -31,18 +31,17 @@ import se.alipsa.matrix.jupyter.RendererRegistry
 
 import java.lang.reflect.Field
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Function
 
 /** Tests the jjava adapter against a real renderer without starting a Jupyter process. */
 class MatrixJupyterExtensionTest {
   @AfterEach
   void uninstallAttachedKernels() {
-    Field field = MatrixJupyterExtension.getDeclaredField('attached')
-    field.accessible = true
-    Map<BaseKernel, Map<Class<?>, String>> attached = field.get(null) as Map<BaseKernel, Map<Class<?>, String>>
-    synchronized (attached) {
-      attached.clear()
-    }
+    ['attached', 'registeredTypes', 'kernelOrders'].each { String name -> clearStateMap(name) }
+    Field sequence = MatrixJupyterExtension.getDeclaredField('nextKernelOrder')
+    sequence.accessible = true
+    (sequence.get(null) as AtomicLong).set(0)
   }
 
   @Test
@@ -143,6 +142,32 @@ class MatrixJupyterExtensionTest {
   }
 
   @Test
+  void reinstallDoesNotAppendDuplicateRenderFunctions() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    int registrations = registrationCount(kernel.renderer)
+    extension.uninstall(kernel)
+    extension.install(kernel)
+
+    assertEquals(registrations, registrationCount(kernel.renderer))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void uninstallDisablesItsExistingHostRegistrations() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    Matrix matrix = Matrix.builder().columns(value: [1]).build()
+
+    extension.install(kernel)
+    extension.uninstall(kernel)
+
+    assertNull(kernel.renderer.renderAs(matrix, 'text/html').getData(MIMEType.TEXT_HTML))
+  }
+
+  @Test
   void registersMissingMimeRenderersAsHtml() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()
@@ -167,7 +192,7 @@ class MatrixJupyterExtensionTest {
   }
 
   @Test
-  void reportsRendererFailuresConsistentlyForRichAndPlainRequests() {
+  void degradesRichRendererFailuresAndUsesThePlainTextFallback() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()
 
@@ -177,12 +202,12 @@ class MatrixJupyterExtensionTest {
 
     assertNull(rich.getData(MIMEType.TEXT_HTML))
     assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('failing value'))
-    assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
+    assertFalse(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
     extension.uninstall(kernel)
   }
 
   @Test
-  void rendersOnceWhenOnlyPlainTextIsRequested() {
+  void rendersPlainOnlyRequestsWithoutProducingARichPayload() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()
     LazyRenderer.renderCalls = 0
@@ -191,7 +216,7 @@ class MatrixJupyterExtensionTest {
     DisplayData rendered = kernel.renderer.renderAs(new LazyValue(), 'text/plain')
 
     assertEquals('lazy plain text', rendered.getData(MIMEType.TEXT_PLAIN))
-    assertEquals(1, LazyRenderer.renderCalls)
+    assertEquals(0, LazyRenderer.renderCalls)
     extension.uninstall(kernel)
   }
 
@@ -215,6 +240,32 @@ class MatrixJupyterExtensionTest {
       assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('MatrixJupyterExtension.refresh()'))
     } finally {
       DisappearingRenderer.present = true
+      RendererRegistry.instance.reload()
+      extension.uninstall(kernel)
+    }
+  }
+
+  @Test
+  void explainsWhenARendererChangesItsRegisteredMime() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+    DisappearingRenderer.present = true
+    DisappearingRenderer.activeMime = 'text/html'
+    RendererRegistry.instance.reload()
+    extension.install(kernel)
+
+    try {
+      DisappearingRenderer.activeMime = 'image/svg+xml'
+      RendererRegistry.instance.reload()
+
+      DisplayData rendered = kernel.renderer.renderAs(new DisappearingValue(), 'text/html')
+
+      assertNull(rendered.getData(MIMEType.TEXT_HTML))
+      assertTrue(rendered.getData(MIMEType.TEXT_PLAIN).contains('no longer produces its registered text/html payload'))
+      assertTrue(rendered.getData(MIMEType.TEXT_PLAIN).contains('restart the kernel'))
+      assertFalse(rendered.getData(MIMEType.TEXT_PLAIN).contains('No Matrix renderer currently handles'))
+    } finally {
+      DisappearingRenderer.activeMime = 'text/html'
       RendererRegistry.instance.reload()
       extension.uninstall(kernel)
     }
@@ -303,6 +354,15 @@ class MatrixJupyterExtensionTest {
     field.accessible = true
     Map<Class<?>, List<?>> registrations = field.get(renderer) as Map<Class<?>, List<?>>
     registrations.values()*.size().sum(0) as int
+  }
+
+  private static void clearStateMap(String name) {
+    Field field = MatrixJupyterExtension.getDeclaredField(name)
+    field.accessible = true
+    Map<?, ?> state = field.get(null) as Map<?, ?>
+    synchronized (state) {
+      state.clear()
+    }
   }
 
   private static class TestStatusRenderer implements se.alipsa.matrix.jupyter.MatrixRenderer {

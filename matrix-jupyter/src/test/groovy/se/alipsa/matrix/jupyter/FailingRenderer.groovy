@@ -83,12 +83,16 @@ class CustomMimeValue {
 /** Test-only renderer that can disappear after it has been registered. */
 class DisappearingRenderer implements MatrixRenderer {
   static boolean present = true
+  static String activeMime = 'text/html'
 
   @Override String rendererName() { 'DisappearingRenderer' }
   @Override boolean available() { present }
   @Override Set<Class<?>> supportedTypes() { [DisappearingValue] as Set<Class<?>> }
+  @Override String preferredMime() { activeMime }
   @Override String unavailableReason() { 'test renderer was removed' }
-  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.html('<b>present</b>', 'present') }
+  @Override MimeBundle render(Object value, RenderOptions options) {
+    activeMime == 'image/svg+xml' ? MimeBundle.svg('<svg/>', 'present') : MimeBundle.html('<b>present</b>', 'present')
+  }
 }
 
 /** Value handled by {@link DisappearingRenderer}. */

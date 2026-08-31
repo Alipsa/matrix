@@ -46,7 +46,11 @@ def smokeClasspath = sourceSets.test.runtimeClasspath.filter { File file -> !(fi
 
 def groovy6Executable = providers.gradleProperty('groovy6Executable')
     .orElse(providers.environmentVariable('GROOVY_6_HOME').map { "${it}/bin/groovy" })
-    .orElse(providers.systemProperty('user.home').map { "${it}/.sdkman/candidates/groovy/6.0.0-beta-3/bin/groovy" })
+    .orElse(providers.systemProperty('user.home').map { String home ->
+      File candidates = new File(home, '.sdkman/candidates/groovy')
+      File newest = candidates.listFiles()?.findAll { File candidate -> candidate.directory && candidate.name.startsWith('6.') }?.sort { File candidate -> candidate.name }?.last()
+      newest ? new File(newest, 'bin/groovy').absolutePath : new File(candidates, '6.x/bin/groovy').absolutePath
+    })
 
 tasks.register('groovy6Smoke', Exec) {
   group = 'verification'

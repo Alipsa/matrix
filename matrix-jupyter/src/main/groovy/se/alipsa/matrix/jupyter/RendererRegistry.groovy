@@ -2,8 +2,6 @@ package se.alipsa.matrix.jupyter
 
 import se.alipsa.matrix.core.util.Logger
 
-import java.util.concurrent.ConcurrentHashMap
-
 /** Discovers MatrixRenderer services and dispatches values to their renderer. */
 @SuppressWarnings(['PropertyName', 'IfStatementBraces', 'ExplicitLinkedHashMapInstantiation', 'UnnecessaryCollectCall'])
 class RendererRegistry {
@@ -16,7 +14,7 @@ class RendererRegistry {
   private volatile boolean loaded
   private volatile List<ActiveRenderer> activeRenderers = []
   private volatile List<SkippedRenderer> skippedRenderers = []
-  private final Map<Class<?>, MatrixRenderer> dispatch = new ConcurrentHashMap<>()
+  private volatile Map<Class<?>, MatrixRenderer> dispatch = [:].asImmutable()
 
   /** @return available renderers from the current discovery pass */
   List<ActiveRenderer> active() { load(); activeRenderers }
@@ -131,7 +129,7 @@ class RendererRegistry {
     }
     activeRenderers = Collections.unmodifiableList(found)
     skippedRenderers = Collections.unmodifiableList(missed)
-    dispatch.clear(); dispatch.putAll(routes)
+    dispatch = Collections.unmodifiableMap(new LinkedHashMap<>(routes))
     loaded = true
   }
 
