@@ -10,6 +10,7 @@ import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Scale
@@ -354,6 +355,7 @@ class CharmLegendRendererTest {
     assertLegendKeyOrientation('size', LegendPosition.TOP, true)
     assertLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
     assertLegendKeyOrientation('size', LegendPosition.RIGHT, false)
+    assertLegendKeyOrientation('size', LegendPosition.TOP, true, true)
   }
 
   @Test
@@ -361,15 +363,47 @@ class CharmLegendRendererTest {
     assertLegendKeyOrientation('alpha', LegendPosition.TOP, true)
     assertLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
     assertLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
+    assertLegendKeyOrientation('alpha', LegendPosition.TOP, true, true)
+    assertLegendKeyOrientation('alpha', LegendPosition.LEFT, true, false, LegendDirection.HORIZONTAL)
   }
 
   @Test
   void testBinnedSizeScaleDoesNotReserveAnEmptyLegendRow() {
-    assertEquals(0, topAlphaKeyYs(false).first() <=> 22G)
-    assertEquals(0, topAlphaKeyYs(true).first() <=> 32G)
+    List<BigDecimal> alphaKeyYs = legendKeyYsWithOptionalBinnedSize(false)
+    List<BigDecimal> alphaKeyYsWithBinnedSize = legendKeyYsWithOptionalBinnedSize(true)
+
+    assertEquals(alphaKeyYs, alphaKeyYsWithBinnedSize,
+        'A binned size scale must not shift alpha legend keys')
+    assertFalse(legendTextWithOptionalBinnedSize(true).contains('size'),
+        'A binned size scale must not render an orphaned legend title')
   }
 
-  private static Set<BigDecimal> topAlphaKeyYs(boolean includeBinnedSize) {
+  @Test
+  void testLinetypeScaleDoesNotRenderAnOrphanedLegendTitle() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'linetype')
+        .rows([[1, 2, 'solid'], [2, 3, 'dashed']])
+        .build()
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; linetype = 'linetype' }
+      layers { geomLine() }
+    }.build()
+
+    assertFalse(SvgWriter.toXml(chart.render()).contains('id="legend"'),
+        'A linetype scale without a renderer must not create a title-only legend')
+  }
+
+  private static List<BigDecimal> legendKeyYsWithOptionalBinnedSize(boolean includeBinnedSize) {
+    legendKeyCoordinates(renderAlphaLegendWithOptionalBinnedSize(includeBinnedSize))*.y.collect { it as BigDecimal }
+  }
+
+  private static List<String> legendTextWithOptionalBinnedSize(boolean includeBinnedSize) {
+    renderAlphaLegendWithOptionalBinnedSize(includeBinnedSize).descendants()
+        .findAll { it instanceof Text }
+        .collect { (it as Text).content }
+  }
+
+  private static Svg renderAlphaLegendWithOptionalBinnedSize(boolean includeBinnedSize) {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'size', 'alpha')
         .rows([[1, 2, 1, 0.2], [2, 3, 2, 0.5], [3, 4, 3, 0.8]])
@@ -390,15 +424,16 @@ class CharmLegendRendererTest {
       spec.scale.size = Scale.binned()
     }
 
-    legendKeyCoordinates(spec.build().render())*.y.collect { it as BigDecimal } as Set<BigDecimal>
+    spec.build().render()
   }
 
-  private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal) {
+  private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                  boolean discrete = false, LegendDirection direction = null) {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'value')
         .rows([[1, 2, 1], [2, 3, 2], [3, 4, 3]])
         .build()
-    Chart chart = plot(data) {
+    PlotSpec spec = plot(data) {
       mapping {
         x = 'x'
         y = 'y'
@@ -409,8 +444,21 @@ class CharmLegendRendererTest {
         }
       }
       layers { geomPoint() }
-      theme { legendPosition = position }
-    }.build()
+      theme {
+        legendPosition = position
+        if (direction != null) {
+          legendDirection = direction
+        }
+      }
+    }
+    if (discrete) {
+      if (aesthetic == 'size') {
+        spec.scale.size = Scale.discrete()
+      } else {
+        spec.scale.alpha = Scale.discrete()
+      }
+    }
+    Chart chart = spec.build()
 
     List<Map<String, String>> keys = legendKeyCoordinates(chart.render())
     assertTrue(keys.size() > 1, "Expected multiple ${aesthetic} legend keys")
