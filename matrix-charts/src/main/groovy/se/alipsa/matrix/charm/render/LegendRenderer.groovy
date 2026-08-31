@@ -47,6 +47,7 @@ class LegendRenderer {
   private static final int COLORBAR_WIDTH_HORIZONTAL = 100
   private static final int COLORBAR_HEIGHT_HORIZONTAL = 15
   private static final int COLORBAR_STEPS = 20
+  private static final int LEGEND_LABEL_CHAR_WIDTH = 6
   private static final Pattern PER_LAYER_SCALE_KEY = ~/^(.+)_layer(\d+)$/
 
   /**
@@ -266,8 +267,10 @@ class LegendRenderer {
 
     int y = startY
     int x = 0
+    boolean rendered = false
 
     levels.each { String level ->
+      rendered = true
       if (isColorKey) {
         ColorCharmScale cs = aesthetic == 'fill' ? context.fillScale : context.colorScale
         String color = cs.colorFor(level)
@@ -318,11 +321,11 @@ class LegendRenderer {
       if (vertical) {
         y += keySize + spacing
       } else {
-        x += keySize + textOffset + level.length() * 6 + spacing
+        x += keySize + textOffset + level.length() * LEGEND_LABEL_CHAR_WIDTH + spacing
       }
     }
 
-    vertical ? y : y + keySize + spacing
+    rendered ? (vertical ? y : y + keySize + spacing) : startY
   }
 
   // ---- Colorbar ----
@@ -603,7 +606,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * LEGEND_LABEL_CHAR_WIDTH + spacing }
       }
     } else if (sizeScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = sizeScale as ContinuousCharmScale
@@ -630,7 +633,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * 6 + spacing }
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing }
       }
     }
 
@@ -673,7 +676,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * LEGEND_LABEL_CHAR_WIDTH + spacing }
       }
     } else if (alphaScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = alphaScale as ContinuousCharmScale
@@ -697,7 +700,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * 6 + spacing }
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing }
       }
     }
 
@@ -769,7 +772,7 @@ class LegendRenderer {
       if (vertical) {
         y += keySize + spacing
       } else {
-        x += keySize + textOffset + label.length() * 6 + spacing
+        x += keySize + textOffset + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing
       }
     }
 
@@ -980,7 +983,7 @@ class LegendRenderer {
       def labelEl = group.addText(level).x(x + textOffset).y(y + keySize - 2)
           .fontSize(labelSize).fill(labelColor).styleClass('charm-legend-label gg-legend-label')
       if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-      if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
+      if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * LEGEND_LABEL_CHAR_WIDTH + spacing }
     }
     vertical ? y : y + keySize + spacing
   }
