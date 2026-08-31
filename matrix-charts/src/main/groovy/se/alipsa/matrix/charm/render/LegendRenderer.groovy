@@ -159,10 +159,10 @@ class LegendRenderer {
 
       switch (baseAesthetic) {
         case 'size' -> {
-          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
+          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
         }
         case 'alpha' -> {
-          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
+          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
         }
         default -> {
           switch (guideType) {
@@ -567,7 +567,7 @@ class LegendRenderer {
 
   // ---- Size Legend ----
 
-  private int renderSizeLegend(G group, RenderContext context, int startY) {
+  private int renderSizeLegend(G group, RenderContext context, int startY, boolean vertical) {
     CharmScale sizeScale = context.sizeScale
     if (sizeScale == null) {
       return startY
@@ -602,7 +602,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
       }
     } else if (sizeScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = sizeScale as ContinuousCharmScale
@@ -628,16 +628,16 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * 6 + spacing }
       }
     }
 
-    y
+    vertical ? y : y + keySize + spacing
   }
 
   // ---- Alpha Legend ----
 
-  private int renderAlphaLegend(G group, RenderContext context, int startY) {
+  private int renderAlphaLegend(G group, RenderContext context, int startY, boolean vertical) {
     CharmScale alphaScale = context.alphaScale
     if (alphaScale == null) {
       return startY
@@ -669,7 +669,7 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + level.length() * 6 + spacing }
       }
     } else if (alphaScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale cont = alphaScale as ContinuousCharmScale
@@ -692,11 +692,11 @@ class LegendRenderer {
             .fontSize(labelSize).fill(labelColor)
             .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
-        y += keySize + spacing
+        if (vertical) { y += keySize + spacing } else { x += keySize + textOffset + label.length() * 6 + spacing }
       }
     }
 
-    y
+    vertical ? y : y + keySize + spacing
   }
 
   // ---- Continuous as Discrete ----
@@ -1064,28 +1064,28 @@ class LegendRenderer {
   }
 
   /** Renders a size legend from an explicit scale. */
-  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
+  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale, int startY, boolean vertical) {
     if (scale == null) {
-      return renderSizeLegend(group, context, startY)
+      return renderSizeLegend(group, context, startY, vertical)
     }
     CharmScale previous = context.sizeScale
     try {
       context.sizeScale = scale
-      return renderSizeLegend(group, context, startY)
+      return renderSizeLegend(group, context, startY, vertical)
     } finally {
       context.sizeScale = previous
     }
   }
 
   /** Renders an alpha legend from an explicit scale. */
-  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
+  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale, int startY, boolean vertical) {
     if (scale == null) {
-      return renderAlphaLegend(group, context, startY)
+      return renderAlphaLegend(group, context, startY, vertical)
     }
     CharmScale previous = context.alphaScale
     try {
       context.alphaScale = scale
-      return renderAlphaLegend(group, context, startY)
+      return renderAlphaLegend(group, context, startY, vertical)
     } finally {
       context.alphaScale = previous
     }
