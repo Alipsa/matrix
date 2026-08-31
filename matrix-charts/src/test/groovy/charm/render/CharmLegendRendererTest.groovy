@@ -12,6 +12,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
@@ -362,6 +363,36 @@ class CharmLegendRendererTest {
     assertLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
   }
 
+  @Test
+  void testBinnedSizeScaleDoesNotReserveAnEmptyLegendRow() {
+    assertEquals(0, topAlphaKeyYs(false).first() <=> 22G)
+    assertEquals(0, topAlphaKeyYs(true).first() <=> 32G)
+  }
+
+  private static Set<BigDecimal> topAlphaKeyYs(boolean includeBinnedSize) {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'size', 'alpha')
+        .rows([[1, 2, 1, 0.2], [2, 3, 2, 0.5], [3, 4, 3, 0.8]])
+        .build()
+    PlotSpec spec = plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+        alpha = 'alpha'
+        if (includeBinnedSize) {
+          size = 'size'
+        }
+      }
+      layers { geomPoint() }
+      theme { legendPosition = TOP }
+    }
+    if (includeBinnedSize) {
+      spec.scale.size = Scale.binned()
+    }
+
+    legendKeyCoordinates(spec.build().render())*.y.collect { it as BigDecimal } as Set<BigDecimal>
+  }
+
   private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal) {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'value')
@@ -381,10 +412,10 @@ class CharmLegendRendererTest {
       theme { legendPosition = position }
     }.build()
 
-    List<Map<String, Object>> keys = legendKeyCoordinates(chart.render())
+    List<Map<String, String>> keys = legendKeyCoordinates(chart.render())
     assertTrue(keys.size() > 1, "Expected multiple ${aesthetic} legend keys")
-    Set<Object> xs = keys*.x as Set<Object>
-    Set<Object> ys = keys*.y as Set<Object>
+    Set<String> xs = keys*.x as Set<String>
+    Set<String> ys = keys*.y as Set<String>
     if (horizontal) {
       assertTrue(xs.size() > 1, "Expected horizontal ${aesthetic} legend keys")
       assertEquals(1, ys.size(), "Expected aligned ${aesthetic} legend keys")
@@ -394,12 +425,12 @@ class CharmLegendRendererTest {
     }
   }
 
-  private static List<Map<String, Object>> legendKeyCoordinates(Svg svg) {
+  private static List<Map<String, String>> legendKeyCoordinates(Svg svg) {
     svg.descendants()
         .findAll { element -> element.getAttribute('class')?.toString()?.contains('charm-legend-key') }
         .collect { element ->
           [x: element.getAttribute('cx') ?: element.getAttribute('x'),
-           y: element.getAttribute('cy') ?: element.getAttribute('y')]
+           y: element.getAttribute('cy') ?: element.getAttribute('y')] as Map<String, String>
         }
   }
 
