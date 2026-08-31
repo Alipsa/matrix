@@ -1,0 +1,17 @@
+se.alipsa.matrix.jupyter.render.CoreRenderer
+se.alipsa.matrix.jupyter.render.CharmRenderer
+se.alipsa.matrix.jupyter.render.GgRenderer
+se.alipsa.matrix.jupyter.render.PictRenderer
+se.alipsa.matrix.jupyter.FailingRenderer
+se.alipsa.matrix.jupyter.UnavailableRenderer
+se.alipsa.matrix.jupyter.DuplicateMatrixRenderer
+se.alipsa.matrix.jupyter.InvalidMimeRenderer
+se.alipsa.matrix.jupyter.NullMimeRenderer
+se.alipsa.matrix.jupyter.CustomMimeRenderer
+se.alipsa.matrix.jupyter.DisappearingRenderer
+se.alipsa.matrix.jupyter.InterfaceRenderer
+se.alipsa.matrix.jupyter.ParentRenderer
+se.alipsa.matrix.jupyter.ThrowingConstructorRenderer
+se.alipsa.matrix.jupyter.ThrowingAvailabilityRenderer
+se.alipsa.matrix.jupyter.DedupeRenderer
+se.alipsa.matrix.jupyter.LazyRenderer

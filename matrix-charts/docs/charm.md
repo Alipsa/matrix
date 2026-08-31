@@ -777,7 +777,7 @@ Available properties in `animation {}`:
 - `playState`
 - `keyframes`
 
-Note: CSS `@keyframes` animations are embedded in the SVG `<style>` block and are visible only in SVG viewers that support CSS animation. Animation styles are silently stripped when exporting to PNG/JPEG with `ChartToPng`/`ChartToJpeg` because raster output is static.
+Animation CSS is scoped to the rendered SVG root (`#charm-root`), which Charm adds whenever an animation or stylesheet is present. Consequently, `AnimationSpec.toCss()` is intended for a Charm-rendered SVG; CSS copied into another SVG must either use an element with `id="charm-root"` or have that selector scope removed. CSS `@keyframes` animations are visible only in SVG viewers that support CSS animation. Animation styles are silently stripped when exporting to PNG/JPEG with `ChartToPng`/`ChartToJpeg` because raster output is static.
 
 ## Raw SVG Stylesheets
 

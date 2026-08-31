@@ -1578,6 +1578,17 @@ class Matrix implements Iterable<Row>, Cloneable {
     return title + head(rowCount(), includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
+  /**
+   * Render a selected number of rows as a delimited text table.
+   *
+   * @param rows the maximum number of rows to include
+   * @param fromHead whether to select rows from the beginning rather than the end
+   * @return the formatted text table including the matrix title and header
+   */
+  String content(int rows, boolean fromHead) {
+    toString() + DEFAULT_ROW_DELIMITER + (fromHead ? head(rows) : tail(rows))
+  }
+
 
   /**
    * Render the matrix as a delimited text table using the supplied parameters.

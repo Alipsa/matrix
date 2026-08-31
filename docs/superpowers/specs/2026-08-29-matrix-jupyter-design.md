@@ -63,7 +63,7 @@ Following the assessment's minimalism principle (§4):
 | D6 | SVG id **and CSS** namespacing lives in gsvg + charm, not here | gsvg owns the dom4j tree and IDREF knowledge; see §5 |
 | D7 | Tables truncate rows **and columns** by default | A 100k-row or 500-column Matrix must not serialize into notebook JSON |
 | D8 | matrix-core is a normal (`api`) dependency; every other matrix module is `compileOnly` | The always-loaded registry uses `core.util.Logger` per AGENTS.md; matrix-jupyter is useless without matrix-core, so pretending it is optional buys nothing and risks `NoClassDefFoundError` from the registry itself |
-| D9 | Loader resolution is deployment-dependent: this jar's own defining loader first, TCCL as fallback, plus an explicit `reload(ClassLoader)` | Two deployments exist and they need opposite answers (§2.3.1) |
+| D9 | Service discovery unions this jar's own loader, the TCCL and an explicit `reload(ClassLoader)`; optional-class probes use defining-loader then TCCL fallback | Both discovery and optional targets need the grabbed and container deployment views (§2.3.1) |
 | D10 | Registry supports `reload()`, **and the extension supports `refresh()`** | A registry-only reload never reaches the notebook: jjava must also be told about the newly renderable types (§2.6.1) |
 
 ## 1. Architecture
@@ -170,10 +170,15 @@ precedence, and jjava's own `Renderer` already dispatches by registered type (§
 second-stage veto had no defined miss path in either consumer. `supportedTypes()` is the single
 authority.
 
-**Availability probing.** `AbstractRenderer.probe(String className)` does
-`Class.forName(className, false, MatrixRenderer.classLoader)` inside `try`/`catch (Throwable)`
-— `Throwable`, not `Exception`, because a partially present module raises `NoClassDefFoundError`.
-The loader choice is D9, explained in §2.3.1.
+**Availability probing.** `AbstractRenderer.probe(String className)` tries the renderer's defining
+loader first, then the thread context class loader, using `loadClass(className)` inside
+`try`/`catch (Throwable)`. It identity-deduplicates the loaders and treats both being unavailable as
+missing. This is deliberately a fallback rather than `Class.forName`: the defining loader covers the
+grabbed deployment, where the renderer and its optional target are loaded into the notebook session
+while the TCCL remains the kernel application loader; the TCCL covers the static deployment in a
+container or application server. `Throwable`, rather than `Exception`, is required because a
+partially present module raises `NoClassDefFoundError`. `probe()` is synchronized so its diagnostic
+state always describes one completed probe.
 
 `AbstractRenderer.unavailableReason()` reports the failed probe as
 `<class name> not on classpath`. A third-party renderer that does not subclass it inherits the
@@ -218,11 +223,15 @@ wrong too, because **two deployments exist and they need opposite loaders**
 | **Grabbed** — `@Grab('se.alipsa.matrix:matrix-jupyter')` in a cell | kernel calls `installExtensions(sessionLoader)`; Grape grabs into that same session `GroovyClassLoader` (assessment §3.4) | this jar's own defining loader — it *is* the session loader |
 | **Static** — jar on the kernel's launch classpath | `installDefaultExtensions()` → `installExtensions(getClassLoader())` at startup | **not** this jar's loader (that is the app loader, which cannot see later grabs) — the session loader reaches it only as TCCL |
 
-The two consumers of a loader need **different** rules, because their failure conditions differ:
+The two consumers of a loader need **different** rules:
 
-- **`Class.forName` probing — fallback.** Try this jar's own defining loader
-  (`MatrixRenderer.classLoader`); on failure retry with the thread context classloader. A missing
-  class is a real failure condition, so the fallback fires when it is needed.
+- **Optional-class probing — defining-loader then TCCL fallback.** Resolve optional renderer targets
+  with `renderer.classLoader.loadClass(...)`, then
+  `Thread.currentThread().contextClassLoader.loadClass(...)` if needed. This is a narrow availability
+  probe, never `Class.forName`, and it does not retain the resulting `Class`; it therefore avoids
+  class pinning while covering both deployment rows above. The defining-loader pass is necessary for
+  grabbed renderers whose TCCL remains the kernel application loader, while TCCL remains necessary
+  for a static extension used from a container session.
 - **`ServiceLoader` discovery — union, not fallback.** A fallback would never fire: the own-loader
   pass *always* succeeds, because `CoreRenderer` ships in this very jar. In the static deployment that
   would silently hide a third-party renderer jar grabbed into the session loader — the exact case the
@@ -235,7 +244,7 @@ The two consumers of a loader need **different** rules, because their failure co
 ```groovy
 Set<String> seenProviderNames = new LinkedHashSet<>()
 List<ClassLoader> loaders = []
-[MatrixRenderer.classLoader, Thread.currentThread().contextClassLoader].each { ClassLoader loader ->
+[MatrixRenderer.classLoader, Thread.currentThread().contextClassLoader, extraLoader].each { ClassLoader loader ->
   if (loader != null && !loaders.any { ClassLoader known -> known.is(loader) }) {
     loaders.add(loader)
   }
@@ -1032,7 +1041,9 @@ Fast tests run in the normal suite (`./gradlew :matrix-jupyter:test`).
    throwable message, `preferredMime == null`, `mimeUsable == null`, and a `→ ?` report column; every
    later provider remains discovered.
 6. Loader resolution (§2.3.1), one case per rule, because the two rules differ:
-   - **probe fallback** — a probe class visible only via the TCCL resolves on the second attempt;
+   - **two-loader probe** — a probe class visible only via the TCCL resolves, a grabbed target visible
+     only via the renderer loader resolves, and both loaders missing the target report the
+     missing-class diagnostic;
    - **union discovery** — a provider jar visible only via the TCCL *is* discovered, which a fallback
      would have missed because the own-loader pass always succeeds;
    - **dedupe** — a provider visible through *both* loaders is registered once. Without this,
@@ -1090,10 +1101,12 @@ Fast tests run in the normal suite (`./gradlew :matrix-jupyter:test`).
    and the test passes vacuously, proving nothing. This is the single test standing between Goal 4 and
    the `NoClassDefFoundError` §2.2 guards against, so the loader setup is part of the requirement, not
    an implementation detail.
-9. **Groovy 6 smoke check** (`./gradlew :matrix-jupyter:groovy6Smoke`, opt-in, not in `build`) — a
-   separate configuration resolving Groovy 6, running one `CoreRenderer` and one `CharmRenderer`
-   render. §6 test 7 runs on Groovy 5 and cannot catch Groovy-5-compiled call-site/metaclass bytecode
-   misbehaving on a Groovy 6 runtime, which is the actual compatibility risk (§8).
+9. **Groovy 6 smoke check** (`./gradlew :matrix-jupyter:groovy6Smoke`, opt-in, not in `build`) — runs
+   one `CoreRenderer` and one `CharmRenderer` render with an SDKMAN Groovy 6 runtime. It resolves the
+   executable from `-Pgroovy6Executable`, then `GROOVY_6_HOME/bin/groovy`, then SDKMAN's
+   `~/.sdkman/candidates/groovy/6.0.0-beta-3/bin/groovy`. §6 test 7 runs on Groovy 5 and cannot catch
+   Groovy-5-compiled call-site/metaclass bytecode misbehaving on a Groovy 6 runtime, which is the
+   actual compatibility risk (§8).
 
 Rewriter semantics (nested defs, CSS `#id` selectors, longest-id-first, `@keyframes` renaming,
 unknown-id references left alone, idempotence, source `Svg` not mutated) belong to **gsvg's** suite.
@@ -1165,7 +1178,7 @@ Out of repo, prerequisites: gsvg 1.2.0 (§5.2) and the matrix-charts changes (§
 | Risk | Mitigation |
 |---|---|
 | `jjava-jupyter` alpha API churn | Confined to `MatrixJupyterExtension`; pinned to 1.0-a8; adapter kept dumb; §6 test 7 fails loudly on a bump |
-| Groovy 5-compiled classes on a Groovy 6 kernel runtime | The real risk is call-site/metaclass bytecode, not the JDK. §6 test 9 adds an opt-in Groovy 6 smoke check; until it runs, compatibility is **claimed only for Groovy 5** |
+| Groovy 5-compiled classes on a Groovy 6 kernel runtime | The real risk is call-site/metaclass bytecode, not the JDK. §6 test 9 provides an opt-in Groovy 6 smoke check. It passed locally with SDKMAN Groovy 6.0.0-beta-3; rerun it when upgrading either Groovy or Matrix. |
 | JDK: module built at `release = 21`, kernel targets JDK 25 | JDK 21 bytecode runs on 25; unproblematic and separate from the Groovy question above |
 | gsvg 1.2.0 and the charm changes not yet released | Hard prerequisite with the release order in §5.3; matrix-jupyter is not started before they land |
 | Untrusted-notebook sanitization removing styling | §6.1 spike, sequenced **first** in §5.3 — it can invalidate the CSS half of the gsvg and charm work before either is built |

@@ -84,6 +84,9 @@ class CharmRenderer {
   Svg render(Chart chart, RenderConfig config) {
     RenderConfig cfg = config?.copy() ?: new RenderConfig()
     Svg svg = new Svg()
+    if (chart.animation?.active || chart.stylesheet?.trim()) {
+      svg.id('charm-root')
+    }
     svg.width(cfg.width)
     svg.height(cfg.height)
     svg.viewBox("0 0 ${cfg.width} ${cfg.height}")

@@ -12,6 +12,8 @@ interface MatrixRenderer {
   default String unavailableReason() { 'available() returned false' }
   /** @return richest MIME type emitted by this renderer */
   default String preferredMime() { 'text/html' }
+  /** @return options-aware plain-text fallback without rendering the rich payload */
+  default String plainText(Object value, RenderOptions options) { value.toString() }
   /** Render a supported value. */
   MimeBundle render(Object value, RenderOptions options)
 }

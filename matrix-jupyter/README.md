@@ -13,6 +13,18 @@ import se.alipsa.matrix.core.Matrix
 Matrix.builder().columns(city: ['Stockholm', 'Uppsala'], population: [984748, 245329]).build()
 ```
 
+With `matrix-charts` present, a returned Charm chart is rendered as inline SVG too:
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+
+def data = Matrix.builder().columns(x: [1, 2, 3], y: [2, 4, 3]).build()
+plot(data) {
+  mapping { x = 'x'; y = 'y' }
+  layers { geomPoint() }
+}.build()
+```
+
 `RenderOptions.defaults` controls tables and applicable chart sizes: `maxRows` and `maxColumns` default to `50` (use `null` for no limit), `fromHead` is `true`, `attr` is an empty map, and `width`/`height` are `800`/`600`. For example:
 
 ```groovy
@@ -22,6 +34,17 @@ RenderOptions.defaults = new RenderOptions(20, 10, true, [class: 'matrix-table']
 
 Tables report truncation in a caption. Attribute values other than `caption` are passed through to `Matrix.toHtml` and are not escaped. `GgChart` dimensions are not changed because doing so would mutate the chart object.
 
+Charm's built-in animation CSS is scoped to its SVG root. A stylesheet supplied through a chart is
+left unchanged, so scope custom rules yourself when several charts share a page:
+
+```groovy
+chart.stylesheet = '#charm-root .my-rule { stroke: tomato; }'
+```
+
+`#charm-root` is unique when SVG is rendered through this module, which namespaces each result.
+If you embed raw `SvgWriter.toXml(chart.render())` output yourself, give each chart a distinct
+root id and adjust its stylesheet to avoid duplicate IDs and cross-chart CSS matches.
+
 If a chart module is added after a first render, call:
 
 ```groovy
@@ -29,5 +52,7 @@ import se.alipsa.matrix.jupyter.kernel.MatrixJupyterExtension
 MatrixJupyterExtension.describe()
 MatrixJupyterExtension.refresh()
 ```
+
+When a host explicitly requests only `text/plain` (for example, `renderAs(value, 'text/plain')`), matrix-jupyter uses the renderer's plain-text fallback without producing a rich payload. A rich-rendering failure is therefore not reported on that path; request the preferred rich MIME to receive its failure diagnostic.
 
 `@Grab`-only extension discovery requires the Groovy kernel to rescan its session loader after grabbing; until that kernel behavior is confirmed, static installation is the supported approach. For standalone hosts, use `RendererRegistry.instance.render(value)` and `RendererRegistry.instance.describe()`.

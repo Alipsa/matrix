@@ -10,6 +10,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.chartexport.AnimationCssStripper
 import se.alipsa.matrix.chartexport.ChartToImage
@@ -32,6 +33,7 @@ class AnimationTest {
     String xml = SvgWriter.toXml(chart.render())
     assertFalse(xml.contains('charm-animation'))
     assertFalse(xml.contains('@keyframes'))
+    assertFalse(xml.contains('id="charm-root"'))
   }
 
   @Test
@@ -49,10 +51,29 @@ class AnimationTest {
     }.build()
 
     String xml = SvgWriter.toXml(chart.render())
+    assertTrue(xml.contains('id="charm-root"'))
     assertTrue(xml.contains('/* charm-animation */'))
     assertTrue(xml.contains('@keyframes pulse'))
-    assertTrue(xml.contains('.charm-point'))
+    assertTrue(xml.contains('#charm-root .charm-point'))
     assertTrue(xml.contains('animation-duration: 2s'))
+  }
+
+  @Test
+  void testAnimationScopesEverySelectorAndSupportsTheSvgRoot() {
+    AnimationSpec spec = new AnimationSpec(selector: '.charm-point, .charm-line')
+
+    String css = spec.toCss()
+
+    assertTrue(css.contains('#charm-root .charm-point, #charm-root .charm-line'))
+    assertTrue(new AnimationSpec(selector: '.charm-point,').toCss().contains('#charm-root .charm-point {'))
+    assertFalse(new AnimationSpec(selector: '.charm-point,').toCss().contains('#charm-root ,'))
+    assertTrue(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root {'))
+    assertFalse(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root svg {'))
+    assertTrue(new AnimationSpec(selector: '#charm-root .charm-point').toCss().contains('#charm-root .charm-point {'))
+    assertFalse(new AnimationSpec(selector: '#charm-root .charm-point').toCss().contains('#charm-root #charm-root'))
+    assertTrue(new AnimationSpec(selector: 'svg .charm-point').toCss().contains('#charm-root .charm-point {'))
+    assertTrue(new AnimationSpec(selector: ':root .charm-point').toCss().contains('#charm-root .charm-point {'))
+    assertTrue(new AnimationSpec(selector: '.a\\,b').toCss().contains('#charm-root .a\\,b {'))
   }
 
   @Test

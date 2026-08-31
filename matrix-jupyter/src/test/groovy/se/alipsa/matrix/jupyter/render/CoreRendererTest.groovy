@@ -24,6 +24,7 @@ class CoreRendererTest {
     assertEquals(['text/html', 'text/plain'], bundle.keySet().toList())
     assertTrue(bundle['text/html'].contains('&lt;script&gt;alert(1)&lt;/script&gt;'))
     assertFalse(bundle['text/html'].contains('<script>'))
+    assertEquals(bundle['text/plain'], new CoreRenderer().plainText(matrix, RenderOptions.defaults))
   }
 
   @Test
@@ -45,6 +46,28 @@ class CoreRendererTest {
     assertFalse(unlimited['text/html'].contains('showing '))
     assertTrue(unlimited['text/html'].contains('>4</td>'))
     assertTrue(empty['text/html'].contains('<table'))
+  }
+
+  @Test
+  void truncatesRowsFromTheTailWhenRequested() {
+    Matrix matrix = Matrix.builder().columns(value: [1, 2, 3]).build()
+
+    MimeBundle bundle = new CoreRenderer().render(matrix, new RenderOptions(2, null, false))
+
+    assertFalse(bundle['text/html'].contains('>1</td>'))
+    assertTrue(bundle['text/html'].contains('>2</td>'))
+    assertTrue(bundle['text/html'].contains('>3</td>'))
+    assertTrue(bundle['text/html'].contains('showing 2 of 3 rows'))
+  }
+
+  @Test
+  void truncatesPlainTextRowsAndColumnsFromTheTail() {
+    Matrix matrix = Matrix.builder().columns(a: [1, 2, 3], b: [4, 5, 6], c: [7, 8, 9]).build()
+
+    String plain = new CoreRenderer().plainText(matrix, new RenderOptions(2, 2, false))
+    Matrix columns = matrix.selectColumns(['a', 'b'])
+
+    assertEquals("${columns}\n${columns.tail(2)}\nshowing 2 of 3 rows, 2 of 3 columns", plain)
   }
 
   @Test

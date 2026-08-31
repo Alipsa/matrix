@@ -27,15 +27,38 @@ class CoreRenderer extends AbstractRenderer {
     if (columnsTruncated) rendered = matrix.selectColumns(matrix.columnNames().take(options.maxColumns))
     boolean rowsTruncated = options.maxRows != null && totalRows > options.maxRows
     Map<String, String> attributes = new LinkedHashMap<>(options.attr)
+    List<String> notices = notices(matrix, options)
     if (rowsTruncated || columnsTruncated) {
-      List<String> notices = []
-      if (rowsTruncated) notices << "showing ${options.maxRows} of ${totalRows} rows".toString()
-      if (columnsTruncated) notices << "${options.maxColumns} of ${totalColumns} columns".toString()
       attributes.caption = [attributes.caption, notices.join(', ')].findAll { it }.join(' — ')
     }
     String html = rendered.toHtml(attributes, options.maxRows, options.fromHead)
-    String plain = value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid ? matrix.content() : value.toString()
-    MimeBundle.html(html, plain)
+    MimeBundle.html(html, plainText(matrix, options, notices))
+  }
+
+  @Override
+  String plainText(Object value, RenderOptions options) {
+    if (!tabular(value)) return value.toString()
+    Matrix matrix = toMatrix(value)
+    plainText(matrix, options, notices(matrix, options))
+  }
+
+  private static String plainText(Matrix matrix, RenderOptions options, List<String> notices) {
+    Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
+        matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
+    String suffix = notices ? "\n${notices.join(', ')}" : ''
+    String body = options.maxRows == null ? rendered.content() : rendered.content(options.maxRows, options.fromHead)
+    body + suffix
+  }
+
+  private static boolean tabular(Object value) {
+    value instanceof Matrix || value instanceof Row || value instanceof Column || value instanceof Grid || value instanceof Summary || value instanceof Structure
+  }
+
+  private static List<String> notices(Matrix matrix, RenderOptions options) {
+    List<String> result = []
+    if (options.maxRows != null && matrix.rowCount() > options.maxRows) result << "showing ${options.maxRows} of ${matrix.rowCount()} rows".toString()
+    if (options.maxColumns != null && matrix.columnCount() > options.maxColumns) result << "${options.maxColumns} of ${matrix.columnCount()} columns".toString()
+    result
   }
 
   private static Matrix toMatrix(Object value) {

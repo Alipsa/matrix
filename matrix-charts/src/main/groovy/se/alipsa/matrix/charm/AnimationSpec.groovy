@@ -28,7 +28,10 @@ class AnimationSpec {
   }
 
   /**
-   * Converts this animation spec into a CSS style block body.
+   * Converts this animation spec into a CSS style block body scoped to the chart's
+   * {@code #charm-root} SVG element. CharmRenderer creates that element when a chart
+   * has an active animation or stylesheet, so this output is intended for rendered
+   * Charm charts rather than standalone CSS.
    *
    * @return CSS text
    */
@@ -49,7 +52,7 @@ class AnimationSpec {
 @keyframes ${keyframeName} {
   ${keyframeBody}
 }
-${targetSelector} {
+${scopedSelector(targetSelector)} {
   animation-name: ${keyframeName};
   animation-duration: ${animationDuration};
   animation-timing-function: ${animationTiming};
@@ -86,6 +89,65 @@ ${targetSelector} {
   private static String normalized(String value, String fallback) {
     String trimmed = value?.trim()
     trimmed ? trimmed : fallback
+  }
+
+  private static String scopedSelector(String selector) {
+    topLevelSelectors(selector).collect { String target ->
+      scopeSelector(target)
+    }.join(', ')
+  }
+
+  private static String scopeSelector(String target) {
+    if (target ==~ /#charm-root(?:\s|[>+~.:#\[]|$).*/) {
+      return target
+    }
+    String withoutSvgRoot = target.replaceFirst(/^(?:svg|:root)(?:\s+|$)/, '').trim()
+    withoutSvgRoot ? "#charm-root ${withoutSvgRoot}" : '#charm-root'
+  }
+
+  private static List<String> topLevelSelectors(String selector) {
+    List<String> result = []
+    StringBuilder part = new StringBuilder()
+    int parens = 0
+    int brackets = 0
+    String quote = null
+    boolean escaped = false
+    selector.each { String character ->
+      boolean split = false
+      if (escaped) {
+        escaped = false
+      } else if (character == '\\') {
+        escaped = true
+      } else if (quote != null) {
+        if (character == quote) {
+          quote = null
+        }
+      } else if (character in ['"', "'"]) {
+        quote = character
+      } else if (character == '(') {
+        parens++
+      } else if (character == ')') {
+        parens--
+      } else if (character == '[') {
+        brackets++
+      } else if (character == ']') {
+        brackets--
+      } else if (character == ',' && parens == 0 && brackets == 0) {
+        split = true
+      }
+      if (split) {
+        if (part.toString().trim()) {
+          result << part.toString().trim()
+        }
+        part.setLength(0)
+      } else {
+        part.append(character)
+      }
+    }
+    if (part.toString().trim()) {
+      result << part.toString().trim()
+    }
+    result ?: ['#charm-root']
   }
 
   private void validateForCdata() {

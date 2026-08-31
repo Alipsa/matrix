@@ -4,11 +4,9 @@ import org.dom4j.Attribute
 import org.dom4j.Element
 
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.SvgIdRewriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
-
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 /**
  * Renders a {@link PlotGrid} into a single SVG using nested {@code <svg>} elements
@@ -23,15 +21,6 @@ import java.util.regex.Pattern
 @SuppressWarnings('DuplicateStringLiteral')
 @SuppressWarnings('UnnecessaryCast')
 class PlotGridRenderer {
-
-  /** Matches url(#someId) references in attribute values. */
-  private static final Pattern URL_REF_PATTERN = Pattern.compile('url\\(#([^)]+)\\)')
-
-  /** Matches #someId href references. */
-  private static final Pattern HREF_REF_PATTERN = Pattern.compile('^#(.+)$')
-
-  /** Attribute names that can contain href-style references. */
-  private static final Set<String> HREF_ATTRS = ['href', 'xlink:href'] as Set<String>
 
   /** Title area height in pixels when a title is present. */
   private static final int TITLE_HEIGHT = 30
@@ -105,7 +94,7 @@ class PlotGridRenderer {
       Svg cellSvg = renderer.render(chart, cellConfig)
 
       String prefix = "g${row}c${col}-"
-      rewriteDomIds(cellSvg.element, prefix)
+      SvgIdRewriter.prefixIds(cellSvg, prefix)
 
       Svg nested = outerSvg.addSvg()
       nested.addAttribute('x', cellX)
@@ -113,6 +102,11 @@ class PlotGridRenderer {
       nested.width(cellW)
       nested.height(cellH)
       nested.viewBox("0 0 $cellW $cellH")
+      cellSvg.element.attributes().each { Attribute attribute ->
+        if (attribute.qualifiedName in ['id', 'class', 'style']) {
+          nested.addAttribute(attribute.qualifiedName, attribute.value)
+        }
+      }
 
       // Clone DOM children from cellSvg into nested SVG (avoids the
       // duplicate-element issue that SvgElementFactory.copyChildren can cause
@@ -188,125 +182,6 @@ class PlotGridRenderer {
       offset += sizes[i] + spacing
     }
     offset
-  }
-
-  /**
-   * Rewrites all SVG IDs in a DOM element tree with a prefix to prevent collisions
-   * when multiple subplots are composed into a single SVG document.
-   *
-   * <p>Two-phase approach operating directly on DOM4J elements:</p>
-   * <ol>
-   *   <li>Collect all existing IDs and build old-to-new mapping</li>
-   *   <li>Rewrite {@code id} attributes and all references ({@code url(#...)},
-   *       {@code href="#..."}, {@code xlink:href="#..."})</li>
-   * </ol>
-   *
-   * @param root the root DOM element to rewrite
-   * @param prefix the prefix to prepend to each ID
-   */
-  private static void rewriteDomIds(Element root, String prefix) {
-    List<Element> allElements = collectDomDescendants(root)
-
-    // Phase 1: collect all IDs
-    Map<String, String> idMap = [:]
-    for (Element elem : allElements) {
-      String id = elem.attributeValue('id')
-      if (id != null && !id.isEmpty()) {
-        idMap[id] = "${prefix}${id}"
-      }
-    }
-
-    if (idMap.isEmpty()) {
-      return
-    }
-
-    // Phase 2: rewrite IDs and references
-    for (Element elem : allElements) {
-      String id = elem.attributeValue('id')
-      if (id != null && idMap.containsKey(id)) {
-        elem.addAttribute('id', idMap[id])
-      }
-
-      // Scan all attributes for url(#...) and href references
-      List<Attribute> attrs = elem.attributes() as List<Attribute>
-      for (Attribute attr : attrs) {
-        String attrName = attr.name
-        String attrValue = attr.value
-        if (attrName == 'id' || attrValue == null) {
-          continue
-        }
-
-        if (attrValue.contains('url(#')) {
-          String rewritten = rewriteUrlRefs(attrValue, idMap)
-          if (rewritten != attrValue) {
-            attr.value = rewritten
-          }
-        }
-
-        if (HREF_ATTRS.contains(attrName) || HREF_ATTRS.contains(attr.qualifiedName)) {
-          String rewritten = rewriteHrefRef(attrValue, idMap)
-          if (rewritten != attrValue) {
-            attr.value = rewritten
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Collects an element and all its descendants into a flat list.
-   *
-   * @param root the root element
-   * @return flat list of all elements (root + descendants)
-   */
-  private static List<Element> collectDomDescendants(Element root) {
-    List<Element> result = [root]
-    root.elements().each { Element child ->
-      result.addAll(collectDomDescendants(child))
-    }
-    result
-  }
-
-  /**
-   * Rewrites all url(#id) references in an attribute value.
-   *
-   * @param value the attribute value
-   * @param idMap old-to-new ID mapping
-   * @return rewritten value
-   */
-  private static String rewriteUrlRefs(String value, Map<String, String> idMap) {
-    Matcher matcher = URL_REF_PATTERN.matcher(value)
-    StringBuffer sb = new StringBuffer()
-    while (matcher.find()) {
-      String oldId = matcher.group(1)
-      String newId = idMap[oldId]
-      if (newId != null) {
-        matcher.appendReplacement(sb, "url(#${Matcher.quoteReplacement(newId)})")
-      } else {
-        matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)))
-      }
-    }
-    matcher.appendTail(sb)
-    sb.toString()
-  }
-
-  /**
-   * Rewrites a #ref href value if it matches a known ID.
-   *
-   * @param value the href attribute value
-   * @param idMap old-to-new ID mapping
-   * @return rewritten value
-   */
-  private static String rewriteHrefRef(String value, Map<String, String> idMap) {
-    Matcher matcher = HREF_REF_PATTERN.matcher(value)
-    if (matcher.matches()) {
-      String oldId = matcher.group(1)
-      String newId = idMap[oldId]
-      if (newId != null) {
-        return "#${newId}"
-      }
-    }
-    value
   }
 
 }
