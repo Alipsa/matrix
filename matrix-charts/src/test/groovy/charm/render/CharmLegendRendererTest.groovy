@@ -397,7 +397,14 @@ class CharmLegendRendererTest {
     assertTrue(content.contains('>linetype<'), 'Linetype legend title should be rendered')
     assertEquals([null, '8,4', '2,2'], legendLinetypeDashArrays(svg),
         'Linetype legend keys should retain their distinct dash patterns')
+  }
+
+  @Test
+  void testLinetypeLegendKeysFollowLegendOrientation() {
     assertDiscreteLegendKeyOrientation('linetype', LegendPosition.TOP, true)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.BOTTOM, true)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.RIGHT, false)
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
   }
 
   private static List<BigDecimal> legendKeyYs(Svg svg) {
@@ -413,8 +420,7 @@ class CharmLegendRendererTest {
   private static List<String> legendLinetypeDashArrays(Svg svg) {
     svg.descendants()
         .findAll { element ->
-          element.getAttribute('class')?.toString()?.contains('charm-legend-key') &&
-              element.getAttribute('x1') != null
+          element.getAttribute('class')?.toString()?.contains('charm-legend-linetype-key')
         }
         .collect { element -> element.getAttribute('stroke-dasharray')?.toString() }
   }
@@ -448,8 +454,9 @@ class CharmLegendRendererTest {
     assertLegendKeyOrientation(aesthetic, position, horizontal, null, direction)
   }
 
-  private static void assertDiscreteLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal) {
-    assertLegendKeyOrientation(aesthetic, position, horizontal, Scale.discrete())
+  private static void assertDiscreteLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                          LegendDirection direction = null) {
+    assertLegendKeyOrientation(aesthetic, position, horizontal, Scale.discrete(), direction)
   }
 
   private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
@@ -462,12 +469,11 @@ class CharmLegendRendererTest {
       mapping {
         x = 'x'
         y = 'y'
-        if (aesthetic == 'size') {
-          size = 'value'
-        } else if (aesthetic == 'alpha') {
-          alpha = 'value'
-        } else {
-          linetype = 'value'
+        switch (aesthetic) {
+          case 'size' -> size = 'value'
+          case 'alpha' -> alpha = 'value'
+          case 'linetype' -> linetype = 'value'
+          default -> throw new IllegalArgumentException("Unsupported legend aesthetic: ${aesthetic}")
         }
       }
       layers { geomPoint() }
@@ -479,12 +485,11 @@ class CharmLegendRendererTest {
       }
     }
     if (scale != null) {
-      if (aesthetic == 'size') {
-        spec.scale.size = scale
-      } else if (aesthetic == 'alpha') {
-        spec.scale.alpha = scale
-      } else {
-        spec.scale.linetype = scale
+      switch (aesthetic) {
+        case 'size' -> spec.scale.size = scale
+        case 'alpha' -> spec.scale.alpha = scale
+        case 'linetype' -> spec.scale.linetype = scale
+        default -> throw new IllegalArgumentException("Unsupported legend aesthetic: ${aesthetic}")
       }
     }
     Chart chart = spec.build()

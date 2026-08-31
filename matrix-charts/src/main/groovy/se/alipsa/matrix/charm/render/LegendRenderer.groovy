@@ -745,7 +745,7 @@ class LegendRenderer {
     scale.levels.each { String level ->
       def key = group.addLine(x, y + keySize / 2, x + keySize, y + keySize / 2)
           .stroke(keyColor)
-          .styleClass('charm-legend-key gg-legend-key')
+          .styleClass('charm-legend-key charm-legend-linetype-key gg-legend-key')
       String dashArray = GeomUtils.dashArray(GeomUtils.resolveLinetype(scale, level))
       if (dashArray != null) {
         key.addAttribute('stroke-dasharray', dashArray)
@@ -836,6 +836,7 @@ class LegendRenderer {
       }
     }
 
+    // A valid continuous scale always generates five break values above, so no empty-row guard is needed.
     vertical ? y : y + keySize + spacing
   }
 
