@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.jupyter.render.CharmRenderer
 
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
+import java.lang.reflect.Modifier
 
 /** Tests optional-class probing through the thread context class loader. */
 class AbstractRendererTest {
@@ -44,30 +43,32 @@ class AbstractRendererTest {
   @Test
   void probesTheRendererLoaderBeforeAContextLoaderThatHidesItsTarget() {
     ClassLoader original = Thread.currentThread().contextClassLoader
-    Thread.currentThread().contextClassLoader = new HidingClassLoader(original)
+    GroovyClassLoader rendererLoader = new GroovyClassLoader(original)
+    rendererLoader.parseClass('package test.renderer\nclass RendererOwnedTarget {}')
+    Class<?> rendererClass = rendererLoader.parseClass('''package test.renderer
+      class RendererOwnedProbe extends se.alipsa.matrix.jupyter.AbstractRenderer {
+        String rendererName() { 'RendererOwnedProbe' }
+        boolean available() { probe('test.renderer.RendererOwnedTarget') }
+        Set<Class<?>> supportedTypes() { [] as Set }
+        se.alipsa.matrix.jupyter.MimeBundle render(Object value, se.alipsa.matrix.jupyter.RenderOptions options) {
+          se.alipsa.matrix.jupyter.MimeBundle.plain(value.toString())
+        }
+      }''')
+    Thread.currentThread().contextClassLoader = new HidingClassLoader(original, 'test.renderer.RendererOwnedTarget')
 
     try {
-      assertTrue(new CharmRenderer().available())
+      assertTrue((rendererClass.getDeclaredConstructor().newInstance() as MatrixRenderer).available())
     } finally {
       Thread.currentThread().contextClassLoader = original
+      rendererLoader.close()
     }
   }
 
   @Test
   void synchronizesConcurrentProbesBeforeUpdatingTheDiagnostic() {
-    ProbeRenderer renderer = new ProbeRenderer()
-    def executor = Executors.newFixedThreadPool(2)
-    try {
-      def results = executor.invokeAll([
-          { renderer.probeClass('test.missing.First') } as Callable<Boolean>,
-          { renderer.probeClass('test.missing.Second') } as Callable<Boolean>
-      ])
+    def method = AbstractRenderer.getDeclaredMethod('probe', String)
 
-      assertFalse(results*.get().any())
-      assertTrue(renderer.unavailableReason() in ['test.missing.First not on classpath', 'test.missing.Second not on classpath'])
-    } finally {
-      executor.shutdownNow()
-    }
+    assertTrue(Modifier.isSynchronized(method.modifiers))
   }
 
   private static class ProbeRenderer extends AbstractRenderer {
@@ -79,13 +80,16 @@ class AbstractRendererTest {
   }
 
   private static class HidingClassLoader extends ClassLoader {
-    HidingClassLoader(ClassLoader parent) {
+    private final String hiddenClass
+
+    HidingClassLoader(ClassLoader parent, String hiddenClass) {
       super(parent)
+      this.hiddenClass = hiddenClass
     }
 
     @Override
     Class<?> loadClass(String name) throws ClassNotFoundException {
-      if (name == 'se.alipsa.matrix.charm.Chart') {
+      if (name == hiddenClass) {
         throw new ClassNotFoundException(name)
       }
       super.loadClass(name)

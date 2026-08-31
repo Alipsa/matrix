@@ -61,6 +61,16 @@ class CoreRendererTest {
   }
 
   @Test
+  void truncatesPlainTextRowsAndColumnsFromTheTail() {
+    Matrix matrix = Matrix.builder().columns(a: [1, 2, 3], b: [4, 5, 6], c: [7, 8, 9]).build()
+
+    String plain = new CoreRenderer().plainText(matrix, new RenderOptions(2, 2, false))
+    Matrix columns = matrix.selectColumns(['a', 'b'])
+
+    assertEquals("${columns}\n${columns.tail(2)}\nshowing 2 of 3 rows, 2 of 3 columns", plain)
+  }
+
+  @Test
   void wrapsGridRowsAndColumnsAsTables() {
     Matrix matrix = Matrix.builder().columns(name: ['Ada'], score: [42]).build()
     Grid grid = new Grid([[1, 2], [3, 4]])

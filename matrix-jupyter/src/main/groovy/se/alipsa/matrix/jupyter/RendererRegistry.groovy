@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap
 @SuppressWarnings(['PropertyName', 'IfStatementBraces', 'ExplicitLinkedHashMapInstantiation', 'UnnecessaryCollectCall'])
 class RendererRegistry {
   private static final Logger log = Logger.getLogger(RendererRegistry)
+  // A malformed service declaration can make ServiceLoader repeatedly throw without advancing.
+  // Stop after a bounded number of failures so discovery cannot hang indefinitely.
   private static final int MAX_CONSECUTIVE_DISCOVERY_FAILURES = 100
   static final RendererRegistry instance = new RendererRegistry()
   private final Object lock = new Object()

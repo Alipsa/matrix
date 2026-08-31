@@ -21,11 +21,12 @@ import java.util.function.Supplier
 @SuppressWarnings(['FieldName', 'IfStatementBraces'])
 class MatrixJupyterExtension implements Extension {
   private static final String LIST_SEPARATOR = ', '
+  private static final String TEXT_PLAIN = 'text/plain'
   private static final Logger log = Logger.getLogger(MatrixJupyterExtension)
   private static final Map<BaseKernel, Map<Class<?>, String>> attached = Collections.synchronizedMap(new WeakHashMap<>())
   private static final Map<String, MIMEType> mimeTypes = ['text/html': MIMEType.TEXT_HTML,
                                                           'image/svg+xml': MIMEType.IMAGE_SVG,
-                                                          'text/plain': MIMEType.TEXT_PLAIN].asImmutable()
+                                                          (TEXT_PLAIN): MIMEType.TEXT_PLAIN].asImmutable()
 
   @Override
   void install(BaseKernel kernel) {
@@ -105,11 +106,15 @@ class MatrixJupyterExtension implements Extension {
           missingNote()
         } else {
           Object data = rendered.get(preferredMime)
-          if (data != null) out.putData(mime, data)
+          if (data != null) {
+            out.putData(mime, data)
+          } else {
+            missingNote()
+          }
         }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
-        Object plain = attempted ? bundle?.get('text/plain') : RendererRegistry.instance.plainText(value)
+        Object plain = attempted ? bundle?.get(TEXT_PLAIN) : once()?.get(TEXT_PLAIN)
         plain != null ? plain : missingNote()
       } as Supplier<Object>)
     }

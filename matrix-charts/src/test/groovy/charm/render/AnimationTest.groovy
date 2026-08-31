@@ -69,6 +69,10 @@ class AnimationTest {
     assertFalse(new AnimationSpec(selector: '.charm-point,').toCss().contains('#charm-root ,'))
     assertTrue(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root {'))
     assertFalse(new AnimationSpec(selector: 'svg').toCss().contains('#charm-root svg {'))
+    assertTrue(new AnimationSpec(selector: '#charm-root .charm-point').toCss().contains('#charm-root .charm-point {'))
+    assertFalse(new AnimationSpec(selector: '#charm-root .charm-point').toCss().contains('#charm-root #charm-root'))
+    assertTrue(new AnimationSpec(selector: 'svg .charm-point').toCss().contains('#charm-root .charm-point {'))
+    assertTrue(new AnimationSpec(selector: ':root .charm-point').toCss().contains('#charm-root .charm-point {'))
   }
 
   @Test

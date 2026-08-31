@@ -133,6 +133,6 @@ Do not produce minimal stubs that require multiple rounds of refinement.
 
 - **Groovy**: 5.1.1 (groovy, groovy-sql, groovy-ginq)
 - **Testing**: JUnit Jupiter 6.0.3
-- **Charting**: gsvg 1.1.0, XChart 3.8.8, JavaFX 23.0.2
+- **Charting**: gsvg 1.2.0, XChart 3.8.8, JavaFX 23.0.2
 - **Statistics**: Smile 4.4.2, commons-math3
 - **Data formats**: Jackson, Apache POI, commons-csv

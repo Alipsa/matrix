@@ -41,6 +41,10 @@ left unchanged, so scope custom rules yourself when several charts share a page:
 chart.stylesheet = '#charm-root .my-rule { stroke: tomato; }'
 ```
 
+`#charm-root` is unique when SVG is rendered through this module, which namespaces each result.
+If you embed raw `SvgWriter.toXml(chart.render())` output yourself, give each chart a distinct
+root id and adjust its stylesheet to avoid duplicate IDs and cross-chart CSS matches.
+
 If a chart module is added after a first render, call:
 
 ```groovy

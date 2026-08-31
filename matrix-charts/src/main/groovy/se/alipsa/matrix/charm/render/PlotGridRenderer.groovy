@@ -103,7 +103,9 @@ class PlotGridRenderer {
       nested.height(cellH)
       nested.viewBox("0 0 $cellW $cellH")
       cellSvg.element.attributes().each { Attribute attribute ->
-        if (attribute.qualifiedName in ['id', 'class', 'style']) nested.addAttribute(attribute.qualifiedName, attribute.value)
+        if (attribute.qualifiedName in ['id', 'class', 'style']) {
+          nested.addAttribute(attribute.qualifiedName, attribute.value)
+        }
       }
 
       // Clone DOM children from cellSvg into nested SVG (avoids the

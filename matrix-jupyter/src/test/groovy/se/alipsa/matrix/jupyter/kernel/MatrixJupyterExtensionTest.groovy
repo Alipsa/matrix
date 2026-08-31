@@ -167,7 +167,7 @@ class MatrixJupyterExtensionTest {
   }
 
   @Test
-  void keepsRendererFailuresOutOfRichMimeSlots() {
+  void reportsRendererFailuresConsistentlyForRichAndPlainRequests() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()
 
@@ -177,12 +177,12 @@ class MatrixJupyterExtensionTest {
 
     assertNull(rich.getData(MIMEType.TEXT_HTML))
     assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('failing value'))
-    assertFalse(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
+    assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
     extension.uninstall(kernel)
   }
 
   @Test
-  void avoidsRichRenderingWhenOnlyPlainTextIsRequested() {
+  void rendersOnceWhenOnlyPlainTextIsRequested() {
     TestKernel kernel = new TestKernel()
     MatrixJupyterExtension extension = new MatrixJupyterExtension()
     LazyRenderer.renderCalls = 0
@@ -191,7 +191,7 @@ class MatrixJupyterExtensionTest {
     DisplayData rendered = kernel.renderer.renderAs(new LazyValue(), 'text/plain')
 
     assertEquals('lazy plain text', rendered.getData(MIMEType.TEXT_PLAIN))
-    assertEquals(0, LazyRenderer.renderCalls)
+    assertEquals(1, LazyRenderer.renderCalls)
     extension.uninstall(kernel)
   }
 
