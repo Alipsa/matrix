@@ -8,7 +8,10 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.charm.geom.LayerBuilder
+import se.alipsa.matrix.charm.geom.LayersDsl
 import se.alipsa.matrix.charm.theme.CharmThemes
+import se.alipsa.matrix.charm.theme.ElementLine
+import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -21,6 +24,8 @@ import se.alipsa.matrix.core.Matrix
 class PlotSpec {
 
   private static final LevenshteinDistance COLUMN_DISTANCE = LevenshteinDistance.getDefaultInstance()
+  private static final int MAX_SUGGESTIONS = 3
+  private static final int SIMILARITY_DIVISOR = 3
 
   private static final Map<CharmGeomType, List<String>> REQUIRED_MAPPINGS = [
       (CharmGeomType.POINT)    : ['x', 'y'],
@@ -239,14 +244,14 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec layers(
-      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = se.alipsa.matrix.charm.geom.LayersDsl)
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayersDsl)
       Closure<?> configure
   ) {
-    se.alipsa.matrix.charm.geom.LayersDsl dsl = new se.alipsa.matrix.charm.geom.LayersDsl()
+    LayersDsl dsl = new LayersDsl()
     Closure<?> body = configure.rehydrate(dsl, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
-    dsl.collected.each { se.alipsa.matrix.charm.geom.LayerBuilder builder ->
+    dsl.collected.each { LayerBuilder builder ->
       layers << builder.build()
     }
     this
@@ -267,7 +272,7 @@ class PlotSpec {
    * @param builder configured layer builder
    * @return this plot spec
    */
-  PlotSpec addLayer(se.alipsa.matrix.charm.geom.LayerBuilder builder) {
+  PlotSpec addLayer(LayerBuilder builder) {
     layers << builder.build()
     this
   }
@@ -280,7 +285,7 @@ class PlotSpec {
    * @param builder configured layer builder
    * @return this plot spec
    */
-  PlotSpec plus(se.alipsa.matrix.charm.geom.LayerBuilder builder) {
+  PlotSpec plus(LayerBuilder builder) {
     addLayer(builder)
   }
 
@@ -294,7 +299,7 @@ class PlotSpec {
     if (other == null) {
       return this
     }
-    Theme merged = theme.plus(other)
+    Theme merged = theme + other
     merged.properties.each { key, val ->
       String k = key as String
       if (k != 'class' && theme.hasProperty(k)) {
@@ -745,11 +750,11 @@ class PlotSpec {
 
     // Allow roughly one edit per three characters of the typo, with a floor of 2 so
     // short column names (e.g. 'x') still tolerate a single-character mismatch.
-    int threshold = (columnName.size() / 3).ceil().max(2) as int
+    int threshold = (columnName.size() / SIMILARITY_DIVISOR).ceil().max(2) as int
     List<String> suggestions = ranked
         .findAll { ColumnSuggestion entry -> entry.distance <= threshold }
         .collect { ColumnSuggestion entry -> entry.name }
-        .take(3)
+        .take(MAX_SUGGESTIONS)
 
     if (suggestions.isEmpty()) {
       return ''
@@ -1065,11 +1070,11 @@ class PlotSpec {
      * @param value line width
      */
     void setAxisLineWidth(Number value) {
-      theme.axisLineX = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.axisLineX = new ElementLine(
           color: theme.axisLineX?.color ?: '#333333',
           size: value
       )
-      theme.axisLineY = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.axisLineY = new ElementLine(
           color: theme.axisLineY?.color ?: '#333333',
           size: value
       )
@@ -1081,11 +1086,11 @@ class PlotSpec {
      * @param value colour value
      */
     void setAxisColor(String value) {
-      theme.axisLineX = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.axisLineX = new ElementLine(
           color: value,
           size: theme.axisLineX?.size ?: 1
       )
-      theme.axisLineY = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.axisLineY = new ElementLine(
           color: value,
           size: theme.axisLineY?.size ?: 1
       )
@@ -1108,10 +1113,10 @@ class PlotSpec {
      * @param value colour value
      */
     void setTextColor(String value) {
-      se.alipsa.matrix.charm.theme.ElementText xText = theme.axisTextX?.copy()
-          ?: new se.alipsa.matrix.charm.theme.ElementText()
-      se.alipsa.matrix.charm.theme.ElementText yText = theme.axisTextY?.copy()
-          ?: new se.alipsa.matrix.charm.theme.ElementText()
+      ElementText xText = theme.axisTextX?.copy()
+          ?: new ElementText()
+      ElementText yText = theme.axisTextY?.copy()
+          ?: new ElementText()
       xText.color = value
       yText.color = value
       theme.axisTextX = xText
@@ -1124,10 +1129,10 @@ class PlotSpec {
      * @param value text size
      */
     void setTextSize(Number value) {
-      se.alipsa.matrix.charm.theme.ElementText xText = theme.axisTextX?.copy()
-          ?: new se.alipsa.matrix.charm.theme.ElementText()
-      se.alipsa.matrix.charm.theme.ElementText yText = theme.axisTextY?.copy()
-          ?: new se.alipsa.matrix.charm.theme.ElementText()
+      ElementText xText = theme.axisTextX?.copy()
+          ?: new ElementText()
+      ElementText yText = theme.axisTextY?.copy()
+          ?: new ElementText()
       xText.size = value
       yText.size = value
       theme.axisTextX = xText
@@ -1140,8 +1145,8 @@ class PlotSpec {
      * @param value title size
      */
     void setTitleSize(Number value) {
-      se.alipsa.matrix.charm.theme.ElementText title = theme.plotTitle?.copy()
-          ?: new se.alipsa.matrix.charm.theme.ElementText()
+      ElementText title = theme.plotTitle?.copy()
+          ?: new ElementText()
       title.size = value
       theme.plotTitle = title
     }
@@ -1183,7 +1188,7 @@ class PlotSpec {
      * @param value colour value
      */
     void setGridColor(String value) {
-      theme.panelGridMajor = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.panelGridMajor = new ElementLine(
           color: value,
           size: theme.panelGridMajor?.size ?: 1
       )
@@ -1195,7 +1200,7 @@ class PlotSpec {
      * @param value line width
      */
     void setGridLineWidth(Number value) {
-      theme.panelGridMajor = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.panelGridMajor = new ElementLine(
           color: theme.panelGridMajor?.color ?: '#eeeeee',
           size: value
       )
@@ -1207,7 +1212,7 @@ class PlotSpec {
      * @param value colour value for minor grid lines
      */
     void setGridMinor(String value) {
-      theme.panelGridMinor = new se.alipsa.matrix.charm.theme.ElementLine(
+      theme.panelGridMinor = new ElementLine(
           color: value,
           size: theme.panelGridMinor?.size ?: 1
       )
@@ -1223,7 +1228,7 @@ class PlotSpec {
       if (preset == null) {
         throw new CharmValidationException('preset theme cannot be null')
       }
-      Theme merged = theme.plus(preset)
+      Theme merged = theme + preset
       merged.properties.each { key, val ->
         String k = key as String
         if (k != 'class' && theme.hasProperty(k)) {

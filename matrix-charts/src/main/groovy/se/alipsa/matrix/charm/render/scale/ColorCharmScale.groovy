@@ -18,6 +18,12 @@ import se.alipsa.matrix.core.ValueConverter
  *   <li>IDENTITY - pass-through (data values are colors)</li>
  * </ul>
  */
+@SuppressWarnings([
+    'DuplicateListLiteral',
+    'DuplicateNumberLiteral',
+    'DuplicateStringLiteral',
+    'IfStatementBraces'
+])
 class ColorCharmScale extends CharmScale {
 
   private static final List<String> DEFAULT_COLORS = [
@@ -82,7 +88,7 @@ class ColorCharmScale extends CharmScale {
     if (value == null) return naValue
 
     if (colorType == 'identity') {
-      String colorValue = value.toString()
+      String colorValue = value
       String normalized = ColorUtil.normalizeColor(colorValue)
       return normalized ?: colorValue
     }
@@ -116,7 +122,7 @@ class ColorCharmScale extends CharmScale {
       return new ArrayList<Object>(levels)
     }
     if (domainMin != null && domainMax != null) {
-      return [domainMin, domainMax] as List<Object>
+      return [domainMin, domainMax]
     }
     []
   }
@@ -259,7 +265,7 @@ class ColorCharmScale extends CharmScale {
     }
 
     if (userValues instanceof List) {
-      this.values = (userValues as List).collect { it?.toString() }
+      this.values = (userValues as List)*.toString()
     }
 
     colorMap = [:]
@@ -311,7 +317,7 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void trainGradientN(List<Object> dataValues, Scale spec) {
-    this.gradientColors = (spec.params['colors'] as List)?.collect { it?.toString() } ?: ['#132B43', '#56B1F7']
+    this.gradientColors = (spec.params['colors'] as List)*.toString() ?: ['#132B43', '#56B1F7']
     this.gradientValues = spec.params['gradientValues'] as List<BigDecimal>
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
 
@@ -449,7 +455,7 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void trainStepsN(List<Object> dataValues, Scale spec) {
-    this.gradientColors = (spec.params['colors'] as List)?.collect { it?.toString() } ?: ['#132B43', '#56B1F7']
+    this.gradientColors = (spec.params['colors'] as List)*.toString() ?: ['#132B43', '#56B1F7']
     if (gradientColors.size() < 2) {
       gradientColors = ['#132B43', '#56B1F7']
     }
@@ -480,7 +486,7 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void collectLevels(List<Object> dataValues) {
-    LinkedHashSet<String> unique = new LinkedHashSet<>()
+    Set<String> unique = [] as Set<String>
     dataValues.each { Object value ->
       if (value != null) {
         unique << value.toString()
@@ -503,10 +509,9 @@ class ColorCharmScale extends CharmScale {
       if (normalized < midNorm) {
         BigDecimal t = midNorm > 0 ? normalized / midNorm : 0.0
         return ColorScaleUtil.interpolateColor(low, mid, t)
-      } else {
-        BigDecimal t = midNorm < 1 ? (normalized - midNorm) / (1 - midNorm) : 1.0
-        return ColorScaleUtil.interpolateColor(mid, high, t)
       }
+      BigDecimal t = midNorm < 1 ? (normalized - midNorm) / (1 - midNorm) : 1.0
+      return ColorScaleUtil.interpolateColor(mid, high, t)
     }
     ColorScaleUtil.interpolateColor(low, high, normalized)
   }
@@ -527,7 +532,7 @@ class ColorCharmScale extends CharmScale {
     while (idx < stops.size() - 1 && normalized > stops[idx + 1]) {
       idx++
     }
-    if (idx >= stops.size() - 1) return gradientColors[gradientColors.size() - 1]
+    if (idx >= stops.size() - 1) return gradientColors.last()
 
     BigDecimal start = stops[idx]
     BigDecimal end = stops[idx + 1]
@@ -539,7 +544,7 @@ class ColorCharmScale extends CharmScale {
     if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
     BigDecimal v = value as BigDecimal
     if (domainMax == domainMin) {
-      return gradientColors[gradientColors.size() - 1]
+      return gradientColors.last()
     }
     BigDecimal normalized = ((v - domainMin) / (domainMax - domainMin)).min(1.0).max(0.0)
     int idx = normalized * (gradientColors.size() - 1) as int

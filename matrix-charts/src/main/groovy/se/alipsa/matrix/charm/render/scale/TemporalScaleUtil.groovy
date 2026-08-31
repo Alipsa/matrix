@@ -17,7 +17,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.TemporalAccessor
-import java.util.Locale
 
 /**
  * Shared temporal scale helpers for canonical conversion, break generation, and label formatting.
@@ -26,6 +25,11 @@ import java.util.Locale
  * - date/datetime: epoch-millis from instant
  * - time: millis since midnight
  */
+@SuppressWarnings([
+    'DuplicateNumberLiteral',
+    'DuplicateStringLiteral',
+    'ReturnNullFromCatchBlock'
+])
 class TemporalScaleUtil {
 
   static final ZoneId DEFAULT_ZONE = ZoneOffset.UTC
@@ -380,7 +384,7 @@ class TemporalScaleUtil {
       case 'second' -> value.plusSeconds(interval.amount)
       case 'minute' -> value.plusMinutes(interval.amount)
       case 'hour' -> value.plusHours(interval.amount)
-      default -> value.plus(interval.duration)
+      default -> value + interval.duration
     }
   }
 

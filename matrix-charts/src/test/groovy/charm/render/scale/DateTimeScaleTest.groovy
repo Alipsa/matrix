@@ -9,13 +9,24 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
+import se.alipsa.matrix.charm.render.scale.TemporalScaleUtil
 
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 
 class DateTimeScaleTest {
+
+  @Test
+  void testDatetimeAutoBreaksSwitchFromWeeklyToMonthlyAfterSixtyDays() {
+    List<BigDecimal> sixtyDayBreaks = TemporalScaleUtil.autoBreaks('datetime', 0, Duration.ofDays(60).toMillis(), 5)
+    List<BigDecimal> sixtyOneDayBreaks = TemporalScaleUtil.autoBreaks('datetime', 0, Duration.ofDays(61).toMillis(), 5)
+
+    assertEquals(Duration.ofDays(7).toMillis(), sixtyDayBreaks[1] - sixtyDayBreaks[0])
+    assertTrue(sixtyOneDayBreaks[1] - sixtyOneDayBreaks[0] > Duration.ofDays(28).toMillis())
+  }
 
   @Test
   void testDateScaleUsesUtcEpochMillisByDefault() {

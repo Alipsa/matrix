@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.render.RenderContext
 /**
  * Renders step geometry.
  */
+@SuppressWarnings(['DuplicateNumberLiteral', 'DuplicateStringLiteral'])
 class StepRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
@@ -19,7 +20,7 @@ class StepRenderer {
     int elementIndex = 0
 
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(layerData)
-    groups.each { Object _, List<LayerData> groupData ->
+    groups.each { Object ignored, List<LayerData> groupData ->
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
       if (sorted.size() < 2) {
         return

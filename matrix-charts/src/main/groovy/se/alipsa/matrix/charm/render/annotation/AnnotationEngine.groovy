@@ -30,6 +30,15 @@ import se.alipsa.matrix.core.util.Logger
 /**
  * Dispatch and rendering helpers for charm annotations.
  */
+@SuppressWarnings([
+    'AbcMetric',
+    'CyclomaticComplexity',
+    'DuplicateNumberLiteral',
+    'DuplicateStringLiteral',
+    'IfStatementBraces',
+    'ParameterCount',
+    'ParameterName'
+])
 class AnnotationEngine {
 
   private static final Logger log = Logger.getLogger(AnnotationEngine)
@@ -641,33 +650,33 @@ class AnnotationEngine {
     if (columns.contains('region')) return 'region'
     if (columns.contains('id')) return 'id'
     if (columns.contains('map_id')) return 'map_id'
-    throw new IllegalArgumentException("annotation_map map data must include an id column (region, id, or map_id)")
+    throw new IllegalArgumentException('annotation_map map data must include an id column (region, id, or map_id)')
   }
 
   private static String resolveMapXColumn(Matrix mapData, Map<String, Object> params) {
-    String fromParam = params?.get('x')?.toString()
+    String fromParam = params?.get('x')
     if (fromParam != null) {
       return fromParam
     }
     List<String> columns = mapData.columnNames()
     if (columns.contains('x')) return 'x'
     if (columns.contains('long')) return 'long'
-    throw new IllegalArgumentException("annotation_map map data must include an x column (x or long)")
+    throw new IllegalArgumentException('annotation_map map data must include an x column (x or long)')
   }
 
   private static String resolveMapYColumn(Matrix mapData, Map<String, Object> params) {
-    String fromParam = params?.get('y')?.toString()
+    String fromParam = params?.get('y')
     if (fromParam != null) {
       return fromParam
     }
     List<String> columns = mapData.columnNames()
     if (columns.contains('y')) return 'y'
     if (columns.contains('lat')) return 'lat'
-    throw new IllegalArgumentException("annotation_map map data must include a y column (y or lat)")
+    throw new IllegalArgumentException('annotation_map map data must include a y column (y or lat)')
   }
 
   private static String resolveMapGroupColumn(Matrix mapData, Map<String, Object> params, String mapIdCol) {
-    String fromParam = params?.get('group')?.toString()
+    String fromParam = params?.get('group')
     if (fromParam != null) {
       return fromParam
     }
@@ -683,7 +692,7 @@ class AnnotationEngine {
       Map<String, String> mapping,
       String mapIdCol
   ) {
-    String dataMapIdCol = params?.get('map_id')?.toString()
+    String dataMapIdCol = params?.get('map_id')
     if (dataMapIdCol == null && params?.get('mapId') != null) {
       dataMapIdCol = params.get('mapId').toString()
     }
@@ -694,7 +703,7 @@ class AnnotationEngine {
       dataMapIdCol = mapIdCol
     }
     if (dataMapIdCol == null) {
-      throw new IllegalArgumentException("annotation_map requires map_id mapping/parameter when data is supplied")
+      throw new IllegalArgumentException('annotation_map requires map_id mapping/parameter when data is supplied')
     }
 
     Map<Object, Map<String, Object>> dataById = [:]
@@ -744,7 +753,7 @@ class AnnotationEngine {
   }
 
   private static String normalizeColor(Object value) {
-    String raw = value?.toString()
+    String raw = value
     if (raw == null) {
       return '#000000'
     }

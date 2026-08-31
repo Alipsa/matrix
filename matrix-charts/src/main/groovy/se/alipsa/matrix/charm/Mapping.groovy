@@ -5,6 +5,7 @@ import groovy.transform.CompileDynamic
 /**
  * Canonical aesthetic mappings for a plot or layer.
  */
+@SuppressWarnings(['IfStatementBraces', 'UnnecessaryObjectReferences'])
 class Mapping {
 
   private ColumnExpr x

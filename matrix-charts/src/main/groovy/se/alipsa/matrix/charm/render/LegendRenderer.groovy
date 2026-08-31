@@ -25,6 +25,17 @@ import java.util.regex.Pattern
  * Supports discrete legends, colorbars, colorsteps, size legends,
  * alpha legends, custom guides, and legend merging/positioning.
  */
+@SuppressWarnings([
+    'AbcMetric',
+    'ClassSize',
+    'CyclomaticComplexity',
+    'DuplicateNumberLiteral',
+    'DuplicateStringLiteral',
+    'IfStatementBraces',
+    'MethodSize',
+    'NestedBlockDepth',
+    'ParameterCount'
+])
 class LegendRenderer {
 
   private static final Logger log = Logger.getLogger(LegendRenderer)
@@ -148,10 +159,10 @@ class LegendRenderer {
 
       switch (baseAesthetic) {
         case 'size' -> {
-          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
+          currentY = renderSizeLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
         }
         case 'alpha' -> {
-          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY, isVertical)
+          currentY = renderAlphaLegendFromScale(legend, context, scaleObj as CharmScale, currentY)
         }
         default -> {
           switch (guideType) {
@@ -167,7 +178,7 @@ class LegendRenderer {
                 ColorCharmScale cs = resolveColorScaleObj(context, baseAesthetic, scaleObj)
                 if (cs != null && !cs.levels.isEmpty()) {
                   DiscreteCharmScale shapeForKeys = (!isPerLayer && mergeShapeIntoColor) ? shapeDiscrete : null
-                  currentY = renderDiscreteLegendFromScale(legend, context, baseAesthetic, cs, currentY,
+                  currentY = renderDiscreteLegendFromScale(legend, context, cs, currentY,
                       isVertical, usesPoints, shapeForKeys)
                 } else if (cs != null && cs.domainMin != null) {
                   currentY = renderContinuousAsDiscreteFromScale(legend, context, baseAesthetic, cs, currentY, isVertical)
@@ -180,7 +191,7 @@ class LegendRenderer {
               if (isColorAesthetic(baseAesthetic)) {
                 ColorCharmScale cs = resolveColorScaleObj(context, baseAesthetic, scaleObj)
                 if (cs != null && !cs.levels.isEmpty()) {
-                  currentY = renderDiscreteLegendFromScale(legend, context, baseAesthetic, cs, currentY,
+                  currentY = renderDiscreteLegendFromScale(legend, context, cs, currentY,
                       isVertical, usesPoints, null)
                 } else if (cs != null && cs.domainMin != null) {
                   currentY = renderColorbarFromScale(legend, context, baseAesthetic, scaleObj, currentY, isVertical)
@@ -556,7 +567,7 @@ class LegendRenderer {
 
   // ---- Size Legend ----
 
-  private int renderSizeLegend(G group, RenderContext context, int startY, boolean vertical) {
+  private int renderSizeLegend(G group, RenderContext context, int startY) {
     CharmScale sizeScale = context.sizeScale
     if (sizeScale == null) {
       return startY
@@ -626,7 +637,7 @@ class LegendRenderer {
 
   // ---- Alpha Legend ----
 
-  private int renderAlphaLegend(G group, RenderContext context, int startY, boolean vertical) {
+  private int renderAlphaLegend(G group, RenderContext context, int startY) {
     CharmScale alphaScale = context.alphaScale
     if (alphaScale == null) {
       return startY
@@ -933,8 +944,7 @@ class LegendRenderer {
   }
 
   /** Renders a discrete legend from an explicit color scale (for per-layer or global). */
-  private int renderDiscreteLegendFromScale(G group, RenderContext context, String aesthetic,
-                                              ColorCharmScale cs, int startY, boolean vertical,
+  private int renderDiscreteLegendFromScale(G group, RenderContext context, ColorCharmScale cs, int startY, boolean vertical,
                                               boolean usesPoints, DiscreteCharmScale shapeForKeys) {
     ElementText labelText = context.chart.theme.legendText
     BigDecimal defaultSize = (context.chart.theme.baseSize ?: 10) as BigDecimal
@@ -1054,30 +1064,28 @@ class LegendRenderer {
   }
 
   /** Renders a size legend from an explicit scale. */
-  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale,
-                                          int startY, boolean vertical) {
+  private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
     if (scale == null) {
-      return renderSizeLegend(group, context, startY, vertical)
+      return renderSizeLegend(group, context, startY)
     }
     CharmScale previous = context.sizeScale
     try {
       context.sizeScale = scale
-      return renderSizeLegend(group, context, startY, vertical)
+      return renderSizeLegend(group, context, startY)
     } finally {
       context.sizeScale = previous
     }
   }
 
   /** Renders an alpha legend from an explicit scale. */
-  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale,
-                                           int startY, boolean vertical) {
+  private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale, int startY) {
     if (scale == null) {
-      return renderAlphaLegend(group, context, startY, vertical)
+      return renderAlphaLegend(group, context, startY)
     }
     CharmScale previous = context.alphaScale
     try {
       context.alphaScale = scale
-      return renderAlphaLegend(group, context, startY, vertical)
+      return renderAlphaLegend(group, context, startY)
     } finally {
       context.alphaScale = previous
     }
@@ -1380,10 +1388,10 @@ class LegendRenderer {
 
     // Next priority: explicit scale name from scale params.
     for (Object scaleObj : legendScales.values()) {
-      if (!(scaleObj instanceof se.alipsa.matrix.charm.render.scale.CharmScale)) {
+      if (!(scaleObj instanceof CharmScale)) {
         continue
       }
-      def scale = scaleObj as se.alipsa.matrix.charm.render.scale.CharmScale
+      def scale = scaleObj as CharmScale
       Object name = scale.scaleSpec?.params?.get('name')
       if (name instanceof CharSequence && !name.toString().isBlank()) {
         return name.toString()

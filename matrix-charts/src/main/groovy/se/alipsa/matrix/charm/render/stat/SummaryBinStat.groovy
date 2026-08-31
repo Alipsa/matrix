@@ -5,11 +5,10 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.core.ValueConverter
 
-import java.util.Locale
-
 /**
  * Summary stat over x bins.
  */
+@SuppressWarnings(['AbcMetric', 'CyclomaticComplexity', 'DuplicateNumberLiteral'])
 class SummaryBinStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {

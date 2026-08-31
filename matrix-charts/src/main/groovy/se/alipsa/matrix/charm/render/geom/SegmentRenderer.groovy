@@ -11,6 +11,7 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Renders segment-like geometries: segment, hline, vline, and abline.
  */
+@SuppressWarnings(['AbcMetric', 'ParameterCount'])
 class SegmentRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
