@@ -350,12 +350,14 @@ class CharmLegendRendererTest {
 
   @Test
   void testSizeLegendKeysFollowLegendOrientation() {
+    assertLegendKeyOrientation('size', LegendPosition.TOP, true)
     assertLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
     assertLegendKeyOrientation('size', LegendPosition.RIGHT, false)
   }
 
   @Test
   void testAlphaLegendKeysFollowLegendOrientation() {
+    assertLegendKeyOrientation('alpha', LegendPosition.TOP, true)
     assertLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
     assertLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
   }
@@ -379,10 +381,10 @@ class CharmLegendRendererTest {
       theme { legendPosition = position }
     }.build()
 
-    List<Map<String, String>> keys = legendKeyCoordinates(SvgWriter.toXml(chart.render()))
+    List<Map<String, Object>> keys = legendKeyCoordinates(chart.render())
     assertTrue(keys.size() > 1, "Expected multiple ${aesthetic} legend keys")
-    Set<String> xs = keys*.x as Set<String>
-    Set<String> ys = keys*.y as Set<String>
+    Set<Object> xs = keys*.x as Set<Object>
+    Set<Object> ys = keys*.y as Set<Object>
     if (horizontal) {
       assertTrue(xs.size() > 1, "Expected horizontal ${aesthetic} legend keys")
       assertEquals(1, ys.size(), "Expected aligned ${aesthetic} legend keys")
@@ -392,12 +394,12 @@ class CharmLegendRendererTest {
     }
   }
 
-  private static List<Map<String, String>> legendKeyCoordinates(String xml) {
-    (xml =~ /<(?:circle|rect)\b[^>]*class="charm-legend-key gg-legend-key"[^>]*>/)
-        .collect { String tag ->
-          String x = (tag =~ /\b(?:cx|x)="([^"]+)"/)[0][1]
-          String y = (tag =~ /\b(?:cy|y)="([^"]+)"/)[0][1]
-          [x: x, y: y]
+  private static List<Map<String, Object>> legendKeyCoordinates(Svg svg) {
+    svg.descendants()
+        .findAll { element -> element.getAttribute('class')?.toString()?.contains('charm-legend-key') }
+        .collect { element ->
+          [x: element.getAttribute('cx') ?: element.getAttribute('x'),
+           y: element.getAttribute('cy') ?: element.getAttribute('y')]
         }
   }
 
