@@ -111,9 +111,14 @@ ${scopedSelector(targetSelector)} {
     int parens = 0
     int brackets = 0
     String quote = null
+    boolean escaped = false
     selector.each { String character ->
       boolean split = false
-      if (quote != null) {
+      if (escaped) {
+        escaped = false
+      } else if (character == '\\') {
+        escaped = true
+      } else if (quote != null) {
         if (character == quote) {
           quote = null
         }
