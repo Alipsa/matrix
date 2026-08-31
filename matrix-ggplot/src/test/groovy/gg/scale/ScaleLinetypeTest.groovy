@@ -260,8 +260,8 @@ class ScaleLinetypeTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    // Linetype keys are not rendered yet, so no title-only legend should be emitted.
-    assertFalse(content.contains('Line Type'))
+    // The custom scale name should be used as the linetype legend title.
+    assertTrue(content.contains('Line Type'))
   }
 
   @Test

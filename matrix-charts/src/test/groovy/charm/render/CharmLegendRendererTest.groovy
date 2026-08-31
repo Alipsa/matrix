@@ -352,34 +352,37 @@ class CharmLegendRendererTest {
 
   @Test
   void testSizeLegendKeysFollowLegendOrientation() {
-    assertLegendKeyOrientation('size', LegendPosition.TOP, true)
-    assertLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
-    assertLegendKeyOrientation('size', LegendPosition.RIGHT, false)
-    assertLegendKeyOrientation('size', LegendPosition.TOP, true, true)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.TOP, true)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.RIGHT, false)
+    assertContinuousLegendKeyOrientation('size', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
+    assertDiscreteLegendKeyOrientation('size', LegendPosition.TOP, true)
   }
 
   @Test
   void testAlphaLegendKeysFollowLegendOrientation() {
-    assertLegendKeyOrientation('alpha', LegendPosition.TOP, true)
-    assertLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
-    assertLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
-    assertLegendKeyOrientation('alpha', LegendPosition.TOP, true, true)
-    assertLegendKeyOrientation('alpha', LegendPosition.LEFT, true, false, LegendDirection.HORIZONTAL)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.TOP, true)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
+    assertContinuousLegendKeyOrientation('alpha', LegendPosition.LEFT, true, LegendDirection.HORIZONTAL)
+    assertDiscreteLegendKeyOrientation('alpha', LegendPosition.TOP, true)
   }
 
   @Test
   void testBinnedSizeScaleDoesNotReserveAnEmptyLegendRow() {
-    List<BigDecimal> alphaKeyYs = legendKeyYsWithOptionalBinnedSize(false)
-    List<BigDecimal> alphaKeyYsWithBinnedSize = legendKeyYsWithOptionalBinnedSize(true)
+    Svg alphaLegend = renderAlphaLegendWithOptionalBinnedSize(false)
+    Svg alphaLegendWithBinnedSize = renderAlphaLegendWithOptionalBinnedSize(true)
+    List<BigDecimal> alphaKeyYs = legendKeyYs(alphaLegend)
+    List<BigDecimal> alphaKeyYsWithBinnedSize = legendKeyYs(alphaLegendWithBinnedSize)
 
     assertEquals(alphaKeyYs, alphaKeyYsWithBinnedSize,
         'A binned size scale must not shift alpha legend keys')
-    assertFalse(legendTextWithOptionalBinnedSize(true).contains('size'),
+    assertFalse(legendText(alphaLegendWithBinnedSize).contains('size'),
         'A binned size scale must not render an orphaned legend title')
   }
 
   @Test
-  void testLinetypeScaleDoesNotRenderAnOrphanedLegendTitle() {
+  void testLinetypeScaleRendersLegendKeysAndTitle() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'linetype')
         .rows([[1, 2, 'solid'], [2, 3, 'dashed']])
@@ -389,16 +392,17 @@ class CharmLegendRendererTest {
       layers { geomLine() }
     }.build()
 
-    assertFalse(SvgWriter.toXml(chart.render()).contains('id="legend"'),
-        'A linetype scale without a renderer must not create a title-only legend')
+    String content = SvgWriter.toXml(chart.render())
+    assertTrue(content.contains('>linetype<'), 'Linetype legend title should be rendered')
+    assertTrue(content.contains('charm-legend-key'), 'Linetype legend keys should be rendered')
   }
 
-  private static List<BigDecimal> legendKeyYsWithOptionalBinnedSize(boolean includeBinnedSize) {
-    legendKeyCoordinates(renderAlphaLegendWithOptionalBinnedSize(includeBinnedSize))*.y.collect { it as BigDecimal }
+  private static List<BigDecimal> legendKeyYs(Svg svg) {
+    legendKeyCoordinates(svg)*.y.collect { it as BigDecimal }
   }
 
-  private static List<String> legendTextWithOptionalBinnedSize(boolean includeBinnedSize) {
-    renderAlphaLegendWithOptionalBinnedSize(includeBinnedSize).descendants()
+  private static List<String> legendText(Svg svg) {
+    svg.descendants()
         .findAll { it instanceof Text }
         .collect { (it as Text).content }
   }
@@ -427,8 +431,17 @@ class CharmLegendRendererTest {
     spec.build().render()
   }
 
+  private static void assertContinuousLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
+                                                            LegendDirection direction = null) {
+    assertLegendKeyOrientation(aesthetic, position, horizontal, null, direction)
+  }
+
+  private static void assertDiscreteLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal) {
+    assertLegendKeyOrientation(aesthetic, position, horizontal, Scale.discrete())
+  }
+
   private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal,
-                                                  boolean discrete = false, LegendDirection direction = null) {
+                                                  Scale scale, LegendDirection direction = null) {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'value')
         .rows([[1, 2, 1], [2, 3, 2], [3, 4, 3]])
@@ -451,11 +464,11 @@ class CharmLegendRendererTest {
         }
       }
     }
-    if (discrete) {
+    if (scale != null) {
       if (aesthetic == 'size') {
-        spec.scale.size = Scale.discrete()
+        spec.scale.size = scale
       } else {
-        spec.scale.alpha = Scale.discrete()
+        spec.scale.alpha = scale
       }
     }
     Chart chart = spec.build()
@@ -478,7 +491,7 @@ class CharmLegendRendererTest {
         .findAll { element -> element.getAttribute('class')?.toString()?.contains('charm-legend-key') }
         .collect { element ->
           [x: element.getAttribute('cx') ?: element.getAttribute('x'),
-           y: element.getAttribute('cy') ?: element.getAttribute('y')] as Map<String, String>
+           y: element.getAttribute('cy') ?: element.getAttribute('y')]
         }
   }
 

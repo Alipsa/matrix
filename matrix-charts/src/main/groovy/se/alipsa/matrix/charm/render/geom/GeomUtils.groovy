@@ -178,17 +178,19 @@ class GeomUtils {
     }
     def resolvedLinetypeScale = context.linetypeScaleForLayer(context.layerIndex)
     if (datum.linetype != null && resolvedLinetypeScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale linetypeScale = resolvedLinetypeScale as DiscreteCharmScale
-      String mapped = mappedValue(linetypeScale, datum.linetype)
-      if (mapped != null) {
-        return LinetypeName.normalize(mapped)
-      }
-      int idx = linetypeScale.levels.indexOf(datum.linetype.toString())
-      if (idx >= 0) {
-        return DEFAULT_LINETYPES[idx % DEFAULT_LINETYPES.size()]
-      }
+      return resolveLinetype(resolvedLinetypeScale as DiscreteCharmScale, datum.linetype)
     }
     datum.linetype != null ? LinetypeName.normalize(datum.linetype) : datum.linetype
+  }
+
+  /** Resolves a discrete linetype scale value to its configured or default linetype. */
+  static Object resolveLinetype(DiscreteCharmScale linetypeScale, Object value) {
+    String mapped = mappedValue(linetypeScale, value)
+    if (mapped != null) {
+      return LinetypeName.normalize(mapped)
+    }
+    int idx = linetypeScale.levels.indexOf(value.toString())
+    idx >= 0 ? DEFAULT_LINETYPES[idx % DEFAULT_LINETYPES.size()] : LinetypeName.normalize(value)
   }
 
   /**
