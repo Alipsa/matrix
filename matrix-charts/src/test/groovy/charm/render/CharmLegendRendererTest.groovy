@@ -348,4 +348,57 @@ class CharmLegendRendererTest {
     }
   }
 
+  @Test
+  void testSizeLegendKeysFollowLegendOrientation() {
+    assertLegendKeyOrientation('size', LegendPosition.BOTTOM, true)
+    assertLegendKeyOrientation('size', LegendPosition.RIGHT, false)
+  }
+
+  @Test
+  void testAlphaLegendKeysFollowLegendOrientation() {
+    assertLegendKeyOrientation('alpha', LegendPosition.BOTTOM, true)
+    assertLegendKeyOrientation('alpha', LegendPosition.RIGHT, false)
+  }
+
+  private static void assertLegendKeyOrientation(String aesthetic, LegendPosition position, boolean horizontal) {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'value')
+        .rows([[1, 2, 1], [2, 3, 2], [3, 4, 3]])
+        .build()
+    Chart chart = plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+        if (aesthetic == 'size') {
+          size = 'value'
+        } else {
+          alpha = 'value'
+        }
+      }
+      layers { geomPoint() }
+      theme { legendPosition = position }
+    }.build()
+
+    List<Map<String, String>> keys = legendKeyCoordinates(SvgWriter.toXml(chart.render()))
+    assertTrue(keys.size() > 1, "Expected multiple ${aesthetic} legend keys")
+    Set<String> xs = keys*.x as Set<String>
+    Set<String> ys = keys*.y as Set<String>
+    if (horizontal) {
+      assertTrue(xs.size() > 1, "Expected horizontal ${aesthetic} legend keys")
+      assertEquals(1, ys.size(), "Expected aligned ${aesthetic} legend keys")
+    } else {
+      assertEquals(1, xs.size(), "Expected aligned ${aesthetic} legend keys")
+      assertTrue(ys.size() > 1, "Expected vertical ${aesthetic} legend keys")
+    }
+  }
+
+  private static List<Map<String, String>> legendKeyCoordinates(String xml) {
+    (xml =~ /<(?:circle|rect)\b[^>]*class="charm-legend-key gg-legend-key"[^>]*>/)
+        .collect { String tag ->
+          String x = (tag =~ /\b(?:cx|x)="([^"]+)"/)[0][1]
+          String y = (tag =~ /\b(?:cy|y)="([^"]+)"/)[0][1]
+          [x: x, y: y]
+        }
+  }
+
 }
