@@ -26,6 +26,9 @@ import se.alipsa.matrix.chartexport.ExportFormat
  */
 class PlotGrid {
 
+  private static final String TARGET_PATH_BLANK = 'targetPath cannot be blank'
+  private static final String TARGET_FILE_NULL = 'targetFile cannot be null'
+
   private final List<Chart> charts
   private final int ncol
   private final int nrow
@@ -206,7 +209,7 @@ class PlotGrid {
    */
   void writeTo(String targetPath) {
     if (targetPath == null || targetPath.trim().isEmpty()) {
-      throw new IllegalArgumentException('targetPath cannot be blank')
+      throw new IllegalArgumentException(TARGET_PATH_BLANK)
     }
     writeTo(new File(targetPath))
   }
@@ -222,7 +225,7 @@ class PlotGrid {
    */
   void writeTo(String targetPath, int width, int height) {
     if (targetPath == null || targetPath.trim().isEmpty()) {
-      throw new IllegalArgumentException('targetPath cannot be blank')
+      throw new IllegalArgumentException(TARGET_PATH_BLANK)
     }
     writeTo(new File(targetPath), width, height)
   }
@@ -235,7 +238,7 @@ class PlotGrid {
    */
   void writeTo(File targetFile) {
     if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile cannot be null')
+      throw new IllegalArgumentException(TARGET_FILE_NULL)
     }
     switch (ExportFormat.fromFile(targetFile)) {
       case ExportFormat.PNG -> ChartToPng.export(this, targetFile)
@@ -256,7 +259,7 @@ class PlotGrid {
    */
   void writeTo(File targetFile, int width, int height) {
     if (targetFile == null) {
-      throw new IllegalArgumentException('targetFile cannot be null')
+      throw new IllegalArgumentException(TARGET_FILE_NULL)
     }
     Svg svg = render(width, height)
     switch (ExportFormat.fromFile(targetFile)) {

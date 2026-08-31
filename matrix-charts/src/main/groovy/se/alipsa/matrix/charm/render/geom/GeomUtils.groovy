@@ -19,6 +19,12 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Shared helpers for Charm geom renderers.
  */
+@SuppressWarnings([
+    'DuplicateNumberLiteral',
+    'DuplicateStringLiteral',
+    'ParameterCount',
+    'UnnecessaryObjectReferences'
+])
 class GeomUtils {
 
   private static final List<String> DEFAULT_PALETTE = [
@@ -45,11 +51,11 @@ class GeomUtils {
                               String defaultColor = '#1f77b4') {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.color != null) {
-      String raw = override.color.toString()
+      String raw = override.color
       return ColorUtil.normalizeColor(raw) ?: raw
     }
     if (layer.params.color != null) {
-      String raw = layer.params.color.toString()
+      String raw = layer.params.color
       return ColorUtil.normalizeColor(raw) ?: raw
     }
     int layerIdx = context.layerIndex
@@ -66,11 +72,11 @@ class GeomUtils {
   static String resolveFill(RenderContext context, LayerSpec layer, LayerData datum) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.fill != null) {
-      String raw = override.fill.toString()
+      String raw = override.fill
       return ColorUtil.normalizeColor(raw) ?: raw
     }
     if (layer.params.fill != null) {
-      String raw = layer.params.fill.toString()
+      String raw = layer.params.fill
       return ColorUtil.normalizeColor(raw) ?: raw
     }
     int layerIdx = context.layerIndex
@@ -336,7 +342,7 @@ class GeomUtils {
    * Stable grouping for line/area-like geoms.
    */
   static Map<Object, List<LayerData>> groupSeries(List<LayerData> data) {
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<Object, List<LayerData>> groups = [:]
     data.each { LayerData datum ->
       Object key = datum.group ?: datum.color ?: datum.fill ?: '__all__'
       List<LayerData> bucket = groups[key]
@@ -405,7 +411,7 @@ class GeomUtils {
         elements << d2
       }
       case 'triangle' -> {
-        BigDecimal h = size * (3.0 as BigDecimal).sqrt() / 2
+        BigDecimal h = size * 3.0.sqrt() / 2
         BigDecimal topY = cy - h * 2 / 3
         BigDecimal bottomY = cy + h / 3
         BigDecimal leftX = cx - half

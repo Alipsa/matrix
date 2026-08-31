@@ -4,8 +4,6 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.Stat
 
-import java.util.Locale
-
 /**
  * Summary stat for grouped summaries on y.
  */
@@ -18,7 +16,7 @@ class SummaryStat {
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
     String fun = (params.fun ?: params['fun.y'] ?: 'mean').toString().toLowerCase(Locale.ROOT)
-    Map<List<Object>, List<LayerData>> groups = new LinkedHashMap<>()
+    Map<List<Object>, List<LayerData>> groups = [:]
     data.each { LayerData datum ->
       List<Object> key = [StatUtils.seriesKey(datum), datum.x]
       List<LayerData> bucket = groups[key]

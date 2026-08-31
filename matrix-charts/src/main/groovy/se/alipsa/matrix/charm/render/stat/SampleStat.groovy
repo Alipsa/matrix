@@ -6,9 +6,6 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 
-import java.util.Locale
-import java.util.Random
-
 /**
  * Sample stat for large datasets.
  *

@@ -65,15 +65,20 @@ class P1GeomRendererTest {
   void testCssIdsRemainUniqueForMultiPrimitiveGeoms() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'xmin', 'xmax', 'ymin', 'ymax', 'label')
-        .rows([[1.0, 2.0, 0.7, 1.3, 1.5, 2.5, 'p1']])
+        .rows([
+            [1.0, 2.0, 0.7, 1.3, 1.5, 2.5, 'p1'],
+            [2.0, 3.0, 1.7, 2.3, 2.5, 3.5, 'p2'],
+            [3.0, 4.0, 2.7, 3.3, 3.5, 4.5, 'p3']
+        ])
         .build()
     List<Map<String, Object>> cases = [
-        [geom: CharmGeomType.ERRORBAR, aes: [x: 'x', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-errorbar-', expected: 3],
-        [geom: CharmGeomType.ERRORBARH, aes: [y: 'y', xmin: 'xmin', xmax: 'xmax'], options: [:], idToken: '-errorbarh-', expected: 3],
-        [geom: CharmGeomType.CROSSBAR, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-crossbar-', expected: 2],
-        [geom: CharmGeomType.POINTRANGE, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-pointrange-', expected: 2],
-        [geom: CharmGeomType.LABEL, aes: [x: 'x', y: 'y', label: 'label'], options: [:], idToken: '-label-', expected: 2],
-        [geom: CharmGeomType.RUG, aes: [x: 'x', y: 'y'], options: [sides: 'bltr'], idToken: '-rug-', expected: 4]
+        [geom: CharmGeomType.ERRORBAR, aes: [x: 'x', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-errorbar-', expected: 9],
+        [geom: CharmGeomType.ERRORBARH, aes: [y: 'y', xmin: 'xmin', xmax: 'xmax'], options: [:], idToken: '-errorbarh-', expected: 9],
+        [geom: CharmGeomType.CROSSBAR, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-crossbar-', expected: 6],
+        [geom: CharmGeomType.LINERANGE, aes: [x: 'x', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-linerange-', expected: 3],
+        [geom: CharmGeomType.POINTRANGE, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-pointrange-', expected: 6],
+        [geom: CharmGeomType.LABEL, aes: [x: 'x', y: 'y', label: 'label'], options: [:], idToken: '-label-', expected: 6],
+        [geom: CharmGeomType.RUG, aes: [x: 'x', y: 'y'], options: [sides: 'bltr'], idToken: '-rug-', expected: 12]
     ]
 
     cases.each { Map<String, Object> tc ->

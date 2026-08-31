@@ -5,8 +5,6 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 
-import java.util.Locale
-
 /**
  * Renders simple-feature outputs by routing to point/path/polygon renderers.
  */
@@ -43,7 +41,7 @@ class SfRenderer {
   }
 
   private static String sfType(LayerData datum) {
-    String fromMeta = datum?.meta?.__sf_type?.toString()
+    String fromMeta = datum?.meta?.__sf_type
     if (fromMeta != null && !fromMeta.isEmpty()) {
       return fromMeta.toUpperCase(Locale.ROOT)
     }

@@ -154,6 +154,19 @@ class P1StatTest {
   }
 
   @Test
+  void testSummaryBinStatUsesBinwidthToDetermineBinCount() {
+    LayerSpec layer = makeLayer(CharmStatType.SUMMARY_BIN, [binwidth: 1])
+    List<LayerData> data = (0..<100).collect { int x ->
+      new LayerData(x: x, y: x, rowIndex: x)
+    }
+
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(99, result.size())
+    assertEquals(0, (result.last().meta.xmax as BigDecimal) <=> 99G)
+  }
+
+  @Test
   void testUniqueStat() {
     LayerSpec layer = makeLayer(CharmStatType.UNIQUE)
     List<LayerData> data = [

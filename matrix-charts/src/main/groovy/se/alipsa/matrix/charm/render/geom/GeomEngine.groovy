@@ -10,6 +10,7 @@ import se.alipsa.matrix.charm.render.RenderContext
 /**
  * Central dispatch for geometry rendering in Charm.
  */
+@SuppressWarnings(['AbcMetric', 'CyclomaticComplexity'])
 class GeomEngine {
 
   /**
