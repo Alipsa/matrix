@@ -64,7 +64,7 @@ def groovy6Executable = providers.gradleProperty('groovy6Executable')
     .orElse(providers.environmentVariable('GROOVY_6_HOME').map { "${it}/bin/groovy" })
     .orElse(providers.systemProperty('user.home').map { String home ->
       File candidates = new File(home, '.sdkman/candidates/groovy')
-      List<File> versions = candidates.listFiles()?.findAll { File candidate -> candidate.directory && candidate.name.startsWith('6.') } ?: []
+      List<File> versions = candidates.listFiles()?.findAll { File candidate -> candidate.directory && candidate.name ==~ /^6\.\d+(?:\.\d+)*(?:-(?:alpha|beta|rc)-?\d*)?$/ } ?: []
       File newest = versions.max(compareGroovy6Candidates)
       newest ? new File(newest, 'bin/groovy').absolutePath : new File(candidates, '6.x/bin/groovy').absolutePath
     })
