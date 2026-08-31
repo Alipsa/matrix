@@ -53,4 +53,6 @@ MatrixJupyterExtension.describe()
 MatrixJupyterExtension.refresh()
 ```
 
+When a host explicitly requests only `text/plain` (for example, `renderAs(value, 'text/plain')`), matrix-jupyter uses the renderer's plain-text fallback without producing a rich payload. A rich-rendering failure is therefore not reported on that path; request the preferred rich MIME to receive its failure diagnostic.
+
 `@Grab`-only extension discovery requires the Groovy kernel to rescan its session loader after grabbing; until that kernel behavior is confirmed, static installation is the supported approach. For standalone hosts, use `RendererRegistry.instance.render(value)` and `RendererRegistry.instance.describe()`.

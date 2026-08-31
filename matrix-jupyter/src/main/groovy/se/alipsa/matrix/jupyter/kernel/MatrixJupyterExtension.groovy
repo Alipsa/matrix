@@ -122,7 +122,7 @@ class MatrixJupyterExtension implements Extension {
         }
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
-        Object plain = attempted ? staleMime ?: bundle?.get(TEXT_PLAIN) : RendererRegistry.instance.plainText(value)
+        Object plain = attempted ? (staleMime ?: bundle?.get(TEXT_PLAIN)) : RendererRegistry.instance.plainText(value)
         plain != null ? plain : missingRendererNote()
       } as Supplier<Object>)
     }

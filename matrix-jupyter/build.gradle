@@ -44,11 +44,28 @@ test { useJUnitPlatform() }
 
 def smokeClasspath = sourceSets.test.runtimeClasspath.filter { File file -> !(file.name ==~ /groovy-\d.*\.jar/) }
 
+def compareGroovy6Candidates = { File first, File second ->
+  boolean firstPrerelease = first.name.contains('-')
+  boolean secondPrerelease = second.name.contains('-')
+  if (firstPrerelease != secondPrerelease) return firstPrerelease ? -1 : 1
+  List<Integer> firstParts = first.name.tokenize('-').first().tokenize('.').collect { String part -> part as int }
+  List<Integer> secondParts = second.name.tokenize('-').first().tokenize('.').collect { String part -> part as int }
+  int partCount = [firstParts.size(), secondParts.size()].max()
+  for (int index = 0; index < partCount; index++) {
+    int firstPart = index < firstParts.size() ? firstParts[index] : 0
+    int secondPart = index < secondParts.size() ? secondParts[index] : 0
+    int comparison = firstPart <=> secondPart
+    if (comparison != 0) return comparison
+  }
+  first.name <=> second.name
+}
+
 def groovy6Executable = providers.gradleProperty('groovy6Executable')
     .orElse(providers.environmentVariable('GROOVY_6_HOME').map { "${it}/bin/groovy" })
     .orElse(providers.systemProperty('user.home').map { String home ->
       File candidates = new File(home, '.sdkman/candidates/groovy')
-      File newest = candidates.listFiles()?.findAll { File candidate -> candidate.directory && candidate.name.startsWith('6.') }?.sort { File candidate -> candidate.name }?.last()
+      List<File> versions = candidates.listFiles()?.findAll { File candidate -> candidate.directory && candidate.name.startsWith('6.') } ?: []
+      File newest = versions.max(compareGroovy6Candidates)
       newest ? new File(newest, 'bin/groovy').absolutePath : new File(candidates, '6.x/bin/groovy').absolutePath
     })
 

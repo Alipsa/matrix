@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
-import se.alipsa.matrix.jupyter.render.CharmRenderer
-
 /** Tests optional-class probing through the thread context class loader. */
 class AbstractRendererTest {
   @Test
