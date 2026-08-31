@@ -385,16 +385,19 @@ class CharmLegendRendererTest {
   void testLinetypeScaleRendersLegendKeysAndTitle() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'linetype')
-        .rows([[1, 2, 'solid'], [2, 3, 'dashed']])
+        .rows([[1, 2, 'solid'], [2, 3, 'dashed'], [3, 4, 'dotted']])
         .build()
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; linetype = 'linetype' }
       layers { geomLine() }
     }.build()
 
-    String content = SvgWriter.toXml(chart.render())
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('>linetype<'), 'Linetype legend title should be rendered')
-    assertTrue(content.contains('charm-legend-key'), 'Linetype legend keys should be rendered')
+    assertEquals([null, '8,4', '2,2'], legendLinetypeDashArrays(svg),
+        'Linetype legend keys should retain their distinct dash patterns')
+    assertDiscreteLegendKeyOrientation('linetype', LegendPosition.TOP, true)
   }
 
   private static List<BigDecimal> legendKeyYs(Svg svg) {
@@ -405,6 +408,15 @@ class CharmLegendRendererTest {
     svg.descendants()
         .findAll { it instanceof Text }
         .collect { (it as Text).content }
+  }
+
+  private static List<String> legendLinetypeDashArrays(Svg svg) {
+    svg.descendants()
+        .findAll { element ->
+          element.getAttribute('class')?.toString()?.contains('charm-legend-key') &&
+              element.getAttribute('x1') != null
+        }
+        .collect { element -> element.getAttribute('stroke-dasharray')?.toString() }
   }
 
   private static Svg renderAlphaLegendWithOptionalBinnedSize(boolean includeBinnedSize) {
@@ -452,8 +464,10 @@ class CharmLegendRendererTest {
         y = 'y'
         if (aesthetic == 'size') {
           size = 'value'
-        } else {
+        } else if (aesthetic == 'alpha') {
           alpha = 'value'
+        } else {
+          linetype = 'value'
         }
       }
       layers { geomPoint() }
@@ -467,8 +481,10 @@ class CharmLegendRendererTest {
     if (scale != null) {
       if (aesthetic == 'size') {
         spec.scale.size = scale
-      } else {
+      } else if (aesthetic == 'alpha') {
         spec.scale.alpha = scale
+      } else {
+        spec.scale.linetype = scale
       }
     }
     Chart chart = spec.build()
@@ -490,8 +506,8 @@ class CharmLegendRendererTest {
     svg.descendants()
         .findAll { element -> element.getAttribute('class')?.toString()?.contains('charm-legend-key') }
         .collect { element ->
-          [x: element.getAttribute('cx') ?: element.getAttribute('x'),
-           y: element.getAttribute('cy') ?: element.getAttribute('y')]
+          [x: element.getAttribute('cx') ?: element.getAttribute('x') ?: element.getAttribute('x1'),
+           y: element.getAttribute('cy') ?: element.getAttribute('y') ?: element.getAttribute('y1')]
         }
   }
 

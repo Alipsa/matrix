@@ -48,6 +48,7 @@ class LegendRenderer {
   private static final int COLORBAR_WIDTH_HORIZONTAL = 100
   private static final int COLORBAR_HEIGHT_HORIZONTAL = 15
   private static final int COLORBAR_STEPS = 20
+  private static final int LEGEND_KEY_LABEL_GAP = 8
   private static final int LEGEND_LABEL_CHAR_WIDTH = 6
   private static final Pattern PER_LAYER_SCALE_KEY = ~/^(.+)_layer(\d+)$/
 
@@ -255,7 +256,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     boolean isColorKey = isColorAesthetic(aesthetic)
     boolean isShapeKey = aesthetic == 'shape'
 
@@ -327,7 +328,7 @@ class LegendRenderer {
       }
     }
 
-    endOfRow(!levels.isEmpty(), vertical, keySize, spacing, startY, y)
+    endOfRow(startY, !levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   // ---- Colorbar ----
@@ -584,7 +585,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     BigDecimal maxRadius = keySize / 2.0
 
     int x = 0
@@ -647,7 +648,7 @@ class LegendRenderer {
       }
     }
 
-    endOfRow(rendered, vertical, keySize, spacing, startY, y)
+    endOfRow(startY, rendered, vertical, keySize, spacing, y)
   }
 
   // ---- Alpha Legend ----
@@ -665,7 +666,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
 
     int x = 0
     int y = startY
@@ -722,21 +723,22 @@ class LegendRenderer {
       }
     }
 
-    endOfRow(rendered, vertical, keySize, spacing, startY, y)
+    endOfRow(startY, rendered, vertical, keySize, spacing, y)
   }
 
   // ---- Linetype Legend ----
 
+  /** Renders a linetype legend from an explicit discrete scale. */
   private int renderLinetypeLegendFromScale(G group, RenderContext context, DiscreteCharmScale scale,
                                               int startY, boolean vertical) {
     ElementText labelText = context.chart.theme.legendText
     BigDecimal defaultSize = (context.chart.theme.baseSize ?: 10) as BigDecimal
     BigDecimal labelSize = (labelText?.size ?: defaultSize) as BigDecimal
     String labelColor = labelText?.color ?: '#333333'
-    String keyColor = context.chart.theme.legendKey?.color ?: '#333333'
+    String keyColor = context.chart.theme.legendKey?.color ?: '#999999'
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     int x = 0
     int y = startY
 
@@ -762,7 +764,7 @@ class LegendRenderer {
       }
     }
 
-    endOfRow(!scale.levels.isEmpty(), vertical, keySize, spacing, startY, y)
+    endOfRow(startY, !scale.levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   // ---- Continuous as Discrete ----
@@ -780,7 +782,7 @@ class LegendRenderer {
 
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
 
     List<Object> breakValues = []
     List<String> breakLabels = []
@@ -1018,7 +1020,7 @@ class LegendRenderer {
     BigDecimal labelSize = (labelText?.size ?: defaultSize) as BigDecimal
     int keySize = context.config.legendKeySize
     int spacing = context.config.legendSpacing
-    int textOffset = keySize + 8
+    int textOffset = keySize + LEGEND_KEY_LABEL_GAP
     List<String> levels = cs?.levels ?: []
     int y = startY
     int x = 0
@@ -1047,7 +1049,7 @@ class LegendRenderer {
         x = advanceKey(x, keySize, level, spacing)
       }
     }
-    endOfRow(!levels.isEmpty(), vertical, keySize, spacing, startY, y)
+    endOfRow(startY, !levels.isEmpty(), vertical, keySize, spacing, y)
   }
 
   /** Renders a colorbar from an explicit scale object (for per-layer or global). */
@@ -1211,11 +1213,11 @@ class LegendRenderer {
 
   /** Advances to the next horizontal key, preserving the established key-to-label gap. */
   private static int advanceKey(int x, int keySize, String label, int spacing) {
-    x + keySize + (keySize + 8) + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing
+    x + keySize + (keySize + LEGEND_KEY_LABEL_GAP) + label.length() * LEGEND_LABEL_CHAR_WIDTH + spacing
   }
 
   /** Returns the y coordinate after a rendered legend row, preserving an empty row's starting point. */
-  private static int endOfRow(boolean rendered, boolean vertical, int keySize, int spacing, int startY, int y) {
+  private static int endOfRow(int startY, boolean rendered, boolean vertical, int keySize, int spacing, int y) {
     rendered ? (vertical ? y : y + keySize + spacing) : startY
   }
 

@@ -185,6 +185,9 @@ class GeomUtils {
 
   /** Resolves a discrete linetype scale value to its configured or default linetype. */
   static Object resolveLinetype(DiscreteCharmScale linetypeScale, Object value) {
+    if (value == null) {
+      return null
+    }
     String mapped = mappedValue(linetypeScale, value)
     if (mapped != null) {
       return LinetypeName.normalize(mapped)
