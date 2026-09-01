@@ -1699,7 +1699,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
-  private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
+  @PackageScope
+  static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
     if (entry instanceof Number) {
       if (thatVal instanceof Number) {
         return numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)

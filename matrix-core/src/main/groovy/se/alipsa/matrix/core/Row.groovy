@@ -465,12 +465,11 @@ class Row implements GroovyObject, List<Object> {
 
     /**
      * Two rows are equal when compared against another {@link List} of the same
-     * size with Groovy-equal corresponding elements. This includes numeric values
-     * with the same mathematical value, regardless of their runtime types or
-     * {@link BigDecimal} scale.
+     * size with equal corresponding elements. Numeric values are compared by their
+     * exact mathematical value, regardless of runtime type or {@link BigDecimal} scale.
      *
      * @param o the object to compare against
-     * @return true if {@code o} is a List with Groovy-equal elements in the same order
+     * @return true if {@code o} is a List with equal elements in the same order
      */
     @Override
     boolean equals(Object o) {
@@ -480,7 +479,16 @@ class Row implements GroovyObject, List<Object> {
         if (!(o instanceof List)) {
             return false
         }
-        return content == o
+        List<?> other = o as List<?>
+        if (content.size() != other.size()) {
+            return false
+        }
+        for (int i = 0; i < content.size(); i++) {
+            if (Matrix.valuesAreDifferent(content[i], other[i], BigDecimal.ZERO)) {
+                return false
+            }
+        }
+        return true
     }
 
     /**

@@ -1361,6 +1361,21 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsUsesExactNumericValuesBeyondDoublePrecision() {
+    Matrix longValue = Matrix.builder()
+        .data(value: [9_007_199_254_740_993L])
+        .types(Number)
+        .build()
+    Matrix doubleValue = Matrix.builder()
+        .data(value: [9_007_199_254_740_992.0d])
+        .types(Number)
+        .build()
+
+    assertNotEquals(longValue, doubleValue)
+    assertNotEquals('', longValue.diff(doubleValue))
+  }
+
+  @Test
   void testEqualsIgnoreTypesFalseStillComparesNumbersByMathematicalValue() {
     Matrix left = Matrix.builder()
         .data(id: [1], amount: [5])

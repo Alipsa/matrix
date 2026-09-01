@@ -55,6 +55,18 @@ class MatrixJavaTest {
   }
 
   @Test
+  void testRowEqualsUsesExactNumericValues() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("amount", 1))
+        .types(Number.class)
+        .build();
+    Row longRow = new Row(0, List.of(9_007_199_254_740_993L), parent);
+    Row doubleRow = new Row(0, List.of(9_007_199_254_740_992.0d), parent);
+
+    assertNotEquals(longRow, doubleRow);
+  }
+
+  @Test
   void testMatrixConstructors() {
     Columns columns = new Columns();
     columns.add("emp_id", 1, 2, 3, 4, 5);
