@@ -1409,6 +1409,27 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsRejectsMixedStringAndNumericValuesInEitherOrder() {
+    Matrix characterValue = Matrix.builder()
+        .data(value: [('a' as Character)])
+        .types(Object)
+        .build()
+    Matrix stringValue = Matrix.builder()
+        .data(value: ['a'])
+        .types(Object)
+        .build()
+    Matrix numberValue = Matrix.builder()
+        .data(value: [97])
+        .types(Object)
+        .build()
+
+    assertNotEquals(characterValue, stringValue)
+    assertNotEquals(stringValue, characterValue)
+    assertNotEquals(stringValue, numberValue)
+    assertNotEquals(numberValue, stringValue)
+  }
+
+  @Test
   void testEqualsIgnoreTypesFalseStillComparesNumbersByMathematicalValue() {
     Matrix left = Matrix.builder()
         .data(id: [1], amount: [5])

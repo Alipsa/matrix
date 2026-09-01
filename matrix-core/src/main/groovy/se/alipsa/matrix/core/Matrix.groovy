@@ -1708,8 +1708,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (thatVal instanceof Character) {
       thatVal = characterCode(thatVal as Character)
     }
-    if (entry instanceof Number) {
-      if (thatVal instanceof Number) {
+    boolean entryIsNumber = entry instanceof Number
+    boolean thatValIsNumber = thatVal instanceof Number
+    if (entryIsNumber || thatValIsNumber) {
+      if (entryIsNumber && thatValIsNumber) {
         return numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)
       }
       return true
@@ -1735,7 +1737,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static int characterCode(Character value) {
-    value.toString().codePointAt(0)
+    value.hashCode()
   }
 
   /**
@@ -1957,8 +1959,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       int r = 0
       for (entry in column) {
         def thatVal = thatCol[r]
-        if (entry instanceof Number || entry instanceof Character) {
-          if (thatVal instanceof Number || thatVal instanceof Character) {
+        boolean entryIsNumeric = entry instanceof Number || entry instanceof Character
+        boolean thatValIsNumeric = thatVal instanceof Number || thatVal instanceof Character
+        if (entryIsNumeric || thatValIsNumeric) {
+          if (entryIsNumeric && thatValIsNumeric) {
             if (valuesAreDifferent(entry, thatVal, allowedDiff)) {
               return [r, i, entry, thatVal]
             }
@@ -2357,7 +2361,8 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   private static int arrayValueHash(Object array) {
     int result = 1
-    for (int i = 0; i < Array.getLength(array); i++) {
+    int length = Array.getLength(array)
+    for (int i = 0; i < length; i++) {
       result = 31 * result + normalizedValueHash(Array.get(array, i))
     }
     result

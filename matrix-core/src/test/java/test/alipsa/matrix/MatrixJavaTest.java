@@ -95,6 +95,22 @@ class MatrixJavaTest {
     assertEquivalentRows(numberRow, characterRow);
   }
 
+  @Test
+  void testRowEqualsRejectsMixedStringAndNumericValuesInEitherOrder() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+    Row characterRow = new Row(0, List.of('a'), parent);
+    Row stringRow = new Row(0, List.of("a"), parent);
+    Row numberRow = new Row(0, List.of(97), parent);
+
+    assertNotEquals(characterRow, stringRow);
+    assertNotEquals(stringRow, characterRow);
+    assertNotEquals(stringRow, numberRow);
+    assertNotEquals(numberRow, stringRow);
+  }
+
   private static void assertEquivalentRows(Row left, Row right) {
     assertEquals(left, right);
     assertEquals(left.hashCode(), right.hashCode());
