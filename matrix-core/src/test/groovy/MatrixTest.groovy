@@ -1345,6 +1345,22 @@ class MatrixTest {
   }
 
   @Test
+  void testNonFiniteFloatingPointValuesUseGroovyNumericEquality() {
+    Matrix doubles = Matrix.builder()
+        .data(value: [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY])
+        .types(Number)
+        .build()
+    Matrix floats = Matrix.builder()
+        .data(value: [Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY])
+        .types(Number)
+        .build()
+
+    assertEquals(doubles, floats)
+    assertEquals(doubles.hashCode(), floats.hashCode())
+    assertEquals('', doubles.diff(floats))
+  }
+
+  @Test
   void testEqualsIgnoreTypesFalseStillComparesNumbersByMathematicalValue() {
     Matrix left = Matrix.builder()
         .data(id: [1], amount: [5])

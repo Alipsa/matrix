@@ -1702,11 +1702,28 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
     if (entry instanceof Number) {
       if (thatVal instanceof Number) {
-        return ((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff
+        return numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)
       }
       return true
     }
     entry != thatVal
+  }
+
+  private static boolean numericValuesAreDifferent(Number entry, Number thatVal, BigDecimal allowedDiff) {
+    boolean entryIsNonFinite = isNonFiniteFloatingPoint(entry)
+    boolean thatValIsNonFinite = isNonFiniteFloatingPoint(thatVal)
+    if (entryIsNonFinite || thatValIsNonFinite) {
+      return !entryIsNonFinite || !thatValIsNonFinite || Double.compare(entry.doubleValue(), thatVal.doubleValue()) != 0
+    }
+    (entry.toBigDecimal() - thatVal.toBigDecimal()).abs() > allowedDiff
+  }
+
+  private static boolean isNonFiniteFloatingPoint(Number value) {
+    if (value instanceof Double || value instanceof Float) {
+      double floatingPointValue = value.doubleValue()
+      return Double.isNaN(floatingPointValue) || Double.isInfinite(floatingPointValue)
+    }
+    false
   }
 
   /**
@@ -1930,7 +1947,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         def thatVal = thatCol[r]
         if (entry instanceof Number) {
           if (thatVal instanceof Number) {
-            if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
+            if (numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)) {
               return [r, i, entry, thatVal]
             }
           } else if (ignoreTypes) {
@@ -2301,7 +2318,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       Number number = value as Number
       if ((number instanceof Double || number instanceof Float) &&
           (Double.isNaN(number.doubleValue()) || Double.isInfinite(number.doubleValue()))) {
-        return number.hashCode()
+        return Double.hashCode(number.doubleValue())
       }
       return number.toBigDecimal().stripTrailingZeros().hashCode()
     }
