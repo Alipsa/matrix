@@ -2297,7 +2297,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       return 0
     }
     if (value instanceof Number) {
-      return (value as Number).toBigDecimal().stripTrailingZeros().hashCode()
+      Number number = value as Number
+      if ((number instanceof Double || number instanceof Float) &&
+          (Double.isNaN(number.doubleValue()) || Double.isInfinite(number.doubleValue()))) {
+        return number.hashCode()
+      }
+      return number.toBigDecimal().stripTrailingZeros().hashCode()
     }
     return value.hashCode()
   }

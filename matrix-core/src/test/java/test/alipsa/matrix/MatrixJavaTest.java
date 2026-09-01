@@ -39,6 +39,19 @@ import static se.alipsa.matrix.core.util.CollectionUtils.*;
 class MatrixJavaTest {
 
   @Test
+  void testRowEqualsUsesStandardListElementEquality() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("amount", 1))
+        .types(BigDecimal.class)
+        .build();
+    Row row = new Row(0, List.of(new BigDecimal("1.0")), parent);
+    List<Object> values = new ArrayList<>(List.of(1));
+
+    assertFalse(row.equals(values));
+    assertFalse(values.equals(row));
+  }
+
+  @Test
   void testMatrixConstructors() {
     Columns columns = new Columns();
     columns.add("emp_id", 1, 2, 3, 4, 5);

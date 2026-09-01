@@ -480,7 +480,7 @@ class Row implements GroovyObject, List<Object> {
         if (!(o instanceof List)) {
             return false
         }
-        return content == o
+        return Objects.equals(content, o)
     }
 
     /**

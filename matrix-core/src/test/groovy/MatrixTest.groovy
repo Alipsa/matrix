@@ -4,6 +4,7 @@ import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 import static se.alipsa.matrix.core.ValueConverter.asYearMonth
 
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.function.Executable
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Converter
@@ -1330,6 +1331,17 @@ class MatrixTest {
 
     assertEquals(left, right)
     assertEquals(left.hashCode(), right.hashCode())
+  }
+
+  @Test
+  void testHashCodeSupportsNonFiniteFloatingPointValues() {
+    Matrix matrix = Matrix.builder()
+        .data(value: [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY,
+                      Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY])
+        .types(Number)
+        .build()
+
+    assertDoesNotThrow({ matrix.hashCode() } as Executable)
   }
 
   @Test
