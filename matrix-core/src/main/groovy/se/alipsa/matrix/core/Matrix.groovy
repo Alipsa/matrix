@@ -1867,7 +1867,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param o the matrix to compare against
    * @param ignoreColumnNames whether to ignore column names when comparing
    * @param ignoreMatrixName whether to ignore the matrix name when comparing
-   * @param ignoreTypes whether to ignore column types when comparing
+   * @param ignoreTypes whether to ignore declared column types and non-numeric cell
+   *        value types when comparing. Numeric cell values are always compared by
+   *        mathematical value (within {@code allowedDiff}) regardless of this flag —
+   *        e.g. {@code 5} and {@code 5L} are always considered equal cell values even
+   *        with {@code ignoreTypes = false}. This lets {@link MatrixAssertions} compare
+   *        computed {@code BigDecimal} results against plain {@code int}/{@code Integer}
+   *        expected values in tests.
    * @param allowedDiff numeric tolerance for numeric values
    * @param throwException whether to throw on mismatch instead of returning false
    * @param message message prefix used when throwException is true
