@@ -1716,6 +1716,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       return true
     }
+    if (isSequence(entry) && isSequence(thatVal)) {
+      return sequenceValuesAreDifferent(entry, thatVal, allowedDiff)
+    }
+    if (entry instanceof Map && thatVal instanceof Map) {
+      return mapValuesAreDifferent(entry as Map<Object, Object>, thatVal as Map<Object, Object>, allowedDiff)
+    }
     entry != thatVal
   }
 
@@ -1737,7 +1743,55 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static int characterCode(Character value) {
-    value.hashCode()
+    value.charValue() as int
+  }
+
+  private static boolean isSequence(Object value) {
+    value != null && (value.getClass().isArray() || value instanceof Collection)
+  }
+
+  private static boolean sequenceValuesAreDifferent(Object left, Object right, BigDecimal allowedDiff) {
+    List<Object> leftValues = sequenceValues(left)
+    List<Object> rightValues = sequenceValues(right)
+    if (leftValues.size() != rightValues.size()) {
+      return true
+    }
+    for (int i = 0; i < leftValues.size(); i++) {
+      if (valuesAreDifferent(leftValues[i], rightValues[i], allowedDiff)) {
+        return true
+      }
+    }
+    false
+  }
+
+  private static List<Object> sequenceValues(Object value) {
+    if (value.getClass().isArray()) {
+      int length = Array.getLength(value)
+      List<Object> result = new ArrayList<>(length)
+      for (int i = 0; i < length; i++) {
+        result.add(Array.get(value, i))
+      }
+      return result
+    }
+    new ArrayList<>(value as Collection<Object>)
+  }
+
+  private static boolean mapValuesAreDifferent(Map<Object, Object> left, Map<Object, Object> right, BigDecimal allowedDiff) {
+    if (left.size() != right.size()) {
+      return true
+    }
+    List<Map.Entry<Object, Object>> unmatched = new ArrayList<>(right.entrySet())
+    for (Map.Entry<Object, Object> leftEntry : left.entrySet()) {
+      Map.Entry<Object, Object> match = unmatched.find { Map.Entry<Object, Object> rightEntry ->
+        !valuesAreDifferent(leftEntry.key, rightEntry.key, allowedDiff) &&
+            !valuesAreDifferent(leftEntry.value, rightEntry.value, allowedDiff)
+      }
+      if (match == null) {
+        return true
+      }
+      unmatched.remove(match)
+    }
+    false
   }
 
   /**
