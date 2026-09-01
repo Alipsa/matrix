@@ -119,6 +119,7 @@ class MatrixParquetReader {
   private static final long NANOS_PER_SECOND = 1_000_000_000L
   private static final long NANOS_PER_MILLI = 1_000_000L
   private static final long NANOS_PER_MICRO = 1_000L
+  private static final int UNICODE_HEX_DIGITS = 4
 
   /**
    * Creates a new builder for reading Parquet data into a Matrix.
@@ -928,11 +929,12 @@ class MatrixParquetReader {
       return pos + 1
     }
     if (escaped == 'u' as char) {
-      if (pos + 4 >= json.length()) {
+      int hexEnd = pos + 1 + UNICODE_HEX_DIGITS
+      if (hexEnd > json.length()) {
         throw new IllegalArgumentException("Invalid index metadata JSON: $json")
       }
-      value.append((char) Integer.parseInt(json.substring(pos + 1, pos + 5), 16))
-      return pos + 5
+      value.append((char) Integer.parseInt(json.substring(pos + 1, hexEnd), 16))
+      return hexEnd
     }
     throw new IllegalArgumentException("Invalid index metadata JSON: $json")
   }

@@ -52,7 +52,7 @@
     <matrixJsonVersion>2.3.1</matrixJsonVersion>
     <matrixJupyterVersion>0.1.0-SNAPSHOT</matrixJupyterVersion>
     <matrixLoggingVersion>0.1.1</matrixLoggingVersion>
-    <matrixParquetVersion>0.6.0</matrixParquetVersion>
+    <matrixParquetVersion>0.6.1-SNAPSHOT</matrixParquetVersion>
     <matrixPictVersion>0.5.0</matrixPictVersion>
     <matrixSmileVersion>0.2.0</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.4.1</matrixSpreadsheetVersion>
