@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixArffVersion>0.2.1</matrixArffVersion>
+    <matrixArffVersion>0.2.2-SNAPSHOT</matrixArffVersion>
     <matrixAvroVersion>0.3.1-SNAPSHOT</matrixAvroVersion>
     <!-- These modules have unreleased SNAPSHOT work in this repo; the BOM
          intentionally pins the last released version until each is published. -->
