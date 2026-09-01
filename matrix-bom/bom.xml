@@ -55,7 +55,7 @@
     <matrixParquetVersion>0.6.1-SNAPSHOT</matrixParquetVersion>
     <matrixPictVersion>0.5.1-SNAPSHOT</matrixPictVersion>
     <matrixSmileVersion>0.2.1-SNAPSHOT</matrixSmileVersion>
-    <matrixSpreadsheetVersion>2.4.1</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.4.2-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.4.0</matrixSqlVersion>
     <matrixStatsVersion>2.5.3-SNAPSHOT</matrixStatsVersion>
     <matrixTablesawVersion>0.3.2</matrixTablesawVersion>

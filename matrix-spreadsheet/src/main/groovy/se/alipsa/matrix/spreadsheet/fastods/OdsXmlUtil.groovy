@@ -12,20 +12,23 @@ import javax.xml.stream.events.XMLEvent
 class OdsXmlUtil {
 
   static final String OPENDOCUMENT_MIMETYPE = 'application/vnd.oasis.opendocument.spreadsheet'
-  static final String tableUrn = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0'
-  static final String officeUrn = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
-  static final String textUrn = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
+  static final String TABLE_URN = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0'
+  static final String OFFICE_URN = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
+  static final String TEXT_URN = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
+
+  private static final String EQUALS = '='
+  private static final String SPACE = ' '
 
   static QName oqn(String localPart) {
-    new QName(officeUrn, localPart)
+    new QName(OFFICE_URN, localPart)
   }
 
   static QName tqn(String localPart) {
-    new QName(tableUrn, localPart)
+    new QName(TABLE_URN, localPart)
   }
 
   static QName textQn(String localPart) {
-    new QName(textUrn, localPart)
+    new QName(TEXT_URN, localPart)
   }
 
   // Useful for debugging
@@ -33,9 +36,9 @@ class OdsXmlUtil {
     StringBuilder sb = new StringBuilder()
     startElement.attributes.each {
       sb.append(it.name.localPart)
-          .append('=')
+          .append(EQUALS)
           .append(it.value)
-          .append(' ')
+          .append(SPACE)
     }
     sb.toString()
   }
@@ -46,9 +49,9 @@ class OdsXmlUtil {
     if (reader.isStartElement()) {
       for (int i = 0; i < reader.getAttributeCount(); i++) {
         sb.append(reader.getAttributeLocalName(i))
-            .append('=')
+            .append(EQUALS)
             .append(reader.getAttributeValue(i))
-            .append(' ')
+            .append(SPACE)
       }
     }
     sb.toString()

@@ -1,8 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.officeUrn
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.textUrn
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OFFICE_URN
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.TABLE_URN
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.TEXT_URN
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
@@ -49,16 +49,16 @@ class OdsXmlWriter {
   @SuppressWarnings('UnnecessaryObjectReferences')
   static void writeDocument(XMLStreamWriter writer, List<Matrix> data, List<String> sheetNames, List<String> startPositions = null) {
     writer.writeStartDocument('UTF-8', '1.0')
-    writer.setPrefix(NS_OFFICE, officeUrn)
-    writer.setPrefix(NS_TABLE, tableUrn)
-    writer.setPrefix(NS_TEXT, textUrn)
-    writer.writeStartElement(NS_OFFICE, 'document-content', officeUrn)
-    writer.writeNamespace(NS_OFFICE, officeUrn)
-    writer.writeNamespace(NS_TABLE, tableUrn)
-    writer.writeNamespace(NS_TEXT, textUrn)
-    writer.writeAttribute(NS_OFFICE, officeUrn, 'version', '1.2')
-    writer.writeStartElement(NS_OFFICE, 'body', officeUrn)
-    writer.writeStartElement(NS_OFFICE, 'spreadsheet', officeUrn)
+    writer.setPrefix(NS_OFFICE, OFFICE_URN)
+    writer.setPrefix(NS_TABLE, TABLE_URN)
+    writer.setPrefix(NS_TEXT, TEXT_URN)
+    writer.writeStartElement(NS_OFFICE, 'document-content', OFFICE_URN)
+    writer.writeNamespace(NS_OFFICE, OFFICE_URN)
+    writer.writeNamespace(NS_TABLE, TABLE_URN)
+    writer.writeNamespace(NS_TEXT, TEXT_URN)
+    writer.writeAttribute(NS_OFFICE, OFFICE_URN, 'version', '1.2')
+    writer.writeStartElement(NS_OFFICE, 'body', OFFICE_URN)
+    writer.writeStartElement(NS_OFFICE, 'spreadsheet', OFFICE_URN)
     List<String> positions = startPositions ?: Collections.nCopies(data.size(), DEFAULT_START)
     if (positions.size() != data.size()) {
       throw new IllegalArgumentException('Matrices and start positions lists must have the same size')
@@ -107,8 +107,8 @@ class OdsXmlWriter {
   static void writeTable(XMLStreamWriter writer, Matrix matrix, String sheetName, TableTemplate template, String startPosition) {
     String safeName = SpreadsheetUtil.createValidSheetName(sheetName)
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
-    writer.writeStartElement(NS_TABLE, NS_TABLE, tableUrn)
-    writer.writeAttribute(NS_TABLE, tableUrn, 'name', safeName)
+    writer.writeStartElement(NS_TABLE, NS_TABLE, TABLE_URN)
+    writer.writeAttribute(NS_TABLE, TABLE_URN, 'name', safeName)
     if (template?.tableAttributes != null) {
       template.tableAttributes.findAll { !it.isTableNameAttribute() }.each { TableAttribute attr ->
         writer.writeAttribute(attr.prefix ?: '', attr.namespace ?: '', attr.localName, attr.value)
@@ -129,7 +129,7 @@ class OdsXmlWriter {
   }
 
   private static void writeHeaderRow(XMLStreamWriter writer, List<String> names) {
-    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, tableUrn)
+    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, TABLE_URN)
     writeLeadingEmptyCells(writer, 1)
     names.each { String name ->
       writeStringCell(writer, name)
@@ -138,7 +138,7 @@ class OdsXmlWriter {
   }
 
   private static void writeDataRow(XMLStreamWriter writer, List<Column> columns, int colCount, int rowIndex, int startCol) {
-    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, tableUrn)
+    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, TABLE_URN)
     writeLeadingEmptyCells(writer, startCol)
     for (int c = 0; c < colCount; c++) {
       writeCell(writer, columns.get(c).get(rowIndex))
@@ -147,7 +147,7 @@ class OdsXmlWriter {
   }
 
   private static void writeHeaderRow(XMLStreamWriter writer, List<String> names, int startCol) {
-    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, tableUrn)
+    writer.writeStartElement(NS_TABLE, EL_TABLE_ROW, TABLE_URN)
     writeLeadingEmptyCells(writer, startCol)
     names.each { String name ->
       writeStringCell(writer, name)
@@ -159,8 +159,8 @@ class OdsXmlWriter {
     if (count < 1) {
       return
     }
-    writer.writeEmptyElement(NS_TABLE, EL_TABLE_ROW, tableUrn)
-    writer.writeAttribute(NS_TABLE, tableUrn, 'number-rows-repeated', String.valueOf(count))
+    writer.writeEmptyElement(NS_TABLE, EL_TABLE_ROW, TABLE_URN)
+    writer.writeAttribute(NS_TABLE, TABLE_URN, 'number-rows-repeated', String.valueOf(count))
   }
 
   private static void writeLeadingEmptyCells(XMLStreamWriter writer, int startCol) {
@@ -168,29 +168,29 @@ class OdsXmlWriter {
     if (count < 1) {
       return
     }
-    writer.writeEmptyElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-    writer.writeAttribute(NS_TABLE, tableUrn, 'number-columns-repeated', String.valueOf(count))
+    writer.writeEmptyElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+    writer.writeAttribute(NS_TABLE, TABLE_URN, 'number-columns-repeated', String.valueOf(count))
   }
 
   private static void writeCell(XMLStreamWriter writer, Object value) {
     if (value == null) {
-      writer.writeEmptyElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
+      writer.writeEmptyElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
       return
     }
     switch (value) {
       case Boolean -> {
         String v = value as String
-        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-        writer.writeAttribute(NS_OFFICE, officeUrn, ATTR_VALUE_TYPE, 'boolean')
-        writer.writeAttribute(NS_OFFICE, officeUrn, 'boolean-value', v)
+        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, ATTR_VALUE_TYPE, 'boolean')
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, 'boolean-value', v)
         writeText(writer, v)
         writer.writeEndElement()
       }
       case Number -> {
         String v = ValueConverter.asBigDecimal(value).toPlainString()
-        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-        writer.writeAttribute(NS_OFFICE, officeUrn, ATTR_VALUE_TYPE, 'float')
-        writer.writeAttribute(NS_OFFICE, officeUrn, 'value', v)
+        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, ATTR_VALUE_TYPE, 'float')
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, 'value', v)
         writeText(writer, v)
         writer.writeEndElement()
       }
@@ -201,9 +201,9 @@ class OdsXmlWriter {
       case Date -> writeDateCell(writer, ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
       case Duration -> {
         String v = value as String
-        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-        writer.writeAttribute(NS_OFFICE, officeUrn, ATTR_VALUE_TYPE, 'time')
-        writer.writeAttribute(NS_OFFICE, officeUrn, 'time-value', v)
+        writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, ATTR_VALUE_TYPE, 'time')
+        writer.writeAttribute(NS_OFFICE, OFFICE_URN, 'time-value', v)
         writeText(writer, v)
         writer.writeEndElement()
       }
@@ -212,29 +212,29 @@ class OdsXmlWriter {
   }
 
   private static void writeDateCell(XMLStreamWriter writer, String value) {
-    writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-    writer.writeAttribute(NS_OFFICE, officeUrn, ATTR_VALUE_TYPE, 'date')
-    writer.writeAttribute(NS_OFFICE, officeUrn, 'date-value', value)
+    writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+    writer.writeAttribute(NS_OFFICE, OFFICE_URN, ATTR_VALUE_TYPE, 'date')
+    writer.writeAttribute(NS_OFFICE, OFFICE_URN, 'date-value', value)
     writeText(writer, value)
     writer.writeEndElement()
   }
 
   private static void writeStringCell(XMLStreamWriter writer, String value) {
-    writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, tableUrn)
-    writer.writeAttribute(NS_OFFICE, officeUrn, ATTR_VALUE_TYPE, 'string')
+    writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)
+    writer.writeAttribute(NS_OFFICE, OFFICE_URN, ATTR_VALUE_TYPE, 'string')
     writeText(writer, value)
     writer.writeEndElement()
   }
 
   private static void writeText(XMLStreamWriter writer, String value) {
-    writer.writeStartElement(NS_TEXT, 'p', textUrn)
+    writer.writeStartElement(NS_TEXT, 'p', TEXT_URN)
     writer.writeCharacters(value == null ? '' : value)
     writer.writeEndElement()
   }
 
   private static void writeTableColumns(XMLStreamWriter writer, List<TableColumn> columns) {
     columns.each { TableColumn column ->
-      writer.writeStartElement(NS_TABLE, 'table-column', tableUrn)
+      writer.writeStartElement(NS_TABLE, 'table-column', TABLE_URN)
       column.attributes?.each { TableAttribute attr ->
         if (attr.namespace) {
           writer.writeAttribute(attr.prefix ?: '', attr.namespace ?: '', attr.localName, attr.value)
@@ -264,7 +264,7 @@ class OdsXmlWriter {
     }
 
     boolean isTableNameAttribute() {
-      return localName == 'name' && namespace == tableUrn
+      return localName == 'name' && namespace == TABLE_URN
     }
 
   }
