@@ -465,12 +465,12 @@ class Row implements GroovyObject, List<Object> {
 
     /**
      * Two rows are equal when compared against another {@link List} of the same
-     * size with equal corresponding elements, matching the general
-     * {@link List#equals(Object)} contract that this class's {@code implements List}
-     * declaration promises.
+     * size with Groovy-equal corresponding elements. This includes numeric values
+     * with the same mathematical value, regardless of their runtime types or
+     * {@link BigDecimal} scale.
      *
      * @param o the object to compare against
-     * @return true if {@code o} is a List with the same elements in the same order
+     * @return true if {@code o} is a List with Groovy-equal elements in the same order
      */
     @Override
     boolean equals(Object o) {
@@ -480,18 +480,22 @@ class Row implements GroovyObject, List<Object> {
         if (!(o instanceof List)) {
             return false
         }
-        return Objects.equals(content, o)
+        return content == o
     }
 
     /**
-     * Hash code consistent with {@link #equals(Object)}, matching the general
-     * {@link List#hashCode()} contract.
+     * Hash code consistent with {@link #equals(Object)}. Numerically equal values
+     * have the same hash code regardless of runtime type or {@link BigDecimal} scale.
      *
      * @return the hash code derived from this row's current element values
      */
     @Override
     int hashCode() {
-        return content.hashCode()
+        int result = 1
+        for (Object value : content) {
+            result = 31 * result + Matrix.normalizedValueHash(value)
+        }
+        return result
     }
 
     List<Object> minusColumn(String columnName) {

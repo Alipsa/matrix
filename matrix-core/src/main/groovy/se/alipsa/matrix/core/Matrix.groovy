@@ -2292,7 +2292,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param value the cell value to hash
    * @return a hash code consistent with {@link #equals(Object)}
    */
-  private static int normalizedValueHash(Object value) {
+  @PackageScope
+  static int normalizedValueHash(Object value) {
     if (value == null) {
       return 0
     }

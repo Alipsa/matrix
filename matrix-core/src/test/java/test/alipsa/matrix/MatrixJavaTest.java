@@ -39,7 +39,7 @@ import static se.alipsa.matrix.core.util.CollectionUtils.*;
 class MatrixJavaTest {
 
   @Test
-  void testRowEqualsUsesStandardListElementEquality() {
+  void testRowEqualsUsesGroovyCollectionComparison() {
     Matrix parent = Matrix.builder()
         .columns(new Columns().add("amount", 1))
         .types(BigDecimal.class)
@@ -47,8 +47,11 @@ class MatrixJavaTest {
     Row row = new Row(0, List.of(new BigDecimal("1.0")), parent);
     List<Object> values = new ArrayList<>(List.of(1));
 
-    assertFalse(row.equals(values));
-    assertFalse(values.equals(row));
+    Row equivalentRow = new Row(0, List.of(1), parent);
+
+    assertTrue(row.equals(values));
+    assertEquals(row, equivalentRow);
+    assertEquals(row.hashCode(), equivalentRow.hashCode());
   }
 
   @Test
