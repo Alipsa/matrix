@@ -2262,9 +2262,38 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   int hashCode() {
-    int result = mColumns != null ? mColumns.hashCode() : 0
+    int result = 1
+    if (mColumns != null) {
+      for (Column col : mColumns) {
+        int colHash = 1
+        for (Object value : col) {
+          colHash = 31 * colHash + normalizedValueHash(value)
+        }
+        result = 31 * result + colHash
+      }
+    }
     result = 31 * result + types().hashCode()
     return result
+  }
+
+  /**
+   * Hash a single cell value the same way {@link #checkValues} compares it, so that
+   * {@link #hashCode()} stays consistent with the numeric tolerance used by the
+   * zero-arg {@link #equals(Object)} override: numbers that are mathematically equal
+   * (e.g. {@code 1}, {@code 1.0d}, {@code new BigDecimal("1.00")}) must hash identically
+   * regardless of runtime type or {@code BigDecimal} scale.
+   *
+   * @param value the cell value to hash
+   * @return a hash code consistent with {@link #equals(Object)}
+   */
+  private static int normalizedValueHash(Object value) {
+    if (value == null) {
+      return 0
+    }
+    if (value instanceof Number) {
+      return (value as Number).toBigDecimal().stripTrailingZeros().hashCode()
+    }
+    return value.hashCode()
   }
 
   /**

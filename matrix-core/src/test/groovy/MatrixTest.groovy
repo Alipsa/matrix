@@ -1303,6 +1303,55 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsHashCodeContractWithDifferentBigDecimalScale() {
+    Matrix left = Matrix.builder()
+        .data(id: [1], amount: [new BigDecimal('1.0')])
+        .types(Integer, BigDecimal)
+        .build()
+    Matrix right = Matrix.builder()
+        .data(id: [1], amount: [new BigDecimal('1.00')])
+        .types(Integer, BigDecimal)
+        .build()
+
+    assertEquals(left, right)
+    assertEquals(left.hashCode(), right.hashCode())
+  }
+
+  @Test
+  void testEqualsHashCodeContractWithDifferentNumberSubtypes() {
+    Matrix left = Matrix.builder()
+        .data(id: [1], amount: [1])
+        .types(Integer, Number)
+        .build()
+    Matrix right = Matrix.builder()
+        .data(id: [1], amount: [1.0d])
+        .types(Integer, Number)
+        .build()
+
+    assertEquals(left, right)
+    assertEquals(left.hashCode(), right.hashCode())
+  }
+
+  @Test
+  void testEqualsIgnoreTypesFalseStillComparesNumbersByMathematicalValue() {
+    Matrix left = Matrix.builder()
+        .data(id: [1], amount: [5])
+        .types(Integer, Number)
+        .build()
+    Matrix right = Matrix.builder()
+        .data(id: [1], amount: [5L])
+        .types(Integer, Number)
+        .build()
+
+    // ignoreTypes=false guards declared *column* types (checked up front via types())
+    // and non-numeric *cell* values; numeric cell comparisons are always done by
+    // mathematical value regardless of runtime Number subtype. This is intentional —
+    // see the Javadoc on the ignoreTypes parameter — and is locked in here so it is
+    // not accidentally "fixed" into a breaking change for MatrixAssertions callers.
+    assertTrue(left.equals(right, true, true, false, BigDecimal.ZERO, false))
+  }
+
+  @Test
   void testDiffForceRowComparingWithDifferentRowCounts() {
     Matrix left = Matrix.builder()
         .matrixName('left')
