@@ -42,6 +42,12 @@ class AvroWriteOptions {
   static final int DEFAULT_SYNC_INTERVAL = 0
   static final int MIN_SYNC_INTERVAL = 32
   static final int MAX_SYNC_INTERVAL = 1 << 30
+  private static final boolean DEFAULT_INFER_PRECISION_AND_SCALE = false
+  private static final int DEFAULT_DEFLATE_XZ_LEVEL = 6
+  private static final int MAX_DEFLATE_XZ_LEVEL = 9
+  private static final String KEY_NAMESPACE = 'namespace'
+  private static final String KEY_COMPRESSION = 'compression'
+  private static final String KEY_COLUMN_SCHEMAS = 'columnSchemas'
   /**
    * Supported compression codecs for Avro files.
    */
@@ -60,18 +66,13 @@ class AvroWriteOptions {
     /** Zstandard compression - excellent balance of speed and ratio (requires zstd library) */
     ZSTANDARD
   }
-  private boolean inferPrecisionAndScale = false
+  private boolean inferPrecisionAndScale = DEFAULT_INFER_PRECISION_AND_SCALE
   private String namespace = DEFAULT_NAMESPACE
   private String schemaName = null
   private Compression compression = Compression.NULL
   private int compressionLevel = DEFAULT_COMPRESSION_LEVEL
   private int syncInterval = DEFAULT_SYNC_INTERVAL
   private Map<String, AvroSchemaDecl> columnSchemas = [:]
-  /**
-   * Creates a new AvroWriteOptions with default settings.
-   */
-  AvroWriteOptions() {
-  }
   /**
    * Creates write options with the default settings.
    *
@@ -251,13 +252,13 @@ class AvroWriteOptions {
   CodecFactory createCodecFactory() {
     switch (compression) {
       case Compression.DEFLATE ->
-        compressionLevel >= 0 ? CodecFactory.deflateCodec(compressionLevel) : CodecFactory.deflateCodec(6)
+        compressionLevel >= 0 ? CodecFactory.deflateCodec(compressionLevel) : CodecFactory.deflateCodec(DEFAULT_DEFLATE_XZ_LEVEL)
       case Compression.SNAPPY ->
         CodecFactory.snappyCodec()
       case Compression.BZIP2 ->
         CodecFactory.bzip2Codec()
       case Compression.XZ ->
-        compressionLevel >= 0 ? CodecFactory.xzCodec(compressionLevel) : CodecFactory.xzCodec(6)
+        compressionLevel >= 0 ? CodecFactory.xzCodec(compressionLevel) : CodecFactory.xzCodec(DEFAULT_DEFLATE_XZ_LEVEL)
       case Compression.ZSTANDARD ->
         compressionLevel >= 0 ? CodecFactory.zstandardCodec(compressionLevel) : CodecFactory.zstandardCodec(3)
       default ->
@@ -307,7 +308,7 @@ class AvroWriteOptions {
         result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
       }
     }
-    if (normalized.containsKey('namespace')) {
+    if (normalized.containsKey(KEY_NAMESPACE)) {
       String namespace = OptionMaps.stringValueOrNull(normalized.namespace)
       if (namespace != null) {
         result.namespace(namespace)
@@ -319,7 +320,7 @@ class AvroWriteOptions {
         result.schemaName(schemaName)
       }
     }
-    if (normalized.containsKey('compression')) {
+    if (normalized.containsKey(KEY_COMPRESSION)) {
       def value = normalized.compression
       if (Compression.isInstance(value)) {
         compression = value as Compression
@@ -342,7 +343,7 @@ class AvroWriteOptions {
     if (normalized.containsKey('columnschemas')) {
       Object value = normalized.columnschemas
       if (value != null) {
-        result.columnSchemas(AvroSchemaDecl.columnSchemasValue(value, 'columnSchemas'))
+        result.columnSchemas(AvroSchemaDecl.columnSchemasValue(value, KEY_COLUMN_SCHEMAS))
       }
     }
     if (compression != null) {
@@ -363,13 +364,13 @@ class AvroWriteOptions {
     }
     switch (effectiveCompression) {
       case Compression.DEFLATE -> {
-        if (level < 1 || level > 9) {
-          throw new IllegalArgumentException("DEFLATE compressionLevel must be -1 or between 1 and 9 but was $level")
+        if (level < 1 || level > MAX_DEFLATE_XZ_LEVEL) {
+          throw new IllegalArgumentException("DEFLATE compressionLevel must be -1 or between 1 and $MAX_DEFLATE_XZ_LEVEL but was $level")
         }
       }
       case Compression.XZ -> {
-        if (level < 0 || level > 9) {
-          throw new IllegalArgumentException("XZ compressionLevel must be -1 or between 0 and 9 but was $level")
+        if (level < 0 || level > MAX_DEFLATE_XZ_LEVEL) {
+          throw new IllegalArgumentException("XZ compressionLevel must be -1 or between 0 and $MAX_DEFLATE_XZ_LEVEL but was $level")
         }
       }
       case Compression.ZSTANDARD -> {
@@ -407,13 +408,13 @@ class AvroWriteOptions {
    */
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('inferPrecisionAndScale', Boolean, 'false', 'Infer decimal precision and scale for BigDecimal columns'),
-        new OptionDescriptor('namespace', String, DEFAULT_NAMESPACE, 'Namespace for the generated Avro schema'),
+        new OptionDescriptor('inferPrecisionAndScale', Boolean, String.valueOf(DEFAULT_INFER_PRECISION_AND_SCALE), 'Infer decimal precision and scale for BigDecimal columns'),
+        new OptionDescriptor(KEY_NAMESPACE, String, DEFAULT_NAMESPACE, 'Namespace for the generated Avro schema'),
         new OptionDescriptor('schemaName', String, 'matrix.matrixName or MatrixSchema', 'Record name override for the generated Avro schema'),
-        new OptionDescriptor('compression', Compression, 'NULL', 'Compression codec to use when writing'),
-        new OptionDescriptor('compressionLevel', Integer, '-1', 'Codec-specific compression level'),
-        new OptionDescriptor('syncInterval', Integer, '0', 'Sync marker interval in bytes'),
-        new OptionDescriptor('columnSchemas', Map, null, 'Map of column names to explicit Avro schema declarations for decimal, array, map, or record overrides')
+        new OptionDescriptor(KEY_COMPRESSION, Compression, 'NULL', 'Compression codec to use when writing'),
+        new OptionDescriptor('compressionLevel', Integer, String.valueOf(DEFAULT_COMPRESSION_LEVEL), 'Codec-specific compression level'),
+        new OptionDescriptor('syncInterval', Integer, String.valueOf(DEFAULT_SYNC_INTERVAL), 'Sync marker interval in bytes'),
+        new OptionDescriptor(KEY_COLUMN_SCHEMAS, Map, null, 'Map of column names to explicit Avro schema declarations for decimal, array, map, or record overrides')
     ]
   }
   private static Map<String, AvroSchemaDecl> copyColumnSchemas(Map<String, AvroSchemaDecl> value) {

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.avro
 
 import org.apache.avro.Conversions
+import org.apache.avro.LogicalType
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
 import org.apache.avro.UnresolvedUnionException
@@ -473,16 +474,24 @@ class MatrixAvroWriter {
    */
   private static Schema toFieldSchema(Class<?> clazz, int[] decimalMeta) {
     if (clazz == BigDecimal) {
-      if (decimalMeta != null) {
-        int precision = decimalMeta[0] > 0 ? decimalMeta[0] : 10
-        int scale = decimalMeta[1] >= 0 ? decimalMeta[1] : 2
-        Schema s = Schema.create(Schema.Type.BYTES)
-        LogicalTypes.decimal(precision, scale).addToSchema(s)
-        return s
-      } else {
-        return Schema.create(Schema.Type.DOUBLE) // fallback like Parquet writer
-      }
+      return decimalMeta != null ? decimalFieldSchema(decimalMeta) : Schema.create(Schema.Type.DOUBLE) // fallback like Parquet writer
     }
+    Schema primitive = primitiveFieldSchema(clazz)
+    if (primitive != null) {
+      return primitive
+    }
+    Schema logical = logicalFieldSchema(clazz)
+    // Fallback
+    logical != null ? logical : Schema.create(Schema.Type.STRING)
+  }
+  private static Schema decimalFieldSchema(int[] decimalMeta) {
+    int precision = decimalMeta[0] > 0 ? decimalMeta[0] : 10
+    int scale = decimalMeta[1] >= 0 ? decimalMeta[1] : 2
+    Schema s = Schema.create(Schema.Type.BYTES)
+    LogicalTypes.decimal(precision, scale).addToSchema(s)
+    s
+  }
+  private static Schema primitiveFieldSchema(Class<?> clazz) {
     if (clazz == String) {
       return Schema.create(Schema.Type.STRING)
     }
@@ -504,38 +513,30 @@ class MatrixAvroWriter {
     if (clazz == byte[].class) {
       return Schema.create(Schema.Type.BYTES)
     }
+    null
+  }
+  private static Schema logicalFieldSchema(Class<?> clazz) {
     if (clazz == LocalDate || clazz == java.sql.Date) {
-      Schema s = Schema.create(Schema.Type.INT)
-      LogicalTypes.date().addToSchema(s)
-      return s
+      return withLogicalType(Schema.Type.INT, LogicalTypes.date())
     }
     if (clazz == LocalTime || clazz == Time) {
-      Schema s = Schema.create(Schema.Type.INT)
-      LogicalTypes.timeMillis().addToSchema(s)
-      return s
+      return withLogicalType(Schema.Type.INT, LogicalTypes.timeMillis())
     }
-    if (clazz == Instant) {
-      Schema s = Schema.create(Schema.Type.LONG)
-      LogicalTypes.timestampMillis().addToSchema(s)
-      return s
+    if (clazz == Instant || clazz == Date) {
+      return withLogicalType(Schema.Type.LONG, LogicalTypes.timestampMillis())
     }
     if (clazz == LocalDateTime) {
-      Schema s = Schema.create(Schema.Type.LONG)
-      LogicalTypes.localTimestampMicros().addToSchema(s)
-      return s
-    }
-    if (clazz == Date) {
-      Schema s = Schema.create(Schema.Type.LONG)
-      LogicalTypes.timestampMillis().addToSchema(s)
-      return s
+      return withLogicalType(Schema.Type.LONG, LogicalTypes.localTimestampMicros())
     }
     if (clazz == UUID) {
-      Schema s = Schema.create(Schema.Type.STRING)
-      LogicalTypes.uuid().addToSchema(s)
-      return s
+      return withLogicalType(Schema.Type.STRING, LogicalTypes.uuid())
     }
-    // Fallback
-    return Schema.create(Schema.Type.STRING)
+    null
+  }
+  private static Schema withLogicalType(Schema.Type type, LogicalType logicalType) {
+    Schema s = Schema.create(type)
+    logicalType.addToSchema(s)
+    s
   }
   // ----------------------------------------------------------------------
   // Row writing
@@ -779,100 +780,129 @@ class MatrixAvroWriter {
     Class<?> declared = normalizeType(matrix.type(col))
     ColumnProfile profile = new ColumnProfile(col, declared)
     if (declared != Object && declared != Number) {
-      profile.effectiveType = declared
-      if (declared == BigDecimal && inferPrecisionAndScale) {
-        scanDecimalPrecision(matrix, col, profile)
-      } else if (declared == List) {
-        scanListElement(matrix, col, profile)
-      } else if (declared == Map) {
-        scanMapDetails(matrix, col, profile)
-      }
+      applyDeclaredType(matrix, col, declared, inferPrecisionAndScale, profile)
       return profile
     }
-    boolean sawBigDecimal = false
-    boolean sawFloat = false
-    boolean sawIntegral = false
-    boolean needsLong = false
-    boolean fixedType = false
+    scanUntypedColumn(matrix, col, inferPrecisionAndScale, profile)
+    return profile
+  }
+  private static void applyDeclaredType(Matrix matrix, String col, Class<?> declared,
+                                        boolean inferPrecisionAndScale, ColumnProfile profile) {
+    profile.effectiveType = declared
+    if (declared == BigDecimal && inferPrecisionAndScale) {
+      scanDecimalPrecision(matrix, col, profile)
+    } else if (declared == List) {
+      scanListElement(matrix, col, profile)
+    } else if (declared == Map) {
+      scanMapDetails(matrix, col, profile)
+    }
+  }
+  private static void scanUntypedColumn(Matrix matrix, String col, boolean inferPrecisionAndScale, ColumnProfile profile) {
+    TypeScanState state = new TypeScanState()
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
       Object v = matrix[r, col]
       if (v == null) {
         continue
       }
-      if (!fixedType) {
-        if (BigDecimal.isInstance(v)) {
-          sawBigDecimal = true
-          if (inferPrecisionAndScale) {
-            updateDecimalMeta((BigDecimal) v, profile)
-          }
-          continue
-        }
-        if (Float.isInstance(v) || Double.isInstance(v)) {
-          sawFloat = true
-          continue
-        }
-        if (Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
-            || Long.isInstance(v) || BigInteger.isInstance(v)) {
-          sawIntegral = true
-          long lv = (BigInteger.isInstance(v)) ? ((BigInteger) v).longValue() : ((Number) v).longValue()
-          if (lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || Long.isInstance(v) || BigInteger.isInstance(v)) {
-            needsLong = true
-          }
-          continue
-        }
-        if (String.isInstance(v) || Boolean.isInstance(v) || byte[].isInstance(v)
-            || java.sql.Date.isInstance(v) || Time.isInstance(v) || Date.isInstance(v)
-            || LocalDate.isInstance(v) || LocalTime.isInstance(v)
-            || Instant.isInstance(v) || LocalDateTime.isInstance(v)
-            || UUID.isInstance(v)) {
-          profile.effectiveType = v.getClass()
-          fixedType = true
-          break
-        }
-        if (List.isInstance(v)) {
-          profile.effectiveType = List
-          fixedType = true
-          scanListElementValue((List) v, profile)
-          if (profile.listElemClass != null) {
-            break
-          }
-          continue
-        }
-        if (Map.isInstance(v)) {
-          profile.effectiveType = Map
-          fixedType = true
-          scanMapValue((Map) v, profile)
-          continue
-        }
-        profile.effectiveType = String
-        fixedType = true
+      boolean stop = state.fixedType
+          ? continueFixedTypeScan(v, profile)
+          : scanUntypedValue(v, profile, state, inferPrecisionAndScale)
+      if (stop) {
         break
-      } else if (profile.effectiveType == Map) {
-        if (Map.isInstance(v)) {
-          scanMapValue((Map) v, profile)
-        }
-      } else if (profile.effectiveType == List) {
-        if (List.isInstance(v) && profile.listElemClass == null) {
-          scanListElementValue((List) v, profile)
-          if (profile.listElemClass != null) {
-            break
-          }
-        }
       }
     }
-    if (!fixedType) {
-      if (sawBigDecimal) {
-        profile.effectiveType = BigDecimal
-      } else if (sawFloat) {
-        profile.effectiveType = Double
-      } else if (sawIntegral) {
-        profile.effectiveType = needsLong ? Long : Integer
-      } else {
-        profile.effectiveType = String
-      }
+    if (!state.fixedType) {
+      profile.effectiveType = resolveUnfixedType(state)
     }
-    return profile
+  }
+  private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state,
+                                          boolean inferPrecisionAndScale) {
+    if (BigDecimal.isInstance(v)) {
+      state.sawBigDecimal = true
+      if (inferPrecisionAndScale) {
+        updateDecimalMeta((BigDecimal) v, profile)
+      }
+      return false
+    }
+    if (Float.isInstance(v) || Double.isInstance(v)) {
+      state.sawFloat = true
+      return false
+    }
+    if (isIntegralValue(v)) {
+      state.sawIntegral = true
+      if (needsLongStorage(v)) {
+        state.needsLong = true
+      }
+      return false
+    }
+    if (isFixedScalarValue(v)) {
+      profile.effectiveType = v.getClass()
+      state.fixedType = true
+      return true
+    }
+    if (List.isInstance(v)) {
+      profile.effectiveType = List
+      state.fixedType = true
+      scanListElementValue((List) v, profile)
+      return profile.listElemClass != null
+    }
+    if (Map.isInstance(v)) {
+      profile.effectiveType = Map
+      state.fixedType = true
+      scanMapValue((Map) v, profile)
+      return false
+    }
+    profile.effectiveType = String
+    state.fixedType = true
+    true
+  }
+  private static boolean continueFixedTypeScan(Object v, ColumnProfile profile) {
+    if (profile.effectiveType == Map) {
+      if (Map.isInstance(v)) {
+        scanMapValue((Map) v, profile)
+      }
+      return false
+    }
+    if (profile.effectiveType == List && List.isInstance(v) && profile.listElemClass == null) {
+      scanListElementValue((List) v, profile)
+      return profile.listElemClass != null
+    }
+    false
+  }
+  private static boolean isIntegralValue(Object v) {
+    Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
+        || Long.isInstance(v) || BigInteger.isInstance(v)
+  }
+  private static boolean needsLongStorage(Object v) {
+    long lv = BigInteger.isInstance(v) ? ((BigInteger) v).longValue() : ((Number) v).longValue()
+    lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || Long.isInstance(v) || BigInteger.isInstance(v)
+  }
+  private static boolean isFixedScalarValue(Object v) {
+    String.isInstance(v) || Boolean.isInstance(v) || byte[].isInstance(v)
+        || java.sql.Date.isInstance(v) || Time.isInstance(v) || Date.isInstance(v)
+        || LocalDate.isInstance(v) || LocalTime.isInstance(v)
+        || Instant.isInstance(v) || LocalDateTime.isInstance(v)
+        || UUID.isInstance(v)
+  }
+  private static Class<?> resolveUnfixedType(TypeScanState state) {
+    if (state.sawBigDecimal) {
+      return BigDecimal
+    }
+    if (state.sawFloat) {
+      return Double
+    }
+    if (state.sawIntegral) {
+      return state.needsLong ? Long : Integer
+    }
+    String
+  }
+  private static final class TypeScanState {
+    boolean sawBigDecimal
+    boolean sawFloat
+    boolean sawIntegral
+    boolean needsLong
+    boolean fixedType
   }
   private static void scanDecimalPrecision(Matrix matrix, String col, ColumnProfile profile) {
     int rows = matrix.rowCount()
@@ -970,31 +1000,39 @@ class MatrixAvroWriter {
       return true
     }
     if (s.getType() == Schema.Type.UNION) {
-      for (Schema branch : s.getTypes()) {
-        if (isCompatible(branch, v)) {
-          return true
-        }
-      }
-      return false
+      return isUnionCompatible(s, v)
     }
     def logical = s.getLogicalType()
     if (logical != null) {
-      String name = logical.getName()
-      return switch (name) {
-        case 'date' -> LocalDate.isInstance(v) || java.sql.Date.isInstance(v) || Number.isInstance(v)
-        case 'time-millis', 'time-micros' -> LocalTime.isInstance(v) || Time.isInstance(v) || Number.isInstance(v)
-        case 'timestamp-millis' ->
-          Instant.isInstance(v) || Date.isInstance(v) || LocalDateTime.isInstance(v) || Number.isInstance(v)
-        case 'timestamp-micros' ->
-          Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
-        case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
-        case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
-        case 'decimal' -> BigDecimal.isInstance(v) || Double.isInstance(v) || Float.isInstance(v) ||
-            byte[].isInstance(v) || ByteBuffer.isInstance(v)
-        default -> false
+      return isLogicalTypeCompatible(logical.getName(), v)
+    }
+    isPlainTypeCompatible(s, v)
+  }
+  private static boolean isUnionCompatible(Schema s, Object v) {
+    for (Schema branch : s.getTypes()) {
+      if (isCompatible(branch, v)) {
+        return true
       }
     }
-    return switch (s.getType()) {
+    false
+  }
+  private static boolean isLogicalTypeCompatible(String name, Object v) {
+    switch (name) {
+      case 'date' -> LocalDate.isInstance(v) || java.sql.Date.isInstance(v) || Number.isInstance(v)
+      case 'time-millis', 'time-micros' -> LocalTime.isInstance(v) || Time.isInstance(v) || Number.isInstance(v)
+      case 'timestamp-millis' ->
+        Instant.isInstance(v) || Date.isInstance(v) || LocalDateTime.isInstance(v) || Number.isInstance(v)
+      case 'timestamp-micros' ->
+        Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
+      case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
+      case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
+      case 'decimal' -> BigDecimal.isInstance(v) || Double.isInstance(v) || Float.isInstance(v) ||
+          byte[].isInstance(v) || ByteBuffer.isInstance(v)
+      default -> false
+    }
+  }
+  private static boolean isPlainTypeCompatible(Schema s, Object v) {
+    switch (s.getType()) {
       case Schema.Type.STRING -> true // we'll toString() later
       case Schema.Type.BOOLEAN -> Boolean.isInstance(v)
       case Schema.Type.INT -> Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
