@@ -1376,6 +1376,39 @@ class MatrixTest {
   }
 
   @Test
+  void testEqualsHashesGroovyEqualNonNumericValues() {
+    GString gString = "value${''}"
+    Matrix gStringValue = Matrix.builder()
+        .data(value: [gString])
+        .types(Object)
+        .build()
+    Matrix stringValue = Matrix.builder()
+        .data(value: ['value'])
+        .types(Object)
+        .build()
+
+    assertEquals(gStringValue, stringValue)
+    assertEquals(gStringValue.hashCode(), stringValue.hashCode())
+    assertEquals('', gStringValue.diff(stringValue))
+  }
+
+  @Test
+  void testEqualsComparesCharactersAsNumbersInEitherOrder() {
+    Matrix characterValue = Matrix.builder()
+        .data(value: [('a' as Character)])
+        .types(Object)
+        .build()
+    Matrix numberValue = Matrix.builder()
+        .data(value: [97])
+        .types(Object)
+        .build()
+
+    assertEquals(characterValue, numberValue)
+    assertEquals(numberValue, characterValue)
+    assertEquals(characterValue.hashCode(), numberValue.hashCode())
+  }
+
+  @Test
   void testEqualsIgnoreTypesFalseStillComparesNumbersByMathematicalValue() {
     Matrix left = Matrix.builder()
         .data(id: [1], amount: [5])

@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,40 @@ class MatrixJavaTest {
     Row doubleRow = new Row(0, List.of(9_007_199_254_740_992.0d), parent);
 
     assertNotEquals(longRow, doubleRow);
+  }
+
+  @Test
+  void testRowEqualsHashesGroovyEqualCompoundValues() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+
+    assertEquivalentRows(new Row(0, List.of(new int[]{1, 2}), parent),
+        new Row(0, List.of(new int[]{1, 2}), parent));
+    assertEquivalentRows(new Row(0, List.of(List.of(1)), parent),
+        new Row(0, List.of(List.of(1.0d)), parent));
+    assertEquivalentRows(new Row(0, List.of(Map.of("a", 1)), parent),
+        new Row(0, List.of(Map.of("a", 1.0d)), parent));
+  }
+
+  @Test
+  void testRowEqualsComparesCharactersAsNumbersInEitherOrder() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+    Row characterRow = new Row(0, List.of('a'), parent);
+    Row numberRow = new Row(0, List.of(97), parent);
+
+    assertEquivalentRows(characterRow, numberRow);
+    assertEquivalentRows(numberRow, characterRow);
+  }
+
+  private static void assertEquivalentRows(Row left, Row right) {
+    assertEquals(left, right);
+    assertEquals(left.hashCode(), right.hashCode());
+    assertTrue(new HashSet<>(List.of(left)).contains(right));
   }
 
   @Test

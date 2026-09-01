@@ -19,6 +19,7 @@ import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
 
+import java.lang.reflect.Array
 import java.math.RoundingMode
 import java.nio.file.Path
 import java.text.NumberFormat
@@ -1701,6 +1702,12 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @PackageScope
   static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
+    if (entry instanceof Character) {
+      entry = characterCode(entry as Character)
+    }
+    if (thatVal instanceof Character) {
+      thatVal = characterCode(thatVal as Character)
+    }
     if (entry instanceof Number) {
       if (thatVal instanceof Number) {
         return numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)
@@ -1725,6 +1732,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       return Double.isNaN(floatingPointValue) || Double.isInfinite(floatingPointValue)
     }
     false
+  }
+
+  private static int characterCode(Character value) {
+    value.toString().codePointAt(0)
   }
 
   /**
@@ -1946,9 +1957,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       int r = 0
       for (entry in column) {
         def thatVal = thatCol[r]
-        if (entry instanceof Number) {
-          if (thatVal instanceof Number) {
-            if (numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)) {
+        if (entry instanceof Number || entry instanceof Character) {
+          if (thatVal instanceof Number || thatVal instanceof Character) {
+            if (valuesAreDifferent(entry, thatVal, allowedDiff)) {
               return [r, i, entry, thatVal]
             }
           } else if (ignoreTypes) {
@@ -2315,6 +2326,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (value == null) {
       return 0
     }
+    if (value instanceof Character) {
+      return normalizedValueHash(characterCode(value as Character))
+    }
     if (value instanceof Number) {
       Number number = value as Number
       if ((number instanceof Double || number instanceof Float) &&
@@ -2323,7 +2337,54 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       return number.toBigDecimal().stripTrailingZeros().hashCode()
     }
+    if (value instanceof CharSequence) {
+      return value.toString().hashCode()
+    }
+    if (value.getClass().isArray()) {
+      return arrayValueHash(value)
+    }
+    if (value instanceof Map) {
+      return mapValueHash(value as Map<Object, Object>)
+    }
+    if (value instanceof Set) {
+      return setValueHash(value as Set<Object>)
+    }
+    if (value instanceof Collection) {
+      return collectionValueHash(value as Collection<Object>)
+    }
     return value.hashCode()
+  }
+
+  private static int arrayValueHash(Object array) {
+    int result = 1
+    for (int i = 0; i < Array.getLength(array); i++) {
+      result = 31 * result + normalizedValueHash(Array.get(array, i))
+    }
+    result
+  }
+
+  private static int collectionValueHash(Collection<Object> values) {
+    int result = 1
+    for (Object value : values) {
+      result = 31 * result + normalizedValueHash(value)
+    }
+    result
+  }
+
+  private static int setValueHash(Set<Object> values) {
+    int result = 0
+    for (Object value : values) {
+      result += normalizedValueHash(value)
+    }
+    result
+  }
+
+  private static int mapValueHash(Map<Object, Object> values) {
+    int result = 0
+    for (Map.Entry<Object, Object> entry : values.entrySet()) {
+      result += normalizedValueHash(entry.key) ^ normalizedValueHash(entry.value)
+    }
+    result
   }
 
   /**
