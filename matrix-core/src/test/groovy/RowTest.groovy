@@ -1,5 +1,7 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
@@ -97,6 +99,50 @@ class RowTest {
 
     assertEquals('Failed to find a column with the name salary', ex.message)
     assertEquals([1, 'Rick'], row)
+  }
+
+  @Test
+  void testEqualsComparesContentNotIdentity() {
+    Matrix table1 = Matrix.builder()
+        .columns(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+    Matrix table2 = Matrix.builder()
+        .columns(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    Row row1 = table1.row(0)
+    Row row2 = table2.row(0)
+
+    assertNotSame(row1, row2)
+    assertEquals(row1, row2)
+    assertEquals(row1.hashCode(), row2.hashCode())
+  }
+
+  @Test
+  void testEqualsReturnsFalseForDifferentContent() {
+    Matrix table = Matrix.builder()
+        .columns(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    assertNotEquals(table.row(0), table.row(1))
+  }
+
+  @Test
+  void testEqualsAgainstPlainList() {
+    Matrix table = Matrix.builder()
+        .columns(id: [1, 2], name: ['Rick', 'Dan'])
+        .types(Integer, String)
+        .build()
+
+    Row row = table.row(0)
+
+    assertEquals([1, 'Rick'], row)
+    assertEquals(row, [1, 'Rick'])
+    assertNotEquals(row, [1, 'Someone Else'])
+    assertNotEquals(row, 'not a list at all')
   }
 
 }

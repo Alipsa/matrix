@@ -463,6 +463,37 @@ class Row implements GroovyObject, List<Object> {
         return String.valueOf(content)
     }
 
+    /**
+     * Two rows are equal when compared against another {@link List} of the same
+     * size with equal corresponding elements, matching the general
+     * {@link List#equals(Object)} contract that this class's {@code implements List}
+     * declaration promises.
+     *
+     * @param o the object to compare against
+     * @return true if {@code o} is a List with the same elements in the same order
+     */
+    @Override
+    boolean equals(Object o) {
+        if (this.is(o)) {
+            return true
+        }
+        if (!(o instanceof List)) {
+            return false
+        }
+        return content == o
+    }
+
+    /**
+     * Hash code consistent with {@link #equals(Object)}, matching the general
+     * {@link List#hashCode()} contract.
+     *
+     * @return the hash code derived from this row's current element values
+     */
+    @Override
+    int hashCode() {
+        return content.hashCode()
+    }
+
     List<Object> minusColumn(String columnName) {
         int idx = columnNames.indexOf(columnName)
         if (idx == COLUMN_NOT_FOUND) {
