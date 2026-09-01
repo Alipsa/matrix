@@ -2,7 +2,6 @@ package se.alipsa.matrix.arff
 
 import se.alipsa.matrix.core.Matrix
 
-import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.sql.Timestamp
@@ -17,6 +16,19 @@ import java.time.LocalDateTime
 class MatrixArffWriter {
 
   private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
+  private static final String MATRIX_NULL_MESSAGE = 'Matrix cannot be null'
+  private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
+  private static final String COMMA = ','
+  private static final String SPACE = ' '
+  private static final String QUESTION_MARK = '?'
+  private static final String PERCENT = '%'
+  private static final String APOSTROPHE = "'"
+  private static final String DOUBLE_QUOTE = '"'
+  private static final String OPEN_BRACE = '{'
+  private static final String CLOSE_BRACE = '}'
+  private static final String BACKSLASH = '\\'
+  private static final String UNDERSCORE = '_'
+  private static final String DOUBLE_DOT = '..'
 
   /** Write to a File. */
   static void write(Matrix matrix, File file) {
@@ -101,7 +113,7 @@ class MatrixArffWriter {
   /** Write Matrix to a String in ARFF format using typed ARFF write options. */
   static String writeString(Matrix matrix, ArffWriteOptions options) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException(MATRIX_NULL_MESSAGE)
     }
     StringWriter writer = new StringWriter()
     write(matrix, writer, options)
@@ -111,7 +123,7 @@ class MatrixArffWriter {
   private static void writeMatrix(Matrix matrix, PrintWriter pw, ArffWriteOptions options) {
     validateWriteOptions(matrix, options)
 
-    String relationName = matrix.matrixName ?: 'matrix'
+    String relationName = matrix.matrixName ?: DEFAULT_MATRIX_BASE_NAME
     pw.println("@RELATION ${escapeIdentifier(relationName)}")
     pw.println()
 
@@ -131,7 +143,7 @@ class MatrixArffWriter {
       StringBuilder line = new StringBuilder()
       for (int col = 0; col < columnNames.size(); col++) {
         if (col > 0) {
-          line.append(',')
+          line.append(COMMA)
         }
         line.append(formatValue(matrix[row, col], attributeInfos[col]))
       }
@@ -155,7 +167,7 @@ class MatrixArffWriter {
       return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.DATE, options)
     }
     if (options.inferNominals && (colType == String || colType == Object)) {
-      LinkedHashSet<String> uniqueValues = collectUniqueStringValues(matrix, colName)
+      Set<String> uniqueValues = collectUniqueStringValues(matrix, colName)
       if (shouldBeNominal(uniqueValues, matrix.rowCount(), options.nominalThreshold)) {
         return createNominalInfo(colName, uniqueValues as List<String>, false)
       }
@@ -214,7 +226,7 @@ class MatrixArffWriter {
       throw new IllegalArgumentException(guidance)
     }
     validateNominalValues(colName, nominalValues)
-    String typeDecl = "{${nominalValues.collect { String value -> escapeNominalValue(value) }.join(',')}}"
+    String typeDecl = "{${nominalValues.collect { String value -> escapeNominalValue(value) }.join(COMMA)}}"
     new ArffAttributeInfo(ArffTypeDecl.NOMINAL, typeDecl, nominalValues)
   }
 
@@ -297,8 +309,8 @@ class MatrixArffWriter {
     type in [Date, java.sql.Date, Timestamp, LocalDate, LocalDateTime, Instant]
   }
 
-  private static LinkedHashSet<String> collectUniqueStringValues(Matrix matrix, String colName) {
-    LinkedHashSet<String> values = [] as LinkedHashSet<String>
+  private static Set<String> collectUniqueStringValues(Matrix matrix, String colName) {
+    Set<String> values = [] as LinkedHashSet<String>
     int rowCount = matrix.rowCount()
     for (int row = 0; row < rowCount; row++) {
       Object value = matrix[row, colName]
@@ -319,7 +331,7 @@ class MatrixArffWriter {
 
   private static String formatValue(Object value, ArffAttributeInfo info) {
     if (value == null) {
-      return '?'
+      return QUESTION_MARK
     }
     return switch (info.type) {
       case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> value.toString()
@@ -351,18 +363,18 @@ class MatrixArffWriter {
   }
 
   private static String escapeIdentifier(String name) {
-    if (name.contains(' ') || name.contains(',') || name.contains('{') ||
-        name.contains('}') || name.contains('%') || name.contains("'") ||
-        name.contains('"')) {
+    if (name.contains(SPACE) || name.contains(COMMA) || name.contains(OPEN_BRACE) ||
+        name.contains(CLOSE_BRACE) || name.contains(PERCENT) || name.contains(APOSTROPHE) ||
+        name.contains(DOUBLE_QUOTE)) {
       return "'${escapeQuotedContent(name)}'"
     }
     name
   }
 
   private static String escapeNominalValue(String value) {
-    if (value.isEmpty() || value == '?' || value.startsWith('%') ||
-        value.contains(',') || value.contains(' ') || value.contains("'") ||
-        value.contains('"') || value.contains('{') || value.contains('}')) {
+    if (value.isEmpty() || value == QUESTION_MARK || value.startsWith(PERCENT) ||
+        value.contains(COMMA) || value.contains(SPACE) || value.contains(APOSTROPHE) ||
+        value.contains(DOUBLE_QUOTE) || value.contains(OPEN_BRACE) || value.contains(CLOSE_BRACE)) {
       return "'${escapeQuotedContent(value)}'"
     }
     value
@@ -373,21 +385,21 @@ class MatrixArffWriter {
   }
 
   private static String escapeQuotedContent(String value) {
-    value.replace("\\", "\\\\").replace("'", "\\'")
+    value.replace(BACKSLASH, '\\\\').replace(APOSTROPHE, '\\\'')
   }
 
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw new IllegalArgumentException(MATRIX_NULL_MESSAGE)
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
+      throw new IllegalArgumentException('Matrix must have at least one column')
     }
   }
 
   private static File ensureFileOutput(Matrix matrix, File output) {
     if (output == null) {
-      throw new IllegalArgumentException("File or directory cannot be null")
+      throw new IllegalArgumentException('File or directory cannot be null')
     }
     if (output.isDirectory()) {
       output = new File(output, safeFileName(matrix.matrixName) + '.arff')
@@ -403,13 +415,13 @@ class MatrixArffWriter {
   private static String safeFileName(String name) {
     String baseName = name?.trim()
     if (baseName == null || baseName.isEmpty()) {
-      return 'matrix'
+      return DEFAULT_MATRIX_BASE_NAME
     }
-    baseName = baseName.replace('\\', '_').replace('/', '_')
-    baseName = baseName.replace('..', '_')
-    baseName = baseName.replaceAll(/[^A-Za-z0-9._-]/, '_')
-    if (baseName.isEmpty() || baseName == '.' || baseName == '..') {
-      return 'matrix'
+    baseName = baseName.replace(BACKSLASH, UNDERSCORE).replace('/', UNDERSCORE)
+    baseName = baseName.replace(DOUBLE_DOT, UNDERSCORE)
+    baseName = baseName.replaceAll(/[^A-Za-z0-9._-]/, UNDERSCORE)
+    if (baseName.isEmpty() || baseName == '.' || baseName == DOUBLE_DOT) {
+      return DEFAULT_MATRIX_BASE_NAME
     }
     baseName
   }

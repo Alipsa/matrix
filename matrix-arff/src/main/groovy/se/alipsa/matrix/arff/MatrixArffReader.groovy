@@ -21,7 +21,21 @@ import java.util.regex.Pattern
  */
 class MatrixArffReader {
 
-  private static final Pattern DATE_FORMAT_PATTERN = Pattern.compile(/(?i)date\s*(?:'([^']*)'|"([^"]*)")?/)
+  private static final Pattern DATE_FORMAT_PATTERN =
+      Pattern.compile(/(?i)date\s*(?:'(?<singleQuoted>[^']*)'|"(?<doubleQuoted>[^"]*)")?/)
+  private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
+  private static final String ATTRIBUTE_KEYWORD = '@ATTRIBUTE'
+  private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
+  private static final int RELATION_PREFIX_LENGTH = 9
+  private static final char BACKSLASH_CHAR = '\\'
+  private static final char SINGLE_QUOTE_CHAR = '\''
+  private static final char DOUBLE_QUOTE_CHAR = '"'
+  private static final String SINGLE_QUOTE = String.valueOf(SINGLE_QUOTE_CHAR)
+  private static final String DOUBLE_QUOTE = String.valueOf(DOUBLE_QUOTE_CHAR)
+  private static final String DOT = '.'
+  private static final String SLASH = '/'
+  private static final String OPEN_BRACE = '{'
+  private static final String CLOSE_BRACE = '}'
 
   /** Read from an Arff file. */
   static Matrix read(File file) {
@@ -44,7 +58,7 @@ class MatrixArffReader {
   /** Read from an Arff file with typed options. */
   static Matrix read(Path path, ArffReadOptions options) {
     if (path == null) {
-      throw new IllegalArgumentException("Path cannot be null")
+      throw new IllegalArgumentException('Path cannot be null')
     }
     read(path.toFile(), options)
   }
@@ -56,13 +70,13 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix read(InputStream input, String defaultName = 'ArffMatrix') {
+  static Matrix read(InputStream input, String defaultName = DEFAULT_MATRIX_NAME) {
     read(input, defaultName, new ArffReadOptions())
   }
 
   /** Read arff from an InputStream with typed options. */
   static Matrix read(InputStream input, ArffReadOptions options) {
-    read(input, 'ArffMatrix', options)
+    read(input, DEFAULT_MATRIX_NAME, options)
   }
 
   /**
@@ -88,13 +102,13 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix read(Reader reader, String defaultName = 'ArffMatrix') {
+  static Matrix read(Reader reader, String defaultName = DEFAULT_MATRIX_NAME) {
     read(reader, defaultName, new ArffReadOptions())
   }
 
   /** Read arff from a Reader with typed options. */
   static Matrix read(Reader reader, ArffReadOptions options) {
-    read(reader, 'ArffMatrix', options)
+    read(reader, DEFAULT_MATRIX_NAME, options)
   }
 
   /**
@@ -133,13 +147,13 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix readString(String arffContent, String defaultName = 'ArffMatrix') {
+  static Matrix readString(String arffContent, String defaultName = DEFAULT_MATRIX_NAME) {
     readString(arffContent, defaultName, new ArffReadOptions())
   }
 
   /** Read arff content from a String with typed options. */
   static Matrix readString(String arffContent, ArffReadOptions options) {
-    readString(arffContent, 'ArffMatrix', options)
+    readString(arffContent, DEFAULT_MATRIX_NAME, options)
   }
 
   /**
@@ -215,7 +229,7 @@ class MatrixArffReader {
       String upperLine = line.toUpperCase()
       if (upperLine.startsWith('@RELATION')) {
         relationName = parseRelationName(line, lineNumber, rawLine)
-      } else if (upperLine.startsWith('@ATTRIBUTE')) {
+      } else if (upperLine.startsWith(ATTRIBUTE_KEYWORD)) {
         ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
         attributeNames.add(attr.name)
         attributes.add(attr)
@@ -224,7 +238,7 @@ class MatrixArffReader {
       }
     }
 
-    List<Class> types = attributes.collect { ArffAttribute attr -> attr.javaType }
+    List<Class> types = attributes*.javaType
     List<List<Object>> columns = []
     if (!rows.isEmpty()) {
       int numCols = attributeNames.size()
@@ -249,28 +263,28 @@ class MatrixArffReader {
   }
 
   private static String parseRelationName(String line, int lineNumber, String rawLine) {
-    if (line.length() < 9) {
+    if (line.length() < RELATION_PREFIX_LENGTH) {
       throw parseError('Invalid @RELATION line', lineNumber, rawLine)
     }
-    String name = line.substring(9).trim()
+    String name = line.substring(RELATION_PREFIX_LENGTH).trim()
     unescapeQuoted(name)
   }
 
   private static ArffAttribute parseAttribute(String line, ArffReadOptions options, int lineNumber, String rawLine) {
     String trimmed = line.trim()
-    int attrIndex = trimmed.toUpperCase().indexOf('@ATTRIBUTE')
+    int attrIndex = trimmed.toUpperCase().indexOf(ATTRIBUTE_KEYWORD)
     if (attrIndex < 0) {
-      throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
+      throw parseError(INVALID_ATTRIBUTE_LINE, lineNumber, rawLine)
     }
-    String spec = trimmed.substring(attrIndex + 10).trim()
+    String spec = trimmed.substring(attrIndex + ATTRIBUTE_KEYWORD.length()).trim()
     if (spec.isEmpty()) {
-      throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
+      throw parseError(INVALID_ATTRIBUTE_LINE, lineNumber, rawLine)
     }
 
     String name
     String typeSpec
     char first = spec.charAt(0)
-    if (first == '\'' || first == '"') {
+    if (first == SINGLE_QUOTE_CHAR || first == DOUBLE_QUOTE_CHAR) {
       char quoteChar = first
       StringBuilder sb = new StringBuilder()
       boolean escape = false
@@ -283,7 +297,7 @@ class MatrixArffReader {
           escape = false
           continue
         }
-        if (c == '\\') {
+        if (c == BACKSLASH_CHAR) {
           escape = true
           continue
         }
@@ -311,7 +325,7 @@ class MatrixArffReader {
         }
       }
       if (splitIndex < 0) {
-        throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
+        throw parseError(INVALID_ATTRIBUTE_LINE, lineNumber, rawLine)
       }
       name = spec.substring(0, splitIndex)
       typeSpec = spec.substring(splitIndex).trim()
@@ -326,27 +340,27 @@ class MatrixArffReader {
     String nominalValuesStr = extractNominalValues(typeSpec)
     if (nominalValuesStr != null) {
       List<String> nominalValues = parseNominalValues(nominalValuesStr)
-      return new ArffAttribute(name, ArffType.NOMINAL, String.class, nominalValues)
+      return new ArffAttribute(name, ArffType.NOMINAL, String, nominalValues)
     }
 
     if (upperType.startsWith('DATE')) {
       String dateFormat = null
       Matcher dateMatcher = DATE_FORMAT_PATTERN.matcher(typeSpec)
       if (dateMatcher.find()) {
-        dateFormat = dateMatcher.group(1) ?: dateMatcher.group(2)
+        dateFormat = dateMatcher.group('singleQuoted') ?: dateMatcher.group('doubleQuoted')
       }
-      return new ArffAttribute(name, ArffType.DATE, Date.class, null, dateFormat)
+      return new ArffAttribute(name, ArffType.DATE, Date, null, dateFormat)
     }
 
     switch (upperType) {
-      case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal.class)
-      case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer.class)
-      case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String.class)
+      case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal)
+      case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer)
+      case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String)
       default -> {
         if (options.failOnUnknownAttributeType) {
           throw parseError("Unknown @ATTRIBUTE type '$typeSpec'", lineNumber, rawLine)
         }
-        yield new ArffAttribute(name, ArffType.STRING, String.class)
+        yield new ArffAttribute(name, ArffType.STRING, String)
       }
     }
   }
@@ -361,7 +375,7 @@ class MatrixArffReader {
 
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
                                            int lineNumber, String rawLine) {
-    if (line.startsWith('{')) {
+    if (line.startsWith(OPEN_BRACE)) {
       return parseSparseDataRow(line, attributes, lineNumber, rawLine)
     }
 
@@ -388,7 +402,7 @@ class MatrixArffReader {
 
   /** Parse a sparse ARFF row in `{index value, ...}` format. */
   private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, int lineNumber, String rawLine) {
-    if (!line.endsWith('}')) {
+    if (!line.endsWith(CLOSE_BRACE)) {
       throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
     List<Object> row = [null] * attributes.size()
@@ -459,7 +473,7 @@ class MatrixArffReader {
           escape = false
           continue
         }
-        if (c == '\\') {
+        if (c == BACKSLASH_CHAR) {
           escape = true
           continue
         }
@@ -469,7 +483,7 @@ class MatrixArffReader {
         continue
       }
 
-      if (c == '\'' || c == '"') {
+      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
         inQuote = true
         quoteChar = c
         current.append(c)
@@ -487,7 +501,7 @@ class MatrixArffReader {
       throw parseError('Unterminated quoted sparse value', lineNumber, rawLine)
     }
     if (escape) {
-      current.append('\\')
+      current.append(BACKSLASH_CHAR)
     }
     entries.add(current.toString())
     entries
@@ -509,7 +523,7 @@ class MatrixArffReader {
     }
 
     char first = value.charAt(0)
-    if (first != '\'' && first != '"') {
+    if (first != SINGLE_QUOTE_CHAR && first != DOUBLE_QUOTE_CHAR) {
       return new ParsedToken(value, false)
     }
 
@@ -522,7 +536,7 @@ class MatrixArffReader {
         escape = false
         continue
       }
-      if (c == '\\') {
+      if (c == BACKSLASH_CHAR) {
         escape = true
         continue
       }
@@ -560,7 +574,7 @@ class MatrixArffReader {
           escape = false
           continue
         }
-        if (c == '\\') {
+        if (c == BACKSLASH_CHAR) {
           escape = true
           continue
         }
@@ -573,7 +587,7 @@ class MatrixArffReader {
         continue
       }
 
-      if (c == '\'' || c == '"') {
+      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
         if (current.toString().trim().isEmpty()) {
           current.setLength(0)
         } else {
@@ -602,7 +616,7 @@ class MatrixArffReader {
       throw new IllegalArgumentException(detail)
     }
     if (escape) {
-      current.append('\\')
+      current.append(BACKSLASH_CHAR)
     }
     values.add(new ParsedToken(current.toString(), tokenQuoted))
     values
@@ -638,8 +652,8 @@ class MatrixArffReader {
   }
 
   private static String unescapeQuoted(String value) {
-    boolean quoted = (value.startsWith("'") && value.endsWith("'")) ||
-        (value.startsWith('"') && value.endsWith('"'))
+    boolean quoted = (value.startsWith(SINGLE_QUOTE) && value.endsWith(SINGLE_QUOTE)) ||
+        (value.startsWith(DOUBLE_QUOTE) && value.endsWith(DOUBLE_QUOTE))
     if (!quoted) {
       return value
     }
@@ -656,20 +670,20 @@ class MatrixArffReader {
         escape = false
         continue
       }
-      if (c == '\\') {
+      if (c == BACKSLASH_CHAR) {
         escape = true
         continue
       }
       result.append(c)
     }
     if (escape) {
-      result.append('\\')
+      result.append(BACKSLASH_CHAR)
     }
     result.toString()
   }
 
   private static String extractNominalValues(String typeSpec) {
-    int openIndex = typeSpec.indexOf('{')
+    int openIndex = typeSpec.indexOf(OPEN_BRACE)
     if (openIndex < 0) {
       return null
     }
@@ -683,7 +697,7 @@ class MatrixArffReader {
           escape = false
           continue
         }
-        if (c == '\\') {
+        if (c == BACKSLASH_CHAR) {
           escape = true
           continue
         }
@@ -692,12 +706,12 @@ class MatrixArffReader {
         }
         continue
       }
-      if (c == '\'' || c == '"') {
+      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
         inQuote = true
         quoteChar = c
         continue
       }
-      if (c == '}') {
+      if (c == CLOSE_BRACE) {
         return typeSpec.substring(openIndex + 1, i)
       }
     }
@@ -706,7 +720,7 @@ class MatrixArffReader {
 
   private static void validateFile(File file) {
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw new IllegalArgumentException('File cannot be null')
     }
     if (!file.exists()) {
       throw new IllegalArgumentException("File does not exist: ${file.absolutePath}")
@@ -718,8 +732,8 @@ class MatrixArffReader {
 
   private static String defaultName(File file) {
     String name = file.name
-    if (name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name.contains(DOT)) {
+      name = name.substring(0, name.lastIndexOf(DOT))
     }
     name
   }
@@ -730,15 +744,15 @@ class MatrixArffReader {
       name = url.getFile()
     }
     if (name == null || name.isEmpty()) {
-      return 'ArffMatrix'
+      return DEFAULT_MATRIX_NAME
     }
-    if (name.contains('/')) {
-      name = name.substring(name.lastIndexOf('/') + 1)
+    if (name.contains(SLASH)) {
+      name = name.substring(name.lastIndexOf(SLASH) + 1)
     }
-    if (name.contains('.')) {
-      name = name.substring(0, name.lastIndexOf('.'))
+    if (name.contains(DOT)) {
+      name = name.substring(0, name.lastIndexOf(DOT))
     }
-    name ?: 'ArffMatrix'
+    name ?: DEFAULT_MATRIX_NAME
   }
 
   private static String fallbackName(String defaultName, ArffReadOptions options) {
