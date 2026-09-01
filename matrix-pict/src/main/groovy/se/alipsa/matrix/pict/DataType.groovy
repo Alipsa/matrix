@@ -35,7 +35,7 @@ enum DataType {
    * @param two the second column type
    * @return true if both types have the same DataType
    */
-  static boolean equals(Class one, Class two) {
+  static boolean sameCategory(Class one, Class two) {
     of(one) == of(two)
   }
 
@@ -47,7 +47,7 @@ enum DataType {
    * @return true if the types have different DataTypes
    */
   static boolean differs(Class one, Class two) {
-    !equals(one, two)
+    !sameCategory(one, two)
   }
 
   /**

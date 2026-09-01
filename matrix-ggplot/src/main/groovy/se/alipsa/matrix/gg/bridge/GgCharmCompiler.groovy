@@ -12,7 +12,6 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.ColumnRef
 import se.alipsa.matrix.charm.Coord
 import se.alipsa.matrix.charm.CssAttributesSpec
-import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.Facet
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.GeomSpec
@@ -21,24 +20,14 @@ import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.Labels
 import se.alipsa.matrix.charm.LayerSpec
-import se.alipsa.matrix.charm.LegendDirection
-import se.alipsa.matrix.charm.LegendPosition
-import se.alipsa.matrix.charm.LogticksAnnotationSpec
-import se.alipsa.matrix.charm.MapAnnotationSpec
 import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.PositionSpec
-import se.alipsa.matrix.charm.RasterAnnotationSpec
-import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charm.ScaleSpec
-import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.StatSpec
-import se.alipsa.matrix.charm.TextAnnotationSpec
-import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.Guide
@@ -53,10 +42,6 @@ import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
-import se.alipsa.matrix.gg.geom.GeomCustom
-import se.alipsa.matrix.gg.geom.GeomLogticks
-import se.alipsa.matrix.gg.geom.GeomMap
-import se.alipsa.matrix.gg.geom.GeomRasterAnn
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -69,9 +54,6 @@ import se.alipsa.matrix.gg.scale.ScaleXTime
 import se.alipsa.matrix.gg.scale.ScaleYDate
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.scale.ScaleYTime
-import se.alipsa.matrix.gg.theme.Theme as GgTheme
-
-import java.util.Locale
 
 /**
  * Adapter bridge that converts gg charts into Charm charts and renders
@@ -81,17 +63,47 @@ class GgCharmCompiler {
 
   private static final Logger log = Logger.getLogger(GgCharmCompiler)
 
+  private static final String AES_X = 'x'
+  private static final String AES_Y = 'y'
+  private static final String AES_XEND = 'xend'
+  private static final String AES_YEND = 'yend'
+  private static final String AES_XMIN = 'xmin'
+  private static final String AES_XMAX = 'xmax'
+  private static final String AES_YMIN = 'ymin'
+  private static final String AES_YMAX = 'ymax'
+  private static final String AES_COLOR = 'color'
+  private static final String AES_FILL = 'fill'
+  private static final String AES_SIZE = 'size'
+  private static final String AES_SHAPE = 'shape'
+  private static final String AES_GROUP = 'group'
+  private static final String AES_ALPHA = 'alpha'
+  private static final String AES_LINETYPE = 'linetype'
+  private static final String AES_LABEL = 'label'
+  private static final String AES_TOOLTIP = 'tooltip'
+  private static final String AES_WEIGHT = 'weight'
+
+  private static final String PARAM_STAT = 'stat'
+  private static final String PARAM_POSITION = 'position'
+  private static final String PARAM_MAPPING = 'mapping'
+  private static final String PARAM_LAYER_DATA = '__layer_data'
+  private static final String PARAM_TITLE = 'title'
+  private static final String PARAM_NAME = 'name'
+  private static final String PARAM_TYPE = 'type'
+  private static final String PARAM_DATE_FORMAT = 'dateFormat'
+  private static final String PARAM_DATE_BREAKS = 'dateBreaks'
+  private static final String PARAM_ZONE_ID = 'zoneId'
+
   private static final Set<String> LAYER_PARAM_SKIP_KEYS = [
-      'stat', 'position', 'mapping', '__layer_data'
+      PARAM_STAT, PARAM_POSITION, PARAM_MAPPING, PARAM_LAYER_DATA
   ] as Set<String>
 
   private static final List<String> AESTHETIC_KEYS = [
-      'x', 'y', 'color', 'fill', 'size', 'shape', 'group',
-      'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax',
-      'alpha', 'linetype', 'label', 'tooltip', 'weight'
+      AES_X, AES_Y, AES_COLOR, AES_FILL, AES_SIZE, AES_SHAPE, AES_GROUP,
+      AES_XEND, AES_YEND, AES_XMIN, AES_XMAX, AES_YMIN, AES_YMAX,
+      AES_ALPHA, AES_LINETYPE, AES_LABEL, AES_TOOLTIP, AES_WEIGHT
   ]
   private static final Set<String> PARAM_COLUMN_AESTHETICS = [
-      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'tooltip', 'weight'
+      AES_X, AES_Y, AES_XEND, AES_YEND, AES_XMIN, AES_XMAX, AES_YMIN, AES_YMAX, AES_LABEL, AES_TOOLTIP, AES_WEIGHT
   ] as Set<String>
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()
@@ -134,7 +146,7 @@ class GgCharmCompiler {
     Set<Layer> annotationLayers = [] as Set<Layer>
     Set<Layer> mappedLayerIdentities = [] as Set<Layer>
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
-      List<AnnotationSpec> annotationSpecs = mapAnnotationLayer(layer, idx, reasons)
+      List<AnnotationSpec> annotationSpecs = GgCharmAnnotationMapper.mapAnnotationLayer(layer, idx, reasons)
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
         annotationLayers << layer
@@ -166,7 +178,7 @@ class GgCharmCompiler {
     }
 
     // Apply per-layer scales from NewScaleMarker partitioning
-    applyPerLayerScales(ggChart, mappedLayers, skippedLayers, reasons)
+    applyPerLayerScales(ggChart, mappedLayers, skippedLayers)
 
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, globalScales)
 
@@ -177,7 +189,7 @@ class GgCharmCompiler {
         plotMapping,
         mappedLayers,
         mappedScales,
-        mapTheme(ggChart.theme),
+        GgCharmThemeMapper.mapTheme(ggChart.theme),
         mappedFacet,
         mappedCoord,
         mappedLabels,
@@ -206,7 +218,7 @@ class GgCharmCompiler {
    * to the correct mapped layers based on NewScaleMarker positions.
    */
   private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers,
-                                     Set<Layer> skippedLayers, List<String> reasons) {
+                                     Set<Layer> skippedLayers) {
     if (ggChart.components.isEmpty() || !ggChart.components.any { it instanceof NewScaleMarker }) {
       return
     }
@@ -238,7 +250,7 @@ class GgCharmCompiler {
         String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(ggScale.aesthetic)
         if (aesthetic != null && activeMarkers[aesthetic] && layerIdx >= 0 && layerIdx < mappedLayers.size()) {
           // This scale applies to the current layer as a per-layer override
-          CharmScale charmScale = mapSingleScale(ggScale, reasons)
+          CharmScale charmScale = mapSingleScale(ggScale)
           if (charmScale != null) {
             LayerSpec target = mappedLayers[layerIdx]
             // Need to rebuild LayerSpec with the per-layer scale added
@@ -302,7 +314,7 @@ class GgCharmCompiler {
       } else if (component instanceof GgScale) {
         GgScale scale = component as GgScale
         String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
-        if (aesthetic == null || !Boolean.TRUE.equals(markerActivated[aesthetic])) {
+        if (aesthetic == null || Boolean.TRUE != markerActivated[aesthetic]) {
           globalScales << scale
         }
       }
@@ -348,7 +360,7 @@ class GgCharmCompiler {
 
     Map<String, Object> layerParams = normalizeLayerParams(geomSpec.type, layer.params)
     if (layer.data != null) {
-      layerParams['__layer_data'] = layer.data
+      layerParams[PARAM_LAYER_DATA] = layer.data
     }
 
     Map<String, Object> statParams = deepCopyMap(layer.statParams)
@@ -385,12 +397,7 @@ class GgCharmCompiler {
 
   private GeomSpec resolveLayerGeomSpec(Layer layer, int idx, List<String> reasons) {
     if (layer?.geom != null) {
-      try {
-        return layer.geom.toCharmGeomSpec()
-      } catch (Exception e) {
-        reasons.add("Layer ${idx} geom '${layer.geom.class.simpleName}' could not be mapped: ${e.message}".toString())
-        return null
-      }
+      return mapDeclaredGeom(layer, idx, reasons)
     }
 
     CharmGeomType inferred = inferGeomType(layer?.stat)
@@ -405,6 +412,16 @@ class GgCharmCompiler {
         mappingRegistry.mapStat(layer?.stat ?: StatType.IDENTITY) ?: CharmStatType.IDENTITY,
         mappingRegistry.mapPosition(layer?.position ?: PositionType.IDENTITY) ?: CharmPositionType.IDENTITY
     )
+  }
+
+  private static GeomSpec mapDeclaredGeom(Layer layer, int idx, List<String> reasons) {
+    GeomSpec mapped = null
+    try {
+      mapped = layer.geom.toCharmGeomSpec()
+    } catch (Exception e) {
+      reasons.add("Layer ${idx} geom '${layer.geom.class.simpleName}' could not be mapped: ${e.message}".toString())
+    }
+    mapped
   }
 
   private static CharmGeomType inferGeomType(StatType statType) {
@@ -437,327 +454,6 @@ class GgCharmCompiler {
       case StatType.ALIGN -> CharmGeomType.AREA
       default -> null
     }
-  }
-
-  private List<AnnotationSpec> mapAnnotationLayer(Layer layer, int idx, List<String> reasons) {
-    if (layer == null || layer.geom == null) {
-      return []
-    }
-    GeomSpec geomSpec
-    try {
-      geomSpec = layer.geom.toCharmGeomSpec()
-    } catch (Exception ignored) {
-      return []
-    }
-
-    switch (geomSpec.type) {
-      case CharmGeomType.CUSTOM:
-        return mapCustomAnnotationLayer(layer, idx, reasons)
-      case CharmGeomType.LOGTICKS:
-        return mapLogticksAnnotationLayer(layer, idx)
-      case CharmGeomType.RASTER_ANN:
-        return mapRasterAnnotationLayer(layer, idx, reasons)
-      case CharmGeomType.MAP:
-        if (!layer.inheritAes) {
-          return mapMapAnnotationLayer(layer, idx, reasons)
-        }
-        return []
-      case CharmGeomType.TEXT:
-      case CharmGeomType.RECT:
-      case CharmGeomType.SEGMENT:
-        if (!layer.inheritAes) {
-          return mapInlineAnnotationLayer(layer, geomSpec.type, idx, reasons)
-        }
-        return []
-      default:
-        return []
-    }
-  }
-
-  private List<AnnotationSpec> mapCustomAnnotationLayer(Layer layer, int idx, List<String> reasons) {
-    if (!(layer.geom instanceof GeomCustom)) {
-      reasons.add("Layer ${idx} custom annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
-      return []
-    }
-    GeomCustom geom = layer.geom as GeomCustom
-    if (geom.grob == null) {
-      reasons.add("Layer ${idx} custom annotation requires a grob".toString())
-      return []
-    }
-    Matrix bounds = layer.data
-    Map<String, Object> annotationParams = filterParams(layer.params, ['grob', 'xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
-    annotationParams['__source'] = 'gg'
-    CustomAnnotationSpec spec = new CustomAnnotationSpec(
-        grob: geom.grob,
-        xmin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmin', 0),
-        xmax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmax', 0),
-        ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
-        ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
-        drawOrder: idx,
-        params: annotationParams
-    )
-    [spec]
-  }
-
-  private List<AnnotationSpec> mapLogticksAnnotationLayer(Layer layer, int idx) {
-    if (!(layer.geom instanceof GeomLogticks)) {
-      return []
-    }
-    GeomLogticks geom = layer.geom as GeomLogticks
-    Map<String, Object> params = [
-        base     : geom.base,
-        sides    : geom.sides,
-        outside  : geom.outside,
-        scaled   : geom.scaled,
-        short    : geom.shortLength,
-        mid      : geom.midLength,
-        long     : geom.longLength,
-        colour   : geom.colour,
-        linewidth: geom.linewidth,
-        linetype : geom.linetype,
-        alpha    : geom.alpha
-    ]
-    params.putAll(filterParams(layer.params, [] as Set<String>))
-    params['__source'] = 'gg'
-    [new LogticksAnnotationSpec(drawOrder: idx, params: params)]
-  }
-
-  private List<AnnotationSpec> mapRasterAnnotationLayer(Layer layer, int idx, List<String> reasons) {
-    if (!(layer.geom instanceof GeomRasterAnn)) {
-      reasons.add("Layer ${idx} raster annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
-      return []
-    }
-    GeomRasterAnn geom = layer.geom as GeomRasterAnn
-    if (geom.raster == null) {
-      reasons.add("Layer ${idx} raster annotation requires raster data".toString())
-      return []
-    }
-    Matrix bounds = layer.data
-    RasterAnnotationSpec spec = new RasterAnnotationSpec(
-        raster: geom.raster.collect { List<String> row -> row == null ? [] : new ArrayList<>(row) },
-        xmin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmin', 0),
-        xmax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmax', 0),
-        ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
-        ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
-        interpolate: geom.interpolate,
-        drawOrder: idx,
-        params: filterParams(layer.params, ['raster', 'xmin', 'xmax', 'ymin', 'ymax', 'interpolate'] as Set<String>)
-    )
-    spec.params['__source'] = 'gg'
-    [spec]
-  }
-
-  private List<AnnotationSpec> mapMapAnnotationLayer(Layer layer, int idx, List<String> reasons) {
-    if (!(layer.geom instanceof GeomMap)) {
-      reasons.add("Layer ${idx} map annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
-      return []
-    }
-    GeomMap geom = layer.geom as GeomMap
-    Matrix mapData = geom.map ?: (layer.params?.get('map') instanceof Matrix ? layer.params.get('map') as Matrix : null)
-    if (mapData == null) {
-      reasons.add("Layer ${idx} annotation_map requires a map Matrix".toString())
-      return []
-    }
-    MapAnnotationSpec spec = new MapAnnotationSpec(
-        map: mapData,
-        data: layer.data,
-        drawOrder: idx,
-        mapping: extractMapMapping(layer.aes),
-        params: filterParams(layer.params, ['map', 'data', 'mapping'] as Set<String>)
-    )
-    spec.params['__source'] = 'gg'
-    [spec]
-  }
-
-  private List<AnnotationSpec> mapInlineAnnotationLayer(
-      Layer layer,
-      CharmGeomType type,
-      int idx,
-      List<String> reasons
-  ) {
-    Matrix data = layer.data
-    GgAes aes = layer.aes
-    if (data == null || aes == null || data.rowCount() == 0) {
-      reasons.add("Layer ${idx} annotation ${type} is missing data/aes bindings".toString())
-      return []
-    }
-
-    switch (type) {
-      case CharmGeomType.TEXT:
-        return mapTextAnnotations(data, aes, layer.params, idx, reasons)
-      case CharmGeomType.RECT:
-        return mapRectAnnotations(data, aes, layer.params, idx, reasons)
-      case CharmGeomType.SEGMENT:
-        return mapSegmentAnnotations(data, aes, layer.params, idx, reasons)
-      default:
-        return []
-    }
-  }
-
-  private List<AnnotationSpec> mapTextAnnotations(
-      Matrix data,
-      GgAes aes,
-      Map params,
-      int idx,
-      List<String> reasons
-  ) {
-    String xCol = resolveColumnRef(aes, 'x')
-    String yCol = resolveColumnRef(aes, 'y')
-    String labelCol = resolveColumnRef(aes, 'label')
-    if (xCol == null || yCol == null || labelCol == null) {
-      reasons.add("Layer ${idx} text annotation requires x, y, and label columns".toString())
-      return []
-    }
-
-    Map<String, Object> style = filterParams(params, ['x', 'y', 'label'] as Set<String>)
-    List<AnnotationSpec> specs = []
-    for (int row = 0; row < data.rowCount(); row++) {
-      Number x = coerceNumber(data[row, xCol])
-      Number y = coerceNumber(data[row, yCol])
-      String label = data[row, labelCol]?.toString()
-      if (x == null || y == null || label == null) {
-        continue
-      }
-      specs << new TextAnnotationSpec(x: x, y: y, label: label, drawOrder: idx, params: new LinkedHashMap<>(style))
-    }
-    specs
-  }
-
-  private List<AnnotationSpec> mapRectAnnotations(
-      Matrix data,
-      GgAes aes,
-      Map params,
-      int idx,
-      List<String> reasons
-  ) {
-    String xminCol = resolveColumnRef(aes, 'xmin')
-    String xmaxCol = resolveColumnRef(aes, 'xmax')
-    String yminCol = resolveColumnRef(aes, 'ymin')
-    String ymaxCol = resolveColumnRef(aes, 'ymax')
-    if (xminCol == null || xmaxCol == null || yminCol == null || ymaxCol == null) {
-      reasons.add("Layer ${idx} rect annotation requires xmin, xmax, ymin, and ymax columns".toString())
-      return []
-    }
-
-    Map<String, Object> style = filterParams(params, ['xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
-    List<AnnotationSpec> specs = []
-    for (int row = 0; row < data.rowCount(); row++) {
-      Number xmin = coerceNumber(data[row, xminCol])
-      Number xmax = coerceNumber(data[row, xmaxCol])
-      Number ymin = coerceNumber(data[row, yminCol])
-      Number ymax = coerceNumber(data[row, ymaxCol])
-      if (xmin == null || xmax == null || ymin == null || ymax == null) {
-        continue
-      }
-      specs << new RectAnnotationSpec(
-          xmin: xmin,
-          xmax: xmax,
-          ymin: ymin,
-          ymax: ymax,
-          drawOrder: idx,
-          params: new LinkedHashMap<>(style)
-      )
-    }
-    specs
-  }
-
-  private List<AnnotationSpec> mapSegmentAnnotations(
-      Matrix data,
-      GgAes aes,
-      Map params,
-      int idx,
-      List<String> reasons
-  ) {
-    String xCol = resolveColumnRef(aes, 'x')
-    String yCol = resolveColumnRef(aes, 'y')
-    String xendCol = resolveColumnRef(aes, 'xend')
-    String yendCol = resolveColumnRef(aes, 'yend')
-    if (xCol == null || yCol == null || xendCol == null || yendCol == null) {
-      reasons.add("Layer ${idx} segment annotation requires x, y, xend, and yend columns".toString())
-      return []
-    }
-
-    Map<String, Object> style = filterParams(params, ['x', 'y', 'xend', 'yend'] as Set<String>)
-    List<AnnotationSpec> specs = []
-    for (int row = 0; row < data.rowCount(); row++) {
-      Number x = coerceNumber(data[row, xCol])
-      Number y = coerceNumber(data[row, yCol])
-      Number xend = coerceNumber(data[row, xendCol])
-      Number yend = coerceNumber(data[row, yendCol])
-      if (x == null || y == null || xend == null || yend == null) {
-        continue
-      }
-      specs << new SegmentAnnotationSpec(
-          x: x,
-          y: y,
-          xend: xend,
-          yend: yend,
-          drawOrder: idx,
-          params: new LinkedHashMap<>(style)
-      )
-    }
-    specs
-  }
-
-  private static Map<String, String> extractMapMapping(GgAes aes) {
-    Map<String, String> mapping = [:]
-    if (aes == null) {
-      return mapping
-    }
-    String mapId = resolveColumnRef(aes, 'map_id')
-    if (mapId != null) {
-      mapping['map_id'] = mapId
-    }
-    String x = resolveColumnRef(aes, 'x')
-    if (x != null) {
-      mapping['x'] = x
-    }
-    String y = resolveColumnRef(aes, 'y')
-    if (y != null) {
-      mapping['y'] = y
-    }
-    String group = resolveColumnRef(aes, 'group')
-    if (group != null) {
-      mapping['group'] = group
-    }
-    String fill = resolveColumnRef(aes, 'fill')
-    if (fill != null) {
-      mapping['fill'] = fill
-    }
-    String color = resolveColumnRef(aes, 'color')
-    if (color != null) {
-      mapping['color'] = color
-    }
-    mapping
-  }
-
-  private static String resolveColumnRef(GgAes aes, String aesthetic) {
-    if (aes == null) {
-      return null
-    }
-    Object value = aes.getAestheticValue(aesthetic)
-    if (value instanceof CharSequence) {
-      return value.toString()
-    }
-    if (value instanceof Factor && (value as Factor).value instanceof CharSequence) {
-      return (value as Factor).value.toString()
-    }
-    null
-  }
-
-  private static Number coerceNumber(Object value) {
-    if (value instanceof Number) {
-      return value as Number
-    }
-    ValueConverter.asBigDecimal(value)
-  }
-
-  private static Map<String, Object> filterParams(Map source, Set<String> excluded) {
-    Map<String, Object> params = deepCopyMap(source)
-    excluded.each { String key ->
-      params.remove(key)
-    }
-    params
   }
 
   private CharmStatType mapLayerStat(GeomSpec geomSpec, StatType ggStat, int idx, List<String> reasons) {
@@ -814,7 +510,7 @@ class GgCharmCompiler {
   /**
    * Maps a single gg scale to a Charm scale for per-layer use.
    */
-  private CharmScale mapSingleScale(GgScale scale, List<String> reasons) {
+  private CharmScale mapSingleScale(GgScale scale) {
     if (scale == null) {
       return null
     }
@@ -854,7 +550,7 @@ class GgCharmCompiler {
 
   private static void enrichScale(CharmScale charmScale, GgScale ggScale) {
     if (ggScale.name) {
-      charmScale.params['name'] = ggScale.name
+      charmScale.params[PARAM_NAME] = ggScale.name
     }
     if (ggScale.limits != null) {
       charmScale.params['limits'] = new ArrayList<>(ggScale.limits)
@@ -878,25 +574,25 @@ class GgCharmCompiler {
     if (ggScale instanceof ScaleXDate || ggScale instanceof ScaleYDate) {
       ScaleXDate dateScale = ggScale as ScaleXDate
       if (dateScale.dateFormat) {
-        charmScale.params['dateFormat'] = dateScale.dateFormat
+        charmScale.params[PARAM_DATE_FORMAT] = dateScale.dateFormat
       }
       if (dateScale.dateBreaks) {
-        charmScale.params['dateBreaks'] = dateScale.dateBreaks
+        charmScale.params[PARAM_DATE_BREAKS] = dateScale.dateBreaks
       }
       if (dateScale.zoneId) {
-        charmScale.params['zoneId'] = dateScale.zoneId
+        charmScale.params[PARAM_ZONE_ID] = dateScale.zoneId
       }
     }
     if (ggScale instanceof ScaleXDatetime || ggScale instanceof ScaleYDatetime) {
       ScaleXDatetime datetimeScale = ggScale as ScaleXDatetime
       if (datetimeScale.dateFormat) {
-        charmScale.params['dateFormat'] = datetimeScale.dateFormat
+        charmScale.params[PARAM_DATE_FORMAT] = datetimeScale.dateFormat
       }
       if (datetimeScale.dateBreaks) {
-        charmScale.params['dateBreaks'] = datetimeScale.dateBreaks
+        charmScale.params[PARAM_DATE_BREAKS] = datetimeScale.dateBreaks
       }
       if (datetimeScale.zoneId) {
-        charmScale.params['zoneId'] = datetimeScale.zoneId
+        charmScale.params[PARAM_ZONE_ID] = datetimeScale.zoneId
       }
     }
     if (ggScale instanceof ScaleXTime || ggScale instanceof ScaleYTime) {
@@ -911,7 +607,7 @@ class GgCharmCompiler {
   }
 
   private static CharmScale fallbackScale(GgScale scale, String aesthetic) {
-    if (aesthetic == 'x' || aesthetic == 'y') {
+    if (aesthetic == AES_X || aesthetic == AES_Y) {
       String simple = scale?.class?.simpleName?.toLowerCase(Locale.ROOT) ?: ''
       if (simple.contains('datetime')) {
         return CharmScale.datetime()
@@ -924,13 +620,13 @@ class GgCharmCompiler {
       }
       return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
     }
-    if (aesthetic == 'color' || aesthetic == 'fill') {
+    if (aesthetic == AES_COLOR || aesthetic == AES_FILL) {
       return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
     }
-    if (aesthetic == 'size' || aesthetic == 'alpha') {
+    if (aesthetic == AES_SIZE || aesthetic == AES_ALPHA) {
       return CharmScale.continuous()
     }
-    if (aesthetic == 'shape' || aesthetic == 'linetype' || aesthetic == 'group') {
+    if (aesthetic == AES_SHAPE || aesthetic == AES_LINETYPE || aesthetic == AES_GROUP) {
       return CharmScale.discrete()
     }
     null
@@ -938,15 +634,15 @@ class GgCharmCompiler {
 
   private static void assignScale(ScaleSpec spec, String aesthetic, CharmScale charmScale, int idx, List<String> reasons) {
     switch (aesthetic) {
-      case 'x' -> spec.x = charmScale
-      case 'y' -> spec.y = charmScale
-      case 'color' -> spec.color = charmScale
-      case 'fill' -> spec.fill = charmScale
-      case 'size' -> spec.size = charmScale
-      case 'shape' -> spec.shape = charmScale
-      case 'alpha' -> spec.alpha = charmScale
-      case 'linetype' -> spec.linetype = charmScale
-      case 'group' -> spec.group = charmScale
+      case AES_X -> spec.x = charmScale
+      case AES_Y -> spec.y = charmScale
+      case AES_COLOR -> spec.color = charmScale
+      case AES_FILL -> spec.fill = charmScale
+      case AES_SIZE -> spec.size = charmScale
+      case AES_SHAPE -> spec.shape = charmScale
+      case AES_ALPHA -> spec.alpha = charmScale
+      case AES_LINETYPE -> spec.linetype = charmScale
+      case AES_GROUP -> spec.group = charmScale
       default -> {
         String msg = "Scale ${idx} aesthetic '${aesthetic}' is not delegated"
         reasons.add(msg)
@@ -1062,7 +758,7 @@ class GgCharmCompiler {
   private static Map<String, Object> normalizeLayerParams(CharmGeomType geomType, Map params) {
     Map<String, Object> normalized = [:]
     (params ?: [:]).each { Object key, Object value ->
-      String name = key?.toString()
+      String name = key
       if (name == null || LAYER_PARAM_SKIP_KEYS.contains(name)) {
         return
       }
@@ -1073,8 +769,8 @@ class GgCharmCompiler {
   }
 
   private static String normalizeParamKey(CharmGeomType geomType, String key) {
-    String normalized = key == 'colour' ? 'color' : key
-    if ((geomType == CharmGeomType.LINE || geomType == CharmGeomType.SMOOTH) && (normalized == 'size' || normalized == 'linewidth')) {
+    String normalized = key == 'colour' ? AES_COLOR : key
+    if ((geomType == CharmGeomType.LINE || geomType == CharmGeomType.SMOOTH) && (normalized == AES_SIZE || normalized == 'linewidth')) {
       return 'lineWidth'
     }
     if ((geomType == CharmGeomType.COL || geomType == CharmGeomType.BAR) && normalized == 'width') {
@@ -1083,7 +779,7 @@ class GgCharmCompiler {
     normalized
   }
 
-  private static Map<String, Object> deepCopyMap(Map map) {
+  static Map<String, Object> deepCopyMap(Map map) {
     Map<String, Object> copy = [:]
     (map ?: [:]).each { Object key, Object value ->
       if (key != null) {
@@ -1095,7 +791,7 @@ class GgCharmCompiler {
 
   private static Object deepCopyValue(Object value) {
     if (value instanceof Map) {
-      Map<Object, Object> copy = new LinkedHashMap<>()
+      Map<Object, Object> copy = [:]
       (value as Map).each { Object k, Object v ->
         copy[k] = deepCopyValue(v)
       }
@@ -1166,65 +862,6 @@ class GgCharmCompiler {
     mapping
   }
 
-  private static Theme mapTheme(GgTheme source) {
-    Theme theme = new Theme()
-    if (source == null) {
-      return theme
-    }
-    // Map typed elements field-by-field from gg theme to charm theme
-    theme.plotBackground = mapRect(source.plotBackground)
-    theme.plotTitle = mapText(source.plotTitle)
-    theme.plotSubtitle = mapText(source.plotSubtitle)
-    theme.plotCaption = mapText(source.plotCaption)
-    theme.plotMargin = source.plotMargin != null ? new ArrayList<>(source.plotMargin) : null
-
-    theme.panelBackground = mapRect(source.panelBackground)
-    theme.panelBorder = mapRect(source.panelBorder)
-    theme.panelGridMajor = mapLine(source.panelGridMajor)
-    theme.panelGridMinor = mapLine(source.panelGridMinor)
-    theme.panelSpacing = source.panelSpacing != null ? new ArrayList<>(source.panelSpacing) : null
-
-    theme.axisLineX = mapLine(source.axisLineX)
-    theme.axisLineY = mapLine(source.axisLineY)
-    theme.axisTicksX = mapLine(source.axisTicksX)
-    theme.axisTicksY = mapLine(source.axisTicksY)
-    theme.axisTextX = mapText(source.axisTextX)
-    theme.axisTextY = mapText(source.axisTextY)
-    theme.axisTitleX = mapText(source.axisTitleX)
-    theme.axisTitleY = mapText(source.axisTitleY)
-    theme.axisTickLength = source.axisTickLength
-
-    Object normalizedLegendPos = LegendPosition.normalize(source.legendPosition)
-    theme.legendPosition = normalizedLegendPos instanceof LegendPosition
-        ? normalizedLegendPos as LegendPosition
-        : LegendPosition.RIGHT
-    if (source.legendPositionCoords != null) {
-      theme.legendPositionCoords = new ArrayList<>(source.legendPositionCoords)
-    }
-    Object dirNormalized = LegendDirection.normalize(source.legendDirection)
-    theme.legendDirection = dirNormalized instanceof LegendDirection
-        ? dirNormalized as LegendDirection
-        : LegendDirection.VERTICAL
-    theme.legendBackground = mapRect(source.legendBackground)
-    theme.legendKey = mapRect(source.legendKey)
-    theme.legendKeySize = source.legendKeySize != null ? new ArrayList<>(source.legendKeySize) : null
-    theme.legendTitle = mapText(source.legendTitle)
-    theme.legendText = mapText(source.legendText)
-    theme.legendMargin = source.legendMargin != null ? new ArrayList<>(source.legendMargin) : null
-
-    theme.stripBackground = mapRect(source.stripBackground)
-    theme.stripText = mapText(source.stripText)
-
-    theme.discreteColors = source.discreteColors != null ? new ArrayList<>(source.discreteColors) : null
-    theme.gradientColors = source.gradientColors != null ? new ArrayList<>(source.gradientColors) : null
-    theme.baseFamily = source.baseFamily
-    theme.baseSize = source.baseSize
-    theme.baseLineHeight = source.baseLineHeight
-    theme.themeName = source.themeName
-    theme.explicitNulls = source.explicitNulls != null ? new HashSet<String>(source.explicitNulls) : new HashSet<String>()
-    theme
-  }
-
   private static Matrix resolvePlotData(GgChart chart) {
     if (chart?.data != null) {
       return chart.data
@@ -1234,47 +871,6 @@ class GgCharmCompiler {
       return layerData
     }
     new Matrix('gg-plot', [], [], [])
-  }
-
-  private static se.alipsa.matrix.charm.theme.ElementText mapText(se.alipsa.matrix.gg.theme.ElementText source) {
-    if (source == null) {
-      return null
-    }
-    new se.alipsa.matrix.charm.theme.ElementText(
-        family: source.family,
-        face: source.face,
-        size: source.size,
-        color: source.color,
-        hjust: source.hjust,
-        vjust: source.vjust,
-        angle: source.angle,
-        lineheight: source.lineheight,
-        margin: source.margin != null ? new ArrayList<>(source.margin) : null
-    )
-  }
-
-  private static se.alipsa.matrix.charm.theme.ElementLine mapLine(se.alipsa.matrix.gg.theme.ElementLine source) {
-    if (source == null) {
-      return null
-    }
-    new se.alipsa.matrix.charm.theme.ElementLine(
-        color: source.color,
-        size: source.size,
-        linetype: source.linetype,
-        lineend: source.lineend
-    )
-  }
-
-  private static se.alipsa.matrix.charm.theme.ElementRect mapRect(se.alipsa.matrix.gg.theme.ElementRect source) {
-    if (source == null) {
-      return null
-    }
-    new se.alipsa.matrix.charm.theme.ElementRect(
-        fill: source.fill,
-        color: source.color,
-        size: source.size,
-        linetype: source.linetype
-    )
   }
 
   private static Labels mapLabels(Label source, Guides guides, List<GgScale> scales) {
@@ -1339,16 +935,17 @@ class GgCharmCompiler {
   }
 
   private static String extractGuideTitle(Object guideSpec) {
+    Object title = null
     if (guideSpec instanceof Guide) {
-      Guide guide = guideSpec as Guide
-      Object title = guide.params?.get('title') ?: guide.params?.get('name')
-      return title?.toString()
+      title = titleOrName((guideSpec as Guide).params)
+    } else if (guideSpec instanceof Map) {
+      title = titleOrName(guideSpec as Map)
     }
-    if (guideSpec instanceof Map) {
-      Object title = (guideSpec as Map).get('title') ?: (guideSpec as Map).get('name')
-      return title?.toString()
-    }
-    null
+    title?.toString()
+  }
+
+  private static Object titleOrName(Map params) {
+    params?.get(PARAM_TITLE) ?: params?.get(PARAM_NAME)
   }
 
   /**
@@ -1424,12 +1021,12 @@ class GgCharmCompiler {
 
     if (spec instanceof Map) {
       Map map = spec as Map
-      String typeStr = map['type']?.toString()
+      String typeStr = map[PARAM_TYPE]
       GuideType type = GuideType.fromString(typeStr)
       if (type == null) {
         return null
       }
-      Map<String, Object> params = convertGuideParams(map.findAll { k, v -> k != 'type' })
+      Map<String, Object> params = convertGuideParams(map.findAll { k, v -> k != PARAM_TYPE })
       return new GuideSpec(type, params)
     }
 

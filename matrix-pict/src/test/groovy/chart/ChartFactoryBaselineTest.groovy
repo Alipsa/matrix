@@ -269,8 +269,8 @@ class ChartFactoryBaselineTest {
     assertTrue(DataType.differs(Boolean, Double))
     assertFalse(DataType.differs(Integer, Double))
     assertFalse(DataType.differs(Long, Float))
-    assertTrue(DataType.equals(Integer, Double))
-    assertFalse(DataType.equals(String, Integer))
+    assertTrue(DataType.sameCategory(Integer, Double))
+    assertFalse(DataType.sameCategory(String, Integer))
   }
 
   @Test

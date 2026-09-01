@@ -11,7 +11,7 @@ plugins {
 
 group = 'se.alipsa.matrix'
 description = "Integration between Matrix and Smile ML library"
-version = '0.2.0'
+version = '0.2.1-SNAPSHOT'
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
