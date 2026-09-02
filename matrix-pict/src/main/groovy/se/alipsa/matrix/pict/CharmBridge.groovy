@@ -32,6 +32,14 @@ import java.awt.Font
  */
 class CharmBridge {
 
+  private static final String AES_X = 'x'
+  private static final String AES_Y = 'y'
+  private static final String AES_SERIES = 'series'
+  private static final String AES_SIZE = 'size'
+  private static final String AES_GROUP = 'group'
+  private static final String AES_COLOR = 'color'
+  private static final String AES_FILL = 'fill'
+
   /**
    * Converts a pict chart {@link Chart} to a Charm {@link se.alipsa.matrix.charm.Chart}
    * using default dimensions (800x600).
@@ -75,7 +83,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
     spec.addLayer(new AreaBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -93,16 +101,17 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {
-      spec.mapping(multiSeries ? [x: 'y', y: 'x', fill: 'series'] : [x: 'y', y: 'x'])
+      spec.mapping(multiSeries ? [(AES_X): AES_Y, (AES_Y): AES_X, (AES_FILL): AES_SERIES] : [(AES_X): AES_Y, (AES_Y): AES_X])
       spec.addLayer(new BarBuilder().position(position))
     } else {
-      spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
+      spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
       spec.addLayer(new ColBuilder().position(position))
     }
     applyLabelsAndTheme(spec, chart)
     spec
   }
 
+  @SuppressWarnings('UnnecessaryToString')
   private static PlotSpec buildBoxSpec(BoxChart chart) {
     List<List<?>> rows = []
     List<?> categories = chart.categorySeries
@@ -111,16 +120,16 @@ class CharmBridge {
       String category = categories[idx].toString()
       List<Number> values = allValues[idx] as List<Number>
       for (Number val : values) {
-        rows.add([category, val] as List<?>)
+        rows.add([category, val])
       }
     }
     Matrix data = Matrix.builder()
-        .columnNames('x', 'y')
+        .columnNames(AES_X, AES_Y)
         .rows(rows)
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([x: 'x', y: 'y'])
+    spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y])
     spec.addLayer(new BoxplotBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -129,15 +138,15 @@ class CharmBridge {
   private static PlotSpec buildHistogramSpec(Histogram chart) {
     List<List<?>> rows = []
     for (Number val : chart.originalData) {
-      rows.add([val] as List<?>)
+      rows.add([val])
     }
     Matrix data = Matrix.builder()
-        .columnNames('x')
+        .columnNames(AES_X)
         .rows(rows)
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([x: 'x'])
+    spec.mapping([(AES_X): AES_X])
     spec.addLayer(new HistogramBuilder().bins(chart.numberOfBins))
     applyLabelsAndTheme(spec, chart as Chart)
     spec
@@ -147,7 +156,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.mapping(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_COLOR): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
     spec.addLayer(new LineBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -158,16 +167,16 @@ class CharmBridge {
     List<?> values = chart.valueSeries[0]
     List<List<?>> rows = []
     for (int idx = 0; idx < categories.size(); idx++) {
-      rows.add([categories[idx].toString(), values[idx]] as List<?>)
+      rows.add([categories[idx].toString(), values[idx]])
     }
     Matrix data = Matrix.builder()
-        .columnNames('x', 'y')
+        .columnNames(AES_X, AES_Y)
         .rows(rows)
         .types([String, BigDecimal])
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([x: 'x', y: 'y', fill: 'x'])
+    spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_X])
     spec.addLayer(new PieBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -177,7 +186,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.mapping(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_COLOR): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
     spec.addLayer(new PointBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -191,14 +200,14 @@ class CharmBridge {
     if (chart.groupSeries) {
       List<List<?>> rows = []
       for (int i = 0; i < xValues.size(); i++) {
-        rows.add([xValues[i], yValues[i], sizeValues[i], chart.groupSeries[i]] as List<?>)
+        rows.add([xValues[i], yValues[i], sizeValues[i], chart.groupSeries[i]])
       }
       Matrix data = Matrix.builder()
-          .columnNames('x', 'y', 'size', 'group')
+          .columnNames(AES_X, AES_Y, AES_SIZE, AES_GROUP)
           .rows(rows)
           .build()
       PlotSpec spec = Charts.plot(data)
-      spec.mapping([x: 'x', y: 'y', size: 'size', color: 'group'])
+      spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_SIZE): AES_SIZE, (AES_COLOR): AES_GROUP])
       spec.addLayer(new PointBuilder())
       applyLabelsAndTheme(spec, chart)
       return spec
@@ -206,14 +215,14 @@ class CharmBridge {
 
     List<List<?>> rows = []
     for (int i = 0; i < xValues.size(); i++) {
-      rows.add([xValues[i], yValues[i], sizeValues[i]] as List<?>)
+      rows.add([xValues[i], yValues[i], sizeValues[i]])
     }
     Matrix data = Matrix.builder()
-        .columnNames('x', 'y', 'size')
+        .columnNames(AES_X, AES_Y, AES_SIZE)
         .rows(rows)
         .build()
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([x: 'x', y: 'y', size: 'size'])
+    spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_SIZE): AES_SIZE])
     spec.addLayer(new PointBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -232,10 +241,10 @@ class CharmBridge {
     if (valueLists.size() == 1) {
       List<List<?>> rows = []
       for (int idx = 0; idx < categories.size(); idx++) {
-        rows.add([categories[idx], valueLists[0][idx]] as List<?>)
+        rows.add([categories[idx], valueLists[0][idx]])
       }
       return Matrix.builder()
-          .columnNames('x', 'y')
+          .columnNames(AES_X, AES_Y)
           .rows(rows)
           .build()
     }
@@ -246,11 +255,11 @@ class CharmBridge {
       String seriesName = seriesNames != null && seriesIdx < seriesNames.size()
           ? seriesNames[seriesIdx] : "series${seriesIdx}"
       for (int catIdx = 0; catIdx < categories.size(); catIdx++) {
-        rows.add([categories[catIdx], values[catIdx], seriesName] as List<?>)
+        rows.add([categories[catIdx], values[catIdx], seriesName])
       }
     }
     Matrix.builder()
-        .columnNames('x', 'y', 'series')
+        .columnNames(AES_X, AES_Y, AES_SERIES)
         .rows(rows)
         .build()
   }
@@ -260,6 +269,16 @@ class CharmBridge {
    */
   private static void applyLabelsAndTheme(PlotSpec spec, Chart chart) {
     se.alipsa.matrix.charm.LabelsSpec labels = spec.labels as se.alipsa.matrix.charm.LabelsSpec
+    applyLabels(spec, labels, chart)
+    applyAxisScales(spec, chart)
+
+    se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
+    applyThemeBackgrounds(theme, chart)
+    applyAxisVisibility(theme, chart)
+    applyLegend(theme, labels, chart.legend)
+  }
+
+  private static void applyLabels(PlotSpec spec, se.alipsa.matrix.charm.LabelsSpec labels, Chart chart) {
     if (chart.style?.titleVisible != false && chart.title) {
       labels.title = chart.title
     }
@@ -272,9 +291,9 @@ class CharmBridge {
     if (chart.style?.css?.trim()) {
       spec.stylesheet(chart.style.css)
     }
-    applyAxisScales(spec, chart)
+  }
 
-    se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
+  private static void applyThemeBackgrounds(se.alipsa.matrix.charm.ThemeSpec theme, Chart chart) {
     if (chart.style?.plotBackgroundColor) {
       theme.panelBackground = new se.alipsa.matrix.charm.theme.ElementRect(
           fill: colorToHex(chart.style.plotBackgroundColor)
@@ -285,6 +304,9 @@ class CharmBridge {
           fill: colorToHex(chart.style.chartBackgroundColor)
       )
     }
+  }
+
+  private static void applyAxisVisibility(se.alipsa.matrix.charm.ThemeSpec theme, Chart chart) {
     if (chart.style?.xAxisVisible == false) {
       theme.axisLineX = null
       theme.axisTextX = null
@@ -299,30 +321,33 @@ class CharmBridge {
       theme.axisTitleY = null
       theme.explicitNulls.addAll(['axisLineY', 'axisTextY', 'axisTicksY', 'axisTitleY'])
     }
-    Legend legend = chart.legend
-    if (legend != null) {
-      if (!legend.visible) {
-        theme.legendPosition = LegendPosition.NONE
-      } else if (legend.position) {
-        theme.legendPosition = mapPosition(legend.position)
-      }
-      if (legend.direction) {
-        theme.legendDirection = mapDirection(legend.direction)
-      }
-      if (legend.backgroundColor) {
-        theme.legendBackground = new se.alipsa.matrix.charm.theme.ElementRect(
-            fill: colorToHex(legend.backgroundColor)
-        )
-      }
-      if (legend.font) {
-        se.alipsa.matrix.charm.theme.ElementText fontElement = mapFont(legend.font)
-        theme.legendText = fontElement
-        theme.legendTitle = fontElement.copy()
-      }
-      if (legend.title) {
-        labels.guides['color'] = legend.title
-        labels.guides['fill'] = legend.title
-      }
+  }
+
+  private static void applyLegend(se.alipsa.matrix.charm.ThemeSpec theme, se.alipsa.matrix.charm.LabelsSpec labels, Legend legend) {
+    if (legend == null) {
+      return
+    }
+    if (!legend.visible) {
+      theme.legendPosition = LegendPosition.NONE
+    } else if (legend.position) {
+      theme.legendPosition = mapPosition(legend.position)
+    }
+    if (legend.direction) {
+      theme.legendDirection = mapDirection(legend.direction)
+    }
+    if (legend.backgroundColor) {
+      theme.legendBackground = new se.alipsa.matrix.charm.theme.ElementRect(
+          fill: colorToHex(legend.backgroundColor)
+      )
+    }
+    if (legend.font) {
+      se.alipsa.matrix.charm.theme.ElementText fontElement = mapFont(legend.font)
+      theme.legendText = fontElement
+      theme.legendTitle = fontElement.copy()
+    }
+    if (legend.title) {
+      labels.guides[AES_COLOR] = legend.title
+      labels.guides[AES_FILL] = legend.title
     }
   }
 

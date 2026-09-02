@@ -36,6 +36,7 @@ class GsAuthUtils {
   // to register their own client. Per Google's OAuth docs, installed-app client secrets are
   // not confidential: https://developers.google.com/identity/protocols/oauth2/native-app
   private static final String BUNDLED_CLIENT_SECRET_RESOURCE = '/se/alipsa/matrix/gsheets/oauth/client_secret.json'
+  private static final String UTF8 = 'UTF-8'
 
   /**
    * Drop-in replacement for {@code gcloud auth application-default login}.
@@ -59,7 +60,7 @@ class GsAuthUtils {
   static GoogleCredentials loginAndWriteAdc(List<String> scopes, String quotaProjectId = null) {
     InputStream secretStream = resolveClientSecretStream()
     try {
-      loginAndWriteAdc(new InputStreamReader(secretStream, 'UTF-8'), scopes, quotaProjectId)
+      loginAndWriteAdc(new InputStreamReader(secretStream, UTF8), scopes, quotaProjectId)
     } finally {
       secretStream.close()
     }
@@ -73,7 +74,7 @@ class GsAuthUtils {
     if (!clientSecretJson.exists()) {
       throw new IllegalStateException("Error: OAuth client secret file was not found at $clientSecretJson.absolutePath")
     }
-    clientSecretJson.withReader('UTF-8') { Reader reader ->
+    clientSecretJson.withReader(UTF8) { Reader reader ->
       loginAndWriteAdc(reader, scopes, quotaProjectId)
     }
   }
@@ -84,10 +85,10 @@ class GsAuthUtils {
       log.info("Using OAuth client override at ${override.absolutePath}")
       return new FileInputStream(override)
     }
-    InputStream bundled = GsAuthUtils.class.getResourceAsStream(BUNDLED_CLIENT_SECRET_RESOURCE)
+    InputStream bundled = GsAuthUtils.getResourceAsStream(BUNDLED_CLIENT_SECRET_RESOURCE)
     if (bundled == null) {
       throw new IllegalStateException(
-          "No OAuth client available: matrix-gsheets was built without its bundled OAuth " +
+          'No OAuth client available: matrix-gsheets was built without its bundled OAuth ' +
           "client resource ($BUNDLED_CLIENT_SECRET_RESOURCE), and no override was found at " +
           "$override.absolutePath. Provide your own client, or rebuild matrix-gsheets with " +
           'the bundled resource present.'
@@ -121,7 +122,9 @@ class GsAuthUtils {
         client_secret  : secrets.details.clientSecret,
         refresh_token  : refreshToken
     ]
-    if (quotaProjectId) adc.quota_project_id = quotaProjectId
+    if (quotaProjectId) {
+      adc.quota_project_id = quotaProjectId
+    }
 
     // Persist to the standard ADC path
     File adcFile = GsAuthenticator.ADC_FILE_PATH
@@ -131,8 +134,12 @@ class GsAuthUtils {
 
     // Return a ready-to-use GoogleCredentials as well
     GoogleCredentials gc = GoogleCredentials.fromStream(new ByteArrayInputStream(adcFile.bytes))
-    if (scopes) gc = gc.createScoped(scopes)
-    if (quotaProjectId) gc = gc.createWithQuotaProject(quotaProjectId)
+    if (scopes) {
+      gc = gc.createScoped(scopes)
+    }
+    if (quotaProjectId) {
+      gc = gc.createWithQuotaProject(quotaProjectId)
+    }
     gc.refresh()
     return gc
   }
@@ -152,33 +159,42 @@ class GsAuthUtils {
 
   @CompileDynamic
   static boolean hasAllScopes(GoogleCredentials creds, List<String> required) {
-    if (creds == null) return false
+    if (creds == null) {
+      return false
+    }
     try {
       creds.refresh()
     } catch (IOException ignored) {
       creds.refreshIfExpired()
     }
     def token = creds.accessToken?.tokenValue
-    if (!token) return false
-    def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token,'UTF-8')}").toURL()
+    if (!token) {
+      return false
+    }
+    def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token, UTF8)}").toURL()
     def json = new JsonSlurper().parse(url)
     def granted = (json?.scope ?: '')
-        .split("\\s+")
+        .split('\\s+')
         .collect { canonScope(it) }
         .findAll { it } as Set<String>
     for (String req : (required ?: Collections.<String>emptyList())) {
-      if (!isSatisfied(granted, req)) return false
+      if (!isSatisfied(granted, req)) {
+        return false
+      }
     }
     return true
   }
 
   private static boolean isSatisfied(Set<String> granted, String required) {
     String r = canonScope(required)
-    if (granted.contains(r)) return true
+    if (granted.contains(r)) {
+      return true
+    }
     // Implications
-    if (SCOPE_SHEETS_READONLY.equals(r) && granted.contains(SCOPE_SHEETS)) return true
-    if (SCOPE_DRIVE_FILE.equals(r) && granted.contains('https://www.googleapis.com/auth/drive')) return true
-    return false
+    if (SCOPE_SHEETS_READONLY == r && granted.contains(SCOPE_SHEETS)) {
+      return true
+    }
+    SCOPE_DRIVE_FILE == r && granted.contains('https://www.googleapis.com/auth/drive')
   }
 
   /**
@@ -187,7 +203,9 @@ class GsAuthUtils {
    * @return the canonicalized scope or the original if no canonicalization is known
    */
   static String canonScope(String s) {
-    if (s == null) return null
+    if (s == null) {
+      return null
+    }
     switch (s) {
       case 'email', SCOPE_USERINFO_EMAIL -> SCOPE_USERINFO_EMAIL                // canonicalize to the short OIDC form
       default -> s

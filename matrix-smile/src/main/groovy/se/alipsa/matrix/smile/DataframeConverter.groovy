@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile
 
-import groovy.transform.CompileStatic
-
 import smile.data.DataFrame
 import smile.data.type.BooleanType
 import smile.data.type.ByteType
@@ -31,15 +29,23 @@ import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.ZonedDateTime
 
-@CompileStatic
+/**
+ * Converts between {@link Matrix} and Smile's {@link DataFrame}.
+ */
 class DataframeConverter {
 
   private static final Logger log = Logger.getLogger(DataframeConverter)
 
+  /**
+   * Converts a Smile {@link DataFrame} to a Matrix, preserving its column names and types.
+   *
+   * @param dataFrame the Smile data frame to convert
+   * @return a Matrix containing the data frame's rows and columns
+   */
   static Matrix convert(DataFrame dataFrame) {
-    def columnNames = dataFrame.schema().fields().collect { it.name() }
+    def columnNames = dataFrame.schema().fields()*.name()
     def rowCount = dataFrame.nrow()
-    Map<String, List<Object>> data = new LinkedHashMap<String, List<Object>>()
+    Map<String, List<Object>> data = [:]
     for (String colName : columnNames) {
       data.put(colName, new ArrayList<Object>(rowCount))
     }
@@ -56,118 +62,118 @@ class DataframeConverter {
     Matrix.builder().data(data).types(types).build()
   }
 
+  /**
+   * Converts a Matrix to a Smile {@link DataFrame}.
+   *
+   * @param matrix the Matrix to convert
+   * @return a Smile data frame containing the Matrix columns
+   */
   static DataFrame convert(Matrix matrix) {
     int numCols = matrix.columnCount()
     String[] colNames = matrix.columnNames()
 
-    List<ValueVector> columns = new ArrayList<>()
+    List<ValueVector> columns = []
 
     for (int j = 0; j < numCols; j++) {
-      String colName = colNames[j]
-      Class<?> dataType = matrix.type(j)
-
-      // Extract all data from the column
-      List<Object> columnData = matrix.column(j)
-
-      // Check if column contains nulls - use optimized primitive arrays when no nulls
-      boolean hasNulls = SmileUtil.hasNulls(columnData)
-
-      // Create the appropriate Smile ValueVector based on the type
-      // Use of() variants (primitive arrays) when no nulls for better performance
-      // Use ofNullable() variants when nulls are present
-      switch (dataType) {
-        case Float -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Float[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveFloatArray(columnData)))
-          }
-        }
-        case float -> columns.add(ValueVector.of(colName, columnData as float[]))
-        case Double -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Double[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveDoubleArray(columnData)))
-          }
-        }
-        case double -> columns.add(ValueVector.of(colName, columnData as double[]))
-        case Integer -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Integer[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveIntArray(columnData)))
-          }
-        }
-        case int -> columns.add(ValueVector.of(colName, columnData as int[]))
-        case String -> columns.add(ValueVector.of(colName, columnData as String[]))
-        case Boolean -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Boolean[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveBooleanArray(columnData)))
-          }
-        }
-        case boolean -> columns.add(ValueVector.of(colName, columnData as boolean[]))
-        case Character -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Character[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveCharArray(columnData)))
-          }
-        }
-        case char -> columns.add(ValueVector.of(colName, columnData as char[]))
-        case Byte -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Byte[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveByteArray(columnData)))
-          }
-        }
-        case byte -> columns.add(ValueVector.of(colName, columnData as byte[]))
-        case Short -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Short[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveShortArray(columnData)))
-          }
-        }
-        case short -> columns.add(ValueVector.of(colName, columnData as short[]))
-        case Long -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData as Long[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveLongArray(columnData)))
-          }
-        }
-        case long -> columns.add(ValueVector.of(colName, columnData as long[]))
-        case BigDecimal, BigInteger -> columns.add(ValueVector.of(colName, columnData as BigDecimal[]))
-        case Timestamp -> columns.add(ValueVector.of(colName, columnData as Timestamp[]))
-        case Instant -> columns.add(ValueVector.of(colName, columnData as Instant[]))
-        case LocalDateTime -> columns.add(ValueVector.of(colName, columnData as LocalDateTime[]))
-        case ZonedDateTime -> columns.add(ValueVector.of(colName, columnData as ZonedDateTime[]))
-        case LocalDate -> columns.add(ValueVector.of(colName, columnData as LocalDate[]))
-        case LocalTime -> columns.add(ValueVector.of(colName, columnData as LocalTime[]))
-        case OffsetTime -> columns.add(ValueVector.of(colName, columnData as OffsetTime[]))
-        case Number -> {
-          if (hasNulls) {
-            columns.add(ValueVector.ofNullable(colName, columnData.collect { it != null ? it as Double : null } as Double[]))
-          } else {
-            columns.add(ValueVector.of(colName, toPrimitiveDoubleArray(columnData)))
-          }
-        }
-        case Enum -> columns.add(ValueVector.nominal(colName, columnData as Enum[]))
-        default -> {
-          // Handle other types or default to StringVector
-          log.warn("Unhandled data type ${dataType.getSimpleName()} for column ${colName}; defaulting to String")
-          List<String> values = ListConverter.convert(columnData, String)
-          columns.add(ValueVector.of(colName, values as String[]))
-        }
-      }
+      columns.add(toValueVector(colNames[j], matrix.type(j), matrix.column(j)))
     }
 
     // Create the Smile DataFrame from the ValueVectors
     new DataFrame(columns as ValueVector[])
+  }
+
+  /**
+   * Builds a single Smile {@link ValueVector} for one Matrix column.
+   * Uses {@code of()} variants (primitive arrays) when no nulls are present for better
+   * performance, and {@code ofNullable()} variants when nulls are present.
+   */
+  private static ValueVector toValueVector(String colName, Class<?> dataType, List<Object> columnData) {
+    boolean hasNulls = SmileUtil.hasNulls(columnData)
+    switch (dataType) {
+      case Float -> floatVector(colName, columnData, hasNulls)
+      case float -> ValueVector.of(colName, columnData as float[])
+      case Double -> doubleVector(colName, columnData, hasNulls)
+      case double -> ValueVector.of(colName, columnData as double[])
+      case Integer -> intVector(colName, columnData, hasNulls)
+      case int -> ValueVector.of(colName, columnData as int[])
+      case String -> ValueVector.of(colName, columnData as String[])
+      case Boolean -> booleanVector(colName, columnData, hasNulls)
+      case boolean -> ValueVector.of(colName, columnData as boolean[])
+      case Character -> charVector(colName, columnData, hasNulls)
+      case char -> ValueVector.of(colName, columnData as char[])
+      case Byte -> byteVector(colName, columnData, hasNulls)
+      case byte -> ValueVector.of(colName, columnData as byte[])
+      case Short -> shortVector(colName, columnData, hasNulls)
+      case short -> ValueVector.of(colName, columnData as short[])
+      case Long -> longVector(colName, columnData, hasNulls)
+      case long -> ValueVector.of(colName, columnData as long[])
+      case BigDecimal, BigInteger -> ValueVector.of(colName, columnData as BigDecimal[])
+      case Timestamp -> ValueVector.of(colName, columnData as Timestamp[])
+      case Instant -> ValueVector.of(colName, columnData as Instant[])
+      case LocalDateTime -> ValueVector.of(colName, columnData as LocalDateTime[])
+      case ZonedDateTime -> ValueVector.of(colName, columnData as ZonedDateTime[])
+      case LocalDate -> ValueVector.of(colName, columnData as LocalDate[])
+      case LocalTime -> ValueVector.of(colName, columnData as LocalTime[])
+      case OffsetTime -> ValueVector.of(colName, columnData as OffsetTime[])
+      case Number -> numberVector(colName, columnData, hasNulls)
+      case Enum -> ValueVector.nominal(colName, columnData as Enum[])
+      default -> defaultVector(colName, dataType, columnData)
+    }
+  }
+
+  private static ValueVector floatVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Float[]) :
+        ValueVector.of(colName, toPrimitiveFloatArray(columnData))
+  }
+
+  private static ValueVector doubleVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Double[]) :
+        ValueVector.of(colName, toPrimitiveDoubleArray(columnData))
+  }
+
+  private static ValueVector intVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Integer[]) :
+        ValueVector.of(colName, toPrimitiveIntArray(columnData))
+  }
+
+  private static ValueVector booleanVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Boolean[]) :
+        ValueVector.of(colName, toPrimitiveBooleanArray(columnData))
+  }
+
+  private static ValueVector charVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Character[]) :
+        ValueVector.of(colName, toPrimitiveCharArray(columnData))
+  }
+
+  private static ValueVector byteVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Byte[]) :
+        ValueVector.of(colName, toPrimitiveByteArray(columnData))
+  }
+
+  private static ValueVector shortVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Short[]) :
+        ValueVector.of(colName, toPrimitiveShortArray(columnData))
+  }
+
+  private static ValueVector longVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, columnData as Long[]) :
+        ValueVector.of(colName, toPrimitiveLongArray(columnData))
+  }
+
+  private static ValueVector numberVector(String colName, List<Object> columnData, boolean hasNulls) {
+    hasNulls ? ValueVector.ofNullable(colName, toNullableDoubleArray(columnData)) :
+        ValueVector.of(colName, toPrimitiveDoubleArray(columnData))
+  }
+
+  private static Double[] toNullableDoubleArray(List<Object> columnData) {
+    columnData.collect { it != null ? it as Double : null } as Double[]
+  }
+
+  private static ValueVector defaultVector(String colName, Class<?> dataType, List<Object> columnData) {
+    log.warn("Unhandled data type ${dataType.getSimpleName()} for column ${colName}; defaulting to String")
+    List<String> values = ListConverter.convert(columnData, String)
+    ValueVector.of(colName, values as String[])
   }
 
   /**
@@ -266,16 +272,16 @@ class DataframeConverter {
       case StringType -> String
       case BooleanType -> Boolean
       case CharType -> Character
-      case ByteType -> Byte.class
-      case ShortType -> Short.class
-      case LongType -> Long.class
+      case ByteType -> Byte
+      case ShortType -> Short
+      case LongType -> Long
       case DecimalType -> BigDecimal
       case DateTimeType -> LocalDateTime
       case DateType -> LocalDate
       case TimeType -> LocalTime
       default -> {
         log.warn("Unhandled Smile DataType ${dataType}; defaulting to Object")
-        Object.class
+        Object
       }
     }
   }

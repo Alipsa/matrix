@@ -10,7 +10,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.Locale
 
 /**
  * Typed declaration for explicit Avro schema overrides on Matrix columns.
@@ -21,6 +20,13 @@ import java.util.Locale
  * and {@link AvroSchemaDecl#fromMap(java.util.Map)}.
  */
 abstract class AvroSchemaDecl {
+
+  private static final String KEY_KIND = 'kind'
+  private static final String KIND_SCALAR = 'scalar'
+  private static final String KIND_DECIMAL = 'decimal'
+  private static final String KIND_ARRAY = 'array'
+  private static final String KIND_MAP = 'map'
+  private static final String KIND_RECORD = 'record'
 
   private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
       (String)        : AvroScalarTypeDecl.STRING,
@@ -94,7 +100,7 @@ abstract class AvroSchemaDecl {
    * @return a decimal schema declaration
    */
   static AvroSchemaDecl decimal(int precision, int scale) {
-    validateDecimal(precision, scale, 'decimal')
+    validateDecimal(precision, scale, KIND_DECIMAL)
     new DecimalAvroSchemaDecl(precision, scale)
   }
   /**
@@ -202,11 +208,11 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("Schema declaration must include 'kind'")
     }
     switch (kind.toLowerCase(Locale.ROOT)) {
-      case 'scalar' -> parseScalarDecl(normalized)
-      case 'decimal' -> parseDecimalDecl(normalized)
-      case 'array' -> parseArrayDecl(normalized)
-      case 'map' -> parseMapDecl(normalized)
-      case 'record' -> parseRecordDecl(normalized)
+      case KIND_SCALAR -> parseScalarDecl(normalized)
+      case KIND_DECIMAL -> parseDecimalDecl(normalized)
+      case KIND_ARRAY -> parseArrayDecl(normalized)
+      case KIND_MAP -> parseMapDecl(normalized)
+      case KIND_RECORD -> parseRecordDecl(normalized)
       default -> throw new IllegalArgumentException("Unsupported schema declaration kind '$kind'")
     }
   }
@@ -356,24 +362,24 @@ abstract class AvroSchemaDecl {
     }
   }
   private static AvroSchemaDecl parseScalarDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, 'scalar', ['kind', 'scalartype'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_SCALAR, [KEY_KIND, 'scalartype'] as Set<String>)
     scalar(scalarTypeValue(normalized.scalartype, 'scalar.scalarType'))
   }
   private static AvroSchemaDecl parseDecimalDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, 'decimal', ['kind', 'precision', 'scale'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_DECIMAL, [KEY_KIND, 'precision', 'scale'] as Set<String>)
     decimal(intValue(normalized.precision, 'decimal.precision'),
         intValue(normalized.scale, 'decimal.scale'))
   }
   private static AvroSchemaDecl parseArrayDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, 'array', ['kind', 'elementtype'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_ARRAY, [KEY_KIND, 'elementtype'] as Set<String>)
     array(schemaDeclValue(normalized.elementtype, 'array.elementType'))
   }
   private static AvroSchemaDecl parseMapDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, 'map', ['kind', 'valuetype'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_MAP, [KEY_KIND, 'valuetype'] as Set<String>)
     map(schemaDeclValue(normalized.valuetype, 'map.valueType'))
   }
   private static AvroSchemaDecl parseRecordDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, 'record', ['kind', 'recordname', 'fields'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_RECORD, [KEY_KIND, 'recordname', 'fields'] as Set<String>)
     record(OptionMaps.stringValueOrNull(normalized.recordname), recordFieldsValue(normalized.fields, 'record.fields'))
   }
 

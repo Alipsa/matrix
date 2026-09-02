@@ -8,7 +8,19 @@ import java.util.regex.Pattern
  */
 class SpreadsheetUtil {
 
-   public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+   public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS')
+
+   /**
+    * Legacy name for {@link #DATE_TIME_FORMATTER}.
+    *
+    * @deprecated Use {@link #DATE_TIME_FORMATTER}.
+    */
+   @Deprecated
+   @SuppressWarnings('FieldName')
+   public static final DateTimeFormatter dateTimeFormatter = DATE_TIME_FORMATTER
+
+   private static final int RADIX = 26
+   private static final int MAX_SHEET_NAME_LENGTH = 31
 
    private SpreadsheetUtil() {
       // prevent instantiation
@@ -26,7 +38,7 @@ class SpreadsheetUtil {
       String colName = name.toUpperCase()
       int number = 0
       for (int i = 0; i < colName.length(); i++) {
-         number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
+         number = number * RADIX + (colName.charAt(i) - ('A' as char - 1))
       }
       return number
    }
@@ -40,8 +52,8 @@ class SpreadsheetUtil {
       StringBuilder sb = new StringBuilder()
       while (number > 0) {
          number--
-         sb.append(('A' as char + (number % 26)) as char)
-         number = (number / 26) as int
+         sb.append(('A' as char + (number % RADIX)) as char)
+         number = (number / RADIX) as int
       }
       sb.reverse().toString()
    }
@@ -67,9 +79,9 @@ class SpreadsheetUtil {
          int suffix = 1
          while (usedNames.contains(uniqueName)) {
             String candidate = "${safeName}${suffix}"
-            // Ensure the suffixed name also respects the 31-char limit
-            if (candidate.length() > 31) {
-               int cutoff = Math.max(0, 31 - String.valueOf(suffix).length())
+            // Ensure the suffixed name also respects the sheet-name length limit
+            if (candidate.length() > MAX_SHEET_NAME_LENGTH) {
+               int cutoff = Math.max(0, MAX_SHEET_NAME_LENGTH - String.valueOf(suffix).length())
                candidate = safeName.substring(0, Math.min(cutoff, safeName.length())) + suffix
             }
             uniqueName = candidate
@@ -178,7 +190,7 @@ class SpreadsheetUtil {
       if (nameProposal.length() < 1) {
          return 'empty'
       }
-      final int length = Math.min(31, nameProposal.length())
+      final int length = Math.min(MAX_SHEET_NAME_LENGTH, nameProposal.length())
       final String shortname = nameProposal.substring(0, length)
       final StringBuilder result = new StringBuilder(shortname)
       for (int i=0; i<length; i++) {

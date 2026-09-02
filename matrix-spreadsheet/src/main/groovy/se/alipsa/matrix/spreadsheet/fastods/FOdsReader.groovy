@@ -1,6 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.TABLE_URN
 
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
@@ -168,7 +168,7 @@ class FOdsReader implements SpreadsheetReader {
           while (xmlReader.hasNext()) {
             xmlReader.next()
             if (xmlReader.isStartElement() && xmlReader.localName == 'table') {
-              String name = xmlReader.getAttributeValue(tableUrn, 'name')
+              String name = xmlReader.getAttributeValue(TABLE_URN, 'name')
               if (name != null) {
                 names.add(name.trim())
               }

@@ -366,6 +366,35 @@ class Aes {
 
   String getTooltipColName() { extractColName(tooltip) }
 
+  private static final String AES_X = 'x'
+  private static final String AES_Y = 'y'
+  private static final String AES_COLOR = 'color'
+  private static final String AES_LINEWIDTH = 'linewidth'
+  private static final String AES_MAP_ID = 'map_id'
+
+  /**
+   * All aesthetic names, in the order they are considered when merging or
+   * building from a parameter map.
+   */
+  private static final List<String> AESTHETIC_NAMES = [
+      AES_X, AES_Y, 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax',
+      AES_COLOR, 'fill', 'size', 'shape', 'alpha', 'linetype', AES_LINEWIDTH,
+      'group', 'label', 'tooltip', 'weight', 'geometry', AES_MAP_ID
+  ]
+
+  /**
+   * Alternate parameter-map keys accepted for a handful of aesthetics
+   * (old-style names, British spelling, etc.), in precedence order.
+   * Aesthetics not listed here are looked up only by their own name.
+   */
+  private static final Map<String, List<String>> AESTHETIC_ALIASES = [
+      (AES_X)        : [AES_X, 'xCol'],
+      (AES_Y)        : [AES_Y, 'yCol'],
+      (AES_COLOR)    : [AES_COLOR, 'col', 'colour', 'colorCol'],
+      (AES_LINEWIDTH): [AES_LINEWIDTH, 'lineWidth'],
+      (AES_MAP_ID)   : [AES_MAP_ID, 'mapId'],
+  ]
+
   Aes() {}
 
   Aes(List<String> colNames) {
@@ -383,80 +412,14 @@ class Aes {
   }
 
   Aes(Map params) {
-    // Handle both old-style (xCol, yCol) and new-style (x, y) parameter names
-    def xValue = firstNonNull([params.x, params.xCol])
-    if (xValue != null) {
-      assignAesthetic('x', xValue)
-    }
-
-    def yValue = firstNonNull([params.y, params.yCol])
-    if (yValue != null) {
-      assignAesthetic('y', yValue)
-    }
-
-    if (params.xend != null) {
-      assignAesthetic('xend', params.xend)
-    }
-    if (params.yend != null) {
-      assignAesthetic('yend', params.yend)
-    }
-    if (params.xmin != null) {
-      assignAesthetic('xmin', params.xmin)
-    }
-    if (params.xmax != null) {
-      assignAesthetic('xmax', params.xmax)
-    }
-    if (params.ymin != null) {
-      assignAesthetic('ymin', params.ymin)
-    }
-    if (params.ymax != null) {
-      assignAesthetic('ymax', params.ymax)
-    }
-
-    def colorValue = firstNonNull([params.color, params.col, params.colour, params.colorCol])
-    if (colorValue != null) {
-      assignAesthetic('color', colorValue)
-    }
-    if (params.fill != null) {
-      assignAesthetic('fill', params.fill)
-    }
-    if (params.size != null) {
-      assignAesthetic('size', params.size)
-    }
-    if (params.shape != null) {
-      assignAesthetic('shape', params.shape)
-    }
-    if (params.alpha != null) {
-      assignAesthetic('alpha', params.alpha)
-    }
-    if (params.linetype != null) {
-      assignAesthetic('linetype', params.linetype)
-    }
-
-    def linewidthValue = firstNonNull([params.linewidth, params.lineWidth])
-    if (linewidthValue != null) {
-      assignAesthetic('linewidth', linewidthValue)
-    }
-
-    if (params.group != null) {
-      assignAesthetic('group', params.group)
-    }
-    if (params.label != null) {
-      assignAesthetic('label', params.label)
-    }
-    if (params.tooltip != null) {
-      assignAesthetic('tooltip', params.tooltip)
-    }
-    if (params.weight != null) {
-      assignAesthetic('weight', params.weight)
-    }
-    if (params.geometry != null) {
-      assignAesthetic('geometry', params.geometry)
-    }
-
-    def mapIdValue = firstNonNull([params.map_id, params.mapId])
-    if (mapIdValue != null) {
-      assignAesthetic('map_id', mapIdValue)
+    // Handle both old-style (xCol, yCol, colorCol, ...) and new-style (x, y, color, ...)
+    // parameter names via AESTHETIC_ALIASES.
+    AESTHETIC_NAMES.each { String name ->
+      List<String> keys = AESTHETIC_ALIASES[name] ?: [name]
+      def value = firstNonNull(keys.collect { params[it] })
+      if (value != null) {
+        assignAesthetic(name, value)
+      }
     }
   }
 
@@ -521,7 +484,7 @@ class Aes {
   /**
    * Return the first non-null value from a precedence-ordered list.
    */
-  private static def firstNonNull(List values) {
+  private static firstNonNull(List values) {
     values.find { it != null }
   }
 
@@ -724,91 +687,12 @@ class Aes {
       return this
     }
     Aes result = new Aes()
-    // Start with base values
-    result.@x = base.x
-    result.@y = base.y
-    result.@xend = base.xend
-    result.@yend = base.yend
-    result.@xmin = base.xmin
-    result.@xmax = base.xmax
-    result.@ymin = base.ymin
-    result.@ymax = base.ymax
-    result.@color = base.color
-    result.@fill = base.fill
-    result.@size = base.size
-    result.@shape = base.shape
-    result.@alpha = base.alpha
-    result.@linetype = base.linetype
-    result.@linewidth = base.linewidth
-    result.@group = base.group
-    result.@label = base.label
-    result.@tooltip = base.tooltip
-    result.@weight = base.weight
-    result.@geometry = base.geometry
-    result.@map_id = base.map_id
-    // Override with this Aes's non-null values and corresponding column names
-    if (this.x != null) {
-      result.@x = this.x
-    }
-    if (this.y != null) {
-      result.@y = this.y
-    }
-    if (this.xend != null) {
-      result.@xend = this.xend
-    }
-    if (this.yend != null) {
-      result.@yend = this.yend
-    }
-    if (this.xmin != null) {
-      result.@xmin = this.xmin
-    }
-    if (this.xmax != null) {
-      result.@xmax = this.xmax
-    }
-    if (this.ymin != null) {
-      result.@ymin = this.ymin
-    }
-    if (this.ymax != null) {
-      result.@ymax = this.ymax
-    }
-    if (this.color != null) {
-      result.@color = this.color
-    }
-    if (this.fill != null) {
-      result.@fill = this.fill
-    }
-    if (this.size != null) {
-      result.@size = this.size
-    }
-    if (this.shape != null) {
-      result.@shape = this.shape
-    }
-    if (this.alpha != null) {
-      result.@alpha = this.alpha
-    }
-    if (this.linetype != null) {
-      result.@linetype = this.linetype
-    }
-    if (this.linewidth != null) {
-      result.@linewidth = this.linewidth
-    }
-    if (this.group != null) {
-      result.@group = this.group
-    }
-    if (this.label != null) {
-      result.@label = this.label
-    }
-    if (this.tooltip != null) {
-      result.@tooltip = this.tooltip
-    }
-    if (this.weight != null) {
-      result.@weight = this.weight
-    }
-    if (this.geometry != null) {
-      result.@geometry = this.geometry
-    }
-    if (this.map_id != null) {
-      result.@map_id = this.map_id
+    AESTHETIC_NAMES.each { String name ->
+      def thisValue = getAestheticValue(name)
+      def value = thisValue != null ? thisValue : base.getAestheticValue(name)
+      if (value != null) {
+        result.setAesthetic(name, value)
+      }
     }
     return result
   }

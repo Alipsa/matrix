@@ -66,18 +66,28 @@ class GgChart {
    */
   List<Object> components = []
 
+  private static final String PARAM_STAT = 'stat'
+  private static final String PARAM_POSITION = 'position'
+  private static final String PARAM_MAPPING = 'mapping'
+  private static final String PARAM_GEOM = 'geom'
+  private static final String PARAM_WIDTH = 'width'
+  private static final String PARAM_REVERSE = 'reverse'
+  private static final String PARAM_SEED = 'seed'
+
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
-      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef',
-      'geometry', 'quantiles', 'xlim', 'seed'
+      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', PARAM_WIDTH, 'coef',
+      'geometry', 'quantiles', 'xlim', PARAM_SEED
   ] as Set<String>
 
+  private static final Set<String> REVERSE_ONLY_PARAM_KEYS = [PARAM_REVERSE] as Set<String>
+
   private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [
-      (PositionType.DODGE): ['width'] as Set<String>,
-      (PositionType.DODGE2): ['width', 'padding', 'reverse'] as Set<String>,
-      (PositionType.STACK): ['reverse'] as Set<String>,
-      (PositionType.FILL): ['reverse'] as Set<String>,
-      (PositionType.JITTER): ['width', 'height', 'seed'] as Set<String>,
+      (PositionType.DODGE): [PARAM_WIDTH] as Set<String>,
+      (PositionType.DODGE2): [PARAM_WIDTH, 'padding', PARAM_REVERSE] as Set<String>,
+      (PositionType.STACK): REVERSE_ONLY_PARAM_KEYS,
+      (PositionType.FILL): REVERSE_ONLY_PARAM_KEYS,
+      (PositionType.JITTER): [PARAM_WIDTH, 'height', PARAM_SEED] as Set<String>,
       (PositionType.NUDGE): ['x', 'y'] as Set<String>
   ]
 
@@ -108,14 +118,14 @@ class GgChart {
           statParams[key] = geom.params[key]
         }
       }
-      if (geom.params.containsKey('stat')) {
-        StatType parsed = parseStatType(geom.params['stat'])
+      if (geom.params.containsKey(PARAM_STAT)) {
+        StatType parsed = parseStatType(geom.params[PARAM_STAT])
         if (parsed != null) {
           statOverride = parsed
         }
       }
-      if (geom.params.containsKey('position')) {
-        Position positionSpec = parsePositionSpec(geom.params['position'])
+      if (geom.params.containsKey(PARAM_POSITION)) {
+        Position positionSpec = parsePositionSpec(geom.params[PARAM_POSITION])
         if (positionSpec != null) {
           positionOverride = positionSpec.positionType
           if (positionSpec.params) {
@@ -125,8 +135,8 @@ class GgChart {
       }
       positionParams.putAll(extractPositionParams(positionOverride, geom.params, positionParams))
       // Extract mapping parameter as layer aes
-      if (geom.params.containsKey('mapping')) {
-        def mapping = geom.params['mapping']
+      if (geom.params.containsKey(PARAM_MAPPING)) {
+        def mapping = geom.params[PARAM_MAPPING]
         if (mapping instanceof Aes) {
           layerAes = mapping as Aes
         }
@@ -266,51 +276,51 @@ class GgChart {
         continue
       }
       if (part instanceof Iterable) {
-        plus(part as Iterable<?>)
+        this + (part as Iterable<?>)
         continue
       }
       if (part instanceof Geom) {
-        plus(part as Geom)
+        this + (part as Geom)
         continue
       }
       if (part instanceof Annotate) {
-        plus(part as Annotate)
+        this + (part as Annotate)
         continue
       }
       if (part instanceof Theme) {
-        plus(part as Theme)
+        this + (part as Theme)
         continue
       }
       if (part instanceof Layer) {
-        plus(part as Layer)
+        this + (part as Layer)
         continue
       }
       if (part instanceof Scale) {
-        plus(part as Scale)
+        this + (part as Scale)
         continue
       }
       if (part instanceof Facet) {
-        plus(part as Facet)
+        this + (part as Facet)
         continue
       }
       if (part instanceof Coord) {
-        plus(part as Coord)
+        this + (part as Coord)
         continue
       }
       if (part instanceof Label) {
-        plus(part as Label)
+        this + (part as Label)
         continue
       }
       if (part instanceof Guides) {
-        plus(part as Guides)
+        this + (part as Guides)
         continue
       }
       if (part instanceof Stats) {
-        plus(part as Stats)
+        this + (part as Stats)
         continue
       }
       if (part instanceof NewScaleMarker) {
-        plus(part as NewScaleMarker)
+        this + (part as NewScaleMarker)
         continue
       }
       throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
@@ -479,7 +489,7 @@ class GgChart {
       }
     }
     Geom geom = null
-    Object geomParam = statParams.remove('geom') ?: geomParams.remove('geom')
+    Object geomParam = statParams.remove(PARAM_GEOM) ?: geomParams.remove(PARAM_GEOM)
     if (geomParam instanceof Geom) {
       geom = geomParam as Geom
     } else if (geomParam instanceof String) {

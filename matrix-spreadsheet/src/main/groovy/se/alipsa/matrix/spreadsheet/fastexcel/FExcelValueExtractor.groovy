@@ -99,7 +99,7 @@ class FExcelValueExtractor extends ValueExtractor {
       if (value == null) {
         return null
       }
-      return LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.dateTimeFormatter)
+      return LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.DATE_TIME_FORMATTER)
    }
 
    /**

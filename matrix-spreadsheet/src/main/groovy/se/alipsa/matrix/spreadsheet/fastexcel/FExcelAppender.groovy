@@ -20,6 +20,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -67,6 +68,12 @@ class FExcelAppender {
   private static final String TAG_XF = 'xf'
   private static final String ATTR_R_ID = 'r:id'
   private static final String ATTR_TARGET = 'Target'
+  private static final String ATTR_TYPE = 'Type'
+  private static final String ATTR_PART_NAME = 'PartName'
+  private static final String ATTR_CONTENT_TYPE = 'ContentType'
+  private static final String TAG_OVERRIDE = 'Override'
+  private static final String STYLES_PART_NAME = '/xl/styles.xml'
+  private static final String STYLES_TARGET = 'styles.xml'
   private static final String TAG_VECTOR = 'vector'
   private static final String RID_PREFIX = 'rId'
   private static final String PROP_NO = 'no'
@@ -80,7 +87,8 @@ class FExcelAppender {
   private static final String DOUBLE_QUOTE = '"'
   private static final String DATE_FORMAT = 'yyyy-MM-dd'
   private static final String DATETIME_FORMAT = 'yyyy-MM-dd HH:mm:ss.SSS'
-  private static final String DEFAULT_STYLES_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
+  private static final String XML_PROLOG = '<?xml version="1.0" encoding="UTF-8"?>'
+  private static final String DEFAULT_STYLES_XML = XML_PROLOG +
       '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
       '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
       '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
@@ -89,10 +97,26 @@ class FExcelAppender {
       '<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>' +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
       '</styleSheet>'
-  private static final LocalDate EXCEL_1900_EPOCH = LocalDate.of(1899, 12, 31)
-  private static final LocalDate EXCEL_1904_EPOCH = LocalDate.of(1904, 1, 1)
-  private static final LocalDate EXCEL_LEAP_BUG_START = LocalDate.of(1900, 3, 1)
+  private static final LocalDate EXCEL_1900_EPOCH = LocalDate.of(1899, Month.DECEMBER, 31)
+  private static final LocalDate EXCEL_1904_EPOCH = LocalDate.of(1904, Month.JANUARY, 1)
+  private static final LocalDate EXCEL_LEAP_BUG_START = LocalDate.of(1900, Month.MARCH, 1)
   private static final BigDecimal NANOS_PER_DAY = new BigDecimal(86_400_000_000_000L)
+  private static final int TIME_FRACTION_SCALE = 12
+  private static final String GT = '>'
+  private static final String EQUALS_QUOTE = '="'
+  private static final String ALL_TAGS = '*'
+  private static final String ATTR_FONT_ID = 'fontId'
+  private static final String ATTR_FILL_ID = 'fillId'
+  private static final String ATTR_BORDER_ID = 'borderId'
+  private static final String ATTR_XF_ID = 'xfId'
+  private static final String ATTR_APPLY_NUMBER_FORMAT = 'applyNumberFormat'
+  private static final String ZERO = '0'
+  private static final String ONE = '1'
+  private static final String TRUE_STR = 'true'
+  // Capture groups for ATTR_VALUE_PATTERN only; fallback element patterns have distinct captures.
+  private static final int ATTR_NAME_GROUP = 1
+  private static final int ATTR_VALUE_GROUP = 2
+  private static final Pattern ATTR_VALUE_PATTERN = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
     return appendOrReplaceSheets(file, data, sheetNames, null)
@@ -183,57 +207,71 @@ class FExcelAppender {
     Document types = parseXml(state.contentTypesXml)
     Document app = state.appXml ? parseXml(state.appXml) : null
     boolean date1904 = workbookUsesDate1904(workbook)
-    StylePlan stylePlan = requested.values().any { Matrix matrix -> hasDateValues(matrix) } ? ensureDateStyles(state.stylesXml) : null
-    if (stylePlan != null) {
-      ensureStyleRelationship(rels)
-      ensureStyleContentType(types)
-    }
+    StylePlan stylePlan = resolveStylePlan(state, requested, rels, types)
 
     Map<String, SheetInfo> existing = readSheets(workbook, rels)
-    List<Integer> sheetIds = existing.values()*.sheetId
-    List<Integer> sheetIndexes = existing.values()*.sheetIndex
-    int nextSheetId = nextValue(sheetIds, 1)
-    int nextRelId = maxRelId(rels) + 1
-    int nextSheetIndex = nextValue(sheetIndexes, 1)
+    IdAllocator ids = new IdAllocator(existing, rels)
+    SheetTemplate baseTemplate = mergeTemplate(state.zip, existing, readBaseTemplate(state.zip, existing))
+    PlanContext ctx = new PlanContext(state.zip, new DocumentSet(workbook, rels, types), existing, ids, baseTemplate, stylePlan, date1904)
 
     Map<String, String> replacements = [:]
     Map<String, String> additions = [:]
-    Map<String, SheetTemplate> templateCache = [:]
-    SheetTemplate baseTemplate = readBaseTemplate(state.zip, existing)
-    baseTemplate = mergeTemplate(state.zip, existing, baseTemplate)
-
-    requested.each { String name, Matrix matrix ->
-      String startPosition = positions.get(name) ?: DEFAULT_START
-      SheetInfo info = existing.get(name)
-      if (info != null) {
-        SheetTemplate template = templateForPath(state.zip, templateCache, info.path) ?: baseTemplate
-        replacements.put(info.path, buildSheetXml(matrix, template, startPosition, stylePlan, date1904))
-      } else {
-        String sheetPath = "xl/worksheets/sheet${nextSheetIndex++}.xml"
-        String relId = "rId${nextRelId++}"
-        int sheetId = nextSheetId++
-        addSheet(workbook, name, sheetId, relId)
-        addRelationship(rels, relId, sheetPath)
-        addContentType(types, sheetPath)
-        additions.put(sheetPath, buildSheetXml(matrix, baseTemplate, startPosition, stylePlan, date1904))
-        existing.put(name, new SheetInfo(name, sheetId, relId, sheetPath, sheetId, relIdNumber(relId), sheetNumberFromPath(sheetPath)))
-      }
-    }
+    applyRequestedSheets(ctx, requested, positions, replacements, additions)
 
     String workbookXml = serialize(workbook)
     String relsXml = serialize(rels)
     String contentTypesXml = serialize(types)
     String appXml = app ? updateAppXml(app, existing.keySet().toList()) : null
-
-    if (stylePlan != null) {
-      if (state.stylesXml == null) {
-        additions.put(STYLES_PATH, stylePlan.stylesXml)
-      } else {
-        replacements.put(STYLES_PATH, stylePlan.stylesXml)
-      }
-    }
+    addStylesPlanOutput(stylePlan, state, replacements, additions)
 
     return new WorkbookPlan(workbookXml, relsXml, contentTypesXml, appXml, replacements, additions)
+  }
+
+  private static StylePlan resolveStylePlan(WorkbookState state, Map<String, Matrix> requested, Document rels, Document types) {
+    boolean needsDateStyles = requested.values().any { Matrix matrix -> hasDateValues(matrix) }
+    StylePlan stylePlan = needsDateStyles ? ensureDateStyles(state.stylesXml) : null
+    if (stylePlan != null) {
+      ensureStyleRelationship(rels)
+      ensureStyleContentType(types)
+    }
+    stylePlan
+  }
+
+  private static void addStylesPlanOutput(StylePlan stylePlan, WorkbookState state, Map<String, String> replacements, Map<String, String> additions) {
+    if (stylePlan == null) {
+      return
+    }
+    if (state.stylesXml == null) {
+      additions.put(STYLES_PATH, stylePlan.stylesXml)
+    } else {
+      replacements.put(STYLES_PATH, stylePlan.stylesXml)
+    }
+  }
+
+  private static void applyRequestedSheets(PlanContext ctx, Map<String, Matrix> requested, Map<String, String> positions,
+                                            Map<String, String> replacements, Map<String, String> additions) {
+    Map<String, SheetTemplate> templateCache = [:]
+    requested.each { String name, Matrix matrix ->
+      String startPosition = positions.get(name) ?: DEFAULT_START
+      SheetInfo info = ctx.existing.get(name)
+      if (info != null) {
+        SheetTemplate template = templateForPath(ctx.zip, templateCache, info.path) ?: ctx.baseTemplate
+        replacements.put(info.path, buildSheetXml(matrix, template, startPosition, ctx.stylePlan, ctx.date1904))
+      } else {
+        addNewSheet(ctx, name, matrix, startPosition, additions)
+      }
+    }
+  }
+
+  private static void addNewSheet(PlanContext ctx, String name, Matrix matrix, String startPosition, Map<String, String> additions) {
+    String sheetPath = "xl/worksheets/sheet${ctx.ids.nextSheetIndex++}.xml"
+    String relId = "rId${ctx.ids.nextRelId++}"
+    int sheetId = ctx.ids.nextSheetId++
+    addSheet(ctx.documents.workbook, name, sheetId, relId)
+    addRelationship(ctx.documents.rels, relId, sheetPath)
+    addContentType(ctx.documents.types, sheetPath)
+    additions.put(sheetPath, buildSheetXml(matrix, ctx.baseTemplate, startPosition, ctx.stylePlan, ctx.date1904))
+    ctx.existing.put(name, new SheetInfo(name, sheetId, relId, sheetPath, sheetId, relIdNumber(relId), sheetNumberFromPath(sheetPath)))
   }
 
   private static Map<String, SheetInfo> readSheets(Document workbook, Document rels) {
@@ -270,7 +308,7 @@ class FExcelAppender {
       String id = rel.getAttribute(ATTR_ID)
       if (id?.startsWith(RID_PREFIX)) {
         try {
-          int num = Integer.parseInt(id.substring(3))
+          int num = Integer.parseInt(id.substring(RID_PREFIX.length()))
           maxId = Math.max(maxId, num)
         } catch (NumberFormatException ignored) {
           // ignore non-numeric rIds
@@ -292,15 +330,15 @@ class FExcelAppender {
   private static void addRelationship(Document rels, String relId, String sheetPath) {
     Element rel = rels.createElement(RELATIONSHIP_TAG)
     rel.setAttribute(ATTR_ID, relId)
-    rel.setAttribute('Type', WORKSHEET_REL_TYPE)
+    rel.setAttribute(ATTR_TYPE, WORKSHEET_REL_TYPE)
     rel.setAttribute(ATTR_TARGET, sheetPath.replaceFirst('^xl/', ''))
     rels.documentElement.appendChild(rel)
   }
 
   private static void addContentType(Document types, String sheetPath) {
-    Element override = types.createElement('Override')
-    override.setAttribute('PartName', '/' + sheetPath)
-    override.setAttribute('ContentType', WORKSHEET_CONTENT_TYPE)
+    Element override = types.createElement(TAG_OVERRIDE)
+    override.setAttribute(ATTR_PART_NAME, '/' + sheetPath)
+    override.setAttribute(ATTR_CONTENT_TYPE, WORKSHEET_CONTENT_TYPE)
     types.documentElement.appendChild(override)
   }
 
@@ -308,28 +346,28 @@ class FExcelAppender {
     NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
-      if (STYLES_REL_TYPE == rel.getAttribute('Type')) {
+      if (STYLES_REL_TYPE == rel.getAttribute(ATTR_TYPE)) {
         return
       }
     }
     Element rel = rels.createElement(RELATIONSHIP_TAG)
     rel.setAttribute(ATTR_ID, "rId${maxRelId(rels) + 1}")
-    rel.setAttribute('Type', STYLES_REL_TYPE)
-    rel.setAttribute(ATTR_TARGET, 'styles.xml')
+    rel.setAttribute(ATTR_TYPE, STYLES_REL_TYPE)
+    rel.setAttribute(ATTR_TARGET, STYLES_TARGET)
     rels.documentElement.appendChild(rel)
   }
 
   private static void ensureStyleContentType(Document types) {
-    NodeList overrides = types.getElementsByTagName('Override')
+    NodeList overrides = types.getElementsByTagName(TAG_OVERRIDE)
     for (int i = 0; i < overrides.length; i++) {
       Element override = (Element) overrides.item(i)
-      if ('/xl/styles.xml' == override.getAttribute('PartName')) {
+      if (STYLES_PART_NAME == override.getAttribute(ATTR_PART_NAME)) {
         return
       }
     }
-    Element override = types.createElement('Override')
-    override.setAttribute('PartName', '/xl/styles.xml')
-    override.setAttribute('ContentType', STYLES_CONTENT_TYPE)
+    Element override = types.createElement(TAG_OVERRIDE)
+    override.setAttribute(ATTR_PART_NAME, STYLES_PART_NAME)
+    override.setAttribute(ATTR_CONTENT_TYPE, STYLES_CONTENT_TYPE)
     types.documentElement.appendChild(override)
   }
 
@@ -457,18 +495,18 @@ class FExcelAppender {
   private static String buildSheetXml(Matrix matrix, SheetTemplate template, String startPosition, StylePlan stylePlan, boolean date1904) {
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     StringBuilder sb = new StringBuilder()
-    sb.append('<?xml version="1.0" encoding="UTF-8"?>')
+    sb.append(XML_PROLOG)
     sb.append('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ')
       .append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
     appendWorksheetRootAttributes(sb, template?.worksheetRootAttributes)
-    sb.append('>')
+    sb.append(GT)
     sb.append('<dimension ref="').append(sheetDimension(matrix, position)).append(ROW_END)
     if (template?.sheetFormatXml) {
       sb.append(template.sheetFormatXml)
     } else if (template?.sheetFormatAttributes && !template.sheetFormatAttributes.isEmpty()) {
       sb.append('<sheetFormatPr')
       template.sheetFormatAttributes.each { String key, String value ->
-        sb.append(SPACE).append(key).append('="').append(escapeXml(value)).append(DOUBLE_QUOTE)
+        sb.append(SPACE).append(key).append(EQUALS_QUOTE).append(escapeXml(value)).append(DOUBLE_QUOTE)
       }
       sb.append('/>')
     }
@@ -541,7 +579,7 @@ class FExcelAppender {
       return
     }
     switch (value) {
-      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? '1' : '0').append(VALUE_CELL_END)
+      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? ONE : ZERO).append(VALUE_CELL_END)
       case Number -> {
         String v = ValueConverter.asBigDecimal(value).toPlainString()
         sb.append('<c t="n"><v>').append(v).append(VALUE_CELL_END)
@@ -579,7 +617,7 @@ class FExcelAppender {
     return value
         .replace('&', '&amp;')
         .replace('<', '&lt;')
-        .replace('>', '&gt;')
+        .replace(GT, '&gt;')
         .replace(DOUBLE_QUOTE, '&quot;')
         .replace("'", '&apos;')
   }
@@ -660,10 +698,16 @@ class FExcelAppender {
       return
     }
     attributes.each { String name, String value ->
-      sb.append(SPACE).append(name).append('="').append(escapeXml(value)).append(DOUBLE_QUOTE)
+      sb.append(SPACE).append(name).append(EQUALS_QUOTE).append(escapeXml(value)).append(DOUBLE_QUOTE)
     }
   }
 
+  /**
+   * Returns null (not an empty map) when the {@code <worksheet>} root tag itself cannot be located,
+   * a distinct signal from an empty map (tag found, no interesting attributes) that {@link #mergeTemplate}
+   * relies on to decide whether a fallback template still needs to be consulted.
+   */
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
   private static Map<String, String> readWorksheetRootAttributesFallback(String sheetXml) {
     Pattern pattern = Pattern.compile('<worksheet\\b([^>]*)>')
     def matcher = pattern.matcher(sheetXml)
@@ -672,14 +716,13 @@ class FExcelAppender {
     }
     String attrs = matcher.group(1)
     Map<String, String> result = [:]
-    Pattern attrPattern = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
-    def attrMatcher = attrPattern.matcher(attrs)
+    def attrMatcher = ATTR_VALUE_PATTERN.matcher(attrs)
     while (attrMatcher.find()) {
-      String name = attrMatcher.group(1)
+      String name = attrMatcher.group(ATTR_NAME_GROUP)
       if (name.startsWith('xmlns:') && name != 'xmlns:r') {
-        result.put(name, attrMatcher.group(2))
+        result.put(name, attrMatcher.group(ATTR_VALUE_GROUP))
       } else if (name == 'mc:Ignorable') {
-        result.put(name, attrMatcher.group(2))
+        result.put(name, attrMatcher.group(ATTR_VALUE_GROUP))
       }
     }
     return result
@@ -711,12 +754,11 @@ class FExcelAppender {
     }
     String attrs = matcher.group(1)
     Map<String, String> result = [:]
-    Pattern attrPattern = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
-    def attrMatcher = attrPattern.matcher(attrs)
+    def attrMatcher = ATTR_VALUE_PATTERN.matcher(attrs)
     while (attrMatcher.find()) {
-      String name = attrMatcher.group(1)
+      String name = attrMatcher.group(ATTR_NAME_GROUP)
       if (!name.contains(COLON)) {
-        result.put(name, attrMatcher.group(2))
+        result.put(name, attrMatcher.group(ATTR_VALUE_GROUP))
       }
     }
     return result
@@ -772,7 +814,7 @@ class FExcelAppender {
       return false
     }
     String value = workbookPr.getAttribute('date1904')
-    return value == 'true' || value == '1'
+    return value == TRUE_STR || value == ONE
   }
 
   private static boolean hasDateValues(Matrix matrix) {
@@ -825,17 +867,21 @@ class FExcelAppender {
     maxId + 1
   }
 
+  private static void setDefaultStyleRefs(Element xf) {
+    xf.setAttribute(ATTR_FONT_ID, ZERO)
+    xf.setAttribute(ATTR_FILL_ID, ZERO)
+    xf.setAttribute(ATTR_BORDER_ID, ZERO)
+    xf.setAttribute(ATTR_XF_ID, ZERO)
+  }
+
   private static int ensureCellXf(Document styles, int numFmtId) {
     Element root = styles.documentElement
     Element cellXfs = firstDirectChild(root, TAG_CELL_XFS)
     if (cellXfs == null) {
       cellXfs = styles.createElement(TAG_CELL_XFS)
       Element defaultXf = styles.createElement(TAG_XF)
-      defaultXf.setAttribute(ATTR_NUM_FMT_ID, '0')
-      defaultXf.setAttribute('fontId', '0')
-      defaultXf.setAttribute('fillId', '0')
-      defaultXf.setAttribute('borderId', '0')
-      defaultXf.setAttribute('xfId', '0')
+      defaultXf.setAttribute(ATTR_NUM_FMT_ID, ZERO)
+      setDefaultStyleRefs(defaultXf)
       cellXfs.appendChild(defaultXf)
       Element insertAfter = firstDirectChild(root, 'cellStyleXfs') ?: firstDirectChild(root, 'borders')
       root.insertBefore(cellXfs, insertAfter?.nextSibling)
@@ -848,11 +894,8 @@ class FExcelAppender {
     }
     Element xf = styles.createElement(TAG_XF)
     xf.setAttribute(ATTR_NUM_FMT_ID, String.valueOf(numFmtId))
-    xf.setAttribute('fontId', '0')
-    xf.setAttribute('fillId', '0')
-    xf.setAttribute('borderId', '0')
-    xf.setAttribute('xfId', '0')
-    xf.setAttribute('applyNumberFormat', '1')
+    setDefaultStyleRefs(xf)
+    xf.setAttribute(ATTR_APPLY_NUMBER_FORMAT, ONE)
     cellXfs.appendChild(xf)
     updateCount(cellXfs)
     return xfs.size()
@@ -867,7 +910,7 @@ class FExcelAppender {
     NodeList nodes = parent.childNodes
     for (int i = 0; i < nodes.length; i++) {
       Node node = nodes.item(i)
-      if (node instanceof Element && (tagName == '*' || localName((Element) node) == tagName)) {
+      if (node instanceof Element && (tagName == ALL_TAGS || localName((Element) node) == tagName)) {
         result.add((Element) node)
       }
     }
@@ -879,7 +922,7 @@ class FExcelAppender {
   }
 
   private static void updateCount(Element element) {
-    element.setAttribute(ATTR_COUNT, String.valueOf(directChildren(element, '*').size()))
+    element.setAttribute(ATTR_COUNT, String.valueOf(directChildren(element, ALL_TAGS).size()))
   }
 
   private static BigDecimal excelSerial(LocalDate date, boolean date1904) {
@@ -895,7 +938,7 @@ class FExcelAppender {
 
   private static BigDecimal excelSerial(LocalDateTime dateTime, boolean date1904) {
     BigDecimal wholeDays = excelSerial(dateTime.toLocalDate(), date1904)
-    BigDecimal fraction = new BigDecimal(dateTime.toLocalTime().toNanoOfDay()).divide(NANOS_PER_DAY, 12, RoundingMode.HALF_UP)
+    BigDecimal fraction = new BigDecimal(dateTime.toLocalTime().toNanoOfDay()).divide(NANOS_PER_DAY, TIME_FRACTION_SCALE, RoundingMode.HALF_UP)
     return wholeDays.add(fraction).stripTrailingZeros()
   }
 
@@ -936,6 +979,64 @@ class FExcelAppender {
       this.appXml = appXml
       this.replacements = replacements
       this.additions = additions
+    }
+
+  }
+
+  /**
+   * Mutable counters for allocating identifiers to newly added sheets.
+   */
+  private static class IdAllocator {
+
+    int nextSheetId
+    int nextRelId
+    int nextSheetIndex
+
+    IdAllocator(Map<String, SheetInfo> existing, Document rels) {
+      this.nextSheetId = nextValue(existing.values()*.sheetId, 1)
+      this.nextRelId = maxRelId(rels) + 1
+      this.nextSheetIndex = nextValue(existing.values()*.sheetIndex, 1)
+    }
+
+  }
+
+  private static class DocumentSet {
+
+    final Document workbook
+    final Document rels
+    final Document types
+
+    DocumentSet(Document workbook, Document rels, Document types) {
+      this.workbook = workbook
+      this.rels = rels
+      this.types = types
+    }
+
+  }
+
+  /**
+   * Bundles the workbook-building context shared while applying requested sheets,
+   * so the per-sheet helper methods don't need a long individual parameter list.
+   */
+  private static class PlanContext {
+
+    final ZipFile zip
+    final DocumentSet documents
+    final Map<String, SheetInfo> existing
+    final IdAllocator ids
+    final SheetTemplate baseTemplate
+    final StylePlan stylePlan
+    final boolean date1904
+
+    PlanContext(ZipFile zip, DocumentSet documents, Map<String, SheetInfo> existing, IdAllocator ids,
+                SheetTemplate baseTemplate, StylePlan stylePlan, boolean date1904) {
+      this.zip = zip
+      this.documents = documents
+      this.existing = existing
+      this.ids = ids
+      this.baseTemplate = baseTemplate
+      this.stylePlan = stylePlan
+      this.date1904 = date1904
     }
 
   }

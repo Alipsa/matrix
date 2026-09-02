@@ -1,7 +1,5 @@
 package se.alipsa.matrix.bigquery
 
-import groovy.transform.CompileStatic
-
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.FieldValue
@@ -58,10 +56,10 @@ import java.time.ZonedDateTime
  *
  * @see Bq
  */
-@CompileStatic
 class TypeMapper {
 
   private static final Logger log = Logger.getLogger(TypeMapper)
+  private static final long NANOS_PER_MICRO = 1_000L
 
   /**
    * Maps a Java class to a BigQuery StandardSQLTypeName.
@@ -175,7 +173,9 @@ class TypeMapper {
    * @return the converted Java object, or null if the field value is null
    */
   static Object convertFieldValue(FieldValue fv, Field field) {
-    if (fv.isNull()) return null
+    if (fv.isNull()) {
+      return null
+    }
 
     switch (fv.attribute) {
       case FieldValue.Attribute.REPEATED -> convertRepeatedValue(fv, field)
@@ -193,10 +193,16 @@ class TypeMapper {
    * @return the converted Java object, or null if the field value is null
    */
   static Object convertFieldValue(FieldValue fv, StandardSQLTypeName colType) {
-    if (fv.isNull()) return null
+    if (fv.isNull()) {
+      return null
+    }
 
-    if (fv.attribute == FieldValue.Attribute.REPEATED) return convertRepeatedValue(fv)
-    if (fv.attribute == FieldValue.Attribute.RECORD) return convertRecordValue(fv.recordValue)
+    if (fv.attribute == FieldValue.Attribute.REPEATED) {
+      return convertRepeatedValue(fv)
+    }
+    if (fv.attribute == FieldValue.Attribute.RECORD) {
+      return convertRecordValue(fv.recordValue)
+    }
 
     convertPrimitiveFieldValue(fv, colType)
   }
@@ -217,7 +223,7 @@ class TypeMapper {
         if (v instanceof CharSequence) {
           LocalTime.parse(v.toString(), Bq.BQ_TIME_FORMATTER)
         } else if (v instanceof Number) {
-          LocalTime.ofNanoOfDay(v.longValue() * 1_000L)
+          LocalTime.ofNanoOfDay(v.longValue() * NANOS_PER_MICRO)
         }
       }
       case StandardSQLTypeName.RANGE -> fv.rangeValue
@@ -260,7 +266,9 @@ class TypeMapper {
   }
 
   private static Object convertNestedFieldValue(FieldValue fv) {
-    if (fv.isNull()) return null
+    if (fv.isNull()) {
+      return null
+    }
 
     switch (fv.attribute) {
       case FieldValue.Attribute.REPEATED -> convertRepeatedValue(fv)
@@ -272,7 +280,9 @@ class TypeMapper {
 
   private static Object convertRawFieldValue(FieldValue fv) {
     Object value = fv.value
-    if (value instanceof CharSequence) return value.toString()
+    if (value instanceof CharSequence) {
+      return value.toString()
+    }
     value
   }
 
@@ -285,8 +295,12 @@ class TypeMapper {
       // - UnsupportedOperationException: when the method isn't supported by driver version
       // - ClassCastException: when internal type doesn't match expected byte array
       Object v = fv.getValue()
-      if (v instanceof byte[]) return (byte[]) v
-      if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
+      if (v instanceof byte[]) {
+        return (byte[]) v
+      }
+      if (v instanceof CharSequence) {
+        return Base64.decoder.decode(v.toString())
+      }
       if (v instanceof ByteBuffer) {
         ByteBuffer bb = (ByteBuffer) v
         byte[] out = new byte[bb.remaining()]
@@ -332,7 +346,9 @@ class TypeMapper {
    * @see ValueConverter
    */
   static Object convert(Object value, StandardSQLTypeName type) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
     switch (type) {
       case StandardSQLTypeName.BIGNUMERIC -> ValueConverter.asBigDecimal(value)
       case StandardSQLTypeName.BOOL -> ValueConverter.asBoolean(value)
@@ -353,7 +369,7 @@ class TypeMapper {
           LocalTime.parse(value.toString(), Bq.BQ_TIME_FORMATTER)
         } else if (value instanceof Number) {
           long micros = ((Number) value).longValue()
-          LocalTime.ofNanoOfDay(micros * 1_000L)
+          LocalTime.ofNanoOfDay(micros * NANOS_PER_MICRO)
         }
       }
       default -> ValueConverter.asString(value)
@@ -381,7 +397,9 @@ class TypeMapper {
    * @return Instant representing the timestamp, or null if value is null
    */
   static Instant convertToInstant(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
     BigDecimal timestampSeconds = ValueConverter.asBigDecimal(value)
     BigDecimal wholeSeconds = timestampSeconds.setScale(0, RoundingMode.FLOOR)
     BigDecimal fractionalSeconds = timestampSeconds - wholeSeconds

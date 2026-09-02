@@ -56,6 +56,10 @@ ruleset {
             staticFinalRegex = /(log|[A-Z][A-Z_0-9]*)/
             regex = /[a-z][a-zA-Z0-9]*/
         }
+        'PropertyName' {
+            // map_id intentionally mirrors ggplot2's exact aesthetic name.
+            ignorePropertyNames = 'map_id'
+        }
         exclude 'FactoryMethodName'
         exclude 'ConfusingMethodName'
     }
