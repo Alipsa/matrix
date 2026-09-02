@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.bridge
 
 import groovy.transform.CompileDynamic
+import groovy.transform.PackageScope
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.AnnotationSpec
@@ -779,6 +780,7 @@ class GgCharmCompiler {
     normalized
   }
 
+  @PackageScope
   static Map<String, Object> deepCopyMap(Map map) {
     Map<String, Object> copy = [:]
     (map ?: [:]).each { Object key, Object value ->

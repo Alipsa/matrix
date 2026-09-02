@@ -40,6 +40,20 @@ enum DataType {
   }
 
   /**
+   * Checks whether two column types belong to the same DataType category.
+   *
+   * @deprecated Use {@link #sameCategory(Class, Class)} for a name that does not resemble an instance equality method.
+   * @param one the first column type
+   * @param two the second column type
+   * @return true if both types have the same DataType
+   */
+  @Deprecated
+  @SuppressWarnings('EqualsOverloaded')
+  static boolean equals(Class one, Class two) {
+    sameCategory(one, two)
+  }
+
+  /**
    * Checks whether two column types belong to different DataType categories.
    *
    * @param one the first column type

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.bridge
 
+import groovy.transform.PackageScope
+
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CustomAnnotationSpec
@@ -24,6 +26,7 @@ import se.alipsa.matrix.gg.layer.Layer
  * Maps gg annotation layers (custom, logticks, raster, map, and inline
  * text/rect/segment annotations) to their Charm {@link AnnotationSpec} equivalents.
  */
+@PackageScope
 class GgCharmAnnotationMapper {
 
   private static final String AES_X = 'x'
@@ -219,6 +222,7 @@ class GgCharmAnnotationMapper {
     }
   }
 
+  @SuppressWarnings('UnnecessaryToString')
   private static List<AnnotationSpec> mapTextAnnotations(
       Matrix data,
       GgAes aes,
@@ -239,7 +243,7 @@ class GgCharmAnnotationMapper {
     for (int row = 0; row < data.rowCount(); row++) {
       Number x = coerceNumber(data[row, xCol])
       Number y = coerceNumber(data[row, yCol])
-      String label = data[row, labelCol]
+      String label = data[row, labelCol]?.toString()
       if (x == null || y == null || label == null) {
         continue
       }

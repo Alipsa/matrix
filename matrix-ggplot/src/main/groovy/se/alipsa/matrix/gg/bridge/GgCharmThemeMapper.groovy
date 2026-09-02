@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.bridge
 
+import groovy.transform.PackageScope
+
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.Theme
@@ -8,6 +10,7 @@ import se.alipsa.matrix.gg.theme.Theme as GgTheme
 /**
  * Maps gg theme elements ({@link GgTheme}) to their Charm ({@link Theme}) equivalents.
  */
+@PackageScope
 class GgCharmThemeMapper {
 
   static Theme mapTheme(GgTheme source) {

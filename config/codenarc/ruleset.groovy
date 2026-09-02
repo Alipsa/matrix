@@ -57,8 +57,8 @@ ruleset {
             regex = /[a-z][a-zA-Z0-9]*/
         }
         'PropertyName' {
-            // Aes.map_id intentionally mirrors ggplot2's exact aesthetic name (map_id)
-            doNotApplyToFilesMatching = /.*Aes\.groovy/
+            // map_id intentionally mirrors ggplot2's exact aesthetic name.
+            ignorePropertyNames = 'map_id'
         }
         exclude 'FactoryMethodName'
         exclude 'ConfusingMethodName'

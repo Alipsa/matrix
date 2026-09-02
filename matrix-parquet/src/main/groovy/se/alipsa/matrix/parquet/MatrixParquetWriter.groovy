@@ -91,6 +91,7 @@ class MatrixParquetWriter {
   private static final String ERR_ZONE_ID_NULL = 'ZoneId cannot be null'
   private static final String ERR_OPTIONS_NULL = 'Options cannot be null'
   private static final String COMMA = ','
+  private static final String ZERO = '0'
   private static final int DECIMAL_META_LENGTH = 2
   private static final int ERROR_VALUE_MAX_LENGTH = 100
   private static final long MICROS_PER_SECOND = 1_000_000L
@@ -649,7 +650,7 @@ class MatrixParquetWriter {
       } else if (ch == '\t' as char) {
         escaped.append('\\t')
       } else if (Character.isISOControl(ch)) {
-        escaped.append('\\u').append(Integer.toHexString((int) ch).padLeft(4, String.valueOf(0)))
+        escaped.append('\\u').append(Integer.toHexString((int) ch).padLeft(4, ZERO))
       } else {
         escaped.append(ch)
       }

@@ -113,6 +113,8 @@ class FExcelAppender {
   private static final String ZERO = '0'
   private static final String ONE = '1'
   private static final String TRUE_STR = 'true'
+  // Capture groups for ATTR_VALUE_PATTERN only; fallback element patterns have distinct captures.
+  private static final int ATTR_NAME_GROUP = 1
   private static final int ATTR_VALUE_GROUP = 2
   private static final Pattern ATTR_VALUE_PATTERN = Pattern.compile('\\b([A-Za-z_][A-Za-z0-9_.:-]*)="([^"]*)"')
 
@@ -716,7 +718,7 @@ class FExcelAppender {
     Map<String, String> result = [:]
     def attrMatcher = ATTR_VALUE_PATTERN.matcher(attrs)
     while (attrMatcher.find()) {
-      String name = attrMatcher.group(1)
+      String name = attrMatcher.group(ATTR_NAME_GROUP)
       if (name.startsWith('xmlns:') && name != 'xmlns:r') {
         result.put(name, attrMatcher.group(ATTR_VALUE_GROUP))
       } else if (name == 'mc:Ignorable') {
@@ -754,7 +756,7 @@ class FExcelAppender {
     Map<String, String> result = [:]
     def attrMatcher = ATTR_VALUE_PATTERN.matcher(attrs)
     while (attrMatcher.find()) {
-      String name = attrMatcher.group(1)
+      String name = attrMatcher.group(ATTR_NAME_GROUP)
       if (!name.contains(COLON)) {
         result.put(name, attrMatcher.group(ATTR_VALUE_GROUP))
       }

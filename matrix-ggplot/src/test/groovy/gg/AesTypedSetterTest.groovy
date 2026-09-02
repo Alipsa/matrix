@@ -157,6 +157,21 @@ class AesTypedSetterTest {
   }
 
   @Test
+  void testMergeAssignsWrappedAndFallbackAestheticValues() {
+    Closure expression = { row -> row.mpg * 2 }
+    List<Integer> fallbackValue = [1, 2, 3]
+    Aes base = new Aes(x: I(42), y: factor('cyl'), color: after_stat('count'), label: expression, size: fallbackValue)
+    Aes merged = new Aes(x: I(99)).merge(base)
+
+    assertTrue(merged.isConstant('x'))
+    assertEquals(99, merged.getConstantValue('x'))
+    assertTrue(merged.isFactor('y'))
+    assertTrue(merged.isAfterStat('color'))
+    assertTrue(merged.isExpression('label'))
+    assertEquals(fallbackValue, merged.size)
+  }
+
+  @Test
   void testToStringIncludesRangePositionAesthetics() {
     Aes aes = new Aes(xend: 'col')
 

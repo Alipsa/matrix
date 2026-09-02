@@ -289,7 +289,8 @@ final class OdsStreamDataReader extends OdsDataReader {
   /**
    * Extract boolean value from office:boolean-value attribute.
    */
-  private static Object extractBooleanValue(final XMLStreamReader reader, final String officeUrn) {
+  @SuppressWarnings('BooleanMethodReturnsNull')
+  private static Boolean extractBooleanValue(final XMLStreamReader reader, final String officeUrn) {
     String v = reader.getAttributeValue(officeUrn, 'boolean-value')
     return v != null ? Boolean.parseBoolean(v) : null
   }
@@ -336,6 +337,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     }
   }
 
+  @SuppressWarnings('UnnecessaryToString')
   private static String extractTextContent(final XMLStreamReader reader, final String textUrn) {
     // Pre-allocate typical cell text size to reduce StringBuilder resizing
     StringBuilder text = new StringBuilder(64)
@@ -371,7 +373,7 @@ final class OdsStreamDataReader extends OdsDataReader {
       }
     }
 
-    String s = text
+    String s = text.toString()
     return s.isEmpty() ? null : s
   }
 

@@ -111,12 +111,13 @@ class CharmBridge {
     spec
   }
 
+  @SuppressWarnings('UnnecessaryToString')
   private static PlotSpec buildBoxSpec(BoxChart chart) {
     List<List<?>> rows = []
     List<?> categories = chart.categorySeries
     List<List<?>> allValues = chart.valueSeries
     for (int idx = 0; idx < categories.size(); idx++) {
-      String category = categories[idx]
+      String category = categories[idx].toString()
       List<Number> values = allValues[idx] as List<Number>
       for (Number val : values) {
         rows.add([category, val])
