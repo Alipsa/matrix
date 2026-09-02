@@ -16,6 +16,19 @@ class OdsXmlUtil {
   static final String OFFICE_URN = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
   static final String TEXT_URN = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
 
+  /** @deprecated Use {@link #TABLE_URN}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final String tableUrn = TABLE_URN
+  /** @deprecated Use {@link #OFFICE_URN}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final String officeUrn = OFFICE_URN
+  /** @deprecated Use {@link #TEXT_URN}. */
+  @Deprecated
+  @SuppressWarnings('PropertyName')
+  static final String textUrn = TEXT_URN
+
   private static final String EQUALS = '='
   private static final String SPACE = ' '
 

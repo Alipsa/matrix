@@ -4,10 +4,18 @@ import static se.alipsa.matrix.core.ValueConverter.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 
 class FastOdsTest {
+
+  @Test
+  void testLegacyNamespaceAliases() {
+    assert OdsXmlUtil.TABLE_URN == OdsXmlUtil.tableUrn
+    assert OdsXmlUtil.OFFICE_URN == OdsXmlUtil.officeUrn
+    assert OdsXmlUtil.TEXT_URN == OdsXmlUtil.textUrn
+  }
 
   @Test
   void testPosition() {

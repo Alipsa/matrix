@@ -10,6 +10,15 @@ class SpreadsheetUtil {
 
    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS')
 
+   /**
+    * Legacy name for {@link #DATE_TIME_FORMATTER}.
+    *
+    * @deprecated Use {@link #DATE_TIME_FORMATTER}.
+    */
+   @Deprecated
+   @SuppressWarnings('FieldName')
+   public static final DateTimeFormatter dateTimeFormatter = DATE_TIME_FORMATTER
+
    private static final int RADIX = 26
    private static final int MAX_SHEET_NAME_LENGTH = 31
 

@@ -9,6 +9,11 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 class SpreadSheetUtilTest {
 
     @Test
+    void testLegacyDateTimeFormatterAlias() {
+        assertEquals(SpreadsheetUtil.DATE_TIME_FORMATTER, SpreadsheetUtil.dateTimeFormatter)
+    }
+
+    @Test
     void testLetterToNumber() {
         assertEquals(1, SpreadsheetUtil.asColumnNumber('A'))
         assertEquals(29, SpreadsheetUtil.asColumnNumber('AC'))
