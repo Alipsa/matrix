@@ -2,7 +2,7 @@
 
 ## v.2.2.1, in progress
 - Dependency updates:
-  - org.jsoup:jsoup 1.22.2 -> 1.23.1
+  - org.jsoup:jsoup 1.22.2 -> 1.23.2
 
 ## v2.2.0, 2026-05-10
 - `Rdatasets.overview()` is now lazy — no network I/O on class loading; added `Rdatasets.refresh()` to clear the cache

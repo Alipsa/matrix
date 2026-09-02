@@ -2,9 +2,10 @@
 
 ## 0.2.2, in progress
 - Upgrade dependencies:
-  - com.google.apis:google-api-services-drive v3-rev20260624-2.0.0 -> v3-rev20260720-2.0.0
-  - com.google.auth:google-auth-library-bom 1.48.0 -> 1.49.0
-  - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.49.0
+  - com.google.api-client:google-api-client 2.9.0 -> 2.9.1
+  - com.google.apis:google-api-services-drive v3-rev20260624-2.0.0 -> v3-rev20260823-2.0.0
+  - com.google.auth:google-auth-library-bom 1.48.0 -> 1.51.0
+  - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.51.0
   - com.google.http-client:google-http-client-gson 2.1.1 -> 2.2.0
 
 ## 0.2.1, 2026-07-09

@@ -1,5 +1,8 @@
 # Matrix-avro release history
 
+## v0.3.1, unreleased
+- Dependency upgrades
+  - org.apache.avro:avro 1.12.1 -> 1.12.2
 ## v0.3.0 2026-05-01
 - matrix-avro now compiles Groovy statically by default via config/groovy/compileStatic.groovy; explicit @CompileStatic annotations were removed.
 - CodeNarc is now enforced for the module with ignoreFailures = false, and warnings were fixed.
