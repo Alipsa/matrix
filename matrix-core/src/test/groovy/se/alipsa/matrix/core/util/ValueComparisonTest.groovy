@@ -24,7 +24,7 @@ class ValueComparisonTest {
     assertEquals(65_535, ValueComparison.normalizedValueHash(65_535))
     assertEquals(new BigDecimal('65536').hashCode(), ValueComparison.normalizedValueHash(65_536))
     assertEquals(new BigDecimal('-1').hashCode(), ValueComparison.normalizedValueHash(-1))
-    assertEquals(new BigDecimal('0.5').hashCode(), ValueComparison.normalizedValueHash(0.5d))
+    assertEquals(0.5G.hashCode(), ValueComparison.normalizedValueHash(0.5d))
   }
 
   @Test

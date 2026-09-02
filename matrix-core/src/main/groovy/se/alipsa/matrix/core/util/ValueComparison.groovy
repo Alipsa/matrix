@@ -3,11 +3,14 @@ package se.alipsa.matrix.core.util
 import java.lang.reflect.Array
 
 /**
- * Compares and hashes Matrix cell values according to Groovy equality semantics.
+ * Compares and hashes Matrix cell values using Groovy collection semantics and
+ * mathematical numeric comparison.
  *
  * Numeric values compare by mathematical value. Numeric tolerance applies directly
  * to numeric values and recursively to elements of ordered sequences (Lists and
- * arrays). Sets and maps retain exact Groovy equality semantics.
+ * arrays). Sets and maps retain exact Groovy equality semantics. Numeric comparison
+ * uses {@code toBigDecimal()} value, so it does not distinguish signed zero or
+ * non-numeric state carried by custom {@link Number} implementations.
  */
 final class ValueComparison {
 
