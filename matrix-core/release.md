@@ -7,6 +7,8 @@
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
 ### Fixes
+- `Row` now has content-based `equals()` and `hashCode()` behavior consistent with Groovy value comparison, including numerically equivalent values and nested collections.
+- `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
 - Restored the Java-convenience helper shapes of `Columns` and `CollectionUtils.m(...)` so existing raw-map assignments and entry iteration continue to compile.
 - Added Java compilation regression coverage for the builder APIs and Java-convenience helpers.
@@ -27,6 +29,7 @@
   These intentionally raw `List` declarations may produce `rawtypes` warnings with `javac -Xlint:rawtypes`; suppress that warning or avoid `-Werror` for this migration.
 
 - Matrix default equality is now exact for numeric values; use `MatrixAssertions` or the tolerance-based equals overload for approximate comparisons.
+- Character and single-character String cell values compare using Groovy equality semantics. Code relying on their previous distinction must use an explicit type check.
 - Unknown column names in name-based lookup, mutation, movement, conversion, and rename paths now raise clear `IllegalArgumentException`s instead of exposing a `-1` index or silently targeting the last column.
 - `Row.subList(int, int)` remains a live checked view with write-through value replacement; structural row mutations and row sorting are rejected. The other subList overloads return copies.
 - Grid row writers enforce a rectangular width. List-based Grid constructors snapshot the supplied outer list and rows. The public `data` property is a read-only outer view with checked live rows: indexed value writes remain supported, while structural row/outer-list mutations and direct reassignment are rejected.

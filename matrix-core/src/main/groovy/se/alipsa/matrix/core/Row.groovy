@@ -4,6 +4,8 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
+import se.alipsa.matrix.core.util.ValueComparison
+
 
 
 /**
@@ -465,8 +467,9 @@ class Row implements GroovyObject, List<Object> {
 
     /**
      * Two rows are equal when compared against another {@link List} of the same
-     * size with equal corresponding elements. Numeric values are compared by their
-     * exact mathematical value, regardless of runtime type or {@link BigDecimal} scale.
+     * size with equal corresponding elements, using Groovy value semantics. Numeric
+     * values are compared by exact mathematical value regardless of runtime type or
+     * {@link BigDecimal} scale.
      *
      * @param o the object to compare against
      * @return true if {@code o} is a List with equal elements in the same order
@@ -484,11 +487,11 @@ class Row implements GroovyObject, List<Object> {
             return false
         }
         for (int i = 0; i < content.size(); i++) {
-            if (Matrix.valuesAreDifferent(content[i], other[i], BigDecimal.ZERO)) {
+            if (ValueComparison.valuesAreDifferent(content[i], other[i], BigDecimal.ZERO)) {
                 return false
             }
         }
-        return true
+        true
     }
 
     /**
@@ -501,9 +504,9 @@ class Row implements GroovyObject, List<Object> {
     int hashCode() {
         int result = 1
         for (Object value : content) {
-            result = 31 * result + Matrix.normalizedValueHash(value)
+            result = 31 * result + ValueComparison.normalizedValueHash(value)
         }
-        return result
+        result
     }
 
     List<Object> minusColumn(String columnName) {

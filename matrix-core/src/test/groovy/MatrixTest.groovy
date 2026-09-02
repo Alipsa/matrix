@@ -1409,7 +1409,7 @@ class MatrixTest {
   }
 
   @Test
-  void testEqualsRejectsMixedStringAndNumericValuesInEitherOrder() {
+  void testEqualsUsesGroovyCharacterAndStringSemantics() {
     Matrix characterValue = Matrix.builder()
         .data(value: [('a' as Character)])
         .types(Object)
@@ -1423,10 +1423,35 @@ class MatrixTest {
         .types(Object)
         .build()
 
-    assertNotEquals(characterValue, stringValue)
-    assertNotEquals(stringValue, characterValue)
-    assertNotEquals(stringValue, numberValue)
-    assertNotEquals(numberValue, stringValue)
+    assertEquals(characterValue, stringValue)
+    assertEquals(stringValue, characterValue)
+    assertEquals(characterValue.hashCode(), stringValue.hashCode())
+    assertEquals('', characterValue.diff(stringValue))
+    assertEquals(stringValue, numberValue)
+    assertEquals(numberValue, stringValue)
+    assertEquals(stringValue.hashCode(), numberValue.hashCode())
+  }
+
+  @Test
+  void testEqualsAndDiffKeepSetSemantics() {
+    Matrix listValue = Matrix.builder()
+        .data(value: [[1, 2]])
+        .types(Object)
+        .build()
+    Matrix firstSet = Matrix.builder()
+        .data(value: [[1, 2] as LinkedHashSet])
+        .types(Object)
+        .build()
+    Matrix secondSet = Matrix.builder()
+        .data(value: [[2, 1] as LinkedHashSet])
+        .types(Object)
+        .build()
+
+    assertNotEquals(listValue, firstSet)
+    assertNotEquals('', listValue.diff(firstSet))
+    assertEquals(firstSet, secondSet)
+    assertEquals(firstSet.hashCode(), secondSet.hashCode())
+    assertEquals('', firstSet.diff(secondSet))
   }
 
   @Test

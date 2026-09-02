@@ -96,7 +96,7 @@ class MatrixJavaTest {
   }
 
   @Test
-  void testRowEqualsRejectsMixedStringAndNumericValuesInEitherOrder() {
+  void testRowEqualsUsesGroovyCharacterAndStringSemantics() {
     Matrix parent = Matrix.builder()
         .columns(new Columns().add("value", 1))
         .types(Object.class)
@@ -105,10 +105,10 @@ class MatrixJavaTest {
     Row stringRow = new Row(0, List.of("a"), parent);
     Row numberRow = new Row(0, List.of(97), parent);
 
-    assertNotEquals(characterRow, stringRow);
-    assertNotEquals(stringRow, characterRow);
-    assertNotEquals(stringRow, numberRow);
-    assertNotEquals(numberRow, stringRow);
+    assertEquivalentRows(characterRow, stringRow);
+    assertEquivalentRows(stringRow, characterRow);
+    assertEquivalentRows(stringRow, numberRow);
+    assertEquivalentRows(numberRow, stringRow);
   }
 
   private static void assertEquivalentRows(Row left, Row right) {

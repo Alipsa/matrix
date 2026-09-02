@@ -1,8 +1,6 @@
 # matrix-core equals/hashCode Contract Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
->
-> **Note for this repository:** project instructions for `matrix` forbid delegating work to subagents ("Use skills and plugins inline; NEVER use subagents"). Use `superpowers:executing-plans` (inline execution) here, not `subagent-driven-development`, unless the user explicitly overrides that constraint for this run.
+> **For agentic workers:** Follow this plan task-by-task and respect the repository's agent instructions. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix two confirmed `equals()`/`hashCode()` contract violations found in a code review of `matrix-core` — `Row` implementing `List` without overriding `equals()`/`hashCode()`, and `Matrix.hashCode()` being inconsistent with the numeric-tolerant `Matrix.equals(Object)` — and document (without changing) a related, intentional design choice in the multi-arg `equals()`.
 

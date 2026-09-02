@@ -18,8 +18,8 @@ import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
+import se.alipsa.matrix.core.util.ValueComparison
 
-import java.lang.reflect.Array
 import java.math.RoundingMode
 import java.nio.file.Path
 import java.text.NumberFormat
@@ -1684,7 +1684,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         thatRow = other.row(i)
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
-          if (valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
+          if (ValueComparison.valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
             valueDiff = true
           }
         }
@@ -1698,100 +1698,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     } else {
       return ''
     }
-  }
-
-  @PackageScope
-  static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
-    if (entry instanceof Character) {
-      entry = characterCode(entry as Character)
-    }
-    if (thatVal instanceof Character) {
-      thatVal = characterCode(thatVal as Character)
-    }
-    boolean entryIsNumber = entry instanceof Number
-    boolean thatValIsNumber = thatVal instanceof Number
-    if (entryIsNumber || thatValIsNumber) {
-      if (entryIsNumber && thatValIsNumber) {
-        return numericValuesAreDifferent(entry as Number, thatVal as Number, allowedDiff)
-      }
-      return true
-    }
-    if (isSequence(entry) && isSequence(thatVal)) {
-      return sequenceValuesAreDifferent(entry, thatVal, allowedDiff)
-    }
-    if (entry instanceof Map && thatVal instanceof Map) {
-      return mapValuesAreDifferent(entry as Map<Object, Object>, thatVal as Map<Object, Object>, allowedDiff)
-    }
-    entry != thatVal
-  }
-
-  private static boolean numericValuesAreDifferent(Number entry, Number thatVal, BigDecimal allowedDiff) {
-    boolean entryIsNonFinite = isNonFiniteFloatingPoint(entry)
-    boolean thatValIsNonFinite = isNonFiniteFloatingPoint(thatVal)
-    if (entryIsNonFinite || thatValIsNonFinite) {
-      return !entryIsNonFinite || !thatValIsNonFinite || Double.compare(entry.doubleValue(), thatVal.doubleValue()) != 0
-    }
-    (entry.toBigDecimal() - thatVal.toBigDecimal()).abs() > allowedDiff
-  }
-
-  private static boolean isNonFiniteFloatingPoint(Number value) {
-    if (value instanceof Double || value instanceof Float) {
-      double floatingPointValue = value.doubleValue()
-      return Double.isNaN(floatingPointValue) || Double.isInfinite(floatingPointValue)
-    }
-    false
-  }
-
-  private static int characterCode(Character value) {
-    value.charValue() as int
-  }
-
-  private static boolean isSequence(Object value) {
-    value != null && (value.getClass().isArray() || value instanceof Collection)
-  }
-
-  private static boolean sequenceValuesAreDifferent(Object left, Object right, BigDecimal allowedDiff) {
-    List<Object> leftValues = sequenceValues(left)
-    List<Object> rightValues = sequenceValues(right)
-    if (leftValues.size() != rightValues.size()) {
-      return true
-    }
-    for (int i = 0; i < leftValues.size(); i++) {
-      if (valuesAreDifferent(leftValues[i], rightValues[i], allowedDiff)) {
-        return true
-      }
-    }
-    false
-  }
-
-  private static List<Object> sequenceValues(Object value) {
-    if (value.getClass().isArray()) {
-      int length = Array.getLength(value)
-      List<Object> result = new ArrayList<>(length)
-      for (int i = 0; i < length; i++) {
-        result.add(Array.get(value, i))
-      }
-      return result
-    }
-    new ArrayList<>(value as Collection<Object>)
-  }
-
-  private static boolean mapValuesAreDifferent(Map<Object, Object> left, Map<Object, Object> right, BigDecimal allowedDiff) {
-    if (left.size() != right.size()) {
-      return true
-    }
-    List<Map.Entry<Object, Object>> unmatched = new ArrayList<>(right.entrySet())
-    for (Map.Entry<Object, Object> leftEntry : left.entrySet()) {
-      Map.Entry<Object, Object> match = unmatched.find { Map.Entry<Object, Object> rightEntry ->
-        !valuesAreDifferent(leftEntry.key, rightEntry.key, allowedDiff) &&
-            !valuesAreDifferent(leftEntry.value, rightEntry.value, allowedDiff)
-      }
-      if (match == null) {
-        return true
-      }
-      unmatched.remove(match)
-    }
-    false
   }
 
   /**
@@ -2013,29 +1919,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       int r = 0
       for (entry in column) {
         def thatVal = thatCol[r]
-        boolean entryIsNumeric = entry instanceof Number || entry instanceof Character
-        boolean thatValIsNumeric = thatVal instanceof Number || thatVal instanceof Character
-        if (entryIsNumeric || thatValIsNumeric) {
-          if (entryIsNumeric && thatValIsNumeric) {
-            if (valuesAreDifferent(entry, thatVal, allowedDiff)) {
-              return [r, i, entry, thatVal]
-            }
-          } else if (ignoreTypes) {
-            if (String.valueOf(entry) != String.valueOf(thatVal)) {
-              return [r, i, entry, thatVal]
-            }
-          } else {
+        if (ValueComparison.valuesAreDifferent(entry, thatVal, allowedDiff)) {
+          if (!ignoreTypes || String.valueOf(entry) != String.valueOf(thatVal)) {
             return [r, i, entry, thatVal]
-          }
-        } else {
-          if (ignoreTypes) {
-            if (String.valueOf(entry) != String.valueOf(thatVal)) {
-              return [r, i, entry, thatVal]
-            }
-          } else {
-            if (entry != thatVal) {
-              return [r, i, entry, thatVal]
-            }
           }
         }
         r++
@@ -2353,6 +2239,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     MatrixPrinter.head(this, rows, includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
+  /**
+   * Computes a content-based hash using the same normalized value rules as default equality.
+   * This operation visits every cell in the matrix.
+   *
+   * @return the hash code for this matrix
+   */
   @Override
   int hashCode() {
     int result = 1
@@ -2360,90 +2252,13 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (Column col : mColumns) {
         int colHash = 1
         for (Object value : col) {
-          colHash = 31 * colHash + normalizedValueHash(value)
+          colHash = 31 * colHash + ValueComparison.normalizedValueHash(value)
         }
         result = 31 * result + colHash
       }
     }
     result = 31 * result + types().hashCode()
     return result
-  }
-
-  /**
-   * Hash a single cell value the same way {@link #checkValues} compares it, so that
-   * {@link #hashCode()} stays consistent with the numeric tolerance used by the
-   * zero-arg {@link #equals(Object)} override: numbers that are mathematically equal
-   * (e.g. {@code 1}, {@code 1.0d}, {@code new BigDecimal("1.00")}) must hash identically
-   * regardless of runtime type or {@code BigDecimal} scale.
-   *
-   * @param value the cell value to hash
-   * @return a hash code consistent with {@link #equals(Object)}
-   */
-  @PackageScope
-  static int normalizedValueHash(Object value) {
-    if (value == null) {
-      return 0
-    }
-    if (value instanceof Character) {
-      return normalizedValueHash(characterCode(value as Character))
-    }
-    if (value instanceof Number) {
-      Number number = value as Number
-      if ((number instanceof Double || number instanceof Float) &&
-          (Double.isNaN(number.doubleValue()) || Double.isInfinite(number.doubleValue()))) {
-        return Double.hashCode(number.doubleValue())
-      }
-      return number.toBigDecimal().stripTrailingZeros().hashCode()
-    }
-    if (value instanceof CharSequence) {
-      return value.toString().hashCode()
-    }
-    if (value.getClass().isArray()) {
-      return arrayValueHash(value)
-    }
-    if (value instanceof Map) {
-      return mapValueHash(value as Map<Object, Object>)
-    }
-    if (value instanceof Set) {
-      return setValueHash(value as Set<Object>)
-    }
-    if (value instanceof Collection) {
-      return collectionValueHash(value as Collection<Object>)
-    }
-    return value.hashCode()
-  }
-
-  private static int arrayValueHash(Object array) {
-    int result = 1
-    int length = Array.getLength(array)
-    for (int i = 0; i < length; i++) {
-      result = 31 * result + normalizedValueHash(Array.get(array, i))
-    }
-    result
-  }
-
-  private static int collectionValueHash(Collection<Object> values) {
-    int result = 1
-    for (Object value : values) {
-      result = 31 * result + normalizedValueHash(value)
-    }
-    result
-  }
-
-  private static int setValueHash(Set<Object> values) {
-    int result = 0
-    for (Object value : values) {
-      result += normalizedValueHash(value)
-    }
-    result
-  }
-
-  private static int mapValueHash(Map<Object, Object> values) {
-    int result = 0
-    for (Map.Entry<Object, Object> entry : values.entrySet()) {
-      result += normalizedValueHash(entry.key) ^ normalizedValueHash(entry.value)
-    }
-    result
   }
 
   /**
