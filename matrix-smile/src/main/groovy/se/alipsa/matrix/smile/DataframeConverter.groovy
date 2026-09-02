@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile
 
-import groovy.transform.CompileStatic
-
 import smile.data.DataFrame
 import smile.data.type.BooleanType
 import smile.data.type.ByteType
@@ -34,11 +32,16 @@ import java.time.ZonedDateTime
 /**
  * Converts between {@link Matrix} and Smile's {@link DataFrame}.
  */
-@CompileStatic
 class DataframeConverter {
 
   private static final Logger log = Logger.getLogger(DataframeConverter)
 
+  /**
+   * Converts a Smile {@link DataFrame} to a Matrix, preserving its column names and types.
+   *
+   * @param dataFrame the Smile data frame to convert
+   * @return a Matrix containing the data frame's rows and columns
+   */
   static Matrix convert(DataFrame dataFrame) {
     def columnNames = dataFrame.schema().fields()*.name()
     def rowCount = dataFrame.nrow()
@@ -59,6 +62,12 @@ class DataframeConverter {
     Matrix.builder().data(data).types(types).build()
   }
 
+  /**
+   * Converts a Matrix to a Smile {@link DataFrame}.
+   *
+   * @param matrix the Matrix to convert
+   * @return a Smile data frame containing the Matrix columns
+   */
   static DataFrame convert(Matrix matrix) {
     int numCols = matrix.columnCount()
     String[] colNames = matrix.columnNames()

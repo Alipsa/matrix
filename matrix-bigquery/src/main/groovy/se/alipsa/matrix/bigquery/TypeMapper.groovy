@@ -1,7 +1,5 @@
 package se.alipsa.matrix.bigquery
 
-import groovy.transform.CompileStatic
-
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.FieldValue
@@ -58,7 +56,6 @@ import java.time.ZonedDateTime
  *
  * @see Bq
  */
-@CompileStatic
 class TypeMapper {
 
   private static final Logger log = Logger.getLogger(TypeMapper)
