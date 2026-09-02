@@ -98,8 +98,8 @@ class FExcelAppender {
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
       '</styleSheet>'
   private static final LocalDate EXCEL_1900_EPOCH = LocalDate.of(1899, Month.DECEMBER, 31)
-  private static final LocalDate EXCEL_1904_EPOCH = LocalDate.of(1904, 1, 1)
-  private static final LocalDate EXCEL_LEAP_BUG_START = LocalDate.of(1900, 3, 1)
+  private static final LocalDate EXCEL_1904_EPOCH = LocalDate.of(1904, Month.JANUARY, 1)
+  private static final LocalDate EXCEL_LEAP_BUG_START = LocalDate.of(1900, Month.MARCH, 1)
   private static final BigDecimal NANOS_PER_DAY = new BigDecimal(86_400_000_000_000L)
   private static final int TIME_FRACTION_SCALE = 12
   private static final String GT = '>'

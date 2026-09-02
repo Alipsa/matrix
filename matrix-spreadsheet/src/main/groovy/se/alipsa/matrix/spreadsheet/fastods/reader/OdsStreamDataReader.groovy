@@ -2,7 +2,9 @@ package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asInteger
-import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OFFICE_URN
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.TABLE_URN
+import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.TEXT_URN
 import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFactory.INSTANCE
 
 import se.alipsa.matrix.core.util.Logger
