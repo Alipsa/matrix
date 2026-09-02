@@ -4,6 +4,8 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
+import se.alipsa.matrix.core.util.ValueComparison
+
 
 
 /**
@@ -461,6 +463,52 @@ class Row implements GroovyObject, List<Object> {
     @Override
     String toString() {
         return String.valueOf(content)
+    }
+
+    /**
+     * Two rows are equal when compared against another {@link List} of the same
+     * size with equal corresponding elements, using Groovy value semantics. Numeric
+     * values are compared by exact mathematical value regardless of runtime type or
+     * {@link BigDecimal} scale.
+     *
+     * @param o the object to compare against
+     * @return true if {@code o} is a List with equal elements in the same order
+     */
+    @Override
+    boolean equals(Object o) {
+        if (this.is(o)) {
+            return true
+        }
+        if (!(o instanceof List)) {
+            return false
+        }
+        List<?> other = o as List<?>
+        if (content.size() != other.size()) {
+            return false
+        }
+        for (int i = 0; i < content.size(); i++) {
+            if (ValueComparison.valuesAreDifferent(content[i], other[i], BigDecimal.ZERO)) {
+                return false
+            }
+        }
+        true
+    }
+
+    /**
+     * Hash code consistent with {@link #equals(Object)}. Numerically equal values
+     * have the same hash code regardless of runtime type or {@link BigDecimal} scale.
+     * A Row is a mutable view, so changing its values after using it in a hash-based
+     * collection changes this hash code.
+     *
+     * @return the hash code derived from this row's current element values
+     */
+    @Override
+    int hashCode() {
+        int result = 1
+        for (Object value : content) {
+            result = 31 * result + ValueComparison.normalizedValueHash(value)
+        }
+        result
     }
 
     List<Object> minusColumn(String columnName) {

@@ -18,6 +18,7 @@ import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.TypeHelper
+import se.alipsa.matrix.core.util.ValueComparison
 
 import java.math.RoundingMode
 import java.nio.file.Path
@@ -1683,7 +1684,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         thatRow = other.row(i)
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
-          if (valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
+          if (ValueComparison.valuesAreDifferent(entry, thatRow[c], allowedDiff)) {
             valueDiff = true
           }
         }
@@ -1697,16 +1698,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     } else {
       return ''
     }
-  }
-
-  private static boolean valuesAreDifferent(Object entry, Object thatVal, BigDecimal allowedDiff) {
-    if (entry instanceof Number) {
-      if (thatVal instanceof Number) {
-        return ((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff
-      }
-      return true
-    }
-    entry != thatVal
   }
 
   /**
@@ -1867,7 +1858,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param o the matrix to compare against
    * @param ignoreColumnNames whether to ignore column names when comparing
    * @param ignoreMatrixName whether to ignore the matrix name when comparing
-   * @param ignoreTypes whether to ignore column types when comparing
+   * @param ignoreTypes whether to ignore declared column types and non-numeric cell
+   *        value types when comparing. Numeric cell values are always compared by
+   *        mathematical value (within {@code allowedDiff}) regardless of this flag —
+   *        e.g. {@code 5} and {@code 5L} are always considered equal cell values even
+   *        with {@code ignoreTypes = false}. This lets {@link MatrixAssertions} compare
+   *        computed {@code BigDecimal} results against plain {@code int}/{@code Integer}
+   *        expected values in tests.
    * @param allowedDiff numeric tolerance for numeric values
    * @param throwException whether to throw on mismatch instead of returning false
    * @param message message prefix used when throwException is true
@@ -1922,27 +1919,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       int r = 0
       for (entry in column) {
         def thatVal = thatCol[r]
-        if (entry instanceof Number) {
-          if (thatVal instanceof Number) {
-            if (((entry as Number).toBigDecimal() - (thatVal as Number).toBigDecimal()).abs() > allowedDiff) {
-              return [r, i, entry, thatVal]
-            }
-          } else if (ignoreTypes) {
-            if (String.valueOf(entry) != String.valueOf(thatVal)) {
-              return [r, i, entry, thatVal]
-            }
-          } else {
+        if (ValueComparison.valuesAreDifferent(entry, thatVal, allowedDiff)) {
+          if (!ignoreTypes || String.valueOf(entry) != String.valueOf(thatVal)) {
             return [r, i, entry, thatVal]
-          }
-        } else {
-          if (ignoreTypes) {
-            if (String.valueOf(entry) != String.valueOf(thatVal)) {
-              return [r, i, entry, thatVal]
-            }
-          } else {
-            if (entry != thatVal) {
-              return [r, i, entry, thatVal]
-            }
           }
         }
         r++
@@ -2260,9 +2239,24 @@ class Matrix implements Iterable<Row>, Cloneable {
     MatrixPrinter.head(this, rows, includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
+  /**
+   * Computes a content-based hash using the same normalized value rules as default equality.
+   * This operation visits every cell in the matrix.
+   *
+   * @return the hash code for this matrix
+   */
   @Override
   int hashCode() {
-    int result = mColumns != null ? mColumns.hashCode() : 0
+    int result = 1
+    if (mColumns != null) {
+      for (Column col : mColumns) {
+        int colHash = 1
+        for (Object value : col) {
+          colHash = 31 * colHash + ValueComparison.normalizedValueHash(value)
+        }
+        result = 31 * result + colHash
+      }
+    }
     result = 31 * result + types().hashCode()
     return result
   }

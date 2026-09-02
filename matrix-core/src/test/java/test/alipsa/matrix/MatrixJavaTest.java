@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,84 @@ import static se.alipsa.matrix.core.util.CollectionUtils.*;
  * Testing that a Matrix can work fine outside Groovy e.g. used in Java
  */
 class MatrixJavaTest {
+
+  @Test
+  void testRowEqualsUsesGroovyCollectionComparison() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("amount", 1))
+        .types(BigDecimal.class)
+        .build();
+    Row row = new Row(0, List.of(new BigDecimal("1.0")), parent);
+    List<Object> values = new ArrayList<>(List.of(1));
+
+    Row equivalentRow = new Row(0, List.of(1), parent);
+
+    assertTrue(row.equals(values));
+    assertEquals(row, equivalentRow);
+    assertEquals(row.hashCode(), equivalentRow.hashCode());
+  }
+
+  @Test
+  void testRowEqualsUsesExactNumericValues() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("amount", 1))
+        .types(Number.class)
+        .build();
+    Row longRow = new Row(0, List.of(9_007_199_254_740_993L), parent);
+    Row doubleRow = new Row(0, List.of(9_007_199_254_740_992.0d), parent);
+
+    assertNotEquals(longRow, doubleRow);
+  }
+
+  @Test
+  void testRowEqualsHashesGroovyEqualCompoundValues() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+
+    assertEquivalentRows(new Row(0, List.of(new int[]{1, 2}), parent),
+        new Row(0, List.of(new int[]{1, 2}), parent));
+    assertEquivalentRows(new Row(0, List.of(List.of(1)), parent),
+        new Row(0, List.of(List.of(1.0d)), parent));
+    assertEquivalentRows(new Row(0, List.of(Map.of("a", 1)), parent),
+        new Row(0, List.of(Map.of("a", 1.0d)), parent));
+  }
+
+  @Test
+  void testRowEqualsComparesCharactersAsNumbersInEitherOrder() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+    Row characterRow = new Row(0, List.of('a'), parent);
+    Row numberRow = new Row(0, List.of(97), parent);
+
+    assertEquivalentRows(characterRow, numberRow);
+    assertEquivalentRows(numberRow, characterRow);
+  }
+
+  @Test
+  void testRowEqualsUsesGroovyCharacterAndStringSemantics() {
+    Matrix parent = Matrix.builder()
+        .columns(new Columns().add("value", 1))
+        .types(Object.class)
+        .build();
+    Row characterRow = new Row(0, List.of('a'), parent);
+    Row stringRow = new Row(0, List.of("a"), parent);
+    Row numberRow = new Row(0, List.of(97), parent);
+
+    assertEquivalentRows(characterRow, stringRow);
+    assertEquivalentRows(stringRow, characterRow);
+    assertEquivalentRows(stringRow, numberRow);
+    assertEquivalentRows(numberRow, stringRow);
+  }
+
+  private static void assertEquivalentRows(Row left, Row right) {
+    assertEquals(left, right);
+    assertEquals(left.hashCode(), right.hashCode());
+    assertTrue(new HashSet<>(List.of(left)).contains(right));
+  }
 
   @Test
   void testMatrixConstructors() {

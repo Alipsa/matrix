@@ -283,13 +283,13 @@ class Polish390Test {
   }
 
   @Test
-  void equalNumericMatricesWithDifferentScaleOrBoxingMayHaveDifferentHashCodes() {
+  void equalNumericMatricesWithDifferentScaleOrBoxingHaveEqualHashCodes() {
     def m1 = Matrix.builder().data(a: [1.0G]).build()
     def m2 = Matrix.builder().data(a: [1.00G]).build()
     assertEquals(m1, m2)
-    // Documented limitation: hash codes may differ for scale/boxing variants.
-    // The assertion below records the current behavior rather than a contract.
-    assertNotEquals(m1.hashCode(), m2.hashCode())
+    // hashCode() normalizes numeric cell values so it stays consistent with the
+    // numeric tolerance used by equals(), regardless of BigDecimal scale or boxing.
+    assertEquals(m1.hashCode(), m2.hashCode())
   }
 
   // ── 7. Precision and input adapters ────────────────────────────────────────
