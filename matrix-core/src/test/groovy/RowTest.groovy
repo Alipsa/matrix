@@ -145,4 +145,15 @@ class RowTest {
     assertNotEquals(row, 'not a list at all')
   }
 
+  @Test
+  void testEqualsKeepsSetCellsDistinctFromListCells() {
+    Matrix listMatrix = Matrix.builder().data(value: [[1, 2]]).types(Object).build()
+    Matrix firstSetMatrix = Matrix.builder().data(value: [[1, 2] as LinkedHashSet]).types(Object).build()
+    Matrix secondSetMatrix = Matrix.builder().data(value: [[2, 1] as LinkedHashSet]).types(Object).build()
+
+    assertNotEquals(listMatrix.row(0), firstSetMatrix.row(0))
+    assertEquals(firstSetMatrix.row(0), secondSetMatrix.row(0))
+    assertEquals(firstSetMatrix.row(0).hashCode(), secondSetMatrix.row(0).hashCode())
+  }
+
 }

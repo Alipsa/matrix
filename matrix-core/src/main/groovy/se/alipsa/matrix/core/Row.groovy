@@ -497,6 +497,8 @@ class Row implements GroovyObject, List<Object> {
     /**
      * Hash code consistent with {@link #equals(Object)}. Numerically equal values
      * have the same hash code regardless of runtime type or {@link BigDecimal} scale.
+     * A Row is a mutable view, so changing its values after using it in a hash-based
+     * collection changes this hash code.
      *
      * @return the hash code derived from this row's current element values
      */

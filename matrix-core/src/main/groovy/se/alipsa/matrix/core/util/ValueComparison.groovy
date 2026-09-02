@@ -5,10 +5,11 @@ import java.lang.reflect.Array
 /**
  * Compares and hashes Matrix cell values according to Groovy equality semantics.
  *
- * Numeric values compare by mathematical value. Collections and maps retain their
- * Groovy semantics, while arrays are compared by their element values.
+ * Numeric values compare by mathematical value. Numeric tolerance applies directly
+ * to numeric values and recursively to elements of ordered sequences (Lists and
+ * arrays). Sets and maps retain exact Groovy equality semantics.
  */
-class ValueComparison {
+final class ValueComparison {
 
   private ValueComparison() {
   }
@@ -18,7 +19,8 @@ class ValueComparison {
    *
    * @param left the first value
    * @param right the second value
-   * @param allowedDiff maximum allowed numeric difference
+   * @param allowedDiff maximum allowed numeric difference for direct values and
+   *        ordered sequence elements; Sets and Maps compare exactly
    * @return true when the values differ
    */
   static boolean valuesAreDifferent(Object left, Object right, BigDecimal allowedDiff) {
@@ -33,9 +35,6 @@ class ValueComparison {
     }
     if (isSequence(left) && isSequence(right)) {
       return sequenceValuesAreDifferent(left, right, allowedDiff)
-    }
-    if (left instanceof Map && right instanceof Map) {
-      return mapValuesAreDifferent(left, right, allowedDiff)
     }
     left != right
   }
@@ -56,6 +55,9 @@ class ValueComparison {
         return Double.hashCode(value.doubleValue())
       }
       BigDecimal normalized = value.toBigDecimal().stripTrailingZeros()
+      // Groovy considers an integral numeric value equal to its matching Character
+      // and one-character String. Character and String hash to the character code,
+      // so use that hash for the Character range rather than BigDecimal.hashCode().
       if (normalized.scale() <= 0 && normalized >= Character.MIN_VALUE && normalized <= Character.MAX_VALUE) {
         return normalized.intValue()
       }
@@ -124,27 +126,6 @@ class ValueComparison {
       return result
     }
     new ArrayList<>(value as List<Object>)
-  }
-
-  private static boolean mapValuesAreDifferent(Map<Object, Object> left, Map<Object, Object> right, BigDecimal allowedDiff) {
-    if (left.size() != right.size()) {
-      return true
-    }
-    // Tolerance-based map matching is best-effort: exact Groovy map equality does
-    // not need this matching path, while approximate keys cannot always be matched
-    // unambiguously.
-    List<Map.Entry<Object, Object>> unmatched = new ArrayList<>(right.entrySet())
-    for (Map.Entry<Object, Object> leftEntry : left.entrySet()) {
-      Map.Entry<Object, Object> match = unmatched.find { Map.Entry<Object, Object> rightEntry ->
-        !valuesAreDifferent(leftEntry.key, rightEntry.key, allowedDiff) &&
-            !valuesAreDifferent(leftEntry.value, rightEntry.value, allowedDiff)
-      }
-      if (match == null) {
-        return true
-      }
-      unmatched.remove(match)
-    }
-    false
   }
 
   private static int sequenceValueHash(Collection<Object> values) {

@@ -1433,6 +1433,29 @@ class MatrixTest {
   }
 
   @Test
+  void testMapCellsKeepGroovyNumericKeySemantics() {
+    Matrix integerKey = Matrix.builder()
+        .data(value: [[1: 'value']])
+        .types(Object)
+        .build()
+    Matrix decimalKey = Matrix.builder()
+        .data(value: [[1.0d: 'value']])
+        .types(Object)
+        .build()
+
+    assertNotEquals(integerKey, decimalKey)
+    assertNotEquals('', integerKey.diff(decimalKey))
+  }
+
+  @Test
+  void testEqualsIgnoreTypesUsesMatchingStringRepresentations() {
+    Matrix numeric = Matrix.builder().data(value: [1]).types(Object).build()
+    Matrix text = Matrix.builder().data(value: ['1']).types(Object).build()
+
+    assertTrue(numeric.equals(text, true, true, true, BigDecimal.ZERO, false))
+  }
+
+  @Test
   void testEqualsAndDiffKeepSetSemantics() {
     Matrix listValue = Matrix.builder()
         .data(value: [[1, 2]])
