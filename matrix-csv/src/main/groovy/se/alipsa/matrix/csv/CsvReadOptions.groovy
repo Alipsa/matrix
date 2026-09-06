@@ -1,15 +1,18 @@
 package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 
 import org.apache.commons.csv.DuplicateHeaderMode
 
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
+import se.alipsa.matrix.core.util.Logger
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Typed options class for CSV read operations via the SPI.
@@ -32,6 +35,8 @@ import java.text.NumberFormat
 @CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'ReturnsNullInsteadOfEmptyCollection'])
 class CsvReadOptions {
+
+  private static final Logger log = Logger.getLogger(CsvReadOptions)
 
   private static final String BOOLEAN_TRUE = 'true'
   private static final Character DEFAULT_DELIMITER = ',' as Character
@@ -62,7 +67,12 @@ class CsvReadOptions {
   boolean ignoreSurroundingSpaces = DEFAULT_IGNORE_SURROUNDING_SPACES
   String nullString = null
   DuplicateHeaderMode duplicateHeaderMode = DEFAULT_DUPLICATE_HEADER_MODE
+
+  @Deprecated
   String recordSeparator = DEFAULT_RECORD_SEPARATOR
+
+  @PackageScope
+  static final AtomicBoolean RECORD_SEPARATOR_WARNING_EMITTED = new AtomicBoolean(false)
 
   /** Sets the field delimiter character. */
   CsvReadOptions delimiter(Character c) {
@@ -150,11 +160,46 @@ class CsvReadOptions {
 
   /** Sets the duplicate header mode from a case-insensitive enum name. */
   CsvReadOptions duplicateHeaderMode(String mode) {
-    duplicateHeaderMode(DuplicateHeaderMode.valueOf(String.valueOf(mode).trim().toUpperCase(Locale.ROOT)))
+    duplicateHeaderMode(CsvOptionUtil.duplicateHeaderMode(mode))
   }
 
-  /** Sets the record separator string. */
-  CsvReadOptions recordSeparator(String sep) { this.recordSeparator = sep; this }
+  /**
+   * Returns the retained legacy read-side record separator.
+   *
+   * @return the inert record separator value
+   * @deprecated Commons CSV record separators affect output only; use
+   * {@link CsvWriteOptions#recordSeparator(String)} when writing
+   */
+  @Deprecated
+  String getRecordSeparator() {
+    this.@recordSeparator
+  }
+
+  /**
+   * Retains the legacy read-side record separator without changing parsing.
+   *
+   * @param separator ignored record separator
+   * @deprecated Commons CSV record separators affect output only; use
+   * {@link CsvWriteOptions#recordSeparator(String)} when writing
+   */
+  @Deprecated
+  void setRecordSeparator(String separator) {
+    this.@recordSeparator = separator
+  }
+
+  /**
+   * Retains the legacy read-side record separator without changing parsing.
+   *
+   * @param separator ignored record separator
+   * @return this options instance
+   * @deprecated Commons CSV record separators affect output only; use
+   * {@link CsvWriteOptions#recordSeparator(String)} when writing
+   */
+  @Deprecated
+  CsvReadOptions recordSeparator(String separator) {
+    this.@recordSeparator = separator
+    this
+  }
 
   /**
    * @return true when the delimiter was explicitly configured by the caller
@@ -216,11 +261,12 @@ class CsvReadOptions {
           result.duplicateHeaderMode(OptionMaps.stringValueOrNull(value))
         }
       } else if (key == 'recordseparator') {
+        warnRecordSeparatorDeprecated()
         String recordSeparator = OptionMaps.stringValueOrNull(value)
         if (recordSeparator == null) {
           throw new IllegalArgumentException('recordSeparator must be a String')
         }
-        result.recordSeparator(recordSeparator)
+        result.@recordSeparator = recordSeparator
       } else {
         throw new IllegalArgumentException("Unknown CsvReadOptions option: '${key}'")
       }
@@ -292,8 +338,8 @@ class CsvReadOptions {
     if (duplicateHeaderMode != DEFAULT_DUPLICATE_HEADER_MODE) {
       m.duplicateHeaderMode = duplicateHeaderMode
     }
-    if (recordSeparator != DEFAULT_RECORD_SEPARATOR) {
-      m.recordSeparator = recordSeparator
+    if (this.@recordSeparator != DEFAULT_RECORD_SEPARATOR) {
+      m.recordSeparator = this.@recordSeparator
     }
     m
   }
@@ -321,7 +367,6 @@ class CsvReadOptions {
         new OptionDescriptor('ignoreSurroundingSpaces', Boolean, BOOLEAN_TRUE, 'Whether to ignore spaces around quoted values'),
         new OptionDescriptor('nullString', String, null, 'String to interpret as null'),
         new OptionDescriptor('duplicateHeaderMode', DuplicateHeaderMode, DEFAULT_DUPLICATE_HEADER_MODE, 'How to handle duplicate header fields'),
-        new OptionDescriptor('recordSeparator', String, '\\n', 'The record separator string'),
     ]
   }
 
@@ -333,6 +378,17 @@ class CsvReadOptions {
       return CsvOptionUtil.resolveCharset(value as CharSequence)
     }
     throw new IllegalArgumentException("charset must be a Charset or CharSequence but was ${value?.class}")
+  }
+
+  private static void warnRecordSeparatorDeprecated() {
+    if (RECORD_SEPARATOR_WARNING_EMITTED.compareAndSet(false, true)) {
+      log.warn('CsvReadOptions recordSeparator is deprecated and inert; record separators are recognized automatically when reading')
+    }
+  }
+
+  @PackageScope
+  static boolean resetRecordSeparatorWarning(boolean emitted) {
+    RECORD_SEPARATOR_WARNING_EMITTED.getAndSet(emitted)
   }
 
   private static List<String> resolveHeader(Object value) {

@@ -72,7 +72,7 @@ goto fail
 
 
 
-@rem Use 75%% of the available processors by default, preserving an explicit override.
+@rem Use 50%% of the available processors by default, preserving an explicit override.
 set "GRADLE_WORKER_ARG="
 set "GRADLE_WORKER_SET="
 for %%A in (%*) do if /I "%%A"=="--max-workers" set "GRADLE_WORKER_SET=1"
@@ -102,7 +102,7 @@ goto :eof
 
 :setGradleWorkerLimit
 if not defined NUMBER_OF_PROCESSORS set NUMBER_OF_PROCESSORS=1
-set /a GRADLE_WORKER_COUNT=(%NUMBER_OF_PROCESSORS%*3)/4
+set /a GRADLE_WORKER_COUNT=%NUMBER_OF_PROCESSORS%/2
 if %GRADLE_WORKER_COUNT% LSS 1 set GRADLE_WORKER_COUNT=1
 set "GRADLE_WORKER_ARG=--max-workers=%GRADLE_WORKER_COUNT%"
 goto :eof

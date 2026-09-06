@@ -37,8 +37,7 @@ class CsvTypedOptionsTest {
         ignoreEmptyLines       : false,
         ignoreSurroundingSpaces: false,
         nullString             : 'NULL',
-        duplicateHeaderMode    : 'ALLOW_ALL',
-        recordSeparator        : '\r\n'
+        duplicateHeaderMode    : 'ALLOW_ALL'
     ])
 
     Map<String, ?> serialized = options.toMap()
@@ -53,7 +52,6 @@ class CsvTypedOptionsTest {
     assertFalse(reparsed.trim)
     assertFalse(reparsed.ignoreEmptyLines)
     assertFalse(reparsed.ignoreSurroundingSpaces)
-    assertEquals('\r\n', reparsed.recordSeparator)
   }
 
   @Test

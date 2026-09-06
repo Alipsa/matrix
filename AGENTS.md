@@ -36,6 +36,7 @@ Authoritative project metadata:
 - `./gradlew dependencyUpdates`: report newer dependency versions.
 - `./gradlew :matrix-core:codenarcMain`: run CodeNarc static analysis on main sources for a single module.
 - `./gradlew :matrix-core:codenarcTest`: run CodeNarc static analysis on test sources for a single module.
+- `./gradlew :matrix-csv:testNonUtf8DefaultEncoding`: verify matrix-csv UTF-8 file output under a forced non-UTF-8 JVM default; `check` and `build` include it, but `test` alone does not.
 
 ### Verification order
 Before an implementation can be considered done, run these checks in order:

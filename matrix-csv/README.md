@@ -68,8 +68,10 @@ Read defaults:
 - `trim(true)`, `ignoreEmptyLines(true)`, and `firstRowAsHeader(true)` are enabled by default
 - `ignoreSurroundingSpaces(true)` is enabled by default except when the `excel()` preset is applied
 - charset defaults to UTF-8 for byte-based sources (`File`, `Path`, `URL`, `InputStream`)
+- matching UTF-8, UTF-16LE, and UTF-16BE byte-order marks are stripped from byte-based sources; plain UTF-16 retains its BOM for byte-order detection
 - charset has no effect for `Reader` or `String` content because characters are already decoded
 - matrix naming precedence is `CsvReadOptions.tableName(...)`, then a source-derived name for `File`/`Path`/`URL`, then the fallback name `matrix` for `InputStream`/`Reader`/`String`
+- URL-derived names use the decoded path without query or fragment data and preserve literal `+`; malformed URLs fall back to a best-effort undecoded path
 - `.tsv` and `.tab` file names auto-select tab delimiters for typed direct reads and SPI reads unless the delimiter was explicitly configured
 
 Write defaults:
@@ -83,8 +85,8 @@ Write defaults:
 
 Preset behavior:
 
-- `excel()` applies Apache Excel semantics: `recordSeparator('\r\n')`, `QuoteMode.ALL_NON_NULL` on writes, `allowMissingColumnNames(true)`, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)`
-- `rfc4180()` applies `recordSeparator('\r\n')`
+- `excel()` applies Apache Excel semantics: CRLF and `QuoteMode.ALL_NON_NULL` on writes, `allowMissingColumnNames(true)`, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)`
+- `rfc4180()` applies CRLF on writes
 - `tsv()` applies `delimiter('\t')`
 
 ## Fluent Read API
@@ -209,13 +211,16 @@ Supported typed read options cover:
 - explicit header or `firstRowAsHeader(...)`
 - charset, table name, types, date/time pattern, and number format
 - trim / empty-line / surrounding-space handling
-- `nullString(...)`, `duplicateHeaderMode(...)`, and `recordSeparator(...)`
+- `nullString(...)` and `duplicateHeaderMode(...)`
 
 Source-specific behavior:
 
 - charset only affects `File`, `Path`, `URL`, and `InputStream`
 - charset is ignored for `Reader` and `String`
 - `tableName(...)` overrides source-derived names
+- read-side `recordSeparator` settings are deprecated, accepted for compatibility, and inert; Commons CSV recognizes CR, LF, and CRLF automatically
+
+Duplicate-header mode names are case-insensitive and ignore surrounding whitespace. In dynamic Groovy, uncast `duplicateHeaderMode(null)` selects the String overload and throws `IllegalArgumentException`; only an explicitly typed `(DuplicateHeaderMode) null` uses the `ALLOW_EMPTY` default.
 
 ### Typed Writes
 
@@ -271,7 +276,7 @@ println readOptions.toMap()
 println writeOptions.toMap()
 ```
 
-`fromMap(...)` normalizes case-insensitive keys and keeps direct typed calls aligned with SPI behavior.
+`fromMap(...)` normalizes case-insensitive keys and keeps direct typed calls aligned with SPI behavior. The legacy read-side `recordSeparator` key remains accepted and round-trippable but is deprecated and has no effect.
 
 ## Matrix SPI / Map-Based Usage
 
@@ -314,6 +319,34 @@ Legacy overloads that accept Apache Commons CSV `CSVFormat` directly still exist
 def matrix = CsvReader.read().delimiter(';').from(file)
 ```
 
+Deprecated short forms intentionally preserve their published Commons CSV defaults. This differs from the supported fluent and typed defaults:
+
+| Operation | Whitespace | Record separator |
+|-----------|------------|------------------|
+| Deprecated `CsvReader.read(file)` | Commons CSV default; no trimming | Not applicable |
+| Fluent `CsvReader.read().from(file)` | Trims values and surrounding spaces | Not applicable |
+| Deprecated `CsvWriter.write(matrix, file)` | Not applicable | CRLF |
+| Fluent `CsvWriter.write(matrix).to(file)` | Not applicable | LF |
+
+Typed options must be non-null. Dynamic Groovy calls such as `CsvReader.read(file, null)` remain ambiguous because the typed-options and deprecated `CSVFormat` overloads have the same arity; use the fluent no-options forms instead.
+
+Fluent and typed readers reject rows whose width differs from the parsed or configured header. The `IllegalArgumentException` identifies the normalized source-record position and includes expected and actual column counts. Deprecated readers already rejected ragged records, but now use the same message format.
+
+Caller-supplied `Writer` and `PrintWriter` instances are flushed but remain open. A supplied `CSVPrinter` remains entirely caller-owned and is neither closed nor replaced. Because its constructor may emit a configured header before `CsvWriter` is called, construct it with `skipHeaderRecord(true)` when `withHeader` must control all header output:
+
+```groovy
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
+import se.alipsa.matrix.csv.CsvWriter
+
+def format = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+    .setSkipHeaderRecord(true)
+    .build()
+def printer = new CSVPrinter(writer, format)
+CsvWriter.write(matrix, printer, true)
+printer.flush()
+```
+
 ## Quick Reference
 
 ### Shared fluent methods
@@ -324,7 +357,6 @@ def matrix = CsvReader.read().delimiter(';').from(file)
 | `quoteCharacter(...)` | `"` | Read and write |
 | `escapeCharacter(...)` | `null` | Read and write |
 | `nullString(...)` | `null` | Read and write |
-| `recordSeparator(...)` | `\n` | Read and write |
 
 ### Read-only fluent methods
 
@@ -349,6 +381,7 @@ def matrix = CsvReader.read().delimiter(';').from(file)
 |--------|---------|-------|
 | `charset(...)` | `UTF-8` | File/Path output only |
 | `withHeader(...)` | `true` | Write only |
+| `recordSeparator(...)` | `\n` | Write only |
 
 ### Presets
 

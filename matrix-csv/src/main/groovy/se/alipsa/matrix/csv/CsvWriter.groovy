@@ -77,7 +77,7 @@ class CsvWriter {
    * @param options typed CSV write options
    */
   static void write(Matrix matrix, File out, CsvWriteOptions options) {
-    CsvWriteOptions writeOptions = options ?: new CsvWriteOptions()
+    CsvWriteOptions writeOptions = requireWriteOptions(options)
     buildWriteBuilder(matrix, writeOptions, out.name).to(out, writeOptions.charset)
   }
 
@@ -102,7 +102,7 @@ class CsvWriter {
    * @param options typed CSV write options
    */
   static void write(Matrix matrix, Writer writer, CsvWriteOptions options) {
-    buildWriteBuilder(matrix, options ?: new CsvWriteOptions(), null).to(writer)
+    buildWriteBuilder(matrix, requireWriteOptions(options), null).to(writer)
   }
 
   /**
@@ -115,7 +115,7 @@ class CsvWriter {
    * @return the CSV string
    */
   static String writeString(Matrix matrix, CsvWriteOptions options) {
-    buildWriteBuilder(matrix, options ?: new CsvWriteOptions(), null).asString()
+    buildWriteBuilder(matrix, requireWriteOptions(options), null).asString()
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -137,7 +137,9 @@ class CsvWriter {
   static void write(Matrix matrix, File out, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     validateMatrix(matrix)
     out = ensureFileOutput(matrix, out)
-    write(matrix, format, new PrintWriter(out), withHeader)
+    try (PrintWriter printWriter = new PrintWriter(out, StandardCharsets.UTF_8)) {
+      write(matrix, format, printWriter, withHeader)
+    }
   }
 
   /**
@@ -170,6 +172,7 @@ class CsvWriter {
 
   /**
    * Write a Matrix as a CSV to the Writer specified.
+   * The writer is flushed before this method returns but remains open.
    *
    * @param matrix the matrix to write
    * @param writer the Writer to write to
@@ -184,6 +187,7 @@ class CsvWriter {
 
   /**
    * Write a Matrix as a CSV to the PrintWriter specified.
+   * The writer is flushed before this method returns but remains open.
    *
    * @param matrix the matrix to write
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
@@ -193,17 +197,18 @@ class CsvWriter {
    */
   @Deprecated
   static void write(Matrix matrix, CSVFormat format = CSVFormat.DEFAULT, PrintWriter printWriter, boolean withHeader = true) {
-    try (CSVPrinter printer = new CSVPrinter(printWriter, format)) {
-      if (format.header != null && format.header.length == matrix.columnCount()) {
-        printer.printRecord(format.header)
-      } else if (withHeader) {
-        if (matrix.columnNames() != null) {
-          printer.printRecord(matrix.columnNames())
-        } else {
-          printer.printRecord((1..matrix.columnCount()).collect { 'c' + it })
-        }
+    CSVFormat writerFormat = CSVFormat.Builder.create(format)
+        .setSkipHeaderRecord(true)
+        .build()
+    try (CSVPrinter printer = new CSVPrinter(CloseShieldWriter.wrap(printWriter), writerFormat)) {
+      if (withHeader) {
+        List<String> header = format.header != null && format.header.length == matrix.columnCount()
+            ? format.header.toList()
+            : matrix.columnNames()
+        printer.printRecord(header)
       }
       printer.printRecords(matrix.rows())
+      printer.flush()
     }
   }
 
@@ -214,7 +219,9 @@ class CsvWriter {
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row (default: true)
    * @deprecated Prefer {@code CsvWriter.write(matrix).to(writer)} when a Writer is available.
-   * Use this compatibility overload when an existing CSVPrinter must be reused.
+   * Use this compatibility overload when an existing CSVPrinter must be reused. The caller
+   * owns the printer and should construct it with {@code skipHeaderRecord(true)} when
+   * {@code withHeader} must control all header output.
    */
   @Deprecated
   static void write(Matrix matrix, CSVPrinter printer, boolean withHeader = true) {
@@ -347,7 +354,7 @@ class CsvWriter {
   }
 
   private static WriteBuilder buildWriteBuilder(Matrix matrix, CsvWriteOptions options, String targetName) {
-    CsvWriteOptions writeOptions = options ?: new CsvWriteOptions()
+    CsvWriteOptions writeOptions = requireWriteOptions(options)
     WriteBuilder builder = write(matrix)
         .delimiter(resolveWriteDelimiter(writeOptions, targetName))
         .quoteCharacter(writeOptions.quote)
@@ -356,6 +363,13 @@ class CsvWriter {
         .recordSeparator(writeOptions.recordSeparator)
         .nullString(writeOptions.nullString)
     builder
+  }
+
+  private static CsvWriteOptions requireWriteOptions(CsvWriteOptions options) {
+    if (options == null) {
+      throw new IllegalArgumentException('CsvWriteOptions must not be null')
+    }
+    options
   }
 
   private static char resolveWriteDelimiter(CsvWriteOptions options, String targetName) {
@@ -513,7 +527,8 @@ class CsvWriter {
     }
 
     /**
-     * Writes CSV data to a Writer. The caller is responsible for closing the Writer.
+     * Writes CSV data to a Writer. The writer is flushed before this method returns,
+     * and the caller remains responsible for closing it.
      *
      * @param writer the Writer to write to
      */
@@ -523,7 +538,8 @@ class CsvWriter {
     }
 
     /**
-     * Writes CSV data to a PrintWriter. The caller is responsible for closing the PrintWriter.
+     * Writes CSV data to a PrintWriter. The writer is flushed before this method returns,
+     * and the caller remains responsible for closing it.
      *
      * @param printWriter the PrintWriter to write to
      */
@@ -533,13 +549,10 @@ class CsvWriter {
       CSVFormat apacheFormat = format.toCSVFormat()
       try (CSVPrinter printer = new CSVPrinter(CloseShieldWriter.wrap(printWriter), apacheFormat)) {
         if (withHeaderValue) {
-          if (matrix.columnNames() != null) {
-            printer.printRecord(matrix.columnNames())
-          } else {
-            printer.printRecord((1..matrix.columnCount()).collect { 'c' + it })
-          }
+          printer.printRecord(matrix.columnNames())
         }
         printer.printRecords(matrix.rows())
+        printer.flush()
       }
     }
 

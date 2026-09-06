@@ -1,5 +1,14 @@
 # Release history
 
+## v2.5.0
+- reject ragged CSV records instead of silently padding or truncating header metadata, with normalized record positions and expected/actual column counts
+- strip matching UTF-8, UTF-16LE, and UTF-16BE byte-order marks from byte-based reads
+- preserve and flush caller-owned writers while preventing duplicate configured headers
+- consistently use UTF-8 for deprecated file writes, independent of the JVM default charset
+- improve URL-derived matrix names, duplicate-header mode normalization, and fallback matrix naming
+- deprecate the inert read-side record-separator options while retaining compatibility
+- retain the published whitespace and CRLF behavior of deprecated short-form methods; fluent builders remain the supported no-options API
+
 ## v2.4.0, 2026-06-18
 - preserve column names when reading header-only CSV files through the fluent API and SPI
 - use the default matrix name `matrix` for fluent string, reader, and stream reads unless explicitly overridden
