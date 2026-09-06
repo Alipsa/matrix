@@ -1,9 +1,9 @@
 # Matrix-groovy-ext release history
 
 ## v0.4.0-SNAPSHOT 2026-09-06
-- Improved `sin()`, `cos()`, and `atan()` accuracy by using DECIMAL128 guard arithmetic and returning DECIMAL64-rounded results consistently.
-- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude and cache the highest-precision value for reuse.
-- Made inverse-trigonometric special cases return consistent DECIMAL64 results and improved `acos()` accuracy near ±1 by avoiding subtractive cancellation.
+- Improved trigonometric accuracy by retaining DECIMAL128 guard precision in derived functions and rounding only their public results.
+- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude and cache up to 384 digits for reuse.
+- Preserved exact `double` round-tripping for π/2 inverse-trigonometric special cases and improved `acos()` accuracy near ±1 by avoiding subtractive cancellation.
 - Improved `exp()` accuracy for large exponents by using the higher-precision internal e constant.
 - **Breaking:** Removed the public `min(Number, BigDecimal)` and `max(Number, BigDecimal)` signatures to eliminate ambiguous dynamic static invocation. Extension syntax remains source-compatible through the `Number, Number` overloads, but already-compiled direct callers must be recompiled.
 - **Breaking:** Changed `Double.ulp()` and `Float.ulp()` from decimal-scale semantics to their IEEE 754 ULP. `ulp(Number)` now dispatches by runtime type for consistent behavior under static compilation.

@@ -708,6 +708,7 @@ class NumberExtensionTest {
   void testTan() {
     assertEquals(Math.tan(12.2), NumberExtension.tan(12.2).doubleValue(), 1e-10)
     assertEquals(Math.tan(11), NumberExtension.tan(11).doubleValue(), 1e-10)
+    assertEquals(0.1511352180582951G, NumberExtension.tan(0.15G))
   }
 
   @Test
@@ -746,6 +747,7 @@ class NumberExtensionTest {
     assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
     assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
     assertEquals(0.0, NumberExtension.atan2(0.0, 0.0).doubleValue(), 1e-10)
+    assertEquals(2.034443935795703G, NumberExtension.atan2(1G, -0.5G))
 
     // Test with extension syntax
     assert (1.0).atan2(1.0).doubleValue() == Math.atan2(1.0, 1.0)
@@ -906,11 +908,13 @@ class NumberExtensionTest {
 
     // Test with Number type
     assertEquals(Math.acos(0.5), NumberExtension.acos(0.5).doubleValue(), 1e-10)
+    assertEquals(2.094395102393195G, NumberExtension.acos(-0.5G))
+    assertEquals(2.690565841793531G, NumberExtension.acos(-0.9G))
 
     // Test exact BigDecimal values
     assert 1.0G.acos() == 0.0G
     assert (-1.0G).acos() == NumberExtension.PI32.round(MathContext.DECIMAL64)
-    assert 0.0G.acos() == (NumberExtension.PI32 / 2).round(MathContext.DECIMAL64)
+    assert 0.0G.acos() == NumberExtension.PI32.divide(2G, new MathContext(17))
 
     // Test out of range throws
     assertThrows(ArithmeticException) {
@@ -984,17 +988,23 @@ class NumberExtensionTest {
   }
 
   @Test
-  void testInverseTrigSpecialCasesUseDecimal64Precision() {
+  void testInverseTrigSpecialCasesUseExpectedPrecision() {
     BigDecimal expectedPi = NumberExtension.PI32.round(MathContext.DECIMAL64)
-    BigDecimal expectedHalfPi = (NumberExtension.PI32 / 2).round(MathContext.DECIMAL64)
+    BigDecimal expectedHalfPi = NumberExtension.PI32.divide(2G, new MathContext(17))
 
     assertEquals(expectedHalfPi, 1.0G.asin())
     assertEquals(-expectedHalfPi, (-1.0G).asin())
     assertEquals(expectedHalfPi, 0.0G.acos())
     assertEquals(expectedPi, (-1.0G).acos())
     assertEquals(expectedPi, 0.0G.atan2(-1.0G))
-    assertTrue(1.0G.asin().precision() <= MathContext.DECIMAL64.precision)
     assertTrue((-1.0G).acos().precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testHalfPiSpecialCasesRoundTripToDouble() {
+    assertEquals(Math.PI / 2, 1.0G.asin().doubleValue())
+    assertEquals(Math.PI / 2, 0.0G.acos().doubleValue())
+    assertEquals(Math.PI / 2, 1.0G.atan2(0.0G).doubleValue())
   }
 
   @Test
@@ -1020,6 +1030,42 @@ class NumberExtensionTest {
 
     assertSame(highPrecision, reused)
     assertTrue(reused.precision() >= 100 + MathContext.DECIMAL128.precision)
+  }
+
+  @Test
+  void testCalculatedPiDoesNotTrustTruncatedSeed() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      cacheField.set(null, null)
+      BigDecimal calculated = calculatePi.invoke(null, new MathContext(31)) as BigDecimal
+      assertEquals(3.141592653589793238462643383280G, calculated)
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @Test
+  void testPiCacheIsBounded() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      cacheField.set(null, null)
+      calculatePi.invoke(null, MathContext.DECIMAL128)
+      BigDecimal cached = cacheField.get(null) as BigDecimal
+      calculatePi.invoke(null, new MathContext(385))
+      assertSame(cached, cacheField.get(null))
+    } finally {
+      cacheField.set(null, original)
+    }
   }
 
   @CompileStatic

@@ -41,7 +41,7 @@
     <matrixCsvVersion>2.4.0</matrixCsvVersion>
     <matrixDatasetsVersion>2.2.1-SNAPSHOT</matrixDatasetsVersion>
     <matrixGgplotVersion>0.5.1-SNAPSHOT</matrixGgplotVersion>
-    <matrixGroovyExtVersion>0.3.0</matrixGroovyExtVersion>
+    <matrixGroovyExtVersion>0.4.0-SNAPSHOT</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.2.2-SNAPSHOT</matrixGsheetsVersion>
     <matrixJsonVersion>2.3.2-SNAPSHOT</matrixJsonVersion>
     <matrixJupyterVersion>0.1.0-SNAPSHOT</matrixJupyterVersion>

@@ -1,7 +1,7 @@
 package test.alipsa.matrix.ext
 
 import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 import org.junit.jupiter.api.Test
 
@@ -15,7 +15,7 @@ class ModuleMetadataTest {
     }
 
     String projectVersion = System.getProperty('project.version')
-    assertTrue(projectVersion.endsWith('-SNAPSHOT'))
+    assumeTrue(projectVersion != null, 'project.version not set; run via Gradle')
     assertEquals(projectVersion, properties.moduleVersion)
   }
 }

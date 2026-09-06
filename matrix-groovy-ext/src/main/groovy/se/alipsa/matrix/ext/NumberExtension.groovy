@@ -91,9 +91,12 @@ class NumberExtension {
   private static final int LOG1P_MAX_ITERATIONS = 40
   private static final MathContext CALCULATION_CONTEXT = MathContext.DECIMAL128
   private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
+  private static final MathContext HALF_PI_CONTEXT = new MathContext(17, RoundingMode.HALF_EVEN)
+  private static final int MAX_CACHED_PI_PRECISION = 384
   private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
-  private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), RESULT_CONTEXT)
-  private static volatile BigDecimal cachedPi = PI32
+  private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
+  private static volatile BigDecimal cachedPi
+  private static final BigDecimal CALCULATION_PI = calculatePi(CALCULATION_CONTEXT)
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -746,7 +749,7 @@ class NumberExtension {
   /** Computes π using Machin's formula at the requested precision. */
   private static BigDecimal calculatePi(MathContext context) {
     BigDecimal cached = cachedPi
-    if (cached.precision() >= context.precision) {
+    if (cached != null && cached.precision() >= context.precision) {
       return cached.round(context)
     }
     calculateAndCachePi(context)
@@ -755,7 +758,7 @@ class NumberExtension {
   /** Computes and caches π after rechecking the cache while holding the class monitor. */
   private static synchronized BigDecimal calculateAndCachePi(MathContext context) {
     BigDecimal cached = cachedPi
-    if (cached.precision() >= context.precision) {
+    if (cached != null && cached.precision() >= context.precision) {
       return cached.round(context)
     }
 
@@ -769,7 +772,9 @@ class NumberExtension {
     BigDecimal firstTerm = arctanInverse(5, workContext).multiply(BigDecimal.valueOf(16), workContext)
     BigDecimal secondTerm = arctanInverse(239, workContext).multiply(BigDecimal.valueOf(4), workContext)
     BigDecimal calculated = firstTerm.subtract(secondTerm, workContext).round(context)
-    cachedPi = calculated
+    if (context.precision <= MAX_CACHED_PI_PRECISION) {
+      cachedPi = calculated
+    }
     calculated
   }
 
@@ -813,6 +818,11 @@ class NumberExtension {
    * @return the sine of the angle as a BigDecimal
    */
   static BigDecimal sin(BigDecimal self) {
+    sinInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes sine with guard precision for use by derived functions. */
+  private static BigDecimal sinInternal(BigDecimal self) {
     BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
 
     BigDecimal result = reducedAngle
@@ -834,7 +844,7 @@ class NumberExtension {
       result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
-    result.round(RESULT_CONTEXT)
+    result
   }
 
   /**
@@ -867,6 +877,11 @@ class NumberExtension {
    * @return the cosine of the angle as a BigDecimal
    */
   static BigDecimal cos(BigDecimal self) {
+    cosInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes cosine with guard precision for use by derived functions. */
+  private static BigDecimal cosInternal(BigDecimal self) {
     BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
 
     BigDecimal result = BigDecimal.ONE
@@ -888,7 +903,7 @@ class NumberExtension {
       result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
-    result.round(RESULT_CONTEXT)
+    result
   }
 
   /**
@@ -984,14 +999,14 @@ class NumberExtension {
    * @throws ArithmeticException if the tangent is undefined because cosine is zero
    */
   static BigDecimal tan(BigDecimal self) {
-    BigDecimal sinVal = sin(self)
-    BigDecimal cosVal = cos(self)
+    BigDecimal sinVal = sinInternal(self)
+    BigDecimal cosVal = cosInternal(self)
 
     if (cosVal == 0) {
       throw new ArithmeticException('Tangent undefined (cos is 0)')
     }
 
-    sinVal.divide(cosVal, RESULT_CONTEXT)
+    sinVal.divide(cosVal, CALCULATION_CONTEXT).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1018,13 +1033,18 @@ class NumberExtension {
    * @return the arctangent of the value
    */
   static BigDecimal atan(BigDecimal self) {
+    atanInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes arctangent with guard precision for use by derived functions. */
+  private static BigDecimal atanInternal(BigDecimal self) {
     if (self == 0) {
       return BigDecimal.ZERO
     }
 
     // Handle negative input: atan(-x) = -atan(x)
     if (self < 0) {
-      return atan(self.negate()).negate()
+      return atanInternal(self.negate()).negate()
     }
 
     BigDecimal x = self
@@ -1066,7 +1086,7 @@ class NumberExtension {
       result = result.add(step, CALCULATION_CONTEXT)
       iteration++
     }
-    result.multiply(multiplier, CALCULATION_CONTEXT).round(RESULT_CONTEXT)
+    result.multiply(multiplier, CALCULATION_CONTEXT)
   }
 
   /**
@@ -1116,7 +1136,7 @@ class NumberExtension {
     // asin(x) = atan(x / sqrt(1 - x²))
     BigDecimal xSquared = self.multiply(self, CALCULATION_CONTEXT)
     BigDecimal denominator = BigDecimal.ONE.subtract(xSquared, CALCULATION_CONTEXT).sqrt(CALCULATION_CONTEXT)
-    atan(self.divide(denominator, CALCULATION_CONTEXT))
+    atanInternal(self.divide(denominator, CALCULATION_CONTEXT)).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1157,7 +1177,7 @@ class NumberExtension {
     BigDecimal denominator = BigDecimal.ONE.add(self, CALCULATION_CONTEXT)
     BigDecimal ratio = numerator.divide(denominator, CALCULATION_CONTEXT)
     BigDecimal root = ratio.sqrt(CALCULATION_CONTEXT)
-    (atan(root) * 2).round(RESULT_CONTEXT)
+    atanInternal(root).multiply(BigDecimal.valueOf(2), CALCULATION_CONTEXT).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1219,14 +1239,14 @@ class NumberExtension {
     BigDecimal z = y.divide(x, CALCULATION_CONTEXT)
 
     // 3. Calculate raw atan(z)
-    BigDecimal result = atan(z)
+    BigDecimal result = atanInternal(z)
 
     // 4. Adjust for Quadrants
     if (x < 0) {
       if (y >= 0) {
-        result = result + RESULT_PI
+        result = result.add(CALCULATION_PI, CALCULATION_CONTEXT)
       } else {
-        result = result - RESULT_PI
+        result = result.subtract(CALCULATION_PI, CALCULATION_CONTEXT)
       }
     }
     result.round(RESULT_CONTEXT)
