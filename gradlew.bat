@@ -72,8 +72,15 @@ goto fail
 
 
 
+@rem Use 75%% of the available processors by default, preserving an explicit override.
+set "GRADLE_WORKER_ARG="
+for %%A in (%*) do if /I "%%A"=="--max-workers" set "GRADLE_WORKER_ARG=provided"
+for %%A in (%*) do echo %%A| findstr /B /C:"--max-workers=" >NUL && set "GRADLE_WORKER_ARG=provided"
+if not defined GRADLE_WORKER_ARG call :setGradleWorkerLimit
+
 @rem Execute Gradle
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" %*
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" %* %GRADLE_WORKER_ARG%
+goto end
 
 :end
 @rem End local scope for the variables with windows NT shell
@@ -91,3 +98,9 @@ exit /b %EXIT_CODE%
 if "%OS%"=="Windows_NT" endlocal
 
 :omega
+
+:setGradleWorkerLimit
+set /a GRADLE_WORKER_COUNT=(%NUMBER_OF_PROCESSORS%*3)/4
+if %GRADLE_WORKER_COUNT% LSS 1 set GRADLE_WORKER_COUNT=1
+set "GRADLE_WORKER_ARG=--max-workers=%GRADLE_WORKER_COUNT%"
+goto :eof
