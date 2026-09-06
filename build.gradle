@@ -35,7 +35,11 @@ fi'''
     String shText = sh.text
     String shAnchor = '# Add default JVM options here.'
     if (!shText.contains('gradle_worker_limit_set')) {
-      sh.text = shText.replace(shAnchor, workerBlock + '\n\n' + shAnchor)
+      String patched = shText.replace(shAnchor, workerBlock + '\n\n' + shAnchor)
+      if (patched == shText) {
+        throw new GradleException("gradlew anchor no longer matches; update the worker-limit re-injection in build.gradle")
+      }
+      sh.text = patched
     }
 
     String batchBlock = '''@rem Use 75%% of the available processors by default, preserving an explicit override.
@@ -54,12 +58,28 @@ goto :eof
 '''
     String batchText = batch.text
     String batchAnchor = '@rem Execute Gradle'
-    if (!batchText.contains('GRADLE_WORKER_SET') || !batchText.contains('%GRADLE_WORKER_ARG%')) {
-      batch.text = batchText.replace(batchAnchor, batchBlock + '\n\n' + batchAnchor)
-      String executeLine = '"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -jar "%APP_HOME%\\gradle\\wrapper\\gradle-wrapper.jar" %*'
-      batch.text = batch.text.replace(executeLine, executeLine.replace('%*', '%* %GRADLE_WORKER_ARG%'))
-      batch.text = batch.text.replace(':omega', ':omega\ngoto :eof\n' + batchHelper)
+    if (!batchText.contains('GRADLE_WORKER_SET')) {
+      String patched = batchText.replace(batchAnchor, batchBlock + '\n\n' + batchAnchor)
+      if (patched == batchText) {
+        throw new GradleException("gradlew.bat anchor no longer matches; update the worker-limit re-injection in build.gradle")
+      }
+      batchText = patched.replace(':omega', ':omega\ngoto :eof\n' + batchHelper)
     }
+
+    String[] batchLines = batchText.split('\n', -1)
+    int launchLine = batchLines.findIndexOf { String line -> line.startsWith('"%JAVA_EXE%"') && line.contains('%*') }
+    if (launchLine < 0) {
+      throw new GradleException("gradlew.bat launch line no longer matches; update the worker-limit re-injection in build.gradle")
+    }
+    if (!batchLines[launchLine].contains('%GRADLE_WORKER_ARG%')) {
+      int argumentMarker = batchLines[launchLine].lastIndexOf('%*')
+      String originalLine = batchLines[launchLine]
+      batchLines[launchLine] = originalLine.substring(0, argumentMarker) + '%* %GRADLE_WORKER_ARG%' + originalLine.substring(argumentMarker + 2)
+      if (batchLines[launchLine] == originalLine) {
+        throw new GradleException("gradlew.bat launch line could not be patched; update the worker-limit re-injection in build.gradle")
+      }
+    }
+    batch.text = batchLines.join('\n')
   }
 }
 

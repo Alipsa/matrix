@@ -99,6 +99,7 @@ if "%OS%"=="Windows_NT" endlocal
 
 :omega
 goto :eof
+
 :setGradleWorkerLimit
 if not defined NUMBER_OF_PROCESSORS set NUMBER_OF_PROCESSORS=1
 set /a GRADLE_WORKER_COUNT=(%NUMBER_OF_PROCESSORS%*3)/4
