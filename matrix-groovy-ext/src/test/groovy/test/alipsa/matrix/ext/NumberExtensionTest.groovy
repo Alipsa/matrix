@@ -1033,13 +1033,13 @@ class NumberExtensionTest {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
     cacheField.accessible = true
 
-    new BigDecimal('1E+500').sin()
-    BigDecimal highPrecision = cacheField.get(null) as BigDecimal
     new BigDecimal('1E+400').sin()
+    BigDecimal highPrecision = cacheField.get(null) as BigDecimal
+    new BigDecimal('1E+300').sin()
     BigDecimal reused = cacheField.get(null) as BigDecimal
 
     assertSame(highPrecision, reused)
-    assertTrue(reused.precision() >= 500 + MathContext.DECIMAL128.precision)
+    assertTrue(reused.precision() >= 400 + MathContext.DECIMAL128.precision)
   }
 
   @Test
@@ -1073,9 +1073,9 @@ class NumberExtensionTest {
       BigDecimal existing = 3.141592653589793G
       BigDecimal candidate = 3.1415926535897932G
       cacheField.set(null, existing)
-      cachePi.invoke(null, candidate, new MathContext(2049))
+      cachePi.invoke(null, candidate, new MathContext(513))
       assertSame(existing, cacheField.get(null))
-      cachePi.invoke(null, candidate, new MathContext(2048))
+      cachePi.invoke(null, candidate, new MathContext(512))
       assertSame(candidate, cacheField.get(null))
       cachePi.invoke(null, 3.141592653589794G, MathContext.DECIMAL64)
       assertSame(candidate, cacheField.get(null))

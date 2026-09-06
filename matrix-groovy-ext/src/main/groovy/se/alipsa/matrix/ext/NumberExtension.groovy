@@ -93,7 +93,7 @@ class NumberExtension {
   private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
   private static final MathContext HALF_PI_CONTEXT = new MathContext(17, RoundingMode.HALF_EVEN)
   /** Shared work and cache ceiling for adaptive-precision trigonometric range reduction. */
-  private static final int MAX_TRIGONOMETRIC_PRECISION = 2048
+  private static final int MAX_TRIGONOMETRIC_PRECISION = 512
   private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
   private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
   private static volatile BigDecimal cachedPi
@@ -823,6 +823,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the sine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    */
   static BigDecimal sin(BigDecimal self) {
     sinInternal(self).round(RESULT_CONTEXT)
@@ -859,6 +860,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the sine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    * @see #sin(BigDecimal)
    */
   static BigDecimal sin(Number self) {
@@ -882,6 +884,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the cosine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    */
   static BigDecimal cos(BigDecimal self) {
     cosInternal(self).round(RESULT_CONTEXT)
@@ -918,6 +921,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the cosine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    * @see #cos(BigDecimal)
    */
   static BigDecimal cos(Number self) {
@@ -990,6 +994,7 @@ class NumberExtension {
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
    * @see #tan(BigDecimal)
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    */
   static BigDecimal tan(Number self) {
     tan(self as BigDecimal)
@@ -1004,6 +1009,7 @@ class NumberExtension {
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
    * @throws ArithmeticException if the tangent is undefined because cosine is zero
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction
    */
   static BigDecimal tan(BigDecimal self) {
     BigDecimal sinVal = sinInternal(self)
