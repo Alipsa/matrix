@@ -2,6 +2,8 @@ package test.alipsa.matrix.ext
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.ext.NumberExtension
@@ -907,8 +909,8 @@ class NumberExtensionTest {
 
     // Test exact BigDecimal values
     assert 1.0G.acos() == 0.0G
-    assert (-1.0G).acos() == NumberExtension.PI32
-    assert 0.0G.acos() == NumberExtension.PI32 / 2
+    assert (-1.0G).acos() == NumberExtension.PI32.round(MathContext.DECIMAL64)
+    assert 0.0G.acos() == (NumberExtension.PI32 / 2).round(MathContext.DECIMAL64)
 
     // Test out of range throws
     assertThrows(ArithmeticException) {
@@ -966,6 +968,63 @@ class NumberExtensionTest {
 
     assertEquals(BigDecimal.valueOf(Math.ulp(3.14d)), 3.14d.ulp())
     assertEquals(BigDecimal.valueOf(expectedFloatUlp), 3.14f.ulp())
+  }
+
+  @Test
+  @CompileStatic
+  void testFloatingPointUlpUsesRuntimeTypeForNumberReceiver() {
+    Number doubleValue = 1000.0d
+    Number floatValue = 1000.0f
+
+    assertEquals(BigDecimal.valueOf(Math.ulp(1000.0d)), doubleValue.ulp())
+    assertEquals(BigDecimal.valueOf(Math.ulp(1000.0d)), ulpOfNumber(doubleValue))
+    double expectedFloatUlp = Math.ulp(1000.0f)
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), floatValue.ulp())
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), ulpOfNumber(floatValue))
+  }
+
+  @Test
+  void testInverseTrigSpecialCasesUseDecimal64Precision() {
+    BigDecimal expectedPi = NumberExtension.PI32.round(MathContext.DECIMAL64)
+    BigDecimal expectedHalfPi = (NumberExtension.PI32 / 2).round(MathContext.DECIMAL64)
+
+    assertEquals(expectedHalfPi, 1.0G.asin())
+    assertEquals(-expectedHalfPi, (-1.0G).asin())
+    assertEquals(expectedHalfPi, 0.0G.acos())
+    assertEquals(expectedPi, (-1.0G).acos())
+    assertEquals(expectedPi, 0.0G.atan2(-1.0G))
+    assertTrue(1.0G.asin().precision() <= MathContext.DECIMAL64.precision)
+    assertTrue((-1.0G).acos().precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testAcosRetainsPrecisionNearOne() {
+    BigDecimal positiveActual = 0.9999999999999999G.acos()
+    BigDecimal positiveExpected = 1.4142135623730950e-8
+    BigDecimal negativeActual = (-0.9999999999999999G).acos()
+    BigDecimal negativeExpected = 3.141592639447658G
+
+    assertTrue((positiveActual - positiveExpected).abs() < 1e-23)
+    assertEquals(negativeExpected, negativeActual)
+  }
+
+  @Test
+  void testLargeAngleRangeReductionCachesHighestPiPrecision() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    cacheField.accessible = true
+
+    new BigDecimal('1E+100').sin()
+    BigDecimal highPrecision = cacheField.get(null) as BigDecimal
+    new BigDecimal('1E+50').sin()
+    BigDecimal reused = cacheField.get(null) as BigDecimal
+
+    assertSame(highPrecision, reused)
+    assertTrue(reused.precision() >= 100 + MathContext.DECIMAL128.precision)
+  }
+
+  @CompileStatic
+  private static BigDecimal ulpOfNumber(Number value) {
+    NumberExtension.ulp(value)
   }
 
 }

@@ -53,6 +53,7 @@ import java.math.RoundingMode
  *
  * // Unit in last place (for epsilon calculations)
  * BigDecimal epsilon = value.ulp() * 10
+ * BigDecimal doubleEpsilon = (1000.0d).ulp()  // → 1.1368683772161603E-13 (IEEE 754)
  *
  * // Chainable min/max with mixed types
  * BigDecimal binIndex = 0.max(value.min(100))  // Clamp to [0, 100]
@@ -90,6 +91,9 @@ class NumberExtension {
   private static final int LOG1P_MAX_ITERATIONS = 40
   private static final MathContext CALCULATION_CONTEXT = MathContext.DECIMAL128
   private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
+  private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
+  private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), RESULT_CONTEXT)
+  private static volatile BigDecimal cachedPi = PI32
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -422,15 +426,15 @@ class NumberExtension {
     BigDecimal term = BigDecimal.ONE
     BigDecimal result = BigDecimal.ONE
     int iteration = 1
-    BigDecimal threshold = new BigDecimal("1e-${CALCULATION_CONTEXT.precision}")
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-CALCULATION_CONTEXT.precision)
 
     while (true) {
       term = term.multiply(r, CALCULATION_CONTEXT)
-          .divide(new BigDecimal(iteration), CALCULATION_CONTEXT)
+          .divide(BigDecimal.valueOf(iteration), CALCULATION_CONTEXT)
       if (term.abs() < threshold) {
         break
       }
-      result = result.add(term)
+      result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
 
@@ -493,7 +497,11 @@ class NumberExtension {
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(Number self) {
-    ulp(self as BigDecimal)
+    switch (self) {
+      case Double -> ulp((Double) self)
+      case Float -> ulp((Float) self)
+      default -> ulp(self as BigDecimal)
+    }
   }
 
   /**
@@ -737,6 +745,20 @@ class NumberExtension {
 
   /** Computes π using Machin's formula at the requested precision. */
   private static BigDecimal calculatePi(MathContext context) {
+    BigDecimal cached = cachedPi
+    if (cached.precision() >= context.precision) {
+      return cached.round(context)
+    }
+    calculateAndCachePi(context)
+  }
+
+  /** Computes and caches π after rechecking the cache while holding the class monitor. */
+  private static synchronized BigDecimal calculateAndCachePi(MathContext context) {
+    BigDecimal cached = cachedPi
+    if (cached.precision() >= context.precision) {
+      return cached.round(context)
+    }
+
     int workPrecision
     try {
       workPrecision = Math.addExact(context.precision, 8)
@@ -746,7 +768,9 @@ class NumberExtension {
     MathContext workContext = new MathContext(workPrecision, context.roundingMode)
     BigDecimal firstTerm = arctanInverse(5, workContext).multiply(BigDecimal.valueOf(16), workContext)
     BigDecimal secondTerm = arctanInverse(239, workContext).multiply(BigDecimal.valueOf(4), workContext)
-    firstTerm.subtract(secondTerm, workContext).round(context)
+    BigDecimal calculated = firstTerm.subtract(secondTerm, workContext).round(context)
+    cachedPi = calculated
+    calculated
   }
 
   /** Computes arctan(1 / inverse) using its alternating Taylor series. */
@@ -1084,10 +1108,10 @@ class NumberExtension {
       return BigDecimal.ZERO
     }
     if (self == 1) {
-      return PI / 2
+      return RESULT_HALF_PI
     }
     if (self == -1) {
-      return (PI / 2).negate()
+      return RESULT_HALF_PI.negate()
     }
     // asin(x) = atan(x / sqrt(1 - x²))
     BigDecimal xSquared = self.multiply(self, CALCULATION_CONTEXT)
@@ -1122,13 +1146,18 @@ class NumberExtension {
       return BigDecimal.ZERO
     }
     if (self == -1) {
-      return PI32
+      return RESULT_PI
     }
     if (self == 0) {
-      return PI32 / 2
+      return RESULT_HALF_PI
     }
-    // acos(x) = π/2 - asin(x)
-    (PI32 / 2 - asin(self)).round(RESULT_CONTEXT)
+    // This form avoids subtractive cancellation near 1:
+    // acos(x) = 2 * atan(sqrt((1 - x) / (1 + x)))
+    BigDecimal numerator = BigDecimal.ONE.subtract(self, CALCULATION_CONTEXT)
+    BigDecimal denominator = BigDecimal.ONE.add(self, CALCULATION_CONTEXT)
+    BigDecimal ratio = numerator.divide(denominator, CALCULATION_CONTEXT)
+    BigDecimal root = ratio.sqrt(CALCULATION_CONTEXT)
+    (atan(root) * 2).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1178,10 +1207,10 @@ class NumberExtension {
     // 1. Handle special cases (x=0, y=0) to avoid division by zero
     if (x == 0) {
       if (y > 0) {
-        return PI / 2
+        return RESULT_HALF_PI
       }
       if (y < 0) {
-        return (PI / 2).negate()
+        return RESULT_HALF_PI.negate()
       }
       return BigDecimal.ZERO
     }
@@ -1195,9 +1224,9 @@ class NumberExtension {
     // 4. Adjust for Quadrants
     if (x < 0) {
       if (y >= 0) {
-        result = result + PI
+        result = result + RESULT_PI
       } else {
-        result = result - PI
+        result = result - RESULT_PI
       }
     }
     result.round(RESULT_CONTEXT)

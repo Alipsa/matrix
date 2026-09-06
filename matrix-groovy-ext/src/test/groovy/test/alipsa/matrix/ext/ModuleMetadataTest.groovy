@@ -1,6 +1,7 @@
 package test.alipsa.matrix.ext
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
@@ -13,6 +14,8 @@ class ModuleMetadataTest {
       properties.load(it)
     }
 
-    assertEquals('0.4.0-snapshot', properties.moduleVersion)
+    String projectVersion = System.getProperty('project.version')
+    assertTrue(projectVersion.endsWith('-SNAPSHOT'))
+    assertEquals(projectVersion, properties.moduleVersion)
   }
 }
