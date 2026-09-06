@@ -1028,6 +1028,12 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testTrigonometricRangeReductionBoundary() {
+    assertNotNull(NumberExtension.sin(new BigDecimal('1E+469')))
+    assertThrows(ArithmeticException) { NumberExtension.sin(new BigDecimal('1E+470')) }
+  }
+
+  @Test
   @ResourceLock('NumberExtension.cachedPi')
   void testLargeAngleRangeReductionCachesHighestPiPrecision() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')

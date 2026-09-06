@@ -59,7 +59,7 @@ BigDecimal degrees = angleRadians.toDegrees()       // 45.0
 // double sine = Math.sin(angleRadians);
 ```
 
-Trigonometric range reduction supports angles requiring up to 512 digits of π; larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
+Trigonometric range reduction supports angles requiring up to 512 digits of π (roughly through `1E+469`); larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
 
 ### Polar and Cartesian Coordinates
 
