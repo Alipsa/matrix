@@ -198,6 +198,7 @@ if "$cygwin" || "$msys" ; then
     done
 fi
 
+
 # Use 75% of the available processors by default, while preserving an explicit
 # --max-workers setting supplied by the caller.
 gradle_worker_limit_set=false
