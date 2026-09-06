@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*
 import groovy.transform.CompileStatic
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.ResourceLock
 
 import se.alipsa.matrix.ext.NumberExtension
 
@@ -1019,20 +1020,22 @@ class NumberExtensionTest {
   }
 
   @Test
+  @ResourceLock('NumberExtension.cachedPi')
   void testLargeAngleRangeReductionCachesHighestPiPrecision() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
     cacheField.accessible = true
 
-    new BigDecimal('1E+100').sin()
+    new BigDecimal('1E+500').sin()
     BigDecimal highPrecision = cacheField.get(null) as BigDecimal
-    new BigDecimal('1E+50').sin()
+    new BigDecimal('1E+400').sin()
     BigDecimal reused = cacheField.get(null) as BigDecimal
 
     assertSame(highPrecision, reused)
-    assertTrue(reused.precision() >= 100 + MathContext.DECIMAL128.precision)
+    assertTrue(reused.precision() >= 500 + MathContext.DECIMAL128.precision)
   }
 
   @Test
+  @ResourceLock('NumberExtension.cachedPi')
   void testCalculatedPiDoesNotTrustTruncatedSeed() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
     def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
@@ -1050,19 +1053,22 @@ class NumberExtensionTest {
   }
 
   @Test
-  void testPiCacheIsBounded() {
+  @ResourceLock('NumberExtension.cachedPi')
+  void testPiCacheRejectsOverCeilingPrecision() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
-    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    def cachePi = NumberExtension.getDeclaredMethod('cachePi', BigDecimal, MathContext)
     cacheField.accessible = true
-    calculatePi.accessible = true
+    cachePi.accessible = true
     BigDecimal original = cacheField.get(null) as BigDecimal
 
     try {
-      cacheField.set(null, null)
-      calculatePi.invoke(null, MathContext.DECIMAL128)
-      BigDecimal cached = cacheField.get(null) as BigDecimal
-      calculatePi.invoke(null, new MathContext(385))
-      assertSame(cached, cacheField.get(null))
+      BigDecimal existing = 3.141592653589793G
+      BigDecimal candidate = 3.141592653589794G
+      cacheField.set(null, existing)
+      cachePi.invoke(null, candidate, new MathContext(100_001))
+      assertSame(existing, cacheField.get(null))
+      cachePi.invoke(null, candidate, new MathContext(100_000))
+      assertSame(candidate, cacheField.get(null))
     } finally {
       cacheField.set(null, original)
     }

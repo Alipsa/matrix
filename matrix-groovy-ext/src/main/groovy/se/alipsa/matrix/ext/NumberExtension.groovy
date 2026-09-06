@@ -92,7 +92,7 @@ class NumberExtension {
   private static final MathContext CALCULATION_CONTEXT = MathContext.DECIMAL128
   private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
   private static final MathContext HALF_PI_CONTEXT = new MathContext(17, RoundingMode.HALF_EVEN)
-  private static final int MAX_CACHED_PI_PRECISION = 384
+  private static final int MAX_CACHED_PI_PRECISION = 100_000
   private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
   private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
   private static volatile BigDecimal cachedPi
@@ -772,10 +772,15 @@ class NumberExtension {
     BigDecimal firstTerm = arctanInverse(5, workContext).multiply(BigDecimal.valueOf(16), workContext)
     BigDecimal secondTerm = arctanInverse(239, workContext).multiply(BigDecimal.valueOf(4), workContext)
     BigDecimal calculated = firstTerm.subtract(secondTerm, workContext).round(context)
+    cachePi(calculated, context)
+    calculated
+  }
+
+  /** Retains calculated π only within the bounded cache precision. */
+  private static void cachePi(BigDecimal calculated, MathContext context) {
     if (context.precision <= MAX_CACHED_PI_PRECISION) {
       cachedPi = calculated
     }
-    calculated
   }
 
   /** Computes arctan(1 / inverse) using its alternating Taylor series. */

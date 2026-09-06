@@ -2,7 +2,7 @@
 
 ## v0.4.0-SNAPSHOT 2026-09-06
 - Improved trigonometric accuracy by retaining DECIMAL128 guard precision in derived functions and rounding only their public results.
-- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude and cache up to 384 digits for reuse.
+- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude and cache up to 100,000 digits for reuse.
 - Preserved exact `double` round-tripping for π/2 inverse-trigonometric special cases and improved `acos()` accuracy near ±1 by avoiding subtractive cancellation.
 - Improved `exp()` accuracy for large exponents by using the higher-precision internal e constant.
 - **Breaking:** Removed the public `min(Number, BigDecimal)` and `max(Number, BigDecimal)` signatures to eliminate ambiguous dynamic static invocation. Extension syntax remains source-compatible through the `Number, Number` overloads, but already-compiled direct callers must be recompiled.
