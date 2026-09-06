@@ -6,11 +6,6 @@ pluginManagement {
   }
 }
 
-// Keep worker usage bounded for all Gradle entry points, including IDEs and direct Gradle calls.
-// The wrapper supplies the same value for shell invocations; this setting is the durable fallback
-// that survives wrapper regeneration.
-gradle.startParameter.maxWorkerCount = Math.max(1, (Runtime.runtime.availableProcessors() * 3).intdiv(4))
-
 rootProject.name = 'matrix'
 include 'matrix-core'
 include 'matrix-stats'

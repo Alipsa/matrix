@@ -1028,6 +1028,7 @@ class NumberExtensionTest {
   }
 
   @Test
+  @ResourceLock('NumberExtension.cachedPi')
   void testTrigonometricRangeReductionBoundary() {
     assertNotNull(NumberExtension.sin(new BigDecimal('1E+469')))
     assertThrows(ArithmeticException) { NumberExtension.sin(new BigDecimal('1E+470')) }
@@ -1038,14 +1039,20 @@ class NumberExtensionTest {
   void testLargeAngleRangeReductionCachesHighestPiPrecision() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
     cacheField.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
 
-    new BigDecimal('1E+400').sin()
-    BigDecimal highPrecision = cacheField.get(null) as BigDecimal
-    new BigDecimal('1E+300').sin()
-    BigDecimal reused = cacheField.get(null) as BigDecimal
+    try {
+      cacheField.set(null, null)
+      new BigDecimal('1E+400').sin()
+      BigDecimal highPrecision = cacheField.get(null) as BigDecimal
+      new BigDecimal('1E+300').sin()
+      BigDecimal reused = cacheField.get(null) as BigDecimal
 
-    assertSame(highPrecision, reused)
-    assertTrue(reused.precision() >= 400 + MathContext.DECIMAL128.precision)
+      assertSame(highPrecision, reused)
+      assertTrue(reused.precision() >= 400 + MathContext.DECIMAL128.precision)
+    } finally {
+      cacheField.set(null, original)
+    }
   }
 
   @Test
