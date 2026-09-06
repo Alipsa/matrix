@@ -919,4 +919,53 @@ class NumberExtensionTest {
     }
   }
 
+  @Test
+  void testTranscendentalFunctionsUseDecimal64Precision() {
+    BigDecimal angle = 0.1G
+
+    BigDecimal sine = angle.sin()
+    BigDecimal cosine = angle.cos()
+    BigDecimal arctangent = angle.atan()
+
+    assertEquals(Math.sin(0.1), sine.doubleValue(), 1e-15)
+    assertEquals(Math.cos(0.1), cosine.doubleValue(), 1e-15)
+    assertEquals(Math.atan(0.1), arctangent.doubleValue(), 1e-15)
+    assertTrue(sine.precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(cosine.precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(arctangent.precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testExpRetainsDecimal64AccuracyForLargeExponent() {
+    double expected = Math.exp(700)
+    double actual = 700G.exp().doubleValue()
+
+    assertEquals(expected, actual, expected * 1e-15)
+  }
+
+  @Test
+  void testSinCosRangeReductionForExactlyRepresentableLargeAngle() {
+    BigDecimal angle = new BigDecimal(BigInteger.ONE.shiftLeft(100))
+    double doubleAngle = Math.scalb(1.0d, 100)
+
+    assertEquals(Math.sin(doubleAngle), angle.sin().doubleValue(), 1e-15)
+    assertEquals(Math.cos(doubleAngle), angle.cos().doubleValue(), 1e-15)
+  }
+
+  @Test
+  void testMinMaxSupportDirectDynamicStaticInvocation() {
+    assertEquals(1G, NumberExtension.min(1, 2))
+    assertEquals(2G, NumberExtension.max(1, 2))
+    assertEquals(1.5G, NumberExtension.min(1.5d, 2.5d))
+    assertEquals(2.5G, NumberExtension.max(1.5d, 2.5d))
+  }
+
+  @Test
+  void testFloatingPointUlpUsesReceiverRepresentation() {
+    double expectedFloatUlp = Math.ulp(3.14f)
+
+    assertEquals(BigDecimal.valueOf(Math.ulp(3.14d)), 3.14d.ulp())
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), 3.14f.ulp())
+  }
+
 }

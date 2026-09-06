@@ -1,5 +1,13 @@
 # Matrix-groovy-ext release history
 
+## v0.4.0-snapshot 2026-09-06
+- Improved `sin()`, `cos()`, and `atan()` accuracy by using DECIMAL128 guard arithmetic and returning DECIMAL64-rounded results consistently.
+- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude.
+- Improved `exp()` accuracy for large exponents by using the higher-precision internal e constant.
+- Removed ambiguous crossed `min()` and `max()` overloads so direct dynamic static invocation works alongside extension syntax.
+- Added IEEE 754-aware `ulp()` overloads for `Double` and `Float`.
+- Updated dependency examples and extension metadata for `0.4.0-snapshot`.
+
 ## v0.3.0 2026-06-28
 - Added `cbrt()` — cube root with DECIMAL64 precision using Newton-Raphson refinement seeded from `Math.cbrt`. Supports negative values and BigDecimal values far outside double range (both `BigDecimal` and `Number` overloads).
 - Added `hypot(Number)` — scaled `sqrt(x² + y²)` that avoids overflow/underflow for extreme values (both `BigDecimal` and `Number` overloads).

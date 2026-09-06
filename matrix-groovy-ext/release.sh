@@ -6,7 +6,7 @@ source jdk21
 echo "Build was successful, publishing to maven central..."
 ./gradlew release
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+if grep "version '" build.gradle | grep -qi 'snapshot'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT published"
