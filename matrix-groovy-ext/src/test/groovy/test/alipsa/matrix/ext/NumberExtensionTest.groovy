@@ -1020,6 +1020,14 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testTrigonometricRangeReductionRejectsUnboundedPrecision() {
+    ArithmeticException exception = assertThrows(ArithmeticException) {
+      NumberExtension.sin(new BigDecimal('1E+2010'))
+    }
+    assertEquals('Angle magnitude is too large for trigonometric range reduction: 1E+2010', exception.message)
+  }
+
+  @Test
   @ResourceLock('NumberExtension.cachedPi')
   void testLargeAngleRangeReductionCachesHighestPiPrecision() {
     def cacheField = NumberExtension.getDeclaredField('cachedPi')
@@ -1063,11 +1071,13 @@ class NumberExtensionTest {
 
     try {
       BigDecimal existing = 3.141592653589793G
-      BigDecimal candidate = 3.141592653589794G
+      BigDecimal candidate = 3.1415926535897932G
       cacheField.set(null, existing)
-      cachePi.invoke(null, candidate, new MathContext(100_001))
+      cachePi.invoke(null, candidate, new MathContext(2049))
       assertSame(existing, cacheField.get(null))
-      cachePi.invoke(null, candidate, new MathContext(100_000))
+      cachePi.invoke(null, candidate, new MathContext(2048))
+      assertSame(candidate, cacheField.get(null))
+      cachePi.invoke(null, 3.141592653589794G, MathContext.DECIMAL64)
       assertSame(candidate, cacheField.get(null))
     } finally {
       cacheField.set(null, original)

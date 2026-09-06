@@ -92,7 +92,8 @@ class NumberExtension {
   private static final MathContext CALCULATION_CONTEXT = MathContext.DECIMAL128
   private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
   private static final MathContext HALF_PI_CONTEXT = new MathContext(17, RoundingMode.HALF_EVEN)
-  private static final int MAX_CACHED_PI_PRECISION = 100_000
+  /** Shared work and cache ceiling for adaptive-precision trigonometric range reduction. */
+  private static final int MAX_TRIGONOMETRIC_PRECISION = 2048
   private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
   private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
   private static volatile BigDecimal cachedPi
@@ -736,7 +737,7 @@ class NumberExtension {
     }
 
     long requestedPrecision = integerDigits + CALCULATION_CONTEXT.precision + 8
-    if (requestedPrecision > Integer.MAX_VALUE) {
+    if (requestedPrecision > MAX_TRIGONOMETRIC_PRECISION) {
       throw new ArithmeticException("Angle magnitude is too large for trigonometric range reduction: ${angle}")
     }
 
@@ -778,7 +779,8 @@ class NumberExtension {
 
   /** Retains calculated π only within the bounded cache precision. */
   private static void cachePi(BigDecimal calculated, MathContext context) {
-    if (context.precision <= MAX_CACHED_PI_PRECISION) {
+    int cachedPrecision = cachedPi?.precision() ?: 0
+    if (context.precision <= MAX_TRIGONOMETRIC_PRECISION && calculated.precision() > cachedPrecision) {
       cachedPi = calculated
     }
   }
