@@ -13,13 +13,13 @@ For Maven:
 <dependency>
    <groupId>se.alipsa.matrix</groupId>
    <artifactId>matrix-groovy-ext</artifactId>
-   <version>0.2.0</version>
+   <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 For Gradle:
 
 ```groovy
-implementation('se.alipsa.matrix:matrix-groovy-ext:0.2.0')
+implementation('se.alipsa.matrix:matrix-groovy-ext:0.4.0-SNAPSHOT')
 ```
 
 ## Usage Examples
@@ -58,6 +58,8 @@ BigDecimal degrees = angleRadians.toDegrees()       // 45.0
 // double angleRadians = Math.toRadians(45.0);
 // double sine = Math.sin(angleRadians);
 ```
+
+Trigonometric range reduction supports angles requiring up to 512 digits of π (roughly through `1E+469`); larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
 
 ### Polar and Cartesian Coordinates
 
@@ -159,14 +161,23 @@ BigDecimal idx = (ratio * maxIndex).max(0).min(maxIndex)  // 7.5
 ### Unit in Last Place (ULP)
 
 ```groovy
-// Useful for floating-point comparison tolerance
+// BigDecimal uses decimal scale: ulp is 10^-scale
 BigDecimal value = 1.0
-BigDecimal epsilon = value.ulp() * 10      // Small tolerance for comparisons
+BigDecimal epsilon = value.ulp() * 10      // 1.0
 
 BigDecimal a = 0.1 + 0.2
 BigDecimal b = 0.3
-boolean equal = (a - b).abs() < epsilon    // Safe floating-point comparison
+boolean equal = (a - b).abs() < epsilon
+
+// Double and Float use their IEEE 754 binary representation
+Double measurement = 1000.0d
+BigDecimal floatingUlp = measurement.ulp() // 1.1368683772161603E-13
 ```
+
+`ulp()` dispatches on the runtime numeric type even when the receiver is declared as `Number`.
+For `BigDecimal` and integral values it returns the decimal-scale ULP; for `Double` and `Float`
+it returns the IEEE 754 ULP converted to `BigDecimal`. Version 0.4.0 changes the previous
+`Double`/`Float` behavior, which treated those values as decimal representations.
 
 ## Why Use NumberExtension?
 

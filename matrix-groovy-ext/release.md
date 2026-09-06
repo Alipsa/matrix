@@ -1,5 +1,15 @@
 # Matrix-groovy-ext release history
 
+## v0.4.0-SNAPSHOT 2026-09-06
+- Improved trigonometric accuracy by retaining DECIMAL128 guard precision in derived functions and rounding only their public results.
+- Made trigonometric range reduction calculate π at a precision derived from the angle magnitude, reject requests above 512 digits, and cache eligible values for reuse.
+- Documented the approximate supported angle boundary (through `1E+469`) and added a regression test for the accepted/rejected transition.
+- Preserved exact `double` round-tripping for π/2 inverse-trigonometric special cases and improved `acos()` accuracy near ±1 by avoiding subtractive cancellation.
+- Improved `exp()` accuracy for large exponents by using the higher-precision internal e constant.
+- **Breaking:** Removed the public `min(Number, BigDecimal)` and `max(Number, BigDecimal)` signatures to eliminate ambiguous dynamic static invocation. Extension syntax remains source-compatible through the `Number, Number` overloads, but already-compiled direct callers must be recompiled.
+- **Breaking:** Changed `Double.ulp()` and `Float.ulp()` from decimal-scale semantics to their IEEE 754 ULP. `ulp(Number)` now dispatches by runtime type for consistent behavior under static compilation.
+- Updated dependency examples and extension metadata for `0.4.0-SNAPSHOT`.
+
 ## v0.3.0 2026-06-28
 - Added `cbrt()` — cube root with DECIMAL64 precision using Newton-Raphson refinement seeded from `Math.cbrt`. Supports negative values and BigDecimal values far outside double range (both `BigDecimal` and `Number` overloads).
 - Added `hypot(Number)` — scaled `sqrt(x² + y²)` that avoids overflow/underflow for extreme values (both `BigDecimal` and `Number` overloads).

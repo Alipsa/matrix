@@ -2,7 +2,10 @@ package test.alipsa.matrix.ext
 
 import static org.junit.jupiter.api.Assertions.*
 
+import groovy.transform.CompileStatic
+
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.ResourceLock
 
 import se.alipsa.matrix.ext.NumberExtension
 
@@ -706,6 +709,7 @@ class NumberExtensionTest {
   void testTan() {
     assertEquals(Math.tan(12.2), NumberExtension.tan(12.2).doubleValue(), 1e-10)
     assertEquals(Math.tan(11), NumberExtension.tan(11).doubleValue(), 1e-10)
+    assertEquals(0.1511352180582951G, NumberExtension.tan(0.15G))
   }
 
   @Test
@@ -744,6 +748,7 @@ class NumberExtensionTest {
     assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
     assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
     assertEquals(0.0, NumberExtension.atan2(0.0, 0.0).doubleValue(), 1e-10)
+    assertEquals(2.034443935795703G, NumberExtension.atan2(1G, -0.5G))
 
     // Test with extension syntax
     assert (1.0).atan2(1.0).doubleValue() == Math.atan2(1.0, 1.0)
@@ -904,11 +909,13 @@ class NumberExtensionTest {
 
     // Test with Number type
     assertEquals(Math.acos(0.5), NumberExtension.acos(0.5).doubleValue(), 1e-10)
+    assertEquals(2.094395102393195G, NumberExtension.acos(-0.5G))
+    assertEquals(2.690565841793531G, NumberExtension.acos(-0.9G))
 
     // Test exact BigDecimal values
     assert 1.0G.acos() == 0.0G
-    assert (-1.0G).acos() == NumberExtension.PI32
-    assert 0.0G.acos() == NumberExtension.PI32 / 2
+    assert (-1.0G).acos() == NumberExtension.PI32.round(MathContext.DECIMAL64)
+    assert 0.0G.acos() == NumberExtension.PI32.divide(2G, new MathContext(17))
 
     // Test out of range throws
     assertThrows(ArithmeticException) {
@@ -917,6 +924,182 @@ class NumberExtensionTest {
     assertThrows(ArithmeticException) {
       (-1.5).acos()
     }
+  }
+
+  @Test
+  void testTranscendentalFunctionsUseDecimal64Precision() {
+    BigDecimal angle = 0.1G
+
+    BigDecimal sine = angle.sin()
+    BigDecimal cosine = angle.cos()
+    BigDecimal arctangent = angle.atan()
+
+    assertEquals(Math.sin(0.1), sine.doubleValue(), 1e-15)
+    assertEquals(Math.cos(0.1), cosine.doubleValue(), 1e-15)
+    assertEquals(Math.atan(0.1), arctangent.doubleValue(), 1e-15)
+    assertTrue(sine.precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(cosine.precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(arctangent.precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testExpRetainsDecimal64AccuracyForLargeExponent() {
+    double expected = Math.exp(700)
+    double actual = 700G.exp().doubleValue()
+
+    assertEquals(expected, actual, expected * 1e-15)
+  }
+
+  @Test
+  void testSinCosRangeReductionForExactlyRepresentableLargeAngle() {
+    BigDecimal angle = new BigDecimal(BigInteger.ONE.shiftLeft(100))
+    double doubleAngle = Math.scalb(1.0d, 100)
+
+    assertEquals(Math.sin(doubleAngle), angle.sin().doubleValue(), 1e-15)
+    assertEquals(Math.cos(doubleAngle), angle.cos().doubleValue(), 1e-15)
+  }
+
+  @Test
+  void testMinMaxSupportDirectDynamicStaticInvocation() {
+    assertEquals(1G, NumberExtension.min(1, 2))
+    assertEquals(2G, NumberExtension.max(1, 2))
+    assertEquals(1.5G, NumberExtension.min(1.5d, 2.5d))
+    assertEquals(2.5G, NumberExtension.max(1.5d, 2.5d))
+  }
+
+  @Test
+  void testFloatingPointUlpUsesReceiverRepresentation() {
+    double expectedFloatUlp = Math.ulp(3.14f)
+
+    assertEquals(BigDecimal.valueOf(Math.ulp(3.14d)), 3.14d.ulp())
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), 3.14f.ulp())
+  }
+
+  @Test
+  @CompileStatic
+  void testFloatingPointUlpUsesRuntimeTypeForNumberReceiver() {
+    Number doubleValue = 1000.0d
+    Number floatValue = 1000.0f
+
+    assertEquals(BigDecimal.valueOf(Math.ulp(1000.0d)), doubleValue.ulp())
+    assertEquals(BigDecimal.valueOf(Math.ulp(1000.0d)), ulpOfNumber(doubleValue))
+    double expectedFloatUlp = Math.ulp(1000.0f)
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), floatValue.ulp())
+    assertEquals(BigDecimal.valueOf(expectedFloatUlp), ulpOfNumber(floatValue))
+  }
+
+  @Test
+  void testInverseTrigSpecialCasesUseExpectedPrecision() {
+    BigDecimal expectedPi = NumberExtension.PI32.round(MathContext.DECIMAL64)
+    BigDecimal expectedHalfPi = NumberExtension.PI32.divide(2G, new MathContext(17))
+
+    assertEquals(expectedHalfPi, 1.0G.asin())
+    assertEquals(-expectedHalfPi, (-1.0G).asin())
+    assertEquals(expectedHalfPi, 0.0G.acos())
+    assertEquals(expectedPi, (-1.0G).acos())
+    assertEquals(expectedPi, 0.0G.atan2(-1.0G))
+    assertTrue((-1.0G).acos().precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testHalfPiSpecialCasesRoundTripToDouble() {
+    assertEquals(Math.PI / 2, 1.0G.asin().doubleValue())
+    assertEquals(Math.PI / 2, 0.0G.acos().doubleValue())
+    assertEquals(Math.PI / 2, 1.0G.atan2(0.0G).doubleValue())
+  }
+
+  @Test
+  void testAcosRetainsPrecisionNearOne() {
+    BigDecimal positiveActual = 0.9999999999999999G.acos()
+    BigDecimal positiveExpected = 1.4142135623730950e-8
+    BigDecimal negativeActual = (-0.9999999999999999G).acos()
+    BigDecimal negativeExpected = 3.141592639447658G
+
+    assertTrue((positiveActual - positiveExpected).abs() < 1e-23)
+    assertEquals(negativeExpected, negativeActual)
+  }
+
+  @Test
+  void testTrigonometricRangeReductionRejectsUnboundedPrecision() {
+    ArithmeticException exception = assertThrows(ArithmeticException) {
+      NumberExtension.sin(new BigDecimal('1E+2010'))
+    }
+    assertEquals('Angle magnitude is too large for trigonometric range reduction: 1E+2010', exception.message)
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testTrigonometricRangeReductionBoundary() {
+    assertNotNull(NumberExtension.sin(new BigDecimal('1E+469')))
+    assertThrows(ArithmeticException) { NumberExtension.sin(new BigDecimal('1E+470')) }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testLargeAngleRangeReductionCachesHighestPiPrecision() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    cacheField.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      cacheField.set(null, null)
+      new BigDecimal('1E+400').sin()
+      BigDecimal highPrecision = cacheField.get(null) as BigDecimal
+      new BigDecimal('1E+300').sin()
+      BigDecimal reused = cacheField.get(null) as BigDecimal
+
+      assertSame(highPrecision, reused)
+      assertTrue(reused.precision() >= 400 + MathContext.DECIMAL128.precision)
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testCalculatedPiDoesNotTrustTruncatedSeed() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def calculatePi = NumberExtension.getDeclaredMethod('calculatePi', MathContext)
+    cacheField.accessible = true
+    calculatePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      cacheField.set(null, null)
+      BigDecimal calculated = calculatePi.invoke(null, new MathContext(31)) as BigDecimal
+      assertEquals(3.141592653589793238462643383280G, calculated)
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @Test
+  @ResourceLock('NumberExtension.cachedPi')
+  void testPiCacheRejectsOverCeilingPrecision() {
+    def cacheField = NumberExtension.getDeclaredField('cachedPi')
+    def cachePi = NumberExtension.getDeclaredMethod('cachePi', BigDecimal, MathContext)
+    cacheField.accessible = true
+    cachePi.accessible = true
+    BigDecimal original = cacheField.get(null) as BigDecimal
+
+    try {
+      BigDecimal existing = 3.141592653589793G
+      BigDecimal candidate = 3.1415926535897932G
+      cacheField.set(null, existing)
+      cachePi.invoke(null, candidate, new MathContext(513))
+      assertSame(existing, cacheField.get(null))
+      cachePi.invoke(null, candidate, new MathContext(512))
+      assertSame(candidate, cacheField.get(null))
+      cachePi.invoke(null, 3.141592653589794G, MathContext.DECIMAL64)
+      assertSame(candidate, cacheField.get(null))
+    } finally {
+      cacheField.set(null, original)
+    }
+  }
+
+  @CompileStatic
+  private static BigDecimal ulpOfNumber(Number value) {
+    NumberExtension.ulp(value)
   }
 
 }

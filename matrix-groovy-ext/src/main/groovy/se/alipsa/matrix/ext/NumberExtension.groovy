@@ -53,6 +53,7 @@ import java.math.RoundingMode
  *
  * // Unit in last place (for epsilon calculations)
  * BigDecimal epsilon = value.ulp() * 10
+ * BigDecimal doubleEpsilon = (1000.0d).ulp()  // → 1.1368683772161603E-13 (IEEE 754)
  *
  * // Chainable min/max with mixed types
  * BigDecimal binIndex = 0.max(value.min(100))  // Clamp to [0, 100]
@@ -88,6 +89,15 @@ class NumberExtension {
   /** Threshold for terminating the {@code log1p} Taylor series; conservatively below DECIMAL64 precision for |x| < 1e-10. */
   private static final BigDecimal LOG1P_THRESHOLD = 1e-34
   private static final int LOG1P_MAX_ITERATIONS = 40
+  private static final MathContext CALCULATION_CONTEXT = MathContext.DECIMAL128
+  private static final MathContext RESULT_CONTEXT = MathContext.DECIMAL64
+  private static final MathContext HALF_PI_CONTEXT = new MathContext(17, RoundingMode.HALF_EVEN)
+  /** Shared work and cache ceiling for adaptive-precision trigonometric range reduction. */
+  private static final int MAX_TRIGONOMETRIC_PRECISION = 512
+  private static final BigDecimal RESULT_PI = PI32.round(RESULT_CONTEXT)
+  private static final BigDecimal RESULT_HALF_PI = PI32.divide(BigDecimal.valueOf(2), HALF_PI_CONTEXT)
+  private static volatile BigDecimal cachedPi
+  private static final BigDecimal CALCULATION_PI = calculatePi(CALCULATION_CONTEXT)
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -180,7 +190,7 @@ class NumberExtension {
    * where y = (x-1)/(x+1).
    */
   private static BigDecimal lnSeries(BigDecimal value) {
-    MathContext mc = MathContext.DECIMAL128
+    MathContext mc = CALCULATION_CONTEXT
     BigDecimal two = 2
     // Argument reduction: scale to [1, 10) using BigDecimal magnitude, then to [0.5, 2.0] with powers of 2
     int tenPower = value.precision() - value.scale() - 1
@@ -420,24 +430,24 @@ class NumberExtension {
     BigDecimal term = BigDecimal.ONE
     BigDecimal result = BigDecimal.ONE
     int iteration = 1
-    BigDecimal threshold = new BigDecimal("1e-${MathContext.DECIMAL128.precision}")
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-CALCULATION_CONTEXT.precision)
 
     while (true) {
-      term = term.multiply(r, MathContext.DECIMAL128)
-          .divide(new BigDecimal(iteration), MathContext.DECIMAL128)
+      term = term.multiply(r, CALCULATION_CONTEXT)
+          .divide(BigDecimal.valueOf(iteration), CALCULATION_CONTEXT)
       if (term.abs() < threshold) {
         break
       }
-      result = result.add(term)
+      result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
 
     // Combine: e^k * e^r
     BigDecimal eToK = k >= 0
-        ? E.pow(k, MathContext.DECIMAL128)
-        : BigDecimal.ONE.divide(E.pow(-k, MathContext.DECIMAL128), MathContext.DECIMAL128)
+        ? E32.pow(k, CALCULATION_CONTEXT)
+        : BigDecimal.ONE.divide(E32.pow(-k, CALCULATION_CONTEXT), CALCULATION_CONTEXT)
 
-    (eToK * result).round(MathContext.DECIMAL64)
+    (eToK * result).round(RESULT_CONTEXT)
   }
 
   /**
@@ -463,14 +473,39 @@ class NumberExtension {
   }
 
   /**
+   * Returns the IEEE 754 unit in the last place of this Double value.
+   *
+   * @param self the Double value
+   * @return the floating-point ulp as a BigDecimal
+   */
+  static BigDecimal ulp(Double self) {
+    BigDecimal.valueOf(Math.ulp(self))
+  }
+
+  /**
+   * Returns the IEEE 754 unit in the last place of this Float value.
+   *
+   * @param self the Float value
+   * @return the floating-point ulp as a BigDecimal
+   */
+  static BigDecimal ulp(Float self) {
+    BigDecimal.valueOf(Math.ulp(self) as double)
+  }
+
+  /**
    * Returns the size of an ulp (unit in the last place) of this Number value.
-   * For BigDecimal, the ulp is 10<sup>-scale</sup>. Other Number types are first converted to BigDecimal.
+   * Double and Float values are handled by typed overloads using their IEEE 754 representation.
+   * Other Number types are first converted to BigDecimal.
    *
    * @param self the Number value
    * @return a BigDecimal representing the size of an ulp
    */
   static BigDecimal ulp(Number self) {
-    ulp(self as BigDecimal)
+    switch (self) {
+      case Double -> ulp((Double) self)
+      case Float -> ulp((Float) self)
+      default -> ulp(self as BigDecimal)
+    }
   }
 
   /**
@@ -495,30 +530,6 @@ class NumberExtension {
   static BigDecimal max(BigDecimal self, Number other) {
     BigDecimal otherBD = other as BigDecimal
     return self > otherBD ? self : otherBD
-  }
-
-  /**
-   * Returns the smaller of this Number and the given BigDecimal.
-   *
-   * @param self the Number value
-   * @param other the BigDecimal to compare with
-   * @return the smaller value as a BigDecimal
-   */
-  static BigDecimal min(Number self, BigDecimal other) {
-    BigDecimal selfBD = self as BigDecimal
-    return selfBD < other ? selfBD : other
-  }
-
-  /**
-   * Returns the larger of this Number and the given BigDecimal.
-   *
-   * @param self the Number value
-   * @param other the BigDecimal to compare with
-   * @return the larger value as a BigDecimal
-   */
-  static BigDecimal max(Number self, BigDecimal other) {
-    BigDecimal selfBD = self as BigDecimal
-    return selfBD > other ? selfBD : other
   }
 
   /**
@@ -710,6 +721,92 @@ class NumberExtension {
   }
 
   /**
+   * Reduces an angle modulo 2π. The π precision grows with the integer part of the angle,
+   * preserving enough fractional digits for a DECIMAL64 trigonometric result.
+   */
+  private static BigDecimal reduceAngle(BigDecimal angle) {
+    BigDecimal twoPi = PI32 * 2
+    if (angle.abs() <= twoPi) {
+      return angle
+    }
+
+    long integerDigits = (angle.precision() as long) - angle.scale()
+    int staticPiLimit = PI32.precision() - RESULT_CONTEXT.precision - 2
+    if (integerDigits <= staticPiLimit) {
+      return angle.remainder(twoPi)
+    }
+
+    long requestedPrecision = integerDigits + CALCULATION_CONTEXT.precision + 8
+    if (requestedPrecision > MAX_TRIGONOMETRIC_PRECISION) {
+      throw new ArithmeticException("Angle magnitude is too large for trigonometric range reduction: ${angle}")
+    }
+
+    int precision = Math.max(CALCULATION_CONTEXT.precision, requestedPrecision as int)
+    MathContext reductionContext = new MathContext(precision, RoundingMode.HALF_EVEN)
+    BigDecimal preciseTwoPi = calculatePi(reductionContext).multiply(BigDecimal.valueOf(2), reductionContext)
+    angle.remainder(preciseTwoPi)
+  }
+
+  /** Computes π using Machin's formula at the requested precision. */
+  private static BigDecimal calculatePi(MathContext context) {
+    BigDecimal cached = cachedPi
+    if (cached != null && cached.precision() >= context.precision) {
+      return cached.round(context)
+    }
+    calculateAndCachePi(context)
+  }
+
+  /** Computes and caches π after rechecking the cache while holding the class monitor. */
+  private static synchronized BigDecimal calculateAndCachePi(MathContext context) {
+    BigDecimal cached = cachedPi
+    if (cached != null && cached.precision() >= context.precision) {
+      return cached.round(context)
+    }
+
+    int workPrecision
+    try {
+      workPrecision = Math.addExact(context.precision, 8)
+    } catch (ArithmeticException ignored) {
+      throw new ArithmeticException("Requested precision is too large for π calculation: ${context.precision}")
+    }
+    MathContext workContext = new MathContext(workPrecision, context.roundingMode)
+    BigDecimal firstTerm = arctanInverse(5, workContext).multiply(BigDecimal.valueOf(16), workContext)
+    BigDecimal secondTerm = arctanInverse(239, workContext).multiply(BigDecimal.valueOf(4), workContext)
+    BigDecimal calculated = firstTerm.subtract(secondTerm, workContext).round(context)
+    cachePi(calculated, context)
+    calculated
+  }
+
+  /** Retains calculated π only within the bounded cache precision. */
+  private static void cachePi(BigDecimal calculated, MathContext context) {
+    int cachedPrecision = cachedPi?.precision() ?: 0
+    if (context.precision <= MAX_TRIGONOMETRIC_PRECISION && calculated.precision() > cachedPrecision) {
+      cachedPi = calculated
+    }
+  }
+
+  /** Computes arctan(1 / inverse) using its alternating Taylor series. */
+  private static BigDecimal arctanInverse(int inverse, MathContext context) {
+    BigDecimal inverseValue = BigDecimal.valueOf(inverse)
+    BigDecimal inverseSquared = inverseValue * inverseValue
+    BigDecimal term = BigDecimal.ONE.divide(inverseValue, context)
+    BigDecimal result = term
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-context.precision)
+    int iteration = 1
+
+    while (true) {
+      term = term.divide(inverseSquared, context).negate()
+      BigDecimal step = term.divide(BigDecimal.valueOf(2L * iteration + 1), context)
+      if (step.abs() < threshold) {
+        break
+      }
+      result = result.add(step, context)
+      iteration++
+    }
+    result
+  }
+
+  /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
    * This method uses higher-precision range reduction followed by a Taylor series expansion
@@ -726,36 +823,36 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the sine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal sin(BigDecimal self) {
-    // Normalize x to range [-2PI, 2PI] to keep series fast
-    // (Optional but recommended for large angles)
-    BigDecimal reducedAngle = self
-    BigDecimal twoPi = PI32 * 2
-    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
-      reducedAngle = reducedAngle % twoPi
-    }
+    sinInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes sine with guard precision for use by derived functions. */
+  private static BigDecimal sinInternal(BigDecimal self) {
+    BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
 
     BigDecimal result = reducedAngle
     BigDecimal term = reducedAngle
-    BigDecimal xSquared = reducedAngle ** 2
+    BigDecimal xSquared = reducedAngle.multiply(reducedAngle, CALCULATION_CONTEXT)
     int iteration = 1
-    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-CALCULATION_CONTEXT.precision)
 
     while (true) {
       // term = term * (-x^2) / ((2n)(2n+1))
-      term = (term * xSquared).negate()
-      BigDecimal divisor = (2 * iteration) * (2 * iteration + 1)
-      term = term / divisor
+      term = term.multiply(xSquared, CALCULATION_CONTEXT).negate()
+      BigDecimal divisor = BigDecimal.valueOf((2L * iteration) * (2L * iteration + 1))
+      term = term.divide(divisor, CALCULATION_CONTEXT)
 
       if (term.abs() < threshold) {
         break
       }
 
-      result = result + term
+      result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
-    return result
+    result
   }
 
   /**
@@ -763,6 +860,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the sine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    * @see #sin(BigDecimal)
    */
   static BigDecimal sin(Number self) {
@@ -786,34 +884,36 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the cosine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal cos(BigDecimal self) {
-    BigDecimal reducedAngle = self
-    BigDecimal twoPi = PI32 * 2
-    if (reducedAngle > twoPi || reducedAngle < -twoPi) {
-      reducedAngle = reducedAngle % twoPi
-    }
+    cosInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes cosine with guard precision for use by derived functions. */
+  private static BigDecimal cosInternal(BigDecimal self) {
+    BigDecimal reducedAngle = reduceAngle(self).round(CALCULATION_CONTEXT)
 
     BigDecimal result = BigDecimal.ONE
     BigDecimal term = BigDecimal.ONE
-    BigDecimal xSquared = reducedAngle ** 2
+    BigDecimal xSquared = reducedAngle.multiply(reducedAngle, CALCULATION_CONTEXT)
     int iteration = 1
-    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-CALCULATION_CONTEXT.precision)
 
     while (true) {
       // term = term * (-x^2) / ((2n-1)(2n))
-      term = (term * xSquared).negate()
-      BigDecimal divisor = (2 * iteration - 1) * (2 * iteration)
-      term = term / divisor
+      term = term.multiply(xSquared, CALCULATION_CONTEXT).negate()
+      BigDecimal divisor = BigDecimal.valueOf((2L * iteration - 1) * (2L * iteration))
+      term = term.divide(divisor, CALCULATION_CONTEXT)
 
       if (term.abs() < threshold) {
         break
       }
 
-      result = result + term
+      result = result.add(term, CALCULATION_CONTEXT)
       iteration++
     }
-    return result
+    result
   }
 
   /**
@@ -821,6 +921,7 @@ class NumberExtension {
    *
    * @param self the angle in radians
    * @return the cosine of the angle as a BigDecimal
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    * @see #cos(BigDecimal)
    */
   static BigDecimal cos(Number self) {
@@ -893,6 +994,7 @@ class NumberExtension {
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
    * @see #tan(BigDecimal)
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal tan(Number self) {
     tan(self as BigDecimal)
@@ -907,16 +1009,17 @@ class NumberExtension {
    * @param self the angle in radians
    * @return the tangent of the angle as a BigDecimal
    * @throws ArithmeticException if the tangent is undefined because cosine is zero
+   * @throws ArithmeticException if the angle magnitude requires more than 512 digits of π for range reduction (roughly 1E+470 and above)
    */
   static BigDecimal tan(BigDecimal self) {
-    BigDecimal sinVal = sin(self)
-    BigDecimal cosVal = cos(self)
+    BigDecimal sinVal = sinInternal(self)
+    BigDecimal cosVal = cosInternal(self)
 
     if (cosVal == 0) {
       throw new ArithmeticException('Tangent undefined (cos is 0)')
     }
 
-    return sinVal / cosVal
+    sinVal.divide(cosVal, CALCULATION_CONTEXT).round(RESULT_CONTEXT)
   }
 
   /**
@@ -943,13 +1046,18 @@ class NumberExtension {
    * @return the arctangent of the value
    */
   static BigDecimal atan(BigDecimal self) {
+    atanInternal(self).round(RESULT_CONTEXT)
+  }
+
+  /** Computes arctangent with guard precision for use by derived functions. */
+  private static BigDecimal atanInternal(BigDecimal self) {
     if (self == 0) {
       return BigDecimal.ZERO
     }
 
     // Handle negative input: atan(-x) = -atan(x)
     if (self < 0) {
-      return atan(self.negate()).negate()
+      return atanInternal(self.negate()).negate()
     }
 
     BigDecimal x = self
@@ -960,38 +1068,38 @@ class NumberExtension {
     // BUG FIX: changed condition from (x > 0) to (x > 0.5) to prevent infinite loop
     while (x > 0.5) {
       // Identity: newX = x / (1 + sqrt(1 + x^2))
-      BigDecimal xSquared = x ** 2
-      BigDecimal root = sqrt((1 + xSquared))
-      BigDecimal denominator = 1 + root
+      BigDecimal xSquared = x.multiply(x, CALCULATION_CONTEXT)
+      BigDecimal root = BigDecimal.ONE.add(xSquared, CALCULATION_CONTEXT).sqrt(CALCULATION_CONTEXT)
+      BigDecimal denominator = BigDecimal.ONE.add(root, CALCULATION_CONTEXT)
 
-      x = x / denominator
-      multiplier = multiplier * 2
+      x = x.divide(denominator, CALCULATION_CONTEXT)
+      multiplier *= 2
     }
 
     // 2. Taylor Series: x - x^3/3 + x^5/5 - x^7/7 ...
     BigDecimal result = x
-    BigDecimal xSquared = x ** 2
+    BigDecimal xSquared = x.multiply(x, CALCULATION_CONTEXT)
     BigDecimal term = x
     int iteration = 1
 
     // Threshold: stop when changes are smaller than the precision we care about
-    BigDecimal threshold = new BigDecimal('1e-' + MathContext.DECIMAL64.getPrecision())
+    BigDecimal threshold = BigDecimal.ONE.scaleByPowerOfTen(-CALCULATION_CONTEXT.precision)
 
     while (true) {
       // Calculate next numerator term: term * -x^2
-      term = (term * xSquared).negate()
+      term = term.multiply(xSquared, CALCULATION_CONTEXT).negate()
 
       // Calculate divisor: 2k + 1 (3, 5, 7...)
-      BigDecimal divisor = 2 * iteration + 1
-      BigDecimal step = term / divisor
+      BigDecimal divisor = BigDecimal.valueOf(2L * iteration + 1)
+      BigDecimal step = term.divide(divisor, CALCULATION_CONTEXT)
 
       if (step.abs() < threshold) {
         break
       }
-      result = result + step
+      result = result.add(step, CALCULATION_CONTEXT)
       iteration++
     }
-    return result * multiplier
+    result.multiply(multiplier, CALCULATION_CONTEXT)
   }
 
   /**
@@ -1033,15 +1141,15 @@ class NumberExtension {
       return BigDecimal.ZERO
     }
     if (self == 1) {
-      return PI / 2
+      return RESULT_HALF_PI
     }
     if (self == -1) {
-      return (PI / 2).negate()
+      return RESULT_HALF_PI.negate()
     }
     // asin(x) = atan(x / sqrt(1 - x²))
-    BigDecimal xSquared = self ** 2
-    BigDecimal denominator = sqrt(1 - xSquared)
-    atan(self / denominator)
+    BigDecimal xSquared = self.multiply(self, CALCULATION_CONTEXT)
+    BigDecimal denominator = BigDecimal.ONE.subtract(xSquared, CALCULATION_CONTEXT).sqrt(CALCULATION_CONTEXT)
+    atanInternal(self.divide(denominator, CALCULATION_CONTEXT)).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1071,13 +1179,18 @@ class NumberExtension {
       return BigDecimal.ZERO
     }
     if (self == -1) {
-      return PI32
+      return RESULT_PI
     }
     if (self == 0) {
-      return PI32 / 2
+      return RESULT_HALF_PI
     }
-    // acos(x) = π/2 - asin(x)
-    PI32 / 2 - asin(self)
+    // This form avoids subtractive cancellation near 1:
+    // acos(x) = 2 * atan(sqrt((1 - x) / (1 + x)))
+    BigDecimal numerator = BigDecimal.ONE.subtract(self, CALCULATION_CONTEXT)
+    BigDecimal denominator = BigDecimal.ONE.add(self, CALCULATION_CONTEXT)
+    BigDecimal ratio = numerator.divide(denominator, CALCULATION_CONTEXT)
+    BigDecimal root = ratio.sqrt(CALCULATION_CONTEXT)
+    atanInternal(root).multiply(BigDecimal.valueOf(2), CALCULATION_CONTEXT).round(RESULT_CONTEXT)
   }
 
   /**
@@ -1127,29 +1240,29 @@ class NumberExtension {
     // 1. Handle special cases (x=0, y=0) to avoid division by zero
     if (x == 0) {
       if (y > 0) {
-        return PI / 2
+        return RESULT_HALF_PI
       }
       if (y < 0) {
-        return (PI / 2).negate()
+        return RESULT_HALF_PI.negate()
       }
       return BigDecimal.ZERO
     }
 
     // 2. Calculate the ratio z = y/x
-    BigDecimal z = y / x
+    BigDecimal z = y.divide(x, CALCULATION_CONTEXT)
 
     // 3. Calculate raw atan(z)
-    BigDecimal result = atan(z)
+    BigDecimal result = atanInternal(z)
 
     // 4. Adjust for Quadrants
     if (x < 0) {
       if (y >= 0) {
-        result = result + PI
+        result = result.add(CALCULATION_PI, CALCULATION_CONTEXT)
       } else {
-        result = result - PI
+        result = result.subtract(CALCULATION_PI, CALCULATION_CONTEXT)
       }
     }
-    return result
+    result.round(RESULT_CONTEXT)
   }
 
 }

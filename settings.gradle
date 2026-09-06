@@ -6,9 +6,6 @@ pluginManagement {
   }
 }
 
-// Reserve 2 CPU cores for other work during parallel builds
-gradle.startParameter.maxWorkerCount = Math.max(1, Runtime.runtime.availableProcessors() - 2)
-
 rootProject.name = 'matrix'
 include 'matrix-core'
 include 'matrix-stats'

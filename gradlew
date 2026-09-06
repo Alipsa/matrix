@@ -57,7 +57,7 @@
 #       Darwin, MinGW, and NonStop.
 #
 #   (3) This script is generated from the Groovy template
-#       https://github.com/gradle/gradle/blob/HEAD/platforms/jvm/plugins-application/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
+#       https://github.com/gradle/gradle/blob/b631911858264c0b6e4d6603d677ff5218766cee/platforms/jvm/plugins-application/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
 #       within the Gradle project.
 #
 #       You can find Gradle at https://github.com/gradle/gradle/.
@@ -198,6 +198,29 @@ if "$cygwin" || "$msys" ; then
     done
 fi
 
+
+# Use 75% of the available processors by default, while preserving an explicit
+# --max-workers setting supplied by the caller.
+gradle_worker_limit_set=false
+for arg do
+    case "$arg" in
+        --max-workers|--max-workers=*) gradle_worker_limit_set=true ;;
+    esac
+done
+if ! $gradle_worker_limit_set ; then
+    if command -v getconf >/dev/null 2>&1 ; then
+        gradle_cpu_count=$(getconf _NPROCESSORS_ONLN)
+    elif command -v sysctl >/dev/null 2>&1 ; then
+        gradle_cpu_count=$(sysctl -n hw.ncpu)
+    else
+        gradle_cpu_count=1
+    fi
+    gradle_worker_count=$((gradle_cpu_count * 3 / 4))
+    if [ "$gradle_worker_count" -lt 1 ] ; then
+        gradle_worker_count=1
+    fi
+    set -- "$@" "--max-workers=$gradle_worker_count"
+fi
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'

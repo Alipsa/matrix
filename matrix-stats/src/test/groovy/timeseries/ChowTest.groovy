@@ -21,7 +21,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0  // Intercept
       X[i][1] = i + 1.0  // x
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.1  // Very small noise
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.1)  // Very small noise
     }
 
     def result = Chow.test(y, X, 10)
@@ -31,8 +31,7 @@ class ChowTest {
     assertEquals(2, result.numParameters)
     assertEquals(10, result.breakPoint)
 
-    // Should typically not reject H0 (no structural break)
-    // With random noise, allow for occasional false positives
+    // Should not reject H0 (no structural break)
     assertTrue(result.pValue > 0.01, 'Should typically not detect break when none exists')
   }
 
@@ -47,13 +46,13 @@ class ChowTest {
     for (int i = 0; i < 15; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 1.0 + 2.0 * (i + 1.0) + (Math.random() - 0.5) * 0.1
+      y[i] = 1.0 + 2.0 * (i + 1.0) + deterministicNoise(i, 0.1)
     }
 
     for (int i = 15; i < 30; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 5.0 + 1.0 * (i + 1.0) + (Math.random() - 0.5) * 0.1
+      y[i] = 5.0 + 1.0 * (i + 1.0) + deterministicNoise(i, 0.1)
     }
 
     def result = Chow.test(y, X, 15)
@@ -69,7 +68,7 @@ class ChowTest {
 
   @Test
   void testListInput() {
-    List<Double> y = (1..20).collect { it * 2.0 + 1.0 + (Math.random() - 0.5) * 0.1 }
+    List<Double> y = (1..20).collect { it * 2.0 + 1.0 + deterministicNoise(it, 0.1) }
     List<List<Double>> X = (1..20).collect { [1.0, it as double] }
 
     def result = Chow.test(y, X, 10)
@@ -159,14 +158,14 @@ class ChowTest {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
       X[i][2] = (i + 1.0) * (i + 1.0)
-      y[i] = 1.0 + 2.0 * X[i][1] + 0.5 * X[i][2] + (Math.random() - 0.5) * 0.5
+      y[i] = 1.0 + 2.0 * X[i][1] + 0.5 * X[i][2] + deterministicNoise(i, 0.5)
     }
 
     for (int i = 20; i < 40; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
       X[i][2] = (i + 1.0) * (i + 1.0)
-      y[i] = 5.0 + 1.0 * X[i][1] + 1.5 * X[i][2] + (Math.random() - 0.5) * 0.5  // Different coefficients
+      y[i] = 5.0 + 1.0 * X[i][1] + 1.5 * X[i][2] + deterministicNoise(i, 0.5)  // Different coefficients
     }
 
     def result = Chow.test(y, X, 20)
@@ -185,7 +184,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -205,7 +204,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -227,7 +226,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -247,7 +246,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -272,7 +271,7 @@ class ChowTest {
     for (int i = 0; i < 30; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 15)
@@ -292,7 +291,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -314,7 +313,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -332,7 +331,7 @@ class ChowTest {
     for (int i = 0; i < 20; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + deterministicNoise(i, 0.5)
     }
 
     def result = Chow.test(y, X, 10)
@@ -351,13 +350,13 @@ class ChowTest {
     for (int i = 0; i < 15; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 1.0 + 2.0 * (i + 1.0) + (Math.random() - 0.5) * 0.1
+      y[i] = 1.0 + 2.0 * (i + 1.0) + deterministicNoise(i, 0.1)
     }
 
     for (int i = 15; i < 30; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 10.0 + 1.0 * (i + 1.0) + (Math.random() - 0.5) * 0.1
+      y[i] = 10.0 + 1.0 * (i + 1.0) + deterministicNoise(i, 0.1)
     }
 
     def resultCorrect = Chow.test(y, X, 15)  // Test at actual break
@@ -371,7 +370,7 @@ class ChowTest {
   @Test
   void testSimpleLinearRegression() {
     // Simple example: y = x with noise
-    double[] y = (1..20).collect { it + (Math.random() - 0.5) * 0.5 } as double[]
+    double[] y = (1..20).collect { it + deterministicNoise(it, 0.5) } as double[]
     double[][] X = (1..20).collect { [1.0, it] as double[] } as double[][]
 
     def result = Chow.test(y, X, 10)
@@ -397,5 +396,13 @@ class ChowTest {
 
     assertNotNull(result.interpret(0.10G))
     assertNotNull(result.evaluate(0.10G))
+  }
+
+  private static double deterministicNoise(int index, double amplitude) {
+    Random random = new Random(42L)
+    for (int i = 0; i < index; i++) {
+      random.nextDouble()
+    }
+    (random.nextDouble() - 0.5) * amplitude
   }
 }
