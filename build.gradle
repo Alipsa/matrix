@@ -55,7 +55,7 @@ set /a GRADLE_WORKER_COUNT=(%NUMBER_OF_PROCESSORS%*3)/4
 if %GRADLE_WORKER_COUNT% LSS 1 set GRADLE_WORKER_COUNT=1
 set "GRADLE_WORKER_ARG=--max-workers=%GRADLE_WORKER_COUNT%"
 goto :eof
-'''
+'''.stripIndent().stripTrailing()
     String batchText = batch.text
     String batchAnchor = '@rem Execute Gradle'
     if (!batchText.contains('GRADLE_WORKER_SET')) {
@@ -75,9 +75,6 @@ goto :eof
       int argumentMarker = batchLines[launchLine].lastIndexOf('%*')
       String originalLine = batchLines[launchLine]
       batchLines[launchLine] = originalLine.substring(0, argumentMarker) + '%* %GRADLE_WORKER_ARG%' + originalLine.substring(argumentMarker + 2)
-      if (batchLines[launchLine] == originalLine) {
-        throw new GradleException("gradlew.bat launch line could not be patched; update the worker-limit re-injection in build.gradle")
-      }
     }
     batch.text = batchLines.join('\n')
   }
