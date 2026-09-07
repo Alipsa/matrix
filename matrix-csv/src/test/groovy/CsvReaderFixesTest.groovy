@@ -123,6 +123,37 @@ class CsvReaderFixesTest {
   }
 
   @Test
+  void preservesNativeNullStringRecordSemanticsWithInferredHeaders() {
+    Matrix quotedNull = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .fromString('a,b\n"NA",NA\n')
+    assertEquals(['NA', null], quotedNull.row(0))
+
+    Matrix emptyField = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .fromString('a,b,c\n1,,3\n')
+    assertEquals(['1', '', '3'], emptyField.row(0))
+  }
+
+  @Test
+  void inferredNullStringHeaderValidationHonorsIgnoreHeaderCase() {
+    CSVFormat format = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+        .setHeader()
+        .setSkipHeaderRecord(true)
+        .setNullString('NA')
+        .setIgnoreHeaderCase(true)
+        .setDuplicateHeaderMode(DuplicateHeaderMode.DISALLOW)
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvReader.readString('a,A\n1,2\n', format)
+    }
+    assertTrue(exception.message.contains('duplicate name: "A"'))
+  }
+
+  @Test
   void nullStringDoesNotHideOverWideRecords() {
     [
         { CsvReader.read().nullString('NA').fromString('a,b\n1,2,3,4\n') },

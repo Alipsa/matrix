@@ -450,7 +450,15 @@ class CsvReader {
    */
   private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader, CSVFormat format) {
     List<CSVRecord> records = parser.records
-    List<String> headerRow = parserHeaderRow(parser, format)
+    boolean extractedHeader = inferredHeaderNullString(format) != null
+    List<String> headerRow
+    if (extractedHeader && !records.isEmpty()) {
+      List<String> inferredHeader = records.remove(0).toList()
+      validateInferredHeader(inferredHeader, format)
+      headerRow = inferredHeader.collect { String name -> name == null ? '' : name }
+    } else {
+      headerRow = parserHeaderRow(parser)
+    }
 
     // Handle empty CSV file
     if (records.isEmpty()) {
@@ -470,12 +478,11 @@ class CsvReader {
     boolean consumedHeader = firstRowAsHeader && !headerRow.isEmpty()
     records.each { CSVRecord record ->
       if (record.size() != ncols) {
-        long sourceRecord = record.recordNumber + (consumedHeader ? 1 : 0)
+        long sourceRecord = record.recordNumber + (consumedHeader && !extractedHeader ? 1 : 0)
         throw new IllegalArgumentException("CSV record $sourceRecord has ${record.size()} columns; expected $ncols")
       }
     }
-    String nullString = inferredHeaderNullString(format)
-    List<List<String>> rows = records.collect { CSVRecord record -> recordValues(record, nullString) }
+    List<List<String>> rows = records*.toList()
     if (headerRow.isEmpty() && firstRowAsHeader) {
       headerRow = rows.remove(0)
     } else if (headerRow.isEmpty()) {
@@ -492,17 +499,11 @@ class CsvReader {
         .build()
   }
 
-  private static List<String> parserHeaderRow(CSVParser parser, CSVFormat format) {
+  private static List<String> parserHeaderRow(CSVParser parser) {
     if (parser.headerNames == null || parser.headerNames.isEmpty()) {
       return []
     }
     List<String> headerNames = parser.headerNames.toList()
-    String nullString = inferredHeaderNullString(format)
-    if (nullString != null) {
-      List<String> resolved = headerNames.collect { String name -> name == nullString ? null : name }
-      validateInferredHeader(resolved, format)
-      return resolved.collect { String name -> name == null ? '' : name }
-    }
     Map<String, Integer> headerMap = parser.headerMap
     if (headerMap == null || headerMap.isEmpty()) {
       return headerNames
@@ -520,7 +521,9 @@ class CsvReader {
 
   private static void validateInferredHeader(List<String> header, CSVFormat format) {
     boolean observedMissing = false
-    Set<String> observed = [] as Set<String>
+    Set<String> observed = format.ignoreHeaderCase
+        ? new TreeSet<String>(String.CASE_INSENSITIVE_ORDER)
+        : new LinkedHashSet<String>()
     header.each { String name ->
       boolean blank = name == null || name.isBlank()
       if (blank && !format.allowMissingColumnNames) {
@@ -537,11 +540,6 @@ class CsvReader {
         observed << name
       }
     }
-  }
-
-  private static List<String> recordValues(CSVRecord record, String nullString) {
-    List<String> values = record.toList()
-    nullString == null ? values : values.collect { String value -> value == nullString ? null : value }
   }
 
   private static List<String> emptyHeader(int width) {
@@ -650,8 +648,8 @@ class CsvReader {
       return format
     }
     CSVFormat.Builder.create(format)
-        .setNullString(null)
-        .setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_ALL)
+        .setHeader((String[]) null)
+        .setSkipHeaderRecord(false)
         .build()
   }
 
