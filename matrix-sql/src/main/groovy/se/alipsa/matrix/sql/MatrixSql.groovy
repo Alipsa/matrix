@@ -171,21 +171,24 @@ class MatrixSql implements Closeable {
   }
 
   /**
-   * Update a single row in the given table, matching by the specified columns.
-   * This overload takes only a table name and therefore has no match columns;
-   * it always throws {@link IllegalArgumentException} to prevent accidental
-   * unconstrained updates. Use {@link #update(String, Row, String...)} with
-   * match columns, or {@link #executeUpdate(String, Row)} to run a prepared
-   * DML statement.
+   * Update a single row in the given table, deriving the match columns from the table's
+   * primary key.
    *
    * @param tableName the name of the table to update
    * @param row the row data containing both update values and match values
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException always, since no match columns are supplied
+   * @throws IllegalArgumentException if the table has no primary key; use
+   *         {@link #update(String, Row, String...)} with explicit match columns instead
    */
   int update(String tableName, Row row) throws SQLException {
-    update(tableName, row, new String[0])
+    String[] pk = matrixDbUtil.primaryKeyColumns(connect(), tableName)
+    if (pk.length == 0) {
+      throw new IllegalArgumentException(
+          "Cannot derive match columns for $tableName: no primary key. " +
+          'Use update(tableName, row, matchColumnName...) instead')
+    }
+    update(tableName, row, pk)
   }
 
   /**

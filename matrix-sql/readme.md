@@ -148,6 +148,10 @@ try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
   ]).types(int, String).build().row(0)
   assert matrixSql.update(tableName, row, 'id') == 1
 
+  // When the table has a primary key, the two-arg overload derives the match columns from it
+  row['name'] = 'Bob'
+  assert matrixSql.update(tableName, row) == 1
+
   Matrix updated = matrixSql.select("select * from $quotedTable where id = 2")
   assert updated[0, 'name'] == 'Robert'
 

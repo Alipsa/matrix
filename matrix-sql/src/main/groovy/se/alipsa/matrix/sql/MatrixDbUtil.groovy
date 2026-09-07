@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -293,6 +294,43 @@ class MatrixDbUtil {
       }
     }
     names
+  }
+
+  /**
+   * Get the primary key column names of the given table, ordered by key sequence.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to look up
+   * @return the primary key column names in key order, or an empty array if the table has no primary key
+   * @throws SQLException if any sql error occurs
+   */
+  String[] primaryKeyColumns(Connection con, String tableName) throws SQLException {
+    DatabaseMetaData metadata = con.getMetaData()
+    String storedName = findTableName(metadata, tableName)
+    if (storedName == null) {
+      return new String[0]
+    }
+    SortedMap<Short, String> columnsBySeq = new TreeMap<>()
+    try (ResultSet rs = metadata.getPrimaryKeys(null, null, storedName)) {
+      while (rs.next()) {
+        if (rs.getString(COL_TABLE_NAME) == storedName) {
+          columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString('COLUMN_NAME')
+        }
+      }
+    }
+    columnsBySeq.values() as String[]
+  }
+
+  private static String findTableName(DatabaseMetaData metadata, String tableName) throws SQLException {
+    try (ResultSet rs = metadata.getTables(null, null, null, TABLE_TYPES)) {
+      while (rs.next()) {
+        String name = rs.getString(COL_TABLE_NAME)
+        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
+          return name
+        }
+      }
+    }
+    null
   }
 
   /**

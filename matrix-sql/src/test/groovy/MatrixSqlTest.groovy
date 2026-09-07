@@ -188,10 +188,42 @@ class MatrixSqlTest {
       Row params = Matrix.builder('params').data([name: ['Bob'], id: [1]]).types(String, int).build().row(0)
       String quotedTable = SqlIdentifier.renderTable(tableName)
       assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
-      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, params) }
+      IllegalArgumentException noPk = assertThrows(IllegalArgumentException) { matrixSql.update(tableName, params) }
+      assertEquals(
+          "Cannot derive match columns for $tableName: no primary key. " +
+          'Use update(tableName, row, matchColumnName...) instead',
+          noPk.message
+      )
       params['name'] = 'Carol'
       assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
       assertEquals('Carol', matrixSql.select("select \"name\" from $quotedTable")[0, 'name'])
+    }
+  }
+
+  @Test
+  void testUpdateDerivesMatchColumnsFromPrimaryKey() {
+    Matrix data = Matrix.builder('people3').data([
+        id: [1, 2],
+        name: ['Alice', 'Bob']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('update_pk_match_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data, 'id')
+
+      Row row = data.row(1)
+      row['name'] = 'Robert'
+      assertEquals(1, matrixSql.update(tableName, row))
+
+      Matrix stored = matrixSql.select("select * from $tableName order by \"id\"")
+      assertEquals('Robert', stored[1, 'name'])
+      assertEquals('Alice', stored[0, 'name'])
     }
   }
 
