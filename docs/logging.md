@@ -29,8 +29,10 @@ and routes Log4j API calls from third-party libraries to SLF4J. Grape and
 `System.LoggerFinder`, so Matrix `System.Logger` calls continue to use the JDK's
 default JUL backend in this script setup. JPL routing through SLF4J requires
 `matrix-logging` and its runtime dependencies on the JVM launch classpath, for
-example through a Gradle or Maven build, `CLASSPATH`, or `java -cp`; it is not
-available through `@Grab` or `groovy -cp`.
+example through a Gradle or Maven build, `java -cp`, or the `CLASSPATH`
+environment variable when launching with `java`. The `groovy` launcher does not
+qualify: neither `groovy -cp` nor `CLASSPATH` places entries on the JVM launch
+classpath.
 
 Do not use `matrix-logging` in an application that already configures a logging
 backend. Its runtime dependencies include `slf4j-simple` and

@@ -44,17 +44,22 @@ test {
   useJUnitPlatform()
 }
 
-// This root-level guide is deliberately an input so edits to either user-facing
-// snippet revalidate the documented release coordinate.
-def documentedVersionFiles = [file('README.md'), rootProject.file('docs/logging.md')]
+// The root-level guide and BOM are deliberately inputs so edits to either
+// user-facing snippet revalidate the documented release coordinates.
+File readmeFile = file('README.md')
+def documentedVersionFiles = [readmeFile, rootProject.file('docs/logging.md')]
 String documentedMatrixLoggingVersion = version.toString() - '-SNAPSHOT'
+File matrixBomFile = rootProject.file('matrix-bom/bom.xml')
+String documentedMatrixBomVersion = new groovy.xml.XmlSlurper().parse(matrixBomFile).version.text().toString() - '-SNAPSHOT'
 File documentedVersionMarker = layout.buildDirectory.file('verification/documented-version.txt').get().asFile
 
 tasks.register('checkDocumentedVersion') {
-  description = 'Checks that matrix-logging documentation uses the current release version.'
+  description = 'Checks that matrix-logging documentation uses the current module and BOM release versions.'
   group = 'verification'
   inputs.files(documentedVersionFiles)
+  inputs.file(matrixBomFile)
   inputs.property('matrixLoggingVersion', documentedMatrixLoggingVersion)
+  inputs.property('matrixBomVersion', documentedMatrixBomVersion)
   outputs.file(documentedVersionMarker)
 
   doLast {
@@ -65,8 +70,14 @@ tasks.register('checkDocumentedVersion') {
         throw new GradleException("${documentation} must use ${expectedCoordinate}")
       }
     }
+
+    String expectedBomCoordinate = "se.alipsa.matrix:matrix-bom:${documentedMatrixBomVersion}"
+    def documentedBomCoordinates = readmeFile.text.findAll(/se\.alipsa\.matrix:matrix-bom:[^'\"\s)]+/)
+    if (!documentedBomCoordinates || documentedBomCoordinates.any { it != expectedBomCoordinate }) {
+      throw new GradleException("${readmeFile} must use ${expectedBomCoordinate}")
+    }
     documentedVersionMarker.parentFile.mkdirs()
-    documentedVersionMarker.text = "${expectedCoordinate}\n"
+    documentedVersionMarker.text = "${expectedCoordinate}\n${expectedBomCoordinate}\n"
   }
 }
 

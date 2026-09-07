@@ -35,14 +35,16 @@ Grape and `groovy -cp` load dependencies after the JVM has selected its
 API calls to `slf4j-simple`, but Matrix `System.Logger` calls continue to use
 the JDK's default JUL backend. To route JPL/System.Logger calls through SLF4J,
 put `matrix-logging` and its runtime dependencies on the JVM launch classpath,
-for example with a Gradle or Maven build, `CLASSPATH`, or `java -cp`. This is a
-Gradle/Maven and launch-classpath benefit, not an `@Grab` benefit.
+for example with a Gradle or Maven build, `java -cp`, or the `CLASSPATH`
+environment variable when launching with `java`. The `groovy` launcher does not
+qualify: neither `groovy -cp` nor `CLASSPATH` places entries on the JVM launch
+classpath.
 
 ## Gradle
 
 ```groovy
 dependencies {
-  implementation(platform('se.alipsa.matrix:matrix-bom:2.5.1'))
+  implementation(platform('se.alipsa.matrix:matrix-bom:2.5.2'))
   implementation('se.alipsa.matrix:matrix-core')
   runtimeOnly('se.alipsa.matrix:matrix-logging')
 }

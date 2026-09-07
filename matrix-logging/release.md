@@ -4,7 +4,7 @@
 - Document that Groovy scripts require `@GrabConfig(systemClassLoader=true)` for SLF4J provider and Log4j bridge discovery
 - Clarify that JPL/System.Logger routing requires dependencies on the JVM launch classpath and is unavailable through Grape or `groovy -cp`
 - Warn applications with an existing logging backend against using the convenience module transitively
-- Add a documentation-version check to prevent the README and logging guide from drifting from the module version
+- Add a documentation-version check to prevent the README and logging guide from drifting from the documented release versions
 - Enable Spotless for Java-only subprojects, including `matrix-logging`
 - Correct the launch-classpath smoke test's documented scope
 
