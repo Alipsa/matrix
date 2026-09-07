@@ -171,15 +171,38 @@ class MatrixSql implements Closeable {
   }
 
   /**
-   * Execute a prepared update query using values from a row.
+   * Update using a row while preserving the legacy table-name overload behavior.
+   * If the first argument begins with a recognized DML keyword, it is treated as prepared SQL and
+   * delegated to {@link #executeUpdate(String, Row)}. Otherwise it is treated as a table name and
+   * delegates to the match-column overload, which requires at least one match column.
    *
-   * @param sqlQuery the sql query to execute, with '?' placeholders for the row values
+   * @param tableNameOrSql a table name or a DML statement with '?' placeholders
+   * @param row the values to bind to the prepared statement
+   * @return the number of rows affected
+   * @throws SQLException if a database access error occurs
+   * @throws IllegalArgumentException if a table name is supplied without match columns
+   */
+  int update(String tableNameOrSql, Row row) throws SQLException {
+    if (!isPreparedUpdateSql(tableNameOrSql)) {
+      return update(tableNameOrSql, row, new String[0])
+    }
+    executeUpdate(tableNameOrSql, row)
+  }
+
+  /**
+   * Execute a prepared DML statement using values from a row.
+   *
+   * @param sqlQuery the SQL statement to execute, with '?' placeholders for the row values
    * @param row the values to bind to the prepared statement
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
    */
-  int update(String sqlQuery, Row row) throws SQLException {
+  int executeUpdate(String sqlQuery, Row row) throws SQLException {
     update(sqlQuery, row as List)
+  }
+
+  private static boolean isPreparedUpdateSql(String value) {
+    value != null && value ==~ /(?is)\s*(?:update|insert|delete|merge|with)\b.*/
   }
 
   /**
@@ -594,7 +617,7 @@ class MatrixSql implements Closeable {
       throw new SQLException('Connection is not available and no ConnectionInfo is configured to create one')
     }
     String configuredUrl = ci.getUrl()
-    if (configuredUrl == null) {
+    if (isBlank(configuredUrl)) {
       throw new SQLException('Database URL is required')
     }
     String url = configuredUrl.toLowerCase()

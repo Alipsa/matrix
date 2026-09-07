@@ -15,6 +15,8 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
 
   Matrix matrix
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
+  private final Map<Integer, Integer> precisionByColumn = [:]
+  private final Map<Integer, Integer> scaleByColumn = [:]
 
   MatrixResultSetMetaData(Matrix matrix) {
     this.matrix = matrix
@@ -25,6 +27,50 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
       throw new SQLException("Column index out of range: $column")
     }
     column - 1
+  }
+
+  private int calculatePrecision(int columnIndex) {
+    Class type = matrix.type(columnIndex)
+    if (type == BigDecimal || type == BigInteger) {
+      int precision = 0
+      matrix.column(columnIndex).each { Object value ->
+        if (value instanceof BigDecimal || value instanceof BigInteger) {
+          int valuePrecision = value instanceof BigDecimal ? value.precision() : value.toString().length()
+          precision = valuePrecision > precision ? valuePrecision : precision
+        }
+      }
+      return precision
+    }
+    if (CharSequence.isAssignableFrom(type)) {
+      int precision = 0
+      matrix.column(columnIndex).each { Object value ->
+        int length = value == null ? 0 : value.toString().length()
+        precision = length > precision ? length : precision
+      }
+      return precision
+    }
+    switch (type) {
+      case Byte, Byte.TYPE -> 3
+      case Short, Short.TYPE -> 5
+      case Integer, Integer.TYPE -> 10
+      case Long, Long.TYPE -> 19
+      case Float, Float.TYPE -> 7
+      case Double, Double.TYPE -> 15
+      default -> 0
+    }
+  }
+
+  private int calculateScale(int columnIndex) {
+    if (matrix.type(columnIndex) != BigDecimal) {
+      return 0
+    }
+    int scale = 0
+    matrix.column(columnIndex).each { Object value ->
+      if (value instanceof BigDecimal) {
+        scale = value.scale() > scale ? value.scale() : scale
+      }
+    }
+    scale
   }
   /**
    * Returns the number of columns in this {@code ResultSet} object.
@@ -184,16 +230,10 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
   @Override
   int getPrecision(int column) throws SQLException {
     int columnIndex = checkedColumnIndex(column)
-    if (matrix.type(columnIndex) != BigDecimal) {
-      return 0
+    if (!precisionByColumn.containsKey(columnIndex)) {
+      precisionByColumn[columnIndex] = calculatePrecision(columnIndex)
     }
-    int precision = 0
-    matrix.column(columnIndex).each { Object value ->
-      if (value instanceof BigDecimal) {
-        precision = value.precision() > precision ? value.precision() : precision
-      }
-    }
-    precision
+    precisionByColumn[columnIndex]
   }
 
   /**
@@ -207,16 +247,10 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
   @Override
   int getScale(int column) throws SQLException {
     int columnIndex = checkedColumnIndex(column)
-    if (matrix.type(columnIndex) != BigDecimal) {
-      return 0
+    if (!scaleByColumn.containsKey(columnIndex)) {
+      scaleByColumn[columnIndex] = calculateScale(columnIndex)
     }
-    int scale = 0
-    matrix.column(columnIndex).each { Object value ->
-      if (value instanceof BigDecimal) {
-        scale = value.scale() > scale ? value.scale() : scale
-      }
-    }
-    scale
+    scaleByColumn[columnIndex]
   }
 
   /**

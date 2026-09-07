@@ -188,7 +188,26 @@ class MatrixSqlTest {
       Row params = Matrix.builder('params').data([name: ['Bob'], id: [1]]).types(String, int).build().row(0)
       String quotedTable = SqlIdentifier.renderTable(tableName)
       assertEquals(1, matrixSql.update("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
-      assertEquals('Bob', matrixSql.select("select \"name\" from $quotedTable")[0, 'name'])
+      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, params) }
+      params['name'] = 'Carol'
+      assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
+      assertEquals('Carol', matrixSql.select("select \"name\" from $quotedTable")[0, 'name'])
+    }
+  }
+
+  @Test
+  void testTableExistsHandlesUpperCaseIdentifierFolding() {
+    Matrix data = Matrix.builder('tbl_a').data([id: [1]]).types(int).build()
+    String url = h2MemUrl('uppercase_table_exists')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, data.rowCount(), false)
+
+      assertTrue(matrixSql.tableExists('tbl_a'))
+      assertTrue(matrixSql.tableExists('TBL_A'))
+      SQLException exception = assertThrows(SQLException) {
+        matrixSql.create(data, data.rowCount(), false)
+      }
+      assertEquals('Table tbl_a already exists', exception.message)
     }
   }
 
@@ -523,6 +542,10 @@ class MatrixSqlTest {
       matrixSql.execute('CREATE VIEW view_only AS SELECT 1 AS id')
       assertFalse(matrixSql.tableExists('view_only'))
       assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('view_only') })
+      matrixSql.execute('CREATE SCHEMA other')
+      matrixSql.execute('CREATE TABLE other.remote_table (id INT)')
+      assertTrue(matrixSql.tableExists('remote_table'))
+      assertTrue(matrixSql.getTableNames().any { it.equalsIgnoreCase('remote_table') })
     }
   }
 
@@ -643,6 +666,17 @@ class MatrixSqlTest {
     MatrixSql missingUrl = new MatrixSql(valid)
     SQLException missingUrlException = assertThrows(SQLException) { missingUrl.connect() }
     assertEquals('Database URL is required', missingUrlException.message)
+    ConnectionInfo blankUrlInfo = new ConnectionInfo() {
+
+      @Override
+      String getUrl() {
+        '  '
+      }
+
+    }
+    blankUrlInfo.setDependency('com.h2database:h2:2.4.240')
+    MatrixSql blankUrl = new MatrixSql(blankUrlInfo)
+    assertEquals('Database URL is required', assertThrows(SQLException) { blankUrl.connect() }.message)
 
     ConnectionInfo invalid = new ConnectionInfo()
     assertThrows(IllegalArgumentException) { MatrixSql.check(invalid) }

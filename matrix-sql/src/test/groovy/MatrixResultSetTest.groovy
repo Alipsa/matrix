@@ -13,6 +13,11 @@ import java.sql.SQLException
 import java.sql.Time
 import java.sql.Timestamp
 import java.sql.Types
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class MatrixResultSetTest {
 
@@ -185,10 +190,10 @@ class MatrixResultSetTest {
 
   @Test
   void testCalendarGettersWithNumberMillisAppliesTimezoneOffset() {
-    long epochMillis = 1714392896000L  // 2024-04-29 12:34:56 UTC
+    long epochMillis = Instant.parse('2024-04-29T12:34:56Z').toEpochMilli()
     Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
     Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
-    int cetOffset = cetCal.getTimeZone().getOffset(epochMillis)
+    ZoneId stockholm = ZoneId.of('Europe/Stockholm')
 
     Matrix matrix = Matrix.builder('millis').data([
         d: [epochMillis],
@@ -203,7 +208,8 @@ class MatrixResultSetTest {
 
     // UTC calendar: no offset change
     Date dateUtc = rs.getDate(1, utcCal)
-    assertEquals(new Date(epochMillis), dateUtc)
+    long expectedUtcDate = LocalDate.of(2024, 4, 29).atStartOfDay(ZoneId.of('UTC')).toInstant().toEpochMilli()
+    assertEquals(new Date(expectedUtcDate), dateUtc)
     assertFalse(rs.wasNull())
 
     Time timeUtc = rs.getTime(2, utcCal)
@@ -216,11 +222,23 @@ class MatrixResultSetTest {
 
     // The stored wall-clock value is interpreted in the supplied calendar's zone.
     Date dateCet = rs.getDate(1, cetCal)
-    assertEquals(new Date(epochMillis - cetOffset), dateCet)
+    long expectedDate = LocalDate.of(2024, 4, 29).atStartOfDay(stockholm).toInstant().toEpochMilli()
+    assertEquals(new Date(expectedDate), dateCet)
     Time timeCet = rs.getTime(2, cetCal)
-    assertEquals(new Time(epochMillis - cetOffset), timeCet)
+    long expectedDateTime = LocalDateTime.of(2024, 4, 29, 12, 34, 56).atZone(stockholm).toInstant().toEpochMilli()
+    assertEquals(new Time(expectedDateTime), timeCet)
     Timestamp tsCet = rs.getTimestamp(3, cetCal)
-    assertEquals(new Timestamp(epochMillis - cetOffset), tsCet)
+    assertEquals(new Timestamp(expectedDateTime), tsCet)
+
+    long transitionWallTime = Instant.parse('2024-10-27T01:30:00Z').toEpochMilli()
+    ResultSet transition = new MatrixResultSet(
+        Matrix.builder('transition').data([ts: [transitionWallTime]]).types(Long).build()
+    )
+    assertTrue(transition.next())
+    long expectedTransition = ZonedDateTime.of(
+        LocalDateTime.of(2024, 10, 27, 1, 30), stockholm
+    ).toInstant().toEpochMilli()
+    assertEquals(new Timestamp(expectedTransition), transition.getTimestamp(1, cetCal))
   }
 
   @Test
@@ -346,19 +364,33 @@ class MatrixResultSetTest {
   @Test
   void testUpdaterValidationAndMetadataContracts() {
     ResultSet rs = new MatrixResultSet(
-        Matrix.builder('metadata').data([amount: [123.4500], name: ['x']]).types(BigDecimal, String).build()
+        Matrix.builder('metadata').data([amount: [123.4500], name: ['xyz'], count: [1]]).types(BigDecimal, String, int).build()
     )
     assertThrows(SQLException) { rs.updateString(1, 'x') }
+    assertThrows(SQLException) { rs.updateString('name', 'x') }
     assertTrue(rs.next())
     assertThrows(SQLException) { rs.updateString(0, 'x') }
-    assertThrows(SQLException) { rs.updateString(3, 'x') }
+    assertThrows(SQLException) { rs.updateString(4, 'x') }
+    assertThrows(SQLException) { rs.updateString('missing', 'x') }
+    assertThrows(SQLException) { rs.updateObject(4, 1.2345, 2) }
+    rs.updateObject(1, 1.2345, 2)
+    assertEquals(1.23, rs.getBigDecimal(1))
+    rs.updateObject('amount', 2.3456, 2)
+    assertEquals(2.35, rs.getBigDecimal('amount'))
 
     def metadata = rs.metaData
     assertFalse(metadata.isCurrency(1))
-    assertEquals(7, metadata.getPrecision(1))
-    assertEquals(4, metadata.getScale(1))
+    assertEquals(3, metadata.getPrecision(1))
+    assertEquals(2, metadata.getScale(1))
+    assertEquals(3, metadata.getPrecision(2))
+    assertEquals(10, metadata.getPrecision(3))
+    rs.updateBigDecimal(1, 123456.789)
+    assertEquals(3, metadata.getPrecision(1), 'Precision should be cached after its first calculation')
     assertThrows(SQLException) { metadata.getColumnName(0) }
-    assertThrows(SQLException) { metadata.getColumnType(3) }
+    assertThrows(SQLException) { metadata.getColumnType(4) }
+
+    rs.close()
+    assertThrows(SQLException) { rs.updateString('name', 'x') }
   }
 
 }

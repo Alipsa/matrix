@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -267,17 +268,23 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    String catalog = con.getCatalog()
-    String schema = con.getSchema()
-    try (ResultSet rs = con.getMetaData().getTables(catalog, schema, tableName, TABLE_TYPES)) {
-      while (rs.next()) {
-        String name = rs.getString(COL_TABLE_NAME)
-        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
-          return true
+    DatabaseMetaData metadata = con.getMetaData()
+    Set<String> patterns = [
+        tableName,
+        tableName.toUpperCase(Locale.ROOT),
+        tableName.toLowerCase(Locale.ROOT)
+    ] as Set<String>
+    for (String pattern : patterns) {
+      try (ResultSet rs = metadata.getTables(null, null, pattern, TABLE_TYPES)) {
+        while (rs.next()) {
+          String name = rs.getString(COL_TABLE_NAME)
+          if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
+            return true
+          }
         }
       }
-      return false
     }
+    false
   }
 
   /**
@@ -289,9 +296,7 @@ class MatrixDbUtil {
    */
   Set<String> getTableNames(Connection con) throws SQLException {
     Set<String> names = [] as Set
-    String catalog = con.getCatalog()
-    String schema = con.getSchema()
-    try (ResultSet rs = con.getMetaData().getTables(catalog, schema, '%', TABLE_TYPES)) {
+    try (ResultSet rs = con.getMetaData().getTables(null, null, null, TABLE_TYPES)) {
       while (rs.next()) {
         names << rs.getString(COL_TABLE_NAME)
       }
@@ -353,12 +358,17 @@ class MatrixDbUtil {
   /**
    * Convert JDBC batch update counts into a non-negative affected-row count.
    * Drivers reporting {@link Statement#SUCCESS_NO_INFO} are counted as one successful row.
+   * {@link Statement#EXECUTE_FAILED} entries are excluded from the count and logged as warnings.
    *
    * @param results the update counts returned by {@link Statement#executeBatch()}
    * @return the non-negative affected-row count
    */
   static int batchResultCount(int[] results) {
     results.inject(0) { int total, int result ->
+      if (result == Statement.EXECUTE_FAILED) {
+        log.warn('JDBC batch result contains EXECUTE_FAILED; the affected-row count excludes that statement')
+        return total
+      }
       total + (result == Statement.SUCCESS_NO_INFO ? 1 : result > 0 ? result : 0)
     }
   }
