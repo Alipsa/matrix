@@ -6,7 +6,7 @@
 - Warn applications with an existing logging backend against using the convenience module transitively
 - Add a documentation-version check to prevent the README and logging guide from drifting from the module version
 - Enable Spotless for Java-only subprojects, including `matrix-logging`
-- Correct the launch-classpath smoke test's scope and make its `System.err` setup more robust
+- Correct the launch-classpath smoke test's documented scope
 
 ## v0.1.1, 2026-07-10
 - Dependency updates:

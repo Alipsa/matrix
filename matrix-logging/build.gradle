@@ -44,23 +44,29 @@ test {
   useJUnitPlatform()
 }
 
+// This root-level guide is deliberately an input so edits to either user-facing
+// snippet revalidate the documented release coordinate.
 def documentedVersionFiles = [file('README.md'), rootProject.file('docs/logging.md')]
-String matrixLoggingVersion = version.toString()
+String documentedMatrixLoggingVersion = version.toString() - '-SNAPSHOT'
+File documentedVersionMarker = layout.buildDirectory.file('verification/documented-version.txt').get().asFile
 
 tasks.register('checkDocumentedVersion') {
-  description = 'Checks that matrix-logging documentation uses the current project version.'
+  description = 'Checks that matrix-logging documentation uses the current release version.'
   group = 'verification'
   inputs.files(documentedVersionFiles)
-  inputs.property('matrixLoggingVersion', matrixLoggingVersion)
+  inputs.property('matrixLoggingVersion', documentedMatrixLoggingVersion)
+  outputs.file(documentedVersionMarker)
 
   doLast {
-    String expectedCoordinate = "se.alipsa.matrix:matrix-logging:${matrixLoggingVersion}"
+    String expectedCoordinate = "se.alipsa.matrix:matrix-logging:${documentedMatrixLoggingVersion}"
     documentedVersionFiles.each { File documentation ->
       def documentedCoordinates = documentation.text.findAll(/se\.alipsa\.matrix:matrix-logging:[^'\"\s)]+/)
       if (!documentedCoordinates || documentedCoordinates.any { it != expectedCoordinate }) {
         throw new GradleException("${documentation} must use ${expectedCoordinate}")
       }
     }
+    documentedVersionMarker.parentFile.mkdirs()
+    documentedVersionMarker.text = "${expectedCoordinate}\n"
   }
 }
 

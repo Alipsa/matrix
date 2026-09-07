@@ -279,18 +279,20 @@ subprojects { Project p ->
     }
   }
 
-  apply plugin: 'com.diffplug.spotless'
+  plugins.withId('java') {
+    apply plugin: 'com.diffplug.spotless'
 
-  spotless {
-    java {
-      trimTrailingWhitespace()
-      endWithNewline()
-    }
+    spotless {
+      java {
+        trimTrailingWhitespace()
+        endWithNewline()
+      }
 
-    groovyGradle {
-      target '*.gradle'
-      trimTrailingWhitespace()
-      endWithNewline()
+      groovyGradle {
+        target '*.gradle'
+        trimTrailingWhitespace()
+        endWithNewline()
+      }
     }
   }
 

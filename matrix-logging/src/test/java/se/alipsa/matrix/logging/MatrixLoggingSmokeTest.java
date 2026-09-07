@@ -19,12 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class MatrixLoggingSmokeTest {
 
-  private PrintStream originalErr;
+  private final PrintStream originalErr = System.err;
   private ByteArrayOutputStream captured;
 
   @BeforeEach
   void redirectErr() {
-    originalErr = System.err;
     captured = new ByteArrayOutputStream();
     System.setErr(new PrintStream(captured, true));
   }
