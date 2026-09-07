@@ -68,7 +68,7 @@ Read defaults:
 - `trim(true)`, `ignoreEmptyLines(true)`, and `firstRowAsHeader(true)` are enabled by default
 - `ignoreSurroundingSpaces(true)` is enabled by default except when the `excel()` preset is applied
 - charset defaults to UTF-8 for byte-based sources (`File`, `Path`, `URL`, `InputStream`)
-- matching UTF-8, UTF-16LE, and UTF-16BE byte-order marks are stripped from byte-based sources; plain UTF-16 retains its BOM for byte-order detection
+- matching UTF-8, UTF-16LE, UTF-16BE, UTF-32LE, and UTF-32BE byte-order marks are stripped from byte-based sources; plain UTF-16 and UTF-32 retain their BOMs for byte-order detection
 - charset has no effect for `Reader` or `String` content because characters are already decoded
 - matrix naming precedence is `CsvReadOptions.tableName(...)`, then a source-derived name for `File`/`Path`/`URL`, then the fallback name `matrix` for `InputStream`/`Reader`/`String`
 - URL-derived names use the decoded path without query or fragment data and preserve literal `+`; malformed URLs fall back to a best-effort undecoded path
@@ -276,7 +276,7 @@ println readOptions.toMap()
 println writeOptions.toMap()
 ```
 
-`fromMap(...)` normalizes case-insensitive keys and keeps direct typed calls aligned with SPI behavior. The legacy read-side `recordSeparator` key remains accepted and round-trippable but is deprecated and has no effect.
+`fromMap(...)` normalizes case-insensitive keys and keeps direct typed calls aligned with SPI behavior. The legacy read-side `recordSeparator` key remains accepted but is deprecated and has no effect; `toMap()` omits it so serialization agrees with option discovery.
 
 ## Matrix SPI / Map-Based Usage
 

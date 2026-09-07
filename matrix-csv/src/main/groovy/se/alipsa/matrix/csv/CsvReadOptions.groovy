@@ -338,9 +338,6 @@ class CsvReadOptions {
     if (duplicateHeaderMode != DEFAULT_DUPLICATE_HEADER_MODE) {
       m.duplicateHeaderMode = duplicateHeaderMode
     }
-    if (this.@recordSeparator != DEFAULT_RECORD_SEPARATOR) {
-      m.recordSeparator = this.@recordSeparator
-    }
     m
   }
 
@@ -387,7 +384,7 @@ class CsvReadOptions {
   }
 
   @PackageScope
-  static boolean resetRecordSeparatorWarning(boolean emitted) {
+  static boolean swapRecordSeparatorWarningFlag(boolean emitted) {
     RECORD_SEPARATOR_WARNING_EMITTED.getAndSet(emitted)
   }
 

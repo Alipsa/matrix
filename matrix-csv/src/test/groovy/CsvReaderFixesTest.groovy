@@ -10,9 +10,12 @@ import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.csv.CsvReadOptions
 import se.alipsa.matrix.csv.CsvReader
 
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 
 class CsvReaderFixesTest {
 
@@ -85,6 +88,26 @@ class CsvReaderFixesTest {
   }
 
   @Test
+  void preservesTrailingNullHeaderColumns() {
+    Matrix fluent = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .duplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
+        .fromString('a,b,NA\n1,2,3\n')
+    CSVFormat format = CSVFormat.Builder.create(CSVFormat.EXCEL)
+        .setHeader()
+        .setSkipHeaderRecord(true)
+        .setNullString('NA')
+        .build()
+    Matrix deprecated = CsvReader.readString('a,b,NA\n1,2,3\n', format)
+
+    [fluent, deprecated].each { Matrix matrix ->
+      assertEquals(['a', 'b', ''], matrix.columnNames())
+      assertEquals([['1', '2', '3']], matrix.rows())
+    }
+  }
+
+  @Test
   void normalizesDuplicateHeaderModeNamesAndNulls() {
     ['allow_all', ' AlLoW_AlL '].each { String mode ->
       assertEquals(['a', 'a'], CsvReader.read().duplicateHeaderMode(mode).fromString('a,a\n1,2\n').columnNames())
@@ -128,7 +151,9 @@ class CsvReaderFixesTest {
     [
         (StandardCharsets.UTF_8)   : [0xEF, 0xBB, 0xBF] as byte[],
         (StandardCharsets.UTF_16LE): [0xFF, 0xFE] as byte[],
-        (StandardCharsets.UTF_16BE): [0xFE, 0xFF] as byte[]
+        (StandardCharsets.UTF_16BE): [0xFE, 0xFF] as byte[],
+        (Charset.forName('UTF-32LE')): [0xFF, 0xFE, 0x00, 0x00] as byte[],
+        (Charset.forName('UTF-32BE')): [0x00, 0x00, 0xFE, 0xFF] as byte[]
     ].each { charset, byte[] bom ->
       byte[] content = (bom.toList() + 'a,b\n1,2\n'.getBytes(charset).toList()) as byte[]
       File file = tempDir.resolve("bom-${charset.name()}.csv").toFile()
@@ -151,11 +176,15 @@ class CsvReaderFixesTest {
   }
 
   @Test
-  void retainsBomForPlainUtf16AndCharacterSources() {
-    ['UTF-16LE', 'UTF-16BE'].each { String encoding ->
-      byte[] bom = encoding.endsWith('LE') ? [0xFF, 0xFE] as byte[] : [0xFE, 0xFF] as byte[]
+  void retainsBomForPlainUtf16AndUtf32AndCharacterSources() {
+    [
+        ['UTF-16LE', 'UTF-16', [0xFF, 0xFE] as byte[]],
+        ['UTF-16BE', 'UTF-16', [0xFE, 0xFF] as byte[]],
+        ['UTF-32LE', 'UTF-32', [0xFF, 0xFE, 0x00, 0x00] as byte[]],
+        ['UTF-32BE', 'UTF-32', [0x00, 0x00, 0xFE, 0xFF] as byte[]]
+    ].each { String encoding, String decoder, byte[] bom ->
       byte[] content = (bom.toList() + 'a,b\n1,2\n'.getBytes(encoding).toList()) as byte[]
-      Matrix matrix = CsvReader.read(new ByteArrayInputStream(content), new CsvReadOptions().charset('UTF-16'))
+      Matrix matrix = CsvReader.read(new ByteArrayInputStream(content), new CsvReadOptions().charset(decoder))
       assertEquals(['a', 'b'], matrix.columnNames())
     }
 
@@ -183,8 +212,29 @@ class CsvReaderFixesTest {
     CsvReadOptions options = new CsvReadOptions().recordSeparator('|')
     Map<String, ?> serialized = options.toMap()
     CsvReadOptions reparsed = CsvReadOptions.fromMap(serialized)
-    assertEquals('|', serialized.recordSeparator)
-    assertEquals('|', reparsed.recordSeparator)
+    assertFalse(serialized.containsKey('recordSeparator'))
+    assertEquals('\n', reparsed.recordSeparator)
+  }
+
+  @Test
+  void readsOpaqueJarUrlsAndDerivesMatrixName() {
+    Path jar = tempDir.resolve('csv-fixtures.jar')
+    try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {
+      output.putNextEntry(new JarEntry('nested/data.csv'))
+      output.write('a,b\n1,2\n'.getBytes(StandardCharsets.UTF_8))
+      output.closeEntry()
+    }
+    URL url = new URI("jar:${jar.toUri()}!/nested/data.csv").toURL()
+
+    [
+        CsvReader.read(url, new CsvReadOptions()),
+        CsvReader.read().from(url),
+        CsvReader.read().fromUrl(url.toString()),
+        CsvReader.read(url, CSVFormat.DEFAULT)
+    ].each { Matrix matrix ->
+      assertEquals('data', matrix.matrixName)
+      assertEquals([['1', '2']], matrix.rows())
+    }
   }
 
   @Test

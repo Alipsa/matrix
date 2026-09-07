@@ -23,14 +23,14 @@ class CsvCompatibilityInternalTest {
 
   @Test
   void recordSeparatorWarningGuardIsClaimedOnlyOnce() {
-    boolean previous = CsvReadOptions.resetRecordSeparatorWarning(false)
+    boolean previous = CsvReadOptions.swapRecordSeparatorWarningFlag(false)
     try {
       CsvReadOptions.fromMap([recordSeparator: '|'])
       assertTrue(CsvReadOptions.RECORD_SEPARATOR_WARNING_EMITTED.get())
       CsvReadOptions.fromMap([recordSeparator: ';'])
       assertTrue(CsvReadOptions.RECORD_SEPARATOR_WARNING_EMITTED.get())
     } finally {
-      CsvReadOptions.resetRecordSeparatorWarning(previous)
+      CsvReadOptions.swapRecordSeparatorWarningFlag(previous)
     }
   }
 
@@ -56,5 +56,6 @@ class CsvCompatibilityInternalTest {
     assertEquals('', CsvReader.tableName(new URI('https://example.test/path/').toURL()))
     assertEquals('a b', CsvReader.tableName(new URL('https://example.test/a b.csv?version=1.2#part')))
     assertEquals('a b%20c', CsvReader.tableName(new URL('https://example.test/a b%20c.csv')))
+    assertEquals('data', CsvReader.tableName(new URI('jar:file:/tmp/archive.jar!/nested/data.csv').toURL()))
   }
 }
