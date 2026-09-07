@@ -673,8 +673,8 @@ class CsvReader {
         .setNullString(null)
         .build()
     try (CSVParser parser = CSVParser.parse(content, headerFormat)) {
-      List<CSVRecord> records = parser.records
-      records.isEmpty() ? [] : records[0].toList()
+      Iterator<CSVRecord> records = parser.iterator()
+      records.hasNext() ? records.next().toList() : []
     }
   }
 
