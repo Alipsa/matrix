@@ -37,23 +37,24 @@ class SqlGenerator {
    * @return a PreparedUpdate with sql and values
    */
   static PreparedUpdate createPreparedUpdate(String tableName, Row row, String[] matchColumnName) {
-    createPreparedUpdate(tableName, row, matchColumnName, true)
+    Map<String, String> columnNames = row.columnNames().collectEntries { String column -> [(column): column] }
+    createPreparedUpdate(tableName, row, matchColumnName, columnNames)
   }
 
   /**
-   * Create a prepared update statement (with placeholders) and parameter values.
+   * Create a prepared update statement using database-resolved identifier spellings.
    *
-   * @param tableName the table name
+   * @param tableName the stored table name
    * @param row the row containing the values to update and match on
-   * @param matchColumnName the column(s) to match in the WHERE clause
-   * @param addQuotes whether to quote identifiers
+   * @param matchColumnName the row column name(s) to match in the WHERE clause
+   * @param storedColumnNames row column names mapped to their stored database spellings
    * @return a PreparedUpdate with sql and values
    */
   static PreparedUpdate createPreparedUpdate(
       String tableName,
       Row row,
       String[] matchColumnName,
-      boolean addQuotes
+      Map<String, String> storedColumnNames
   ) {
     if (matchColumnName == null || matchColumnName.length == 0) {
       throw new IllegalArgumentException('matchColumnName is required')
@@ -63,7 +64,9 @@ class SqlGenerator {
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
-    String sql = createPreparedUpdateSql(tableName, updateColumns, matchColumns, addQuotes)
+    List<String> storedUpdateColumns = updateColumns.collect { storedColumnNames[it] }
+    List<String> storedMatchColumns = matchColumns.collect { storedColumnNames[it] }
+    String sql = createPreparedUpdateSql(tableName, storedUpdateColumns, storedMatchColumns)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
     new PreparedUpdate(sql, values)
   }
@@ -77,28 +80,10 @@ class SqlGenerator {
    * @return the SQL update statement with placeholders
    */
   static String createPreparedUpdateSql(String tableName, List<String> updateColumns, List<String> matchColumns) {
-    createPreparedUpdateSql(tableName, updateColumns, matchColumns, true)
-  }
-
-  /**
-   * Create a prepared update statement (with placeholders).
-   *
-   * @param tableName the table name
-   * @param updateColumns columns to update in the SET clause
-   * @param matchColumns columns to match in the WHERE clause
-   * @param addQuotes whether to quote identifiers
-   * @return the SQL update statement with placeholders
-   */
-  static String createPreparedUpdateSql(
-      String tableName,
-      List<String> updateColumns,
-      List<String> matchColumns,
-      boolean addQuotes
-  ) {
-    String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
-    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(COMMA_SEP)
+    String sql = "update ${SqlIdentifier.renderTable(tableName)} set "
+    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(COMMA_SEP)
     sql += ' where '
-    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(' and ')
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(' and ')
     sql
   }
 

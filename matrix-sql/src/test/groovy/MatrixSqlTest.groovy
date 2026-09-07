@@ -20,10 +20,15 @@ import se.alipsa.matrix.sql.MatrixSqlFactory
 import se.alipsa.matrix.sql.SqlIdentifier
 import se.alipsa.mavenutils.ArtifactLookup
 
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 
 class MatrixSqlTest {
 
@@ -240,7 +245,7 @@ class MatrixSqlTest {
   @Test
   void testUpdateDerivesCaseFoldedPrimaryKeyColumns() {
     Matrix data = Matrix.builder('nq').data([
-        id: [1],
+        ID: [1],
         name: ['Alice']
     ])
     .types(int, String)
@@ -248,7 +253,7 @@ class MatrixSqlTest {
 
     String url = h2MemUrl('update_folded_pk_testdb')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
-      matrixSql.create(data, data.rowCount(), false, 'id')
+      matrixSql.create(data, data.rowCount(), false, 'ID')
 
       Row row = data.row(0)
       row['name'] = 'Alicia'
@@ -258,7 +263,7 @@ class MatrixSqlTest {
   }
 
   @Test
-  void testPrimaryKeyLookupUsesCurrentSchemaAndRejectsAmbiguity() {
+  void testPrimaryKeyLookupUsesCurrentSchema() {
     String url = h2MemUrl('schema_primary_key_testdb')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       matrixSql.execute('CREATE SCHEMA s1')
@@ -274,14 +279,39 @@ class MatrixSqlTest {
       assertArrayEquals(['x', 'y'] as String[], util.primaryKeyColumns(con, 'orders'))
 
       con.schema = 'PUBLIC'
-      SQLException exception = assertThrows(SQLException) { util.primaryKeyColumns(con, 'orders') }
-      assertTrue(exception.message.startsWith('Ambiguous table name orders; matches:'))
       assertFalse(util.tableExists(con, 'orders'))
+      assertArrayEquals([] as String[], util.primaryKeyColumns(con, 'orders'))
 
       Matrix orders = Matrix.builder('orders').data([a: [1], value: ['public']]).types(int, String).build()
       matrixSql.create(orders, 'a')
       assertTrue(util.tableExists(con, 'orders'))
       assertArrayEquals(['a'] as String[], util.primaryKeyColumns(con, 'orders'))
+    }
+  }
+
+  @Test
+  void testDerivedUpdateCachesResolvedTableMetadata() {
+    Matrix data = Matrix.builder('cached_updates').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('update_metadata_cache_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection delegate = owner.connect()
+      AtomicInteger getTablesCalls = new AtomicInteger()
+      DatabaseMetaData metadata = countingMetadata(delegate.getMetaData(), getTablesCalls)
+      Connection connection = delegatingConnection(delegate, metadata)
+
+      try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+        Row row = data.row(0)
+        row['name'] = 'Alicia'
+        assertEquals(1, matrixSql.update('cached_updates', row))
+        row['name'] = 'Ally'
+        assertEquals(1, matrixSql.update('cached_updates', row))
+        assertEquals(1, getTablesCalls.get())
+      }
     }
   }
 
@@ -916,6 +946,37 @@ class MatrixSqlTest {
       assertEquals(1, stored.rowCount(), 'Managed MatrixSql must remain usable after close()')
     } finally {
       owner.close()
+    }
+  }
+
+  private static DatabaseMetaData countingMetadata(DatabaseMetaData delegate, AtomicInteger getTablesCalls) {
+    Proxy.newProxyInstance(
+        DatabaseMetaData.classLoader,
+        [DatabaseMetaData] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          if (method.name == 'getTables') {
+            getTablesCalls.incrementAndGet()
+          }
+          invokeDelegate(delegate, method, args)
+        }
+    ) as DatabaseMetaData
+  }
+
+  private static Connection delegatingConnection(Connection delegate, DatabaseMetaData metadata) {
+    Proxy.newProxyInstance(
+        Connection.classLoader,
+        [Connection] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          method.name == 'getMetaData' ? metadata : invokeDelegate(delegate, method, args)
+        }
+    ) as Connection
+  }
+
+  private static Object invokeDelegate(Object delegate, Method method, Object[] args) {
+    try {
+      method.invoke(delegate, args)
+    } catch (InvocationTargetException e) {
+      throw e.targetException
     }
   }
 

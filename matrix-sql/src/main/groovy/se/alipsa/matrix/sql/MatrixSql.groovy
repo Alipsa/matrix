@@ -182,31 +182,8 @@ class MatrixSql implements Closeable {
    *         {@link #update(String, Row, String...)} with explicit match columns instead
    */
   int update(String tableName, Row row) throws SQLException {
-    String[] pk = matrixDbUtil.primaryKeyColumns(connect(), tableName)
-    if (pk.length == 0) {
-      throw new IllegalArgumentException(
-          "Cannot derive match columns for $tableName: no primary key. " +
-          'Use update(tableName, row, matchColumnName...) instead')
-    }
-    List<String> rowColumnNames = row.columnNames()
-    List<String> matchColumns = []
-    List<String> missingPrimaryKeyColumns = []
-    pk.each { String primaryKeyColumn ->
-      String matchColumn = rowColumnNames.find { String rowColumn ->
-        rowColumn.equalsIgnoreCase(primaryKeyColumn)
-      }
-      if (matchColumn == null) {
-        missingPrimaryKeyColumns << primaryKeyColumn
-      } else {
-        matchColumns << matchColumn
-      }
-    }
-    if (!missingPrimaryKeyColumns.isEmpty()) {
-      throw new IllegalArgumentException(
-          "Cannot update $tableName: row is missing primary key column(s): ${missingPrimaryKeyColumns.join(', ')}")
-    }
-    boolean addQuotes = pk.toList() == matchColumns
-    update(tableName, row, matchColumns as String[], addQuotes)
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row)
+    executePreparedUpdate(prepared)
   }
 
   /**
@@ -232,11 +209,11 @@ class MatrixSql implements Closeable {
    * @throws IllegalArgumentException if matchColumnName is empty
    */
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
-    update(tableName, row, matchColumnName, true)
+    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName)
+    executePreparedUpdate(prepared)
   }
 
-  private int update(String tableName, Row row, String[] matchColumnName, boolean addQuotes) throws SQLException {
-    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName, addQuotes)
+  private int executePreparedUpdate(SqlGenerator.PreparedUpdate prepared) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(prepared.sql)) {
       bindParams(stm, prepared.values)
       stm.executeUpdate()
@@ -269,7 +246,9 @@ class MatrixSql implements Closeable {
    */
   Map<Integer, Object> execute(String sqlQuery) throws SQLException {
     try(Statement stm = connect().createStatement()) {
-      return dbExecute(stm, sqlQuery)
+      Map<Integer, Object> result = dbExecute(stm, sqlQuery)
+      matrixDbUtil.clearTableMetadataCache(connect())
+      result
     }
   }
 
@@ -287,7 +266,9 @@ class MatrixSql implements Closeable {
   Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
       bindParams(stm, params)
-      dbExecute(stm)
+      Map<Integer, Object> result = dbExecute(stm)
+      matrixDbUtil.clearTableMetadataCache(connect())
+      result
     }
   }
 
@@ -456,7 +437,7 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Object dropTable(String tableName) {
-    dbExecuteSql("drop table ${SqlIdentifier.renderTable(tableName)}")
+    matrixDbUtil.dropTable(connect(), tableName)
   }
 
   /**
@@ -615,10 +596,6 @@ class MatrixSql implements Closeable {
       int[] results = stm.executeBatch()
       return MatrixDbUtil.batchResultCount(results)
     }
-  }
-
-  private Object dbExecuteSql(String sql) throws SQLException {
-      matrixDbUtil.dbExecuteSql(connect(), sql)
   }
 
   /**

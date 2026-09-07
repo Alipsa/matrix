@@ -31,11 +31,15 @@ class MatrixDbUtil {
   private static final String COL_TABLE_NAME = 'TABLE_NAME'
   private static final String COL_TABLE_SCHEMA = 'TABLE_SCHEM'
   private static final String COL_TABLE_CATALOG = 'TABLE_CAT'
+  private static final String COL_COLUMN_NAME = 'COLUMN_NAME'
   private static final String COMMA_SEPARATOR = ', '
   private static final String UNDERSCORE = '_'
   private static final String[] TABLE_TYPES = ['TABLE', 'BASE TABLE'] as String[]
 
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
+
+  private final Map<Connection, Map<String, TableMetadata>> tableMetadataCache =
+      Collections.synchronizedMap(new WeakHashMap<Connection, Map<String, TableMetadata>>())
 
   SqlTypeMapper mapper
 
@@ -79,6 +83,7 @@ class MatrixDbUtil {
     }
     try(Statement stm = con.createStatement()) {
       result.ddlResult = stm.execute(sql)
+      clearTableMetadataCache(con)
     } catch (SQLException e) {
       log.error("Failed to create table $tableName using ddl: $sql", e)
       throw e
@@ -222,7 +227,9 @@ class MatrixDbUtil {
    * @return the result of the drop operation
    */
   Object dropTable(Connection con, String tableName) {
-    dbExecuteSql(con, "drop table ${SqlIdentifier.renderTable(tableName)}")
+    Object result = dbExecuteSql(con, "drop table ${SqlIdentifier.renderTable(tableName)}")
+    clearTableMetadataCache(con)
+    result
   }
 
   /**
@@ -294,34 +301,163 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   String[] primaryKeyColumns(Connection con, String tableName) throws SQLException {
-    DatabaseMetaData metadata = con.getMetaData()
-    TableReference table = findTable(metadata, tableName, con.schema)
+    TableMetadata table = tableMetadata(con, tableName)
     if (table == null) {
       return new String[0]
+    }
+    table.primaryKeyColumns as String[]
+  }
+
+  /**
+   * Create an update statement whose match columns come from the current-schema table's primary key.
+   * Row column names are resolved case-insensitively to their stored database spellings.
+   *
+   * @param con the database connection
+   * @param tableName the table to update in the connection's current catalog and schema
+   * @param row the row containing update and primary-key values
+   * @return the prepared SQL and ordered values
+   * @throws SQLException if metadata cannot be read
+   * @throws IllegalArgumentException if no primary key exists or required columns cannot be resolved
+   */
+  SqlGenerator.PreparedUpdate createPreparedUpdate(Connection con, String tableName, Row row) throws SQLException {
+    TableMetadata table = tableMetadata(con, tableName)
+    if (table == null || table.primaryKeyColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot derive match columns for $tableName: no primary key. " +
+          'Use update(tableName, row, matchColumnName...) instead')
+    }
+
+    Map<String, String> storedColumnNames = resolveStoredColumnNames(tableName, row.columnNames(), table.columnNames)
+    List<String> matchColumns = []
+    List<String> missingPrimaryKeyColumns = []
+    table.primaryKeyColumns.each { String primaryKeyColumn ->
+      String matchColumn = storedColumnNames.find { String rowColumn, String storedColumn ->
+        storedColumn == primaryKeyColumn
+      }?.key
+      if (matchColumn == null) {
+        missingPrimaryKeyColumns << primaryKeyColumn
+      } else {
+        matchColumns << matchColumn
+      }
+    }
+    if (!missingPrimaryKeyColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row is missing primary key column(s): ${missingPrimaryKeyColumns.join(COMMA_SEPARATOR)}")
+    }
+    SqlGenerator.createPreparedUpdate(table.name, row, matchColumns as String[], storedColumnNames)
+  }
+
+  /**
+   * Clear resolved table metadata for a connection after schema changes.
+   *
+   * @param con the connection whose cached metadata should be discarded
+   */
+  void clearTableMetadataCache(Connection con) {
+    synchronized (tableMetadataCache) {
+      tableMetadataCache.remove(con)
+    }
+  }
+
+  private TableMetadata tableMetadata(Connection con, String tableName) throws SQLException {
+    String catalog = con.catalog
+    String schema = con.schema
+    String cacheKey = [catalog, schema, tableName].join('\u0000')
+    synchronized (tableMetadataCache) {
+      Map<String, TableMetadata> connectionCache = tableMetadataCache[con]
+      TableMetadata cached = connectionCache?.get(cacheKey)
+      if (cached != null) {
+        return cached
+      }
+      TableMetadata resolved = loadTableMetadata(con.getMetaData(), catalog, schema, tableName)
+      if (resolved != null) {
+        if (connectionCache == null) {
+          connectionCache = [:]
+          tableMetadataCache[con] = connectionCache
+        }
+        connectionCache[cacheKey] = resolved
+      }
+      resolved
+    }
+  }
+
+  private static TableMetadata loadTableMetadata(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    TableReference table = findTable(metadata, catalog, schema, tableName)
+    if (table == null) {
+      return null
+    }
+    List<String> columnNames = []
+    try (ResultSet rs = metadata.getColumns(table.catalog, table.schema, table.name, null)) {
+      while (rs.next()) {
+        if (sameTable(rs, table)) {
+          columnNames << rs.getString(COL_COLUMN_NAME)
+        }
+      }
     }
     SortedMap<Short, String> columnsBySeq = new TreeMap<>()
     try (ResultSet rs = metadata.getPrimaryKeys(table.catalog, table.schema, table.name)) {
       while (rs.next()) {
-        if (rs.getString(COL_TABLE_NAME) == table.name
-            && rs.getString(COL_TABLE_SCHEMA) == table.schema
-            && rs.getString(COL_TABLE_CATALOG) == table.catalog) {
-          columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString('COLUMN_NAME')
+        if (sameTable(rs, table)) {
+          columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString(COL_COLUMN_NAME)
         }
       }
     }
-    columnsBySeq.values() as String[]
+    new TableMetadata(table, columnNames, columnsBySeq.values() as List<String>)
   }
 
-  private static TableReference findTable(DatabaseMetaData metadata, String tableName, String preferredSchema) throws SQLException {
-    List<TableReference> matches = findTables(metadata, null, null, tableName)
+  private static boolean sameTable(ResultSet rs, TableReference table) throws SQLException {
+    rs.getString(COL_TABLE_NAME) == table.name
+        && rs.getString(COL_TABLE_SCHEMA) == table.schema
+        && rs.getString(COL_TABLE_CATALOG) == table.catalog
+  }
+
+  private static Map<String, String> resolveStoredColumnNames(
+      String tableName,
+      List<String> rowColumnNames,
+      List<String> storedColumnNames
+  ) {
+    Map<String, String> resolved = [:]
+    List<String> missing = []
+    rowColumnNames.each { String rowColumn ->
+      String storedColumn = storedColumnNames.find { it == rowColumn }
+      if (storedColumn == null) {
+        List<String> caseInsensitiveMatches = storedColumnNames.findAll { it.equalsIgnoreCase(rowColumn) }
+        if (caseInsensitiveMatches.size() > 1) {
+          throw new IllegalArgumentException(
+              "Cannot update $tableName: row column $rowColumn is ambiguous; matches: ${caseInsensitiveMatches.join(COMMA_SEPARATOR)}")
+        }
+        storedColumn = caseInsensitiveMatches.find()
+      }
+      if (storedColumn == null) {
+        missing << rowColumn
+      } else {
+        resolved[rowColumn] = storedColumn
+      }
+    }
+    if (!missing.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row column(s) not found in table: ${missing.join(COMMA_SEPARATOR)}")
+    }
+    resolved
+  }
+
+  private static TableReference findTable(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    List<TableReference> matches = findTables(metadata, catalog, schema, tableName)
     if (matches.isEmpty()) {
       return null
     }
-    List<TableReference> preferred = matches.findAll {
-      preferredSchema != null && it.schema?.equalsIgnoreCase(preferredSchema)
-    }
-    if (preferred.size() == 1) {
-      return preferred.first()
+    List<TableReference> exactMatches = matches.findAll { it.name == tableName }
+    if (exactMatches.size() == 1) {
+      return exactMatches.first()
     }
     if (matches.size() == 1) {
       return matches.first()
@@ -366,6 +502,19 @@ class MatrixDbUtil {
 
     String qualifiedName() {
       [catalog, schema, name].findAll { it != null }.join('.')
+    }
+  }
+
+  private static class TableMetadata {
+
+    final String name
+    final List<String> columnNames
+    final List<String> primaryKeyColumns
+
+    TableMetadata(TableReference table, List<String> columnNames, List<String> primaryKeyColumns) {
+      this.name = table.name
+      this.columnNames = columnNames.asImmutable()
+      this.primaryKeyColumns = primaryKeyColumns.asImmutable()
     }
   }
 
