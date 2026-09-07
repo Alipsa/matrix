@@ -56,6 +56,7 @@ class MatrixResultSet implements ResultSet {
   int rowIdx = BEFORE_FIRST
   Matrix matrix
   Object lastReadValue
+  private MatrixResultSetMetaData metaData
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
 
   /**
@@ -120,20 +121,20 @@ class MatrixResultSet implements ResultSet {
     matrix[rowIdx, checkedColumnIndex(columnLabel), type]
   }
 
-  private static long calendarMillis(long millis, Calendar calendar, boolean dateOnly = false) {
+  private static long calendarMillis(long millis, Calendar calendar, boolean dateOnly = false, boolean timeOnly = false) {
     Calendar source = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
     source.timeInMillis = millis
     Calendar target = calendar.clone() as Calendar
     target.clear()
     target.set(
-        source.get(Calendar.YEAR),
-        source.get(Calendar.MONTH),
-        source.get(Calendar.DAY_OF_MONTH),
+        timeOnly ? 1970 : source.get(Calendar.YEAR),
+        timeOnly ? Calendar.JANUARY : source.get(Calendar.MONTH),
+        timeOnly ? 1 : source.get(Calendar.DAY_OF_MONTH),
         dateOnly ? 0 : source.get(Calendar.HOUR_OF_DAY),
         dateOnly ? 0 : source.get(Calendar.MINUTE),
         dateOnly ? 0 : source.get(Calendar.SECOND)
     )
-    target.set(Calendar.MILLISECOND, dateOnly ? 0 : source.get(Calendar.MILLISECOND))
+    target.set(Calendar.MILLISECOND, dateOnly || timeOnly ? 0 : source.get(Calendar.MILLISECOND))
     target.timeInMillis
   }
 
@@ -878,7 +879,9 @@ class MatrixResultSet implements ResultSet {
    * Retrieves the  number, types and properties of
    * this {@code ResultSet} object's columns.
    *
-   * @return the description of this {@code ResultSet} object's columns
+   * @return the description of this {@code ResultSet} object's columns;
+   *         the same instance is returned on subsequent calls and reflects
+   *         a snapshot of the data taken when it was first created
    * @throws SQLException if a database access error occurs or this method is
    *         called on a closed result set
    */
@@ -887,7 +890,10 @@ class MatrixResultSet implements ResultSet {
     if (matrix == null) {
       throw new SQLException(RESULT_SET_CLOSED)
     }
-    return new MatrixResultSetMetaData(matrix)
+    if (metaData == null) {
+      metaData = new MatrixResultSetMetaData(matrix)
+    }
+    metaData
   }
 
   /**
@@ -2926,7 +2932,7 @@ class MatrixResultSet implements ResultSet {
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
       long millis = val.longValue()
-      lastReadValue = new Time(calendarMillis(millis, cal))
+      lastReadValue = new Time(calendarMillis(millis, cal, false, true))
     } else {
       lastReadValue = matrix[rowIdx, idx, Time]
     }

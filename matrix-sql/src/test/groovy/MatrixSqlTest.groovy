@@ -187,7 +187,7 @@ class MatrixSqlTest {
 
       Row params = Matrix.builder('params').data([name: ['Bob'], id: [1]]).types(String, int).build().row(0)
       String quotedTable = SqlIdentifier.renderTable(tableName)
-      assertEquals(1, matrixSql.update("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
+      assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
       assertThrows(IllegalArgumentException) { matrixSql.update(tableName, params) }
       params['name'] = 'Carol'
       assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
@@ -208,6 +208,12 @@ class MatrixSqlTest {
         matrixSql.create(data, data.rowCount(), false)
       }
       assertEquals('Table tbl_a already exists', exception.message)
+
+      matrixSql.execute('CREATE TABLE "MiXeD_Case" (id INT)')
+      assertTrue(matrixSql.tableExists('MiXeD_Case'))
+      assertTrue(matrixSql.tableExists('mixed_case'))
+      assertTrue(matrixSql.tableExists('MIXED_CASE'))
+      assertFalse(matrixSql.tableExists('tblXa'))
     }
   }
 

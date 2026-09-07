@@ -213,7 +213,8 @@ class MatrixResultSetTest {
     assertFalse(rs.wasNull())
 
     Time timeUtc = rs.getTime(2, utcCal)
-    assertEquals(new Time(epochMillis), timeUtc)
+    long expectedUtcTime = LocalDateTime.of(1970, 1, 1, 12, 34, 56).atZone(ZoneId.of('UTC')).toInstant().toEpochMilli()
+    assertEquals(new Time(expectedUtcTime), timeUtc)
     assertFalse(rs.wasNull())
 
     Timestamp tsUtc = rs.getTimestamp(3, utcCal)
@@ -225,9 +226,10 @@ class MatrixResultSetTest {
     long expectedDate = LocalDate.of(2024, 4, 29).atStartOfDay(stockholm).toInstant().toEpochMilli()
     assertEquals(new Date(expectedDate), dateCet)
     Time timeCet = rs.getTime(2, cetCal)
-    long expectedDateTime = LocalDateTime.of(2024, 4, 29, 12, 34, 56).atZone(stockholm).toInstant().toEpochMilli()
-    assertEquals(new Time(expectedDateTime), timeCet)
+    long expectedTime = LocalDateTime.of(1970, 1, 1, 12, 34, 56).atZone(stockholm).toInstant().toEpochMilli()
+    assertEquals(new Time(expectedTime), timeCet)
     Timestamp tsCet = rs.getTimestamp(3, cetCal)
+    long expectedDateTime = LocalDateTime.of(2024, 4, 29, 12, 34, 56).atZone(stockholm).toInstant().toEpochMilli()
     assertEquals(new Timestamp(expectedDateTime), tsCet)
 
     long transitionWallTime = Instant.parse('2024-10-27T01:30:00Z').toEpochMilli()
@@ -379,18 +381,27 @@ class MatrixResultSetTest {
     assertEquals(2.35, rs.getBigDecimal('amount'))
 
     def metadata = rs.metaData
+    assertSame(rs.metaData, metadata)
     assertFalse(metadata.isCurrency(1))
     assertEquals(3, metadata.getPrecision(1))
     assertEquals(2, metadata.getScale(1))
     assertEquals(3, metadata.getPrecision(2))
     assertEquals(10, metadata.getPrecision(3))
     rs.updateBigDecimal(1, 123456.789)
-    assertEquals(3, metadata.getPrecision(1), 'Precision should be cached after its first calculation')
+    assertEquals(3, metadata.getPrecision(1), 'Precision is a snapshot from when the metadata was created')
     assertThrows(SQLException) { metadata.getColumnName(0) }
     assertThrows(SQLException) { metadata.getColumnType(4) }
 
     rs.close()
     assertThrows(SQLException) { rs.updateString('name', 'x') }
+  }
+
+  @Test
+  void testGetPrecisionIgnoresSignForBigInteger() {
+    ResultSet rs = new MatrixResultSet(
+        Matrix.builder('bigints').data([value: [-123, 4567]]).types(BigInteger).build()
+    )
+    assertEquals(4, rs.metaData.getPrecision(1))
   }
 
 }

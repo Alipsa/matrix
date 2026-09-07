@@ -10,16 +10,25 @@ import java.sql.SQLException
 /**
  * Provides {@link ResultSetMetaData} backed by a {@link Matrix}, exposing column names,
  * types, and display sizes derived from the matrix structure.
+ *
+ * <p>Precision and scale are computed eagerly and reflect a snapshot of the matrix contents
+ * at construction time; values updated afterwards are not reflected.</p>
  */
 class MatrixResultSetMetaData implements ResultSetMetaData {
 
   Matrix matrix
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
-  private final Map<Integer, Integer> precisionByColumn = [:]
-  private final Map<Integer, Integer> scaleByColumn = [:]
+  private final int[] precisionByColumn
+  private final int[] scaleByColumn
 
   MatrixResultSetMetaData(Matrix matrix) {
     this.matrix = matrix
+    precisionByColumn = new int[matrix.columnCount()]
+    scaleByColumn = new int[matrix.columnCount()]
+    for (int i = 0; i < precisionByColumn.length; i++) {
+      precisionByColumn[i] = calculatePrecision(i)
+      scaleByColumn[i] = calculateScale(i)
+    }
   }
 
   private int checkedColumnIndex(int column) throws SQLException {
@@ -34,8 +43,8 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
     if (type == BigDecimal || type == BigInteger) {
       int precision = 0
       matrix.column(columnIndex).each { Object value ->
-        if (value instanceof BigDecimal || value instanceof BigInteger) {
-          int valuePrecision = value instanceof BigDecimal ? value.precision() : value.toString().length()
+        if (value instanceof Number) {
+          int valuePrecision = new BigDecimal(value.toString()).precision()
           precision = valuePrecision > precision ? valuePrecision : precision
         }
       }
@@ -66,8 +75,9 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
     }
     int scale = 0
     matrix.column(columnIndex).each { Object value ->
-      if (value instanceof BigDecimal) {
-        scale = value.scale() > scale ? value.scale() : scale
+      if (value instanceof Number) {
+        int valueScale = new BigDecimal(value.toString()).scale()
+        scale = valueScale > scale ? valueScale : scale
       }
     }
     scale
@@ -230,9 +240,6 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
   @Override
   int getPrecision(int column) throws SQLException {
     int columnIndex = checkedColumnIndex(column)
-    if (!precisionByColumn.containsKey(columnIndex)) {
-      precisionByColumn[columnIndex] = calculatePrecision(columnIndex)
-    }
     precisionByColumn[columnIndex]
   }
 
@@ -247,9 +254,6 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
   @Override
   int getScale(int column) throws SQLException {
     int columnIndex = checkedColumnIndex(column)
-    if (!scaleByColumn.containsKey(columnIndex)) {
-      scaleByColumn[columnIndex] = calculateScale(columnIndex)
-    }
     scaleByColumn[columnIndex]
   }
 

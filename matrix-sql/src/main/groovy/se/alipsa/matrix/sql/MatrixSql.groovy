@@ -171,22 +171,21 @@ class MatrixSql implements Closeable {
   }
 
   /**
-   * Update using a row while preserving the legacy table-name overload behavior.
-   * If the first argument begins with a recognized DML keyword, it is treated as prepared SQL and
-   * delegated to {@link #executeUpdate(String, Row)}. Otherwise it is treated as a table name and
-   * delegates to the match-column overload, which requires at least one match column.
+   * Update a single row in the given table, matching by the specified columns.
+   * This overload takes only a table name and therefore has no match columns;
+   * it always throws {@link IllegalArgumentException} to prevent accidental
+   * unconstrained updates. Use {@link #update(String, Row, String...)} with
+   * match columns, or {@link #executeUpdate(String, Row)} to run a prepared
+   * DML statement.
    *
-   * @param tableNameOrSql a table name or a DML statement with '?' placeholders
-   * @param row the values to bind to the prepared statement
+   * @param tableName the name of the table to update
+   * @param row the row data containing both update values and match values
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if a table name is supplied without match columns
+   * @throws IllegalArgumentException always, since no match columns are supplied
    */
-  int update(String tableNameOrSql, Row row) throws SQLException {
-    if (!isPreparedUpdateSql(tableNameOrSql)) {
-      return update(tableNameOrSql, row, new String[0])
-    }
-    executeUpdate(tableNameOrSql, row)
+  int update(String tableName, Row row) throws SQLException {
+    update(tableName, row, new String[0])
   }
 
   /**
@@ -199,10 +198,6 @@ class MatrixSql implements Closeable {
    */
   int executeUpdate(String sqlQuery, Row row) throws SQLException {
     update(sqlQuery, row as List)
-  }
-
-  private static boolean isPreparedUpdateSql(String value) {
-    value != null && value ==~ /(?is)\s*(?:update|insert|delete|merge|with)\b.*/
   }
 
   /**

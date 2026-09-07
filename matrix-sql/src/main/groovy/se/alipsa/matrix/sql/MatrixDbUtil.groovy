@@ -13,7 +13,6 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
-import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -268,19 +267,11 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    DatabaseMetaData metadata = con.getMetaData()
-    Set<String> patterns = [
-        tableName,
-        tableName.toUpperCase(Locale.ROOT),
-        tableName.toLowerCase(Locale.ROOT)
-    ] as Set<String>
-    for (String pattern : patterns) {
-      try (ResultSet rs = metadata.getTables(null, null, pattern, TABLE_TYPES)) {
-        while (rs.next()) {
-          String name = rs.getString(COL_TABLE_NAME)
-          if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
-            return true
-          }
+    try (ResultSet rs = con.getMetaData().getTables(null, null, null, TABLE_TYPES)) {
+      while (rs.next()) {
+        String name = rs.getString(COL_TABLE_NAME)
+        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
+          return true
         }
       }
     }
