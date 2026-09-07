@@ -316,6 +316,86 @@ class MatrixSqlTest {
   }
 
   @Test
+  void testDdlUpdatePathsInvalidateDerivedUpdateMetadata() {
+    Matrix data = Matrix.builder('ddl_cache').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('ddl_update_cache_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, 'id')
+      Row row = data.row(0)
+      row['name'] = 'Alicia'
+      assertEquals(1, matrixSql.update('ddl_cache', row))
+
+      assertEquals(0, matrixSql.update('ALTER TABLE ddl_cache ADD COLUMN nick VARCHAR(20)'))
+      Row rowWithNick = Matrix.builder('with_nick').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally']
+      ]).types(int, String, String).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithNick))
+
+      assertEquals(0, matrixSql.update('ALTER TABLE ddl_cache ADD COLUMN age INT', []))
+      Row rowWithAge = Matrix.builder('with_age').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally'],
+          age: [42]
+      ]).types(int, String, String, int).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithAge))
+
+      assertEquals(0, matrixSql.executeQuery('ALTER TABLE ddl_cache ADD COLUMN city VARCHAR(20)'))
+      Row rowWithCity = Matrix.builder('with_city').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally'],
+          age: [42],
+          city: ['Stockholm']
+      ]).types(int, String, String, int, String).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithCity))
+    }
+  }
+
+  @Test
+  void testMetadataInvalidationIsSharedByConnection() {
+    Matrix data = Matrix.builder('shared_cache').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('shared_metadata_cache_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection connection = owner.connect()
+      try (MatrixSql other = new MatrixSql(connection, DataBaseProvider.H2)) {
+        Row row = data.row(0)
+        row['name'] = 'Alicia'
+        assertEquals(1, other.update('shared_cache', row))
+
+        owner.execute('ALTER TABLE shared_cache ADD COLUMN nick VARCHAR(20)')
+        Row rowWithNick = Matrix.builder('with_nick').data([
+            id: [1],
+            name: ['Alicia'],
+            nick: ['Ally']
+        ]).types(int, String, String).build().row(0)
+        assertEquals(1, other.update('shared_cache', rowWithNick))
+
+        new Sql(connection).execute('ALTER TABLE shared_cache ADD COLUMN city VARCHAR(20)')
+        MatrixDbUtil.clearTableMetadataCache(connection)
+        Row rowWithCity = Matrix.builder('with_city').data([
+            id: [1],
+            name: ['Alicia'],
+            nick: ['Ally'],
+            city: ['Stockholm']
+        ]).types(int, String, String, String).build().row(0)
+        assertEquals(1, other.update('shared_cache', rowWithCity))
+      }
+    }
+  }
+
+  @Test
   void testTableExistsHandlesUpperCaseIdentifierFolding() {
     Matrix data = Matrix.builder('tbl_a').data([id: [1]]).types(int).build()
     String url = h2MemUrl('uppercase_table_exists')

@@ -38,8 +38,7 @@ class MatrixDbUtil {
 
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
-  private final Map<Connection, Map<String, TableMetadata>> tableMetadataCache =
-      Collections.synchronizedMap(new WeakHashMap<Connection, Map<String, TableMetadata>>())
+  private static final Map<Connection, ConnectionMetadataCache> TABLE_METADATA_CACHE = new WeakHashMap<>()
 
   SqlTypeMapper mapper
 
@@ -83,10 +82,11 @@ class MatrixDbUtil {
     }
     try(Statement stm = con.createStatement()) {
       result.ddlResult = stm.execute(sql)
-      clearTableMetadataCache(con)
     } catch (SQLException e) {
       log.error("Failed to create table $tableName using ddl: $sql", e)
       throw e
+    } finally {
+      clearTableMetadataCache(con)
     }
     try {
       result.inserted = insert(con, tableName, table, addQuotes)
@@ -227,9 +227,7 @@ class MatrixDbUtil {
    * @return the result of the drop operation
    */
   Object dropTable(Connection con, String tableName) {
-    Object result = dbExecuteSql(con, "drop table ${SqlIdentifier.renderTable(tableName)}")
-    clearTableMetadataCache(con)
-    result
+    dbExecuteSql(con, "drop table ${SqlIdentifier.renderTable(tableName)}")
   }
 
   /**
@@ -352,9 +350,13 @@ class MatrixDbUtil {
    *
    * @param con the connection whose cached metadata should be discarded
    */
-  void clearTableMetadataCache(Connection con) {
-    synchronized (tableMetadataCache) {
-      tableMetadataCache.remove(con)
+  static void clearTableMetadataCache(Connection con) {
+    synchronized (TABLE_METADATA_CACHE) {
+      ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+      if (cache != null) {
+        cache.tableMetadata.clear()
+        cache.generation++
+      }
     }
   }
 
@@ -362,21 +364,33 @@ class MatrixDbUtil {
     String catalog = con.catalog
     String schema = con.schema
     String cacheKey = [catalog, schema, tableName].join('\u0000')
-    synchronized (tableMetadataCache) {
-      Map<String, TableMetadata> connectionCache = tableMetadataCache[con]
-      TableMetadata cached = connectionCache?.get(cacheKey)
-      if (cached != null) {
-        return cached
-      }
-      TableMetadata resolved = loadTableMetadata(con.getMetaData(), catalog, schema, tableName)
-      if (resolved != null) {
-        if (connectionCache == null) {
-          connectionCache = [:]
-          tableMetadataCache[con] = connectionCache
+    while (true) {
+      long generation
+      synchronized (TABLE_METADATA_CACHE) {
+        ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+        if (cache == null) {
+          cache = new ConnectionMetadataCache()
+          TABLE_METADATA_CACHE[con] = cache
         }
-        connectionCache[cacheKey] = resolved
+        TableMetadata cached = cache.tableMetadata[cacheKey]
+        if (cached != null) {
+          return cached
+        }
+        generation = cache.generation
       }
-      resolved
+
+      TableMetadata resolved = loadTableMetadata(con.getMetaData(), catalog, schema, tableName)
+
+      synchronized (TABLE_METADATA_CACHE) {
+        ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+        if (cache == null || cache.generation != generation) {
+          continue
+        }
+        if (resolved != null) {
+          cache.tableMetadata[cacheKey] = resolved
+        }
+        return resolved
+      }
     }
   }
 
@@ -518,6 +532,12 @@ class MatrixDbUtil {
     }
   }
 
+  private static class ConnectionMetadataCache {
+
+    final Map<String, TableMetadata> tableMetadata = [:]
+    long generation
+  }
+
   /**
    * Insert the data from the given table into the given table in the database.
    *
@@ -612,12 +632,14 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   Object dbExecuteSql(Connection con, String sql) throws SQLException {
-    try(Statement stm = con.createStatement()) {
+    try (Statement stm = con.createStatement()) {
       boolean hasResultSet = stm.execute(sql)
       if (hasResultSet) {
         return Matrix.builder().data(stm.getResultSet()).build()
       }
       stm.getUpdateCount()
+    } finally {
+      clearTableMetadataCache(con)
     }
   }
 

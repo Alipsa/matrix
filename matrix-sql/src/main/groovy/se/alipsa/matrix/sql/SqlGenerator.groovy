@@ -12,6 +12,8 @@ class SqlGenerator {
   private static final String PLACEHOLDER = '?'
   private static final String VALUES_CLAUSE = ' ) values ( '
   private static final String CLOSE_PAREN = ' ) '
+  private static final String WHERE_CLAUSE = ' where '
+  private static final String AND_SEPARATOR = ' and '
 
   /**
    * Prepared update statement details.
@@ -82,8 +84,32 @@ class SqlGenerator {
   static String createPreparedUpdateSql(String tableName, List<String> updateColumns, List<String> matchColumns) {
     String sql = "update ${SqlIdentifier.renderTable(tableName)} set "
     sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(COMMA_SEP)
-    sql += ' where '
-    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(' and ')
+    sql += WHERE_CLAUSE
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(AND_SEPARATOR)
+    sql
+  }
+
+  /**
+   * Create a prepared update statement (with placeholders), optionally quoting identifiers.
+   *
+   * @param tableName the table name
+   * @param updateColumns columns to update in the SET clause
+   * @param matchColumns columns to match in the WHERE clause
+   * @param addQuotes whether to quote identifiers
+   * @return the SQL update statement with placeholders
+   * @deprecated Prefer {@link #createPreparedUpdateSql(String, List, List)}, which always quotes identifiers
+   */
+  @Deprecated
+  static String createPreparedUpdateSql(
+      String tableName,
+      List<String> updateColumns,
+      List<String> matchColumns,
+      boolean addQuotes
+  ) {
+    String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
+    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(COMMA_SEP)
+    sql += WHERE_CLAUSE
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(AND_SEPARATOR)
     sql
   }
 

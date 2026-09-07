@@ -153,13 +153,26 @@ try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
   assert matrixSql.update(tableName, row) == 1
 
   Matrix updated = matrixSql.select("select * from $quotedTable where id = 2")
-  assert updated[0, 'name'] == 'Robert'
+  assert updated[0, 'name'] == 'Bob'
 
   assert matrixSql.delete("delete from $quotedTable where id = 3") == 1
 
   Matrix remaining = matrixSql.select("select * from $quotedTable")
   assert remaining.rowCount() == 3
 }
+```
+
+Derived row updates cache table and primary-key metadata per JDBC connection. SQL executed through
+`MatrixSql` invalidates that cache automatically. If schema-changing SQL is executed directly through
+`groovy.sql.Sql` or a raw JDBC `Statement`, clear the cache before the next derived update:
+
+```groovy
+import groovy.sql.Sql
+import se.alipsa.matrix.sql.MatrixDbUtil
+
+def connection = matrixSql.connect()
+new Sql(connection).execute('ALTER TABLE people ADD COLUMN nickname VARCHAR(100)')
+MatrixDbUtil.clearTableMetadataCache(connection)
 ```
 
 ### Prepared Parameters

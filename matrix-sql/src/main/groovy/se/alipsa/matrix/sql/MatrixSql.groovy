@@ -146,7 +146,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int update(String sqlQuery) {
-    dbUpdate(sqlQuery)
+    Connection connection = connect()
+    try {
+      dbUpdate(connection, sqlQuery)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
+    }
   }
 
   /**
@@ -158,14 +163,17 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int update(String sqlQuery, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sqlQuery)) {
       bindParams(stm, params)
       stm.executeUpdate()
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
-  private int dbUpdate(String sqlQuery) throws SQLException  {
-    try(Statement stm = connect().createStatement()) {
+  private static int dbUpdate(Connection connection, String sqlQuery) throws SQLException  {
+    try(Statement stm = connection.createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)
     }
   }
@@ -178,8 +186,10 @@ class MatrixSql implements Closeable {
    * @param row the row data containing both update values and match values
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if the table has no primary key; use
-   *         {@link #update(String, Row, String...)} with explicit match columns instead
+   * @throws IllegalArgumentException if the table has no primary key, the row omits a primary-key
+   *         column, or the row contains a column that does not exist in the table; use
+   *         {@link #update(String, Row, String...)} with explicit match columns instead when no
+   *         primary key exists
    */
   int update(String tableName, Row row) throws SQLException {
     SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row)
@@ -245,10 +255,11 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Map<Integer, Object> execute(String sqlQuery) throws SQLException {
-    try(Statement stm = connect().createStatement()) {
-      Map<Integer, Object> result = dbExecute(stm, sqlQuery)
-      matrixDbUtil.clearTableMetadataCache(connect())
-      result
+    Connection connection = connect()
+    try(Statement stm = connection.createStatement()) {
+      dbExecute(stm, sqlQuery)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -264,11 +275,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sqlQuery)) {
       bindParams(stm, params)
-      Map<Integer, Object> result = dbExecute(stm)
-      matrixDbUtil.clearTableMetadataCache(connect())
-      result
+      dbExecute(stm)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -513,8 +525,11 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int delete(String sql) throws SQLException {
-    try(Statement stm = connect().createStatement()) {
+    Connection connection = connect()
+    try(Statement stm = connection.createStatement()) {
       stm.executeUpdate(sql)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -527,9 +542,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int delete(String sql, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sql)) {
       bindParams(stm, params)
       stm.executeUpdate()
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
