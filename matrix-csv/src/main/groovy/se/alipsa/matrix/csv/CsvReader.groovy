@@ -454,8 +454,15 @@ class CsvReader {
     List<String> headerRow
     if (extractedHeader && !records.isEmpty()) {
       List<String> inferredHeader = records.remove(0).toList()
-      validateInferredHeader(inferredHeader, format)
-      headerRow = inferredHeader.collect { String name -> name == null ? '' : name }
+      boolean absentHeader = inferredHeader.every { String name -> name == null || name.isEmpty() }
+          && !records.isEmpty()
+          && inferredHeader.size() < records[0].size()
+      if (absentHeader) {
+        headerRow = []
+      } else {
+        validateInferredHeader(inferredHeader, format)
+        headerRow = inferredHeader.collect { String name -> name == null ? '' : name }
+      }
     } else {
       headerRow = parserHeaderRow(parser)
     }

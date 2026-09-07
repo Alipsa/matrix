@@ -138,6 +138,17 @@ class CsvReaderFixesTest {
   }
 
   @Test
+  void ignoresNarrowAllNullRecordBeforeInferredHeader() {
+    Matrix matrix = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .fromString('\na,b\n1,2\n')
+
+    assertEquals(['a', 'b'], matrix.columnNames())
+    assertEquals([['1', '2']], matrix.rows())
+  }
+
+  @Test
   void inferredNullStringHeaderValidationHonorsIgnoreHeaderCase() {
     CSVFormat format = CSVFormat.Builder.create(CSVFormat.DEFAULT)
         .setHeader()
