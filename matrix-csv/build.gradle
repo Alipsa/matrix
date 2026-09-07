@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.4.0'
+version = '2.5.0-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusReleaseUrl = version.contains("SNAPSHOT")
@@ -46,6 +46,7 @@ dependencies {
 
 test {
   useJUnitPlatform()
+  exclude '**/CsvNonUtf8DefaultEncodingTest.class'
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
@@ -72,6 +73,18 @@ test {
     info.exceptionFormat = debug.exceptionFormat
   }
 }
+
+tasks.register('testNonUtf8DefaultEncoding', Test) {
+  description = 'Verifies deprecated CSV file writes use UTF-8 under a non-UTF-8 JVM default'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform()
+  include '**/CsvNonUtf8DefaultEncodingTest.class'
+  jvmArgs '-Dfile.encoding=ISO-8859-1'
+}
+
+check.dependsOn testNonUtf8DefaultEncoding
 
 //Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {

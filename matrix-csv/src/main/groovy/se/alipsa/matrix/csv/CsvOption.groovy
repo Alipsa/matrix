@@ -52,7 +52,12 @@ enum CsvOption {
   IgnoreSurroundingSpaces,
   /** Converts strings equal to the given nullString to null when reading records. Default: {@code null} (no substitution). */
   NullString,
-  /** The marker for a new line. Default: {@code '\n'}. */
+  /**
+   * Retained for compatibility but inert when reading.
+   *
+   * @deprecated Commons CSV recognizes CR, LF, and CRLF automatically when reading
+   */
+  @Deprecated
   RecordSeparator,
   /** Whether the first row contains the header. Default: {@code true} unless Header is set. */
   FirstRowAsHeader,

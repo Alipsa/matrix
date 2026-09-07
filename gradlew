@@ -199,7 +199,7 @@ if "$cygwin" || "$msys" ; then
 fi
 
 
-# Use 75% of the available processors by default, while preserving an explicit
+# Use 50% of the available processors by default, while preserving an explicit
 # --max-workers setting supplied by the caller.
 gradle_worker_limit_set=false
 for arg do
@@ -215,7 +215,7 @@ if ! $gradle_worker_limit_set ; then
     else
         gradle_cpu_count=1
     fi
-    gradle_worker_count=$((gradle_cpu_count * 3 / 4))
+    gradle_worker_count=$((gradle_cpu_count / 2))
     if [ "$gradle_worker_count" -lt 1 ] ; then
         gradle_worker_count=1
     fi

@@ -2,6 +2,8 @@ package se.alipsa.matrix.csv
 
 import groovy.transform.CompileStatic
 
+import org.apache.commons.csv.DuplicateHeaderMode
+
 import java.nio.charset.Charset
 
 /**
@@ -122,5 +124,24 @@ class CsvOptionUtil {
     }
     String lower = String.valueOf(fileName).toLowerCase(Locale.ROOT)
     lower.endsWith('.tsv') || lower.endsWith('.tab')
+  }
+
+  /**
+   * Resolves a duplicate-header mode from a case-insensitive enum name.
+   *
+   * @param mode duplicate-header mode name
+   * @return the resolved mode
+   * @throws IllegalArgumentException if mode is null or is not a known mode
+   */
+  static DuplicateHeaderMode duplicateHeaderMode(String mode) {
+    if (mode == null) {
+      throw new IllegalArgumentException('duplicateHeaderMode must not be null')
+    }
+    String normalized = mode.trim().toUpperCase(Locale.ROOT)
+    try {
+      DuplicateHeaderMode.valueOf(normalized)
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Unknown duplicateHeaderMode '${mode}'; expected one of ${DuplicateHeaderMode.values()*.name()}", e)
+    }
   }
 }

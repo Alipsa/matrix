@@ -4,8 +4,11 @@ import groovy.transform.CompileStatic
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVRecord
 import org.apache.commons.csv.DuplicateHeaderMode
 import org.apache.commons.csv.QuoteMode
+import org.apache.commons.io.ByteOrderMark
+import org.apache.commons.io.input.BOMInputStream
 import org.apache.commons.io.input.CloseShieldInputStream
 import org.apache.commons.io.input.CloseShieldReader
 
@@ -62,6 +65,8 @@ class CsvReader {
   private static final String PATH_SEPARATOR = '/'
   private static final String EXTENSION_SEPARATOR = '.'
   private static final String DEFAULT_MATRIX_NAME = 'matrix'
+  private static final Charset UTF_32LE = Charset.forName('UTF-32LE')
+  private static final Charset UTF_32BE = Charset.forName('UTF-32BE')
 
   // ──────────────────────────────────────────────────────────────
   // Map-based API (uses CsvOption enum as keys)
@@ -219,7 +224,8 @@ class CsvReader {
   /**
    * Reads CSV data from an InputStream using typed read options.
    *
-   * <p>The charset option applies to this byte-based source. If no explicit
+   * <p>The charset option applies to this byte-based source. A matching UTF-8,
+   * UTF-16LE, UTF-16BE, UTF-32LE, or UTF-32BE byte-order mark is stripped. If no explicit
    * table name is configured, the resulting Matrix uses the fallback name {@code matrix}.</p>
    *
    * @param is the input stream to read
@@ -282,9 +288,8 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(InputStream is, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), charset, format)) {
-      parse(matrixName, parser, firstRowAsHeader)
-    }
+    InputStream input = byteInput(is, charset, true)
+    parse(matrixName, new InputStreamReader(input, charset), firstRowAsHeader, format)
   }
 
   /**
@@ -304,9 +309,7 @@ class CsvReader {
   @Deprecated
   @SuppressWarnings('UnusedMethodParameter')
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), format)) {
-      parse(matrixName, parser, firstRowAsHeader)
-    }
+    parse(matrixName, CloseShieldReader.wrap(reader), firstRowAsHeader, format)
   }
 
   /**
@@ -339,8 +342,9 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    try (CSVParser parser = CSVParser.parse(url, charset, format)) {
-      parse(tableName(url), parser, firstRowAsHeader)
+    try (InputStream source = url.openStream()) {
+      InputStream input = byteInput(source, charset, false)
+      parse(tableName(url), new InputStreamReader(input, charset), firstRowAsHeader, format)
     }
   }
 
@@ -396,8 +400,9 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(File file, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    try (CSVParser parser = CSVParser.parse(file, charset, format)) {
-      parse(tableName(file), parser, firstRowAsHeader)
+    try (InputStream source = new FileInputStream(file)) {
+      InputStream input = byteInput(source, charset, false)
+      parse(tableName(file), new InputStreamReader(input, charset), firstRowAsHeader, format)
     }
   }
 
@@ -423,23 +428,55 @@ class CsvReader {
   // ──────────────────────────────────────────────────────────────
 
   /**
-   * Core parsing logic that converts CSVParser records into a Matrix.
+   * Core parsing logic that converts CSV content into a Matrix.
    *
    * <p>Handles column name extraction, validates that all rows have the same number
    * of columns, and generates auto-generated column names (c0, c1, ...) when needed.</p>
    *
    * @param matrixName name for the resulting Matrix (can be null or empty)
-   * @param parser CSVParser containing the parsed CSV data
+   * @param reader reader containing the CSV data
    * @param firstRowAsHeader if true, uses first row as column names; if false, generates c0, c1, etc.
+   * @param format CSV format whose null and inferred-header settings are applied to the result
    * @return Matrix containing the parsed data with all values as Strings
    * @throws IllegalArgumentException if rows have inconsistent column counts
    */
-  private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader) {
-    List<List<String>> rows = parser.records*.toList()
-    List<String> headerRow = parserHeaderRow(parser, rows.isEmpty() ? 0 : rows[0].size())
+  private static Matrix parse(String matrixName, Reader reader, boolean firstRowAsHeader, CSVFormat format) throws IOException {
+    if (inferredHeaderNullString(format) == null) {
+      try (CSVParser parser = CSVParser.parse(reader, format)) {
+        return parse(matrixName, parser, firstRowAsHeader, format, null)
+      }
+    }
+    String content = reader.text
+    List<String> headerWithoutNullString = inferredHeaderWithoutNullString(content, format)
+    try (CSVParser parser = CSVParser.parse(content, parserFormat(format))) {
+      parse(matrixName, parser, firstRowAsHeader, format, headerWithoutNullString)
+    }
+  }
+
+  private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader, CSVFormat format, List<String> headerWithoutNullString) {
+    List<CSVRecord> records = parser.records
+    boolean extractedHeader = headerWithoutNullString != null
+    List<String> headerRow
+    if (extractedHeader && !records.isEmpty()) {
+      List<String> inferredHeader = records.remove(0).toList()
+      for (int i = 0; i < inferredHeader.size(); i++) {
+        if (headerWithoutNullString[i] == null) {
+          inferredHeader[i] = null
+        }
+      }
+      boolean absentHeader = inferredHeader.every { String name -> name == null }
+      if (absentHeader) {
+        headerRow = []
+      } else {
+        validateInferredHeader(inferredHeader, format)
+        headerRow = inferredHeader.collect { String name -> name == null ? '' : name }
+      }
+    } else {
+      headerRow = parserHeaderRow(parser)
+    }
 
     // Handle empty CSV file
-    if (rows.isEmpty()) {
+    if (records.isEmpty()) {
       if (!headerRow.isEmpty()) {
         return Matrix.builder()
             .matrixName(matrixName ?: DEFAULT_MATRIX_NAME)
@@ -452,14 +489,15 @@ class CsvReader {
           .build()
     }
 
-    int rowCount = 0
-    int ncols = rows[0].size()
-    for (List<String> row in rows) {
-      if (row.size() != ncols) {
-        throw new IllegalArgumentException("This csv file does not have an equal number of columns on each row, error on row $rowCount: expected $ncols but was ${row.size()}")
+    int ncols = headerRow.isEmpty() ? records[0].size() : headerRow.size()
+    boolean consumedHeader = firstRowAsHeader && !headerRow.isEmpty()
+    records.each { CSVRecord record ->
+      if (record.size() != ncols) {
+        long sourceRecord = record.recordNumber + (consumedHeader && !extractedHeader ? 1 : 0)
+        throw new IllegalArgumentException("CSV record $sourceRecord has ${record.size()} columns; expected $ncols")
       }
-      rowCount++
     }
+    List<List<String>> rows = records*.toList()
     if (headerRow.isEmpty() && firstRowAsHeader) {
       headerRow = rows.remove(0)
     } else if (headerRow.isEmpty()) {
@@ -469,31 +507,58 @@ class CsvReader {
     }
     def types = [String] * ncols
     Matrix.builder()
-        .matrixName(matrixName)
+        .matrixName(matrixName ?: DEFAULT_MATRIX_NAME)
         .columnNames(headerRow)
         .rows(rows)
         .types(types)
         .build()
   }
 
-  private static List<String> parserHeaderRow(CSVParser parser, int ncols) {
+  private static List<String> parserHeaderRow(CSVParser parser) {
     if (parser.headerNames == null || parser.headerNames.isEmpty()) {
       return []
     }
-    List<String> headerRow = parser.headerNames
-    if (ncols == 0 || headerRow.size() == ncols) {
-      return headerRow
-    }
-    List<String> resolvedHeaderRow = [''] * ncols
+    List<String> headerNames = parser.headerNames.toList()
     Map<String, Integer> headerMap = parser.headerMap
-    if (headerMap != null) {
-      headerMap.each { String name, Integer index ->
-        if (index != null && index >= 0 && index < ncols) {
-          resolvedHeaderRow[index] = name ?: ''
-        }
+    if (headerMap == null || headerMap.isEmpty()) {
+      return headerNames
+    }
+    int headerWidth = headerMap.values().max() + 1
+    if (headerNames.size() == headerWidth) {
+      return headerNames
+    }
+    List<String> resolved = emptyHeader(headerWidth)
+    headerMap.each { String name, Integer index ->
+      resolved[index] = name
+    }
+    resolved
+  }
+
+  private static void validateInferredHeader(List<String> header, CSVFormat format) {
+    boolean observedMissing = false
+    Set<String> observed = format.ignoreHeaderCase
+        ? new TreeSet<String>(String.CASE_INSENSITIVE_ORDER)
+        : new LinkedHashSet<String>()
+    header.each { String name ->
+      boolean blank = name == null || name.isBlank()
+      if (blank && !format.allowMissingColumnNames) {
+        throw new IllegalArgumentException("A header name is missing in ${header}")
+      }
+      boolean duplicate = blank ? observedMissing : observed.contains(name)
+      DuplicateHeaderMode mode = format.duplicateHeaderMode
+      if (duplicate && mode != DuplicateHeaderMode.ALLOW_ALL && !(blank && mode == DuplicateHeaderMode.ALLOW_EMPTY)) {
+        throw new IllegalArgumentException("The header contains a duplicate name: \"${name}\" in ${header}. "
+            + 'If this is valid then use CSVFormat.Builder.setDuplicateHeaderMode().')
+      }
+      observedMissing |= blank
+      if (name != null) {
+        observed << name
       }
     }
-    resolvedHeaderRow
+  }
+
+  private static List<String> emptyHeader(int width) {
+    Collections.nCopies(width, '').toList()
   }
 
   /**
@@ -504,7 +569,22 @@ class CsvReader {
    */
   @groovy.transform.PackageScope
   static String tableName(URL url) {
-    def name = url.getFile() == null ? url.getPath() : url.getFile()
+    String name
+    try {
+      name = url.toURI().path
+    } catch (URISyntaxException ignored) {
+      // Fall through to URL accessors, which also work for non-RFC URL strings.
+    }
+    if (!name) {
+      name = url.file ?: url.path ?: ''
+      int cutIndex = name.indexOf('?')
+      if (cutIndex < 0) {
+        cutIndex = name.indexOf('#')
+      }
+      if (cutIndex >= 0) {
+        name = name.substring(0, cutIndex)
+      }
+    }
     if (name.contains(PATH_SEPARATOR)) {
       name = name.substring(name.lastIndexOf(PATH_SEPARATOR) + 1, name.length())
     }
@@ -530,7 +610,10 @@ class CsvReader {
   }
 
   private static ReadBuilder buildReadBuilder(CsvReadOptions options, String sourceName, boolean useFallbackMatrixName) {
-    CsvReadOptions readOptions = options ?: new CsvReadOptions()
+    if (options == null) {
+      throw new IllegalArgumentException('CsvReadOptions must not be null')
+    }
+    CsvReadOptions readOptions = options
     ReadBuilder builder = read()
         .delimiter(resolveReadDelimiter(readOptions, sourceName))
         .quoteCharacter(readOptions.quote)
@@ -542,12 +625,10 @@ class CsvReader {
         .nullString(readOptions.nullString)
         .recordSeparator(readOptions.recordSeparator)
         .firstRowAsHeader(readOptions.firstRowAsHeader)
+        .header(readOptions.header)
         .charset(readOptions.charset)
         .duplicateHeaderMode(readOptions.duplicateHeaderMode)
 
-    if (readOptions.header != null) {
-      builder.header(readOptions.header)
-    }
     if (readOptions.tableName != null) {
       builder.matrixName(readOptions.tableName)
     } else if (useFallbackMatrixName) {
@@ -570,6 +651,78 @@ class CsvReader {
       return '\t' as char
     }
     options.delimiter as char
+  }
+
+  private static String inferredHeaderNullString(CSVFormat format) {
+    String[] header = format.header
+    header != null && header.length == 0 ? format.nullString : null
+  }
+
+  private static CSVFormat parserFormat(CSVFormat format) {
+    if (inferredHeaderNullString(format) == null) {
+      return format
+    }
+    CSVFormat.Builder.create(format)
+        .setHeader((String[]) null)
+        .setSkipHeaderRecord(false)
+        .build()
+  }
+
+  private static List<String> inferredHeaderWithoutNullString(String content, CSVFormat format) throws IOException {
+    CSVFormat headerFormat = CSVFormat.Builder.create(parserFormat(format))
+        .setNullString(null)
+        .build()
+    try (CSVParser parser = CSVParser.parse(content, headerFormat)) {
+      Iterator<CSVRecord> records = parser.iterator()
+      records.hasNext() ? records.next().toList() : []
+    }
+  }
+
+  /**
+   * Wraps a byte input with caller-ownership protection and matching BOM removal.
+   *
+   * @param input source byte stream
+   * @param charset charset used to decode the source
+   * @param callerOwned whether closing the returned stream must preserve the source stream
+   * @return the stream to pass to Commons CSV
+   * @throws IOException if the BOM wrapper cannot be created
+   */
+  private static InputStream byteInput(InputStream input, Charset charset, boolean callerOwned) throws IOException {
+    InputStream source = callerOwned ? CloseShieldInputStream.wrap(input) : input
+    ByteOrderMark mark = byteOrderMark(charset)
+    if (mark == null) {
+      return source
+    }
+    BOMInputStream.builder()
+        .setInputStream(source)
+        .setByteOrderMarks(mark)
+        .get()
+  }
+
+  /**
+   * Resolves the single BOM that may be stripped for a configured charset.
+   *
+   * @param charset configured source charset
+   * @return the matching BOM, or null when the decoder must receive the original bytes
+   */
+  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
+  private static ByteOrderMark byteOrderMark(Charset charset) {
+    if (charset == StandardCharsets.UTF_8) {
+      return ByteOrderMark.UTF_8
+    }
+    if (charset == StandardCharsets.UTF_16LE) {
+      return ByteOrderMark.UTF_16LE
+    }
+    if (charset == StandardCharsets.UTF_16BE) {
+      return ByteOrderMark.UTF_16BE
+    }
+    if (charset == UTF_32LE) {
+      return ByteOrderMark.UTF_32LE
+    }
+    if (charset == UTF_32BE) {
+      return ByteOrderMark.UTF_32BE
+    }
+    null
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -673,7 +826,15 @@ class CsvReader {
     /** Sets the string to interpret as null when reading. */
     ReadBuilder nullString(String s) { nullString = s; this }
 
-    /** Sets the record separator string. */
+    /**
+     * Retains the legacy read-side record separator setting without changing parsing.
+     *
+     * @param s ignored record separator
+     * @return this builder
+     * @deprecated Commons CSV record separators affect output only; use
+     * {@link CsvWriteOptions#recordSeparator(String)} when writing
+     */
+    @Deprecated
     ReadBuilder recordSeparator(String s) { recordSeparator = s; this }
 
     // ── Reader-specific methods ───────────────────────────────
@@ -689,7 +850,9 @@ class CsvReader {
      */
     ReadBuilder header(List<String> names) {
       header = names
-      firstRowAsHeader = false
+      if (names != null) {
+        firstRowAsHeader = false
+      }
       this
     }
 
@@ -714,7 +877,7 @@ class CsvReader {
 
     /** Sets the duplicate header mode from its enum name. */
     ReadBuilder duplicateHeaderMode(String mode) {
-      duplicateHeaderMode(DuplicateHeaderMode.valueOf(mode))
+      duplicateHeaderMode(CsvOptionUtil.duplicateHeaderMode(mode))
     }
 
     // ── Type conversion methods ─────────────────────────────
@@ -807,8 +970,9 @@ class CsvReader {
     Matrix from(File file) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       String name = matrixName ? matrixName : tableName(file)
-      try (CSVParser parser = CSVParser.parse(file, charset, apacheFormat)) {
-        convertIfNeeded(parse(name, parser, firstRowAsHeader))
+      try (InputStream source = new FileInputStream(file)) {
+        InputStream input = byteInput(source, charset, false)
+        convertIfNeeded(parse(name, new InputStreamReader(input, charset), firstRowAsHeader, apacheFormat))
       }
     }
 
@@ -833,13 +997,15 @@ class CsvReader {
     Matrix from(URL url) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       String name = matrixName ? matrixName : tableName(url)
-      try (CSVParser parser = CSVParser.parse(url, charset, apacheFormat)) {
-        convertIfNeeded(parse(name, parser, firstRowAsHeader))
+      try (InputStream source = url.openStream()) {
+        InputStream input = byteInput(source, charset, false)
+        convertIfNeeded(parse(name, new InputStreamReader(input, charset), firstRowAsHeader, apacheFormat))
       }
     }
 
     /**
-     * Reads CSV data from an InputStream. The caller is responsible for closing the InputStream.
+     * Reads CSV data from an InputStream. A matching UTF-8, UTF-16LE, UTF-16BE, UTF-32LE,
+     * or UTF-32BE byte-order mark is stripped. The caller is responsible for closing the InputStream.
      *
      * @param is the InputStream to read from
      * @return Matrix containing the imported data
@@ -847,9 +1013,8 @@ class CsvReader {
      */
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), charset, apacheFormat)) {
-        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader))
-      }
+      InputStream input = byteInput(is, charset, true)
+      convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, new InputStreamReader(input, charset), firstRowAsHeader, apacheFormat))
     }
 
     /**
@@ -861,9 +1026,7 @@ class CsvReader {
      */
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), apacheFormat)) {
-        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader))
-      }
+      convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, CloseShieldReader.wrap(reader), firstRowAsHeader, apacheFormat))
     }
 
     /**

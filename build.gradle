@@ -10,7 +10,7 @@ tasks.named('wrapper') {
   File sh = file('gradlew')
   File batch = file('gradlew.bat')
   doLast {
-    String workerBlock = '''# Use 75% of the available processors by default, while preserving an explicit
+    String workerBlock = '''# Use 50% of the available processors by default, while preserving an explicit
 # --max-workers setting supplied by the caller.
 gradle_worker_limit_set=false
 for arg do
@@ -26,7 +26,7 @@ if ! $gradle_worker_limit_set ; then
     else
         gradle_cpu_count=1
     fi
-    gradle_worker_count=$((gradle_cpu_count * 3 / 4))
+    gradle_worker_count=$((gradle_cpu_count / 2))
     if [ "$gradle_worker_count" -lt 1 ] ; then
         gradle_worker_count=1
     fi
@@ -42,7 +42,7 @@ fi'''
       sh.text = patched
     }
 
-    String batchBlock = '''@rem Use 75%% of the available processors by default, preserving an explicit override.
+    String batchBlock = '''@rem Use 50%% of the available processors by default, preserving an explicit override.
 set "GRADLE_WORKER_ARG="
 set "GRADLE_WORKER_SET="
 for %%A in (%*) do if /I "%%A"=="--max-workers" set "GRADLE_WORKER_SET=1"
@@ -51,7 +51,7 @@ if not defined GRADLE_WORKER_SET call :setGradleWorkerLimit'''
     String batchHelper = '''
 :setGradleWorkerLimit
 if not defined NUMBER_OF_PROCESSORS set NUMBER_OF_PROCESSORS=1
-set /a GRADLE_WORKER_COUNT=(%NUMBER_OF_PROCESSORS%*3)/4
+set /a GRADLE_WORKER_COUNT=%NUMBER_OF_PROCESSORS%/2
 if %GRADLE_WORKER_COUNT% LSS 1 set GRADLE_WORKER_COUNT=1
 set "GRADLE_WORKER_ARG=--max-workers=%GRADLE_WORKER_COUNT%"
 goto :eof
