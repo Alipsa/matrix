@@ -99,7 +99,8 @@ class CsvReaderFixesTest {
         .nullString('NA')
         .duplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
         .fromString('NA,NA\n1,2\n')
-    assertEquals(['', ''], repeatedNullHeaders.columnNames())
+    assertEquals(['1', '2'], repeatedNullHeaders.columnNames())
+    assertTrue(repeatedNullHeaders.isEmpty())
   }
 
   @Test
@@ -146,6 +147,36 @@ class CsvReaderFixesTest {
 
     assertEquals(['a', 'b'], matrix.columnNames())
     assertEquals([['1', '2']], matrix.rows())
+  }
+
+  @Test
+  void ignoresSameWidthAllNullRecordBeforeInferredHeader() {
+    Matrix matrix = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .fromString('\na\n1\n')
+
+    assertEquals(['a'], matrix.columnNames())
+    assertEquals([['1']], matrix.rows())
+  }
+
+  @Test
+  void validatesEmptyStringRecordAsInferredHeader() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvReader.read()
+          .ignoreEmptyLines(false)
+          .nullString('NA')
+          .fromString('\na,b\n1,2\n')
+    }
+
+    assertTrue(exception.message.contains('A header name is missing'))
+
+    Matrix quotedEmptyHeader = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .fromString('""\na\n')
+    assertEquals([''], quotedEmptyHeader.columnNames())
+    assertEquals([['a']], quotedEmptyHeader.rows())
   }
 
   @Test
