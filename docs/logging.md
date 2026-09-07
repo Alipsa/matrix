@@ -13,18 +13,30 @@ the other logging APIs into it.
 ## Groovy scripts and small tools
 
 For Groovy scripts, the simplest option is to grab `matrix-logging` alongside
-the Matrix modules you use:
+the Matrix modules you use. `systemClassLoader=true` is required so SLF4J can
+discover the grabbed provider and Log4j bridge:
 
 ```groovy
+@GrabConfig(systemClassLoader=true)
 @Grab('se.alipsa.matrix:matrix-core:3.8.0')
-@Grab('se.alipsa.matrix:matrix-logging:0.1.0')
+@Grab('se.alipsa.matrix:matrix-logging:0.1.2-SNAPSHOT')
 import se.alipsa.matrix.core.Matrix
 ```
 
 `matrix-logging` provides a lightweight SLF4J default using `slf4j-simple`,
-routes Matrix `System.Logger` calls to SLF4J, and routes Log4j API calls from
-third-party libraries to SLF4J. Full applications can use it too, but they often
-prefer one of the explicit setups below.
+and routes Log4j API calls from third-party libraries to SLF4J. Grape and
+`groovy -cp` load dependencies after the JVM has selected its
+`System.LoggerFinder`, so Matrix `System.Logger` calls continue to use the JDK's
+default JUL backend in this script setup. JPL routing through SLF4J requires
+`matrix-logging` and its runtime dependencies on the JVM launch classpath, for
+example through a Gradle or Maven build, `CLASSPATH`, or `java -cp`; it is not
+available through `@Grab` or `groovy -cp`.
+
+Do not use `matrix-logging` in an application that already configures a logging
+backend. Its runtime dependencies include `slf4j-simple` and
+`log4j-to-slf4j`, which can silently introduce a second SLF4J provider or a
+bridge that conflicts with the application's backend. Use one of the explicit
+setups below instead.
 
 Do not install bridges in both directions. For example:
 

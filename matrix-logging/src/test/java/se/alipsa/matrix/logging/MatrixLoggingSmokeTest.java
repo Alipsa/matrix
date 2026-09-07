@@ -12,18 +12,19 @@ import java.lang.System.Logger.Level;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies that matrix-logging's runtime dependencies actually route JDK System.Logger
- * and Log4j API calls through to the bundled slf4j-simple backend, so a dependency
- * version bump that silently breaks the routing (rather than just changing a number)
- * fails the build instead of only degrading Groovy script users' logging output.
+ * Verifies that matrix-logging's runtime dependencies route JDK System.Logger and
+ * Log4j API calls through to the bundled slf4j-simple backend when the dependencies
+ * are present on the JVM launch classpath. Grape-based script loading has different
+ * classloader behavior and is intentionally outside this test's scope.
  */
 class MatrixLoggingSmokeTest {
 
-  private final PrintStream originalErr = System.err;
+  private PrintStream originalErr;
   private ByteArrayOutputStream captured;
 
   @BeforeEach
   void redirectErr() {
+    originalErr = System.err;
     captured = new ByteArrayOutputStream();
     System.setErr(new PrintStream(captured, true));
   }

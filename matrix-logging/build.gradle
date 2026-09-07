@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.1'
+version = '0.1.2-SNAPSHOT'
 description = 'Convenience logging setup for Matrix Groovy scripts'
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -42,6 +42,30 @@ dependencies {
 
 test {
   useJUnitPlatform()
+}
+
+def documentedVersionFiles = [file('README.md'), rootProject.file('docs/logging.md')]
+String matrixLoggingVersion = version.toString()
+
+tasks.register('checkDocumentedVersion') {
+  description = 'Checks that matrix-logging documentation uses the current project version.'
+  group = 'verification'
+  inputs.files(documentedVersionFiles)
+  inputs.property('matrixLoggingVersion', matrixLoggingVersion)
+
+  doLast {
+    String expectedCoordinate = "se.alipsa.matrix:matrix-logging:${matrixLoggingVersion}"
+    documentedVersionFiles.each { File documentation ->
+      def documentedCoordinates = documentation.text.findAll(/se\.alipsa\.matrix:matrix-logging:[^'\"\s)]+/)
+      if (!documentedCoordinates || documentedCoordinates.any { it != expectedCoordinate }) {
+        throw new GradleException("${documentation} must use ${expectedCoordinate}")
+      }
+    }
+  }
+}
+
+tasks.named('check') {
+  dependsOn tasks.named('checkDocumentedVersion')
 }
 
 tasks.register('javadocJar', Jar) {
