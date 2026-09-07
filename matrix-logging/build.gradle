@@ -50,7 +50,6 @@ File readmeFile = file('README.md')
 def documentedVersionFiles = [readmeFile, rootProject.file('docs/logging.md')]
 String documentedMatrixLoggingVersion = version.toString() - '-SNAPSHOT'
 File matrixBomFile = rootProject.file('matrix-bom/bom.xml')
-String documentedMatrixBomVersion = new groovy.xml.XmlSlurper().parse(matrixBomFile).version.text().toString() - '-SNAPSHOT'
 File documentedVersionMarker = layout.buildDirectory.file('verification/documented-version.txt').get().asFile
 
 tasks.register('checkDocumentedVersion') {
@@ -59,7 +58,6 @@ tasks.register('checkDocumentedVersion') {
   inputs.files(documentedVersionFiles)
   inputs.file(matrixBomFile)
   inputs.property('matrixLoggingVersion', documentedMatrixLoggingVersion)
-  inputs.property('matrixBomVersion', documentedMatrixBomVersion)
   outputs.file(documentedVersionMarker)
 
   doLast {
@@ -71,6 +69,8 @@ tasks.register('checkDocumentedVersion') {
       }
     }
 
+    String documentedMatrixBomVersion = new groovy.xml.XmlSlurper()
+        .parse(matrixBomFile).version.text().toString() - '-SNAPSHOT'
     String expectedBomCoordinate = "se.alipsa.matrix:matrix-bom:${documentedMatrixBomVersion}"
     def documentedBomCoordinates = readmeFile.text.findAll(/se\.alipsa\.matrix:matrix-bom:[^'\"\s)]+/)
     if (!documentedBomCoordinates || documentedBomCoordinates.any { it != expectedBomCoordinate }) {
