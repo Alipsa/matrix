@@ -188,12 +188,25 @@ class MatrixSql implements Closeable {
           "Cannot derive match columns for $tableName: no primary key. " +
           'Use update(tableName, row, matchColumnName...) instead')
     }
-    List<String> missingPrimaryKeyColumns = pk.findAll { !row.columnNames().contains(it) }
+    List<String> rowColumnNames = row.columnNames()
+    List<String> matchColumns = []
+    List<String> missingPrimaryKeyColumns = []
+    pk.each { String primaryKeyColumn ->
+      String matchColumn = rowColumnNames.find { String rowColumn ->
+        rowColumn.equalsIgnoreCase(primaryKeyColumn)
+      }
+      if (matchColumn == null) {
+        missingPrimaryKeyColumns << primaryKeyColumn
+      } else {
+        matchColumns << matchColumn
+      }
+    }
     if (!missingPrimaryKeyColumns.isEmpty()) {
       throw new IllegalArgumentException(
           "Cannot update $tableName: row is missing primary key column(s): ${missingPrimaryKeyColumns.join(', ')}")
     }
-    update(tableName, row, pk)
+    boolean addQuotes = pk.toList() == matchColumns
+    update(tableName, row, matchColumns as String[], addQuotes)
   }
 
   /**
@@ -219,7 +232,11 @@ class MatrixSql implements Closeable {
    * @throws IllegalArgumentException if matchColumnName is empty
    */
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
-    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName)
+    update(tableName, row, matchColumnName, true)
+  }
+
+  private int update(String tableName, Row row, String[] matchColumnName, boolean addQuotes) throws SQLException {
+    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName, addQuotes)
     try(PreparedStatement stm = connect().prepareStatement(prepared.sql)) {
       bindParams(stm, prepared.values)
       stm.executeUpdate()

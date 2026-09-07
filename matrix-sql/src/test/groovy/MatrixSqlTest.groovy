@@ -238,6 +238,26 @@ class MatrixSqlTest {
   }
 
   @Test
+  void testUpdateDerivesCaseFoldedPrimaryKeyColumns() {
+    Matrix data = Matrix.builder('nq').data([
+        id: [1],
+        name: ['Alice']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('update_folded_pk_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, data.rowCount(), false, 'id')
+
+      Row row = data.row(0)
+      row['name'] = 'Alicia'
+      assertEquals(1, matrixSql.update('nq', row))
+      assertEquals('Alicia', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+    }
+  }
+
+  @Test
   void testPrimaryKeyLookupUsesCurrentSchemaAndRejectsAmbiguity() {
     String url = h2MemUrl('schema_primary_key_testdb')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
@@ -256,7 +276,12 @@ class MatrixSqlTest {
       con.schema = 'PUBLIC'
       SQLException exception = assertThrows(SQLException) { util.primaryKeyColumns(con, 'orders') }
       assertTrue(exception.message.startsWith('Ambiguous table name orders; matches:'))
-      assertThrows(SQLException) { util.tableExists(con, 'orders') }
+      assertFalse(util.tableExists(con, 'orders'))
+
+      Matrix orders = Matrix.builder('orders').data([a: [1], value: ['public']]).types(int, String).build()
+      matrixSql.create(orders, 'a')
+      assertTrue(util.tableExists(con, 'orders'))
+      assertArrayEquals(['a'] as String[], util.primaryKeyColumns(con, 'orders'))
     }
   }
 
@@ -279,6 +304,11 @@ class MatrixSqlTest {
       assertTrue(matrixSql.tableExists('mixed_case'))
       assertTrue(matrixSql.tableExists('MIXED_CASE'))
       assertFalse(matrixSql.tableExists('tblXa'))
+
+      Matrix settings = Matrix.builder('settings').data([id: [1]]).types(int).build()
+      assertFalse(matrixSql.tableExists('settings'))
+      matrixSql.create(settings, 'id')
+      assertTrue(matrixSql.tableExists('settings'))
     }
   }
 
@@ -615,8 +645,9 @@ class MatrixSqlTest {
       assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('view_only') })
       matrixSql.execute('CREATE SCHEMA other')
       matrixSql.execute('CREATE TABLE other.remote_table (id INT)')
-      assertTrue(matrixSql.tableExists('remote_table'))
-      assertTrue(matrixSql.getTableNames().any { it.equalsIgnoreCase('remote_table') })
+      assertFalse(matrixSql.tableExists('remote_table'))
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('remote_table') })
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('USERS') })
     }
   }
 

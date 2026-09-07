@@ -33,7 +33,7 @@ class MatrixDbUtil {
   private static final String COL_TABLE_CATALOG = 'TABLE_CAT'
   private static final String COMMA_SEPARATOR = ', '
   private static final String UNDERSCORE = '_'
-  private static final String[] TABLE_TYPES = ['TABLE'] as String[]
+  private static final String[] TABLE_TYPES = ['TABLE', 'BASE TABLE'] as String[]
 
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
@@ -271,24 +271,18 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    findTable(con.getMetaData(), tableName, con.schema) != null
+    !findTables(con.getMetaData(), con.catalog, con.schema, tableName).isEmpty()
   }
 
   /**
-   * Get the names of all tables in the database.
+   * Get the names of all tables in the connection's current catalog and schema.
    *
    * @param con the db connection
    * @return a set of table names
    * @throws SQLException if any sql error occurs
    */
   Set<String> getTableNames(Connection con) throws SQLException {
-    Set<String> names = [] as Set
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, TABLE_TYPES)) {
-      while (rs.next()) {
-        names << rs.getString(COL_TABLE_NAME)
-      }
-    }
-    names
+    findTables(con.getMetaData(), con.catalog, con.schema, null)*.name as Set<String>
   }
 
   /**
@@ -319,19 +313,7 @@ class MatrixDbUtil {
   }
 
   private static TableReference findTable(DatabaseMetaData metadata, String tableName, String preferredSchema) throws SQLException {
-    List<TableReference> matches = []
-    try (ResultSet rs = metadata.getTables(null, null, null, TABLE_TYPES)) {
-      while (rs.next()) {
-        String name = rs.getString(COL_TABLE_NAME)
-        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
-          matches << new TableReference(
-              rs.getString(COL_TABLE_CATALOG),
-              rs.getString(COL_TABLE_SCHEMA),
-              name
-          )
-        }
-      }
-    }
+    List<TableReference> matches = findTables(metadata, null, null, tableName)
     if (matches.isEmpty()) {
       return null
     }
@@ -346,6 +328,28 @@ class MatrixDbUtil {
     }
     String locations = matches*.qualifiedName().join(COMMA_SEPARATOR)
     throw new SQLException("Ambiguous table name $tableName; matches: $locations")
+  }
+
+  private static List<TableReference> findTables(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    List<TableReference> matches = []
+    try (ResultSet rs = metadata.getTables(catalog, schema, null, TABLE_TYPES)) {
+      while (rs.next()) {
+        String name = rs.getString(COL_TABLE_NAME)
+        if (tableName == null || name.equalsIgnoreCase(tableName)) {
+          matches << new TableReference(
+              rs.getString(COL_TABLE_CATALOG),
+              rs.getString(COL_TABLE_SCHEMA),
+              name
+          )
+        }
+      }
+    }
+    matches
   }
 
   private static class TableReference {

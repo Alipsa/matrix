@@ -37,6 +37,24 @@ class SqlGenerator {
    * @return a PreparedUpdate with sql and values
    */
   static PreparedUpdate createPreparedUpdate(String tableName, Row row, String[] matchColumnName) {
+    createPreparedUpdate(tableName, row, matchColumnName, true)
+  }
+
+  /**
+   * Create a prepared update statement (with placeholders) and parameter values.
+   *
+   * @param tableName the table name
+   * @param row the row containing the values to update and match on
+   * @param matchColumnName the column(s) to match in the WHERE clause
+   * @param addQuotes whether to quote identifiers
+   * @return a PreparedUpdate with sql and values
+   */
+  static PreparedUpdate createPreparedUpdate(
+      String tableName,
+      Row row,
+      String[] matchColumnName,
+      boolean addQuotes
+  ) {
     if (matchColumnName == null || matchColumnName.length == 0) {
       throw new IllegalArgumentException('matchColumnName is required')
     }
@@ -45,7 +63,7 @@ class SqlGenerator {
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
-    String sql = createPreparedUpdateSql(tableName, updateColumns, matchColumns)
+    String sql = createPreparedUpdateSql(tableName, updateColumns, matchColumns, addQuotes)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
     new PreparedUpdate(sql, values)
   }

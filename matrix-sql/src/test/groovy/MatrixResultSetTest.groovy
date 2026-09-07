@@ -382,22 +382,21 @@ class MatrixResultSetTest {
 
     def metadata = rs.metaData
     assertSame(rs.metaData, metadata)
-    assertArrayEquals([-1, -1, -1] as int[], metadata.@precisionByColumn)
-    assertArrayEquals([-1, -1, -1] as int[], metadata.@scaleByColumn)
     assertEquals('amount', metadata.getColumnName(1))
-    assertArrayEquals([-1, -1, -1] as int[], metadata.@precisionByColumn)
     assertFalse(metadata.isCurrency(1))
-    assertEquals(3, metadata.getPrecision(1))
-    assertEquals(2, metadata.getScale(1))
+    rs.updateBigDecimal(1, 123456.789)
+    assertEquals(9, metadata.getPrecision(1), 'Column-name access must not calculate precision')
+    rs.updateBigDecimal(1, 1.2)
+    assertEquals(9, metadata.getPrecision(1), 'Precision is cached after it is first requested')
+    assertEquals(1, metadata.getScale(1))
+    rs.updateBigDecimal(1, 1.2345)
+    assertEquals(1, metadata.getScale(1), 'Scale is cached after it is first requested')
     assertEquals(3, metadata.getPrecision(2))
     assertEquals(10, metadata.getPrecision(3))
-    rs.updateBigDecimal(1, 123456.789)
-    assertEquals(3, metadata.getPrecision(1), 'Precision is a snapshot from when the metadata was created')
     assertThrows(SQLException) { metadata.getColumnName(0) }
     assertThrows(SQLException) { metadata.getColumnType(4) }
 
     rs.close()
-    assertNull(rs.@metaData)
     assertThrows(SQLException) { rs.updateString('name', 'x') }
     assertThrows(SQLException) { rs.metaData }
   }
