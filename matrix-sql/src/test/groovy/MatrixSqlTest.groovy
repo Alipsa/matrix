@@ -224,6 +224,39 @@ class MatrixSqlTest {
       Matrix stored = matrixSql.select("select * from $tableName order by \"id\"")
       assertEquals('Robert', stored[1, 'name'])
       assertEquals('Alice', stored[0, 'name'])
+
+      Row missingPrimaryKey = Matrix.builder('missing_pk')
+          .data([name: ['Charlie']])
+          .types(String)
+          .build()
+          .row(0)
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        matrixSql.update(tableName, missingPrimaryKey)
+      }
+      assertEquals("Cannot update $tableName: row is missing primary key column(s): id", exception.message)
+    }
+  }
+
+  @Test
+  void testPrimaryKeyLookupUsesCurrentSchemaAndRejectsAmbiguity() {
+    String url = h2MemUrl('schema_primary_key_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE SCHEMA s1')
+      matrixSql.execute('CREATE SCHEMA s2')
+      matrixSql.execute('CREATE TABLE s1."orders" ("a" INT PRIMARY KEY, "b" INT)')
+      matrixSql.execute('CREATE TABLE s2."orders" ("x" INT, "y" INT, PRIMARY KEY ("x", "y"))')
+
+      Connection con = matrixSql.connect()
+      MatrixDbUtil util = new MatrixDbUtil(DataBaseProvider.H2)
+      con.schema = 'S1'
+      assertArrayEquals(['a'] as String[], util.primaryKeyColumns(con, 'orders'))
+      con.schema = 'S2'
+      assertArrayEquals(['x', 'y'] as String[], util.primaryKeyColumns(con, 'orders'))
+
+      con.schema = 'PUBLIC'
+      SQLException exception = assertThrows(SQLException) { util.primaryKeyColumns(con, 'orders') }
+      assertTrue(exception.message.startsWith('Ambiguous table name orders; matches:'))
+      assertThrows(SQLException) { util.tableExists(con, 'orders') }
     }
   }
 

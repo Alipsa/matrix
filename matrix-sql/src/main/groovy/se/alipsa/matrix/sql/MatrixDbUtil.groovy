@@ -29,6 +29,9 @@ class MatrixDbUtil {
   static final int DEFAULT_DECIMAL_SCALE = 10
 
   private static final String COL_TABLE_NAME = 'TABLE_NAME'
+  private static final String COL_TABLE_SCHEMA = 'TABLE_SCHEM'
+  private static final String COL_TABLE_CATALOG = 'TABLE_CAT'
+  private static final String COMMA_SEPARATOR = ', '
   private static final String UNDERSCORE = '_'
   private static final String[] TABLE_TYPES = ['TABLE'] as String[]
 
@@ -113,7 +116,7 @@ class MatrixDbUtil {
     sql += String.join(',\n', columns)
     if (primaryKey.length > 0) {
       sql += "\n , CONSTRAINT ${SqlIdentifier.constraintName('pk', tableName, addQuotes)} PRIMARY KEY ("
-      sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(', ')
+      sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(COMMA_SEPARATOR)
       sql += ')'
     }
     sql += '\n)'
@@ -268,15 +271,7 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, TABLE_TYPES)) {
-      while (rs.next()) {
-        String name = rs.getString(COL_TABLE_NAME)
-        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
-          return true
-        }
-      }
-    }
-    false
+    findTable(con.getMetaData(), tableName, con.schema) != null
   }
 
   /**
@@ -306,14 +301,16 @@ class MatrixDbUtil {
    */
   String[] primaryKeyColumns(Connection con, String tableName) throws SQLException {
     DatabaseMetaData metadata = con.getMetaData()
-    String storedName = findTableName(metadata, tableName)
-    if (storedName == null) {
+    TableReference table = findTable(metadata, tableName, con.schema)
+    if (table == null) {
       return new String[0]
     }
     SortedMap<Short, String> columnsBySeq = new TreeMap<>()
-    try (ResultSet rs = metadata.getPrimaryKeys(null, null, storedName)) {
+    try (ResultSet rs = metadata.getPrimaryKeys(table.catalog, table.schema, table.name)) {
       while (rs.next()) {
-        if (rs.getString(COL_TABLE_NAME) == storedName) {
+        if (rs.getString(COL_TABLE_NAME) == table.name
+            && rs.getString(COL_TABLE_SCHEMA) == table.schema
+            && rs.getString(COL_TABLE_CATALOG) == table.catalog) {
           columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString('COLUMN_NAME')
         }
       }
@@ -321,16 +318,51 @@ class MatrixDbUtil {
     columnsBySeq.values() as String[]
   }
 
-  private static String findTableName(DatabaseMetaData metadata, String tableName) throws SQLException {
+  private static TableReference findTable(DatabaseMetaData metadata, String tableName, String preferredSchema) throws SQLException {
+    List<TableReference> matches = []
     try (ResultSet rs = metadata.getTables(null, null, null, TABLE_TYPES)) {
       while (rs.next()) {
         String name = rs.getString(COL_TABLE_NAME)
         if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
-          return name
+          matches << new TableReference(
+              rs.getString(COL_TABLE_CATALOG),
+              rs.getString(COL_TABLE_SCHEMA),
+              name
+          )
         }
       }
     }
-    null
+    if (matches.isEmpty()) {
+      return null
+    }
+    List<TableReference> preferred = matches.findAll {
+      preferredSchema != null && it.schema?.equalsIgnoreCase(preferredSchema)
+    }
+    if (preferred.size() == 1) {
+      return preferred.first()
+    }
+    if (matches.size() == 1) {
+      return matches.first()
+    }
+    String locations = matches*.qualifiedName().join(COMMA_SEPARATOR)
+    throw new SQLException("Ambiguous table name $tableName; matches: $locations")
+  }
+
+  private static class TableReference {
+
+    final String catalog
+    final String schema
+    final String name
+
+    TableReference(String catalog, String schema, String name) {
+      this.catalog = catalog
+      this.schema = schema
+      this.name = name
+    }
+
+    String qualifiedName() {
+      [catalog, schema, name].findAll { it != null }.join('.')
+    }
   }
 
   /**

@@ -382,6 +382,10 @@ class MatrixResultSetTest {
 
     def metadata = rs.metaData
     assertSame(rs.metaData, metadata)
+    assertArrayEquals([-1, -1, -1] as int[], metadata.@precisionByColumn)
+    assertArrayEquals([-1, -1, -1] as int[], metadata.@scaleByColumn)
+    assertEquals('amount', metadata.getColumnName(1))
+    assertArrayEquals([-1, -1, -1] as int[], metadata.@precisionByColumn)
     assertFalse(metadata.isCurrency(1))
     assertEquals(3, metadata.getPrecision(1))
     assertEquals(2, metadata.getScale(1))
@@ -393,15 +397,17 @@ class MatrixResultSetTest {
     assertThrows(SQLException) { metadata.getColumnType(4) }
 
     rs.close()
+    assertNull(rs.@metaData)
     assertThrows(SQLException) { rs.updateString('name', 'x') }
+    assertThrows(SQLException) { rs.metaData }
   }
 
   @Test
   void testGetPrecisionIgnoresSignForBigInteger() {
     ResultSet rs = new MatrixResultSet(
-        Matrix.builder('bigints').data([value: [-123, 4567]]).types(BigInteger).build()
+        Matrix.builder('bigints').data([value: [-123]]).types(BigInteger).build()
     )
-    assertEquals(4, rs.metaData.getPrecision(1))
+    assertEquals(3, rs.metaData.getPrecision(1))
   }
 
 }

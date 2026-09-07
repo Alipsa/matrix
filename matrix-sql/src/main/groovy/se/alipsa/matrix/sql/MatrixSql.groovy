@@ -188,6 +188,11 @@ class MatrixSql implements Closeable {
           "Cannot derive match columns for $tableName: no primary key. " +
           'Use update(tableName, row, matchColumnName...) instead')
     }
+    List<String> missingPrimaryKeyColumns = pk.findAll { !row.columnNames().contains(it) }
+    if (!missingPrimaryKeyColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row is missing primary key column(s): ${missingPrimaryKeyColumns.join(', ')}")
+    }
     update(tableName, row, pk)
   }
 

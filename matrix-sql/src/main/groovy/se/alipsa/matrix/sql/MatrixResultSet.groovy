@@ -53,6 +53,12 @@ class MatrixResultSet implements ResultSet {
   private static final String UNSUPPORTED_NCLOB = 'Support for NClob not implemented'
   private static final int BEFORE_FIRST = -1
 
+  private enum CalendarValueType {
+    DATE,
+    TIME,
+    TIMESTAMP
+  }
+
   int rowIdx = BEFORE_FIRST
   Matrix matrix
   Object lastReadValue
@@ -121,20 +127,32 @@ class MatrixResultSet implements ResultSet {
     matrix[rowIdx, checkedColumnIndex(columnLabel), type]
   }
 
-  private static long calendarMillis(long millis, Calendar calendar, boolean dateOnly = false, boolean timeOnly = false) {
+  private static long calendarDateMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.DATE)
+  }
+
+  private static long calendarTimeMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.TIME)
+  }
+
+  private static long calendarTimestampMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.TIMESTAMP)
+  }
+
+  private static long calendarMillis(long millis, Calendar calendar, CalendarValueType valueType) {
     Calendar source = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
     source.timeInMillis = millis
     Calendar target = calendar.clone() as Calendar
     target.clear()
     target.set(
-        timeOnly ? 1970 : source.get(Calendar.YEAR),
-        timeOnly ? Calendar.JANUARY : source.get(Calendar.MONTH),
-        timeOnly ? 1 : source.get(Calendar.DAY_OF_MONTH),
-        dateOnly ? 0 : source.get(Calendar.HOUR_OF_DAY),
-        dateOnly ? 0 : source.get(Calendar.MINUTE),
-        dateOnly ? 0 : source.get(Calendar.SECOND)
+        valueType == CalendarValueType.TIME ? 1970 : source.get(Calendar.YEAR),
+        valueType == CalendarValueType.TIME ? Calendar.JANUARY : source.get(Calendar.MONTH),
+        valueType == CalendarValueType.TIME ? 1 : source.get(Calendar.DAY_OF_MONTH),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.HOUR_OF_DAY),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.MINUTE),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.SECOND)
     )
-    target.set(Calendar.MILLISECOND, dateOnly || timeOnly ? 0 : source.get(Calendar.MILLISECOND))
+    target.set(Calendar.MILLISECOND, valueType == CalendarValueType.TIMESTAMP ? source.get(Calendar.MILLISECOND) : 0)
     target.timeInMillis
   }
 
@@ -200,6 +218,7 @@ class MatrixResultSet implements ResultSet {
   @Override
   void close() throws SQLException {
     matrix = null
+    metaData = null
   }
 
   /**
@@ -2876,7 +2895,7 @@ class MatrixResultSet implements ResultSet {
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
       long millis = val.longValue()
-      lastReadValue = new Date(calendarMillis(millis, cal, true))
+      lastReadValue = new Date(calendarDateMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Date]
     }
@@ -2932,7 +2951,7 @@ class MatrixResultSet implements ResultSet {
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
       long millis = val.longValue()
-      lastReadValue = new Time(calendarMillis(millis, cal, false, true))
+      lastReadValue = new Time(calendarTimeMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Time]
     }
@@ -2988,7 +3007,7 @@ class MatrixResultSet implements ResultSet {
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
       long millis = val.longValue()
-      lastReadValue = new Timestamp(calendarMillis(millis, cal))
+      lastReadValue = new Timestamp(calendarTimestampMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Timestamp]
     }
