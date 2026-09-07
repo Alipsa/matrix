@@ -56,6 +56,8 @@ class CsvCompatibilityInternalTest {
     assertEquals('', CsvReader.tableName(new URI('https://example.test/path/').toURL()))
     assertEquals('a b', CsvReader.tableName(new URL('https://example.test/a b.csv?version=1.2#part')))
     assertEquals('a b%20c', CsvReader.tableName(new URL('https://example.test/a b%20c.csv')))
+    assertEquals('re?port', CsvReader.tableName(new URI('https://example.test/re%3Fport.csv').toURL()))
+    assertEquals('re#port', CsvReader.tableName(new URI('https://example.test/re%23port.csv').toURL()))
     assertEquals('data', CsvReader.tableName(new URI('jar:file:/tmp/archive.jar!/nested/data.csv').toURL()))
   }
 }

@@ -289,8 +289,8 @@ class CsvReader {
   @Deprecated
   static Matrix read(InputStream is, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
     InputStream input = byteInput(is, charset, true)
-    try (CSVParser parser = CSVParser.parse(input, charset, format)) {
-      parse(matrixName, parser, firstRowAsHeader, inferredHeaderNullString(format))
+    try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(format))) {
+      parse(matrixName, parser, firstRowAsHeader, format)
     }
   }
 
@@ -311,8 +311,8 @@ class CsvReader {
   @Deprecated
   @SuppressWarnings('UnusedMethodParameter')
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), format)) {
-      parse(matrixName, parser, firstRowAsHeader, inferredHeaderNullString(format))
+    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), parserFormat(format))) {
+      parse(matrixName, parser, firstRowAsHeader, format)
     }
   }
 
@@ -348,8 +348,8 @@ class CsvReader {
   static Matrix read(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (InputStream source = url.openStream()) {
       InputStream input = byteInput(source, charset, false)
-      try (CSVParser parser = CSVParser.parse(input, charset, format)) {
-        parse(tableName(url), parser, firstRowAsHeader, inferredHeaderNullString(format))
+      try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(format))) {
+        parse(tableName(url), parser, firstRowAsHeader, format)
       }
     }
   }
@@ -408,8 +408,8 @@ class CsvReader {
   static Matrix read(File file, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (InputStream source = new FileInputStream(file)) {
       InputStream input = byteInput(source, charset, false)
-      try (CSVParser parser = CSVParser.parse(input, charset, format)) {
-        parse(tableName(file), parser, firstRowAsHeader, inferredHeaderNullString(format))
+      try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(format))) {
+        parse(tableName(file), parser, firstRowAsHeader, format)
       }
     }
   }
@@ -444,13 +444,13 @@ class CsvReader {
    * @param matrixName name for the resulting Matrix (can be null or empty)
    * @param parser CSVParser containing the parsed CSV data
    * @param firstRowAsHeader if true, uses first row as column names; if false, generates c0, c1, etc.
-   * @param inferredHeaderNullString null marker used while inferring a header, or null otherwise
+   * @param format original CSV format whose null and inferred-header settings are applied to the result
    * @return Matrix containing the parsed data with all values as Strings
    * @throws IllegalArgumentException if rows have inconsistent column counts
    */
-  private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader, String inferredHeaderNullString) {
+  private static Matrix parse(String matrixName, CSVParser parser, boolean firstRowAsHeader, CSVFormat format) {
     List<CSVRecord> records = parser.records
-    List<String> headerRow = parserHeaderRow(parser, records.isEmpty() ? 0 : records[0].size(), inferredHeaderNullString)
+    List<String> headerRow = parserHeaderRow(parser, format)
 
     // Handle empty CSV file
     if (records.isEmpty()) {
@@ -474,7 +474,8 @@ class CsvReader {
         throw new IllegalArgumentException("CSV record $sourceRecord has ${record.size()} columns; expected $ncols")
       }
     }
-    List<List<String>> rows = records*.toList()
+    String nullString = inferredHeaderNullString(format)
+    List<List<String>> rows = records.collect { CSVRecord record -> recordValues(record, nullString) }
     if (headerRow.isEmpty() && firstRowAsHeader) {
       headerRow = rows.remove(0)
     } else if (headerRow.isEmpty()) {
@@ -491,22 +492,22 @@ class CsvReader {
         .build()
   }
 
-  private static List<String> parserHeaderRow(CSVParser parser, int recordWidth, String inferredHeaderNullString) {
-    if (parser.headerNames == null) {
+  private static List<String> parserHeaderRow(CSVParser parser, CSVFormat format) {
+    if (parser.headerNames == null || parser.headerNames.isEmpty()) {
       return []
     }
     List<String> headerNames = parser.headerNames.toList()
-    Map<String, Integer> headerMap = parser.headerMap
-    if (headerNames.isEmpty()) {
-      return inferredHeaderNullString == null ? [] : emptyHeader(recordWidth)
+    String nullString = inferredHeaderNullString(format)
+    if (nullString != null) {
+      List<String> resolved = headerNames.collect { String name -> name == nullString ? null : name }
+      validateInferredHeader(resolved, format)
+      return resolved.collect { String name -> name == null ? '' : name }
     }
+    Map<String, Integer> headerMap = parser.headerMap
     if (headerMap == null || headerMap.isEmpty()) {
       return headerNames
     }
     int headerWidth = headerMap.values().max() + 1
-    if (inferredHeaderNullString != null) {
-      headerWidth = Math.max(headerWidth, recordWidth)
-    }
     if (headerNames.size() == headerWidth) {
       return headerNames
     }
@@ -515,6 +516,32 @@ class CsvReader {
       resolved[index] = name
     }
     resolved
+  }
+
+  private static void validateInferredHeader(List<String> header, CSVFormat format) {
+    boolean observedMissing = false
+    Set<String> observed = [] as Set<String>
+    header.each { String name ->
+      boolean blank = name == null || name.isBlank()
+      if (blank && !format.allowMissingColumnNames) {
+        throw new IllegalArgumentException("A header name is missing in ${header}")
+      }
+      boolean duplicate = blank ? observedMissing : observed.contains(name)
+      DuplicateHeaderMode mode = format.duplicateHeaderMode
+      if (duplicate && mode != DuplicateHeaderMode.ALLOW_ALL && !(blank && mode == DuplicateHeaderMode.ALLOW_EMPTY)) {
+        throw new IllegalArgumentException("The header contains a duplicate name: \"${name}\" in ${header}. "
+            + 'If this is valid then use CSVFormat.Builder.setDuplicateHeaderMode().')
+      }
+      observedMissing |= blank
+      if (name != null) {
+        observed << name
+      }
+    }
+  }
+
+  private static List<String> recordValues(CSVRecord record, String nullString) {
+    List<String> values = record.toList()
+    nullString == null ? values : values.collect { String value -> value == nullString ? null : value }
   }
 
   private static List<String> emptyHeader(int width) {
@@ -537,14 +564,13 @@ class CsvReader {
     }
     if (!name) {
       name = url.file ?: url.path ?: ''
-    }
-    int queryIndex = name.indexOf('?')
-    if (queryIndex >= 0) {
-      name = name.substring(0, queryIndex)
-    }
-    int fragmentIndex = name.indexOf('#')
-    if (fragmentIndex >= 0) {
-      name = name.substring(0, fragmentIndex)
+      int cutIndex = name.indexOf('?')
+      if (cutIndex < 0) {
+        cutIndex = name.indexOf('#')
+      }
+      if (cutIndex >= 0) {
+        name = name.substring(0, cutIndex)
+      }
     }
     if (name.contains(PATH_SEPARATOR)) {
       name = name.substring(name.lastIndexOf(PATH_SEPARATOR) + 1, name.length())
@@ -617,6 +643,16 @@ class CsvReader {
   private static String inferredHeaderNullString(CSVFormat format) {
     String[] header = format.header
     header != null && header.length == 0 ? format.nullString : null
+  }
+
+  private static CSVFormat parserFormat(CSVFormat format) {
+    if (inferredHeaderNullString(format) == null) {
+      return format
+    }
+    CSVFormat.Builder.create(format)
+        .setNullString(null)
+        .setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_ALL)
+        .build()
   }
 
   /**
@@ -913,8 +949,8 @@ class CsvReader {
       String name = matrixName ? matrixName : tableName(file)
       try (InputStream source = new FileInputStream(file)) {
         InputStream input = byteInput(source, charset, false)
-        try (CSVParser parser = CSVParser.parse(input, charset, apacheFormat)) {
-          convertIfNeeded(parse(name, parser, firstRowAsHeader, inferredHeaderNullString(apacheFormat)))
+        try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(apacheFormat))) {
+          convertIfNeeded(parse(name, parser, firstRowAsHeader, apacheFormat))
         }
       }
     }
@@ -942,8 +978,8 @@ class CsvReader {
       String name = matrixName ? matrixName : tableName(url)
       try (InputStream source = url.openStream()) {
         InputStream input = byteInput(source, charset, false)
-        try (CSVParser parser = CSVParser.parse(input, charset, apacheFormat)) {
-          convertIfNeeded(parse(name, parser, firstRowAsHeader, inferredHeaderNullString(apacheFormat)))
+        try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(apacheFormat))) {
+          convertIfNeeded(parse(name, parser, firstRowAsHeader, apacheFormat))
         }
       }
     }
@@ -959,8 +995,8 @@ class CsvReader {
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       InputStream input = byteInput(is, charset, true)
-      try (CSVParser parser = CSVParser.parse(input, charset, apacheFormat)) {
-        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader, inferredHeaderNullString(apacheFormat)))
+      try (CSVParser parser = CSVParser.parse(input, charset, parserFormat(apacheFormat))) {
+        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader, apacheFormat))
       }
     }
 
@@ -973,8 +1009,8 @@ class CsvReader {
      */
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), apacheFormat)) {
-        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader, inferredHeaderNullString(apacheFormat)))
+      try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), parserFormat(apacheFormat))) {
+        convertIfNeeded(parse(matrixName ?: DEFAULT_MATRIX_NAME, parser, firstRowAsHeader, apacheFormat))
       }
     }
 

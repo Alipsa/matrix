@@ -85,6 +85,21 @@ class CsvReaderFixesTest {
       CsvReader.read().duplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY).fromString('a,,b\n1,2,3\n')
     }
     assertTrue(missingName.message.contains('A header name is missing'))
+
+    IllegalArgumentException duplicateWithNullString = assertThrows(IllegalArgumentException) {
+      CsvReader.read()
+          .nullString('NA')
+          .duplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
+          .fromString('a,a\n1,2\n')
+    }
+    assertTrue(duplicateWithNullString.message.contains('duplicate name: "a"'))
+
+    Matrix repeatedNullHeaders = CsvReader.read()
+        .excel()
+        .nullString('NA')
+        .duplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
+        .fromString('NA,NA\n1,2\n')
+    assertEquals(['', ''], repeatedNullHeaders.columnNames())
   }
 
   @Test
@@ -105,6 +120,28 @@ class CsvReaderFixesTest {
       assertEquals(['a', 'b', ''], matrix.columnNames())
       assertEquals([['1', '2', '3']], matrix.rows())
     }
+  }
+
+  @Test
+  void nullStringDoesNotHideOverWideRecords() {
+    [
+        { CsvReader.read().nullString('NA').fromString('a,b\n1,2,3,4\n') },
+        { CsvReader.read().excel().nullString('NA').fromString('a,b,NA\n1,2,3,4\n') },
+        { CsvReader.readString('a,b\n1,2,3,4\n', new CsvReadOptions().nullString('NA')) }
+    ].each { Closure<?> read ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException, read)
+      assertTrue(exception.message.startsWith('CSV record 2 has'))
+    }
+
+    CSVFormat format = CSVFormat.Builder.create(CSVFormat.EXCEL)
+        .setHeader()
+        .setSkipHeaderRecord(true)
+        .setNullString('NA')
+        .build()
+    IllegalArgumentException deprecated = assertThrows(IllegalArgumentException) {
+      CsvReader.readString('a,b,NA\n1,2,3,4\n', format)
+    }
+    assertEquals('CSV record 2 has 4 columns; expected 3', deprecated.message)
   }
 
   @Test
