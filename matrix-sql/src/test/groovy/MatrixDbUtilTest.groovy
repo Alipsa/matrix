@@ -13,7 +13,15 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.sql.MatrixDbUtil
 import se.alipsa.matrix.sql.SqlIdentifier
 
+import java.sql.Statement
+
 class MatrixDbUtilTest {
+
+  @Test
+  void testBatchResultCountHandlesJdbcSentinels() {
+    assertEquals(5, MatrixDbUtil.batchResultCount([2, Statement.SUCCESS_NO_INFO, 0, 2] as int[]))
+    assertEquals(1, MatrixDbUtil.batchResultCount([Statement.EXECUTE_FAILED, Statement.SUCCESS_NO_INFO] as int[]))
+  }
 
   @Test
   void testDdl() {

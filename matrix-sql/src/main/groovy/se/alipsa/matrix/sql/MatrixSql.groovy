@@ -16,7 +16,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.stream.IntStream
 
 /**
  * Bridges Matrix and SQL allowing you to go back and forth between the two.
@@ -172,17 +171,15 @@ class MatrixSql implements Closeable {
   }
 
   /**
-   * Update a row in the given table. This overload delegates to
-   * {@link #update(String, Row, String...)} with an empty matchColumnName array,
-   * which will throw {@link IllegalArgumentException} because match columns are required.
+   * Execute a prepared update query using values from a row.
    *
-   * @param tableName the name of the table to update
-   * @param row the row data to update
+   * @param sqlQuery the sql query to execute, with '?' placeholders for the row values
+   * @param row the values to bind to the prepared statement
+   * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException because matchColumnName is required
    */
-  int update(String tableName, Row row) throws SQLException {
-    update(tableName, row, new String[0])
+  int update(String sqlQuery, Row row) throws SQLException {
+    update(sqlQuery, row as List)
   }
 
   /**
@@ -573,7 +570,7 @@ class MatrixSql implements Closeable {
         stm.addBatch()
       }
       int[] results = stm.executeBatch()
-      return IntStream.of(results).sum()
+      return MatrixDbUtil.batchResultCount(results)
     }
   }
 
@@ -596,7 +593,11 @@ class MatrixSql implements Closeable {
     if (ci == null) {
       throw new SQLException('Connection is not available and no ConnectionInfo is configured to create one')
     }
-    String url = ci.getUrl().toLowerCase()
+    String configuredUrl = ci.getUrl()
+    if (configuredUrl == null) {
+      throw new SQLException('Database URL is required')
+    }
+    String url = configuredUrl.toLowerCase()
     if (!url.contains(':h2:') && !url.contains(':derby:')
         && isBlank(ci.getPassword()) && !url.contains('passw')
         && !url.contains('integratedsecurity=true')) {
@@ -688,16 +689,18 @@ class MatrixSql implements Closeable {
     }
   }
 
-  private static void bindParams(PreparedStatement stm, List params) throws SQLException {
+  private void bindParams(PreparedStatement stm, List params) throws SQLException {
     int i = 1
     params.each {
-      stm.setObject(i++, it)
+      stm.setObject(i++, mapper.convertToDbValue(it))
     }
   }
 
   private static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
-    return (safeLcUrl.contains(PROP_USER) && safeLcUrl.contains('pass')) || safeLcUrl.contains('@')
+    boolean containsUser = safeLcUrl ==~ /.*[?;&]${PROP_USER}=[^?;&]+.*/
+    boolean containsPassword = safeLcUrl ==~ /.*[?;&](?:password|pass)=[^?;&]+.*/
+    containsUser && containsPassword
   }
 
   /**

@@ -22,6 +22,7 @@ import se.alipsa.mavenutils.ArtifactLookup
 
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.time.LocalDate
 
 class MatrixSqlTest {
@@ -168,7 +169,7 @@ class MatrixSqlTest {
   }
 
   @Test
-  void testUpdateRequiresMatchColumn() {
+  void testPreparedUpdateAcceptsRowValues() {
     Matrix data = Matrix.builder('people2').data([
         id: [1],
         name: ['Alice']
@@ -184,9 +185,10 @@ class MatrixSqlTest {
       }
       matrixSql.create(data)
 
-      Row row = data.row(0)
-      row['name'] = 'Bob'
-      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, row) }
+      Row params = Matrix.builder('params').data([name: ['Bob'], id: [1]]).types(String, int).build().row(0)
+      String quotedTable = SqlIdentifier.renderTable(tableName)
+      assertEquals(1, matrixSql.update("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
+      assertEquals('Bob', matrixSql.select("select \"name\" from $quotedTable")[0, 'name'])
     }
   }
 
@@ -518,6 +520,9 @@ class MatrixSqlTest {
       Set<String> names = matrixSql.getTableNames()
       assertTrue(names.any { it.equalsIgnoreCase('tbl_a') }, "Expected tbl_a in $names")
       assertTrue(names.any { it.equalsIgnoreCase('tbl_b') }, "Expected tbl_b in $names")
+      matrixSql.execute('CREATE VIEW view_only AS SELECT 1 AS id')
+      assertFalse(matrixSql.tableExists('view_only'))
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('view_only') })
     }
   }
 
@@ -635,6 +640,9 @@ class MatrixSqlTest {
     ConnectionInfo valid = new ConnectionInfo()
     valid.setDependency('com.h2database:h2:2.4.240')
     MatrixSql.check(valid)  // must not throw
+    MatrixSql missingUrl = new MatrixSql(valid)
+    SQLException missingUrlException = assertThrows(SQLException) { missingUrl.connect() }
+    assertEquals('Database URL is required', missingUrlException.message)
 
     ConnectionInfo invalid = new ConnectionInfo()
     assertThrows(IllegalArgumentException) { MatrixSql.check(invalid) }
@@ -649,6 +657,15 @@ class MatrixSqlTest {
       assertTrue(matrixSql.getMatrixDbUtil() instanceof MatrixDbUtil)
       assertTrue(matrixSql.getSqlTypeMapper() instanceof SqlTypeMapper)
     }
+  }
+
+  @Test
+  void testOracleUrlDoesNotSuppressConnectionProperties() {
+    def method = MatrixSql.getDeclaredMethod('urlContainsLogin', String)
+    method.accessible = true
+
+    assertFalse(method.invoke(null, 'jdbc:oracle:thin:@//host:1521/service') as boolean)
+    assertTrue(method.invoke(null, 'jdbc:h2:mem:test;user=sa;password=secret') as boolean)
   }
 
   @Test

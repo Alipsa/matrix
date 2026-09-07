@@ -17,7 +17,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.stream.IntStream
 
 /**
  * Utility class for creating tables and inserting data from Matrix objects into a database.
@@ -30,6 +29,7 @@ class MatrixDbUtil {
 
   private static final String COL_TABLE_NAME = 'TABLE_NAME'
   private static final String UNDERSCORE = '_'
+  private static final String[] TABLE_TYPES = ['TABLE'] as String[]
 
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
@@ -70,10 +70,10 @@ class MatrixDbUtil {
 
     String sql = createTableDdl(tableName, table, props, addQuotes, primaryKey)
     result.sql = sql
+    if (tableExists(con, tableName)) {
+      throw new SQLException("Table $tableName already exists")
+    }
     try(Statement stm = con.createStatement()) {
-      if (tableExists(con, tableName)) {
-        throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
-      }
       result.ddlResult = stm.execute(sql)
     } catch (SQLException e) {
       log.error("Failed to create table $tableName using ddl: $sql", e)
@@ -267,10 +267,12 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
+    String catalog = con.getCatalog()
+    String schema = con.getSchema()
+    try (ResultSet rs = con.getMetaData().getTables(catalog, schema, tableName, TABLE_TYPES)) {
       while (rs.next()) {
         String name = rs.getString(COL_TABLE_NAME)
-        if (name.toUpperCase() == tableName.toUpperCase()) {
+        if (name.toUpperCase(Locale.ROOT) == tableName.toUpperCase(Locale.ROOT)) {
           return true
         }
       }
@@ -287,7 +289,9 @@ class MatrixDbUtil {
    */
   Set<String> getTableNames(Connection con) throws SQLException {
     Set<String> names = [] as Set
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
+    String catalog = con.getCatalog()
+    String schema = con.getSchema()
+    try (ResultSet rs = con.getMetaData().getTables(catalog, schema, '%', TABLE_TYPES)) {
       while (rs.next()) {
         names << rs.getString(COL_TABLE_NAME)
       }
@@ -342,7 +346,20 @@ class MatrixDbUtil {
         stm.addBatch()
       }
       int[] results = stm.executeBatch()
-      return IntStream.of(results).sum()
+      return batchResultCount(results)
+    }
+  }
+
+  /**
+   * Convert JDBC batch update counts into a non-negative affected-row count.
+   * Drivers reporting {@link Statement#SUCCESS_NO_INFO} are counted as one successful row.
+   *
+   * @param results the update counts returned by {@link Statement#executeBatch()}
+   * @return the non-negative affected-row count
+   */
+  static int batchResultCount(int[] results) {
+    results.inject(0) { int total, int result ->
+      total + (result == Statement.SUCCESS_NO_INFO ? 1 : result > 0 ? result : 0)
     }
   }
 

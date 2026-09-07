@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.sql.MatrixResultSet
 
+import java.net.URI
 import java.sql.Date
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -115,6 +116,17 @@ class MatrixResultSetTest {
     assertThrows(SQLException) { rs.next() }
     assertThrows(SQLException) { rs.getMetaData() }
     assertThrows(SQLException) { rs.wasNull() }
+    assertThrows(SQLException) { rs.isBeforeFirst() }
+    assertThrows(SQLException) { rs.isAfterLast() }
+    assertThrows(SQLException) { rs.isFirst() }
+    assertThrows(SQLException) { rs.isLast() }
+    assertThrows(SQLException) { rs.first() }
+    assertThrows(SQLException) { rs.last() }
+    assertThrows(SQLException) { rs.beforeFirst() }
+    assertThrows(SQLException) { rs.afterLast() }
+    assertThrows(SQLException) { rs.absolute(1) }
+    assertThrows(SQLException) { rs.relative(1) }
+    assertThrows(SQLException) { rs.updateString(1, 'x') }
   }
 
   @Test
@@ -176,7 +188,7 @@ class MatrixResultSetTest {
     long epochMillis = 1714392896000L  // 2024-04-29 12:34:56 UTC
     Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
     Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
-    int cetOffset = cetCal.getTimeZone().getOffset(0)
+    int cetOffset = cetCal.getTimeZone().getOffset(epochMillis)
 
     Matrix matrix = Matrix.builder('millis').data([
         d: [epochMillis],
@@ -202,13 +214,13 @@ class MatrixResultSetTest {
     assertEquals(new Timestamp(epochMillis), tsUtc)
     assertFalse(rs.wasNull())
 
-    // CET calendar: offset applied
+    // The stored wall-clock value is interpreted in the supplied calendar's zone.
     Date dateCet = rs.getDate(1, cetCal)
-    assertEquals(new Date(epochMillis + cetOffset), dateCet)
+    assertEquals(new Date(epochMillis - cetOffset), dateCet)
     Time timeCet = rs.getTime(2, cetCal)
-    assertEquals(new Time(epochMillis + cetOffset), timeCet)
+    assertEquals(new Time(epochMillis - cetOffset), timeCet)
     Timestamp tsCet = rs.getTimestamp(3, cetCal)
-    assertEquals(new Timestamp(epochMillis + cetOffset), tsCet)
+    assertEquals(new Timestamp(epochMillis - cetOffset), tsCet)
   }
 
   @Test
@@ -228,9 +240,9 @@ class MatrixResultSetTest {
     assertTrue(rs.next())
 
     // Valid access by index and label
-    assertEquals(new URL('https://example.com'), rs.getURL(1))
+    assertEquals(URI.create('https://example.com').toURL(), rs.getURL(1))
     assertFalse(rs.wasNull())
-    assertEquals(new URL('https://example.com'), rs.getURL('site'))
+    assertEquals(URI.create('https://example.com').toURL(), rs.getURL('site'))
     assertFalse(rs.wasNull())
 
     // Null value
@@ -266,18 +278,87 @@ class MatrixResultSetTest {
     ResultSet rs = new MatrixResultSet(matrix)
     assertTrue(rs.isWrapperFor(Matrix))
     assertTrue(rs.isWrapperFor(List))
+    assertTrue(rs.isWrapperFor(ResultSet))
     assertFalse(rs.isWrapperFor(String))
     assertNotNull(rs.unwrap(Matrix))
     assertNotNull(rs.unwrap(List))
+    assertSame(rs, rs.unwrap(ResultSet))
     assertThrows(SQLException) { rs.unwrap(String) }
 
     def rsmd = rs.getMetaData()
     assertTrue(rsmd.isWrapperFor(Matrix))
     assertTrue(rsmd.isWrapperFor(List))
+    assertTrue(rsmd.isWrapperFor(java.sql.ResultSetMetaData))
     assertFalse(rsmd.isWrapperFor(String))
     assertNotNull(rsmd.unwrap(Matrix))
     assertNotNull(rsmd.unwrap(List))
+    assertSame(rsmd, rsmd.unwrap(java.sql.ResultSetMetaData))
     assertThrows(SQLException) { rsmd.unwrap(String) }
+
+    rs.close()
+    assertThrows(SQLException) { rs.unwrap(Matrix) }
+  }
+
+  @Test
+  void testAbsoluteRelativeAndPreviousCursorMovement() {
+    Matrix matrix = Matrix.builder('cursor').data([id: [1, 2, 3], value: ['a', 'b', 'c']]).types(int, String).build()
+    ResultSet rs = new MatrixResultSet(matrix)
+
+    assertTrue(rs.absolute(-1))
+    assertEquals(3, rs.getRow())
+    assertEquals(3, rs.getInt(1))
+
+    assertFalse(rs.absolute(0))
+    assertTrue(rs.isBeforeFirst())
+    assertEquals(0, rs.getRow())
+
+    assertTrue(rs.absolute(3))
+    assertFalse(rs.relative(5))
+    assertTrue(rs.isAfterLast())
+    assertEquals(0, rs.getRow())
+    assertTrue(rs.previous())
+    assertEquals(3, rs.getRow())
+
+    int reverseCount = 0
+    while (rs.previous()) {
+      reverseCount++
+    }
+    assertEquals(2, reverseCount)
+    assertTrue(rs.isBeforeFirst())
+    assertFalse(rs.previous())
+  }
+
+  @Test
+  void testEmptyCursorStateAndRoundedBigDecimal() {
+    ResultSet empty = new MatrixResultSet(Matrix.builder('empty').data([amount: []]).types(BigDecimal).build())
+    assertFalse(empty.isBeforeFirst())
+    assertFalse(empty.isAfterLast())
+    assertFalse(empty.isFirst())
+    assertFalse(empty.isLast())
+
+    ResultSet rs = new MatrixResultSet(
+        Matrix.builder('decimal').data([amount: [1.2345]]).types(BigDecimal).build()
+    )
+    assertTrue(rs.next())
+    assertEquals(1.23, rs.getBigDecimal(1, 2))
+  }
+
+  @Test
+  void testUpdaterValidationAndMetadataContracts() {
+    ResultSet rs = new MatrixResultSet(
+        Matrix.builder('metadata').data([amount: [123.4500], name: ['x']]).types(BigDecimal, String).build()
+    )
+    assertThrows(SQLException) { rs.updateString(1, 'x') }
+    assertTrue(rs.next())
+    assertThrows(SQLException) { rs.updateString(0, 'x') }
+    assertThrows(SQLException) { rs.updateString(3, 'x') }
+
+    def metadata = rs.metaData
+    assertFalse(metadata.isCurrency(1))
+    assertEquals(7, metadata.getPrecision(1))
+    assertEquals(4, metadata.getScale(1))
+    assertThrows(SQLException) { metadata.getColumnName(0) }
+    assertThrows(SQLException) { metadata.getColumnType(3) }
   }
 
 }
