@@ -269,8 +269,6 @@ subprojects { Project p ->
       }
     }
 
-    apply plugin: 'com.diffplug.spotless'
-
     spotless {
       groovy {
         excludeJava()
@@ -278,7 +276,13 @@ subprojects { Project p ->
         trimTrailingWhitespace()
         endWithNewline()
       }
+    }
+  }
 
+  plugins.withId('java') {
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
       java {
         trimTrailingWhitespace()
         endWithNewline()

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.1'
+version = '0.1.2-SNAPSHOT'
 description = 'Convenience logging setup for Matrix Groovy scripts'
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -42,6 +42,47 @@ dependencies {
 
 test {
   useJUnitPlatform()
+}
+
+// The root-level guide and BOM are deliberately inputs so edits to either
+// user-facing snippet revalidate the documented release coordinates.
+File readmeFile = file('README.md')
+def documentedVersionFiles = [readmeFile, rootProject.file('docs/logging.md')]
+String documentedMatrixLoggingVersion = version.toString() - '-SNAPSHOT'
+File matrixBomFile = rootProject.file('matrix-bom/bom.xml')
+File documentedVersionMarker = layout.buildDirectory.file('verification/documented-version.txt').get().asFile
+
+tasks.register('checkDocumentedVersion') {
+  description = 'Checks that matrix-logging documentation uses the current module and BOM release versions.'
+  group = 'verification'
+  inputs.files(documentedVersionFiles)
+  inputs.file(matrixBomFile)
+  inputs.property('matrixLoggingVersion', documentedMatrixLoggingVersion)
+  outputs.file(documentedVersionMarker)
+
+  doLast {
+    String expectedCoordinate = "se.alipsa.matrix:matrix-logging:${documentedMatrixLoggingVersion}"
+    documentedVersionFiles.each { File documentation ->
+      def documentedCoordinates = documentation.text.findAll(/se\.alipsa\.matrix:matrix-logging:[^'\"\s)]+/)
+      if (!documentedCoordinates || documentedCoordinates.any { it != expectedCoordinate }) {
+        throw new GradleException("${documentation} must use ${expectedCoordinate}")
+      }
+    }
+
+    String documentedMatrixBomVersion = new groovy.xml.XmlSlurper()
+        .parse(matrixBomFile).version.text().toString() - '-SNAPSHOT'
+    String expectedBomCoordinate = "se.alipsa.matrix:matrix-bom:${documentedMatrixBomVersion}"
+    def documentedBomCoordinates = readmeFile.text.findAll(/se\.alipsa\.matrix:matrix-bom:[^'\"\s)]+/)
+    if (!documentedBomCoordinates || documentedBomCoordinates.any { it != expectedBomCoordinate }) {
+      throw new GradleException("${readmeFile} must use ${expectedBomCoordinate}")
+    }
+    documentedVersionMarker.parentFile.mkdirs()
+    documentedVersionMarker.text = "${expectedCoordinate}\n${expectedBomCoordinate}\n"
+  }
+}
+
+tasks.named('check') {
+  dependsOn tasks.named('checkDocumentedVersion')
 }
 
 tasks.register('javadocJar', Jar) {
