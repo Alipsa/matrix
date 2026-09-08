@@ -1,6 +1,7 @@
 # Matrix-avro release history
 
 ## v0.3.1, unreleased
+- Decimal schema inference now uses the shared matrix-core column profile, including a reserved integer digit for values below one.
 - Dependency upgrades
   - org.apache.avro:avro 1.12.1 -> 1.12.2
 ## v0.3.0 2026-05-01

@@ -479,6 +479,23 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void testDecimalSchemaUsesSharedPrecisionAndScaleProfile() {
+    Matrix matrix = Matrix.builder('DecimalProfile')
+        .columns(small: [0.001g, 0.002g], mixed: [123.4g, 0.001g])
+        .types(BigDecimal, BigDecimal)
+        .build()
+
+    Schema schema = MatrixAvroWriter.buildSchema(matrix, true)
+    LogicalTypes.Decimal small = nonNullFieldSchema(schema, 'small').logicalType as LogicalTypes.Decimal
+    LogicalTypes.Decimal mixed = nonNullFieldSchema(schema, 'mixed').logicalType as LogicalTypes.Decimal
+
+    assertEquals(4, small.precision)
+    assertEquals(3, small.scale)
+    assertEquals(6, mixed.precision)
+    assertEquals(3, mixed.scale)
+  }
+
+  @Test
   void testFactoryOptionsWriteExactDecimals() {
     Matrix m = Matrix.builder('ExactDecimals')
         .columns(amount: [12.34, 56.789])

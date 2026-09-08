@@ -3,6 +3,7 @@ package se.alipsa.matrix.sql
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.DecimalColumnProfile
 
 import java.sql.ResultSetMetaData
 import java.sql.SQLException
@@ -83,21 +84,10 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
   }
 
   private void calculateDecimalMetrics(int columnIndex) {
-    int maxIntegerDigits = 0
-    int maxScale = 0
-    matrix.column(columnIndex).each { Object value ->
-      if (value instanceof Number) {
-        BigDecimal decimal = value instanceof BigDecimal
-            ? value
-            : new BigDecimal(value.toString())
-        int integerDigits = Math.max(1, decimal.precision() - decimal.scale())
-        maxIntegerDigits = Math.max(maxIntegerDigits, integerDigits)
-        int valueScale = decimal.scale()
-        maxScale = Math.max(maxScale, valueScale)
-      }
-    }
-    precisionByColumn[columnIndex] = maxIntegerDigits + maxScale
-    scaleByColumn[columnIndex] = maxScale
+    List<Number> values = matrix.column(columnIndex).findAll { Object value -> value instanceof Number } as List<Number>
+    DecimalColumnProfile profile = DecimalColumnProfile.profile(values)
+    precisionByColumn[columnIndex] = profile.precision
+    scaleByColumn[columnIndex] = profile.scale
   }
   /**
    * Returns the number of columns in this {@code ResultSet} object.

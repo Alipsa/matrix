@@ -7,6 +7,7 @@
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
 ### Fixes
+- Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
 - Restored the Java-convenience helper shapes of `Columns` and `CollectionUtils.m(...)` so existing raw-map assignments and entry iteration continue to compile.

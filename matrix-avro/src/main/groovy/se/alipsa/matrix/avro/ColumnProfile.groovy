@@ -2,6 +2,8 @@ package se.alipsa.matrix.avro
 
 import groovy.transform.PackageScope
 
+import se.alipsa.matrix.core.util.DecimalColumnProfile
+
 /**
  * Inferred column characteristics used when building Avro schemas.
  */
@@ -17,20 +19,16 @@ final class ColumnProfile {
   boolean recordSeen = false
   Map recordSample
   Set<String> recordKeys
-  boolean sawDecimal = false
-  int maxIntegerDigits = 0
-  int maxScale = 0
+  DecimalColumnProfile decimalProfile
   ColumnProfile(String name, Class<?> declaredType) {
     this.name = name
     this.declaredType = declaredType
   }
   int[] decimalMeta() {
-    if (!sawDecimal) {
+    if (decimalProfile == null || !decimalProfile.hasValues) {
       return [10, 0] as int[]
     }
-    int scale = Math.max(0, maxScale)
-    int precision = Math.max(1, maxIntegerDigits + scale)
-    [precision, scale] as int[]
+    [decimalProfile.precision, decimalProfile.scale] as int[]
   }
 
 }
