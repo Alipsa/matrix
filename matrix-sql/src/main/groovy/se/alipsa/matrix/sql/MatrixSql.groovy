@@ -16,7 +16,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.stream.IntStream
 
 /**
  * Bridges Matrix and SQL allowing you to go back and forth between the two.
@@ -147,7 +146,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int update(String sqlQuery) {
-    dbUpdate(sqlQuery)
+    Connection connection = connect()
+    try {
+      dbUpdate(connection, sqlQuery)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
+    }
   }
 
   /**
@@ -159,30 +163,49 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int update(String sqlQuery, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sqlQuery)) {
       bindParams(stm, params)
       stm.executeUpdate()
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
-  private int dbUpdate(String sqlQuery) throws SQLException  {
-    try(Statement stm = connect().createStatement()) {
+  private static int dbUpdate(Connection connection, String sqlQuery) throws SQLException  {
+    try(Statement stm = connection.createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)
     }
   }
 
   /**
-   * Update a row in the given table. This overload delegates to
-   * {@link #update(String, Row, String...)} with an empty matchColumnName array,
-   * which will throw {@link IllegalArgumentException} because match columns are required.
+   * Update a single row in the given table, deriving the match columns from the table's
+   * primary key.
    *
    * @param tableName the name of the table to update
-   * @param row the row data to update
+   * @param row the row data containing both update values and match values
+   * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException because matchColumnName is required
+   * @throws IllegalArgumentException if the table has no primary key, the row omits a primary-key
+   *         column, or the row contains a column that does not exist in the table; use
+   *         {@link #update(String, Row, String...)} with explicit match columns instead when no
+   *         primary key exists
    */
   int update(String tableName, Row row) throws SQLException {
-    update(tableName, row, new String[0])
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row)
+    executePreparedUpdate(prepared)
+  }
+
+  /**
+   * Execute a prepared DML statement using values from a row.
+   *
+   * @param sqlQuery the SQL statement to execute, with '?' placeholders for the row values
+   * @param row the values to bind to the prepared statement
+   * @return the number of rows affected
+   * @throws SQLException if a database access error occurs
+   */
+  int executeUpdate(String sqlQuery, Row row) throws SQLException {
+    update(sqlQuery, row as List)
   }
 
   /**
@@ -190,13 +213,19 @@ class MatrixSql implements Closeable {
    *
    * @param tableName the name of the table to update
    * @param row the row data containing both update values and match values
-   * @param matchColumnName the column(s) to match in the WHERE clause (required)
+   * @param matchColumnName the Matrix or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively (required)
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if matchColumnName is empty
+   * @throws IllegalArgumentException if matchColumnName is empty or is not present in the row,
+   *                                  or if a row column cannot be mapped unambiguously to a table column
    */
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
-    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName)
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row, matchColumnName)
+    executePreparedUpdate(prepared)
+  }
+
+  private int executePreparedUpdate(SqlGenerator.PreparedUpdate prepared) throws SQLException {
     try(PreparedStatement stm = connect().prepareStatement(prepared.sql)) {
       bindParams(stm, prepared.values)
       stm.executeUpdate()
@@ -208,10 +237,12 @@ class MatrixSql implements Closeable {
    * by the given columns.
    *
    * @param table the Matrix containing the rows to update; the table name is derived from the Matrix name
-   * @param matchColumnName the column(s) to match in the WHERE clause (required)
+   * @param matchColumnName the Matrix or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively (required)
    * @return the total number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if matchColumnName is empty
+   * @throws IllegalArgumentException if matchColumnName is empty or a Matrix column cannot be mapped
+   *                                  unambiguously to a table column
    */
   int update(Matrix table, String... matchColumnName) throws SQLException {
     dbExecuteBatchUpdate(table, matchColumnName)
@@ -228,8 +259,11 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Map<Integer, Object> execute(String sqlQuery) throws SQLException {
-    try(Statement stm = connect().createStatement()) {
-      return dbExecute(stm, sqlQuery)
+    Connection connection = connect()
+    try(Statement stm = connection.createStatement()) {
+      dbExecute(stm, sqlQuery)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -245,9 +279,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Map<Integer, Object> execute(String sqlQuery, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sqlQuery)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sqlQuery)) {
       bindParams(stm, params)
       dbExecute(stm)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -416,7 +453,7 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   Object dropTable(String tableName) {
-    dbExecuteSql("drop table ${SqlIdentifier.renderTable(tableName)}")
+    matrixDbUtil.dropTable(connect(), tableName)
   }
 
   /**
@@ -492,8 +529,11 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int delete(String sql) throws SQLException {
-    try(Statement stm = connect().createStatement()) {
+    Connection connection = connect()
+    try(Statement stm = connection.createStatement()) {
       stm.executeUpdate(sql)
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -506,9 +546,12 @@ class MatrixSql implements Closeable {
    * @throws SQLException if a database access error occurs
    */
   int delete(String sql, List params) throws SQLException {
-    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+    Connection connection = connect()
+    try(PreparedStatement stm = connection.prepareStatement(sql)) {
       bindParams(stm, params)
       stm.executeUpdate()
+    } finally {
+      MatrixDbUtil.clearTableMetadataCache(connection)
     }
   }
 
@@ -560,25 +603,22 @@ class MatrixSql implements Closeable {
     if (table.rowCount() == 0) {
       return 0
     }
-    List<String> matchColumns = matchColumnName.toList()
-    List<String> updateColumns = SqlGenerator.updateColumnNames(table.columnNames(), matchColumns)
-    if (updateColumns.isEmpty()) {
-      throw new IllegalArgumentException('No columns left to update after excluding match columns')
-    }
-    String sql = SqlGenerator.createPreparedUpdateSql(tableName(table), updateColumns, matchColumns)
-    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+    Connection connection = connect()
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(
+        connection,
+        tableName(table),
+        table.row(0),
+        matchColumnName
+    )
+    try(PreparedStatement stm = connection.prepareStatement(prepared.sql)) {
       for (Row row : table) {
-        List<Object> values = SqlGenerator.updateValues(row, updateColumns, matchColumns)
+        List<Object> values = SqlGenerator.updateValues(row, prepared.updateColumns, prepared.matchColumns)
         bindParams(stm, values)
         stm.addBatch()
       }
       int[] results = stm.executeBatch()
-      return IntStream.of(results).sum()
+      return MatrixDbUtil.batchResultCount(results)
     }
-  }
-
-  private Object dbExecuteSql(String sql) throws SQLException {
-      matrixDbUtil.dbExecuteSql(connect(), sql)
   }
 
   /**
@@ -596,7 +636,11 @@ class MatrixSql implements Closeable {
     if (ci == null) {
       throw new SQLException('Connection is not available and no ConnectionInfo is configured to create one')
     }
-    String url = ci.getUrl().toLowerCase()
+    String configuredUrl = ci.getUrl()
+    if (isBlank(configuredUrl)) {
+      throw new SQLException('Database URL is required')
+    }
+    String url = configuredUrl.toLowerCase()
     if (!url.contains(':h2:') && !url.contains(':derby:')
         && isBlank(ci.getPassword()) && !url.contains('passw')
         && !url.contains('integratedsecurity=true')) {
@@ -688,16 +732,18 @@ class MatrixSql implements Closeable {
     }
   }
 
-  private static void bindParams(PreparedStatement stm, List params) throws SQLException {
+  private void bindParams(PreparedStatement stm, List params) throws SQLException {
     int i = 1
     params.each {
-      stm.setObject(i++, it)
+      stm.setObject(i++, mapper.convertToDbValue(it))
     }
   }
 
   private static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
-    return (safeLcUrl.contains(PROP_USER) && safeLcUrl.contains('pass')) || safeLcUrl.contains('@')
+    boolean containsUser = safeLcUrl ==~ /.*[?;&]${PROP_USER}=[^?;&]+.*/
+    boolean containsPassword = safeLcUrl ==~ /.*[?;&](?:password|pass)=[^?;&]+.*/
+    containsUser && containsPassword
   }
 
   /**

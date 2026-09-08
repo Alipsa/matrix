@@ -12,6 +12,8 @@ class SqlGenerator {
   private static final String PLACEHOLDER = '?'
   private static final String VALUES_CLAUSE = ' ) values ( '
   private static final String CLOSE_PAREN = ' ) '
+  private static final String WHERE_CLAUSE = ' where '
+  private static final String AND_SEPARATOR = ' and '
 
   /**
    * Prepared update statement details.
@@ -20,10 +22,27 @@ class SqlGenerator {
 
     final String sql
     final List<Object> values
+    final List<String> updateColumns
+    final List<String> matchColumns
 
-    PreparedUpdate(String sql, List<Object> values) {
+    /**
+     * Create prepared update details with the row column order used for parameter binding.
+     *
+     * @param sql the SQL statement
+     * @param values the ordered parameter values
+     * @param updateColumns row columns used by the SET clause, in placeholder order
+     * @param matchColumns row columns used by the WHERE clause, in placeholder order
+     */
+    PreparedUpdate(
+        String sql,
+        List<Object> values,
+        List<String> updateColumns,
+        List<String> matchColumns
+    ) {
       this.sql = sql
       this.values = values
+      this.updateColumns = updateColumns.asImmutable()
+      this.matchColumns = matchColumns.asImmutable()
     }
 
   }
@@ -33,21 +52,95 @@ class SqlGenerator {
    *
    * @param tableName the table name
    * @param row the row containing the values to update and match on
-   * @param matchColumnName the column(s) to match in the WHERE clause
+   * @param matchColumnName the row column(s) to match in the WHERE clause, matched case-insensitively
    * @return a PreparedUpdate with sql and values
    */
   static PreparedUpdate createPreparedUpdate(String tableName, Row row, String[] matchColumnName) {
+    Map<String, String> columnNames = row.columnNames().collectEntries { String column -> [(column): column] }
+    createPreparedUpdate(tableName, row, matchColumnName, columnNames, false)
+  }
+
+  /**
+   * Create a prepared update statement using database-resolved identifier spellings.
+   *
+   * @param tableName the stored table name
+   * @param row the row containing the values to update and match on
+   * @param matchColumnName the row or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively
+   * @param storedColumnNames row column names mapped to their stored database spellings
+   * @return a PreparedUpdate with sql and values
+   */
+  static PreparedUpdate createPreparedUpdate(
+      String tableName,
+      Row row,
+      String[] matchColumnName,
+      Map<String, String> storedColumnNames
+  ) {
+    createPreparedUpdate(tableName, row, matchColumnName, storedColumnNames, true)
+  }
+
+  private static PreparedUpdate createPreparedUpdate(
+      String tableName,
+      Row row,
+      String[] matchColumnName,
+      Map<String, String> storedColumnNames,
+      boolean storedTableName
+  ) {
     if (matchColumnName == null || matchColumnName.length == 0) {
       throw new IllegalArgumentException('matchColumnName is required')
     }
-    List<String> matchColumns = matchColumnName.toList()
+    if (storedColumnNames == null) {
+      throw new IllegalArgumentException('storedColumnNames is required')
+    }
+    List<String> matchColumns = resolveMatchColumns(row.columnNames(), matchColumnName.toList(), storedColumnNames)
     List<String> updateColumns = updateColumnNames(row.columnNames(), matchColumns)
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
-    String sql = createPreparedUpdateSql(tableName, updateColumns, matchColumns)
+    (row.columnNames() + matchColumns).unique().each { String column ->
+      if (!storedColumnNames.containsKey(column) || storedColumnNames[column] == null || storedColumnNames[column].isBlank()) {
+        throw new IllegalArgumentException("No stored column name mapping for row column: $column")
+      }
+    }
+    List<String> storedUpdateColumns = updateColumns.collect { storedColumnNames[it] }
+    List<String> storedMatchColumns = matchColumns.collect { storedColumnNames[it] }
+    String sql = createPreparedUpdateSqlWithTableName(tableName, storedUpdateColumns, storedMatchColumns, storedTableName)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
-    new PreparedUpdate(sql, values)
+    new PreparedUpdate(sql, values, updateColumns, matchColumns)
+  }
+
+  private static List<String> resolveMatchColumns(
+      List<String> rowColumnNames,
+      List<String> requestedMatchColumns,
+      Map<String, String> storedColumnNames
+  ) {
+    List<String> resolvedMatchColumns = requestedMatchColumns.collect { String requestedColumn ->
+      String exactMatch = rowColumnNames.find { it == requestedColumn }
+      if (exactMatch != null) {
+        return exactMatch
+      }
+      List<String> matches = rowColumnNames.findAll { String rowColumn ->
+        rowColumn.equalsIgnoreCase(requestedColumn)
+            || storedColumnNames[rowColumn]?.equalsIgnoreCase(requestedColumn)
+      }
+      if (matches.isEmpty()) {
+        throw new IllegalArgumentException("No row column found for match column: $requestedColumn")
+      }
+      if (matches.size() > 1) {
+        throw new IllegalArgumentException(
+            "Match column $requestedColumn is ambiguous; matches row columns: ${matches.join(COMMA_SEP)}")
+      }
+      matches.first()
+    }
+    Map<String, List<String>> groupedMatchColumns = resolvedMatchColumns.groupBy { String column -> column }
+    List<String> duplicates = groupedMatchColumns.findAll { String column, List<String> matches ->
+      matches.size() > 1
+    }.keySet().toList()
+    if (!duplicates.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Match columns resolve to duplicate row column(s): ${duplicates.join(COMMA_SEP)}")
+    }
+    resolvedMatchColumns
   }
 
   /**
@@ -59,18 +152,34 @@ class SqlGenerator {
    * @return the SQL update statement with placeholders
    */
   static String createPreparedUpdateSql(String tableName, List<String> updateColumns, List<String> matchColumns) {
-    createPreparedUpdateSql(tableName, updateColumns, matchColumns, true)
+    createPreparedUpdateSqlWithTableName(tableName, updateColumns, matchColumns, false)
+  }
+
+  private static String createPreparedUpdateSqlWithTableName(
+      String tableName,
+      List<String> updateColumns,
+      List<String> matchColumns,
+      boolean storedTableName
+  ) {
+    String renderedTableName = storedTableName ? SqlIdentifier.quote(tableName) : SqlIdentifier.renderTable(tableName)
+    String sql = "update $renderedTableName set "
+    sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(COMMA_SEP)
+    sql += WHERE_CLAUSE
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(AND_SEPARATOR)
+    sql
   }
 
   /**
-   * Create a prepared update statement (with placeholders).
+   * Create a prepared update statement (with placeholders), optionally quoting identifiers.
    *
    * @param tableName the table name
    * @param updateColumns columns to update in the SET clause
    * @param matchColumns columns to match in the WHERE clause
    * @param addQuotes whether to quote identifiers
    * @return the SQL update statement with placeholders
+   * @deprecated Prefer {@link #createPreparedUpdateSql(String, List, List)}, which always quotes identifiers
    */
+  @Deprecated
   static String createPreparedUpdateSql(
       String tableName,
       List<String> updateColumns,
@@ -79,8 +188,8 @@ class SqlGenerator {
   ) {
     String sql = "update ${SqlIdentifier.renderTable(tableName, addQuotes)} set "
     sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(COMMA_SEP)
-    sql += ' where '
-    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(' and ')
+    sql += WHERE_CLAUSE
+    sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column, addQuotes)} = $PLACEHOLDER" }.join(AND_SEPARATOR)
     sql
   }
 

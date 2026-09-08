@@ -20,9 +20,15 @@ import se.alipsa.matrix.sql.MatrixSqlFactory
 import se.alipsa.matrix.sql.SqlIdentifier
 import se.alipsa.mavenutils.ArtifactLookup
 
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 
 class MatrixSqlTest {
 
@@ -168,7 +174,7 @@ class MatrixSqlTest {
   }
 
   @Test
-  void testUpdateRequiresMatchColumn() {
+  void testPreparedUpdateAcceptsRowValues() {
     Matrix data = Matrix.builder('people2').data([
         id: [1],
         name: ['Alice']
@@ -184,9 +190,317 @@ class MatrixSqlTest {
       }
       matrixSql.create(data)
 
+      Row params = Matrix.builder('params').data([name: ['Bob'], id: [1]]).types(String, int).build().row(0)
+      String quotedTable = SqlIdentifier.renderTable(tableName)
+      assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
+      IllegalArgumentException noPk = assertThrows(IllegalArgumentException) { matrixSql.update(tableName, params) }
+      assertEquals(
+          "Cannot derive match columns for $tableName: no primary key. " +
+          'Use update(tableName, row, matchColumnName...) instead',
+          noPk.message
+      )
+      params['name'] = 'Carol'
+      assertEquals(1, matrixSql.executeUpdate("update $quotedTable set \"name\" = ? where \"id\" = ?", params))
+      assertEquals('Carol', matrixSql.select("select \"name\" from $quotedTable")[0, 'name'])
+    }
+  }
+
+  @Test
+  void testUpdateDerivesMatchColumnsFromPrimaryKey() {
+    Matrix data = Matrix.builder('people3').data([
+        id: [1, 2],
+        name: ['Alice', 'Bob']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('update_pk_match_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data, 'id')
+
+      Row row = data.row(1)
+      row['name'] = 'Robert'
+      assertEquals(1, matrixSql.update(tableName, row))
+
+      Matrix stored = matrixSql.select("select * from $tableName order by \"id\"")
+      assertEquals('Robert', stored[1, 'name'])
+      assertEquals('Alice', stored[0, 'name'])
+
+      Row missingPrimaryKey = Matrix.builder('missing_pk')
+          .data([name: ['Charlie']])
+          .types(String)
+          .build()
+          .row(0)
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        matrixSql.update(tableName, missingPrimaryKey)
+      }
+      assertEquals("Cannot update $tableName: row is missing primary key column(s): id", exception.message)
+    }
+  }
+
+  @Test
+  void testUpdateDerivesCaseFoldedPrimaryKeyColumns() {
+    Matrix data = Matrix.builder('nq').data([
+        id: [1],
+        name: ['Alice']
+    ])
+    .types(int, String)
+    .build()
+
+    String url = h2MemUrl('update_folded_pk_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, data.rowCount(), false, 'id')
+
       Row row = data.row(0)
-      row['name'] = 'Bob'
-      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, row) }
+      row['name'] = 'Alicia'
+      assertEquals(1, matrixSql.update('nq', row))
+      assertEquals('Alicia', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      row['name'] = 'Ally'
+      assertEquals(1, matrixSql.update('nq', row, 'ID'))
+      assertEquals('Ally', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      data[0, 'name'] = 'Batch'
+      assertEquals(1, matrixSql.update(data, 'ID'))
+      assertEquals('Batch', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      IllegalArgumentException rowException = assertThrows(IllegalArgumentException) {
+        matrixSql.update('nq', row, 'id', 'ID')
+      }
+      assertEquals('Match columns resolve to duplicate row column(s): id', rowException.message)
+
+      IllegalArgumentException batchException = assertThrows(IllegalArgumentException) {
+        matrixSql.update(data, 'id', 'ID')
+      }
+      assertEquals('Match columns resolve to duplicate row column(s): id', batchException.message)
+    }
+  }
+
+  @Test
+  void testDerivedUpdateQuotesStoredTableName() {
+    String url = h2MemUrl('update_quoted_table_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE TABLE "MiXeD_Case" ("id" INT PRIMARY KEY, "name" VARCHAR(20))')
+      matrixSql.execute('INSERT INTO "MiXeD_Case" VALUES (1, \'Alice\')')
+      Row row = Matrix.builder('row').data([id: [1], name: ['Alicia']]).types(int, String).build().row(0)
+
+      assertEquals(1, matrixSql.update('MiXeD_Case', row))
+      assertEquals('Alicia', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+
+      row['name'] = 'Ally'
+      assertEquals(1, matrixSql.update('MiXeD_Case', row, 'id'))
+      assertEquals('Ally', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+
+      Matrix batch = Matrix.builder('MiXeD_Case').data([id: [1], name: ['Batch']]).types(int, String).build()
+      assertEquals(1, matrixSql.update(batch, 'id'))
+      assertEquals('Batch', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+    }
+  }
+
+  @Test
+  void testDerivedUpdateRejectsDuplicateStoredColumnTargets() {
+    String url = h2MemUrl('update_duplicate_columns_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE TABLE dup (ID INT PRIMARY KEY, NAME VARCHAR(20))')
+      matrixSql.execute("INSERT INTO dup VALUES (1, 'Alice')")
+      Row row = Matrix.builder('row').data([id: [1], Id: [99]]).types(int, int).build().row(0)
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        matrixSql.update('dup', row)
+      }
+      assertEquals(
+          'Cannot update dup: row columns id, Id resolve to the same table column ID',
+          exception.message
+      )
+      assertEquals(1, matrixSql.select('SELECT ID FROM dup')[0, 'ID'])
+    }
+  }
+
+  @Test
+  void testPrimaryKeyLookupUsesCurrentSchema() {
+    String url = h2MemUrl('schema_primary_key_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE SCHEMA s1')
+      matrixSql.execute('CREATE SCHEMA s2')
+      matrixSql.execute('CREATE TABLE s1."orders" ("a" INT PRIMARY KEY, "b" INT)')
+      matrixSql.execute('CREATE TABLE s2."orders" ("x" INT, "y" INT, PRIMARY KEY ("x", "y"))')
+
+      Connection con = matrixSql.connect()
+      MatrixDbUtil util = new MatrixDbUtil(DataBaseProvider.H2)
+      con.schema = 'S1'
+      assertArrayEquals(['a'] as String[], util.primaryKeyColumns(con, 'orders'))
+      con.schema = 'S2'
+      assertArrayEquals(['x', 'y'] as String[], util.primaryKeyColumns(con, 'orders'))
+
+      con.schema = 'PUBLIC'
+      assertFalse(util.tableExists(con, 'orders'))
+      assertArrayEquals([] as String[], util.primaryKeyColumns(con, 'orders'))
+
+      Matrix orders = Matrix.builder('orders').data([a: [1], value: ['public']]).types(int, String).build()
+      matrixSql.create(orders, 'a')
+      assertTrue(util.tableExists(con, 'orders'))
+      assertArrayEquals(['a'] as String[], util.primaryKeyColumns(con, 'orders'))
+    }
+  }
+
+  @Test
+  void testDerivedUpdateCachesResolvedTableMetadata() {
+    Matrix data = Matrix.builder('cached_updates').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('update_metadata_cache_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection delegate = owner.connect()
+      AtomicInteger getTablesCalls = new AtomicInteger()
+      DatabaseMetaData metadata = countingMetadata(delegate.getMetaData(), getTablesCalls)
+      Connection connection = delegatingConnection(delegate, metadata)
+
+      try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+        Row row = data.row(0)
+        row['name'] = 'Alicia'
+        assertEquals(1, matrixSql.update('cached_updates', row))
+        row['name'] = 'Ally'
+        assertEquals(1, matrixSql.update('cached_updates', row))
+        assertEquals(1, getTablesCalls.get())
+      }
+    }
+  }
+
+  @Test
+  void testMetadataLookupToleratesMissingCatalogAndSchemaValues() {
+    Matrix data = Matrix.builder('metadata_locations').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('metadata_location_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection delegate = owner.connect()
+      [null, ''].eachWithIndex { String unavailableValue, int index ->
+        DatabaseMetaData metadata = metadataWithUnavailableLocations(delegate.getMetaData(), unavailableValue)
+        Connection connection = delegatingConnection(delegate, metadata)
+
+        try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+          Row row = data.row(0)
+          row['name'] = "Updated $index"
+          assertEquals(1, matrixSql.update('metadata_locations', row))
+        }
+      }
+    }
+  }
+
+  @Test
+  void testDdlUpdatePathsInvalidateDerivedUpdateMetadata() {
+    Matrix data = Matrix.builder('ddl_cache').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('ddl_update_cache_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, 'id')
+      Row row = data.row(0)
+      row['name'] = 'Alicia'
+      assertEquals(1, matrixSql.update('ddl_cache', row))
+
+      assertEquals(0, matrixSql.update('ALTER TABLE ddl_cache ADD COLUMN nick VARCHAR(20)'))
+      Row rowWithNick = Matrix.builder('with_nick').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally']
+      ]).types(int, String, String).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithNick))
+
+      assertEquals(0, matrixSql.update('ALTER TABLE ddl_cache ADD COLUMN age INT', []))
+      Row rowWithAge = Matrix.builder('with_age').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally'],
+          age: [42]
+      ]).types(int, String, String, int).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithAge))
+
+      assertEquals(0, matrixSql.executeQuery('ALTER TABLE ddl_cache ADD COLUMN city VARCHAR(20)'))
+      Row rowWithCity = Matrix.builder('with_city').data([
+          id: [1],
+          name: ['Alicia'],
+          nick: ['Ally'],
+          age: [42],
+          city: ['Stockholm']
+      ]).types(int, String, String, int, String).build().row(0)
+      assertEquals(1, matrixSql.update('ddl_cache', rowWithCity))
+    }
+  }
+
+  @Test
+  void testMetadataInvalidationIsSharedByConnection() {
+    Matrix data = Matrix.builder('shared_cache').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('shared_metadata_cache_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection connection = owner.connect()
+      try (MatrixSql other = new MatrixSql(connection, DataBaseProvider.H2)) {
+        Row row = data.row(0)
+        row['name'] = 'Alicia'
+        assertEquals(1, other.update('shared_cache', row))
+
+        owner.execute('ALTER TABLE shared_cache ADD COLUMN nick VARCHAR(20)')
+        Row rowWithNick = Matrix.builder('with_nick').data([
+            id: [1],
+            name: ['Alicia'],
+            nick: ['Ally']
+        ]).types(int, String, String).build().row(0)
+        assertEquals(1, other.update('shared_cache', rowWithNick))
+
+        new Sql(connection).execute('ALTER TABLE shared_cache ADD COLUMN city VARCHAR(20)')
+        MatrixDbUtil.clearTableMetadataCache(connection)
+        Row rowWithCity = Matrix.builder('with_city').data([
+            id: [1],
+            name: ['Alicia'],
+            nick: ['Ally'],
+            city: ['Stockholm']
+        ]).types(int, String, String, String).build().row(0)
+        assertEquals(1, other.update('shared_cache', rowWithCity))
+      }
+    }
+  }
+
+  @Test
+  void testTableExistsHandlesUpperCaseIdentifierFolding() {
+    Matrix data = Matrix.builder('tbl_a').data([id: [1]]).types(int).build()
+    String url = h2MemUrl('uppercase_table_exists')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, data.rowCount(), false)
+
+      assertTrue(matrixSql.tableExists('tbl_a'))
+      assertTrue(matrixSql.tableExists('TBL_A'))
+      SQLException exception = assertThrows(SQLException) {
+        matrixSql.create(data, data.rowCount(), false)
+      }
+      assertEquals('Table tbl_a already exists', exception.message)
+
+      matrixSql.execute('CREATE TABLE "MiXeD_Case" (id INT)')
+      assertTrue(matrixSql.tableExists('MiXeD_Case'))
+      assertTrue(matrixSql.tableExists('mixed_case'))
+      assertTrue(matrixSql.tableExists('MIXED_CASE'))
+      assertFalse(matrixSql.tableExists('tblXa'))
+
+      Matrix settings = Matrix.builder('settings').data([id: [1]]).types(int).build()
+      assertFalse(matrixSql.tableExists('settings'))
+      matrixSql.create(settings, 'id')
+      assertTrue(matrixSql.tableExists('settings'))
     }
   }
 
@@ -518,6 +832,14 @@ class MatrixSqlTest {
       Set<String> names = matrixSql.getTableNames()
       assertTrue(names.any { it.equalsIgnoreCase('tbl_a') }, "Expected tbl_a in $names")
       assertTrue(names.any { it.equalsIgnoreCase('tbl_b') }, "Expected tbl_b in $names")
+      matrixSql.execute('CREATE VIEW view_only AS SELECT 1 AS id')
+      assertFalse(matrixSql.tableExists('view_only'))
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('view_only') })
+      matrixSql.execute('CREATE SCHEMA other')
+      matrixSql.execute('CREATE TABLE other.remote_table (id INT)')
+      assertFalse(matrixSql.tableExists('remote_table'))
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('remote_table') })
+      assertFalse(matrixSql.getTableNames().any { it.equalsIgnoreCase('USERS') })
     }
   }
 
@@ -635,6 +957,20 @@ class MatrixSqlTest {
     ConnectionInfo valid = new ConnectionInfo()
     valid.setDependency('com.h2database:h2:2.4.240')
     MatrixSql.check(valid)  // must not throw
+    MatrixSql missingUrl = new MatrixSql(valid)
+    SQLException missingUrlException = assertThrows(SQLException) { missingUrl.connect() }
+    assertEquals('Database URL is required', missingUrlException.message)
+    ConnectionInfo blankUrlInfo = new ConnectionInfo() {
+
+      @Override
+      String getUrl() {
+        '  '
+      }
+
+    }
+    blankUrlInfo.setDependency('com.h2database:h2:2.4.240')
+    MatrixSql blankUrl = new MatrixSql(blankUrlInfo)
+    assertEquals('Database URL is required', assertThrows(SQLException) { blankUrl.connect() }.message)
 
     ConnectionInfo invalid = new ConnectionInfo()
     assertThrows(IllegalArgumentException) { MatrixSql.check(invalid) }
@@ -649,6 +985,15 @@ class MatrixSqlTest {
       assertTrue(matrixSql.getMatrixDbUtil() instanceof MatrixDbUtil)
       assertTrue(matrixSql.getSqlTypeMapper() instanceof SqlTypeMapper)
     }
+  }
+
+  @Test
+  void testOracleUrlDoesNotSuppressConnectionProperties() {
+    def method = MatrixSql.getDeclaredMethod('urlContainsLogin', String)
+    method.accessible = true
+
+    assertFalse(method.invoke(null, 'jdbc:oracle:thin:@//host:1521/service') as boolean)
+    assertTrue(method.invoke(null, 'jdbc:h2:mem:test;user=sa;password=secret') as boolean)
   }
 
   @Test
@@ -763,6 +1108,63 @@ class MatrixSqlTest {
       assertEquals(1, stored.rowCount(), 'Managed MatrixSql must remain usable after close()')
     } finally {
       owner.close()
+    }
+  }
+
+  private static DatabaseMetaData countingMetadata(DatabaseMetaData delegate, AtomicInteger getTablesCalls) {
+    Proxy.newProxyInstance(
+        DatabaseMetaData.classLoader,
+        [DatabaseMetaData] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          if (method.name == 'getTables') {
+            getTablesCalls.incrementAndGet()
+          }
+          invokeDelegate(delegate, method, args)
+        }
+    ) as DatabaseMetaData
+  }
+
+  private static DatabaseMetaData metadataWithUnavailableLocations(DatabaseMetaData delegate, String unavailableValue) {
+    Proxy.newProxyInstance(
+        DatabaseMetaData.classLoader,
+        [DatabaseMetaData] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          Object result = invokeDelegate(delegate, method, args)
+          method.name in ['getColumns', 'getPrimaryKeys']
+              ? resultSetWithUnavailableLocations(result as ResultSet, unavailableValue)
+              : result
+        }
+    ) as DatabaseMetaData
+  }
+
+  private static ResultSet resultSetWithUnavailableLocations(ResultSet delegate, String unavailableValue) {
+    Proxy.newProxyInstance(
+        ResultSet.classLoader,
+        [ResultSet] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          if (method.name == 'getString' && args?.length == 1 && args[0] in ['TABLE_CAT', 'TABLE_SCHEM']) {
+            return unavailableValue
+          }
+          invokeDelegate(delegate, method, args)
+        }
+    ) as ResultSet
+  }
+
+  private static Connection delegatingConnection(Connection delegate, DatabaseMetaData metadata) {
+    Proxy.newProxyInstance(
+        Connection.classLoader,
+        [Connection] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          method.name == 'getMetaData' ? metadata : invokeDelegate(delegate, method, args)
+        }
+    ) as Connection
+  }
+
+  private static Object invokeDelegate(Object delegate, Method method, Object[] args) {
+    try {
+      method.invoke(delegate, args)
+    } catch (InvocationTargetException e) {
+      throw e.targetException
     }
   }
 

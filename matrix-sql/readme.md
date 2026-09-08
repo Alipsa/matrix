@@ -9,9 +9,9 @@ database as simple as possible.
 To use it, add the following to your Gradle build script:
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
-implementation 'se.alipsa.matrix:matrix-core:3.7.1'
-implementation 'se.alipsa.matrix:matrix-sql:2.4.0'
+implementation 'org.apache.groovy:groovy:5.1.1'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0-SNAPSHOT'
+implementation 'se.alipsa.matrix:matrix-sql:2.5.0-SNAPSHOT'
 ```
 
 or if you use Maven:
@@ -21,17 +21,17 @@ or if you use Maven:
   <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.5</version>
+    <version>5.1.1</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>3.7.1</version>
+    <version>3.9.0-SNAPSHOT</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.4.0</version>
+    <version>2.5.0-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```
@@ -148,14 +148,33 @@ try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
   ]).types(int, String).build().row(0)
   assert matrixSql.update(tableName, row, 'id') == 1
 
+  // When the table has a primary key, the two-arg overload derives the match columns from it
+  row['name'] = 'Bob'
+  assert matrixSql.update(tableName, row) == 1
+
   Matrix updated = matrixSql.select("select * from $quotedTable where id = 2")
-  assert updated[0, 'name'] == 'Robert'
+  assert updated[0, 'name'] == 'Bob'
 
   assert matrixSql.delete("delete from $quotedTable where id = 3") == 1
 
   Matrix remaining = matrixSql.select("select * from $quotedTable")
   assert remaining.rowCount() == 3
 }
+```
+
+Derived row updates cache table and primary-key metadata per JDBC connection. SQL executed through
+`MatrixSql` invalidates that cache automatically. If schema-changing SQL is executed directly through
+`groovy.sql.Sql` or a raw JDBC `Statement`, clear the cache before the next derived update. Schema
+changes made through another connection or process cannot invalidate a connection's cache automatically;
+clear the cache on every affected long-lived `MatrixSql` connection after such a change:
+
+```groovy
+import groovy.sql.Sql
+import se.alipsa.matrix.sql.MatrixDbUtil
+
+def connection = matrixSql.connect()
+new Sql(connection).execute('ALTER TABLE people ADD COLUMN nickname VARCHAR(100)')
+MatrixDbUtil.clearTableMetadataCache(connection)
 ```
 
 ### Prepared Parameters
@@ -262,3 +281,4 @@ The following table illustrates the version compatibility of matrix-sql and matr
 |      2.2.0 | 3.4.0 -> 3.5.0 |
 |      2.3.0 |          3.6.0 |
 |      2.4.0 | 3.6.0 -> 3.7.1 |
+|      2.5.0 |          3.9.0 |

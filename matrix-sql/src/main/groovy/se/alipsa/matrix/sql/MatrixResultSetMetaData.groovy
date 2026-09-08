@@ -3,6 +3,7 @@ package se.alipsa.matrix.sql
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.DecimalColumnProfile
 
 import java.sql.ResultSetMetaData
 import java.sql.SQLException
@@ -10,14 +11,83 @@ import java.sql.SQLException
 /**
  * Provides {@link ResultSetMetaData} backed by a {@link Matrix}, exposing column names,
  * types, and display sizes derived from the matrix structure.
+ *
+ * <p>Precision and scale are computed lazily per column and cached. For decimal columns,
+ * both metrics are computed together so they describe a compatible numeric shape. Values
+ * updated after either metric is first requested are not reflected in either metric.</p>
  */
 class MatrixResultSetMetaData implements ResultSetMetaData {
 
+  private static final int NOT_CALCULATED = -1
+
   Matrix matrix
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
+  private final int[] precisionByColumn
+  private final int[] scaleByColumn
 
   MatrixResultSetMetaData(Matrix matrix) {
     this.matrix = matrix
+    precisionByColumn = new int[matrix.columnCount()]
+    scaleByColumn = new int[matrix.columnCount()]
+    Arrays.fill(precisionByColumn, NOT_CALCULATED)
+    Arrays.fill(scaleByColumn, NOT_CALCULATED)
+  }
+
+  private int checkedColumnIndex(int column) throws SQLException {
+    if (column < 1 || column > matrix.columnCount()) {
+      throw new SQLException("Column index out of range: $column")
+    }
+    column - 1
+  }
+
+  private int calculatePrecision(int columnIndex) {
+    Class type = matrix.type(columnIndex)
+    if (type == BigDecimal) {
+      calculateDecimalMetrics(columnIndex)
+      return precisionByColumn[columnIndex]
+    }
+    if (type == BigInteger) {
+      int precision = 0
+      matrix.column(columnIndex).each { Object value ->
+        if (value instanceof Number) {
+          int valuePrecision = new BigDecimal(value.toString()).precision()
+          precision = valuePrecision > precision ? valuePrecision : precision
+        }
+      }
+      return precision
+    }
+    if (CharSequence.isAssignableFrom(type)) {
+      int precision = 0
+      matrix.column(columnIndex).each { Object value ->
+        int length = value == null ? 0 : value.toString().length()
+        precision = length > precision ? length : precision
+      }
+      return precision
+    }
+    switch (type) {
+      case Byte, Byte.TYPE -> 3
+      case Short, Short.TYPE -> 5
+      case Integer, Integer.TYPE -> 10
+      case Long, Long.TYPE -> 19
+      case Float, Float.TYPE -> 7
+      case Double, Double.TYPE -> 15
+      default -> 0
+    }
+  }
+
+  private int calculateScale(int columnIndex) {
+    if (matrix.type(columnIndex) != BigDecimal) {
+      return 0
+    }
+    calculateDecimalMetrics(columnIndex)
+    scaleByColumn[columnIndex]
+  }
+
+  private void calculateDecimalMetrics(int columnIndex) {
+    List<Number> values = matrix.column(columnIndex).findAll { Object value -> value instanceof Number } as List<Number>
+    DecimalColumnProfile profile = DecimalColumnProfile.profile(values)
+    precisionByColumn[columnIndex] = profile.precision
+    scaleByColumn[columnIndex] = profile.scale
   }
   /**
    * Returns the number of columns in this {@code ResultSet} object.
@@ -39,6 +109,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isAutoIncrement(int column) throws SQLException {
+    checkedColumnIndex(column)
     return false
   }
 
@@ -51,6 +122,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isCaseSensitive(int column) throws SQLException {
+    checkedColumnIndex(column)
     return true
   }
 
@@ -63,6 +135,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isSearchable(int column) throws SQLException {
+    checkedColumnIndex(column)
     return true
   }
 
@@ -75,7 +148,8 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isCurrency(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column - 1))
+    checkedColumnIndex(column)
+    return false
   }
 
   /**
@@ -88,6 +162,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int isNullable(int column) throws SQLException {
+    checkedColumnIndex(column)
     return columnNullable
   }
 
@@ -100,7 +175,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isSigned(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column - 1))
+    return Number.isAssignableFrom(matrix.type(checkedColumnIndex(column)))
   }
 
   /**
@@ -113,7 +188,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getColumnDisplaySize(int column) throws SQLException {
-    matrix.maxContentLength(matrix.columnName(column - 1), false)
+    matrix.maxContentLength(matrix.columnName(checkedColumnIndex(column)), false)
   }
 
   /**
@@ -129,7 +204,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnLabel(int column) throws SQLException {
-    return matrix.columnName(column - 1)
+    return matrix.columnName(checkedColumnIndex(column))
   }
 
   /**
@@ -141,7 +216,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnName(int column) throws SQLException {
-    return matrix.columnName(column - 1)
+    return matrix.columnName(checkedColumnIndex(column))
   }
 
   /**
@@ -153,6 +228,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getSchemaName(int column) throws SQLException {
+    checkedColumnIndex(column)
     return ''
   }
 
@@ -170,7 +246,11 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getPrecision(int column) throws SQLException {
-    return 0
+    int columnIndex = checkedColumnIndex(column)
+    if (precisionByColumn[columnIndex] < 0) {
+      precisionByColumn[columnIndex] = calculatePrecision(columnIndex)
+    }
+    precisionByColumn[columnIndex]
   }
 
   /**
@@ -183,7 +263,11 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getScale(int column) throws SQLException {
-    return 0
+    int columnIndex = checkedColumnIndex(column)
+    if (scaleByColumn[columnIndex] < 0) {
+      scaleByColumn[columnIndex] = calculateScale(columnIndex)
+    }
+    scaleByColumn[columnIndex]
   }
 
   /**
@@ -195,6 +279,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getTableName(int column) throws SQLException {
+    checkedColumnIndex(column)
     return matrix.matrixName
   }
 
@@ -208,6 +293,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getCatalogName(int column) throws SQLException {
+    checkedColumnIndex(column)
     return ''
   }
 
@@ -221,7 +307,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getColumnType(int column) throws SQLException {
-    sqlTypeMapper.jdbcType(matrix.type(column - 1))
+    sqlTypeMapper.jdbcType(matrix.type(checkedColumnIndex(column)))
   }
 
   /**
@@ -234,7 +320,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnTypeName(int column) throws SQLException {
-    sqlTypeMapper.sqlType(matrix.type(column - 1))
+    sqlTypeMapper.sqlType(matrix.type(checkedColumnIndex(column)))
   }
 
   /**
@@ -246,6 +332,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isReadOnly(int column) throws SQLException {
+    checkedColumnIndex(column)
     return false
   }
 
@@ -258,6 +345,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isWritable(int column) throws SQLException {
+    checkedColumnIndex(column)
     return true
   }
 
@@ -270,6 +358,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isDefinitelyWritable(int column) throws SQLException {
+    checkedColumnIndex(column)
     return true
   }
 
@@ -290,7 +379,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnClassName(int column) throws SQLException {
-    return matrix.type(column - 1).getName()
+    return matrix.type(checkedColumnIndex(column)).getName()
   }
 
   /**
@@ -312,6 +401,9 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   <T> T unwrap(Class<T> iface) throws SQLException {
+    if (iface?.isInstance(this)) {
+      return this as T
+    }
     if (iface == Matrix) {
       return matrix as T
     }
@@ -338,7 +430,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isWrapperFor(Class<?> iface) throws SQLException {
-    iface == Matrix || iface == List
+    iface != null && (iface.isInstance(this) || iface == Matrix || iface == List)
   }
 
 }

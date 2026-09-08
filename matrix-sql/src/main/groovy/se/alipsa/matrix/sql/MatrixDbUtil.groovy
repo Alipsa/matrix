@@ -10,14 +10,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.util.DecimalColumnProfile
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.stream.IntStream
 
 /**
  * Utility class for creating tables and inserting data from Matrix objects into a database.
@@ -29,9 +30,16 @@ class MatrixDbUtil {
   static final int DEFAULT_DECIMAL_SCALE = 10
 
   private static final String COL_TABLE_NAME = 'TABLE_NAME'
+  private static final String COL_TABLE_SCHEMA = 'TABLE_SCHEM'
+  private static final String COL_TABLE_CATALOG = 'TABLE_CAT'
+  private static final String COL_COLUMN_NAME = 'COLUMN_NAME'
+  private static final String COMMA_SEPARATOR = ', '
   private static final String UNDERSCORE = '_'
+  private static final String[] TABLE_TYPES = ['TABLE', 'BASE TABLE'] as String[]
 
   private static final Logger log = Logger.getLogger(MatrixDbUtil)
+
+  private static final Map<Connection, ConnectionMetadataCache> TABLE_METADATA_CACHE = new WeakHashMap<>()
 
   SqlTypeMapper mapper
 
@@ -70,14 +78,16 @@ class MatrixDbUtil {
 
     String sql = createTableDdl(tableName, table, props, addQuotes, primaryKey)
     result.sql = sql
+    if (tableExists(con, tableName)) {
+      throw new SQLException("Table $tableName already exists")
+    }
     try(Statement stm = con.createStatement()) {
-      if (tableExists(con, tableName)) {
-        throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
-      }
       result.ddlResult = stm.execute(sql)
     } catch (SQLException e) {
       log.error("Failed to create table $tableName using ddl: $sql", e)
       throw e
+    } finally {
+      clearTableMetadataCache(con)
     }
     try {
       result.inserted = insert(con, tableName, table, addQuotes)
@@ -112,7 +122,7 @@ class MatrixDbUtil {
     sql += String.join(',\n', columns)
     if (primaryKey.length > 0) {
       sql += "\n , CONSTRAINT ${SqlIdentifier.constraintName('pk', tableName, addQuotes)} PRIMARY KEY ("
-      sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(', ')
+      sql += SqlIdentifier.renderAll(primaryKey.toList(), addQuotes).join(COMMA_SEPARATOR)
       sql += ')'
     }
     sql += '\n)'
@@ -171,18 +181,10 @@ class MatrixDbUtil {
       Map<String, Integer> props = [:]
       Class type = types.get(i++)
       if (BigDecimal == type) {
-        Integer left = 0
-        Integer right = 0
-        (0..<rowsToScan).each { int r ->
-          BigDecimal val = table[r, name]
-          if (val != null) {
-            left = Math.max(left, val.precision() - val.scale())
-            right = Math.max(right, val.scale())
-          }
-        }
-        Integer precision = left + right
-        props.put(DECIMAL_PRECISION, precision > 0 ? precision : DEFAULT_DECIMAL_PRECISION)
-        props.put(DECIMAL_SCALE, precision > 0 ? right : DEFAULT_DECIMAL_SCALE)
+        List<BigDecimal> values = (0..<rowsToScan).collect { int r -> table[r, name] as BigDecimal }
+        DecimalColumnProfile profile = DecimalColumnProfile.profile(values)
+        props.put(DECIMAL_PRECISION, profile.hasValues ? profile.precision : DEFAULT_DECIMAL_PRECISION)
+        props.put(DECIMAL_SCALE, profile.hasValues ? profile.scale : DEFAULT_DECIMAL_SCALE)
       } else if (type == String) {
         Integer maxLength = 0
         (0..<rowsToScan).each { int r ->
@@ -267,32 +269,308 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
-      while (rs.next()) {
-        String name = rs.getString(COL_TABLE_NAME)
-        if (name.toUpperCase() == tableName.toUpperCase()) {
-          return true
-        }
-      }
-      return false
-    }
+    !findTables(con.getMetaData(), con.catalog, con.schema, tableName).isEmpty()
   }
 
   /**
-   * Get the names of all tables in the database.
+   * Get the names of all tables in the connection's current catalog and schema.
    *
    * @param con the db connection
    * @return a set of table names
    * @throws SQLException if any sql error occurs
    */
   Set<String> getTableNames(Connection con) throws SQLException {
-    Set<String> names = [] as Set
-    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
-      while (rs.next()) {
-        names << rs.getString(COL_TABLE_NAME)
+    findTables(con.getMetaData(), con.catalog, con.schema, null)*.name as Set<String>
+  }
+
+  /**
+   * Get the primary key column names of the given table, ordered by key sequence.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to look up
+   * @return the primary key column names in key order, or an empty array if the table has no primary key
+   * @throws SQLException if any sql error occurs
+   */
+  String[] primaryKeyColumns(Connection con, String tableName) throws SQLException {
+    TableMetadata table = tableMetadata(con, tableName)
+    if (table == null) {
+      return new String[0]
+    }
+    table.primaryKeyColumns as String[]
+  }
+
+  /**
+   * Create an update statement whose match columns come from the current-schema table's primary key.
+   * Row column names are resolved case-insensitively to their stored database spellings.
+   *
+   * @param con the database connection
+   * @param tableName the table to update in the connection's current catalog and schema
+   * @param row the row containing update and primary-key values
+   * @return the prepared SQL and ordered values
+   * @throws SQLException if metadata cannot be read
+   * @throws IllegalArgumentException if no primary key exists or required columns cannot be resolved
+   */
+  SqlGenerator.PreparedUpdate createPreparedUpdate(Connection con, String tableName, Row row) throws SQLException {
+    TableMetadata table = tableMetadata(con, tableName)
+    if (table == null || table.primaryKeyColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot derive match columns for $tableName: no primary key. " +
+          'Use update(tableName, row, matchColumnName...) instead')
+    }
+
+    Map<String, String> storedColumnNames = resolveStoredColumnNames(tableName, row.columnNames(), table.columnNames)
+    List<String> matchColumns = []
+    List<String> missingPrimaryKeyColumns = []
+    table.primaryKeyColumns.each { String primaryKeyColumn ->
+      String matchColumn = storedColumnNames.find { String rowColumn, String storedColumn ->
+        storedColumn == primaryKeyColumn
+      }?.key
+      if (matchColumn == null) {
+        missingPrimaryKeyColumns << primaryKeyColumn
+      } else {
+        matchColumns << matchColumn
       }
     }
-    names
+    if (!missingPrimaryKeyColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row is missing primary key column(s): ${missingPrimaryKeyColumns.join(COMMA_SEPARATOR)}")
+    }
+    SqlGenerator.createPreparedUpdate(table.name, row, matchColumns as String[], storedColumnNames)
+  }
+
+  /**
+   * Create an update statement with explicit match columns, resolving the stored table spelling when
+   * the table is visible in the connection's current catalog and schema. Match columns accept either
+   * the row spelling or stored database spelling and are resolved case-insensitively.
+   *
+   * @param con the database connection
+   * @param tableName the table to update
+   * @param row the row containing update and match values
+   * @param matchColumnNames the row or stored column names to use in the WHERE clause
+   * @return the prepared SQL and ordered values
+   * @throws SQLException if metadata cannot be read
+   * @throws IllegalArgumentException if match columns or stored column mappings are invalid
+   */
+  SqlGenerator.PreparedUpdate createPreparedUpdate(
+      Connection con,
+      String tableName,
+      Row row,
+      String[] matchColumnNames
+  ) throws SQLException {
+    TableMetadata table = tableMetadata(con, tableName)
+    if (table == null) {
+      return SqlGenerator.createPreparedUpdate(tableName, row, matchColumnNames)
+    }
+    Map<String, String> storedColumnNames = resolveStoredColumnNames(tableName, row.columnNames(), table.columnNames)
+    SqlGenerator.createPreparedUpdate(table.name, row, matchColumnNames, storedColumnNames)
+  }
+
+  /**
+   * Clear resolved table metadata for a connection after schema changes.
+   *
+   * @param con the connection whose cached metadata should be discarded
+   */
+  static void clearTableMetadataCache(Connection con) {
+    synchronized (TABLE_METADATA_CACHE) {
+      ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+      if (cache != null) {
+        cache.tableMetadata.clear()
+        cache.generation++
+      }
+    }
+  }
+
+  private TableMetadata tableMetadata(Connection con, String tableName) throws SQLException {
+    String catalog = con.catalog
+    String schema = con.schema
+    String cacheKey = [catalog, schema, tableName].join('\u0000')
+    while (true) {
+      long generation
+      synchronized (TABLE_METADATA_CACHE) {
+        ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+        if (cache == null) {
+          cache = new ConnectionMetadataCache()
+          TABLE_METADATA_CACHE[con] = cache
+        }
+        TableMetadata cached = cache.tableMetadata[cacheKey]
+        if (cached != null) {
+          return cached
+        }
+        generation = cache.generation
+      }
+
+      TableMetadata resolved = loadTableMetadata(con.getMetaData(), catalog, schema, tableName)
+
+      synchronized (TABLE_METADATA_CACHE) {
+        ConnectionMetadataCache cache = TABLE_METADATA_CACHE[con]
+        if (cache == null || cache.generation != generation) {
+          continue
+        }
+        if (resolved != null) {
+          cache.tableMetadata[cacheKey] = resolved
+        }
+        return resolved
+      }
+    }
+  }
+
+  private static TableMetadata loadTableMetadata(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    TableReference table = findTable(metadata, catalog, schema, tableName)
+    if (table == null) {
+      return null
+    }
+    List<String> columnNames = []
+    try (ResultSet rs = metadata.getColumns(table.catalog, table.schema, table.name, null)) {
+      while (rs.next()) {
+        if (sameMetadataTable(rs, table)) {
+          columnNames << rs.getString(COL_COLUMN_NAME)
+        }
+      }
+    }
+    SortedMap<Short, String> columnsBySeq = new TreeMap<>()
+    try (ResultSet rs = metadata.getPrimaryKeys(table.catalog, table.schema, table.name)) {
+      while (rs.next()) {
+        if (sameMetadataTable(rs, table)) {
+          columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString(COL_COLUMN_NAME)
+        }
+      }
+    }
+    new TableMetadata(table, columnNames, columnsBySeq.values() as List<String>)
+  }
+
+  private static boolean sameMetadataTable(ResultSet rs, TableReference table) throws SQLException {
+    rs.getString(COL_TABLE_NAME) == table.name
+        && metadataLocationMatches(rs.getString(COL_TABLE_SCHEMA), table.schema)
+        && metadataLocationMatches(rs.getString(COL_TABLE_CATALOG), table.catalog)
+  }
+
+  private static boolean metadataLocationMatches(String metadataValue, String tableValue) {
+    metadataValue == null || metadataValue.isBlank() || tableValue == null || tableValue.isBlank() || metadataValue == tableValue
+  }
+
+  private static Map<String, String> resolveStoredColumnNames(
+      String tableName,
+      List<String> rowColumnNames,
+      List<String> storedColumnNames
+  ) {
+    Map<String, String> resolved = [:]
+    List<String> missing = []
+    rowColumnNames.each { String rowColumn ->
+      String storedColumn = storedColumnNames.find { it == rowColumn }
+      if (storedColumn == null) {
+        List<String> caseInsensitiveMatches = storedColumnNames.findAll { it.equalsIgnoreCase(rowColumn) }
+        if (caseInsensitiveMatches.size() > 1) {
+          throw new IllegalArgumentException(
+              "Cannot update $tableName: row column $rowColumn is ambiguous; matches: ${caseInsensitiveMatches.join(COMMA_SEPARATOR)}")
+        }
+        storedColumn = caseInsensitiveMatches.find()
+      }
+      if (storedColumn == null) {
+        missing << rowColumn
+      } else {
+        resolved[rowColumn] = storedColumn
+      }
+    }
+    if (!missing.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row column(s) not found in table: ${missing.join(COMMA_SEPARATOR)}")
+    }
+    Map<String, List<String>> rowColumnsByStoredColumn = resolved.keySet().groupBy { String rowColumn ->
+      resolved[rowColumn]
+    }
+    Map.Entry<String, List<String>> duplicate = rowColumnsByStoredColumn.find { String storedColumn, List<String> rowColumns ->
+      rowColumns.size() > 1
+    }
+    if (duplicate != null) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row columns ${duplicate.value.join(COMMA_SEPARATOR)} " +
+          "resolve to the same table column ${duplicate.key}")
+    }
+    resolved
+  }
+
+  private static TableReference findTable(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    List<TableReference> matches = findTables(metadata, catalog, schema, tableName)
+    if (matches.isEmpty()) {
+      return null
+    }
+    List<TableReference> exactMatches = matches.findAll { it.name == tableName }
+    if (exactMatches.size() == 1) {
+      return exactMatches.first()
+    }
+    if (matches.size() == 1) {
+      return matches.first()
+    }
+    String locations = matches*.qualifiedName().join(COMMA_SEPARATOR)
+    throw new SQLException("Ambiguous table name $tableName; matches: $locations")
+  }
+
+  private static List<TableReference> findTables(
+      DatabaseMetaData metadata,
+      String catalog,
+      String schema,
+      String tableName
+  ) throws SQLException {
+    List<TableReference> matches = []
+    try (ResultSet rs = metadata.getTables(catalog, schema, null, TABLE_TYPES)) {
+      while (rs.next()) {
+        String name = rs.getString(COL_TABLE_NAME)
+        if (tableName == null || name.equalsIgnoreCase(tableName)) {
+          matches << new TableReference(
+              rs.getString(COL_TABLE_CATALOG),
+              rs.getString(COL_TABLE_SCHEMA),
+              name
+          )
+        }
+      }
+    }
+    matches
+  }
+
+  private static class TableReference {
+
+    final String catalog
+    final String schema
+    final String name
+
+    TableReference(String catalog, String schema, String name) {
+      this.catalog = catalog
+      this.schema = schema
+      this.name = name
+    }
+
+    String qualifiedName() {
+      [catalog, schema, name].findAll { it != null }.join('.')
+    }
+  }
+
+  private static class TableMetadata {
+
+    final String name
+    final List<String> columnNames
+    final List<String> primaryKeyColumns
+
+    TableMetadata(TableReference table, List<String> columnNames, List<String> primaryKeyColumns) {
+      this.name = table.name
+      this.columnNames = columnNames.asImmutable()
+      this.primaryKeyColumns = primaryKeyColumns.asImmutable()
+    }
+  }
+
+  private static class ConnectionMetadataCache {
+
+    final Map<String, TableMetadata> tableMetadata = [:]
+    long generation
   }
 
   /**
@@ -342,7 +620,25 @@ class MatrixDbUtil {
         stm.addBatch()
       }
       int[] results = stm.executeBatch()
-      return IntStream.of(results).sum()
+      return batchResultCount(results)
+    }
+  }
+
+  /**
+   * Convert JDBC batch update counts into a non-negative affected-row count.
+   * Drivers reporting {@link Statement#SUCCESS_NO_INFO} are counted as one successful row.
+   * {@link Statement#EXECUTE_FAILED} entries are excluded from the count and logged as warnings.
+   *
+   * @param results the update counts returned by {@link Statement#executeBatch()}
+   * @return the non-negative affected-row count
+   */
+  static int batchResultCount(int[] results) {
+    results.inject(0) { int total, int result ->
+      if (result == Statement.EXECUTE_FAILED) {
+        log.warn('JDBC batch result contains EXECUTE_FAILED; the affected-row count excludes that statement')
+        return total
+      }
+      total + (result == Statement.SUCCESS_NO_INFO ? 1 : result > 0 ? result : 0)
     }
   }
 
@@ -371,12 +667,14 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   Object dbExecuteSql(Connection con, String sql) throws SQLException {
-    try(Statement stm = con.createStatement()) {
+    try (Statement stm = con.createStatement()) {
       boolean hasResultSet = stm.execute(sql)
       if (hasResultSet) {
         return Matrix.builder().data(stm.getResultSet()).build()
       }
       stm.getUpdateCount()
+    } finally {
+      clearTableMetadataCache(con)
     }
   }
 

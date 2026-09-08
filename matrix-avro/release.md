@@ -1,6 +1,7 @@
 # Matrix-avro release history
 
 ## v0.3.1, unreleased
+- Decimal schema inference now uses the shared column profile from matrix-core 3.9.0; matrix-core 3.9.0 or later is required.
 - Dependency upgrades
   - org.apache.avro:avro 1.12.1 -> 1.12.2
 ## v0.3.0 2026-05-01

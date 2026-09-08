@@ -7,7 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.sql.MatrixSqlFactory
+
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class DerbyDbTest {
 
@@ -38,11 +42,21 @@ class DerbyDbTest {
       ''')
       assertEquals(1, result)
 
+      Row row = Matrix.builder('singleRow').data([
+          place: [2],
+          firstname: ['Ada'],
+          start: [LocalDate.of(2026, 9, 7)],
+          bin: [[0x01] as byte[]],
+          theTime: [java.sql.Time.valueOf('09:30:00')],
+          'local date time': [LocalDateTime.of(2026, 9, 7, 9, 30)]
+      ]).types(int, String, LocalDate, byte[], java.sql.Time, LocalDateTime).build().row(0)
+      assertEquals(1, derby.insert('test', row))
+
       result = derby.executeQuery('select * from test').withMatrixName('test')
       assertInstanceOf(Matrix, result)
       Matrix selected = result as Matrix
       assertEquals('test', selected.matrixName)
-      assertEquals(1, selected.rowCount())
+      assertEquals(2, selected.rowCount())
       assertEquals(1, selected[0, 'place'])
       assertEquals('Per', selected[0, 'firstname'])
 

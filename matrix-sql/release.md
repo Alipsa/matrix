@@ -1,6 +1,34 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
+## v2.5.0, 2026-09-08
+
+Requires matrix-core 3.9.0 or later.
+
+### Table discovery and derived updates
+- `getTableNames(Connection)` and `tableExists(Connection, String)` now inspect only tables in the connection's current catalog and schema; views, temporary tables, and tables in other schemas are excluded.
+- `update(String, Row)` now derives match columns from the table's primary key. The row must contain every primary-key column; use `update(String, Row, String...)` for tables without a primary key.
+- Derived and explicit-match updates resolve and quote the table's stored identifier spelling, including mixed-case quoted names.
+- Table and primary-key metadata is cached per connection and invalidated by Matrix SQL schema-changing operations or explicitly with `MatrixDbUtil.clearTableMetadataCache(Connection)`.
+- Metadata matching tolerates drivers that report missing catalog or schema values across JDBC metadata calls.
+- Ambiguous or duplicate case-insensitive column mappings are rejected instead of generating an unsafe update.
+- Explicit single-row and batch updates reject Matrix columns that cannot be mapped unambiguously to stored table columns.
+- Explicit match column names accept either the Matrix spelling or stored database spelling, matched case-insensitively.
+- Explicit match columns that resolve to the same Matrix column are rejected as duplicates.
+
+### DDL generation
+- Generated decimal columns now reserve at least one integer digit. Columns containing only values below one are therefore sized one precision digit wider; for example, `NUMERIC(3, 3)` becomes `NUMERIC(4, 3)`.
+
+### ResultSet and JDBC behavior
+- `MatrixResultSet` cursor movement and state reporting now follow JDBC before-first and after-last semantics, including repeated `next()` calls after the final row.
+- Decimal precision and scale metadata is derived as a compatible pair that accommodates both the largest integer part and the greatest scale in a column.
+- Strengthened closed-state, column-index, update, metadata, calendar, URL, wrapper, numeric rounding, and null-handling behavior.
+- JDBC batch sentinel values now produce non-negative affected-row counts.
+
+### Validation and connection handling
+- Prepared updates report the specific row or match column missing from a stored-column mapping.
+- Improved managed-connection lifecycle, connection validation, prepared parameter binding, and DDL metadata-cache invalidation.
+
 ## v2.4.0, 2026-04-30
 
 ### SQL identifier handling

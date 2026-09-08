@@ -13,7 +13,15 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.sql.MatrixDbUtil
 import se.alipsa.matrix.sql.SqlIdentifier
 
+import java.sql.Statement
+
 class MatrixDbUtilTest {
+
+  @Test
+  void testBatchResultCountHandlesJdbcSentinels() {
+    assertEquals(5, MatrixDbUtil.batchResultCount([2, Statement.SUCCESS_NO_INFO, 0, 2] as int[]))
+    assertEquals(1, MatrixDbUtil.batchResultCount([Statement.EXECUTE_FAILED, Statement.SUCCESS_NO_INFO] as int[]))
+  }
 
   @Test
   void testDdl() {
@@ -101,6 +109,24 @@ class MatrixDbUtilTest {
     assertEquals(2, mappings.size())
     assertEquals(1, mappings['name'].size())
     assertEquals(2, mappings['amount'].size())
+  }
+
+  @Test
+  void testCreateMappingsUsesSharedDecimalProfile() {
+    Matrix m = Matrix.builder('decimals').data([
+        small: [0.001g, 0.002g],
+        mixed: [123.4g, 0.001g]
+    ])
+    .types(BigDecimal, BigDecimal)
+    .build()
+
+    def util = new MatrixDbUtil(SqlTypeMapper.create(DataBaseProvider.UNKNOWN))
+    Map mappings = util.createMappings(m, m.rowCount())
+
+    assertEquals(4, mappings['small'][DECIMAL_PRECISION])
+    assertEquals(3, mappings['small'][DECIMAL_SCALE])
+    assertEquals(6, mappings['mixed'][DECIMAL_PRECISION])
+    assertEquals(3, mappings['mixed'][DECIMAL_SCALE])
   }
 
   @Test

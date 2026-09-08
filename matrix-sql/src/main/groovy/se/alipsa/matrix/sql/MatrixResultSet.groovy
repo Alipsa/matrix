@@ -8,6 +8,7 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 
+import java.math.RoundingMode
 import java.nio.charset.StandardCharsets
 import java.sql.Array
 import java.sql.Blob
@@ -52,9 +53,16 @@ class MatrixResultSet implements ResultSet {
   private static final String UNSUPPORTED_NCLOB = 'Support for NClob not implemented'
   private static final int BEFORE_FIRST = -1
 
+  private enum CalendarValueType {
+    DATE,
+    TIME,
+    TIMESTAMP
+  }
+
   int rowIdx = BEFORE_FIRST
   Matrix matrix
   Object lastReadValue
+  private MatrixResultSetMetaData metaData
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
 
   /**
@@ -88,11 +96,17 @@ class MatrixResultSet implements ResultSet {
   }
 
   private int checkedColumnIndex(String columnLabel) throws SQLException {
+    ensureOpen()
     int columnIndex = matrix.columnIndex(columnLabel)
     if (columnIndex < 0) {
       throw new SQLException("Column not found: $columnLabel")
     }
     columnIndex
+  }
+
+  private int checkedUpdateColumnIndex(String columnLabel) throws SQLException {
+    ensureCurrentRow()
+    checkedColumnIndex(columnLabel)
   }
 
   private Object readValue(int columnIndex) throws SQLException {
@@ -111,6 +125,35 @@ class MatrixResultSet implements ResultSet {
   private Object readValue(String columnLabel, Class type) throws SQLException {
     ensureCurrentRow()
     matrix[rowIdx, checkedColumnIndex(columnLabel), type]
+  }
+
+  private static long calendarDateMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.DATE)
+  }
+
+  private static long calendarTimeMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.TIME)
+  }
+
+  private static long calendarTimestampMillis(long millis, Calendar calendar) {
+    calendarMillis(millis, calendar, CalendarValueType.TIMESTAMP)
+  }
+
+  private static long calendarMillis(long millis, Calendar calendar, CalendarValueType valueType) {
+    Calendar source = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    source.timeInMillis = millis
+    Calendar target = calendar.clone() as Calendar
+    target.clear()
+    target.set(
+        valueType == CalendarValueType.TIME ? 1970 : source.get(Calendar.YEAR),
+        valueType == CalendarValueType.TIME ? Calendar.JANUARY : source.get(Calendar.MONTH),
+        valueType == CalendarValueType.TIME ? 1 : source.get(Calendar.DAY_OF_MONTH),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.HOUR_OF_DAY),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.MINUTE),
+        valueType == CalendarValueType.DATE ? 0 : source.get(Calendar.SECOND)
+    )
+    target.set(Calendar.MILLISECOND, valueType == CalendarValueType.TIMESTAMP ? source.get(Calendar.MILLISECOND) : 0)
+    target.timeInMillis
   }
 
   /**
@@ -142,7 +185,7 @@ class MatrixResultSet implements ResultSet {
   @Override
   boolean next() throws SQLException {
     ensureOpen()
-    rowIdx++
+    rowIdx = Math.min(rowIdx + 1, matrix.rowCount())
     rowIdx < matrix.rowCount()
   }
 
@@ -175,6 +218,7 @@ class MatrixResultSet implements ResultSet {
   @Override
   void close() throws SQLException {
     matrix = null
+    metaData = null
   }
 
   /**
@@ -350,7 +394,7 @@ class MatrixResultSet implements ResultSet {
   @Override
   BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
     lastReadValue = readValue(columnIndex, BigDecimal)
-    (lastReadValue == null) ? null : lastReadValue.setScale(scale)
+    (lastReadValue == null) ? null : lastReadValue.setScale(scale, RoundingMode.HALF_UP)
   }
 
   /**
@@ -854,7 +898,9 @@ class MatrixResultSet implements ResultSet {
    * Retrieves the  number, types and properties of
    * this {@code ResultSet} object's columns.
    *
-   * @return the description of this {@code ResultSet} object's columns
+   * @return the description of this {@code ResultSet} object's columns;
+   *         the same instance is returned on subsequent calls and reflects
+   *         a snapshot of the data taken when it was first created
    * @throws SQLException if a database access error occurs or this method is
    *         called on a closed result set
    */
@@ -863,7 +909,10 @@ class MatrixResultSet implements ResultSet {
     if (matrix == null) {
       throw new SQLException(RESULT_SET_CLOSED)
     }
-    return new MatrixResultSetMetaData(matrix)
+    if (metaData == null) {
+      metaData = new MatrixResultSetMetaData(matrix)
+    }
+    metaData
   }
 
   /**
@@ -1054,7 +1103,8 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean isBeforeFirst() throws SQLException {
-    return rowIdx < 0
+    ensureOpen()
+    return matrix.rowCount() > 0 && rowIdx < 0
   }
 
   /**
@@ -1076,7 +1126,8 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean isAfterLast() throws SQLException {
-    return rowIdx > matrix.lastRowIndex()
+    ensureOpen()
+    return matrix.rowCount() > 0 && rowIdx > matrix.lastRowIndex()
   }
 
   /**
@@ -1097,7 +1148,8 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean isFirst() throws SQLException {
-    return rowIdx == 0
+    ensureOpen()
+    return matrix.rowCount() > 0 && rowIdx == 0
   }
 
   /**
@@ -1121,7 +1173,8 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean isLast() throws SQLException {
-    return rowIdx == matrix.lastRowIndex()
+    ensureOpen()
+    return matrix.rowCount() > 0 && rowIdx == matrix.lastRowIndex()
   }
 
   /**
@@ -1138,6 +1191,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void beforeFirst() throws SQLException {
+    ensureOpen()
     rowIdx = BEFORE_FIRST
   }
 
@@ -1154,6 +1208,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void afterLast() throws SQLException {
+    ensureOpen()
     rowIdx = matrix.rowCount()
   }
 
@@ -1172,6 +1227,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean first() throws SQLException {
+    ensureOpen()
     rowIdx = 0
     matrix.rowCount() > 0
   }
@@ -1191,6 +1247,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean last() throws SQLException {
+    ensureOpen()
     rowIdx = matrix.lastRowIndex()
     matrix.rowCount() > 0
   }
@@ -1212,7 +1269,8 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   int getRow() throws SQLException {
-    return rowIdx + 1
+    ensureOpen()
+    return rowIdx >= 0 && rowIdx < matrix.rowCount() ? rowIdx + 1 : 0
   }
 
   /**
@@ -1260,13 +1318,20 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean absolute(int row) throws SQLException {
+    ensureOpen()
+    if (row == 0) {
+      rowIdx = BEFORE_FIRST
+      return false
+    }
     if (row < 0) {
       if (row < -matrix.rowCount()) {
+        rowIdx = BEFORE_FIRST
         return false
       }
-      rowIdx = matrix.rowCount() - row
+      rowIdx = matrix.rowCount() + row
     } else {
       if (row > matrix.rowCount()) {
+        rowIdx = matrix.rowCount()
         return false
       }
       rowIdx = row - 1
@@ -1300,14 +1365,15 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean relative(int rows) throws SQLException {
+    ensureOpen()
     rowIdx = rowIdx + rows
     if (rowIdx < 0) {
       rowIdx = BEFORE_FIRST
     }
     if (rowIdx > matrix.lastRowIndex()) {
-      rowIdx = matrix.columnCount()
+      rowIdx = matrix.rowCount()
     }
-    true
+    rowIdx >= 0 && rowIdx < matrix.rowCount()
   }
 
   /**
@@ -1532,7 +1598,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNull(int columnIndex) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = null
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = null
   }
 
   /**
@@ -1554,7 +1620,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBoolean(int columnIndex, boolean x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1576,7 +1642,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateByte(int columnIndex, byte x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1598,7 +1664,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateShort(int columnIndex, short x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1620,7 +1686,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateInt(int columnIndex, int x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1642,7 +1708,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateLong(int columnIndex, long x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1664,7 +1730,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateFloat(int columnIndex, float x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1686,7 +1752,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateDouble(int columnIndex, double x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1709,7 +1775,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1731,7 +1797,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateString(int columnIndex, String x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1753,7 +1819,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBytes(int columnIndex, byte[] x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1775,7 +1841,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateDate(int columnIndex, Date x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1797,7 +1863,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateTime(int columnIndex, Time x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1820,7 +1886,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1844,7 +1910,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.getText()
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.getText()
   }
 
   /**
@@ -1868,7 +1934,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.getBytes()
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.getBytes()
   }
 
   /**
@@ -1892,7 +1958,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.getText()
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.getText()
   }
 
   /**
@@ -1927,10 +1993,11 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateObject(int columnIndex, Object x, int scaleOrLength) throws SQLException {
+    int columnIdx = checkedColumnIndex(columnIndex)
     if (x instanceof BigDecimal) {
-      x = x.setScale(scaleOrLength)
+      x = x.setScale(scaleOrLength, RoundingMode.HALF_UP)
     }
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, columnIdx] = x
   }
 
   /**
@@ -1953,7 +2020,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateObject(int columnIndex, Object x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x
   }
 
   /**
@@ -1974,7 +2041,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNull(String columnLabel) throws SQLException {
-    matrix[rowIdx, columnLabel] = null
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = null
   }
 
   /**
@@ -1996,7 +2063,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBoolean(String columnLabel, boolean x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2018,7 +2085,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateByte(String columnLabel, byte x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2040,7 +2107,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateShort(String columnLabel, short x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2062,7 +2129,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateInt(String columnLabel, int x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2084,7 +2151,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateLong(String columnLabel, long x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2106,7 +2173,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateFloat(String columnLabel, float x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2128,7 +2195,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateDouble(String columnLabel, double x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2151,7 +2218,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBigDecimal(String columnLabel, BigDecimal x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2173,7 +2240,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateString(String columnLabel, String x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2196,7 +2263,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBytes(String columnLabel, byte[] x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2218,7 +2285,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateDate(String columnLabel, Date x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2240,7 +2307,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateTime(String columnLabel, Time x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2263,7 +2330,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateTimestamp(String columnLabel, Timestamp x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2287,7 +2354,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateAsciiStream(String columnLabel, InputStream x, int length) throws SQLException {
-    matrix[rowIdx, columnLabel] = x.getText()
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x.getText()
   }
 
   /**
@@ -2311,7 +2378,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBinaryStream(String columnLabel, InputStream x, int length) throws SQLException {
-    matrix[rowIdx, columnLabel] = x.getBytes()
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x.getBytes()
   }
 
   /**
@@ -2336,7 +2403,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateCharacterStream(String columnLabel, Reader reader, int length) throws SQLException {
-    matrix[rowIdx, columnLabel] = reader.getText()
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = reader.getText()
   }
 
   /**
@@ -2371,10 +2438,11 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateObject(String columnLabel, Object x, int scaleOrLength) throws SQLException {
+    int columnIdx = checkedUpdateColumnIndex(columnLabel)
     if (x instanceof BigDecimal) {
-      x = x.setScale(scaleOrLength)
+      x = x.setScale(scaleOrLength, RoundingMode.HALF_UP)
     }
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, columnIdx] = x
   }
 
   /**
@@ -2397,7 +2465,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateObject(String columnLabel, Object x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x
   }
 
   /**
@@ -2826,7 +2894,8 @@ class MatrixResultSet implements ResultSet {
     int idx = checkedColumnIndex(columnIndex)
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      lastReadValue = new Date(val + cal.getTimeZone().getOffset(0) as long)
+      long millis = val.longValue()
+      lastReadValue = new Date(calendarDateMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Date]
     }
@@ -2881,7 +2950,8 @@ class MatrixResultSet implements ResultSet {
     int idx = checkedColumnIndex(columnIndex)
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      lastReadValue = new Time(val + cal.getTimeZone().getOffset(0) as long)
+      long millis = val.longValue()
+      lastReadValue = new Time(calendarTimeMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Time]
     }
@@ -2936,7 +3006,8 @@ class MatrixResultSet implements ResultSet {
     int idx = checkedColumnIndex(columnIndex)
     def val = matrix[rowIdx, idx]
     if (val instanceof Number) {
-      lastReadValue = new Timestamp(val + cal.getTimeZone().getOffset(0) as long)
+      long millis = val.longValue()
+      lastReadValue = new Timestamp(calendarTimestampMillis(millis, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Timestamp]
     }
@@ -2988,8 +3059,8 @@ class MatrixResultSet implements ResultSet {
     try {
       String val = readValue(columnIndex, String)
       lastReadValue = val
-      val == null ? null : new URL(val)
-    } catch (MalformedURLException e) {
+      val == null ? null : URI.create(val).toURL()
+    } catch (IllegalArgumentException | MalformedURLException e) {
       throw new SQLException(e.getMessage(), e)
     }
   }
@@ -3034,6 +3105,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateRef(int columnIndex, Ref x) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_REF)
   }
 
@@ -3078,6 +3150,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBlob(int columnIndex, Blob x) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_BLOB)
   }
 
@@ -3122,6 +3195,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateClob(int columnIndex, Clob x) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_CLOB)
   }
 
@@ -3166,6 +3240,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateArray(int columnIndex, Array x) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_ARRAY)
   }
 
@@ -3250,6 +3325,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateRowId(int columnIndex, RowId x) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_ROWID)
   }
 
@@ -3323,7 +3399,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNString(int columnIndex, String nString) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = nString
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = nString
   }
 
   /**
@@ -3349,7 +3425,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNString(String columnLabel, String nString) throws SQLException {
-    matrix[rowIdx, columnLabel] = nString
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = nString
   }
 
   /**
@@ -3373,6 +3449,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNClob(int columnIndex, NClob nClob) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_CLOB)
   }
 
@@ -3506,6 +3583,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_SQLXML)
   }
 
@@ -3866,6 +3944,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_BLOB)
   }
 
@@ -3923,6 +4002,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_CLOB)
   }
 
@@ -3985,6 +4065,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_NCLOB)
   }
 
@@ -4113,7 +4194,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.text
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.text
   }
 
   /**
@@ -4142,7 +4223,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.getBytes()
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.getBytes()
   }
 
   /**
@@ -4171,7 +4252,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
-    matrix[rowIdx, columnIndex - 1] = x.text
+    matrix[rowIdx, checkedColumnIndex(columnIndex)] = x.text
   }
 
   /**
@@ -4200,7 +4281,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x.text
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x.text
   }
 
   /**
@@ -4229,7 +4310,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
-    matrix[rowIdx, columnLabel] = x.getBytes()
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = x.getBytes()
   }
 
   /**
@@ -4258,7 +4339,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
-    matrix[rowIdx, columnLabel] = reader.text
+    matrix[rowIdx, checkedUpdateColumnIndex(columnLabel)] = reader.text
   }
 
   /**
@@ -4286,6 +4367,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_BLOB)
   }
 
@@ -4346,6 +4428,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateClob(int columnIndex, Reader reader) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_CLOB)
   }
 
@@ -4411,6 +4494,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void updateNClob(int columnIndex, Reader reader) throws SQLException {
+    checkedColumnIndex(columnIndex)
     throw new SQLFeatureNotSupportedException(UNSUPPORTED_NCLOB)
   }
 
@@ -4527,6 +4611,10 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   def <T> T unwrap(Class<T> iface) throws SQLException {
+    ensureOpen()
+    if (iface?.isInstance(this)) {
+      return this as T
+    }
     if (iface == Matrix) {
       return matrix as T
     }
@@ -4553,7 +4641,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean isWrapperFor(Class<?> iface) throws SQLException {
-    iface == Matrix || iface == List
+    iface != null && (iface.isInstance(this) || iface == Matrix || iface == List)
   }
 
 }

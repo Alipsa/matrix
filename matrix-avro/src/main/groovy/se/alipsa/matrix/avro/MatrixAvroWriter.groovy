@@ -15,6 +15,7 @@ import se.alipsa.matrix.avro.exceptions.AvroConversionException
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.DecimalColumnProfile
 
 import java.math.RoundingMode
 import java.nio.ByteBuffer
@@ -780,24 +781,23 @@ class MatrixAvroWriter {
     Class<?> declared = normalizeType(matrix.type(col))
     ColumnProfile profile = new ColumnProfile(col, declared)
     if (declared != Object && declared != Number) {
-      applyDeclaredType(matrix, col, declared, inferPrecisionAndScale, profile)
+      applyDeclaredType(matrix, col, declared, profile)
+      profileDecimalColumn(matrix, col, inferPrecisionAndScale, profile)
       return profile
     }
-    scanUntypedColumn(matrix, col, inferPrecisionAndScale, profile)
+    scanUntypedColumn(matrix, col, profile)
+    profileDecimalColumn(matrix, col, inferPrecisionAndScale, profile)
     return profile
   }
-  private static void applyDeclaredType(Matrix matrix, String col, Class<?> declared,
-                                        boolean inferPrecisionAndScale, ColumnProfile profile) {
+  private static void applyDeclaredType(Matrix matrix, String col, Class<?> declared, ColumnProfile profile) {
     profile.effectiveType = declared
-    if (declared == BigDecimal && inferPrecisionAndScale) {
-      scanDecimalPrecision(matrix, col, profile)
-    } else if (declared == List) {
+    if (declared == List) {
       scanListElement(matrix, col, profile)
     } else if (declared == Map) {
       scanMapDetails(matrix, col, profile)
     }
   }
-  private static void scanUntypedColumn(Matrix matrix, String col, boolean inferPrecisionAndScale, ColumnProfile profile) {
+  private static void scanUntypedColumn(Matrix matrix, String col, ColumnProfile profile) {
     TypeScanState state = new TypeScanState()
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
@@ -807,7 +807,7 @@ class MatrixAvroWriter {
       }
       boolean stop = state.fixedType
           ? continueFixedTypeScan(v, profile)
-          : scanUntypedValue(v, profile, state, inferPrecisionAndScale)
+          : scanUntypedValue(v, profile, state)
       if (stop) {
         break
       }
@@ -816,13 +816,9 @@ class MatrixAvroWriter {
       profile.effectiveType = resolveUnfixedType(state)
     }
   }
-  private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state,
-                                          boolean inferPrecisionAndScale) {
+  private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state) {
     if (BigDecimal.isInstance(v)) {
       state.sawBigDecimal = true
-      if (inferPrecisionAndScale) {
-        updateDecimalMeta((BigDecimal) v, profile)
-      }
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
@@ -904,13 +900,11 @@ class MatrixAvroWriter {
     boolean needsLong
     boolean fixedType
   }
-  private static void scanDecimalPrecision(Matrix matrix, String col, ColumnProfile profile) {
-    int rows = matrix.rowCount()
-    for (int r = 0; r < rows; r++) {
-      def v = matrix[r, col]
-      if (BigDecimal.isInstance(v)) {
-        updateDecimalMeta((BigDecimal) v, profile)
-      }
+  private static void profileDecimalColumn(Matrix matrix, String col, boolean inferPrecisionAndScale,
+                                           ColumnProfile profile) {
+    if (inferPrecisionAndScale && profile.effectiveType == BigDecimal) {
+      List<BigDecimal> values = matrix.column(col).findAll { BigDecimal.isInstance(it) } as List<BigDecimal>
+      profile.decimalProfile = DecimalColumnProfile.profile(values)
     }
   }
   private static void scanListElement(Matrix matrix, String col, ColumnProfile profile) {
@@ -962,16 +956,6 @@ class MatrixAvroWriter {
         }
       }
     }
-  }
-  private static void updateDecimalMeta(BigDecimal value, ColumnProfile profile) {
-    profile.sawDecimal = true
-    int scale = value.scale()
-    profile.maxScale = Math.max(profile.maxScale, scale)
-    int integerDigits = value.precision() - scale
-    if (integerDigits < 0) {
-      integerDigits = 0
-    }
-    profile.maxIntegerDigits = Math.max(profile.maxIntegerDigits, integerDigits)
   }
   private static Class<?> normalizeType(Class<?> clazz) {
     return clazz == BigInteger ? Long : clazz
