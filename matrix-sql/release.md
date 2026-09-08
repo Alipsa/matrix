@@ -16,6 +16,9 @@ Requires matrix-core 3.9.0 or later.
 - Explicit match column names accept either the Matrix spelling or stored database spelling, matched case-insensitively.
 - Explicit match columns that resolve to the same Matrix column are rejected as duplicates.
 
+### DDL generation
+- Generated decimal columns now reserve at least one integer digit. Columns containing only values below one are therefore sized one precision digit wider; for example, `NUMERIC(3, 3)` becomes `NUMERIC(4, 3)`.
+
 ### ResultSet and JDBC behavior
 - `MatrixResultSet` cursor movement and state reporting now follow JDBC before-first and after-last semantics, including repeated `next()` calls after the final row.
 - Decimal precision and scale metadata is derived as a compatible pair that accommodates both the largest integer part and the greatest scale in a column.
