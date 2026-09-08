@@ -9,7 +9,7 @@ database as simple as possible.
 To use it, add the following to your Gradle build script:
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'org.apache.groovy:groovy:5.1.1'
 implementation 'se.alipsa.matrix:matrix-core:3.9.0-SNAPSHOT'
 implementation 'se.alipsa.matrix:matrix-sql:2.5.0-SNAPSHOT'
 ```
@@ -21,7 +21,7 @@ or if you use Maven:
   <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.5</version>
+    <version>5.1.1</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>

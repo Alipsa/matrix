@@ -112,6 +112,24 @@ class MatrixDbUtilTest {
   }
 
   @Test
+  void testCreateMappingsUsesSharedDecimalProfile() {
+    Matrix m = Matrix.builder('decimals').data([
+        small: [0.001g, 0.002g],
+        mixed: [123.4g, 0.001g]
+    ])
+    .types(BigDecimal, BigDecimal)
+    .build()
+
+    def util = new MatrixDbUtil(SqlTypeMapper.create(DataBaseProvider.UNKNOWN))
+    Map mappings = util.createMappings(m, m.rowCount())
+
+    assertEquals(4, mappings['small'][DECIMAL_PRECISION])
+    assertEquals(3, mappings['small'][DECIMAL_SCALE])
+    assertEquals(6, mappings['mixed'][DECIMAL_PRECISION])
+    assertEquals(3, mappings['mixed'][DECIMAL_SCALE])
+  }
+
+  @Test
   void testCreateMappingsUsesDefaultsForNullOnlyColumns() {
     Matrix m = Matrix.builder('nulls').data([
         name: [null, null],

@@ -10,6 +10,7 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.util.DecimalColumnProfile
 import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
@@ -180,18 +181,10 @@ class MatrixDbUtil {
       Map<String, Integer> props = [:]
       Class type = types.get(i++)
       if (BigDecimal == type) {
-        Integer left = 0
-        Integer right = 0
-        (0..<rowsToScan).each { int r ->
-          BigDecimal val = table[r, name]
-          if (val != null) {
-            left = Math.max(left, val.precision() - val.scale())
-            right = Math.max(right, val.scale())
-          }
-        }
-        Integer precision = left + right
-        props.put(DECIMAL_PRECISION, precision > 0 ? precision : DEFAULT_DECIMAL_PRECISION)
-        props.put(DECIMAL_SCALE, precision > 0 ? right : DEFAULT_DECIMAL_SCALE)
+        List<BigDecimal> values = (0..<rowsToScan).collect { int r -> table[r, name] as BigDecimal }
+        DecimalColumnProfile profile = DecimalColumnProfile.profile(values)
+        props.put(DECIMAL_PRECISION, profile.hasValues ? profile.precision : DEFAULT_DECIMAL_PRECISION)
+        props.put(DECIMAL_SCALE, profile.hasValues ? profile.scale : DEFAULT_DECIMAL_SCALE)
       } else if (type == String) {
         Integer maxLength = 0
         (0..<rowsToScan).each { int r ->
