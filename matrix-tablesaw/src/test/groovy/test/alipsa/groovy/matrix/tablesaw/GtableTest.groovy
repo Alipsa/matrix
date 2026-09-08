@@ -1,6 +1,7 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static tech.tablesaw.api.ColumnType.*
@@ -26,7 +27,7 @@ class GtableTest {
     def empData = [
         emp_id: 1..5,
         emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
-        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        salary: [623.3d, 515.2d, 611.0d, 729.0d, 843.25d],
         start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
         ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
@@ -56,12 +57,38 @@ class GtableTest {
     def data = [
         name: ['Alice', 'Bob'],
         age: [25, 30],
-        salary: [50000, 60000]
+        salary: [50000.0, 60000.0]
     ]
     Gtable table = Gtable.create(data, [salary: BigDecimalColumnType.instance()])
     assertEquals(STRING, table.column('name').type())
     assertEquals(INTEGER, table.column('age').type())
     assertEquals(BigDecimalColumnType.instance(), table.column('salary').type())
+  }
+
+  @Test
+  void testCreateValidatesDeclaredTypes() {
+    def data = [name: ['Alice'], age: [25]]
+    assertThrows(IllegalArgumentException) { Gtable.create(data, [STRING]) }
+    assertThrows(IllegalArgumentException) { Gtable.create(data, [STRING, INTEGER, DOUBLE]) }
+    assertThrows(IllegalArgumentException) { Gtable.create(data, [STRING, null]) }
+    assertThrows(IllegalArgumentException) { Gtable.create(data, [STRING, SKIP]) }
+    assertThrows(IllegalArgumentException) { Gtable.create(data, null as List<ColumnType>) }
+  }
+
+  @Test
+  void testCreateValidatesTypeOverrides() {
+    def data = [name: ['Alice'], age: [25]]
+    assertThrows(IllegalArgumentException) {
+      Gtable.create(data, [unknown: STRING] as LinkedHashMap<String, ColumnType>)
+    }
+    assertThrows(IllegalArgumentException) {
+      Gtable.create(data, [age: null] as LinkedHashMap<String, ColumnType>)
+    }
+    assertThrows(IllegalArgumentException) {
+      Gtable.create(data, [age: SKIP] as LinkedHashMap<String, ColumnType>)
+    }
+    def valid = Gtable.create(data, [age: INTEGER] as LinkedHashMap<String, ColumnType>)
+    assertEquals(INTEGER, valid.column('age').type())
   }
 
   @Test
@@ -126,7 +153,7 @@ class GtableTest {
     def empData = [
         emp_id: 1..5,
         emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
-        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        salary: [623.3d, 515.2d, 611.0d, 729.0d, 843.25d],
         start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
@@ -145,14 +172,14 @@ class GtableTest {
     def empData = [
         emp_id: 1..5,
         emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
-        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        salary: [623.3d, 515.2d, 611.0d, 729.0d, 843.25d],
         start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
 
     Gtable table2 = Gtable.create([
         employee_id: [1, 2, 3, 4, null],
-        performance: [0.76, 0.79, 0.68, 1.10, 0.91]
+        performance: [0.76d, 0.79d, 0.68d, 1.10d, 0.91d]
     ], [INTEGER, DOUBLE])
 
     // does not mutate the table
@@ -218,7 +245,7 @@ class GtableTest {
     def empData = [
         emp_id: 1..5,
         emp_name: ['Rick', 'Dan', 'Michelle', 'Ryan', 'Gary'],
-        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        salary: [623.3d, 515.2d, 611.0d, 729.0d, 843.25d],
         start_date: toLocalDates('2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11', '2015-03-27')
     ]
     Gtable table = Gtable.create(empData, [INTEGER, STRING, DOUBLE, LOCAL_DATE])
@@ -246,7 +273,7 @@ class GtableTest {
     def matrix = Matrix.builder().data(
         name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
         age: [25, 30, 35, 40, 45],
-        salary: [50000, 60000, 70000, 80000, 90000],
+        salary: [50000.0, 60000.0, 70000.0, 80000.0, 90000.0],
         department: ['HR', 'IT', 'Finance', 'IT', 'HR']
     ).types(String, Integer, BigDecimal, String)
         .build()
@@ -276,7 +303,7 @@ class GtableTest {
   void testTableLevelNormalization() {
     def matrix = Matrix.builder().data(
         name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
-        salary: [50000, 60000, 70000, 80000, 90000]
+        salary: [50000.0, 60000.0, 70000.0, 80000.0, 90000.0]
     ).types(String, BigDecimal).build()
 
     def gTable = TableUtil.fromMatrix(matrix)

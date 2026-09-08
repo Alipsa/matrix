@@ -100,8 +100,9 @@ class TableUtilTest {
 
     def glaciers = Table.read().usingOptions(builder.build())
     BigDecimalColumn col = glaciers.column(1) as BigDecimalColumn
-    TableUtil.round(col, 2)
-    col.forEach(v -> assertEquals(2, v.scale()))
+    BigDecimalColumn rounded = TableUtil.round(col, 2) as BigDecimalColumn
+    rounded.forEach(v -> assertEquals(2, v.scale()))
+    assertTrue(col.any { it.scale() != 2 })
   }
 
   @Test
@@ -238,22 +239,59 @@ class TableUtilTest {
   void testRoundDoubleColumnPreservesMissingValues() {
     DoubleColumn col = DoubleColumn.create('values', [1.234d, Double.NaN, 5.678d] as double[])
 
-    TableUtil.round(col, 2)
+    DoubleColumn rounded = TableUtil.round(col, 2) as DoubleColumn
 
-    assertEquals(1.23d, col.getDouble(0), 1e-9)
-    assertTrue(col.isMissing(1))
-    assertEquals(5.68d, col.getDouble(2), 1e-9)
+    assertEquals(1.23d, rounded.getDouble(0), 1e-9)
+    assertTrue(rounded.isMissing(1))
+    assertEquals(5.68d, rounded.getDouble(2), 1e-9)
+    assertEquals(1.234d, col.getDouble(0), 1e-9)
   }
 
   @Test
   void testRoundFloatColumnPreservesMissingValues() {
     FloatColumn col = FloatColumn.create('values', [1.234f, Float.NaN, 5.678f] as float[])
 
-    TableUtil.round(col, 2)
+    FloatColumn rounded = TableUtil.round(col, 2) as FloatColumn
 
-    assertEquals(1.23f, col.getFloat(0), 1e-6f)
-    assertTrue(col.isMissing(1))
-    assertEquals(5.68f, col.getFloat(2), 1e-6f)
+    assertEquals(1.23f, rounded.getFloat(0), 1e-6f)
+    assertTrue(rounded.isMissing(1))
+    assertEquals(5.68f, rounded.getFloat(2), 1e-6f)
+    assertEquals(1.234f, col.getFloat(0), 1e-6f)
+  }
+
+  @Test
+  void testRoundCopiesIntegerColumnsAndLeavesNonNumericColumnsAlone() {
+    IntColumn ints = IntColumn.create('ints', [1, 2] as int[])
+    def rounded = TableUtil.round(ints, 2)
+    assertTrue(rounded !== ints)
+    assertEquals(ints.asList(), rounded.asList())
+
+    StringColumn strings = StringColumn.create('strings', ['a'])
+    assertTrue(TableUtil.round(strings, 2).is(strings))
+  }
+
+  @Test
+  void testCreateColumnValidatesEveryValueAndAllowsMissing() {
+    def integer = TableUtil.createColumn(INTEGER, 'age', [1, null, 3])
+    assertTrue(integer.isMissing(1))
+
+    [
+        (INTEGER): [1, 'x'],
+        (DOUBLE): [1.0d, 2],
+        (BOOLEAN): [true, 'false'],
+        (LOCAL_DATE): [LocalDate.now(), '2026-09-08'],
+        (BigDecimalColumnType.instance()): [1.0, 2.0d]
+    ].each { ColumnType type, List<?> values ->
+      def exception = assertThrows(IllegalArgumentException) {
+        TableUtil.createColumn(type, 'mixed', values)
+      }
+      assertTrue(exception.message.contains("Column 'mixed' row 1"))
+      assertTrue(exception.message.contains('expects'))
+    }
+
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(SKIP, 'skip', [])
+    }
   }
 
   @Test

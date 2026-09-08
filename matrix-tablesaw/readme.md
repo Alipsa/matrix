@@ -129,6 +129,132 @@ def joined = employees.joinOn('id')
 // joined is a Gtable
 ```
 
+## Version 0.4.0 behavior notes
+
+### Secure XML reading
+
+`XmlReader` rejects any XML containing a `DOCTYPE` declaration and disables external entities and
+external DTD loading, so files cannot trigger external resource reads (XXE):
+
+```groovy
+// Throws RuntimeIOException for documents with a DOCTYPE or that reference
+// external entities; the external resource is never read.
+Gtable table = Gtable.read().xml('data.xml')
+```
+
+`Reader` and `InputStream` sources are owned by the reader: they are closed after parsing, on both
+success and failure (matching the ODS reader). Do not reuse a reader you have handed to
+`XmlReadOptions.builder(reader)`.
+
+### XML shape validation and duplicate column names
+
+Every first-row `<td>` must carry a non-blank `name` attribute, and every later row must contain
+exactly as many `<td>` elements as the first row; otherwise reading fails with a
+`RuntimeIOException` naming the one-based data row and the expected/actual cell count.
+
+Duplicate column names are compared case-insensitively. By default they are rejected; when you
+opt in, later occurrences are renamed deterministically and collision-safely:
+
+```groovy
+// Rejects 'Name' + 'name' with RuntimeIOException:
+Gtable.read().usingOptions(XmlReadOptions.builder('data.xml').build())
+
+// Allows them; columns become 'Name', 'name-2' (never colliding, even with
+// pre-suffixed input such as 'name-2' followed by another 'name'):
+def options = XmlReadOptions.builder('data.xml')
+    .allowDuplicateColumnNames(true)
+    .build()
+Gtable table = Gtable.read().usingOptions(options)
+```
+
+### Writers preserve missing values
+
+The XLSX, ODS, and XML writers emit missing cells as blank/empty cells — no numeric or boolean
+sentinels are serialized, so a missing `SHORT` never becomes `-32768` in the output file, and a
+missing `BOOLEAN` never becomes `false`. Ordinary finite values and `false` remain
+distinguishable from missing.
+
+### XLSX is binary-only; worksheet names are sanitized
+
+```groovy
+// Writing to a Writer-backed destination is rejected before the workbook is built:
+table.write().usingOptions(XlsxWriteOptions.builder(new StringWriter()).build())
+// -> IllegalArgumentException("XLSX requires a binary OutputStream destination")
+
+// Use a stream, File, or file name instead. Names longer than 31 characters or containing
+// []:*?/\ are sanitized to a safe deterministic sheet name (falling back to 'Sheet1'):
+table.write().usingOptions(XlsxWriteOptions.builder('report.xlsx').build())
+```
+
+`XlsxWriteOptions.builder(Writer)` still compiles but is deprecated: `build()` succeeds and
+`XlsxWriter.write` rejects the destination.
+
+### File destinations open lazily
+
+For all three formats, `builder(File)` and `builder(String)` defer opening the output file until
+writing starts — merely building options neither creates nor truncates the target, and I/O errors
+surface as `RuntimeIOException` from the write call. A successful write closes the stream:
+
+```groovy
+def options = XmlWriteOptions.builder('out.xml').build()
+assert !new File('out.xml').exists()   // not created yet
+table.write().usingOptions(options)    // file created, written, and closed here
+```
+
+### BigDecimalColumn conversion rules
+
+```groovy
+def col = BigDecimalColumn.create('x')
+col.append(Double.NaN)          // becomes a missing value
+col.append(Float.NaN)           // becomes a missing value
+col.append(1.1f)                // exactly 1.1 (Float.toString, no double widening)
+col.append(0.1d)                // BigDecimal.valueOf(0.1) -> 0.1
+col.append(Double.POSITIVE_INFINITY)  // IllegalArgumentException: not representable
+```
+
+### Division defaults and explicit contexts
+
+No-context division uses `MathContext.DECIMAL64`; pass an explicit context when you need another
+precision:
+
+```groovy
+def a = BigDecimalColumn.create('a', [10.0])
+def b = BigDecimalColumn.create('b', [3.0])
+def q = a.divide(b)                                  // DECIMAL64: 3.333333333333333
+def qp = a.divide(b, new MathContext(12))            // caller-chosen precision
+a.divideBy(b)                                        // mutates a in place
+```
+
+### Strict Gtable type validation
+
+```groovy
+// Throws IllegalArgumentException naming the type index and column — no silent
+// coercion or missing-value insertion:
+Gtable.create([age: [1, 'x']], [ColumnType.INTEGER])   // mismatched value type
+
+// These also fail fast instead of being ignored:
+Gtable.create([a: [1]], [null])          // null type entry
+Gtable.create([a: [1]], [ColumnType.SKIP])
+Gtable.create([a: [1], b: [2]], [ColumnType.INTEGER])  // wrong number of types
+Gtable.create([a: [1], b: [2]], null)                  // null type list
+```
+
+### Non-mutating rounding
+
+`TableUtil.round` returns a rounded copy and leaves the source column untouched (HALF_EVEN by
+default). You must use the return value:
+
+```groovy
+NumberColumn source = table.numberColumn('amount')
+NumberColumn rounded = TableUtil.round(source, 2)   // source is unchanged
+```
+
+### ODS row handling
+
+Interior all-missing rows round-trip through ODS and XML with their position preserved. The ODS
+reader drops only *trailing* all-missing rows, which spreadsheet applications commonly declare
+past the actual data.
+
 ## Documentation
 
 See the [Tablesaw tutorial](../docs/tutorial/14-matrix-tablesaw.md) for a full walk-through, and the tests in `src/test/groovy/test/alipsa/groovy/matrix/tablesaw/` for executable examples.

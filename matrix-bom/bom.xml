@@ -52,7 +52,7 @@
     <matrixSpreadsheetVersion>2.5.0-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.5.0-SNAPSHOT</matrixSqlVersion>
     <matrixStatsVersion>2.5.3-SNAPSHOT</matrixStatsVersion>
-    <matrixTablesawVersion>0.3.2</matrixTablesawVersion>
+    <matrixTablesawVersion>0.4.0-SNAPSHOT</matrixTablesawVersion>
     <matrixXChartVersion>0.4.0-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>

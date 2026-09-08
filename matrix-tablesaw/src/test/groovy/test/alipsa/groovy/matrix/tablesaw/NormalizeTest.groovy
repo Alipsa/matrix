@@ -29,6 +29,23 @@ class NormalizeTest {
   }
 
   @Test
+  void testLogNormPreservesFloatingMissingRows() {
+    def doubles = Normalizer.logNorm(DoubleColumn.create('d', [1d, null, Math.E] as Double[]), 6)
+    def floats = Normalizer.logNorm(FloatColumn.create('f', [1f, null, Math.E as float] as Float[]), 6)
+
+    Assertions.assertEquals(3, doubles.size())
+    Assertions.assertTrue(doubles.isMissing(1))
+    Assertions.assertEquals(0d, doubles.getDouble(0))
+    Assertions.assertEquals(1d, doubles.getDouble(2), 1e-6)
+    floats.with {
+      Assertions.assertEquals(3, size())
+      Assertions.assertTrue(isMissing(1))
+      Assertions.assertEquals(0f, getFloat(0))
+      Assertions.assertEquals(1f, getFloat(2), 1e-6f)
+    }
+  }
+
+  @Test
   void testMinMaxNormDouble() {
     def obs = DoubleColumn.create('values', [1200, 34567, 3456, 12, 3456, 985, 1211])
     def norm = Normalizer.minMaxNorm(obs, 8)

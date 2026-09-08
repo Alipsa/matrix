@@ -136,7 +136,7 @@ class TableUtil {
    *
    * @param column the column to round
    * @param numDecimals the number of decimal places
-   * @return the rounded column (or original column if not numeric)
+   * @return a rounded copy, or the original column if it is not numeric
    */
   static Column<?> round(Column<?> column, int numDecimals) {
     if (column in NumberColumn) {
@@ -150,15 +150,15 @@ class TableUtil {
    *
    * <p>Supported column types:
    * <ul>
-   *   <li>{@link BigDecimalColumn} - uses setScale</li>
+   *   <li>{@link BigDecimalColumn} - uses setScale on a copy</li>
    *   <li>{@link DoubleColumn} - rounds each value</li>
    *   <li>{@link FloatColumn} - rounds each value</li>
-   *   <li>Integer types (IntColumn, ShortColumn, LongColumn) - returned unchanged</li>
+   *   <li>Integer types (IntColumn, ShortColumn, LongColumn) - copied unchanged</li>
    * </ul>
    *
    * @param column the numeric column to round
    * @param numDecimals the number of decimal places (must be non-negative)
-   * @return the column with rounded values
+   * @return an independent copy with rounded values
    * @throws IllegalArgumentException if numDecimals is negative
    */
   static NumberColumn round(NumberColumn column, int numDecimals) {
@@ -166,12 +166,14 @@ class TableUtil {
       throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
-    if (column in BigDecimalColumn) {
-      return (column as BigDecimalColumn).setScale(numDecimals)
+    NumberColumn rounded = column.copy() as NumberColumn
+
+    if (rounded in BigDecimalColumn) {
+      return (rounded as BigDecimalColumn).setScale(numDecimals)
     }
 
-    if (column in DoubleColumn) {
-      def dc = column as DoubleColumn
+    if (rounded in DoubleColumn) {
+      def dc = rounded as DoubleColumn
       for (int i = 0; i < dc.size(); i++) {
         if (dc.isMissing(i)) {
           continue
@@ -181,8 +183,8 @@ class TableUtil {
       }
     }
 
-    if (column in FloatColumn) {
-      def fc = column as FloatColumn
+    if (rounded in FloatColumn) {
+      def fc = rounded as FloatColumn
       for (int i = 0; i < fc.size(); i++) {
         if (fc.isMissing(i)) {
           continue
@@ -192,7 +194,7 @@ class TableUtil {
       }
     }
     // everything else (IntColumn, ShortColumn, LongColumn cannot be rounded as they have no decimals
-    column
+    rounded
   }
 
   /**
@@ -292,10 +294,7 @@ class TableUtil {
         }
         continue
       }
-      Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
-      if (col != null) {
-        columns.add(col)
-      }
+      columns.add(createColumn(type, matrix.columnNames().get(i), matrix.column(i)))
     }
     Table.create(matrix.getMatrixName(), columns)
   }
@@ -323,95 +322,23 @@ class TableUtil {
    * @param name the column name
    * @param values the values to populate the column
    * @param <T> the type parameter
-   * @return a column of the specified type, or null if type is not supported
+   * @return a column of the specified type
+   * @throws IllegalArgumentException if the type is unsupported or a non-null value has the wrong type
    */
   static Column<?> createColumn(ColumnType type, String name, List<?> values) {
-    if (type == ColumnType.STRING) {
-      var col = StringColumn.create(name)
-      for (Object val : values) {
-        col.append((String) val)
-      }
-      return col
+    Class<?> expectedType = classForColumnType(type)
+    if (type == null || type == ColumnType.SKIP || expectedType == Object) {
+      throw new IllegalArgumentException("Unsupported column type for column '${name}': ${type}")
     }
-    if (type == ColumnType.BOOLEAN) {
-      var col = BooleanColumn.create(name)
-      for (Object val : values) {
-        col.append((Boolean) val)
+    Column<?> column = type.create(name)
+    values.eachWithIndex { Object value, int row ->
+      if (value != null && !expectedType.isInstance(value)) {
+        throw new IllegalArgumentException(
+            "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}")
       }
-      return col
+      column.appendObj(value)
     }
-    if (type == ColumnType.LOCAL_DATE) {
-      var col = DateColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalDate) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LOCAL_DATE_TIME) {
-      var col = DateTimeColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalDateTime) val)
-      }
-      return col
-    }
-    if (type == ColumnType.INSTANT) {
-      var col = InstantColumn.create(name)
-      for (Object val : values) {
-        col.append((Instant) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LOCAL_TIME) {
-      var col = TimeColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalTime) val)
-      }
-      return col
-    }
-    if (type == BigDecimalColumnType.instance()) {
-      var col = BigDecimalColumn.create(name)
-      for (Object val : values) {
-        col.append((BigDecimal) val)
-      }
-      return col
-    }
-    if (type == ColumnType.DOUBLE) {
-      var col = DoubleColumn.create(name)
-      for (Object val : values) {
-        col.append((Double) val)
-      }
-      return col
-    }
-    if (type == ColumnType.FLOAT) {
-      var col = FloatColumn.create(name)
-      for (Object val : values) {
-        col.append((Float) val)
-      }
-      return col
-    }
-    if (type == ColumnType.INTEGER) {
-      var col = IntColumn.create(name)
-      for (Object val : values) {
-        col.append((Integer) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LONG) {
-      var col = LongColumn.create(name)
-      for (Object val : values) {
-        col.append((Long) val)
-      }
-      return col
-    }
-    if (type == ColumnType.SHORT) {
-      var col = ShortColumn.create(name)
-      for (Object val : values) {
-        col.append((Short) val)
-      }
-      return col
-    }
-
-    null
+    column
   }
 
   /**

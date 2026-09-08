@@ -12,9 +12,11 @@ import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.column.numbers.BigDecimalColumnFormatter;
 import tech.tablesaw.column.numbers.BigDecimalColumnType;
 import tech.tablesaw.columns.AbstractColumnParser;
+import tech.tablesaw.columns.numbers.DoubleParser;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
@@ -152,6 +154,10 @@ public class BigDecimalColumnTest {
   public void testAppendFloat() {
     var appended = obs.copy().append(123.333f);
     assertEquals(123.333f, appended.get(9).floatValue(), "Append float");
+    assertEquals(new BigDecimal("1.1"), BigDecimalColumn.create("float").append(1.1f).get(0));
+    assertEquals(
+        new BigDecimal("1.1"),
+        BigDecimalColumn.create("boxed").append((Number) Float.valueOf(1.1f)).get(0));
   }
 
   @Test
@@ -176,6 +182,27 @@ public class BigDecimalColumnTest {
   public void testAppendNumber() {
     var appended = obs.copy().append(BigInteger.valueOf(1231123411234511234L));
     assertEquals(BigDecimal.valueOf(1231123411234511234L), appended.get(9), "Append number");
+  }
+
+  @Test
+  void testFloatingMissingAndInfiniteConversions() {
+    assertTrue(BigDecimalColumn.create("double", new double[] {1.0, Double.NaN}).isMissing(1));
+    assertTrue(BigDecimalColumn.create("float", new float[] {1.0f, Float.NaN}).isMissing(1));
+    assertTrue(BigDecimalColumn.create("numbers", new Number[] {Double.NaN}).isMissing(0));
+    assertTrue(BigDecimalColumn.create("collection", List.of(Float.NaN)).isMissing(0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> BigDecimalColumn.create("infinite", new double[] {Double.POSITIVE_INFINITY}));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> BigDecimalColumn.create("infinite", new float[] {Float.NEGATIVE_INFINITY}));
+
+    DoubleColumn source = DoubleColumn.create("source", new Double[] {1.5, null, 2.5});
+    BigDecimalColumn converted = BigDecimalColumn.create("converted");
+    for (int i = 0; i < source.size(); i++) {
+      converted.append(source.isMissing(i) ? null : source.getDouble(i));
+    }
+    assertArrayEquals(source.asObjectArray(), converted.asDoubleColumn().asObjectArray());
   }
 
   @Test
@@ -277,6 +304,56 @@ public class BigDecimalColumnTest {
   }
 
   @Test
+  void testParserPrecisionAndCustomSemantics() {
+    String precise = "12345678901234567890.123456789";
+    DoubleParser doubleParser = new DoubleParser(ColumnType.DOUBLE);
+    BigDecimalColumn appended = BigDecimalColumn.create("precise").appendCell(precise, doubleParser);
+    BigDecimalColumn set = BigDecimalColumn.create("precise", 1);
+    set.set(0, precise, doubleParser);
+    assertEquals(new BigDecimal(precise), appended.get(0));
+    assertEquals(new BigDecimal(precise), set.get(0));
+
+    AbstractColumnParser<BigDecimal> reinterpret =
+        new AbstractColumnParser<>(BigDecimalColumnType.instance()) {
+          @Override
+          public boolean canParse(String value) {
+            return true;
+          }
+
+          @Override
+          public BigDecimal parse(String value) {
+            return new BigDecimal("1234");
+          }
+
+          @Override
+          public double parseDouble(String value) {
+            return 1234d;
+          }
+        };
+    assertEquals(
+        new BigDecimal("1234"), BigDecimalColumn.create("custom").appendCell("1.234", reinterpret).get(0));
+
+    AbstractColumnParser<BigDecimal> noDouble =
+        new AbstractColumnParser<>(BigDecimalColumnType.instance()) {
+          @Override
+          public boolean canParse(String value) {
+            return true;
+          }
+
+          @Override
+          public BigDecimal parse(String value) {
+            return new BigDecimal(value);
+          }
+        };
+    BigDecimalColumn noDoubleColumn = BigDecimalColumn.create("custom", 1);
+    noDoubleColumn.set(0, precise, noDouble);
+    assertEquals(new BigDecimal(precise), noDoubleColumn.get(0));
+    assertEquals(
+        new BigDecimal(precise),
+        BigDecimalColumn.create("custom").appendCell(precise, noDouble).get(0));
+  }
+
+  @Test
   public void testGetUnformattedString() {
     assertEquals("", obs.getUnformattedString(1), "unformatted string for null");
     assertEquals("1200.000000000", obs.getUnformattedString(0));
@@ -284,7 +361,7 @@ public class BigDecimalColumnTest {
 
   @Test
   public void testValueHash() {
-    assertEquals(new BigDecimal("1211.9").setScale(9, RoundingMode.HALF_EVEN).hashCode(),
+    assertEquals(new BigDecimal("1211.9").hashCode(),
         obs.valueHash(6), "Hashcode");
   }
 
@@ -331,6 +408,34 @@ public class BigDecimalColumnTest {
   public void testAsSet() {
     var exp = new HashSet<>(Arrays.asList(values));
     assertEquals(exp, obs.asSet(), "as set");
+  }
+
+  @Test
+  void testNumericEqualityHashingAndDistinctValues() {
+    BigDecimalColumn column =
+        BigDecimalColumn.create(
+            "scaled", new BigDecimal[] {new BigDecimal("1.0"), new BigDecimal("1.00"), null, null});
+    assertTrue(column.equals(0, 1));
+    assertEquals(column.valueHash(0), column.valueHash(1));
+    assertEquals(2, column.countUnique());
+    assertArrayEquals(
+        new BigDecimal[] {new BigDecimal("1.0"), null}, column.unique().asBigDecimalArray());
+    assertTrue(column.asSet().contains(new BigDecimal("1.000")));
+    assertFalse(new HashSet<>(column.asSet()).contains(new BigDecimal("1.000")));
+
+    Table deduplicated = Table.create("scaled").addColumns(column).dropDuplicateRows();
+    assertEquals(2, deduplicated.rowCount());
+  }
+
+  @Test
+  void testIntFactoriesAreUnambiguous() {
+    assertEquals(5, BigDecimalColumn.create("missing", 5).countMissing());
+    assertArrayEquals(
+        new BigDecimal[] {BigDecimal.valueOf(5)},
+        BigDecimalColumn.createFromInts("one", 5).asBigDecimalArray());
+    assertArrayEquals(
+        new BigDecimal[] {BigDecimal.valueOf(5), BigDecimal.valueOf(6)},
+        BigDecimalColumn.createFromInts("two", 5, 6).asBigDecimalArray());
   }
 
   @Test
@@ -565,7 +670,8 @@ public class BigDecimalColumnTest {
   @Test
   void testDivideInPlace() {
     var original = obs.copy();
-    var result = original.divideBy(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)));
+    var result = original.divideBy(BigDecimalColumn.create("divide", bdArr(1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1)))
+        .setScale(9);
     assertArrayEquals(
         bdArr(9, "1090.909090909", null, "3141.818181818", "11.000000000", "3142.181818182", "895.454545455", "1101.727272727", null, "11.000000000"),
         result.asBigDecimalArray()
@@ -574,16 +680,21 @@ public class BigDecimalColumnTest {
   }
 
   @Test
-  void testDivideScaleUsesDividendScale() {
-    // BigDecimal.divide(divisor, RoundingMode) uses the dividend scale
+  void testDivideUsesDecimal64ByDefaultAndAcceptsContext() {
     var col = BigDecimalColumn.create("test",
         new BigDecimal[]{new BigDecimal("10.000"), new BigDecimal("3.00")});
     var result = col.divide(BigDecimalColumn.create("div",
         new BigDecimal[]{new BigDecimal("3"), new BigDecimal("2")}));
-    // 10.000 / 3 = 3.333 (scale 3 from dividend)
-    assertEquals(new BigDecimal("3.333"), result.get(0));
-    // 3.00 / 2 = 1.50 (scale 2 from dividend)
-    assertEquals(new BigDecimal("1.50"), result.get(1));
+    assertEquals(new BigDecimal("3.333333333333333"), result.get(0));
+    assertEquals(0, new BigDecimal("1.5").compareTo(result.get(1)));
+    assertEquals(
+        new BigDecimal("3.33"),
+        col.divide(
+                BigDecimalColumn.create(
+                    "div", new BigDecimal[] {new BigDecimal("3"), new BigDecimal("2")}),
+                new MathContext(3))
+            .get(0));
+    assertThrows(IllegalArgumentException.class, () -> col.divide(col, null));
   }
 
   @Test
@@ -691,6 +802,20 @@ public class BigDecimalColumnTest {
     BigDecimal cv = BigDecimalAggregateFunctions.cv.summarize(col);
     assertTrue(cv.compareTo(new BigDecimal("0.5")) > 0);
     assertTrue(cv.compareTo(new BigDecimal("0.6")) < 0);
+  }
+
+  @Test
+  void testEmptyAndMissingAggregates() {
+    for (BigDecimalColumn column :
+        List.of(BigDecimalColumn.create("empty"), BigDecimalColumn.create("missing", 2))) {
+      assertNull(BigDecimalAggregateFunctions.mean.summarize(column));
+      assertNull(BigDecimalAggregateFunctions.median.summarize(column));
+      assertNull(BigDecimalAggregateFunctions.cv.summarize(column));
+      assertNull(BigDecimalAggregateFunctions.range.summarize(column));
+      assertNull(BigDecimalAggregateFunctions.min.summarize(column));
+      assertNull(BigDecimalAggregateFunctions.max.summarize(column));
+      assertEquals(0, BigDecimal.ZERO.compareTo(BigDecimalAggregateFunctions.sum.summarize(column)));
+    }
   }
 
   @Test

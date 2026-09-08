@@ -1,5 +1,90 @@
 # Matrix-Tablesaw Version history
 
+## v0.4.0, unreleased
+
+### Security
+- `XmlReader` now rejects any XML document containing a `DOCTYPE` declaration, and disables
+  external general entities, external parameter entities, and external DTD loading as defense in
+  depth. Previously an XML file referencing an external entity could cause the parser to read
+  arbitrary files (XML external entity injection).
+- XML parsing failures and rejected documents surface as `RuntimeIOException` with a useful
+  message instead of leaking parser internals.
+
+### Breaking changes
+- `BigDecimalColumn.create(String, int...)` is replaced by `createFromInts(String, int...)`.
+  `create(String, int)` retains its Tablesaw-compatible meaning of creating that many missing
+  rows, so `create("c", 5)` still yields five missing rows while `createFromInts("c", 5, 6)`
+  yields two values.
+- `XlsxWriteOptions.builder(Writer)` is deprecated and its `build()` now fails at write time:
+  XLSX is a binary-only format, so `XlsxWriter` rejects character destinations with
+  `IllegalArgumentException("XLSX requires a binary OutputStream destination")`. Use the
+  `OutputStream`, `File`, or filename overloads instead.
+- `TableUtil.createColumn` throws a named `IllegalArgumentException` (column name, zero-based row
+  index, expected type, actual type) for values whose runtime type does not match the requested
+  `ColumnType`, instead of coercing or silently inserting missing values. Unsupported and `SKIP`
+  types now also throw instead of returning `null`.
+- `TableUtil.round(NumberColumn, int)` no longer mutates the source column: it returns an
+  independent rounded copy (HALF_EVEN by default). Callers must use the return value.
+
+### Numeric behavior
+- `Double.NaN` and `Float.NaN` appended to a `BigDecimalColumn` become missing values; positive
+  and negative infinity are rejected with `IllegalArgumentException` because `BigDecimal` cannot
+  represent them.
+- Finite `Float` values convert via `new BigDecimal(Float.toString(value))`, so `append(1.1f)`
+  produces `1.1` rather than the widened-double representation `1.100000023841858`.
+- No-context `divide`/`divideBy` now use `MathContext.DECIMAL64` instead of dividend-scale
+  rounding; overloads accepting an explicit `MathContext` were added.
+- `BigDecimalColumn` equality, hashing, and distinct-value operations are now numeric:
+  `1.0` and `1.00` are equal, hash identically, and appear once in `unique()`/`asSet()`.
+  `asSet()` uses numeric comparator equality, so `asSet().contains(new BigDecimal("1.000"))`
+  is true even though an ordinary hash-based set containing `1.0` would not contain it.
+- Parser-based string mutation (`set`/`appendCell` with a parser) preserves the exact decimal
+  text only when it agrees with the parser's numeric interpretation; otherwise the parser's
+  custom semantics win. `BigDecimalParser` bypasses this agreement probe.
+- Empty or all-missing columns return `null` from mean, median, coefficient of variation, range,
+  min, and max; sum retains its existing empty-input convention.
+
+### I/O fixes
+- XML, ODS, and XLSX writers now emit missing cells as blank/empty cells instead of serializing
+  Tablesaw numeric/boolean sentinels.
+- Interior all-missing rows now round-trip through ODS (and XML) instead of being dropped or —
+  worse — being corrupted into the following row's values by the ODS writer; the ODS reader keeps
+  interior all-missing rows and only drops trailing all-missing rows.
+- XML output is deterministic UTF-8: stream destinations get an explicit
+  `encoding="UTF-8"` declaration written through an explicit `OutputStreamWriter`, while a
+  caller-supplied `Writer` is used as supplied and the declaration omits the encoding attribute.
+- XML duplicate column names are compared case-insensitively. With `allowDuplicateColumnNames(false)`
+  they are rejected; with it enabled, later occurrences are renamed deterministically to
+  collision-safe `name-2`, `name-3`, ... Unlike Tablesaw CSV, pre-suffixed names such as `name-2`
+  cannot cause the generated names to collide.
+- XML tables are shape-validated before indexing: every first-row `<td>` needs a non-blank `name`,
+  and every later row must have exactly as many `<td>` elements as the first row; violations
+  raise `RuntimeIOException` naming the one-based data row and expected/actual cell count.
+- XLSX worksheet names are sanitized with `WorkbookUtil.createSafeSheetName`, falling back to
+  `Sheet1` when the result is null or blank.
+- File-backed `builder(File)`/`builder(String)` write options for XLSX, ODS, and XML defer opening
+  the output file until writing starts: creating or building options no longer creates or
+  truncates the target. I/O errors surface as `RuntimeIOException` from the write call. A
+  successful write closes the stream.
+- `Reader` and `InputStream` sources passed to `XmlReader` are closed after parsing, on both
+  success and failure, matching the module's ODS reader behavior.
+- Shared `FormatWriteOptionsBuilder` base class added for the XLSX/ODS/XML write-option builders,
+  owning common destination construction (including the lazy file destination). All existing
+  builder entry points and signatures are preserved.
+
+### Validation
+- `Gtable.create(data, columnTypes)` validates up front that the type list is non-null, matches
+  the data size, and contains no null, `SKIP`, or unsupported entries, identifying the bad type
+  index and column name.
+- `Gtable.create(data, typeOverrides)` rejects unknown override keys and routes null/`SKIP`/
+  unsupported override values through the same named error instead of silently ignoring them.
+- `Normalizer.logNorm` for `DoubleColumn` and `FloatColumn` skips missing rows instead of
+  normalizing the missing sentinel.
+
+### Build/test changes
+- New `testNonUtf8DefaultEncoding` Gradle task verifies XML stream output is UTF-8 under a
+  non-UTF-8 JVM default (`-Dfile.encoding=ISO-8859-1`); wired into `check`.
+
 ## v0.3.2, 2026-07-06
 - matrix-tablesaw/src/main/java/tech/tablesaw/api/NumberAggregateFunction.java: BigDecimal aggregate functions now only declare compatibility with BigDecimalColumnType,
   preventing Tablesaw from dispatching them to DoubleColumn, IntColumn, etc.

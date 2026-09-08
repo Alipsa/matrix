@@ -1,14 +1,27 @@
 package io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.DateTimeColumn;
 import tech.tablesaw.api.BigDecimalColumn;
+import tech.tablesaw.api.DoubleColumn;
+import tech.tablesaw.api.FloatColumn;
+import tech.tablesaw.api.IntColumn;
+import tech.tablesaw.api.LongColumn;
+import tech.tablesaw.api.ShortColumn;
 import tech.tablesaw.api.Table;
+import tech.tablesaw.column.numbers.BigDecimalColumnType;
+import tech.tablesaw.io.RuntimeIOException;
+import tech.tablesaw.io.ods.OdsReadOptions;
 import tech.tablesaw.io.ods.OdsWriteOptions;
+import tech.tablesaw.io.xml.XmlReadOptions;
 import tech.tablesaw.io.xml.XmlWriteOptions;
 import tech.tablesaw.io.xlsx.XlsxWriteOptions;
 
@@ -17,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -27,6 +41,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExportDataTest {
+
+  @TempDir File tempDir;
 
   @Test
   public void testXmlExport() throws IOException {
@@ -152,5 +168,105 @@ public class ExportDataTest {
     }
 
     destFile.deleteOnExit();
+  }
+
+  @Test
+  public void testMissingValuesRemainBlankInEveryFormat() throws IOException {
+    Table table = missingValueTable();
+
+    File xlsx = new File(tempDir, "missing.xlsx");
+    table.write().usingOptions(XlsxWriteOptions.builder(xlsx).build());
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(xlsx))) {
+      Row missing = workbook.getSheetAt(0).getRow(2);
+      for (int i = 0; i < table.columnCount(); i++) {
+        assertEquals(CellType.BLANK, missing.getCell(i).getCellType());
+      }
+      Row realSentinels = workbook.getSheetAt(0).getRow(3);
+      assertEquals(2d, realSentinels.getCell(1).getNumericCellValue());
+      assertFalse(realSentinels.getCell(6).getBooleanCellValue());
+    }
+
+    ColumnType[] types = table.types().toArray(new ColumnType[0]);
+    File xml = new File(tempDir, "missing.xml");
+    table.write().usingOptions(XmlWriteOptions.builder(xml).build());
+    XmlReadOptions.Builder xmlBuilder = XmlReadOptions.builder(xml);
+    xmlBuilder.columnTypes(types);
+    assertMissingRows(new tech.tablesaw.io.xml.XmlReader().read(xmlBuilder.build()));
+
+    File ods = new File(tempDir, "missing.ods");
+    table.write().usingOptions(OdsWriteOptions.builder(ods).build());
+    OdsReadOptions.Builder odsBuilder = OdsReadOptions.builder(ods);
+    odsBuilder.columnTypes(types);
+    assertMissingRows(Table.read().usingOptions(odsBuilder.build()));
+
+    XmlReadOptions inferredOptions = XmlReadOptions.builder(xml).build();
+    Table inferred = new tech.tablesaw.io.xml.XmlReader().read(inferredOptions);
+    for (int i = 0; i < inferred.columnCount(); i++) {
+      assertTrue(inferred.column(i).isMissing(1));
+    }
+  }
+
+  @Test
+  public void testWriterDestinationsAndSafeSheetNames() throws IOException {
+    Table table = Table.create("bad[]:*?/\\name-that-is-far-longer-than-thirty-one-characters")
+        .addColumns(IntColumn.create("value", new int[] {1}));
+    assertEquals(
+        "XLSX requires a binary OutputStream destination",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> table.write().usingOptions(XlsxWriteOptions.builder(new StringWriter()).build()))
+            .getMessage());
+
+    File output = new File(tempDir, "safe.xlsx");
+    table.write().usingOptions(XlsxWriteOptions.builder(output).build());
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(output))) {
+      String name = workbook.getSheetAt(0).getSheetName();
+      assertTrue(name.length() <= 31);
+      assertFalse(name.matches(".*[\\[\\]:*?/\\\\].*"));
+    }
+  }
+
+  @Test
+  public void testFileDestinationsOpenLazilyAndCloseAfterWrite() throws IOException {
+    Table table = Table.create("lazy").addColumns(IntColumn.create("value", new int[] {1}));
+    File output = new File(tempDir, "lazy.xml");
+    XmlWriteOptions options = XmlWriteOptions.builder(output).build();
+    assertFalse(output.exists());
+
+    table.write().usingOptions(options);
+    assertTrue(output.exists());
+    OutputStream closedStream = options.destination().stream();
+    assertThrows(IOException.class, () -> closedStream.write(1));
+
+    assertThrows(
+        RuntimeIOException.class,
+        () ->
+            table
+                .write()
+                .usingOptions(XmlWriteOptions.builder(new File(tempDir, "missing/out.xml")).build()));
+  }
+
+  private static Table missingValueTable() {
+    return Table.create("missing")
+        .addColumns(
+            ShortColumn.create("short").append((short) 1).appendMissing().append((short) 2),
+            IntColumn.create("int").append(1).appendMissing().append(2),
+            LongColumn.create("long").append(1L).appendMissing().append(2L),
+            FloatColumn.create("float").append(1.5f).appendMissing().append(2.5f),
+            DoubleColumn.create("double").append(1.5d).appendMissing().append(2.5d),
+            BigDecimalColumn.create(
+                "decimal", new BigDecimal[] {new BigDecimal("1.5"), null, new BigDecimal("2.5")}),
+            BooleanColumn.create("boolean").append(true).appendMissing().append(false));
+  }
+
+  private static void assertMissingRows(Table table) {
+    assertEquals(3, table.rowCount());
+    assertEquals(7, table.columnCount());
+    assertEquals(BigDecimalColumnType.instance(), table.column(5).type());
+    for (int i = 0; i < table.columnCount(); i++) {
+      assertTrue(
+          table.column(i).isMissing(1),
+          "column " + i + " (" + table.column(i).name() + ", " + table.column(i).type() + ")");
+    }
   }
 }

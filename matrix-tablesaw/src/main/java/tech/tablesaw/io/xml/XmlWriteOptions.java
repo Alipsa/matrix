@@ -1,6 +1,7 @@
 package tech.tablesaw.io.xml;
 
 import tech.tablesaw.io.Destination;
+import tech.tablesaw.io.FormatWriteOptionsBuilder;
 import tech.tablesaw.io.WriteOptions;
 
 import java.io.File;
@@ -60,8 +61,7 @@ public class XmlWriteOptions extends WriteOptions {
    * Creates a builder with a File destination.
    *
    * @param dest the file to write to
-   * @return a new builder
-   * <p>Note: this method does not access the filesystem; any I/O errors occur when writing.
+   * @return a builder that opens and truncates the file only when writing begins
    */
   public static Builder builder(File dest) {
     return new Builder(dest);
@@ -71,8 +71,7 @@ public class XmlWriteOptions extends WriteOptions {
    * Creates a builder with a file name destination.
    *
    * @param fileName the name of the file to write to
-   * @return a new builder
-   * <p>Note: this method does not access the filesystem; any I/O errors occur when writing.
+   * @return a builder that opens and truncates the file only when writing begins
    */
   public static Builder builder(String fileName) {
     return builder(new File(fileName));
@@ -92,7 +91,7 @@ public class XmlWriteOptions extends WriteOptions {
    *
    * <p>Provides a fluent API for configuring XML write options.
    */
-  public static class Builder extends WriteOptions.Builder {
+  public static class Builder extends FormatWriteOptionsBuilder {
 
     /**
      * Constructs a builder with the specified destination.
@@ -122,7 +121,9 @@ public class XmlWriteOptions extends WriteOptions {
     }
 
     /**
-     * Constructs a builder with a File destination.
+     * Constructs a builder with a File destination. The file is opened lazily:
+     * building options does not create or truncate the file; that happens when
+     * writing begins, and I/O failures surface as RuntimeIOException from the write call.
      *
      * @param dest the file to write to
      */

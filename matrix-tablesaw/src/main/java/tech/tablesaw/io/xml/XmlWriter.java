@@ -3,6 +3,8 @@ package tech.tablesaw.io.xml;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.DataWriter;
@@ -11,7 +13,10 @@ import tech.tablesaw.io.RuntimeIOException;
 import tech.tablesaw.io.WriterRegistry;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Writer for XML format using dom4j.
@@ -92,14 +97,27 @@ public class XmlWriter implements DataWriter<XmlWriteOptions> {
       for (String name : row.columnNames()) {
         var element = r.addElement("td");
         element.addAttribute("name", name);
-        var value = row.getObject(name);
-        if (value != null){
+        if (!row.isMissing(name)) {
+          var value = row.getObject(name);
           element.setText(String.valueOf(value));
         }
       }
     }
-    try (Writer writer = options.destination().createWriter()) {
-      doc.write(writer);
+    Writer destinationWriter = options.destination().writer();
+    OutputFormat format = OutputFormat.createCompactFormat();
+    format.setEncoding(StandardCharsets.UTF_8.name());
+    format.setOmitEncoding(destinationWriter != null);
+    try {
+      Writer writer;
+      if (destinationWriter != null) {
+        writer = destinationWriter;
+      } else {
+        OutputStream stream = options.destination().stream();
+        writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+      }
+      try (XMLWriter xmlWriter = new XMLWriter(writer, format)) {
+        xmlWriter.write(doc);
+      }
     } catch (IOException e) {
       throw new RuntimeIOException(e);
     }

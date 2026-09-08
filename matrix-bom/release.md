@@ -1,5 +1,10 @@
 # Maven-BOM release history
 
+## v2.5.2, in progress
+
+Dependency changes:
+- Upgrade matrix-tablesaw 0.3.2 -> 0.4.0
+
 ## v2.5.1, 2026-07-10
 Pom files available at maven central
 - [matrix-bom](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.5.1/matrix-bom-2.5.1.pom)
