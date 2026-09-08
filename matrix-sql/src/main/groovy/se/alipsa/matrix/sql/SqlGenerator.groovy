@@ -22,10 +22,37 @@ class SqlGenerator {
 
     final String sql
     final List<Object> values
+    final List<String> updateColumns
+    final List<String> matchColumns
 
+    /**
+     * Create prepared update details without column-order metadata.
+     *
+     * @param sql the SQL statement
+     * @param values the ordered parameter values
+     */
     PreparedUpdate(String sql, List<Object> values) {
+      this(sql, values, [], [])
+    }
+
+    /**
+     * Create prepared update details with the row column order used for parameter binding.
+     *
+     * @param sql the SQL statement
+     * @param values the ordered parameter values
+     * @param updateColumns row columns used by the SET clause, in placeholder order
+     * @param matchColumns row columns used by the WHERE clause, in placeholder order
+     */
+    PreparedUpdate(
+        String sql,
+        List<Object> values,
+        List<String> updateColumns,
+        List<String> matchColumns
+    ) {
       this.sql = sql
       this.values = values
+      this.updateColumns = updateColumns.asImmutable()
+      this.matchColumns = matchColumns.asImmutable()
     }
 
   }
@@ -88,7 +115,7 @@ class SqlGenerator {
     List<String> storedMatchColumns = matchColumns.collect { storedColumnNames[it] }
     String sql = createPreparedUpdateSqlWithTableName(tableName, storedUpdateColumns, storedMatchColumns, storedTableName)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
-    new PreparedUpdate(sql, values)
+    new PreparedUpdate(sql, values, updateColumns, matchColumns)
   }
 
   /**

@@ -216,7 +216,8 @@ class MatrixSql implements Closeable {
    * @param matchColumnName the column(s) to match in the WHERE clause (required)
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if matchColumnName is empty or is not present in the row
+   * @throws IllegalArgumentException if matchColumnName is empty or is not present in the row,
+   *                                  or if a row column cannot be mapped unambiguously to a table column
    */
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
     SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row, matchColumnName)
@@ -238,7 +239,8 @@ class MatrixSql implements Closeable {
    * @param matchColumnName the column(s) to match in the WHERE clause (required)
    * @return the total number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if matchColumnName is empty
+   * @throws IllegalArgumentException if matchColumnName is empty or a Matrix column cannot be mapped
+   *                                  unambiguously to a table column
    */
   int update(Matrix table, String... matchColumnName) throws SQLException {
     dbExecuteBatchUpdate(table, matchColumnName)
@@ -599,11 +601,6 @@ class MatrixSql implements Closeable {
     if (table.rowCount() == 0) {
       return 0
     }
-    List<String> matchColumns = matchColumnName.toList()
-    List<String> updateColumns = SqlGenerator.updateColumnNames(table.columnNames(), matchColumns)
-    if (updateColumns.isEmpty()) {
-      throw new IllegalArgumentException('No columns left to update after excluding match columns')
-    }
     Connection connection = connect()
     SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(
         connection,
@@ -612,10 +609,14 @@ class MatrixSql implements Closeable {
         matchColumnName
     )
     try(PreparedStatement stm = connection.prepareStatement(prepared.sql)) {
+      boolean firstRow = true
       for (Row row : table) {
-        List<Object> values = SqlGenerator.updateValues(row, updateColumns, matchColumns)
+        List<Object> values = firstRow
+            ? prepared.values
+            : SqlGenerator.updateValues(row, prepared.updateColumns, prepared.matchColumns)
         bindParams(stm, values)
         stm.addBatch()
+        firstRow = false
       }
       int[] results = stm.executeBatch()
       return MatrixDbUtil.batchResultCount(results)

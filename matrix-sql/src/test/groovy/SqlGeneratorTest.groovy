@@ -40,4 +40,20 @@ class SqlGeneratorTest {
     }
     assertEquals('No stored column name mapping for row column: nosuchcol', exception.message)
   }
+
+  @Test
+  void testPreparedUpdateCarriesItsParameterColumnOrder() {
+    Row row = Matrix.builder('row').data([name: ['Alice'], id: [1], status: ['active']])
+        .types(String, int, String)
+        .build()
+        .row(0)
+
+    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(
+        'people', row, ['id'] as String[]
+    )
+
+    assertEquals(['name', 'status'], prepared.updateColumns)
+    assertEquals(['id'], prepared.matchColumns)
+    assertEquals(['Alice', 'active', 1], prepared.values)
+  }
 }
