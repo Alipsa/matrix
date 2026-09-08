@@ -346,6 +346,32 @@ class MatrixDbUtil {
   }
 
   /**
+   * Create an update statement with explicit match columns, resolving the stored table spelling when
+   * the table is visible in the connection's current catalog and schema.
+   *
+   * @param con the database connection
+   * @param tableName the table to update
+   * @param row the row containing update and match values
+   * @param matchColumnNames the row column names to use in the WHERE clause
+   * @return the prepared SQL and ordered values
+   * @throws SQLException if metadata cannot be read
+   * @throws IllegalArgumentException if match columns or stored column mappings are invalid
+   */
+  SqlGenerator.PreparedUpdate createPreparedUpdate(
+      Connection con,
+      String tableName,
+      Row row,
+      String[] matchColumnNames
+  ) throws SQLException {
+    TableMetadata table = tableMetadata(con, tableName)
+    if (table == null) {
+      return SqlGenerator.createPreparedUpdate(tableName, row, matchColumnNames)
+    }
+    Map<String, String> columnNames = row.columnNames().collectEntries { String column -> [(column): column] }
+    SqlGenerator.createPreparedUpdate(table.name, row, matchColumnNames, columnNames)
+  }
+
+  /**
    * Clear resolved table metadata for a connection after schema changes.
    *
    * @param con the connection whose cached metadata should be discarded
@@ -430,7 +456,7 @@ class MatrixDbUtil {
   }
 
   private static boolean metadataLocationMatches(String metadataValue, String tableValue) {
-    metadataValue == null || tableValue == null || metadataValue == tableValue
+    metadataValue == null || metadataValue.isBlank() || tableValue == null || tableValue.isBlank() || metadataValue == tableValue
   }
 
   private static Map<String, String> resolveStoredColumnNames(

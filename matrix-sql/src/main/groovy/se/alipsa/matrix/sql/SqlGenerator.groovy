@@ -79,7 +79,7 @@ class SqlGenerator {
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
-    row.columnNames().each { String column ->
+    (row.columnNames() + matchColumns).unique().each { String column ->
       if (!storedColumnNames.containsKey(column) || storedColumnNames[column] == null || storedColumnNames[column].isBlank()) {
         throw new IllegalArgumentException("No stored column name mapping for row column: $column")
       }

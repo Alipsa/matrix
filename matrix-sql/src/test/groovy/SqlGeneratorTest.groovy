@@ -30,4 +30,14 @@ class SqlGeneratorTest {
     }
     assertEquals('No stored column name mapping for row column: name', exception.message)
   }
+
+  @Test
+  void testPreparedUpdateReportsMatchColumnMissingFromRow() {
+    Row row = Matrix.builder('row').data([id: [1], name: ['Alice']]).types(int, String).build().row(0)
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      SqlGenerator.createPreparedUpdate('people', row, ['nosuchcol'] as String[])
+    }
+    assertEquals('No stored column name mapping for row column: nosuchcol', exception.message)
+  }
 }

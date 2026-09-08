@@ -216,10 +216,10 @@ class MatrixSql implements Closeable {
    * @param matchColumnName the column(s) to match in the WHERE clause (required)
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
-   * @throws IllegalArgumentException if matchColumnName is empty
+   * @throws IllegalArgumentException if matchColumnName is empty or is not present in the row
    */
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
-    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName)
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(connect(), tableName, row, matchColumnName)
     executePreparedUpdate(prepared)
   }
 

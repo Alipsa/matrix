@@ -272,6 +272,10 @@ class MatrixSqlTest {
 
       assertEquals(1, matrixSql.update('MiXeD_Case', row))
       assertEquals('Alicia', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+
+      row['name'] = 'Ally'
+      assertEquals(1, matrixSql.update('MiXeD_Case', row, 'id'))
+      assertEquals('Ally', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
     }
   }
 
@@ -358,13 +362,15 @@ class MatrixSqlTest {
     try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       owner.create(data, 'id')
       Connection delegate = owner.connect()
-      DatabaseMetaData metadata = metadataWithMissingLocations(delegate.getMetaData())
-      Connection connection = delegatingConnection(delegate, metadata)
+      [null, ''].eachWithIndex { String unavailableValue, int index ->
+        DatabaseMetaData metadata = metadataWithUnavailableLocations(delegate.getMetaData(), unavailableValue)
+        Connection connection = delegatingConnection(delegate, metadata)
 
-      try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
-        Row row = data.row(0)
-        row['name'] = 'Alicia'
-        assertEquals(1, matrixSql.update('metadata_locations', row))
+        try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+          Row row = data.row(0)
+          row['name'] = "Updated $index"
+          assertEquals(1, matrixSql.update('metadata_locations', row))
+        }
       }
     }
   }
@@ -1096,24 +1102,26 @@ class MatrixSqlTest {
     ) as DatabaseMetaData
   }
 
-  private static DatabaseMetaData metadataWithMissingLocations(DatabaseMetaData delegate) {
+  private static DatabaseMetaData metadataWithUnavailableLocations(DatabaseMetaData delegate, String unavailableValue) {
     Proxy.newProxyInstance(
         DatabaseMetaData.classLoader,
         [DatabaseMetaData] as Class[],
         { Object proxy, Method method, Object[] args ->
           Object result = invokeDelegate(delegate, method, args)
-          method.name in ['getColumns', 'getPrimaryKeys'] ? resultSetWithMissingLocations(result as ResultSet) : result
+          method.name in ['getColumns', 'getPrimaryKeys']
+              ? resultSetWithUnavailableLocations(result as ResultSet, unavailableValue)
+              : result
         }
     ) as DatabaseMetaData
   }
 
-  private static ResultSet resultSetWithMissingLocations(ResultSet delegate) {
+  private static ResultSet resultSetWithUnavailableLocations(ResultSet delegate, String unavailableValue) {
     Proxy.newProxyInstance(
         ResultSet.classLoader,
         [ResultSet] as Class[],
         { Object proxy, Method method, Object[] args ->
           if (method.name == 'getString' && args?.length == 1 && args[0] in ['TABLE_CAT', 'TABLE_SCHEM']) {
-            return null
+            return unavailableValue
           }
           invokeDelegate(delegate, method, args)
         }
