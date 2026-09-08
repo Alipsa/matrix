@@ -330,14 +330,28 @@ class TableUtilTest {
       TableUtil.createColumn(DOUBLE, 'd', [9007199254740993L])
     }
     assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(DOUBLE, 'd', [Long.MAX_VALUE])
+    }
+    assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(DOUBLE, 'd', [10G ** 400])
     }
     assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(FLOAT, 'f', [16777217])
     }
     assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(FLOAT, 'f', [Integer.MAX_VALUE])
+    }
+    assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(INTEGER, 'i', [1L])
     }
+  }
+
+  @Test
+  void testCreateColumnAcceptsExactlyRepresentableWideIntegers() {
+    // 2^53 and 2^80 are exactly representable as doubles even though they exceed int range
+    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1L << 53, 2G ** 80])
+    assertEquals(9007199254740992d, doubles.getDouble(0), 0.0d)
+    assertEquals(1208925819614629174706176d, doubles.getDouble(1), 0.0d)
   }
 
   @Test
@@ -349,9 +363,11 @@ class TableUtilTest {
     // NaN becomes missing, infinities are rejected, mirroring BigDecimalColumn.toBigDecimal
     def withNan = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.NaN])
     assertTrue(withNan.isMissing(0))
-    assertThrows(IllegalArgumentException) {
+    def infinity = assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.POSITIVE_INFINITY])
     }
+    assertTrue(infinity.message.contains("Column 'bd' row 0"))
+    assertTrue(infinity.message.contains('expects java.math.BigDecimal but got java.lang.Double'))
   }
 
   @Test

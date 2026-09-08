@@ -268,17 +268,17 @@ public class ExportDataTest {
     File ods = new File(tempDir, "trailing.ods");
     table.write().usingOptions(OdsWriteOptions.builder(ods).build());
 
-    // By default trailing all-missing rows are preserved so round trips are lossless
-    Table kept = Table.read().usingOptions(OdsReadOptions.builder(ods).build());
+    // By default trailing all-missing rows are trimmed (ODF padding convention)
+    Table trimmed = Table.read().usingOptions(OdsReadOptions.builder(ods).build());
+    assertEquals(1, trimmed.rowCount());
+
+    // ...and a legitimate trailing all-missing data row can be preserved explicitly
+    Table kept =
+        Table.read()
+            .usingOptions(OdsReadOptions.builder(ods).trimTrailingMissingRows(false).build());
     assertEquals(2, kept.rowCount());
     assertTrue(kept.column("s").isMissing(1));
     assertTrue(kept.column("i").isMissing(1));
-
-    // ...and files from ODF producers that pad the sheet with empty rows can opt into trimming
-    Table trimmed =
-        Table.read()
-            .usingOptions(OdsReadOptions.builder(ods).trimTrailingMissingRows(true).build());
-    assertEquals(1, trimmed.rowCount());
   }
 
   private static Table missingValueTable() {

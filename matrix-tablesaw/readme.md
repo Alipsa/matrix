@@ -256,14 +256,14 @@ NumberColumn rounded = TableUtil.round(source, 2)   // source is unchanged
 
 ### ODS row handling
 
-All-missing rows round-trip through ODS and XML with their position preserved; the ODS reader
-keeps trailing all-missing rows by default, so a write followed by a read is lossless. When
-reading files from spreadsheet applications that declare empty rows past the actual data range,
-enable the trim to avoid inflated tables:
+Interior all-missing rows round-trip through ODS and XML with their position preserved. Trailing
+all-missing rows are dropped by default, because spreadsheet applications commonly declare empty
+rows past the actual data range; disable the trim to keep a legitimate trailing all-missing data
+row (for example when round-tripping a file this module wrote):
 
 ```groovy
-Table trimmed = Table.read().usingOptions(
-    OdsReadOptions.builder('data.ods').trimTrailingMissingRows(true).build())
+Table kept = Table.read().usingOptions(
+    OdsReadOptions.builder('data.ods').trimTrailingMissingRows(false).build())
 ```
 
 ## Documentation

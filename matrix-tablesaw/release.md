@@ -35,6 +35,9 @@
   `null`.
 - `TableUtil.round(NumberColumn, int)` no longer mutates the source column: it returns an
   independent rounded copy (HALF_EVEN by default). Callers must use the return value.
+- ODS (and XML) reads now preserve interior all-missing rows instead of dropping them, so tables
+  containing such rows report a higher row count than 0.3.2. Trailing all-missing rows are still
+  dropped by default; see the I/O fixes below for the opt-out.
 
 ### Numeric behavior
 - `Double.NaN` and `Float.NaN` appended to a `BigDecimalColumn` become missing values; positive
@@ -57,11 +60,11 @@
 ### I/O fixes
 - XML, ODS, and XLSX writers now emit missing cells as blank/empty cells instead of serializing
   Tablesaw numeric/boolean sentinels.
-- Interior and trailing all-missing rows now round-trip through ODS (and XML) instead of being
-  dropped or — worse — being corrupted into the following row's values by the ODS writer. The ODS
-  reader keeps trailing all-missing rows by default so round trips are lossless; pass
-  `trimTrailingMissingRows(true)` to `OdsReadOptions.builder(...)` when reading files from ODF
-  producers that declare empty rows past the data range.
+- Interior all-missing rows now round-trip through ODS (and XML) instead of being dropped or —
+  worse — being corrupted into the following row's values by the ODS writer. Trailing all-missing
+  rows are still dropped by default, as in 0.3.2; pass `trimTrailingMissingRows(false)` to
+  `OdsReadOptions.builder(...)` to preserve a legitimate trailing all-missing data row, for
+  example when round-tripping a file written by this module's own writer.
 - XML output is deterministic UTF-8: stream destinations get an explicit
   `encoding="UTF-8"` declaration written through an explicit `OutputStreamWriter`, while a
   caller-supplied `Writer` is used as supplied and the declaration omits the encoding attribute.

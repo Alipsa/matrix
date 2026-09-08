@@ -68,10 +68,11 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * Read a table from an ODS file using the specified options.
    *
    * <p>Reads data from the specified sheet index (default is 0, the first sheet).
-   * The first row is treated as column headers. Interior all-missing rows are preserved so
-   * missing data keeps its position, and trailing all-missing rows are kept by default so round
-   * trips are lossless; enable {@code trimTrailingMissingRows(true)} to drop trailing empty rows
-   * that ODF producers commonly declare past the data range.
+   * The first row is treated as column headers. Trailing rows where all values are missing are
+   * dropped by default (ODF producers commonly declare empty rows past the data range), while
+   * interior all-missing rows are preserved so missing data keeps its position; disable the trim
+   * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
+   * row, for example when round-tripping a file written by {@link OdsWriter}.
    * All cell values are read as strings and then converted to appropriate types based on
    * the read options.
    *

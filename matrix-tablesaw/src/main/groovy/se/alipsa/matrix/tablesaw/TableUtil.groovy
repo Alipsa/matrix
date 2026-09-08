@@ -359,8 +359,11 @@ class TableUtil {
    * @param name the column name (used in the error message)
    * @param row the zero-based row index (used in the error message)
    * @return the value, converted when a lossless widening applies
-   * @throws IllegalArgumentException if the value cannot be represented exactly in the expected type
+   * @throws IllegalArgumentException if the value cannot be represented exactly in the expected
+   *         type, or is an infinity for a {@link BigDecimal} column; the message names the
+   *         column, row index, expected type, and actual type
    */
+  @SuppressWarnings('BigDecimalInstantiation')
   private static Object coerceValue(Object value, Class<?> expectedType, String name, int row) {
     if (value == null || expectedType.isInstance(value)) {
       return value
@@ -371,7 +374,13 @@ class TableUtil {
     if (value instanceof Number) {
       Number num = (Number) value
       if (expectedType == BigDecimal) {
-        return BigDecimalColumn.toBigDecimal(num)
+        try {
+          return BigDecimalColumn.toBigDecimal(num)
+        } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException(
+              "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}: ${e.message}",
+              e)
+        }
       }
       if (expectedType == Double) {
         if (num instanceof Float || num instanceof Integer || num instanceof Short || num instanceof Byte) {
@@ -379,13 +388,16 @@ class TableUtil {
         }
         if (num instanceof Long) {
           double d = num.doubleValue()
-          if ((long) d == (Long) num) {
+          // exact binary comparison: (long) d saturates, so a narrow-domain check would lie
+          if (new BigDecimal(d) == BigDecimal.valueOf((Long) num)) {
             return d
           }
         }
         if (num instanceof BigInteger) {
           double d = num.doubleValue()
-          if (Double.isFinite(d) && new BigDecimal((BigInteger) num) == BigDecimal.valueOf(d)) {
+          // new BigDecimal(d) is the exact binary value; BigDecimal.valueOf would be the
+          // shortest round-trip decimal and reject exactly representable integers such as 2^80
+          if (Double.isFinite(d) && new BigDecimal(d) == new BigDecimal((BigInteger) num)) {
             return d
           }
         }
@@ -396,7 +408,9 @@ class TableUtil {
         }
         if (num instanceof Integer) {
           float f = num.floatValue()
-          if ((int) f == (Integer) num) {
+          // compare in the double domain: both conversions are exact, so int-domain saturation
+          // cannot hide an inexact conversion
+          if ((double) f == num.doubleValue()) {
             return f
           }
         }

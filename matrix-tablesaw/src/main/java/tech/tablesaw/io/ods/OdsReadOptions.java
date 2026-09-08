@@ -40,10 +40,11 @@ public class OdsReadOptions extends ReadOptions {
   protected Integer sheetIndex;
 
   /**
-   * Whether trailing all-missing rows are dropped. Defaults to {@code false} so round trips are
-   * lossless; enable to drop empty rows past the data range that ODF producers commonly declare.
+   * Whether trailing all-missing rows are dropped. Defaults to {@code true} because ODF producers
+   * commonly declare empty rows past the data range; disable for a lossless round trip of a
+   * legitimate trailing all-missing data row.
    */
-  protected boolean trimTrailingMissingRows = false;
+  protected boolean trimTrailingMissingRows = true;
 
   /**
    * Creates a builder with a File source.
@@ -133,10 +134,11 @@ public class OdsReadOptions extends ReadOptions {
     protected Integer sheetIndex;
 
     /**
-     * Whether trailing all-missing rows are dropped. Defaults to {@code false} so round trips are
-     * lossless; enable to drop empty rows past the data range that ODF producers commonly declare.
+     * Whether trailing all-missing rows are dropped. Defaults to {@code true} because ODF
+     * producers commonly declare empty rows past the data range; disable for a lossless round
+     * trip of a legitimate trailing all-missing data row.
      */
-    protected boolean trimTrailingMissingRows = false;
+    protected boolean trimTrailingMissingRows = true;
 
     /**
      * Constructs a builder with the specified source.
@@ -347,11 +349,12 @@ public class OdsReadOptions extends ReadOptions {
     /**
      * Sets whether trailing rows where every value is missing are dropped.
      *
-     * <p>Disabled by default so that reading preserves a legitimate trailing all-missing data
-     * row and round trips are lossless; enable it when reading files from ODF producers that
-     * declare empty rows past the actual data range, to avoid inflated tables.
+     * <p>Enabled by default: ODF producers commonly declare empty rows past the actual data
+     * range, and dropping them avoids inflated tables. Disable it to preserve a legitimate
+     * trailing all-missing data row, for example when round-tripping a file written by
+     * {@link OdsWriter}, whose row count is exact.
      *
-     * @param trimTrailingMissingRows true to drop trailing all-missing rows, false (default) to
+     * @param trimTrailingMissingRows true (default) to drop trailing all-missing rows, false to
      *     keep them
      * @return this builder
      */
