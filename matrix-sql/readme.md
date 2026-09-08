@@ -10,7 +10,7 @@ To use it, add the following to your Gradle build script:
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation 'se.alipsa.matrix:matrix-core:3.7.1'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0-SNAPSHOT'
 implementation 'se.alipsa.matrix:matrix-sql:2.5.0-SNAPSHOT'
 ```
 
@@ -26,7 +26,7 @@ or if you use Maven:
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>3.7.1</version>
+    <version>3.9.0-SNAPSHOT</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
@@ -281,3 +281,4 @@ The following table illustrates the version compatibility of matrix-sql and matr
 |      2.2.0 | 3.4.0 -> 3.5.0 |
 |      2.3.0 |          3.6.0 |
 |      2.4.0 | 3.6.0 -> 3.7.1 |
+|      2.5.0 |          3.9.0 |

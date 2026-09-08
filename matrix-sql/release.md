@@ -3,6 +3,8 @@ Date format used below is yyyy-MM-dd
 
 ## v2.5.0, 2026-09-08
 
+Requires matrix-core 3.9.0 or later.
+
 ### Table discovery and derived updates
 - `getTableNames(Connection)` and `tableExists(Connection, String)` now inspect only tables in the connection's current catalog and schema; views, temporary tables, and tables in other schemas are excluded.
 - `update(String, Row)` now derives match columns from the table's primary key. The row must contain every primary-key column; use `update(String, Row, String...)` for tables without a primary key.
