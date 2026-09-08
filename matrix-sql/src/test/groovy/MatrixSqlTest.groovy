@@ -267,6 +267,16 @@ class MatrixSqlTest {
       data[0, 'name'] = 'Batch'
       assertEquals(1, matrixSql.update(data, 'ID'))
       assertEquals('Batch', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      IllegalArgumentException rowException = assertThrows(IllegalArgumentException) {
+        matrixSql.update('nq', row, 'id', 'ID')
+      }
+      assertEquals('Match columns resolve to duplicate row column(s): id', rowException.message)
+
+      IllegalArgumentException batchException = assertThrows(IllegalArgumentException) {
+        matrixSql.update(data, 'id', 'ID')
+      }
+      assertEquals('Match columns resolve to duplicate row column(s): id', batchException.message)
     }
   }
 

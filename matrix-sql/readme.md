@@ -164,7 +164,9 @@ try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
 
 Derived row updates cache table and primary-key metadata per JDBC connection. SQL executed through
 `MatrixSql` invalidates that cache automatically. If schema-changing SQL is executed directly through
-`groovy.sql.Sql` or a raw JDBC `Statement`, clear the cache before the next derived update:
+`groovy.sql.Sql` or a raw JDBC `Statement`, clear the cache before the next derived update. Schema
+changes made through another connection or process cannot invalidate a connection's cache automatically;
+clear the cache on every affected long-lived `MatrixSql` connection after such a change:
 
 ```groovy
 import groovy.sql.Sql

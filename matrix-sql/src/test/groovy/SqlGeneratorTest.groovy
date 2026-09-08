@@ -70,4 +70,17 @@ class SqlGeneratorTest {
     assertEquals(['id'], prepared.matchColumns)
     assertEquals(['Alice', 1], prepared.values)
   }
+
+  @Test
+  void testPreparedUpdateRejectsDuplicateResolvedMatchColumns() {
+    Row row = Matrix.builder('row').data([id: [1], name: ['Alice']]).types(int, String).build().row(0)
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      SqlGenerator.createPreparedUpdate(
+          'PEOPLE', row, ['id', 'ID'] as String[], [id: 'ID', name: 'NAME']
+      )
+    }
+
+    assertEquals('Match columns resolve to duplicate row column(s): id', exception.message)
+  }
 }

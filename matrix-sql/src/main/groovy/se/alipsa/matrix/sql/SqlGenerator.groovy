@@ -114,7 +114,7 @@ class SqlGenerator {
       List<String> requestedMatchColumns,
       Map<String, String> storedColumnNames
   ) {
-    requestedMatchColumns.collect { String requestedColumn ->
+    List<String> resolvedMatchColumns = requestedMatchColumns.collect { String requestedColumn ->
       String exactMatch = rowColumnNames.find { it == requestedColumn }
       if (exactMatch != null) {
         return exactMatch
@@ -132,6 +132,15 @@ class SqlGenerator {
       }
       matches.first()
     }
+    Map<String, List<String>> groupedMatchColumns = resolvedMatchColumns.groupBy { String column -> column }
+    List<String> duplicates = groupedMatchColumns.findAll { String column, List<String> matches ->
+      matches.size() > 1
+    }.keySet().toList()
+    if (!duplicates.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Match columns resolve to duplicate row column(s): ${duplicates.join(COMMA_SEP)}")
+    }
+    resolvedMatchColumns
   }
 
   /**
