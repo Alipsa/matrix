@@ -185,7 +185,7 @@ class MatrixResultSet implements ResultSet {
   @Override
   boolean next() throws SQLException {
     ensureOpen()
-    rowIdx++
+    rowIdx = Math.min(rowIdx + 1, matrix.rowCount())
     rowIdx < matrix.rowCount()
   }
 

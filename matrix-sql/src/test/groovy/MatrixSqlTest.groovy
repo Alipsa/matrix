@@ -263,6 +263,38 @@ class MatrixSqlTest {
   }
 
   @Test
+  void testDerivedUpdateQuotesStoredTableName() {
+    String url = h2MemUrl('update_quoted_table_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE TABLE "MiXeD_Case" ("id" INT PRIMARY KEY, "name" VARCHAR(20))')
+      matrixSql.execute('INSERT INTO "MiXeD_Case" VALUES (1, \'Alice\')')
+      Row row = Matrix.builder('row').data([id: [1], name: ['Alicia']]).types(int, String).build().row(0)
+
+      assertEquals(1, matrixSql.update('MiXeD_Case', row))
+      assertEquals('Alicia', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+    }
+  }
+
+  @Test
+  void testDerivedUpdateRejectsDuplicateStoredColumnTargets() {
+    String url = h2MemUrl('update_duplicate_columns_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.execute('CREATE TABLE dup (ID INT PRIMARY KEY, NAME VARCHAR(20))')
+      matrixSql.execute("INSERT INTO dup VALUES (1, 'Alice')")
+      Row row = Matrix.builder('row').data([id: [1], Id: [99]]).types(int, int).build().row(0)
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        matrixSql.update('dup', row)
+      }
+      assertEquals(
+          'Cannot update dup: row columns id, Id resolve to the same table column ID',
+          exception.message
+      )
+      assertEquals(1, matrixSql.select('SELECT ID FROM dup')[0, 'ID'])
+    }
+  }
+
+  @Test
   void testPrimaryKeyLookupUsesCurrentSchema() {
     String url = h2MemUrl('schema_primary_key_testdb')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
@@ -311,6 +343,28 @@ class MatrixSqlTest {
         row['name'] = 'Ally'
         assertEquals(1, matrixSql.update('cached_updates', row))
         assertEquals(1, getTablesCalls.get())
+      }
+    }
+  }
+
+  @Test
+  void testMetadataLookupToleratesMissingCatalogAndSchemaValues() {
+    Matrix data = Matrix.builder('metadata_locations').data([
+        id: [1],
+        name: ['Alice']
+    ]).types(int, String).build()
+
+    String url = h2MemUrl('metadata_location_testdb')
+    try (MatrixSql owner = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      owner.create(data, 'id')
+      Connection delegate = owner.connect()
+      DatabaseMetaData metadata = metadataWithMissingLocations(delegate.getMetaData())
+      Connection connection = delegatingConnection(delegate, metadata)
+
+      try (MatrixSql matrixSql = new MatrixSql(connection, DataBaseProvider.H2)) {
+        Row row = data.row(0)
+        row['name'] = 'Alicia'
+        assertEquals(1, matrixSql.update('metadata_locations', row))
       }
     }
   }
@@ -1040,6 +1094,30 @@ class MatrixSqlTest {
           invokeDelegate(delegate, method, args)
         }
     ) as DatabaseMetaData
+  }
+
+  private static DatabaseMetaData metadataWithMissingLocations(DatabaseMetaData delegate) {
+    Proxy.newProxyInstance(
+        DatabaseMetaData.classLoader,
+        [DatabaseMetaData] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          Object result = invokeDelegate(delegate, method, args)
+          method.name in ['getColumns', 'getPrimaryKeys'] ? resultSetWithMissingLocations(result as ResultSet) : result
+        }
+    ) as DatabaseMetaData
+  }
+
+  private static ResultSet resultSetWithMissingLocations(ResultSet delegate) {
+    Proxy.newProxyInstance(
+        ResultSet.classLoader,
+        [ResultSet] as Class[],
+        { Object proxy, Method method, Object[] args ->
+          if (method.name == 'getString' && args?.length == 1 && args[0] in ['TABLE_CAT', 'TABLE_SCHEM']) {
+            return null
+          }
+          invokeDelegate(delegate, method, args)
+        }
+    ) as ResultSet
   }
 
   private static Connection delegatingConnection(Connection delegate, DatabaseMetaData metadata) {

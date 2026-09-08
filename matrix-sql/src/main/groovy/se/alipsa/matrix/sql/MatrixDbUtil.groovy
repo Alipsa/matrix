@@ -407,7 +407,7 @@ class MatrixDbUtil {
     List<String> columnNames = []
     try (ResultSet rs = metadata.getColumns(table.catalog, table.schema, table.name, null)) {
       while (rs.next()) {
-        if (sameTable(rs, table)) {
+        if (sameMetadataTable(rs, table)) {
           columnNames << rs.getString(COL_COLUMN_NAME)
         }
       }
@@ -415,7 +415,7 @@ class MatrixDbUtil {
     SortedMap<Short, String> columnsBySeq = new TreeMap<>()
     try (ResultSet rs = metadata.getPrimaryKeys(table.catalog, table.schema, table.name)) {
       while (rs.next()) {
-        if (sameTable(rs, table)) {
+        if (sameMetadataTable(rs, table)) {
           columnsBySeq[rs.getShort('KEY_SEQ')] = rs.getString(COL_COLUMN_NAME)
         }
       }
@@ -423,10 +423,14 @@ class MatrixDbUtil {
     new TableMetadata(table, columnNames, columnsBySeq.values() as List<String>)
   }
 
-  private static boolean sameTable(ResultSet rs, TableReference table) throws SQLException {
+  private static boolean sameMetadataTable(ResultSet rs, TableReference table) throws SQLException {
     rs.getString(COL_TABLE_NAME) == table.name
-        && rs.getString(COL_TABLE_SCHEMA) == table.schema
-        && rs.getString(COL_TABLE_CATALOG) == table.catalog
+        && metadataLocationMatches(rs.getString(COL_TABLE_SCHEMA), table.schema)
+        && metadataLocationMatches(rs.getString(COL_TABLE_CATALOG), table.catalog)
+  }
+
+  private static boolean metadataLocationMatches(String metadataValue, String tableValue) {
+    metadataValue == null || tableValue == null || metadataValue == tableValue
   }
 
   private static Map<String, String> resolveStoredColumnNames(
@@ -455,6 +459,17 @@ class MatrixDbUtil {
     if (!missing.isEmpty()) {
       throw new IllegalArgumentException(
           "Cannot update $tableName: row column(s) not found in table: ${missing.join(COMMA_SEPARATOR)}")
+    }
+    Map<String, List<String>> rowColumnsByStoredColumn = resolved.keySet().groupBy { String rowColumn ->
+      resolved[rowColumn]
+    }
+    Map.Entry<String, List<String>> duplicate = rowColumnsByStoredColumn.find { String storedColumn, List<String> rowColumns ->
+      rowColumns.size() > 1
+    }
+    if (duplicate != null) {
+      throw new IllegalArgumentException(
+          "Cannot update $tableName: row columns ${duplicate.value.join(COMMA_SEPARATOR)} " +
+          "resolve to the same table column ${duplicate.key}")
     }
     resolved
   }

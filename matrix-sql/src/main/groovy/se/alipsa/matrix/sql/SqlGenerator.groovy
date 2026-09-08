@@ -40,7 +40,7 @@ class SqlGenerator {
    */
   static PreparedUpdate createPreparedUpdate(String tableName, Row row, String[] matchColumnName) {
     Map<String, String> columnNames = row.columnNames().collectEntries { String column -> [(column): column] }
-    createPreparedUpdate(tableName, row, matchColumnName, columnNames)
+    createPreparedUpdate(tableName, row, matchColumnName, columnNames, false)
   }
 
   /**
@@ -58,17 +58,35 @@ class SqlGenerator {
       String[] matchColumnName,
       Map<String, String> storedColumnNames
   ) {
+    createPreparedUpdate(tableName, row, matchColumnName, storedColumnNames, true)
+  }
+
+  private static PreparedUpdate createPreparedUpdate(
+      String tableName,
+      Row row,
+      String[] matchColumnName,
+      Map<String, String> storedColumnNames,
+      boolean storedTableName
+  ) {
     if (matchColumnName == null || matchColumnName.length == 0) {
       throw new IllegalArgumentException('matchColumnName is required')
+    }
+    if (storedColumnNames == null) {
+      throw new IllegalArgumentException('storedColumnNames is required')
     }
     List<String> matchColumns = matchColumnName.toList()
     List<String> updateColumns = updateColumnNames(row.columnNames(), matchColumns)
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
+    row.columnNames().each { String column ->
+      if (!storedColumnNames.containsKey(column) || storedColumnNames[column] == null || storedColumnNames[column].isBlank()) {
+        throw new IllegalArgumentException("No stored column name mapping for row column: $column")
+      }
+    }
     List<String> storedUpdateColumns = updateColumns.collect { storedColumnNames[it] }
     List<String> storedMatchColumns = matchColumns.collect { storedColumnNames[it] }
-    String sql = createPreparedUpdateSql(tableName, storedUpdateColumns, storedMatchColumns)
+    String sql = createPreparedUpdateSqlWithTableName(tableName, storedUpdateColumns, storedMatchColumns, storedTableName)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
     new PreparedUpdate(sql, values)
   }
@@ -82,7 +100,17 @@ class SqlGenerator {
    * @return the SQL update statement with placeholders
    */
   static String createPreparedUpdateSql(String tableName, List<String> updateColumns, List<String> matchColumns) {
-    String sql = "update ${SqlIdentifier.renderTable(tableName)} set "
+    createPreparedUpdateSqlWithTableName(tableName, updateColumns, matchColumns, false)
+  }
+
+  private static String createPreparedUpdateSqlWithTableName(
+      String tableName,
+      List<String> updateColumns,
+      List<String> matchColumns,
+      boolean storedTableName
+  ) {
+    String renderedTableName = storedTableName ? SqlIdentifier.quote(tableName) : SqlIdentifier.renderTable(tableName)
+    String sql = "update $renderedTableName set "
     sql += updateColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(COMMA_SEP)
     sql += WHERE_CLAUSE
     sql += matchColumns.collect { String column -> "${SqlIdentifier.render(column)} = $PLACEHOLDER" }.join(AND_SEPARATOR)

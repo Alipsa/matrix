@@ -349,6 +349,22 @@ class MatrixResultSetTest {
   }
 
   @Test
+  void testRepeatedNextKeepsCursorAfterLast() {
+    ResultSet rs = new MatrixResultSet(
+        Matrix.builder('forward').data([id: [1, 2, 3]]).types(int).build()
+    )
+
+    assertTrue(rs.next())
+    assertTrue(rs.next())
+    assertTrue(rs.next())
+    assertFalse(rs.next())
+    assertFalse(rs.next())
+    assertTrue(rs.isAfterLast())
+    assertTrue(rs.previous())
+    assertEquals(3, rs.getRow())
+  }
+
+  @Test
   void testEmptyCursorStateAndRoundedBigDecimal() {
     ResultSet empty = new MatrixResultSet(Matrix.builder('empty').data([amount: []]).types(BigDecimal).build())
     assertFalse(empty.isBeforeFirst())
