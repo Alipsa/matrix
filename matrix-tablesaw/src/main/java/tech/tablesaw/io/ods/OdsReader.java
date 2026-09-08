@@ -68,8 +68,10 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * Read a table from an ODS file using the specified options.
    *
    * <p>Reads data from the specified sheet index (default is 0, the first sheet).
-   * The first row is treated as column headers. Trailing rows where all values are missing are
-   * dropped, while interior all-missing rows are preserved so missing data keeps its position.
+   * The first row is treated as column headers. By default, trailing rows where all values are
+   * missing are dropped (ODF producers commonly declare empty rows past the data range), while
+   * interior all-missing rows are preserved so missing data keeps its position; disable this with
+   * {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data row.
    * All cell values are read as strings and then converted to appropriate types based on
    * the read options.
    *
@@ -107,8 +109,10 @@ public class OdsReader implements DataReader<OdsReadOptions> {
       }
       // Drop trailing all-missing rows, which ODF producers commonly declare past the data range,
       // but keep interior all-missing rows so missing data round-trips with its row position
-      while (!dataRows.isEmpty() && allMissing(dataRows.get(dataRows.size() - 1))) {
-        dataRows.remove(dataRows.size() - 1);
+      if (options.trimTrailingMissingRows) {
+        while (!dataRows.isEmpty() && allMissing(dataRows.get(dataRows.size() - 1))) {
+          dataRows.remove(dataRows.size() - 1);
+        }
       }
       return TableBuildingUtils.build(columnNames, dataRows, options);
     } catch (IOException e) {

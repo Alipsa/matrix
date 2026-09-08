@@ -115,7 +115,7 @@ public class XmlReader implements DataReader<XmlReadOptions> {
         columnNames = columnNames(elements, options.allowDuplicateColumnNames());
         isFirstRow = false;
       }
-      validateCellCount(rowNumber, columnNames.size(), elements.size());
+      validateCellCount(rowNumber - 1, columnNames.size(), elements.size());
       String[] rowValues = new String[columnNames.size()];
       for (int i = 0; i < elements.size(); i++ ) {
         rowValues[i] = elements.get(i).getText();

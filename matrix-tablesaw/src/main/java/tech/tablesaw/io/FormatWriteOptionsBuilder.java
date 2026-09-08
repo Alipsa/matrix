@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -50,6 +51,10 @@ public class FormatWriteOptionsBuilder extends WriteOptions.Builder {
    */
   protected FormatWriteOptionsBuilder(File file) {
     super(new LazyFileDestination(file));
+    // Mirror the autoClose state Tablesaw's Destination(File) constructor sets, so file-backed
+    // options built through this base behave identically to Tablesaw's own file destinations.
+    // None of the three in-module writers consult the flag (they close unconditionally), so this
+    // is state parity only.
     autoClose = true;
   }
 }
@@ -83,6 +88,6 @@ final class LazyFileDestination extends Destination {
 
   @Override
   public Writer createWriter() {
-    return new OutputStreamWriter(stream());
+    return new OutputStreamWriter(stream(), StandardCharsets.UTF_8);
   }
 }

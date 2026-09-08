@@ -60,9 +60,9 @@ public class XlsxWriteOptions extends WriteOptions {
    * Creates a builder with a Writer destination.
    *
    * @param dest the writer to write to
-  * @return a new builder
+   * @return a new builder
    * @deprecated XLSX is binary; use an OutputStream, File, filename, or binary Destination
-  */
+   */
   @Deprecated(since = "0.4.0")
   public static Builder builder(Writer dest) {
     return new Builder(dest);

@@ -40,6 +40,12 @@ public class OdsReadOptions extends ReadOptions {
   protected Integer sheetIndex;
 
   /**
+   * Whether trailing all-missing rows are dropped. Defaults to {@code true}; ODF producers
+   * commonly declare empty rows past the data range.
+   */
+  protected boolean trimTrailingMissingRows = true;
+
+  /**
    * Creates a builder with a File source.
    * The table name is automatically set to the file name.
    *
@@ -112,6 +118,7 @@ public class OdsReadOptions extends ReadOptions {
   protected OdsReadOptions(Builder builder) {
     super(builder);
     sheetIndex = builder.sheetIndex;
+    trimTrailingMissingRows = builder.trimTrailingMissingRows;
   }
 
   /**
@@ -124,6 +131,12 @@ public class OdsReadOptions extends ReadOptions {
 
     /** The zero-based sheet index to read, or null to use default sheet resolution. */
     protected Integer sheetIndex;
+
+    /**
+     * Whether trailing all-missing rows are dropped. Defaults to {@code true}; ODF producers
+     * commonly declare empty rows past the data range.
+     */
+    protected boolean trimTrailingMissingRows = true;
 
     /**
      * Constructs a builder with the specified source.
@@ -328,6 +341,23 @@ public class OdsReadOptions extends ReadOptions {
      */
     public Builder sheetIndex(int sheetIndex) {
       this.sheetIndex = sheetIndex;
+      return this;
+    }
+
+    /**
+     * Sets whether trailing rows where every value is missing are dropped.
+     *
+     * <p>Enabled by default. ODF producers commonly declare empty rows past the actual data
+     * range, so dropping them avoids inflated tables; disable it to preserve a legitimate
+     * trailing all-missing data row (for example in a file written by {@link OdsWriter}, whose
+     * row count is exact).
+     *
+     * @param trimTrailingMissingRows true to drop trailing all-missing rows (default), false to
+     *     keep them
+     * @return this builder
+     */
+    public Builder trimTrailingMissingRows(boolean trimTrailingMissingRows) {
+      this.trimTrailingMissingRows = trimTrailingMissingRows;
       return this;
     }
 

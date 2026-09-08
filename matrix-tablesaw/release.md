@@ -20,8 +20,13 @@
   `IllegalArgumentException("XLSX requires a binary OutputStream destination")`. Use the
   `OutputStream`, `File`, or filename overloads instead.
 - `TableUtil.createColumn` throws a named `IllegalArgumentException` (column name, zero-based row
-  index, expected type, actual type) for values whose runtime type does not match the requested
-  `ColumnType`, instead of coercing or silently inserting missing values. Unsupported and `SKIP`
+  index, expected type, actual type) for values whose runtime type is incompatible with the
+  requested `ColumnType`, instead of silently inserting missing values. Lossless widenings are
+  still accepted and converted: `Integer`/`Long`/`Short`/`Byte`/`BigInteger` to `BigDecimal`,
+  `Integer`/`Long`/`Short`/`Byte`/`Float`/`BigInteger` to `Double`, narrower integers to wider
+  integer types, and any `CharSequence` (including Groovy `GString`) to `String`. This keeps
+  `TableUtil.fromMatrix`/`toTablesaw` working for Matrix columns declared wider than their stored
+  values (for example integer salaries in a `BigDecimal`-typed column). Unsupported and `SKIP`
   types now also throw instead of returning `null`.
 - `TableUtil.round(NumberColumn, int)` no longer mutates the source column: it returns an
   independent rounded copy (HALF_EVEN by default). Callers must use the return value.
@@ -48,8 +53,10 @@
 - XML, ODS, and XLSX writers now emit missing cells as blank/empty cells instead of serializing
   Tablesaw numeric/boolean sentinels.
 - Interior all-missing rows now round-trip through ODS (and XML) instead of being dropped or —
-  worse — being corrupted into the following row's values by the ODS writer; the ODS reader keeps
-  interior all-missing rows and only drops trailing all-missing rows.
+  worse — being corrupted into the following row's values by the ODS writer. The ODS reader drops
+  trailing all-missing rows by default (ODF producers commonly declare empty rows past the data
+  range); pass `trimTrailingMissingRows(false)` to `OdsReadOptions.builder(...)` to preserve a
+  legitimate trailing all-missing data row.
 - XML output is deterministic UTF-8: stream destinations get an explicit
   `encoding="UTF-8"` declaration written through an explicit `OutputStreamWriter`, while a
   caller-supplied `Writer` is used as supplied and the declaration omits the encoding attribute.

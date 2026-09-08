@@ -125,10 +125,10 @@ public class BigDecimalAggregateFunctions {
 
 
   /**
-   * Converts a Column<BigDecimal> to a List<Number>
+   * Collects the non-missing values of a column into a new list.
    *
-   * @param column the column to convert
-   * @return a new, converted list
+   * @param column the column to collect from
+   * @return a new list containing only the non-missing values
    */
   static List<BigDecimal> nonMissingValues(Column<BigDecimal> column) {
     List<BigDecimal> list = new ArrayList<>();

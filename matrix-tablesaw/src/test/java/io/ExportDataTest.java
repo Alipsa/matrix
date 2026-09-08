@@ -16,6 +16,7 @@ import tech.tablesaw.api.FloatColumn;
 import tech.tablesaw.api.IntColumn;
 import tech.tablesaw.api.LongColumn;
 import tech.tablesaw.api.ShortColumn;
+import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.column.numbers.BigDecimalColumnType;
 import tech.tablesaw.io.RuntimeIOException;
@@ -229,13 +230,23 @@ public class ExportDataTest {
   @Test
   public void testFileDestinationsOpenLazilyAndCloseAfterWrite() throws IOException {
     Table table = Table.create("lazy").addColumns(IntColumn.create("value", new int[] {1}));
-    File output = new File(tempDir, "lazy.xml");
-    XmlWriteOptions options = XmlWriteOptions.builder(output).build();
-    assertFalse(output.exists());
+    File xmlOutput = new File(tempDir, "lazy.xml");
+    File odsOutput = new File(tempDir, "lazy.ods");
+    File xlsxOutput = new File(tempDir, "lazy.xlsx");
+    XmlWriteOptions xmlOptions = XmlWriteOptions.builder(xmlOutput).build();
+    OdsWriteOptions odsOptions = OdsWriteOptions.builder(odsOutput).build();
+    XlsxWriteOptions xlsxOptions = XlsxWriteOptions.builder(xlsxOutput).build();
+    assertFalse(xmlOutput.exists());
+    assertFalse(odsOutput.exists());
+    assertFalse(xlsxOutput.exists());
 
-    table.write().usingOptions(options);
-    assertTrue(output.exists());
-    OutputStream closedStream = options.destination().stream();
+    table.write().usingOptions(xmlOptions);
+    table.write().usingOptions(odsOptions);
+    table.write().usingOptions(xlsxOptions);
+    assertTrue(xmlOutput.exists());
+    assertTrue(odsOutput.exists());
+    assertTrue(xlsxOutput.exists());
+    OutputStream closedStream = xmlOptions.destination().stream();
     assertThrows(IOException.class, () -> closedStream.write(1));
 
     assertThrows(
@@ -244,6 +255,30 @@ public class ExportDataTest {
             table
                 .write()
                 .usingOptions(XmlWriteOptions.builder(new File(tempDir, "missing/out.xml")).build()));
+  }
+
+  @Test
+  public void testOdsTrailingAllMissingRow() throws IOException {
+    Table table =
+        Table.create("trailing")
+            .addColumns(
+                StringColumn.create("s").append("a").appendMissing(),
+                IntColumn.create("i").append(1).appendMissing());
+
+    File ods = new File(tempDir, "trailing.ods");
+    table.write().usingOptions(OdsWriteOptions.builder(ods).build());
+
+    // By default trailing all-missing rows are trimmed (ODF padding convention)
+    Table trimmed = Table.read().usingOptions(OdsReadOptions.builder(ods).build());
+    assertEquals(1, trimmed.rowCount());
+
+    // ...but a legitimate trailing all-missing data row can be preserved explicitly
+    Table kept =
+        Table.read()
+            .usingOptions(OdsReadOptions.builder(ods).trimTrailingMissingRows(false).build());
+    assertEquals(2, kept.rowCount());
+    assertTrue(kept.column("s").isMissing(1));
+    assertTrue(kept.column("i").isMissing(1));
   }
 
   private static Table missingValueTable() {

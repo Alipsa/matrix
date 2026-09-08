@@ -66,6 +66,16 @@ class GtableTest {
   }
 
   @Test
+  void testCreateAcceptsGStringAndWidenedValues() {
+    def who = 'Alice'
+    Gtable table = Gtable.create(
+        [name: ["${who}", 'Ann'], salary: [50000, 60000]],
+        [STRING, BigDecimalColumnType.instance()])
+    assertEquals('Alice', table.column('name').getString(0))
+    assertEquals(new BigDecimal('60000'), table.column('salary').getBigDecimal(1))
+  }
+
+  @Test
   void testCreateValidatesDeclaredTypes() {
     def data = [name: ['Alice'], age: [25]]
     assertThrows(IllegalArgumentException) { Gtable.create(data, [STRING]) }

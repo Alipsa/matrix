@@ -323,7 +323,8 @@ class TableUtil {
    * @param values the values to populate the column
    * @param <T> the type parameter
    * @return a column of the specified type
-   * @throws IllegalArgumentException if the type is unsupported or a non-null value has the wrong type
+   * @throws IllegalArgumentException if the type is unsupported or a non-null value has a type that
+   *         is neither the expected type nor a losslessly widenable one
    */
   static Column<?> createColumn(ColumnType type, String name, List<?> values) {
     Class<?> expectedType = classForColumnType(type)
@@ -332,13 +333,65 @@ class TableUtil {
     }
     Column<?> column = type.create(name)
     values.eachWithIndex { Object value, int row ->
-      if (value != null && !expectedType.isInstance(value)) {
-        throw new IllegalArgumentException(
-            "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}")
-      }
-      column.appendObj(value)
+      column.appendObj(coerceValue(value, expectedType, name, row))
     }
     column
+  }
+
+  /**
+   * Validates a value against the expected Java type, converting lossless widenings.
+   *
+   * <p>{@code null} is returned as-is (missing). Values already of the expected type are returned
+   * unchanged. A {@link CharSequence} (including Groovy {@code GString}) is accepted for
+   * {@link String} columns and converted with {@code toString()}. Numeric values are widened
+   * losslessly: {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code BigInteger} to
+   * {@link BigDecimal}; {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code Float}/
+   * {@code BigInteger} to {@link Double}; {@code Integer}/{@code Short}/{@code Byte} to
+   * {@link Float}; {@code Integer}/{@code Short}/{@code Byte} to {@link Long}; {@code Short}/
+   * {@code Byte} to {@link Integer}; and {@code Byte} to {@link Short}. All other mismatches are
+   * rejected rather than coerced.
+   *
+   * @param value the value to validate
+   * @param expectedType the Java type required by the column type
+   * @param name the column name (used in the error message)
+   * @param row the zero-based row index (used in the error message)
+   * @return the value, converted when a lossless widening applies
+   * @throws IllegalArgumentException if the value cannot be represented in the expected type
+   */
+  private static Object coerceValue(Object value, Class<?> expectedType, String name, int row) {
+    if (value == null || expectedType.isInstance(value)) {
+      return value
+    }
+    if (expectedType == String && value instanceof CharSequence) {
+      return value.toString()
+    }
+    if (value instanceof Number) {
+      Number num = (Number) value
+      if (expectedType == BigDecimal && isWidenableTo(num, [Integer, Long, Short, Byte, BigInteger])) {
+        return num instanceof BigInteger ? new BigDecimal((BigInteger) num) : BigDecimal.valueOf(num.longValue())
+      }
+      if (expectedType == Double && isWidenableTo(num, [Integer, Long, Short, Byte, Float, BigInteger])) {
+        return num.doubleValue()
+      }
+      if (expectedType == Float && isWidenableTo(num, [Integer, Short, Byte])) {
+        return num.floatValue()
+      }
+      if (expectedType == Long && isWidenableTo(num, [Integer, Short, Byte])) {
+        return num.longValue()
+      }
+      if (expectedType == Integer && isWidenableTo(num, [Short, Byte])) {
+        return num.intValue()
+      }
+      if (expectedType == Short && num instanceof Byte) {
+        return num.shortValue()
+      }
+    }
+    throw new IllegalArgumentException(
+        "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}")
+  }
+
+  private static boolean isWidenableTo(Number num, List<Class<?>> sourceTypes) {
+    sourceTypes.any { it.isInstance(num) }
   }
 
   /**

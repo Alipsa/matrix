@@ -277,7 +277,7 @@ class TableUtilTest {
 
     [
         (INTEGER): [1, 'x'],
-        (DOUBLE): [1.0d, 2],
+        (DOUBLE): [1.0d, true],
         (BOOLEAN): [true, 'false'],
         (LOCAL_DATE): [LocalDate.now(), '2026-09-08'],
         (BigDecimalColumnType.instance()): [1.0, 2.0d]
@@ -292,6 +292,69 @@ class TableUtilTest {
     assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(SKIP, 'skip', [])
     }
+  }
+
+  @Test
+  void testCreateColumnWidensNumbersLosslessly() {
+    def widened = TableUtil.createColumn(BigDecimalColumnType.instance(), 'salary', [50000, null, 70000])
+    assertEquals(3, widened.size())
+    assertTrue(widened.isMissing(1))
+    assertEquals(new BigDecimal('50000'), widened.getBigDecimal(0))
+
+    def fromInts = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1, 2L, (short) 3, (byte) 4, 5G])
+    assertEquals(new BigDecimal('5'), fromInts.getBigDecimal(4))
+
+    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1, 2L, 3.5f, (short) 4, (byte) 5, 6G])
+    assertEquals(1.0d, doubles.getDouble(0), 0.0d)
+    assertEquals(3.5d, doubles.getDouble(2), 0.0d)
+
+    def floats = TableUtil.createColumn(FLOAT, 'f', [1, (short) 2, (byte) 3])
+    assertEquals(1.0f, floats.getFloat(0), 0.0f)
+
+    def longs = TableUtil.createColumn(LONG, 'l', [1, (short) 2, (byte) 3])
+    assertEquals(3L, longs.getLong(2))
+
+    def ints = TableUtil.createColumn(INTEGER, 'i', [(short) 1, (byte) 2])
+    assertEquals(2, ints.getInt(1))
+
+    def shorts = TableUtil.createColumn(SHORT, 's', [(byte) 7])
+    assertEquals((short) 7, shorts.getShort(0))
+  }
+
+  @Test
+  void testCreateColumnRejectsLossyOrIncompatibleValues() {
+    // Double/Float into BigDecimal and Long into Integer are not lossless widenings
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1.5d])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(INTEGER, 'i', [1L])
+    }
+  }
+
+  @Test
+  void testCreateColumnAcceptsGStringForStringColumns() {
+    def who = 'Alice'
+    def column = TableUtil.createColumn(STRING, 'name', ["${who}", 'Ann', null])
+    assertEquals('Alice', column.getString(0))
+    assertEquals('Ann', column.getString(1))
+    assertTrue(column.isMissing(2))
+  }
+
+  @Test
+  void testFromMatrixWidensDeclaredTypesLosslessly() {
+    // The documented tutorial example: values narrower than the declared Matrix types
+    def matrix = Matrix.builder().data(
+        name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+        age: [25, 30, 35, 40, 45],
+        salary: [50000, 60000, 70000, 80000, 90000],
+        dept: ['Eng', 'Eng', 'Ops', 'Ops', 'HR']
+    ).types(String, Integer, BigDecimal, String).build()
+
+    def gTable = TableUtil.fromMatrix(matrix)
+    assertEquals(5, gTable.rowCount())
+    assertEquals(BigDecimalColumnType.instance(), gTable.column('salary').type())
+    assertEquals(new BigDecimal('60000'), gTable.column('salary').getBigDecimal(1))
   }
 
   @Test

@@ -88,11 +88,11 @@ class XmlReaderTest {
   void rejectsShortAndLongRowsWithUsefulMessages() {
     RuntimeIOException shortRow =
         assertMalformedRows("<td name=\"a\">2</td>");
-    assertTrue(shortRow.getCause().getMessage().contains("row 2 contains 1 cells; expected 2"));
+    assertTrue(shortRow.getCause().getMessage().contains("row 1 contains 1 cells; expected 2"));
 
     RuntimeIOException longRow =
         assertMalformedRows("<td name=\"a\">2</td><td name=\"b\">3</td><td name=\"c\">4</td>");
-    assertTrue(longRow.getCause().getMessage().contains("row 2 contains 3 cells; expected 2"));
+    assertTrue(longRow.getCause().getMessage().contains("row 1 contains 3 cells; expected 2"));
   }
 
   private static RuntimeIOException assertInvalid(String cells) {

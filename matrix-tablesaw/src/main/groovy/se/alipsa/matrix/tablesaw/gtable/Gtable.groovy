@@ -83,16 +83,7 @@ class Gtable extends Table {
 
   @SuppressWarnings('ImplementationAsType')
   static Gtable create(LinkedHashMap<String, List<?>> data) {
-    def inferredTypes = data.collect { entry ->
-      def firstNonNull = entry.value.find { it != null }
-      def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
-      if (inferred == ColumnType.SKIP) {
-        throw new IllegalArgumentException(
-            "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
-      }
-      inferred
-    }
-    create(data, inferredTypes)
+    create(data, data.collect { entry -> inferColumnType(entry.key, entry.value) })
   }
 
   @SuppressWarnings('ImplementationAsType')
@@ -105,17 +96,29 @@ class Gtable extends Table {
       throw new IllegalArgumentException("Unknown type override column(s): ${unknownNames}")
     }
     def types = data.collect { entry ->
-      typeOverrides.containsKey(entry.key) ? typeOverrides.get(entry.key) : {
-        def firstNonNull = entry.value.find { it != null }
-        def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
-        if (inferred == ColumnType.SKIP) {
-          throw new IllegalArgumentException(
-              "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
-        }
-        inferred
-      }()
+      typeOverrides.containsKey(entry.key)
+          ? typeOverrides.get(entry.key)
+          : inferColumnType(entry.key, entry.value)
     }
     create(data, types)
+  }
+
+  /**
+   * Infers the column type from the first non-null value.
+   *
+   * @param name the column name (used in the error message)
+   * @param values the column values
+   * @return the inferred column type, {@link ColumnType#STRING} for all-missing columns
+   * @throws IllegalArgumentException if the inferred type is unsupported
+   */
+  private static ColumnType inferColumnType(String name, List<?> values) {
+    def firstNonNull = values.find { it != null }
+    def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+    if (inferred == ColumnType.SKIP) {
+      throw new IllegalArgumentException(
+          "Cannot infer column type for '${name}': ${firstNonNull.class.name} is not supported")
+    }
+    inferred
   }
 
   private static void validateColumnType(ColumnType type, String name, int index) {
