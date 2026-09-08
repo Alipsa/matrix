@@ -16,6 +16,7 @@ Date format used below is yyyy-MM-dd
 
 ### ResultSet and JDBC behavior
 - `MatrixResultSet` cursor movement and state reporting now follow JDBC before-first and after-last semantics, including repeated `next()` calls after the final row.
+- Decimal precision and scale metadata is derived as a compatible pair that accommodates both the largest integer part and the greatest scale in a column.
 - Strengthened closed-state, column-index, update, metadata, calendar, URL, wrapper, numeric rounding, and null-handling behavior.
 - JDBC batch sentinel values now produce non-negative affected-row counts.
 

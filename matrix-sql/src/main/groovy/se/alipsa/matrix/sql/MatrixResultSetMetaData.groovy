@@ -11,8 +11,9 @@ import java.sql.SQLException
  * Provides {@link ResultSetMetaData} backed by a {@link Matrix}, exposing column names,
  * types, and display sizes derived from the matrix structure.
  *
- * <p>Precision and scale are computed lazily per column and cached; values updated after a
- * column's metric is first requested are not reflected in that metric.</p>
+ * <p>Precision and scale are computed lazily per column and cached. For decimal columns,
+ * both metrics are computed together so they describe a compatible numeric shape. Values
+ * updated after either metric is first requested are not reflected in either metric.</p>
  */
 class MatrixResultSetMetaData implements ResultSetMetaData {
 
@@ -40,13 +41,15 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
 
   private int calculatePrecision(int columnIndex) {
     Class type = matrix.type(columnIndex)
-    if (type == BigDecimal || type == BigInteger) {
+    if (type == BigDecimal) {
+      calculateDecimalMetrics(columnIndex)
+      return precisionByColumn[columnIndex]
+    }
+    if (type == BigInteger) {
       int precision = 0
       matrix.column(columnIndex).each { Object value ->
         if (value instanceof Number) {
-          int valuePrecision = value instanceof BigDecimal
-              ? value.precision()
-              : new BigDecimal(value.toString()).precision()
+          int valuePrecision = new BigDecimal(value.toString()).precision()
           precision = valuePrecision > precision ? valuePrecision : precision
         }
       }
@@ -75,16 +78,26 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
     if (matrix.type(columnIndex) != BigDecimal) {
       return 0
     }
-    int scale = 0
+    calculateDecimalMetrics(columnIndex)
+    scaleByColumn[columnIndex]
+  }
+
+  private void calculateDecimalMetrics(int columnIndex) {
+    int maxIntegerDigits = 0
+    int maxScale = 0
     matrix.column(columnIndex).each { Object value ->
       if (value instanceof Number) {
-        int valueScale = value instanceof BigDecimal
-            ? value.scale()
-            : new BigDecimal(value.toString()).scale()
-        scale = valueScale > scale ? valueScale : scale
+        BigDecimal decimal = value instanceof BigDecimal
+            ? value
+            : new BigDecimal(value.toString())
+        int integerDigits = Math.max(1, decimal.precision() - decimal.scale())
+        maxIntegerDigits = Math.max(maxIntegerDigits, integerDigits)
+        int valueScale = decimal.scale()
+        maxScale = Math.max(maxScale, valueScale)
       }
     }
-    scale
+    precisionByColumn[columnIndex] = maxIntegerDigits + maxScale
+    scaleByColumn[columnIndex] = maxScale
   }
   /**
    * Returns the number of columns in this {@code ResultSet} object.

@@ -404,9 +404,9 @@ class MatrixResultSetTest {
     assertEquals(9, metadata.getPrecision(1), 'Column-name access must not calculate precision')
     rs.updateBigDecimal(1, 1.2)
     assertEquals(9, metadata.getPrecision(1), 'Precision is cached after it is first requested')
-    assertEquals(1, metadata.getScale(1))
+    assertEquals(3, metadata.getScale(1), 'Scale is cached with precision for a compatible numeric shape')
     rs.updateBigDecimal(1, 1.2345)
-    assertEquals(1, metadata.getScale(1), 'Scale is cached after it is first requested')
+    assertEquals(3, metadata.getScale(1), 'Scale is cached after it is first requested')
     assertEquals(3, metadata.getPrecision(2))
     assertEquals(10, metadata.getPrecision(3))
     assertThrows(SQLException) { metadata.getColumnName(0) }
@@ -423,6 +423,21 @@ class MatrixResultSetTest {
         Matrix.builder('bigints').data([value: [-123]]).types(BigInteger).build()
     )
     assertEquals(3, rs.metaData.getPrecision(1))
+  }
+
+  @Test
+  void testDecimalPrecisionAccommodatesMaximumScaleAndIntegerDigits() {
+    ResultSet rs = new MatrixResultSet(
+        Matrix.builder('decimalPrecision')
+            .data([small: [0.001g, 0.002g], mixed: [123.4g, 0.001g]])
+            .types(BigDecimal, BigDecimal)
+            .build()
+    )
+
+    assertEquals(4, rs.metaData.getPrecision(1))
+    assertEquals(3, rs.metaData.getScale(1))
+    assertEquals(6, rs.metaData.getPrecision(2))
+    assertEquals(3, rs.metaData.getScale(2))
   }
 
 }
