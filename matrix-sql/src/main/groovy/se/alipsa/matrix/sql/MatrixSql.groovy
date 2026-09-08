@@ -604,8 +604,14 @@ class MatrixSql implements Closeable {
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
     }
-    String sql = SqlGenerator.createPreparedUpdateSql(tableName(table), updateColumns, matchColumns)
-    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+    Connection connection = connect()
+    SqlGenerator.PreparedUpdate prepared = matrixDbUtil.createPreparedUpdate(
+        connection,
+        tableName(table),
+        table.row(0),
+        matchColumnName
+    )
+    try(PreparedStatement stm = connection.prepareStatement(prepared.sql)) {
       for (Row row : table) {
         List<Object> values = SqlGenerator.updateValues(row, updateColumns, matchColumns)
         bindParams(stm, values)

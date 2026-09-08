@@ -1,7 +1,7 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.5.0-SNAPSHOT
+## v2.5.0, 2026-09-08
 
 ### Table discovery and derived updates
 - `getTableNames(Connection)` and `tableExists(Connection, String)` now inspect only tables in the connection's current catalog and schema; views, temporary tables, and tables in other schemas are excluded.

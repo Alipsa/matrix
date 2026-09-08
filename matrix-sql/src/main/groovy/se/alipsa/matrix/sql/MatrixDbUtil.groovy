@@ -367,8 +367,8 @@ class MatrixDbUtil {
     if (table == null) {
       return SqlGenerator.createPreparedUpdate(tableName, row, matchColumnNames)
     }
-    Map<String, String> columnNames = row.columnNames().collectEntries { String column -> [(column): column] }
-    SqlGenerator.createPreparedUpdate(table.name, row, matchColumnNames, columnNames)
+    Map<String, String> storedColumnNames = resolveStoredColumnNames(tableName, row.columnNames(), table.columnNames)
+    SqlGenerator.createPreparedUpdate(table.name, row, matchColumnNames, storedColumnNames)
   }
 
   /**

@@ -259,6 +259,10 @@ class MatrixSqlTest {
       row['name'] = 'Alicia'
       assertEquals(1, matrixSql.update('nq', row))
       assertEquals('Alicia', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      row['name'] = 'Ally'
+      assertEquals(1, matrixSql.update('nq', row, 'ID'))
+      assertEquals('Ally', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
     }
   }
 
@@ -276,6 +280,10 @@ class MatrixSqlTest {
       row['name'] = 'Ally'
       assertEquals(1, matrixSql.update('MiXeD_Case', row, 'id'))
       assertEquals('Ally', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
+
+      Matrix batch = Matrix.builder('MiXeD_Case').data([id: [1], name: ['Batch']]).types(int, String).build()
+      assertEquals(1, matrixSql.update(batch, 'id'))
+      assertEquals('Batch', matrixSql.select('SELECT "name" FROM "MiXeD_Case"')[0, 'name'])
     }
   }
 
