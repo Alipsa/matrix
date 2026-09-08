@@ -1031,7 +1031,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @param number the number to convert
    * @return a BigDecimal corresponding to the number, or null if the input is null
    */
-  protected static BigDecimal toBigDecimal(Number number) {
+  public static BigDecimal toBigDecimal(Number number) {
     if (number == null) return null;
 
     // If already a BigDecimal, return it directly without conversion

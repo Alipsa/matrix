@@ -343,20 +343,23 @@ class TableUtil {
    *
    * <p>{@code null} is returned as-is (missing). Values already of the expected type are returned
    * unchanged. A {@link CharSequence} (including Groovy {@code GString}) is accepted for
-   * {@link String} columns and converted with {@code toString()}. Numeric values are widened
-   * losslessly: {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code BigInteger} to
-   * {@link BigDecimal}; {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code Float}/
-   * {@code BigInteger} to {@link Double}; {@code Integer}/{@code Short}/{@code Byte} to
-   * {@link Float}; {@code Integer}/{@code Short}/{@code Byte} to {@link Long}; {@code Short}/
-   * {@code Byte} to {@link Integer}; and {@code Byte} to {@link Short}. All other mismatches are
-   * rejected rather than coerced.
+   * {@link String} columns and converted with {@code toString()}. Numeric widenings are accepted
+   * only when exact: {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code BigInteger}/
+   * {@code Float}/{@code Double} to {@link BigDecimal} through
+   * {@link BigDecimalColumn#toBigDecimal(Number)} (NaN becomes missing, infinities are rejected);
+   * {@code Float} (always exact), {@code Integer}/{@code Short}/{@code Byte}, and exactly
+   * representable {@code Long}/{@code BigInteger} to {@link Double}; {@code Short}/{@code Byte}
+   * and exactly representable {@code Integer} to {@link Float}; {@code Integer}/{@code Short}/
+   * {@code Byte} to {@link Long}; {@code Short}/{@code Byte} to {@link Integer}; and {@code Byte}
+   * to {@link Short}. Values that would lose precision or overflow are rejected rather than
+   * coerced.
    *
    * @param value the value to validate
    * @param expectedType the Java type required by the column type
    * @param name the column name (used in the error message)
    * @param row the zero-based row index (used in the error message)
    * @return the value, converted when a lossless widening applies
-   * @throws IllegalArgumentException if the value cannot be represented in the expected type
+   * @throws IllegalArgumentException if the value cannot be represented exactly in the expected type
    */
   private static Object coerceValue(Object value, Class<?> expectedType, String name, int row) {
     if (value == null || expectedType.isInstance(value)) {
@@ -367,19 +370,41 @@ class TableUtil {
     }
     if (value instanceof Number) {
       Number num = (Number) value
-      if (expectedType == BigDecimal && isWidenableTo(num, [Integer, Long, Short, Byte, BigInteger])) {
-        return num instanceof BigInteger ? new BigDecimal((BigInteger) num) : BigDecimal.valueOf(num.longValue())
+      if (expectedType == BigDecimal) {
+        return BigDecimalColumn.toBigDecimal(num)
       }
-      if (expectedType == Double && isWidenableTo(num, [Integer, Long, Short, Byte, Float, BigInteger])) {
-        return num.doubleValue()
+      if (expectedType == Double) {
+        if (num instanceof Float || num instanceof Integer || num instanceof Short || num instanceof Byte) {
+          return num.doubleValue()
+        }
+        if (num instanceof Long) {
+          double d = num.doubleValue()
+          if ((long) d == (Long) num) {
+            return d
+          }
+        }
+        if (num instanceof BigInteger) {
+          double d = num.doubleValue()
+          if (Double.isFinite(d) && new BigDecimal((BigInteger) num) == BigDecimal.valueOf(d)) {
+            return d
+          }
+        }
       }
-      if (expectedType == Float && isWidenableTo(num, [Integer, Short, Byte])) {
-        return num.floatValue()
+      if (expectedType == Float) {
+        if (num instanceof Short || num instanceof Byte) {
+          return num.floatValue()
+        }
+        if (num instanceof Integer) {
+          float f = num.floatValue()
+          if ((int) f == (Integer) num) {
+            return f
+          }
+        }
       }
-      if (expectedType == Long && isWidenableTo(num, [Integer, Short, Byte])) {
+      if (expectedType == Long && (num instanceof Integer || num instanceof Short || num instanceof Byte)) {
         return num.longValue()
       }
-      if (expectedType == Integer && isWidenableTo(num, [Short, Byte])) {
+      if (expectedType == Integer && (num instanceof Short || num instanceof Byte)) {
         return num.intValue()
       }
       if (expectedType == Short && num instanceof Byte) {
@@ -388,10 +413,6 @@ class TableUtil {
     }
     throw new IllegalArgumentException(
         "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}")
-  }
-
-  private static boolean isWidenableTo(Number num, List<Class<?>> sourceTypes) {
-    sourceTypes.any { it.isInstance(num) }
   }
 
   /**

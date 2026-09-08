@@ -280,7 +280,7 @@ class TableUtilTest {
         (DOUBLE): [1.0d, true],
         (BOOLEAN): [true, 'false'],
         (LOCAL_DATE): [LocalDate.now(), '2026-09-08'],
-        (BigDecimalColumnType.instance()): [1.0, 2.0d]
+        (BigDecimalColumnType.instance()): [1.0, true]
     ].each { ColumnType type, List<?> values ->
       def exception = assertThrows(IllegalArgumentException) {
         TableUtil.createColumn(type, 'mixed', values)
@@ -304,12 +304,14 @@ class TableUtilTest {
     def fromInts = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1, 2L, (short) 3, (byte) 4, 5G])
     assertEquals(new BigDecimal('5'), fromInts.getBigDecimal(4))
 
-    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1, 2L, 3.5f, (short) 4, (byte) 5, 6G])
+    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1, 9007199254740991L, 3.5f, (short) 4, (byte) 5, 6G])
     assertEquals(1.0d, doubles.getDouble(0), 0.0d)
+    assertEquals(9007199254740991d, doubles.getDouble(1), 0.0d)
     assertEquals(3.5d, doubles.getDouble(2), 0.0d)
 
-    def floats = TableUtil.createColumn(FLOAT, 'f', [1, (short) 2, (byte) 3])
+    def floats = TableUtil.createColumn(FLOAT, 'f', [1, 16777216, (short) 2, (byte) 3])
     assertEquals(1.0f, floats.getFloat(0), 0.0f)
+    assertEquals(16777216.0f, floats.getFloat(1), 0.0f)
 
     def longs = TableUtil.createColumn(LONG, 'l', [1, (short) 2, (byte) 3])
     assertEquals(3L, longs.getLong(2))
@@ -323,12 +325,32 @@ class TableUtilTest {
 
   @Test
   void testCreateColumnRejectsLossyOrIncompatibleValues() {
-    // Double/Float into BigDecimal and Long into Integer are not lossless widenings
+    // beyond the exact range of the target type: precision loss or overflow
     assertThrows(IllegalArgumentException) {
-      TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1.5d])
+      TableUtil.createColumn(DOUBLE, 'd', [9007199254740993L])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(DOUBLE, 'd', [10G ** 400])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(FLOAT, 'f', [16777217])
     }
     assertThrows(IllegalArgumentException) {
       TableUtil.createColumn(INTEGER, 'i', [1L])
+    }
+  }
+
+  @Test
+  void testCreateColumnConvertsFloatingToBigDecimalLikeTheColumnDoes() {
+    def col = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1.5d, 2.5f])
+    assertEquals(1.5G, col.getBigDecimal(0))
+    assertEquals(2.5G, col.getBigDecimal(1))
+
+    // NaN becomes missing, infinities are rejected, mirroring BigDecimalColumn.toBigDecimal
+    def withNan = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.NaN])
+    assertTrue(withNan.isMissing(0))
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.POSITIVE_INFINITY])
     }
   }
 

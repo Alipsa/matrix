@@ -228,8 +228,9 @@ a.divideBy(b)                                        // mutates a in place
 ### Strict Gtable type validation
 
 Lossless widenings are still accepted and converted (for example integer values in a
-`BigDecimal`-typed column, or a `GString` in a `STRING` column); only genuinely incompatible
-types are rejected:
+`BigDecimal`-typed column, floating-point values through `BigDecimalColumn.toBigDecimal` where NaN
+becomes missing and infinities are rejected, or a `GString` in a `STRING` column); only values
+that cannot be represented exactly are rejected:
 
 ```groovy
 // Throws IllegalArgumentException naming the type index and column — no silent
@@ -255,14 +256,14 @@ NumberColumn rounded = TableUtil.round(source, 2)   // source is unchanged
 
 ### ODS row handling
 
-Interior all-missing rows round-trip through ODS and XML with their position preserved. The ODS
-reader drops trailing all-missing rows by default, because spreadsheet applications commonly
-declare empty rows past the actual data range. Disable the trim to keep a legitimate trailing
-all-missing data row:
+All-missing rows round-trip through ODS and XML with their position preserved; the ODS reader
+keeps trailing all-missing rows by default, so a write followed by a read is lossless. When
+reading files from spreadsheet applications that declare empty rows past the actual data range,
+enable the trim to avoid inflated tables:
 
 ```groovy
-Table kept = Table.read().usingOptions(
-    OdsReadOptions.builder('data.ods').trimTrailingMissingRows(false).build())
+Table trimmed = Table.read().usingOptions(
+    OdsReadOptions.builder('data.ods').trimTrailingMissingRows(true).build())
 ```
 
 ## Documentation

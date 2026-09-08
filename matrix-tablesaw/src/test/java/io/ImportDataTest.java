@@ -65,6 +65,7 @@ public class ImportDataTest {
           case "Mean cumulative mass balance" -> DOUBLE;
           default -> STRING;
         })
+        .trimTrailingMissingRows(true)
         .build();
     var glaciers = Table.read().usingOptions(options);
     assertEquals(70, glaciers.rowCount(), "Number of rows");
@@ -101,12 +102,17 @@ public class ImportDataTest {
 
     var options = OdsReadOptions.builder(odsFile).build();
     var table = Table.read().usingOptions(options);
-    assertEquals(2, table.rowCount(), "Should have 2 data rows (all-empty row skipped)");
+    assertEquals(3, table.rowCount(), "Trailing all-empty row is kept by default (lossless)");
+    var trimmed =
+        Table.read()
+            .usingOptions(OdsReadOptions.builder(odsFile).trimTrailingMissingRows(true).build());
+    assertEquals(2, trimmed.rowCount(), "Should have 2 data rows when trailing all-empty row is trimmed");
     assertEquals(3, table.columnCount());
     assertEquals("x1", table.get(0, 0));
     assertEquals("y1", table.get(0, 1));
     assertEquals("z1", table.get(0, 2));
     assertEquals("x2", table.get(1, 0));
+    assertTrue(table.column(0).isMissing(2), "Trailing all-empty row should be all missing");
     assertTrue(table.column(1).isMissing(1), "Missing cell should be missing, not 'null' string");
     assertEquals("z2", table.get(1, 2));
 

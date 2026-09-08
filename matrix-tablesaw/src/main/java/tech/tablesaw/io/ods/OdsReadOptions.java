@@ -40,10 +40,10 @@ public class OdsReadOptions extends ReadOptions {
   protected Integer sheetIndex;
 
   /**
-   * Whether trailing all-missing rows are dropped. Defaults to {@code true}; ODF producers
-   * commonly declare empty rows past the data range.
+   * Whether trailing all-missing rows are dropped. Defaults to {@code false} so round trips are
+   * lossless; enable to drop empty rows past the data range that ODF producers commonly declare.
    */
-  protected boolean trimTrailingMissingRows = true;
+  protected boolean trimTrailingMissingRows = false;
 
   /**
    * Creates a builder with a File source.
@@ -133,10 +133,10 @@ public class OdsReadOptions extends ReadOptions {
     protected Integer sheetIndex;
 
     /**
-     * Whether trailing all-missing rows are dropped. Defaults to {@code true}; ODF producers
-     * commonly declare empty rows past the data range.
+     * Whether trailing all-missing rows are dropped. Defaults to {@code false} so round trips are
+     * lossless; enable to drop empty rows past the data range that ODF producers commonly declare.
      */
-    protected boolean trimTrailingMissingRows = true;
+    protected boolean trimTrailingMissingRows = false;
 
     /**
      * Constructs a builder with the specified source.
@@ -347,12 +347,11 @@ public class OdsReadOptions extends ReadOptions {
     /**
      * Sets whether trailing rows where every value is missing are dropped.
      *
-     * <p>Enabled by default. ODF producers commonly declare empty rows past the actual data
-     * range, so dropping them avoids inflated tables; disable it to preserve a legitimate
-     * trailing all-missing data row (for example in a file written by {@link OdsWriter}, whose
-     * row count is exact).
+     * <p>Disabled by default so that reading preserves a legitimate trailing all-missing data
+     * row and round trips are lossless; enable it when reading files from ODF producers that
+     * declare empty rows past the actual data range, to avoid inflated tables.
      *
-     * @param trimTrailingMissingRows true to drop trailing all-missing rows (default), false to
+     * @param trimTrailingMissingRows true to drop trailing all-missing rows, false (default) to
      *     keep them
      * @return this builder
      */
