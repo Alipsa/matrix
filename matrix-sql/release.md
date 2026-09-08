@@ -11,6 +11,7 @@ Date format used below is yyyy-MM-dd
 - Metadata matching tolerates drivers that report missing catalog or schema values across JDBC metadata calls.
 - Ambiguous or duplicate case-insensitive column mappings are rejected instead of generating an unsafe update.
 - Explicit single-row and batch updates reject Matrix columns that cannot be mapped unambiguously to stored table columns.
+- Explicit match column names accept either the Matrix spelling or stored database spelling, matched case-insensitively.
 
 ### ResultSet and JDBC behavior
 - `MatrixResultSet` cursor movement and state reporting now follow JDBC before-first and after-last semantics, including repeated `next()` calls after the final row.

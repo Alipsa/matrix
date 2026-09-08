@@ -38,7 +38,7 @@ class SqlGeneratorTest {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       SqlGenerator.createPreparedUpdate('people', row, ['nosuchcol'] as String[])
     }
-    assertEquals('No stored column name mapping for row column: nosuchcol', exception.message)
+    assertEquals('No row column found for match column: nosuchcol', exception.message)
   }
 
   @Test
@@ -55,5 +55,19 @@ class SqlGeneratorTest {
     assertEquals(['name', 'status'], prepared.updateColumns)
     assertEquals(['id'], prepared.matchColumns)
     assertEquals(['Alice', 'active', 1], prepared.values)
+  }
+
+  @Test
+  void testPreparedUpdateResolvesStoredMatchColumnSpelling() {
+    Row row = Matrix.builder('row').data([id: [1], name: ['Alice']]).types(int, String).build().row(0)
+
+    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(
+        'PEOPLE', row, ['ID'] as String[], [id: 'ID', name: 'NAME']
+    )
+
+    assertEquals('update "PEOPLE" set "NAME" = ? where "ID" = ?', prepared.sql)
+    assertEquals(['name'], prepared.updateColumns)
+    assertEquals(['id'], prepared.matchColumns)
+    assertEquals(['Alice', 1], prepared.values)
   }
 }

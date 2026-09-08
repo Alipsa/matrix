@@ -245,7 +245,7 @@ class MatrixSqlTest {
   @Test
   void testUpdateDerivesCaseFoldedPrimaryKeyColumns() {
     Matrix data = Matrix.builder('nq').data([
-        ID: [1],
+        id: [1],
         name: ['Alice']
     ])
     .types(int, String)
@@ -253,7 +253,7 @@ class MatrixSqlTest {
 
     String url = h2MemUrl('update_folded_pk_testdb')
     try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
-      matrixSql.create(data, data.rowCount(), false, 'ID')
+      matrixSql.create(data, data.rowCount(), false, 'id')
 
       Row row = data.row(0)
       row['name'] = 'Alicia'
@@ -263,6 +263,10 @@ class MatrixSqlTest {
       row['name'] = 'Ally'
       assertEquals(1, matrixSql.update('nq', row, 'ID'))
       assertEquals('Ally', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
+
+      data[0, 'name'] = 'Batch'
+      assertEquals(1, matrixSql.update(data, 'ID'))
+      assertEquals('Batch', matrixSql.select('SELECT name FROM nq')[0, 'NAME'])
     }
   }
 

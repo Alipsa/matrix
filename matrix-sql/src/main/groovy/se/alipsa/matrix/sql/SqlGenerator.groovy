@@ -26,16 +26,6 @@ class SqlGenerator {
     final List<String> matchColumns
 
     /**
-     * Create prepared update details without column-order metadata.
-     *
-     * @param sql the SQL statement
-     * @param values the ordered parameter values
-     */
-    PreparedUpdate(String sql, List<Object> values) {
-      this(sql, values, [], [])
-    }
-
-    /**
      * Create prepared update details with the row column order used for parameter binding.
      *
      * @param sql the SQL statement
@@ -62,7 +52,7 @@ class SqlGenerator {
    *
    * @param tableName the table name
    * @param row the row containing the values to update and match on
-   * @param matchColumnName the column(s) to match in the WHERE clause
+   * @param matchColumnName the row column(s) to match in the WHERE clause, matched case-insensitively
    * @return a PreparedUpdate with sql and values
    */
   static PreparedUpdate createPreparedUpdate(String tableName, Row row, String[] matchColumnName) {
@@ -75,7 +65,8 @@ class SqlGenerator {
    *
    * @param tableName the stored table name
    * @param row the row containing the values to update and match on
-   * @param matchColumnName the row column name(s) to match in the WHERE clause
+   * @param matchColumnName the row or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively
    * @param storedColumnNames row column names mapped to their stored database spellings
    * @return a PreparedUpdate with sql and values
    */
@@ -101,7 +92,7 @@ class SqlGenerator {
     if (storedColumnNames == null) {
       throw new IllegalArgumentException('storedColumnNames is required')
     }
-    List<String> matchColumns = matchColumnName.toList()
+    List<String> matchColumns = resolveMatchColumns(row.columnNames(), matchColumnName.toList(), storedColumnNames)
     List<String> updateColumns = updateColumnNames(row.columnNames(), matchColumns)
     if (updateColumns.isEmpty()) {
       throw new IllegalArgumentException('No columns left to update after excluding match columns')
@@ -116,6 +107,31 @@ class SqlGenerator {
     String sql = createPreparedUpdateSqlWithTableName(tableName, storedUpdateColumns, storedMatchColumns, storedTableName)
     List<Object> values = updateValues(row, updateColumns, matchColumns)
     new PreparedUpdate(sql, values, updateColumns, matchColumns)
+  }
+
+  private static List<String> resolveMatchColumns(
+      List<String> rowColumnNames,
+      List<String> requestedMatchColumns,
+      Map<String, String> storedColumnNames
+  ) {
+    requestedMatchColumns.collect { String requestedColumn ->
+      String exactMatch = rowColumnNames.find { it == requestedColumn }
+      if (exactMatch != null) {
+        return exactMatch
+      }
+      List<String> matches = rowColumnNames.findAll { String rowColumn ->
+        rowColumn.equalsIgnoreCase(requestedColumn)
+            || storedColumnNames[rowColumn]?.equalsIgnoreCase(requestedColumn)
+      }
+      if (matches.isEmpty()) {
+        throw new IllegalArgumentException("No row column found for match column: $requestedColumn")
+      }
+      if (matches.size() > 1) {
+        throw new IllegalArgumentException(
+            "Match column $requestedColumn is ambiguous; matches row columns: ${matches.join(COMMA_SEP)}")
+      }
+      matches.first()
+    }
   }
 
   /**

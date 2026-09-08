@@ -347,12 +347,13 @@ class MatrixDbUtil {
 
   /**
    * Create an update statement with explicit match columns, resolving the stored table spelling when
-   * the table is visible in the connection's current catalog and schema.
+   * the table is visible in the connection's current catalog and schema. Match columns accept either
+   * the row spelling or stored database spelling and are resolved case-insensitively.
    *
    * @param con the database connection
    * @param tableName the table to update
    * @param row the row containing update and match values
-   * @param matchColumnNames the row column names to use in the WHERE clause
+   * @param matchColumnNames the row or stored column names to use in the WHERE clause
    * @return the prepared SQL and ordered values
    * @throws SQLException if metadata cannot be read
    * @throws IllegalArgumentException if match columns or stored column mappings are invalid

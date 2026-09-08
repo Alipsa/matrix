@@ -213,7 +213,8 @@ class MatrixSql implements Closeable {
    *
    * @param tableName the name of the table to update
    * @param row the row data containing both update values and match values
-   * @param matchColumnName the column(s) to match in the WHERE clause (required)
+   * @param matchColumnName the Matrix or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively (required)
    * @return the number of rows affected
    * @throws SQLException if a database access error occurs
    * @throws IllegalArgumentException if matchColumnName is empty or is not present in the row,
@@ -236,7 +237,8 @@ class MatrixSql implements Closeable {
    * by the given columns.
    *
    * @param table the Matrix containing the rows to update; the table name is derived from the Matrix name
-   * @param matchColumnName the column(s) to match in the WHERE clause (required)
+   * @param matchColumnName the Matrix or stored column name(s) to match in the WHERE clause,
+   *                        matched case-insensitively (required)
    * @return the total number of rows affected
    * @throws SQLException if a database access error occurs
    * @throws IllegalArgumentException if matchColumnName is empty or a Matrix column cannot be mapped
@@ -609,14 +611,10 @@ class MatrixSql implements Closeable {
         matchColumnName
     )
     try(PreparedStatement stm = connection.prepareStatement(prepared.sql)) {
-      boolean firstRow = true
       for (Row row : table) {
-        List<Object> values = firstRow
-            ? prepared.values
-            : SqlGenerator.updateValues(row, prepared.updateColumns, prepared.matchColumns)
+        List<Object> values = SqlGenerator.updateValues(row, prepared.updateColumns, prepared.matchColumns)
         bindParams(stm, values)
         stm.addBatch()
-        firstRow = false
       }
       int[] results = stm.executeBatch()
       return MatrixDbUtil.batchResultCount(results)
