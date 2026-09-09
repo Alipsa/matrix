@@ -961,12 +961,7 @@ class MatrixSqlTest {
     SQLException missingUrlException = assertThrows(SQLException) { missingUrl.connect() }
     assertEquals('Database URL is required', missingUrlException.message)
     ConnectionInfo blankUrlInfo = new ConnectionInfo() {
-
-      @Override
-      String getUrl() {
-        '  '
-      }
-
+      final String url = '  '
     }
     blankUrlInfo.setDependency('com.h2database:h2:2.4.240')
     MatrixSql blankUrl = new MatrixSql(blankUrlInfo)
@@ -1114,50 +1109,46 @@ class MatrixSqlTest {
   private static DatabaseMetaData countingMetadata(DatabaseMetaData delegate, AtomicInteger getTablesCalls) {
     Proxy.newProxyInstance(
         DatabaseMetaData.classLoader,
-        [DatabaseMetaData] as Class[],
-        { Object proxy, Method method, Object[] args ->
-          if (method.name == 'getTables') {
-            getTablesCalls.incrementAndGet()
-          }
-          invokeDelegate(delegate, method, args)
-        }
-    ) as DatabaseMetaData
+        [DatabaseMetaData] as Class[]
+    ) { Object proxy, Method method, Object[] args ->
+      if (method.name == 'getTables') {
+        getTablesCalls.incrementAndGet()
+      }
+      invokeDelegate(delegate, method, args)
+    } as DatabaseMetaData
   }
 
   private static DatabaseMetaData metadataWithUnavailableLocations(DatabaseMetaData delegate, String unavailableValue) {
     Proxy.newProxyInstance(
         DatabaseMetaData.classLoader,
-        [DatabaseMetaData] as Class[],
-        { Object proxy, Method method, Object[] args ->
-          Object result = invokeDelegate(delegate, method, args)
-          method.name in ['getColumns', 'getPrimaryKeys']
-              ? resultSetWithUnavailableLocations(result as ResultSet, unavailableValue)
-              : result
-        }
-    ) as DatabaseMetaData
+        [DatabaseMetaData] as Class[]
+    ) { Object proxy, Method method, Object[] args ->
+      Object result = invokeDelegate(delegate, method, args)
+      method.name in ['getColumns', 'getPrimaryKeys']
+          ? resultSetWithUnavailableLocations(result as ResultSet, unavailableValue)
+          : result
+    } as DatabaseMetaData
   }
 
   private static ResultSet resultSetWithUnavailableLocations(ResultSet delegate, String unavailableValue) {
     Proxy.newProxyInstance(
         ResultSet.classLoader,
-        [ResultSet] as Class[],
-        { Object proxy, Method method, Object[] args ->
-          if (method.name == 'getString' && args?.length == 1 && args[0] in ['TABLE_CAT', 'TABLE_SCHEM']) {
-            return unavailableValue
-          }
-          invokeDelegate(delegate, method, args)
-        }
-    ) as ResultSet
+        [ResultSet] as Class[]
+    ) { Object proxy, Method method, Object[] args ->
+      if (method.name == 'getString' && args?.length == 1 && args[0] in ['TABLE_CAT', 'TABLE_SCHEM']) {
+        return unavailableValue
+      }
+      invokeDelegate(delegate, method, args)
+    } as ResultSet
   }
 
   private static Connection delegatingConnection(Connection delegate, DatabaseMetaData metadata) {
     Proxy.newProxyInstance(
         Connection.classLoader,
-        [Connection] as Class[],
-        { Object proxy, Method method, Object[] args ->
-          method.name == 'getMetaData' ? metadata : invokeDelegate(delegate, method, args)
-        }
-    ) as Connection
+        [Connection] as Class[]
+    ) { Object proxy, Method method, Object[] args ->
+      method.name == 'getMetaData' ? metadata : invokeDelegate(delegate, method, args)
+    } as Connection
   }
 
   private static Object invokeDelegate(Object delegate, Method method, Object[] args) {
