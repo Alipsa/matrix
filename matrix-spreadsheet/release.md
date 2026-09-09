@@ -3,7 +3,7 @@
 ## Next release
 
 ### Bug Fixes
-- preserve locale-aware numeric detection and conversion for cached formula values after `ValueConverter.isNumeric(CharSequence)` changed its default parser to `Locale.ROOT`
+- parse cached XLSX formula numbers exactly using their locale-invariant OOXML representation
 
 ## v2.4.1, 2026-07-07
 

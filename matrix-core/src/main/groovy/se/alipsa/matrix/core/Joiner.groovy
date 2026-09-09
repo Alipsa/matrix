@@ -198,7 +198,7 @@ class Joiner {
 
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
       List<Class> xKeyTypes = xKeyIndices.collect { x.type(it) }
-      appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
+      rc.types = appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
           xColCount, xKeyIndices, xKeyTypes, rc.types, yKeyNames.size())
     }
 
@@ -211,13 +211,14 @@ class Joiner {
   }
 
   @SuppressWarnings('ParameterCount')
-  private static void appendUnmatchedYRows(List<List<Object>> resultRows,
-                                           Map<List<Object>, List<List<Object>>> yIndex,
-                                           Map<List<Object>, List<Object>> rawKeys,
-                                           Set<List<Object>> matchedYKeys,
-                                           int xColCount, List<Integer> xKeyIndices,
-                                           List<Class> xKeyTypes, List<Class> resultTypes,
-                                           int keyCount) {
+  private static List<Class> appendUnmatchedYRows(List<List<Object>> resultRows,
+                                                  Map<List<Object>, List<List<Object>>> yIndex,
+                                                  Map<List<Object>, List<Object>> rawKeys,
+                                                  Set<List<Object>> matchedYKeys,
+                                                  int xColCount, List<Integer> xKeyIndices,
+                                                  List<Class> xKeyTypes, List<Class> initialResultTypes,
+                                                  int keyCount) {
+    List<Class> resultTypes = new ArrayList<>(initialResultTypes)
     yIndex.each { List<Object> yKey, List<List<Object>> yRows ->
       if (matchedYKeys.contains(yKey)) {
         return
@@ -228,14 +229,18 @@ class Joiner {
           int xKeyIndex = xKeyIndices[k]
           Object converted = convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k])
           Class declaredType = resultTypes[xKeyIndex]
-          if (converted != null && !primitiveWrapper(declaredType).isInstance(converted)) {
-            resultTypes[xKeyIndex] = commonDeclaredType(declaredType, converted.class)
+          if (converted != null
+              && (declaredType == null || !primitiveWrapper(declaredType).isInstance(converted))) {
+            resultTypes[xKeyIndex] = declaredType == null
+                ? converted.class
+                : commonDeclaredType(declaredType, converted.class)
           }
           xRow.set(xKeyIndex, converted)
         }
         resultRows << xRow + yVals
       }
     }
+    resultTypes
   }
 
   /**
@@ -245,8 +250,8 @@ class Joiner {
    * infinity), keep the raw y key so the emitted value stays truthful.
    */
   private static Object convertUnmatchedKey(Object rawKey, Class xKeyType) {
-    if (rawKey == null) {
-      return null
+    if (rawKey == null || xKeyType == null) {
+      return rawKey
     }
     Object converted = ValueConverter.convert(rawKey, xKeyType)
     if (converted == null) {

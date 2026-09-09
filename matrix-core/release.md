@@ -12,7 +12,7 @@
 
 ### Fixes
 - `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toMarkdown` now validates attribute names and HTML-escapes attribute values.
-- Full and right joins widen a result key-column type only when an unmatched right-side key cannot be converted losslessly to the left key type, ensuring emitted values satisfy the result schema without sacrificing schema precision.
+- Full and right joins widen a result key-column type only when an unmatched right-side key cannot be converted losslessly to the left key type, including key columns without a declared type, ensuring emitted values satisfy the result schema without sacrificing schema precision.
 - `ValueConverter.asLocalDateTime` supports every `java.util.Date` subclass, including `java.sql.Time`.
 - `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger`; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.

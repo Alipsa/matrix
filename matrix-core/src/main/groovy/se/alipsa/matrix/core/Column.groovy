@@ -76,7 +76,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   private Column applyOperation(Object val, Closure operation) {
-    Column result = newLike()
+    Column result = newLike(size())
     this.each {
       if (it == null) {
         result.add(null)
@@ -182,7 +182,7 @@ class Column extends ArrayList {
     if (list.size() != size()) {
       throw new IllegalArgumentException("Operand size (${list.size()}) must equal column size (${size()})")
     }
-    Column result = newLike()
+    Column result = newLike(size())
     this.eachWithIndex { it, idx ->
       def val = list[idx]
       if (it == null || val == null) {
@@ -265,7 +265,9 @@ class Column extends ArrayList {
   }
 
   private Column newLike() {
-    newLike(0)
+    Column col = new Column(this.type)
+    col.name = this.name
+    col
   }
 
   private Column newLike(int initialCapacity) {

@@ -4,17 +4,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 
 import org.junit.jupiter.api.Test
 
-import java.text.NumberFormat
 import java.util.Locale
 
 class FExcelValueExtractorTest {
 
   @Test
-  void testParseFormulaNumberUsesSameLocaleForDetectionAndConversion() {
-    NumberFormat format = NumberFormat.getInstance(Locale.forLanguageTag('sv-SE'))
-
-    assertEquals(1234.5G, FExcelValueExtractor.parseFormulaNumber('1234,5', format))
-    assertEquals(1234G, FExcelValueExtractor.parseFormulaNumber('1\u00a0234', format))
-    assertEquals('not numeric', FExcelValueExtractor.parseFormulaNumber('not numeric', format))
+  void testParseFormulaNumberUsesLocaleInvariantOoxmlFormatWithoutPrecisionLoss() {
+    Locale originalLocale = Locale.default
+    try {
+      Locale.default = Locale.forLanguageTag('sv-SE')
+      assertEquals(1234.5G, FExcelValueExtractor.parseFormulaNumber('1234.5'))
+      assertEquals(123456789012345678901G,
+          FExcelValueExtractor.parseFormulaNumber('123456789012345678901'))
+      assertEquals(0.1234567890123456789G,
+          FExcelValueExtractor.parseFormulaNumber('0.1234567890123456789'))
+      assertEquals('1234,5', FExcelValueExtractor.parseFormulaNumber('1234,5'))
+      assertEquals('not numeric', FExcelValueExtractor.parseFormulaNumber('not numeric'))
+    } finally {
+      Locale.default = originalLocale
+    }
   }
 }

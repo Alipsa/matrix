@@ -11,7 +11,6 @@ import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
-import java.text.NumberFormat
 import java.time.LocalDateTime
 
 /**
@@ -150,14 +149,19 @@ class FExcelValueExtractor extends ValueExtractor {
          }
          return date
       }
-      parseFormulaNumber(rawValue, NumberFormat.getInstance())
+      parseFormulaNumber(rawValue)
    }
 
    @PackageScope
-   static Object parseFormulaNumber(String rawValue, NumberFormat format) {
-      ValueConverter.isNumeric(rawValue, format)
-          ? ValueConverter.asBigDecimal(rawValue, format)
-          : rawValue
+   static Object parseFormulaNumber(String rawValue) {
+      if (rawValue == null) {
+         return null
+      }
+      try {
+         new BigDecimal(rawValue)
+      } catch (NumberFormatException ignored) {
+         rawValue
+      }
    }
 
 }
