@@ -279,6 +279,17 @@ class Column extends ArrayList {
     that
   }
 
+  /**
+   * Returns a new Column with the values in the given range.
+   *
+   * <p>Unlike {@code column[range]} (Groovy's {@code getAt}), which supports
+   * reverse ranges and returns the values in reverse order, this method rejects
+   * reverse ranges with an {@link IllegalArgumentException}.</p>
+   *
+   * @param range the range of indices to include
+   * @return a new Column containing the values in the range
+   * @throws IllegalArgumentException if the range is reverse
+   */
   Column subList(IntRange range) {
     if (range.reverse) {
       throw new IllegalArgumentException('Reverse ranges are not supported')

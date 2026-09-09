@@ -205,6 +205,8 @@ class ColumnTest {
     assert [1, 2, 3] == result
     assert result instanceof Column
     assertThrows(IllegalArgumentException) { c.subList(3..1) }
+    // getAt supports reverse ranges (documented asymmetry with subList)
+    assert [4, 3, 2] == (c[3..1] as List)
   }
 
   @Test

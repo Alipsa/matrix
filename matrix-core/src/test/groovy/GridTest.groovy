@@ -381,4 +381,13 @@ class GridTest {
         assertThrows(IllegalArgumentException) { grid.replaceColumn(5, [9, 9]) }
         assertThrows(IllegalArgumentException) { grid[0, 1] = 'str' }
     }
+
+    @Test
+    void testReplaceColumnOnEmptyGridIsANoOp() {
+        Grid<Integer> grid = new Grid<Integer>([], Integer)
+
+        grid.replaceColumn(0, [])
+
+        assertTrue(grid.data.isEmpty())
+    }
 }

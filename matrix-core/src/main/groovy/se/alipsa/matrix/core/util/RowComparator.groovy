@@ -30,9 +30,10 @@ class RowComparator<T> implements Comparator<List<T>> {
   @Override
   int compare(List<T> r1, List<T> r2) {
     for (idx in columnIdx) {
-      int result = idx.value == ASC
-          ? compareValues(r1[idx.key], r2[idx.key])
-          : compareValues(r2[idx.key], r1[idx.key])
+      // Treat anything that is not explicitly DESC (including null) as ascending
+      int result = idx.value == DESC
+          ? compareValues(r2[idx.key], r1[idx.key])
+          : compareValues(r1[idx.key], r2[idx.key])
       if (result != 0) {
         return result
       }

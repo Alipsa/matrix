@@ -268,7 +268,7 @@ class Grid<T> implements Iterable<List<T>> {
       throw new IllegalArgumentException("Column values size ($valSize) must match row count ($rowCount)")
     }
     int width = establishedWidth()
-    if (column < 0 || column >= width) {
+    if (column < 0 || (width >= 0 && column >= width)) {
       throw new IllegalArgumentException("Column index ($column) must be within grid width ($width)")
     }
     values.eachWithIndex { T value, int i ->

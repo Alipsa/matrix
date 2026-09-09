@@ -527,9 +527,12 @@ class Stat {
         BigDecimal sum = BigDecimal.ZERO
         int nVals = 0
         for (value in list) {
-            if (value != null && value instanceof Number) {
-                sum += value as BigDecimal
-                nVals++
+            if (value instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(value as Number)
+                if (decimal != null) {
+                    sum += decimal
+                    nVals++
+                }
             }
         }
         if (nVals == 0) {
@@ -629,22 +632,30 @@ class Stat {
         if (valueList == null) {
             return null
         }
-        List<? extends Number> vals = valueList.findAll { it instanceof Number } as List<Number>
+        List<BigDecimal> vals = []
+        valueList.each {
+            if (it instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(it as Number)
+                if (decimal != null) {
+                    vals << decimal
+                }
+            }
+        }
         if (vals.isEmpty()) {
             return null
         }
         if (vals.size() == 1) {
-            return vals[0] as BigDecimal
+            return vals[0]
         }
         vals.sort()
         if (vals.size() % 2 == 0) {
             def index = vals.size() / 2 as int
-            def val1 = vals[index - 1] as Number
-            def val2 = vals[index] as Number
+            BigDecimal val1 = vals[index - 1]
+            BigDecimal val2 = vals[index]
             BigDecimal median = (val1 + val2) / 2
             return median
         }
-        return asBigDecimal(vals[vals.size() / 2 as int])
+        return vals[vals.size() / 2 as int]
     }
 
     /**
@@ -845,10 +856,13 @@ class Stat {
         if (values == null || values.isEmpty()) {
             return null
         }
-        List<Number> nullFreeNumbers = []
+        List<BigDecimal> nullFreeNumbers = []
         values.each {
-            if (it != null && it instanceof Number) {
-                nullFreeNumbers.add(it)
+            if (it instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(it as Number)
+                if (decimal != null) {
+                    nullFreeNumbers.add(decimal)
+                }
             }
         }
         BigDecimal m = mean(nullFreeNumbers, DEFAULT_MEAN_SCALE)

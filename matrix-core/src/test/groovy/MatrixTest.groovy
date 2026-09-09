@@ -3552,4 +3552,44 @@ class MatrixTest {
 
     assertThrows(MissingPropertyException) { matrix.rowCont }
   }
+
+  @Test
+  void testMetaClassPropertyAccess() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertNotNull(matrix.metaClass)
+    assertTrue(matrix.properties instanceof Map)
+    assertThrows(MissingPropertyException) { matrix.zzz }
+  }
+
+  @Test
+  void testOrderByNullDirectionSortsAscending() {
+    Matrix matrix = Matrix.builder().data(a: [3, 1, 2]).build()
+
+    matrix.orderBy('a', null)
+    assertEquals([1, 2, 3], matrix.column('a'))
+
+    Matrix mapped = Matrix.builder().data(a: [3, 1, 2]).build()
+    mapped.orderBy(['a': null] as LinkedHashMap<String, Boolean>)
+    assertEquals([1, 2, 3], mapped.column('a'))
+  }
+
+  @Test
+  void testHtmlRejectsInvalidAttributeNames() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(IllegalArgumentException) {
+      matrix.toHtml(['x" onload="alert(1)': 'v'], matrix.rows(), false)
+    }
+  }
+
+  @Test
+  void testMarkdownEscapesNewlines() {
+    Matrix matrix = Matrix.builder().data(a: ['line1\nline2', 'crlf\r\nend'], b: ['ok', 'ok']).types(String, String).build()
+
+    String markdown = matrix.toMarkdown()
+
+    assertTrue(markdown.contains('| line1<br>line2 |'))
+    assertTrue(markdown.contains('| crlf<br>end |'))
+  }
 }

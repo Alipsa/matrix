@@ -195,8 +195,9 @@ class Joiner {
     }
 
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
+      List<Class> xKeyTypes = xKeyIndices.collect { x.type(it) }
       appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
-          xColCount, xKeyIndices, yKeyNames.size())
+          xColCount, xKeyIndices, xKeyTypes, yKeyNames.size())
     }
 
     Matrix.builder()
@@ -207,12 +208,13 @@ class Joiner {
         .build()
   }
 
+  @SuppressWarnings('ParameterCount')
   private static void appendUnmatchedYRows(List<List<Object>> resultRows,
                                            Map<List<Object>, List<List<Object>>> yIndex,
                                            Map<List<Object>, List<Object>> rawKeys,
                                            Set<List<Object>> matchedYKeys,
                                            int xColCount, List<Integer> xKeyIndices,
-                                           int keyCount) {
+                                           List<Class> xKeyTypes, int keyCount) {
     yIndex.each { List<Object> yKey, List<List<Object>> yRows ->
       if (matchedYKeys.contains(yKey)) {
         return
@@ -220,7 +222,8 @@ class Joiner {
       yRows.each { List<Object> yVals ->
         List<Object> xRow = ([null] * xColCount) as List<Object>
         (0..<keyCount).each { int k ->
-          xRow.set(xKeyIndices[k], rawKeys[yKey][k])
+          Object rawKey = rawKeys[yKey][k]
+          xRow.set(xKeyIndices[k], rawKey == null ? null : ValueConverter.convert(rawKey, xKeyTypes[k]))
         }
         resultRows << xRow + yVals
       }

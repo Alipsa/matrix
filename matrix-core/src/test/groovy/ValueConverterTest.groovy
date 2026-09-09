@@ -170,6 +170,13 @@ class ValueConverterTest {
   }
 
   @Test
+  void testConvertEmptyStringToCharacterReturnsNull() {
+    assertNull(ValueConverter.convert('', Character))
+    assertNull(ValueConverter.convert('', Boolean))
+    assertEquals('a' as Character, ValueConverter.convert('a', Character))
+  }
+
+  @Test
   void testConvertWithNullFallback() {
     assertEquals(1, ValueConverter.convert(1, int, null, null, 0))
     assertEquals(0, ValueConverter.convert(null, int, null, null, 0))
@@ -295,6 +302,7 @@ class ValueConverterTest {
   }
 
   @Test
+  @SuppressWarnings('LocaleSetDefault')
   void testDefaultNumericParsingIsLocaleIndependent() {
     Locale original = Locale.default
     try {

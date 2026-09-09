@@ -82,7 +82,7 @@ class ValueConverter {
       case Long, long -> (E) asLong(o)
       case BigInteger -> (E) asBigInteger(o)
       case Float, float -> (E) asFloat(o)
-      case Character, char -> (E) o.asType(Character)
+      case Character, char -> (E)('' == o ? null : o.asType(Character))
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
@@ -424,7 +424,13 @@ class ValueConverter {
   }
 
   /**
-   * Checks whether object is a Number or a CharSequence containing numbers
+   * Checks whether object is a Number or a CharSequence containing numbers.
+   *
+   * <p>Since 3.9.0, CharSequence values are parsed with {@link Locale#ROOT} (no
+   * locale-specific grouping): {@code '1,234.5'} is numeric and {@code '1 234'}
+   * (with a non-breaking space group separator) is not. Pass an explicit
+   * NumberFormat to parse with other locale conventions. This differs from the
+   * rest of this class, which defaults to {@link Locale#default}.</p>
    *
    * @param o the Object to test
    * @param numberFormatOpt an optional NumberFormat to use

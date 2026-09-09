@@ -67,7 +67,8 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final String CONTENT_LINE_ENDING_OPTION = 'lineEnding'
   private static final String DEFAULT_ROW_DELIMITER = '\n'
   private static final String DEFAULT_LINE_COMMENT = '#'
-
+  private static final String HTML_ATTRIBUTE_NAME = '[A-Za-z_][A-Za-z0-9_.:-]*'
+  private static final String MARKDOWN_LINE_BREAK = '<br>'
   private static final Logger log = Logger.getLogger(Matrix)
 
   private List<Column> mColumns
@@ -2224,19 +2225,18 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Intercept property access to return a column when the name matches.
+   * Delegates to the metaClass for all other names, which provides standard
+   * properties (e.g. metaClass, properties) and throws
+   * {@link MissingPropertyException} for unknown names.
    *
    * @param name the property name
-   * @return the matching Column, or the default property value if not a column name
+   * @return the matching Column, or the metaClass property value if not a column name
    */
   Object getProperty(String name) {
     if (columnIndex(name) >= 0) {
       return column(name)
     }
-    Map<String, Object> properties = getProperties()
-    if (properties.containsKey(name)) {
-      return properties.get(name)
-    }
-    throw new MissingPropertyException(name, Matrix)
+    getMetaClass().getProperty(this, name)
   }
 
   /**
@@ -3747,6 +3747,9 @@ class Matrix implements Iterable<Row>, Cloneable {
         } else if (k == 'caption') {
           caption = v
         } else {
+          if (!(k as String).matches(HTML_ATTRIBUTE_NAME)) {
+            throw new IllegalArgumentException("Invalid HTML attribute name: ${k}")
+          }
           sb.append(' ').append(k).append('="').append(escapeHtml(v)).append('"')
         }
       }
@@ -3899,6 +3902,9 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   private static String escapeMarkdownCell(String value) {
     value?.replace('|', '\\|')
+        ?.replace('\r\n', MARKDOWN_LINE_BREAK)
+        ?.replace(DEFAULT_ROW_DELIMITER, MARKDOWN_LINE_BREAK)
+        ?.replace('\r', MARKDOWN_LINE_BREAK)
   }
 
   private List<Row> rowsForRender(Integer numRows, boolean fromHead) {

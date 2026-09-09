@@ -7,6 +7,7 @@
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
 ### Fixes
+- `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
 - Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.

@@ -627,4 +627,14 @@ class StatTest {
     assertEquals(3, sum(values))
     assertEquals(3L, sum(values, Long))
   }
+
+  @Test
+  void testMeanMedianSdSkipNonFiniteValues() {
+    List<?> values = [1, Double.NaN, 2, Double.NEGATIVE_INFINITY, null]
+
+    assertEquals(1.5, mean(values), 'mean')
+    assertEquals(1.5, median(values), 'median')
+    assertEquals(0.7071067811865476, sd(values) as double, 1e-15, 'sd')
+    assertEquals(0.5, variance(values), 'variance')
+  }
 }

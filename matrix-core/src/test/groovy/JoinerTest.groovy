@@ -754,4 +754,24 @@ class JoinerTest {
     assertEquals(0, Joiner.merge(integers, strings, 'id').rowCount())
   }
 
+  @Test
+  void testFullJoinConvertsUnmatchedYKeysToXKeyColumnType() {
+    Matrix x = Matrix.builder('x').data([
+        id  : [1, 2, 3],
+        name: ['A', 'B', 'C']
+    ]).types([Integer, String]).build()
+
+    Matrix y = Matrix.builder('y').data([
+        id   : [1.0d, 4.0d],
+        score: [80, 90]
+    ]).types([Double, Integer]).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    assertEquals(Integer, result.type('id'))
+    assertEquals([1, 2, 3, 4], result.column('id') as List)
+    assertEquals(['A', 'B', 'C', null], result.column('name') as List)
+    assertEquals([80, null, null, 90], result.column('score') as List)
+  }
+
 }
