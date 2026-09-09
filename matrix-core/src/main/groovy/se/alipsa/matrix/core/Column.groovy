@@ -2,6 +2,8 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
+
 import se.alipsa.matrix.core.util.CumulativeHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.ShiftHelper
@@ -282,21 +284,48 @@ class Column extends ArrayList {
   /**
    * Returns a new Column with the values in the given range.
    *
-   * <p>Unlike {@code column[range]} (Groovy's {@code getAt}), which supports
-   * reverse ranges and returns the values in reverse order, this method rejects
-   * reverse ranges with an {@link IllegalArgumentException}.</p>
+   * <p>Range semantics follow Groovy list slicing: negative indices count back from
+   * the end and a reverse range such as {@code 3..1} returns the values in reverse
+   * order. This method and {@code column[range]} ({@link #getAt(IntRange)}) are
+   * equivalent; both return a detached {@code Column} that preserves this column's
+   * name and type.</p>
+   *
+   * <pre>
+   * Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+   * c.subList(1..3)   // [20, 30, 40]
+   * c.subList(3..1)   // [40, 30, 20]
+   * c.subList(-3..-1) // [30, 40, 50]
+   * c.subList(1..&lt;3)  // [20, 30]
+   * </pre>
    *
    * @param range the range of indices to include
    * @return a new Column containing the values in the range
-   * @throws IllegalArgumentException if the range is reverse
+   * @throws IndexOutOfBoundsException if the range falls outside this column
    */
   Column subList(IntRange range) {
-    if (range.reverse) {
-      throw new IllegalArgumentException('Reverse ranges are not supported')
-    }
     Column result = newLike()
-    result.addAll(super.subList(range.from, range.to + 1))
+    result.addAll(DefaultGroovyMethods.getAt((List) this, (Range) range))
     result
+  }
+
+  /**
+   * Returns a new Column with the values in the given range, so that {@code column[range]}
+   * keeps the Column behavior (element-wise arithmetic, name and type) instead of degrading
+   * to a plain list.
+   *
+   * <p>Equivalent to {@link #subList(IntRange)}; see that method for the range semantics.</p>
+   *
+   * <pre>
+   * Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+   * c[1..3] * 2 // [40, 60, 80] - element-wise, not list repetition
+   * </pre>
+   *
+   * @param range the range of indices to include
+   * @return a new Column containing the values in the range
+   * @throws IndexOutOfBoundsException if the range falls outside this column
+   */
+  Column getAt(IntRange range) {
+    subList(range)
   }
 
   /**

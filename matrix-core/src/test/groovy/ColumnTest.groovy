@@ -204,9 +204,65 @@ class ColumnTest {
     Column result = c.subList(0..2)
     assert [1, 2, 3] == result
     assert result instanceof Column
-    assertThrows(IllegalArgumentException) { c.subList(3..1) }
-    // getAt supports reverse ranges (documented asymmetry with subList)
-    assert [4, 3, 2] == (c[3..1] as List)
+  }
+
+  @Test
+  void testRangeAccessReturnsColumnPreservingNameAndType() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    [c.subList(1..3), c[1..3]].each { Column result ->
+      assert [20, 30, 40] == result
+      assert result instanceof Column
+      assertEquals('vals', result.name)
+      assertEquals(Integer, result.type)
+    }
+  }
+
+  @Test
+  void testRangeAccessKeepsColumnArithmetic() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    // element-wise, not Groovy list repetition
+    assert [40, 60, 80] == c[1..3] * 2
+    assert [40, 60, 80] == c.subList(1..3) * 2
+  }
+
+  @Test
+  void testRangeAccessSupportsReverseRanges() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    assert [40, 30, 20] == c.subList(3..1)
+    assert [40, 30, 20] == c[3..1]
+  }
+
+  @Test
+  void testRangeAccessSupportsNegativeIndices() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    assert [30, 40, 50] == c.subList(-3..-1)
+    assert [30, 40, 50] == c[-3..-1]
+    assert [50, 40, 30] == c.subList(-1..-3)
+    assert [50, 40, 30] == c[-1..-3]
+  }
+
+  @Test
+  void testRangeAccessSupportsExclusiveRanges() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    assert [20, 30] == c.subList(1..<3)
+    assert [20, 30] == c[1..<3]
+  }
+
+  @Test
+  void testRangeAccessReturnsDetachedCopy() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    c.subList(1..3).set(0, 99)
+    c[1..3].set(0, 99)
+    assert [10, 20, 30, 40, 50] == c
+  }
+
+  @Test
+  void testRangeAccessRejectsOutOfBounds() {
+    Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+    assertThrows(IndexOutOfBoundsException) { c.subList(3..9) }
+    assertThrows(IndexOutOfBoundsException) { c[3..9] }
+    assertThrows(IndexOutOfBoundsException) { c.subList(-9..-1) }
+    assertThrows(IndexOutOfBoundsException) { c[-9..-1] }
   }
 
   @Test

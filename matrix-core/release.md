@@ -6,6 +6,9 @@
 - `toHtml(attr: [caption: '…'])` writes an escaped `<caption>` as the first child of the table. The `caption` key is consumed rather than emitted as a table attribute.
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
+### New Column methods
+- `Column.getAt(IntRange)` — `column[1..3]` now returns a `Column` (name and type preserved) instead of a plain `ArrayList`, so element-wise arithmetic and the rest of the Column API survive slicing. It is equivalent to `Column.subList(IntRange)`; both follow Groovy list-slicing semantics (negative indices count from the end, reverse ranges return values in reverse order) and both return a detached copy.
+
 ### Fixes
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
 - Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
@@ -43,7 +46,7 @@
 - `Matrix.getProperty` now throws `MissingPropertyException` for unknown property names instead of returning null. Column names still resolve to their Column; only the unknown-name fallback changed.
 - Joiner key semantics follow SQL-style null semantics: null, NaN, and infinite key values never match (previously null matched null). Finite numeric keys now match across numeric runtime types (e.g. Integer 1 matches Double 1.0); String keys do not match numeric keys.
 - Column list arithmetic (`+`, `-`, `*`, `/`, `**`) throws `IllegalArgumentException` when the operand is longer than the column; previously the operand was silently truncated to the column length.
-- `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and rejects reverse ranges with `IllegalArgumentException` (Groovy's `column[reverseRange]` getAt still returns the values reversed).
+- `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and `column[range]` now returns a `Column` rather than an `ArrayList`. Code that declared the slice as `ArrayList`, or that relied on `column[range] * 2` performing Groovy list repetition, must change: `Column.multiply` is element-wise.
 - `Matrix.toHtml` throws `IllegalArgumentException` for attribute names that are not valid HTML attribute names.
 - `Matrix.orderBy(String, Boolean)` is now tie-stable (ties previously kept no stable order) and a null direction sorts ascending.
 - `Stat.sum`, `mean`, `median`, `variance`, and `sd` skip NaN and infinite values (and nulls) instead of throwing.

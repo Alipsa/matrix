@@ -628,6 +628,24 @@ Given that matrix.col1 contains the value [1,2,3,4]
 | <<       | leftShift   | Object    | add the value to the column          | assert matrix.col1 << 5 == [1, 2, 3, 4, 5]            |
 | \|       | or          | Closure    | pipe the column into a closure       | assert (matrix.col1 \| { it.removeNulls() } \| { it.cumsum() }) == [1, 3, 6, 10] |
 | \|       | or          | Collection | set union with another collection    | assert (matrix.col1 \| [3, 5, 6]) == [1, 2, 3, 4, 5, 6] as Set |
+| []       | getAt       | IntRange   | return a Column with the values in the range | assert matrix.col1[1..2] == [2, 3]            |
+| []       | getAt       | Number, Class | return the value at the index as the type specified | BigDecimal v = matrix.col1[1, BigDecimal] |
+
+`column[range]` (`getAt(IntRange)`) and `column.subList(range)` are equivalent: both return a
+detached `Column` that preserves the source column's name and type, so the result keeps element-wise
+arithmetic rather than degrading to a plain list.
+
+```groovy
+Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+
+assert c[1..3] == [20, 30, 40]        // same as c.subList(1..3)
+assert c[1..3] * 2 == [40, 60, 80]    // element-wise, not list repetition
+assert c[3..1] == [40, 30, 20]        // reverse range
+assert c[-3..-1] == [30, 40, 50]      // negative indices count from the end
+assert c[1..<3] == [20, 30]           // exclusive range
+assert c[1..3].name == 'vals'
+assert c[1..3].type == Integer
+```
 
 
 ### Row
