@@ -78,7 +78,7 @@
   and every later row must have exactly as many `<td>` elements as the first row; violations
   raise `RuntimeIOException` naming the one-based data row and expected/actual cell count.
 - XLSX worksheet names are sanitized with `WorkbookUtil.createSafeSheetName`; null or blank table
-  names use `Sheet1`.
+  names, including names that become blank during sanitization, use `Sheet1`.
 - File-backed `builder(File)`/`builder(String)` write options for XLSX, ODS, and XML defer opening
   the output file until writing starts: creating or building options no longer creates or
   truncates the target. I/O errors surface as `RuntimeIOException` from the write call. A

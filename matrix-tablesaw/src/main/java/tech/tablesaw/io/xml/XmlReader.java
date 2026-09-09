@@ -167,7 +167,7 @@ public class XmlReader implements DataReader<XmlReadOptions> {
         } while (reservedNames.contains(normalizedName) || assignedNames.contains(normalizedName));
       }
       originalNamesSeen.add(name.toLowerCase(Locale.ROOT));
-      assignedNames.add(candidate.toLowerCase(Locale.ROOT));
+      assignedNames.add(normalizedName);
       names.add(candidate);
     }
     return names;

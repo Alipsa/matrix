@@ -183,7 +183,8 @@ table.write().usingOptions(XlsxWriteOptions.builder(new StringWriter()).build())
 // -> IllegalArgumentException("XLSX requires a binary OutputStream destination")
 
 // Use a stream, File, or file name instead. Names longer than 31 characters or containing
-// []:*?/\ are sanitized to a safe deterministic sheet name; null or blank names use 'Sheet1':
+// []:*?/\ are sanitized to a safe deterministic sheet name. Null or blank names, including
+// non-blank names that become blank after sanitizing (such as '[]'), use 'Sheet1':
 table.write().usingOptions(XlsxWriteOptions.builder('report.xlsx').build())
 ```
 

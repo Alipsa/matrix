@@ -248,6 +248,7 @@ public class ExportDataTest {
 
     assertEquals("Sheet1", writeAndReadSheetName(Table.create((String) null), "null-name.xlsx"));
     assertEquals("Sheet1", writeAndReadSheetName(Table.create("   "), "blank-name.xlsx"));
+    assertEquals("Sheet1", writeAndReadSheetName(Table.create("[]"), "illegal-name.xlsx"));
     assertEquals("normal", writeAndReadSheetName(Table.create("normal"), "normal-name.xlsx"));
   }
 

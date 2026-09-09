@@ -106,6 +106,9 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
       String sheetName = tableName == null || tableName.isBlank()
           ? "Sheet1"
           : WorkbookUtil.createSafeSheetName(tableName);
+      if (sheetName.isBlank()) {
+        sheetName = "Sheet1";
+      }
       XSSFSheet sheet = workbook.createSheet(sheetName);
       int rowNum = 0;
       List<String> columnNames = table.columnNames();
