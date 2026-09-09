@@ -62,6 +62,17 @@ class Gtable extends Table {
   @SuppressWarnings('ImplementationAsType')
   static Gtable create(LinkedHashMap<String, List<?>> data, List<ColumnType> columnTypes) {
     validateColumnLengths(data)
+    if (columnTypes == null) {
+      throw new IllegalArgumentException('columnTypes is required')
+    }
+    if (columnTypes.size() != data.size()) {
+      throw new IllegalArgumentException(
+          "columnTypes has ${columnTypes.size()} entries but data has ${data.size()} columns: ${data.keySet()}")
+    }
+    List<String> names = data.keySet() as List<String>
+    columnTypes.eachWithIndex { ColumnType type, int index ->
+      validateColumnType(type, names[index], index)
+    }
     List<Column<?>> columns = []
     int i = 0
     data.each {
@@ -72,32 +83,49 @@ class Gtable extends Table {
 
   @SuppressWarnings('ImplementationAsType')
   static Gtable create(LinkedHashMap<String, List<?>> data) {
-    def inferredTypes = data.collect { entry ->
-      def firstNonNull = entry.value.find { it != null }
-      def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
-      if (inferred == ColumnType.SKIP) {
-        throw new IllegalArgumentException(
-            "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
-      }
-      inferred
-    }
-    create(data, inferredTypes)
+    create(data, data.collect { entry -> inferColumnType(entry.key, entry.value) })
   }
 
   @SuppressWarnings('ImplementationAsType')
   static Gtable create(LinkedHashMap<String, List<?>> data, LinkedHashMap<String, ColumnType> typeOverrides) {
+    if (typeOverrides == null) {
+      throw new IllegalArgumentException('typeOverrides is required')
+    }
+    Set<String> unknownNames = typeOverrides.keySet() - data.keySet()
+    if (!unknownNames.isEmpty()) {
+      throw new IllegalArgumentException("Unknown type override column(s): ${unknownNames}")
+    }
     def types = data.collect { entry ->
-      typeOverrides.get(entry.key) ?: {
-        def firstNonNull = entry.value.find { it != null }
-        def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
-        if (inferred == ColumnType.SKIP) {
-          throw new IllegalArgumentException(
-              "Cannot infer column type for '${entry.key}': ${firstNonNull.class.name} is not supported")
-        }
-        inferred
-      }()
+      typeOverrides.containsKey(entry.key)
+          ? typeOverrides.get(entry.key)
+          : inferColumnType(entry.key, entry.value)
     }
     create(data, types)
+  }
+
+  /**
+   * Infers the column type from the first non-null value.
+   *
+   * @param name the column name (used in the error message)
+   * @param values the column values
+   * @return the inferred column type, {@link ColumnType#STRING} for all-missing columns
+   * @throws IllegalArgumentException if the inferred type is unsupported
+   */
+  private static ColumnType inferColumnType(String name, List<?> values) {
+    def firstNonNull = values.find { it != null }
+    def inferred = firstNonNull == null ? ColumnType.STRING : TableUtil.columnTypeForClass(firstNonNull.class)
+    if (inferred == ColumnType.SKIP) {
+      throw new IllegalArgumentException(
+          "Cannot infer column type for '${name}': ${firstNonNull.class.name} is not supported")
+    }
+    inferred
+  }
+
+  private static void validateColumnType(ColumnType type, String name, int index) {
+    if (type == null || type == ColumnType.SKIP || TableUtil.classForColumnType(type) == Object) {
+      throw new IllegalArgumentException(
+          "Unsupported column type at index ${index} for column '${name}': ${type}")
+    }
   }
 
   private static final int UNSET = -1

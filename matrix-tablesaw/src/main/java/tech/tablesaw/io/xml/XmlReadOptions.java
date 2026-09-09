@@ -21,6 +21,9 @@ import java.util.function.Function;
  * It extends {@link ReadOptions} to support standard parsing options like date/time formats,
  * column types, missing value indicators, and locale settings.
  *
+ * <p>The XML reader closes the configured source after reading, including caller-supplied readers
+ * and input streams. Documents containing a {@code DOCTYPE} are rejected.
+ *
  * <p>Example usage:
  * <pre>{@code
  * XmlReadOptions options = XmlReadOptions.builder("input.xml")

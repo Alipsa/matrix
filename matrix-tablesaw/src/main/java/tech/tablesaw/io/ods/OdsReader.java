@@ -68,7 +68,11 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * Read a table from an ODS file using the specified options.
    *
    * <p>Reads data from the specified sheet index (default is 0, the first sheet).
-   * The first row is treated as column headers. Rows where all values are null are skipped.
+   * The first row is treated as column headers. Trailing rows where all values are missing are
+   * dropped by default (ODF producers commonly declare empty rows past the data range), while
+   * interior all-missing rows are preserved so missing data keeps its position; disable the trim
+   * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
+   * row, for example when round-tripping a file written by {@link OdsWriter}.
    * All cell values are read as strings and then converted to appropriate types based on
    * the read options.
    *
@@ -98,25 +102,38 @@ public class OdsReader implements DataReader<OdsReadOptions> {
       List<String[]> dataRows = new ArrayList<>();
       for (int rowNum = 1; rowNum < lastRow; rowNum++) {
         String[] rowValues = new String[columnNames.size()];
-        int nullCount = 0;
         for (int colNum = 0; colNum < lastColumn; colNum++) {
           Object val = sheet.getRange(rowNum, colNum).getValue();
-          if (val == null) {
-            nullCount++;
-            rowValues[colNum] = null;
-          } else {
-            rowValues[colNum] = String.valueOf(val);
-          }
+          rowValues[colNum] = val == null ? null : String.valueOf(val);
         }
-        // Skip rows where all values are missing
-        if (nullCount != lastColumn) {
-          dataRows.add(rowValues);
+        dataRows.add(rowValues);
+      }
+      // Drop trailing all-missing rows, which ODF producers commonly declare past the data range,
+      // but keep interior all-missing rows so missing data round-trips with its row position
+      if (options.trimTrailingMissingRows) {
+        while (!dataRows.isEmpty() && allMissing(dataRows.get(dataRows.size() - 1))) {
+          dataRows.remove(dataRows.size() - 1);
         }
       }
       return TableBuildingUtils.build(columnNames, dataRows, options);
     } catch (IOException e) {
       throw new RuntimeIOException(e);
     }
+  }
+
+  /**
+   * Checks whether every value in the row is null (missing).
+   *
+   * @param rowValues the row to check
+   * @return true if all values are null
+   */
+  private static boolean allMissing(String[] rowValues) {
+    for (String value : rowValues) {
+      if (value != null) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

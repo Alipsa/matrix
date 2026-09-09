@@ -24,8 +24,12 @@ class Normalizer {
    */
   static DoubleColumn logNorm(DoubleColumn column, int... decimals) {
     List<Double> vals = []
-    for (Double x : column) {
-      vals.add(Normalize.logNorm(x, decimals))
+    column.size().times { int i ->
+      if (column.isMissing(i)) {
+        vals.add(null)
+      } else {
+        vals.add(Normalize.logNorm(column.getDouble(i), decimals))
+      }
     }
     DoubleColumn.create(NORM_PREFIX + column.name(), vals)
   }
@@ -40,8 +44,12 @@ class Normalizer {
    */
   static FloatColumn logNorm(FloatColumn column, int... decimals) {
     List<Float> vals = []
-    for (Float x : column) {
-      vals.add(Normalize.logNorm(x, decimals))
+    column.size().times { int i ->
+      if (column.isMissing(i)) {
+        vals.add(null)
+      } else {
+        vals.add(Normalize.logNorm(column.getFloat(i), decimals))
+      }
     }
     FloatColumn.create(NORM_PREFIX + column.name(), vals as Float[])
   }

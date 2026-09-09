@@ -136,7 +136,7 @@ class TableUtil {
    *
    * @param column the column to round
    * @param numDecimals the number of decimal places
-   * @return the rounded column (or original column if not numeric)
+   * @return a rounded copy, or the original column if it is not numeric
    */
   static Column<?> round(Column<?> column, int numDecimals) {
     if (column in NumberColumn) {
@@ -150,15 +150,15 @@ class TableUtil {
    *
    * <p>Supported column types:
    * <ul>
-   *   <li>{@link BigDecimalColumn} - uses setScale</li>
+   *   <li>{@link BigDecimalColumn} - uses setScale on a copy</li>
    *   <li>{@link DoubleColumn} - rounds each value</li>
    *   <li>{@link FloatColumn} - rounds each value</li>
-   *   <li>Integer types (IntColumn, ShortColumn, LongColumn) - returned unchanged</li>
+   *   <li>Integer types (IntColumn, ShortColumn, LongColumn) - copied unchanged</li>
    * </ul>
    *
    * @param column the numeric column to round
    * @param numDecimals the number of decimal places (must be non-negative)
-   * @return the column with rounded values
+   * @return an independent copy with rounded values
    * @throws IllegalArgumentException if numDecimals is negative
    */
   static NumberColumn round(NumberColumn column, int numDecimals) {
@@ -166,12 +166,14 @@ class TableUtil {
       throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
-    if (column in BigDecimalColumn) {
-      return (column as BigDecimalColumn).setScale(numDecimals)
+    NumberColumn rounded = column.copy() as NumberColumn
+
+    if (rounded in BigDecimalColumn) {
+      return (rounded as BigDecimalColumn).setScale(numDecimals)
     }
 
-    if (column in DoubleColumn) {
-      def dc = column as DoubleColumn
+    if (rounded in DoubleColumn) {
+      def dc = rounded as DoubleColumn
       for (int i = 0; i < dc.size(); i++) {
         if (dc.isMissing(i)) {
           continue
@@ -181,8 +183,8 @@ class TableUtil {
       }
     }
 
-    if (column in FloatColumn) {
-      def fc = column as FloatColumn
+    if (rounded in FloatColumn) {
+      def fc = rounded as FloatColumn
       for (int i = 0; i < fc.size(); i++) {
         if (fc.isMissing(i)) {
           continue
@@ -192,7 +194,7 @@ class TableUtil {
       }
     }
     // everything else (IntColumn, ShortColumn, LongColumn cannot be rounded as they have no decimals
-    column
+    rounded
   }
 
   /**
@@ -292,10 +294,7 @@ class TableUtil {
         }
         continue
       }
-      Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
-      if (col != null) {
-        columns.add(col)
-      }
+      columns.add(createColumn(type, matrix.columnNames().get(i), matrix.column(i)))
     }
     Table.create(matrix.getMatrixName(), columns)
   }
@@ -323,95 +322,111 @@ class TableUtil {
    * @param name the column name
    * @param values the values to populate the column
    * @param <T> the type parameter
-   * @return a column of the specified type, or null if type is not supported
+   * @return a column of the specified type
+   * @throws IllegalArgumentException if the type is unsupported or a non-null value has a type that
+   *         is neither the expected type nor a losslessly widenable one
    */
   static Column<?> createColumn(ColumnType type, String name, List<?> values) {
-    if (type == ColumnType.STRING) {
-      var col = StringColumn.create(name)
-      for (Object val : values) {
-        col.append((String) val)
-      }
-      return col
+    Class<?> expectedType = classForColumnType(type)
+    if (type == null || type == ColumnType.SKIP || expectedType == Object) {
+      throw new IllegalArgumentException("Unsupported column type for column '${name}': ${type}")
     }
-    if (type == ColumnType.BOOLEAN) {
-      var col = BooleanColumn.create(name)
-      for (Object val : values) {
-        col.append((Boolean) val)
-      }
-      return col
+    Column<?> column = type.create(name)
+    values.eachWithIndex { Object value, int row ->
+      column.appendObj(coerceValue(value, expectedType, name, row))
     }
-    if (type == ColumnType.LOCAL_DATE) {
-      var col = DateColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalDate) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LOCAL_DATE_TIME) {
-      var col = DateTimeColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalDateTime) val)
-      }
-      return col
-    }
-    if (type == ColumnType.INSTANT) {
-      var col = InstantColumn.create(name)
-      for (Object val : values) {
-        col.append((Instant) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LOCAL_TIME) {
-      var col = TimeColumn.create(name)
-      for (Object val : values) {
-        col.append((LocalTime) val)
-      }
-      return col
-    }
-    if (type == BigDecimalColumnType.instance()) {
-      var col = BigDecimalColumn.create(name)
-      for (Object val : values) {
-        col.append((BigDecimal) val)
-      }
-      return col
-    }
-    if (type == ColumnType.DOUBLE) {
-      var col = DoubleColumn.create(name)
-      for (Object val : values) {
-        col.append((Double) val)
-      }
-      return col
-    }
-    if (type == ColumnType.FLOAT) {
-      var col = FloatColumn.create(name)
-      for (Object val : values) {
-        col.append((Float) val)
-      }
-      return col
-    }
-    if (type == ColumnType.INTEGER) {
-      var col = IntColumn.create(name)
-      for (Object val : values) {
-        col.append((Integer) val)
-      }
-      return col
-    }
-    if (type == ColumnType.LONG) {
-      var col = LongColumn.create(name)
-      for (Object val : values) {
-        col.append((Long) val)
-      }
-      return col
-    }
-    if (type == ColumnType.SHORT) {
-      var col = ShortColumn.create(name)
-      for (Object val : values) {
-        col.append((Short) val)
-      }
-      return col
-    }
+    column
+  }
 
-    null
+  /**
+   * Validates a value against the expected Java type, converting lossless widenings.
+   *
+   * <p>{@code null} is returned as-is (missing). Values already of the expected type are returned
+   * unchanged. A {@link CharSequence} (including Groovy {@code GString}) is accepted for
+   * {@link String} columns and converted with {@code toString()}. Numeric widenings are accepted
+   * only when exact: {@code Integer}/{@code Long}/{@code Short}/{@code Byte}/{@code BigInteger}/
+   * {@code Float}/{@code Double} to {@link BigDecimal} through
+   * {@link BigDecimalColumn#toBigDecimal(Number)} (NaN becomes missing, infinities are rejected);
+   * {@code Float} (always exact), {@code Integer}/{@code Short}/{@code Byte}, and exactly
+   * representable {@code Long}/{@code BigInteger} to {@link Double}; {@code Short}/{@code Byte}
+   * and exactly representable {@code Integer} to {@link Float}; {@code Integer}/{@code Short}/
+   * {@code Byte} to {@link Long}; {@code Short}/{@code Byte} to {@link Integer}; and {@code Byte}
+   * to {@link Short}. Values that would lose precision or overflow are rejected rather than
+   * coerced.
+   *
+   * @param value the value to validate
+   * @param expectedType the Java type required by the column type
+   * @param name the column name (used in the error message)
+   * @param row the zero-based row index (used in the error message)
+   * @return the value, converted when a lossless widening applies
+   * @throws IllegalArgumentException if the value cannot be represented exactly in the expected
+   *         type, or is an infinity for a {@link BigDecimal} column; the message names the
+   *         column, row index, expected type, and actual type
+   */
+  @SuppressWarnings('BigDecimalInstantiation')
+  private static Object coerceValue(Object value, Class<?> expectedType, String name, int row) {
+    if (value == null || expectedType.isInstance(value)) {
+      return value
+    }
+    if (expectedType == String && value instanceof CharSequence) {
+      return value.toString()
+    }
+    if (value instanceof Number) {
+      Number num = (Number) value
+      if (expectedType == BigDecimal) {
+        try {
+          return BigDecimalColumn.toBigDecimal(num)
+        } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException(
+              "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}: ${e.message}",
+              e)
+        }
+      }
+      if (expectedType == Double) {
+        if (num instanceof Float || num instanceof Integer || num instanceof Short || num instanceof Byte) {
+          return num.doubleValue()
+        }
+        if (num instanceof Long) {
+          double d = num.doubleValue()
+          // exact binary comparison: (long) d saturates, so a narrow-domain check would lie
+          if (new BigDecimal(d) == BigDecimal.valueOf((Long) num)) {
+            return d
+          }
+        }
+        if (num instanceof BigInteger) {
+          double d = num.doubleValue()
+          // new BigDecimal(d) is the exact binary value; BigDecimal.valueOf would be the
+          // shortest round-trip decimal and reject exactly representable integers such as 2^80
+          if (Double.isFinite(d) && new BigDecimal(d) == new BigDecimal((BigInteger) num)) {
+            return d
+          }
+        }
+      }
+      if (expectedType == Float) {
+        if (num instanceof Short || num instanceof Byte) {
+          return num.floatValue()
+        }
+        if (num instanceof Integer) {
+          float f = num.floatValue()
+          // compare in the double domain: both conversions are exact, so int-domain saturation
+          // cannot hide an inexact conversion
+          if ((double) f == num.doubleValue()) {
+            return f
+          }
+        }
+      }
+      if (expectedType == Long && (num instanceof Integer || num instanceof Short || num instanceof Byte)) {
+        return num.longValue()
+      }
+      if (expectedType == Integer && (num instanceof Short || num instanceof Byte)) {
+        return num.intValue()
+      }
+      if (expectedType == Short && num instanceof Byte) {
+        return num.shortValue()
+      }
+    }
+    throw new IllegalArgumentException(
+        "Column '${name}' row ${row} expects ${expectedType.name} but got ${value.class.name}")
   }
 
   /**

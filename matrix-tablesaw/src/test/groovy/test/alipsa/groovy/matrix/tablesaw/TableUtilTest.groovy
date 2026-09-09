@@ -100,8 +100,9 @@ class TableUtilTest {
 
     def glaciers = Table.read().usingOptions(builder.build())
     BigDecimalColumn col = glaciers.column(1) as BigDecimalColumn
-    TableUtil.round(col, 2)
-    col.forEach(v -> assertEquals(2, v.scale()))
+    BigDecimalColumn rounded = TableUtil.round(col, 2) as BigDecimalColumn
+    rounded.forEach(v -> assertEquals(2, v.scale()))
+    assertTrue(col.any { it.scale() != 2 })
   }
 
   @Test
@@ -238,22 +239,160 @@ class TableUtilTest {
   void testRoundDoubleColumnPreservesMissingValues() {
     DoubleColumn col = DoubleColumn.create('values', [1.234d, Double.NaN, 5.678d] as double[])
 
-    TableUtil.round(col, 2)
+    DoubleColumn rounded = TableUtil.round(col, 2) as DoubleColumn
 
-    assertEquals(1.23d, col.getDouble(0), 1e-9)
-    assertTrue(col.isMissing(1))
-    assertEquals(5.68d, col.getDouble(2), 1e-9)
+    assertEquals(1.23d, rounded.getDouble(0), 1e-9)
+    assertTrue(rounded.isMissing(1))
+    assertEquals(5.68d, rounded.getDouble(2), 1e-9)
+    assertEquals(1.234d, col.getDouble(0), 1e-9)
   }
 
   @Test
   void testRoundFloatColumnPreservesMissingValues() {
     FloatColumn col = FloatColumn.create('values', [1.234f, Float.NaN, 5.678f] as float[])
 
-    TableUtil.round(col, 2)
+    FloatColumn rounded = TableUtil.round(col, 2) as FloatColumn
 
-    assertEquals(1.23f, col.getFloat(0), 1e-6f)
-    assertTrue(col.isMissing(1))
-    assertEquals(5.68f, col.getFloat(2), 1e-6f)
+    assertEquals(1.23f, rounded.getFloat(0), 1e-6f)
+    assertTrue(rounded.isMissing(1))
+    assertEquals(5.68f, rounded.getFloat(2), 1e-6f)
+    assertEquals(1.234f, col.getFloat(0), 1e-6f)
+  }
+
+  @Test
+  void testRoundCopiesIntegerColumnsAndLeavesNonNumericColumnsAlone() {
+    IntColumn ints = IntColumn.create('ints', [1, 2] as int[])
+    def rounded = TableUtil.round(ints, 2)
+    assertTrue(rounded !== ints)
+    assertEquals(ints.asList(), rounded.asList())
+
+    StringColumn strings = StringColumn.create('strings', ['a'])
+    assertTrue(TableUtil.round(strings, 2).is(strings))
+  }
+
+  @Test
+  void testCreateColumnValidatesEveryValueAndAllowsMissing() {
+    def integer = TableUtil.createColumn(INTEGER, 'age', [1, null, 3])
+    assertTrue(integer.isMissing(1))
+
+    [
+        (INTEGER): [1, 'x'],
+        (DOUBLE): [1.0d, true],
+        (BOOLEAN): [true, 'false'],
+        (LOCAL_DATE): [LocalDate.now(), '2026-09-08'],
+        (BigDecimalColumnType.instance()): [1.0, true]
+    ].each { ColumnType type, List<?> values ->
+      def exception = assertThrows(IllegalArgumentException) {
+        TableUtil.createColumn(type, 'mixed', values)
+      }
+      assertTrue(exception.message.contains("Column 'mixed' row 1"))
+      assertTrue(exception.message.contains('expects'))
+    }
+
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(SKIP, 'skip', [])
+    }
+  }
+
+  @Test
+  void testCreateColumnWidensNumbersLosslessly() {
+    def widened = TableUtil.createColumn(BigDecimalColumnType.instance(), 'salary', [50000, null, 70000])
+    assertEquals(3, widened.size())
+    assertTrue(widened.isMissing(1))
+    assertEquals(new BigDecimal('50000'), widened.getBigDecimal(0))
+
+    def fromInts = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1, 2L, (short) 3, (byte) 4, 5G])
+    assertEquals(new BigDecimal('5'), fromInts.getBigDecimal(4))
+
+    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1, 9007199254740991L, 3.5f, (short) 4, (byte) 5, 6G])
+    assertEquals(1.0d, doubles.getDouble(0), 0.0d)
+    assertEquals(9007199254740991d, doubles.getDouble(1), 0.0d)
+    assertEquals(3.5d, doubles.getDouble(2), 0.0d)
+
+    def floats = TableUtil.createColumn(FLOAT, 'f', [1, 16777216, (short) 2, (byte) 3])
+    assertEquals(1.0f, floats.getFloat(0), 0.0f)
+    assertEquals(16777216.0f, floats.getFloat(1), 0.0f)
+
+    def longs = TableUtil.createColumn(LONG, 'l', [1, (short) 2, (byte) 3])
+    assertEquals(3L, longs.getLong(2))
+
+    def ints = TableUtil.createColumn(INTEGER, 'i', [(short) 1, (byte) 2])
+    assertEquals(2, ints.getInt(1))
+
+    def shorts = TableUtil.createColumn(SHORT, 's', [(byte) 7])
+    assertEquals((short) 7, shorts.getShort(0))
+  }
+
+  @Test
+  void testCreateColumnRejectsLossyOrIncompatibleValues() {
+    // beyond the exact range of the target type: precision loss or overflow
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(DOUBLE, 'd', [9007199254740993L])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(DOUBLE, 'd', [Long.MAX_VALUE])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(DOUBLE, 'd', [10G ** 400])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(FLOAT, 'f', [16777217])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(FLOAT, 'f', [Integer.MAX_VALUE])
+    }
+    assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(INTEGER, 'i', [1L])
+    }
+  }
+
+  @Test
+  void testCreateColumnAcceptsExactlyRepresentableWideIntegers() {
+    // 2^53 and 2^80 are exactly representable as doubles even though they exceed int range
+    def doubles = TableUtil.createColumn(DOUBLE, 'd', [1L << 53, 2G ** 80])
+    assertEquals(9007199254740992d, doubles.getDouble(0), 0.0d)
+    assertEquals(1208925819614629174706176d, doubles.getDouble(1), 0.0d)
+  }
+
+  @Test
+  void testCreateColumnConvertsFloatingToBigDecimalLikeTheColumnDoes() {
+    def col = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [1.5d, 2.5f])
+    assertEquals(1.5G, col.getBigDecimal(0))
+    assertEquals(2.5G, col.getBigDecimal(1))
+
+    // NaN becomes missing, infinities are rejected, mirroring BigDecimalColumn.toBigDecimal
+    def withNan = TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.NaN])
+    assertTrue(withNan.isMissing(0))
+    def infinity = assertThrows(IllegalArgumentException) {
+      TableUtil.createColumn(BigDecimalColumnType.instance(), 'bd', [Double.POSITIVE_INFINITY])
+    }
+    assertTrue(infinity.message.contains("Column 'bd' row 0"))
+    assertTrue(infinity.message.contains('expects java.math.BigDecimal but got java.lang.Double'))
+  }
+
+  @Test
+  void testCreateColumnAcceptsGStringForStringColumns() {
+    def who = 'Alice'
+    def column = TableUtil.createColumn(STRING, 'name', ["${who}", 'Ann', null])
+    assertEquals('Alice', column.getString(0))
+    assertEquals('Ann', column.getString(1))
+    assertTrue(column.isMissing(2))
+  }
+
+  @Test
+  void testFromMatrixWidensDeclaredTypesLosslessly() {
+    // The documented tutorial example: values narrower than the declared Matrix types
+    def matrix = Matrix.builder().data(
+        name: ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+        age: [25, 30, 35, 40, 45],
+        salary: [50000, 60000, 70000, 80000, 90000],
+        dept: ['Eng', 'Eng', 'Ops', 'Ops', 'HR']
+    ).types(String, Integer, BigDecimal, String).build()
+
+    def gTable = TableUtil.fromMatrix(matrix)
+    assertEquals(5, gTable.rowCount())
+    assertEquals(BigDecimalColumnType.instance(), gTable.column('salary').type())
+    assertEquals(new BigDecimal('60000'), gTable.column('salary').getBigDecimal(1))
   }
 
   @Test

@@ -90,7 +90,14 @@ public class OdsWriter implements DataWriter<OdsWriteOptions> {
       for (var row : table) {
         int colIdx = 0;
         for (String col : colNames) {
-          sheet.getRange(rowNum, colIdx++).setValue(row.getObject(col));
+          if (!row.isMissing(col)) {
+            sheet.getRange(rowNum, colIdx).setValue(row.getObject(col));
+          } else {
+            // sods drops fully empty rows on save, repeating the following row's values, so a
+            // missing cell must be set to an empty string to keep the row; readers return it as null
+            sheet.getRange(rowNum, colIdx).setValue("");
+          }
+          colIdx++;
         }
         rowNum++;
       }

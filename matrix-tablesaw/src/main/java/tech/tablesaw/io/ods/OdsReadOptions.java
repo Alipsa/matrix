@@ -40,6 +40,13 @@ public class OdsReadOptions extends ReadOptions {
   protected Integer sheetIndex;
 
   /**
+   * Whether trailing all-missing rows are dropped. Defaults to {@code true} because ODF producers
+   * commonly declare empty rows past the data range; disable for a lossless round trip of a
+   * legitimate trailing all-missing data row.
+   */
+  protected boolean trimTrailingMissingRows = true;
+
+  /**
    * Creates a builder with a File source.
    * The table name is automatically set to the file name.
    *
@@ -112,6 +119,7 @@ public class OdsReadOptions extends ReadOptions {
   protected OdsReadOptions(Builder builder) {
     super(builder);
     sheetIndex = builder.sheetIndex;
+    trimTrailingMissingRows = builder.trimTrailingMissingRows;
   }
 
   /**
@@ -124,6 +132,13 @@ public class OdsReadOptions extends ReadOptions {
 
     /** The zero-based sheet index to read, or null to use default sheet resolution. */
     protected Integer sheetIndex;
+
+    /**
+     * Whether trailing all-missing rows are dropped. Defaults to {@code true} because ODF
+     * producers commonly declare empty rows past the data range; disable for a lossless round
+     * trip of a legitimate trailing all-missing data row.
+     */
+    protected boolean trimTrailingMissingRows = true;
 
     /**
      * Constructs a builder with the specified source.
@@ -328,6 +343,23 @@ public class OdsReadOptions extends ReadOptions {
      */
     public Builder sheetIndex(int sheetIndex) {
       this.sheetIndex = sheetIndex;
+      return this;
+    }
+
+    /**
+     * Sets whether trailing rows where every value is missing are dropped.
+     *
+     * <p>Enabled by default: ODF producers commonly declare empty rows past the actual data
+     * range, and dropping them avoids inflated tables. Disable it to preserve a legitimate
+     * trailing all-missing data row, for example when round-tripping a file written by
+     * {@link OdsWriter}, whose row count is exact.
+     *
+     * @param trimTrailingMissingRows true (default) to drop trailing all-missing rows, false to
+     *     keep them
+     * @return this builder
+     */
+    public Builder trimTrailingMissingRows(boolean trimTrailingMissingRows) {
+      this.trimTrailingMissingRows = trimTrailingMissingRows;
       return this;
     }
 

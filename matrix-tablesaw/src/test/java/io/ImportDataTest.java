@@ -102,11 +102,16 @@ public class ImportDataTest {
     var options = OdsReadOptions.builder(odsFile).build();
     var table = Table.read().usingOptions(options);
     assertEquals(2, table.rowCount(), "Should have 2 data rows (all-empty row skipped)");
+    var kept =
+        Table.read()
+            .usingOptions(OdsReadOptions.builder(odsFile).trimTrailingMissingRows(false).build());
+    assertEquals(3, kept.rowCount(), "Trailing all-empty row is kept when trimming is disabled");
     assertEquals(3, table.columnCount());
     assertEquals("x1", table.get(0, 0));
     assertEquals("y1", table.get(0, 1));
     assertEquals("z1", table.get(0, 2));
     assertEquals("x2", table.get(1, 0));
+    assertTrue(kept.column(0).isMissing(2), "Trailing all-empty row should be all missing");
     assertTrue(table.column(1).isMissing(1), "Missing cell should be missing, not 'null' string");
     assertEquals("z2", table.get(1, 2));
 

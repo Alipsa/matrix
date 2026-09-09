@@ -2,6 +2,7 @@ package tech.tablesaw.io.xlsx;
 
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import tech.tablesaw.api.ColumnType;
@@ -88,6 +89,9 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
    */
   @Override
   public void write(Table table, XlsxWriteOptions options) {
+    if (options.destination().writer() != null) {
+      throw new IllegalArgumentException("XLSX requires a binary OutputStream destination");
+    }
     try(XSSFWorkbook workbook = new XSSFWorkbook()) {
       CellStyle localDateStyle = workbook.createCellStyle();
       localDateStyle.setDataFormat(
@@ -98,7 +102,14 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
       CellStyle localTimeStyle = workbook.createCellStyle();
       localTimeStyle.setDataFormat(
           workbook.createDataFormat().getFormat("[h]:mm:ss"));
-      XSSFSheet sheet = workbook.createSheet(table.name());
+      String tableName = table.name();
+      String sheetName = tableName == null || tableName.isBlank()
+          ? "Sheet1"
+          : WorkbookUtil.createSafeSheetName(tableName);
+      if (sheetName.isBlank()) {
+        sheetName = "Sheet1";
+      }
+      XSSFSheet sheet = workbook.createSheet(sheetName);
       int rowNum = 0;
       List<String> columnNames = table.columnNames();
 
@@ -114,6 +125,10 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
         colNum = 0;
         for (String colName : columnNames) {
           var cell = excelRow.createCell(colNum++);
+          if (row.isMissing(colName)) {
+            cell.setBlank();
+            continue;
+          }
           var type = row.getColumnType(colName);
 
           if (ColumnType.STRING.equals(type)) {

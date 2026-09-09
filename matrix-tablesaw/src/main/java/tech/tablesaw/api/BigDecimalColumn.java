@@ -21,6 +21,7 @@ import tech.tablesaw.selection.Selection;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -38,6 +39,38 @@ import java.util.stream.Stream;
  *
  * <p>Missing values are represented by the {@link BigDecimalColumnType#missingValueIndicator()},
  * which is {@code null}.
+ *
+ * <p><b>Numeric equality:</b> equality, hashing, and distinct-value operations are numeric rather
+ * than scale-sensitive: values for which {@link BigDecimal#compareTo(BigDecimal)} returns zero
+ * (such as {@code 1.0} and {@code 1.00}) are equal, hash identically, and appear once in
+ * {@link #unique()} and {@link #countUnique()}. {@link #asSet()} uses numeric comparator equality
+ * rather than {@link BigDecimal#equals(Object)}, so bulk operations with ordinary hash-based sets
+ * can be asymmetric; see {@link #asSet()} for details.
+ *
+ * <p><b>Conversion:</b> {@code Double.NaN} and {@code Float.NaN} become missing values, while
+ * infinities are rejected with {@link IllegalArgumentException}. Finite {@code float} values
+ * convert via {@code new BigDecimal(Float.toString(value))} and finite {@code double} values via
+ * {@link BigDecimal#valueOf(double)}.
+ *
+ * <p><b>Factories:</b> use {@link #createFromInts(String, int...)} to create a column from
+ * {@code int} values; {@code create(String, int)} retains its Tablesaw-compatible meaning of
+ * creating that many missing rows.
+ *
+ * <p><b>Division:</b> the no-context {@link #divide(BigDecimalColumn)} and
+ * {@link #divideBy(BigDecimalColumn)} overloads use {@link MathContext#DECIMAL64}; overloads
+ * accepting an explicit {@link MathContext} are available. {@code divide} returns a new column,
+ * while {@code divideBy} mutates this column in place. {@link #setScale(int, RoundingMode...)}
+ * also mutates this column in place and returns {@code this}, defaulting to
+ * {@link RoundingMode#HALF_EVEN}.
+ *
+ * <p><b>Aggregates:</b> empty or all-missing columns return {@code null} from mean, median,
+ * coefficient of variation, range, min, and max; sum retains its existing empty-input convention.
+ *
+ * <p><b>Parser-based string mutation:</b> {@link #set(int, String, AbstractColumnParser)} and
+ * {@link #appendCell(String, AbstractColumnParser)} preserve the exact decimal text only when it
+ * agrees with the supplied parser's numeric interpretation; otherwise the parser's custom format
+ * semantics win. {@link BigDecimalParser} bypasses this agreement probe; heavier custom parsers
+ * add one {@code parseDouble} invocation per applicable cell.
  */
 public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     implements NumberFillers<BigDecimalColumn> {
@@ -55,7 +88,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   public static BigDecimalColumn create(String name, double... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
-      values[i] = BigDecimal.valueOf(arr[i]);
+      values[i] = toBigDecimal(arr[i]);
     }
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
@@ -70,7 +103,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   public static BigDecimalColumn create(String name, float... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
-      values[i] = BigDecimal.valueOf(arr[i]);
+      values[i] = toBigDecimal(arr[i]);
     }
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
@@ -78,11 +111,15 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   /**
    * Creates a column from {@code int} values.
    *
+   * <p>Replaces the source-incompatible {@code create(String, int...)} from earlier versions;
+   * {@code create(String, int)} retains its Tablesaw-compatible meaning of creating that many
+   * missing rows.
+   *
    * @param name the column name
    * @param arr the values to populate the column with
    * @return a new {@code BigDecimalColumn}
    */
-  public static BigDecimalColumn create(String name, int... arr) {
+  public static BigDecimalColumn createFromInts(String name, int... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
       values[i] = BigDecimal.valueOf(arr[i]);
@@ -313,15 +350,25 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return c;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Returns the numerically distinct values, preserving the first encountered representation of
+   * each value in encounter order.
+   *
+   * <p>Values are deduplicated by their canonical (scale-normalized) form, so {@code 1.0} and
+   * {@code 1.00} appear once, using whichever representation was encountered first; missing
+   * ({@code null}) is retained as one distinct value.
+   *
+   * @return a new column containing the distinct values
+   */
   @Override
   public BigDecimalColumn unique() {
-    final ObjectSet<BigDecimal> values = new ObjectLinkedOpenHashSet<>();
+    final Map<BigDecimal, BigDecimal> values = new LinkedHashMap<>();
     for (int i = 0; i < size(); i++) {
-      values.add(getBigDecimal(i));
+      BigDecimal value = getBigDecimal(i);
+      values.putIfAbsent(canonicalValue(value), value);
     }
     final BigDecimalColumn column = BigDecimalColumn.create(name() + " Unique values");
-    values.forEach(column::append);
+    values.values().forEach(column::append);
     return column;
   }
 
@@ -404,8 +451,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @return this column
    */
   public BigDecimalColumn append(final float f) {
-    data.add(BigDecimal.valueOf(f));
-    return this;
+    return append(toBigDecimal(f));
   }
 
   /**
@@ -415,8 +461,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * @return this column
    */
   public BigDecimalColumn append(double d) {
-    data.add(BigDecimal.valueOf(d));
-    return this;
+    return append(toBigDecimal(d));
   }
 
   /**
@@ -545,17 +590,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   @Override
   public BigDecimalColumn appendCell(final String value, AbstractColumnParser<?> parser) {
     try {
-      Object val = parser.parse(value);
-      if (val == null) {
-        return appendMissing();
-      }
-      if (val instanceof BigDecimal) {
-        return append((BigDecimal) val);
-      } else if (val instanceof Number) {
-        return append((Number) val);
-      } else {
-        return append(BigDecimal.valueOf(parser.parseDouble(value)));
-      }
+      return append(parseOrMissing(value, parser));
     } catch (final NumberFormatException e) {
       throw new NumberFormatException(
           "Error adding value to column " + name() + ": " + e.getMessage());
@@ -576,7 +611,8 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   @Override
   public int valueHash(int rowNumber) {
     BigDecimal value = getBigDecimal(rowNumber);
-    return value == null ? Integer.MIN_VALUE : value.hashCode();
+    BigDecimal canonical = canonicalValue(value);
+    return canonical == null ? Integer.MIN_VALUE : canonical.hashCode();
   }
 
   /** {@inheritDoc} */
@@ -585,10 +621,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     BigDecimal val1 = getBigDecimal(rowNumber1);
     BigDecimal val2 = getBigDecimal(rowNumber2);
     if (val1 == null && val2 == null) return true;
-    if (val1 != null) {
-      return val1.equals(val2);
-    }
-    return false ;
+    return val1 != null && val2 != null && val1.compareTo(val2) == 0;
   }
 
   /** {@inheritDoc} */
@@ -662,10 +695,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   /** {@inheritDoc} */
   @Override
   public Column<BigDecimal> set(int row, String stringValue, AbstractColumnParser<?> parser) {
-    if (parser instanceof BigDecimalParser) {
-      return set(row, ((BigDecimalParser)parser).parse(stringValue));
-    }
-    return set(row, new BigDecimal(stringValue));
+    return set(row, parseOrMissing(stringValue, parser));
   }
 
   /** {@inheritDoc} */
@@ -711,18 +741,29 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return val == null ? null : val.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Returns the numerically distinct values as a comparator-backed set.
+   *
+   * <p>The set uses {@link BigDecimalComparator#compareBigDecimals(BigDecimal, BigDecimal)} rather
+   * than {@link BigDecimal#equals(Object)}. Consequently, equality and bulk operations with
+   * hash-based sets can be asymmetric, while {@code contains} treats differently scaled numeric
+   * equivalents as the same member.
+   *
+   * @return a null-safe, numerically ordered set retaining the first inserted representation
+   */
   @Override
   public Set<BigDecimal> asSet() {
-    return new HashSet<>(unique().asList());
+    Set<BigDecimal> values = new TreeSet<>(BigDecimalComparator::compareBigDecimals);
+    values.addAll(data);
+    return values;
   }
 
   /** {@inheritDoc} */
   @Override
   public int countUnique() {
-    ObjectSet<BigDecimal> uniqueElements = new ObjectOpenHashSet<>();
+    Set<BigDecimal> uniqueElements = new HashSet<>();
     for (int i = 0; i < size(); i++) {
-      uniqueElements.add(getBigDecimal(i));
+      uniqueElements.add(canonicalValue(getBigDecimal(i)));
     }
     return uniqueElements.size();
   }
@@ -955,6 +996,24 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   }
 
   /**
+   * Returns a DoubleColumn with missing positions preserved.
+   *
+   * @return a new double column
+   */
+  @Override
+  public DoubleColumn asDoubleColumn() {
+    DoubleColumn result = DoubleColumn.create(name());
+    for (BigDecimal value : data) {
+      if (value == null) {
+        result.appendMissing();
+      } else {
+        result.append(value.doubleValue());
+      }
+    }
+    return result;
+  }
+
+  /**
    * Converts a Number to BigDecimal with appropriate precision handling.
    * <p>
    * Handles various Number subtypes including:
@@ -964,14 +1023,15 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    *   <li>Integer, Long, Short, Byte - converted via longValue() for precision</li>
    *   <li>AtomicInteger, AtomicLong - converted via their int/long values</li>
    *   <li>BigInteger - converted directly to BigDecimal</li>
-   *   <li>Float, Double, DoubleAccumulator - converted via doubleValue()</li>
+   *   <li>Float - converted from its shortest decimal string</li>
+   *   <li>Double and DoubleAccumulator - converted via doubleValue()</li>
    *   <li>Other Number types - converted via doubleValue()</li>
    * </ul>
    *
    * @param number the number to convert
    * @return a BigDecimal corresponding to the number, or null if the input is null
    */
-  protected static BigDecimal toBigDecimal(Number number) {
+  public static BigDecimal toBigDecimal(Number number) {
     if (number == null) return null;
 
     // If already a BigDecimal, return it directly without conversion
@@ -1000,16 +1060,58 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
       return new BigDecimal((BigInteger) number);
     }
 
-    // Handle Float, Double, DoubleAccumulator and other Number types via doubleValue()
-    // Note: This includes DoubleAdder and custom Number implementations
-    return BigDecimal.valueOf(number.doubleValue());
+    if (number instanceof Float) {
+      float value = number.floatValue();
+      if (Float.isNaN(value)) return null;
+      if (Float.isInfinite(value)) {
+        throw new IllegalArgumentException("Cannot convert infinite value to BigDecimal: " + value);
+      }
+      return new BigDecimal(Float.toString(value));
+    }
+
+    double value = number.doubleValue();
+    if (Double.isNaN(value)) return null;
+    if (Double.isInfinite(value)) {
+      throw new IllegalArgumentException("Cannot convert infinite value to BigDecimal: " + value);
+    }
+    return BigDecimal.valueOf(value);
+  }
+
+  private static BigDecimal canonicalValue(BigDecimal value) {
+    if (value == null) return null;
+    if (value.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+    return value.stripTrailingZeros();
+  }
+
+  private static BigDecimal parseOrMissing(String value, AbstractColumnParser<?> parser) {
+    if (parser.isMissing(value)) return null;
+    if (parser instanceof BigDecimalParser) {
+      return ((BigDecimalParser) parser).parse(value);
+    }
+
+    BigDecimal candidate = null;
+    try {
+      candidate = new BigDecimal(value);
+      if (candidate.doubleValue() == parser.parseDouble(value)) {
+        return candidate;
+      }
+    } catch (RuntimeException ignored) {
+      // The parser's primary parse method remains authoritative when the optional probe fails.
+    }
+
+    Object parsed = parser.parse(value);
+    if (parsed == null) return null;
+    if (parsed instanceof BigDecimal) return (BigDecimal) parsed;
+    if (parsed instanceof Number) return toBigDecimal((Number) parsed);
+    throw new IllegalArgumentException(
+        "Parser " + parser.getClass().getName() + " returned non-numeric value: " + parsed);
   }
 
   /**
    * Add all the big decimals in the list to this column
    *
    * @param values a list of values
-   * @return this column
+   * @return this mutated column
    */
   public BigDecimalColumn addAll(List<BigDecimal> values) {
     for (BigDecimal value : values) {
@@ -1069,7 +1171,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
 
   private void assertSameSize(BigDecimalColumn column) {
     checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        "Columns must have the same size: %s has %s rows, %s has %s rows",
         name(), size(), column.name(), column.size());
   }
 
@@ -1225,16 +1327,29 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
 
   /**
    * Returns a new column with the element-wise quotient of this column and the given column.
-   * <p>Division uses {@link RoundingMode#HALF_EVEN} with the scale of the dividend
-   * (the value in this column). Returns a <strong>new column</strong> and does not modify
-   * this column. Use {@link #divideBy(BigDecimalColumn)} for in-place division.
+   * <p>Division uses {@link MathContext#DECIMAL64}. Returns a <strong>new column</strong> and does not
+   * modify this column. Use {@link #divideBy(BigDecimalColumn)} for in-place division.
    *
    * @param column the column to divide by
    * @return a new column containing the quotient
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn divide(BigDecimalColumn column) {
+    return divide(column, MathContext.DECIMAL64);
+  }
+
+  /**
+   * Returns a new column containing element-wise quotients using the supplied context.
+   *
+   * @param column the column to divide by
+   * @param context precision and rounding context
+   * @return a new quotient column
+   * @throws IllegalArgumentException if the columns have different sizes or context is null
+   * @throws ArithmeticException if a divisor is zero
+   */
+  public BigDecimalColumn divide(BigDecimalColumn column, MathContext context) {
     assertSameSize(column);
+    checkArgument(context != null, "MathContext is required");
     BigDecimalColumn result = emptyCopy();
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
@@ -1242,7 +1357,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
       if (orgVal == null || divVal == null) {
         result.appendMissing();
       } else {
-        result.append(orgVal.divide(divVal, RoundingMode.HALF_EVEN));
+        result.append(orgVal.divide(divVal, context));
       }
     }
     return result;
@@ -1250,22 +1365,35 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
 
   /**
    * Divides this column by the given column in place, mutating this column.
-   * <p>Division uses {@link RoundingMode#HALF_EVEN} with the scale of the dividend
-   * (the value in this column).
+   * <p>Division uses {@link MathContext#DECIMAL64}.
    *
    * @param column the column to divide by
    * @return this column
    * @throws IllegalArgumentException if the columns have different sizes
    */
   public BigDecimalColumn divideBy(BigDecimalColumn column) {
+    return divideBy(column, MathContext.DECIMAL64);
+  }
+
+  /**
+   * Divides this column in place using the supplied context.
+   *
+   * @param column the column to divide by
+   * @param context precision and rounding context
+   * @return this mutated column
+   * @throws IllegalArgumentException if the columns have different sizes or context is null
+   * @throws ArithmeticException if a divisor is zero
+   */
+  public BigDecimalColumn divideBy(BigDecimalColumn column, MathContext context) {
     assertSameSize(column);
+    checkArgument(context != null, "MathContext is required");
     for (int i = 0; i < size(); i++) {
       var orgVal = getBigDecimal(i);
       var divVal = column.getBigDecimal(i);
       if (orgVal == null || divVal == null) {
         setMissing(i);
       } else {
-        set(i, orgVal.divide(divVal, RoundingMode.HALF_EVEN));
+        set(i, orgVal.divide(divVal, context));
       }
     }
     return this;

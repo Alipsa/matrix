@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.2'
+version = '0.4.0-SNAPSHOT'
 description = 'Allows conversion between Matrix and Tablesaw'
 
 repositories {
@@ -72,6 +72,7 @@ test {
     testLogging.showStandardStreams = false
 
     useJUnitPlatform()
+    exclude '**/XmlNonUtf8DefaultEncodingTest.class'
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,
@@ -97,6 +98,18 @@ test {
         info.exceptionFormat = debug.exceptionFormat
     }
 }
+
+tasks.register('testNonUtf8DefaultEncoding', Test) {
+    description = 'Verifies XML stream output uses UTF-8 under a non-UTF-8 JVM default'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    include '**/XmlNonUtf8DefaultEncodingTest.class'
+    jvmArgs '-Dfile.encoding=ISO-8859-1'
+}
+
+check.dependsOn testNonUtf8DefaultEncoding
 
 // JaCoCo configuration for code coverage
 jacoco {

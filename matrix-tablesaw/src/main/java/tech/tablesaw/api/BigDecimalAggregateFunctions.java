@@ -1,7 +1,6 @@
 package tech.tablesaw.api;
 
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal;
-import static se.alipsa.matrix.core.ValueConverter.asDouble;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -12,6 +11,9 @@ import tech.tablesaw.columns.Column;
 
 /**
  * A collection of aggregate functions that can be applied to {@link BigDecimalColumn} instances.
+ * Mean, median, range, minimum, and maximum return {@code null} for empty or all-missing columns;
+ * coefficient of variation returns {@code null} when fewer than two non-missing values remain.
+ * Sum retains its empty-input convention of zero.
  */
 public class BigDecimalAggregateFunctions {
 
@@ -30,7 +32,8 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          return Stat.mean(toList(column));
+          List<BigDecimal> values = nonMissingValues(column);
+          return values.isEmpty() ? null : Stat.mean(values);
         }
       };
 
@@ -43,7 +46,8 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          return Stat.median(toList(column));
+          List<BigDecimal> values = nonMissingValues(column);
+          return values.isEmpty() ? null : Stat.median(values);
         }
       };
 
@@ -56,7 +60,8 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          List<Double> nums = toDoubleList(column);
+          List<BigDecimal> nums = nonMissingValues(column);
+          if (nums.size() < 2) return null;
           BigDecimal mean = Stat.mean(nums);
           if (mean.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("Cannot compute CV: mean is zero");
@@ -74,7 +79,7 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          return asBigDecimal(Stat.sum(toList(column)));
+          return asBigDecimal(Stat.sum(nonMissingValues(column)));
         }
       };
 
@@ -87,7 +92,8 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          List<BigDecimal> data = toBigDecimalList(column);
+          List<BigDecimal> data = nonMissingValues(column);
+          if (data.isEmpty()) return null;
           return Stat.max(data).subtract(Stat.min(data));
         }
       };
@@ -101,7 +107,8 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          return Stat.min(toBigDecimalList(column));
+          List<BigDecimal> values = nonMissingValues(column);
+          return values.isEmpty() ? null : Stat.min(values);
         }
       };
 
@@ -114,49 +121,24 @@ public class BigDecimalAggregateFunctions {
 
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
-          return asBigDecimal(Stat.max(toList(column)));
+          List<BigDecimal> values = nonMissingValues(column);
+          return values.isEmpty() ? null : Stat.max(values);
         }
       };
 
 
   /**
-   * Converts a Column<BigDecimal> to a List<Number>
+   * Collects the non-missing values of a column into a new list.
    *
-   * @param column the column to convert
-   * @return a new, converted list
+   * @param column the column to collect from
+   * @return a new list containing only the non-missing values
    */
-  static List<Number> toList(Column<BigDecimal> column) {
-    List<Number> list = new ArrayList<>();
-    for (var v : column) {
-      list.add(v);
-    }
-    return list;
-  }
-
-  /**
-   * Converts a Column<BigDecimal> to a List<BigDecimal>
-   *
-   * @param column the column to convert
-   * @return a new, converted list
-   */
-  static List<BigDecimal> toBigDecimalList(Column<BigDecimal> column) {
+  static List<BigDecimal> nonMissingValues(Column<BigDecimal> column) {
     List<BigDecimal> list = new ArrayList<>();
     for (var v : column) {
-      list.add(asBigDecimal(v));
-    }
-    return list;
-  }
-
-  /**
-   * Converts a Column<BigDecimal> to a List<Double>
-   *
-   * @param column the column to convert
-   * @return a new, converted list
-   */
-  static List<Double> toDoubleList(Column<BigDecimal> column) {
-    List<Double> list = new ArrayList<>();
-    for (var v : column) {
-      list.add(asDouble(v));
+      if (v != null) {
+        list.add(v);
+      }
     }
     return list;
   }
