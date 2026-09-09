@@ -3536,6 +3536,17 @@ class MatrixTest {
   }
 
   @Test
+  void testHtmlRejectsMalformedAlignment() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    IllegalArgumentException error = assertThrows(IllegalArgumentException) {
+      matrix.toHtml([align: 'a right'])
+    }
+
+    assertEquals('Invalid HTML alignment entry: a right', error.message)
+  }
+
+  @Test
   void testMarkdownEscapesPipes() {
     Matrix matrix = Matrix.builder().data(['a|b': ['x|y']]).types(String).build()
 

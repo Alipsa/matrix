@@ -107,7 +107,7 @@ class Joiner {
    */
   static Matrix crossJoin(Matrix x, Matrix y) {
     List<Integer> allYIndices = (0..<y.columnCount()) as List<Integer>
-    ResultColumns rc = computeResultColumns(x, y, [], [], allYIndices, JoinType.CROSS)
+    ResultColumns rc = computeResultColumns(x, y, [], allYIndices)
 
     int xColCount = x.columnCount()
     int yColCount = y.columnCount()
@@ -157,7 +157,7 @@ class Joiner {
 
     ResultColumns rc = filterOnly
         ? new ResultColumns(names: x.columnNames(), types: x.types())
-        : computeResultColumns(x, y, xKeyNames, yKeyNames, yNonKeyIndices, joinType)
+        : computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
 
     JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
     Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
@@ -199,7 +199,7 @@ class Joiner {
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
       List<Class> xKeyTypes = xKeyIndices.collect { x.type(it) }
       appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
-          xColCount, xKeyIndices, xKeyTypes, yKeyNames.size())
+          xColCount, xKeyIndices, xKeyTypes, rc.types, yKeyNames.size())
     }
 
     Matrix.builder()
@@ -216,7 +216,8 @@ class Joiner {
                                            Map<List<Object>, List<Object>> rawKeys,
                                            Set<List<Object>> matchedYKeys,
                                            int xColCount, List<Integer> xKeyIndices,
-                                           List<Class> xKeyTypes, int keyCount) {
+                                           List<Class> xKeyTypes, List<Class> resultTypes,
+                                           int keyCount) {
     yIndex.each { List<Object> yKey, List<List<Object>> yRows ->
       if (matchedYKeys.contains(yKey)) {
         return
@@ -224,7 +225,13 @@ class Joiner {
       yRows.each { List<Object> yVals ->
         List<Object> xRow = ([null] * xColCount) as List<Object>
         (0..<keyCount).each { int k ->
-          xRow.set(xKeyIndices[k], convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k]))
+          int xKeyIndex = xKeyIndices[k]
+          Object converted = convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k])
+          Class declaredType = resultTypes[xKeyIndex]
+          if (converted != null && !primitiveWrapper(declaredType).isInstance(converted)) {
+            resultTypes[xKeyIndex] = commonDeclaredType(declaredType, converted.class)
+          }
+          xRow.set(xKeyIndex, converted)
         }
         resultRows << xRow + yVals
       }
@@ -326,12 +333,9 @@ class Joiner {
     }
   }
 
-  @SuppressWarnings('ParameterCount')
   private static ResultColumns computeResultColumns(Matrix x, Matrix y,
                                                     List<String> xKeyNames,
-                                                    List<String> yKeyNames,
-                                                    List<Integer> yNonKeyIndices,
-                                                    JoinType joinType) {
+                                                    List<Integer> yNonKeyIndices) {
     Set<String> xKeyNameSet = xKeyNames as Set<String>
     List<String> xColNames = x.columnNames()
     List<Class> xColTypes = x.types()
@@ -357,14 +361,6 @@ class Joiner {
     })
 
     List<Class> resultTypes = [] + xColTypes
-    if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
-      xKeyNames.eachWithIndex { String xKeyName, int keyIndex ->
-        int xKeyIndex = x.columnIndex(xKeyName)
-        Class xKeyType = xColTypes[xKeyIndex]
-        Class yKeyType = yColTypes[y.columnIndex(yKeyNames[keyIndex])]
-        resultTypes[xKeyIndex] = commonDeclaredType(xKeyType, yKeyType)
-      }
-    }
     resultTypes.addAll(yNonKeyTypes)
 
     new ResultColumns(names: resultNames, types: resultTypes)

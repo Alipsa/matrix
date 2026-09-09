@@ -1,5 +1,7 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.PackageScope
+
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.CellType
 import org.dhatim.fastexcel.reader.Row
@@ -148,10 +150,14 @@ class FExcelValueExtractor extends ValueExtractor {
          }
          return date
       }
-      if (ValueConverter.isNumeric(rawValue, NumberFormat.getInstance())) {
-         return ValueConverter.asNumber(rawValue)
-      }
-      return rawValue
+      parseFormulaNumber(rawValue, NumberFormat.getInstance())
+   }
+
+   @PackageScope
+   static Object parseFormulaNumber(String rawValue, NumberFormat format) {
+      ValueConverter.isNumeric(rawValue, format)
+          ? ValueConverter.asBigDecimal(rawValue, format)
+          : rawValue
    }
 
 }

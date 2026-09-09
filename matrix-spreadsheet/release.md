@@ -3,7 +3,7 @@
 ## Next release
 
 ### Bug Fixes
-- preserve locale-aware numeric detection for cached formula values after `ValueConverter.isNumeric(CharSequence)` changed its default parser to `Locale.ROOT`
+- preserve locale-aware numeric detection and conversion for cached formula values after `ValueConverter.isNumeric(CharSequence)` changed its default parser to `Locale.ROOT`
 
 ## v2.4.1, 2026-07-07
 

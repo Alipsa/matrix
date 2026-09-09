@@ -386,6 +386,15 @@ class ValueConverter {
     if (o == null || '' == o) {
       return valueIfNull
     }
+    if (o instanceof Character) {
+      return o
+    }
+    if (o instanceof Number) {
+      int code = o.intValue()
+      return code >= Character.MIN_VALUE && code <= Character.MAX_VALUE
+          ? (Character) (char) code
+          : valueIfNull
+    }
     String value = String.valueOf(o)
     value.size() == 1 ? value.charAt(0) : valueIfNull
   }

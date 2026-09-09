@@ -768,7 +768,7 @@ class JoinerTest {
 
     Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
 
-    assertEquals(Number, result.type('id'))
+    assertEquals(Integer, result.type('id'))
     assertEquals([1, 2, 3, 4], result.column('id') as List)
     assertEquals(['A', 'B', 'C', null], result.column('name') as List)
     assertEquals([80, null, null, 90], result.column('score') as List)
@@ -805,7 +805,7 @@ class JoinerTest {
 
     Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
 
-    assertEquals(Object, result.type('id'))
+    assertEquals(Number, result.type('id'))
     assertEquals([1, 4.5d, 2], result.column('id'))
     result.column('id').each { Object value -> assertTrue(result.type('id').isInstance(value)) }
   }

@@ -252,11 +252,11 @@ class ColumnTest {
   void testEmptyRangeAccessReturnsColumnPreservingNameAndType() {
     Column c = new Column('vals', [10, 20, 30], Integer)
 
-    Column result = c[1..<1]
-
-    assertEquals([], result)
-    assertEquals('vals', result.name)
-    assertEquals(Integer, result.type)
+    [c.subList(1..<1), c[1..<1]].each { Column result ->
+      assertEquals([], result)
+      assertEquals('vals', result.name)
+      assertEquals(Integer, result.type)
+    }
   }
 
   @Test

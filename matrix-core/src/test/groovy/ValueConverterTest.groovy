@@ -113,7 +113,11 @@ class ValueConverterTest {
   @Test
   void testCharacterConversionReturnsNullForInvalidInput() {
     assertEquals('a' as Character, ValueConverter.convert('a', Character))
+    assertEquals('A' as Character, ValueConverter.convert(65 as Integer, Character))
+    assertEquals('\t' as Character, ValueConverter.asCharacter(9))
     assertNull(ValueConverter.convert('ab', Character))
+    assertNull(ValueConverter.asCharacter(-1))
+    assertNull(ValueConverter.asCharacter((Character.MAX_VALUE as Integer) + 1))
   }
 
   @Test

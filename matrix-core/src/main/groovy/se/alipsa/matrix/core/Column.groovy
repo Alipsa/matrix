@@ -265,7 +265,11 @@ class Column extends ArrayList {
   }
 
   private Column newLike() {
-    Column col = new Column(this.type)
+    newLike(0)
+  }
+
+  private Column newLike(int initialCapacity) {
+    Column col = new Column(initialCapacity, this.type)
     col.name = this.name
     col
   }
@@ -298,6 +302,16 @@ class Column extends ArrayList {
   }
 
   /**
+   * Returns an empty Column for an empty exclusive range, preserving this column's name and type.
+   *
+   * @param range the empty range
+   * @return a detached empty Column with the same name and type
+   */
+  Column subList(EmptyRange range) {
+    newLike(range.size())
+  }
+
+  /**
    * Returns a new Column with the values in the given range, so that {@code column[range]}
    * keeps the Column behavior (element-wise arithmetic, name and type) instead of degrading
    * to a plain list.
@@ -324,9 +338,7 @@ class Column extends ArrayList {
    * @return a detached empty Column with the same name and type
    */
   Column getAt(EmptyRange range) {
-    Column result = new Column(range.size(), type)
-    result.name = name
-    result
+    subList(range)
   }
 
   /**

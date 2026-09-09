@@ -3801,12 +3801,16 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static Map<String, String> parseHtmlAlignments(String specification) {
     Map<String, String> alignment = [:]
     specification.split(COMMA).each { String item ->
-      String key = item.substring(0, item.indexOf(':')).trim()
-      String value = item.substring(item.indexOf(':') + 1).trim()
+      int separator = item.indexOf(':')
+      if (separator < 0) {
+        throw new IllegalArgumentException("Invalid HTML alignment entry: ${item.trim()}")
+      }
+      String key = item.substring(0, separator).trim()
+      String value = item.substring(separator + 1).trim()
       if (!HTML_ALIGNMENTS.contains(value)) {
         throw new IllegalArgumentException("Invalid HTML alignment: ${value}")
       }
-      alignment.put(key, escapeHtml(value))
+      alignment.put(key, value)
     }
     alignment
   }
