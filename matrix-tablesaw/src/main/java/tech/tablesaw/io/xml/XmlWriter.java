@@ -105,6 +105,7 @@ public class XmlWriter implements DataWriter<XmlWriteOptions> {
     }
     Writer destinationWriter = options.destination().writer();
     OutputFormat format = OutputFormat.createCompactFormat();
+    format.setTrimText(false);
     format.setEncoding(StandardCharsets.UTF_8.name());
     format.setOmitEncoding(destinationWriter != null);
     try {

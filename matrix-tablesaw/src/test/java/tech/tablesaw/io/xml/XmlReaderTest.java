@@ -81,7 +81,7 @@ class XmlReaderTest {
 
     var table = new XmlReader().read(builder.build());
 
-    assertArrayEquals(new String[] {"a", "A-2", "a-2-2"}, table.columnNames().toArray());
+    assertArrayEquals(new String[] {"a", "A-3", "a-2"}, table.columnNames().toArray());
   }
 
   @Test

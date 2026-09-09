@@ -102,10 +102,10 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
       CellStyle localTimeStyle = workbook.createCellStyle();
       localTimeStyle.setDataFormat(
           workbook.createDataFormat().getFormat("[h]:mm:ss"));
-      String sheetName = WorkbookUtil.createSafeSheetName(table.name());
-      if (sheetName == null || sheetName.isBlank()) {
-        sheetName = "Sheet1";
-      }
+      String tableName = table.name();
+      String sheetName = tableName == null || tableName.isBlank()
+          ? "Sheet1"
+          : WorkbookUtil.createSafeSheetName(tableName);
       XSSFSheet sheet = workbook.createSheet(sheetName);
       int rowNum = 0;
       List<String> columnNames = table.columnNames();

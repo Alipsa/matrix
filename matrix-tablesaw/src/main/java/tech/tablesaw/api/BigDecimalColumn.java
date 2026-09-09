@@ -1171,7 +1171,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
 
   private void assertSameSize(BigDecimalColumn column) {
     checkArgument(size() == column.size(),
-        "Columns must have the same size: %s has %d rows, %s has %d rows",
+        "Columns must have the same size: %s has %s rows, %s has %s rows",
         name(), size(), column.name(), column.size());
   }
 

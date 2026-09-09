@@ -142,23 +142,32 @@ public class XmlReader implements DataReader<XmlReadOptions> {
 
   private static List<String> columnNames(List<Element> cells, boolean allowDuplicates) {
     List<String> names = new ArrayList<>();
-    Set<String> usedNames = new HashSet<>();
+    Set<String> reservedNames = new HashSet<>();
     for (Element cell : cells) {
       String name = cell.attributeValue("name");
       if (name == null || name.isBlank()) {
         throw invalidXml("First XML row contains a cell with a missing or blank name");
       }
+      reservedNames.add(name.toLowerCase(Locale.ROOT));
+    }
+    Set<String> originalNamesSeen = new HashSet<>();
+    Set<String> assignedNames = new HashSet<>();
+    for (Element cell : cells) {
+      String name = cell.attributeValue("name");
       String candidate = name;
-      if (usedNames.contains(candidate.toLowerCase(Locale.ROOT))) {
+      String normalizedName = name.toLowerCase(Locale.ROOT);
+      if (originalNamesSeen.contains(normalizedName)) {
         if (!allowDuplicates) {
           throw invalidXml("Duplicate XML column name: " + name);
         }
         int suffix = 2;
         do {
           candidate = name + "-" + suffix++;
-        } while (usedNames.contains(candidate.toLowerCase(Locale.ROOT)));
+          normalizedName = candidate.toLowerCase(Locale.ROOT);
+        } while (reservedNames.contains(normalizedName) || assignedNames.contains(normalizedName));
       }
-      usedNames.add(candidate.toLowerCase(Locale.ROOT));
+      originalNamesSeen.add(name.toLowerCase(Locale.ROOT));
+      assignedNames.add(candidate.toLowerCase(Locale.ROOT));
       names.add(candidate);
     }
     return names;

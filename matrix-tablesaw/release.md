@@ -54,8 +54,9 @@
 - Parser-based string mutation (`set`/`appendCell` with a parser) preserves the exact decimal
   text only when it agrees with the parser's numeric interpretation; otherwise the parser's
   custom semantics win. `BigDecimalParser` bypasses this agreement probe.
-- Empty or all-missing columns return `null` from mean, median, coefficient of variation, range,
-  min, and max; sum retains its existing empty-input convention.
+- Empty or all-missing columns return `null` from mean, median, range, min, and max; coefficient
+  of variation returns `null` when fewer than two non-missing values remain. Sum retains its
+  existing empty-input convention.
 
 ### I/O fixes
 - XML, ODS, and XLSX writers now emit missing cells as blank/empty cells instead of serializing
@@ -68,15 +69,16 @@
 - XML output is deterministic UTF-8: stream destinations get an explicit
   `encoding="UTF-8"` declaration written through an explicit `OutputStreamWriter`, while a
   caller-supplied `Writer` is used as supplied and the declaration omits the encoding attribute.
+  String whitespace is preserved exactly in the compact output.
 - XML duplicate column names are compared case-insensitively. With `allowDuplicateColumnNames(false)`
   they are rejected; with it enabled, later occurrences are renamed deterministically to
-  collision-safe `name-2`, `name-3`, ... Unlike Tablesaw CSV, pre-suffixed names such as `name-2`
-  cannot cause the generated names to collide.
+  collision-safe `name-2`, `name-3`, ... Original pre-suffixed names such as `name-2` are reserved
+  before suffix allocation, so they remain unchanged and generated names skip over them.
 - XML tables are shape-validated before indexing: every first-row `<td>` needs a non-blank `name`,
   and every later row must have exactly as many `<td>` elements as the first row; violations
   raise `RuntimeIOException` naming the one-based data row and expected/actual cell count.
-- XLSX worksheet names are sanitized with `WorkbookUtil.createSafeSheetName`, falling back to
-  `Sheet1` when the result is null or blank.
+- XLSX worksheet names are sanitized with `WorkbookUtil.createSafeSheetName`; null or blank table
+  names use `Sheet1`.
 - File-backed `builder(File)`/`builder(String)` write options for XLSX, ODS, and XML defer opening
   the output file until writing starts: creating or building options no longer creates or
   truncates the target. I/O errors surface as `RuntimeIOException` from the write call. A

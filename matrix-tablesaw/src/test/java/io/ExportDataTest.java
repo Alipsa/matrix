@@ -66,6 +66,26 @@ public class ExportDataTest {
   }
 
   @Test
+  public void testXmlRoundTripPreservesStringWhitespace() {
+    Table table =
+        Table.create("whitespace")
+            .addColumns(
+                StringColumn.create(
+                    "value", new String[] {"  hello   world  ", "a\tb", " "}));
+    StringWriter writer = new StringWriter();
+    table.write().usingOptions(XmlWriteOptions.builder(writer).build());
+    XmlReadOptions.Builder builder = XmlReadOptions.builderFromString(writer.toString());
+    builder.columnTypes(new ColumnType[] {ColumnType.STRING});
+
+    Table restored = new tech.tablesaw.io.xml.XmlReader().read(builder.build());
+
+    assertEquals("  hello   world  ", restored.stringColumn("value").get(0));
+    assertEquals("a\tb", restored.stringColumn("value").get(1));
+    assertEquals(" ", restored.stringColumn("value").get(2));
+    assertFalse(restored.stringColumn("value").isMissing(2));
+  }
+
+  @Test
   public void testOdsExport() throws IOException {
     var url = getClass().getResource("/glaciers.csv");
     var table = Table.read().csv(url);
@@ -225,6 +245,10 @@ public class ExportDataTest {
       assertTrue(name.length() <= 31);
       assertFalse(name.matches(".*[\\[\\]:*?/\\\\].*"));
     }
+
+    assertEquals("Sheet1", writeAndReadSheetName(Table.create((String) null), "null-name.xlsx"));
+    assertEquals("Sheet1", writeAndReadSheetName(Table.create("   "), "blank-name.xlsx"));
+    assertEquals("normal", writeAndReadSheetName(Table.create("normal"), "normal-name.xlsx"));
   }
 
   @Test
@@ -292,6 +316,15 @@ public class ExportDataTest {
             BigDecimalColumn.create(
                 "decimal", new BigDecimal[] {new BigDecimal("1.5"), null, new BigDecimal("2.5")}),
             BooleanColumn.create("boolean").append(true).appendMissing().append(false));
+  }
+
+  private String writeAndReadSheetName(Table table, String filename) throws IOException {
+    table.addColumns(IntColumn.create("value", new int[] {1}));
+    File output = new File(tempDir, filename);
+    table.write().usingOptions(XlsxWriteOptions.builder(output).build());
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(output))) {
+      return workbook.getSheetAt(0).getSheetName();
+    }
   }
 
   private static void assertMissingRows(Table table) {

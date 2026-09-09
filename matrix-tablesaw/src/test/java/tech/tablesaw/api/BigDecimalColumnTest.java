@@ -702,7 +702,10 @@ public class BigDecimalColumnTest {
     var shortCol = BigDecimalColumn.create("short", new BigDecimal[]{BigDecimal.ONE, BigDecimal.TEN});
     var longCol = BigDecimalColumn.create("long", new BigDecimal[]{BigDecimal.ONE, BigDecimal.TEN, BigDecimal.ZERO});
 
-    assertThrows(IllegalArgumentException.class, () -> obs.plus(longCol));
+    var exception = assertThrows(IllegalArgumentException.class, () -> obs.plus(longCol));
+    assertEquals(
+        "Columns must have the same size: values has 9 rows, long has 3 rows",
+        exception.getMessage());
     assertThrows(IllegalArgumentException.class, () -> obs.subtract(longCol));
     assertThrows(IllegalArgumentException.class, () -> obs.multiply(longCol));
     assertThrows(IllegalArgumentException.class, () -> obs.divide(longCol));
@@ -816,6 +819,15 @@ public class BigDecimalColumnTest {
       assertNull(BigDecimalAggregateFunctions.max.summarize(column));
       assertEquals(0, BigDecimal.ZERO.compareTo(BigDecimalAggregateFunctions.sum.summarize(column)));
     }
+  }
+
+  @Test
+  void testCvWithSingleNonMissingValue() {
+    BigDecimalColumn column =
+        BigDecimalColumn.create(
+            "single", new BigDecimal[] {new BigDecimal("5"), null, null});
+
+    assertNull(BigDecimalAggregateFunctions.cv.summarize(column));
   }
 
   @Test

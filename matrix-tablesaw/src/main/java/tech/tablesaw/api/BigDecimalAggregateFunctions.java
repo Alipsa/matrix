@@ -11,6 +11,9 @@ import tech.tablesaw.columns.Column;
 
 /**
  * A collection of aggregate functions that can be applied to {@link BigDecimalColumn} instances.
+ * Mean, median, range, minimum, and maximum return {@code null} for empty or all-missing columns;
+ * coefficient of variation returns {@code null} when fewer than two non-missing values remain.
+ * Sum retains its empty-input convention of zero.
  */
 public class BigDecimalAggregateFunctions {
 
@@ -58,7 +61,7 @@ public class BigDecimalAggregateFunctions {
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
           List<BigDecimal> nums = nonMissingValues(column);
-          if (nums.isEmpty()) return null;
+          if (nums.size() < 2) return null;
           BigDecimal mean = Stat.mean(nums);
           if (mean.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("Cannot compute CV: mean is zero");

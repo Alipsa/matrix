@@ -159,8 +159,8 @@ opt in, later occurrences are renamed deterministically and collision-safely:
 // Rejects 'Name' + 'name' with RuntimeIOException:
 Gtable.read().usingOptions(XmlReadOptions.builder('data.xml').build())
 
-// Allows them; columns become 'Name', 'name-2' (never colliding, even with
-// pre-suffixed input such as 'name-2' followed by another 'name'):
+// Allows them. For input 'Name', 'name', 'name-2', columns become
+// 'Name', 'name-3', 'name-2': original names are reserved before suffixing.
 def options = XmlReadOptions.builder('data.xml')
     .allowDuplicateColumnNames(true)
     .build()
@@ -172,7 +172,8 @@ Gtable table = Gtable.read().usingOptions(options)
 The XLSX, ODS, and XML writers emit missing cells as blank/empty cells — no numeric or boolean
 sentinels are serialized, so a missing `SHORT` never becomes `-32768` in the output file, and a
 missing `BOOLEAN` never becomes `false`. Ordinary finite values and `false` remain
-distinguishable from missing.
+distinguishable from missing. XML string values preserve leading, trailing, repeated, tab, and
+whitespace-only content exactly.
 
 ### XLSX is binary-only; worksheet names are sanitized
 
@@ -182,7 +183,7 @@ table.write().usingOptions(XlsxWriteOptions.builder(new StringWriter()).build())
 // -> IllegalArgumentException("XLSX requires a binary OutputStream destination")
 
 // Use a stream, File, or file name instead. Names longer than 31 characters or containing
-// []:*?/\ are sanitized to a safe deterministic sheet name (falling back to 'Sheet1'):
+// []:*?/\ are sanitized to a safe deterministic sheet name; null or blank names use 'Sheet1':
 table.write().usingOptions(XlsxWriteOptions.builder('report.xlsx').build())
 ```
 
