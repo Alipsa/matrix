@@ -14,7 +14,7 @@ class ColumnTest {
     // equal size
     assert c1 + [1, 2, 3, 4] == [2, 4, 6, 8]
     // smaller
-    assert c1 + [1, 2] == [2, 4, null, null]
+    assertThrows(IllegalArgumentException) { c1 + [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c1 + [1, 2, 3, 4, 5, 6] }
 
@@ -22,7 +22,7 @@ class ColumnTest {
     // equal size
     assert c2 + [1, 2, 3, 4] == [2, null, 6, 8]
     // smaller
-    assert c2 + [1, 2] == [2, null, null, null]
+    assertThrows(IllegalArgumentException) { c2 + [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c2 + [1, 2, 3, 4, 5, 6] }
 
@@ -51,7 +51,7 @@ class ColumnTest {
     // equal size
     assert c1 - [1, 2, 3, 4] == [0, 0, 0, 0]
     // smaller
-    assert c1 - [0, 1] == [1, 1, null, null]
+    assertThrows(IllegalArgumentException) { c1 - [0, 1] }
     // larger
     assertThrows(IllegalArgumentException) { c1 - [-1, 2, 2.1, 4.2, 5, 6] }
 
@@ -59,7 +59,7 @@ class ColumnTest {
     // equal size
     assert c2 - [1, 0, -1, -1.1] == [0, null, 4, 5.1]
     // smaller
-    assert c2 - [2, 1] == [-1, null, null, null]
+    assertThrows(IllegalArgumentException) { c2 - [2, 1] }
     // larger
     assertThrows(IllegalArgumentException) { c2 - [1, 2, 3, 4, 5, 6] }
 
@@ -88,7 +88,7 @@ class ColumnTest {
     // equal size
     assert c1 * [1, 2, 3, 4] == [1, 4, 9, 16]
     // smaller
-    assert c1 * [1, 2] == [1, 4, null, null]
+    assertThrows(IllegalArgumentException) { c1 * [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c1 * [1, 2, 3, 4, 5, 6] }
 
@@ -96,7 +96,7 @@ class ColumnTest {
     // equal size
     assert c2 * [1, 2, 3, 4] == [1, null, 9, 16]
     // smaller
-    assert c2 * [1, 2] == [1, null, null, null]
+    assertThrows(IllegalArgumentException) { c2 * [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c2 * [1, 2, 3, 4, 5, 6] }
   }
@@ -116,7 +116,7 @@ class ColumnTest {
     // equal size
     assert c1 / [1, 1, 2, 0.5] == [1, 2, 1.5, 8]
     // smaller
-    assert c1 / [2, 1] == [0.5, 2, null, null]
+    assertThrows(IllegalArgumentException) { c1 / [2, 1] }
     // larger
     assertThrows(IllegalArgumentException) { c1 / [1, 2, 0.5, 10, 11, 12] }
 
@@ -124,7 +124,7 @@ class ColumnTest {
     // equal size
     assert c2 / [2, 2, 1, 2] == [0.5, null, 3, 2]
     // smaller
-    assert c2 / [1, 2] == [1, null, null, null]
+    assertThrows(IllegalArgumentException) { c2 / [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c2 / [0.5, 2, 2, 2, 1, 60] }
   }
@@ -144,7 +144,7 @@ class ColumnTest {
     // equal size
     assert c1 ** [1, 2, 3, 4] == [1, 4, 27, 256]
     // smaller
-    assert c1 ** [1, 2] == [1, 4, null, null]
+    assertThrows(IllegalArgumentException) { c1 ** [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c1 ** [1, 2, 3, 4, 5, 6] }
 
@@ -152,7 +152,7 @@ class ColumnTest {
     // equal size
     assert c2 ** [1, 2, 3, 4] == [1, null, 27, 256]
     // smaller
-    assert c2 ** [1, 2] == [1, null, null, null]
+    assertThrows(IllegalArgumentException) { c2 ** [1, 2] }
     // larger
     assertThrows(IllegalArgumentException) { c2 ** [1, 2, 3, 4, 5, 6] }
   }
@@ -246,6 +246,17 @@ class ColumnTest {
     Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
     assert [20, 30] == c.subList(1..<3)
     assert [20, 30] == c[1..<3]
+  }
+
+  @Test
+  void testEmptyRangeAccessReturnsColumnPreservingNameAndType() {
+    Column c = new Column('vals', [10, 20, 30], Integer)
+
+    Column result = c[1..<1]
+
+    assertEquals([], result)
+    assertEquals('vals', result.name)
+    assertEquals(Integer, result.type)
   }
 
   @Test

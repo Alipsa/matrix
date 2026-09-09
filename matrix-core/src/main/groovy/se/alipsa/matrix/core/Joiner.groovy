@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
+
 import se.alipsa.matrix.core.util.ValueComparison
 
 /**
@@ -105,7 +107,7 @@ class Joiner {
    */
   static Matrix crossJoin(Matrix x, Matrix y) {
     List<Integer> allYIndices = (0..<y.columnCount()) as List<Integer>
-    ResultColumns rc = computeResultColumns(x, y, [], allYIndices)
+    ResultColumns rc = computeResultColumns(x, y, [], [], allYIndices, JoinType.CROSS)
 
     int xColCount = x.columnCount()
     int yColCount = y.columnCount()
@@ -155,7 +157,7 @@ class Joiner {
 
     ResultColumns rc = filterOnly
         ? new ResultColumns(names: x.columnNames(), types: x.types())
-        : computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
+        : computeResultColumns(x, y, xKeyNames, yKeyNames, yNonKeyIndices, joinType)
 
     JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
     Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
@@ -324,9 +326,12 @@ class Joiner {
     }
   }
 
+  @SuppressWarnings('ParameterCount')
   private static ResultColumns computeResultColumns(Matrix x, Matrix y,
                                                     List<String> xKeyNames,
-                                                    List<Integer> yNonKeyIndices) {
+                                                    List<String> yKeyNames,
+                                                    List<Integer> yNonKeyIndices,
+                                                    JoinType joinType) {
     Set<String> xKeyNameSet = xKeyNames as Set<String>
     List<String> xColNames = x.columnNames()
     List<Class> xColTypes = x.types()
@@ -352,9 +357,32 @@ class Joiner {
     })
 
     List<Class> resultTypes = [] + xColTypes
+    if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
+      xKeyNames.eachWithIndex { String xKeyName, int keyIndex ->
+        int xKeyIndex = x.columnIndex(xKeyName)
+        Class xKeyType = xColTypes[xKeyIndex]
+        Class yKeyType = yColTypes[y.columnIndex(yKeyNames[keyIndex])]
+        resultTypes[xKeyIndex] = commonDeclaredType(xKeyType, yKeyType)
+      }
+    }
     resultTypes.addAll(yNonKeyTypes)
 
     new ResultColumns(names: resultNames, types: resultTypes)
+  }
+
+  private static Class commonDeclaredType(Class left, Class right) {
+    Class leftType = left.isPrimitive() ? primitiveWrapper(left) : left
+    Class rightType = right.isPrimitive() ? primitiveWrapper(right) : right
+    if (leftType == rightType || leftType.isAssignableFrom(rightType)) {
+      return leftType
+    }
+    if (rightType.isAssignableFrom(leftType)) {
+      return rightType
+    }
+    if (Number.isAssignableFrom(leftType) && Number.isAssignableFrom(rightType)) {
+      return Number
+    }
+    Object
   }
 
   private static class ResultColumns {

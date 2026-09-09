@@ -68,6 +68,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final String DEFAULT_ROW_DELIMITER = '\n'
   private static final String DEFAULT_LINE_COMMENT = '#'
   private static final String HTML_ATTRIBUTE_NAME = '[A-Za-z_][A-Za-z0-9_.:-]*'
+  private static final Set<String> HTML_ALIGNMENTS = ['left', 'right', 'center', 'justify'] as Set<String>
   private static final String MARKDOWN_LINE_BREAK = '<br>'
   private static final Logger log = Logger.getLogger(Matrix)
 
@@ -3731,19 +3732,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   @SuppressWarnings('DuplicateStringLiteral')
   String toHtml(Map<String, String> attr = [:], List<?> rows, boolean autoAlign=true) {
-    Map alignment = [:]
+    Map<String, String> alignment = [:]
     String caption = null
     StringBuilder sb = new StringBuilder()
     sb.append('<table')
     if (attr.size() > 0) {
       attr.each {k,v ->
         if (k == 'align') {
-          v.split(COMMA).each { s ->
-            String a = s as String
-            def key = a.substring(0, a.indexOf(':')).trim()
-            def value = a.substring(a.indexOf(':')+1).trim()
-          alignment.put(key, value)
-          }
+          alignment.putAll(parseHtmlAlignments(v))
         } else if (k == 'caption') {
           caption = v
         } else {
@@ -3774,7 +3770,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         String escaped = escapeHtml(colName)
         sb.append("      <th class='${escaped} ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
-          sb.append(" style='text-align: ${alignment[colName]}'")
+          sb.append(" style='text-align: ${escapeHtml(alignment[colName])}'")
         }
         sb.append('>').append(escaped).append('</th>\n')
       }
@@ -3791,7 +3787,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         String escapedName = escapeHtml(colNames[i])
         rowBuilder.append("      <td class='${escapedName} ${typeNames[i]}'")
         if (alignment.containsKey(colNames[i])) {
-          rowBuilder.append(" style='text-align: ${alignment[colNames[i]]}'")
+          rowBuilder.append(" style='text-align: ${escapeHtml(alignment[colNames[i]])}'")
         }
         rowBuilder.append('>').append(escapeHtml(ValueConverter.asString(val))).append('</td>\n')
       }
@@ -3799,6 +3795,20 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     sb.append('  </tbody>\n</table>\n')
     sb.toString()
+  }
+
+  @SuppressWarnings('DuplicateStringLiteral')
+  private static Map<String, String> parseHtmlAlignments(String specification) {
+    Map<String, String> alignment = [:]
+    specification.split(COMMA).each { String item ->
+      String key = item.substring(0, item.indexOf(':')).trim()
+      String value = item.substring(item.indexOf(':') + 1).trim()
+      if (!HTML_ALIGNMENTS.contains(value)) {
+        throw new IllegalArgumentException("Invalid HTML alignment: ${value}")
+      }
+      alignment.put(key, escapeHtml(value))
+    }
+    alignment
   }
 
   /**
@@ -3881,7 +3891,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (attr.size() > 0) {
       sb.append("{")
       attr.each {
-        sb.append(it.key).append('="').append(it.value).append('" ')
+        if (!(it.key as String).matches(HTML_ATTRIBUTE_NAME)) {
+          throw new IllegalArgumentException("Invalid HTML attribute name: ${it.key}")
+        }
+        sb.append(it.key).append('="').append(escapeHtml(it.value)).append('" ')
       }
       sb.append("}\n")
     }

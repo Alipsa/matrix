@@ -82,7 +82,7 @@ class ValueConverter {
       case Long, long -> (E) asLong(o)
       case BigInteger -> (E) asBigInteger(o)
       case Float, float -> (E) asFloat(o)
-      case Character, char -> (E)('' == o ? null : o.asType(Character))
+      case Character, char -> (E) asCharacter(o)
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
@@ -335,7 +335,7 @@ class ValueConverter {
       return o.toLocalDateTime()
     }
     if (o instanceof UtilDate) {
-      return LocalDateTime.ofInstant(o.toInstant(), ZoneId.systemDefault())
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(o.getTime()), ZoneId.systemDefault())
     }
     if (o instanceof Number) {
       return LocalDateTime.ofEpochSecond(o.toLong(), 0, OffsetDateTime.now().getOffset())
@@ -360,7 +360,7 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.byteValue()
     }
-    BigDecimal value = asBigDecimal(String.valueOf(o))
+    Integer value = asInteger(o)
     value?.byteValue()
   }
 
@@ -371,8 +371,23 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.shortValue()
     }
-    BigDecimal value = asBigDecimal(String.valueOf(o))
+    Integer value = asInteger(o)
     value?.shortValue()
+  }
+
+  /**
+   * Converts a single-character value to {@link Character}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned for null, blank, or non-single-character input
+   * @return the converted character, or {@code valueIfNull} when conversion is not possible
+   */
+  static Character asCharacter(Object o, Character valueIfNull = null) {
+    if (o == null || '' == o) {
+      return valueIfNull
+    }
+    String value = String.valueOf(o)
+    value.size() == 1 ? value.charAt(0) : valueIfNull
   }
 
   static Integer asInteger(Object o, Integer valueIfNull = null) {

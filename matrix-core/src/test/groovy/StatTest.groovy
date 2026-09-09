@@ -594,9 +594,9 @@ class StatTest {
 
     Matrix result = frequency(table, 'group', 'value')
 
-    assertEquals(['x', 'y', 'z'], result.column('value'))
-    assertEquals([1, 1, 0], result.column('a'))
-    assertEquals([0, 1, 2], result.column('b'))
+    assertEquals(['y', 'z', 'x'], result.column('value'))
+    assertEquals([1, 0, 1], result.column('a'))
+    assertEquals([1, 2, 0], result.column('b'))
   }
 
   @Test

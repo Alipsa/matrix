@@ -1,6 +1,5 @@
 import static org.junit.jupiter.api.Assertions.*
 
-import org.codehaus.groovy.runtime.typehandling.GroovyCastException
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.ValueConverter
@@ -112,9 +111,9 @@ class ValueConverterTest {
   }
 
   @Test
-  void testCharacterConversionPreservesStrictSemantics() {
+  void testCharacterConversionReturnsNullForInvalidInput() {
     assertEquals('a' as Character, ValueConverter.convert('a', Character))
-    assertThrows(GroovyCastException) { ValueConverter.convert('ab', Character) }
+    assertNull(ValueConverter.convert('ab', Character))
   }
 
   @Test
@@ -189,6 +188,8 @@ class ValueConverterTest {
     assertEquals((byte) 127, ValueConverter.asByte('127'))
     assertEquals((byte) -128, ValueConverter.asByte('-128'))
     assertEquals((byte) 0, ValueConverter.asByte('0'))
+    assertEquals((byte) 1, ValueConverter.asByte(true))
+    assertEquals((byte) 0, ValueConverter.asByte(false))
     assertNull(ValueConverter.asByte(null))
     assertNull(ValueConverter.asByte('1.2.3'))
   }
@@ -198,6 +199,8 @@ class ValueConverterTest {
     assertEquals((short) 32767, ValueConverter.asShort('32767'))
     assertEquals((short) -32768, ValueConverter.asShort('-32768'))
     assertEquals((short) 0, ValueConverter.asShort('0'))
+    assertEquals((short) 1, ValueConverter.asShort(true))
+    assertEquals((short) 0, ValueConverter.asShort(false))
     assertNull(ValueConverter.asShort(null))
     assertNull(ValueConverter.asShort('1.2.3'))
   }
@@ -228,6 +231,11 @@ class ValueConverterTest {
     assertEquals(
         LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()),
         ValueConverter.asLocalDateTime(date)
+    )
+    Time time = Time.valueOf('10:15:30')
+    assertEquals(
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(time.time), ZoneId.systemDefault()),
+        ValueConverter.asLocalDateTime(time)
     )
   }
 

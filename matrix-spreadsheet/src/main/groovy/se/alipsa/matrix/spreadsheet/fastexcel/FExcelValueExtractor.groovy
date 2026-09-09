@@ -9,6 +9,7 @@ import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
+import java.text.NumberFormat
 import java.time.LocalDateTime
 
 /**
@@ -147,7 +148,7 @@ class FExcelValueExtractor extends ValueExtractor {
          }
          return date
       }
-      if (ValueConverter.isNumeric(rawValue)) {
+      if (ValueConverter.isNumeric(rawValue, NumberFormat.getInstance())) {
          return ValueConverter.asNumber(rawValue)
       }
       return rawValue

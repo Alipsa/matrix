@@ -768,7 +768,7 @@ class JoinerTest {
 
     Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
 
-    assertEquals(Integer, result.type('id'))
+    assertEquals(Number, result.type('id'))
     assertEquals([1, 2, 3, 4], result.column('id') as List)
     assertEquals(['A', 'B', 'C', null], result.column('name') as List)
     assertEquals([80, null, null, 90], result.column('score') as List)
@@ -788,6 +788,7 @@ class JoinerTest {
 
     Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
 
+    assertEquals(Number, result.type('id'))
     List<Object> ids = result.column('id') as List<Object>
     assertEquals(1, ids[0])
     assertEquals(2, ids[1])
@@ -795,6 +796,18 @@ class JoinerTest {
     assertEquals(4.5d, (Double) ids[2])
     assertTrue(ids[3] instanceof Double && ((Double) ids[3]).isNaN())
     assertEquals(Double.POSITIVE_INFINITY, (Double) ids[4])
+  }
+
+  @Test
+  void testFullJoinWidensKeyTypeForObjectKeys() {
+    Matrix x = Matrix.builder().data(id: [1], xv: ['a']).types(Integer, String).build()
+    Matrix y = Matrix.builder().data(id: [4.5d, 2], yv: ['b', 'c']).types(Object, String).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    assertEquals(Object, result.type('id'))
+    assertEquals([1, 4.5d, 2], result.column('id'))
+    result.column('id').each { Object value -> assertTrue(result.type('id').isInstance(value)) }
   }
 
 }

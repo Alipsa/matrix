@@ -958,8 +958,7 @@ class Stat {
     static Matrix frequency(Matrix table, String groupName, String columnName, boolean includeColumnNameCategory = true) {
         def groups = table.split(groupName)
         Map<String, List<?>> tbl = [:]
-        // Categories retain first-appearance order across the source matrix.
-        List<String> categories = table.column(columnName).collect { String.valueOf(it) }.unique()
+        List<String> categories = frequency(table, columnName).column(FREQUENCY_VALUE) as List<String>
         if (includeColumnNameCategory) {
             tbl[columnName] = categories
         }

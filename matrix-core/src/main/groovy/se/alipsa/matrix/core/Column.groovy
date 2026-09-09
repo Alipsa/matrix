@@ -179,13 +179,12 @@ class Column extends ArrayList {
 
   @CompileDynamic
   private Column applyListOp(List list, Closure<Object> op) {
-    if (list.size() > size()) {
-      throw new IllegalArgumentException("Operand size (${list.size()}) cannot exceed column size (${size()})")
+    if (list.size() != size()) {
+      throw new IllegalArgumentException("Operand size (${list.size()}) must equal column size (${size()})")
     }
     Column result = newLike()
-    def that = fill(list)
     this.eachWithIndex { it, idx ->
-      def val = that[idx]
+      def val = list[idx]
       if (it == null || val == null) {
         result.add(null)
       } else {
@@ -271,16 +270,6 @@ class Column extends ArrayList {
     col
   }
 
-  private Column fill(List list) {
-    def that = new Column(list)
-    int listSize = list.size()
-    int size = this.size()
-    if (listSize < size) {
-      that.addAll([null] * (size - listSize))
-    }
-    that
-  }
-
   /**
    * Returns a new Column with the values in the given range.
    *
@@ -326,6 +315,18 @@ class Column extends ArrayList {
    */
   Column getAt(IntRange range) {
     subList(range)
+  }
+
+  /**
+   * Returns an empty Column for an empty exclusive range, preserving this column's name and type.
+   *
+   * @param range the empty range
+   * @return a detached empty Column with the same name and type
+   */
+  Column getAt(EmptyRange range) {
+    Column result = new Column(range.size(), type)
+    result.name = name
+    result
   }
 
   /**

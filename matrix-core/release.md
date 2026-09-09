@@ -8,9 +8,15 @@
 
 ### New Column methods
 - `Column.getAt(IntRange)` — `column[1..3]` now returns a `Column` (name and type preserved) instead of a plain `ArrayList`, so element-wise arithmetic and the rest of the Column API survive slicing. It is equivalent to `Column.subList(IntRange)`; both follow Groovy list-slicing semantics (negative indices count from the end, reverse ranges return values in reverse order) and both return a detached copy.
+- Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.
 
 ### Fixes
+- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toMarkdown` now validates attribute names and HTML-escapes attribute values.
+- Full and right joins widen result key-column types when the left and right declared types differ, ensuring unmatched right-side keys always satisfy the result schema.
+- `ValueConverter.asLocalDateTime` supports every `java.util.Date` subclass, including `java.sql.Time`.
+- `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger`; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`, returning null for invalid character input.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
+- Grouped `Stat.frequency(Matrix, String, String)` category rows now use the same frequency-descending, value-ascending order as the single-column overloads.
 - Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
@@ -45,9 +51,10 @@
 - ResultSet imports use JDBC column labels, so aliases can change the resulting Matrix column names from the physical names.
 - `Matrix.getProperty` now throws `MissingPropertyException` for unknown property names instead of returning null. Column names still resolve to their Column; only the unknown-name fallback changed.
 - Joiner key semantics follow SQL-style null semantics: null, NaN, and infinite key values never match (previously null matched null). Finite numeric keys now match across numeric runtime types (e.g. Integer 1 matches Double 1.0); String keys do not match numeric keys.
-- Column list arithmetic (`+`, `-`, `*`, `/`, `**`) throws `IllegalArgumentException` when the operand is longer than the column; previously the operand was silently truncated to the column length.
+- Column list arithmetic (`+`, `-`, `*`, `/`, `**`) requires an operand with exactly the same size as the column and throws `IllegalArgumentException` otherwise; previously longer operands were truncated and shorter operands were null-padded.
 - `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and `column[range]` now returns a `Column` rather than an `ArrayList`. Code that declared the slice as `ArrayList`, or that relied on `column[range] * 2` performing Groovy list repetition, must change: `Column.multiply` is element-wise.
 - `Matrix.toHtml` throws `IllegalArgumentException` for attribute names that are not valid HTML attribute names.
+- `Matrix.toHtml` throws `IllegalArgumentException` for alignment values other than `left`, `right`, `center`, or `justify`; `Matrix.toMarkdown` applies the same attribute-name validation as `toHtml`.
 - `Matrix.orderBy(String, Boolean)` is now tie-stable (ties previously kept no stable order) and a null direction sorts ascending.
 - `Stat.sum`, `mean`, `median`, `variance`, and `sd` skip NaN and infinite values (and nulls) instead of throwing.
 - `MatrixBuilder.csvString`'s `rowDelimiter` option is now a literal string, not a regex.

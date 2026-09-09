@@ -3525,6 +3525,17 @@ class MatrixTest {
   }
 
   @Test
+  void testHtmlRejectsUnsafeAlignment() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    IllegalArgumentException error = assertThrows(IllegalArgumentException) {
+      matrix.toHtml([align: "a: right' onmouseover='alert(1)"])
+    }
+
+    assertTrue(error.message.startsWith('Invalid HTML alignment:'))
+  }
+
+  @Test
   void testMarkdownEscapesPipes() {
     Matrix matrix = Matrix.builder().data(['a|b': ['x|y']]).types(String).build()
 
@@ -3532,6 +3543,18 @@ class MatrixTest {
 
     assertTrue(markdown.contains('| a\\|b |'))
     assertTrue(markdown.contains('| x\\|y |'))
+  }
+
+  @Test
+  void testMarkdownEscapesAttributeValuesAndRejectsInvalidNames() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    String markdown = matrix.toMarkdown([id: 'v"><b>'])
+
+    assertTrue(markdown.endsWith('{id="v&quot;&gt;&lt;b&gt;" }\n'))
+    assertThrows(IllegalArgumentException) {
+      matrix.toMarkdown([('id"><script>x</script>'): 'value'])
+    }
   }
 
   @Test
