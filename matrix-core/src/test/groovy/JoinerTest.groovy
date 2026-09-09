@@ -814,22 +814,22 @@ class JoinerTest {
   void testOuterJoinsHandleNullDeclaredKeyType() {
     Matrix x = Matrix.builder()
         .columnNames(['id', 'name'])
-        .rows([[1, 'A']])
+        .rows([['a', 'A'], ['b', 'B']])
         .types([null, String])
         .build()
     Matrix y = Matrix.builder()
         .columnNames(['id', 'score'])
-        .rows([[2, 80]])
+        .rows([[5, 80]])
         .types([Integer, Integer])
         .build()
 
     Matrix right = Joiner.merge(x, y, 'id', JoinType.RIGHT)
-    assertEquals(Integer, right.type('id'))
-    assertEquals([2], right.column('id'))
+    assertNull(right.type('id'))
+    assertEquals([5], right.column('id'))
 
     Matrix full = Joiner.merge(x, y, 'id', JoinType.FULL)
-    assertEquals(Integer, full.type('id'))
-    assertEquals([1, 2], full.column('id'))
+    assertNull(full.type('id'))
+    assertEquals(['a', 'b', 5], full.column('id'))
   }
 
 }

@@ -229,11 +229,9 @@ class Joiner {
           int xKeyIndex = xKeyIndices[k]
           Object converted = convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k])
           Class declaredType = resultTypes[xKeyIndex]
-          if (converted != null
-              && (declaredType == null || !primitiveWrapper(declaredType).isInstance(converted))) {
-            resultTypes[xKeyIndex] = declaredType == null
-                ? converted.class
-                : commonDeclaredType(declaredType, converted.class)
+          if (converted != null && declaredType != null
+              && !primitiveWrapper(declaredType).isInstance(converted)) {
+            resultTypes[xKeyIndex] = commonDeclaredType(declaredType, converted.class)
           }
           xRow.set(xKeyIndex, converted)
         }
