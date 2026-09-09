@@ -3901,10 +3901,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static String escapeMarkdownCell(String value) {
-    value?.replace('|', '\\|')
-        ?.replace('\r\n', MARKDOWN_LINE_BREAK)
-        ?.replace(DEFAULT_ROW_DELIMITER, MARKDOWN_LINE_BREAK)
-        ?.replace('\r', MARKDOWN_LINE_BREAK)
+    value?.replace('|', '\\|')?.replaceAll(/\r\n|\n|\r/, MARKDOWN_LINE_BREAK)
   }
 
   private List<Row> rowsForRender(Integer numRows, boolean fromHead) {

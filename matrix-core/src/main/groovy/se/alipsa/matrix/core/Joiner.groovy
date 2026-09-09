@@ -222,12 +222,35 @@ class Joiner {
       yRows.each { List<Object> yVals ->
         List<Object> xRow = ([null] * xColCount) as List<Object>
         (0..<keyCount).each { int k ->
-          Object rawKey = rawKeys[yKey][k]
-          xRow.set(xKeyIndices[k], rawKey == null ? null : ValueConverter.convert(rawKey, xKeyTypes[k]))
+          xRow.set(xKeyIndices[k], convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k]))
         }
         resultRows << xRow + yVals
       }
     }
+  }
+
+  /**
+   * Converts an unmatched y key to the x key column's declared type, but only
+   * when the conversion is lossless. Narrowing conversions that would change
+   * the numeric value (4.5 to 4), or that collapse non-finite values (NaN,
+   * infinity), keep the raw y key so the emitted value stays truthful.
+   */
+  private static Object convertUnmatchedKey(Object rawKey, Class xKeyType) {
+    if (rawKey == null) {
+      return null
+    }
+    Object converted = ValueConverter.convert(rawKey, xKeyType)
+    if (converted == null) {
+      return rawKey
+    }
+    if (rawKey instanceof Number && converted instanceof Number) {
+      BigDecimal rawDecimal = ValueConverter.asBigDecimal(rawKey as Number)
+      BigDecimal convertedDecimal = ValueConverter.asBigDecimal(converted as Number)
+      if (rawDecimal == null || convertedDecimal == null || rawDecimal != convertedDecimal) {
+        return rawKey
+      }
+    }
+    converted
   }
 
   private static List<Integer> resolveIndices(Matrix m, List<String> colNames) {

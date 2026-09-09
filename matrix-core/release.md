@@ -40,6 +40,15 @@
 - Numeric summary results now exclude null and non-numeric values from median and quartile calculations. `quartiles([])` returns `[null, null]` and `iqr([])` returns `null`.
 - Rolling mean output now follows a 16-significant-digit precision contract instead of always using scale 16.
 - ResultSet imports use JDBC column labels, so aliases can change the resulting Matrix column names from the physical names.
+- `Matrix.getProperty` now throws `MissingPropertyException` for unknown property names instead of returning null. Column names still resolve to their Column; only the unknown-name fallback changed.
+- Joiner key semantics follow SQL-style null semantics: null, NaN, and infinite key values never match (previously null matched null). Finite numeric keys now match across numeric runtime types (e.g. Integer 1 matches Double 1.0); String keys do not match numeric keys.
+- Column list arithmetic (`+`, `-`, `*`, `/`, `**`) throws `IllegalArgumentException` when the operand is longer than the column; previously the operand was silently truncated to the column length.
+- `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and rejects reverse ranges with `IllegalArgumentException` (Groovy's `column[reverseRange]` getAt still returns the values reversed).
+- `Matrix.toHtml` throws `IllegalArgumentException` for attribute names that are not valid HTML attribute names.
+- `Matrix.orderBy(String, Boolean)` is now tie-stable (ties previously kept no stable order) and a null direction sorts ascending.
+- `Stat.sum`, `mean`, `median`, `variance`, and `sd` skip NaN and infinite values (and nulls) instead of throwing.
+- `MatrixBuilder.csvString`'s `rowDelimiter` option is now a literal string, not a regex.
+- `MatrixAssertions.assertContentNotEquals` now uses `CONTENT_TOLERANCE` and `ignoreTypes = false`, making it the exact complement of `assertContentEquals`.
 
 ## 3.8.0, 2026-05-22
 

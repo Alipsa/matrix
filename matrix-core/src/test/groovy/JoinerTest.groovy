@@ -774,4 +774,27 @@ class JoinerTest {
     assertEquals([80, null, null, 90], result.column('score') as List)
   }
 
+  @Test
+  void testFullJoinKeepsLossyUnmatchedYKeysRaw() {
+    Matrix x = Matrix.builder('x').data([
+        id  : [1, 2],
+        name: ['A', 'B']
+    ]).types([Integer, String]).build()
+
+    Matrix y = Matrix.builder('y').data([
+        id   : [4.5d, Double.NaN, Double.POSITIVE_INFINITY],
+        score: [80, 90, 100]
+    ]).types([Double, Integer]).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    List<Object> ids = result.column('id') as List<Object>
+    assertEquals(1, ids[0])
+    assertEquals(2, ids[1])
+    // narrowing and non-finite conversions are lossy: keep the raw y key
+    assertEquals(4.5d, (Double) ids[2])
+    assertTrue(ids[3] instanceof Double && ((Double) ids[3]).isNaN())
+    assertEquals(Double.POSITIVE_INFINITY, (Double) ids[4])
+  }
+
 }
