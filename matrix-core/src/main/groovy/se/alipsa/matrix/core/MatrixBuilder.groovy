@@ -638,7 +638,7 @@ class MatrixBuilder {
         ? options.nullStrings as List<String>
         : DEFAULT_NULL_STRINGS
 
-    List<String> lines = content.split(rowDelimiter, PRESERVE_EMPTY_FIELDS) as List<String>
+    List<String> lines = content.split(Pattern.quote(rowDelimiter), PRESERVE_EMPTY_FIELDS) as List<String>
     while (!lines.isEmpty() && lines.last().isEmpty()) {
       lines.remove(lines.size() - 1)
     }

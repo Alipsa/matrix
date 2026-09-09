@@ -18,6 +18,24 @@ final class ValueComparison {
   }
 
   /**
+   * Normalizes a value for use in equality-based lookup keys.
+   *
+   * <p>Finite numeric values are represented by a scale-independent BigDecimal so
+   * mathematically equal values of different numeric runtime types share the same
+   * hash and equality semantics. Other values, including non-finite floating-point
+   * numbers, are returned unchanged.</p>
+   *
+   * @param value the key value to normalize
+   * @return a canonical finite numeric value, or the original value otherwise
+   */
+  static Object normalizeKey(Object value) {
+    if (value instanceof Number && !isNonFiniteFloatingPoint(value)) {
+      return value.toBigDecimal().stripTrailingZeros()
+    }
+    value
+  }
+
+  /**
    * Determines whether two values differ using the supplied numeric tolerance.
    *
    * @param left the first value
@@ -57,7 +75,7 @@ final class ValueComparison {
       if (isNonFiniteFloatingPoint(value)) {
         return Double.hashCode(value.doubleValue())
       }
-      BigDecimal normalized = value.toBigDecimal().stripTrailingZeros()
+      BigDecimal normalized = normalizeKey(value) as BigDecimal
       // Groovy considers an integral numeric value equal to its matching Character
       // and one-character String. Character and String hash to the character code,
       // so use that hash for the Character range rather than BigDecimal.hashCode().

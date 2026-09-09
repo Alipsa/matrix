@@ -116,6 +116,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   static List<String> anonymousHeader(int ncols) {
+    if (ncols <= 0) {
+      return []
+    }
     (1..ncols).collect { ANONYMOUS_COLUMN_PREFIX + it }
   }
 
@@ -292,6 +295,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (int i = 0; i < ncol; i++) {
         columns << new Column()
       }
+    } else {
+      columns = new ArrayList<>(columns)
     }
 
     if (headerList == null) {
@@ -306,7 +311,8 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     if (dataTypes.size() > columns.size()) {
       int dataRowCount = columns.isEmpty() ? 0 : columns[0].size()
-      for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
+      int missing = dataTypes.size() - columns.size()
+      for (int i = 0; i < missing; i++) {
         columns.add(new ArrayList(Collections.nCopies(dataRowCount, null)))
       }
     }
@@ -750,6 +756,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
+    int lastColIdx = mColumns.size() - 1
+    if (columnNumber < 0 || columnNumber > lastColIdx) {
+      throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
+    }
     Column col = mColumns[columnNumber]
     Class updatedClass = null
     rows().eachWithIndex { row, idx ->
@@ -2222,7 +2232,11 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (columnIndex(name) >= 0) {
       return column(name)
     }
-    return getProperties().get(name)
+    Map<String, Object> properties = getProperties()
+    if (properties.containsKey(name)) {
+      return properties.get(name)
+    }
+    throw new MissingPropertyException(name, Matrix)
   }
 
   /**
@@ -2410,29 +2424,21 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columnNames the columns to sort by
    * @return this table (mutated), sorted in the order specified by the columns specified
    */
+  @SuppressWarnings('ImplementationAsType')
   Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE) {
     if (columnName !in columnNames()) {
       throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
     }
-    def comparator = new RowComparator(columnIndex(columnName))
-    // copy all the rows
-    List<Row> rows = this.rows()
-    Collections.sort(rows, comparator)
-    if (descending) {
-      Collections.reverse(rows)
-    }
-    updateValues(rows)
-    invalidateIndex()
-    return this
-    //return create(mName, mHeaders, rows as List<List>, mTypes)
+    LinkedHashMap<Integer, Boolean> sortCriteria = [(columnIndex(columnName)): descending]
+    return orderBy(new RowComparator(sortCriteria))
   }
 
 
   /**
    * Sort rows using the supplied column ordering.
    *
-   * The map key is the column name and the value indicates ascending (true)
-   * or descending (false) order. The map iteration order is respected.
+   * The map key is the column name and the value indicates ascending ({@link #ASC})
+   * or descending ({@link #DESC}) order. The map iteration order is respected.
    *
    * @param columnsAndDirection ordered map of column name to ascending flag
    * @return a matrix sorted according to the supplied columns
@@ -3741,7 +3747,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         } else if (k == 'caption') {
           caption = v
         } else {
-          sb.append(' ').append(k).append('="').append(v).append('"')
+          sb.append(' ').append(k).append('="').append(escapeHtml(v)).append('"')
         }
       }
     }
@@ -3856,14 +3862,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     StringBuilder sb = new StringBuilder()
     sb.append('| ')
-    sb.append(String.join(' | ', columnNames())).append(' |\n')
+    sb.append(String.join(' | ', columnNames().collect { escapeMarkdownCell(it) })).append(' |\n')
     sb.append('| ').append(String.join(' | ', alignment)).append(' |\n')
     StringBuilder rowBuilder = new StringBuilder()
     for (row in rows) {
       rowBuilder.setLength(0)
       List<String> values = []
       for (val in row) {
-        values << ValueConverter.asString(val)
+        values << escapeMarkdownCell(ValueConverter.asString(val))
       }
       rowBuilder.append(String.join(' | ', values))
       sb.append('| ')
@@ -3889,6 +3895,10 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     alignment
+  }
+
+  private static String escapeMarkdownCell(String value) {
+    value?.replace('|', '\\|')
   }
 
   private List<Row> rowsForRender(Integer numRows, boolean fromHead) {
@@ -3963,7 +3973,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix transpose(boolean includeHeaderAsRow = false) {
     def numCols = includeHeaderAsRow ? rowCount() + 1 : rowCount()
 
-    return transpose((1..numCols).collect { ANONYMOUS_COLUMN_PREFIX + it }, includeHeaderAsRow)
+    return transpose(anonymousHeader(numCols), includeHeaderAsRow)
   }
 
   /**

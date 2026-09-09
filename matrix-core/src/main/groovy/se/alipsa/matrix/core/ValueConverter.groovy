@@ -74,13 +74,15 @@ class ValueConverter {
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
       case BigDecimal -> (E) asBigDecimal(o, numberFormat)
+      case Boolean, boolean -> (E) asBoolean(o)
       case Double, double -> (E) asDouble(o, numberFormat)
       case Byte, byte -> (E) asByte(o)
       case Short, short -> (E) asShort(o)
       case Integer, int -> (E) asInteger(o)
       case Long, long -> (E) asLong(o)
       case BigInteger -> (E) asBigInteger(o)
-      case Float -> (E) asFloat(o)
+      case Float, float -> (E) asFloat(o)
+      case Character, char -> (E) o.asType(Character)
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
@@ -332,6 +334,9 @@ class ValueConverter {
     if (o instanceof Timestamp) {
       return o.toLocalDateTime()
     }
+    if (o instanceof UtilDate) {
+      return LocalDateTime.ofInstant(o.toInstant(), ZoneId.systemDefault())
+    }
     if (o instanceof Number) {
       return LocalDateTime.ofEpochSecond(o.toLong(), 0, OffsetDateTime.now().getOffset())
     }
@@ -355,15 +360,8 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.byteValue()
     }
-    try {
-      return (o as BigDecimal).byteValue()
-    } catch (NumberFormatException ignored) {
-      String val = asDecimalNumber(String.valueOf(o))
-      if (val.isBlank()) {
-        return null
-      }
-      return Byte.valueOf(val)
-    }
+    BigDecimal value = asBigDecimal(String.valueOf(o))
+    value?.byteValue()
   }
 
   static Short asShort(Object o, Short valueIfNull = null) {
@@ -373,15 +371,8 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.shortValue()
     }
-    try {
-      return (o as BigDecimal).shortValue()
-    } catch (NumberFormatException ignored) {
-      String val = asDecimalNumber(String.valueOf(o))
-      if (val.isBlank()) {
-        return null
-      }
-      return Short.valueOf(val)
-    }
+    BigDecimal value = asBigDecimal(String.valueOf(o))
+    value?.shortValue()
   }
 
   static Integer asInteger(Object o, Integer valueIfNull = null) {
@@ -399,11 +390,8 @@ class ValueConverter {
     } else if (strVal == FALSE_TEXT) {
       return 0
     }
-    String val = asDecimalNumber(strVal)
-    if (val.isBlank()) {
-      return null
-    }
-    return new BigDecimal(val).intValue()
+    BigDecimal value = asBigDecimal(strVal)
+    value?.intValue()
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
@@ -452,7 +440,7 @@ class ValueConverter {
     if (o instanceof CharSequence) {
       ParsePosition pos = new ParsePosition(0)
       String str = String.valueOf(o)
-      NumberFormat format = numberFormatOpt.length == 0 ? NumberFormat.getInstance() : numberFormatOpt[0]
+      NumberFormat format = numberFormatOpt.length == 0 ? NumberFormat.getInstance(Locale.ROOT) : numberFormatOpt[0]
       format.parse(str, pos)
       //  if, after parsing the string, the parser position is at the end of the string,
       //  we can safely assume that the entire string is numeric
@@ -634,6 +622,9 @@ class ValueConverter {
     if (o instanceof Date) {
       return new Timestamp(o.getTime())
     }
+    if (o instanceof UtilDate) {
+      return new Timestamp(o.getTime())
+    }
     if (o instanceof LocalDateTime) {
       return Timestamp.valueOf(o)
     }
@@ -655,6 +646,9 @@ class ValueConverter {
     }
     if (o instanceof Date) {
       return o
+    }
+    if (o instanceof UtilDate) {
+      return new Date(o.getTime())
     }
     if (o instanceof LocalDate) {
       return Date.valueOf(o)
@@ -745,7 +739,10 @@ class ValueConverter {
     // Some formats e.g. Sweden requires minus and throws an error on hyphen
     // Other formats e.g. US does the opposite
     // here we make sure hyphen and minus both mean the negative prefix
-    String neg = ((DecimalFormat)format).negativePrefix
+    if (!(format instanceof DecimalFormat)) {
+      return val
+    }
+    String neg = format.negativePrefix
     val.replace(S_HYPHEN, neg).replace(S_MINUS, neg)
   }
 

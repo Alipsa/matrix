@@ -740,4 +740,35 @@ UK,200'''
 
     assert !manual.hasIndex()
   }
+
+  @SuppressWarnings('SqlNoDataSourceInspection')
+  @Test
+  void testEmptyResultSetPreservesColumns() {
+    String dbUrl = "jdbc:h2:mem:empty_${System.nanoTime()}"
+    Matrix result = null
+
+    Sql.withInstance(dbUrl, 'sa', '', 'org.h2.Driver') { sql ->
+      sql.execute('create table EMPTY_RESULT (id integer, name varchar(20), amount decimal)')
+      sql.query('select * from EMPTY_RESULT') { rs ->
+        result = Matrix.builder().data(rs).build()
+      }
+    }
+
+    assertEquals(['ID', 'NAME', 'AMOUNT'], result.columnNames())
+    assertEquals(3, result.columnCount())
+    assertEquals(0, result.rowCount())
+  }
+
+  @Test
+  void testCsvStringRoundTripsLiteralRowDelimiters() {
+    Matrix original = Matrix.builder().data(a: [1, 2], b: ['x', 'y']).types(Integer, String).build()
+
+    ['|', '.'].each { String rowDelimiter ->
+      String csv = original.toCsvString(includeTypes: false, rowDelimiter: rowDelimiter)
+      Matrix restored = Matrix.builder().csvString(csv, [rowDelimiter: rowDelimiter]).build()
+
+      assertEquals(original.columnNames(), restored.columnNames())
+      assertEquals([['1', 'x'], ['2', 'y']], restored.rows()*.toList())
+    }
+  }
 }

@@ -16,7 +16,7 @@ class ColumnTest {
     // smaller
     assert c1 + [1, 2] == [2, 4, null, null]
     // larger
-    assert c1 + [1, 2, 3, 4, 5, 6] == [2, 4, 6, 8]
+    assertThrows(IllegalArgumentException) { c1 + [1, 2, 3, 4, 5, 6] }
 
     Column c2 = new Column([1, null, 3, 4])
     // equal size
@@ -24,7 +24,7 @@ class ColumnTest {
     // smaller
     assert c2 + [1, 2] == [2, null, null, null]
     // larger
-    assert c2 + [1, 2, 3, 4, 5, 6] == [2, null, 6, 8]
+    assertThrows(IllegalArgumentException) { c2 + [1, 2, 3, 4, 5, 6] }
 
     Column s1 = new Column(['1', '2', '3'])
     assert s1 + ['px', 'em', 'rem'] == ['1px', '2em', '3rem']
@@ -53,7 +53,7 @@ class ColumnTest {
     // smaller
     assert c1 - [0, 1] == [1, 1, null, null]
     // larger
-    assert c1 - [-1, 2, 2.1, 4.2, 5, 6] == [2, 0, 0.9, -0.2]
+    assertThrows(IllegalArgumentException) { c1 - [-1, 2, 2.1, 4.2, 5, 6] }
 
     Column c2 = new Column([1, null, 3, 4])
     // equal size
@@ -61,7 +61,7 @@ class ColumnTest {
     // smaller
     assert c2 - [2, 1] == [-1, null, null, null]
     // larger
-    assert c2 - [1, 2, 3, 4, 5, 6] == [0, null, 0, 0]
+    assertThrows(IllegalArgumentException) { c2 - [1, 2, 3, 4, 5, 6] }
 
     Column s1 = new Column(['100px', '2rem', 'fit-content'])
     assert s1 - ['px', 'rem', 'fit-'] == ['100', '2', 'content']
@@ -90,7 +90,7 @@ class ColumnTest {
     // smaller
     assert c1 * [1, 2] == [1, 4, null, null]
     // larger
-    assert c1 * [1, 2, 3, 4, 5, 6] == [1, 4, 9, 16]
+    assertThrows(IllegalArgumentException) { c1 * [1, 2, 3, 4, 5, 6] }
 
     Column c2 = new Column([1, null, 3, 4])
     // equal size
@@ -98,7 +98,7 @@ class ColumnTest {
     // smaller
     assert c2 * [1, 2] == [1, null, null, null]
     // larger
-    assert c2 * [1, 2, 3, 4, 5, 6] == [1, null, 9, 16]
+    assertThrows(IllegalArgumentException) { c2 * [1, 2, 3, 4, 5, 6] }
   }
 
   @Test
@@ -118,7 +118,7 @@ class ColumnTest {
     // smaller
     assert c1 / [2, 1] == [0.5, 2, null, null]
     // larger
-    assert c1 / [1, 2, 0.5, 10, 11, 12] == [1, 1, 6, 0.4]
+    assertThrows(IllegalArgumentException) { c1 / [1, 2, 0.5, 10, 11, 12] }
 
     Column c2 = new Column([1, null, 3, 4])
     // equal size
@@ -126,7 +126,7 @@ class ColumnTest {
     // smaller
     assert c2 / [1, 2] == [1, null, null, null]
     // larger
-    assert c2 / [0.5, 2, 2, 2, 1, 60] == [2, null, 1.5, 2]
+    assertThrows(IllegalArgumentException) { c2 / [0.5, 2, 2, 2, 1, 60] }
   }
 
   @Test
@@ -146,7 +146,7 @@ class ColumnTest {
     // smaller
     assert c1 ** [1, 2] == [1, 4, null, null]
     // larger
-    assert c1 ** [1, 2, 3, 4, 5, 6] == [1, 4, 27, 256]
+    assertThrows(IllegalArgumentException) { c1 ** [1, 2, 3, 4, 5, 6] }
 
     Column c2 = new Column([1, null, 3, 4])
     // equal size
@@ -154,7 +154,7 @@ class ColumnTest {
     // smaller
     assert c2 ** [1, 2] == [1, null, null, null]
     // larger
-    assert c2 ** [1, 2, 3, 4, 5, 6] == [1, null, 27, 256]
+    assertThrows(IllegalArgumentException) { c2 ** [1, 2, 3, 4, 5, 6] }
   }
 
   @Test
@@ -201,7 +201,15 @@ class ColumnTest {
   @Test
   void testSubList() {
     Column c = [1, 2, 3, 4] as Column
-    assert [1, 2, 3] == c.subList(0..2)
+    Column result = c.subList(0..2)
+    assert [1, 2, 3] == result
+    assert result instanceof Column
+    assertThrows(IllegalArgumentException) { c.subList(3..1) }
+  }
+
+  @Test
+  void testNamedCollectionConstructorDefaultsType() {
+    assertEquals(Object, new Column('values', [1, 2]).type)
   }
 
   @Test

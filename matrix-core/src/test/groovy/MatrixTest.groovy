@@ -3466,4 +3466,90 @@ class MatrixTest {
     assertEquals(4, result.rowCount())
     assertIterableEquals(['color', 'size'], result.columnNames())
   }
+
+  @Test
+  void testConstructorPadsEmptyColumnsWithoutMutatingInput() {
+    List<List> columns = []
+    Matrix matrix = new Matrix('empty', ['a', 'b', 'c', 'd', 'e'], columns, [String] * 5)
+
+    assertEquals(5, matrix.columnCount())
+    assertEquals(['a', 'b', 'c', 'd', 'e'], matrix.columnNames())
+    assertTrue(columns.isEmpty())
+
+    Matrix rowsMatrix = Matrix.builder()
+        .columnNames(['a', 'b', 'c', 'd', 'e'])
+        .rows([])
+        .types([String] * 5)
+        .build()
+    assertEquals(5, rowsMatrix.columnCount())
+  }
+
+  @Test
+  void testConvertStringColumnToBoolean() {
+    Matrix matrix = Matrix.builder().data(flag: ['false', 'no', 'yes', '0']).types(String).build()
+
+    matrix.convert('flag', Boolean)
+
+    assertEquals([false, false, true, false], matrix.column('flag'))
+    assertEquals(Boolean, matrix.type('flag'))
+  }
+
+  @Test
+  void testDescendingOrderByPreservesTieOrder() {
+    Matrix single = Matrix.builder().data(k: [1, 1, 2], id: ['A', 'B', 'C']).build()
+    Matrix mapped = single.clone()
+
+    single.orderBy('k', true)
+    mapped.orderBy(['k': Matrix.DESC] as LinkedHashMap<String, Boolean>)
+
+    assertEquals(['C', 'A', 'B'], single.column('id'))
+    assertEquals(mapped.rows(), single.rows())
+  }
+
+  @Test
+  void testCriteriaApplyRejectsInvalidColumnIndices() {
+    Matrix matrix = Matrix.builder().data(a: [1], b: [2]).build()
+
+    assertThrows(IndexOutOfBoundsException) { matrix.apply(-1, { true }) { it } }
+    assertThrows(IndexOutOfBoundsException) { matrix.apply(2, { true }) { it } }
+  }
+
+  @Test
+  void testHtmlEscapesAttributeValues() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    String html = matrix.toHtml([id: 'x" onload="alert(1)'])
+
+    assertTrue(html.startsWith('<table id="x&quot; onload=&quot;alert(1)">'))
+    assertFalse(html.contains(' id="x" onload='))
+  }
+
+  @Test
+  void testMarkdownEscapesPipes() {
+    Matrix matrix = Matrix.builder().data(['a|b': ['x|y']]).types(String).build()
+
+    String markdown = matrix.toMarkdown()
+
+    assertTrue(markdown.contains('| a\\|b |'))
+    assertTrue(markdown.contains('| x\\|y |'))
+  }
+
+  @Test
+  void testEmptyTransposeAndAnonymousHeaders() {
+    assertEquals([], Matrix.anonymousHeader(0))
+    assertEquals([], Matrix.anonymousHeader(-1))
+
+    Matrix matrix = Matrix.builder().columnNames(['a', 'b']).rows([]).types(String, String).build()
+    Matrix transposed = matrix.transpose()
+
+    assertEquals(0, transposed.columnCount())
+    assertEquals(0, transposed.rowCount())
+  }
+
+  @Test
+  void testUnknownPropertyThrows() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(MissingPropertyException) { matrix.rowCont }
+  }
 }

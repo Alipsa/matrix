@@ -150,6 +150,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   void putAt(List<Integer> rowColumn, T value) {
+    validateValue(value, "Value at row ${rowColumn[0]}, column ${rowColumn[1]}")
     def row = data.get(rowColumn[0])
     Integer column = rowColumn[1]
     row.set(column, value)
@@ -265,6 +266,10 @@ class Grid<T> implements Iterable<List<T>> {
     int rowCount = data.size()
     if (valSize != rowCount) {
       throw new IllegalArgumentException("Column values size ($valSize) must match row count ($rowCount)")
+    }
+    int width = establishedWidth()
+    if (column < 0 || column >= width) {
+      throw new IllegalArgumentException("Column index ($column) must be within grid width ($width)")
     }
     values.eachWithIndex { T value, int i ->
       validateValue(value, "Value at row $i")

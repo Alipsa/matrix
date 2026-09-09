@@ -33,7 +33,7 @@ class StatTest {
 
     Matrix table = Matrix.builder().columnNames(["v0", "v1", "v2"]).rows(matrix).build()
     List<BigDecimal> m2 = means(table, ["v1", "v2"])
-    assertIterableEquals(m, m2)
+    assertIterableEquals([mean(table.column('v1')), mean(table.column('v2'))], m2)
 
     Grid<Number> bar = new Grid<>([
         [12.0, 3.0, Math.PI],
@@ -201,7 +201,7 @@ class StatTest {
     assertEquals(2, vsByGears.rowCount(), "row count\n" + vsByGears.content())
     assertEquals(['0', '1'], vsByGears["vs"], vsByGears.content())
     assertEquals([12, 3], vsByGears["3"], vsByGears.content())
-    assertEquals([10, 2], vsByGears["4"], vsByGears.content())
+    assertEquals([2, 10], vsByGears["4"], vsByGears.content())
     assertEquals([4, 1], vsByGears["5"], vsByGears.content())
   }
 
@@ -583,5 +583,48 @@ class StatTest {
     ]
     assertIterableEquals([3.0g, null, 12.0g], means(rowList, [0, 1, 2]))
     assertIterableEquals([3 as BigDecimal, null, 12 as BigDecimal], medians(rowList, [0, 1, 2]))
+  }
+
+  @Test
+  void testFrequencyTableFillsMissingCategories() {
+    Matrix table = Matrix.builder().data(
+        group: ['a', 'a', 'b', 'b', 'b'],
+        value: ['x', 'y', 'y', 'z', 'z']
+    ).types(String, String).build()
+
+    Matrix result = frequency(table, 'group', 'value')
+
+    assertEquals(['x', 'y', 'z'], result.column('value'))
+    assertEquals([1, 1, 0], result.column('a'))
+    assertEquals([0, 1, 2], result.column('b'))
+  }
+
+  @Test
+  void testMeansUsesSamePrecisionAsMean() {
+    Matrix table = Matrix.builder().data(
+        doubles: [1.1d, 2.2d],
+        mixed: [1, 2.2d]
+    ).types(Double, Number).build()
+
+    assertEquals([mean(table.column('doubles')), mean(table.column('mixed'))],
+        means(table, ['doubles', 'mixed']))
+  }
+
+  @Test
+  void testEmptyCategorySummaryReportsNoValues() {
+    Column column = new Column('category', [], String)
+
+    Summary result = summary(column)
+
+    assertEquals(0, result.category['Number of unique values'])
+    assertEquals('no values', result.category['Most frequent'])
+  }
+
+  @Test
+  void testSumSkipsNonFiniteValues() {
+    List<?> values = [1, Double.NaN, Double.POSITIVE_INFINITY, 2]
+
+    assertEquals(3, sum(values))
+    assertEquals(3L, sum(values, Long))
   }
 }

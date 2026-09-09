@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import se.alipsa.matrix.core.util.ValueComparison
+
 /**
  * Join operations for combining matrices on one or more key columns.
  *
@@ -10,8 +12,9 @@ package se.alipsa.matrix.core
  * <p>One-to-many joins are fully supported: if a key in y has multiple matching
  * rows, each match produces a separate result row (cross product).</p>
  *
- * <p>Null key values compare equal to other null key values, matching common data
- * analysis merge behavior rather than SQL {@code NULL} semantics.</p>
+ * <p>Finite numeric keys compare by mathematical value across numeric runtime types.
+ * String keys do not match numeric keys. Null, NaN, and infinite key values never
+ * match, following SQL-style null semantics.</p>
  *
  * <p><b>Column name collisions:</b> if x already contains a column whose name ends
  * with {@code _y} (or {@code _x}) and a suffix is needed, the result may contain
@@ -154,7 +157,8 @@ class Joiner {
         ? new ResultColumns(names: x.columnNames(), types: x.types())
         : computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
 
-    Map<List<Object>, List<List<Object>>> yIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
+    JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
+    Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
 
     List<List<Object>> resultRows = []
     boolean needsMatchTracking = joinType == JoinType.RIGHT || joinType == JoinType.FULL
@@ -168,10 +172,10 @@ class Joiner {
     List<List<Object>> xAllCols = (0..<xColCount).collect { x.column(it) as List<Object> }
 
     (0..<xRowCount).each { int r ->
-      List<Object> key = extractFromCols(xKeyCols, r)
+      List<Object> key = normalizeJoinKey(extractFromCols(xKeyCols, r))
       List<Object> xRow = extractFromCols(xAllCols, r)
 
-      List<List<Object>> yMatches = yIndex.get(key)
+      List<List<Object>> yMatches = isMatchableKey(key) ? yIndex.get(key) : null
       if (yMatches != null) {
         if (joinType == JoinType.SEMI) {
           resultRows.add(xRow)
@@ -191,7 +195,7 @@ class Joiner {
     }
 
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
-      appendUnmatchedYRows(resultRows, yIndex, matchedYKeys,
+      appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
           xColCount, xKeyIndices, yKeyNames.size())
     }
 
@@ -205,6 +209,7 @@ class Joiner {
 
   private static void appendUnmatchedYRows(List<List<Object>> resultRows,
                                            Map<List<Object>, List<List<Object>>> yIndex,
+                                           Map<List<Object>, List<Object>> rawKeys,
                                            Set<List<Object>> matchedYKeys,
                                            int xColCount, List<Integer> xKeyIndices,
                                            int keyCount) {
@@ -215,7 +220,7 @@ class Joiner {
       yRows.each { List<Object> yVals ->
         List<Object> xRow = ([null] * xColCount) as List<Object>
         (0..<keyCount).each { int k ->
-          xRow.set(xKeyIndices[k], yKey[k])
+          xRow.set(xKeyIndices[k], rawKeys[yKey][k])
         }
         resultRows << xRow + yVals
       }
@@ -254,23 +259,43 @@ class Joiner {
     [xKeys, yKeys]
   }
 
-  private static Map<List<Object>, List<List<Object>>> buildIndex(
+  private static JoinIndex buildIndex(
       Matrix m, List<Integer> keyIndices, List<Integer> valueIndices) {
     Map<List<Object>, List<List<Object>>> index = [:]
+    Map<List<Object>, List<Object>> rawKeys = [:]
     int rowCount = m.rowCount()
     List<List<Object>> keyCols = keyIndices.collect { m.column(it) as List<Object> }
     List<List<Object>> valCols = valueIndices.collect { m.column(it) as List<Object> }
     (0..<rowCount).each { int r ->
-      List<Object> key = extractFromCols(keyCols, r)
+      List<Object> rawKey = extractFromCols(keyCols, r)
+      List<Object> key = normalizeJoinKey(rawKey)
+      rawKeys.putIfAbsent(key, rawKey)
       index.computeIfAbsent(key) { [] } << extractFromCols(valCols, r)
     }
-    index
+    new JoinIndex(rows: index, rawKeys: rawKeys)
   }
 
   private static List<Object> extractFromCols(List<List<Object>> cols, int row) {
     List<Object> result = new ArrayList<>(cols.size())
     cols.each { List<Object> col -> result.add(col[row]) }
     result
+  }
+
+  private static List<Object> normalizeJoinKey(List<Object> key) {
+    key.collect { ValueComparison.normalizeKey(it) }
+  }
+
+  private static boolean isMatchableKey(List<Object> key) {
+    key.every { Object value ->
+      if (value == null) {
+        return false
+      }
+      if (value instanceof Double || value instanceof Float) {
+        double number = value.doubleValue()
+        return !Double.isNaN(number) && !Double.isInfinite(number)
+      }
+      true
+    }
   }
 
   private static ResultColumns computeResultColumns(Matrix x, Matrix y,
@@ -310,6 +335,13 @@ class Joiner {
 
     List<String> names
     List<Class> types
+
+  }
+
+  private static class JoinIndex {
+
+    Map<List<Object>, List<List<Object>>> rows
+    Map<List<Object>, List<Object>> rawKeys
 
   }
 

@@ -54,6 +54,7 @@ class Column extends ArrayList {
   Column(String name, Collection c) {
     super(c)
     this.name = name
+    this.type = Object
   }
 
   Column(String name, Collection c, Class type) {
@@ -176,6 +177,9 @@ class Column extends ArrayList {
 
   @CompileDynamic
   private Column applyListOp(List list, Closure<Object> op) {
+    if (list.size() > size()) {
+      throw new IllegalArgumentException("Operand size (${list.size()}) cannot exceed column size (${size()})")
+    }
     Column result = newLike()
     def that = fill(list)
     this.eachWithIndex { it, idx ->
@@ -275,8 +279,13 @@ class Column extends ArrayList {
     that
   }
 
-  List subList(IntRange range) {
-    this.subList(range.min(), range.max() + 1)
+  Column subList(IntRange range) {
+    if (range.reverse) {
+      throw new IllegalArgumentException('Reverse ranges are not supported')
+    }
+    Column result = newLike()
+    result.addAll(super.subList(range.from, range.to + 1))
+    result
   }
 
   /**
