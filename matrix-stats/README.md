@@ -387,8 +387,9 @@ assert fixedLagResult.adfGlsResult.lags == 1
 selects a bounded lag with ADF-GLS modified AIC and applies it to both augmented tests; a positive
 lag from 1 through the sample-specific ADF bound is used exactly. KPSS selects its bandwidth
 independently. Input must be finite and non-constant. The composite result is all-or-nothing: if
-any component regression or stationarity statistic is undefined for the series, its descriptive
-`IllegalArgumentException` is propagated rather than returning a partial result.
+any component regression or stationarity statistic is undefined for the series, its
+`IllegalArgumentException` is propagated rather than returning a partial result. Component
+messages can contain lower-level regression diagnostics such as a singular-matrix location.
 
 ## Native Distributions
 

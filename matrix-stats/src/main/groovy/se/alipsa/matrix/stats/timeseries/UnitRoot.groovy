@@ -123,10 +123,8 @@ class UnitRoot {
           "for ${data.length} observations (got ${lags})"
       )
     }
-    for (double value : data) {
-      if (!Double.isFinite(value)) {
-        throw new IllegalArgumentException('Data contains non-finite values')
-      }
+    if (!TimeSeriesUtils.isFinite(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
     }
     if (!TimeSeriesUtils.hasVariation(data)) {
       throw new IllegalArgumentException('Data has no variation (constant series)')

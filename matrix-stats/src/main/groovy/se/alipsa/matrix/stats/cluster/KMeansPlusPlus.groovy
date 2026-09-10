@@ -108,7 +108,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *
  * // Examine cluster assignments
  * assignments.each { cp ->
- *     println "Point ${Arrays.toString(cp.point)} → Cluster ${cp.clusterId}"
+ *     double[] coordinates = cp.point // one defensive copy for this operation
+ *     println "Point ${Arrays.toString(coordinates)} → Cluster ${cp.clusterId}"
  * }
  *
  * // Get clusters as Matrix objects

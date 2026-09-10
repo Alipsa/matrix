@@ -21,6 +21,9 @@ final class TimeSeriesUtils {
   private static final int AUGMENTED_MATRIX_FACTOR = 2
   private static final String NON_EMPTY_MATRIX_MESSAGE = 'Matrix must contain at least one row and one column'
   private static final String RECTANGULAR_MATRIX_MESSAGE = 'Matrix rows must all have the same length'
+
+  @PackageScope
+  static final String NON_FINITE_DATA_MESSAGE = 'Data contains non-finite values'
   private static final Logger log = Logger.getLogger(TimeSeriesUtils)
 
   private TimeSeriesUtils() {
@@ -219,6 +222,22 @@ final class TimeSeriesUtils {
       }
     }
     Math.abs(maximum - minimum) >= 1e-10
+  }
+
+  /**
+   * Determines whether every value in a series is finite.
+   *
+   * @param values the values to inspect
+   * @return true when no value is NaN or positive or negative infinity
+   */
+  @PackageScope
+  static boolean isFinite(double[] values) {
+    for (double value : values) {
+      if (!Double.isFinite(value)) {
+        return false
+      }
+    }
+    true
   }
 
   private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {

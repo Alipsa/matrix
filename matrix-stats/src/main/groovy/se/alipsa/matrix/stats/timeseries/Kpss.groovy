@@ -35,6 +35,9 @@ class Kpss {
 
     int n = data.size()
     double[] y = data*.doubleValue() as double[]
+    if (!TimeSeriesUtils.isFinite(y)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
+    }
     if (!TimeSeriesUtils.hasVariation(y)) {
       throw new IllegalArgumentException('Data has no variation (constant series)')
     }
@@ -193,9 +196,6 @@ class Kpss {
     for (Number value : data) {
       if (value == null) {
         throw new IllegalArgumentException('Data contains null values')
-      }
-      if (!Double.isFinite(value.doubleValue())) {
-        throw new IllegalArgumentException('Data contains non-finite values')
       }
     }
     if (lags != null && (lags < 0 || lags >= data.size())) {

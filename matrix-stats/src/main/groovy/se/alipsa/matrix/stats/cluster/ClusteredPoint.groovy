@@ -46,7 +46,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *
  * // Examine each point's cluster
  * assignments.each { cp ->
- *     println "Point ${Arrays.toString(cp.point)} → Cluster ${cp.clusterId}"
+ *     double[] coordinates = cp.point // one defensive copy for this operation
+ *     println "Point ${Arrays.toString(coordinates)} → Cluster ${cp.clusterId}"
  * }
  *
  * // Find all points in cluster 0
@@ -57,7 +58,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * // Calculate cluster-specific statistics
  * Map&lt;Integer, Double&gt; clusterMeans = assignments.groupBy { it.clusterId }
  *     .collectEntries { clusterId, points ->
- *         double avgX = points.collect { it.point[0] }.sum() / points.size()
+ *         double avgX = points.collect { it.coordinate(0) }.sum() / points.size()
  *         [clusterId, avgX]
  *     }
  * </pre>
@@ -109,7 +110,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * double[][] centroids = clustering.getCentroids()
  * assignments.groupBy { it.clusterId }.each { clusterId, points ->
  *     ClusteredPoint closest = points.min { cp ->
- *         distance(cp.point, centroids[clusterId])
+ *         double[] coordinates = cp.point // cache the defensive copy within this operation
+ *         distance(coordinates, centroids[clusterId])
  *     }
  *     println "Representative of cluster $clusterId: ${Arrays.toString(closest.point)}"
  * }
@@ -130,15 +132,32 @@ class ClusteredPoint {
   final int clusterId
   private final double[] point
 
+  /**
+   * Creates a cluster assignment with a defensive copy of its coordinates.
+   *
+   * @param clusterId the zero-based cluster identifier
+   * @param point the point coordinates
+   * @throws IllegalArgumentException if point is null
+   */
   ClusteredPoint(int clusterId, double[] point) {
     this(clusterId, point, true)
   }
 
+  /**
+   * Creates a cluster assignment from numeric coordinates.
+   *
+   * @param clusterId the zero-based cluster identifier
+   * @param point the point coordinates
+   * @throws IllegalArgumentException if point is null, empty, or contains an invalid value
+   */
   ClusteredPoint(int clusterId, List<? extends Number> point) {
     this(clusterId, NumericConversion.toDoubleArray(point, POINT_LABEL), false)
   }
 
   private ClusteredPoint(int clusterId, double[] point, boolean defensiveCopy) {
+    if (point == null) {
+      throw new IllegalArgumentException('Point cannot be null')
+    }
     this.clusterId = clusterId
     this.point = defensiveCopy ? DoubleArrayUtils.copy(point) : point
   }
@@ -148,12 +167,37 @@ class ClusteredPoint {
     new ClusteredPoint(clusterId, point, false)
   }
 
+  /**
+   * Returns the zero-based cluster identifier.
+   *
+   * @return the cluster identifier
+   */
   int getClusterId() { clusterId }
+
+  /**
+   * Returns a defensive copy of the point coordinates. Cache the returned array when reading
+   * several coordinates in one operation to avoid repeated allocations.
+   *
+   * @return an independent copy of the point coordinates
+   */
   double[] getPoint() { DoubleArrayUtils.copy(point) }
+
+  /**
+   * Returns one coordinate without allocating a defensive array copy.
+   *
+   * @param index the zero-based coordinate index
+   * @return the coordinate value
+   */
+  double coordinate(int index) { point[index] }
 
   @PackageScope
   double[] internalPoint() { point }
 
+  /**
+   * Returns the coordinates as immutable decimal values.
+   *
+   * @return immutable decimal coordinates
+   */
   List<BigDecimal> getPointValues() {
     NumericConversion.toBigDecimalList(point, POINT_LABEL)
   }

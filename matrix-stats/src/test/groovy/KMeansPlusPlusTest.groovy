@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.assertSame
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -213,5 +214,19 @@ class KMeansPlusPlusTest {
     returned[1] = 99.0d
 
     assertArrayEquals([1.0d, 2.0d] as double[], point.point)
+    assertEquals(1.0d, point.coordinate(0))
+  }
+
+  @Test
+  void testClusteredPointRejectsNullCoordinates() {
+    IllegalArgumentException arrayException = assertThrows(IllegalArgumentException) {
+      new ClusteredPoint(3, null as double[])
+    }
+    assertEquals('Point cannot be null', arrayException.message)
+
+    IllegalArgumentException listException = assertThrows(IllegalArgumentException) {
+      new ClusteredPoint(3, null as List<Number>)
+    }
+    assertEquals('Point cannot be null', listException.message)
   }
 }

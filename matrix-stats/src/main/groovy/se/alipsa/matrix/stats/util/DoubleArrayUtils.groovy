@@ -13,8 +13,12 @@ final class DoubleArrayUtils {
    *
    * @param source the array to copy
    * @return an independent copy
+   * @throws IllegalArgumentException if source is null
    */
   static double[] copy(double[] source) {
+    if (source == null) {
+      throw new IllegalArgumentException('Source array cannot be null')
+    }
     Arrays.copyOf(source, source.length)
   }
 
@@ -23,10 +27,17 @@ final class DoubleArrayUtils {
    *
    * @param source the array to copy
    * @return an independent copy of the outer array and every row
+   * @throws IllegalArgumentException if source or any source row is null
    */
   static double[][] deepCopy(double[][] source) {
+    if (source == null) {
+      throw new IllegalArgumentException('Source matrix cannot be null')
+    }
     double[][] copy = new double[source.length][]
     for (int i = 0; i < source.length; i++) {
+      if (source[i] == null) {
+        throw new IllegalArgumentException("Source matrix row ${i} cannot be null")
+      }
       copy[i] = DoubleArrayUtils.copy(source[i])
     }
     copy
