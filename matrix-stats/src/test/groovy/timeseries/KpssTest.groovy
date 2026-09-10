@@ -160,6 +160,13 @@ class KpssTest {
       Kpss.test(data, 'level', 20)
     }
     assertEquals('Lags must be between 0 and 19, got: 20', excessive.message)
+
+    List<Double> nonFinite = (1..20).collect { int value -> value as double }
+    nonFinite[5] = Double.NaN
+    IllegalArgumentException lagBeforeFiniteness = assertThrows(IllegalArgumentException) {
+      Kpss.test(nonFinite, 'level', -1)
+    }
+    assertEquals('Lags must be between 0 and 19, got: -1', lagBeforeFiniteness.message)
   }
 
   @Test

@@ -39,7 +39,7 @@ class Kpss {
       throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
     }
     if (!TimeSeriesUtils.hasVariation(y)) {
-      throw new IllegalArgumentException('Data has no variation (constant series)')
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE)
     }
 
     int l

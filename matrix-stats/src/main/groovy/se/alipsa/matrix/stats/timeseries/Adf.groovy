@@ -33,8 +33,11 @@ class Adf {
     int n = data.size()
     double[] y = data*.doubleValue() as double[]
 
+    if (!TimeSeriesUtils.isFinite(y)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
+    }
     if (!TimeSeriesUtils.hasVariation(y)) {
-      throw new IllegalArgumentException('Data has no variation (constant series). Cannot perform ADF test.')
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE + '. Cannot perform ADF test.')
     }
 
     // Calculate first differences

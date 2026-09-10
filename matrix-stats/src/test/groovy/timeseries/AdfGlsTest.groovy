@@ -128,6 +128,12 @@ class AdfGlsTest {
     }
     assertEquals('Data has no variation (constant series)', constantException.message)
 
+    double[] nonFinite = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, Double.NEGATIVE_INFINITY] as double[]
+    IllegalArgumentException nonFiniteException = assertThrows(IllegalArgumentException) {
+      AdfGls.test(nonFinite, 0, 'drift')
+    }
+    assertEquals('Data contains non-finite values', nonFiniteException.message)
+
     // Invalid type
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as double[]
     assertThrows(IllegalArgumentException) {

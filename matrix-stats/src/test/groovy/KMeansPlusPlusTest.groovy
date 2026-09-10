@@ -215,6 +215,10 @@ class KMeansPlusPlusTest {
 
     assertArrayEquals([1.0d, 2.0d] as double[], point.point)
     assertEquals(1.0d, point.coordinate(0))
+    assertEquals(2, point.dimensions)
+    assertThrows(ArrayIndexOutOfBoundsException) {
+      point.coordinate(point.dimensions)
+    }
   }
 
   @Test

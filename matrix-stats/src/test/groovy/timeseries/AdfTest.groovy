@@ -232,6 +232,17 @@ class AdfTest {
   }
 
   @Test
+  void testNonFiniteSeriesValidation() {
+    List<Double> data = (1..12).collect { it as double }
+    data[5] = Double.POSITIVE_INFINITY
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Adf.test(data)
+    }
+    assertEquals('Data contains non-finite values', exception.message)
+  }
+
+  @Test
   void testEffectiveSize() {
     List<Double> data = []
     Random rnd = new Random(258)

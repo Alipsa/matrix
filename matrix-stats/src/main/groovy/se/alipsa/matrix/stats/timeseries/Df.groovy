@@ -69,6 +69,9 @@ class Df {
   static DfResult test(double[] data, String type = 'drift') {
     validateInput(data, type)
     int n = data.length
+    if (!TimeSeriesUtils.isFinite(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
+    }
     ensureVariation(data)
     double[] response = firstDifferences(data)
     int nObs = response.length
@@ -132,7 +135,7 @@ class Df {
 
   private static void ensureVariation(double[] data) {
     if (!TimeSeriesUtils.hasVariation(data)) {
-      throw new IllegalArgumentException('Data has no variation (constant series)')
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE)
     }
   }
 

@@ -96,7 +96,7 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * <ul>
  *   <li><strong>Defensive:</strong> Copies coordinates at public construction and access boundaries</li>
  *   <li><strong>Thread Safe:</strong> Immutable design allows safe concurrent access</li>
- *   <li><strong>Simple Accessors:</strong> Provides getClusterId() and getPoint() methods</li>
+ *   <li><strong>Simple Accessors:</strong> Provides cluster, dimension, scalar, and snapshot accessors</li>
  *   <li><strong>No Validation:</strong> Assumes valid inputs from KMeansPlusPlus algorithm</li>
  * </ul>
  *
@@ -110,8 +110,12 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * double[][] centroids = clustering.getCentroids()
  * assignments.groupBy { it.clusterId }.each { clusterId, points ->
  *     ClusteredPoint closest = points.min { cp ->
- *         double[] coordinates = cp.point // cache the defensive copy within this operation
- *         distance(coordinates, centroids[clusterId])
+ *         double squaredDistance = 0.0
+ *         for (int i = 0; i < cp.dimensions; i++) {
+ *             double delta = cp.coordinate(i) - centroids[clusterId][i]
+ *             squaredDistance += delta * delta
+ *         }
+ *         squaredDistance
  *     }
  *     println "Representative of cluster $clusterId: ${Arrays.toString(closest.point)}"
  * }
@@ -187,8 +191,16 @@ class ClusteredPoint {
    *
    * @param index the zero-based coordinate index
    * @return the coordinate value
+   * @throws ArrayIndexOutOfBoundsException if index is outside {@code 0 <= index < dimensions}
    */
   double coordinate(int index) { point[index] }
+
+  /**
+   * Returns the number of coordinates without allocating a defensive array copy.
+   *
+   * @return the point dimensionality
+   */
+  int getDimensions() { point.length }
 
   @PackageScope
   double[] internalPoint() { point }

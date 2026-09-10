@@ -24,6 +24,9 @@ final class TimeSeriesUtils {
 
   @PackageScope
   static final String NON_FINITE_DATA_MESSAGE = 'Data contains non-finite values'
+
+  @PackageScope
+  static final String CONSTANT_SERIES_MESSAGE = 'Data has no variation (constant series)'
   private static final Logger log = Logger.getLogger(TimeSeriesUtils)
 
   private TimeSeriesUtils() {

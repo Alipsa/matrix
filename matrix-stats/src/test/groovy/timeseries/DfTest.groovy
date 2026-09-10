@@ -114,6 +114,12 @@ class DfTest {
     }
     assertEquals('Data has no variation (constant series)', constantException.message)
 
+    double[] nonFinite = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, Double.NaN] as double[]
+    IllegalArgumentException nonFiniteException = assertThrows(IllegalArgumentException) {
+      Df.test(nonFinite, 'drift')
+    }
+    assertEquals('Data contains non-finite values', nonFiniteException.message)
+
     // Invalid type
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as double[]
     assertThrows(IllegalArgumentException) {

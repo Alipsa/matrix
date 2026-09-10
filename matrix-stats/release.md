@@ -11,9 +11,11 @@
 - Give direct KPSS calls descriptive failures for non-finite input, constant or perfectly trending data, and non-finite variance or statistic calculations instead of leaking numeric-conversion exceptions.
 - Prevent KPSS statistic-denominator overflow for samples of at least 46,341 observations.
 - Reject non-finite and constant data at the aggregate `UnitRoot` boundary before running component tests; component validation failures still abort the all-or-nothing aggregate result.
+- Reject non-finite data consistently in direct DF, ADF, and ADF-GLS calls with `IllegalArgumentException('Data contains non-finite values')` instead of allowing undefined statistics or downstream numeric failures.
 - Avoid a discarded ADF-GLS fit during automatic aggregate lag selection and clarify that null or zero selects automatically while explicit lags start at one.
 - Make `ClusteredPoint` coordinate access truly immutable and cache immutable K-means assignment views, avoiding repeated deep copies while retaining defensive result boundaries.
 - Reject null coordinates passed to the public `ClusteredPoint` constructors with a descriptive `IllegalArgumentException` instead of retaining null or leaking a utility-level `NullPointerException`.
+- Add allocation-free `ClusteredPoint.dimensions` and `coordinate(index)` access for callers that need to traverse coordinates without requesting a defensive point-array copy.
 - Validate referenced formula-environment vectors against the original matrix row count while ignoring unused environment entries.
 - Include variables nested in unary, arithmetic, and grouped formula expressions in validation, subset filtering, and NA handling. With `NaAction.OMIT`, affected matrix rows are now omitted instead of failing later during expression evaluation.
 - Hoist Grid row views in numeric conversion loops to avoid repeated checked-view allocations without changing conversion results.
