@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.System.Logger.Level;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -36,7 +37,12 @@ class MatrixLoggingSmokeTest {
   @Test
   void systemLoggerRoutesToSlf4jSimple() {
     String marker = "matrix-logging-system-logger-" + System.nanoTime();
-    System.getLogger(MatrixLoggingSmokeTest.class.getName()).log(Level.ERROR, marker);
+    System.Logger logger = System.getLogger(MatrixLoggingSmokeTest.class.getName());
+
+    assertEquals("org.slf4j.jdk.platform.logging.SLF4JPlatformLogger", logger.getClass().getName(),
+        "Expected System.Logger to be provided by slf4j-jdk-platform-logging");
+
+    logger.log(Level.ERROR, marker);
 
     assertTrue(captured.toString().contains(marker),
         "Expected System.Logger message to reach slf4j-simple via slf4j-jdk-platform-logging");
