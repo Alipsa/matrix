@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.util.NumericConversion
 
@@ -251,7 +253,8 @@ class AdfGls {
    * Select optimal number of lags using modified AIC (MAIC).
    * Following Ng and Perron (2001) recommendation.
    */
-  private static int selectLags(double[] data, String type) {
+  @PackageScope
+  static int selectLags(double[] data, String type) {
     int n = data.length
     int maxLags = Math.min(12, (int) Math.floor(12.0 * Math.pow(n / 100.0, 0.25)))
 

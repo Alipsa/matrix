@@ -385,7 +385,10 @@ assert fixedLagResult.adfGlsResult.lags == 1
 
 `UnitRoot.test(data, type = 'drift', lags = 0)` accepts `drift` or `trend`. A null or zero lag
 selects a bounded lag with ADF-GLS modified AIC and applies it to both augmented tests; a positive
-lag is used exactly. KPSS selects its bandwidth independently.
+lag from 1 through the sample-specific ADF bound is used exactly. KPSS selects its bandwidth
+independently. Input must be finite and non-constant. The composite result is all-or-nothing: if
+any component regression or stationarity statistic is undefined for the series, its descriptive
+`IllegalArgumentException` is propagated rather than returning a partial result.
 
 ## Native Distributions
 

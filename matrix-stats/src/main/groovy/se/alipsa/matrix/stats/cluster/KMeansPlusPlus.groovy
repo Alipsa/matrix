@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.cluster
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.DoubleArrayUtils
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -220,6 +221,7 @@ class KMeansPlusPlus {
   // output
   private double[][] centroids // position vectors of centroids                      dim(2): (k) by (number of channels)
   private ClusteredPoint[] assignment // assigns each point to nearest centroid [0, k-1]    dim(1): (number of pixels)
+  private List<ClusteredPoint> assignmentView
   private double wcss          // within-cluster sum-of-squares. Cost function to minimize
 
   // timing information
@@ -248,7 +250,7 @@ class KMeansPlusPlus {
 
     // use information from builder
     k = builder.k
-    points = copyMatrix(builder.points)
+    points = DoubleArrayUtils.deepCopy(builder.points)
     iterations = builder.iterations
     pp = builder.pp
     epsilon = builder.epsilon
@@ -485,14 +487,15 @@ class KMeansPlusPlus {
       if (wcss < bestWCSS) {
         bestWCSS = wcss
         bestCentroids = centroids
-        bestAssignment = snapshotAssignments(assignment)
+        bestAssignment = Arrays.copyOf(assignment, assignment.length)
       }
     }
 
     // keep info from best run
     wcss = bestWCSS
     centroids = bestCentroids
-    assignment = bestAssignment
+    assignment = snapshotAssignments(bestAssignment)
+    assignmentView = assignment.toList().asImmutable() as List<ClusteredPoint>
   }
 
 
@@ -531,7 +534,7 @@ class KMeansPlusPlus {
         }
       }
 
-      assignment[i] = new ClusteredPoint(minLocation, points[i])
+      assignment[i] = ClusteredPoint.internal(minLocation, points[i])
     }
 
   }
@@ -555,9 +558,10 @@ class KMeansPlusPlus {
     // Sum points assigned to each cluster
     for (ClusteredPoint cp : assignment) {
       int cid = cp.clusterId
+      double[] assignedPoint = cp.internalPoint()
       clustSize[cid]++
       for (int j = 0; j < n; j++) {
-        centroids[cid][j] += cp.point[j]
+        centroids[cid][j] += assignedPoint[j]
       }
     }
 
@@ -601,15 +605,15 @@ class KMeansPlusPlus {
    */
   private void basicRandSample() {
     centroids = new double[k][n]
-    double[][] copy = copyMatrix(points)
+    double[][] copy = Arrays.copyOf(points, points.length)
 
     int rand
     for (int i = 0; i < k; i++) {
       rand = random.nextInt(m - i)
       for (int j = 0; j < n; j++) {
-        centroids[i][j] = copy[rand][j]       // store chosen centroid
-        copy[rand][j] = copy[m - 1 - i][j]    // ensure sampling without replacement
+        centroids[i][j] = copy[rand][j]
       }
+      copy[rand] = copy[m - 1 - i]
     }
   }
 
@@ -768,7 +772,7 @@ class KMeansPlusPlus {
   private void calcWCSS() {
     double total = 0
     for (ClusteredPoint cp : assignment) {
-      total += distance(cp.point, centroids[cp.clusterId])
+      total += distance(cp.internalPoint(), centroids[cp.clusterId])
     }
     this.wcss = total
   }
@@ -783,7 +787,7 @@ class KMeansPlusPlus {
    * @return an array where each entry corresponds to a {@link ClusteredPoint} and its assigned cluster
    */
   ClusteredPoint[] getAssignment() {
-    snapshotAssignments(assignment)
+    Arrays.copyOf(assignment, assignment.length)
   }
 
   /**
@@ -792,7 +796,7 @@ class KMeansPlusPlus {
    * @return the clustered points
    */
   List<ClusteredPoint> getAssignments() {
-    snapshotAssignments(assignment).toList().asImmutable() as List<ClusteredPoint>
+    assignmentView
   }
 
   /**
@@ -808,7 +812,7 @@ class KMeansPlusPlus {
         clusterPoints = []
         grouped[cp.clusterId] = clusterPoints
       }
-      clusterPoints.add(cp.point)
+      clusterPoints.add(cp.internalPoint())
     }
 
     Map<Integer, Matrix> result = [:]
@@ -830,7 +834,7 @@ class KMeansPlusPlus {
    * where each centroid is represented as an array of doubles.
    */
   double[][] getCentroids() {
-    copyMatrix(centroids)
+    DoubleArrayUtils.deepCopy(centroids)
   }
 
   /**
@@ -842,21 +846,13 @@ class KMeansPlusPlus {
     NumericConversion.toBigDecimalRows(centroids, 'centroids')
   }
 
-  private static double[][] copyMatrix(double[][] source) {
-    double[][] copy = new double[source.length][]
-    for (int i = 0; i < source.length; i++) {
-      copy[i] = Arrays.copyOf(source[i], source[i].length)
-    }
-    copy
-  }
-
   private static ClusteredPoint[] snapshotAssignments(ClusteredPoint[] source) {
     ClusteredPoint[] copy = new ClusteredPoint[source.length]
     for (int i = 0; i < source.length; i++) {
       ClusteredPoint clusteredPoint = source[i]
       copy[i] = new ClusteredPoint(
         clusteredPoint.clusterId,
-        Arrays.copyOf(clusteredPoint.point, clusteredPoint.point.length)
+        clusteredPoint.internalPoint()
       )
     }
     copy

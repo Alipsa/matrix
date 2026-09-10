@@ -1,5 +1,8 @@
 package se.alipsa.matrix.stats.cluster
 
+import groovy.transform.PackageScope
+
+import se.alipsa.matrix.stats.util.DoubleArrayUtils
 import se.alipsa.matrix.stats.util.NumericConversion
 
 /**
@@ -7,8 +10,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  * in K-Means clustering. It pairs a cluster identifier with the point's feature vector.
  *
  * <p>This class is an immutable value object used internally by {@link KMeansPlusPlus} to store
- * cluster assignment results. Each ClusteredPoint contains the cluster ID (0 to k-1) and the
- * original n-dimensional point coordinates.</p>
+ * cluster assignment results. Each ClusteredPoint contains the cluster ID (0 to k-1) and an
+ * immutable snapshot of the original n-dimensional point coordinates.</p>
  *
  * <h3>What is a ClusteredPoint?</h3>
  * <p>In K-Means clustering, every data point is assigned to exactly one cluster. ClusteredPoint
@@ -84,13 +87,13 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *   a point [3.5, 2.1, 4.8] represents a 3-dimensional data point.</dd>
  *
  *   <dt><strong>Immutability</strong></dt>
- *   <dd>ClusteredPoint is immutable by design (final fields). Once created, the cluster
- *   assignment and point coordinates cannot be changed, ensuring thread safety.</dd>
+ *   <dd>ClusteredPoint is immutable by design. It copies input coordinates and returns a copy
+ *   from getPoint(), so neither the cluster assignment nor stored coordinates can be changed.</dd>
  * </dl>
  *
  * <h3>Implementation Details</h3>
  * <ul>
- *   <li><strong>Memory Efficient:</strong> Stores only clusterId (int) and point reference (double[])</li>
+ *   <li><strong>Defensive:</strong> Copies coordinates at public construction and access boundaries</li>
  *   <li><strong>Thread Safe:</strong> Immutable design allows safe concurrent access</li>
  *   <li><strong>Simple Accessors:</strong> Provides getClusterId() and getPoint() methods</li>
  *   <li><strong>No Validation:</strong> Assumes valid inputs from KMeansPlusPlus algorithm</li>
@@ -125,19 +128,31 @@ class ClusteredPoint {
   private static final String POINT_LABEL = 'point'
 
   final int clusterId
-  final double[] point
+  private final double[] point
 
   ClusteredPoint(int clusterId, double[] point) {
-    this.clusterId = clusterId
-    this.point = point
+    this(clusterId, point, true)
   }
 
   ClusteredPoint(int clusterId, List<? extends Number> point) {
-    this(clusterId, NumericConversion.toDoubleArray(point, POINT_LABEL))
+    this(clusterId, NumericConversion.toDoubleArray(point, POINT_LABEL), false)
+  }
+
+  private ClusteredPoint(int clusterId, double[] point, boolean defensiveCopy) {
+    this.clusterId = clusterId
+    this.point = defensiveCopy ? DoubleArrayUtils.copy(point) : point
+  }
+
+  @PackageScope
+  static ClusteredPoint internal(int clusterId, double[] point) {
+    new ClusteredPoint(clusterId, point, false)
   }
 
   int getClusterId() { clusterId }
-  double[] getPoint() { point }
+  double[] getPoint() { DoubleArrayUtils.copy(point) }
+
+  @PackageScope
+  double[] internalPoint() { point }
 
   List<BigDecimal> getPointValues() {
     NumericConversion.toBigDecimalList(point, POINT_LABEL)

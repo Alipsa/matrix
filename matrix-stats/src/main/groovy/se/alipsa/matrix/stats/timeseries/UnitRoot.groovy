@@ -100,7 +100,9 @@ class UnitRoot {
    *             modified-AIC selection; a positive value is used exactly. KPSS selects its
    *             bandwidth independently.
    * @return UnitRootResult containing results from all tests
-   * @throws IllegalArgumentException if data, type, or lags are invalid
+   * @throws IllegalArgumentException if data, type, or lags are invalid, or any component test
+   *                                  is undefined for the supplied series. The composite result is
+   *                                  all-or-nothing and does not suppress component validation failures.
    */
   static UnitRootResult test(double[] data, String type = 'drift', Integer lags = 0) {
     if (data == null) {
@@ -114,12 +116,20 @@ class UnitRoot {
     if (!(type in ['drift', 'trend'])) {
       throw new IllegalArgumentException("Type must be 'drift' or 'trend' (got '${type}')")
     }
-
     int maxAdfLag = [data.length.intdiv(3), data.length - 11].min()
     if (lags != null && (lags < 0 || lags > maxAdfLag)) {
       throw new IllegalArgumentException(
-        "Lags must be between 0 and ${maxAdfLag} for ${data.length} observations (got ${lags})"
+        "Lags must be null or zero for automatic selection, or between 1 and ${maxAdfLag} " +
+          "for ${data.length} observations (got ${lags})"
       )
+    }
+    for (double value : data) {
+      if (!Double.isFinite(value)) {
+        throw new IllegalArgumentException('Data contains non-finite values')
+      }
+    }
+    if (!TimeSeriesUtils.hasVariation(data)) {
+      throw new IllegalArgumentException('Data has no variation (constant series)')
     }
 
     // Convert to List for test methods
@@ -133,9 +143,9 @@ class UnitRoot {
     int selectedLag
     AdfGls.AdfGlsResult adfGlsResult
     if (lags == null || lags == 0) {
-      AdfGls.AdfGlsResult candidate = AdfGls.test(dataList, null, type)
-      selectedLag = [candidate.lags, maxAdfLag].min()
-      adfGlsResult = selectedLag == candidate.lags ? candidate : AdfGls.test(dataList, selectedLag, type)
+      int candidateLag = AdfGls.selectLags(data, type)
+      selectedLag = [candidateLag, maxAdfLag].min()
+      adfGlsResult = AdfGls.test(dataList, selectedLag, type)
     } else {
       selectedLag = lags
       adfGlsResult = AdfGls.test(dataList, selectedLag, type)

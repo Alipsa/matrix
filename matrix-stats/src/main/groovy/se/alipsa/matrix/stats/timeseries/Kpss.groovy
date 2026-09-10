@@ -74,7 +74,7 @@ class Kpss {
     }
 
     // Calculate KPSS statistic
-    double kpssStatistic = sumOfSquaredPartialSums / (n * n * longRunVariance)
+    double kpssStatistic = sumOfSquaredPartialSums / ((double) n * n * longRunVariance)
     if (!Double.isFinite(kpssStatistic)) {
       throw new IllegalArgumentException('KPSS calculation produced a non-finite statistic')
     }

@@ -192,11 +192,21 @@ class KpssTest {
     }
     assertEquals('KPSS calculation produced a non-finite long-run variance', varianceException.message)
 
-    List<Double> statisticOverflow = [*([3e153d] * 6), *([-3e153d] * 6)] as List<Double>
+    List<Double> statisticOverflow = [*([3e153d] * 6), *([-3e153d] * 6)]
     IllegalArgumentException statisticException = assertThrows(IllegalArgumentException) {
       Kpss.test(statisticOverflow, 'level', 0)
     }
     assertEquals('KPSS calculation produced a non-finite statistic', statisticException.message)
+  }
+
+  @Test
+  void testLargeSampleStatisticDenominatorDoesNotOverflow() {
+    List<Integer> data = (0..<50_000).collect { int index -> index % 11 }
+
+    def result = Kpss.test(data, 'level', 0)
+
+    assertTrue(result.statistic >= 0G)
+    assertTrue(result.statistic < 1G)
   }
 
   @Test

@@ -3,11 +3,13 @@ import static KMeansTestData.gaussianClusters
 import static org.junit.jupiter.api.Assertions.assertArrayEquals
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotSame
+import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.cluster.ClusteredPoint
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 
@@ -135,7 +137,7 @@ class KMeansPlusPlusTest {
       assertArrayEquals(original[i], points[i])
     }
     assertEquals(
-      original.collect { double[] row -> row.toList() }.countBy { it },
+      original*.toList().countBy { it },
       clustering.assignment.collect { it.point.toList() }.countBy { it }
     )
   }
@@ -180,6 +182,10 @@ class KMeansPlusPlusTest {
     assignment[0].point[0] = 999.0
 
     assertEquals(assignedValue, clustering.assignment[0].point[0])
+    int assignedCluster = assignment[0].clusterId
+    assignment[0] = new ClusteredPoint(999, [999.0d, 999.0d] as double[])
+    assertEquals(assignedCluster, clustering.assignment[0].clusterId)
+    assertSame(clustering.assignments, clustering.assignments)
     for (int i = 0; i < points.length; i++) {
       assertArrayEquals(original[i], points[i])
     }
@@ -195,5 +201,17 @@ class KMeansPlusPlusTest {
       assertNotSame(centroids[i], centroidsAgain[i])
       assertArrayEquals(expectedCentroids[i], centroidsAgain[i])
     }
+  }
+
+  @Test
+  void testClusteredPointIsImmutableAtPublicBoundaries() {
+    double[] source = [1.0d, 2.0d] as double[]
+    ClusteredPoint point = new ClusteredPoint(3, source)
+
+    source[0] = 99.0d
+    double[] returned = point.point
+    returned[1] = 99.0d
+
+    assertArrayEquals([1.0d, 2.0d] as double[], point.point)
   }
 }

@@ -164,12 +164,25 @@ class UnitRootTest {
     IllegalArgumentException negativeLags = assertThrows(IllegalArgumentException) {
       UnitRoot.test(data, 'drift', -1)
     }
-    assertTrue(negativeLags.message.contains('Lags must be between 0'))
+    assertTrue(negativeLags.message.contains('null or zero for automatic selection'))
+    assertTrue(negativeLags.message.contains('between 1 and'))
 
     IllegalArgumentException excessiveLags = assertThrows(IllegalArgumentException) {
       UnitRoot.test(data, 'drift', 40)
     }
-    assertTrue(excessiveLags.message.contains('Lags must be between 0'))
+    assertTrue(excessiveLags.message.contains('null or zero for automatic selection'))
+
+    double[] nonFinite = data.clone() as double[]
+    nonFinite[3] = Double.NaN
+    IllegalArgumentException nonFiniteData = assertThrows(IllegalArgumentException) {
+      UnitRoot.test(nonFinite)
+    }
+    assertEquals('Data contains non-finite values', nonFiniteData.message)
+
+    IllegalArgumentException constantData = assertThrows(IllegalArgumentException) {
+      UnitRoot.test(([3.0d] * 20) as double[])
+    }
+    assertEquals('Data has no variation (constant series)', constantData.message)
 
     IllegalArgumentException wrapperMinimum = assertThrows(IllegalArgumentException) {
       UnitRoot.test((1..11) as double[])
@@ -181,6 +194,15 @@ class UnitRootTest {
     double[] minData = (1..15).collect { it + rnd.nextGaussian() * 0.5 } as double[]
     def result = UnitRoot.test(minData)
     assertNotNull(result)
+  }
+
+  @Test
+  void testCompositeFailsWhenAComponentIsUndefined() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      UnitRoot.test((1..20) as double[], 'trend', 1)
+    }
+
+    assertEquals('Singular matrix at column 2 - cannot solve linear system', exception.message)
   }
 
   @Test

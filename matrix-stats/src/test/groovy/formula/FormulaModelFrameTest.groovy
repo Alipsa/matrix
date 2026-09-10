@@ -727,7 +727,7 @@ class FormulaModelFrameTest {
       ModelFrame.of('y ~ I(a + typo)', data).evaluate()
     }
 
-    assertEquals("Unknown variable(s) in formula: [typo]. Available columns: [y, a]", exception.message)
+    assertEquals('Unknown variable(s) in formula: [typo]. Available columns: [y, a]', exception.message)
   }
 
   @Test

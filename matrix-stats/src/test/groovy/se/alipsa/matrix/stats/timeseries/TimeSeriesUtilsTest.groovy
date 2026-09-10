@@ -17,6 +17,21 @@ import se.alipsa.matrix.stats.util.LeastSquaresKernel
 class TimeSeriesUtilsTest {
 
   @Test
+  void adfGlsLagSelectionCanBeAppliedBeforeTheFinalFit() {
+    Random random = new Random(999)
+    double[] data = new double[100]
+    data[0] = random.nextGaussian()
+    data[1] = random.nextGaussian()
+    for (int i = 2; i < data.length; i++) {
+      data[i] = 1.2d * data[i - 1] - 0.45d * data[i - 2] + random.nextGaussian()
+    }
+
+    int selectedLag = AdfGls.selectLags(data, 'drift')
+
+    assertEquals(selectedLag, AdfGls.test(data, selectedLag, 'drift').lags)
+  }
+
+  @Test
   void hasVariationUsesSharedRangeThreshold() {
     assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d] as double[]))
     assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 0.5e-10d] as double[]))
