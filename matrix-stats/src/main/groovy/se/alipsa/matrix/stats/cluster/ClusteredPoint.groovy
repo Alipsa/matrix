@@ -97,7 +97,8 @@ import se.alipsa.matrix.stats.util.NumericConversion
  *   <li><strong>Defensive:</strong> Copies coordinates at public construction and access boundaries</li>
  *   <li><strong>Thread Safe:</strong> Immutable design allows safe concurrent access</li>
  *   <li><strong>Simple Accessors:</strong> Provides cluster, dimension, scalar, and snapshot accessors</li>
- *   <li><strong>No Validation:</strong> Assumes valid inputs from KMeansPlusPlus algorithm</li>
+ *   <li><strong>Validated:</strong> Public constructors reject null, empty, or non-finite coordinates;
+ *   the package-scoped {@code internal} factory skips copying for the clustering hot path</li>
  * </ul>
  *
  * <h3>Common Patterns</h3>

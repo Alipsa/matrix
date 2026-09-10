@@ -37,7 +37,7 @@ class Adf {
       throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
     }
     if (!TimeSeriesUtils.hasVariation(y)) {
-      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE + '. Cannot perform ADF test.')
+      throw new IllegalArgumentException("${TimeSeriesUtils.CONSTANT_SERIES_MESSAGE}. Cannot perform ADF test.")
     }
 
     // Calculate first differences
