@@ -249,7 +249,20 @@ def frame = ModelFrame.of('y ~ x + group', data)
 def lm = FitRegistry.instance().get('lm').fit(frame)
 assert lm.fittedValues.length == data.rowCount()
 assert lm.fittedList.size() == data.rowCount()
+
+// Environment vectors are aligned with the original data rows, before subset and NA handling.
+def externalFrame = ModelFrame.of('y ~ I(exposure + adjustment)', data)
+    .environment([
+        exposure: [1.0, 2.0, 3.0, 4.0],
+        adjustment: [0.1, 0.2, 0.3, 0.4]
+    ])
+    .evaluate()
+assert externalFrame.data.rowCount() == data.rowCount()
 ```
+
+Every environment variable referenced by the formula must provide exactly one value per original
+data row. This also applies inside unary, arithmetic, grouped, and transformed expressions. Extra
+environment entries that the formula does not reference are ignored.
 
 Supported fit methods through `FitRegistry`:
 
@@ -359,11 +372,20 @@ assert paired.n1 == 4
 import se.alipsa.matrix.stats.timeseries.UnitRoot
 
 def series = [1.2, 1.5, 1.3, 1.6, 1.4, 1.7, 1.5, 1.8, 1.6, 1.9, 1.7, 2.0]
-def result = UnitRoot.test(series, 'drift')
+def result = UnitRoot.test(series, 'drift', 0)
 
 println(result.summary())
 println(result.isStationary() ? 'Stationary' : 'Needs differencing')
+
+// A positive lag is used exactly by both ADF and ADF-GLS.
+def fixedLagResult = UnitRoot.test(series, 'trend', 1)
+assert fixedLagResult.adfResult.lag == 1
+assert fixedLagResult.adfGlsResult.lags == 1
 ```
+
+`UnitRoot.test(data, type = 'drift', lags = 0)` accepts `drift` or `trend`. A null or zero lag
+selects a bounded lag with ADF-GLS modified AIC and applies it to both augmented tests; a positive
+lag is used exactly. KPSS selects its bandwidth independently.
 
 ## Native Distributions
 
@@ -437,6 +459,9 @@ Matrix clustered = new KMeans(normalized).fit(['x', 'y'], 2, 20, 'cluster', fals
 
 assert clustered.columnNames().contains('cluster')
 ```
+
+The lower-level `KMeansPlusPlus` API copies input observations and returns defensive assignment and
+centroid snapshots. Mutating those returned arrays does not change the input or fitted model.
 
 ## More Documentation
 

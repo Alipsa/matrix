@@ -248,7 +248,7 @@ class KMeansPlusPlus {
 
     // use information from builder
     k = builder.k
-    points = builder.points
+    points = copyMatrix(builder.points)
     iterations = builder.iterations
     pp = builder.pp
     epsilon = builder.epsilon
@@ -485,7 +485,7 @@ class KMeansPlusPlus {
       if (wcss < bestWCSS) {
         bestWCSS = wcss
         bestCentroids = centroids
-        bestAssignment = assignment
+        bestAssignment = snapshotAssignments(assignment)
       }
     }
 
@@ -601,7 +601,7 @@ class KMeansPlusPlus {
    */
   private void basicRandSample() {
     centroids = new double[k][n]
-    double[][] copy = points
+    double[][] copy = copyMatrix(points)
 
     int rand
     for (int i = 0; i < k; i++) {
@@ -783,7 +783,7 @@ class KMeansPlusPlus {
    * @return an array where each entry corresponds to a {@link ClusteredPoint} and its assigned cluster
    */
   ClusteredPoint[] getAssignment() {
-    assignment
+    snapshotAssignments(assignment)
   }
 
   /**
@@ -792,7 +792,7 @@ class KMeansPlusPlus {
    * @return the clustered points
    */
   List<ClusteredPoint> getAssignments() {
-    assignment.toList().asImmutable() as List<ClusteredPoint>
+    snapshotAssignments(assignment).toList().asImmutable() as List<ClusteredPoint>
   }
 
   /**
@@ -830,7 +830,7 @@ class KMeansPlusPlus {
    * where each centroid is represented as an array of doubles.
    */
   double[][] getCentroids() {
-    centroids
+    copyMatrix(centroids)
   }
 
   /**
@@ -840,6 +840,26 @@ class KMeansPlusPlus {
    */
   List<List<BigDecimal>> getCentroidValues() {
     NumericConversion.toBigDecimalRows(centroids, 'centroids')
+  }
+
+  private static double[][] copyMatrix(double[][] source) {
+    double[][] copy = new double[source.length][]
+    for (int i = 0; i < source.length; i++) {
+      copy[i] = Arrays.copyOf(source[i], source[i].length)
+    }
+    copy
+  }
+
+  private static ClusteredPoint[] snapshotAssignments(ClusteredPoint[] source) {
+    ClusteredPoint[] copy = new ClusteredPoint[source.length]
+    for (int i = 0; i < source.length; i++) {
+      ClusteredPoint clusteredPoint = source[i]
+      copy[i] = new ClusteredPoint(
+        clusteredPoint.clusterId,
+        Arrays.copyOf(clusteredPoint.point, clusteredPoint.point.length)
+      )
+    }
+    copy
   }
 
   /**

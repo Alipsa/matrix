@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.stats.timeseries.AdfGls
 import se.alipsa.matrix.stats.timeseries.UnitRoot
 
 /**
@@ -81,12 +82,16 @@ class UnitRootTest {
       data[i] = rnd.nextGaussian()
     }
 
-    // Note: Skip 'none' type since ADF-GLS doesn't support it
     def resultDrift = UnitRoot.test(data, 'drift')
     def resultTrend = UnitRoot.test(data, 'trend')
 
     assertEquals('drift', resultDrift.type)
     assertEquals('trend', resultTrend.type)
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      UnitRoot.test(data, 'none')
+    }
+    assertEquals("Type must be 'drift' or 'trend' (got 'none')", exception.message)
   }
 
   @Test
@@ -109,18 +114,33 @@ class UnitRootTest {
   void testAutoLagSelection() {
     Random rnd = new Random(999)
     double[] data = new double[100]
-    for (int i = 0; i < 100; i++) {
-      data[i] = rnd.nextGaussian()
+    data[0] = rnd.nextGaussian()
+    data[1] = rnd.nextGaussian()
+    for (int i = 2; i < 100; i++) {
+      data[i] = 1.2d * data[i - 1] - 0.45d * data[i - 2] + rnd.nextGaussian()
     }
 
-    def result = UnitRoot.test(data, 'drift', 0)  // 0 means auto-select
+    def zeroResult = UnitRoot.test(data, 'drift', 0)
+    def nullResult = UnitRoot.test(data, 'drift', null)
+    int candidateLag = AdfGls.test(data, null, 'drift').lags
+    assertEquals(1, candidateLag)
+    int expectedLag = [candidateLag, data.length.intdiv(3), data.length - 11].min()
 
-    assertNotNull(result)
-    // Auto-selected lags should be reasonable (ADF uses 'lag' singular)
-    assertTrue(result.adfResult.lag >= 0)
-    assertTrue(result.adfResult.lag <= 10)
-    assertTrue(result.adfGlsResult.lags >= 0)
-    assertTrue(result.adfGlsResult.lags <= 10)
+    assertEquals(expectedLag, zeroResult.adfResult.lag)
+    assertEquals(expectedLag, zeroResult.adfGlsResult.lags)
+    assertEquals(expectedLag, nullResult.adfResult.lag)
+    assertEquals(expectedLag, nullResult.adfGlsResult.lags)
+  }
+
+  @Test
+  void testAutoLagSelectionIsBoundedForSmallSamples() {
+    Random random = new Random(313)
+    double[] data = (1..15).collect { int ignored -> random.nextGaussian() } as double[]
+
+    def result = UnitRoot.test(data, 'drift', 0)
+
+    assertTrue(result.adfResult.lag <= 4)
+    assertEquals(result.adfResult.lag, result.adfGlsResult.lags)
   }
 
   @Test
@@ -140,6 +160,21 @@ class UnitRootTest {
     assertThrows(IllegalArgumentException) {
       UnitRoot.test(data, 'invalid')
     }
+
+    IllegalArgumentException negativeLags = assertThrows(IllegalArgumentException) {
+      UnitRoot.test(data, 'drift', -1)
+    }
+    assertTrue(negativeLags.message.contains('Lags must be between 0'))
+
+    IllegalArgumentException excessiveLags = assertThrows(IllegalArgumentException) {
+      UnitRoot.test(data, 'drift', 40)
+    }
+    assertTrue(excessiveLags.message.contains('Lags must be between 0'))
+
+    IllegalArgumentException wrapperMinimum = assertThrows(IllegalArgumentException) {
+      UnitRoot.test((1..11) as double[])
+    }
+    assertEquals('Need at least 12 observations for unit root tests (got 11)', wrapperMinimum.message)
 
     // Minimum valid size (need at least 12 for ADF, must have variation in first differences)
     Random rnd = new Random(42)

@@ -167,4 +167,20 @@ class AccuracyTest {
     BigDecimal r2 = Accuracy.r2(actuals, preds)
     assertEquals(1.0, r2 as double, 0.001 as double, 'R² should be 1 when all actuals are constant and predicted perfectly')
   }
+
+  @Test
+  void testR2ConstantActualsWithImperfectPredictions() {
+    assertEquals(0G, Accuracy.r2([25, 25, 25], [0, 0, 0]))
+  }
+
+  @Test
+  void testR2RecognizesHighPrecisionAndMixedScaleConstants() {
+    List<BigDecimal> highPrecision = [
+      25.12345678901234567G,
+      25.12345678901234567G,
+      25.12345678901234567G
+    ]
+    assertEquals(0G, Accuracy.r2(highPrecision, [0, 0, 0]))
+    assertEquals(1G, Accuracy.r2([25.0G, 25.00G, 25G], [25G, 25.000G, 25.00G]))
+  }
 }

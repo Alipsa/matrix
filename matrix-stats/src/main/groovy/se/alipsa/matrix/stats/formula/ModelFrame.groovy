@@ -197,6 +197,9 @@ final class ModelFrame {
 
   /**
    * Sets an optional environment for resolving variables not found in data.
+   * Referenced environment vectors, including variables nested in unary, binary, or grouped
+   * expressions, must contain one value per original data row before subset and NA handling.
+   * Environment entries not referenced by the formula are ignored.
    *
    * @param env map of variable name to column values
    * @return this builder
@@ -277,8 +280,9 @@ final class ModelFrame {
     validateResponseColumn(responseName)
 
     // Stage 4: Validate all predictor variables
-    List<String> variableNames = collectVariableNames(normalized)
-    validateVariables(variableNames)
+    List<String> referencedVariables = collectVariableNames(normalized)
+    validateVariables(referencedVariables)
+    Set<String> referencedEnvVariables = resolveReferencedEnvironmentVariables(referencedVariables)
 
     // Extract weights/offset from data columns
     List<Number> resolvedWeights = resolveWeights()
@@ -293,7 +297,7 @@ final class ModelFrame {
 
     // Stage 6: NA handling (include weights/offset columns so nulls there are handled)
     List<String> allFormulaColumns = [responseName]
-    allFormulaColumns.addAll(variableNames)
+    allFormulaColumns.addAll(referencedVariables)
     if (weightsColumn != null) {
       allFormulaColumns << weightsColumn
     }
@@ -307,7 +311,11 @@ final class ModelFrame {
     // Filter weights/offset/env to surviving original row indices
     resolvedWeights = filterToSurvivors(resolvedWeights, naResult.survivingIndices)
     resolvedOffset = filterToSurvivors(resolvedOffset, naResult.survivingIndices)
-    Map<String, List<?>> filteredEnv = filterEnvToSurvivors(env, naResult.survivingIndices)
+    Map<String, List<?>> filteredEnv = filterEnvironment(
+      env,
+      referencedEnvVariables,
+      naResult.survivingIndices
+    )
 
     // Handle nulls in list-based weights/offset (column-based nulls are already handled above)
     Set<Integer> listNullRows = findNullIndices(resolvedWeights, resolvedOffset)
@@ -322,7 +330,7 @@ final class ModelFrame {
       working = working.subset(kept)
       resolvedWeights = filterByIndices(resolvedWeights, kept)
       resolvedOffset = filterByIndices(resolvedOffset, kept)
-      filteredEnv = filterEnvByIndices(filteredEnv, kept)
+      filteredEnv = filterEnvironment(filteredEnv, referencedEnvVariables, kept)
     }
 
     // Validate non-empty
@@ -491,9 +499,16 @@ final class ModelFrame {
 
   private static void collectVariableNamesFromExpression(FormulaExpression expression, Set<String> names) {
     if (expression instanceof FormulaExpression.Variable) {
-      names << (expression as FormulaExpression.Variable).name
+      names << expression.name
+    } else if (expression instanceof FormulaExpression.Unary) {
+      collectVariableNamesFromExpression(expression.expression, names)
+    } else if (expression instanceof FormulaExpression.Binary) {
+      collectVariableNamesFromExpression(expression.left, names)
+      collectVariableNamesFromExpression(expression.right, names)
+    } else if (expression instanceof FormulaExpression.Grouping) {
+      collectVariableNamesFromExpression(expression.expression, names)
     } else if (expression instanceof FormulaExpression.FunctionCall) {
-      for (FormulaExpression arg : (expression as FormulaExpression.FunctionCall).arguments) {
+      for (FormulaExpression arg : expression.arguments) {
         collectVariableNamesFromExpression(arg, names)
       }
     }
@@ -535,6 +550,28 @@ final class ModelFrame {
         "Unknown variable(s) in formula: ${missing}. Available columns: ${dataColumns}"
       )
     }
+  }
+
+  private void validateEnvironmentVariables(Set<String> variableNames) {
+    for (String variableName : variableNames) {
+      List<?> values = env[variableName]
+      if (values == null) {
+        throw new IllegalArgumentException("Environment variable '${variableName}' cannot be null")
+      }
+      if (values.size() != data.rowCount()) {
+        throw new IllegalArgumentException(
+          "Environment variable '${variableName}' size (${values.size()}) does not match data row count (${data.rowCount()})"
+        )
+      }
+    }
+  }
+
+  private Set<String> resolveReferencedEnvironmentVariables(List<String> variableNames) {
+    Set<String> referenced = variableNames.findAll { String name ->
+      data.columnIndex(name) < 0 && env != null && env.containsKey(name)
+    } as Set<String>
+    validateEnvironmentVariables(referenced)
+    referenced
   }
 
   private void validateColumnExists(String columnName, String label) {
@@ -709,13 +746,18 @@ final class ModelFrame {
   }
 
   @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
-  private static Map<String, List<?>> filterEnvToSurvivors(Map<String, List<?>> env, List<Integer> survivingOriginalIndices) {
+  private static Map<String, List<?>> filterEnvironment(
+    Map<String, List<?>> env,
+    Set<String> referencedEnvVariables,
+    List<Integer> survivingOriginalIndices
+  ) {
     if (env == null) {
       return null
     }
     Map<String, List<?>> filtered = [:]
-    for (Map.Entry<String, List<?>> entry : env.entrySet()) {
-      filtered[entry.key] = survivingOriginalIndices.collect { Integer originalIdx -> entry.value[originalIdx] }
+    for (String variableName : referencedEnvVariables) {
+      List<?> values = env[variableName]
+      filtered[variableName] = survivingOriginalIndices.collect { Integer originalIdx -> values[originalIdx] }
     }
     filtered
   }
@@ -745,18 +787,6 @@ final class ModelFrame {
       return null
     }
     indices.collect { int i -> values[i] } as List<Number>
-  }
-
-  @SuppressWarnings('ReturnsNullInsteadOfEmptyCollection')
-  private static Map<String, List<?>> filterEnvByIndices(Map<String, List<?>> env, List<Integer> indices) {
-    if (env == null) {
-      return null
-    }
-    Map<String, List<?>> filtered = [:]
-    for (Map.Entry<String, List<?>> entry : env.entrySet()) {
-      filtered[entry.key] = indices.collect { int i -> entry.value[i] }
-    }
-    filtered
   }
 
   private static <T> T requireNonNull(T value, String label) {

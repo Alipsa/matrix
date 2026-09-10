@@ -200,6 +200,27 @@ final class TimeSeriesUtils {
     LeastSquaresKernel.calculateResidualSumOfSquares(y, X, beta)
   }
 
+  /**
+   * Determines whether a series has a range of at least {@code 1e-10}.
+   *
+   * @param values the values to inspect
+   * @return true when the series has sufficient variation
+   */
+  @PackageScope
+  static boolean hasVariation(double[] values) {
+    double minimum = Double.POSITIVE_INFINITY
+    double maximum = Double.NEGATIVE_INFINITY
+    for (double value : values) {
+      if (value < minimum) {
+        minimum = value
+      }
+      if (value > maximum) {
+        maximum = value
+      }
+    }
+    Math.abs(maximum - minimum) >= 1e-10
+  }
+
   private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {
     int maxRow = pivotColumn
     double maxVal = Math.abs(matrix[pivotColumn][pivotColumn])

@@ -80,19 +80,7 @@ class AdfGls {
 
     int n = data.length
 
-    // Check for constant series
-    double yMin = Double.POSITIVE_INFINITY
-    double yMax = Double.NEGATIVE_INFINITY
-    for (double val : data) {
-      if (val < yMin) {
-        yMin = val
-      }
-      if (val > yMax) {
-        yMax = val
-      }
-    }
-
-    if (Math.abs(yMax - yMin) < 1e-10) {
+    if (!TimeSeriesUtils.hasVariation(data)) {
       throw new IllegalArgumentException('Data has no variation (constant series)')
     }
 

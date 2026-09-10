@@ -33,10 +33,7 @@ class Adf {
     int n = data.size()
     double[] y = data*.doubleValue() as double[]
 
-    // Check for constant series
-    double yMin = y.min()
-    double yMax = y.max()
-    if (Math.abs(yMax - yMin) < 1e-10) {
+    if (!TimeSeriesUtils.hasVariation(y)) {
       throw new IllegalArgumentException('Data has no variation (constant series). Cannot perform ADF test.')
     }
 

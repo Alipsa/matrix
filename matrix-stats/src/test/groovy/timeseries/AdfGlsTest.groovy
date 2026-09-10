@@ -123,9 +123,10 @@ class AdfGlsTest {
     for (int i = 0; i < 20; i++) {
       constant[i] = 100.0
     }
-    assertThrows(IllegalArgumentException) {
+    IllegalArgumentException constantException = assertThrows(IllegalArgumentException) {
       AdfGls.test(constant, 0, 'drift')
     }
+    assertEquals('Data has no variation (constant series)', constantException.message)
 
     // Invalid type
     double[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as double[]

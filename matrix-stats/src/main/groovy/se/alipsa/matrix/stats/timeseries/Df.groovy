@@ -131,17 +131,7 @@ class Df {
   }
 
   private static void ensureVariation(double[] data) {
-    double yMin = Double.POSITIVE_INFINITY
-    double yMax = Double.NEGATIVE_INFINITY
-    for (double value : data) {
-      if (value < yMin) {
-        yMin = value
-      }
-      if (value > yMax) {
-        yMax = value
-      }
-    }
-    if (Math.abs(yMax - yMin) < 1e-10) {
+    if (!TimeSeriesUtils.hasVariation(data)) {
       throw new IllegalArgumentException('Data has no variation (constant series)')
     }
   }

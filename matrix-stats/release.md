@@ -1,6 +1,16 @@
 # Matrix stats release history
 
 ## v2.5.3, in progress
+- Fix basic `KMeansPlusPlus` initialization so it no longer mutates observations; seeded `pp(false)` centroids, assignments, and WCSS can change because clustering now uses the original data.
+- Return defensive snapshots from `KMeansPlusPlus` assignment and centroid accessors so callers cannot mutate input or fitted-model arrays through results.
+- Fix Kendall tau-b denominator overflow for large samples.
+- Correct `Accuracy.r2()` for constant actual values: perfect predictions return `1`, while imperfect predictions return `0`.
+- Restrict aggregate `UnitRoot` tests to `drift` and `trend`; standalone DF and ADF tests continue supporting `none`.
+- Make null or zero `UnitRoot` lags use bounded ADF-GLS modified-AIC selection shared by ADF and ADF-GLS instead of forcing lag zero.
+- Honor explicit KPSS lags in `0 <= lags < n`, including zero and values above `n.intdiv(3)`; reject negative lags and values at least as large as the sample instead of silently clamping them.
+- Give direct KPSS calls descriptive failures for non-finite input, constant or perfectly trending data, and non-finite variance or statistic calculations instead of leaking numeric-conversion exceptions.
+- Validate referenced formula-environment vectors against the original matrix row count while ignoring unused environment entries.
+- Include variables nested in unary, arithmetic, and grouped formula expressions in validation, subset filtering, and NA handling. With `NaAction.OMIT`, affected matrix rows are now omitted instead of failing later during expression evaluation.
 - Hoist Grid row views in numeric conversion loops to avoid repeated checked-view allocations without changing conversion results.
 - CodeNarc cleanup across the formula, contingency, and cluster packages without behavioral changes.
 - Fix `CategoricalEncoder.levels()` null handling and share string-based level ordering with `encode()`.

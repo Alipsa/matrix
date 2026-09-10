@@ -125,6 +125,81 @@ class KpssTest {
   }
 
   @Test
+  void testExplicitZeroAndLargeSupportedLagAreHonored() {
+    List<Double> data = (1..20).collect { int value -> value + (value % 3) * 0.25d }
+
+    def zeroLag = Kpss.test(data, 'level', 0)
+    def tenLags = Kpss.test(data, 'level', 10)
+
+    assertEquals(0, zeroLag.lags)
+    assertEquals(10, tenLags.lags)
+
+    double mean = data.sum() / data.size()
+    List<Double> residuals = data.collect { double value -> value - mean }
+    double variance = residuals.sum { double value -> value * value } / data.size()
+    double partialSum = 0.0d
+    double numerator = 0.0d
+    residuals.each { double value ->
+      partialSum += value
+      numerator += partialSum * partialSum
+    }
+    BigDecimal expected = BigDecimal.valueOf(numerator / (data.size() * data.size() * variance))
+    assertEquals(expected, zeroLag.statistic)
+  }
+
+  @Test
+  void testInvalidExplicitLagsAreRejected() {
+    List<Integer> data = (1..20).toList()
+
+    IllegalArgumentException negative = assertThrows(IllegalArgumentException) {
+      Kpss.test(data, 'level', -1)
+    }
+    assertEquals('Lags must be between 0 and 19, got: -1', negative.message)
+
+    IllegalArgumentException excessive = assertThrows(IllegalArgumentException) {
+      Kpss.test(data, 'level', 20)
+    }
+    assertEquals('Lags must be between 0 and 19, got: 20', excessive.message)
+  }
+
+  @Test
+  void testDegenerateAndNonFiniteInputsHaveSpecificDiagnostics() {
+    IllegalArgumentException constant = assertThrows(IllegalArgumentException) {
+      Kpss.test((1..20).collect { 5.0d }, 'level')
+    }
+    assertEquals('Data has no variation (constant series)', constant.message)
+
+    IllegalArgumentException trend = assertThrows(IllegalArgumentException) {
+      Kpss.test((1..20).toList(), 'trend')
+    }
+    assertEquals('Detrended residuals have no variation; cannot perform KPSS test', trend.message)
+
+    [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY].each { double invalid ->
+      List<Double> data = (1..20).collect { int value -> value as double }
+      data[5] = invalid
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        Kpss.test(data)
+      }
+      assertEquals('Data contains non-finite values', exception.message)
+    }
+  }
+
+  @Test
+  void testArithmeticOverflowDiagnostics() {
+    List<Double> varianceOverflow = (0..<12).collect { int index -> index % 2 == 0 ? -1e200d : 1e200d }
+    IllegalArgumentException varianceException = assertThrows(IllegalArgumentException) {
+      Kpss.test(varianceOverflow, 'level', 3)
+    }
+    assertEquals('KPSS calculation produced a non-finite long-run variance', varianceException.message)
+
+    List<Double> statisticOverflow = [*([3e153d] * 6), *([-3e153d] * 6)] as List<Double>
+    IllegalArgumentException statisticException = assertThrows(IllegalArgumentException) {
+      Kpss.test(statisticOverflow, 'level', 0)
+    }
+    assertEquals('KPSS calculation produced a non-finite statistic', statisticException.message)
+  }
+
+  @Test
   void testAutoLagSelection() {
     List<Double> data = []
     Random rnd = new Random(654)
