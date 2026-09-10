@@ -3577,6 +3577,10 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) { matrix.toHtml([onClick: 'alert(1)']) }
     assertThrows(IllegalArgumentException) { matrix.toMarkdown([onmouseover: 'alert(1)']) }
     assertThrows(IllegalArgumentException) { matrix.toMarkdown([onClick: 'alert(1)']) }
+
+    Map<String, String> ordinaryAttributes = [once: '1', only: '2', online: '3', 'data-x': '4']
+    assertTrue(matrix.toHtml(ordinaryAttributes).startsWith('<table once="1" only="2" online="3" data-x="4">'))
+    assertTrue(matrix.toMarkdown(ordinaryAttributes).endsWith('{once="1" only="2" online="3" data-x="4" }\n'))
   }
 
   @Test
