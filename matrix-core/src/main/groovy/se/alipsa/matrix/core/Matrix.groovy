@@ -68,26 +68,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final String DEFAULT_ROW_DELIMITER = '\n'
   private static final String DEFAULT_LINE_COMMENT = '#'
   private static final String HTML_ATTRIBUTE_NAME = '[A-Za-z_][A-Za-z0-9_.:-]*'
-  private static final Set<String> HTML_EVENT_HANDLER_ATTRIBUTES = [
-      'onabort', 'onafterprint', 'onanimationcancel', 'onanimationend', 'onanimationiteration', 'onanimationstart',
-      'onauxclick', 'onbeforeinput', 'onbeforematch', 'onbeforeprint', 'onbeforetoggle', 'onbeforeunload',
-      'onblur', 'oncancel', 'oncanplay', 'oncanplaythrough', 'onchange', 'onclick', 'onclose', 'oncommand',
-      'oncontentvisibilityautostatechange', 'oncontextlost', 'oncontextmenu', 'oncontextrestored', 'oncopy',
-      'oncuechange', 'oncut', 'ondblclick', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover',
-      'ondragstart', 'ondrop', 'ondurationchange', 'onemptied', 'onended', 'onerror', 'onfocus', 'onformdata',
-      'onfullscreenchange', 'onfullscreenerror', 'ongotpointercapture', 'onhashchange', 'oninput', 'oninvalid',
-      'onkeydown', 'onkeypress', 'onkeyup', 'onlanguagechange', 'onload', 'onloadeddata', 'onloadedmetadata',
-      'onloadstart', 'onlostpointercapture', 'onmessage', 'onmessageerror', 'onmousedown', 'onmouseenter',
-      'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onoffline', 'ononline',
-      'onpagehide', 'onpagereveal', 'onpageshow', 'onpageswap', 'onpaste', 'onpause', 'onplay', 'onplaying',
-      'onpointercancel', 'onpointerdown', 'onpointerenter', 'onpointerleave', 'onpointermove', 'onpointerout',
-      'onpointerover', 'onpointerrawupdate', 'onpointerup', 'onpopstate', 'onprogress', 'onratechange',
-      'onrejectionhandled', 'onreset', 'onresize', 'onscroll', 'onscrollend', 'onsecuritypolicyviolation',
-      'onseeked', 'onseeking', 'onselect', 'onselectionchange', 'onselectstart', 'onslotchange', 'onstalled',
-      'onstorage', 'onsubmit', 'onsuspend', 'ontimeupdate', 'ontoggle', 'ontouchcancel', 'ontouchend',
-      'ontouchmove', 'ontouchstart', 'ontransitioncancel', 'ontransitionend', 'ontransitionrun',
-      'ontransitionstart', 'onunhandledrejection', 'onunload', 'onvolumechange', 'onwaiting', 'onwheel'
-  ] as Set<String>
+  private static final Set<String> NON_HANDLER_ON_ATTRIBUTES = ['once', 'only', 'online'] as Set<String>
   private static final Set<String> HTML_ALIGNMENTS = ['left', 'right', 'center', 'justify'] as Set<String>
   private static final String MARKDOWN_LINE_BREAK = '<br>'
   private static final Logger log = Logger.getLogger(Matrix)
@@ -3938,8 +3919,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static void validateHtmlAttributeName(String name) {
-    if (name == null || !name.matches(HTML_ATTRIBUTE_NAME)
-        || HTML_EVENT_HANDLER_ATTRIBUTES.contains(name.toLowerCase(Locale.ROOT))) {
+    String lower = name?.toLowerCase(Locale.ROOT)
+    if (lower == null || !name.matches(HTML_ATTRIBUTE_NAME)
+        || (lower.startsWith('on') && !NON_HANDLER_ON_ATTRIBUTES.contains(lower))) {
       throw new IllegalArgumentException("Invalid HTML attribute name: ${name}")
     }
   }

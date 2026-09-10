@@ -11,7 +11,7 @@
 - Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.
 
 ### Fixes
-- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toHtml` and `Matrix.toMarkdown` reject recognized event-handler attribute names, and Markdown output validates attribute names, HTML-escapes attribute values, escapes backslashes and pipes in cells, and converts CR/LF line breaks to `<br>`.
+- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toHtml` and `Matrix.toMarkdown` reject attribute names beginning with `on` except `once`, `only`, and `online`, and Markdown output validates attribute names, HTML-escapes attribute values, escapes backslashes and pipes in cells, and converts CR/LF line breaks to `<br>`.
 - Full and right joins widen a result key-column type only when an unmatched right-side key cannot be converted losslessly to the left key type, including key columns without a declared type, ensuring emitted values satisfy the result schema without sacrificing schema precision.
 - `ValueConverter.asLocalDateTime` supports every `java.util.Date` subclass, including `java.sql.Time`.
 - `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger` and return their supplied fallback for unparseable input; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
