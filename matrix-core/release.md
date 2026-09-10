@@ -11,13 +11,25 @@
 - Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.
 
 ### Fixes
-- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toHtml` and `Matrix.toMarkdown` reject attribute names beginning with `on` except `once`, `only`, and `online`, and Markdown output validates attribute names, HTML-escapes attribute values, escapes backslashes and pipes in cells, and converts CR/LF line breaks to `<br>`.
+- Matrix construction from empty data, including an empty `ResultSet`, preserves every declared header and type without mutating the caller-supplied column list.
+- `Matrix.anonymousHeader(int)` returns an empty list for zero or negative column counts, and transposing a zero-row Matrix no longer creates a spurious anonymous column.
+- `Matrix.apply(int, Closure, Closure)` validates the column index and throws `IndexOutOfBoundsException` for negative or out-of-range indices.
+- `Matrix.dropExcept(int...)` resets or invalidates active index metadata when columns are removed, preventing stale indexed lookups.
+- Matrix row mutations now validate before changing data: `addRow(int, List)`, `moveRow`, and `moveColumn` check their bounds; `addRows` and `removeRows` reject invalid input atomically; and `removeRows` removes duplicate indices only once.
+- `Matrix.toHtml` HTML-escapes table attribute values, restricts per-column alignment values to `left`, `right`, `center`, or `justify`, and escapes alignments at output.
+- `Matrix.toHtml` and `Matrix.toMarkdown` reject syntactically invalid attribute names and names beginning with `on` except `once`, `only`, and `online`; Markdown attribute values are HTML-escaped.
+- Markdown output escapes backslashes and pipes in headers and cells and converts CR/LF line breaks in cells to `<br>`.
 - Full and right joins widen a result key-column type only when an unmatched right-side key cannot be converted losslessly to the left key type, including key columns without a declared type, ensuring emitted values satisfy the result schema without sacrificing schema precision.
-- `ValueConverter.asLocalDateTime` supports every `java.util.Date` subclass, including `java.sql.Time`.
-- `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger` and return their supplied fallback for unparseable input; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
+- Grouped `Stat.frequency(Matrix, String, String)` builds a shared category set across all groups, fills absent group/category combinations with zero, and orders categories by descending overall frequency then ascending value, matching the single-column overloads.
+- Empty categorical summaries report zero unique values and `no values` instead of attempting to describe a null most-frequent row.
+- Typed `Grid` indexed assignment now validates the assigned value type, and `Grid.replaceColumn` rejects indices outside an established grid width.
+- `ValueConverter.asTimestamp`, `asSqlDate`, and `asLocalDateTime` support `java.util.Date`; `asLocalDateTime` also handles subclasses such as `java.sql.Time`.
+- `ValueConverter.asInteger`, `asByte`, and `asShort` return null for malformed numeric text instead of throwing. Byte and short conversion also handles booleans consistently with `asInteger` and returns the supplied fallback for unparseable input without treating a legitimate zero as missing.
+- `ValueConverter.convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
+- `ValueConverter.fixNegationFormat` accepts custom `NumberFormat` implementations that are not `DecimalFormat`, leaving the input unchanged instead of throwing `ClassCastException`.
 - `Stat.means(Matrix, List<String>)` now returns non-null results at the same default scale of 16 as `Stat.mean(List)`.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
-- Grouped `Stat.frequency(Matrix, String, String)` category rows now use the same frequency-descending, value-ascending order as the single-column overloads.
+- `MatrixBuilder.csvString` handles comment-only input explicitly: without a header row, a `#types:` directive establishes an empty schema and generated column names; with `firstRowAsHeader: true`, a clear missing-header exception is thrown. Missing indexed columns and completely empty CSV input also produce specific validation errors.
 - Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
@@ -46,7 +58,7 @@
 - `Row.subList(int, int)` remains a live checked view with write-through value replacement; structural row mutations and row sorting are rejected. The other subList overloads return copies.
 - Grid row writers enforce a rectangular width. List-based Grid constructors snapshot the supplied outer list and rows. The public `data` property is a read-only outer view with checked live rows: indexed value writes remain supported, while structural row/outer-list mutations and direct reassignment are rejected.
 - `Grid.leftShift(List)` now returns the Grid itself for safe operator chaining; its erased return type changes from `Object` to `Grid`.
-- Adding or replacing Matrix columns now validates established width on zero-row schema matrices. This applies to `addColumn`, `upsertColumn`, `m['a'] = [...]`, `m[0] = [...]`, `m.a = [...]`, and the two-pass, order-independent null-list handling in `and(Map)`.
+- Matrix constructors and the `MatrixBuilder.data(Map)`/`columns(Map)` paths reject ragged columns. Adding or replacing columns also validates established width on zero-row schema matrices; this applies to `addColumn`, `upsertColumn`, `m['a'] = [...]`, `m[0] = [...]`, `m.a = [...]`, and the two-pass, order-independent null-list handling in `and(Map)`.
 - Numeric summary results now exclude null and non-numeric values from median and quartile calculations. `quartiles([])` returns `[null, null]` and `iqr([])` returns `null`.
 - Rolling mean output now follows a 16-significant-digit precision contract instead of always using scale 16.
 - ResultSet imports use JDBC column labels, so aliases can change the resulting Matrix column names from the physical names.
@@ -55,8 +67,8 @@
 - Column list arithmetic (`+`, `-`, `*`, `/`, `**`) requires an operand with exactly the same size as the column and throws `IllegalArgumentException` otherwise; previously longer operands were truncated and shorter operands were null-padded.
 - `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and `column[range]` now returns a `Column` rather than an `ArrayList`. Code that declared the slice as `ArrayList`, or that relied on `column[range] * 2` performing Groovy list repetition, must change: `Column.multiply` is element-wise.
 - `Column(String, Collection)` now declares its type as `Object` instead of leaving it null. Callers that used a null type to trigger inference should treat `Object` as an unspecified heterogeneous type as well.
-- `Matrix.toHtml` throws `IllegalArgumentException` for attribute names that are not valid HTML attribute names.
-- `Matrix.toHtml` throws `IllegalArgumentException` for alignment values other than `left`, `right`, `center`, or `justify`; `Matrix.toMarkdown` applies the same attribute-name validation as `toHtml`.
+- `Matrix.toHtml` and `Matrix.toMarkdown` throw `IllegalArgumentException` for syntactically invalid attribute names and names beginning with `on`, except `once`, `only`, and `online`.
+- `Matrix.toHtml` throws `IllegalArgumentException` for alignment values other than `left`, `right`, `center`, or `justify`.
 - `Matrix.orderBy(String, Boolean)` is now tie-stable (ties previously kept no stable order) and a null direction sorts ascending.
 - `Stat.sum`, `mean`, `median`, `variance`, and `sd` skip NaN and infinite values (and nulls) instead of throwing.
 - `MatrixBuilder.csvString`'s `rowDelimiter` option is now a literal string, not a regex.
