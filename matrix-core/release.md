@@ -11,10 +11,11 @@
 - Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.
 
 ### Fixes
-- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toMarkdown` now validates attribute names and HTML-escapes attribute values.
+- `Matrix.toHtml` restricts per-column alignment values to `left`, `right`, `center`, or `justify` and escapes them at output; `Matrix.toHtml` and `Matrix.toMarkdown` reject event-handler attribute names, and Markdown output validates attribute names, HTML-escapes attribute values, and escapes backslashes and pipes in cells.
 - Full and right joins widen a result key-column type only when an unmatched right-side key cannot be converted losslessly to the left key type, including key columns without a declared type, ensuring emitted values satisfy the result schema without sacrificing schema precision.
 - `ValueConverter.asLocalDateTime` supports every `java.util.Date` subclass, including `java.sql.Time`.
-- `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger`; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
+- `ValueConverter.asByte` and `asShort` convert booleans consistently with `asInteger` and return their supplied fallback for unparseable input; `convert` now supports `Boolean`/`boolean`, `Float`/`float`, and `Character`/`char`. Numeric character inputs are interpreted as Unicode code points, while invalid character input returns null.
+- `Stat.means(Matrix, List<String>)` now returns non-null results at the same default scale of 16 as `Stat.mean(List)`.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
 - Grouped `Stat.frequency(Matrix, String, String)` category rows now use the same frequency-descending, value-ascending order as the single-column overloads.
 - Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
@@ -53,6 +54,7 @@
 - Joiner key semantics follow SQL-style null semantics: null, NaN, and infinite key values never match (previously null matched null). Finite numeric keys now match across numeric runtime types (e.g. Integer 1 matches Double 1.0); String keys do not match numeric keys.
 - Column list arithmetic (`+`, `-`, `*`, `/`, `**`) requires an operand with exactly the same size as the column and throws `IllegalArgumentException` otherwise; previously longer operands were truncated and shorter operands were null-padded.
 - `Column.subList(IntRange)` returns a Column copy instead of a live `ArrayList` view, and `column[range]` now returns a `Column` rather than an `ArrayList`. Code that declared the slice as `ArrayList`, or that relied on `column[range] * 2` performing Groovy list repetition, must change: `Column.multiply` is element-wise.
+- `Column(String, Collection)` now declares its type as `Object` instead of leaving it null. Callers that used a null type to trigger inference should treat `Object` as an unspecified heterogeneous type as well.
 - `Matrix.toHtml` throws `IllegalArgumentException` for attribute names that are not valid HTML attribute names.
 - `Matrix.toHtml` throws `IllegalArgumentException` for alignment values other than `left`, `right`, `center`, or `justify`; `Matrix.toMarkdown` applies the same attribute-name validation as `toHtml`.
 - `Matrix.orderBy(String, Boolean)` is now tie-stable (ties previously kept no stable order) and a null direction sorts ascending.

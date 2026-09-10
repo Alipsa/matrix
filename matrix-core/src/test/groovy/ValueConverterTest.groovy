@@ -196,6 +196,8 @@ class ValueConverterTest {
     assertEquals((byte) 0, ValueConverter.asByte(false))
     assertNull(ValueConverter.asByte(null))
     assertNull(ValueConverter.asByte('1.2.3'))
+    assertEquals((byte) 7, ValueConverter.asByte('1.2.3', (byte) 7))
+    assertEquals((byte) 0, ValueConverter.asByte('0', (byte) 7))
   }
 
   @Test
@@ -207,6 +209,8 @@ class ValueConverterTest {
     assertEquals((short) 0, ValueConverter.asShort(false))
     assertNull(ValueConverter.asShort(null))
     assertNull(ValueConverter.asShort('1.2.3'))
+    assertEquals((short) 7, ValueConverter.asShort('1.2.3', (short) 7))
+    assertEquals((short) 0, ValueConverter.asShort('0', (short) 7))
   }
 
   @Test

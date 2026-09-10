@@ -3548,12 +3548,13 @@ class MatrixTest {
 
   @Test
   void testMarkdownEscapesPipes() {
-    Matrix matrix = Matrix.builder().data(['a|b': ['x|y']]).types(String).build()
+    Matrix matrix = Matrix.builder().data(['a|b': ['x|y', 'x\\|y']]).types(String).build()
 
     String markdown = matrix.toMarkdown()
 
     assertTrue(markdown.contains('| a\\|b |'))
     assertTrue(markdown.contains('| x\\|y |'))
+    assertEquals('| x\\\\\\|y |', markdown.readLines()[3])
   }
 
   @Test
@@ -3566,6 +3567,16 @@ class MatrixTest {
     assertThrows(IllegalArgumentException) {
       matrix.toMarkdown([('id"><script>x</script>'): 'value'])
     }
+  }
+
+  @Test
+  void testHtmlAndMarkdownRejectEventHandlerAttributes() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onmouseover: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onClick: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onmouseover: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onClick: 'alert(1)']) }
   }
 
   @Test

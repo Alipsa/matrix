@@ -361,7 +361,7 @@ class ValueConverter {
       return o.byteValue()
     }
     Integer value = asInteger(o)
-    value?.byteValue()
+    value == null ? valueIfNull : value.byteValue()
   }
 
   static Short asShort(Object o, Short valueIfNull = null) {
@@ -372,7 +372,7 @@ class ValueConverter {
       return o.shortValue()
     }
     Integer value = asInteger(o)
-    value?.shortValue()
+    value == null ? valueIfNull : value.shortValue()
   }
 
   /**

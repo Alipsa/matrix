@@ -3743,9 +3743,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         } else if (k == 'caption') {
           caption = v
         } else {
-          if (!(k as String).matches(HTML_ATTRIBUTE_NAME)) {
-            throw new IllegalArgumentException("Invalid HTML attribute name: ${k}")
-          }
+          validateHtmlAttributeName(k as String)
           sb.append(' ').append(k).append('="').append(escapeHtml(v)).append('"')
         }
       }
@@ -3895,9 +3893,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (attr.size() > 0) {
       sb.append("{")
       attr.each {
-        if (!(it.key as String).matches(HTML_ATTRIBUTE_NAME)) {
-          throw new IllegalArgumentException("Invalid HTML attribute name: ${it.key}")
-        }
+        validateHtmlAttributeName(it.key as String)
         sb.append(it.key).append('="').append(escapeHtml(it.value)).append('" ')
       }
       sb.append("}\n")
@@ -3918,7 +3914,13 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static String escapeMarkdownCell(String value) {
-    value?.replace('|', '\\|')?.replaceAll(/\r\n|\n|\r/, MARKDOWN_LINE_BREAK)
+    value?.replace('\\', '\\\\')?.replace('|', '\\|')?.replaceAll(/\r\n|\n|\r/, MARKDOWN_LINE_BREAK)
+  }
+
+  private static void validateHtmlAttributeName(String name) {
+    if (name == null || !name.matches(HTML_ATTRIBUTE_NAME) || name.toLowerCase(Locale.ROOT).startsWith('on')) {
+      throw new IllegalArgumentException("Invalid HTML attribute name: ${name}")
+    }
   }
 
   private List<Row> rowsForRender(Integer numRows, boolean fromHead) {
