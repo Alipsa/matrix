@@ -24,19 +24,32 @@ class Kpss {
    *
    * @param data The time series data
    * @param type The type of test: "level" (tests for level stationarity) or "trend" (tests for trend stationarity)
-   * @param lags The number of lags for long-run variance estimation (default: auto-selected based on sample size)
+   * @param lags The number of lags for long-run variance estimation. Values from 0 through
+   *             {@code data.size() - 1} are used exactly; null auto-selects from the sample size.
    * @return KpssResult containing test statistic and conclusion
+   * @throws IllegalArgumentException if inputs are invalid, the selected deterministic specification
+   *                                  leaves no residual variation, or calculation produces a non-finite value
    */
   static KpssResult test(List<? extends Number> data, String type = 'level', Integer lags = null) {
-    validateInput(data, type)
+    validateInput(data, type, lags)
 
     int n = data.size()
     double[] y = data*.doubleValue() as double[]
+    if (!TimeSeriesUtils.isFinite(y)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
+    }
+    if (!TimeSeriesUtils.hasVariation(y)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE)
+    }
 
-    // Auto-select lags if not specified
-    // Rule of thumb: l = floor(4 * (T/100)^(1/4))
-    int l = lags ?: Math.floor(4.0 * Math.pow(n / 100.0, 0.25)) as int
-    l = Math.max(1, Math.min(l, n / 3 as int))  // Ensure reasonable bounds
+    int l
+    if (lags == null) {
+      // Rule of thumb: l = floor(4 * (T/100)^(1/4))
+      l = Math.floor(4.0 * Math.pow(n / 100.0, 0.25)) as int
+      l = Math.max(1, Math.min(l, n / 3 as int))
+    } else {
+      l = lags
+    }
 
     // Detrend the data
     double[] residuals = detrend(y, type, n)
@@ -56,9 +69,18 @@ class Kpss {
 
     // Estimate long-run variance using Newey-West estimator
     double longRunVariance = estimateLongRunVariance(residuals, l, n)
+    if (!Double.isFinite(longRunVariance)) {
+      throw new IllegalArgumentException('KPSS calculation produced a non-finite long-run variance')
+    }
+    if (longRunVariance <= 0) {
+      throw new IllegalArgumentException('Detrended residuals have no variation; cannot perform KPSS test')
+    }
 
     // Calculate KPSS statistic
-    double kpssStatistic = sumOfSquaredPartialSums / (n * n * longRunVariance)
+    double kpssStatistic = sumOfSquaredPartialSums / ((double) n * n * longRunVariance)
+    if (!Double.isFinite(kpssStatistic)) {
+      throw new IllegalArgumentException('KPSS calculation produced a non-finite statistic')
+    }
 
     // Get critical value
     double criticalValue = getCriticalValue(type)
@@ -157,7 +179,7 @@ class Kpss {
     return 0.146  // 5% critical value for trend stationarity
   }
 
-  private static void validateInput(List<? extends Number> data, String type) {
+  private static void validateInput(List<? extends Number> data, String type, Integer lags) {
     if (data == null) {
       throw new IllegalArgumentException('Data cannot be null')
     }
@@ -175,6 +197,11 @@ class Kpss {
       if (value == null) {
         throw new IllegalArgumentException('Data contains null values')
       }
+    }
+    if (lags != null && (lags < 0 || lags >= data.size())) {
+      throw new IllegalArgumentException(
+        "Lags must be between 0 and ${data.size() - 1}, got: ${lags}"
+      )
     }
   }
 

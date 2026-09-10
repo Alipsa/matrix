@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.stats.Correlation.*
 
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation
@@ -113,5 +114,22 @@ class CorrelationTest {
   @Test
   void testKendallsCorrelationReturnsNullWhenBothInputsAreConstant() {
     assertNull(corKendall([5, 5, 5, 5], [9, 9, 9, 9]))
+  }
+
+  @Test
+  void testKendallsCorrelationDoesNotOverflowPairProduct() {
+    List<Integer> values = (0..<100_000).toList()
+
+    assertEquals(1G, corKendall(values, values))
+  }
+
+  @Test
+  void testKendallsCorrelationDescendingIsInRange() {
+    List<Integer> ascending = (0..<1_000).toList()
+    List<Integer> descending = ascending.reverse()
+    BigDecimal result = corKendall(ascending, descending)
+
+    assertEquals(-1G, result)
+    assertTrue(result >= -1 && result <= 1)
   }
 }

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.timeseries
 
+import groovy.transform.PackageScope
+
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.stats.util.NumericConversion
 
@@ -80,20 +82,11 @@ class AdfGls {
 
     int n = data.length
 
-    // Check for constant series
-    double yMin = Double.POSITIVE_INFINITY
-    double yMax = Double.NEGATIVE_INFINITY
-    for (double val : data) {
-      if (val < yMin) {
-        yMin = val
-      }
-      if (val > yMax) {
-        yMax = val
-      }
+    if (!TimeSeriesUtils.isFinite(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
     }
-
-    if (Math.abs(yMax - yMin) < 1e-10) {
-      throw new IllegalArgumentException('Data has no variation (constant series)')
+    if (!TimeSeriesUtils.hasVariation(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE)
     }
 
     // Auto-select lags if not provided
@@ -263,7 +256,8 @@ class AdfGls {
    * Select optimal number of lags using modified AIC (MAIC).
    * Following Ng and Perron (2001) recommendation.
    */
-  private static int selectLags(double[] data, String type) {
+  @PackageScope
+  static int selectLags(double[] data, String type) {
     int n = data.length
     int maxLags = Math.min(12, (int) Math.floor(12.0 * Math.pow(n / 100.0, 0.25)))
 

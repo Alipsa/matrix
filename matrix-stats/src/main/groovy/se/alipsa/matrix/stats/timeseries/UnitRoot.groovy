@@ -95,37 +95,61 @@ class UnitRoot {
    * Runs comprehensive unit root testing using multiple tests.
    *
    * @param data The time series data
-   * @param type Type of deterministic component ('none', 'drift', or 'trend')
-   * @param lags Number of lags for ADF tests (0 for automatic selection)
+   * @param type Type of deterministic component: {@code drift} (default) or {@code trend}
+   * @param lags Number of lags shared by ADF and ADF-GLS. Null or zero uses bounded ADF-GLS
+   *             modified-AIC selection; a positive value is used exactly. KPSS selects its
+   *             bandwidth independently.
    * @return UnitRootResult containing results from all tests
+   * @throws IllegalArgumentException if data, type, or lags are invalid, or any component test
+   *                                  is undefined for the supplied series. The composite result is
+   *                                  all-or-nothing and does not suppress component validation failures.
    */
   static UnitRootResult test(double[] data, String type = 'drift', Integer lags = 0) {
     if (data == null) {
       throw new IllegalArgumentException('Data cannot be null')
     }
 
-    if (data.length < 10) {
-      throw new IllegalArgumentException("Need at least 10 observations for unit root tests (got ${data.length})")
+    if (data.length < 12) {
+      throw new IllegalArgumentException("Need at least 12 observations for unit root tests (got ${data.length})")
     }
 
-    if (!(type in ['none', 'drift', 'trend'])) {
-      throw new IllegalArgumentException("Type must be 'none', 'drift', or 'trend' (got '${type}')")
+    if (!(type in ['drift', 'trend'])) {
+      throw new IllegalArgumentException("Type must be 'drift' or 'trend' (got '${type}')")
+    }
+    int maxAdfLag = [data.length.intdiv(3), data.length - 11].min()
+    if (lags != null && (lags < 0 || lags > maxAdfLag)) {
+      throw new IllegalArgumentException(
+        "Lags must be null or zero for automatic selection, or between 1 and ${maxAdfLag} " +
+          "for ${data.length} observations (got ${lags})"
+      )
+    }
+    if (!TimeSeriesUtils.isFinite(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.NON_FINITE_DATA_MESSAGE)
+    }
+    if (!TimeSeriesUtils.hasVariation(data)) {
+      throw new IllegalArgumentException(TimeSeriesUtils.CONSTANT_SERIES_MESSAGE)
     }
 
     // Convert to List for test methods
     List<Double> dataList = data.toList().collect { it as Double }
 
-    // Map type for KPSS (uses 'level' or 'trend' instead of 'none'/'drift'/'trend')
-    String kpssType = (type == 'none' || type == 'drift') ? 'level' : 'trend'
+    String kpssType = type == 'drift' ? 'level' : 'trend'
 
     // Run Dickey-Fuller test
     Df.DfResult dfResult = Df.test(dataList, type)
 
-    // Run Augmented Dickey-Fuller test
-    Adf.AdfResult adfResult = Adf.test(dataList, lags ?: 0, type)
+    int selectedLag
+    AdfGls.AdfGlsResult adfGlsResult
+    if (lags == null || lags == 0) {
+      int candidateLag = AdfGls.selectLags(data, type)
+      selectedLag = [candidateLag, maxAdfLag].min()
+      adfGlsResult = AdfGls.test(dataList, selectedLag, type)
+    } else {
+      selectedLag = lags
+      adfGlsResult = AdfGls.test(dataList, selectedLag, type)
+    }
 
-    // Run ADF-GLS test
-    AdfGls.AdfGlsResult adfGlsResult = AdfGls.test(dataList, lags ?: 0, type)
+    Adf.AdfResult adfResult = Adf.test(dataList, selectedLag, type)
 
     // Run KPSS test (note: KPSS tests stationarity, opposite null hypothesis)
     Kpss.KpssResult kpssResult = Kpss.test(dataList, kpssType)
@@ -142,6 +166,11 @@ class UnitRoot {
 
   /**
    * Runs unit root testing with List input.
+   *
+   * @param data the time series data
+   * @param type deterministic component: {@code drift} (default) or {@code trend}
+   * @param lags shared ADF and ADF-GLS lag count; null or zero selects automatically
+   * @return results from all component tests
    */
   static UnitRootResult test(List<? extends Number> data, String type = 'drift', Integer lags = 0) {
     double[] array = data*.doubleValue() as double[]

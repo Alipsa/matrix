@@ -21,6 +21,12 @@ final class TimeSeriesUtils {
   private static final int AUGMENTED_MATRIX_FACTOR = 2
   private static final String NON_EMPTY_MATRIX_MESSAGE = 'Matrix must contain at least one row and one column'
   private static final String RECTANGULAR_MATRIX_MESSAGE = 'Matrix rows must all have the same length'
+
+  @PackageScope
+  static final String NON_FINITE_DATA_MESSAGE = 'Data contains non-finite values'
+
+  @PackageScope
+  static final String CONSTANT_SERIES_MESSAGE = 'Data has no variation (constant series)'
   private static final Logger log = Logger.getLogger(TimeSeriesUtils)
 
   private TimeSeriesUtils() {
@@ -198,6 +204,43 @@ final class TimeSeriesUtils {
    */
   static double calculateRSS(double[] y, double[][] X, double[] beta) {
     LeastSquaresKernel.calculateResidualSumOfSquares(y, X, beta)
+  }
+
+  /**
+   * Determines whether a series has a range of at least {@code 1e-10}.
+   *
+   * @param values the values to inspect
+   * @return true when the series has sufficient variation
+   */
+  @PackageScope
+  static boolean hasVariation(double[] values) {
+    double minimum = Double.POSITIVE_INFINITY
+    double maximum = Double.NEGATIVE_INFINITY
+    for (double value : values) {
+      if (value < minimum) {
+        minimum = value
+      }
+      if (value > maximum) {
+        maximum = value
+      }
+    }
+    Math.abs(maximum - minimum) >= 1e-10
+  }
+
+  /**
+   * Determines whether every value in a series is finite.
+   *
+   * @param values the values to inspect
+   * @return true when no value is NaN or positive or negative infinity
+   */
+  @PackageScope
+  static boolean isFinite(double[] values) {
+    for (double value : values) {
+      if (!Double.isFinite(value)) {
+        return false
+      }
+    }
+    true
   }
 
   private static int findPivotRow(double[][] matrix, int pivotColumn, int rowCount) {

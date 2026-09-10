@@ -212,7 +212,9 @@ class Correlation {
     tiedYPairs += sumN(consecutiveYTies - 1)
 
     final long concordantMinusDiscordant = numPairs - tiedXPairs - tiedYPairs + tiedXYPairs - 2 * swaps
-    final BigDecimal nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (numPairs - tiedYPairs)
+    final BigDecimal nonTiedXPairs = (numPairs - tiedXPairs) as BigDecimal
+    final BigDecimal nonTiedYPairs = (numPairs - tiedYPairs) as BigDecimal
+    final BigDecimal nonTiedPairsMultiplied = nonTiedXPairs * nonTiedYPairs
     if (nonTiedPairsMultiplied == 0) {
       return null
     }

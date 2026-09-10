@@ -17,6 +17,21 @@ import se.alipsa.matrix.stats.util.LeastSquaresKernel
 class TimeSeriesUtilsTest {
 
   @Test
+  void hasVariationUsesSharedRangeThreshold() {
+    assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d] as double[]))
+    assertEquals(false, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 0.5e-10d] as double[]))
+    assertEquals(true, TimeSeriesUtils.hasVariation([2.0d, 2.0d + 2e-10d] as double[]))
+  }
+
+  @Test
+  void isFiniteRejectsNaNAndInfinities() {
+    assertEquals(true, TimeSeriesUtils.isFinite([1.0d, -2.0d] as double[]))
+    assertEquals(false, TimeSeriesUtils.isFinite([1.0d, Double.NaN] as double[]))
+    assertEquals(false, TimeSeriesUtils.isFinite([Double.POSITIVE_INFINITY] as double[]))
+    assertEquals(false, TimeSeriesUtils.isFinite([Double.NEGATIVE_INFINITY] as double[]))
+  }
+
+  @Test
   void solveLinearSystemSolvesWellConditionedSquareSystem() {
     double[][] a = [
       [2.0, 1.0, -1.0] as double[],

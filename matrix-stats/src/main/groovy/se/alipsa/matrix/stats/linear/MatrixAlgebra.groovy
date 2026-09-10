@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.linear
 
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.stats.util.DoubleArrayUtils
 
 /**
  * Native matrix operations used by the statistics implementations to avoid runtime
@@ -235,7 +236,7 @@ final class MatrixAlgebra {
     }
     validateSymmetric(matrix)
 
-    double[][] a = copy(matrix)
+    double[][] a = DoubleArrayUtils.deepCopy(matrix)
     if (n == 1) {
       return [a[0][0]] as double[]
     }
@@ -315,14 +316,6 @@ final class MatrixAlgebra {
         }
       }
     }
-  }
-
-  private static double[][] copy(double[][] matrix) {
-    double[][] copy = new double[matrix.length][matrix[0].length]
-    for (int i = 0; i < matrix.length; i++) {
-      System.arraycopy(matrix[i], 0, copy[i], 0, matrix[i].length)
-    }
-    copy
   }
 
   private static double[] diagonal(double[][] matrix) {

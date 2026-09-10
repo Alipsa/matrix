@@ -225,9 +225,21 @@ class AdfTest {
     // Constant series should be rejected
     List<Double> constantData = (1..50).collect { 5.0 }
 
-    assertThrows(IllegalArgumentException) {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Adf.test(constantData)
     }
+    assertEquals('Data has no variation (constant series). Cannot perform ADF test.', exception.message)
+  }
+
+  @Test
+  void testNonFiniteSeriesValidation() {
+    List<Double> data = (1..12).collect { it as double }
+    data[5] = Double.POSITIVE_INFINITY
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Adf.test(data)
+    }
+    assertEquals('Data contains non-finite values', exception.message)
   }
 
   @Test

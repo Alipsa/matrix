@@ -624,6 +624,130 @@ class FormulaModelFrameTest {
   }
 
   @Test
+  void testNestedEnvironmentExpressionsResolveAllVariableShapes() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y'])
+      .rows([[10.0], [20.0], [30.0]])
+      .types([BigDecimal])
+      .build()
+    Map<String, List<?>> env = [:]
+    env['a'] = [1.0, 2.0, 3.0]
+    env['b'] = [4.0, 5.0, 6.0]
+    env['unusedNull'] = null
+    env['unusedShort'] = [1.0]
+    env['unusedLong'] = [1.0, 2.0, 3.0, 4.0]
+
+    ModelFrameResult binary = ModelFrame.of('y ~ I(a + b)', data).environment(env).evaluate()
+    ModelFrameResult grouped = ModelFrame.of('y ~ I((a + b))', data).environment(env).evaluate()
+    ModelFrameResult unary = ModelFrame.of('y ~ I(-a)', data).environment(env).evaluate()
+
+    assertEquals([5.0, 7.0, 9.0], binary.data.column(binary.predictorNames[0]))
+    assertEquals([5.0, 7.0, 9.0], grouped.data.column(grouped.predictorNames[0]))
+    assertEquals([-1.0, -2.0, -3.0], unary.data.column(unary.predictorNames[0]))
+  }
+
+  @Test
+  void testReferencedEnvironmentVectorsMustAlignWithOriginalRows() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y'])
+      .rows([[10.0], [20.0], [30.0]])
+      .types([BigDecimal])
+      .build()
+
+    Map<String, Map<String, List<?>>> invalidEnvironments = [:]
+    invalidEnvironments['shortVector'] = [a: [1.0, 2.0], b: [3.0, 4.0, 5.0]]
+    invalidEnvironments['longVector'] = [a: [1.0, 2.0, 3.0, 4.0], b: [3.0, 4.0, 5.0]]
+    Map<String, List<?>> nullEnvironment = [b: [3.0, 4.0, 5.0]]
+    nullEnvironment['a'] = null
+    invalidEnvironments['nullVector'] = nullEnvironment
+
+    invalidEnvironments.each { String label, Map<String, List<?>> env ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        ModelFrame.of('y ~ I(a + b)', data).environment(env).evaluate()
+      }
+      assertTrue(exception.message.contains("Environment variable 'a'"))
+      if (label == 'nullVector') {
+        assertEquals("Environment variable 'a' cannot be null", exception.message)
+      } else {
+        assertTrue(exception.message.contains('data row count (3)'))
+        assertTrue(exception.message.contains(label == 'shortVector' ? 'size (2)' : 'size (4)'))
+      }
+    }
+  }
+
+  @Test
+  void testNestedEnvironmentExpressionsStayAlignedThroughBothFilterStages() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y'])
+      .rows([[10.0], [20.0], [30.0], [40.0]])
+      .types([BigDecimal])
+      .build()
+    Map<String, List<?>> env = [a: [1.0, 2.0, 3.0, 4.0], b: [10.0, 20.0, 30.0, 40.0]]
+
+    ModelFrameResult result = ModelFrame.of('y ~ I(a + b)', data)
+      .environment(env)
+      .subset([true, true, true, false])
+      .weights([1.0, null, 1.0, 1.0])
+      .evaluate()
+
+    assertEquals([10.0, 30.0], result.response)
+    assertEquals([11.0, 33.0], result.data.column(result.predictorNames[0]))
+    assertEquals([1], result.droppedRows)
+  }
+
+  @Test
+  void testNestedMatrixVariablesParticipateInNaHandling() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a', 'b'])
+      .rows([[10.0, 1.0, 2.0], [20.0, null, 3.0], [30.0, 4.0, 5.0]])
+      .types([BigDecimal, BigDecimal, BigDecimal])
+      .build()
+
+    ModelFrameResult omitted = ModelFrame.of('y ~ I(a + b)', data)
+      .naAction(NaAction.OMIT)
+      .evaluate()
+    assertEquals([10.0, 30.0], omitted.response)
+    assertEquals([1], omitted.droppedRows)
+
+    IllegalArgumentException failed = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ I(a + b)', data).naAction(NaAction.FAIL).evaluate()
+    }
+    assertEquals('NA values found in columns: [a] (na.action is FAIL)', failed.message)
+  }
+
+  @Test
+  void testUnknownNestedVariableFailsDuringFormulaValidation() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'a'])
+      .rows([[10.0, 1.0], [20.0, 2.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ModelFrame.of('y ~ I(a + typo)', data).evaluate()
+    }
+
+    assertEquals('Unknown variable(s) in formula: [typo]. Available columns: [y, a]', exception.message)
+  }
+
+  @Test
+  void testSameNamedUnusedEnvironmentEntryDoesNotOverrideDataColumn() {
+    Matrix data = Matrix.builder()
+      .columnNames(['y', 'x'])
+      .rows([[10.0, 1.0], [20.0, 2.0], [30.0, 3.0]])
+      .types([BigDecimal, BigDecimal])
+      .build()
+
+    Map<String, List<?>> env = [unused: [1.0]]
+    env['x'] = null
+    ModelFrameResult result = ModelFrame.of('y ~ x', data)
+      .environment(env)
+      .evaluate()
+
+    assertEquals([1.0, 2.0, 3.0], result.data.column('x'))
+  }
+
+  @Test
   void testMissingVariableThrows() {
     Matrix data = Matrix.builder()
       .columnNames(['y', 'x'])

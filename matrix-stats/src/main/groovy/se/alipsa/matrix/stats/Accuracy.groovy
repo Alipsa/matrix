@@ -228,26 +228,28 @@ class Accuracy {
    *
    * @param actuals List of actual values
    * @param predictions List of predicted values
-   * @return Coefficient of determination (R²)
+   * @return Coefficient of determination (R²). For constant actual values, returns 1 for
+   *         perfect predictions and 0 for imperfect predictions.
    */
   static BigDecimal r2(List actuals, List predictions) {
     validatePredictionInputs(actuals, predictions)
 
-    BigDecimal mean = Stat.mean(actuals)
-    def ssRes = 0.0G  // Residual sum of squares
-    def ssTot = 0.0G  // Total sum of squares
+    List<BigDecimal> normalizedActuals = actuals.collect { Object entry -> entry as BigDecimal }
+    List<BigDecimal> normalizedPredictions = predictions.collect { Object entry -> entry as BigDecimal }
+    BigDecimal ssRes = 0.0G
 
-    actuals.eachWithIndex { Object entry, int i ->
-      def act = entry as BigDecimal
-      def pred = predictions[i] as BigDecimal
+    normalizedActuals.eachWithIndex { BigDecimal act, int i ->
+      BigDecimal pred = normalizedPredictions[i]
       ssRes += (act - pred) ** 2
-      ssTot += (act - mean) ** 2
     }
 
-    if (ssTot == 0) {
-      return 1.0G  // Perfect fit if all actuals are the same
+    BigDecimal firstActual = normalizedActuals[0]
+    if (normalizedActuals.every { BigDecimal value -> value == firstActual }) {
+      return ssRes == 0 ? 1.0G : 0.0G
     }
 
+    BigDecimal mean = Stat.mean(normalizedActuals)
+    BigDecimal ssTot = normalizedActuals.sum { BigDecimal act -> (act - mean) ** 2 } as BigDecimal
     1 - (ssRes / ssTot)
   }
 

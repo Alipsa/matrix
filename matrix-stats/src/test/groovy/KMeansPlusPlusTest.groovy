@@ -1,11 +1,16 @@
 import static KMeansTestData.RANDOM_SEED
 import static KMeansTestData.gaussianClusters
+import static org.junit.jupiter.api.Assertions.assertArrayEquals
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotSame
+import static org.junit.jupiter.api.Assertions.assertSame
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.cluster.ClusteredPoint
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 
@@ -116,5 +121,116 @@ class KMeansPlusPlusTest {
         .build()
 
     assertEquals(points.size(), clustering.assignments.size())
+  }
+
+  @Test
+  void testBasicInitializationDoesNotMutateInput() {
+    double[][] points = [[0.0], [1.0], [2.0], [3.0]] as double[][]
+    double[][] original = points.collect { double[] row -> row.clone() as double[] } as double[][]
+
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(2, points)
+      .iterations(1)
+      .pp(false)
+      .randomSeed(7)
+      .build()
+
+    for (int i = 0; i < points.length; i++) {
+      assertArrayEquals(original[i], points[i])
+    }
+    assertEquals(
+      original*.toList().countBy { it },
+      clustering.assignment.collect { it.point.toList() }.countBy { it }
+    )
+  }
+
+  @Test
+  void testSeededPlusPlusResultsRemainReproducible() {
+    double[][] points = [[0.0], [1.0], [4.0], [5.0]] as double[][]
+
+    KMeansPlusPlus first = new KMeansPlusPlus.Builder(2, points)
+      .iterations(2)
+      .pp(true)
+      .randomSeed(19)
+      .build()
+    KMeansPlusPlus second = new KMeansPlusPlus.Builder(2, points)
+      .iterations(2)
+      .pp(true)
+      .randomSeed(19)
+      .build()
+
+    assertEquals(first.wcss, second.wcss)
+    for (int i = 0; i < first.centroids.length; i++) {
+      assertArrayEquals(first.centroids[i], second.centroids[i])
+    }
+    assertEquals(
+      first.assignment.collect { [it.clusterId, it.point.toList()] },
+      second.assignment.collect { [it.clusterId, it.point.toList()] }
+    )
+  }
+
+  @Test
+  void testReturnedResultsDoNotExposeInputOrModelArrays() {
+    double[][] points = [[0.0, 1.0], [1.0, 2.0], [8.0, 9.0], [9.0, 10.0]] as double[][]
+    double[][] original = points.collect { double[] row -> row.clone() as double[] } as double[][]
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(2, points)
+      .iterations(1)
+      .pp(true)
+      .randomSeed(23)
+      .build()
+
+    def assignment = clustering.assignment
+    double assignedValue = assignment[0].point[0]
+    assignment[0].point[0] = 999.0
+
+    assertEquals(assignedValue, clustering.assignment[0].point[0])
+    int assignedCluster = assignment[0].clusterId
+    assignment[0] = new ClusteredPoint(999, [999.0d, 999.0d] as double[])
+    assertEquals(assignedCluster, clustering.assignment[0].clusterId)
+    assertSame(clustering.assignments, clustering.assignments)
+    for (int i = 0; i < points.length; i++) {
+      assertArrayEquals(original[i], points[i])
+    }
+
+    double[][] centroids = clustering.centroids
+    double[][] expectedCentroids = centroids.collect { double[] row -> row.clone() as double[] } as double[][]
+    centroids[0][0] = 999.0
+    centroids[1] = [999.0, 999.0] as double[]
+    double[][] centroidsAgain = clustering.centroids
+
+    assertNotSame(centroids, centroidsAgain)
+    for (int i = 0; i < expectedCentroids.length; i++) {
+      assertNotSame(centroids[i], centroidsAgain[i])
+      assertArrayEquals(expectedCentroids[i], centroidsAgain[i])
+    }
+  }
+
+  @Test
+  void testClusteredPointIsImmutableAtPublicBoundaries() {
+    double[] source = [1.0d, 2.0d] as double[]
+    ClusteredPoint point = new ClusteredPoint(3, source)
+
+    source[0] = 99.0d
+    double[] returned = point.point
+    returned[1] = 99.0d
+
+    assertArrayEquals([1.0d, 2.0d] as double[], point.point)
+    assertEquals(1.0d, point.coordinate(0))
+    assertEquals(2, point.dimensions)
+    assertThrows(ArrayIndexOutOfBoundsException) {
+      point.coordinate(point.dimensions)
+    }
+  }
+
+  @Test
+  void testClusteredPointRejectsNullCoordinates() {
+    IllegalArgumentException arrayException = assertThrows(IllegalArgumentException) {
+      new ClusteredPoint(3, null as double[])
+    }
+    assertEquals('Point cannot be null', arrayException.message)
+
+    IllegalArgumentException listException = assertThrows(IllegalArgumentException) {
+      new ClusteredPoint(3, null as List<Number>)
+    }
+    assertEquals('Point cannot be null', listException.message)
   }
 }
