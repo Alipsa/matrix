@@ -74,6 +74,9 @@
 - `MatrixBuilder.csvString`'s `rowDelimiter` option is now a literal string, not a regex.
 - `MatrixAssertions.assertContentNotEquals` now uses `CONTENT_TOLERANCE` and `ignoreTypes = false`, making it the exact complement of `assertContentEquals`.
 
+### Dependency updates
+- com.h2database:h2 2.4.240 -> 2.5.250
+
 ## 3.8.0, 2026-05-22
 
 ### New Matrix methods

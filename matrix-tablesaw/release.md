@@ -102,6 +102,9 @@
 - New `testNonUtf8DefaultEncoding` Gradle task verifies XML stream output is UTF-8 under a
   non-UTF-8 JVM default (`-Dfile.encoding=ISO-8859-1`); wired into `check`.
 
+### Dependency updates
+- com.h2database:h2 2.4.240 -> 2.5.250
+
 ## v0.3.2, 2026-07-06
 - matrix-tablesaw/src/main/java/tech/tablesaw/api/NumberAggregateFunction.java: BigDecimal aggregate functions now only declare compatibility with BigDecimalColumnType,
   preventing Tablesaw from dispatching them to DoubleColumn, IntColumn, etc.

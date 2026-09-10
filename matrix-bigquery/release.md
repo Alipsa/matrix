@@ -2,11 +2,11 @@
 
 ## v0.7.1, in progress
 - Dependency updates
-  - com.google.auth:google-auth-library-bom 1.48.0 -> 1.51.0 
-  - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.51.0 
-  - com.google.cloud:google-cloud-bigquery 2.67.0 -> 2.70.0 
-  - com.google.cloud:google-cloud-bigquerystorage 3.29.0 -> 3.32.0
-  - com.google.cloud:google-cloud-resourcemanager 1.95.0 -> 1.98.0
+  - com.google.auth:google-auth-library-bom 1.48.0 -> 1.52.0 
+  - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.52.0 
+  - com.google.cloud:google-cloud-bigquery 2.67.0 -> 2.71.0 
+  - com.google.cloud:google-cloud-bigquerystorage 3.29.0 -> 3.33.0
+  - com.google.cloud:google-cloud-resourcemanager 1.95.0 -> 1.99.0
 
 
 ## v0.7.0, 2026-07-05

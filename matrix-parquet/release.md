@@ -2,8 +2,8 @@
 
 ## v0.6.1, unreleased
 - Upgrade dependencies
-  - org.apache.parquet:parquet-column 1.17.1 -> 1.18.0
-  - org.apache.parquet:parquet-hadoop 1.17.1 -> 1.18.0
+  - org.apache.parquet:parquet-column 1.17.1 -> 1.18.1
+  - org.apache.parquet:parquet-hadoop 1.17.1 -> 1.18.1
 
 ## v0.6.0, 2026-06-20
 - Upgrade dependencies

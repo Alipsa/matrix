@@ -7,6 +7,10 @@
 - Add a documentation-version check to prevent the README and logging guide from drifting from the documented release versions
 - Enable Spotless for Java-only subprojects, including `matrix-logging`
 - Correct the launch-classpath smoke test's documented scope
+- Dependency updates:
+  - org.slf4j:slf4j-bom 2.0.18 -> 2.0.19
+  - org.slf4j:slf4j-jdk-platform-logging 2.0.18 -> 2.0.19
+  - org.slf4j:slf4j-simple 2.0.18 -> 2.0.19
 
 ## v0.1.1, 2026-07-10
 - Dependency updates:
