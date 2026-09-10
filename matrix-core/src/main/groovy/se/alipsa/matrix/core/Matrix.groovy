@@ -67,7 +67,10 @@ class Matrix implements Iterable<Row>, Cloneable {
   private static final String CONTENT_LINE_ENDING_OPTION = 'lineEnding'
   private static final String DEFAULT_ROW_DELIMITER = '\n'
   private static final String DEFAULT_LINE_COMMENT = '#'
-
+  private static final String HTML_ATTRIBUTE_NAME = '[A-Za-z_][A-Za-z0-9_.:-]*'
+  private static final Set<String> NON_HANDLER_ON_ATTRIBUTES = ['once', 'only', 'online'] as Set<String>
+  private static final Set<String> HTML_ALIGNMENTS = ['left', 'right', 'center', 'justify'] as Set<String>
+  private static final String MARKDOWN_LINE_BREAK = '<br>'
   private static final Logger log = Logger.getLogger(Matrix)
 
   private List<Column> mColumns
@@ -116,6 +119,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   static List<String> anonymousHeader(int ncols) {
+    if (ncols <= 0) {
+      return []
+    }
     (1..ncols).collect { ANONYMOUS_COLUMN_PREFIX + it }
   }
 
@@ -292,6 +298,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (int i = 0; i < ncol; i++) {
         columns << new Column()
       }
+    } else {
+      columns = new ArrayList<>(columns)
     }
 
     if (headerList == null) {
@@ -306,7 +314,8 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     if (dataTypes.size() > columns.size()) {
       int dataRowCount = columns.isEmpty() ? 0 : columns[0].size()
-      for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
+      int missing = dataTypes.size() - columns.size()
+      for (int i = 0; i < missing; i++) {
         columns.add(new ArrayList(Collections.nCopies(dataRowCount, null)))
       }
     }
@@ -750,6 +759,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
+    int lastColIdx = mColumns.size() - 1
+    if (columnNumber < 0 || columnNumber > lastColIdx) {
+      throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
+    }
     Column col = mColumns[columnNumber]
     Class updatedClass = null
     rows().eachWithIndex { row, idx ->
@@ -2214,15 +2227,18 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Intercept property access to return a column when the name matches.
+   * Delegates to the metaClass for all other names, which provides standard
+   * properties (e.g. metaClass, properties) and throws
+   * {@link MissingPropertyException} for unknown names.
    *
    * @param name the property name
-   * @return the matching Column, or the default property value if not a column name
+   * @return the matching Column, or the metaClass property value if not a column name
    */
   Object getProperty(String name) {
     if (columnIndex(name) >= 0) {
       return column(name)
     }
-    return getProperties().get(name)
+    getMetaClass().getProperty(this, name)
   }
 
   /**
@@ -2410,29 +2426,21 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columnNames the columns to sort by
    * @return this table (mutated), sorted in the order specified by the columns specified
    */
+  @SuppressWarnings('ImplementationAsType')
   Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE) {
     if (columnName !in columnNames()) {
       throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
     }
-    def comparator = new RowComparator(columnIndex(columnName))
-    // copy all the rows
-    List<Row> rows = this.rows()
-    Collections.sort(rows, comparator)
-    if (descending) {
-      Collections.reverse(rows)
-    }
-    updateValues(rows)
-    invalidateIndex()
-    return this
-    //return create(mName, mHeaders, rows as List<List>, mTypes)
+    LinkedHashMap<Integer, Boolean> sortCriteria = [(columnIndex(columnName)): descending]
+    return orderBy(new RowComparator(sortCriteria))
   }
 
 
   /**
    * Sort rows using the supplied column ordering.
    *
-   * The map key is the column name and the value indicates ascending (true)
-   * or descending (false) order. The map iteration order is respected.
+   * The map key is the column name and the value indicates ascending ({@link #ASC})
+   * or descending ({@link #DESC}) order. The map iteration order is respected.
    *
    * @param columnsAndDirection ordered map of column name to ascending flag
    * @return a matrix sorted according to the supplied columns
@@ -3725,23 +3733,19 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   @SuppressWarnings('DuplicateStringLiteral')
   String toHtml(Map<String, String> attr = [:], List<?> rows, boolean autoAlign=true) {
-    Map alignment = [:]
+    Map<String, String> alignment = [:]
     String caption = null
     StringBuilder sb = new StringBuilder()
     sb.append('<table')
     if (attr.size() > 0) {
       attr.each {k,v ->
         if (k == 'align') {
-          v.split(COMMA).each { s ->
-            String a = s as String
-            def key = a.substring(0, a.indexOf(':')).trim()
-            def value = a.substring(a.indexOf(':')+1).trim()
-          alignment.put(key, value)
-          }
+          alignment.putAll(parseHtmlAlignments(v))
         } else if (k == 'caption') {
           caption = v
         } else {
-          sb.append(' ').append(k).append('="').append(v).append('"')
+          validateHtmlAttributeName(k as String)
+          sb.append(' ').append(k).append('="').append(escapeHtml(v)).append('"')
         }
       }
     }
@@ -3765,7 +3769,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         String escaped = escapeHtml(colName)
         sb.append("      <th class='${escaped} ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
-          sb.append(" style='text-align: ${alignment[colName]}'")
+          sb.append(" style='text-align: ${escapeHtml(alignment[colName])}'")
         }
         sb.append('>').append(escaped).append('</th>\n')
       }
@@ -3782,7 +3786,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         String escapedName = escapeHtml(colNames[i])
         rowBuilder.append("      <td class='${escapedName} ${typeNames[i]}'")
         if (alignment.containsKey(colNames[i])) {
-          rowBuilder.append(" style='text-align: ${alignment[colNames[i]]}'")
+          rowBuilder.append(" style='text-align: ${escapeHtml(alignment[colNames[i]])}'")
         }
         rowBuilder.append('>').append(escapeHtml(ValueConverter.asString(val))).append('</td>\n')
       }
@@ -3790,6 +3794,24 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     sb.append('  </tbody>\n</table>\n')
     sb.toString()
+  }
+
+  @SuppressWarnings('DuplicateStringLiteral')
+  private static Map<String, String> parseHtmlAlignments(String specification) {
+    Map<String, String> alignment = [:]
+    specification.split(COMMA).each { String item ->
+      int separator = item.indexOf(':')
+      if (separator < 0) {
+        throw new IllegalArgumentException("Invalid HTML alignment entry: ${item.trim()}")
+      }
+      String key = item.substring(0, separator).trim()
+      String value = item.substring(separator + 1).trim()
+      if (!HTML_ALIGNMENTS.contains(value)) {
+        throw new IllegalArgumentException("Invalid HTML alignment: ${value}")
+      }
+      alignment.put(key, value)
+    }
+    alignment
   }
 
   /**
@@ -3856,14 +3878,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     StringBuilder sb = new StringBuilder()
     sb.append('| ')
-    sb.append(String.join(' | ', columnNames())).append(' |\n')
+    sb.append(String.join(' | ', columnNames().collect { escapeMarkdownCell(it) })).append(' |\n')
     sb.append('| ').append(String.join(' | ', alignment)).append(' |\n')
     StringBuilder rowBuilder = new StringBuilder()
     for (row in rows) {
       rowBuilder.setLength(0)
       List<String> values = []
       for (val in row) {
-        values << ValueConverter.asString(val)
+        values << escapeMarkdownCell(ValueConverter.asString(val))
       }
       rowBuilder.append(String.join(' | ', values))
       sb.append('| ')
@@ -3872,7 +3894,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (attr.size() > 0) {
       sb.append("{")
       attr.each {
-        sb.append(it.key).append('="').append(it.value).append('" ')
+        validateHtmlAttributeName(it.key as String)
+        sb.append(it.key).append('="').append(escapeHtml(it.value)).append('" ')
       }
       sb.append("}\n")
     }
@@ -3889,6 +3912,18 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     alignment
+  }
+
+  private static String escapeMarkdownCell(String value) {
+    value?.replace('\\', '\\\\')?.replace('|', '\\|')?.replaceAll(/\r\n|\n|\r/, MARKDOWN_LINE_BREAK)
+  }
+
+  private static void validateHtmlAttributeName(String name) {
+    String lower = name?.toLowerCase(Locale.ROOT)
+    if (lower == null || !name.matches(HTML_ATTRIBUTE_NAME)
+        || (lower.startsWith('on') && !NON_HANDLER_ON_ATTRIBUTES.contains(lower))) {
+      throw new IllegalArgumentException("Invalid HTML attribute name: ${name}")
+    }
   }
 
   private List<Row> rowsForRender(Integer numRows, boolean fromHead) {
@@ -3963,7 +3998,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix transpose(boolean includeHeaderAsRow = false) {
     def numCols = includeHeaderAsRow ? rowCount() + 1 : rowCount()
 
-    return transpose((1..numCols).collect { ANONYMOUS_COLUMN_PREFIX + it }, includeHeaderAsRow)
+    return transpose(anonymousHeader(numCols), includeHeaderAsRow)
   }
 
   /**

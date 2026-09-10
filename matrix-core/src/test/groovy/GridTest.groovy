@@ -373,4 +373,21 @@ class GridTest {
         assertEquals(3, yearCountMx[2, 1])
         assertEquals(5, yearCountMx[4, 1])
     }
+
+    @Test
+    void testTypedGridRejectsInvalidIndexedAssignmentAndColumnIndex() {
+        Grid<Integer> grid = new Grid<Integer>([[1, 2], [3, 4]], Integer)
+
+        assertThrows(IllegalArgumentException) { grid.replaceColumn(5, [9, 9]) }
+        assertThrows(IllegalArgumentException) { grid[0, 1] = 'str' }
+    }
+
+    @Test
+    void testReplaceColumnOnEmptyGridIsANoOp() {
+        Grid<Integer> grid = new Grid<Integer>([], Integer)
+
+        grid.replaceColumn(0, [])
+
+        assertTrue(grid.data.isEmpty())
+    }
 }

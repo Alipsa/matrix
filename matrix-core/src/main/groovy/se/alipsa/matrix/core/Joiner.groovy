@@ -1,5 +1,9 @@
 package se.alipsa.matrix.core
 
+import static se.alipsa.matrix.core.util.ClassUtils.primitiveWrapper
+
+import se.alipsa.matrix.core.util.ValueComparison
+
 /**
  * Join operations for combining matrices on one or more key columns.
  *
@@ -10,8 +14,9 @@ package se.alipsa.matrix.core
  * <p>One-to-many joins are fully supported: if a key in y has multiple matching
  * rows, each match produces a separate result row (cross product).</p>
  *
- * <p>Null key values compare equal to other null key values, matching common data
- * analysis merge behavior rather than SQL {@code NULL} semantics.</p>
+ * <p>Finite numeric keys compare by mathematical value across numeric runtime types.
+ * String keys do not match numeric keys. Null, NaN, and infinite key values never
+ * match, following SQL-style null semantics.</p>
  *
  * <p><b>Column name collisions:</b> if x already contains a column whose name ends
  * with {@code _y} (or {@code _x}) and a suffix is needed, the result may contain
@@ -154,7 +159,8 @@ class Joiner {
         ? new ResultColumns(names: x.columnNames(), types: x.types())
         : computeResultColumns(x, y, xKeyNames, yNonKeyIndices)
 
-    Map<List<Object>, List<List<Object>>> yIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
+    JoinIndex yJoinIndex = buildIndex(y, yKeyIndices, yNonKeyIndices)
+    Map<List<Object>, List<List<Object>>> yIndex = yJoinIndex.rows
 
     List<List<Object>> resultRows = []
     boolean needsMatchTracking = joinType == JoinType.RIGHT || joinType == JoinType.FULL
@@ -168,10 +174,10 @@ class Joiner {
     List<List<Object>> xAllCols = (0..<xColCount).collect { x.column(it) as List<Object> }
 
     (0..<xRowCount).each { int r ->
-      List<Object> key = extractFromCols(xKeyCols, r)
+      List<Object> key = normalizeJoinKey(extractFromCols(xKeyCols, r))
       List<Object> xRow = extractFromCols(xAllCols, r)
 
-      List<List<Object>> yMatches = yIndex.get(key)
+      List<List<Object>> yMatches = isMatchableKey(key) ? yIndex.get(key) : null
       if (yMatches != null) {
         if (joinType == JoinType.SEMI) {
           resultRows.add(xRow)
@@ -191,8 +197,9 @@ class Joiner {
     }
 
     if (joinType == JoinType.RIGHT || joinType == JoinType.FULL) {
-      appendUnmatchedYRows(resultRows, yIndex, matchedYKeys,
-          xColCount, xKeyIndices, yKeyNames.size())
+      List<Class> xKeyTypes = xKeyIndices.collect { x.type(it) }
+      rc.types = appendUnmatchedYRows(resultRows, yIndex, yJoinIndex.rawKeys, matchedYKeys,
+          xColCount, xKeyIndices, xKeyTypes, rc.types, yKeyNames.size())
     }
 
     Matrix.builder()
@@ -203,11 +210,15 @@ class Joiner {
         .build()
   }
 
-  private static void appendUnmatchedYRows(List<List<Object>> resultRows,
-                                           Map<List<Object>, List<List<Object>>> yIndex,
-                                           Set<List<Object>> matchedYKeys,
-                                           int xColCount, List<Integer> xKeyIndices,
-                                           int keyCount) {
+  @SuppressWarnings('ParameterCount')
+  private static List<Class> appendUnmatchedYRows(List<List<Object>> resultRows,
+                                                  Map<List<Object>, List<List<Object>>> yIndex,
+                                                  Map<List<Object>, List<Object>> rawKeys,
+                                                  Set<List<Object>> matchedYKeys,
+                                                  int xColCount, List<Integer> xKeyIndices,
+                                                  List<Class> xKeyTypes, List<Class> initialResultTypes,
+                                                  int keyCount) {
+    List<Class> resultTypes = new ArrayList<>(initialResultTypes)
     yIndex.each { List<Object> yKey, List<List<Object>> yRows ->
       if (matchedYKeys.contains(yKey)) {
         return
@@ -215,11 +226,43 @@ class Joiner {
       yRows.each { List<Object> yVals ->
         List<Object> xRow = ([null] * xColCount) as List<Object>
         (0..<keyCount).each { int k ->
-          xRow.set(xKeyIndices[k], yKey[k])
+          int xKeyIndex = xKeyIndices[k]
+          Object converted = convertUnmatchedKey(rawKeys[yKey][k], xKeyTypes[k])
+          Class declaredType = resultTypes[xKeyIndex]
+          if (converted != null && declaredType != null
+              && !primitiveWrapper(declaredType).isInstance(converted)) {
+            resultTypes[xKeyIndex] = commonDeclaredType(declaredType, converted.class)
+          }
+          xRow.set(xKeyIndex, converted)
         }
         resultRows << xRow + yVals
       }
     }
+    resultTypes
+  }
+
+  /**
+   * Converts an unmatched y key to the x key column's declared type, but only
+   * when the conversion is lossless. Narrowing conversions that would change
+   * the numeric value (4.5 to 4), or that collapse non-finite values (NaN,
+   * infinity), keep the raw y key so the emitted value stays truthful.
+   */
+  private static Object convertUnmatchedKey(Object rawKey, Class xKeyType) {
+    if (rawKey == null || xKeyType == null) {
+      return rawKey
+    }
+    Object converted = ValueConverter.convert(rawKey, xKeyType)
+    if (converted == null) {
+      return rawKey
+    }
+    if (rawKey instanceof Number && converted instanceof Number) {
+      BigDecimal rawDecimal = ValueConverter.asBigDecimal(rawKey as Number)
+      BigDecimal convertedDecimal = ValueConverter.asBigDecimal(converted as Number)
+      if (rawDecimal == null || convertedDecimal == null || rawDecimal != convertedDecimal) {
+        return rawKey
+      }
+    }
+    converted
   }
 
   private static List<Integer> resolveIndices(Matrix m, List<String> colNames) {
@@ -254,23 +297,43 @@ class Joiner {
     [xKeys, yKeys]
   }
 
-  private static Map<List<Object>, List<List<Object>>> buildIndex(
+  private static JoinIndex buildIndex(
       Matrix m, List<Integer> keyIndices, List<Integer> valueIndices) {
     Map<List<Object>, List<List<Object>>> index = [:]
+    Map<List<Object>, List<Object>> rawKeys = [:]
     int rowCount = m.rowCount()
     List<List<Object>> keyCols = keyIndices.collect { m.column(it) as List<Object> }
     List<List<Object>> valCols = valueIndices.collect { m.column(it) as List<Object> }
     (0..<rowCount).each { int r ->
-      List<Object> key = extractFromCols(keyCols, r)
+      List<Object> rawKey = extractFromCols(keyCols, r)
+      List<Object> key = normalizeJoinKey(rawKey)
+      rawKeys.putIfAbsent(key, rawKey)
       index.computeIfAbsent(key) { [] } << extractFromCols(valCols, r)
     }
-    index
+    new JoinIndex(rows: index, rawKeys: rawKeys)
   }
 
   private static List<Object> extractFromCols(List<List<Object>> cols, int row) {
     List<Object> result = new ArrayList<>(cols.size())
     cols.each { List<Object> col -> result.add(col[row]) }
     result
+  }
+
+  private static List<Object> normalizeJoinKey(List<Object> key) {
+    key.collect { ValueComparison.normalizeKey(it) }
+  }
+
+  private static boolean isMatchableKey(List<Object> key) {
+    key.every { Object value ->
+      if (value == null) {
+        return false
+      }
+      if (value instanceof Double || value instanceof Float) {
+        double number = value.doubleValue()
+        return !Double.isNaN(number) && !Double.isInfinite(number)
+      }
+      true
+    }
   }
 
   private static ResultColumns computeResultColumns(Matrix x, Matrix y,
@@ -306,10 +369,32 @@ class Joiner {
     new ResultColumns(names: resultNames, types: resultTypes)
   }
 
+  private static Class commonDeclaredType(Class left, Class right) {
+    Class leftType = left.isPrimitive() ? primitiveWrapper(left) : left
+    Class rightType = right.isPrimitive() ? primitiveWrapper(right) : right
+    if (leftType == rightType || leftType.isAssignableFrom(rightType)) {
+      return leftType
+    }
+    if (rightType.isAssignableFrom(leftType)) {
+      return rightType
+    }
+    if (Number.isAssignableFrom(leftType) && Number.isAssignableFrom(rightType)) {
+      return Number
+    }
+    Object
+  }
+
   private static class ResultColumns {
 
     List<String> names
     List<Class> types
+
+  }
+
+  private static class JoinIndex {
+
+    Map<List<Object>, List<List<Object>>> rows
+    Map<List<Object>, List<Object>> rawKeys
 
   }
 

@@ -25,6 +25,7 @@ class Stat {
     private static final String LEGACY_GROUP_KEY_SEPARATOR = '_'
     private static final int PERCENT_SCALE = 2
     private static final int PERCENT_BASE = 100
+    private static final int DEFAULT_MEAN_SCALE = 16
     static final String FREQUENCY_VALUE = 'Value'
     static final String FREQUENCY_FREQUENCY = 'Frequency'
     static final String FREQUENCY_PERCENT = 'Percent'
@@ -105,6 +106,13 @@ class Stat {
     @SuppressWarnings('DuplicateNumberLiteral')
     static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
         def freq = frequency(objects)
+        if (freq.rowCount() == 0) {
+            return [
+                SUMMARY_TYPE: type.getSimpleName(),
+                'Number of unique values': 0,
+                'Most frequent': 'no values'
+            ]
+        }
         def mostFrequent = freq.subset(FREQUENCY_FREQUENCY) { it == max(freq[FREQUENCY_FREQUENCY]) }
 
         return [
@@ -114,21 +122,40 @@ class Stat {
         ]
     }
 
+    /**
+     * Sums finite numeric values, ignoring nulls, NaN, and infinities.
+     *
+     * @param list values to sum
+     * @return the sum as a BigDecimal
+     */
     static Number sum(List<?> list) {
         def s = 0 as BigDecimal
         for (value in list) {
             if (value instanceof Number) {
-                s += value
+                BigDecimal decimal = ValueConverter.asBigDecimal(value)
+                if (decimal != null) {
+                    s += decimal
+                }
             }
         }
         return s
     }
 
+    /**
+     * Sums finite numeric values in the requested result type, ignoring nulls, NaN, and infinities.
+     *
+     * @param list values to sum
+     * @param type requested result type
+     * @return the sum converted to type
+     */
     static <T> T sum(List<?> list, Class<T> type) {
         BigDecimal s = DECIMAL_ZERO
         for (value in list) {
             if (value instanceof Number) {
-                s += (value as BigDecimal)
+                BigDecimal decimal = ValueConverter.asBigDecimal(value)
+                if (decimal != null) {
+                    s += decimal
+                }
             }
         }
         return s.asType(type)
@@ -425,21 +452,25 @@ class Stat {
         return means
     }
 
+    @SuppressWarnings('DuplicateNumberLiteral')
     static List<BigDecimal> means(Matrix table, List<String> colNames) {
         // Optimized: use columnar access instead of row iteration
         List<BigDecimal> results = []
         colNames.each { colName ->
             List<?> columnData = table.column(colName)
             BigDecimal sum = DECIMAL_ZERO
-            BigDecimal count = DECIMAL_ZERO
+            int count = 0
             columnData.each { value ->
                 if (value != null && value instanceof Number) {
-                    sum += value
-                    count += 1
+                    BigDecimal decimal = ValueConverter.asBigDecimal(value)
+                    if (decimal != null) {
+                        sum += decimal
+                        count += 1
+                    }
                 }
             }
             // Handle division by zero for empty columns or columns with no numeric values
-            results << (count == 0 ? null : sum / count)
+            results << (count == 0 ? null : sum.divide(count as BigDecimal, DEFAULT_MEAN_SCALE, RoundingMode.HALF_UP))
         }
         return results
     }
@@ -485,20 +516,23 @@ class Stat {
         means
     }
 
-    static BigDecimal mean(BigDecimal[] values, int scale = 16) {
+    static BigDecimal mean(BigDecimal[] values, int scale = DEFAULT_MEAN_SCALE) {
         return mean(values as List<BigDecimal>, scale)
     }
 
-    static BigDecimal mean(List<?> list, int scale = 16) {
+    static BigDecimal mean(List<?> list, int scale = DEFAULT_MEAN_SCALE) {
         if (list == null || list.isEmpty()) {
             return null
         }
         BigDecimal sum = BigDecimal.ZERO
         int nVals = 0
         for (value in list) {
-            if (value != null && value instanceof Number) {
-                sum += value as BigDecimal
-                nVals++
+            if (value instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(value as Number)
+                if (decimal != null) {
+                    sum += decimal
+                    nVals++
+                }
             }
         }
         if (nVals == 0) {
@@ -598,22 +632,30 @@ class Stat {
         if (valueList == null) {
             return null
         }
-        List<? extends Number> vals = valueList.findAll { it instanceof Number } as List<Number>
+        List<BigDecimal> vals = []
+        valueList.each {
+            if (it instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(it as Number)
+                if (decimal != null) {
+                    vals << decimal
+                }
+            }
+        }
         if (vals.isEmpty()) {
             return null
         }
         if (vals.size() == 1) {
-            return vals[0] as BigDecimal
+            return vals[0]
         }
         vals.sort()
         if (vals.size() % 2 == 0) {
             def index = vals.size() / 2 as int
-            def val1 = vals[index - 1] as Number
-            def val2 = vals[index] as Number
+            BigDecimal val1 = vals[index - 1]
+            BigDecimal val2 = vals[index]
             BigDecimal median = (val1 + val2) / 2
             return median
         }
-        return asBigDecimal(vals[vals.size() / 2 as int])
+        return vals[vals.size() / 2 as int]
     }
 
     /**
@@ -814,13 +856,16 @@ class Stat {
         if (values == null || values.isEmpty()) {
             return null
         }
-        List<Number> nullFreeNumbers = []
+        List<BigDecimal> nullFreeNumbers = []
         values.each {
-            if (it != null && it instanceof Number) {
-                nullFreeNumbers.add(it)
+            if (it instanceof Number) {
+                BigDecimal decimal = ValueConverter.asBigDecimal(it as Number)
+                if (decimal != null) {
+                    nullFreeNumbers.add(decimal)
+                }
             }
         }
-        BigDecimal m = mean(nullFreeNumbers, 16)
+        BigDecimal m = mean(nullFreeNumbers, DEFAULT_MEAN_SCALE)
         List<BigDecimal> squaredDeviations = []
         nullFreeNumbers.each {
             BigDecimal deviation = it - m
@@ -913,12 +958,17 @@ class Stat {
     static Matrix frequency(Matrix table, String groupName, String columnName, boolean includeColumnNameCategory = true) {
         def groups = table.split(groupName)
         Map<String, List<?>> tbl = [:]
-        groups.each {
-            def freqTbl = frequency(it.value, columnName)
-            if (includeColumnNameCategory) {
-                tbl[columnName] = freqTbl.column(FREQUENCY_VALUE)
+        List<String> categories = frequency(table, columnName).column(FREQUENCY_VALUE) as List<String>
+        if (includeColumnNameCategory) {
+            tbl[columnName] = categories
+        }
+        groups.each { groupValue, Matrix group ->
+            Map<String, Integer> counts = [:]
+            group.column(columnName).each { value ->
+                String category = String.valueOf(value)
+                counts[category] = (counts[category] ?: 0) + 1
             }
-            tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
+            tbl[String.valueOf(groupValue)] = categories.collect { String category -> counts[category] ?: 0 }
         }
         def nam = (table.getMatrixName() == null || table.getMatrixName().isBlank()) ? groupName : table.getMatrixName() + LEGACY_GROUP_KEY_SEPARATOR + groupName
         return Matrix.builder().data(tbl).matrixName(nam).build()

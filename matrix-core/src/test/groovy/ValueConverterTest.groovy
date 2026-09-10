@@ -6,7 +6,9 @@ import se.alipsa.matrix.core.ValueConverter
 
 import java.sql.Time
 import java.sql.Timestamp
+import java.text.FieldPosition
 import java.text.NumberFormat
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.time.*
 
@@ -38,6 +40,11 @@ class ValueConverterTest {
     assertEquals(false, ValueConverter.asBoolean('NO'))
     assertEquals(false, ValueConverter.asBoolean('off'))
     assertEquals(false, ValueConverter.asBoolean('False'))
+
+    assertFalse(ValueConverter.convert('false', Boolean))
+    assertFalse(ValueConverter.convert('no', Boolean))
+    assertTrue(ValueConverter.convert('yes', Boolean))
+    assertFalse(ValueConverter.convert('0', Boolean))
   }
 
   @Test
@@ -100,6 +107,17 @@ class ValueConverterTest {
   void testAsFloat() {
     assertEquals(.00007594000000032963f, ValueConverter.asFloat('7.594000000032963e-05'))
     assertEquals(-12.3f, ValueConverter.asFloat('-0.123E+2'))
+    assertEquals(1.5f, ValueConverter.convert('1.5', float))
+  }
+
+  @Test
+  void testCharacterConversionReturnsNullForInvalidInput() {
+    assertEquals('a' as Character, ValueConverter.convert('a', Character))
+    assertEquals('A' as Character, ValueConverter.convert(65 as Integer, Character))
+    assertEquals('\t' as Character, ValueConverter.asCharacter(9))
+    assertNull(ValueConverter.convert('ab', Character))
+    assertNull(ValueConverter.asCharacter(-1))
+    assertNull(ValueConverter.asCharacter((Character.MAX_VALUE as Integer) + 1))
   }
 
   @Test
@@ -113,6 +131,7 @@ class ValueConverterTest {
     assertEquals(0, ValueConverter.asInteger(false))
     assertEquals(1, ValueConverter.asInteger('TRUE'))
     assertEquals(0, ValueConverter.asInteger('false'))
+    assertNull(ValueConverter.asInteger('1.2.3'))
   }
 
   @Test
@@ -154,6 +173,13 @@ class ValueConverterTest {
   }
 
   @Test
+  void testConvertEmptyStringToCharacterReturnsNull() {
+    assertNull(ValueConverter.convert('', Character))
+    assertNull(ValueConverter.convert('', Boolean))
+    assertEquals('a' as Character, ValueConverter.convert('a', Character))
+  }
+
+  @Test
   void testConvertWithNullFallback() {
     assertEquals(1, ValueConverter.convert(1, int, null, null, 0))
     assertEquals(0, ValueConverter.convert(null, int, null, null, 0))
@@ -166,7 +192,12 @@ class ValueConverterTest {
     assertEquals((byte) 127, ValueConverter.asByte('127'))
     assertEquals((byte) -128, ValueConverter.asByte('-128'))
     assertEquals((byte) 0, ValueConverter.asByte('0'))
+    assertEquals((byte) 1, ValueConverter.asByte(true))
+    assertEquals((byte) 0, ValueConverter.asByte(false))
     assertNull(ValueConverter.asByte(null))
+    assertNull(ValueConverter.asByte('1.2.3'))
+    assertEquals((byte) 7, ValueConverter.asByte('1.2.3', (byte) 7))
+    assertEquals((byte) 0, ValueConverter.asByte('0', (byte) 7))
   }
 
   @Test
@@ -174,7 +205,12 @@ class ValueConverterTest {
     assertEquals((short) 32767, ValueConverter.asShort('32767'))
     assertEquals((short) -32768, ValueConverter.asShort('-32768'))
     assertEquals((short) 0, ValueConverter.asShort('0'))
+    assertEquals((short) 1, ValueConverter.asShort(true))
+    assertEquals((short) 0, ValueConverter.asShort(false))
     assertNull(ValueConverter.asShort(null))
+    assertNull(ValueConverter.asShort('1.2.3'))
+    assertEquals((short) 7, ValueConverter.asShort('1.2.3', (short) 7))
+    assertEquals((short) 0, ValueConverter.asShort('0', (short) 7))
   }
 
   @Test
@@ -196,6 +232,19 @@ class ValueConverterTest {
     assertEquals(Timestamp.valueOf('2024-10-11 12:34:56'), ValueConverter.asTimestamp('2024-10-11 12:34:56'))
     assertEquals(Timestamp.valueOf('2024-10-11 00:00:00'), ValueConverter.asTimestamp(LocalDate.parse('2024-10-11')))
     assertNull(ValueConverter.asTimestamp(null))
+
+    Date date = new Date(1728667826640L)
+    assertEquals(date.time, ValueConverter.asTimestamp(date).time)
+    assertEquals(date.time, ValueConverter.asSqlDate(date).time)
+    assertEquals(
+        LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()),
+        ValueConverter.asLocalDateTime(date)
+    )
+    Time time = Time.valueOf('10:15:30')
+    assertEquals(
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(time.time), ZoneId.systemDefault()),
+        ValueConverter.asLocalDateTime(time)
+    )
   }
 
   @Test
@@ -266,6 +315,40 @@ class ValueConverterTest {
 
     def time = LocalTime.of(10, 30, 45)
     assertEquals(time.toSecondOfDay() as BigDecimal, ValueConverter.asBigDecimal((Object) time))
+  }
+
+  @Test
+  @SuppressWarnings('LocaleSetDefault')
+  void testDefaultNumericParsingIsLocaleIndependent() {
+    Locale original = Locale.default
+    try {
+      Locale.default = Locale.GERMANY
+      assertTrue(ValueConverter.isNumeric('1.5'))
+    } finally {
+      Locale.default = original
+    }
+  }
+
+  @Test
+  void testFixNegationFormatAllowsNonDecimalNumberFormat() {
+    NumberFormat format = new NumberFormat() {
+      @Override
+      StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos) {
+        toAppendTo.append(number)
+      }
+
+      @Override
+      StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
+        toAppendTo.append(number)
+      }
+
+      @Override
+      Number parse(String source, ParsePosition parsePosition) {
+        null
+      }
+    }
+
+    assertEquals('-1', ValueConverter.fixNegationFormat(format, '-1'))
   }
 
 }

@@ -2,6 +2,8 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
+
 import se.alipsa.matrix.core.util.CumulativeHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.ShiftHelper
@@ -54,6 +56,7 @@ class Column extends ArrayList {
   Column(String name, Collection c) {
     super(c)
     this.name = name
+    this.type = Object
   }
 
   Column(String name, Collection c, Class type) {
@@ -73,7 +76,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   private Column applyOperation(Object val, Closure operation) {
-    Column result = newLike()
+    Column result = newLike(size())
     this.each {
       if (it == null) {
         result.add(null)
@@ -176,10 +179,12 @@ class Column extends ArrayList {
 
   @CompileDynamic
   private Column applyListOp(List list, Closure<Object> op) {
-    Column result = newLike()
-    def that = fill(list)
+    if (list.size() != size()) {
+      throw new IllegalArgumentException("Operand size (${list.size()}) must equal column size (${size()})")
+    }
+    Column result = newLike(size())
     this.eachWithIndex { it, idx ->
-      def val = that[idx]
+      def val = list[idx]
       if (it == null || val == null) {
         result.add(null)
       } else {
@@ -265,18 +270,77 @@ class Column extends ArrayList {
     col
   }
 
-  private Column fill(List list) {
-    def that = new Column(list)
-    int listSize = list.size()
-    int size = this.size()
-    if (listSize < size) {
-      that.addAll([null] * (size - listSize))
-    }
-    that
+  private Column newLike(int initialCapacity) {
+    Column col = new Column(initialCapacity, this.type)
+    col.name = this.name
+    col
   }
 
-  List subList(IntRange range) {
-    this.subList(range.min(), range.max() + 1)
+  /**
+   * Returns a new Column with the values in the given range.
+   *
+   * <p>Range semantics follow Groovy list slicing: negative indices count back from
+   * the end and a reverse range such as {@code 3..1} returns the values in reverse
+   * order. This method and {@code column[range]} ({@link #getAt(IntRange)}) are
+   * equivalent; both return a detached {@code Column} that preserves this column's
+   * name and type.</p>
+   *
+   * <pre>
+   * Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+   * c.subList(1..3)   // [20, 30, 40]
+   * c.subList(3..1)   // [40, 30, 20]
+   * c.subList(-3..-1) // [30, 40, 50]
+   * c.subList(1..&lt;3)  // [20, 30]
+   * </pre>
+   *
+   * @param range the range of indices to include
+   * @return a new Column containing the values in the range
+   * @throws IndexOutOfBoundsException if the range falls outside this column
+   */
+  Column subList(IntRange range) {
+    Column result = newLike()
+    result.addAll(DefaultGroovyMethods.getAt((List) this, (Range) range))
+    result
+  }
+
+  /**
+   * Returns an empty Column for an empty exclusive range, preserving this column's name and type.
+   *
+   * @param range the empty range
+   * @return a detached empty Column with the same name and type
+   */
+  Column subList(EmptyRange range) {
+    newLike(range.size())
+  }
+
+  /**
+   * Returns a new Column with the values in the given range, so that {@code column[range]}
+   * keeps the Column behavior (element-wise arithmetic, name and type) instead of degrading
+   * to a plain list.
+   *
+   * <p>Equivalent to {@link #subList(IntRange)}; see that method for the range semantics.</p>
+   *
+   * <pre>
+   * Column c = new Column('vals', [10, 20, 30, 40, 50], Integer)
+   * c[1..3] * 2 // [40, 60, 80] - element-wise, not list repetition
+   * </pre>
+   *
+   * @param range the range of indices to include
+   * @return a new Column containing the values in the range
+   * @throws IndexOutOfBoundsException if the range falls outside this column
+   */
+  Column getAt(IntRange range) {
+    subList(range)
+  }
+
+  /**
+   * Returns an empty Column for an empty exclusive range, preserving this column's name and type.
+   *
+   * @param range the empty range
+   * @return a detached empty Column with the same name and type
+   */
+  Column getAt(EmptyRange range) {
+    subList(range)
   }
 
   /**

@@ -74,13 +74,15 @@ class ValueConverter {
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
       case BigDecimal -> (E) asBigDecimal(o, numberFormat)
+      case Boolean, boolean -> (E) asBoolean(o)
       case Double, double -> (E) asDouble(o, numberFormat)
       case Byte, byte -> (E) asByte(o)
       case Short, short -> (E) asShort(o)
       case Integer, int -> (E) asInteger(o)
       case Long, long -> (E) asLong(o)
       case BigInteger -> (E) asBigInteger(o)
-      case Float -> (E) asFloat(o)
+      case Float, float -> (E) asFloat(o)
+      case Character, char -> (E) asCharacter(o)
       case Date -> (E) asSqlDate(o)
       case Time -> (E) asSqlTime(o)
       case Timestamp -> (E) asTimestamp(o)
@@ -332,6 +334,9 @@ class ValueConverter {
     if (o instanceof Timestamp) {
       return o.toLocalDateTime()
     }
+    if (o instanceof UtilDate) {
+      return LocalDateTime.ofInstant(Instant.ofEpochMilli(o.getTime()), ZoneId.systemDefault())
+    }
     if (o instanceof Number) {
       return LocalDateTime.ofEpochSecond(o.toLong(), 0, OffsetDateTime.now().getOffset())
     }
@@ -355,15 +360,8 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.byteValue()
     }
-    try {
-      return (o as BigDecimal).byteValue()
-    } catch (NumberFormatException ignored) {
-      String val = asDecimalNumber(String.valueOf(o))
-      if (val.isBlank()) {
-        return null
-      }
-      return Byte.valueOf(val)
-    }
+    Integer value = asInteger(o)
+    value == null ? valueIfNull : value.byteValue()
   }
 
   static Short asShort(Object o, Short valueIfNull = null) {
@@ -373,15 +371,32 @@ class ValueConverter {
     if (o instanceof Number) {
       return o.shortValue()
     }
-    try {
-      return (o as BigDecimal).shortValue()
-    } catch (NumberFormatException ignored) {
-      String val = asDecimalNumber(String.valueOf(o))
-      if (val.isBlank()) {
-        return null
-      }
-      return Short.valueOf(val)
+    Integer value = asInteger(o)
+    value == null ? valueIfNull : value.shortValue()
+  }
+
+  /**
+   * Converts a single-character value to {@link Character}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned for null, blank, or non-single-character input
+   * @return the converted character, or {@code valueIfNull} when conversion is not possible
+   */
+  static Character asCharacter(Object o, Character valueIfNull = null) {
+    if (o == null || '' == o) {
+      return valueIfNull
     }
+    if (o instanceof Character) {
+      return o
+    }
+    if (o instanceof Number) {
+      int code = o.intValue()
+      return code >= Character.MIN_VALUE && code <= Character.MAX_VALUE
+          ? (Character) (char) code
+          : valueIfNull
+    }
+    String value = String.valueOf(o)
+    value.size() == 1 ? value.charAt(0) : valueIfNull
   }
 
   static Integer asInteger(Object o, Integer valueIfNull = null) {
@@ -399,11 +414,8 @@ class ValueConverter {
     } else if (strVal == FALSE_TEXT) {
       return 0
     }
-    String val = asDecimalNumber(strVal)
-    if (val.isBlank()) {
-      return null
-    }
-    return new BigDecimal(val).intValue()
+    BigDecimal value = asBigDecimal(strVal)
+    value?.intValue()
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
@@ -436,7 +448,13 @@ class ValueConverter {
   }
 
   /**
-   * Checks whether object is a Number or a CharSequence containing numbers
+   * Checks whether object is a Number or a CharSequence containing numbers.
+   *
+   * <p>Since 3.9.0, CharSequence values are parsed with {@link Locale#ROOT} (no
+   * locale-specific grouping): {@code '1,234.5'} is numeric and {@code '1 234'}
+   * (with a non-breaking space group separator) is not. Pass an explicit
+   * NumberFormat to parse with other locale conventions. This differs from the
+   * rest of this class, which defaults to {@link Locale#default}.</p>
    *
    * @param o the Object to test
    * @param numberFormatOpt an optional NumberFormat to use
@@ -452,7 +470,7 @@ class ValueConverter {
     if (o instanceof CharSequence) {
       ParsePosition pos = new ParsePosition(0)
       String str = String.valueOf(o)
-      NumberFormat format = numberFormatOpt.length == 0 ? NumberFormat.getInstance() : numberFormatOpt[0]
+      NumberFormat format = numberFormatOpt.length == 0 ? NumberFormat.getInstance(Locale.ROOT) : numberFormatOpt[0]
       format.parse(str, pos)
       //  if, after parsing the string, the parser position is at the end of the string,
       //  we can safely assume that the entire string is numeric
@@ -634,6 +652,9 @@ class ValueConverter {
     if (o instanceof Date) {
       return new Timestamp(o.getTime())
     }
+    if (o instanceof UtilDate) {
+      return new Timestamp(o.getTime())
+    }
     if (o instanceof LocalDateTime) {
       return Timestamp.valueOf(o)
     }
@@ -655,6 +676,9 @@ class ValueConverter {
     }
     if (o instanceof Date) {
       return o
+    }
+    if (o instanceof UtilDate) {
+      return new Date(o.getTime())
     }
     if (o instanceof LocalDate) {
       return Date.valueOf(o)
@@ -745,7 +769,10 @@ class ValueConverter {
     // Some formats e.g. Sweden requires minus and throws an error on hyphen
     // Other formats e.g. US does the opposite
     // here we make sure hyphen and minus both mean the negative prefix
-    String neg = ((DecimalFormat)format).negativePrefix
+    if (!(format instanceof DecimalFormat)) {
+      return val
+    }
+    String neg = format.negativePrefix
     val.replace(S_HYPHEN, neg).replace(S_MINUS, neg)
   }
 

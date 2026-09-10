@@ -31,7 +31,7 @@ class MatrixAssertions {
   }
 
   static void assertContentNotEquals(Matrix expected, Matrix actual, String message = '') {
-    boolean eq = expected.equals(actual, true, true, true, STRUCTURE_TOLERANCE, false, message)
+    boolean eq = expected.equals(actual, true, true, false, CONTENT_TOLERANCE, false, message)
     if (eq) {
       throw new IllegalArgumentException(message)
     }

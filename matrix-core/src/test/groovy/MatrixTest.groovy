@@ -3466,4 +3466,183 @@ class MatrixTest {
     assertEquals(4, result.rowCount())
     assertIterableEquals(['color', 'size'], result.columnNames())
   }
+
+  @Test
+  void testConstructorPadsEmptyColumnsWithoutMutatingInput() {
+    List<List> columns = []
+    Matrix matrix = new Matrix('empty', ['a', 'b', 'c', 'd', 'e'], columns, [String] * 5)
+
+    assertEquals(5, matrix.columnCount())
+    assertEquals(['a', 'b', 'c', 'd', 'e'], matrix.columnNames())
+    assertTrue(columns.isEmpty())
+
+    Matrix rowsMatrix = Matrix.builder()
+        .columnNames(['a', 'b', 'c', 'd', 'e'])
+        .rows([])
+        .types([String] * 5)
+        .build()
+    assertEquals(5, rowsMatrix.columnCount())
+  }
+
+  @Test
+  void testConvertStringColumnToBoolean() {
+    Matrix matrix = Matrix.builder().data(flag: ['false', 'no', 'yes', '0']).types(String).build()
+
+    matrix.convert('flag', Boolean)
+
+    assertEquals([false, false, true, false], matrix.column('flag'))
+    assertEquals(Boolean, matrix.type('flag'))
+  }
+
+  @Test
+  void testDescendingOrderByPreservesTieOrder() {
+    Matrix single = Matrix.builder().data(k: [1, 1, 2], id: ['A', 'B', 'C']).build()
+    Matrix mapped = single.clone()
+
+    single.orderBy('k', true)
+    mapped.orderBy(['k': Matrix.DESC] as LinkedHashMap<String, Boolean>)
+
+    assertEquals(['C', 'A', 'B'], single.column('id'))
+    assertEquals(mapped.rows(), single.rows())
+  }
+
+  @Test
+  void testCriteriaApplyRejectsInvalidColumnIndices() {
+    Matrix matrix = Matrix.builder().data(a: [1], b: [2]).build()
+
+    assertThrows(IndexOutOfBoundsException) { matrix.apply(-1, { true }) { it } }
+    assertThrows(IndexOutOfBoundsException) { matrix.apply(2, { true }) { it } }
+  }
+
+  @Test
+  void testHtmlEscapesAttributeValues() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    String html = matrix.toHtml([id: 'x" onload="alert(1)'])
+
+    assertTrue(html.startsWith('<table id="x&quot; onload=&quot;alert(1)">'))
+    assertFalse(html.contains(' id="x" onload='))
+  }
+
+  @Test
+  void testHtmlRejectsUnsafeAlignment() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    IllegalArgumentException error = assertThrows(IllegalArgumentException) {
+      matrix.toHtml([align: "a: right' onmouseover='alert(1)"])
+    }
+
+    assertTrue(error.message.startsWith('Invalid HTML alignment:'))
+  }
+
+  @Test
+  void testHtmlRejectsMalformedAlignment() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    IllegalArgumentException error = assertThrows(IllegalArgumentException) {
+      matrix.toHtml([align: 'a right'])
+    }
+
+    assertEquals('Invalid HTML alignment entry: a right', error.message)
+  }
+
+  @Test
+  void testMarkdownEscapesPipes() {
+    Matrix matrix = Matrix.builder().data(['a|b': ['x|y', 'x\\|y']]).types(String).build()
+
+    String markdown = matrix.toMarkdown()
+
+    assertTrue(markdown.contains('| a\\|b |'))
+    assertTrue(markdown.contains('| x\\|y |'))
+    assertEquals('| x\\\\\\|y |', markdown.readLines()[3])
+  }
+
+  @Test
+  void testMarkdownEscapesAttributeValuesAndRejectsInvalidNames() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    String markdown = matrix.toMarkdown([id: 'v"><b>'])
+
+    assertTrue(markdown.endsWith('{id="v&quot;&gt;&lt;b&gt;" }\n'))
+    assertThrows(IllegalArgumentException) {
+      matrix.toMarkdown([('id"><script>x</script>'): 'value'])
+    }
+  }
+
+  @Test
+  void testHtmlAndMarkdownRejectEventHandlerAttributes() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onmouseover: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onClick: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onfocusin: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toHtml([onmousewheel: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onmouseover: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onClick: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onfocusin: 'alert(1)']) }
+    assertThrows(IllegalArgumentException) { matrix.toMarkdown([onmousewheel: 'alert(1)']) }
+
+    Map<String, String> ordinaryAttributes = [once: '1', only: '2', online: '3', 'data-x': '4']
+    assertTrue(matrix.toHtml(ordinaryAttributes).startsWith('<table once="1" only="2" online="3" data-x="4">'))
+    assertTrue(matrix.toMarkdown(ordinaryAttributes).endsWith('{once="1" only="2" online="3" data-x="4" }\n'))
+  }
+
+  @Test
+  void testEmptyTransposeAndAnonymousHeaders() {
+    assertEquals([], Matrix.anonymousHeader(0))
+    assertEquals([], Matrix.anonymousHeader(-1))
+
+    Matrix matrix = Matrix.builder().columnNames(['a', 'b']).rows([]).types(String, String).build()
+    Matrix transposed = matrix.transpose()
+
+    assertEquals(0, transposed.columnCount())
+    assertEquals(0, transposed.rowCount())
+  }
+
+  @Test
+  void testUnknownPropertyThrows() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(MissingPropertyException) { matrix.rowCont }
+  }
+
+  @Test
+  void testMetaClassPropertyAccess() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertNotNull(matrix.metaClass)
+    assertTrue(matrix.properties instanceof Map)
+    assertThrows(MissingPropertyException) { matrix.zzz }
+  }
+
+  @Test
+  void testOrderByNullDirectionSortsAscending() {
+    Matrix matrix = Matrix.builder().data(a: [3, 1, 2]).build()
+
+    matrix.orderBy('a', null)
+    assertEquals([1, 2, 3], matrix.column('a'))
+
+    Matrix mapped = Matrix.builder().data(a: [3, 1, 2]).build()
+    mapped.orderBy(['a': null] as LinkedHashMap<String, Boolean>)
+    assertEquals([1, 2, 3], mapped.column('a'))
+  }
+
+  @Test
+  void testHtmlRejectsInvalidAttributeNames() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+
+    assertThrows(IllegalArgumentException) {
+      matrix.toHtml(['x" onload="alert(1)': 'v'], matrix.rows(), false)
+    }
+  }
+
+  @Test
+  void testMarkdownEscapesNewlines() {
+    Matrix matrix = Matrix.builder().data(a: ['line1\nline2', 'crlf\r\nend'], b: ['ok', 'ok']).types(String, String).build()
+
+    String markdown = matrix.toMarkdown()
+
+    assertTrue(markdown.contains('| line1<br>line2 |'))
+    assertTrue(markdown.contains('| crlf<br>end |'))
+  }
 }

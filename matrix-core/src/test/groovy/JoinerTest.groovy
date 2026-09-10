@@ -263,9 +263,9 @@ class JoinerTest {
     ]).build()
 
     def result = Joiner.merge(x, y, 'id')
-    assertEquals(2, result.rowCount())
-    assertEquals([1, null], result.column('id') as List)
-    assertEquals([80, 90], result.column('score') as List)
+    assertEquals(1, result.rowCount())
+    assertEquals([1], result.column('id') as List)
+    assertEquals([80], result.column('score') as List)
   }
 
   @Test
@@ -587,10 +587,10 @@ class JoinerTest {
     ]).build()
 
     def result = Joiner.merge(x, y, 'id', JoinType.FULL)
-    assertEquals(3, result.rowCount())
-    assertEquals([1, null, 2], result.column('id') as List)
-    assertEquals(['A', 'B', null], result.column('name') as List)
-    assertEquals([null, 90, 70], result.column('score') as List)
+    assertEquals(4, result.rowCount())
+    assertEquals([1, null, null, 2], result.column('id') as List)
+    assertEquals(['A', 'B', null, null], result.column('name') as List)
+    assertEquals([null, null, 90, 70], result.column('score') as List)
   }
 
   @Test
@@ -739,6 +739,97 @@ class JoinerTest {
       Joiner.crossJoin(x, y)
     }
     assertTrue(error.message.contains('exceeding maximum'))
+  }
+
+  @Test
+  void testNumericJoinKeysNormalizeAcrossTypes() {
+    Matrix integers = Matrix.builder().data(id: [1, 2], name: ['a', 'b']).types(Integer, String).build()
+
+    Matrix longs = Matrix.builder().data(id: [1L, 2L], value: [10, 20]).types(Long, Integer).build()
+    Matrix decimals = Matrix.builder().data(id: [1.00, 2.0], value: [10, 20]).types(BigDecimal, Integer).build()
+    Matrix strings = Matrix.builder().data(id: ['1', '2'], value: [10, 20]).types(String, Integer).build()
+
+    assertEquals(2, Joiner.merge(integers, longs, 'id').rowCount())
+    assertEquals(2, Joiner.merge(integers, decimals, 'id').rowCount())
+    assertEquals(0, Joiner.merge(integers, strings, 'id').rowCount())
+  }
+
+  @Test
+  void testFullJoinConvertsUnmatchedYKeysToXKeyColumnType() {
+    Matrix x = Matrix.builder('x').data([
+        id  : [1, 2, 3],
+        name: ['A', 'B', 'C']
+    ]).types([Integer, String]).build()
+
+    Matrix y = Matrix.builder('y').data([
+        id   : [1.0d, 4.0d],
+        score: [80, 90]
+    ]).types([Double, Integer]).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    assertEquals(Integer, result.type('id'))
+    assertEquals([1, 2, 3, 4], result.column('id') as List)
+    assertEquals(['A', 'B', 'C', null], result.column('name') as List)
+    assertEquals([80, null, null, 90], result.column('score') as List)
+  }
+
+  @Test
+  void testFullJoinKeepsLossyUnmatchedYKeysRaw() {
+    Matrix x = Matrix.builder('x').data([
+        id  : [1, 2],
+        name: ['A', 'B']
+    ]).types([Integer, String]).build()
+
+    Matrix y = Matrix.builder('y').data([
+        id   : [4.5d, Double.NaN, Double.POSITIVE_INFINITY],
+        score: [80, 90, 100]
+    ]).types([Double, Integer]).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    assertEquals(Number, result.type('id'))
+    List<Object> ids = result.column('id') as List<Object>
+    assertEquals(1, ids[0])
+    assertEquals(2, ids[1])
+    // narrowing and non-finite conversions are lossy: keep the raw y key
+    assertEquals(4.5d, (Double) ids[2])
+    assertTrue(ids[3] instanceof Double && ((Double) ids[3]).isNaN())
+    assertEquals(Double.POSITIVE_INFINITY, (Double) ids[4])
+  }
+
+  @Test
+  void testFullJoinWidensKeyTypeForObjectKeys() {
+    Matrix x = Matrix.builder().data(id: [1], xv: ['a']).types(Integer, String).build()
+    Matrix y = Matrix.builder().data(id: [4.5d, 2], yv: ['b', 'c']).types(Object, String).build()
+
+    Matrix result = Joiner.merge(x, y, 'id', JoinType.FULL)
+
+    assertEquals(Number, result.type('id'))
+    assertEquals([1, 4.5d, 2], result.column('id'))
+    result.column('id').each { Object value -> assertTrue(result.type('id').isInstance(value)) }
+  }
+
+  @Test
+  void testOuterJoinsHandleNullDeclaredKeyType() {
+    Matrix x = Matrix.builder()
+        .columnNames(['id', 'name'])
+        .rows([['a', 'A'], ['b', 'B']])
+        .types([null, String])
+        .build()
+    Matrix y = Matrix.builder()
+        .columnNames(['id', 'score'])
+        .rows([[5, 80]])
+        .types([Integer, Integer])
+        .build()
+
+    Matrix right = Joiner.merge(x, y, 'id', JoinType.RIGHT)
+    assertNull(right.type('id'))
+    assertEquals([5], right.column('id'))
+
+    Matrix full = Joiner.merge(x, y, 'id', JoinType.FULL)
+    assertNull(full.type('id'))
+    assertEquals(['a', 'b', 5], full.column('id'))
   }
 
 }

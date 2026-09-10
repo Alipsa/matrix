@@ -1,5 +1,7 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.PackageScope
+
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.CellType
 import org.dhatim.fastexcel.reader.Row
@@ -113,26 +115,22 @@ class FExcelValueExtractor extends ValueExtractor {
       }
       def formatId = cell.dataFormatId
       def formatString = cell.dataFormatString
-      switch (cell.getType()) {
-         case CellType.EMPTY:
-            return null
-         case CellType.NUMBER:
+      return switch (cell.getType()) {
+         case CellType.EMPTY -> null
+         case CellType.NUMBER -> {
             if (FDateUtil.isADateFormat(formatId, formatString)) {
                def date = cell.asDate()
                if (!formatString.toLowerCase().contains(HOUR_MARKER) && date.hour == 0 && date.minute == 0) {
-                  return date.toLocalDate()
+                  yield date.toLocalDate()
                }
-               return date
+               yield date
             }
-            return cell.asNumber()
-         case CellType.BOOLEAN:
-            return cell.asBoolean()
-         case CellType.STRING:
-            return cell.asString()
-         case CellType.FORMULA:
-            return getValueFromFormulaCell(cell)
-         default:
-            return cell.getRawValue()
+            yield cell.asNumber()
+         }
+         case CellType.BOOLEAN -> cell.asBoolean()
+         case CellType.STRING -> cell.asString()
+         case CellType.FORMULA -> getValueFromFormulaCell(cell)
+         default -> cell.getRawValue()
       }
    }
 
@@ -147,10 +145,19 @@ class FExcelValueExtractor extends ValueExtractor {
          }
          return date
       }
-      if (ValueConverter.isNumeric(rawValue)) {
-         return ValueConverter.asNumber(rawValue)
+      parseFormulaNumber(rawValue)
+   }
+
+   @PackageScope
+   static Object parseFormulaNumber(String rawValue) {
+      if (rawValue == null) {
+         return null
       }
-      return rawValue
+      try {
+         new BigDecimal(rawValue)
+      } catch (NumberFormatException ignored) {
+         rawValue
+      }
    }
 
 }
