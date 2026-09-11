@@ -48,6 +48,13 @@ class RdatasetsHttpTest {
         ex.sendResponseHeaders(200, -1)
         ex.close()
       }
+      createContext('/stall') { HttpExchange ex ->
+        // send the 200 headers immediately, then stall before writing the body
+        byte[] body = 'x'.getBytes(StandardCharsets.UTF_8)
+        ex.sendResponseHeaders(200, body.length)
+        Thread.sleep(2000)
+        ex.responseBody.withCloseable { it.write(body) }
+      }
       createContext('/data.csv') { HttpExchange ex ->
         byte[] body = '"name","value","note"\n"a",1,"x"\n#row,2,"y"\n"b",NA,""\n'.getBytes(StandardCharsets.UTF_8)
         ex.responseHeaders.add('Content-Type', 'text/csv; charset=UTF-8')
@@ -81,8 +88,13 @@ class RdatasetsHttpTest {
   }
 
   @Test
-  void testFetchTextRequestTimeout() {
+  void testFetchTextHeaderTimeout() {
     assertThrows(HttpTimeoutException) { Rdatasets.fetchText("$base/slow", Duration.ofMillis(200)) }
+  }
+
+  @Test
+  void testFetchTextBodyTransferTimeout() {
+    assertThrows(HttpTimeoutException) { Rdatasets.fetchText("$base/stall", Duration.ofMillis(200)) }
   }
 
   @Test

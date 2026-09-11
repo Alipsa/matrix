@@ -11,14 +11,20 @@ import se.alipsa.matrix.core.util.Logger
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.net.http.HttpTimeoutException
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * Convenience wrapper for accessing datasets from the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/).
  * Rdatasets is a collection of more than 3,600 datasets which were originally distributed alongside the
  * statistical software environment R and some of its add-on packages.
  * <p>
- * All remote access uses a 15 second connect timeout and a 120 second request timeout. Two kinds of remote failure
+ * All remote access uses a 15 second connect timeout and a 120 second request timeout that bounds the entire
+ * response, headers and body. Two kinds of remote failure
  * are reported, depending on which request failed:
  * <ul>
  *   <li>loading the dataset index — {@link UncheckedIOException} from {@link #overview()} and {@link #search}, and from
@@ -58,6 +64,14 @@ class Rdatasets {
    * @throws UncheckedIOException if the remote data cannot be fetched
    */
   static Matrix overview() {
+    cachedIndex().clone()
+  }
+
+  /**
+   * Returns the cached overview matrix without copying.
+   * Callers must not mutate the returned matrix; use {@link #overview()} for a mutable, independent copy.
+   */
+  private static Matrix cachedIndex() {
     Matrix result = cachedOverview
     if (result == null) {
       synchronized (Rdatasets) {
@@ -72,7 +86,7 @@ class Rdatasets {
         }
       }
     }
-    result.clone()
+    result
   }
 
   /** Clears the cached overview so the next call to {@link #overview()} re-fetches the data. */
@@ -96,7 +110,7 @@ class Rdatasets {
     requireNames(packageName, itemName)
     log.debug("Fetching info for $packageName/$itemName (plainText=$toPlainText)")
     def urlResult = GQ {
-      from d in overview()
+      from d in cachedIndex()
       where d.Package == packageName && d.Item == itemName
       select d.Doc
     }
@@ -128,7 +142,7 @@ class Rdatasets {
     requireNames(packageName, itemName)
     log.debug("Fetching data for $packageName/$itemName")
     def urlResult = GQ {
-      from d in overview()
+      from d in cachedIndex()
       where d.Package == packageName && d.Item == itemName
       select d.CSV
     }
@@ -183,7 +197,7 @@ class Rdatasets {
     }
     def searchText = text.toLowerCase(Locale.ROOT)
     def result = GQ {
-      from d in overview()
+      from d in cachedIndex()
       where d.Item.toLowerCase(Locale.ROOT).contains(searchText) || d.Title.toLowerCase(Locale.ROOT).contains(searchText)
       select d
     }
@@ -216,25 +230,36 @@ class Rdatasets {
   }
 
   /**
-   * Performs a GET request with connect and request timeouts and returns the body as text.
+   * Performs a GET request with a connect timeout and a total timeout that bounds the entire response
+   * (headers and body) and returns the body as text.
    * The body is decoded with the charset from the Content-Type header, falling back to UTF-8.
    *
    * @param url the location to fetch
-   * @param timeout the request timeout, default {@link #REQUEST_TIMEOUT}
+   * @param timeout the total request timeout including body transfer, default {@link #REQUEST_TIMEOUT}
    * @return the response body
    * @throws IOException on transport errors, timeouts, interruption or a non-200 status
    */
   private static String fetchText(String url, Duration timeout = REQUEST_TIMEOUT) throws IOException {
     HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-        .timeout(timeout)
         .GET()
         .build()
+    CompletableFuture<HttpResponse<String>> future = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
     HttpResponse<String> response
     try {
-      response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString())
+      response = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS)
+    } catch (TimeoutException e) {
+      future.cancel(true)
+      throw new HttpTimeoutException("Request to $url timed out after ${timeout.toSeconds()} seconds")
     } catch (InterruptedException e) {
+      future.cancel(true)
       Thread.currentThread().interrupt()
       throw new IOException("Interrupted while fetching $url", e)
+    } catch (ExecutionException e) {
+      Throwable cause = e.cause
+      if (cause instanceof IOException) {
+        throw (IOException) cause
+      }
+      throw new IOException("Failed to fetch $url: ${cause?.message}", cause)
     }
     if (response.statusCode() != HTTP_OK) {
       throw new IOException("HTTP ${response.statusCode()} when fetching $url")

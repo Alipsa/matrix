@@ -95,7 +95,7 @@ Matrix-datasets provides easy access to the [R datasets repository](https://vinc
 `Rdatasets.overview()` returns a Matrix of all available datasets. The overview is fetched lazily on first call and cached; call `Rdatasets.refresh()` to clear the cache and re-fetch.
 
 Each call to `overview()` returns an independent copy, so you can safely `convert()`, `drop()` or rename columns on it.
-Remote calls use a 15 s connect timeout and a 120 s request timeout. A timeout, network failure or non-200 response raises
+Remote calls use a 15 s connect timeout and a 120 s request timeout covering the full response (headers and body). A timeout, network failure or non-200 response raises
 `UncheckedIOException` when the dataset index cannot be loaded (`overview()`, `search()`, and the first `fetchData`/`fetchInfo`
 call while the cache is cold) and `IOException` when the selected csv or documentation page cannot be fetched.
 
