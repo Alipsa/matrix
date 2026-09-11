@@ -493,11 +493,11 @@ class NumberExtension {
   static BigDecimal ulp(Number self) {
     switch (self) {
       case Double -> {
-        toBigDecimal(self, 'ulp')
+        requireFinite(self, 'ulp')
         floatingPointUlp((Double) self)
       }
       case Float -> {
-        toBigDecimal(self, 'ulp')
+        requireFinite(self, 'ulp')
         floatingPointUlp((Float) self)
       }
       default -> decimalUlp(toBigDecimal(self, 'ulp'))
@@ -719,6 +719,9 @@ class NumberExtension {
   static BigDecimal hypot(BigDecimal x, BigDecimal y) {
     BigDecimal ax = x.abs()
     BigDecimal ay = y.abs()
+    if (ax == BigDecimal.ZERO && ay == BigDecimal.ZERO) {
+      return BigDecimal.ZERO
+    }
     if (ax == BigDecimal.ZERO) {
       return ay.round(RESULT_CONTEXT)
     }
@@ -962,13 +965,17 @@ class NumberExtension {
    * BigDecimal radians = 1G
    * radians.toDegrees()  // → 57.29577951308232
    * }</pre>
-   * <p>The conversion uses the internal high-precision π value and rounds the result
-   * once to DECIMAL64; it does not use the lower-precision public {@link #PI} constant.
+   * <p>The conversion uses the internal high-precision π value and returns a
+   * DECIMAL64-rounded result; zero is returned in canonical form. It does not use the
+   * lower-precision public {@link #PI} constant.
    *
    * @param self the angle in radians
    * @return the angle in degrees as a BigDecimal
    */
   static BigDecimal toDegrees(BigDecimal self) {
+    if (self.signum() == 0) {
+      return BigDecimal.ZERO
+    }
     self.multiply(ONE_EIGHTY, CALCULATION_CONTEXT)
         .divide(CALCULATION_PI, CALCULATION_CONTEXT)
         .round(RESULT_CONTEXT)
@@ -996,13 +1003,17 @@ class NumberExtension {
    * BigDecimal angle = 1G
    * angle.toRadians()  // → 0.01745329251994330
    * }</pre>
-   * <p>The conversion uses the internal high-precision π value and rounds the result
-   * once to DECIMAL64; it does not use the lower-precision public {@link #PI} constant.
+   * <p>The conversion uses the internal high-precision π value and returns a
+   * DECIMAL64-rounded result; zero is returned in canonical form. It does not use the
+   * lower-precision public {@link #PI} constant.
    *
    * @param self the angle in degrees
    * @return the angle in radians as a BigDecimal
    */
   static BigDecimal toRadians(BigDecimal self) {
+    if (self.signum() == 0) {
+      return BigDecimal.ZERO
+    }
     self.multiply(CALCULATION_PI, CALCULATION_CONTEXT)
         .divide(ONE_EIGHTY, CALCULATION_CONTEXT)
         .round(RESULT_CONTEXT)
@@ -1317,13 +1328,18 @@ class NumberExtension {
    * so these inputs cannot be propagated.
    */
   private static BigDecimal toBigDecimal(Number value, String operation) {
+    requireFinite(value, operation)
+    value as BigDecimal
+  }
+
+  /** Rejects floating point values that BigDecimal cannot represent. */
+  private static void requireFinite(Number value, String operation) {
     if (value instanceof Double && !Double.isFinite((Double) value)) {
       throw new IllegalArgumentException("${operation} is undefined for non-finite input: ${value}")
     }
     if (value instanceof Float && !Float.isFinite((Float) value)) {
       throw new IllegalArgumentException("${operation} is undefined for non-finite input: ${value}")
     }
-    value as BigDecimal
   }
 
 }

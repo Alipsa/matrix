@@ -1138,6 +1138,7 @@ class NumberExtensionTest {
     assertTrue(0.0G.hypot(4.00000000000000000000G).precision() <= MathContext.DECIMAL64.precision)
     assertTrue(4.00000000000000000000G.hypot(0.0G).precision() <= MathContext.DECIMAL64.precision)
     assertTrue(123456789.0G.hypot(987654321.0G).precision() <= MathContext.DECIMAL64.precision)
+    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').hypot(new BigDecimal('0.00')))
   }
 
   @Test
@@ -1156,6 +1157,9 @@ class NumberExtensionTest {
     assertEquals(coarse.toRadians(), padded.toRadians())
     assertEquals(coarse.toDegrees().precision(), padded.toDegrees().precision())
     assertEquals(coarse.toRadians().precision(), padded.toRadians().precision())
+
+    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').toDegrees())
+    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').toRadians())
   }
 
   @Test

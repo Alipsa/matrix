@@ -65,8 +65,8 @@ BigDecimal piDegrees = NumberExtension.PI32.toDegrees() // 180.0000000000000
 ```
 
 Trigonometric range reduction supports angles requiring up to 512 digits of π (roughly through `1E+469`); larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
-Angle conversions use the internal high-precision π value and round once to DECIMAL64,
-so their precision and output do not depend on the input scale.
+Angle conversions use the internal high-precision π value, return DECIMAL64-rounded
+results, and canonicalize zero, so their precision and output do not depend on the input scale.
 
 ### Polar and Cartesian Coordinates
 
