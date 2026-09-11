@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 
 import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Paths
-import java.util.function.Function
 
 /**
  * Common file utilities
@@ -35,8 +34,7 @@ class FileUtil {
     if (url == null) {
       throw new FileNotFoundException("$filePath does not exist")
     }
-    resolveFile(filePath, url, "$filePath cannot be resolved to a file",
-        { File f -> "$filePath does not exist" } as Function<File, String>)
+    resolveFile(filePath, url, filePath)
   }
 
   /**
@@ -45,22 +43,20 @@ class FileUtil {
    *
    * @param name the resource name, used in protocol-check error messages
    * @param url the resolved url, must use the file protocol
-   * @param unresolvableMsg message prefix when the url cannot be converted to a File
-   * @param missingMsg produces the message when the resolved File does not exist
+   * @param label the resource description used in the not-resolvable and not-exists messages
    * @return the resolved File
    * @throws FileNotFoundException if the url is not a file-system url, cannot be resolved, or does not exist
    */
-  private static File resolveFile(String name, URL url, String unresolvableMsg,
-      Function<File, String> missingMsg) throws FileNotFoundException {
+  private static File resolveFile(String name, URL url, String label) throws FileNotFoundException {
     requireFileProtocol(name, url)
     File file
     try {
       file = Paths.get(url.toURI()).toFile()
     } catch (URISyntaxException | IllegalArgumentException | FileSystemNotFoundException | UnsupportedOperationException e) {
-      throw new FileNotFoundException("$unresolvableMsg: ${e.message}").initCause(e)
+      throw new FileNotFoundException("$label cannot be resolved to a file: ${e.message}").initCause(e)
     }
     if (!file.exists()) {
-      throw new FileNotFoundException(missingMsg.apply(file))
+      throw new FileNotFoundException("$label does not exist ($file)")
     }
     file
   }
@@ -134,8 +130,7 @@ class FileUtil {
     if (url == null) {
       throw new FileNotFoundException("Resource not found: $name")
     }
-    resolveFile(name, url, "Resource $name cannot be resolved to a file",
-        { File f -> "Resource $name does not exist ($f)" } as Function<File, String>)
+    resolveFile(name, url, "Resource $name")
   }
 
   /**

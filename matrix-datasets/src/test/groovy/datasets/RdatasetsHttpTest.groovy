@@ -14,6 +14,8 @@ import se.alipsa.matrix.datasets.Rdatasets
 import java.net.http.HttpTimeoutException
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * Deterministic tests of the private http helpers in Rdatasets against a local HttpServer.
@@ -23,10 +25,13 @@ class RdatasetsHttpTest {
 
   private static HttpServer server
   private static String base
+  private static ExecutorService executor
 
   @BeforeAll
   static void startServer() {
     server = HttpServer.create(new InetSocketAddress('127.0.0.1', 0), 0)
+    executor = Executors.newCachedThreadPool()
+    server.executor = executor
     server.with {
       createContext('/latin1') { HttpExchange ex ->
         byte[] body = 'Zürich'.getBytes(StandardCharsets.ISO_8859_1)
@@ -69,6 +74,7 @@ class RdatasetsHttpTest {
   @AfterAll
   static void stopServer() {
     server.stop(0)
+    executor.shutdownNow()
   }
 
   @Test

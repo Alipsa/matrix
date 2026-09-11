@@ -249,7 +249,7 @@ class Rdatasets {
       response = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS)
     } catch (TimeoutException e) {
       future.cancel(true)
-      throw new HttpTimeoutException("Request to $url timed out after ${timeout.toSeconds()} seconds")
+      throw (HttpTimeoutException) new HttpTimeoutException("Request to $url timed out after ${timeout.toSeconds()} seconds").initCause(e)
     } catch (InterruptedException e) {
       future.cancel(true)
       Thread.currentThread().interrupt()
