@@ -180,6 +180,15 @@ subprojects { Project p ->
     mavenCentral()
   }
 
+  p.afterEvaluate { proj ->
+    def moduleVersion = proj.version.toString()
+    tasks.named('printVersion') {
+      doLast { println moduleVersion }
+    }
+  }
+  tasks.register('printVersion') {
+  }
+
   tasks.withType(Test).configureEach {
     addTestListener(new TestListener() {
       long totalDuration = 0
