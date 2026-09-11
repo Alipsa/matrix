@@ -1133,12 +1133,12 @@ class NumberExtensionTest {
   }
 
   @Test
-  void testHypotAlwaysReturnsDecimal64Precision() {
+  void testHypotAlwaysReturnsDecimal64PrecisionAndCanonicalZero() {
     assertTrue(3.0G.hypot(4.0G).precision() <= MathContext.DECIMAL64.precision)
     assertTrue(0.0G.hypot(4.00000000000000000000G).precision() <= MathContext.DECIMAL64.precision)
     assertTrue(4.00000000000000000000G.hypot(0.0G).precision() <= MathContext.DECIMAL64.precision)
     assertTrue(123456789.0G.hypot(987654321.0G).precision() <= MathContext.DECIMAL64.precision)
-    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').hypot(new BigDecimal('0.00')))
+    assertEquals(0, 0.000G.hypot(0.00G).scale())
   }
 
   @Test
@@ -1158,8 +1158,8 @@ class NumberExtensionTest {
     assertEquals(coarse.toDegrees().precision(), padded.toDegrees().precision())
     assertEquals(coarse.toRadians().precision(), padded.toRadians().precision())
 
-    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').toDegrees())
-    assertEquals(BigDecimal.ZERO, new BigDecimal('0.000').toRadians())
+    assertEquals(0, 0.000G.toDegrees().scale())
+    assertEquals('0', 0.000G.toRadians().toString())
   }
 
   @Test
