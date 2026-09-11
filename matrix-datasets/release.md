@@ -13,10 +13,11 @@
   instead of `NullPointerException` for null input (matching `mapData(null)`)
 - `Dataset.mapDataSet()` throws `FileNotFoundException` instead of `NullPointerException` when the resource does not exist
 - `Dataset.mapData()`/`mapDataSet()` trim the region argument, so R-style region names with trailing spaces (e.g. nz `'North.Island '`) match
-- `Rdatasets` remote access now has a 15 s connect / 120 s request timeout instead of hanging indefinitely on a stalled
-  connection. A timeout, network failure or non-200 response is reported as `UncheckedIOException` when the dataset index
-  cannot be loaded (`overview()`, `search()`, and the first `fetchData`/`fetchInfo` call on a cold cache) and as `IOException`
-  when the selected csv or documentation page cannot be fetched
+- `Rdatasets` remote access now has a 15 s connect timeout and a 120 s request timeout covering the full response
+  (headers and body) instead of hanging indefinitely on a stalled connection. A timeout, network failure, non-200 response,
+  empty response body or unparsable index is reported as `UncheckedIOException` when the dataset index cannot be loaded
+  (`overview()`, `search()`, and the first `fetchData`/`fetchInfo` call on a cold cache) and as `IOException` when the
+  selected csv or documentation page cannot be fetched
 - `Rdatasets.overview()` returns an independent copy of the cached index, so callers can convert/drop columns without corrupting the cache
 - `Rdatasets.fetchInfo()` decodes the documentation page using the response charset (UTF-8) instead of the JVM default
 - `Rdatasets.fetchData()` / `fetchInfo()` reject blank (not only empty) names up front; the message is now "… cannot be null or blank"
