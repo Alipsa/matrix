@@ -11,6 +11,7 @@ import se.alipsa.matrix.ext.NumberExtension
 
 import java.math.MathContext
 
+@SuppressWarnings('ClassSize')
 class NumberExtensionTest {
 
   @Test
@@ -259,20 +260,26 @@ class NumberExtensionTest {
 
   @Test
   void testUlpNumber() {
-    // Test with Integer
-    Integer intValue = 42
-    BigDecimal ulpInt = NumberExtension.ulp(intValue)
-    assert ulpInt > 0
+    BigDecimal expectedDoubleUlp = BigDecimal.valueOf(Math.ulp(1000.0d))
+    double floatUlp = Math.ulp(1000.0f)
+    BigDecimal expectedFloatUlp = BigDecimal.valueOf(floatUlp)
 
-    // Test with Double
-    Double doubleValue = 3.14
-    BigDecimal ulpDouble = NumberExtension.ulp(doubleValue)
-    assert ulpDouble > 0
+    // direct static invocation must not select a floating-point overload for integral types
+    assertEquals(1G, NumberExtension.ulp(5 as Integer), 'ulp(Integer) must be the decimal ulp')
+    assertEquals(1G, NumberExtension.ulp(5L), 'ulp(Long) must be the decimal ulp')
+    assertEquals(1G, NumberExtension.ulp((short) 5))
+    assertEquals(1G, NumberExtension.ulp((byte) 5))
+    assertEquals(1G, NumberExtension.ulp(5G))
+    assertEquals(0.1G, NumberExtension.ulp(1.0G))
+    assertEquals(expectedDoubleUlp, NumberExtension.ulp(1000.0d))
+    assertEquals(expectedFloatUlp, NumberExtension.ulp(1000.0f))
 
-    // Test with Long
-    Long longValue = 100L
-    BigDecimal ulpLong = NumberExtension.ulp(longValue)
-    assert ulpLong > 0
+    // extension syntax must agree with direct invocation
+    assertEquals(1G, (5 as Integer).ulp())
+    assertEquals(1G, 5L.ulp())
+    assertEquals(0.1G, 1.0G.ulp())
+    assertEquals(expectedDoubleUlp, 1000.0d.ulp())
+    assertEquals(expectedFloatUlp, 1000.0f.ulp())
   }
 
   @Test
@@ -641,6 +648,23 @@ class NumberExtensionTest {
     }
 
     assertEquals('Exponent too large for exp(): 3E+10', e.message)
+
+    ArithmeticException atPowLimit = assertThrows(ArithmeticException) {
+      new BigDecimal('1E+9').exp()
+    }
+    assertEquals('Exponent too large for exp(): 1E+9', atPowLimit.message)
+
+    ArithmeticException negative = assertThrows(ArithmeticException) {
+      new BigDecimal('-1E+9').exp()
+    }
+    assertEquals('Exponent too large for exp(): -1E+9', negative.message)
+  }
+
+  @Test
+  void testExpAcceptsLargestSupportedExponent() {
+    BigDecimal result = new BigDecimal('999999999').exp()
+    assertTrue(result > BigDecimal.ZERO)
+    assertTrue(result.precision() <= MathContext.DECIMAL64.precision)
   }
 
   @Test
@@ -879,10 +903,10 @@ class NumberExtensionTest {
     assertEquals(Math.asin(0.5), NumberExtension.asin(0.5).doubleValue(), 1e-10)
 
     // Test out of range throws
-    assertThrows(ArithmeticException) {
+    assertThrows(IllegalArgumentException) {
       (1.5).asin()
     }
-    assertThrows(ArithmeticException) {
+    assertThrows(IllegalArgumentException) {
       (-1.5).asin()
     }
   }
@@ -918,10 +942,10 @@ class NumberExtensionTest {
     assert 0.0G.acos() == NumberExtension.PI32.divide(2G, new MathContext(17))
 
     // Test out of range throws
-    assertThrows(ArithmeticException) {
+    assertThrows(IllegalArgumentException) {
       (1.5).acos()
     }
-    assertThrows(ArithmeticException) {
+    assertThrows(IllegalArgumentException) {
       (-1.5).acos()
     }
   }
@@ -1095,6 +1119,123 @@ class NumberExtensionTest {
     } finally {
       cacheField.set(null, original)
     }
+  }
+
+  @Test
+  void testHypotMatchesHighPrecisionReferenceInLastPlace() {
+    MathContext reference = new MathContext(40)
+    [[123456789.0G, 987654321.0G], [1.0G, 3.0G], [2.0G, 5.0G], [12.5G, 7.3G]].each { pair ->
+      BigDecimal x = pair[0]
+      BigDecimal y = pair[1]
+      BigDecimal expected = (x * x + y * y).sqrt(reference).round(MathContext.DECIMAL64)
+      assertEquals(expected, x.hypot(y), "hypot(${x}, ${y}) should be correctly rounded")
+    }
+  }
+
+  @Test
+  void testHypotAlwaysReturnsDecimal64PrecisionAndCanonicalZero() {
+    assertTrue(3.0G.hypot(4.0G).precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(0.0G.hypot(4.00000000000000000000G).precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(4.00000000000000000000G.hypot(0.0G).precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(123456789.0G.hypot(987654321.0G).precision() <= MathContext.DECIMAL64.precision)
+    assertEquals(0, 0.000G.hypot(0.00G).scale())
+  }
+
+  @Test
+  void testAngleConversionAlwaysReturnsDecimal64Precision() {
+    assertTrue(1.0G.toRadians().precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(1.0G.toDegrees().precision() <= MathContext.DECIMAL64.precision)
+    assertTrue(NumberExtension.PI32.toDegrees().precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testAngleConversionIsIndependentOfInputScale() {
+    BigDecimal coarse = 1G
+    BigDecimal padded = 1.000000000000000000000000000000G
+
+    assertEquals(coarse.toDegrees(), padded.toDegrees())
+    assertEquals(coarse.toRadians(), padded.toRadians())
+    assertEquals(coarse.toDegrees().precision(), padded.toDegrees().precision())
+    assertEquals(coarse.toRadians().precision(), padded.toRadians().precision())
+
+    assertEquals(0, 0.000G.toDegrees().scale())
+    assertEquals('0', 0.000G.toRadians().toString())
+  }
+
+  @Test
+  void testAngleConversionMatchesDoubleReference() {
+    assertEquals(Math.toDegrees(1.0d), 1.0G.toDegrees().doubleValue(), 1e-15)
+    assertEquals(Math.toRadians(1.0d), 1.0G.toRadians().doubleValue(), 1e-17)
+    assertEquals(180.0d, NumberExtension.PI32.toDegrees().doubleValue(), 1e-13)
+  }
+
+  @Test
+  void testCbrtIsCorrectlyRoundedAcrossMagnitudes() {
+    MathContext reference = new MathContext(50)
+    [2.0G, 7.0G, 1234.0G, 0.7G, 999999.0G, 1.0000001G, 27.0G,
+     new BigDecimal('1e-40'), 0.000001G, new BigDecimal('1e300'),
+     123456789.987654321G].each { BigDecimal value ->
+      BigDecimal expected = BigDecimal.valueOf(Math.cbrt(value.doubleValue()))
+      30.times {
+        expected = (expected * 2 + value.divide(expected * expected, reference))
+            .divide(BigDecimal.valueOf(3), reference)
+      }
+      expected = expected.round(MathContext.DECIMAL64)
+      assertEquals(expected, value.cbrt(), "cbrt(${value}) should be correctly rounded")
+    }
+  }
+
+  @Test
+  void testLogWithBaseAgreesWithDedicatedLogarithms() {
+    (2..500).each { int i ->
+      BigDecimal value = i as BigDecimal
+      assertEquals(value.log10(), value.log(10), "log(${value}, 10) should equal log10(${value})")
+      assertEquals(value.log(), value.log(NumberExtension.E32), "log(${value}, e) should equal log(${value})")
+    }
+    assertEquals(3G, 8.0G.log(2))
+    assertEquals(10G, 1024.0G.log(2))
+
+    // Regression checks: scale variants must remain numerically equivalent.
+    assertEquals(3G, 1000.0G.log(10.0G))
+    assertEquals(3G, 8.0G.log(2.00G))
+  }
+
+  @Test
+  void testTanNearPoleReturnsLargeFiniteValue() {
+    BigDecimal nearPole = NumberExtension.PI32.divide(BigDecimal.valueOf(2), MathContext.DECIMAL128)
+    BigDecimal result = nearPole.tan()
+
+    assertTrue(result.abs() > 1e20G, "expected a large magnitude near the pole, got ${result}")
+    assertTrue(result.precision() <= MathContext.DECIMAL64.precision)
+  }
+
+  @Test
+  void testDomainViolationsShareOneExceptionType() {
+    assertThrows(IllegalArgumentException) { (-1.0G).log() }
+    assertThrows(IllegalArgumentException) { 0.0G.log10() }
+    assertThrows(IllegalArgumentException) { (-2.0G).log1p() }
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) { (-1.0G).sqrt() }
+    assertTrue(e.message.contains('sqrt') && e.message.contains('-1.0'), e.message)
+    assertThrows(IllegalArgumentException) { 2.0G.asin() }
+    assertThrows(IllegalArgumentException) { 2.0G.acos() }
+    assertThrows(IllegalArgumentException) { 8.0G.log(1) }
+  }
+
+  @Test
+  @CompileStatic
+  void testNonFiniteInputsAreRejectedWithNamedOperation() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      NumberExtension.floor(Double.NaN)
+    }
+    assertTrue(e.message.contains('floor'), "message should name the operation: ${e.message}")
+    assertTrue(e.message.contains('NaN'), "message should show the input: ${e.message}")
+
+    assertThrows(IllegalArgumentException) { NumberExtension.sqrt(Double.POSITIVE_INFINITY) }
+    assertThrows(IllegalArgumentException) { NumberExtension.sin(Double.NEGATIVE_INFINITY) }
+    assertThrows(IllegalArgumentException) { NumberExtension.min(Double.NaN, 1) }
+    assertThrows(IllegalArgumentException) { NumberExtension.max(1, Float.NaN) }
+    assertThrows(IllegalArgumentException) { NumberExtension.ulp(Double.NaN) }
+    assertThrows(IllegalArgumentException) { NumberExtension.exp(Float.POSITIVE_INFINITY) }
   }
 
   @CompileStatic
