@@ -307,4 +307,67 @@ class DatasetTest {
         assertEquals(99338, world.rowCount())
     }
 
+    @Test
+    void testDescribeUnnamedMatrixThrowsIllegalArgument() {
+        Matrix unnamed = Matrix.builder().columnNames(['a']).columns([[1]]).build()
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.describe(unnamed)
+        }
+        assertEquals('table name cannot be null', exception.message)
+    }
+
+    @Test
+    void testDescribeNullMatrixThrowsIllegalArgument() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.describe((Matrix) null)
+        }
+        assertEquals('table cannot be null', exception.message)
+    }
+
+    @Test
+    void testDescribeNullNameThrowsIllegalArgument() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.describe((String) null)
+        }
+        assertEquals('table name cannot be null', exception.message)
+    }
+
+    @Test
+    void testLoadNullThrowsIllegalArgument() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.load(null)
+        }
+        assertEquals('dataset name cannot be null', exception.message)
+    }
+
+    @Test
+    void testMapDataSetMissingResourceThrowsFileNotFound() {
+        def exception = assertThrows(FileNotFoundException) {
+            Dataset.mapDataSet('/data/maps/does_not_exist.csv')
+        }
+        assertEquals('Map data resource not found: /data/maps/does_not_exist.csv', exception.message)
+    }
+
+    @Test
+    void testMapDataRegionIsTrimmed() {
+        def arapawa = Dataset.mapData('nz', 'Arapawa.Island ')
+        assertEquals(11, arapawa.rowCount())
+        def sweden = Dataset.mapData('world', '  Sweden ')
+        assertEquals(593, sweden.rowCount())
+    }
+
+    @Test
+    void testDescriptionsMentionAllColumns() {
+        [
+            (Dataset.airquality()): Dataset.descAirquality(),
+            (Dataset.mtcars()): Dataset.descMtcars(),
+            (Dataset.plantGrowth()): Dataset.descPlantGrowth(),
+            (Dataset.toothGrowth()): Dataset.descToothGrowth()
+        ].each { Matrix m, String desc ->
+            m.columnNames().each { String col ->
+                assertTrue(desc.contains("${col}:"), "${m.matrixName}: description should mention column '${col}'")
+            }
+        }
+    }
+
 }

@@ -44,7 +44,14 @@ class Dataset {
   private static final String ORDER = 'order'
   private static final String GROUP = 'group'
   private static final String REGION = 'region'
+  private static final String DATASET_NAME_NULL_MSG = 'dataset name cannot be null'
 
+  /**
+   * Daily air quality measurements in New York, May to September 1973. 153 observations of 6 variables
+   * (Ozone, Solar.R, Wind, Temp, Month, Day); Ozone and Solar.R contain missing values (null).
+   *
+   * @return the airquality dataset
+   */
   static Matrix airquality() {
     Matrix.builder()
         .matrixName('airquality')
@@ -60,6 +67,11 @@ class Dataset {
         )
   }
 
+  /**
+   * The speed of cars and the distances taken to stop, recorded in the 1920s. 50 observations of 2 variables.
+   *
+   * @return the cars dataset
+   */
   static Matrix cars() {
     Matrix.builder()
         .matrixName('cars')
@@ -186,6 +198,11 @@ class Dataset {
         )
   }
 
+  /**
+   * Prices and attributes of ~54,000 round cut diamonds. 53940 observations of 10 variables.
+   *
+   * @return the diamonds dataset
+   */
   static Matrix diamonds() {
     Matrix.builder()
         .matrixName('diamonds')
@@ -205,6 +222,15 @@ class Dataset {
         )
   }
 
+  /**
+   * Loads a csv file from a URL into a Matrix with all columns as String. The matrix name is derived from the
+   * file name in the URL.
+   *
+   * @param url the URL of the csv file
+   * @param delimiter the column delimiter, default ','
+   * @param stringQuote the string quote character, default '' (no quoting)
+   * @return a Matrix containing the csv content
+   */
   static Matrix fromUrl(String url, String delimiter = ',', String stringQuote = '') {
     Matrix.builder()
         .data(new URL(url), delimiter, stringQuote)
@@ -222,7 +248,7 @@ class Dataset {
    */
   static Matrix mapData(String datasetName, String region = null, boolean exact = false) {
     if (datasetName == null) {
-      throw new IllegalArgumentException('dataset name cannot be null')
+      throw new IllegalArgumentException(DATASET_NAME_NULL_MSG)
     }
     String name = datasetName.trim().toLowerCase(Locale.ROOT)
     String filePath = resolveMapDataFile(name, exact)
@@ -262,10 +288,25 @@ class Dataset {
     return matchedName ? MAP_DATA_FILES[matchedName] : null
   }
 
+  /**
+   * Loads a map dataset from a classpath resource (or absolute file path) and optionally filters it to one region.
+   * When a region is given, the {@code order} and {@code group} columns are re-based to start at 1 and the rows
+   * are sorted by {@code order}.
+   *
+   * @param filePath the resource path, e.g. {@code /data/maps/map_world.csv}
+   * @param region optional region name to filter on; surrounding whitespace is ignored
+   * @return a Matrix with the columns long, lat, group, order, region, subregion
+   * @throws FileNotFoundException if the resource cannot be found
+   * @throws IllegalArgumentException if the region does not exist in the dataset
+   */
   @CompileDynamic
   static Matrix mapDataSet(String filePath, String region = null) {
+    URL resource = url(filePath)
+    if (resource == null) {
+      throw new FileNotFoundException("Map data resource not found: $filePath")
+    }
     Matrix ds = Matrix.builder()
-        .data(url(filePath), COMMA, QUOTE)
+        .data(resource, COMMA, QUOTE)
         .build()
         .convert([
             'long': BigDecimal,
@@ -275,16 +316,17 @@ class Dataset {
             (REGION): String,
             'subregion': String
         ])
-    if (region == null) {
+    String regionName = region?.trim()
+    if (regionName == null) {
       log.debug("Loaded ${ds.rowCount()} rows from $filePath")
       return ds
     }
-    Matrix sub = ds.subset(REGION) { it == region }
+    Matrix sub = ds.subset(REGION) { it == regionName }
     if (sub.rowCount() == 0) {
-      log.warn("Region not found in dataset: $region")
-      throw new IllegalArgumentException("Region not found: $region")
+      log.warn("Region not found in dataset: $regionName")
+      throw new IllegalArgumentException("Region not found: $regionName")
     }
-    log.debug("Filtered to ${sub.rowCount()} rows for region: $region")
+    log.debug("Filtered to ${sub.rowCount()} rows for region: $regionName")
     def minOrder = Stat.min(sub[ORDER]) - 1
     def minGroup = Stat.min(sub[GROUP]) - 1
     sub.apply(ORDER) { it - minOrder }
@@ -312,21 +354,20 @@ class Dataset {
   }
 
   /**
-   * Provides a description of the dataset
+   * Provides a description of the dataset.
    *
-   * @param table , the dataset to describe
+   * @param table the dataset to describe (its matrixName is used as the lookup key)
    * @return a String describing the content of the dataset
+   * @throws IllegalArgumentException if the table is null or has no name
    */
   static String describe(Matrix table) {
+    if (table == null) {
+      throw new IllegalArgumentException('table cannot be null')
+    }
     describe(table.matrixName)
   }
 
-  /**
-   * Provides a description of the dataset
-   *
-   * @param tableName the name of the dataset to describe
-   * @return a String describing the content of the dataset
-   */
+  /** Lookup table from lower-case dataset name to its description provider. */
   private static final Map<String, Closure<String>> DESCRIBERS = [
       airquality : { descAirquality() },
       cars       : { descCars() },
@@ -341,7 +382,17 @@ class Dataset {
       map_data   : { descMapData() }
   ]
 
+  /**
+   * Provides a description of the dataset.
+   *
+   * @param tableName the name of the dataset to describe (case-insensitive)
+   * @return a String describing the content of the dataset, or "Unknown table: name" if not found
+   * @throws IllegalArgumentException if the table name is null
+   */
   static String describe(String tableName) {
+    if (tableName == null) {
+      throw new IllegalArgumentException('table name cannot be null')
+    }
     DESCRIBERS.get(tableName.toLowerCase(Locale.ROOT))?.call() ?: "Unknown table: ${tableName}"
   }
 
@@ -378,11 +429,14 @@ class Dataset {
   /**
    * Loads a built-in dataset by name.
    *
-   * @param name the name of the dataset to load
+   * @param name the name of the dataset to load (case-insensitive)
    * @return a Matrix containing the dataset
-   * @throws IllegalArgumentException if the dataset name is unknown
+   * @throws IllegalArgumentException if the dataset name is null or unknown
    */
   static Matrix load(String name) {
+    if (name == null) {
+      throw new IllegalArgumentException(DATASET_NAME_NULL_MSG)
+    }
     def loader = DATASET_LOADERS.get(name.toLowerCase(Locale.ROOT))
     if (loader == null) {
       throw new IllegalArgumentException("Unknown dataset: ${name}")
@@ -390,6 +444,11 @@ class Dataset {
     loader.call()
   }
 
+  /**
+   * Describes the {@link #airquality()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descAirquality() {
     '''
         Daily air quality measurements in New York, May to September 1973.
@@ -402,9 +461,16 @@ class Dataset {
         Solar.R: Solar radiation in Langleys in the frequency band 4000--7700 Angstroms from 0800 to 1200 hours at Central Park
         Wind: Average wind speed in miles per hour at 0700 and 1000 hours at LaGuardia Airport
         Temp: Maximum daily temperature in degrees Fahrenheit at La Guardia Airport.
+        Month: Month (1--12)
+        Day: Day of month (1--31)
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #cars()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descCars() {
     '''
         The data give the speed of cars and the distances taken to stop. Note that the data were recorded in the 1920s.
@@ -416,6 +482,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #mtcars()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descMtcars() {
     '''
         The mtcars (Motor Trend Car Road Tests) dataset was extracted from the 1974 Motor Trend US magazine,
@@ -423,6 +494,7 @@ class Dataset {
         (1973–1974 models)
 
         Variables:
+        model: Car model name
         mpg: Miles/(US) gallon
         cyl: Number of cylinders
         disp: Displacement (cu.in.)
@@ -437,6 +509,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #iris()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descIris() {
     '''
         The iris dataset gives the measurements in centimeters of the variables sepal length, sepal width,
@@ -452,6 +529,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #plantGrowth()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descPlantGrowth() {
     '''
         The plant growth dataset contains results obtained from an experiment to compare yields
@@ -459,12 +541,17 @@ class Dataset {
         obtained under a control and two different treatment conditions.
 
         Variables:
-        "": an integer corresponding to a unique observation,
+        id: an integer corresponding to a unique observation,
         weight: the dried weight,
         group: ctrl, trt1 or trt2
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #toothGrowth()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descToothGrowth() {
     '''
         The ToothGrowth data set contains the result from an experiment studying the effect of
@@ -473,13 +560,18 @@ class Dataset {
         orange juice or ascorbic acid (a form of vitamin C and coded as VC).
 
         Variables:
-        '': an integer corresponding to a unique observation,
+        id: an integer corresponding to a unique observation,
         len: Tooth length
         supp: Supplement type (VC or OJ).
         dose: numeric Dose in milligrams/day
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #usArrests()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descUsArrests() {
     '''
         The US arrests data set contains statistics in arrests per 100,000 residents for assault, murder, and rape
@@ -494,6 +586,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #mpg()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descMpg() {
     '''
         The mpg (miles per gallon) dataset includes information about the fuel economy of popular car models in 1999 and 2008,
@@ -516,6 +613,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the {@link #diamonds()} dataset and its variables.
+   *
+   * @return the description
+   */
   static String descDiamonds() {
     '''
         Diamond price and quality information for ~54,000 diamonds obtained from AwesomeGems.com on July 28, 2005
@@ -534,6 +636,11 @@ class Dataset {
         '''.stripIndent()
   }
 
+  /**
+   * Describes the map datasets available through {@link #mapData(String, String, boolean)} and their variables.
+   *
+   * @return the description
+   */
   static String descMapData() {
     '''
         Map dataset names:

@@ -61,7 +61,7 @@ The following datasets are included in the matrix-datasets module through the Da
 |-------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------|
 | airquality  | Daily air quality measurements in New York, 1973-1974. 153 obs of 6 vars.                                             | Dataset.airquality()                |
 | cars        | The data give the speed of cars and the distances taken to stop. 50 obs of 2 vars                                     | Dataset.cars()                      |
-| mtcars      | Motor Trend Car Road Tests. 32 obs of 11 vars.                                                                        | Dataset.mtcars()                    |
+| mtcars      | Motor Trend Car Road Tests. 32 obs of 12 vars (model + 11 numeric).                                                    | Dataset.mtcars()                    |
 | diamonds    | Prices of over 50,000 round cut diamonds. 53940 obs of 10 vars.                                                       | Dataset.diamonds()                  |
 | iris        | Measurements of iris flowers. 150 obs of 5 vars.                                                                      | Dataset.iris()                      |
 | PlantGrowth | Results from an experiment on the effect of different treatments on plant growth. 30 obs of 3 vars.                   | Dataset.plantGrowth()               |
@@ -90,9 +90,14 @@ List<String> regions = Dataset.mapRegions('world')
 `Dataset.describe(String name)` returns a human-readable description for any dataset name.
 
 ### The Rdatasets
-Matrix-datasets provides easy access to the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/). Rdatasets is a collection of 2536 datasets which were originally distributed alongside the statistical software environment R and some of its add-on packages.
+Matrix-datasets provides easy access to the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/). Rdatasets is a collection of more than 3,600 datasets which were originally distributed alongside the statistical software environment R and some of its add-on packages.
 
 `Rdatasets.overview()` returns a Matrix of all available datasets. The overview is fetched lazily on first call and cached; call `Rdatasets.refresh()` to clear the cache and re-fetch.
+
+Each call to `overview()` returns an independent copy, so you can safely `convert()`, `drop()` or rename columns on it.
+Remote calls use a 15 s connect timeout and a 120 s request timeout. A timeout, network failure or non-200 response raises
+`UncheckedIOException` when the dataset index cannot be loaded (`overview()`, `search()`, and the first `fetchData`/`fetchInfo`
+call while the cache is cold) and `IOException` when the selected csv or documentation page cannot be fetched.
 
 To search the overview by dataset name or title (case-insensitive):
 ```groovy
@@ -124,5 +129,4 @@ The following table illustrates the version compatibility of the matrix datasets
 |           2.1.1 | 3.1.0 -> 3.5.0 |
 |           2.1.2 | 3.5.0 -> 3.6.0 |
 |           2.2.0 | 3.7.0 -> 3.7.1 |
-
 

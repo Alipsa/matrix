@@ -8,27 +8,51 @@ import org.jsoup.Jsoup
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
+
 /**
  * Convenience wrapper for accessing datasets from the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/).
- * Rdatasets is a collection of 2536 datasets which were originally distributed alongside the
+ * Rdatasets is a collection of more than 3,600 datasets which were originally distributed alongside the
  * statistical software environment R and some of its add-on packages.
+ * <p>
+ * All remote access uses a 15 second connect timeout and a 120 second request timeout. Two kinds of remote failure
+ * are reported, depending on which request failed:
+ * <ul>
+ *   <li>loading the dataset index — {@link UncheckedIOException} from {@link #overview()} and {@link #search}, and from
+ *       {@link #fetchData} / {@link #fetchInfo} when they are the first call while the cache is cold;</li>
+ *   <li>fetching the selected csv or documentation page ({@link #fetchData} / {@link #fetchInfo}) — {@link IOException}.</li>
+ * </ul>
  */
 @CompileStatic
 class Rdatasets {
 
   private static final Logger log = Logger.getLogger(Rdatasets)
 
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(15)
+  private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(120)
+  private static final String OVERVIEW_URL = 'https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/datasets.csv'
+  private static final String OVERVIEW_NAME = 'datasets'
   private static final String COMMA = ','
   private static final String QUOTE = '"'
-  private static final String NULL_OR_EMPTY_MSG = 'Package name and item name cannot be null or empty'
+  private static final String NULL_OR_BLANK_MSG = 'Package name and item name cannot be null or blank'
   private static final int EXPECTED_PARTS = 2
+  private static final int HTTP_OK = 200
+
+  private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+      .connectTimeout(CONNECT_TIMEOUT)
+      .followRedirects(HttpClient.Redirect.NORMAL)
+      .build()
 
   private static volatile Matrix cachedOverview = null
 
   /**
    * Returns an overview of the datasets available in the R datasets repository.
    * The overview includes columns for Package, Item, Title, CSV URL, and html url.
-   * Remote access can fail; on failure an exception wrapping the cause is thrown.
+   * The index is fetched on first call and cached; each call returns an independent copy so callers may
+   * freely convert, filter or rename columns without affecting later calls. Use {@link #refresh()} to re-fetch.
    *
    * @return a Matrix containing the overview of datasets
    * @throws UncheckedIOException if the remote data cannot be fetched
@@ -36,48 +60,44 @@ class Rdatasets {
   static Matrix overview() {
     Matrix result = cachedOverview
     if (result == null) {
-      synchronized(Rdatasets) {
+      synchronized (Rdatasets) {
         result = cachedOverview
         if (result == null) {
           try {
-            result = Matrix.builder()
-                .data('https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/datasets.csv', COMMA, QUOTE, true)
-                .build()
-            cachedOverview = result
+            result = fetchCsv(OVERVIEW_URL, OVERVIEW_NAME)
           } catch (IOException e) {
             throw new UncheckedIOException("Failed to fetch Rdatasets overview: ${e.message}", e)
           }
+          cachedOverview = result
         }
       }
     }
-    result
+    result.clone()
   }
 
-  /**
-   * Clears the cached overview so the next call to {@link #overview()} re-fetches the data.
-   */
+  /** Clears the cached overview so the next call to {@link #overview()} re-fetches the data. */
   static void refresh() {
     cachedOverview = null
   }
 
   /**
    * Fetches the documentation for a specific dataset from the R datasets repository.
-   * The documentation is returned as a String, and can be converted to plain text if desired.
    *
-   * @param packageName the name of the package containing the dataset (column Package in the overview)
-   * @param itemName the name of the dataset (column Item in the overview)
+   * @param packageName the name of the package containing the dataset
+   * @param itemName the name of the dataset
    * @param toPlainText if true, converts HTML content to plain text (default is false)
    * @return the documentation for the specified dataset
+   * @throws IllegalArgumentException if a name is null or blank, or the dataset does not exist
+   * @throws UncheckedIOException if the dataset index cannot be fetched
+   * @throws IOException if the documentation page cannot be fetched
    */
   @CompileDynamic
   static String fetchInfo(String packageName, String itemName, boolean toPlainText = false) {
-    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException(NULL_OR_EMPTY_MSG)
-    }
+    requireNames(packageName, itemName)
     log.debug("Fetching info for $packageName/$itemName (plainText=$toPlainText)")
     def urlResult = GQ {
       from d in overview()
-      where d.Package == "$packageName" && d.Item == "$itemName"
+      where d.Package == packageName && d.Item == itemName
       select d.Doc
     }
     def resultList = urlResult.toList()
@@ -85,7 +105,7 @@ class Rdatasets {
       log.warn("Dataset not found: $packageName/$itemName")
       throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
     }
-    String content = resultList[0].toURL().text
+    String content = fetchText(resultList[0] as String)
     if (toPlainText) {
       content = Jsoup.parse(content).wholeText()
     }
@@ -95,21 +115,21 @@ class Rdatasets {
 
   /**
    * Fetches the data for a specific dataset from the R datasets repository.
-   * The data is returned as a Matrix object, which can be used for further analysis.
    *
-   * @param packageName the name of the package containing the dataset (column Package in the overview)
-   * @param itemName the name of the dataset (column Item in the overview)
+   * @param packageName the name of the package containing the dataset
+   * @param itemName the name of the dataset
    * @return a Matrix containing the data for the specified dataset
+   * @throws IllegalArgumentException if a name is null or blank, or the dataset does not exist
+   * @throws UncheckedIOException if the dataset index cannot be fetched
+   * @throws IOException if the csv cannot be fetched
    */
   @CompileDynamic
   static Matrix fetchData(String packageName, String itemName) {
-    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException(NULL_OR_EMPTY_MSG)
-    }
+    requireNames(packageName, itemName)
     log.debug("Fetching data for $packageName/$itemName")
     def urlResult = GQ {
       from d in overview()
-      where d.Package == "$packageName" && d.Item == "$itemName"
+      where d.Package == packageName && d.Item == itemName
       select d.CSV
     }
     def resultList = urlResult.toList()
@@ -117,9 +137,7 @@ class Rdatasets {
       log.warn("Dataset not found: $packageName/$itemName")
       throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
     }
-    Matrix result = Matrix.builder()
-        .data(resultList[0], COMMA, QUOTE, true)
-        .build()
+    Matrix result = fetchCsv(resultList[0] as String, itemName)
     log.debug("Successfully fetched $packageName/$itemName: ${result.rowCount()} rows, ${result.columnCount()} columns")
     result
   }
@@ -174,4 +192,53 @@ class Rdatasets {
         .build()
   }
 
+  /** Validates that both names are present. */
+  private static void requireNames(String packageName, String itemName) {
+    if (packageName == null || packageName.isBlank() || itemName == null || itemName.isBlank()) {
+      throw new IllegalArgumentException(NULL_OR_BLANK_MSG)
+    }
+  }
+
+  /**
+   * Downloads a csv document and parses it into a Matrix.
+   *
+   * @param url the csv location
+   * @param name the matrixName to assign
+   * @return the parsed matrix
+   * @throws IOException on any transport error, timeout or non-200 response
+   */
+  private static Matrix fetchCsv(String url, String name) throws IOException {
+    String csv = fetchText(url)
+    Matrix.builder()
+        .matrixName(name)
+        .csvString(csv, [delimiter: COMMA, quoteString: QUOTE, lineComment: ''])
+        .build()
+  }
+
+  /**
+   * Performs a GET request with connect and request timeouts and returns the body as text.
+   * The body is decoded with the charset from the Content-Type header, falling back to UTF-8.
+   *
+   * @param url the location to fetch
+   * @param timeout the request timeout, default {@link #REQUEST_TIMEOUT}
+   * @return the response body
+   * @throws IOException on transport errors, timeouts, interruption or a non-200 status
+   */
+  private static String fetchText(String url, Duration timeout = REQUEST_TIMEOUT) throws IOException {
+    HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+        .timeout(timeout)
+        .GET()
+        .build()
+    HttpResponse<String> response
+    try {
+      response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString())
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new IOException("Interrupted while fetching $url", e)
+    }
+    if (response.statusCode() != HTTP_OK) {
+      throw new IOException("HTTP ${response.statusCode()} when fetching $url")
+    }
+    response.body()
+  }
 }

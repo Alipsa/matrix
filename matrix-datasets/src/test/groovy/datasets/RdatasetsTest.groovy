@@ -45,7 +45,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchData(null, 'mtcars')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -53,7 +53,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchData('datasets', null)
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -61,7 +61,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchData('datasets', '')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -69,7 +69,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchData('', 'mtcars')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -86,7 +86,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchInfo(null, 'mtcars')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -94,7 +94,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchInfo('datasets', null)
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -102,7 +102,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchInfo('', 'mtcars')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -110,7 +110,7 @@ class RdatasetsTest {
     def exception = assertThrows(IllegalArgumentException) {
       Rdatasets.fetchInfo('datasets', '')
     }
-    assertEquals('Package name and item name cannot be null or empty', exception.message)
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
   }
 
   @Test
@@ -203,6 +203,50 @@ class RdatasetsTest {
     def overview2 = Rdatasets.overview()
     assertNotNull(overview2)
     assertEquals(overview1.rowCount(), overview2.rowCount())
+  }
+
+  @Test
+  void testFetchDataWithBlankPackage() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData('   ', 'mtcars')
+    }
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithBlankItem() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo('datasets', ' ')
+    }
+    assertEquals('Package name and item name cannot be null or blank', exception.message)
+  }
+
+  @Test
+  @Tag('external')
+  void testOverviewReturnsIndependentCopy() {
+    def first = Rdatasets.overview()
+    int columns = first.columnCount()
+    first.drop('Title')
+    def second = Rdatasets.overview()
+    assertEquals(columns, second.columnCount(), 'mutating the returned overview must not affect the cache')
+    assertTrue(second.columnNames().contains('Title'))
+  }
+
+  @Test
+  @Tag('external')
+  void testFetchDataKeepsMatrixName() {
+    def mtcars = Rdatasets.fetchData('datasets', 'mtcars')
+    assertEquals('mtcars', mtcars.matrixName)
+    assertEquals('datasets', Rdatasets.overview().matrixName)
+  }
+
+  @Test
+  @Tag('external')
+  void testFetchInfoHtmlAndPlainText() {
+    String html = Rdatasets.fetchInfo('AER', 'BankWages')
+    assertTrue(html.contains('<'), 'raw fetch should return HTML')
+    String text = Rdatasets.fetchInfo('AER', 'BankWages', true)
+    assertFalse(text.contains('<html'), 'plain text fetch should strip tags')
   }
 
 }
