@@ -48,6 +48,10 @@ class RdatasetsHttpTest {
         ex.sendResponseHeaders(404, -1)
         ex.close()
       }
+      createContext('/empty') { HttpExchange ex ->
+        ex.sendResponseHeaders(200, -1)
+        ex.close()
+      }
       createContext('/slow') { HttpExchange ex ->
         Thread.sleep(2000)
         ex.sendResponseHeaders(200, -1)
@@ -91,6 +95,12 @@ class RdatasetsHttpTest {
   void testFetchTextNon200ThrowsIOException() {
     def exception = assertThrows(IOException) { Rdatasets.fetchText("$base/missing") }
     assertEquals("HTTP 404 when fetching $base/missing", exception.message)
+  }
+
+  @Test
+  void testFetchCsvEmptyBodyThrowsIOException() {
+    def exception = assertThrows(IOException) { Rdatasets.fetchCsv("$base/empty", 'sample') }
+    assertEquals("Empty response body from $base/empty", exception.message)
   }
 
   @Test

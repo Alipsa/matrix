@@ -81,6 +81,9 @@ class Rdatasets {
             result = fetchCsv(OVERVIEW_URL, OVERVIEW_NAME)
           } catch (IOException e) {
             throw new UncheckedIOException("Failed to fetch Rdatasets overview: ${e.message}", e)
+          } catch (IllegalArgumentException e) {
+            throw new UncheckedIOException(
+                "Rdatasets overview response could not be parsed: ${e.message}", new IOException(e))
           }
           cachedOverview = result
         }
@@ -237,7 +240,7 @@ class Rdatasets {
    * @param url the location to fetch
    * @param timeout the total request timeout including body transfer, default {@link #REQUEST_TIMEOUT}
    * @return the response body
-   * @throws IOException on transport errors, timeouts, interruption or a non-200 status
+   * @throws IOException on transport errors, timeouts, interruption, a non-200 status or an empty body
    */
   private static String fetchText(String url, Duration timeout = REQUEST_TIMEOUT) throws IOException {
     HttpRequest request = HttpRequest.newBuilder(URI.create(url))
@@ -249,7 +252,7 @@ class Rdatasets {
       response = future.get(timeout.toMillis(), TimeUnit.MILLISECONDS)
     } catch (TimeoutException e) {
       future.cancel(true)
-      throw (HttpTimeoutException) new HttpTimeoutException("Request to $url timed out after ${timeout.toSeconds()} seconds").initCause(e)
+      throw (HttpTimeoutException) new HttpTimeoutException("Request to $url timed out after ${timeout.toMillis()} ms").initCause(e)
     } catch (InterruptedException e) {
       future.cancel(true)
       Thread.currentThread().interrupt()
@@ -264,6 +267,10 @@ class Rdatasets {
     if (response.statusCode() != HTTP_OK) {
       throw new IOException("HTTP ${response.statusCode()} when fetching $url")
     }
-    response.body()
+    String body = response.body()
+    if (body == null || body.isBlank()) {
+      throw new IOException("Empty response body from $url")
+    }
+    body
   }
 }
