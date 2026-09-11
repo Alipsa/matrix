@@ -29,6 +29,8 @@ The `NumberExtension` class provides mathematical constants and methods that mak
 ### Mathematical Constants
 
 ```groovy
+import se.alipsa.matrix.ext.NumberExtension
+
 import static se.alipsa.matrix.ext.NumberExtension.PI
 import static se.alipsa.matrix.ext.NumberExtension.E
 
@@ -46,13 +48,16 @@ BigDecimal naturalLog = E.log()               // 1.0 (ln(e) = 1)
 ```groovy
 // Angle conversion and trigonometric functions
 BigDecimal angleDegrees = 45.0
-BigDecimal angleRadians = angleDegrees.toRadians()  // π/4
+BigDecimal angleRadians = angleDegrees.toRadians()  // 0.7853981633974483
 BigDecimal sine = angleRadians.sin()                // 0.7071...
 BigDecimal cosine = angleRadians.cos()              // 0.7071...
 BigDecimal tangent = angleRadians.tan()             // 1.0
 
 // Convert back to degrees
-BigDecimal degrees = angleRadians.toDegrees()       // 45.0
+BigDecimal degrees = angleRadians.toDegrees()       // 45.00000000000000
+
+BigDecimal halfTurn = 180G.toRadians()              // 3.141592653589793
+BigDecimal piDegrees = NumberExtension.PI32.toDegrees() // 180.0000000000000
 
 // Compare with Java Math (more verbose):
 // double angleRadians = Math.toRadians(45.0);
@@ -60,6 +65,8 @@ BigDecimal degrees = angleRadians.toDegrees()       // 45.0
 ```
 
 Trigonometric range reduction supports angles requiring up to 512 digits of π (roughly through `1E+469`); larger `BigDecimal` angles throw `ArithmeticException` rather than attempting unbounded computation.
+Angle conversions use the internal high-precision π value and round once to DECIMAL64,
+so their precision and output do not depend on the input scale.
 
 ### Polar and Cartesian Coordinates
 
@@ -176,8 +183,22 @@ BigDecimal floatingUlp = measurement.ulp() // 1.1368683772161603E-13
 
 `ulp()` dispatches on the runtime numeric type even when the receiver is declared as `Number`.
 For `BigDecimal` and integral values it returns the decimal-scale ULP; for `Double` and `Float`
-it returns the IEEE 754 ULP converted to `BigDecimal`. Version 0.4.0 changes the previous
-`Double`/`Float` behavior, which treated those values as decimal representations.
+it returns the IEEE 754 ULP converted to `BigDecimal`. `ulp(Number)` is the sole public overload,
+which also makes direct static calls such as `NumberExtension.ulp(5L)` dispatch consistently.
+Version 0.4.0 changes the previous `Double`/`Float` behavior, which treated those values as
+decimal representations.
+
+### Non-finite Inputs
+
+`BigDecimal` cannot represent NaN or infinity. Every Number extension therefore rejects
+non-finite `Double` and `Float` inputs with an `IllegalArgumentException` that names both the
+operation and input:
+
+```groovy
+Double.NaN.floor()                       // IllegalArgumentException: floor is undefined for non-finite input: NaN
+Double.POSITIVE_INFINITY.sqrt()          // IllegalArgumentException: sqrt is undefined for non-finite input: Infinity
+Float.NaN.min(1)                         // IllegalArgumentException: min is undefined for non-finite input: NaN
+```
 
 ## Why Use NumberExtension?
 
