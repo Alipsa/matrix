@@ -1,6 +1,27 @@
 # Release history
 
-## v.2.2.1, in progress
+## v2.2.1, in progress
+- Fix `FileUtil.checkFilePath()` and `FileUtil.getResourceFile()` for resources packaged inside a jar: they now throw the
+  documented `FileNotFoundException` (with a message pointing to `getResourceUrl()`) instead of leaking
+  `FileSystemNotFoundException` or returning a `File` that does not exist
+- Fix `FileUtil.getResourcePath()` corrupting paths that contain `+` (was decoded as a space);
+  `getResourcePath()` is now documented to return the jar url's file part (not a file-system path) for resources inside a jar
+- Fix `FileUtil.getResourceFile()` resolving the file through `java.net.URI` instead of `new File(url.file)`, so Windows
+  paths (`/C:/…`) and paths containing `+` resolve correctly; the `encodingOpt` parameter is retained but no longer needed
+- Fix POM project/license/scm URLs (previously pointed at non-existent GitHub paths)
+- `Dataset.describe(Matrix)`, `Dataset.describe(String)` and `Dataset.load(String)` throw `IllegalArgumentException`
+  instead of `NullPointerException` for null input (matching `mapData(null)`)
+- `Dataset.mapDataSet()` throws `FileNotFoundException` instead of `NullPointerException` when the resource does not exist
+- `Dataset.mapData()`/`mapDataSet()` trim the region argument, so R-style region names with trailing spaces (e.g. nz `'North.Island '`) match
+- `Rdatasets` remote access now has a 15 s connect timeout and a 120 s request timeout covering the full response
+  (headers and body) instead of hanging indefinitely on a stalled connection. A timeout, network failure, non-200 response,
+  empty response body or unparsable index is reported as `UncheckedIOException` when the dataset index cannot be loaded
+  (`overview()`, `search()`, and the first `fetchData`/`fetchInfo` call on a cold cache) and as `IOException` when the
+  selected csv or documentation page cannot be fetched
+- `Rdatasets.overview()` returns an independent copy of the cached index, so callers can convert/drop columns without corrupting the cache
+- `Rdatasets.fetchInfo()` decodes the documentation page using the response charset (UTF-8) instead of the JVM default
+- `Rdatasets.fetchData()` / `fetchInfo()` reject blank (not only empty) names up front; the message is now "… cannot be null or blank"
+- Fix dataset descriptions: airquality lists Month/Day, mtcars lists model, PlantGrowth/ToothGrowth name the id column correctly
 - Dependency updates:
   - org.jsoup:jsoup 1.22.2 -> 1.23.2
 
