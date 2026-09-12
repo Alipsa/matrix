@@ -934,6 +934,13 @@ class MatrixAvroWriterTest {
     assertFalse(isCompatible(longSchema, Double.POSITIVE_INFINITY))
     assertTrue(isCompatible(longSchema, 42))
     assertTrue(isCompatible(longSchema, 42L))
+
+    Schema intSchema = Schema.create(Schema.Type.INT)
+    assertFalse(isCompatible(intSchema, 2.5g))
+    assertFalse(isCompatible(intSchema, 3_000_000_000L))
+    assertTrue(isCompatible(intSchema, 5L))
+    assertTrue(isCompatible(intSchema, 2.0d))
+    assertTrue(isCompatible(intSchema, 42))
   }
 
   @Test
@@ -1031,6 +1038,44 @@ class MatrixAvroWriterTest {
     }
     assertEquals('count', exception.columnName)
     assertEquals(1, exception.rowNumber)
+  }
+
+  @Test
+  void declaredIntegerColumnAcceptsLosslessNumericValues() {
+    Matrix matrix = Matrix.builder('DeclaredIntegerLossless')
+        .columns(count: [1, 5L, 2.0d, 2.0g])
+        .types(Integer)
+        .build()
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(matrix))
+    assertEquals([1, 5, 2, 2], (0..<4).collect { result[it, 'count'] })
+  }
+
+  @Test
+  void declaredIntegerColumnRejectsLossyValuesWithRowContext() {
+    [2.5g, 3_000_000_000L, Double.NaN].each { Number lossy ->
+      Matrix matrix = Matrix.builder('DeclaredIntegerLossy')
+          .columns(count: [1, lossy])
+          .types(Integer)
+          .build()
+
+      AvroSchemaException exception = assertThrows(AvroSchemaException) {
+        MatrixAvroWriter.writeBytes(matrix)
+      }
+      assertEquals('count', exception.columnName, "value=$lossy")
+      assertEquals(1, exception.rowNumber, "value=$lossy")
+    }
+  }
+
+  @Test
+  void declaredLongColumnAcceptsLosslessFloatingValues() {
+    Matrix matrix = Matrix.builder('DeclaredLongLossless')
+        .columns(count: [1L, 2.0d, 3.0g])
+        .types(Long)
+        .build()
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(matrix))
+    assertEquals([1L, 2L, 3L], (0..<3).collect { result[it, 'count'] })
   }
 
   @Test

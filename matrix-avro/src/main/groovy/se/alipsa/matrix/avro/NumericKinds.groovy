@@ -29,6 +29,14 @@ final class NumericKinds {
   }
 
   /**
+   * @param value the value to classify (may be null)
+   * @return true for Byte, Short, and Integer values, which convert to int directly
+   */
+  static boolean isDirectInt(Object value) {
+    Byte.isInstance(value) || Short.isInstance(value) || Integer.isInstance(value)
+  }
+
+  /**
    * @param value the integral value to classify
    * @return true when the value requires a 64-bit integral schema (Long or BigInteger,
    * or an integral value outside the 32-bit range)

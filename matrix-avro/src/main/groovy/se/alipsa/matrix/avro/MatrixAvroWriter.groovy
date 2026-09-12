@@ -742,7 +742,7 @@ class MatrixAvroWriter {
     switch (fieldSchema.getType()) {
       case Schema.Type.STRING -> v.toString()
       case Schema.Type.BOOLEAN -> (Boolean) v
-      case Schema.Type.INT -> Number.isInstance(v) ? ((Number) v).intValue() : v.toString()
+      case Schema.Type.INT -> toIntAvroValue(v, columnName)
       case Schema.Type.LONG -> toLongAvroValue(v, columnName)
       case Schema.Type.FLOAT -> Number.isInstance(v) ? ((Number) v).floatValue() : v.toString()
       case Schema.Type.DOUBLE -> Number.isInstance(v) ? ((Number) v).doubleValue() : v.toString()
@@ -752,6 +752,15 @@ class MatrixAvroWriter {
       case Schema.Type.RECORD -> toRecordAvroValue(fieldSchema, (Map) v, decConv, columnName)
       default -> v.toString()
     }
+  }
+  private static Object toIntAvroValue(Object v, String columnName) {
+    if (Number.isInstance(v)) {
+      if (NumericKinds.isDirectInt(v)) {
+        return ((Number) v).intValue()
+      }
+      return decimalValue((Number) v, columnName).intValueExact()
+    }
+    v.toString()
   }
   private static Object toLongAvroValue(Object v, String columnName) {
     if (Number.isInstance(v)) {
@@ -1072,7 +1081,7 @@ class MatrixAvroWriter {
     switch (s.getType()) {
       case Schema.Type.STRING -> true // we'll toString() later
       case Schema.Type.BOOLEAN -> Boolean.isInstance(v)
-      case Schema.Type.INT -> Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
+      case Schema.Type.INT -> isExactIntCompatible(v)
       case Schema.Type.LONG -> isExactLongCompatible(v) || Date.isInstance(v) || Instant.isInstance(v)
       case Schema.Type.FLOAT -> Number.isInstance(v)
       case Schema.Type.DOUBLE -> Number.isInstance(v) || BigDecimal.isInstance(v)
@@ -1107,6 +1116,20 @@ class MatrixAvroWriter {
     }
     Map input = (Map) value
     schema.getFields().every { Schema.Field field -> isCompatible(field.schema(), input.get(field.name())) }
+  }
+  private static boolean isExactIntCompatible(Object value) {
+    if (!Number.isInstance(value)) {
+      return false
+    }
+    if (NumericKinds.isDirectInt(value)) {
+      return true
+    }
+    try {
+      decimalValue((Number) value, null).intValueExact()
+      true
+    } catch (ArithmeticException | AvroSchemaException ignored) {
+      false
+    }
   }
   private static boolean isExactLongCompatible(Object value) {
     if (!Number.isInstance(value)) {

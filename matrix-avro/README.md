@@ -348,7 +348,7 @@ AvroWriteOptions options = new AvroWriteOptions()
 |------------------------------|-------------------:|-----------------------------|----------------------------------------------------|
 | `String`                     |           `string` | —                           |                                                    |
 | `Boolean`                    |          `boolean` | —                           |                                                    |
-| `Integer`                    |              `int` | —                           |                                                    |
+| `Integer`                    |              `int` | —                           | exact integral values only                          |
 | `Long`                       |             `long` | —                           | exact integral values only                          |
 | `BigInteger`                 |            `bytes` | `decimal(precision, 0)`     | marked with `se.alipsa.matrix.javaType`             |
 | `Float`                      |            `float` | —                           |                                                    |
