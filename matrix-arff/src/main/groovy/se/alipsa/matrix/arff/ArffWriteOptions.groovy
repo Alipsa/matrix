@@ -16,6 +16,7 @@ class ArffWriteOptions {
   private static final String STRING_COLUMNS = 'stringColumns'
   private static final String ATTRIBUTE_TYPES_BY_COLUMN = 'attributeTypesByColumn'
   private static final String DATE_FORMATS_BY_COLUMN = 'dateFormatsByColumn'
+  private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
 
   private Map<String, List<String>> nominalMappings = [:]
   private boolean inferNominals = true
@@ -25,6 +26,7 @@ class ArffWriteOptions {
   private Map<String, ArffTypeDecl> attributeTypesByColumn = [:]
   private String dateFormat = null
   private Map<String, String> dateFormatsByColumn = [:]
+  private String instanceWeightColumn = null
 
   Map<String, List<String>> getNominalMappings() {
     Map<String, List<String>> copy = [:]
@@ -60,6 +62,11 @@ class ArffWriteOptions {
 
   Map<String, String> getDateFormatsByColumn() {
     dateFormatsByColumn.asImmutable()
+  }
+
+  /** Name of the numeric column written as the ARFF instance weight, or null when no weights are written. */
+  String getInstanceWeightColumn() {
+    instanceWeightColumn
   }
 
   ArffWriteOptions nominalMappings(Map<String, List<String>> value) {
@@ -105,6 +112,17 @@ class ArffWriteOptions {
     this
   }
 
+  /**
+   * Write this numeric column as the ARFF instance weight ({@code ,{w}} after each row) instead of as an attribute;
+   * null cells write no weight (ARFF then assumes 1). The name applies at every depth: a column with this name inside
+   * a {@code Matrix}-typed (relational) column is written as the weight of the nested rows, never as a nested
+   * attribute.
+   */
+  ArffWriteOptions instanceWeightColumn(String value) {
+    this.instanceWeightColumn = value
+    this
+  }
+
   static ArffWriteOptions fromMap(Map<String, ?> options) {
     ArffWriteOptions result = new ArffWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -132,6 +150,9 @@ class ArffWriteOptions {
     }
     if (normalized.containsKey('dateformatsbycolumn')) {
       result.dateFormatsByColumn(stringMapValue(normalized.dateformatsbycolumn, DATE_FORMATS_BY_COLUMN))
+    }
+    if (normalized.containsKey('instanceweightcolumn')) {
+      result.instanceWeightColumn(OptionMaps.stringValueOrNull(normalized.instanceweightcolumn))
     }
 
     result
@@ -163,6 +184,9 @@ class ArffWriteOptions {
     if (!dateFormatsByColumn.isEmpty()) {
       result.dateFormatsByColumn = getDateFormatsByColumn()
     }
+    if (instanceWeightColumn != null) {
+      result.instanceWeightColumn = instanceWeightColumn
+    }
     result
   }
 
@@ -179,7 +203,8 @@ class ArffWriteOptions {
         new OptionDescriptor(STRING_COLUMNS, Collection, null, 'Columns that should always be written as STRING'),
         new OptionDescriptor(ATTRIBUTE_TYPES_BY_COLUMN, Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
         new OptionDescriptor('dateFormat', String, null, 'Global DATE format override for DATE attributes'),
-        new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides')
+        new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides'),
+        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Numeric column written as the ARFF instance weight {w} after each row instead of as an attribute, at every relational depth')
     ]
   }
 

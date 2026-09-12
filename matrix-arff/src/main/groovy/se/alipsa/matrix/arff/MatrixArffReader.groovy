@@ -33,6 +33,7 @@ class MatrixArffReader {
   private static final char SINGLE_QUOTE_CHAR = '\''
   private static final char DOUBLE_QUOTE_CHAR = '"'
   private static final char COMMA_CHAR = ','
+  private static final char OPEN_BRACE_CHAR = '{'
   private static final char CLOSE_BRACE_CHAR = '}'
   private static final char PERCENT_CHAR = '%'
   private static final String DOT = '.'
@@ -210,10 +211,10 @@ class MatrixArffReader {
 
   private static Matrix parseArff(BufferedReader reader, String defaultName, ArffReadOptions options) {
     String relationName = defaultName
-    List<String> attributeNames = []
     Set<String> seenNames = [] as Set<String>
     List<ArffAttribute> attributes = []
     List<List<Object>> rows = []
+    List<BigDecimal> weights = []
     boolean inDataSection = false
     int lineNumber = 0
 
@@ -227,8 +228,9 @@ class MatrixArffReader {
       }
 
       if (inDataSection) {
-        List<Object> row = parseDataRow(line, attributes, options, lineNumber, rawLine)
-        rows.add(row)
+        DataLine dataLine = splitInstanceWeight(line)
+        rows.add(parseDataRow(dataLine.content, attributes, options, lineNumber, rawLine))
+        weights.add(dataLine.weight)
         continue
       }
 
@@ -240,36 +242,70 @@ class MatrixArffReader {
         if (!seenNames.add(attr.name)) {
           throw parseError("Duplicate @ATTRIBUTE name '${attr.name}'", lineNumber, rawLine)
         }
-        attributeNames.add(attr.name)
         attributes.add(attr)
       } else if (upperLine.startsWith('@DATA')) {
         inDataSection = true
       }
     }
 
+    buildMatrix(relationName, attributes, rows, weights, options)
+  }
+
+  private static Matrix buildMatrix(String name, List<ArffAttribute> attributes, List<List<Object>> rows,
+                                    List<BigDecimal> weights, ArffReadOptions options) {
     resolveOmittedValues(rows, attributes, options.omittedStringFallback)
+    List<String> columnNames = attributes*.name
     List<Class> types = attributes*.javaType
     List<List<Object>> columns = []
-    if (!rows.isEmpty()) {
-      int numCols = attributeNames.size()
-      for (int i = 0; i < numCols; i++) {
-        List<Object> col = []
-        for (List<Object> row : rows) {
-          col.add(row[i])
-        }
-        columns.add(col)
+    for (int i = 0; i < attributes.size(); i++) {
+      List<Object> col = []
+      for (List<Object> row : rows) {
+        col.add(row[i])
       }
-    } else {
-      for (int i = 0; i < attributeNames.size(); i++) {
-        columns.add([])
-      }
+      columns.add(col)
     }
-
-    Matrix.builder(relationName)
-        .columnNames(attributeNames)
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn != null) {
+      if (columnNames.contains(weightColumn)) {
+        throw new IllegalArgumentException(
+            "instanceWeightColumn '$weightColumn' clashes with an @ATTRIBUTE of the same name in relation '$name'")
+      }
+      columnNames.add(weightColumn)
+      types.add(BigDecimal)
+      // weight == null means "no {w} on the row" (ARFF: weight 1); an explicit {0} must stay 0, so no ?: here
+      columns.add(weights.collect { BigDecimal weight -> (Object) (weight == null ? BigDecimal.ONE : weight) })
+    }
+    Matrix.builder(name)
+        .columnNames(columnNames)
         .columns(columns)
         .types(types)
         .build()
+  }
+
+  /**
+   * Split a trailing instance weight {@code {w}} off a data line: {@code a,b,{2}} or {@code {0 a}, {2}}. The braces must
+   * be the last top-level brace group, must not be the sparse row itself, and must enclose a number; otherwise the line
+   * is returned unchanged (Weka quietly ignores a non-numeric group too).
+   */
+  private static DataLine splitInstanceWeight(String line) {
+    if (!line.endsWith(CLOSE_BRACE)) {
+      return new DataLine(line, null)
+    }
+    int lastOpen = ArffScanner.lastIndexOfOutsideQuotes(line, OPEN_BRACE_CHAR)
+    if (lastOpen <= 0) {
+      return new DataLine(line, null)
+    }
+    BigDecimal weight
+    try {
+      weight = new BigDecimal(line.substring(lastOpen + 1, line.length() - 1).trim())
+    } catch (NumberFormatException ignored) {
+      return new DataLine(line, null)
+    }
+    String content = line.substring(0, lastOpen).trim()
+    if (!content.isEmpty() && content.charAt(content.length() - 1) == COMMA_CHAR) {
+      content = content.substring(0, content.length() - 1).trim()
+    }
+    new DataLine(content, weight)
   }
 
   /** Cut the line at the first {@code %} that is outside a quoted token, as Weka's tokenizer treats it as a comment. */
@@ -339,6 +375,7 @@ class MatrixArffReader {
   }
 
   private static ArffAttribute parseAttributeType(String name, String typeSpec, ArffReadOptions options, int lineNumber, String rawLine) {
+    typeSpec = stripAttributeWeight(typeSpec)
     String upperType = typeSpec.toUpperCase()
 
     String nominalValuesStr = extractNominalValues(typeSpec)
@@ -367,6 +404,27 @@ class MatrixArffReader {
         yield new ArffAttribute(name, ArffType.STRING, String)
       }
     }
+  }
+
+  /**
+   * Remove a trailing Weka attribute weight such as {@code numeric {0.5}} (a Weka 3.8 extension outside the ARFF
+   * specification). A leading brace group is a nominal declaration and is left untouched; a trailing group after a
+   * nominal declaration is already ignored by {@link #extractNominalValues}.
+   */
+  private static String stripAttributeWeight(String typeSpec) {
+    if (typeSpec.startsWith(OPEN_BRACE) || !typeSpec.endsWith(CLOSE_BRACE)) {
+      return typeSpec
+    }
+    int open = ArffScanner.lastIndexOfOutsideQuotes(typeSpec, OPEN_BRACE_CHAR)
+    if (open <= 0) {
+      return typeSpec
+    }
+    try {
+      new BigDecimal(typeSpec.substring(open + 1, typeSpec.length() - 1).trim())
+    } catch (NumberFormatException ignored) {
+      return typeSpec
+    }
+    typeSpec.substring(0, open).trim()
   }
 
   /**
@@ -731,6 +789,17 @@ class MatrixArffReader {
 
   private static IllegalArgumentException parseError(String message, int lineNumber, String rawLine, Throwable cause) {
     new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}", cause)
+  }
+
+  /** A data line with its trailing instance weight removed; {@code weight} is null when the line declared none. */
+  private static final class DataLine {
+    final String content
+    final BigDecimal weight
+
+    DataLine(String content, BigDecimal weight) {
+      this.content = content
+      this.weight = weight
+    }
   }
 
   private static final class ParsedToken {

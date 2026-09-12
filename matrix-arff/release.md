@@ -35,6 +35,11 @@ Behaviour changes are marked **(changed)**.
 - INTEGER attributes accept integral decimals such as `35.0` (Weka treats `integer` as numeric); non-integral or
   out-of-range values are still rejected
 - `ArffWriteOptions.toMap()` returns immutable collections instead of the option object's internal state
+- Support ARFF instance weights: `ArffReadOptions.instanceWeightColumn(name)` reads a trailing `{w}` into a NUMERIC column
+  (1 when absent) and `ArffWriteOptions.instanceWeightColumn(name)` writes that column as `,{w}`; without the option
+  weights are parsed and discarded instead of being treated as an extra row value
+- Weka 3.8 attribute weights (`@attribute x numeric {0.5}`) are recognised and ignored instead of being read as a nominal
+  declaration
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

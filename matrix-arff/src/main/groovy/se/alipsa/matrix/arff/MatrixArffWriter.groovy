@@ -20,6 +20,8 @@ class MatrixArffWriter {
   private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
   private static final String COMMA = ','
   private static final String QUESTION_MARK = '?'
+  private static final String OPEN_BRACE = '{'
+  private static final String CLOSE_BRACE = '}'
   private static final String BACKSLASH = '\\'
   private static final String UNDERSCORE = '_'
   private static final String DOUBLE_DOT = '..'
@@ -57,6 +59,8 @@ class MatrixArffWriter {
   /** Write to a File using typed ARFF write options. */
   static void write(Matrix matrix, File file, ArffWriteOptions options) {
     validateMatrix(matrix)
+    // validate before the file is created so an invalid configuration leaves no empty or partial file behind
+    validateWriteOptions(matrix, options ?: new ArffWriteOptions())
     File output = ensureFileOutput(matrix, file)
     OutputStream outputStream = new FileOutputStream(output)
     OutputStreamWriter writer = null
@@ -117,16 +121,19 @@ class MatrixArffWriter {
   private static void writeMatrix(Matrix matrix, PrintWriter pw, ArffWriteOptions options) {
     validateWriteOptions(matrix, options)
 
+    // Resolve the whole schema before printing so a validation failure never leaves a partial document behind
+    String weightColumn = options.instanceWeightColumn
+    List<String> columnNames = matrix.columnNames().findAll { String name -> name != weightColumn }
+    List<ArffAttributeInfo> attributeInfos = columnNames.collect { String colName ->
+      resolveAttributeInfo(matrix, colName, options)
+    }
+
     String relationName = matrix.matrixName ?: DEFAULT_MATRIX_BASE_NAME
     pw.println("@RELATION ${escapeIdentifier(relationName)}")
     pw.println()
 
-    List<String> columnNames = matrix.columnNames()
-    List<ArffAttributeInfo> attributeInfos = []
-    for (String colName : columnNames) {
-      ArffAttributeInfo info = resolveAttributeInfo(matrix, colName, options)
-      attributeInfos << info
-      pw.println("@ATTRIBUTE ${escapeIdentifier(colName)} ${info.typeDeclaration}")
+    for (int i = 0; i < columnNames.size(); i++) {
+      pw.println("@ATTRIBUTE ${escapeIdentifier(columnNames[i])} ${attributeInfos[i].typeDeclaration}")
     }
 
     pw.println()
@@ -134,15 +141,35 @@ class MatrixArffWriter {
 
     int rowCount = matrix.rowCount()
     for (int row = 0; row < rowCount; row++) {
-      StringBuilder line = new StringBuilder()
-      for (int col = 0; col < columnNames.size(); col++) {
-        if (col > 0) {
-          line.append(COMMA)
-        }
-        line.append(formatValue(matrix[row, col], attributeInfos[col]))
-      }
-      pw.println(line.toString())
+      pw.println(formatRow(matrix, row, columnNames, attributeInfos, weightColumn))
     }
+  }
+
+  /** One data row: the attribute values, then `,{w}` when {@code weightColumn} is set and the cell is not null. */
+  private static String formatRow(Matrix matrix, int row, List<String> columnNames, List<ArffAttributeInfo> infos,
+                                  String weightColumn) {
+    StringBuilder line = new StringBuilder()
+    for (int col = 0; col < columnNames.size(); col++) {
+      if (col > 0) {
+        line.append(COMMA)
+      }
+      line.append(formatValue(matrix[row, columnNames[col]], infos[col]))
+    }
+    if (weightColumn != null) {
+      Object weight = matrix[row, weightColumn]
+      if (weight != null) {
+        line.append(COMMA).append(OPEN_BRACE).append(formatWeight(weight, weightColumn, row)).append(CLOSE_BRACE)
+      }
+    }
+    line.toString()
+  }
+
+  private static String formatWeight(Object weight, String weightColumn, int row) {
+    if (!(weight instanceof Number) || isNonFinite(weight)) {
+      throw new IllegalArgumentException(
+          "instanceWeightColumn '$weightColumn' must hold finite numbers but row $row holds ${weight.class.simpleName} $weight")
+    }
+    weight.toString()
   }
 
   private static ArffAttributeInfo resolveAttributeInfo(Matrix matrix, String colName, ArffWriteOptions options) {
@@ -235,6 +262,7 @@ class MatrixArffWriter {
     validateColumnsExist('stringColumns', options.stringColumns, matrixColumns)
     validateColumnsExist('attributeTypesByColumn', options.attributeTypesByColumn.keySet(), matrixColumns)
     validateColumnsExist('dateFormatsByColumn', options.dateFormatsByColumn.keySet(), matrixColumns)
+    validateWeightColumn(matrix, options)
 
     Set<String> overlappingColumns = options.nominalColumns.intersect(options.stringColumns) as Set<String>
     if (!overlappingColumns.isEmpty()) {
@@ -269,6 +297,37 @@ class MatrixArffWriter {
 
     for (Map.Entry<String, List<String>> entry : options.nominalMappings.entrySet()) {
       validateNominalValues(entry.key, entry.value)
+    }
+  }
+
+  private static void validateWeightColumn(Matrix matrix, ArffWriteOptions options) {
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn == null) {
+      return
+    }
+    List<String> matrixColumns = matrix.columnNames()
+    if (!matrixColumns.contains(weightColumn)) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' references an unknown column")
+    }
+    if (matrixColumns.size() == 1) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' cannot be the only column")
+    }
+    boolean configuredElsewhere = options.nominalMappings.containsKey(weightColumn) ||
+        options.nominalColumns.contains(weightColumn) || options.stringColumns.contains(weightColumn) ||
+        options.attributeTypesByColumn.containsKey(weightColumn) || options.dateFormatsByColumn.containsKey(weightColumn)
+    if (configuredElsewhere) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' cannot also be configured as an attribute")
+    }
+    Class weightType = matrix.type(weightColumn)
+    if (weightType != Object && !isNumericType(weightType) && !isIntegerType(weightType)) {
+      throw new IllegalArgumentException(
+          "instanceWeightColumn '$weightColumn' must be numeric or Object but its declared type is ${weightType.simpleName}")
+    }
+    for (int row = 0; row < matrix.rowCount(); row++) {
+      Object weight = matrix[row, weightColumn]
+      if (weight != null) {
+        formatWeight(weight, weightColumn, row)
+      }
     }
   }
 

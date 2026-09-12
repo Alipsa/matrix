@@ -1,6 +1,7 @@
 package test.alipsa.matrix.arff
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -362,5 +363,128 @@ class MatrixArffWekaCompatTest {
       MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE n INTEGER\n@DATA\n3000000000\n')
     }
     assertTrue(overflow.message.contains("Invalid INTEGER value '3000000000'"), overflow.message)
+  }
+
+  @Test
+  void instanceWeightsAreReadIntoTheConfiguredColumn() {
+    String arff = '''
+@RELATION weighted
+@ATTRIBUTE a NUMERIC
+@ATTRIBUTE b {x,y}
+@DATA
+1,x,{5}
+2,y
+{0 3, 1 y}, {0.5}
+{1 y} , {2}
+4,x,{0}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().instanceWeightColumn('weight'))
+
+    assertEquals(['a', 'b', 'weight'], m.columnNames())
+    assertEquals(BigDecimal, m.type('weight'))
+    assertEquals(['5', '1', '0.5', '2', '0'], m.column('weight')*.toString(), 'an explicit {0} is zero, not the absent-weight default')
+    assertEquals(3 as BigDecimal, m[2, 'a'])
+    assertEquals(BigDecimal.ZERO, m[3, 'a'])
+    assertEquals('y', m[3, 'b'])
+  }
+
+  @Test
+  void instanceWeightsAreDiscardedByDefaultAndAreNotRowValues() {
+    String arff = '@RELATION w\n@ATTRIBUTE a NUMERIC\n@ATTRIBUTE b {x,y}\n@DATA\n1,x,{5}\n{0 2}, {3}\n'
+
+    Matrix lenient = MatrixArffReader.readString(arff)
+    assertEquals(['a', 'b'], lenient.columnNames())
+    assertEquals(2, lenient.rowCount())
+
+    Matrix strict = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true))
+    assertEquals(2, strict.rowCount())
+  }
+
+  @Test
+  void instanceWeightColumnMustNotClashWithAnAttribute() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION w\n@ATTRIBUTE weight NUMERIC\n@DATA\n1\n',
+          new ArffReadOptions().instanceWeightColumn('weight'))
+    }
+    assertTrue(e.message.contains("instanceWeightColumn 'weight'"), e.message)
+    assertTrue(e.message.contains("in relation 'w'"), e.message)
+  }
+
+  @Test
+  void nonNumericBraceGroupIsNotAWeight() {
+    Matrix m = MatrixArffReader.readString('@RELATION w\n@ATTRIBUTE a NUMERIC\n@DATA\n1,{abc}\n')
+    assertEquals(BigDecimal.ONE, m[0, 'a'])
+
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION w\n@ATTRIBUTE a NUMERIC\n@DATA\n1,{abc}\n', new ArffReadOptions().strict(true))
+    }
+    assertTrue(e.message.contains('Row length mismatch'), e.message)
+  }
+
+  @Test
+  void wekaAttributeWeightsAreIgnored() {
+    String arff = '''
+@RELATION aw
+@ATTRIBUTE a NUMERIC {0.5}
+@ATTRIBUTE b {x,y} {2}
+@ATTRIBUTE d date 'yyyy' {3}
+@ATTRIBUTE s STRING {1.5}
+@DATA
+1,y,2026,'t'
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true))
+
+    assertEquals([BigDecimal, String, Date, String], m.types())
+    assertEquals('y', m[0, 'b'])
+    assertEquals(Date.from(Instant.parse('2026-01-01T00:00:00Z')), m[0, 'd'])
+  }
+
+  @Test
+  void instanceWeightColumnIsWrittenAsTrailingBraceGroup() {
+    Matrix m = Matrix.builder('w')
+        .columns(a: [1, 2, 3, 4], w: [5, null, 0.5, 0])
+        .types([Integer, BigDecimal])
+        .build()
+
+    String arff = MatrixArffWriter.writeString(m, new ArffWriteOptions().instanceWeightColumn('w'))
+    List<String> out = lines(arff)
+
+    assertFalse(out.any { it.startsWith('@ATTRIBUTE w') }, arff)
+    assertEquals(['1,{5}', '2', '3,{0.5}', '4,{0}'], out.dropWhile { it != '@DATA' }.drop(1))
+
+    Matrix back = MatrixArffReader.readString(arff, new ArffReadOptions().instanceWeightColumn('w'))
+    assertEquals(['5', '1', '0.5', '0'], back.column('w')*.toString())
+
+    Matrix integerWeights = Matrix.builder('iw').columns(a: [1, 2], w: [5, 0]).types([Integer, Integer]).build()
+    String integerArff = MatrixArffWriter.writeString(
+        integerWeights, new ArffWriteOptions().instanceWeightColumn('w'))
+    assertEquals(['1,{5}', '2,{0}'], integerArff.readLines().dropWhile { it != '@DATA' }.drop(1))
+  }
+
+  @Test
+  void instanceWeightColumnMustBeNumeric() {
+    Matrix m = Matrix.builder('w').columns(a: [1], w: ['x']).types([Integer, String]).build()
+
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(m, new ArffWriteOptions().instanceWeightColumn('w'))
+    }
+    assertTrue(e.message.contains("instanceWeightColumn 'w'"), e.message)
+
+    Matrix lateInvalid = Matrix.builder('w').columns(a: [1, 2, 3], w: [1, 'x', Double.NaN]).types([Integer, Object]).build()
+    StringWriter destination = new StringWriter()
+    IllegalArgumentException late = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.write(lateInvalid, destination, new ArffWriteOptions().instanceWeightColumn('w'))
+    }
+    assertTrue(late.message.contains("instanceWeightColumn 'w'"), late.message)
+    assertTrue(late.message.contains('row 1'), late.message)
+    assertEquals('', destination.toString(), 'nothing may be written when validation fails')
+
+    Matrix nonFinite = Matrix.builder('w').columns(a: [1, 2], w: [1, Double.NaN]).types([Integer, Object]).build()
+    IllegalArgumentException nan = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(nonFinite, new ArffWriteOptions().instanceWeightColumn('w'))
+    }
+    assertTrue(nan.message.contains('row 1'), nan.message)
   }
 }
