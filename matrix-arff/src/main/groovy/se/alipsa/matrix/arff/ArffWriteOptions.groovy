@@ -27,7 +27,11 @@ class ArffWriteOptions {
   private Map<String, String> dateFormatsByColumn = [:]
 
   Map<String, List<String>> getNominalMappings() {
-    nominalMappings.asImmutable()
+    Map<String, List<String>> copy = [:]
+    nominalMappings.each { String key, List<String> values ->
+      copy[key] = values.asImmutable()
+    }
+    copy.asImmutable()
   }
 
   boolean isInferNominals() {
@@ -136,7 +140,7 @@ class ArffWriteOptions {
   Map<String, ?> toMap() {
     Map<String, Object> result = [:]
     if (!nominalMappings.isEmpty()) {
-      result.nominalMappings = nominalMappings
+      result.nominalMappings = getNominalMappings()
     }
     if (!inferNominals) {
       result.inferNominals = false
@@ -145,19 +149,19 @@ class ArffWriteOptions {
       result.nominalThreshold = nominalThreshold
     }
     if (!nominalColumns.isEmpty()) {
-      result.nominalColumns = nominalColumns
+      result.nominalColumns = getNominalColumns()
     }
     if (!stringColumns.isEmpty()) {
-      result.stringColumns = stringColumns
+      result.stringColumns = getStringColumns()
     }
     if (!attributeTypesByColumn.isEmpty()) {
-      result.attributeTypesByColumn = attributeTypesByColumn
+      result.attributeTypesByColumn = getAttributeTypesByColumn()
     }
     if (dateFormat != null) {
       result.dateFormat = dateFormat
     }
     if (!dateFormatsByColumn.isEmpty()) {
-      result.dateFormatsByColumn = dateFormatsByColumn
+      result.dateFormatsByColumn = getDateFormatsByColumn()
     }
     result
   }
