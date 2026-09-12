@@ -129,17 +129,23 @@ Sparse ARFF data rows are also supported:
 Matrix sparse = MatrixArffReader.readString(arffContent)
 
 assert sparse[0, 'score'] == 1.5
-assert sparse[0, 'note'] == null
+assert sparse[0, 'note'] == 'late sample'
 assert sparse[0, 'status'] == 'ok'
-assert sparse[2, 'score'] == null
+assert sparse[2, 'score'] == 0
 ```
 
-Supported sparse semantics in `matrix-arff`:
+Supported sparse semantics in `matrix-arff` (the ARFF specification as implemented by Weka; before 0.3.0 omitted
+attributes were read as `null`):
 
-- omitted attributes are read as `null`
-- quoted sparse values are supported
-- explicit `?` values are read as `null`
-- duplicate or out-of-range sparse indices fail fast with `IllegalArgumentException`
+- an attribute that is **omitted** from a sparse row has the value `0`: `0` for NUMERIC/INTEGER, the first declared value
+  for nominal attributes and `1970-01-01T00:00:00Z` for DATE
+- an omitted STRING attribute takes the first explicit value that appears in that column anywhere in the data (Weka's
+  string dictionary index 0); when the column has no explicit value at all the cell is `null` (Weka has no value there
+  either) unless `ArffReadOptions.omittedStringFallback` is set — `omittedStringFallback('0')` gives the raw `0` Weka
+  holds internally and the `"0"` liac-arff returns
+- a value that is **missing** must be written explicitly as `?` (for example `{0 1.5, 2 ?}`) and reads as `null`
+- quoted string and nominal values are supported
+- duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
 
 ### Reader Validation Modes
 
@@ -167,6 +173,8 @@ Useful validation flags:
 - `strict(true)` turns on both strict unknown-type handling and strict dense row length validation
 - `failOnUnknownAttributeType(true)` rejects unsupported `@ATTRIBUTE` types instead of treating them as `STRING`
 - `failOnRowLengthMismatch(true)` rejects dense rows whose value count does not match the declared schema
+- `omittedStringFallback('0')` sets the value of a STRING attribute omitted from sparse rows when the column has no
+  explicit value to resolve to (Weka's dictionary index 0); the default is `null`
 
 Syntax errors such as unterminated quoted values are always rejected, and the parser now includes the offending line number and line content in those exceptions.
 
@@ -209,9 +217,9 @@ String sparseArff = """
 Matrix sparse = MatrixArffReader.readString(sparseArff)
 
 assert sparse[0, 'score'] == 1.5
-assert sparse[0, 'note'] == null
+assert sparse[0, 'note'] == 'late sample'
 assert sparse[1, 'status'] == 'warning'
-assert sparse[2, 'score'] == null
+assert sparse[2, 'score'] == 0
 ```
 
 ### Explicit Schema Control

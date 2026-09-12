@@ -149,16 +149,23 @@ See [the tutorial](../docs/tutorial/16-matrix-arff.md) for more details.
 
 @DATA
 {0 1.5,2 ok}
-{1 'late sample',2 warning}
+{1 'late sample',2 warning,0 ?}
 {}
 ```
 
-When sparse rows are read:
+When sparse rows are read, the ARFF specification applies, exactly as in Weka:
 
-- omitted attributes become `null`
+- an attribute that is **omitted** from a sparse row has the value `0`: `0` for NUMERIC/INTEGER, the first declared value
+  for nominal attributes and `1970-01-01T00:00:00Z` for DATE
+- an omitted STRING attribute takes the first explicit value that appears in that column anywhere in the data (Weka's
+  string dictionary index 0); when the column has no explicit value at all the cell is `null` (Weka has no value there
+  either) unless `ArffReadOptions.omittedStringFallback` is set — `omittedStringFallback('0')` gives the raw `0` Weka
+  holds internally and the `"0"` liac-arff returns
+- a value that is **missing** must be written explicitly as `?` (for example `{0 1.5, 2 ?}`) and reads as `null`
 - quoted string and nominal values are supported
-- explicit `?` values are treated as missing and become `null`
 - duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
+
+Before version 0.3.0 omitted attributes were read as `null`.
 
 ## Default Behavior
 

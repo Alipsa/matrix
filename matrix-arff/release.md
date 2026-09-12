@@ -19,6 +19,12 @@ Behaviour changes are marked **(changed)**.
 - `%` outside a quoted token starts a comment anywhere on a line, as in Weka **(changed:** previously only a `%` at the
   start of a line was a comment; an unquoted value such as `50%` now reads as `50`. Since 0.3.0 the writer quotes and
   escapes every value containing `%` (before, only nominal values *starting* with `%` were quoted)**)**
+- Sparse rows follow the ARFF specification as implemented by Weka: an omitted attribute is `0` (NUMERIC/INTEGER `0`,
+  first declared nominal value, epoch DATE, and for STRING the first explicit value in that column — Weka's dictionary
+  index 0 — or `null` when there is none); only an explicit `?` is missing **(changed:** omitted attributes were
+  previously `null`**)**
+- Add `ArffReadOptions.omittedStringFallback(value)`: the value of a sparse-omitted STRING cell whose column has no
+  explicit value (`'0'` reproduces Weka's raw value and liac-arff's string)
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

@@ -38,6 +38,8 @@ class MatrixArffReader {
   private static final String SLASH = '/'
   private static final String OPEN_BRACE = '{'
   private static final String CLOSE_BRACE = '}'
+  /** Marks a STRING cell omitted from a sparse row until {@link #resolveOmittedValues} resolves it. */
+  private static final Object OMITTED = new Object()
 
   /** Read from an Arff file. */
   static Matrix read(File file) {
@@ -240,6 +242,7 @@ class MatrixArffReader {
       }
     }
 
+    resolveOmittedValues(rows, attributes, options.omittedStringFallback)
     List<Class> types = attributes*.javaType
     List<List<Object>> columns = []
     if (!rows.isEmpty()) {
@@ -425,7 +428,7 @@ class MatrixArffReader {
     if (!line.endsWith(CLOSE_BRACE)) {
       throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
-    List<Object> row = [null] * attributes.size()
+    List<Object> row = attributes.collect { ArffAttribute attr -> sparseDefaultValue(attr) }
     String body = line.substring(1, line.length() - 1).trim()
     if (body.isEmpty()) {
       return row
@@ -476,6 +479,48 @@ class MatrixArffReader {
     }
 
     row
+  }
+
+  /**
+   * The value an attribute has when a sparse row omits it. ARFF defines it as {@code 0}: numeric zero, the first
+   * declared nominal value and the epoch for DATE. STRING cells get a marker that {@link #resolveOmittedValues} replaces
+   * once the whole data section is known, because Weka resolves {@code 0} through a dictionary filled while reading.
+   */
+  private static Object sparseDefaultValue(ArffAttribute attr) {
+    switch (attr.type) {
+      case ArffType.NUMERIC -> BigDecimal.ZERO
+      case ArffType.INTEGER -> 0
+      case ArffType.NOMINAL -> attr.nominalValues[0]
+      case ArffType.DATE -> new Date(0L)
+      default -> OMITTED
+    }
+  }
+
+  /**
+   * Resolve STRING cells omitted from sparse rows the way Weka does: value index 0 of the attribute's dictionary, i.e.
+   * the first explicit value read for that attribute anywhere in the data. When the attribute never has an explicit
+   * value there is nothing index 0 can denote and the cell becomes {@code fallback} (null unless
+   * {@code ArffReadOptions.omittedStringFallback} is set).
+   */
+  private static void resolveOmittedValues(List<List<Object>> rows, List<ArffAttribute> attributes, String fallback) {
+    for (int col = 0; col < attributes.size(); col++) {
+      if (attributes[col].type != ArffType.STRING) {
+        continue
+      }
+      Object replacement = fallback
+      for (List<Object> row : rows) {
+        Object value = row[col]
+        if (value != null && !OMITTED.is(value)) {
+          replacement = value
+          break
+        }
+      }
+      for (List<Object> row : rows) {
+        if (OMITTED.is(row[col])) {
+          row[col] = replacement
+        }
+      }
+    }
   }
 
   private static List<String> splitSparseEntries(String body, int lineNumber, String rawLine) {

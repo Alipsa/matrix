@@ -1,6 +1,7 @@
 package test.alipsa.matrix.arff
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -202,5 +203,84 @@ class MatrixArffWekaCompatTest {
     assertEquals('a % b', m.matrixName)
     assertEquals('p % q', m.columnNames()[0])
     assertEquals('50%', m[0, 0])
+  }
+
+  @Test
+  void sparseOmittedAttributesTakeArffDefaultValues() {
+    String arff = '''
+@RELATION sparse_defaults
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE count INTEGER
+@ATTRIBUTE status {yes,no}
+@ATTRIBUTE note STRING
+@ATTRIBUTE never STRING
+@ATTRIBUTE when DATE 'yyyy-MM-dd'
+@DATA
+{0 1.5, 2 no}
+{1 7, 3 'hello', 5 ?}
+{}
+{0 ?, 2 ?, 3 'other'}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals(1.5, m[0, 'score'])
+    assertEquals(0, m[0, 'count'])
+    assertEquals('no', m[0, 'status'])
+    assertEquals('hello', m[0, 'note'], 'omitted STRING resolves to the first explicit value in the column')
+    assertNull(m[0, 'never'], 'a column with no explicit value has nothing index 0 can denote')
+    assertEquals(new Date(0L), m[0, 'when'])
+
+    assertEquals(BigDecimal.ZERO, m[1, 'score'])
+    assertEquals(7, m[1, 'count'])
+    assertEquals('yes', m[1, 'status'])
+    assertEquals('hello', m[1, 'note'])
+    assertNull(m[1, 'when'], 'an explicit ? is missing')
+
+    assertEquals([BigDecimal.ZERO, 0, 'yes', 'hello', null, new Date(0L)], m.row(2))
+
+    assertNull(m[3, 'score'])
+    assertEquals(0, m[3, 'count'])
+    assertNull(m[3, 'status'])
+    assertEquals('other', m[3, 'note'])
+  }
+
+  @Test
+  void denseValuesCountTowardsTheStringDictionary() {
+    String arff = '''
+@RELATION dict
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE note STRING
+@DATA
+{0 1}
+2,'dense first'
+{0 3, 1 'sparse later'}
+{0 4}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals(['dense first', 'dense first', 'sparse later', 'dense first'], m.column('note'))
+  }
+
+  @Test
+  void omittedStringFallbackAppliesOnlyToColumnsWithoutAnyValue() {
+    String arff = '''
+@RELATION fallback
+@ATTRIBUTE note STRING
+@ATTRIBUTE never STRING
+@DATA
+{0 'hello'}
+{}
+{0 ?, 1 ?}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().omittedStringFallback('0'))
+
+    assertEquals(['hello', 'hello', null], m.column('note'), 'a column with a dictionary entry is unaffected')
+    assertEquals(['0', '0', null], m.column('never'), 'no dictionary entry: the fallback applies; an explicit ? stays missing')
+    assertEquals([null, null, null], MatrixArffReader.readString(arff).column('never'), 'null without the option')
+    assertEquals('0', ArffReadOptions.fromMap([omittedStringFallback: '0']).omittedStringFallback)
+    assertEquals([omittedStringFallback: '0'], new ArffReadOptions().omittedStringFallback('0').toMap())
   }
 }
