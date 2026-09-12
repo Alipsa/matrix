@@ -37,7 +37,7 @@ class MatrixArffReader {
   private static final char PERCENT_CHAR = '%'
   private static final char SPACE_CHAR = ' '
   private static final String NOMINAL_DELIMITERS = ','
-  private static final String ROW_DELIMITERS = ',\t'
+  private static final String ROW_DELIMITERS = ',\t '
   private static final String INVALID_QUOTED = 'Invalid quoted'
   private static final String QUOTE_MUST_BEGIN_TOKEN = ' (quote must begin a token)'
   private static final String DOT = '.'
@@ -223,8 +223,10 @@ class MatrixArffReader {
     int lineNumber = 0
 
     String rawLine
+    String lastRawLine
     while ((rawLine = reader.readLine()) != null) {
       lineNumber++
+      lastRawLine = rawLine
       String line = stripComment(rawLine).trim()
 
       if (line.isEmpty()) {
@@ -260,7 +262,7 @@ class MatrixArffReader {
     }
 
     if (scopes.size() > 1) {
-      throw unterminatedRelationalError(scopes.last().name, lineNumber, rawLine)
+      throw unterminatedRelationalError(scopes.last().name, lineNumber, lastRawLine)
     }
     rejectInstanceWeightAttribute(scopes[0], relationName, options)
     buildMatrix(relationName, attributes, rows, weights, options)
@@ -650,7 +652,7 @@ class MatrixArffReader {
       }
       for (List<Object> row : rows) {
         if (OMITTED.is(row[col])) {
-          row[col] = replacement
+          row[col] = replacement instanceof Matrix ? (replacement as Matrix).clone() : replacement
         }
       }
     }
@@ -662,11 +664,9 @@ class MatrixArffReader {
     }
     List<String> entries = []
     int start = 0
-    int comma = ArffScanner.indexOfOutsideQuotes(body, COMMA_CHAR, 0)
-    while (comma >= 0) {
+    for (int comma : ArffScanner.indexesOutsideQuotes(body, COMMA_CHAR)) {
       entries.add(body.substring(start, comma))
       start = comma + 1
-      comma = ArffScanner.indexOfOutsideQuotes(body, COMMA_CHAR, start)
     }
     entries.add(body.substring(start))
     entries

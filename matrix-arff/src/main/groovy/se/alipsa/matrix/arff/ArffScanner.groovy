@@ -84,6 +84,12 @@ final class ArffScanner {
     match == null ? -1 : match
   }
 
+  /** Indexes of every {@code target} outside quoted tokens, in encounter order. */
+  @PackageScope
+  static List<Integer> indexesOutsideQuotes(String text, char target) {
+    scan(text, target).matches
+  }
+
   /** Index of the last {@code target} outside a quoted token, or -1. */
   @PackageScope
   static int lastIndexOfOutsideQuotes(String text, char target) {

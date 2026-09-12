@@ -1,6 +1,7 @@
 package test.alipsa.matrix.arff
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 
 import org.junit.jupiter.api.Test
@@ -31,5 +32,6 @@ class ArffWriteOptionsTest {
     assertEquals(['a'] as Set, options.nominalColumns)
     assertEquals(['b'] as Set, options.stringColumns)
     assertEquals([a: ['x', 'y']], options.nominalMappings)
+    assertSame(options.nominalMappings, options.nominalMappings, 'the immutable view should be cached')
   }
 }

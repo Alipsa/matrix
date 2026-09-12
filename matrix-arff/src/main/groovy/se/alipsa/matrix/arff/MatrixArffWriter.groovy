@@ -124,6 +124,8 @@ class MatrixArffWriter {
     // Resolve the whole schema before printing so a validation failure never leaves a partial document behind
     String weightColumn = options.instanceWeightColumn
     List<String> columnNames = matrix.columnNames().findAll { String name -> name != weightColumn }
+    List<Integer> columnIndexes = columnNames.collect { String name -> matrix.columnIndex(name) }
+    Integer weightColumnIndex = weightColumn == null ? null : matrix.columnIndex(weightColumn)
     List<ArffAttributeInfo> attributeInfos = columnNames.collect { String colName ->
       resolveAttributeInfo(matrix, colName, options)
     }
@@ -141,7 +143,7 @@ class MatrixArffWriter {
 
     int rowCount = matrix.rowCount()
     for (int row = 0; row < rowCount; row++) {
-      pw.println(formatRow(matrix, row, columnNames, attributeInfos, weightColumn))
+      pw.println(formatRow(matrix, row, columnIndexes, attributeInfos, weightColumnIndex, weightColumn))
     }
   }
 
@@ -158,17 +160,17 @@ class MatrixArffWriter {
   }
 
   /** One data row: the attribute values, then `,{w}` when {@code weightColumn} is set and the cell is not null. */
-  private static String formatRow(Matrix matrix, int row, List<String> columnNames, List<ArffAttributeInfo> infos,
-                                  String weightColumn) {
+  private static String formatRow(Matrix matrix, int row, List<Integer> columnIndexes, List<ArffAttributeInfo> infos,
+                                  Integer weightColumnIndex, String weightColumn) {
     StringBuilder line = new StringBuilder()
-    for (int col = 0; col < columnNames.size(); col++) {
+    for (int col = 0; col < columnIndexes.size(); col++) {
       if (col > 0) {
         line.append(COMMA)
       }
-      line.append(formatValue(matrix[row, columnNames[col]], infos[col]))
+      line.append(formatValue(matrix[row, columnIndexes[col]], infos[col]))
     }
-    if (weightColumn != null) {
-      Object weight = matrix[row, weightColumn]
+    if (weightColumnIndex != null) {
+      Object weight = matrix[row, weightColumnIndex]
       if (weight != null) {
         line.append(COMMA).append(OPEN_BRACE).append(formatWeight(weight, weightColumn, row)).append(CLOSE_BRACE)
       }
@@ -231,6 +233,8 @@ class MatrixArffWriter {
     String weightColumn = options.instanceWeightColumn
     String nestedWeightColumn = allNames.contains(weightColumn) ? weightColumn : null
     List<String> nestedNames = allNames.findAll { String name -> name != nestedWeightColumn }
+    List<Integer> nestedIndexes = nestedNames.collect { String name -> nested[0].columnIndex(name) }
+    Integer nestedWeightColumnIndex = nestedWeightColumn == null ? null : nested[0].columnIndex(nestedWeightColumn)
     if (nestedNames.isEmpty()) {
       // Weka rejects a relational declaration without attributes (and so does the reader)
       throw new IllegalArgumentException(
@@ -243,7 +247,7 @@ class MatrixArffWriter {
       resolveInferredAttributeInfo(
           nested, nestedName, options, options.dateFormat ?: ArffDateFormats.DEFAULT_PATTERN)
     }
-    new ArffAttributeInfo(nestedNames, nestedInfos, nestedWeightColumn)
+    new ArffAttributeInfo(nestedNames, nestedIndexes, nestedInfos, nestedWeightColumnIndex, nestedWeightColumn)
   }
 
   /** Infer one attribute over one or more matrices; explicit top-level type options are handled by the caller. */
@@ -490,7 +494,8 @@ class MatrixArffWriter {
     List<String> rows = []
     int rowCount = value.rowCount()
     for (int row = 0; row < rowCount; row++) {
-      rows.add(formatRow(value, row, info.relationalColumnNames, info.relationalInfos, info.relationalWeightColumn))
+      rows.add(formatRow(value, row, info.relationalColumnIndexes, info.relationalInfos,
+          info.relationalWeightColumnIndex, info.relationalWeightColumn))
     }
     ArffEscapes.quote(rows.join('\n'))
   }
@@ -509,19 +514,19 @@ class MatrixArffWriter {
   private static String formatDate(Object value, ArffAttributeInfo info) {
     SimpleDateFormat sdf = info.dateFormatter ?: ArffDateFormats.create(ArffDateFormats.DEFAULT_PATTERN, info.dateMode)
     if (value instanceof Date) {
-      return "'${sdf.format(value)}'"
+      return ArffEscapes.quote(sdf.format(value))
     }
     if (value instanceof LocalDate) {
       Date date = Date.from(value.atStartOfDay(ArffDateFormats.zone(info.dateMode)).toInstant())
-      return "'${sdf.format(date)}'"
+      return ArffEscapes.quote(sdf.format(date))
     }
     if (value instanceof LocalDateTime) {
       Date date = Date.from(value.atZone(ArffDateFormats.zone(info.dateMode)).toInstant())
-      return "'${sdf.format(date)}'"
+      return ArffEscapes.quote(sdf.format(date))
     }
     if (value instanceof Instant) {
       Date date = Date.from(value)
-      return "'${sdf.format(date)}'"
+      return ArffEscapes.quote(sdf.format(date))
     }
     ArffEscapes.quote(value.toString())
   }
@@ -588,7 +593,10 @@ class ArffAttributeInfo {
   SimpleDateFormat dateFormatter
   ArffDateMode dateMode
   List<String> relationalColumnNames
+  List<Integer> relationalColumnIndexes
   List<ArffAttributeInfo> relationalInfos
+  /** Nested weight-column index, or null. */
+  Integer relationalWeightColumnIndex
   /** Nested column written as `{w}` after each nested row, or null. */
   String relationalWeightColumn
 
@@ -603,11 +611,15 @@ class ArffAttributeInfo {
   }
 
   /** Constructor for a RELATIONAL attribute with its sub-relation schema. */
-  ArffAttributeInfo(List<String> relationalColumnNames, List<ArffAttributeInfo> relationalInfos, String relationalWeightColumn) {
+  ArffAttributeInfo(List<String> relationalColumnNames, List<Integer> relationalColumnIndexes,
+                    List<ArffAttributeInfo> relationalInfos, Integer relationalWeightColumnIndex,
+                    String relationalWeightColumn) {
     this.type = ArffTypeDecl.RELATIONAL
     this.typeDeclaration = RELATIONAL_DECLARATION
     this.relationalColumnNames = relationalColumnNames
+    this.relationalColumnIndexes = relationalColumnIndexes
     this.relationalInfos = relationalInfos
+    this.relationalWeightColumnIndex = relationalWeightColumnIndex
     this.relationalWeightColumn = relationalWeightColumn
   }
 }

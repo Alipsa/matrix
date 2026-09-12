@@ -2,6 +2,7 @@ package test.alipsa.matrix.arff
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -124,6 +125,19 @@ class MatrixArffWekaCompatTest {
 
     Matrix back = MatrixArffReader.readString(arff)
     assertEquals(created, back[0, 'created'])
+  }
+
+  @Test
+  void formattedDateValuesEscapeLiteralQuotes() {
+    Date created = Date.from(Instant.parse('1970-01-01T00:00:00Z'))
+    Matrix m = Matrix.builder('dates').columns(created: [created]).types([Date]).build()
+    ArffWriteOptions options = new ArffWriteOptions().dateFormatsByColumn([created: "yyyy''MM"])
+
+    String arff = MatrixArffWriter.writeString(m, options)
+
+    assertTrue(arff.contains("@ATTRIBUTE created DATE 'yyyy\\'\\'MM'"), arff)
+    assertTrue(arff.contains("'1970\\'01'"), arff)
+    assertEquals(created, MatrixArffReader.readString(arff)[0, 'created'])
   }
 
   @Test
@@ -266,6 +280,30 @@ class MatrixArffWekaCompatTest {
     Matrix m = MatrixArffReader.readString(arff)
 
     assertEquals(['dense first', 'dense first', 'sparse later', 'dense first'], m.column('note'))
+  }
+
+  @Test
+  void omittedRelationalValuesDoNotShareMutableMatrices() {
+    String arff = '''
+@RELATION bags
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE bag RELATIONAL
+  @ATTRIBUTE value INTEGER
+@END bag
+@DATA
+1,'5'
+{0 2}
+{0 3}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+    Matrix firstOmitted = m[1, 'bag'] as Matrix
+    Matrix secondOmitted = m[2, 'bag'] as Matrix
+
+    assertNotSame(m[0, 'bag'], firstOmitted)
+    assertNotSame(firstOmitted, secondOmitted)
+    firstOmitted[0, 'value'] = 9
+    assertEquals(5, secondOmitted[0, 'value'])
   }
 
   @Test
@@ -614,6 +652,8 @@ MUSK-1,?,1
       MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n')
     }
     assertTrue(e.message.contains("'bag' is not terminated"), e.message)
+    assertTrue(e.message.contains('@ATTRIBUTE f NUMERIC'), e.message)
+    assertFalse(e.message.endsWith(': null'), e.message)
   }
 
   @Test
@@ -773,6 +813,18 @@ MUSK-1,?,1
     assertEquals(['with spaces', 'tab\there', 'mixed', 'weighted', 'runs', 'comma in run'], m.column('s'))
     assertEquals(['x', 'y', 'y', 'y', 'x', 'y'], m.column('c'))
     assertEquals(['1', '1', '1', '2', '1', '1'], m.column('w')*.toString())
+  }
+
+  @Test
+  void denseRowsMayBeSpaceDelimited() {
+    String arff = '@RELATION s\n@ATTRIBUTE n NUMERIC\n@ATTRIBUTE c {x,y}\n@ATTRIBUTE note STRING\n@DATA\n' +
+        "1 x 'with spaces'\n" +
+        "2 y 'weighted row' {2}\n"
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true).instanceWeightColumn('w'))
+
+    assertEquals([1 as BigDecimal, 'x', 'with spaces', 1 as BigDecimal], m.row(0))
+    assertEquals([2 as BigDecimal, 'y', 'weighted row', 2 as BigDecimal], m.row(1))
   }
 
   @Test

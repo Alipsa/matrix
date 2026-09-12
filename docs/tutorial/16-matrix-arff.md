@@ -193,9 +193,9 @@ Syntax errors such as unterminated quoted values are always rejected, and the pa
 ### Weka Compatibility
 
 Since 0.3.0, `matrix-arff` supports the ARFF features used by Weka: comments and escaping, numeric, nominal, STRING,
-DATE and `relational` attributes, comma- or tab-delimited dense rows, sparse rows, missing values and instance weights.
-Use `ArffDateMode.WEKA` on both read and write options when files must produce the same `Date` instants as Weka on the
-same machine. The default `UTC` mode is machine-independent instead.
+DATE and `relational` attributes, comma-, tab-, or space-delimited dense rows, sparse rows, missing values and instance
+weights. Use `ArffDateMode.WEKA` on both read and write options when files must produce the same `Date` instants as Weka
+on the same machine. The default `UTC` mode is machine-independent instead.
 
 Important interoperability limitations:
 

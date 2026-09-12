@@ -174,9 +174,9 @@ Before version 0.3.0 omitted attributes were read as `null`.
 
 Since 0.3.0 the dialect written and read by `matrix-arff` follows Weka's `weka.core.Utils` and `ArffLoader`, and every
 feature documented in the ARFF specification (`arff_stable.md`) is supported: comments, quoting and escaping,
-NUMERIC/INTEGER/REAL, nominal, STRING, DATE and `relational` attributes, comma- or tab-delimited dense rows, sparse
-rows, missing values and instance weights. Subject to the limitations below, files exchanged with Weka keep their
-values on a round trip.
+NUMERIC/INTEGER/REAL, nominal, STRING, DATE and `relational` attributes, comma-, tab-, or space-delimited dense rows,
+sparse rows, missing values and instance weights. Subject to the limitations below, files exchanged with Weka keep
+their values on a round trip.
 
 Limitations:
 

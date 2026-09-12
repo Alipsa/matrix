@@ -19,7 +19,7 @@ class ArffWriteOptions {
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
   private static final String DATE_MODE = 'dateMode'
 
-  private Map<String, List<String>> nominalMappings = [:]
+  private Map<String, List<String>> nominalMappings = [:].asImmutable()
   private boolean inferNominals = true
   private int nominalThreshold = DEFAULT_NOMINAL_THRESHOLD
   private Set<String> nominalColumns = [] as Set<String>
@@ -31,11 +31,7 @@ class ArffWriteOptions {
   private ArffDateMode dateMode = ArffDateMode.UTC
 
   Map<String, List<String>> getNominalMappings() {
-    Map<String, List<String>> copy = [:]
-    nominalMappings.each { String key, List<String> values ->
-      copy[key] = values.asImmutable()
-    }
-    copy.asImmutable()
+    nominalMappings
   }
 
   boolean isInferNominals() {
@@ -77,7 +73,7 @@ class ArffWriteOptions {
   }
 
   ArffWriteOptions nominalMappings(Map<String, List<String>> value) {
-    this.nominalMappings = value == null ? [:] : copyNominalMappings(value)
+    this.nominalMappings = immutableNominalMappings(value)
     this
   }
 
@@ -283,6 +279,15 @@ class ArffWriteOptions {
       result[key] = stringList(item, "$NOMINAL_MAPPINGS[$key]")
     }
     result
+  }
+
+  private static Map<String, List<String>> immutableNominalMappings(Map<String, List<String>> value) {
+    if (value == null) {
+      return [:].asImmutable()
+    }
+    Map<String, List<String>> copy = copyNominalMappings(value)
+    copy.replaceAll { String key, List<String> values -> values.asImmutable() }
+    copy.asImmutable()
   }
 
   private static Map<String, String> copyStringMap(Map<String, String> value, String name) {
