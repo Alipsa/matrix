@@ -43,6 +43,9 @@ Behaviour changes are marked **(changed)**.
 - Read `relational` attributes (`@attribute bag relational … @end bag`, nested declarations allowed): each cell becomes a
   nested `Matrix` (column type `Matrix`) whose rows may be dense or sparse **(changed:** `relational` was an unknown
   type read as STRING**)**
+- Write `Matrix`-typed columns (or columns forced with `attributeTypesByColumn: [col: RELATIONAL]`) as `relational`
+  attributes; the sub-relation schema is derived from all nested matrices in the column (identical columns and types
+  required), nested relational columns are supported, and a nested `instanceWeightColumn` is written as `{w}`
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
@@ -612,5 +613,107 @@ MUSK-1,?,1
       MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n')
     }
     assertTrue(e.message.contains("'bag' is not terminated"), e.message)
+  }
+
+  @Test
+  void matrixColumnsAreWrittenAsRelationalAttributesAndRoundTrip() {
+    Matrix bagA = Matrix.builder('bag').columns(f1: [1, 2], f2: ['a', 'b']).types([Integer, String]).build()
+    Matrix bagB = Matrix.builder('bag').columns(f1: [3], f2: ['b']).types([Integer, String]).build()
+    Matrix m = Matrix.builder('musk')
+        .columns(molecule: ['M1', 'M2', 'M3'], bag: [bagA, bagB, null], cls: ['1', '0', '1'])
+        .types([String, Matrix, String])
+        .build()
+
+    String arff = MatrixArffWriter.writeString(m)
+    List<String> out = lines(arff)
+    int start = out.indexOf('@ATTRIBUTE bag RELATIONAL')
+
+    assertTrue(start > 0, arff)
+    assertEquals(['  @ATTRIBUTE f1 INTEGER', '  @ATTRIBUTE f2 {a,b}', '@END bag'], out[start + 1..start + 3])
+    assertTrue(out.contains("M1,'1,a\\n2,b',1"), arff)
+    assertTrue(out.contains("M2,'3,b',0"), arff)
+    assertTrue(out.contains('M3,?,1'), arff)
+
+    Matrix back = MatrixArffReader.readString(arff)
+    assertEquals([String, Matrix, String], back.types())
+    Matrix backBag = back[0, 'bag'] as Matrix
+    assertEquals([1, 2], backBag.column('f1'))
+    assertEquals(['a', 'b'], backBag.column('f2'))
+    assertNull(back[2, 'bag'])
+  }
+
+  @Test
+  void nestedRelationalColumnsAreWrittenRecursively() {
+    Matrix inner = Matrix.builder('inner').columns(v: [1.5]).types([BigDecimal]).build()
+    Matrix outer = Matrix.builder('outer').columns(id: [7], inner: [inner]).types([Integer, Matrix]).build()
+    Matrix m = Matrix.builder('nested').columns(outer: [outer]).types([Matrix]).build()
+
+    String arff = MatrixArffWriter.writeString(m)
+    List<String> out = lines(arff)
+
+    assertEquals(
+        ['@ATTRIBUTE outer RELATIONAL', '  @ATTRIBUTE id INTEGER', '  @ATTRIBUTE inner RELATIONAL',
+         '    @ATTRIBUTE v NUMERIC', '  @END inner', '@END outer'],
+        out[2..7])
+    assertTrue(out.contains("'7,\\'1.5\\''"), arff)
+
+    Matrix back = MatrixArffReader.readString(arff)
+    Matrix backOuter = back[0, 'outer'] as Matrix
+    assertEquals(1.5, (backOuter[0, 'inner'] as Matrix)[0, 'v'])
+  }
+
+  @Test
+  void weightedNestedRowsRoundTripThroughRelationalValues() {
+    Matrix bag = Matrix.builder('bag').columns(f: [1, 2], w: [0.5, null]).types([Integer, BigDecimal]).build()
+    // the weight column must exist at the top level (Task 11 validation); here the top-level row carries no weight
+    Matrix m = Matrix.builder('m').columns(id: [1], bag: [bag], w: [null]).types([Integer, Matrix, BigDecimal]).build()
+
+    String arff = MatrixArffWriter.writeString(m, new ArffWriteOptions().instanceWeightColumn('w'))
+    List<String> out = lines(arff)
+
+    assertEquals(['@ATTRIBUTE bag RELATIONAL', '  @ATTRIBUTE f INTEGER', '@END bag'], out[3..5], arff)
+    assertTrue(out.contains("1,'1,{0.5}\\n2'"), arff)
+
+    Matrix back = MatrixArffReader.readString(arff, new ArffReadOptions().instanceWeightColumn('w'))
+    assertEquals(['1'], back.column('w')*.toString())
+    Matrix backBag = back[0, 'bag'] as Matrix
+    assertEquals(['f', 'w'], backBag.columnNames())
+    assertEquals(['0.5', '1'], backBag.column('w')*.toString())
+  }
+
+  @Test
+  void relationalColumnsAreValidated() {
+    Matrix bagA = Matrix.builder('bag').columns(f1: [1]).types([Integer]).build()
+    Matrix bagB = Matrix.builder('bag').columns(other: [1]).types([Integer]).build()
+    Matrix bagC = Matrix.builder('bag').columns(f1: ['x']).types([String]).build()
+
+    IllegalArgumentException mismatch = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(Matrix.builder('m').columns(bag: [bagA, bagB]).types([Matrix]).build())
+    }
+    assertTrue(mismatch.message.contains('same columns'), mismatch.message)
+
+    IllegalArgumentException typeMismatch = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(Matrix.builder('m').columns(bag: [bagA, bagC]).types([Matrix]).build())
+    }
+    assertTrue(typeMismatch.message.contains('same column types'), typeMismatch.message)
+
+    IllegalArgumentException allNull = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(Matrix.builder('m').columns(bag: [null, null]).types([Matrix]).build())
+    }
+    assertTrue(allNull.message.contains('no non-null values'), allNull.message)
+
+    IllegalArgumentException notMatrix = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(Matrix.builder('m').columns(bag: ['x']).types([String]).build(),
+          new ArffWriteOptions().attributeTypesByColumn([bag: ArffTypeDecl.RELATIONAL]))
+    }
+    assertTrue(notMatrix.message.contains('holds String'), notMatrix.message)
+
+    Matrix onlyWeight = Matrix.builder('bag').columns(w: [0.5]).types([BigDecimal]).build()
+    IllegalArgumentException weightOnly = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(
+          Matrix.builder('m').columns(id: [1], bag: [onlyWeight], w: [null]).types([Integer, Matrix, BigDecimal]).build(),
+          new ArffWriteOptions().instanceWeightColumn('w'))
+    }
+    assertTrue(weightOnly.message.contains("at least one column besides instanceWeightColumn 'w'"), weightOnly.message)
   }
 }
