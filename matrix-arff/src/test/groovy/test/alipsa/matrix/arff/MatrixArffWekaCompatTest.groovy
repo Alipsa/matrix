@@ -319,4 +319,13 @@ class MatrixArffWekaCompatTest {
     assertNull(back[0, 'd'])
     assertEquals(1.5, back[2, 'd'])
   }
+
+  @Test
+  void dateWithTrailingTextIsRejected() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString("@RELATION d\n@ATTRIBUTE when DATE 'yyyy-MM-dd'\n@DATA\n'2026-03-18garbage'\n")
+    }
+    assertTrue(e.message.contains("Invalid DATE value '2026-03-18garbage'"), e.message)
+    assertTrue(e.message.contains('line 4'), e.message)
+  }
 }

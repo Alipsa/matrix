@@ -5,6 +5,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.ParseException
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -647,7 +648,7 @@ class MatrixArffReader {
         case ArffType.NUMERIC -> new BigDecimal(value)
         case ArffType.INTEGER -> Integer.parseInt(value)
         case ArffType.STRING, ArffType.NOMINAL -> value
-        case ArffType.DATE -> parseDate(value, attr.dateFormat)
+        case ArffType.DATE -> parseDate(value, attr)
         default -> value
       }
     } catch (NumberFormatException e) {
@@ -657,10 +658,14 @@ class MatrixArffReader {
     }
   }
 
-  private static Date parseDate(String value, String format) throws ParseException {
-    String resolvedFormat = format ?: "yyyy-MM-dd'T'HH:mm:ss"
-    SimpleDateFormat sdf = ArffDateFormats.create(resolvedFormat)
-    sdf.parse(value)
+  private static Date parseDate(String value, ArffAttribute attr) throws ParseException {
+    ParsePosition position = new ParsePosition(0)
+    Date parsed = attr.dateFormatter().parse(value, position)
+    if (parsed == null || position.index != value.length()) {
+      int errorIndex = position.errorIndex >= 0 ? position.errorIndex : position.index
+      throw new ParseException("Unparseable date: \"$value\"", errorIndex)
+    }
+    parsed
   }
 
   private static String extractNominalValues(String typeSpec) {
@@ -756,5 +761,19 @@ class ArffAttribute {
     this.javaType = javaType
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
+  }
+
+  private SimpleDateFormat dateFormatter
+
+  /**
+   * The strict UTC formatter for this attribute's DATE pattern (or the default pattern), created on first use.
+   *
+   * @return the formatter, or null when this is not a DATE attribute
+   */
+  SimpleDateFormat dateFormatter() {
+    if (dateFormatter == null && type == ArffType.DATE) {
+      dateFormatter = ArffDateFormats.create(dateFormat ?: ArffDateFormats.DEFAULT_PATTERN)
+    }
+    dateFormatter
   }
 }

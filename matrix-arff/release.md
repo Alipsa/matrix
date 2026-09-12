@@ -28,6 +28,9 @@ Behaviour changes are marked **(changed)**.
 - Fix `LocalDate` and `LocalDateTime` values being shifted by the JVM's zone offset when written (regression from the
   UTC formatter introduced in 0.2.1)
 - Write `NaN` and infinite `Double`/`Float` values as `?` (missing) instead of literals Weka and the reader reject
+- Reject DATE values with trailing text (`'2026-03-18garbage'`); `SimpleDateFormat.parse` silently ignored it
+- Create one date formatter per DATE attribute instead of one per cell when reading and writing; add
+  `ArffDateFormats.DEFAULT_PATTERN`
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

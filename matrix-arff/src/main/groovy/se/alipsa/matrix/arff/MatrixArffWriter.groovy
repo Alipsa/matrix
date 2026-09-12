@@ -16,7 +16,6 @@ import java.time.ZoneOffset
  */
 class MatrixArffWriter {
 
-  private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
   private static final String MATRIX_NULL_MESSAGE = 'Matrix cannot be null'
   private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
   private static final String COMMA = ','
@@ -226,7 +225,7 @@ class MatrixArffWriter {
   }
 
   private static String resolveDateFormat(String colName, ArffWriteOptions options) {
-    options.dateFormatsByColumn[colName] ?: options.dateFormat ?: DEFAULT_DATE_FORMAT
+    options.dateFormatsByColumn[colName] ?: options.dateFormat ?: ArffDateFormats.DEFAULT_PATTERN
   }
 
   private static void validateWriteOptions(Matrix matrix, ArffWriteOptions options) {
@@ -349,7 +348,7 @@ class MatrixArffWriter {
   }
 
   private static String formatDate(Object value, ArffAttributeInfo info) {
-    SimpleDateFormat sdf = ArffDateFormats.create(info.dateFormat ?: DEFAULT_DATE_FORMAT)
+    SimpleDateFormat sdf = info.dateFormatter ?: ArffDateFormats.create(ArffDateFormats.DEFAULT_PATTERN)
     if (value instanceof Date) {
       return "'${sdf.format((Date) value)}'"
     }
@@ -419,16 +418,19 @@ class MatrixArffWriter {
   }
 }
 
+/** Resolved ARFF schema information for one written column. */
 class ArffAttributeInfo {
   ArffTypeDecl type
   String typeDeclaration
   List<String> nominalValues
   String dateFormat
+  SimpleDateFormat dateFormatter
 
   ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null) {
     this.type = type
     this.typeDeclaration = typeDeclaration
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
+    this.dateFormatter = dateFormat == null ? null : ArffDateFormats.create(dateFormat)
   }
 }
