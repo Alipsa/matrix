@@ -16,6 +16,9 @@ Behaviour changes are marked **(changed)**.
   module write for the default pattern) failing to parse; a Date column written with default options now round-trips
 - Accept unquoted DATE formats (`date yyyy-MM-dd`) as Weka does; trailing text after the format is now a parse error
 - `DATETIME` and other types merely starting with `date` are no longer treated as DATE
+- `%` outside a quoted token starts a comment anywhere on a line, as in Weka **(changed:** previously only a `%` at the
+  start of a line was a comment; an unquoted value such as `50%` now reads as `50`. Since 0.3.0 the writer quotes and
+  escapes every value containing `%` (before, only nominal values *starting* with `%` were quoted)**)**
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

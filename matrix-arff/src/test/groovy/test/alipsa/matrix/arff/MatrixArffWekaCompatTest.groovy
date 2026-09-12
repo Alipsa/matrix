@@ -169,4 +169,38 @@ class MatrixArffWekaCompatTest {
     }
     assertTrue(e.message.contains("Unknown @ATTRIBUTE type 'DATETIME'"), e.message)
   }
+
+  @Test
+  void percentStartsACommentAnywhereOutsideQuotes() {
+    String arff = '''
+@RELATION comments % relation comment
+@ATTRIBUTE n NUMERIC % numeric column
+@ATTRIBUTE s STRING
+@ATTRIBUTE c {a,b} % nominal
+@DATA
+1,'50% done',a % trailing data comment
+2,'x',b%no space
+{0 3, 1 'y'} % sparse comment
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals('comments', m.matrixName)
+    assertEquals(['n', 's', 'c'], m.columnNames())
+    assertEquals(3, m.rowCount())
+    assertEquals('50% done', m[0, 's'])
+    assertEquals('a', m[0, 'c'])
+    assertEquals('b', m[1, 'c'])
+    assertEquals(3 as BigDecimal, m[2, 'n'])
+    assertEquals('y', m[2, 's'])
+  }
+
+  @Test
+  void percentInsideQuotesIsNotAComment() {
+    Matrix m = MatrixArffReader.readString("@RELATION 'a % b'\n@ATTRIBUTE 'p % q' STRING\n@DATA\n'50%'\n")
+
+    assertEquals('a % b', m.matrixName)
+    assertEquals('p % q', m.columnNames()[0])
+    assertEquals('50%', m[0, 0])
+  }
 }

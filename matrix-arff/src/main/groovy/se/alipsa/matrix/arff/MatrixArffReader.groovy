@@ -33,6 +33,7 @@ class MatrixArffReader {
   private static final char DOUBLE_QUOTE_CHAR = '"'
   private static final char COMMA_CHAR = ','
   private static final char CLOSE_BRACE_CHAR = '}'
+  private static final char PERCENT_CHAR = '%'
   private static final String DOT = '.'
   private static final String SLASH = '/'
   private static final String OPEN_BRACE = '{'
@@ -215,9 +216,9 @@ class MatrixArffReader {
     String rawLine
     while ((rawLine = reader.readLine()) != null) {
       lineNumber++
-      String line = rawLine.trim()
+      String line = stripComment(rawLine).trim()
 
-      if (line.isEmpty() || line.startsWith('%')) {
+      if (line.isEmpty()) {
         continue
       }
 
@@ -261,6 +262,12 @@ class MatrixArffReader {
         .columns(columns)
         .types(types)
         .build()
+  }
+
+  /** Cut the line at the first {@code %} that is outside a quoted token, as Weka's tokenizer treats it as a comment. */
+  private static String stripComment(String line) {
+    int comment = ArffScanner.indexOfOutsideQuotes(line, PERCENT_CHAR, 0)
+    comment < 0 ? line : line.substring(0, comment)
   }
 
   private static String parseRelationName(String line, int lineNumber, String rawLine) {
