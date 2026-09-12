@@ -22,8 +22,8 @@ Behaviour changes are marked **(changed)**.
   type read as STRING**)**
 - Dense `@DATA` rows may be comma-, tab-, or space-delimited, as the ARFF specification allows; a run of delimiters
   and blanks is one separator as in Weka, except that each extra comma still reads as an empty (missing) field
-  **(changed:** an unquoted tab or space inside a value now separates values, as it does in Weka; values written by
-  matrix-arff have been quoted in that case since 0.2.x, so only files from other producers are affected**)**
+  **(changed:** an unquoted tab or space inside a value now separates values, as it does in Weka; matrix-arff has
+  quoted values containing spaces since 0.2.x and values containing tabs since the escaping change in this release**)**
 - Reject single or double quotes that begin in the middle of an unquoted dense-row or nominal-declaration token
   **(changed:** values such as `it's` were previously accepted unquoted; write them as `'it\'s'`**)**. Blanks after a
   closing quote are syntax and are no longer appended to the value
