@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 - parse cached XLSX formula numbers exactly using their locale-invariant OOXML representation; locale- or grouping-formatted values such as `1234,5` and `1,234.5` are retained as text
+- SPI `firstRowAsColNames` parsing is now strict: `false` is false and non-Boolean/non-`true`/`false` values are rejected.
 
 ## v2.4.1, 2026-07-07
 

@@ -98,6 +98,88 @@ class MatrixAvroReaderTest {
     assertEquals('FromBytes', m.matrixName)
   }
 
+  @Test
+  void readsEveryBranchOfAMultiTypeUnion() {
+    Schema unionSchema = new Schema.Parser().parse('''
+      {"type":"record","name":"UnionValues","fields":[
+        {"name":"value","type":["null","int","string"]}
+      ]}
+    ''')
+    File file = Files.createTempFile('matrix-avro-union-', '.avro').toFile()
+    try {
+      DataFileWriter<GenericRecord> writer = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(unionSchema))
+      writer.create(unionSchema, file)
+      try {
+        GenericRecord integerRecord = new GenericData.Record(unionSchema)
+        integerRecord.put('value', 42)
+        writer.append(integerRecord)
+        GenericRecord stringRecord = new GenericData.Record(unionSchema)
+        stringRecord.put('value', 'answer')
+        writer.append(stringRecord)
+        GenericRecord nullRecord = new GenericData.Record(unionSchema)
+        nullRecord.put('value', null)
+        writer.append(nullRecord)
+      } finally {
+        writer.close()
+      }
+
+      Matrix matrix = MatrixAvroReader.read(file)
+      assertEquals(42, matrix[0, 'value'])
+      assertTrue(matrix[0, 'value'] instanceof Integer)
+      assertEquals('answer', matrix[1, 'value'])
+      assertTrue(matrix[1, 'value'] instanceof String)
+      assertNull(matrix[2, 'value'])
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void readsNestedAndLogicalBranchesOfAMultiTypeUnion() {
+    Schema unionSchema = new Schema.Parser().parse('''
+      {"type":"record","name":"NestedUnionValues","fields":[
+        {"name":"value","type":["null",
+          {"type":"record","name":"Point","fields":[{"name":"x","type":"int"}]},
+          {"type":"array","items":"string"},
+          {"type":"bytes","logicalType":"decimal","precision":6,"scale":2}
+        ]}
+      ]}
+    ''')
+    File file = Files.createTempFile('matrix-avro-nested-union-', '.avro').toFile()
+    try {
+      DataFileWriter<GenericRecord> writer = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(unionSchema))
+      writer.create(unionSchema, file)
+      try {
+        Schema pointSchema = unionSchema.getField('value').schema().types[1]
+        GenericRecord point = new GenericData.Record(pointSchema)
+        point.put('x', 7)
+        appendUnionRecord(writer, unionSchema, point)
+        appendUnionRecord(writer, unionSchema, ['north', 'south'])
+        Schema decimalSchema = unionSchema.getField('value').schema().types[3]
+        appendUnionRecord(writer, unionSchema,
+            new Conversions.DecimalConversion().toBytes(12.34g, decimalSchema, LogicalTypes.decimal(6, 2)))
+      } finally {
+        writer.close()
+      }
+
+      Matrix matrix = MatrixAvroReader.read(file)
+      assertEquals(7, matrix[0, 'value'].x)
+      assertTrue(matrix[0, 'value'] instanceof Map)
+      assertEquals(['north', 'south'], matrix[1, 'value'])
+      assertTrue(matrix[1, 'value'] instanceof List)
+      assertEquals(12.34g, matrix[2, 'value'])
+      assertTrue(matrix[2, 'value'] instanceof BigDecimal)
+    } finally {
+      file.delete()
+    }
+  }
+
+  private static void appendUnionRecord(DataFileWriter<GenericRecord> writer, Schema schema, Object value) {
+    GenericRecord record = new GenericData.Record(schema)
+    record.put('value', value)
+    writer.append(record)
+  }
+
   // ---------- convenience method tests ----------
 
   @Test @Order(7)

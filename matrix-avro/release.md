@@ -2,6 +2,12 @@
 
 ## v0.3.1, unreleased
 - Decimal schema inference now uses the shared column profile from matrix-core 3.9.0; matrix-core 3.9.0 or later is required.
+- Legal multi-branch unions are now decoded through Avro's branch resolver. Conversion errors retain the full public target label, such as `UNION[NULL, INT, STRING]`.
+- `BigInteger` is now lossless `bytes` `decimal(precision, 0)`, marked with `se.alipsa.matrix.javaType: java.math.BigInteger`; it is no longer narrowed to `long`. Generic consumers should read this as a standard decimal, and Matrix reader schemas that omit the marker read it as `BigDecimal`.
+- Decimal writes accept mixed finite integral, `BigInteger`, `BigDecimal`, `Double`, and `Float` values. A `BigInteger` forces lossless decimal storage even when decimal inference is disabled; nested BigDecimal positions use decimal inference when enabled. Declared decimal schemas round to their declared scale using `HALF_UP` before precision validation.
+- SPI `inferPrecisionAndScale` now parses Booleans and trimmed case-insensitive `true`/`false` strings strictly; strings such as `false` no longer use Groovy truthiness.
+- Write-time `AvroSchemaException`s (for example a non-finite value reaching a declared decimal or long column) now carry the 0-based row number, available through `getRowNumber()`, alongside the column name.
+- The writer reads raw column values, so declared `int`/`long` columns accept losslessly convertible numeric values (for example `5L` or `2.0d` in an `Integer` column) and reject lossy conversions (fractional, out-of-range, or non-finite values) with column and row context instead of silently narrowing them.
 - Dependency upgrades
   - org.apache.avro:avro 1.12.1 -> 1.12.2
 ## v0.3.0 2026-05-01

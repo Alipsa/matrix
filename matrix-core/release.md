@@ -6,6 +6,9 @@
 - `toHtml(attr: [caption: '…'])` writes an escaped `<caption>` as the first child of the table. The `caption` key is consumed rather than emitted as a table attribute.
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
+### SPI
+- Added `OptionMaps.booleanValueOrNull`, which accepts nullable Boolean values and trimmed, case-insensitive `true`/`false` strings while rejecting truthy non-Boolean inputs.
+
 ### New Column methods
 - `Column.getAt(IntRange)` — `column[1..3]` now returns a `Column` (name and type preserved) instead of a plain `ArrayList`, so element-wise arithmetic and the rest of the Column API survive slicing. It is equivalent to `Column.subList(IntRange)`; both follow Groovy list-slicing semantics (negative indices count from the end, reverse ranges return values in reverse order) and both return a detached copy.
 - Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.
@@ -30,7 +33,7 @@
 - `Stat.means(Matrix, List<String>)` now returns non-null results at the same default scale of 16 as `Stat.mean(List)`.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
 - `MatrixBuilder.csvString` handles comment-only input explicitly: without a header row, a `#types:` directive establishes an empty schema and generated column names; with `firstRowAsHeader: true`, a clear missing-header exception is thrown. Missing indexed columns and completely empty CSV input also produce specific validation errors.
-- Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
+- Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns. It profiles iterables via `profile(...)`, streams values incrementally via `include(Number)` without materializing the column, and combines partial profiles via `merge(...)`.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
 - Restored the Java-convenience helper shapes of `Columns` and `CollectionUtils.m(...)` so existing raw-map assignments and entry iteration continue to compile.
