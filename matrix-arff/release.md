@@ -31,6 +31,9 @@ Behaviour changes are marked **(changed)**.
 - Reject DATE values with trailing text (`'2026-03-18garbage'`); `SimpleDateFormat.parse` silently ignored it
 - Create one date formatter per DATE attribute instead of one per cell when reading and writing; add
   `ArffDateFormats.DEFAULT_PATTERN`
+- Reject duplicate `@ATTRIBUTE` names and empty nominal declarations (`{}`) with a parse error, as Weka does
+- INTEGER attributes accept integral decimals such as `35.0` (Weka treats `integer` as numeric); non-integral or
+  out-of-range values are still rejected
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

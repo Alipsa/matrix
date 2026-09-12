@@ -328,4 +328,39 @@ class MatrixArffWekaCompatTest {
     assertTrue(e.message.contains("Invalid DATE value '2026-03-18garbage'"), e.message)
     assertTrue(e.message.contains('line 4'), e.message)
   }
+
+  @Test
+  void duplicateAttributeNamesAreRejected() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString("@RELATION d\n@ATTRIBUTE a NUMERIC\n@ATTRIBUTE a STRING\n@DATA\n1,'x'\n")
+    }
+    assertTrue(e.message.contains("Duplicate @ATTRIBUTE name 'a'"), e.message)
+    assertTrue(e.message.contains('line 3'), e.message)
+  }
+
+  @Test
+  void emptyNominalDeclarationIsRejected() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE a {}\n@DATA\n?\n')
+    }
+    assertTrue(e.message.contains('at least one value'), e.message)
+    assertTrue(e.message.contains('line 2'), e.message)
+  }
+
+  @Test
+  void integerAttributeAcceptsIntegralDecimalsAndRejectsFractions() {
+    Matrix m = MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE n INTEGER\n@DATA\n35.0\n-7\n4E1\n')
+    assertEquals([35, -7, 40], m.column('n'))
+    assertEquals(Integer, m.type('n'))
+
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE n INTEGER\n@DATA\n3.5\n')
+    }
+    assertTrue(e.message.contains("Invalid INTEGER value '3.5'"), e.message)
+
+    IllegalArgumentException overflow = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE n INTEGER\n@DATA\n3000000000\n')
+    }
+    assertTrue(overflow.message.contains("Invalid INTEGER value '3000000000'"), overflow.message)
+  }
 }

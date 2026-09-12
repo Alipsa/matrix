@@ -211,6 +211,7 @@ class MatrixArffReader {
   private static Matrix parseArff(BufferedReader reader, String defaultName, ArffReadOptions options) {
     String relationName = defaultName
     List<String> attributeNames = []
+    Set<String> seenNames = [] as Set<String>
     List<ArffAttribute> attributes = []
     List<List<Object>> rows = []
     boolean inDataSection = false
@@ -236,6 +237,9 @@ class MatrixArffReader {
         relationName = parseRelationName(line, lineNumber, rawLine)
       } else if (upperLine.startsWith(ATTRIBUTE_KEYWORD)) {
         ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
+        if (!seenNames.add(attr.name)) {
+          throw parseError("Duplicate @ATTRIBUTE name '${attr.name}'", lineNumber, rawLine)
+        }
         attributeNames.add(attr.name)
         attributes.add(attr)
       } else if (upperLine.startsWith('@DATA')) {
@@ -339,6 +343,9 @@ class MatrixArffReader {
 
     String nominalValuesStr = extractNominalValues(typeSpec)
     if (nominalValuesStr != null) {
+      if (nominalValuesStr.trim().isEmpty()) {
+        throw parseError('Nominal attribute must declare at least one value', lineNumber, rawLine)
+      }
       List<String> nominalValues = parseNominalValues(nominalValuesStr)
       return new ArffAttribute(name, ArffType.NOMINAL, String, nominalValues)
     }
@@ -646,12 +653,12 @@ class MatrixArffReader {
     try {
       return switch (attr.type) {
         case ArffType.NUMERIC -> new BigDecimal(value)
-        case ArffType.INTEGER -> Integer.parseInt(value)
+        case ArffType.INTEGER -> new BigDecimal(value).intValueExact()
         case ArffType.STRING, ArffType.NOMINAL -> value
         case ArffType.DATE -> parseDate(value, attr)
         default -> value
       }
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException | ArithmeticException e) {
       throw parseError("Invalid ${attr.type} value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     } catch (ParseException e) {
       throw parseError("Invalid DATE value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
