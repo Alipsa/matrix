@@ -108,6 +108,17 @@ class CsvTypedOptionsTest {
   }
 
   @Test
+  void csvBooleanOptionsRemainStrictForSpiMaps() {
+    assertTrue(CsvReadOptions.fromMap([trim: ' TRUE ']).trim)
+    assertFalse(CsvReadOptions.fromMap([trim: 'False']).trim)
+    [1, 0, 'yes'].each { Object value ->
+      assertThrows(IllegalArgumentException) {
+        CsvReadOptions.fromMap([trim: value])
+      }
+    }
+  }
+
+  @Test
   void typedReadOverloadsHandleAllSourcesAndSourceSpecificSemantics() {
     byte[] latin1Bytes = 'id,name\n1,Åsa\n'.getBytes('ISO-8859-1')
     File file = tempDir.resolve('people.csv').toFile()

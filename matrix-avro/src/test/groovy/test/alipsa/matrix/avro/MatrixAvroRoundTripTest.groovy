@@ -8,10 +8,12 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.*
 
+import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
+import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
@@ -20,10 +22,51 @@ import java.time.*
 class MatrixAvroRoundTripTest {
 
   @Test
+  void roundTrip_mixedFiniteNumbersUseOneProfiledDecimalSchema() {
+    BigInteger largeInteger = new BigInteger('92233720368547758081234567890')
+    Matrix source = Matrix.builder('MixedNumbers')
+        .columns(value: [1, largeInteger, -2.25g, 3.5d, 4.75f, new BigDecimal('1.0E10'), null])
+        .types(Object)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeBytes(source, true)
+    Schema valueSchema = MatrixAvroReader.schema(bytes).getField('value').schema().types[1]
+    assertEquals(Schema.Type.BYTES, valueSchema.type)
+    assertEquals('decimal', valueSchema.logicalType.name)
+    assertEquals(2, valueSchema.logicalType.scale)
+    assertNull(valueSchema.getProp('se.alipsa.matrix.javaType'))
+
+    Matrix result = MatrixAvroReader.read(bytes)
+    [1.00g, new BigDecimal('92233720368547758081234567890.00'), -2.25g, 3.50g, 4.75g,
+     new BigDecimal('10000000000.00')].eachWithIndex { BigDecimal expected, int index ->
+      assertEquals(expected, result[index, 'value'])
+      assertTrue(result[index, 'value'] instanceof BigDecimal)
+      assertEquals(2, ((BigDecimal) result[index, 'value']).scale())
+    }
+    assertNull(result[6, 'value'])
+  }
+
+  @Test
+  void nonFiniteNumbersFailDuringAnalysisWithColumnContext() {
+    [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY].each { Double value ->
+      Matrix source = Matrix.builder('NonFinite')
+          .columns(amount: [value])
+          .types(Object)
+          .build()
+      AvroSchemaException exception = assertThrows(AvroSchemaException) {
+        MatrixAvroWriter.buildSchema(source, true)
+      }
+      assertEquals('amount', exception.columnName)
+      assertTrue(exception.message.contains('Non-finite decimal value'))
+    }
+  }
+
+  @Test
   void roundTrip_preservesArbitraryBigIntegerValues() {
     BigInteger beyondLong = new BigInteger('92233720368547758081234567890')
+    BigInteger belowLong = new BigInteger('-92233720368547758081234567890')
     Matrix source = Matrix.builder('BigIntegers')
-        .columns(value: [BigInteger.ZERO, beyondLong, null])
+        .columns(value: [BigInteger.ZERO, beyondLong, belowLong, null])
         .types(BigInteger)
         .build()
     File file = Files.createTempFile('matrix-avro-big-integer-', '.avro').toFile()
@@ -40,7 +83,31 @@ class MatrixAvroRoundTripTest {
       assertEquals(BigInteger.ZERO, result[0, 'value'])
       assertEquals(beyondLong, result[1, 'value'])
       assertTrue(result[1, 'value'] instanceof BigInteger)
-      assertNull(result[2, 'value'])
+      assertEquals(belowLong, result[2, 'value'])
+      assertNull(result[3, 'value'])
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void unmarkedReaderSchemaReadsMarkedBigIntegerAsBigDecimal() {
+    Matrix source = Matrix.builder('BigIntegerEvolution')
+        .columns(value: [new BigInteger('42')])
+        .types(BigInteger)
+        .build()
+    File file = Files.createTempFile('matrix-avro-big-integer-evolution-', '.avro').toFile()
+    try {
+      MatrixAvroWriter.write(source, file)
+      Schema readerSchema = new Schema.Parser().parse('''
+        {"type":"record","name":"BigIntegerEvolution","namespace":"se.alipsa.matrix.avro","fields":[
+          {"name":"value","type":["null", {"type":"bytes","logicalType":"decimal","precision":10,"scale":0}],"default":null}
+        ]}
+      ''')
+
+      Object value = MatrixAvroReader.read(file, AvroReadOptions.defaults().readerSchema(readerSchema))[0, 'value']
+      assertEquals(42g, value)
+      assertTrue(value instanceof BigDecimal)
     } finally {
       file.delete()
     }

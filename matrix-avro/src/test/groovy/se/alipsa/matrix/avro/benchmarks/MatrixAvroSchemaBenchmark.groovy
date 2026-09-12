@@ -46,10 +46,11 @@ class MatrixAvroSchemaBenchmark {
     cols['created'] = (1..rows).collect { LocalDate.of(BENCHMARK_YEAR, 1, 1).plusDays(it % 365) }
     cols['event'] = (1..rows).collect { LocalDateTime.of(BENCHMARK_YEAR, 1, 1, 12, 0).plusMinutes(it % 60) }
     cols['tags'] = (1..rows).collect { ["tag${it % TAG_MODULO}", "tag${(it + 1) % TAG_MODULO}"] }
-    cols['attrs'] = (1..rows).collect { [a: it, b: "v${it}"] }
+    cols['nestedAmounts'] = (1..rows).collect { [it / 10, new BigInteger("${it}00000000000000000000")] }
+    cols['attrs'] = (1..rows).collect { [a: it / 10, b: it * 1_000_000_000L] }
     return Matrix.builder('SchemaBenchmark')
         .columns(cols)
-        .types(Integer, BigDecimal, LocalDate, LocalDateTime, List, Map)
+        .types(Integer, BigDecimal, LocalDate, LocalDateTime, List, List, Map)
         .build()
   }
 

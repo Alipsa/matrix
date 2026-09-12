@@ -872,6 +872,69 @@ class MatrixAvroWriterTest {
     }
   }
 
+  @Test
+  void nestedNumericProfilesScanEveryUntypedListRow() {
+    BigInteger beyondLong = new BigInteger('92233720368547758081234567890')
+    Matrix decimals = Matrix.builder('NestedDecimals')
+        .columns(values: [[1.5g], [2.25g]])
+        .types(Object)
+        .build()
+    Matrix integers = Matrix.builder('NestedIntegers')
+        .columns(values: [[1], [beyondLong]])
+        .types(Object)
+        .build()
+
+    Schema decimalSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(decimals, true), 'values').elementType.types[1]
+    assertEquals('decimal', decimalSchema.logicalType.name)
+    assertEquals(3, decimalSchema.logicalType.precision)
+    assertEquals(2, decimalSchema.logicalType.scale)
+
+    byte[] decimalBytes = MatrixAvroWriter.writeBytes(decimals, true)
+    Matrix decimalResult = MatrixAvroReader.read(decimalBytes)
+    assertEquals(1.50g, decimalResult[0, 'values'][0])
+    assertEquals(2.25g, decimalResult[1, 'values'][0])
+
+    Schema integerSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(integers, false), 'values').elementType.types[1]
+    assertEquals(Schema.Type.BYTES, integerSchema.type)
+    assertEquals('java.math.BigInteger', integerSchema.getProp('se.alipsa.matrix.javaType'))
+    Matrix integerResult = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(integers, false))
+    assertEquals(beyondLong, integerResult[1, 'values'][0])
+  }
+
+  @Test
+  void declaredNumericConversionErrorsUseTheMatrixColumnName() {
+    Matrix decimalMatrix = Matrix.builder('InvalidDecimal')
+        .columns(amount: [Double.NaN])
+        .types(Object)
+        .build()
+    AvroWriteOptions decimalOptions = AvroWriteOptions.defaults()
+        .columnSchema('amount', AvroSchemaDecl.decimal(4, 1))
+
+    AvroSchemaException decimalException = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(decimalMatrix, decimalOptions)
+    }
+    assertEquals('amount', decimalException.columnName)
+    assertTrue(decimalException.message.contains('Non-finite decimal value'))
+
+    Matrix longMatrix = Matrix.builder('InvalidLong')
+        .columns(count: [2.5g])
+        .types(Object)
+        .build()
+    AvroSchemaException longException = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(longMatrix, AvroWriteOptions.defaults().columnSchema('count', AvroSchemaDecl.type(Long)))
+    }
+    assertEquals('count', longException.columnName)
+  }
+
+  @Test
+  void longCompatibilityRejectsNonFiniteValuesWithoutThrowing() {
+    Schema longSchema = Schema.create(Schema.Type.LONG)
+    assertFalse(isCompatible(longSchema, Double.NaN))
+    assertFalse(isCompatible(longSchema, Double.POSITIVE_INFINITY))
+    assertTrue(isCompatible(longSchema, 42))
+    assertTrue(isCompatible(longSchema, 42L))
+  }
+
   // Helper: unwrap ['null', T] to T
   private static Schema nonNullFieldSchema(Schema record, String fieldName) {
     Schema s = record.getField(fieldName).schema()

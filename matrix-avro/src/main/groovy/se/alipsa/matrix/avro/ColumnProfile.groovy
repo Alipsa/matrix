@@ -20,17 +20,14 @@ final class ColumnProfile {
   Map recordSample
   Set<String> recordKeys
   DecimalColumnProfile decimalProfile
-  DecimalColumnProfile listDecimalProfile
-  DecimalColumnProfile mapValueDecimalProfile
+  NestedNumericProfile listNumericProfile
+  NestedNumericProfile mapValueNumericProfile
   Map<String, Class<?>> recordFieldClasses = [:]
-  Map<String, DecimalColumnProfile> recordDecimalProfiles = [:]
+  Map<String, NestedNumericProfile> recordNumericProfiles = [:]
   boolean forceDecimal = false
   boolean inferPrecisionAndScale = false
-  List<Number> listNumbers = []
   boolean listHasNonNumeric = false
-  List<Number> mapValueNumbers = []
   boolean mapValuesHaveNonNumeric = false
-  Map<String, List<Number>> recordNumbers = [:]
   Map<String, Boolean> recordHasNonNumeric = [:]
   ColumnProfile(String name, Class<?> declaredType) {
     this.name = name
@@ -43,4 +40,46 @@ final class ColumnProfile {
     [decimalProfile.precision, decimalProfile.scale] as int[]
   }
 
+}
+
+/**
+ * Incremental numeric characteristics for one nested collection position.
+ */
+@PackageScope
+final class NestedNumericProfile {
+
+  DecimalColumnProfile decimalProfile
+  boolean hasBigInteger
+  boolean hasBigDecimal
+  boolean hasFloating
+  boolean needsLong
+
+  void include(Number value, BigDecimal decimal) {
+    decimalProfile = decimalProfile == null
+        ? DecimalColumnProfile.profile([decimal])
+        : decimalProfile.include(decimal)
+    hasBigInteger |= BigInteger.isInstance(value)
+    hasBigDecimal |= BigDecimal.isInstance(value)
+    hasFloating |= Double.isInstance(value) || Float.isInstance(value)
+    needsLong |= Long.isInstance(value) || (isIntegral(value) &&
+        (value.longValue() < Integer.MIN_VALUE || value.longValue() > Integer.MAX_VALUE))
+  }
+
+  Class<?> schemaClass() {
+    if (hasBigInteger && !hasBigDecimal && !hasFloating) {
+      return BigInteger
+    }
+    if (hasBigInteger || hasBigDecimal) {
+      return BigDecimal
+    }
+    if (hasFloating) {
+      return Double
+    }
+    needsLong ? Long : Integer
+  }
+
+  private static boolean isIntegral(Number value) {
+    Byte.isInstance(value) || Short.isInstance(value) || Integer.isInstance(value) ||
+        Long.isInstance(value) || BigInteger.isInstance(value)
+  }
 }

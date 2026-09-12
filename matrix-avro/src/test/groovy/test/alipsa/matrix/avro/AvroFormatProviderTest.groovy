@@ -117,6 +117,21 @@ class AvroFormatProviderTest {
   }
 
   @Test
+  void spiFalseUsesTheBigDecimalDoubleFallback() {
+    Matrix source = Matrix.builder('spi_false')
+        .columns(amount: [12.34g])
+        .types(BigDecimal)
+        .build()
+    File file = tempDir.resolve('spi-false.avro').toFile()
+
+    source.write([inferPrecisionAndScale: ' false '], file)
+
+    org.apache.avro.Schema schema = se.alipsa.matrix.avro.MatrixAvroReader.schema(file)
+    org.apache.avro.Schema amount = schema.getField('amount').schema().types[1]
+    assertEquals(org.apache.avro.Schema.Type.DOUBLE, amount.type)
+  }
+
+  @Test
   void testReadOptionsRoundTripFromMapToMap() {
     String readerSchemaJson = '''
     {

@@ -555,7 +555,7 @@ class MatrixAvroReader {
   }
   private static Object convertLogicalValue(LogicalType lt, Schema schema, Object v) {
     if (LogicalTypes.Decimal.isInstance(lt)) {
-      return toBigDecimal((LogicalTypes.Decimal) lt, schema, v)
+      return toDecimalValue((LogicalTypes.Decimal) lt, schema, v)
     }
     switch (lt.name) {
       case 'date' -> toLocalDate(v)
@@ -700,7 +700,7 @@ class MatrixAvroReader {
     return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC)
   }
   /**
-   * Converts an Avro decimal logical type value to a BigDecimal.
+   * Converts an Avro decimal logical type value to its corresponding Matrix number.
    *
    * <p>Avro decimals are stored as unscaled byte arrays (big-endian two's complement).
    * The scale is obtained from the logical type metadata.
@@ -708,10 +708,10 @@ class MatrixAvroReader {
    * @param dec the Avro Decimal logical type containing precision and scale
    * @param schema the Avro schema (must be BYTES or FIXED)
    * @param v the raw Avro value (ByteBuffer for BYTES, GenericFixed for FIXED)
-   * @return the corresponding BigDecimal
+   * @return a marked scale-zero bytes decimal as BigInteger; otherwise BigDecimal
    * @throws IllegalArgumentException if schema type is not BYTES or FIXED
    */
-  private static Object toBigDecimal(LogicalTypes.Decimal dec, Schema schema, Object v) {
+  private static Object toDecimalValue(LogicalTypes.Decimal dec, Schema schema, Object v) {
     int scale = dec.getScale()
     byte[] bytes
     if (schema.getType() == Schema.Type.BYTES) {

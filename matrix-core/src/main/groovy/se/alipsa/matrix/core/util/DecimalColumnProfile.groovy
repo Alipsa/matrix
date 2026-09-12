@@ -29,20 +29,31 @@ final class DecimalColumnProfile {
    * @return the inferred profile, or precision and scale zero when no values are present
    */
   static DecimalColumnProfile profile(Iterable<? extends Number> values) {
-    int maxIntegerDigits = 0
-    int maxScale = 0
-    boolean hasValues = false
+    DecimalColumnProfile result = new DecimalColumnProfile(0, 0, false)
     values.each { Number value ->
-      if (value != null) {
-        hasValues = true
-        BigDecimal decimal = value instanceof BigDecimal
-            ? value as BigDecimal
-            : new BigDecimal(value.toString())
-        int integerDigits = Math.max(1, decimal.precision() - decimal.scale())
-        maxIntegerDigits = Math.max(maxIntegerDigits, integerDigits)
-        maxScale = Math.max(maxScale, decimal.scale())
-      }
+      result = result.include(value)
     }
-    new DecimalColumnProfile(maxIntegerDigits + maxScale, maxScale, hasValues)
+    result
+  }
+
+  /**
+   * Returns a profile that also accommodates the supplied decimal-compatible value.
+   * Null values leave this profile unchanged, allowing callers to profile streams
+   * without materializing every value.
+   *
+   * @param value decimal-compatible value to include, or null
+   * @return a profile that can represent this profile's values and {@code value}
+   */
+  DecimalColumnProfile include(Number value) {
+    if (value == null) {
+      return this
+    }
+    BigDecimal decimal = value instanceof BigDecimal
+        ? value as BigDecimal
+        : new BigDecimal(value.toString())
+    int integerDigits = Math.max(1, decimal.precision() - decimal.scale())
+    int maxScale = Math.max(scale, decimal.scale())
+    int maxIntegerDigits = Math.max(hasValues ? precision - scale : 0, integerDigits)
+    new DecimalColumnProfile(maxIntegerDigits + maxScale, maxScale, true)
   }
 }
