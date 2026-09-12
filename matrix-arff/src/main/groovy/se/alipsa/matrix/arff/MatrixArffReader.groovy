@@ -25,10 +25,12 @@ class MatrixArffReader {
   private static final Pattern DATE_TYPE_PATTERN = Pattern.compile(/(?i)^date(?:\s+(.*))?$/)
   private static final String INVALID_DATE_FORMAT = 'Invalid @ATTRIBUTE DATE format'
   private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
+  private static final String RELATION_KEYWORD = '@RELATION'
   private static final String ATTRIBUTE_KEYWORD = '@ATTRIBUTE'
+  private static final String END_KEYWORD = '@END'
+  private static final String DATA_KEYWORD = '@DATA'
   private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
   private static final String INVALID_RELATION_LINE = 'Invalid @RELATION line'
-  private static final int RELATION_PREFIX_LENGTH = 9
   private static final char BACKSLASH_CHAR = '\\'
   private static final char SINGLE_QUOTE_CHAR = '\''
   private static final char DOUBLE_QUOTE_CHAR = '"'
@@ -211,8 +213,8 @@ class MatrixArffReader {
 
   private static Matrix parseArff(BufferedReader reader, String defaultName, ArffReadOptions options) {
     String relationName = defaultName
-    Set<String> seenNames = [] as Set<String>
-    List<ArffAttribute> attributes = []
+    List<AttributeScope> scopes = [new AttributeScope(null)]
+    List<ArffAttribute> attributes = scopes[0].attributes
     List<List<Object>> rows = []
     List<BigDecimal> weights = []
     boolean inDataSection = false
@@ -235,20 +237,76 @@ class MatrixArffReader {
       }
 
       String upperLine = line.toUpperCase()
-      if (upperLine.startsWith('@RELATION')) {
+      if (upperLine.startsWith(RELATION_KEYWORD)) {
         relationName = parseRelationName(line, lineNumber, rawLine)
       } else if (upperLine.startsWith(ATTRIBUTE_KEYWORD)) {
         ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
-        if (!seenNames.add(attr.name)) {
-          throw parseError("Duplicate @ATTRIBUTE name '${attr.name}'", lineNumber, rawLine)
+        if (attr.type == ArffType.RELATIONAL) {
+          scopes.add(new AttributeScope(attr.name))
+        } else {
+          addAttribute(scopes.last(), attr, lineNumber, rawLine)
         }
-        attributes.add(attr)
-      } else if (upperLine.startsWith('@DATA')) {
+      } else if (upperLine.startsWith(END_KEYWORD)) {
+        closeRelationalScope(line, scopes, options, lineNumber, rawLine)
+      } else if (upperLine.startsWith(DATA_KEYWORD)) {
+        if (scopes.size() > 1) {
+          throw unterminatedRelationalError(scopes.last().name, lineNumber, rawLine)
+        }
+        rejectInstanceWeightAttribute(scopes[0], relationName, options)
         inDataSection = true
       }
     }
 
+    if (scopes.size() > 1) {
+      throw unterminatedRelationalError(scopes.last().name, lineNumber, rawLine)
+    }
+    rejectInstanceWeightAttribute(scopes[0], relationName, options)
     buildMatrix(relationName, attributes, rows, weights, options)
+  }
+
+  private static IllegalArgumentException unterminatedRelationalError(String scopeName, int lineNumber, String rawLine) {
+    parseError("Relational attribute '$scopeName' is not terminated by @END before @DATA", lineNumber, rawLine)
+  }
+
+  private static void addAttribute(AttributeScope scope, ArffAttribute attr, int lineNumber, String rawLine) {
+    if (!scope.names.add(attr.name)) {
+      throw parseError("Duplicate @ATTRIBUTE name '${attr.name}'", lineNumber, rawLine)
+    }
+    scope.attributes.add(attr)
+  }
+
+  private static void closeRelationalScope(String line, List<AttributeScope> scopes, ArffReadOptions options,
+                                           int lineNumber, String rawLine) {
+    if (scopes.size() == 1) {
+      throw parseError('@END without an open relational attribute', lineNumber, rawLine)
+    }
+    String endName = parseQuotedName(line, END_KEYWORD.length(), 'Invalid @END line', lineNumber, rawLine)
+    AttributeScope scope = scopes.removeLast()
+    if (!endName.equalsIgnoreCase(scope.name)) {
+      throw parseError("Relational attribute '${scope.name}' must be terminated by @END ${scope.name} but found @END $endName",
+          lineNumber, rawLine)
+    }
+    if (scope.attributes.isEmpty()) {
+      throw parseError("Relational attribute '${scope.name}' declares no attributes", lineNumber, rawLine)
+    }
+    rejectInstanceWeightAttribute(scope, scope.name, options)
+    ArffAttribute attr = new ArffAttribute(scope.name, ArffType.RELATIONAL, Matrix, null, null, scope.attributes)
+    addAttribute(scopes.last(), attr, lineNumber, rawLine)
+  }
+
+  /**
+   * The instance-weight column name is reserved in every relation: an {@code @ATTRIBUTE} of that name would otherwise
+   * be silently merged with the weights that {@link #buildMatrix} appends.
+   */
+  private static void rejectInstanceWeightAttribute(AttributeScope scope, String relationName, ArffReadOptions options) {
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn != null && scope.names.contains(weightColumn)) {
+      throw new IllegalArgumentException(instanceWeightClashMessage(weightColumn, relationName))
+    }
+  }
+
+  private static String instanceWeightClashMessage(String weightColumn, String relationName) {
+    "instanceWeightColumn '$weightColumn' clashes with an @ATTRIBUTE of the same name in relation '$relationName'"
   }
 
   private static Matrix buildMatrix(String name, List<ArffAttribute> attributes, List<List<Object>> rows,
@@ -267,8 +325,7 @@ class MatrixArffReader {
     String weightColumn = options.instanceWeightColumn
     if (weightColumn != null) {
       if (columnNames.contains(weightColumn)) {
-        throw new IllegalArgumentException(
-            "instanceWeightColumn '$weightColumn' clashes with an @ATTRIBUTE of the same name in relation '$name'")
+        throw new IllegalArgumentException(instanceWeightClashMessage(weightColumn, name))
       }
       columnNames.add(weightColumn)
       types.add(BigDecimal)
@@ -315,19 +372,24 @@ class MatrixArffReader {
   }
 
   private static String parseRelationName(String line, int lineNumber, String rawLine) {
-    if (line.length() < RELATION_PREFIX_LENGTH) {
-      throw parseError(INVALID_RELATION_LINE, lineNumber, rawLine)
+    parseQuotedName(line, RELATION_KEYWORD.length(), INVALID_RELATION_LINE, lineNumber, rawLine)
+  }
+
+  /** Parse the (optionally quoted) name that follows a keyword of {@code prefixLength} characters. */
+  private static String parseQuotedName(String line, int prefixLength, String invalidMessage, int lineNumber, String rawLine) {
+    if (line.length() < prefixLength) {
+      throw parseError(invalidMessage, lineNumber, rawLine)
     }
-    String name = line.substring(RELATION_PREFIX_LENGTH).trim()
+    String name = line.substring(prefixLength).trim()
     if (name.isEmpty() || !ArffScanner.isQuoteChar(name.charAt(0))) {
       return name
     }
     ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(name, 0)
     if (token == null) {
-      throw parseError("$INVALID_RELATION_LINE (missing closing quote)", lineNumber, rawLine)
+      throw parseError("$invalidMessage (missing closing quote)", lineNumber, rawLine)
     }
     if (!name.substring(token.end).trim().isEmpty()) {
-      throw parseError("$INVALID_RELATION_LINE (unexpected text after quoted name)", lineNumber, rawLine)
+      throw parseError("$invalidMessage (unexpected text after quoted name)", lineNumber, rawLine)
     }
     token.value
   }
@@ -397,6 +459,7 @@ class MatrixArffReader {
       case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal)
       case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer)
       case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String)
+      case 'RELATIONAL' -> new ArffAttribute(name, ArffType.RELATIONAL, Matrix)
       default -> {
         if (options.failOnUnknownAttributeType) {
           throw parseError("Unknown @ATTRIBUTE type '$typeSpec'", lineNumber, rawLine)
@@ -465,7 +528,7 @@ class MatrixArffReader {
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
                                            int lineNumber, String rawLine) {
     if (line.startsWith(OPEN_BRACE)) {
-      return parseSparseDataRow(line, attributes, lineNumber, rawLine)
+      return parseSparseDataRow(line, attributes, options, lineNumber, rawLine)
     }
 
     List<ParsedToken> values = parseDelimitedLine(line, ',' as char, lineNumber, rawLine, 'data row')
@@ -484,13 +547,14 @@ class MatrixArffReader {
       if (value != null && !token.quoted) {
         value = value.trim()
       }
-      row.add(convertValue(value, attributes[i], token.quoted, lineNumber, rawLine))
+      row.add(convertValue(value, attributes[i], token.quoted, options, lineNumber, rawLine))
     }
     row
   }
 
   /** Parse a sparse ARFF row in `{index value, ...}` format. */
-  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, int lineNumber, String rawLine) {
+  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
+                                                 int lineNumber, String rawLine) {
     if (!line.endsWith(CLOSE_BRACE)) {
       throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
@@ -541,7 +605,7 @@ class MatrixArffReader {
       if (value != null && !valueToken.quoted) {
         value = value.trim()
       }
-      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, lineNumber, rawLine)
+      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, options, lineNumber, rawLine)
     }
 
     row
@@ -570,10 +634,11 @@ class MatrixArffReader {
    */
   private static void resolveOmittedValues(List<List<Object>> rows, List<ArffAttribute> attributes, String fallback) {
     for (int col = 0; col < attributes.size(); col++) {
-      if (attributes[col].type != ArffType.STRING) {
+      ArffType type = attributes[col].type
+      if (type != ArffType.STRING && type != ArffType.RELATIONAL) {
         continue
       }
-      Object replacement = fallback
+      Object replacement = type == ArffType.STRING ? fallback : null
       for (List<Object> row : rows) {
         Object value = row[col]
         if (value != null && !OMITTED.is(value)) {
@@ -700,7 +765,8 @@ class MatrixArffReader {
     values
   }
 
-  private static Object convertValue(String value, ArffAttribute attr, boolean quoted, int lineNumber, String rawLine) {
+  private static Object convertValue(String value, ArffAttribute attr, boolean quoted, ArffReadOptions options,
+                                     int lineNumber, String rawLine) {
     if (value == null) {
       return null
     }
@@ -714,6 +780,7 @@ class MatrixArffReader {
         case ArffType.INTEGER -> new BigDecimal(value).intValueExact()
         case ArffType.STRING, ArffType.NOMINAL -> value
         case ArffType.DATE -> parseDate(value, attr)
+        case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine)
         default -> value
       }
     } catch (NumberFormatException | ArithmeticException e) {
@@ -721,6 +788,26 @@ class MatrixArffReader {
     } catch (ParseException e) {
       throw parseError("Invalid DATE value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     }
+  }
+
+  /**
+   * Parse a relational cell: the (unescaped) token holds the nested rows, one per line, dense or sparse, optionally
+   * weighted, exactly like a @DATA section for the sub-relation.
+   */
+  private static Matrix parseRelationalValue(String value, ArffAttribute attr, ArffReadOptions options,
+                                             int lineNumber, String rawLine) {
+    List<List<Object>> rows = []
+    List<BigDecimal> weights = []
+    value.readLines().each { String nestedLine ->
+      String content = stripComment(nestedLine).trim()
+      if (content.isEmpty()) {
+        return
+      }
+      DataLine dataLine = splitInstanceWeight(content)
+      rows.add(parseDataRow(dataLine.content, attr.relationalAttributes, options, lineNumber, rawLine))
+      weights.add(dataLine.weight)
+    }
+    buildMatrix(attr.name, attr.relationalAttributes, rows, weights, options)
   }
 
   private static Date parseDate(String value, ArffAttribute attr) throws ParseException {
@@ -791,6 +878,17 @@ class MatrixArffReader {
     new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}", cause)
   }
 
+  /** Attributes declared in one scope: the top level, or an open relational declaration named {@code name}. */
+  private static final class AttributeScope {
+    final String name
+    final List<ArffAttribute> attributes = []
+    final Set<String> names = [] as Set<String>
+
+    AttributeScope(String name) {
+      this.name = name
+    }
+  }
+
   /** A data line with its trailing instance weight removed; {@code weight} is null when the line declared none. */
   private static final class DataLine {
     final String content
@@ -819,7 +917,8 @@ enum ArffType {
   INTEGER,
   STRING,
   NOMINAL,
-  DATE
+  DATE,
+  RELATIONAL
 }
 
 /** Class representing an ARFF attribute definition. */
@@ -829,14 +928,17 @@ class ArffAttribute {
   Class javaType
   List<String> nominalValues
   String dateFormat
+  /** Declarations of the sub-relation for a RELATIONAL attribute, otherwise null. */
+  List<ArffAttribute> relationalAttributes
 
   ArffAttribute(String name, ArffType type, Class javaType,
-                List<String> nominalValues = null, String dateFormat = null) {
+                List<String> nominalValues = null, String dateFormat = null, List<ArffAttribute> relationalAttributes = null) {
     this.name = name
     this.type = type
     this.javaType = javaType
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
+    this.relationalAttributes = relationalAttributes
   }
 
   private SimpleDateFormat dateFormatter

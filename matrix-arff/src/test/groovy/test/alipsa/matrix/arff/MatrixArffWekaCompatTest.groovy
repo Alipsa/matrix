@@ -487,4 +487,130 @@ class MatrixArffWekaCompatTest {
     }
     assertTrue(nan.message.contains('row 1'), nan.message)
   }
+
+  @Test
+  void relationalAttributesAreReadAsNestedMatrices() {
+    String arff = '''
+@RELATION musk
+@ATTRIBUTE molecule {MUSK-1,NON-MUSK-2}
+@ATTRIBUTE bag relational
+  @ATTRIBUTE f1 NUMERIC
+  @ATTRIBUTE f2 {a,b}
+@end bag
+@ATTRIBUTE class {0,1}
+@DATA
+MUSK-1,"1,a\\n2,b",1
+NON-MUSK-2,'3,b',0
+MUSK-1,?,1
+{0 NON-MUSK-2, 1 '{1 b}\\n4,a', 2 1}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals(['molecule', 'bag', 'class'], m.columnNames())
+    assertEquals([String, Matrix, String], m.types())
+
+    Matrix bag0 = m[0, 'bag'] as Matrix
+    assertEquals('bag', bag0.matrixName)
+    assertEquals(['f1', 'f2'], bag0.columnNames())
+    assertEquals([BigDecimal, String], bag0.types())
+    assertEquals(2, bag0.rowCount())
+    assertEquals(2 as BigDecimal, bag0[1, 'f1'])
+    assertEquals('b', bag0[1, 'f2'])
+
+    assertEquals(1, (m[1, 'bag'] as Matrix).rowCount())
+    assertNull(m[2, 'bag'])
+
+    Matrix bag3 = m[3, 'bag'] as Matrix
+    assertEquals([BigDecimal.ZERO, 'b'], bag3.row(0))
+    assertEquals([4 as BigDecimal, 'a'], bag3.row(1))
+    assertEquals('1', m[3, 'class'])
+  }
+
+  @Test
+  void nestedRelationalDeclarationsAndEmptyValuesAreRead() {
+    String arff = '''
+@RELATION nested
+@ATTRIBUTE outer RELATIONAL
+  @ATTRIBUTE id INTEGER
+  @ATTRIBUTE inner relational
+    @ATTRIBUTE v NUMERIC
+  @END 'inner'
+@END OUTER
+@DATA
+'1,\\'2\\\\n3\\'\\n4,\\'\\''
+''
+'''.trim()
+
+    // The first data line is the ARFF text  '1,\'2\\n3\'\n4,\'\''  — the inner value '2\n3' escaped once more by the
+    // outer quoting, exactly as Weka writes nested relations. It decodes to the two outer rows  1,'2\n3'  and  4,''.
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    Matrix outer = m[0, 'outer'] as Matrix
+    assertEquals([Integer, Matrix], outer.types())
+    assertEquals(2, outer.rowCount())
+    assertEquals([2 as BigDecimal, 3 as BigDecimal], (outer[0, 'inner'] as Matrix).column('v'))
+    assertEquals(0, (outer[1, 'inner'] as Matrix).rowCount())
+    assertEquals(0, (m[1, 'outer'] as Matrix).rowCount())
+  }
+
+  @Test
+  void relationalDeclarationErrorsHaveLineContext() {
+    IllegalArgumentException mismatch = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n@END other\n@DATA\n')
+    }
+    assertTrue(mismatch.message.contains('must be terminated by @END bag'), mismatch.message)
+    assertTrue(mismatch.message.contains('line 4'), mismatch.message)
+
+    IllegalArgumentException unterminated = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n@DATA\n')
+    }
+    assertTrue(unterminated.message.contains("'bag' is not terminated"), unterminated.message)
+
+    IllegalArgumentException stray = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE f NUMERIC\n@END f\n@DATA\n')
+    }
+    assertTrue(stray.message.contains('@END without'), stray.message)
+
+    IllegalArgumentException empty = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@END bag\n@DATA\n')
+    }
+    assertTrue(empty.message.contains('declares no attributes'), empty.message)
+
+    IllegalArgumentException duplicate = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n@ATTRIBUTE f STRING\n@END bag\n@DATA\n')
+    }
+    assertTrue(duplicate.message.contains("Duplicate @ATTRIBUTE name 'f'"), duplicate.message)
+  }
+
+  @Test
+  void instanceWeightColumnIsReservedInSubRelations() {
+    String arff = "@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE w NUMERIC\n@END bag\n@DATA\n'1'\n"
+
+    Matrix plain = MatrixArffReader.readString(arff)
+    assertEquals(['w'], (plain[0, 'bag'] as Matrix).columnNames(), 'without the option w is an ordinary attribute')
+
+    IllegalArgumentException clash = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arff, new ArffReadOptions().instanceWeightColumn('w'))
+    }
+    assertTrue(clash.message.contains("instanceWeightColumn 'w'"), clash.message)
+    assertTrue(clash.message.contains("in relation 'bag'"), clash.message)
+
+    Matrix renamed = MatrixArffReader.readString(arff, new ArffReadOptions().instanceWeightColumn('weight'))
+    assertEquals(['w', 'weight'], (renamed[0, 'bag'] as Matrix).columnNames())
+
+    String noValues = '@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE w NUMERIC\n@END bag\n@DATA\n?\n'
+    assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(noValues, new ArffReadOptions().instanceWeightColumn('w'))
+    }
+  }
+
+  @Test
+  void unterminatedRelationalScopeIsRejectedAtEndOfHeaderOnlyFile() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION r\n@ATTRIBUTE bag relational\n@ATTRIBUTE f NUMERIC\n')
+    }
+    assertTrue(e.message.contains("'bag' is not terminated"), e.message)
+  }
 }

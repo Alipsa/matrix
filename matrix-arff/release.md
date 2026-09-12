@@ -40,6 +40,9 @@ Behaviour changes are marked **(changed)**.
   weights are parsed and discarded instead of being treated as an extra row value
 - Weka 3.8 attribute weights (`@attribute x numeric {0.5}`) are recognised and ignored instead of being read as a nominal
   declaration
+- Read `relational` attributes (`@attribute bag relational … @end bag`, nested declarations allowed): each cell becomes a
+  nested `Matrix` (column type `Matrix`) whose rows may be dense or sparse **(changed:** `relational` was an unknown
+  type read as STRING**)**
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips
