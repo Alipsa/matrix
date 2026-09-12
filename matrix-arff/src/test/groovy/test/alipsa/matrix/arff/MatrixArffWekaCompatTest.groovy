@@ -1,11 +1,13 @@
 package test.alipsa.matrix.arff
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
@@ -54,5 +56,52 @@ class MatrixArffWekaCompatTest {
     assertTrue(out.contains("@ATTRIBUTE 'pct\\%' {x,y}"), arff)
     assertTrue(out.contains("@ATTRIBUTE 'back\\\\slash' {'p\\\\q',r}"), arff)
     assertTrue(out.contains("'a\\tb',x,'p\\\\q'"), arff)
+  }
+
+  @Test
+  void readerDecodesWekaEscapesInStringsNominalsAndNames() {
+    String arff = '''
+@RELATION 'rel\\tname'
+
+@ATTRIBUTE 'col\\tumn' STRING
+@ATTRIBUTE 'pct\\%' {'a\\tb',c,'x\\%y','say \\"hi\\"'}
+
+@DATA
+'line1\\nline2','a\\tb'
+'cr\\rx','say \\"hi\\"'
+{0 'tab\\there', 1 'x\\%y'}
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals('rel\tname', m.matrixName)
+    assertEquals(['col\tumn', 'pct%'], m.columnNames())
+    assertEquals('line1\nline2', m[0, 0])
+    assertEquals('a\tb', m[0, 1])
+    assertEquals('cr\rx', m[1, 0])
+    assertEquals('say "hi"', m[1, 1])
+    assertEquals('tab\there', m[2, 0])
+    assertEquals('x%y', m[2, 1])
+  }
+
+  @Test
+  void stringsWithControlCharactersRoundTrip() {
+    Matrix m = Matrix.builder('rt')
+        .columns(s: ['line1\nline2', 'tab\there', "it's 50%", 'a\\b'])
+        .types([String])
+        .build()
+
+    Matrix back = MatrixArffReader.readString(MatrixArffWriter.writeString(m))
+
+    assertEquals(m.column('s'), back.column('s'))
+  }
+
+  @Test
+  void relationLineWithLoneQuoteIsAParseError() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString("@RELATION '\n@ATTRIBUTE a NUMERIC\n@DATA\n1\n")
+    }
+    assertTrue(e.message.contains('@RELATION'), e.message)
+    assertTrue(e.message.contains('line 1'), e.message)
   }
 }

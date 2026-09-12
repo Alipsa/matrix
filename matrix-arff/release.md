@@ -7,6 +7,11 @@ Behaviour changes are marked **(changed)**.
 - Add `ArffEscapes` and align writer quoting with Weka's `Utils.quote`: tabs, newlines, carriage returns, `"`, `\` and
   `%` anywhere in a value or identifier are now escaped (`\t`, `\n`, `\r`, `\"`, `\\`, `\%`) and quoted **(changed:**
   such values were previously written raw, producing files Weka could not read**)**
+- Reader decodes Weka escapes inside quoted tokens: `\n`, `\t`, `\r` become the control character and `\"`, `\%`, `\\`,
+  `\'` the literal character, in relation names, attribute names, nominal declarations, dense and sparse values
+  **(changed:** `\n` previously decoded to the letter `n`**)**
+- Fix `@RELATION '` (lone quote) throwing `StringIndexOutOfBoundsException`; it is now an `IllegalArgumentException`
+  with line context
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

@@ -26,12 +26,13 @@ class MatrixArffReader {
   private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
   private static final String ATTRIBUTE_KEYWORD = '@ATTRIBUTE'
   private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
+  private static final String INVALID_RELATION_LINE = 'Invalid @RELATION line'
   private static final int RELATION_PREFIX_LENGTH = 9
   private static final char BACKSLASH_CHAR = '\\'
   private static final char SINGLE_QUOTE_CHAR = '\''
   private static final char DOUBLE_QUOTE_CHAR = '"'
-  private static final String SINGLE_QUOTE = String.valueOf(SINGLE_QUOTE_CHAR)
-  private static final String DOUBLE_QUOTE = String.valueOf(DOUBLE_QUOTE_CHAR)
+  private static final char COMMA_CHAR = ','
+  private static final char CLOSE_BRACE_CHAR = '}'
   private static final String DOT = '.'
   private static final String SLASH = '/'
   private static final String OPEN_BRACE = '{'
@@ -264,10 +265,20 @@ class MatrixArffReader {
 
   private static String parseRelationName(String line, int lineNumber, String rawLine) {
     if (line.length() < RELATION_PREFIX_LENGTH) {
-      throw parseError('Invalid @RELATION line', lineNumber, rawLine)
+      throw parseError(INVALID_RELATION_LINE, lineNumber, rawLine)
     }
     String name = line.substring(RELATION_PREFIX_LENGTH).trim()
-    unescapeQuoted(name)
+    if (name.isEmpty() || !ArffScanner.isQuoteChar(name.charAt(0))) {
+      return name
+    }
+    ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(name, 0)
+    if (token == null) {
+      throw parseError("$INVALID_RELATION_LINE (missing closing quote)", lineNumber, rawLine)
+    }
+    if (!name.substring(token.end).trim().isEmpty()) {
+      throw parseError("$INVALID_RELATION_LINE (unexpected text after quoted name)", lineNumber, rawLine)
+    }
+    token.value
   }
 
   private static ArffAttribute parseAttribute(String line, ArffReadOptions options, int lineNumber, String rawLine) {
@@ -284,37 +295,15 @@ class MatrixArffReader {
     String name
     String typeSpec
     char first = spec.charAt(0)
-    if (first == SINGLE_QUOTE_CHAR || first == DOUBLE_QUOTE_CHAR) {
-      char quoteChar = first
-      StringBuilder sb = new StringBuilder()
-      boolean escape = false
-      boolean closed = false
-      int i = 1
-      for (; i < spec.length(); i++) {
-        char c = spec.charAt(i)
-        if (escape) {
-          sb.append(c)
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          i++
-          closed = true
-          break
-        }
-        sb.append(c)
+    if (ArffScanner.isQuoteChar(first)) {
+      ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(spec, 0)
+      if (token == null) {
+        throw parseError("$INVALID_ATTRIBUTE_LINE (missing closing quote)", lineNumber, rawLine)
       }
-      if (!closed) {
-        throw parseError('Invalid @ATTRIBUTE line (missing closing quote)', lineNumber, rawLine)
-      }
-      name = sb.toString()
-      typeSpec = i < spec.length() ? spec.substring(i).trim() : ''
+      name = token.value
+      typeSpec = spec.substring(token.end).trim()
       if (typeSpec.isEmpty()) {
-        throw parseError('Invalid @ATTRIBUTE line (missing type)', lineNumber, rawLine)
+        throw parseError("$INVALID_ATTRIBUTE_LINE (missing type)", lineNumber, rawLine)
       }
     } else {
       int splitIndex = -1
@@ -459,51 +448,18 @@ class MatrixArffReader {
   }
 
   private static List<String> splitSparseEntries(String body, int lineNumber, String rawLine) {
-    List<String> entries = []
-    StringBuilder current = new StringBuilder()
-    boolean inQuote = false
-    boolean escape = false
-    char quoteChar = 0
-
-    for (int i = 0; i < body.length(); i++) {
-      char c = body.charAt(i)
-      if (inQuote) {
-        current.append(c)
-        if (escape) {
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          inQuote = false
-        }
-        continue
-      }
-
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        inQuote = true
-        quoteChar = c
-        current.append(c)
-        continue
-      }
-      if (c == ',' as char) {
-        entries.add(current.toString())
-        current = new StringBuilder()
-        continue
-      }
-      current.append(c)
-    }
-
-    if (inQuote) {
+    if (ArffScanner.hasUnterminatedQuote(body)) {
       throw parseError('Unterminated quoted sparse value', lineNumber, rawLine)
     }
-    if (escape) {
-      current.append(BACKSLASH_CHAR)
+    List<String> entries = []
+    int start = 0
+    int comma = ArffScanner.indexOfOutsideQuotes(body, COMMA_CHAR, 0)
+    while (comma >= 0) {
+      entries.add(body.substring(start, comma))
+      start = comma + 1
+      comma = ArffScanner.indexOfOutsideQuotes(body, COMMA_CHAR, start)
     }
-    entries.add(current.toString())
+    entries.add(body.substring(start))
     entries
   }
 
@@ -523,34 +479,14 @@ class MatrixArffReader {
     }
 
     char first = value.charAt(0)
-    if (first != SINGLE_QUOTE_CHAR && first != DOUBLE_QUOTE_CHAR) {
+    if (!ArffScanner.isQuoteChar(first)) {
       return new ParsedToken(value, false)
     }
-
-    StringBuilder result = new StringBuilder()
-    boolean escape = false
-    for (int i = 1; i < value.length(); i++) {
-      char c = value.charAt(i)
-      if (escape) {
-        result.append(c)
-        escape = false
-        continue
-      }
-      if (c == BACKSLASH_CHAR) {
-        escape = true
-        continue
-      }
-      if (c == first) {
-        String trailing = i + 1 < value.length() ? value.substring(i + 1).trim() : ''
-        if (!trailing.isEmpty()) {
-          throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
-        }
-        return new ParsedToken(result.toString(), true)
-      }
-      result.append(c)
+    ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(value, 0)
+    if (token == null || !value.substring(token.end).trim().isEmpty()) {
+      throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
     }
-
-    throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
+    new ParsedToken(token.value, true)
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
@@ -570,7 +506,7 @@ class MatrixArffReader {
 
       if (inQuote) {
         if (escape) {
-          current.append(c)
+          current.append(ArffEscapes.unescape(c))
           escape = false
           continue
         }
@@ -651,71 +587,13 @@ class MatrixArffReader {
     sdf.parse(value)
   }
 
-  private static String unescapeQuoted(String value) {
-    boolean quoted = (value.startsWith(SINGLE_QUOTE) && value.endsWith(SINGLE_QUOTE)) ||
-        (value.startsWith(DOUBLE_QUOTE) && value.endsWith(DOUBLE_QUOTE))
-    if (!quoted) {
-      return value
-    }
-    if (value.length() == 2) {
-      return ''
-    }
-    String unquoted = value.substring(1, value.length() - 1)
-    StringBuilder result = new StringBuilder()
-    boolean escape = false
-    for (int i = 0; i < unquoted.length(); i++) {
-      char c = unquoted.charAt(i)
-      if (escape) {
-        result.append(c)
-        escape = false
-        continue
-      }
-      if (c == BACKSLASH_CHAR) {
-        escape = true
-        continue
-      }
-      result.append(c)
-    }
-    if (escape) {
-      result.append(BACKSLASH_CHAR)
-    }
-    result.toString()
-  }
-
   private static String extractNominalValues(String typeSpec) {
     int openIndex = typeSpec.indexOf(OPEN_BRACE)
     if (openIndex < 0) {
       return null
     }
-    boolean inQuote = false
-    boolean escape = false
-    char quoteChar = 0
-    for (int i = openIndex + 1; i < typeSpec.length(); i++) {
-      char c = typeSpec.charAt(i)
-      if (inQuote) {
-        if (escape) {
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          inQuote = false
-        }
-        continue
-      }
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        inQuote = true
-        quoteChar = c
-        continue
-      }
-      if (c == CLOSE_BRACE) {
-        return typeSpec.substring(openIndex + 1, i)
-      }
-    }
-    null
+    int closeIndex = ArffScanner.indexOfOutsideQuotes(typeSpec, CLOSE_BRACE_CHAR, openIndex + 1)
+    closeIndex < 0 ? null : typeSpec.substring(openIndex + 1, closeIndex)
   }
 
   private static void validateFile(File file) {
