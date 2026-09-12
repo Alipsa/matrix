@@ -20,10 +20,10 @@ Behaviour changes are marked **(changed)**.
 - Read `relational` attributes (`@attribute bag relational … @end bag`, nested declarations allowed): each cell becomes a
   nested `Matrix` (column type `Matrix`) whose rows may be dense or sparse **(changed:** `relational` was an unknown
   type read as STRING**)**
-- Dense `@DATA` rows may be tab-delimited as well as comma-delimited, as the ARFF specification allows; a run of
-  delimiters and blanks is one separator as in Weka, except that each extra comma still reads as an empty (missing)
-  field **(changed:** an unquoted tab inside a value now separates values, as it does in Weka; the writer has quoted
-  such values since the escaping change in this release**)**
+- Dense `@DATA` rows may be comma-, tab-, or space-delimited, as the ARFF specification allows; a run of delimiters
+  and blanks is one separator as in Weka, except that each extra comma still reads as an empty (missing) field
+  **(changed:** an unquoted tab or space inside a value now separates values, as it does in Weka; values written by
+  matrix-arff have been quoted in that case since 0.2.x, so only files from other producers are affected**)**
 - Reject single or double quotes that begin in the middle of an unquoted dense-row or nominal-declaration token
   **(changed:** values such as `it's` were previously accepted unquoted; write them as `'it\'s'`**)**. Blanks after a
   closing quote are syntax and are no longer appended to the value
