@@ -135,7 +135,7 @@ MatrixAvroWriter.write(orders, new File('orders.avro'), writeOptions)
 
 Useful write options:
 
-- `inferPrecisionAndScale(...)` stores `BigDecimal` columns as Avro decimal logical types instead of falling back to `double`
+- `inferPrecisionAndScale(...)` stores `BigDecimal` columns as Avro decimal logical types instead of falling back to `double`; SPI values accept Boolean values or trimmed, case-insensitive `true`/`false` strings
 - `namespace(...)` controls the generated Avro namespace
 - `schemaName(...)` overrides the generated record name
 - `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` tune the container file
@@ -214,6 +214,19 @@ data.write([
 ], new File('users-explicit.avro'))
 ```
 
+`BigInteger` values are always lossless Avro `bytes` decimals with scale `0`, including when
+`inferPrecisionAndScale` is false. For an explicit schema, provide the required precision:
+
+```groovy
+data.write([
+    columnSchemas: [identifier: [kind: 'bigInteger', precision: 30]]
+], new File('users.avro'))
+```
+
+The inner `bytes` schema carries `se.alipsa.matrix.javaType: "java.math.BigInteger"`.
+Matrix restores `BigInteger` only for that marked bytes/decimal scale-zero schema; an unmarked
+schema remains interoperable and reads as `BigDecimal`.
+
 SPI round-tripping is available for both read and write options through `toMap()` / `fromMap(...)`.
 
 ## Default Behavior
@@ -229,7 +242,7 @@ Read defaults:
 Write defaults:
 
 - schema naming precedence is `AvroWriteOptions.schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
-- `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
+- `inferPrecisionAndScale` defaults to `false`, so ordinary `BigDecimal`, `Double`, and `Float` positions fall back to Avro `double`; a position containing `BigInteger` remains a lossless decimal
 - `namespace` defaults to `se.alipsa.matrix.avro`
 - `compression` defaults to `NULL`, `compressionLevel` to `-1`, and `syncInterval` to `0`
 - `OutputStream` write overloads leave the caller-owned stream open
@@ -239,7 +252,7 @@ Nested-type heuristics:
 - list element types are inferred from the first non-null element seen in the column
 - map value types are inferred from the first non-null value seen in the column
 - maps are encoded as records only when all non-null rows share the same key set
-- mixed numeric `Object` columns promote to `int`, `long`, or `double` based on observed values
+- mixed numeric `Object` columns promote to `int`, `long`, or `double` based on observed values; positions containing `BigInteger` use decimal, and mixed fractional values read back as `BigDecimal` at the schema scale
 - `columnSchemas` takes precedence over all of the above when present
 
 ## Common Patterns
@@ -315,7 +328,8 @@ AvroWriteOptions options = new AvroWriteOptions()
 | `String`                     |           `string` | —                           |                                                    |
 | `Boolean`                    |          `boolean` | —                           |                                                    |
 | `Integer`                    |              `int` | —                           |                                                    |
-| `Long`, `BigInteger`         |             `long` | —                           |                                                    |
+| `Long`                       |             `long` | —                           | exact integral values only                          |
+| `BigInteger`                 |            `bytes` | `decimal(precision, 0)`     | marked with `se.alipsa.matrix.javaType`             |
 | `Float`                      |            `float` | —                           |                                                    |
 | `Double`                     |           `double` | —                           |                                                    |
 | `BigDecimal` (infer=false)   |           `double` | —                           | fallback                                           |

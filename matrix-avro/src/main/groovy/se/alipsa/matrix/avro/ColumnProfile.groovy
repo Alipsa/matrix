@@ -20,6 +20,18 @@ final class ColumnProfile {
   Map recordSample
   Set<String> recordKeys
   DecimalColumnProfile decimalProfile
+  DecimalColumnProfile listDecimalProfile
+  DecimalColumnProfile mapValueDecimalProfile
+  Map<String, Class<?>> recordFieldClasses = [:]
+  Map<String, DecimalColumnProfile> recordDecimalProfiles = [:]
+  boolean forceDecimal = false
+  boolean inferPrecisionAndScale = false
+  List<Number> listNumbers = []
+  boolean listHasNonNumeric = false
+  List<Number> mapValueNumbers = []
+  boolean mapValuesHaveNonNumeric = false
+  Map<String, List<Number>> recordNumbers = [:]
+  Map<String, Boolean> recordHasNonNumeric = [:]
   ColumnProfile(String name, Class<?> declaredType) {
     this.name = name
     this.declaredType = declaredType

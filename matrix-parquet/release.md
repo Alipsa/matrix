@@ -1,6 +1,7 @@
 # Matrix-parquet Release History
 
 ## v0.6.1, unreleased
+- SPI `inferPrecisionAndScale` parsing is now strict: Boolean values and trimmed, case-insensitive `true`/`false` strings are accepted; former truthy inputs are rejected.
 - Upgrade dependencies
   - org.apache.parquet:parquet-column 1.17.1 -> 1.18.1
   - org.apache.parquet:parquet-hadoop 1.17.1 -> 1.18.1

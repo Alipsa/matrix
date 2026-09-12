@@ -324,7 +324,7 @@ class AvroWriteOptions {
     if (normalized.containsKey(NORMALIZED_INFER_PRECISION_AND_SCALE)) {
       Object inferPrecisionAndScale = normalized[NORMALIZED_INFER_PRECISION_AND_SCALE]
       if (inferPrecisionAndScale != null) {
-        result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
+        result.inferPrecisionAndScale(OptionMaps.booleanValueOrNull(inferPrecisionAndScale, OPTION_INFER_PRECISION_AND_SCALE))
       }
     }
     if (normalized.containsKey(NORMALIZED_NAMESPACE)) {

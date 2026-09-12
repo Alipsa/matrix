@@ -59,6 +59,7 @@ class MatrixAvroWriter {
   private static final long MILLIS_PER_SECOND = 1_000L
   private static final int NANOS_PER_MICRO = 1_000
   private static final int NANOS_PER_MILLI = 1_000_000
+  private static final String LONG_VALUE = 'long value'
   /**
    * Write a Matrix to an Avro file.
    *
@@ -412,48 +413,60 @@ class MatrixAvroWriter {
       AvroSchemaUtil.validateAvroFieldName(col, col)
       Schema fieldSchema
       AvroSchemaDecl declaredSchema = declaredSchemas.get(col)
-      if (declaredSchema != null) {
-        fieldSchema = declaredSchema.toAvroSchema(col, namespace)
-      } else {
-        ColumnProfile profile = profiles.get(col)
-        Class<?> clazz = profile.effectiveType
-        if (clazz == List) {
-          Class<?> elemClass = profile.listElemClass ?: String
-          Schema elemSchema = toFieldSchema(elemClass, null)
-          Schema nullableElem = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), elemSchema))
-          fieldSchema = Schema.createArray(nullableElem)
-        } else if (clazz == Map) {
-          if (profile.recordLike) {
-            Map first = profile.recordSample
-            def rec = Schema.createRecord(col + '_record', null, namespace, false)
-            List<Schema.Field> flds = []
-            for (def k : first.keySet()) {
-              String fieldName = k
-              AvroSchemaUtil.validateAvroFieldName(fieldName, "${col}.${fieldName}")
-              def v = first.get(k)
-              Class<?> vClazz = (v == null) ? String : v.getClass()
-              Schema valueSchema = toFieldSchema(vClazz, null)
-              Schema nullable = AvroSchemaUtil.nullableSchema(valueSchema)
-              flds.add(new Schema.Field(fieldName, nullable, null as String, (Object) null))
-            }
-            rec.setFields(flds)
-            fieldSchema = rec
-          } else {
-            Class<?> valClass = profile.mapValueClass ?: String
-            Schema valueSchema = toFieldSchema(valClass, null)
-            Schema nullableValue = AvroSchemaUtil.nullableSchema(valueSchema)
-            fieldSchema = Schema.createMap(nullableValue)
-          }
-        } else {
-          int[] decimalMeta = inferPrecisionAndScale && clazz == BigDecimal ? profile.decimalMeta() : null
-          fieldSchema = toFieldSchema(clazz, decimalMeta)
-        }
-      }
+      fieldSchema = declaredSchema != null
+          ? declaredSchema.toAvroSchema(col, namespace)
+          : inferredFieldSchema(profiles.get(col), col, inferPrecisionAndScale, namespace)
       Schema nullable = AvroSchemaUtil.nullableSchema(fieldSchema)
       fields.add(new Schema.Field(col, nullable, null as String, (Object) null))
     }
     record.setFields(fields)
     return record
+  }
+  private static Schema inferredFieldSchema(ColumnProfile profile, String columnName,
+                                             boolean inferPrecisionAndScale, String namespace) {
+    Class<?> clazz = profile.effectiveType
+    if (clazz == List) {
+      return listFieldSchema(profile)
+    }
+    if (clazz == Map) {
+      return profile.recordLike ? recordFieldSchema(profile, columnName, namespace) : mapFieldSchema(profile)
+    }
+    int[] metadata = (clazz == BigInteger || (clazz == BigDecimal && (inferPrecisionAndScale || profile.forceDecimal)))
+        ? profile.decimalMeta() : null
+    toFieldSchema(clazz, metadata)
+  }
+  private static Schema listFieldSchema(ColumnProfile profile) {
+    Class<?> elementClass = profile.listElemClass ?: String
+    boolean needsDecimal = (profile.inferPrecisionAndScale || profile.listNumbers.any { BigInteger.isInstance(it) }) &&
+        profile.listDecimalProfile?.hasValues
+    Schema elementSchema = toFieldSchema(elementClass,
+        needsDecimal || elementClass == BigInteger ? decimalMeta(profile.listDecimalProfile, elementClass == BigInteger) : null)
+    Schema.createArray(AvroSchemaUtil.nullableSchema(elementSchema))
+  }
+  private static Schema mapFieldSchema(ColumnProfile profile) {
+    Class<?> valueClass = profile.mapValueClass ?: String
+    boolean needsDecimal = (profile.inferPrecisionAndScale || profile.mapValueNumbers.any { BigInteger.isInstance(it) }) &&
+        profile.mapValueDecimalProfile?.hasValues
+    Schema valueSchema = toFieldSchema(valueClass,
+        needsDecimal || valueClass == BigInteger ? decimalMeta(profile.mapValueDecimalProfile, valueClass == BigInteger) : null)
+    Schema.createMap(AvroSchemaUtil.nullableSchema(valueSchema))
+  }
+  private static Schema recordFieldSchema(ColumnProfile profile, String columnName, String namespace) {
+    Schema record = Schema.createRecord(columnName + '_record', null, namespace, false)
+    List<Schema.Field> fields = []
+    profile.recordSample.keySet().each { Object key ->
+      String fieldName = String.valueOf(key)
+      AvroSchemaUtil.validateAvroFieldName(fieldName, "${columnName}.${fieldName}")
+      Class<?> valueClass = profile.recordFieldClasses[fieldName] ?: String
+      DecimalColumnProfile decimalProfile = profile.recordDecimalProfiles[fieldName]
+      boolean needsDecimal = (profile.inferPrecisionAndScale || profile.recordNumbers[fieldName]?.any { BigInteger.isInstance(it) }) &&
+          decimalProfile?.hasValues
+      Schema valueSchema = toFieldSchema(valueClass,
+          needsDecimal || valueClass == BigInteger ? decimalMeta(decimalProfile, valueClass == BigInteger) : null)
+      fields << new Schema.Field(fieldName, AvroSchemaUtil.nullableSchema(valueSchema), null as String, (Object) null)
+    }
+    record.setFields(fields)
+    record
   }
   /**
    * Maps a Java class to the corresponding Avro field schema.
@@ -474,6 +487,9 @@ class MatrixAvroWriter {
    * @return the corresponding Avro schema
    */
   private static Schema toFieldSchema(Class<?> clazz, int[] decimalMeta) {
+    if (clazz == BigInteger) {
+      return bigIntegerFieldSchema(decimalMeta)
+    }
     if (clazz == BigDecimal) {
       return decimalMeta != null ? decimalFieldSchema(decimalMeta) : Schema.create(Schema.Type.DOUBLE) // fallback like Parquet writer
     }
@@ -491,6 +507,18 @@ class MatrixAvroWriter {
     Schema s = Schema.create(Schema.Type.BYTES)
     LogicalTypes.decimal(precision, scale).addToSchema(s)
     s
+  }
+  private static Schema bigIntegerFieldSchema(int[] decimalMeta) {
+    int precision = decimalMeta != null && decimalMeta[0] > 0 ? decimalMeta[0] : 10
+    Schema schema = decimalFieldSchema([precision, 0] as int[])
+    schema.addProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY, AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE)
+    schema
+  }
+  private static int[] decimalMeta(DecimalColumnProfile profile, boolean scaleZero) {
+    if (profile == null || !profile.hasValues) {
+      return [10, 0] as int[]
+    }
+    [profile.precision, scaleZero ? 0 : profile.scale] as int[]
   }
   private static Schema primitiveFieldSchema(Class<?> clazz) {
     if (clazz == String) {
@@ -556,18 +584,9 @@ class MatrixAvroWriter {
   private static void writeRows(Matrix matrix, DataFileWriter<GenericRecord> dfw, Schema schema) {
     GenericData.Record rec = new GenericData.Record(schema)
     Conversions.DecimalConversion decConv = new Conversions.DecimalConversion()
-    // Unwrap nullable unions to actual field schema
     Map<String, Schema> fieldSchemas = [:]
     for (Schema.Field f : schema.getFields()) {
-      Schema s = f.schema()
-      if (s.getType() == Schema.Type.UNION) {
-        for (Schema t : s.getTypes()) {
-          if (t.getType() != Schema.Type.NULL) {
-            s = t; break
-          }
-        }
-      }
-      fieldSchemas.put(f.name(), s)
+      fieldSchemas.put(f.name(), f.schema())
     }
     List<String> cols = matrix.columnNames()
     int rows = matrix.rowCount()
@@ -580,7 +599,7 @@ class MatrixAvroWriter {
             throw new AvroSchemaException(
                 'Value does not match schema type',
                 col,
-                schemaTypeLabel(fs),
+              AvroSchemaUtil.schemaTypeLabel(fs),
                 v?.getClass()?.simpleName ?: NULL_TYPE_NAME
             )
           }
@@ -593,7 +612,7 @@ class MatrixAvroWriter {
               col,
               r,
               v?.getClass()?.simpleName ?: NULL_TYPE_NAME,
-              fs.getType().name(),
+              AvroSchemaUtil.schemaTypeLabel(fs),
               v,
               e
           )
@@ -704,12 +723,9 @@ class MatrixAvroWriter {
   }
   private static Object toDecimalAvroValue(Schema fieldSchema, Object v, LogicalTypes.Decimal dec,
                                            Conversions.DecimalConversion decConv) {
-    if (BigDecimal.isInstance(v)) {
-      return decConv.toBytes((BigDecimal) v, fieldSchema, dec)
-    }
-    if (Double.isInstance(v) || Float.isInstance(v)) {
-      BigDecimal bd = new BigDecimal(((Number) v).toString()).setScale(dec.getScale(), RoundingMode.HALF_UP)
-      return decConv.toBytes(bd, fieldSchema, dec)
+    if (Number.isInstance(v)) {
+      BigDecimal value = decimalValue((Number) v, 'decimal value').setScale(dec.getScale(), RoundingMode.HALF_UP)
+      return decConv.toBytes(value, fieldSchema, dec)
     }
     NO_AVRO_VALUE
   }
@@ -729,11 +745,8 @@ class MatrixAvroWriter {
     }
   }
   private static Object toLongAvroValue(Object v) {
-    if (BigInteger.isInstance(v)) {
-      return ((BigInteger) v).longValue()
-    }
     if (Number.isInstance(v)) {
-      return ((Number) v).longValue()
+      return decimalValue((Number) v, LONG_VALUE).longValueExact()
     }
     if (Date.isInstance(v)) {
       return ((Date) v).time
@@ -766,7 +779,7 @@ class MatrixAvroWriter {
     GenericData.Record record = new GenericData.Record(fieldSchema)
     fieldSchema.getFields().each { Schema.Field field ->
       def value = input == null ? null : input.get(field.name())
-      record.put(field.name(), toAvroValue(AvroSchemaUtil.nonNullSchema(field.schema()), value, decConv))
+      record.put(field.name(), toAvroValue(field.schema(), value, decConv))
     }
     record
   }
@@ -780,13 +793,16 @@ class MatrixAvroWriter {
   private static ColumnProfile analyzeColumn(Matrix matrix, String col, boolean inferPrecisionAndScale) {
     Class<?> declared = normalizeType(matrix.type(col))
     ColumnProfile profile = new ColumnProfile(col, declared)
+    profile.inferPrecisionAndScale = inferPrecisionAndScale
     if (declared != Object && declared != Number) {
       applyDeclaredType(matrix, col, declared, profile)
-      profileDecimalColumn(matrix, col, inferPrecisionAndScale, profile)
+      profileDecimalColumn(matrix, col, profile)
+      finalizeNestedProfiles(profile)
       return profile
     }
     scanUntypedColumn(matrix, col, profile)
-    profileDecimalColumn(matrix, col, inferPrecisionAndScale, profile)
+    profileDecimalColumn(matrix, col, profile)
+    finalizeNestedProfiles(profile)
     return profile
   }
   private static void applyDeclaredType(Matrix matrix, String col, Class<?> declared, ColumnProfile profile) {
@@ -822,11 +838,15 @@ class MatrixAvroWriter {
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
+      decimalValue((Number) v, "column '$profile.name'")
       state.sawFloat = true
       return false
     }
     if (isIntegralValue(v)) {
       state.sawIntegral = true
+      if (BigInteger.isInstance(v)) {
+        state.sawBigInteger = true
+      }
       if (needsLongStorage(v)) {
         state.needsLong = true
       }
@@ -860,9 +880,9 @@ class MatrixAvroWriter {
       }
       return false
     }
-    if (profile.effectiveType == List && List.isInstance(v) && profile.listElemClass == null) {
+    if (profile.effectiveType == List && List.isInstance(v)) {
       scanListElementValue((List) v, profile)
-      return profile.listElemClass != null
+      return false
     }
     false
   }
@@ -871,7 +891,10 @@ class MatrixAvroWriter {
         || Long.isInstance(v) || BigInteger.isInstance(v)
   }
   private static boolean needsLongStorage(Object v) {
-    long lv = BigInteger.isInstance(v) ? ((BigInteger) v).longValue() : ((Number) v).longValue()
+    if (BigInteger.isInstance(v)) {
+      return true
+    }
+    long lv = ((Number) v).longValue()
     lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || Long.isInstance(v) || BigInteger.isInstance(v)
   }
   private static boolean isFixedScalarValue(Object v) {
@@ -886,9 +909,12 @@ class MatrixAvroWriter {
       return BigDecimal
     }
     if (state.sawFloat) {
-      return Double
+      return state.sawBigInteger ? BigDecimal : Double
     }
     if (state.sawIntegral) {
+      if (state.sawBigInteger) {
+        return BigInteger
+      }
       return state.needsLong ? Long : Integer
     }
     String
@@ -897,14 +923,18 @@ class MatrixAvroWriter {
     boolean sawBigDecimal
     boolean sawFloat
     boolean sawIntegral
+    boolean sawBigInteger
     boolean needsLong
     boolean fixedType
   }
-  private static void profileDecimalColumn(Matrix matrix, String col, boolean inferPrecisionAndScale,
-                                           ColumnProfile profile) {
-    if (inferPrecisionAndScale && profile.effectiveType == BigDecimal) {
-      List<BigDecimal> values = matrix.column(col).findAll { BigDecimal.isInstance(it) } as List<BigDecimal>
+  private static void profileDecimalColumn(Matrix matrix, String col, ColumnProfile profile) {
+    if (profile.effectiveType == BigDecimal || profile.effectiveType == BigInteger) {
+      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) } as List<Number>
+      List<Number> values = sourceValues.collect { Number value ->
+        decimalValue(value, "column '$col'")
+      } as List<Number>
       profile.decimalProfile = DecimalColumnProfile.profile(values)
+      profile.forceDecimal = profile.effectiveType == BigInteger || sourceValues.any { BigInteger.isInstance(it) }
     }
   }
   private static void scanListElement(Matrix matrix, String col, ColumnProfile profile) {
@@ -913,9 +943,6 @@ class MatrixAvroWriter {
       def v = matrix[r, col]
       if (List.isInstance(v)) {
         scanListElementValue((List) v, profile)
-        if (profile.listElemClass != null) {
-          return
-        }
       }
     }
   }
@@ -931,8 +958,15 @@ class MatrixAvroWriter {
   private static void scanListElementValue(List list, ColumnProfile profile) {
     for (def e : list) {
       if (e != null) {
-        profile.listElemClass = e.getClass()
-        return
+        if (profile.listElemClass == null) {
+          profile.listElemClass = e.getClass()
+        }
+        if (Number.isInstance(e)) {
+          decimalValue((Number) e, "column '${profile.name}' list element")
+          profile.listNumbers << (Number) e
+        } else {
+          profile.listHasNonNumeric = true
+        }
       }
     }
   }
@@ -956,9 +990,49 @@ class MatrixAvroWriter {
         }
       }
     }
+    map.values().each { Object value ->
+      if (Number.isInstance(value)) {
+        decimalValue((Number) value, "column '${profile.name}' map value")
+        profile.mapValueNumbers << (Number) value
+      } else if (value != null) {
+        profile.mapValuesHaveNonNumeric = true
+      }
+    }
+    map.each { key, value ->
+      String fieldName = String.valueOf(key)
+      if (value != null && !profile.recordFieldClasses.containsKey(fieldName)) {
+        profile.recordFieldClasses[fieldName] = value.getClass()
+      }
+      if (Number.isInstance(value)) {
+        List<Number> numbers = profile.recordNumbers[fieldName] ?: []
+        decimalValue((Number) value, "column '${profile.name}.$fieldName'")
+        numbers << (Number) value
+        profile.recordNumbers[fieldName] = numbers
+      } else if (value != null) {
+        profile.recordHasNonNumeric[fieldName] = true
+      }
+    }
+  }
+  private static void finalizeNestedProfiles(ColumnProfile profile) {
+    if (!profile.listNumbers.isEmpty() && !profile.listHasNonNumeric) {
+      profile.listDecimalProfile = DecimalColumnProfile.profile(profile.listNumbers)
+      profile.listElemClass = numericSchemaClass(profile.listNumbers)
+    }
+    if (!profile.mapValueNumbers.isEmpty() && !profile.mapValuesHaveNonNumeric) {
+      profile.mapValueDecimalProfile = DecimalColumnProfile.profile(profile.mapValueNumbers)
+      profile.mapValueClass = numericSchemaClass(profile.mapValueNumbers)
+    }
+    if (profile.recordLike) {
+      profile.recordNumbers.each { String fieldName, List<Number> values ->
+        if (!profile.recordHasNonNumeric[fieldName]) {
+          profile.recordDecimalProfiles[fieldName] = DecimalColumnProfile.profile(values)
+          profile.recordFieldClasses[fieldName] = numericSchemaClass(values)
+        }
+      }
+    }
   }
   private static Class<?> normalizeType(Class<?> clazz) {
-    return clazz == BigInteger ? Long : clazz
+    clazz
   }
   private static void validateDeclaredColumnSchemas(Matrix matrix, Map<String, AvroSchemaDecl> declaredSchemas) {
     Set<String> matrixColumns = matrix.columnNames() as Set<String>
@@ -1010,8 +1084,7 @@ class MatrixAvroWriter {
         Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
       case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
       case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
-      case 'decimal' -> BigDecimal.isInstance(v) || Double.isInstance(v) || Float.isInstance(v) ||
-          byte[].isInstance(v) || ByteBuffer.isInstance(v)
+      case 'decimal' -> Number.isInstance(v) || byte[].isInstance(v) || ByteBuffer.isInstance(v)
       default -> false
     }
   }
@@ -1020,7 +1093,7 @@ class MatrixAvroWriter {
       case Schema.Type.STRING -> true // we'll toString() later
       case Schema.Type.BOOLEAN -> Boolean.isInstance(v)
       case Schema.Type.INT -> Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
-      case Schema.Type.LONG -> Number.isInstance(v) || Date.isInstance(v) || Instant.isInstance(v)
+      case Schema.Type.LONG -> isExactLongCompatible(v) || Date.isInstance(v) || Instant.isInstance(v)
       case Schema.Type.FLOAT -> Number.isInstance(v)
       case Schema.Type.DOUBLE -> Number.isInstance(v) || BigDecimal.isInstance(v)
       case Schema.Type.BYTES -> (byte[].isInstance(v)) || (ByteBuffer.isInstance(v)) || (BigDecimal.isInstance(v))
@@ -1055,22 +1128,38 @@ class MatrixAvroWriter {
     Map input = (Map) value
     schema.getFields().every { Schema.Field field -> isCompatible(field.schema(), input.get(field.name())) }
   }
-  /**
-   * Produces a human-readable label for a schema type, preferring logical types.
-   */
-  private static String schemaTypeLabel(Schema schema) {
-    if (schema.getType() == Schema.Type.UNION) {
-      List<String> parts = []
-      for (Schema branch : schema.getTypes()) {
-        parts.add(schemaTypeLabel(branch))
-      }
-      return 'UNION[' + String.join(', ', parts) + ']'
+  private static boolean isExactLongCompatible(Object value) {
+    if (!Number.isInstance(value)) {
+      return false
     }
-    def logical = schema.getLogicalType()
-    if (logical != null) {
-      return logical.getName()
+    try {
+      decimalValue((Number) value, LONG_VALUE).longValueExact()
+      true
+    } catch (ArithmeticException ignored) {
+      false
     }
-    return schema.getType().name()
+  }
+  private static BigDecimal decimalValue(Number value, String location) {
+    if ((Double.isInstance(value) && !Double.isFinite((Double) value)) ||
+        (Float.isInstance(value) && !Float.isFinite((Float) value))) {
+      throw new AvroSchemaException('Non-finite decimal value', location, 'finite Number', String.valueOf(value))
+    }
+    BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
+  }
+  private static Class<?> numericSchemaClass(List<Number> values) {
+    boolean hasBigInteger = values.any { BigInteger.isInstance(it) }
+    boolean hasDecimalOrFloating = values.any { BigDecimal.isInstance(it) || Double.isInstance(it) || Float.isInstance(it) }
+    if (hasBigInteger && !hasDecimalOrFloating) {
+      return BigInteger
+    }
+    if (hasBigInteger || values.any { BigDecimal.isInstance(it) }) {
+      return BigDecimal
+    }
+    if (values.any { Double.isInstance(it) || Float.isInstance(it) }) {
+      return Double
+    }
+    boolean needsLong = values.any { Number value -> value.longValue() < Integer.MIN_VALUE || value.longValue() > Integer.MAX_VALUE || Long.isInstance(value) }
+    needsLong ? Long : Integer
   }
 
   private static final class NonClosingOutputStream extends FilterOutputStream {

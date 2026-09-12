@@ -20,6 +20,33 @@ import java.time.*
 class MatrixAvroRoundTripTest {
 
   @Test
+  void roundTrip_preservesArbitraryBigIntegerValues() {
+    BigInteger beyondLong = new BigInteger('92233720368547758081234567890')
+    Matrix source = Matrix.builder('BigIntegers')
+        .columns(value: [BigInteger.ZERO, beyondLong, null])
+        .types(BigInteger)
+        .build()
+    File file = Files.createTempFile('matrix-avro-big-integer-', '.avro').toFile()
+    try {
+      MatrixAvroWriter.write(source, file, false)
+      Schema schema = MatrixAvroReader.schema(file)
+      Schema valueSchema = schema.getField('value').schema().getTypes().find { it.type != Schema.Type.NULL }
+      assertEquals(Schema.Type.BYTES, valueSchema.type)
+      assertEquals('decimal', valueSchema.logicalType.name)
+      assertEquals(0, valueSchema.logicalType.scale)
+      assertEquals('java.math.BigInteger', valueSchema.getProp('se.alipsa.matrix.javaType'))
+
+      Matrix result = MatrixAvroReader.read(file)
+      assertEquals(BigInteger.ZERO, result[0, 'value'])
+      assertEquals(beyondLong, result[1, 'value'])
+      assertTrue(result[1, 'value'] instanceof BigInteger)
+      assertNull(result[2, 'value'])
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
   void roundTrip_withDecimalInference_preservesTypes() {
     File tmp = Files.createTempFile('matrix-avro-rt-withDecimalInference', '.avro').toFile()
     // --- Build a source Matrix with a variety of types (and some nulls) ---

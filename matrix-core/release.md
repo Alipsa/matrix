@@ -6,6 +6,9 @@
 - `toHtml(attr: [caption: '…'])` writes an escaped `<caption>` as the first child of the table. The `caption` key is consumed rather than emitted as a table attribute.
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.
 
+### SPI
+- Added `OptionMaps.booleanValueOrNull`, which accepts nullable Boolean values and trimmed, case-insensitive `true`/`false` strings while rejecting truthy non-Boolean inputs.
+
 ### New Column methods
 - `Column.getAt(IntRange)` — `column[1..3]` now returns a `Column` (name and type preserved) instead of a plain `ArrayList`, so element-wise arithmetic and the rest of the Column API survive slicing. It is equivalent to `Column.subList(IntRange)`; both follow Groovy list-slicing semantics (negative indices count from the end, reverse ranges return values in reverse order) and both return a detached copy.
 - Empty exclusive slices such as `column[1..<1]` also return a detached empty `Column` with the original name and type.

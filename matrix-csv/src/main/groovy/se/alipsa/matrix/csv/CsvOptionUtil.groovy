@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 
 import org.apache.commons.csv.DuplicateHeaderMode
 
+import se.alipsa.matrix.core.spi.OptionMaps
+
 import java.nio.charset.Charset
 
 /**
@@ -52,19 +54,11 @@ class CsvOptionUtil {
    * @return the resolved boolean value
    */
   static boolean booleanValue(Object value, String optionName) {
-    if (value instanceof Boolean) {
-      return value as Boolean
+    Boolean result = OptionMaps.booleanValueOrNull(value, optionName)
+    if (result == null) {
+      throw new IllegalArgumentException("${optionName} must be a Boolean but was null")
     }
-    if (value instanceof CharSequence) {
-      String normalized = String.valueOf(value).trim().toLowerCase(Locale.ROOT)
-      if (normalized == 'true') {
-        return true
-      }
-      if (normalized == 'false') {
-        return false
-      }
-    }
-    throw new IllegalArgumentException("${optionName} must be a Boolean but was ${value?.class}")
+    result
   }
 
   /**

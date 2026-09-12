@@ -36,4 +36,27 @@ class OptionMaps {
     value == null ? null : String.valueOf(value)
   }
 
+  /**
+   * Parses an optional Boolean SPI value without Groovy truthiness semantics.
+   *
+   * @param value a Boolean, a case-insensitive {@code true}/{@code false} string, or null
+   * @param optionName option name used in validation messages
+   * @return the parsed value, or null when the supplied value is null
+   */
+  static Boolean booleanValueOrNull(Object value, String optionName) {
+    if (value == null || Boolean.isInstance(value)) {
+      return (Boolean) value
+    }
+    if (CharSequence.isInstance(value)) {
+      String normalized = String.valueOf(value).trim()
+      if (normalized.equalsIgnoreCase('true')) {
+        return true
+      }
+      if (normalized.equalsIgnoreCase('false')) {
+        return false
+      }
+    }
+    throw new IllegalArgumentException("$optionName must be a Boolean or 'true'/'false' string but was ${value.class}")
+  }
+
 }

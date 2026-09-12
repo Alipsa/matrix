@@ -864,7 +864,7 @@ class MatrixAvroWriterTest {
         MatrixAvroWriter.write(m, tmp)
       }
       assertEquals('props', ex.columnName)
-      assertEquals('RECORD', ex.expectedType)
+      assertEquals('UNION[NULL, RECORD]', ex.expectedType)
       assertEquals('ArrayList', ex.actualType)
       assertTrue(ex.message.contains('expected'))
     } finally {

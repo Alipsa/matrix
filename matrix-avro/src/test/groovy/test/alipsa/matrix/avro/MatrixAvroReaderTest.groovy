@@ -98,6 +98,42 @@ class MatrixAvroReaderTest {
     assertEquals('FromBytes', m.matrixName)
   }
 
+  @Test
+  void readsEveryBranchOfAMultiTypeUnion() {
+    Schema unionSchema = new Schema.Parser().parse('''
+      {"type":"record","name":"UnionValues","fields":[
+        {"name":"value","type":["null","int","string"]}
+      ]}
+    ''')
+    File file = Files.createTempFile('matrix-avro-union-', '.avro').toFile()
+    try {
+      DataFileWriter<GenericRecord> writer = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(unionSchema))
+      writer.create(unionSchema, file)
+      try {
+        GenericRecord integerRecord = new GenericData.Record(unionSchema)
+        integerRecord.put('value', 42)
+        writer.append(integerRecord)
+        GenericRecord stringRecord = new GenericData.Record(unionSchema)
+        stringRecord.put('value', 'answer')
+        writer.append(stringRecord)
+        GenericRecord nullRecord = new GenericData.Record(unionSchema)
+        nullRecord.put('value', null)
+        writer.append(nullRecord)
+      } finally {
+        writer.close()
+      }
+
+      Matrix matrix = MatrixAvroReader.read(file)
+      assertEquals(42, matrix[0, 'value'])
+      assertTrue(matrix[0, 'value'] instanceof Integer)
+      assertEquals('answer', matrix[1, 'value'])
+      assertTrue(matrix[1, 'value'] instanceof String)
+      assertNull(matrix[2, 'value'])
+    } finally {
+      file.delete()
+    }
+  }
+
   // ---------- convenience method tests ----------
 
   @Test @Order(7)

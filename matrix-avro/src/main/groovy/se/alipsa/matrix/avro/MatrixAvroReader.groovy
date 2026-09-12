@@ -508,7 +508,7 @@ class MatrixAvroReader {
         field.name(),
         rowNumber,
         raw?.getClass()?.simpleName ?: 'null',
-        getTargetType(field.schema()),
+        AvroSchemaUtil.schemaTypeLabel(field.schema()),
         raw,
         e
     )
@@ -522,22 +522,6 @@ class MatrixAvroReader {
       return schemaName
     }
     fallbackName ?: DEFAULT_MATRIX_NAME
-  }
-  /**
-   * Gets a human-readable target type name from an Avro schema.
-   */
-  private static String getTargetType(Schema schema) {
-    if (schema.getType() == Schema.Type.UNION) {
-      Schema nonNull = schema.getTypes().stream()
-          .filter(s -> s.getType() != Schema.Type.NULL)
-          .findFirst().orElse(schema)
-      return getTargetType(nonNull)
-    }
-    def lt = schema.getLogicalType()
-    if (lt != null) {
-      return lt.getName()
-    }
-    return schema.getType().name()
   }
   /**
    * Converts an Avro-typed value to a suitable Java value for Matrix storage.
@@ -560,7 +544,7 @@ class MatrixAvroReader {
       return null
     }
     if (schema.getType() == Schema.Type.UNION) {
-      return convertValue(AvroSchemaUtil.nonNullSchema(schema), v)
+      return convertValue(AvroSchemaUtil.resolveUnionBranch(schema, v), v)
     }
     LogicalType lt = schema.getLogicalType()
     if (lt != null) {
@@ -727,7 +711,7 @@ class MatrixAvroReader {
    * @return the corresponding BigDecimal
    * @throws IllegalArgumentException if schema type is not BYTES or FIXED
    */
-  private static BigDecimal toBigDecimal(LogicalTypes.Decimal dec, Schema schema, Object v) {
+  private static Object toBigDecimal(LogicalTypes.Decimal dec, Schema schema, Object v) {
     int scale = dec.getScale()
     byte[] bytes
     if (schema.getType() == Schema.Type.BYTES) {
@@ -737,7 +721,12 @@ class MatrixAvroReader {
     } else {
       throw new IllegalArgumentException('Decimal logical type on non-bytes/fixed field')
     }
-    return new BigDecimal(new BigInteger(bytes), scale)
+    BigInteger unscaled = new BigInteger(bytes)
+    if (schema.getType() == Schema.Type.BYTES && scale == 0 &&
+        AvroSchemaUtil.BIG_INTEGER_JAVA_TYPE == schema.getProp(AvroSchemaUtil.JAVA_TYPE_PROPERTY)) {
+      return unscaled
+    }
+    new BigDecimal(unscaled, scale)
   }
   /**
    * Validates that the file exists and is not a directory.

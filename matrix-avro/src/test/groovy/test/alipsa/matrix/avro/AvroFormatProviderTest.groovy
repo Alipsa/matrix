@@ -2,6 +2,7 @@ package test.alipsa.matrix.avro
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -104,6 +105,18 @@ class AvroFormatProviderTest {
   }
 
   @Test
+  void testWriteOptionsParseBooleanSpiValuesStrictly() {
+    assertTrue(AvroWriteOptions.fromMap([inferPrecisionAndScale: ' TRUE ']).inferPrecisionAndScale)
+    assertFalse(AvroWriteOptions.fromMap([inferPrecisionAndScale: 'False']).inferPrecisionAndScale)
+    assertThrows(IllegalArgumentException) {
+      AvroWriteOptions.fromMap([inferPrecisionAndScale: 1])
+    }
+    assertThrows(IllegalArgumentException) {
+      AvroWriteOptions.fromMap([inferPrecisionAndScale: 'yes'])
+    }
+  }
+
+  @Test
   void testReadOptionsRoundTripFromMapToMap() {
     String readerSchemaJson = '''
     {
@@ -198,6 +211,7 @@ class AvroFormatProviderTest {
         syncInterval          : 64000,
         columnSchemas         : [
             amount: [kind: 'decimal', precision: 12, scale: 3],
+            identifier: [kind: 'bigInteger', precision: 30],
             props : [kind: 'map', valueType: 'INT'],
             tags  : [kind: 'array', elementType: 'STRING'],
             person: [
@@ -220,6 +234,8 @@ class AvroFormatProviderTest {
     assertFalse(roundTrip.containsKey('schemaName'))
     assertEquals('decimal', ((roundTrip.columnSchemas as Map).amount as Map).kind)
     assertEquals(12, (((roundTrip.columnSchemas as Map).amount as Map).precision))
+    assertEquals('bigInteger', ((roundTrip.columnSchemas as Map).identifier as Map).kind)
+    assertEquals(30, (((roundTrip.columnSchemas as Map).identifier as Map).precision))
     assertEquals('map', ((roundTrip.columnSchemas as Map).props as Map).kind)
     assertEquals('INT', (((roundTrip.columnSchemas as Map).props as Map).valueType as Map).scalarType)
     assertEquals('array', ((roundTrip.columnSchemas as Map).tags as Map).kind)
