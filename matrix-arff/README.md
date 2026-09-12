@@ -99,11 +99,14 @@ The `MatrixArffReader` class provides several methods to read ARFF files from di
 
 ```groovy
 import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffDateMode
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
 ArffReadOptions readOptions = new ArffReadOptions()
     .fallbackMatrixName('fallback-name')
+    .instanceWeightColumn('weight')
+    .dateMode(ArffDateMode.WEKA)
 
 Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
 Matrix fromPath = MatrixArffReader.read(Path.of("iris.arff"), readOptions)
@@ -167,12 +170,59 @@ When sparse rows are read, the ARFF specification applies, exactly as in Weka:
 
 Before version 0.3.0 omitted attributes were read as `null`.
 
+## Weka Compatibility
+
+Since 0.3.0 the dialect written and read by `matrix-arff` follows Weka's `weka.core.Utils` and `ArffLoader`, and every
+feature documented in the ARFF specification (`arff_stable.md`) is supported: comments, quoting and escaping,
+NUMERIC/INTEGER/REAL, nominal, STRING, DATE and `relational` attributes, comma- or tab-delimited dense rows, sparse
+rows, missing values and instance weights. Subject to the limitations below, files exchanged with Weka keep their
+values on a round trip.
+
+Limitations:
+
+- sparse rows are read but always written as dense rows (the values are the same; Weka reads both)
+- by default DATE values are parsed and written in UTC with `Locale.ROOT`, requiring the whole value to match; Weka
+  uses the JVM's default time zone and locale and ignores text after the date. The date strings in a file are the
+  same, but the `Date` instants differ by the JVM's UTC offset when Weka runs in a non-UTC zone, and patterns with
+  localized text (`MMM`, `EEE`) must use English names. Set `dateMode` to `ArffDateMode.WEKA` in the read and write
+  options to get Weka's behavior on the same machine
+- trailing text after a DATE format declaration is rejected; Weka accepts the first format token and ignores the rest
+  of that header line
+- quoted `\a`, `\b`, `\f`, `\v` and octal escapes are not decoded exactly like Weka's underlying
+  `java.io.StreamTokenizer`; all escapes emitted by Weka's writer are supported
+- an empty comma field (`1,,3`) reads as missing; Weka rejects it as a premature end of line
+- INTEGER attributes are read as `Integer` (Weka stores all numeric types as `double`), so integral values outside the
+  `int` range are rejected
+- an omitted STRING cell in a sparse row whose column never has an explicit value reads as `null`; Weka has no value
+  there either (the raw cell is `0` and it fails on access) and liac-arff yields the string `"0"`. Set
+  `omittedStringFallback('0')` to get that value
+- Weka's sparse STRING index-0 rule means an omitted cell may take the first explicit value from a different row. This
+  compatibility behavior is the default; producers should put a deliberate dummy value at dictionary index 0 or write
+  an explicit `?` when the cell is missing
+- omitted STRING values inside relational cells are resolved per nested `Matrix`; Weka appears to share one STRING
+  dictionary across all cells of the relational attribute, so files relying on cross-cell dictionary index 0 may differ
+- nominal data values are validated against the declaration only in strict mode (Weka always validates)
+- instance weights are kept only when `instanceWeightColumn` is set; otherwise they are discarded (Weka keeps them on
+  the `Instance`). The name is reserved at every relational depth: a file whose sub-relation declares an attribute with
+  that name must be read with another option value, and on writing a nested column with that name becomes the nested
+  rows' weight rather than an attribute
+- Weka 3.8 attribute weights (`numeric {0.5}`) are parsed and dropped; they are not part of the ARFF specification
+
 ## Default Behavior
 
 The defaults are intentionally lenient so basic imports and exports work without extra configuration:
 
 - matrix name defaults to `@RELATION` when present, otherwise to the fallback name from `ArffReadOptions.fallbackMatrixName(...)`, otherwise to the source name such as the file name or `ArffMatrix`
-- ARFF missing values (`?`) read as `null`, and `null` values write as `?`
+- ARFF missing values (an unquoted `?`) read as `null`; `null`, `NaN` and infinite values write as `?`. A quoted `'?'` is
+  the literal string
+- `%` outside a quoted token starts a comment anywhere on a line
+- values are quoted and escaped as Weka's `Utils.quote` does (`\n`, `\t`, `\r`, `\'`, `\"`, `\\`, `\%`), plus quoting on
+  any control character; the reader decodes every escape Weka's writer emits
+- DATE attributes accept quoted formats with escaped quotes (`date 'yyyy-MM-dd\'T\'HH:mm:ss'`) and unquoted single-token
+  formats (`date yyyy-MM-dd`); dates are parsed strictly in UTC and trailing text is rejected
+- duplicate attribute names and empty nominal declarations (`{}`) are parse errors
+- a quote must begin a token: mid-token quotes in dense rows or nominal declarations are parse errors (write an
+  apostrophe-containing value such as `it's` as `'it\'s'`); blanks after a closing quote are ignored
 - dense rows with missing trailing values are padded with `null`
 - dense rows with extra trailing values ignore the extras unless strict row-length validation is enabled
 - unknown attribute types fall back to `STRING` unless strict unknown-type validation is enabled
@@ -199,16 +249,26 @@ import se.alipsa.matrix.arff.MatrixArffReader
 ArffReadOptions options = new ArffReadOptions()
     .fallbackMatrixName('fallback-name')
     .strict(true)
+    .instanceWeightColumn('weight')
 
 Matrix matrix = MatrixArffReader.read(new File('dataset.arff'), options)
 ```
 
 Useful read options:
 
-- `strict(true)` enables fail-fast validation for unknown attribute types and dense row length mismatches
+- `strict(true)` enables fail-fast validation for unknown attribute types, dense row length mismatches and undeclared
+  nominal values; default: `false`
 - `failOnUnknownAttributeType(true)` fails on unsupported `@ATTRIBUTE` types instead of falling back to `STRING`
 - `failOnRowLengthMismatch(true)` fails when a dense `@DATA` row has more or fewer values than declared attributes
-- `fallbackMatrixName(...)` supplies a fallback matrix name when the ARFF file has no `@RELATION`
+- `failOnUndeclaredNominalValue(true)` fails when a nominal data value is not declared in its attribute; by default it
+  follows `strict`
+- `fallbackMatrixName(name)` supplies a fallback matrix name when the ARFF file has no `@RELATION`; default: source name
+- `omittedStringFallback(value)` supplies an omitted sparse STRING value only when the attribute has no dictionary
+  entry; default: `null`
+- `instanceWeightColumn(name)` stores `{w}` instance weights in a `BigDecimal` column (using `1` when absent); default:
+  `null`, which parses and discards weights
+- `dateMode(ArffDateMode.UTC)` uses UTC, `Locale.ROOT` and whole-value matching (default);
+  `dateMode(ArffDateMode.WEKA)` uses the JVM zone and locale and accepts trailing text like Weka
 
 Default read behavior stays lenient:
 
@@ -223,6 +283,7 @@ Default read behavior stays lenient:
 
 ```groovy
 import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffDateMode
 import se.alipsa.matrix.arff.ArffWriteOptions
 import se.alipsa.matrix.arff.MatrixArffWriter
 
@@ -236,6 +297,8 @@ ArffWriteOptions options = new ArffWriteOptions()
     ])
     .dateFormat('yyyy-MM-dd')
     .dateFormatsByColumn([createdAt: 'yyyy/MM/dd HH:mm'])
+    .instanceWeightColumn('weight')
+    .dateMode(ArffDateMode.WEKA)
 
 MatrixArffWriter.write(matrix, new File('configured.arff'), options)
 ```
@@ -247,13 +310,19 @@ Convenience shortcuts such as `MatrixArffWriter.write(matrix, file)` and
 
 Useful write options:
 
-- `inferNominals(false)` disables the default String/Object nominal inference heuristic
-- `nominalThreshold(n)` changes the maximum distinct-value count used by nominal inference
-- `nominalColumns([...])` forces selected columns to be written as nominal
-- `stringColumns([...])` forces selected columns to be written as `STRING`
-- `attributeTypesByColumn([...])` forces a per-column ARFF type such as `STRING`, `NOMINAL`, `DATE`, `NUMERIC`, or `INTEGER`
-- `nominalMappings([...])` supplies explicit nominal values and preserves their declared order
-- `dateFormat(...)` and `dateFormatsByColumn([...])` control DATE declarations and output formatting
+- `inferNominals(value)` enables String/Object nominal inference; default: `true`
+- `nominalThreshold(n)` sets the maximum distinct-value count used by nominal inference; default: `50`
+- `nominalColumns(names)` forces selected columns to be written as nominal; default: empty
+- `stringColumns(names)` forces selected columns to be written as `STRING`; default: empty
+- `attributeTypesByColumn(types)` forces per-column ARFF types: `STRING`, `NOMINAL`, `DATE`, `NUMERIC`, `REAL`, `INTEGER`
+  or `RELATIONAL`; default: empty
+- `nominalMappings(values)` supplies explicit nominal values and preserves their declared order; default: empty
+- `dateFormat(pattern)` sets the global DATE format; default: `yyyy-MM-dd'T'HH:mm:ss`
+- `dateFormatsByColumn(patterns)` overrides DATE formats by column; default: empty
+- `instanceWeightColumn(name)` writes a numeric column as `{w}` rather than as an attribute; null weights use ARFF's
+  implicit weight `1`; default: `null`
+- `dateMode(ArffDateMode.UTC)` formats in UTC with `Locale.ROOT` (default);
+  `dateMode(ArffDateMode.WEKA)` uses the JVM zone and locale
 
 By default, nominal inference only applies when the distinct-value count is at or below `nominalThreshold` and, for datasets with 10 or more rows, the distinct-value count is also at or below 10% of the row count.
 
