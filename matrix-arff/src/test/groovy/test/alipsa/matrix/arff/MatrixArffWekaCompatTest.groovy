@@ -755,4 +755,48 @@ MUSK-1,?,1
     }
     assertTrue(e.message.contains("Undeclared nominal value 'z'"), e.message)
   }
+
+  @Test
+  void denseRowsMayBeTabDelimited() {
+    String arff = '@RELATION t\n@ATTRIBUTE n NUMERIC\n@ATTRIBUTE c {x,y}\n@ATTRIBUTE s STRING\n@DATA\n' +
+        "1\tx\t'with spaces'\n" +
+        "2\t y\t  'tab\\there'\n" +
+        "3,y,'mixed'\n" +
+        "4\ty\t'weighted'\t{2}\n" +
+        "5,\tx\t\t'runs'\n" +
+        "6\t,y ,\t'comma in run'\n"
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true).instanceWeightColumn('w'))
+
+    assertEquals(6, m.rowCount())
+    assertEquals(['with spaces', 'tab\there', 'mixed', 'weighted', 'runs', 'comma in run'], m.column('s'))
+    assertEquals(['x', 'y', 'y', 'y', 'x', 'y'], m.column('c'))
+    assertEquals(['1', '1', '1', '2', '1', '1'], m.column('w')*.toString())
+  }
+
+  @Test
+  void emptyCommaFieldsStayMissing() {
+    String arff = '@RELATION e\n@ATTRIBUTE a NUMERIC\n@ATTRIBUTE b NUMERIC\n@ATTRIBUTE c NUMERIC\n@DATA\n' +
+        '1,,3\n' +
+        ',,\n' +
+        '4,\t,6\n'
+
+    Matrix m = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true))
+
+    assertEquals([1 as BigDecimal, null, 3 as BigDecimal], m.row(0))
+    assertEquals([null, null, null], m.row(1))
+    assertEquals([4 as BigDecimal, null, 6 as BigDecimal], m.row(2), 'each extra comma in a run is one empty field')
+  }
+
+  @Test
+  void quoteBoundariesAndWhitespaceAreHandledConsistently() {
+    Matrix m = MatrixArffReader.readString(
+        "@RELATION q\n@ATTRIBUTE a STRING\n@ATTRIBUTE b STRING\n@DATA\n'a' ,b\n")
+    assertEquals(['a', 'b'], m.row(0), 'blanks after a closing quote are syntax, not part of the quoted value')
+
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString("@RELATION q\n@ATTRIBUTE a STRING\n@ATTRIBUTE b STRING\n@DATA\nit's,x % note\n")
+    }
+    assertTrue(e.message.contains('quoted data row'), e.message)
+  }
 }

@@ -48,6 +48,13 @@ Behaviour changes are marked **(changed)**.
   required), nested relational columns are supported, and a nested `instanceWeightColumn` is written as `{w}`
 - `strict(true)` (or the new `failOnUndeclaredNominalValue(true)`) rejects nominal data values that are not in the
   attribute declaration, as Weka does; the lenient default still accepts them
+- Dense `@DATA` rows may be tab-delimited as well as comma-delimited, as the ARFF specification allows; a run of
+  delimiters and blanks is one separator as in Weka, except that each extra comma still reads as an empty (missing)
+  field **(changed:** an unquoted tab inside a value now separates values, as it does in Weka; the writer has quoted
+  such values since the escaping change in this release**)**
+- Reject single or double quotes that begin in the middle of an unquoted dense-row or nominal-declaration token
+  **(changed:** values such as `it's` were previously accepted unquoted; write them as `'it\'s'`**)**. Blanks after a
+  closing quote are syntax and are no longer appended to the value
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

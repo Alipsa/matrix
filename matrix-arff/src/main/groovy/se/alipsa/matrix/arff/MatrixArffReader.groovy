@@ -32,12 +32,15 @@ class MatrixArffReader {
   private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
   private static final String INVALID_RELATION_LINE = 'Invalid @RELATION line'
   private static final char BACKSLASH_CHAR = '\\'
-  private static final char SINGLE_QUOTE_CHAR = '\''
-  private static final char DOUBLE_QUOTE_CHAR = '"'
   private static final char COMMA_CHAR = ','
   private static final char OPEN_BRACE_CHAR = '{'
   private static final char CLOSE_BRACE_CHAR = '}'
   private static final char PERCENT_CHAR = '%'
+  private static final char SPACE_CHAR = ' '
+  private static final String NOMINAL_DELIMITERS = ','
+  private static final String ROW_DELIMITERS = ',\t'
+  private static final String INVALID_QUOTED = 'Invalid quoted'
+  private static final String QUOTE_MUST_BEGIN_TOKEN = ' (quote must begin a token)'
   private static final String DOT = '.'
   private static final String SLASH = '/'
   private static final String OPEN_BRACE = '{'
@@ -519,7 +522,7 @@ class MatrixArffReader {
 
   private static List<String> parseNominalValues(String valuesStr) {
     List<String> values = []
-    parseDelimitedLine(valuesStr, ',' as char).each { ParsedToken token ->
+    parseDelimitedLine(valuesStr, NOMINAL_DELIMITERS).each { ParsedToken token ->
       values.add(token.quoted ? token.value : token.value.trim())
     }
     values
@@ -531,7 +534,7 @@ class MatrixArffReader {
       return parseSparseDataRow(line, attributes, options, lineNumber, rawLine)
     }
 
-    List<ParsedToken> values = parseDelimitedLine(line, ',' as char, lineNumber, rawLine, 'data row')
+    List<ParsedToken> values = parseDelimitedLine(line, ROW_DELIMITERS, lineNumber, rawLine, 'data row')
     if (options.failOnRowLengthMismatch && values.size() != attributes.size()) {
       throw parseError(
           "Row length mismatch: expected ${attributes.size()} values but found ${values.size()}",
@@ -696,17 +699,23 @@ class MatrixArffReader {
     new ParsedToken(token.value, true)
   }
 
-  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
-    parseDelimitedLine(line, delimiter, 0, line, null)
+  private static List<ParsedToken> parseDelimitedLine(String line, String delimiters) {
+    parseDelimitedLine(line, delimiters, 0, line, null)
   }
 
-  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter, int lineNumber, String rawLine, String context) {
+  /**
+   * Split a dense data row or a nominal declaration body into tokens. A run of delimiters and blanks is one separator
+   * (plus one empty field per extra comma, see {@link #skipDelimiterRun}); a quote must begin a token and only blanks
+   * may follow its closing quote before the next delimiter.
+   */
+  private static List<ParsedToken> parseDelimitedLine(String line, String delimiters, int lineNumber, String rawLine, String context) {
     List<ParsedToken> values = []
     StringBuilder current = new StringBuilder()
     boolean inQuote = false
     char quoteChar = 0
     boolean tokenQuoted = false
     boolean escape = false
+    boolean afterQuotedToken = false
 
     for (int i = 0; i < line.length(); i++) {
       char c = line.charAt(i)
@@ -723,46 +732,79 @@ class MatrixArffReader {
         }
         if (c == quoteChar) {
           inQuote = false
-          tokenQuoted = true
+          afterQuotedToken = true
           continue
         }
         current.append(c)
         continue
       }
 
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        if (current.toString().trim().isEmpty()) {
-          current.setLength(0)
-        } else {
-          current.append(c)
-          continue
-        }
-        inQuote = true
-        quoteChar = c
-        tokenQuoted = true
-        continue
-      }
-      if (c == delimiter) {
+      if (delimiters.indexOf((int) c) >= 0) {
         values.add(new ParsedToken(current.toString(), tokenQuoted))
         current = new StringBuilder()
         tokenQuoted = false
+        afterQuotedToken = false
+        i = skipDelimiterRun(line, i, delimiters, values)
+        continue
+      }
+      if (afterQuotedToken) {
+        if (c <= SPACE_CHAR) {
+          continue
+        }
+        throw delimitedLineError(INVALID_QUOTED, QUOTE_MUST_BEGIN_TOKEN, context, lineNumber, rawLine)
+      }
+      if (ArffScanner.isQuoteChar(c)) {
+        if (!current.toString().trim().isEmpty()) {
+          throw delimitedLineError(INVALID_QUOTED, QUOTE_MUST_BEGIN_TOKEN, context, lineNumber, rawLine)
+        }
+        current.setLength(0)
+        inQuote = true
+        quoteChar = c
+        tokenQuoted = true
         continue
       }
       current.append(c)
     }
 
     if (inQuote) {
-      String detail = context == null ? 'Unterminated quoted value' : "Unterminated quoted $context"
-      if (lineNumber > 0) {
-        throw parseError(detail, lineNumber, rawLine)
-      }
-      throw new IllegalArgumentException(detail)
-    }
-    if (escape) {
-      current.append(BACKSLASH_CHAR)
+      throw delimitedLineError('Unterminated quoted', '', context, lineNumber, rawLine)
     }
     values.add(new ParsedToken(current.toString(), tokenQuoted))
     values
+  }
+
+  private static IllegalArgumentException delimitedLineError(String problem, String suffix, String context,
+                                                             int lineNumber, String rawLine) {
+    String detail = "$problem ${context ?: 'value'}$suffix"
+    lineNumber > 0 ? parseError(detail, lineNumber, rawLine) : new IllegalArgumentException(detail)
+  }
+
+  /**
+   * Consume the run of delimiters and blanks (characters {@code <= ' '}) that starts with the delimiter at
+   * {@code start}. Weka's tokenizer collapses such a run into a single separator; this reader additionally keeps the
+   * lenient reading of {@code 1,,3} as an empty (missing) field, so every comma after the first one in the run adds
+   * one empty token, while tabs and spaces never do.
+   *
+   * @return the index of the last character consumed
+   */
+  private static int skipDelimiterRun(String line, int start, String delimiters, List<ParsedToken> values) {
+    int commas = line.charAt(start) == COMMA_CHAR ? 1 : 0
+    int i = start + 1
+    while (i < line.length()) {
+      char c = line.charAt(i)
+      boolean isDelimiter = delimiters.indexOf((int) c) >= 0
+      if (!isDelimiter && c > SPACE_CHAR) {
+        break
+      }
+      if (c == COMMA_CHAR) {
+        commas++
+      }
+      i++
+    }
+    for (int extra = 1; extra < commas; extra++) {
+      values.add(new ParsedToken('', false))
+    }
+    i - 1
   }
 
   private static Object convertValue(String value, ArffAttribute attr, boolean quoted, ArffReadOptions options,
