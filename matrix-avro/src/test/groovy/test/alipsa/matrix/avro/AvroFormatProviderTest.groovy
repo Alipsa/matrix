@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+import org.apache.avro.Schema
+import org.apache.avro.file.DataFileReader
+import org.apache.avro.generic.GenericDatumReader
+import org.apache.avro.generic.GenericRecord
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -12,6 +16,8 @@ import se.alipsa.matrix.avro.AvroFormatProvider
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroReader
+import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
@@ -126,9 +132,9 @@ class AvroFormatProviderTest {
 
     source.write([inferPrecisionAndScale: ' false '], file)
 
-    org.apache.avro.Schema schema = se.alipsa.matrix.avro.MatrixAvroReader.schema(file)
-    org.apache.avro.Schema amount = schema.getField('amount').schema().types[1]
-    assertEquals(org.apache.avro.Schema.Type.DOUBLE, amount.type)
+    Schema schema = MatrixAvroReader.schema(file)
+    Schema amount = schema.getField('amount').schema().types[1]
+    assertEquals(Schema.Type.DOUBLE, amount.type)
   }
 
   @Test
@@ -151,8 +157,8 @@ class AvroFormatProviderTest {
     Map<String, ?> roundTrip = options.toMap()
 
     assertEquals('OrdersView', roundTrip.matrixName)
-    assertTrue(roundTrip.readerSchema instanceof org.apache.avro.Schema)
-    assertEquals('ProjectedOrders', (roundTrip.readerSchema as org.apache.avro.Schema).name)
+    assertTrue(roundTrip.readerSchema instanceof Schema)
+    assertEquals('ProjectedOrders', (roundTrip.readerSchema as Schema).name)
   }
 
   @Test
@@ -168,9 +174,9 @@ class AvroFormatProviderTest {
     File file = tempDir.resolve('orders-schema-default.avro').toFile()
     source.write([inferPrecisionAndScale: true], file)
 
-    def reader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+    def reader = new DataFileReader<GenericRecord>(
         file,
-        new org.apache.avro.generic.GenericDatumReader<>()
+        new GenericDatumReader<>()
     )
     try {
       assertEquals('orders', reader.schema.name)
@@ -193,19 +199,19 @@ class AvroFormatProviderTest {
     File typedFile = tempDir.resolve('orders-typed.avro').toFile()
 
     source.write([inferPrecisionAndScale: true], spiFile)
-    se.alipsa.matrix.avro.MatrixAvroWriter.write(
+    MatrixAvroWriter.write(
         source,
         typedFile,
         new AvroWriteOptions().inferPrecisionAndScale(true)
     )
 
-    def spiReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+    def spiReader = new DataFileReader<GenericRecord>(
         spiFile,
-        new org.apache.avro.generic.GenericDatumReader<>()
+        new GenericDatumReader<>()
     )
-    def typedReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+    def typedReader = new DataFileReader<GenericRecord>(
         typedFile,
-        new org.apache.avro.generic.GenericDatumReader<>()
+        new GenericDatumReader<>()
     )
     try {
       assertEquals('orders', spiReader.schema.name)
@@ -276,7 +282,7 @@ class AvroFormatProviderTest {
         .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
         .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
 
-    se.alipsa.matrix.avro.MatrixAvroWriter.write(source, directFile, typed)
+    MatrixAvroWriter.write(source, directFile, typed)
     source.write([
         columnSchemas: [
             amount: [kind: 'decimal', precision: 12, scale: 2],
@@ -285,13 +291,13 @@ class AvroFormatProviderTest {
         ]
     ], spiFile)
 
-    def directReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+    def directReader = new DataFileReader<GenericRecord>(
         directFile,
-        new org.apache.avro.generic.GenericDatumReader<>()
+        new GenericDatumReader<>()
     )
-    def spiReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+    def spiReader = new DataFileReader<GenericRecord>(
         spiFile,
-        new org.apache.avro.generic.GenericDatumReader<>()
+        new GenericDatumReader<>()
     )
     try {
       assertEquals(directReader.schema.toString(true), spiReader.schema.toString(true))
@@ -303,7 +309,7 @@ class AvroFormatProviderTest {
 
   @Test
   void testInvalidColumnSchemaDeclarationFailsFast() {
-    IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException) {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
       AvroWriteOptions.fromMap([
           columnSchemas: [
               amount: [kind: 'decimal', precision: 8]

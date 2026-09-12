@@ -6,6 +6,7 @@
 - `BigInteger` is now lossless `bytes` `decimal(precision, 0)`, marked with `se.alipsa.matrix.javaType: java.math.BigInteger`; it is no longer narrowed to `long`. Generic consumers should read this as a standard decimal, and Matrix reader schemas that omit the marker read it as `BigDecimal`.
 - Decimal writes accept mixed finite integral, `BigInteger`, `BigDecimal`, `Double`, and `Float` values. A `BigInteger` forces lossless decimal storage even when decimal inference is disabled; nested BigDecimal positions use decimal inference when enabled. Declared decimal schemas round to their declared scale using `HALF_UP` before precision validation.
 - SPI `inferPrecisionAndScale` now parses Booleans and trimmed case-insensitive `true`/`false` strings strictly; strings such as `false` no longer use Groovy truthiness.
+- Write-time `AvroSchemaException`s (for example a non-finite value reaching a declared decimal or long column) now carry the 0-based row number, available through `getRowNumber()`, alongside the column name.
 - Dependency upgrades
   - org.apache.avro:avro 1.12.1 -> 1.12.2
 ## v0.3.0 2026-05-01

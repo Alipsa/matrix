@@ -374,6 +374,91 @@ class MatrixAvroRoundTripTest {
     tmp.delete()
   }
 
+  @Test
+  void roundTrip_scalarBigIntegerMixedWithDecimalAndFloatingUsesUnmarkedDecimal() {
+    Matrix source = Matrix.builder('ScalarMixedBigInteger')
+        .columns(value: [7g, 1.5g, 2.5d, 3.5f, null])
+        .types(Object)
+        .build()
+
+    [false, true].each { boolean infer ->
+      byte[] bytes = MatrixAvroWriter.writeBytes(source, infer)
+      Schema valueSchema = MatrixAvroReader.schema(bytes).getField('value').schema().types[1]
+      assertEquals(Schema.Type.BYTES, valueSchema.type, "infer=$infer")
+      assertEquals('decimal', valueSchema.logicalType.name, "infer=$infer")
+      assertEquals(1, valueSchema.logicalType.scale, "infer=$infer")
+      assertNull(valueSchema.getProp('se.alipsa.matrix.javaType'), "infer=$infer")
+
+      Matrix result = MatrixAvroReader.read(bytes)
+      [7.0g, 1.5g, 2.5g, 3.5g].eachWithIndex { BigDecimal expected, int index ->
+        assertEquals(expected, result[index, 'value'], "infer=$infer row=$index")
+        assertTrue(result[index, 'value'] instanceof BigDecimal, "infer=$infer row=$index")
+      }
+      assertNull(result[4, 'value'])
+    }
+  }
+
+  @Test
+  void roundTrip_nestedBigIntegerMixedWithDecimalAndFloatingUsesUnmarkedDecimal() {
+    Matrix source = Matrix.builder('NestedMixedBigInteger')
+        .columns(values: [[7g, 1.5g], [8g, 2.5d], [9g, 3.5f], null])
+        .types(Object)
+        .build()
+
+    [false, true].each { boolean infer ->
+      byte[] bytes = MatrixAvroWriter.writeBytes(source, infer)
+      Schema elementSchema = MatrixAvroReader.schema(bytes).getField('values').schema().types[1].elementType
+      elementSchema = elementSchema.types.find { it.type != Schema.Type.NULL }
+      assertEquals(Schema.Type.BYTES, elementSchema.type, "infer=$infer")
+      assertEquals('decimal', elementSchema.logicalType.name, "infer=$infer")
+      assertEquals(1, elementSchema.logicalType.scale, "infer=$infer")
+      assertNull(elementSchema.getProp('se.alipsa.matrix.javaType'), "infer=$infer")
+
+      Matrix result = MatrixAvroReader.read(bytes)
+      [[7.0g, 1.5g], [8.0g, 2.5g], [9.0g, 3.5g]].eachWithIndex { List<BigDecimal> expected, int index ->
+        assertEquals(expected, result[index, 'values'], "infer=$infer row=$index")
+      }
+      assertNull(result[3, 'values'])
+    }
+  }
+
+  @Test
+  void roundTrip_allNullScalarBigIntegerUsesPrecision10Default() {
+    Matrix source = Matrix.builder('AllNullScalarBigInteger')
+        .columns(value: [null, null])
+        .types(BigInteger)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeBytes(source, false)
+    Schema valueSchema = MatrixAvroReader.schema(bytes).getField('value').schema().types[1]
+    assertEquals(Schema.Type.BYTES, valueSchema.type)
+    assertEquals('decimal', valueSchema.logicalType.name)
+    assertEquals(10, valueSchema.logicalType.precision)
+    assertEquals(0, valueSchema.logicalType.scale)
+    assertEquals('java.math.BigInteger', valueSchema.getProp('se.alipsa.matrix.javaType'))
+
+    Matrix result = MatrixAvroReader.read(bytes)
+    assertEquals(2, result.rowCount())
+    assertNull(result[0, 'value'])
+    assertNull(result[1, 'value'])
+  }
+
+  @Test
+  void roundTrip_allNullNestedPositionsUseStringElementsWithoutTypeEvidence() {
+    Matrix source = Matrix.builder('AllNullNested')
+        .columns(values: [[null], [null, null]])
+        .types(Object)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeBytes(source, false)
+    Schema elementSchema = MatrixAvroReader.schema(bytes).getField('values').schema().types[1].elementType
+    assertEquals(Schema.Type.STRING, elementSchema.types.find { it.type != Schema.Type.NULL }.type)
+
+    Matrix result = MatrixAvroReader.read(bytes)
+    assertEquals([null], result[0, 'values'])
+    assertEquals([null, null], result[1, 'values'])
+  }
+
   // --- helpers ---
   private static LocalTime truncMillis(LocalTime t) {
     if (t == null) {

@@ -34,4 +34,19 @@ class DecimalColumnProfileTest {
     assertEquals(6, profile.precision)
     assertEquals(2, profile.scale)
   }
+
+  @Test
+  void testMergesProfilesWithoutLosingIntegerDigitsOrScale() {
+    DecimalColumnProfile smallScale = DecimalColumnProfile.profile([123.4g])    // precision 4, scale 1 (3 integer digits)
+    DecimalColumnProfile longInteger = DecimalColumnProfile.profile([1234g])    // precision 4, scale 0 (4 integer digits)
+    DecimalColumnProfile empty = DecimalColumnProfile.profile([null])
+
+    DecimalColumnProfile merged = smallScale.merge(longInteger)
+    assertEquals(5, merged.precision)
+    assertEquals(1, merged.scale)
+
+    assertSame(smallScale, smallScale.merge(empty))
+    assertSame(longInteger, empty.merge(longInteger))
+    assertSame(smallScale, smallScale.merge(null))
+  }
 }

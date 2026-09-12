@@ -864,6 +864,7 @@ class MatrixAvroWriterTest {
         MatrixAvroWriter.write(m, tmp)
       }
       assertEquals('props', ex.columnName)
+      assertEquals(1, ex.rowNumber)
       assertEquals('UNION[NULL, RECORD]', ex.expectedType)
       assertEquals('ArrayList', ex.actualType)
       assertTrue(ex.message.contains('expected'))
@@ -933,6 +934,129 @@ class MatrixAvroWriterTest {
     assertFalse(isCompatible(longSchema, Double.POSITIVE_INFINITY))
     assertTrue(isCompatible(longSchema, 42))
     assertTrue(isCompatible(longSchema, 42L))
+  }
+
+  @Test
+  void bigIntegerValuesFittingInLongStillUseMarkedDecimalSchema() {
+    Matrix fitsLong = Matrix.builder('FitsLong')
+        .columns(value: [7g, 42g, null])
+        .types(BigInteger)
+        .build()
+
+    [false, true].each { boolean infer ->
+      Schema valueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(fitsLong, infer), 'value')
+      assertEquals(Schema.Type.BYTES, valueSchema.type, "infer=$infer")
+      assertEquals('decimal', valueSchema.logicalType.name, "infer=$infer")
+      assertEquals(0, valueSchema.logicalType.scale, "infer=$infer")
+      assertEquals(2, valueSchema.logicalType.precision, "infer=$infer")
+      assertEquals('java.math.BigInteger', valueSchema.getProp('se.alipsa.matrix.javaType'), "infer=$infer")
+    }
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(fitsLong, false))
+    assertEquals([7g, 42g, null], (0..<3).collect { result[it, 'value'] })
+  }
+
+  @Test
+  void allNullAndEmptyBigIntegerColumnsDefaultToPrecision10MarkedDecimal() {
+    Matrix allNull = Matrix.builder('AllNullBigInteger')
+        .columns(value: [null, null])
+        .types(BigInteger)
+        .build()
+    Matrix zeroRows = Matrix.builder('EmptyBigInteger')
+        .columns(value: [])
+        .types(BigInteger)
+        .build()
+
+    [allNull, zeroRows].each { Matrix matrix ->
+      Schema valueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(matrix, false), 'value')
+      assertEquals(Schema.Type.BYTES, valueSchema.type)
+      assertEquals('decimal', valueSchema.logicalType.name)
+      assertEquals(10, valueSchema.logicalType.precision)
+      assertEquals(0, valueSchema.logicalType.scale)
+      assertEquals('java.math.BigInteger', valueSchema.getProp('se.alipsa.matrix.javaType'))
+    }
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(allNull, false))
+    assertEquals([null, null], (0..<2).collect { result[it, 'value'] })
+  }
+
+  @Test
+  void declaredLongSchemaRejectsOutOfRangeValuesWithRowContext() {
+    BigInteger beyondLong = new BigInteger('92233720368547758081234567890')
+    [beyondLong, 1e19d].each { Number outOfRange ->
+      Matrix matrix = Matrix.builder('LongOutOfRange')
+          .columns(count: [1L, outOfRange])
+          .types(Object)
+          .build()
+
+      AvroSchemaException exception = assertThrows(AvroSchemaException) {
+        MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults().columnSchema('count', AvroSchemaDecl.type(Long)))
+      }
+      assertEquals('count', exception.columnName)
+      assertEquals(1, exception.rowNumber)
+      assertTrue(exception.message.contains('row: 1'))
+    }
+  }
+
+  @Test
+  void matrixDeclaredLongColumnRejectsFractionalValuesWithRowContext() {
+    Matrix matrix = Matrix.builder('DeclaredLongColumn')
+        .columns(count: [1L, 2.5g])
+        .types(Long)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix)
+    }
+    assertEquals('count', exception.columnName)
+    assertEquals(1, exception.rowNumber)
+
+    Matrix integral = Matrix.builder('DeclaredLongIntegral')
+        .columns(count: [1, 2.0d])
+        .types(Long)
+        .build()
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(integral))
+    assertEquals([1L, 2L], (0..<2).collect { result[it, 'count'] })
+  }
+
+  @Test
+  void nonFiniteDeclaredLongValueFailureIncludesRowContext() {
+    Matrix matrix = Matrix.builder('NonFiniteLong')
+        .columns(count: [1L, Double.NaN])
+        .types(Long)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix)
+    }
+    assertEquals('count', exception.columnName)
+    assertEquals(1, exception.rowNumber)
+  }
+
+  @Test
+  void mapValueProfileIsMergedFromRecordFieldProfiles() {
+    Matrix matrix = Matrix.builder('MergedMapProfile')
+        .columns(props: [[x: 5g], [y: 9g, z: 1.5g]])
+        .types(Object)
+        .build()
+
+    [false, true].each { boolean infer ->
+      Schema propsSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(matrix, infer), 'props')
+      assertEquals(Schema.Type.MAP, propsSchema.type, "infer=$infer")
+      Schema valueSchema = propsSchema.getValueType()
+      if (valueSchema.getType() == Schema.Type.UNION) {
+        valueSchema = valueSchema.types.find { it.type != Schema.Type.NULL }
+      }
+      assertEquals(Schema.Type.BYTES, valueSchema.type, "infer=$infer")
+      assertEquals('decimal', valueSchema.logicalType.name, "infer=$infer")
+      assertEquals(1, valueSchema.logicalType.scale, "infer=$infer")
+      assertNull(valueSchema.getProp('se.alipsa.matrix.javaType'), "infer=$infer")
+    }
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(matrix, false))
+    assertEquals(5.0g, (result[0, 'props'] as Map).x)
+    assertEquals(9.0g, (result[1, 'props'] as Map).y)
+    assertEquals(1.5g, (result[1, 'props'] as Map).z)
   }
 
   // Helper: unwrap ['null', T] to T

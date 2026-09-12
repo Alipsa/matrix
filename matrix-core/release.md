@@ -33,7 +33,7 @@
 - `Stat.means(Matrix, List<String>)` now returns non-null results at the same default scale of 16 as `Stat.mean(List)`.
 - `ValueConverter.isNumeric(CharSequence)` now parses with `Locale.ROOT` instead of the default locale: `'1,234.5'` is numeric and locale-specific grouping such as `'1 234'` (non-breaking space) is not. Pass an explicit `NumberFormat` to parse with other locale conventions.
 - `MatrixBuilder.csvString` handles comment-only input explicitly: without a header row, a `#types:` directive establishes an empty schema and generated column names; with `firstRowAsHeader: true`, a clear missing-header exception is thrown. Missing indexed columns and completely empty CSV input also produce specific validation errors.
-- Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns.
+- Added `DecimalColumnProfile` as the shared precision/scale inference rule for decimal-valued columns. It profiles iterables via `profile(...)`, streams values incrementally via `include(Number)` without materializing the column, and combines partial profiles via `merge(...)`.
 - `Matrix.hashCode()` now normalizes numerically equivalent cell values so matrices equal under the default comparison have the same hash code.
 - Preserved Java source compatibility for map-based APIs accepting `Map<String, List>` in `MatrixBuilder.columns`, `MatrixBuilder.data`, `Matrix.and`, and `Matrix.builder(Map, List<Class>, String)`, while continuing to accept typed list maps.
 - Restored the Java-convenience helper shapes of `Columns` and `CollectionUtils.m(...)` so existing raw-map assignments and entry iteration continue to compile.

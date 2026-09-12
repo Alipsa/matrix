@@ -56,4 +56,24 @@ final class DecimalColumnProfile {
     int maxIntegerDigits = Math.max(hasValues ? precision - scale : 0, integerDigits)
     new DecimalColumnProfile(maxIntegerDigits + maxScale, maxScale, true)
   }
+
+  /**
+   * Returns a profile that can represent every value of this profile and the supplied profile.
+   * Profiles without values are ignored, so merging with an empty profile returns the
+   * value-bearing side.
+   *
+   * @param other the profile to combine with this one (may be null or valueless)
+   * @return a profile accommodating both profiles' values
+   */
+  DecimalColumnProfile merge(DecimalColumnProfile other) {
+    if (other == null || !other.hasValues) {
+      return this
+    }
+    if (!hasValues) {
+      return other
+    }
+    int mergedScale = Math.max(scale, other.scale)
+    int mergedIntegerDigits = Math.max(precision - scale, other.precision - other.scale)
+    new DecimalColumnProfile(Math.max(1, mergedIntegerDigits) + mergedScale, mergedScale, true)
+  }
 }

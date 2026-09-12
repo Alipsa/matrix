@@ -590,10 +590,15 @@ class MatrixAvroWriter {
       fieldSchemas.put(f.name(), f.schema())
     }
     List<String> cols = matrix.columnNames()
+    int[] colIndexes = new int[cols.size()]
+    for (int i = 0; i < cols.size(); i++) {
+      colIndexes[i] = matrix.columnIndex(cols.get(i))
+    }
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
-      for (String col : cols) {
-        Object v = matrix[r, col]
+      for (int c = 0; c < cols.size(); c++) {
+        String col = cols.get(c)
+        Object v = matrix.get(r, colIndexes[c])
         Schema fs = fieldSchemas.get(col)
         try {
           if (!isCompatible(fs, v)) {
@@ -606,7 +611,7 @@ class MatrixAvroWriter {
           }
           rec.put(col, toAvroValue(fs, v, decConv, col))
         } catch (AvroSchemaException e) {
-          throw e
+          throw e.withRowNumber(r)
         } catch (Exception e) {
           throw new AvroConversionException(
               'Failed to convert value to Avro format',
@@ -750,7 +755,7 @@ class MatrixAvroWriter {
   }
   private static Object toLongAvroValue(Object v, String columnName) {
     if (Number.isInstance(v)) {
-      if (Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v) || Long.isInstance(v)) {
+      if (NumericKinds.isDirectLong(v)) {
         return ((Number) v).longValue()
       }
       return decimalValue((Number) v, columnName).longValueExact()
@@ -824,9 +829,10 @@ class MatrixAvroWriter {
   }
   private static void scanUntypedColumn(Matrix matrix, String col, ColumnProfile profile) {
     TypeScanState state = new TypeScanState()
+    int colIndex = matrix.columnIndex(col)
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
-      Object v = matrix[r, col]
+      Object v = matrix.get(r, colIndex)
       if (v == null) {
         continue
       }
@@ -838,27 +844,21 @@ class MatrixAvroWriter {
       }
     }
     if (!state.fixedType) {
-      profile.effectiveType = resolveUnfixedType(state)
+      profile.effectiveType = state.numerics.hasValues() ? state.numerics.schemaClass() : String
     }
   }
   private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state) {
     if (BigDecimal.isInstance(v)) {
-      state.sawBigDecimal = true
+      state.numerics.include((Number) v, (BigDecimal) v)
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
-      decimalValue((Number) v, profile.name)
-      state.sawFloat = true
+      BigDecimal decimal = decimalValue((Number) v, profile.name)
+      state.numerics.include((Number) v, decimal)
       return false
     }
-    if (isIntegralValue(v)) {
-      state.sawIntegral = true
-      if (BigInteger.isInstance(v)) {
-        state.sawBigInteger = true
-      }
-      if (needsLongStorage(v)) {
-        state.needsLong = true
-      }
+    if (NumericKinds.isIntegral(v)) {
+      state.numerics.include((Number) v, decimalValue((Number) v, profile.name))
       return false
     }
     if (isFixedScalarValue(v)) {
@@ -895,17 +895,6 @@ class MatrixAvroWriter {
     }
     false
   }
-  private static boolean isIntegralValue(Object v) {
-    Byte.isInstance(v) || Short.isInstance(v) || Integer.isInstance(v)
-        || Long.isInstance(v) || BigInteger.isInstance(v)
-  }
-  private static boolean needsLongStorage(Object v) {
-    if (BigInteger.isInstance(v)) {
-      return true
-    }
-    long lv = ((Number) v).longValue()
-    lv < Integer.MIN_VALUE || lv > Integer.MAX_VALUE || Long.isInstance(v) || BigInteger.isInstance(v)
-  }
   private static boolean isFixedScalarValue(Object v) {
     String.isInstance(v) || Boolean.isInstance(v) || byte[].isInstance(v)
         || java.sql.Date.isInstance(v) || Time.isInstance(v) || Date.isInstance(v)
@@ -913,27 +902,8 @@ class MatrixAvroWriter {
         || Instant.isInstance(v) || LocalDateTime.isInstance(v)
         || UUID.isInstance(v)
   }
-  private static Class<?> resolveUnfixedType(TypeScanState state) {
-    if (state.sawBigDecimal) {
-      return BigDecimal
-    }
-    if (state.sawFloat) {
-      return state.sawBigInteger ? BigDecimal : Double
-    }
-    if (state.sawIntegral) {
-      if (state.sawBigInteger) {
-        return BigInteger
-      }
-      return state.needsLong ? Long : Integer
-    }
-    String
-  }
   private static final class TypeScanState {
-    boolean sawBigDecimal
-    boolean sawFloat
-    boolean sawIntegral
-    boolean sawBigInteger
-    boolean needsLong
+    final NestedNumericProfile numerics = new NestedNumericProfile()
     boolean fixedType
   }
   private static void profileDecimalColumn(Matrix matrix, String col, ColumnProfile profile) {
@@ -947,18 +917,20 @@ class MatrixAvroWriter {
     }
   }
   private static void scanListElement(Matrix matrix, String col, ColumnProfile profile) {
+    int colIndex = matrix.columnIndex(col)
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
-      def v = matrix[r, col]
+      def v = matrix.get(r, colIndex)
       if (List.isInstance(v)) {
         scanListElementValue((List) v, profile)
       }
     }
   }
   private static void scanMapDetails(Matrix matrix, String col, ColumnProfile profile) {
+    int colIndex = matrix.columnIndex(col)
     int rows = matrix.rowCount()
     for (int r = 0; r < rows; r++) {
-      def v = matrix[r, col]
+      def v = matrix.get(r, colIndex)
       if (Map.isInstance(v)) {
         scanMapValue((Map) v, profile)
       }
@@ -1002,17 +974,6 @@ class MatrixAvroWriter {
         }
       }
     }
-    map.values().each { Object value ->
-      if (Number.isInstance(value)) {
-        BigDecimal decimal = decimalValue((Number) value, "${profile.name} map value")
-        if (profile.mapValueNumericProfile == null) {
-          profile.mapValueNumericProfile = new NestedNumericProfile()
-        }
-        profile.mapValueNumericProfile.include((Number) value, decimal)
-      } else if (value != null) {
-        profile.mapValuesHaveNonNumeric = true
-      }
-    }
     map.each { key, value ->
       String fieldName = String.valueOf(key)
       if (value != null && !profile.recordFieldClasses.containsKey(fieldName)) {
@@ -1035,14 +996,18 @@ class MatrixAvroWriter {
     if (profile.listNumericProfile != null && !profile.listHasNonNumeric) {
       profile.listElemClass = profile.listNumericProfile.schemaClass()
     }
-    if (profile.mapValueNumericProfile != null && !profile.mapValuesHaveNonNumeric) {
-      profile.mapValueClass = profile.mapValueNumericProfile.schemaClass()
-    }
     if (profile.recordLike) {
+      // record schemas use the per-field profiles; the whole-map profile is never read
+      profile.mapValueNumericProfile = null
       profile.recordNumericProfiles.each { String fieldName, NestedNumericProfile numericProfile ->
         if (!profile.recordHasNonNumeric[fieldName]) {
           profile.recordFieldClasses[fieldName] = numericProfile.schemaClass()
         }
+      }
+    } else {
+      profile.mapValueNumericProfile = NestedNumericProfile.merge(profile.recordNumericProfiles.values())
+      if (profile.mapValueNumericProfile != null && !profile.mapValuesHaveNonNumeric) {
+        profile.mapValueClass = profile.mapValueNumericProfile.schemaClass()
       }
     }
   }
@@ -1147,7 +1112,7 @@ class MatrixAvroWriter {
     if (!Number.isInstance(value)) {
       return false
     }
-    if (Byte.isInstance(value) || Short.isInstance(value) || Integer.isInstance(value) || Long.isInstance(value)) {
+    if (NumericKinds.isDirectLong(value)) {
       return true
     }
     try {
