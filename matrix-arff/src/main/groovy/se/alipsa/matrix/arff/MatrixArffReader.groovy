@@ -21,8 +21,8 @@ import java.util.regex.Pattern
  */
 class MatrixArffReader {
 
-  private static final Pattern DATE_FORMAT_PATTERN =
-      Pattern.compile(/(?i)date\s*(?:'(?<singleQuoted>[^']*)'|"(?<doubleQuoted>[^"]*)")?/)
+  private static final Pattern DATE_TYPE_PATTERN = Pattern.compile(/(?i)^date(?:\s+(.*))?$/)
+  private static final String INVALID_DATE_FORMAT = 'Invalid @ATTRIBUTE DATE format'
   private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
   private static final String ATTRIBUTE_KEYWORD = '@ATTRIBUTE'
   private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
@@ -332,12 +332,9 @@ class MatrixArffReader {
       return new ArffAttribute(name, ArffType.NOMINAL, String, nominalValues)
     }
 
-    if (upperType.startsWith('DATE')) {
-      String dateFormat = null
-      Matcher dateMatcher = DATE_FORMAT_PATTERN.matcher(typeSpec)
-      if (dateMatcher.find()) {
-        dateFormat = dateMatcher.group('singleQuoted') ?: dateMatcher.group('doubleQuoted')
-      }
+    Matcher dateMatcher = DATE_TYPE_PATTERN.matcher(typeSpec)
+    if (dateMatcher.matches()) {
+      String dateFormat = parseDateFormat(dateMatcher.group(1), lineNumber, rawLine)
       return new ArffAttribute(name, ArffType.DATE, Date, null, dateFormat)
     }
 
@@ -352,6 +349,33 @@ class MatrixArffReader {
         yield new ArffAttribute(name, ArffType.STRING, String)
       }
     }
+  }
+
+  /**
+   * Parse the optional format after the {@code date} keyword. Weka reads it as a single token, so both
+   * {@code date 'yyyy-MM-dd\'T\'HH:mm:ss'} (escaped quotes) and {@code date yyyy-MM-dd} (unquoted) are valid.
+   *
+   * @return the format pattern, or null when none was given (the default pattern applies)
+   */
+  private static String parseDateFormat(String formatSpec, int lineNumber, String rawLine) {
+    String spec = formatSpec?.trim()
+    if (spec == null || spec.isEmpty()) {
+      return null
+    }
+    if (ArffScanner.isQuoteChar(spec.charAt(0))) {
+      ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(spec, 0)
+      if (token == null) {
+        throw parseError("$INVALID_DATE_FORMAT (missing closing quote)", lineNumber, rawLine)
+      }
+      if (!spec.substring(token.end).trim().isEmpty()) {
+        throw parseError("$INVALID_DATE_FORMAT (unexpected text after format)", lineNumber, rawLine)
+      }
+      return token.value
+    }
+    if (indexOfWhitespace(spec) >= 0) {
+      throw parseError("$INVALID_DATE_FORMAT (unexpected text after format)", lineNumber, rawLine)
+    }
+    spec
   }
 
   private static List<String> parseNominalValues(String valuesStr) {
@@ -407,7 +431,7 @@ class MatrixArffReader {
         throw parseError('Invalid sparse ARFF row (empty entry)', lineNumber, rawLine)
       }
 
-      int splitIndex = findSparseEntryValueStart(entry)
+      int splitIndex = indexOfWhitespace(entry)
       if (splitIndex < 0) {
         throw parseError("Invalid sparse ARFF sparse entry '$entry'", lineNumber, rawLine)
       }
@@ -463,9 +487,9 @@ class MatrixArffReader {
     entries
   }
 
-  private static int findSparseEntryValueStart(String entry) {
-    for (int i = 0; i < entry.length(); i++) {
-      if (Character.isWhitespace(entry.charAt(i))) {
+  private static int indexOfWhitespace(String text) {
+    for (int i = 0; i < text.length(); i++) {
+      if (Character.isWhitespace(text.charAt(i))) {
         return i
       }
     }

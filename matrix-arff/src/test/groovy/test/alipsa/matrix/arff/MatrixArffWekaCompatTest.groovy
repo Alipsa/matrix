@@ -6,10 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.ArffWriteOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
+
+import java.time.Instant
 
 /**
  * Tests that the ARFF dialect written and read by matrix-arff matches Weka's (weka.core.Utils and
@@ -103,5 +106,67 @@ class MatrixArffWekaCompatTest {
     }
     assertTrue(e.message.contains('@RELATION'), e.message)
     assertTrue(e.message.contains('line 1'), e.message)
+  }
+
+  @Test
+  void defaultDateFormatRoundTripsThroughWriterAndReader() {
+    Date created = Date.from(Instant.parse('2026-03-18T14:15:16Z'))
+    Matrix m = Matrix.builder('dates').columns(created: [created]).types([Date]).build()
+
+    String arff = MatrixArffWriter.writeString(m)
+    assertTrue(arff.contains("@ATTRIBUTE created DATE 'yyyy-MM-dd\\'T\\'HH:mm:ss'"), arff)
+
+    Matrix back = MatrixArffReader.readString(arff)
+    assertEquals(created, back[0, 'created'])
+  }
+
+  @Test
+  void wekaStyleEscapedDateFormatIsRead() {
+    String arff = '''
+@RELATION d
+@ATTRIBUTE when date 'yyyy-MM-dd\\'T\\'HH:mm:ss'
+@ATTRIBUTE other date "yyyy-MM-dd'T'HH:mm"
+@DATA
+'2026-03-18T14:15:16','2026-03-18T14:15'
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals(Date.from(Instant.parse('2026-03-18T14:15:16Z')), m[0, 'when'])
+    assertEquals(Date.from(Instant.parse('2026-03-18T14:15:00Z')), m[0, 'other'])
+  }
+
+  @Test
+  void unquotedDateFormatIsRead() {
+    String arff = '''
+@RELATION d
+@ATTRIBUTE when date yyyy-MM-dd
+@ATTRIBUTE noFormat DATE
+@DATA
+2026-03-18,'2026-03-18T14:15:16'
+'''.trim()
+
+    Matrix m = MatrixArffReader.readString(arff)
+
+    assertEquals(Date.from(Instant.parse('2026-03-18T00:00:00Z')), m[0, 'when'])
+    assertEquals(Date.from(Instant.parse('2026-03-18T14:15:16Z')), m[0, 'noFormat'])
+  }
+
+  @Test
+  void trailingTextAfterDateFormatIsAParseError() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString("@RELATION d\n@ATTRIBUTE when date 'yyyy-MM-dd' extra\n@DATA\n2026-03-18\n")
+    }
+    assertTrue(e.message.contains('DATE format'), e.message)
+    assertTrue(e.message.contains('line 2'), e.message)
+  }
+
+  @Test
+  void typeStartingWithDateButNotDateIsUnknown() {
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString('@RELATION d\n@ATTRIBUTE x DATETIME\n@DATA\n1\n',
+          new ArffReadOptions().failOnUnknownAttributeType(true))
+    }
+    assertTrue(e.message.contains("Unknown @ATTRIBUTE type 'DATETIME'"), e.message)
   }
 }

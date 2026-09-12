@@ -12,6 +12,10 @@ Behaviour changes are marked **(changed)**.
   **(changed:** `\n` previously decoded to the letter `n`**)**
 - Fix `@RELATION '` (lone quote) throwing `StringIndexOutOfBoundsException`; it is now an `IllegalArgumentException`
   with line context
+- Fix DATE attribute formats containing escaped quotes (`date 'yyyy-MM-dd\'T\'HH:mm:ss'`, the form Weka and this
+  module write for the default pattern) failing to parse; a Date column written with default options now round-trips
+- Accept unquoted DATE formats (`date yyyy-MM-dd`) as Weka does; trailing text after the format is now a parse error
+- `DATETIME` and other types merely starting with `date` are no longer treated as DATE
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips
