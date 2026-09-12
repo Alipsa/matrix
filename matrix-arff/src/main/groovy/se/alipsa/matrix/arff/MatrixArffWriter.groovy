@@ -19,13 +19,7 @@ class MatrixArffWriter {
   private static final String MATRIX_NULL_MESSAGE = 'Matrix cannot be null'
   private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
   private static final String COMMA = ','
-  private static final String SPACE = ' '
   private static final String QUESTION_MARK = '?'
-  private static final String PERCENT = '%'
-  private static final String APOSTROPHE = "'"
-  private static final String DOUBLE_QUOTE = '"'
-  private static final String OPEN_BRACE = '{'
-  private static final String CLOSE_BRACE = '}'
   private static final String BACKSLASH = '\\'
   private static final String UNDERSCORE = '_'
   private static final String DOUBLE_DOT = '..'
@@ -197,7 +191,7 @@ class MatrixArffWriter {
       case ArffTypeDecl.STRING -> new ArffAttributeInfo(ArffTypeDecl.STRING, 'STRING')
       case ArffTypeDecl.DATE -> {
         String dateFormat = resolveDateFormat(colName, options)
-        yield new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${escapeQuotedContent(dateFormat)}'", null, dateFormat)
+        yield new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${ArffEscapes.escape(dateFormat)}'", null, dateFormat)
       }
       case ArffTypeDecl.NOMINAL -> {
         List<String> nominalValues = nominalValuesForColumn(matrix, colName, colType, options)
@@ -359,33 +353,19 @@ class MatrixArffWriter {
       Date date = Date.from((Instant) value)
       return "'${sdf.format(date)}'"
     }
-    "'${escapeQuotedContent(value.toString())}'"
+    ArffEscapes.quote(value.toString())
   }
 
   private static String escapeIdentifier(String name) {
-    if (name.contains(SPACE) || name.contains(COMMA) || name.contains(OPEN_BRACE) ||
-        name.contains(CLOSE_BRACE) || name.contains(PERCENT) || name.contains(APOSTROPHE) ||
-        name.contains(DOUBLE_QUOTE)) {
-      return "'${escapeQuotedContent(name)}'"
-    }
-    name
+    ArffEscapes.quoteIfNeeded(name)
   }
 
   private static String escapeNominalValue(String value) {
-    if (value.isEmpty() || value == QUESTION_MARK || value.startsWith(PERCENT) ||
-        value.contains(COMMA) || value.contains(SPACE) || value.contains(APOSTROPHE) ||
-        value.contains(DOUBLE_QUOTE) || value.contains(OPEN_BRACE) || value.contains(CLOSE_BRACE)) {
-      return "'${escapeQuotedContent(value)}'"
-    }
-    value
+    ArffEscapes.quoteIfNeeded(value)
   }
 
   private static String escapeStringValue(String value) {
-    "'${escapeQuotedContent(value)}'"
-  }
-
-  private static String escapeQuotedContent(String value) {
-    value.replace(BACKSLASH, '\\\\').replace(APOSTROPHE, '\\\'')
+    ArffEscapes.quote(value)
   }
 
   private static void validateMatrix(Matrix matrix) {

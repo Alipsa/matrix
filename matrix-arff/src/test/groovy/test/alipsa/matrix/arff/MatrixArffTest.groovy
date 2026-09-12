@@ -790,10 +790,10 @@ plain
     String arffContent = MatrixArffWriter.writeString(m, options)
     Matrix result = MatrixArffReader.readString(arffContent)
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','%comment',normal}"))
+    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','\\%comment',normal}"))
     assertTrue(arffContent.contains("''"))
     assertTrue(arffContent.contains("'?'"))
-    assertTrue(arffContent.contains("'%comment'"))
+    assertTrue(arffContent.contains("'\\%comment'"))
     assertEquals('', result[0, 'category'])
     assertEquals('?', result[1, 'category'])
     assertEquals('%comment', result[2, 'category'])
