@@ -1,5 +1,10 @@
 # Matrix-arff release history
 
+## v0.3.0, in progress
+Weka compatibility release. Files written by matrix-arff now interoperate with Weka across the documented supported
+behavior and limitations.
+Behaviour changes are marked **(changed)**.
+
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips
 - Add `ArffDateFormats` utility to share strict (`lenient=false`), UTC, `Locale.ROOT` date formatter creation between reader and writer
