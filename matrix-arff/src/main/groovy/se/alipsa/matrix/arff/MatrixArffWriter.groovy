@@ -15,20 +15,16 @@ import java.time.LocalDateTime
  */
 class MatrixArffWriter {
 
-  private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
   private static final String MATRIX_NULL_MESSAGE = 'Matrix cannot be null'
   private static final String DEFAULT_MATRIX_BASE_NAME = 'matrix'
   private static final String COMMA = ','
-  private static final String SPACE = ' '
   private static final String QUESTION_MARK = '?'
-  private static final String PERCENT = '%'
-  private static final String APOSTROPHE = "'"
-  private static final String DOUBLE_QUOTE = '"'
   private static final String OPEN_BRACE = '{'
   private static final String CLOSE_BRACE = '}'
   private static final String BACKSLASH = '\\'
   private static final String UNDERSCORE = '_'
   private static final String DOUBLE_DOT = '..'
+  private static final String NESTED_INDENT = '  '
 
   /** Write to a File. */
   static void write(Matrix matrix, File file) {
@@ -63,6 +59,8 @@ class MatrixArffWriter {
   /** Write to a File using typed ARFF write options. */
   static void write(Matrix matrix, File file, ArffWriteOptions options) {
     validateMatrix(matrix)
+    // validate before the file is created so an invalid configuration leaves no empty or partial file behind
+    validateWriteOptions(matrix, options ?: new ArffWriteOptions())
     File output = ensureFileOutput(matrix, file)
     OutputStream outputStream = new FileOutputStream(output)
     OutputStreamWriter writer = null
@@ -123,16 +121,21 @@ class MatrixArffWriter {
   private static void writeMatrix(Matrix matrix, PrintWriter pw, ArffWriteOptions options) {
     validateWriteOptions(matrix, options)
 
+    // Resolve the whole schema before printing so a validation failure never leaves a partial document behind
+    String weightColumn = options.instanceWeightColumn
+    List<String> columnNames = matrix.columnNames().findAll { String name -> name != weightColumn }
+    List<Integer> columnIndexes = columnNames.collect { String name -> matrix.columnIndex(name) }
+    Integer weightColumnIndex = weightColumn == null ? null : matrix.columnIndex(weightColumn)
+    List<ArffAttributeInfo> attributeInfos = columnNames.collect { String colName ->
+      resolveAttributeInfo(matrix, colName, options)
+    }
+
     String relationName = matrix.matrixName ?: DEFAULT_MATRIX_BASE_NAME
     pw.println("@RELATION ${escapeIdentifier(relationName)}")
     pw.println()
 
-    List<String> columnNames = matrix.columnNames()
-    List<ArffAttributeInfo> attributeInfos = []
-    for (String colName : columnNames) {
-      ArffAttributeInfo info = resolveAttributeInfo(matrix, colName, options)
-      attributeInfos << info
-      pw.println("@ATTRIBUTE ${escapeIdentifier(colName)} ${info.typeDeclaration}")
+    for (int i = 0; i < columnNames.size(); i++) {
+      writeAttributeDeclaration(pw, columnNames[i], attributeInfos[i], '')
     }
 
     pw.println()
@@ -140,39 +143,145 @@ class MatrixArffWriter {
 
     int rowCount = matrix.rowCount()
     for (int row = 0; row < rowCount; row++) {
-      StringBuilder line = new StringBuilder()
-      for (int col = 0; col < columnNames.size(); col++) {
-        if (col > 0) {
-          line.append(COMMA)
-        }
-        line.append(formatValue(matrix[row, col], attributeInfos[col]))
-      }
-      pw.println(line.toString())
+      pw.println(formatRow(matrix, row, columnIndexes, attributeInfos, weightColumnIndex, weightColumn))
     }
+  }
+
+  private static void writeAttributeDeclaration(PrintWriter pw, String colName, ArffAttributeInfo info, String indent) {
+    String identifier = escapeIdentifier(colName)
+    pw.println("${indent}@ATTRIBUTE $identifier ${info.typeDeclaration}")
+    if (info.type == ArffTypeDecl.RELATIONAL) {
+      String nestedIndent = indent + NESTED_INDENT
+      for (int i = 0; i < info.relationalColumnNames.size(); i++) {
+        writeAttributeDeclaration(pw, info.relationalColumnNames[i], info.relationalInfos[i], nestedIndent)
+      }
+      pw.println("${indent}@END $identifier")
+    }
+  }
+
+  /** One data row: the attribute values, then `,{w}` when {@code weightColumn} is set and the cell is not null. */
+  private static String formatRow(Matrix matrix, int row, List<Integer> columnIndexes, List<ArffAttributeInfo> infos,
+                                  Integer weightColumnIndex, String weightColumn) {
+    StringBuilder line = new StringBuilder()
+    for (int col = 0; col < columnIndexes.size(); col++) {
+      if (col > 0) {
+        line.append(COMMA)
+      }
+      line.append(formatValue(matrix[row, columnIndexes[col]], infos[col]))
+    }
+    if (weightColumnIndex != null) {
+      Object weight = matrix[row, weightColumnIndex]
+      if (weight != null) {
+        line.append(COMMA).append(OPEN_BRACE).append(formatWeight(weight, weightColumn, row)).append(CLOSE_BRACE)
+      }
+    }
+    line.toString()
+  }
+
+  private static String formatWeight(Object weight, String weightColumn, int row) {
+    if (!(weight instanceof Number) || isNonFinite(weight)) {
+      throw new IllegalArgumentException(
+          "instanceWeightColumn '$weightColumn' must hold finite numbers but row $row holds ${weight.class.simpleName} $weight")
+    }
+    weight.toString()
   }
 
   private static ArffAttributeInfo resolveAttributeInfo(Matrix matrix, String colName, ArffWriteOptions options) {
     Class colType = matrix.type(colName)
-    ArffTypeDecl type = explicitTypeForColumn(colName, options)
-    if (type != null) {
-      return createAttributeInfo(matrix, colName, colType, type, options)
+    ArffTypeDecl explicit = explicitTypeForColumn(colName, options)
+    if (explicit != null) {
+      return createAttributeInfo(matrix, colName, colType, explicit, options)
+    }
+    resolveInferredAttributeInfo([matrix], colName, options, resolveDateFormat(colName, options))
+  }
+
+  /**
+   * Schema for a relational column across all matrices that hold it (one at the top level; several when the column
+   * itself sits inside a relational value).
+   */
+  private static ArffAttributeInfo createRelationalInfo(List<Matrix> parts, String colName, ArffWriteOptions options) {
+    List<Matrix> nested = []
+    for (Matrix part : parts) {
+      int rowCount = part.rowCount()
+      for (int row = 0; row < rowCount; row++) {
+        Object value = part[row, colName]
+        if (value == null) {
+          continue
+        }
+        if (!(value instanceof Matrix)) {
+          throw new IllegalArgumentException(
+              "Column '$colName' is written as RELATIONAL but row $row holds ${value.class.simpleName}")
+        }
+        nested.add(value)
+      }
+    }
+    if (nested.isEmpty()) {
+      throw new IllegalArgumentException("Column '$colName' cannot be written as RELATIONAL because it has no non-null values")
+    }
+    List<String> allNames = nested[0].columnNames()
+    List<Class> allTypes = nested[0].types()
+    for (Matrix part : nested) {
+      if (part.columnNames() != allNames) {
+        throw new IllegalArgumentException(
+            "All values of relational column '$colName' must have the same columns: expected $allNames but found ${part.columnNames()}")
+      }
+      if (part.types() != allTypes) {
+        throw new IllegalArgumentException(
+            "All values of relational column '$colName' must have the same column types: expected $allTypes but found ${part.types()}")
+      }
+    }
+    String weightColumn = options.instanceWeightColumn
+    String nestedWeightColumn = allNames.contains(weightColumn) ? weightColumn : null
+    List<String> nestedNames = allNames.findAll { String name -> name != nestedWeightColumn }
+    List<Integer> nestedIndexes = nestedNames.collect { String name -> nested[0].columnIndex(name) }
+    Integer nestedWeightColumnIndex = nestedWeightColumn == null ? null : nested[0].columnIndex(nestedWeightColumn)
+    if (nestedNames.isEmpty()) {
+      // Weka rejects a relational declaration without attributes (and so does the reader)
+      throw new IllegalArgumentException(
+          "Relational column '$colName' must have at least one column besides instanceWeightColumn '$weightColumn'")
+    }
+    if (nestedWeightColumn != null) {
+      nested.each { Matrix part -> validateWeightCells(part, nestedWeightColumn) }
+    }
+    List<ArffAttributeInfo> nestedInfos = nestedNames.collect { String nestedName ->
+      resolveInferredAttributeInfo(
+          nested, nestedName, options, options.dateFormat ?: ArffDateFormats.DEFAULT_PATTERN)
+    }
+    new ArffAttributeInfo(nestedNames, nestedIndexes, nestedInfos, nestedWeightColumnIndex, nestedWeightColumn)
+  }
+
+  /** Infer one attribute over one or more matrices; explicit top-level type options are handled by the caller. */
+  private static ArffAttributeInfo resolveInferredAttributeInfo(List<Matrix> parts, String colName,
+                                                                ArffWriteOptions options, String dateFormat) {
+    Class colType = parts[0].type(colName)
+    if (colType == Matrix) {
+      return createRelationalInfo(parts, colName, options)
     }
     if (isIntegerType(colType)) {
-      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.INTEGER, options)
+      return createAttributeInfo(parts[0], colName, colType, ArffTypeDecl.INTEGER, options)
     }
     if (isNumericType(colType)) {
-      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.NUMERIC, options)
+      return createAttributeInfo(parts[0], colName, colType, ArffTypeDecl.NUMERIC, options)
     }
     if (isDateType(colType)) {
-      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.DATE, options)
+      return createDateInfo(dateFormat, options.dateMode)
     }
     if (options.inferNominals && (colType == String || colType == Object)) {
-      Set<String> uniqueValues = collectUniqueStringValues(matrix, colName)
-      if (shouldBeNominal(uniqueValues, matrix.rowCount(), options.nominalThreshold)) {
+      Set<String> uniqueValues = [] as LinkedHashSet<String>
+      int rowCount = 0
+      for (Matrix part : parts) {
+        uniqueValues.addAll(collectUniqueStringValues(part, colName))
+        rowCount += part.rowCount()
+      }
+      if (shouldBeNominal(uniqueValues, rowCount, options.nominalThreshold)) {
         return createNominalInfo(colName, uniqueValues as List<String>, false)
       }
     }
-    createAttributeInfo(matrix, colName, colType, ArffTypeDecl.STRING, options)
+    createAttributeInfo(parts[0], colName, colType, ArffTypeDecl.STRING, options)
+  }
+
+  private static ArffAttributeInfo createDateInfo(String dateFormat, ArffDateMode dateMode) {
+    new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${ArffEscapes.escape(dateFormat)}'", null, dateFormat, dateMode)
   }
 
   private static ArffTypeDecl explicitTypeForColumn(String colName, ArffWriteOptions options) {
@@ -195,10 +304,8 @@ class MatrixArffWriter {
       case ArffTypeDecl.REAL -> new ArffAttributeInfo(ArffTypeDecl.REAL, 'REAL')
       case ArffTypeDecl.INTEGER -> new ArffAttributeInfo(ArffTypeDecl.INTEGER, 'INTEGER')
       case ArffTypeDecl.STRING -> new ArffAttributeInfo(ArffTypeDecl.STRING, 'STRING')
-      case ArffTypeDecl.DATE -> {
-        String dateFormat = resolveDateFormat(colName, options)
-        yield new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${escapeQuotedContent(dateFormat)}'", null, dateFormat)
-      }
+      case ArffTypeDecl.DATE -> createDateInfo(resolveDateFormat(colName, options), options.dateMode)
+      case ArffTypeDecl.RELATIONAL -> createRelationalInfo([matrix], colName, options)
       case ArffTypeDecl.NOMINAL -> {
         List<String> nominalValues = nominalValuesForColumn(matrix, colName, colType, options)
         yield createNominalInfo(colName, nominalValues, options.nominalMappings.containsKey(colName))
@@ -231,7 +338,7 @@ class MatrixArffWriter {
   }
 
   private static String resolveDateFormat(String colName, ArffWriteOptions options) {
-    options.dateFormatsByColumn[colName] ?: options.dateFormat ?: DEFAULT_DATE_FORMAT
+    options.dateFormatsByColumn[colName] ?: options.dateFormat ?: ArffDateFormats.DEFAULT_PATTERN
   }
 
   private static void validateWriteOptions(Matrix matrix, ArffWriteOptions options) {
@@ -241,6 +348,7 @@ class MatrixArffWriter {
     validateColumnsExist('stringColumns', options.stringColumns, matrixColumns)
     validateColumnsExist('attributeTypesByColumn', options.attributeTypesByColumn.keySet(), matrixColumns)
     validateColumnsExist('dateFormatsByColumn', options.dateFormatsByColumn.keySet(), matrixColumns)
+    validateWeightColumn(matrix, options)
 
     Set<String> overlappingColumns = options.nominalColumns.intersect(options.stringColumns) as Set<String>
     if (!overlappingColumns.isEmpty()) {
@@ -275,6 +383,42 @@ class MatrixArffWriter {
 
     for (Map.Entry<String, List<String>> entry : options.nominalMappings.entrySet()) {
       validateNominalValues(entry.key, entry.value)
+    }
+  }
+
+  private static void validateWeightColumn(Matrix matrix, ArffWriteOptions options) {
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn == null) {
+      return
+    }
+    List<String> matrixColumns = matrix.columnNames()
+    if (!matrixColumns.contains(weightColumn)) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' references an unknown column")
+    }
+    if (matrixColumns.size() == 1) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' cannot be the only column")
+    }
+    boolean configuredElsewhere = options.nominalMappings.containsKey(weightColumn) ||
+        options.nominalColumns.contains(weightColumn) || options.stringColumns.contains(weightColumn) ||
+        options.attributeTypesByColumn.containsKey(weightColumn) || options.dateFormatsByColumn.containsKey(weightColumn)
+    if (configuredElsewhere) {
+      throw new IllegalArgumentException("instanceWeightColumn '$weightColumn' cannot also be configured as an attribute")
+    }
+    Class weightType = matrix.type(weightColumn)
+    if (weightType != Object && !isNumericType(weightType) && !isIntegerType(weightType)) {
+      throw new IllegalArgumentException(
+          "instanceWeightColumn '$weightColumn' must be numeric or Object but its declared type is ${weightType.simpleName}")
+    }
+    validateWeightCells(matrix, weightColumn)
+  }
+
+  private static void validateWeightCells(Matrix matrix, String weightColumn) {
+    int rowCount = matrix.rowCount()
+    for (int row = 0; row < rowCount; row++) {
+      Object weight = matrix[row, weightColumn]
+      if (weight != null) {
+        formatWeight(weight, weightColumn, row)
+      }
     }
   }
 
@@ -334,58 +478,69 @@ class MatrixArffWriter {
       return QUESTION_MARK
     }
     return switch (info.type) {
-      case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> value.toString()
+      case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> isNonFinite(value) ? QUESTION_MARK : value.toString()
       case ArffTypeDecl.DATE -> formatDate(value, info)
       case ArffTypeDecl.NOMINAL -> escapeNominalValue(value.toString())
       case ArffTypeDecl.STRING -> escapeStringValue(value.toString())
+      case ArffTypeDecl.RELATIONAL -> formatRelational(value, info)
       default -> throw new IllegalArgumentException("Unsupported ArffTypeDecl: ${info.type}")
     }
   }
 
+  private static String formatRelational(Object value, ArffAttributeInfo info) {
+    if (!(value instanceof Matrix)) {
+      throw new IllegalArgumentException("Relational value must be a Matrix but was ${value.class.simpleName}")
+    }
+    List<String> rows = []
+    int rowCount = value.rowCount()
+    for (int row = 0; row < rowCount; row++) {
+      rows.add(formatRow(value, row, info.relationalColumnIndexes, info.relationalInfos,
+          info.relationalWeightColumnIndex, info.relationalWeightColumn))
+    }
+    ArffEscapes.quote(rows.join('\n'))
+  }
+
+  /** Weka has no representation for NaN or infinity (NaN is its internal missing marker), so they are written as `?`. */
+  private static boolean isNonFinite(Object value) {
+    if (value instanceof Double) {
+      return value.isNaN() || value.isInfinite()
+    }
+    if (value instanceof Float) {
+      return value.isNaN() || value.isInfinite()
+    }
+    false
+  }
+
   private static String formatDate(Object value, ArffAttributeInfo info) {
-    SimpleDateFormat sdf = ArffDateFormats.create(info.dateFormat ?: DEFAULT_DATE_FORMAT)
+    SimpleDateFormat sdf = info.dateFormatter ?: ArffDateFormats.create(ArffDateFormats.DEFAULT_PATTERN, info.dateMode)
     if (value instanceof Date) {
-      return "'${sdf.format((Date) value)}'"
+      return ArffEscapes.quote(sdf.format(value))
     }
     if (value instanceof LocalDate) {
-      Date date = java.sql.Date.valueOf((LocalDate) value)
-      return "'${sdf.format(date)}'"
+      Date date = Date.from(value.atStartOfDay(ArffDateFormats.zone(info.dateMode)).toInstant())
+      return ArffEscapes.quote(sdf.format(date))
     }
     if (value instanceof LocalDateTime) {
-      Date date = Timestamp.valueOf((LocalDateTime) value)
-      return "'${sdf.format(date)}'"
+      Date date = Date.from(value.atZone(ArffDateFormats.zone(info.dateMode)).toInstant())
+      return ArffEscapes.quote(sdf.format(date))
     }
     if (value instanceof Instant) {
-      Date date = Date.from((Instant) value)
-      return "'${sdf.format(date)}'"
+      Date date = Date.from(value)
+      return ArffEscapes.quote(sdf.format(date))
     }
-    "'${escapeQuotedContent(value.toString())}'"
+    ArffEscapes.quote(value.toString())
   }
 
   private static String escapeIdentifier(String name) {
-    if (name.contains(SPACE) || name.contains(COMMA) || name.contains(OPEN_BRACE) ||
-        name.contains(CLOSE_BRACE) || name.contains(PERCENT) || name.contains(APOSTROPHE) ||
-        name.contains(DOUBLE_QUOTE)) {
-      return "'${escapeQuotedContent(name)}'"
-    }
-    name
+    ArffEscapes.quoteIfNeeded(name)
   }
 
   private static String escapeNominalValue(String value) {
-    if (value.isEmpty() || value == QUESTION_MARK || value.startsWith(PERCENT) ||
-        value.contains(COMMA) || value.contains(SPACE) || value.contains(APOSTROPHE) ||
-        value.contains(DOUBLE_QUOTE) || value.contains(OPEN_BRACE) || value.contains(CLOSE_BRACE)) {
-      return "'${escapeQuotedContent(value)}'"
-    }
-    value
+    ArffEscapes.quoteIfNeeded(value)
   }
 
   private static String escapeStringValue(String value) {
-    "'${escapeQuotedContent(value)}'"
-  }
-
-  private static String escapeQuotedContent(String value) {
-    value.replace(BACKSLASH, '\\\\').replace(APOSTROPHE, '\\\'')
+    ArffEscapes.quote(value)
   }
 
   private static void validateMatrix(Matrix matrix) {
@@ -427,16 +582,44 @@ class MatrixArffWriter {
   }
 }
 
+/** Resolved ARFF schema information for one written column. */
 class ArffAttributeInfo {
+  private static final String RELATIONAL_DECLARATION = 'RELATIONAL'
+
   ArffTypeDecl type
   String typeDeclaration
   List<String> nominalValues
   String dateFormat
+  SimpleDateFormat dateFormatter
+  ArffDateMode dateMode
+  List<String> relationalColumnNames
+  List<Integer> relationalColumnIndexes
+  List<ArffAttributeInfo> relationalInfos
+  /** Nested weight-column index, or null. */
+  Integer relationalWeightColumnIndex
+  /** Nested column written as `{w}` after each nested row, or null. */
+  String relationalWeightColumn
 
-  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null) {
+  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null,
+                    ArffDateMode dateMode = ArffDateMode.UTC) {
     this.type = type
     this.typeDeclaration = typeDeclaration
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
+    this.dateMode = dateMode
+    this.dateFormatter = dateFormat == null ? null : ArffDateFormats.create(dateFormat, dateMode)
+  }
+
+  /** Constructor for a RELATIONAL attribute with its sub-relation schema. */
+  ArffAttributeInfo(List<String> relationalColumnNames, List<Integer> relationalColumnIndexes,
+                    List<ArffAttributeInfo> relationalInfos, Integer relationalWeightColumnIndex,
+                    String relationalWeightColumn) {
+    this.type = ArffTypeDecl.RELATIONAL
+    this.typeDeclaration = RELATIONAL_DECLARATION
+    this.relationalColumnNames = relationalColumnNames
+    this.relationalColumnIndexes = relationalColumnIndexes
+    this.relationalInfos = relationalInfos
+    this.relationalWeightColumnIndex = relationalWeightColumnIndex
+    this.relationalWeightColumn = relationalWeightColumn
   }
 }

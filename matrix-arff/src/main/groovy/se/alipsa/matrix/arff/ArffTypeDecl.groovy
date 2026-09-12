@@ -10,6 +10,7 @@ enum ArffTypeDecl {
   INTEGER,
   STRING,
   NOMINAL,
-  DATE
+  DATE,
+  RELATIONAL
 
 }

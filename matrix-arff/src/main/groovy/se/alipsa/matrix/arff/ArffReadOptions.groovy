@@ -11,11 +11,19 @@ class ArffReadOptions {
   private static final String STRICT = 'strict'
   private static final String FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE = 'failOnUnknownAttributeType'
   private static final String FAIL_ON_ROW_LENGTH_MISMATCH = 'failOnRowLengthMismatch'
+  private static final String FAIL_ON_UNDECLARED_NOMINAL_VALUE = 'failOnUndeclaredNominalValue'
+  private static final String OMITTED_STRING_FALLBACK = 'omittedStringFallback'
+  private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String DATE_MODE = 'dateMode'
 
   private String fallbackMatrixName = null
   private boolean strict = false
   private Boolean failOnUnknownAttributeType = null
   private Boolean failOnRowLengthMismatch = null
+  private Boolean failOnUndeclaredNominalValue = null
+  private String omittedStringFallback = null
+  private String instanceWeightColumn = null
+  private ArffDateMode dateMode = ArffDateMode.UTC
 
   String getFallbackMatrixName() {
     fallbackMatrixName
@@ -31,6 +39,25 @@ class ArffReadOptions {
 
   boolean isFailOnRowLengthMismatch() {
     failOnRowLengthMismatch == null ? strict : failOnRowLengthMismatch.booleanValue()
+  }
+
+  boolean isFailOnUndeclaredNominalValue() {
+    failOnUndeclaredNominalValue == null ? strict : failOnUndeclaredNominalValue.booleanValue()
+  }
+
+  /** Value of a STRING cell omitted from a sparse row when the column has no explicit value at all; null by default. */
+  String getOmittedStringFallback() {
+    omittedStringFallback
+  }
+
+  /** Name of the NUMERIC column that receives ARFF instance weights, or null when weights are discarded. */
+  String getInstanceWeightColumn() {
+    instanceWeightColumn
+  }
+
+  /** How DATE values are parsed; {@link ArffDateMode#UTC} by default. */
+  ArffDateMode getDateMode() {
+    dateMode
   }
 
   ArffReadOptions fallbackMatrixName(String value) {
@@ -53,6 +80,41 @@ class ArffReadOptions {
     this
   }
 
+  ArffReadOptions failOnUndeclaredNominalValue(boolean value) {
+    this.failOnUndeclaredNominalValue = value
+    this
+  }
+
+  /**
+   * A STRING attribute omitted from a sparse row takes the first explicit value in that column (Weka's string
+   * dictionary index 0). When the column never has an explicit value there is no such entry: the cell is null by
+   * default, or this value when set — {@code '0'} reproduces the raw value Weka holds and the string liac-arff yields.
+   */
+  ArffReadOptions omittedStringFallback(String value) {
+    this.omittedStringFallback = value
+    this
+  }
+
+  /**
+   * Store ARFF instance weights ({@code {w}} after a data row) in a NUMERIC column with this name; rows without a
+   * weight get {@code 1}. Null (the default) parses and discards weights. The name is reserved in every relation of
+   * the file, including the sub-relations of relational attributes (their nested rows may be weighted as well), so an
+   * {@code @ATTRIBUTE} with this name at any depth is rejected; choose a name that no attribute in the file uses.
+   */
+  ArffReadOptions instanceWeightColumn(String value) {
+    this.instanceWeightColumn = value
+    this
+  }
+
+  /**
+   * Choose {@link ArffDateMode#WEKA} to parse DATE values with the JVM's default time zone and locale exactly
+   * as Weka does on the same machine; null resets to the default {@link ArffDateMode#UTC}.
+   */
+  ArffReadOptions dateMode(ArffDateMode value) {
+    this.dateMode = value == null ? ArffDateMode.UTC : value
+    this
+  }
+
   static ArffReadOptions fromMap(Map<String, ?> options) {
     ArffReadOptions result = new ArffReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -71,6 +133,18 @@ class ArffReadOptions {
     if (normalized.containsKey('failonrowlengthmismatch')) {
       result.failOnRowLengthMismatch(ArffOptionValues.booleanValue(normalized.failonrowlengthmismatch, FAIL_ON_ROW_LENGTH_MISMATCH))
     }
+    if (normalized.containsKey('failonundeclarednominalvalue')) {
+      result.failOnUndeclaredNominalValue(ArffOptionValues.booleanValue(normalized.failonundeclarednominalvalue, FAIL_ON_UNDECLARED_NOMINAL_VALUE))
+    }
+    if (normalized.containsKey('omittedstringfallback')) {
+      result.omittedStringFallback(OptionMaps.stringValueOrNull(normalized.omittedstringfallback))
+    }
+    if (normalized.containsKey('instanceweightcolumn')) {
+      result.instanceWeightColumn(OptionMaps.stringValueOrNull(normalized.instanceweightcolumn))
+    }
+    if (normalized.containsKey('datemode')) {
+      result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
+    }
     result
   }
 
@@ -88,6 +162,18 @@ class ArffReadOptions {
     if (failOnRowLengthMismatch != null) {
       result.failOnRowLengthMismatch = failOnRowLengthMismatch
     }
+    if (failOnUndeclaredNominalValue != null) {
+      result.failOnUndeclaredNominalValue = failOnUndeclaredNominalValue
+    }
+    if (omittedStringFallback != null) {
+      result.omittedStringFallback = omittedStringFallback
+    }
+    if (instanceWeightColumn != null) {
+      result.instanceWeightColumn = instanceWeightColumn
+    }
+    if (dateMode != ArffDateMode.UTC) {
+      result.dateMode = dateMode
+    }
     result
   }
 
@@ -98,9 +184,13 @@ class ArffReadOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('fallbackMatrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
-        new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types and row length mismatches unless overridden by specific options'),
+        new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types, row length mismatches and undeclared nominal values unless overridden by specific options'),
         new OptionDescriptor(FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE, Boolean, STRICT, 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
-        new OptionDescriptor(FAIL_ON_ROW_LENGTH_MISMATCH, Boolean, STRICT, 'Fail when a dense @DATA row has more or fewer values than the declared attributes')
+        new OptionDescriptor(FAIL_ON_ROW_LENGTH_MISMATCH, Boolean, STRICT, 'Fail when a dense @DATA row has more or fewer values than the declared attributes'),
+        new OptionDescriptor(FAIL_ON_UNDECLARED_NOMINAL_VALUE, Boolean, STRICT, 'Fail when a nominal data value is not in the attribute declaration, as Weka does'),
+        new OptionDescriptor(OMITTED_STRING_FALLBACK, String, null, 'Value for a STRING attribute omitted from sparse rows when the column has no explicit value to resolve to (Weka dictionary index 0); null when unset, \'0\' matches Weka\'s raw value and liac-arff'),
+        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Name of a NUMERIC column that receives ARFF instance weights ({w} after a row, 1 when absent) in every relation including relational sub-relations; weights are discarded when unset'),
+        new OptionDescriptor(DATE_MODE, ArffDateMode, ArffDateMode.UTC, 'UTC (machine-independent, whole value must match) or WEKA (JVM default time zone and locale, trailing text ignored, as weka.core.Attribute) for parsing DATE values')
     ]
   }
 

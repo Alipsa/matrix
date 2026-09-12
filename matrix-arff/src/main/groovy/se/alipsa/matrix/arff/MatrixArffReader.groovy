@@ -21,21 +21,31 @@ import java.util.regex.Pattern
  */
 class MatrixArffReader {
 
-  private static final Pattern DATE_FORMAT_PATTERN =
-      Pattern.compile(/(?i)date\s*(?:'(?<singleQuoted>[^']*)'|"(?<doubleQuoted>[^"]*)")?/)
+  private static final Pattern DATE_TYPE_PATTERN = Pattern.compile(/(?i)^date(?:\s+(.*))?$/)
+  private static final String INVALID_DATE_FORMAT = 'Invalid @ATTRIBUTE DATE format'
   private static final String DEFAULT_MATRIX_NAME = 'ArffMatrix'
+  private static final String RELATION_KEYWORD = '@RELATION'
   private static final String ATTRIBUTE_KEYWORD = '@ATTRIBUTE'
+  private static final String END_KEYWORD = '@END'
+  private static final String DATA_KEYWORD = '@DATA'
   private static final String INVALID_ATTRIBUTE_LINE = 'Invalid @ATTRIBUTE line'
-  private static final int RELATION_PREFIX_LENGTH = 9
+  private static final String INVALID_RELATION_LINE = 'Invalid @RELATION line'
   private static final char BACKSLASH_CHAR = '\\'
-  private static final char SINGLE_QUOTE_CHAR = '\''
-  private static final char DOUBLE_QUOTE_CHAR = '"'
-  private static final String SINGLE_QUOTE = String.valueOf(SINGLE_QUOTE_CHAR)
-  private static final String DOUBLE_QUOTE = String.valueOf(DOUBLE_QUOTE_CHAR)
+  private static final char COMMA_CHAR = ','
+  private static final char OPEN_BRACE_CHAR = '{'
+  private static final char CLOSE_BRACE_CHAR = '}'
+  private static final char PERCENT_CHAR = '%'
+  private static final char SPACE_CHAR = ' '
+  private static final String NOMINAL_DELIMITERS = ','
+  private static final String ROW_DELIMITERS = ',\t '
+  private static final String INVALID_QUOTED = 'Invalid quoted'
+  private static final String QUOTE_MUST_BEGIN_TOKEN = ' (quote must begin a token)'
   private static final String DOT = '.'
   private static final String SLASH = '/'
   private static final String OPEN_BRACE = '{'
   private static final String CLOSE_BRACE = '}'
+  /** Marks a STRING cell omitted from a sparse row until {@link #resolveOmittedValues} resolves it. */
+  private static final Object OMITTED = new Object()
 
   /** Read from an Arff file. */
   static Matrix read(File file) {
@@ -205,69 +215,187 @@ class MatrixArffReader {
 
   private static Matrix parseArff(BufferedReader reader, String defaultName, ArffReadOptions options) {
     String relationName = defaultName
-    List<String> attributeNames = []
-    List<ArffAttribute> attributes = []
+    List<AttributeScope> scopes = [new AttributeScope(null)]
+    List<ArffAttribute> attributes = scopes[0].attributes
     List<List<Object>> rows = []
+    List<BigDecimal> weights = []
     boolean inDataSection = false
     int lineNumber = 0
 
     String rawLine
+    String lastRawLine
     while ((rawLine = reader.readLine()) != null) {
       lineNumber++
-      String line = rawLine.trim()
+      lastRawLine = rawLine
+      String line = stripComment(rawLine).trim()
 
-      if (line.isEmpty() || line.startsWith('%')) {
+      if (line.isEmpty()) {
         continue
       }
 
       if (inDataSection) {
-        List<Object> row = parseDataRow(line, attributes, options, lineNumber, rawLine)
-        rows.add(row)
+        DataLine dataLine = splitInstanceWeight(line)
+        rows.add(parseDataRow(dataLine.content, attributes, options, lineNumber, rawLine))
+        weights.add(dataLine.weight)
         continue
       }
 
       String upperLine = line.toUpperCase()
-      if (upperLine.startsWith('@RELATION')) {
+      if (upperLine.startsWith(RELATION_KEYWORD)) {
         relationName = parseRelationName(line, lineNumber, rawLine)
       } else if (upperLine.startsWith(ATTRIBUTE_KEYWORD)) {
         ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
-        attributeNames.add(attr.name)
-        attributes.add(attr)
-      } else if (upperLine.startsWith('@DATA')) {
+        if (attr.type == ArffType.RELATIONAL) {
+          scopes.add(new AttributeScope(attr.name))
+        } else {
+          addAttribute(scopes.last(), attr, lineNumber, rawLine)
+        }
+      } else if (upperLine.startsWith(END_KEYWORD)) {
+        closeRelationalScope(line, scopes, options, lineNumber, rawLine)
+      } else if (upperLine.startsWith(DATA_KEYWORD)) {
+        if (scopes.size() > 1) {
+          throw unterminatedRelationalError(scopes.last().name, lineNumber, rawLine)
+        }
+        rejectInstanceWeightAttribute(scopes[0], relationName, options)
         inDataSection = true
       }
     }
 
+    if (scopes.size() > 1) {
+      throw unterminatedRelationalError(scopes.last().name, lineNumber, lastRawLine)
+    }
+    rejectInstanceWeightAttribute(scopes[0], relationName, options)
+    buildMatrix(relationName, attributes, rows, weights, options)
+  }
+
+  private static IllegalArgumentException unterminatedRelationalError(String scopeName, int lineNumber, String rawLine) {
+    parseError("Relational attribute '$scopeName' is not terminated by @END before @DATA", lineNumber, rawLine)
+  }
+
+  private static void addAttribute(AttributeScope scope, ArffAttribute attr, int lineNumber, String rawLine) {
+    if (!scope.names.add(attr.name)) {
+      throw parseError("Duplicate @ATTRIBUTE name '${attr.name}'", lineNumber, rawLine)
+    }
+    scope.attributes.add(attr)
+  }
+
+  private static void closeRelationalScope(String line, List<AttributeScope> scopes, ArffReadOptions options,
+                                           int lineNumber, String rawLine) {
+    if (scopes.size() == 1) {
+      throw parseError('@END without an open relational attribute', lineNumber, rawLine)
+    }
+    String endName = parseQuotedName(line, END_KEYWORD.length(), 'Invalid @END line', lineNumber, rawLine)
+    AttributeScope scope = scopes.removeLast()
+    if (!endName.equalsIgnoreCase(scope.name)) {
+      throw parseError("Relational attribute '${scope.name}' must be terminated by @END ${scope.name} but found @END $endName",
+          lineNumber, rawLine)
+    }
+    if (scope.attributes.isEmpty()) {
+      throw parseError("Relational attribute '${scope.name}' declares no attributes", lineNumber, rawLine)
+    }
+    rejectInstanceWeightAttribute(scope, scope.name, options)
+    ArffAttribute attr = new ArffAttribute(scope.name, ArffType.RELATIONAL, Matrix, null, null, scope.attributes)
+    addAttribute(scopes.last(), attr, lineNumber, rawLine)
+  }
+
+  /**
+   * The instance-weight column name is reserved in every relation: an {@code @ATTRIBUTE} of that name would otherwise
+   * be silently merged with the weights that {@link #buildMatrix} appends.
+   */
+  private static void rejectInstanceWeightAttribute(AttributeScope scope, String relationName, ArffReadOptions options) {
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn != null && scope.names.contains(weightColumn)) {
+      throw new IllegalArgumentException(instanceWeightClashMessage(weightColumn, relationName))
+    }
+  }
+
+  private static String instanceWeightClashMessage(String weightColumn, String relationName) {
+    "instanceWeightColumn '$weightColumn' clashes with an @ATTRIBUTE of the same name in relation '$relationName'"
+  }
+
+  private static Matrix buildMatrix(String name, List<ArffAttribute> attributes, List<List<Object>> rows,
+                                    List<BigDecimal> weights, ArffReadOptions options) {
+    resolveOmittedValues(rows, attributes, options.omittedStringFallback)
+    List<String> columnNames = attributes*.name
     List<Class> types = attributes*.javaType
     List<List<Object>> columns = []
-    if (!rows.isEmpty()) {
-      int numCols = attributeNames.size()
-      for (int i = 0; i < numCols; i++) {
-        List<Object> col = []
-        for (List<Object> row : rows) {
-          col.add(row[i])
-        }
-        columns.add(col)
+    for (int i = 0; i < attributes.size(); i++) {
+      List<Object> col = []
+      for (List<Object> row : rows) {
+        col.add(row[i])
       }
-    } else {
-      for (int i = 0; i < attributeNames.size(); i++) {
-        columns.add([])
-      }
+      columns.add(col)
     }
-
-    Matrix.builder(relationName)
-        .columnNames(attributeNames)
+    String weightColumn = options.instanceWeightColumn
+    if (weightColumn != null) {
+      if (columnNames.contains(weightColumn)) {
+        throw new IllegalArgumentException(instanceWeightClashMessage(weightColumn, name))
+      }
+      columnNames.add(weightColumn)
+      types.add(BigDecimal)
+      // weight == null means "no {w} on the row" (ARFF: weight 1); an explicit {0} must stay 0, so no ?: here
+      columns.add(weights.collect { BigDecimal weight -> (Object) (weight == null ? BigDecimal.ONE : weight) })
+    }
+    Matrix.builder(name)
+        .columnNames(columnNames)
         .columns(columns)
         .types(types)
         .build()
   }
 
-  private static String parseRelationName(String line, int lineNumber, String rawLine) {
-    if (line.length() < RELATION_PREFIX_LENGTH) {
-      throw parseError('Invalid @RELATION line', lineNumber, rawLine)
+  /**
+   * Split a trailing instance weight {@code {w}} off a data line: {@code a,b,{2}} or {@code {0 a}, {2}}. The braces must
+   * be the last top-level brace group, must not be the sparse row itself, and must enclose a number; otherwise the line
+   * is returned unchanged (Weka quietly ignores a non-numeric group too).
+   */
+  private static DataLine splitInstanceWeight(String line) {
+    if (!line.endsWith(CLOSE_BRACE)) {
+      return new DataLine(line, null)
     }
-    String name = line.substring(RELATION_PREFIX_LENGTH).trim()
-    unescapeQuoted(name)
+    int lastOpen = ArffScanner.lastIndexOfOutsideQuotes(line, OPEN_BRACE_CHAR)
+    if (lastOpen <= 0) {
+      return new DataLine(line, null)
+    }
+    BigDecimal weight
+    try {
+      weight = new BigDecimal(line.substring(lastOpen + 1, line.length() - 1).trim())
+    } catch (NumberFormatException ignored) {
+      return new DataLine(line, null)
+    }
+    String content = line.substring(0, lastOpen).trim()
+    if (!content.isEmpty() && content.charAt(content.length() - 1) == COMMA_CHAR) {
+      content = content.substring(0, content.length() - 1).trim()
+    }
+    new DataLine(content, weight)
+  }
+
+  /** Cut the line at the first {@code %} that is outside a quoted token, as Weka's tokenizer treats it as a comment. */
+  private static String stripComment(String line) {
+    int comment = ArffScanner.indexOfOutsideQuotes(line, PERCENT_CHAR, 0)
+    comment < 0 ? line : line.substring(0, comment)
+  }
+
+  private static String parseRelationName(String line, int lineNumber, String rawLine) {
+    parseQuotedName(line, RELATION_KEYWORD.length(), INVALID_RELATION_LINE, lineNumber, rawLine)
+  }
+
+  /** Parse the (optionally quoted) name that follows a keyword of {@code prefixLength} characters. */
+  private static String parseQuotedName(String line, int prefixLength, String invalidMessage, int lineNumber, String rawLine) {
+    if (line.length() < prefixLength) {
+      throw parseError(invalidMessage, lineNumber, rawLine)
+    }
+    String name = line.substring(prefixLength).trim()
+    if (name.isEmpty() || !ArffScanner.isQuoteChar(name.charAt(0))) {
+      return name
+    }
+    ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(name, 0)
+    if (token == null) {
+      throw parseError("$invalidMessage (missing closing quote)", lineNumber, rawLine)
+    }
+    if (!name.substring(token.end).trim().isEmpty()) {
+      throw parseError("$invalidMessage (unexpected text after quoted name)", lineNumber, rawLine)
+    }
+    token.value
   }
 
   private static ArffAttribute parseAttribute(String line, ArffReadOptions options, int lineNumber, String rawLine) {
@@ -284,37 +412,15 @@ class MatrixArffReader {
     String name
     String typeSpec
     char first = spec.charAt(0)
-    if (first == SINGLE_QUOTE_CHAR || first == DOUBLE_QUOTE_CHAR) {
-      char quoteChar = first
-      StringBuilder sb = new StringBuilder()
-      boolean escape = false
-      boolean closed = false
-      int i = 1
-      for (; i < spec.length(); i++) {
-        char c = spec.charAt(i)
-        if (escape) {
-          sb.append(c)
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          i++
-          closed = true
-          break
-        }
-        sb.append(c)
+    if (ArffScanner.isQuoteChar(first)) {
+      ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(spec, 0)
+      if (token == null) {
+        throw parseError("$INVALID_ATTRIBUTE_LINE (missing closing quote)", lineNumber, rawLine)
       }
-      if (!closed) {
-        throw parseError('Invalid @ATTRIBUTE line (missing closing quote)', lineNumber, rawLine)
-      }
-      name = sb.toString()
-      typeSpec = i < spec.length() ? spec.substring(i).trim() : ''
+      name = token.value
+      typeSpec = spec.substring(token.end).trim()
       if (typeSpec.isEmpty()) {
-        throw parseError('Invalid @ATTRIBUTE line (missing type)', lineNumber, rawLine)
+        throw parseError("$INVALID_ATTRIBUTE_LINE (missing type)", lineNumber, rawLine)
       }
     } else {
       int splitIndex = -1
@@ -335,20 +441,21 @@ class MatrixArffReader {
   }
 
   private static ArffAttribute parseAttributeType(String name, String typeSpec, ArffReadOptions options, int lineNumber, String rawLine) {
+    typeSpec = stripAttributeWeight(typeSpec)
     String upperType = typeSpec.toUpperCase()
 
     String nominalValuesStr = extractNominalValues(typeSpec)
     if (nominalValuesStr != null) {
+      if (nominalValuesStr.trim().isEmpty()) {
+        throw parseError('Nominal attribute must declare at least one value', lineNumber, rawLine)
+      }
       List<String> nominalValues = parseNominalValues(nominalValuesStr)
       return new ArffAttribute(name, ArffType.NOMINAL, String, nominalValues)
     }
 
-    if (upperType.startsWith('DATE')) {
-      String dateFormat = null
-      Matcher dateMatcher = DATE_FORMAT_PATTERN.matcher(typeSpec)
-      if (dateMatcher.find()) {
-        dateFormat = dateMatcher.group('singleQuoted') ?: dateMatcher.group('doubleQuoted')
-      }
+    Matcher dateMatcher = DATE_TYPE_PATTERN.matcher(typeSpec)
+    if (dateMatcher.matches()) {
+      String dateFormat = parseDateFormat(dateMatcher.group(1), lineNumber, rawLine)
       return new ArffAttribute(name, ArffType.DATE, Date, null, dateFormat)
     }
 
@@ -356,6 +463,7 @@ class MatrixArffReader {
       case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal)
       case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer)
       case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String)
+      case 'RELATIONAL' -> new ArffAttribute(name, ArffType.RELATIONAL, Matrix)
       default -> {
         if (options.failOnUnknownAttributeType) {
           throw parseError("Unknown @ATTRIBUTE type '$typeSpec'", lineNumber, rawLine)
@@ -365,9 +473,57 @@ class MatrixArffReader {
     }
   }
 
+  /**
+   * Remove a trailing Weka attribute weight such as {@code numeric {0.5}} (a Weka 3.8 extension outside the ARFF
+   * specification). A leading brace group is a nominal declaration and is left untouched; a trailing group after a
+   * nominal declaration is already ignored by {@link #extractNominalValues}.
+   */
+  private static String stripAttributeWeight(String typeSpec) {
+    if (typeSpec.startsWith(OPEN_BRACE) || !typeSpec.endsWith(CLOSE_BRACE)) {
+      return typeSpec
+    }
+    int open = ArffScanner.lastIndexOfOutsideQuotes(typeSpec, OPEN_BRACE_CHAR)
+    if (open <= 0) {
+      return typeSpec
+    }
+    try {
+      new BigDecimal(typeSpec.substring(open + 1, typeSpec.length() - 1).trim())
+    } catch (NumberFormatException ignored) {
+      return typeSpec
+    }
+    typeSpec.substring(0, open).trim()
+  }
+
+  /**
+   * Parse the optional format after the {@code date} keyword. Weka reads it as a single token, so both
+   * {@code date 'yyyy-MM-dd\'T\'HH:mm:ss'} (escaped quotes) and {@code date yyyy-MM-dd} (unquoted) are valid.
+   *
+   * @return the format pattern, or null when none was given (the default pattern applies)
+   */
+  private static String parseDateFormat(String formatSpec, int lineNumber, String rawLine) {
+    String spec = formatSpec?.trim()
+    if (spec == null || spec.isEmpty()) {
+      return null
+    }
+    if (ArffScanner.isQuoteChar(spec.charAt(0))) {
+      ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(spec, 0)
+      if (token == null) {
+        throw parseError("$INVALID_DATE_FORMAT (missing closing quote)", lineNumber, rawLine)
+      }
+      if (!spec.substring(token.end).trim().isEmpty()) {
+        throw parseError("$INVALID_DATE_FORMAT (unexpected text after format)", lineNumber, rawLine)
+      }
+      return token.value
+    }
+    if (indexOfWhitespace(spec) >= 0) {
+      throw parseError("$INVALID_DATE_FORMAT (unexpected text after format)", lineNumber, rawLine)
+    }
+    spec
+  }
+
   private static List<String> parseNominalValues(String valuesStr) {
     List<String> values = []
-    parseDelimitedLine(valuesStr, ',' as char).each { ParsedToken token ->
+    parseDelimitedLine(valuesStr, NOMINAL_DELIMITERS).each { ParsedToken token ->
       values.add(token.quoted ? token.value : token.value.trim())
     }
     values
@@ -376,10 +532,10 @@ class MatrixArffReader {
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
                                            int lineNumber, String rawLine) {
     if (line.startsWith(OPEN_BRACE)) {
-      return parseSparseDataRow(line, attributes, lineNumber, rawLine)
+      return parseSparseDataRow(line, attributes, options, lineNumber, rawLine)
     }
 
-    List<ParsedToken> values = parseDelimitedLine(line, ',' as char, lineNumber, rawLine, 'data row')
+    List<ParsedToken> values = parseDelimitedLine(line, ROW_DELIMITERS, lineNumber, rawLine, 'data row')
     if (options.failOnRowLengthMismatch && values.size() != attributes.size()) {
       throw parseError(
           "Row length mismatch: expected ${attributes.size()} values but found ${values.size()}",
@@ -395,17 +551,18 @@ class MatrixArffReader {
       if (value != null && !token.quoted) {
         value = value.trim()
       }
-      row.add(convertValue(value, attributes[i], token.quoted, lineNumber, rawLine))
+      row.add(convertValue(value, attributes[i], token.quoted, options, lineNumber, rawLine))
     }
     row
   }
 
   /** Parse a sparse ARFF row in `{index value, ...}` format. */
-  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, int lineNumber, String rawLine) {
+  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
+                                                 int lineNumber, String rawLine) {
     if (!line.endsWith(CLOSE_BRACE)) {
       throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
-    List<Object> row = [null] * attributes.size()
+    List<Object> row = attributes.collect { ArffAttribute attr -> sparseDefaultValue(attr) }
     String body = line.substring(1, line.length() - 1).trim()
     if (body.isEmpty()) {
       return row
@@ -418,7 +575,7 @@ class MatrixArffReader {
         throw parseError('Invalid sparse ARFF row (empty entry)', lineNumber, rawLine)
       }
 
-      int splitIndex = findSparseEntryValueStart(entry)
+      int splitIndex = indexOfWhitespace(entry)
       if (splitIndex < 0) {
         throw parseError("Invalid sparse ARFF sparse entry '$entry'", lineNumber, rawLine)
       }
@@ -452,64 +609,72 @@ class MatrixArffReader {
       if (value != null && !valueToken.quoted) {
         value = value.trim()
       }
-      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, lineNumber, rawLine)
+      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, options, lineNumber, rawLine)
     }
 
     row
   }
 
-  private static List<String> splitSparseEntries(String body, int lineNumber, String rawLine) {
-    List<String> entries = []
-    StringBuilder current = new StringBuilder()
-    boolean inQuote = false
-    boolean escape = false
-    char quoteChar = 0
-
-    for (int i = 0; i < body.length(); i++) {
-      char c = body.charAt(i)
-      if (inQuote) {
-        current.append(c)
-        if (escape) {
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          inQuote = false
-        }
-        continue
-      }
-
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        inQuote = true
-        quoteChar = c
-        current.append(c)
-        continue
-      }
-      if (c == ',' as char) {
-        entries.add(current.toString())
-        current = new StringBuilder()
-        continue
-      }
-      current.append(c)
+  /**
+   * The value an attribute has when a sparse row omits it. ARFF defines it as {@code 0}: numeric zero, the first
+   * declared nominal value and the epoch for DATE. STRING cells get a marker that {@link #resolveOmittedValues} replaces
+   * once the whole data section is known, because Weka resolves {@code 0} through a dictionary filled while reading.
+   */
+  private static Object sparseDefaultValue(ArffAttribute attr) {
+    switch (attr.type) {
+      case ArffType.NUMERIC -> BigDecimal.ZERO
+      case ArffType.INTEGER -> 0
+      case ArffType.NOMINAL -> attr.nominalValues[0]
+      case ArffType.DATE -> new Date(0L)
+      default -> OMITTED
     }
+  }
 
-    if (inQuote) {
+  /**
+   * Resolve STRING cells omitted from sparse rows the way Weka does: value index 0 of the attribute's dictionary, i.e.
+   * the first explicit value read for that attribute anywhere in the data. When the attribute never has an explicit
+   * value there is nothing index 0 can denote and the cell becomes {@code fallback} (null unless
+   * {@code ArffReadOptions.omittedStringFallback} is set).
+   */
+  private static void resolveOmittedValues(List<List<Object>> rows, List<ArffAttribute> attributes, String fallback) {
+    for (int col = 0; col < attributes.size(); col++) {
+      ArffType type = attributes[col].type
+      if (type != ArffType.STRING && type != ArffType.RELATIONAL) {
+        continue
+      }
+      Object replacement = type == ArffType.STRING ? fallback : null
+      for (List<Object> row : rows) {
+        Object value = row[col]
+        if (value != null && !OMITTED.is(value)) {
+          replacement = value
+          break
+        }
+      }
+      for (List<Object> row : rows) {
+        if (OMITTED.is(row[col])) {
+          row[col] = replacement instanceof Matrix ? (replacement as Matrix).clone() : replacement
+        }
+      }
+    }
+  }
+
+  private static List<String> splitSparseEntries(String body, int lineNumber, String rawLine) {
+    if (ArffScanner.hasUnterminatedQuote(body)) {
       throw parseError('Unterminated quoted sparse value', lineNumber, rawLine)
     }
-    if (escape) {
-      current.append(BACKSLASH_CHAR)
+    List<String> entries = []
+    int start = 0
+    for (int comma : ArffScanner.indexesOutsideQuotes(body, COMMA_CHAR)) {
+      entries.add(body.substring(start, comma))
+      start = comma + 1
     }
-    entries.add(current.toString())
+    entries.add(body.substring(start))
     entries
   }
 
-  private static int findSparseEntryValueStart(String entry) {
-    for (int i = 0; i < entry.length(); i++) {
-      if (Character.isWhitespace(entry.charAt(i))) {
+  private static int indexOfWhitespace(String text) {
+    for (int i = 0; i < text.length(); i++) {
+      if (Character.isWhitespace(text.charAt(i))) {
         return i
       }
     }
@@ -523,54 +688,40 @@ class MatrixArffReader {
     }
 
     char first = value.charAt(0)
-    if (first != SINGLE_QUOTE_CHAR && first != DOUBLE_QUOTE_CHAR) {
+    if (!ArffScanner.isQuoteChar(first)) {
       return new ParsedToken(value, false)
     }
-
-    StringBuilder result = new StringBuilder()
-    boolean escape = false
-    for (int i = 1; i < value.length(); i++) {
-      char c = value.charAt(i)
-      if (escape) {
-        result.append(c)
-        escape = false
-        continue
-      }
-      if (c == BACKSLASH_CHAR) {
-        escape = true
-        continue
-      }
-      if (c == first) {
-        String trailing = i + 1 < value.length() ? value.substring(i + 1).trim() : ''
-        if (!trailing.isEmpty()) {
-          throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
-        }
-        return new ParsedToken(result.toString(), true)
-      }
-      result.append(c)
+    ArffScanner.QuotedToken token = ArffScanner.readQuotedToken(value, 0)
+    if (token == null || !value.substring(token.end).trim().isEmpty()) {
+      throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
     }
-
-    throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
+    new ParsedToken(token.value, true)
   }
 
-  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
-    parseDelimitedLine(line, delimiter, 0, line, null)
+  private static List<ParsedToken> parseDelimitedLine(String line, String delimiters) {
+    parseDelimitedLine(line, delimiters, 0, line, null)
   }
 
-  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter, int lineNumber, String rawLine, String context) {
+  /**
+   * Split a dense data row or a nominal declaration body into tokens. A run of delimiters and blanks is one separator
+   * (plus one empty field per extra comma, see {@link #skipDelimiterRun}); a quote must begin a token and only blanks
+   * may follow its closing quote before the next delimiter.
+   */
+  private static List<ParsedToken> parseDelimitedLine(String line, String delimiters, int lineNumber, String rawLine, String context) {
     List<ParsedToken> values = []
     StringBuilder current = new StringBuilder()
     boolean inQuote = false
     char quoteChar = 0
     boolean tokenQuoted = false
     boolean escape = false
+    boolean afterQuotedToken = false
 
     for (int i = 0; i < line.length(); i++) {
       char c = line.charAt(i)
 
       if (inQuote) {
         if (escape) {
-          current.append(c)
+          current.append(ArffEscapes.unescape(c))
           escape = false
           continue
         }
@@ -580,49 +731,83 @@ class MatrixArffReader {
         }
         if (c == quoteChar) {
           inQuote = false
-          tokenQuoted = true
+          afterQuotedToken = true
           continue
         }
         current.append(c)
         continue
       }
 
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        if (current.toString().trim().isEmpty()) {
-          current.setLength(0)
-        } else {
-          current.append(c)
-          continue
-        }
-        inQuote = true
-        quoteChar = c
-        tokenQuoted = true
-        continue
-      }
-      if (c == delimiter) {
+      if (delimiters.indexOf((int) c) >= 0) {
         values.add(new ParsedToken(current.toString(), tokenQuoted))
         current = new StringBuilder()
         tokenQuoted = false
+        afterQuotedToken = false
+        i = skipDelimiterRun(line, i, delimiters, values)
+        continue
+      }
+      if (afterQuotedToken) {
+        if (c <= SPACE_CHAR) {
+          continue
+        }
+        throw delimitedLineError(INVALID_QUOTED, QUOTE_MUST_BEGIN_TOKEN, context, lineNumber, rawLine)
+      }
+      if (ArffScanner.isQuoteChar(c)) {
+        if (!current.toString().trim().isEmpty()) {
+          throw delimitedLineError(INVALID_QUOTED, QUOTE_MUST_BEGIN_TOKEN, context, lineNumber, rawLine)
+        }
+        current.setLength(0)
+        inQuote = true
+        quoteChar = c
+        tokenQuoted = true
         continue
       }
       current.append(c)
     }
 
     if (inQuote) {
-      String detail = context == null ? 'Unterminated quoted value' : "Unterminated quoted $context"
-      if (lineNumber > 0) {
-        throw parseError(detail, lineNumber, rawLine)
-      }
-      throw new IllegalArgumentException(detail)
-    }
-    if (escape) {
-      current.append(BACKSLASH_CHAR)
+      throw delimitedLineError('Unterminated quoted', '', context, lineNumber, rawLine)
     }
     values.add(new ParsedToken(current.toString(), tokenQuoted))
     values
   }
 
-  private static Object convertValue(String value, ArffAttribute attr, boolean quoted, int lineNumber, String rawLine) {
+  private static IllegalArgumentException delimitedLineError(String problem, String suffix, String context,
+                                                             int lineNumber, String rawLine) {
+    String detail = "$problem ${context ?: 'value'}$suffix"
+    lineNumber > 0 ? parseError(detail, lineNumber, rawLine) : new IllegalArgumentException(detail)
+  }
+
+  /**
+   * Consume the run of delimiters and blanks (characters {@code <= ' '}) that starts with the delimiter at
+   * {@code start}. Weka's tokenizer collapses such a run into a single separator; this reader additionally keeps the
+   * lenient reading of {@code 1,,3} as an empty (missing) field, so every comma after the first one in the run adds
+   * one empty token, while tabs and spaces never do.
+   *
+   * @return the index of the last character consumed
+   */
+  private static int skipDelimiterRun(String line, int start, String delimiters, List<ParsedToken> values) {
+    int commas = line.charAt(start) == COMMA_CHAR ? 1 : 0
+    int i = start + 1
+    while (i < line.length()) {
+      char c = line.charAt(i)
+      boolean isDelimiter = delimiters.indexOf((int) c) >= 0
+      if (!isDelimiter && c > SPACE_CHAR) {
+        break
+      }
+      if (c == COMMA_CHAR) {
+        commas++
+      }
+      i++
+    }
+    for (int extra = 1; extra < commas; extra++) {
+      values.add(new ParsedToken('', false))
+    }
+    i - 1
+  }
+
+  private static Object convertValue(String value, ArffAttribute attr, boolean quoted, ArffReadOptions options,
+                                     int lineNumber, String rawLine) {
     if (value == null) {
       return null
     }
@@ -633,53 +818,48 @@ class MatrixArffReader {
     try {
       return switch (attr.type) {
         case ArffType.NUMERIC -> new BigDecimal(value)
-        case ArffType.INTEGER -> Integer.parseInt(value)
-        case ArffType.STRING, ArffType.NOMINAL -> value
-        case ArffType.DATE -> parseDate(value, attr.dateFormat)
+        case ArffType.INTEGER -> new BigDecimal(value).intValueExact()
+        case ArffType.STRING -> value
+        case ArffType.NOMINAL -> {
+          if (options.failOnUndeclaredNominalValue && !attr.containsNominalValue(value)) {
+            throw parseError("Undeclared nominal value '$value' for attribute '${attr.name}' (declared: ${attr.nominalValues})",
+                lineNumber, rawLine)
+          }
+          yield value
+        }
+        case ArffType.DATE -> parseDate(value, attr, options.dateMode)
+        case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine)
         default -> value
       }
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException | ArithmeticException e) {
       throw parseError("Invalid ${attr.type} value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     } catch (ParseException e) {
       throw parseError("Invalid DATE value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     }
   }
 
-  private static Date parseDate(String value, String format) throws ParseException {
-    String resolvedFormat = format ?: "yyyy-MM-dd'T'HH:mm:ss"
-    SimpleDateFormat sdf = ArffDateFormats.create(resolvedFormat)
-    sdf.parse(value)
+  /**
+   * Parse a relational cell: the (unescaped) token holds the nested rows, one per line, dense or sparse, optionally
+   * weighted, exactly like a @DATA section for the sub-relation.
+   */
+  private static Matrix parseRelationalValue(String value, ArffAttribute attr, ArffReadOptions options,
+                                             int lineNumber, String rawLine) {
+    List<List<Object>> rows = []
+    List<BigDecimal> weights = []
+    value.readLines().each { String nestedLine ->
+      String content = stripComment(nestedLine).trim()
+      if (content.isEmpty()) {
+        return
+      }
+      DataLine dataLine = splitInstanceWeight(content)
+      rows.add(parseDataRow(dataLine.content, attr.relationalAttributes, options, lineNumber, rawLine))
+      weights.add(dataLine.weight)
+    }
+    buildMatrix(attr.name, attr.relationalAttributes, rows, weights, options)
   }
 
-  private static String unescapeQuoted(String value) {
-    boolean quoted = (value.startsWith(SINGLE_QUOTE) && value.endsWith(SINGLE_QUOTE)) ||
-        (value.startsWith(DOUBLE_QUOTE) && value.endsWith(DOUBLE_QUOTE))
-    if (!quoted) {
-      return value
-    }
-    if (value.length() == 2) {
-      return ''
-    }
-    String unquoted = value.substring(1, value.length() - 1)
-    StringBuilder result = new StringBuilder()
-    boolean escape = false
-    for (int i = 0; i < unquoted.length(); i++) {
-      char c = unquoted.charAt(i)
-      if (escape) {
-        result.append(c)
-        escape = false
-        continue
-      }
-      if (c == BACKSLASH_CHAR) {
-        escape = true
-        continue
-      }
-      result.append(c)
-    }
-    if (escape) {
-      result.append(BACKSLASH_CHAR)
-    }
-    result.toString()
+  private static Date parseDate(String value, ArffAttribute attr, ArffDateMode mode) throws ParseException {
+    ArffDateFormats.parse(attr.dateFormatter(mode), value, mode)
   }
 
   private static String extractNominalValues(String typeSpec) {
@@ -687,35 +867,8 @@ class MatrixArffReader {
     if (openIndex < 0) {
       return null
     }
-    boolean inQuote = false
-    boolean escape = false
-    char quoteChar = 0
-    for (int i = openIndex + 1; i < typeSpec.length(); i++) {
-      char c = typeSpec.charAt(i)
-      if (inQuote) {
-        if (escape) {
-          escape = false
-          continue
-        }
-        if (c == BACKSLASH_CHAR) {
-          escape = true
-          continue
-        }
-        if (c == quoteChar) {
-          inQuote = false
-        }
-        continue
-      }
-      if (c == SINGLE_QUOTE_CHAR || c == DOUBLE_QUOTE_CHAR) {
-        inQuote = true
-        quoteChar = c
-        continue
-      }
-      if (c == CLOSE_BRACE) {
-        return typeSpec.substring(openIndex + 1, i)
-      }
-    }
-    null
+    int closeIndex = ArffScanner.indexOfOutsideQuotes(typeSpec, CLOSE_BRACE_CHAR, openIndex + 1)
+    closeIndex < 0 ? null : typeSpec.substring(openIndex + 1, closeIndex)
   }
 
   private static void validateFile(File file) {
@@ -767,6 +920,28 @@ class MatrixArffReader {
     new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}", cause)
   }
 
+  /** Attributes declared in one scope: the top level, or an open relational declaration named {@code name}. */
+  private static final class AttributeScope {
+    final String name
+    final List<ArffAttribute> attributes = []
+    final Set<String> names = [] as Set<String>
+
+    AttributeScope(String name) {
+      this.name = name
+    }
+  }
+
+  /** A data line with its trailing instance weight removed; {@code weight} is null when the line declared none. */
+  private static final class DataLine {
+    final String content
+    final BigDecimal weight
+
+    DataLine(String content, BigDecimal weight) {
+      this.content = content
+      this.weight = weight
+    }
+  }
+
   private static final class ParsedToken {
     final String value
     final boolean quoted
@@ -784,7 +959,8 @@ enum ArffType {
   INTEGER,
   STRING,
   NOMINAL,
-  DATE
+  DATE,
+  RELATIONAL
 }
 
 /** Class representing an ARFF attribute definition. */
@@ -794,13 +970,47 @@ class ArffAttribute {
   Class javaType
   List<String> nominalValues
   String dateFormat
+  /** Declarations of the sub-relation for a RELATIONAL attribute, otherwise null. */
+  List<ArffAttribute> relationalAttributes
 
   ArffAttribute(String name, ArffType type, Class javaType,
-                List<String> nominalValues = null, String dateFormat = null) {
+                List<String> nominalValues = null, String dateFormat = null, List<ArffAttribute> relationalAttributes = null) {
     this.name = name
     this.type = type
     this.javaType = javaType
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
+    this.relationalAttributes = relationalAttributes
+  }
+
+  private SimpleDateFormat dateFormatter
+  private ArffDateMode dateFormatterMode
+  private Set<String> nominalValueSet
+
+  /** Whether this NOMINAL declaration contains {@code value}, using a lazily cached membership set. */
+  boolean containsNominalValue(String value) {
+    if (type == ArffType.NOMINAL && nominalValueSet == null) {
+      nominalValueSet = nominalValues as LinkedHashSet<String>
+    }
+    nominalValueSet?.contains(value) ?: false
+  }
+
+  /** The formatter for this attribute's DATE pattern in the default {@link ArffDateMode#UTC}; see {@link #dateFormatter(ArffDateMode)}. */
+  SimpleDateFormat dateFormatter() {
+    dateFormatter(ArffDateMode.UTC)
+  }
+
+  /**
+   * The formatter for this attribute's DATE pattern (or the default pattern) in the given mode, created on first
+   * use and cached until a different mode is requested.
+   *
+   * @return the formatter, or null when this is not a DATE attribute
+   */
+  SimpleDateFormat dateFormatter(ArffDateMode mode) {
+    if (type == ArffType.DATE && (dateFormatter == null || dateFormatterMode != mode)) {
+      dateFormatter = ArffDateFormats.create(dateFormat ?: ArffDateFormats.DEFAULT_PATTERN, mode)
+      dateFormatterMode = mode
+    }
+    dateFormatter
   }
 }

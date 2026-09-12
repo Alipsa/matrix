@@ -559,19 +559,19 @@ plain
     assertEquals(4, m.columnCount())
 
     assertEquals(1.5, m[0, 'score'])
-    assertNull(m[0, 'note'])
+    assertEquals('hello', m[0, 'note'])
     assertEquals('yes', m[0, 'status'])
-    assertNull(m[0, 'count'])
+    assertEquals(0, m[0, 'count'])
 
-    assertNull(m[1, 'score'])
+    assertEquals(BigDecimal.ZERO, m[1, 'score'])
     assertEquals('hello', m[1, 'note'])
-    assertNull(m[1, 'status'])
+    assertEquals('yes', m[1, 'status'])
     assertEquals(4, m[1, 'count'])
 
-    assertNull(m[2, 'score'])
-    assertNull(m[2, 'note'])
-    assertNull(m[2, 'status'])
-    assertNull(m[2, 'count'])
+    assertEquals(BigDecimal.ZERO, m[2, 'score'])
+    assertEquals('hello', m[2, 'note'])
+    assertEquals('yes', m[2, 'status'])
+    assertEquals(0, m[2, 'count'])
   }
 
   @Test @Order(27)
@@ -593,10 +593,10 @@ plain
     assertEquals(2, m.rowCount())
     assertEquals('text, with comma', m[0, 'note'])
     assertEquals('value with comma', m[0, 'category'])
-    assertNull(m[0, 'amount'])
+    assertEquals(BigDecimal.ZERO, m[0, 'amount'])
 
     assertEquals('O\'Reilly', m[1, 'note'])
-    assertNull(m[1, 'category'])
+    assertEquals('value with comma', m[1, 'category'])
     assertNull(m[1, 'amount'])
   }
 
@@ -681,16 +681,16 @@ plain
     assertEquals(10.5, m[0, 'score'])
 
     assertEquals(2, m[1, 'id'])
-    assertNull(m[1, 'note'])
+    assertEquals('dense', m[1, 'note'])
     assertEquals(20.5, m[1, 'score'])
 
     assertEquals(3, m[2, 'id'])
     assertEquals('dense again', m[2, 'note'])
     assertNull(m[2, 'score'])
 
-    assertNull(m[3, 'id'])
+    assertEquals(0, m[3, 'id'])
     assertEquals('sparse only', m[3, 'note'])
-    assertNull(m[3, 'score'])
+    assertEquals(BigDecimal.ZERO, m[3, 'score'])
   }
 
   @Test @Order(32)
@@ -790,10 +790,10 @@ plain
     String arffContent = MatrixArffWriter.writeString(m, options)
     Matrix result = MatrixArffReader.readString(arffContent)
 
-    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','%comment',normal}"))
+    assertTrue(arffContent.contains("@ATTRIBUTE category {'','?','\\%comment',normal}"))
     assertTrue(arffContent.contains("''"))
     assertTrue(arffContent.contains("'?'"))
-    assertTrue(arffContent.contains("'%comment'"))
+    assertTrue(arffContent.contains("'\\%comment'"))
     assertEquals('', result[0, 'category'])
     assertEquals('?', result[1, 'category'])
     assertEquals('%comment', result[2, 'category'])

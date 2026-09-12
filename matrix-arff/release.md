@@ -1,5 +1,64 @@
 # Matrix-arff release history
 
+## v0.3.0, in progress
+Weka compatibility release. Files written by matrix-arff now interoperate with Weka across the documented supported
+behavior and limitations.
+Behaviour changes are marked **(changed)**.
+- Add `ArffEscapes` and align writer quoting with Weka's `Utils.quote`: tabs, newlines, carriage returns, `"`, `\` and
+  `%` anywhere in a value or identifier are now escaped (`\t`, `\n`, `\r`, `\"`, `\\`, `\%`) and quoted **(changed:**
+  such values were previously written raw, producing files Weka could not read**)**
+- Reader decodes Weka escapes inside quoted tokens: `\n`, `\t`, `\r` become the control character and `\"`, `\%`, `\\`,
+  `\'` the literal character, in relation names, attribute names, nominal declarations, dense and sparse values
+  **(changed:** `\n` previously decoded to the letter `n`**)**
+- `%` outside a quoted token starts a comment anywhere on a line, as in Weka **(changed:** previously only a `%` at the
+  start of a line was a comment; an unquoted value such as `50%` now reads as `50`. Since 0.3.0 the writer quotes and
+  escapes every value containing `%` (before, only nominal values *starting* with `%` were quoted)**)**
+- Sparse rows follow the ARFF specification as implemented by Weka: an omitted attribute is `0` (NUMERIC/INTEGER `0`,
+  first declared nominal value, epoch DATE, and for STRING the first explicit value in that column — Weka's dictionary
+  index 0 — or `null` when there is none); only an explicit `?` is missing **(changed:** omitted attributes were
+  previously `null`**)**
+- Read `relational` attributes (`@attribute bag relational … @end bag`, nested declarations allowed): each cell becomes a
+  nested `Matrix` (column type `Matrix`) whose rows may be dense or sparse **(changed:** `relational` was an unknown
+  type read as STRING**)**
+- Dense `@DATA` rows may be comma-, tab-, or space-delimited, as the ARFF specification allows; a run of delimiters
+  and blanks is one separator as in Weka, except that each extra comma still reads as an empty (missing) field
+  **(changed:** an unquoted tab or space inside a value now separates values, as it does in Weka; matrix-arff has
+  quoted values containing spaces since 0.2.x and values containing tabs since the escaping change in this release**)**
+- Reject single or double quotes that begin in the middle of an unquoted dense-row or nominal-declaration token
+  **(changed:** values such as `it's` were previously accepted unquoted; write them as `'it\'s'`**)**. Blanks after a
+  closing quote are syntax and are no longer appended to the value
+- Fix `@RELATION '` (lone quote) throwing `StringIndexOutOfBoundsException`; it is now an `IllegalArgumentException`
+  with line context
+- Fix DATE attribute formats containing escaped quotes (`date 'yyyy-MM-dd\'T\'HH:mm:ss'`, the form Weka and this
+  module write for the default pattern) failing to parse; a Date column written with default options now round-trips
+- Accept unquoted DATE formats (`date yyyy-MM-dd`) as Weka does; trailing text after the format is now a parse error
+- `DATETIME` and other types merely starting with `date` are no longer treated as DATE
+- Add `ArffReadOptions.omittedStringFallback(value)`: the value of a sparse-omitted STRING cell whose column has no
+  explicit value (`'0'` reproduces Weka's raw value and liac-arff's string)
+- Fix `LocalDate` and `LocalDateTime` values being shifted by the JVM's zone offset when written (regression from the
+  UTC formatter introduced in 0.2.1)
+- Write `NaN` and infinite `Double`/`Float` values as `?` (missing) instead of literals Weka and the reader reject
+- Reject DATE values with trailing text (`'2026-03-18garbage'`); `SimpleDateFormat.parse` silently ignored it
+- Reject duplicate `@ATTRIBUTE` names and empty nominal declarations (`{}`) with a parse error, as Weka does
+- INTEGER attributes accept integral decimals such as `35.0` (Weka treats `integer` as numeric); non-integral or
+  out-of-range values are still rejected
+- Support ARFF instance weights: `ArffReadOptions.instanceWeightColumn(name)` reads a trailing `{w}` into a NUMERIC column
+  (1 when absent) and `ArffWriteOptions.instanceWeightColumn(name)` writes that column as `,{w}`; without the option
+  weights are parsed and discarded instead of being treated as an extra row value
+- Weka 3.8 attribute weights (`@attribute x numeric {0.5}`) are recognised and ignored instead of being read as a nominal
+  declaration
+- Write `Matrix`-typed columns (or columns forced with `attributeTypesByColumn: [col: RELATIONAL]`) as `relational`
+  attributes; the sub-relation schema is derived from all nested matrices in the column (identical columns and types
+  required), nested relational columns are supported, and a nested `instanceWeightColumn` is written as `{w}`
+- `strict(true)` (or the new `failOnUndeclaredNominalValue(true)`) rejects nominal data values that are not in the
+  attribute declaration, as Weka does; the lenient default still accepts them
+- Add `dateMode` to `ArffReadOptions` and `ArffWriteOptions`: `ArffDateMode.UTC` (default, unchanged: UTC, `Locale.ROOT`,
+  whole value must match) or `ArffDateMode.WEKA` (the JVM's default time zone and locale, text after the date ignored)
+  to get exactly the `Date` instants Weka computes on the same machine
+- Create one date formatter per DATE attribute instead of one per cell when reading and writing; add
+  `ArffDateFormats.DEFAULT_PATTERN`
+- `ArffWriteOptions.toMap()` returns immutable collections instead of the option object's internal state
+
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips
 - Add `ArffDateFormats` utility to share strict (`lenient=false`), UTC, `Locale.ROOT` date formatter creation between reader and writer

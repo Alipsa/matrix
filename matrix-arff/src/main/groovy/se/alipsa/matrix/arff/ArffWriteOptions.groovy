@@ -16,8 +16,10 @@ class ArffWriteOptions {
   private static final String STRING_COLUMNS = 'stringColumns'
   private static final String ATTRIBUTE_TYPES_BY_COLUMN = 'attributeTypesByColumn'
   private static final String DATE_FORMATS_BY_COLUMN = 'dateFormatsByColumn'
+  private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String DATE_MODE = 'dateMode'
 
-  private Map<String, List<String>> nominalMappings = [:]
+  private Map<String, List<String>> nominalMappings = [:].asImmutable()
   private boolean inferNominals = true
   private int nominalThreshold = DEFAULT_NOMINAL_THRESHOLD
   private Set<String> nominalColumns = [] as Set<String>
@@ -25,9 +27,11 @@ class ArffWriteOptions {
   private Map<String, ArffTypeDecl> attributeTypesByColumn = [:]
   private String dateFormat = null
   private Map<String, String> dateFormatsByColumn = [:]
+  private String instanceWeightColumn = null
+  private ArffDateMode dateMode = ArffDateMode.UTC
 
   Map<String, List<String>> getNominalMappings() {
-    nominalMappings.asImmutable()
+    nominalMappings
   }
 
   boolean isInferNominals() {
@@ -58,8 +62,18 @@ class ArffWriteOptions {
     dateFormatsByColumn.asImmutable()
   }
 
+  /** Name of the numeric column written as the ARFF instance weight, or null when no weights are written. */
+  String getInstanceWeightColumn() {
+    instanceWeightColumn
+  }
+
+  /** How DATE values are formatted; {@link ArffDateMode#UTC} by default. */
+  ArffDateMode getDateMode() {
+    dateMode
+  }
+
   ArffWriteOptions nominalMappings(Map<String, List<String>> value) {
-    this.nominalMappings = value == null ? [:] : copyNominalMappings(value)
+    this.nominalMappings = immutableNominalMappings(value)
     this
   }
 
@@ -101,6 +115,26 @@ class ArffWriteOptions {
     this
   }
 
+  /**
+   * Write this numeric column as the ARFF instance weight ({@code ,{w}} after each row) instead of as an attribute;
+   * null cells write no weight (ARFF then assumes 1). The name applies at every depth: a column with this name inside
+   * a {@code Matrix}-typed (relational) column is written as the weight of the nested rows, never as a nested
+   * attribute.
+   */
+  ArffWriteOptions instanceWeightColumn(String value) {
+    this.instanceWeightColumn = value
+    this
+  }
+
+  /**
+   * Choose {@link ArffDateMode#WEKA} to format DATE values with the JVM's default time zone and locale exactly
+   * as Weka does on the same machine; null resets to the default {@link ArffDateMode#UTC}.
+   */
+  ArffWriteOptions dateMode(ArffDateMode value) {
+    this.dateMode = value == null ? ArffDateMode.UTC : value
+    this
+  }
+
   static ArffWriteOptions fromMap(Map<String, ?> options) {
     ArffWriteOptions result = new ArffWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -129,6 +163,12 @@ class ArffWriteOptions {
     if (normalized.containsKey('dateformatsbycolumn')) {
       result.dateFormatsByColumn(stringMapValue(normalized.dateformatsbycolumn, DATE_FORMATS_BY_COLUMN))
     }
+    if (normalized.containsKey('instanceweightcolumn')) {
+      result.instanceWeightColumn(OptionMaps.stringValueOrNull(normalized.instanceweightcolumn))
+    }
+    if (normalized.containsKey('datemode')) {
+      result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
+    }
 
     result
   }
@@ -136,7 +176,7 @@ class ArffWriteOptions {
   Map<String, ?> toMap() {
     Map<String, Object> result = [:]
     if (!nominalMappings.isEmpty()) {
-      result.nominalMappings = nominalMappings
+      result.nominalMappings = getNominalMappings()
     }
     if (!inferNominals) {
       result.inferNominals = false
@@ -145,19 +185,25 @@ class ArffWriteOptions {
       result.nominalThreshold = nominalThreshold
     }
     if (!nominalColumns.isEmpty()) {
-      result.nominalColumns = nominalColumns
+      result.nominalColumns = getNominalColumns()
     }
     if (!stringColumns.isEmpty()) {
-      result.stringColumns = stringColumns
+      result.stringColumns = getStringColumns()
     }
     if (!attributeTypesByColumn.isEmpty()) {
-      result.attributeTypesByColumn = attributeTypesByColumn
+      result.attributeTypesByColumn = getAttributeTypesByColumn()
     }
     if (dateFormat != null) {
       result.dateFormat = dateFormat
     }
     if (!dateFormatsByColumn.isEmpty()) {
-      result.dateFormatsByColumn = dateFormatsByColumn
+      result.dateFormatsByColumn = getDateFormatsByColumn()
+    }
+    if (instanceWeightColumn != null) {
+      result.instanceWeightColumn = instanceWeightColumn
+    }
+    if (dateMode != ArffDateMode.UTC) {
+      result.dateMode = dateMode
     }
     result
   }
@@ -175,7 +221,9 @@ class ArffWriteOptions {
         new OptionDescriptor(STRING_COLUMNS, Collection, null, 'Columns that should always be written as STRING'),
         new OptionDescriptor(ATTRIBUTE_TYPES_BY_COLUMN, Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
         new OptionDescriptor('dateFormat', String, null, 'Global DATE format override for DATE attributes'),
-        new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides')
+        new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides'),
+        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Numeric column written as the ARFF instance weight {w} after each row instead of as an attribute, at every relational depth'),
+        new OptionDescriptor(DATE_MODE, ArffDateMode, ArffDateMode.UTC, 'UTC (machine-independent, whole value must match) or WEKA (JVM default time zone and locale, trailing text ignored, as weka.core.Attribute) for formatting DATE values')
     ]
   }
 
@@ -233,6 +281,15 @@ class ArffWriteOptions {
     result
   }
 
+  private static Map<String, List<String>> immutableNominalMappings(Map<String, List<String>> value) {
+    if (value == null) {
+      return [:].asImmutable()
+    }
+    Map<String, List<String>> copy = copyNominalMappings(value)
+    copy.replaceAll { String key, List<String> values -> values.asImmutable() }
+    copy.asImmutable()
+  }
+
   private static Map<String, String> copyStringMap(Map<String, String> value, String name) {
     Map<String, String> result = [:]
     value.each { String key, String item ->
@@ -288,17 +345,7 @@ class ArffWriteOptions {
   }
 
   private static ArffTypeDecl attributeTypeValue(Object value, String name) {
-    if (ArffTypeDecl.isInstance(value)) {
-      return (ArffTypeDecl) value
-    }
-    if (CharSequence.isInstance(value)) {
-      try {
-        return ArffTypeDecl.valueOf(value.toString().trim().toUpperCase(java.util.Locale.ROOT))
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("$name must be one of ${ArffTypeDecl.values().toList()} but was $value", e)
-      }
-    }
-    throw new IllegalArgumentException("$name must be an ArffTypeDecl or String but was ${value?.class}")
+    ArffOptionValues.enumValue(value, ArffTypeDecl, name)
   }
 
 }

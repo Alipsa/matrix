@@ -26,7 +26,7 @@ To use the matrix-arff module, add it as a dependency to your project.
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
 implementation "se.alipsa.matrix:matrix-core:3.5.0"
-implementation "se.alipsa.matrix:matrix-arff:0.2.1"
+implementation "se.alipsa.matrix:matrix-arff:0.3.0"
 ```
 
 ### Maven Configuration
@@ -46,7 +46,7 @@ implementation "se.alipsa.matrix:matrix-arff:0.2.1"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-arff</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -59,11 +59,14 @@ The `MatrixArffReader` class provides several methods to read ARFF files from di
 
 ```groovy
 import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffDateMode
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
 ArffReadOptions readOptions = new ArffReadOptions()
     .fallbackMatrixName('fallback-name')
+    .instanceWeightColumn('weight')
+    .dateMode(ArffDateMode.WEKA)
 
 Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
 Matrix fromPath = MatrixArffReader.read(Paths.get("data/dataset.arff"), readOptions)
@@ -121,7 +124,7 @@ Sparse ARFF data rows are also supported:
 
 @DATA
 {0 1.5,2 ok}
-{1 'late sample',2 warning}
+{1 'late sample',2 warning,0 ?}
 {}
 ```
 
@@ -129,17 +132,23 @@ Sparse ARFF data rows are also supported:
 Matrix sparse = MatrixArffReader.readString(arffContent)
 
 assert sparse[0, 'score'] == 1.5
-assert sparse[0, 'note'] == null
+assert sparse[0, 'note'] == 'late sample'
 assert sparse[0, 'status'] == 'ok'
-assert sparse[2, 'score'] == null
+assert sparse[2, 'score'] == 0
 ```
 
-Supported sparse semantics in `matrix-arff`:
+Supported sparse semantics in `matrix-arff` (the ARFF specification as implemented by Weka; before 0.3.0 omitted
+attributes were read as `null`):
 
-- omitted attributes are read as `null`
-- quoted sparse values are supported
-- explicit `?` values are read as `null`
-- duplicate or out-of-range sparse indices fail fast with `IllegalArgumentException`
+- an attribute that is **omitted** from a sparse row has the value `0`: `0` for NUMERIC/INTEGER, the first declared value
+  for nominal attributes and `1970-01-01T00:00:00Z` for DATE
+- an omitted STRING attribute takes the first explicit value that appears in that column anywhere in the data (Weka's
+  string dictionary index 0); when the column has no explicit value at all the cell is `null` (Weka has no value there
+  either) unless `ArffReadOptions.omittedStringFallback` is set — `omittedStringFallback('0')` gives the raw `0` Weka
+  holds internally and the `"0"` liac-arff returns
+- a value that is **missing** must be written explicitly as `?` (for example `{0 1.5, 2 ?}`) and reads as `null`
+- quoted string and nominal values are supported
+- duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
 
 ### Reader Validation Modes
 
@@ -164,11 +173,46 @@ Matrix strictMatrix = MatrixArffReader.read(new File('dataset.arff'), options)
 
 Useful validation flags:
 
-- `strict(true)` turns on both strict unknown-type handling and strict dense row length validation
-- `failOnUnknownAttributeType(true)` rejects unsupported `@ATTRIBUTE` types instead of treating them as `STRING`
-- `failOnRowLengthMismatch(true)` rejects dense rows whose value count does not match the declared schema
+- `strict(value)` enables strict unknown-type, dense-row-length and undeclared-nominal validation; default: `false`
+- `failOnUnknownAttributeType(value)` rejects unsupported `@ATTRIBUTE` types instead of treating them as `STRING`; by
+  default it follows `strict`
+- `failOnRowLengthMismatch(value)` rejects dense rows whose value count does not match the declared schema; by default
+  it follows `strict`
+- `failOnUndeclaredNominalValue(value)` rejects nominal values missing from the attribute declaration; by default it
+  follows `strict`
+- `fallbackMatrixName(name)` supplies the matrix name when no `@RELATION` exists; default: the source name
+- `omittedStringFallback(value)` sets a sparse-omitted STRING value only when the attribute has no dictionary entry;
+  default: `null` (`'0'` reproduces Weka's raw value and liac-arff's string)
+- `instanceWeightColumn(name)` keeps `{w}` instance weights in a `BigDecimal` column, using `1` when a row omits its
+  weight; default: `null`, which parses and discards weights
+- `dateMode(ArffDateMode.UTC)` parses strictly with `Locale.ROOT` in UTC (default);
+  `dateMode(ArffDateMode.WEKA)` uses the JVM's locale and zone and ignores trailing date text like Weka
 
 Syntax errors such as unterminated quoted values are always rejected, and the parser now includes the offending line number and line content in those exceptions.
+
+### Weka Compatibility
+
+Since 0.3.0, `matrix-arff` supports the ARFF features used by Weka: comments and escaping, numeric, nominal, STRING,
+DATE and `relational` attributes, comma-, tab-, or space-delimited dense rows, sparse rows, missing values and instance
+weights. Use `ArffDateMode.WEKA` on both read and write options when files must produce the same `Date` instants as Weka
+on the same machine. The default `UTC` mode is machine-independent instead.
+
+Important interoperability limitations:
+
+- sparse input is always written back as dense rows
+- UTC date mode requires the entire value to match and uses `Locale.ROOT`; Weka uses the JVM defaults and accepts
+  trailing date text. Weka mode opts into those Weka rules
+- trailing text after a DATE format declaration is rejected even though Weka ignores it
+- `\a`, `\b`, `\f`, `\v` and octal escapes are not decoded exactly like Weka's `StreamTokenizer`; every escape Weka's
+  writer emits is supported
+- empty comma fields read as missing, while Weka rejects them
+- INTEGER values must fit an `Integer`; Weka stores every numeric type as `double`
+- a sparse-omitted STRING takes dictionary value 0, which can be the first explicit value from another row. Use an
+  explicit `?` for missing data and consider a deliberate dummy dictionary value
+- sparse-omitted STRING values inside relational cells are resolved per nested `Matrix`; Weka appears to share the
+  dictionary across all cells of the relational attribute
+- undeclared nominal values are rejected only when strict or explicit nominal validation is enabled
+- weights are retained only when `instanceWeightColumn` is configured; Weka attribute weights are parsed and discarded
 
 ## Options-First Write API
 
@@ -176,6 +220,7 @@ Syntax errors such as unterminated quoted values are always rejected, and the pa
 
 ```groovy
 import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffDateMode
 import se.alipsa.matrix.arff.ArffWriteOptions
 import se.alipsa.matrix.arff.MatrixArffWriter
 
@@ -183,6 +228,8 @@ ArffWriteOptions writeOptions = new ArffWriteOptions()
     .inferNominals(false)
     .attributeTypesByColumn([category: ArffTypeDecl.STRING])
     .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+    .instanceWeightColumn('weight')
+    .dateMode(ArffDateMode.WEKA)
 
 MatrixArffWriter.write(matrix, new File('configured.arff'), writeOptions)
 String arff = MatrixArffWriter.writeString(matrix, writeOptions)
@@ -190,7 +237,53 @@ String arff = MatrixArffWriter.writeString(matrix, writeOptions)
 
 Convenience overloads without `ArffWriteOptions` still exist for default behavior.
 
-## Focused v0.2.0 Examples
+Write-option parameters and defaults:
+
+- `inferNominals(value)`: infer nominal String/Object columns; default `true`
+- `nominalThreshold(n)`: maximum distinct values for nominal inference; default `50`
+- `nominalColumns(names)`: columns forced to nominal; default empty
+- `stringColumns(names)`: columns forced to STRING; default empty
+- `attributeTypesByColumn(types)`: per-column `STRING`, `NOMINAL`, `DATE`, `NUMERIC`, `REAL`, `INTEGER` or `RELATIONAL`;
+  default empty
+- `nominalMappings(values)`: ordered nominal declarations by column; default empty
+- `dateFormat(pattern)`: global DATE format; default `yyyy-MM-dd'T'HH:mm:ss`
+- `dateFormatsByColumn(patterns)`: per-column DATE formats; default empty
+- `instanceWeightColumn(name)`: numeric column emitted as `{w}` at every relational depth; default `null`
+- `dateMode(mode)`: `UTC` for machine-independent output (default), or `WEKA` for the JVM locale and zone
+
+### Relational Attributes
+
+A `Matrix`-typed column is written as an ARFF `relational` attribute. Every non-null nested matrix in that column must
+have identical column names and types. The following example writes two bags, reads them back, and accesses a nested
+value end to end:
+
+```groovy
+import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.MatrixArffWriter
+import se.alipsa.matrix.core.Matrix
+
+Matrix bagA = Matrix.builder('bag')
+    .columns(item: [1, 2], label: ['a', 'b'])
+    .types([Integer, String])
+    .build()
+Matrix bagB = Matrix.builder('bag')
+    .columns(item: [3], label: ['c'])
+    .types([Integer, String])
+    .build()
+Matrix source = Matrix.builder('bags')
+    .columns(id: [10, 20], observations: [bagA, bagB])
+    .types([Integer, Matrix])
+    .build()
+
+String arff = MatrixArffWriter.writeString(source)
+Matrix restored = MatrixArffReader.readString(arff)
+Matrix firstBag = restored[0, 'observations'] as Matrix
+
+assert firstBag.columnNames() == ['item', 'label']
+assert firstBag[1, 'label'] == 'b'
+```
+
+## Focused Examples
 
 ### Sparse Input
 
@@ -202,16 +295,16 @@ String sparseArff = """
 @ATTRIBUTE status {ok,warning,error}
 @DATA
 {0 1.5,2 ok}
-{1 'late sample',2 warning}
+{1 'late sample',2 warning,0 ?}
 {}
 """.trim()
 
 Matrix sparse = MatrixArffReader.readString(sparseArff)
 
 assert sparse[0, 'score'] == 1.5
-assert sparse[0, 'note'] == null
+assert sparse[0, 'note'] == 'late sample'
 assert sparse[1, 'status'] == 'warning'
-assert sparse[2, 'score'] == null
+assert sparse[2, 'score'] == 0
 ```
 
 ### Explicit Schema Control
@@ -310,6 +403,7 @@ The ARFF format supports several attribute types, which are automatically conver
 | `INTEGER` | Whole numbers | `Integer` |
 | `STRING` | Text strings | `String` |
 | `DATE` | Date/time values | `Date` |
+| `RELATIONAL` | Nested ARFF rows | `Matrix` |
 | `{val1,val2,...}` | Nominal (categorical) | `String` |
 
 **Note:** When writing a Matrix, `Long` and `BigInteger` columns are stored as `NUMERIC` and are read back as `BigDecimal`.
