@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 /**
  * Writes Matrix objects to ARFF (Attribute-Relation File Format) files.
@@ -261,7 +260,7 @@ class MatrixArffWriter {
       return createAttributeInfo(parts[0], colName, colType, ArffTypeDecl.NUMERIC, options)
     }
     if (isDateType(colType)) {
-      return createDateInfo(dateFormat)
+      return createDateInfo(dateFormat, options.dateMode)
     }
     if (options.inferNominals && (colType == String || colType == Object)) {
       Set<String> uniqueValues = [] as LinkedHashSet<String>
@@ -277,8 +276,8 @@ class MatrixArffWriter {
     createAttributeInfo(parts[0], colName, colType, ArffTypeDecl.STRING, options)
   }
 
-  private static ArffAttributeInfo createDateInfo(String dateFormat) {
-    new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${ArffEscapes.escape(dateFormat)}'", null, dateFormat)
+  private static ArffAttributeInfo createDateInfo(String dateFormat, ArffDateMode dateMode) {
+    new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${ArffEscapes.escape(dateFormat)}'", null, dateFormat, dateMode)
   }
 
   private static ArffTypeDecl explicitTypeForColumn(String colName, ArffWriteOptions options) {
@@ -301,7 +300,7 @@ class MatrixArffWriter {
       case ArffTypeDecl.REAL -> new ArffAttributeInfo(ArffTypeDecl.REAL, 'REAL')
       case ArffTypeDecl.INTEGER -> new ArffAttributeInfo(ArffTypeDecl.INTEGER, 'INTEGER')
       case ArffTypeDecl.STRING -> new ArffAttributeInfo(ArffTypeDecl.STRING, 'STRING')
-      case ArffTypeDecl.DATE -> createDateInfo(resolveDateFormat(colName, options))
+      case ArffTypeDecl.DATE -> createDateInfo(resolveDateFormat(colName, options), options.dateMode)
       case ArffTypeDecl.RELATIONAL -> createRelationalInfo([matrix], colName, options)
       case ArffTypeDecl.NOMINAL -> {
         List<String> nominalValues = nominalValuesForColumn(matrix, colName, colType, options)
@@ -508,20 +507,20 @@ class MatrixArffWriter {
   }
 
   private static String formatDate(Object value, ArffAttributeInfo info) {
-    SimpleDateFormat sdf = info.dateFormatter ?: ArffDateFormats.create(ArffDateFormats.DEFAULT_PATTERN)
+    SimpleDateFormat sdf = info.dateFormatter ?: ArffDateFormats.create(ArffDateFormats.DEFAULT_PATTERN, info.dateMode)
     if (value instanceof Date) {
-      return "'${sdf.format((Date) value)}'"
+      return "'${sdf.format(value)}'"
     }
     if (value instanceof LocalDate) {
-      Date date = Date.from(value.atStartOfDay(ZoneOffset.UTC).toInstant())
+      Date date = Date.from(value.atStartOfDay(ArffDateFormats.zone(info.dateMode)).toInstant())
       return "'${sdf.format(date)}'"
     }
     if (value instanceof LocalDateTime) {
-      Date date = Date.from(value.toInstant(ZoneOffset.UTC))
+      Date date = Date.from(value.atZone(ArffDateFormats.zone(info.dateMode)).toInstant())
       return "'${sdf.format(date)}'"
     }
     if (value instanceof Instant) {
-      Date date = Date.from((Instant) value)
+      Date date = Date.from(value)
       return "'${sdf.format(date)}'"
     }
     ArffEscapes.quote(value.toString())
@@ -587,17 +586,20 @@ class ArffAttributeInfo {
   List<String> nominalValues
   String dateFormat
   SimpleDateFormat dateFormatter
+  ArffDateMode dateMode
   List<String> relationalColumnNames
   List<ArffAttributeInfo> relationalInfos
   /** Nested column written as `{w}` after each nested row, or null. */
   String relationalWeightColumn
 
-  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null) {
+  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null,
+                    ArffDateMode dateMode = ArffDateMode.UTC) {
     this.type = type
     this.typeDeclaration = typeDeclaration
     this.nominalValues = nominalValues
     this.dateFormat = dateFormat
-    this.dateFormatter = dateFormat == null ? null : ArffDateFormats.create(dateFormat)
+    this.dateMode = dateMode
+    this.dateFormatter = dateFormat == null ? null : ArffDateFormats.create(dateFormat, dateMode)
   }
 
   /** Constructor for a RELATIONAL attribute with its sub-relation schema. */

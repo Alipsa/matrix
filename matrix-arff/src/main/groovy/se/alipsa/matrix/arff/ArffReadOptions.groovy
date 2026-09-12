@@ -14,6 +14,7 @@ class ArffReadOptions {
   private static final String FAIL_ON_UNDECLARED_NOMINAL_VALUE = 'failOnUndeclaredNominalValue'
   private static final String OMITTED_STRING_FALLBACK = 'omittedStringFallback'
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String DATE_MODE = 'dateMode'
 
   private String fallbackMatrixName = null
   private boolean strict = false
@@ -22,6 +23,7 @@ class ArffReadOptions {
   private Boolean failOnUndeclaredNominalValue = null
   private String omittedStringFallback = null
   private String instanceWeightColumn = null
+  private ArffDateMode dateMode = ArffDateMode.UTC
 
   String getFallbackMatrixName() {
     fallbackMatrixName
@@ -51,6 +53,11 @@ class ArffReadOptions {
   /** Name of the NUMERIC column that receives ARFF instance weights, or null when weights are discarded. */
   String getInstanceWeightColumn() {
     instanceWeightColumn
+  }
+
+  /** How DATE values are parsed; {@link ArffDateMode#UTC} by default. */
+  ArffDateMode getDateMode() {
+    dateMode
   }
 
   ArffReadOptions fallbackMatrixName(String value) {
@@ -99,6 +106,15 @@ class ArffReadOptions {
     this
   }
 
+  /**
+   * Choose {@link ArffDateMode#WEKA} to parse DATE values with the JVM's default time zone and locale exactly
+   * as Weka does on the same machine; null resets to the default {@link ArffDateMode#UTC}.
+   */
+  ArffReadOptions dateMode(ArffDateMode value) {
+    this.dateMode = value == null ? ArffDateMode.UTC : value
+    this
+  }
+
   static ArffReadOptions fromMap(Map<String, ?> options) {
     ArffReadOptions result = new ArffReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -126,6 +142,9 @@ class ArffReadOptions {
     if (normalized.containsKey('instanceweightcolumn')) {
       result.instanceWeightColumn(OptionMaps.stringValueOrNull(normalized.instanceweightcolumn))
     }
+    if (normalized.containsKey('datemode')) {
+      result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
+    }
     result
   }
 
@@ -152,6 +171,9 @@ class ArffReadOptions {
     if (instanceWeightColumn != null) {
       result.instanceWeightColumn = instanceWeightColumn
     }
+    if (dateMode != ArffDateMode.UTC) {
+      result.dateMode = dateMode
+    }
     result
   }
 
@@ -167,7 +189,8 @@ class ArffReadOptions {
         new OptionDescriptor(FAIL_ON_ROW_LENGTH_MISMATCH, Boolean, STRICT, 'Fail when a dense @DATA row has more or fewer values than the declared attributes'),
         new OptionDescriptor(FAIL_ON_UNDECLARED_NOMINAL_VALUE, Boolean, STRICT, 'Fail when a nominal data value is not in the attribute declaration, as Weka does'),
         new OptionDescriptor(OMITTED_STRING_FALLBACK, String, null, 'Value for a STRING attribute omitted from sparse rows when the column has no explicit value to resolve to (Weka dictionary index 0); null when unset, \'0\' matches Weka\'s raw value and liac-arff'),
-        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Name of a NUMERIC column that receives ARFF instance weights ({w} after a row, 1 when absent) in every relation including relational sub-relations; weights are discarded when unset')
+        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Name of a NUMERIC column that receives ARFF instance weights ({w} after a row, 1 when absent) in every relation including relational sub-relations; weights are discarded when unset'),
+        new OptionDescriptor(DATE_MODE, ArffDateMode, ArffDateMode.UTC, 'UTC (machine-independent, whole value must match) or WEKA (JVM default time zone and locale, trailing text ignored, as weka.core.Attribute) for parsing DATE values')
     ]
   }
 

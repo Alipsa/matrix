@@ -55,6 +55,9 @@ Behaviour changes are marked **(changed)**.
 - Reject single or double quotes that begin in the middle of an unquoted dense-row or nominal-declaration token
   **(changed:** values such as `it's` were previously accepted unquoted; write them as `'it\'s'`**)**. Blanks after a
   closing quote are syntax and are no longer appended to the value
+- Add `dateMode` to `ArffReadOptions` and `ArffWriteOptions`: `ArffDateMode.UTC` (default, unchanged: UTC, `Locale.ROOT`,
+  whole value must match) or `ArffDateMode.WEKA` (the JVM's default time zone and locale, text after the date ignored)
+  to get exactly the `Date` instants Weka computes on the same machine
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

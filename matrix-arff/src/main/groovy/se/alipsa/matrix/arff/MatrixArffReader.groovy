@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.ParseException
-import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -828,7 +827,7 @@ class MatrixArffReader {
           }
           yield value
         }
-        case ArffType.DATE -> parseDate(value, attr)
+        case ArffType.DATE -> parseDate(value, attr, options.dateMode)
         case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine)
         default -> value
       }
@@ -859,14 +858,8 @@ class MatrixArffReader {
     buildMatrix(attr.name, attr.relationalAttributes, rows, weights, options)
   }
 
-  private static Date parseDate(String value, ArffAttribute attr) throws ParseException {
-    ParsePosition position = new ParsePosition(0)
-    Date parsed = attr.dateFormatter().parse(value, position)
-    if (parsed == null || position.index != value.length()) {
-      int errorIndex = position.errorIndex >= 0 ? position.errorIndex : position.index
-      throw new ParseException("Unparseable date: \"$value\"", errorIndex)
-    }
-    parsed
+  private static Date parseDate(String value, ArffAttribute attr, ArffDateMode mode) throws ParseException {
+    ArffDateFormats.parse(attr.dateFormatter(mode), value, mode)
   }
 
   private static String extractNominalValues(String typeSpec) {
@@ -991,6 +984,7 @@ class ArffAttribute {
   }
 
   private SimpleDateFormat dateFormatter
+  private ArffDateMode dateFormatterMode
   private Set<String> nominalValueSet
 
   /** Whether this NOMINAL declaration contains {@code value}, using a lazily cached membership set. */
@@ -1001,14 +995,21 @@ class ArffAttribute {
     nominalValueSet?.contains(value) ?: false
   }
 
+  /** The formatter for this attribute's DATE pattern in the default {@link ArffDateMode#UTC}; see {@link #dateFormatter(ArffDateMode)}. */
+  SimpleDateFormat dateFormatter() {
+    dateFormatter(ArffDateMode.UTC)
+  }
+
   /**
-   * The strict UTC formatter for this attribute's DATE pattern (or the default pattern), created on first use.
+   * The formatter for this attribute's DATE pattern (or the default pattern) in the given mode, created on first
+   * use and cached until a different mode is requested.
    *
    * @return the formatter, or null when this is not a DATE attribute
    */
-  SimpleDateFormat dateFormatter() {
-    if (dateFormatter == null && type == ArffType.DATE) {
-      dateFormatter = ArffDateFormats.create(dateFormat ?: ArffDateFormats.DEFAULT_PATTERN)
+  SimpleDateFormat dateFormatter(ArffDateMode mode) {
+    if (type == ArffType.DATE && (dateFormatter == null || dateFormatterMode != mode)) {
+      dateFormatter = ArffDateFormats.create(dateFormat ?: ArffDateFormats.DEFAULT_PATTERN, mode)
+      dateFormatterMode = mode
     }
     dateFormatter
   }

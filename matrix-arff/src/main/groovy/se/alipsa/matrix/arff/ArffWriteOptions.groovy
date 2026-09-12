@@ -17,6 +17,7 @@ class ArffWriteOptions {
   private static final String ATTRIBUTE_TYPES_BY_COLUMN = 'attributeTypesByColumn'
   private static final String DATE_FORMATS_BY_COLUMN = 'dateFormatsByColumn'
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
+  private static final String DATE_MODE = 'dateMode'
 
   private Map<String, List<String>> nominalMappings = [:]
   private boolean inferNominals = true
@@ -27,6 +28,7 @@ class ArffWriteOptions {
   private String dateFormat = null
   private Map<String, String> dateFormatsByColumn = [:]
   private String instanceWeightColumn = null
+  private ArffDateMode dateMode = ArffDateMode.UTC
 
   Map<String, List<String>> getNominalMappings() {
     Map<String, List<String>> copy = [:]
@@ -67,6 +69,11 @@ class ArffWriteOptions {
   /** Name of the numeric column written as the ARFF instance weight, or null when no weights are written. */
   String getInstanceWeightColumn() {
     instanceWeightColumn
+  }
+
+  /** How DATE values are formatted; {@link ArffDateMode#UTC} by default. */
+  ArffDateMode getDateMode() {
+    dateMode
   }
 
   ArffWriteOptions nominalMappings(Map<String, List<String>> value) {
@@ -123,6 +130,15 @@ class ArffWriteOptions {
     this
   }
 
+  /**
+   * Choose {@link ArffDateMode#WEKA} to format DATE values with the JVM's default time zone and locale exactly
+   * as Weka does on the same machine; null resets to the default {@link ArffDateMode#UTC}.
+   */
+  ArffWriteOptions dateMode(ArffDateMode value) {
+    this.dateMode = value == null ? ArffDateMode.UTC : value
+    this
+  }
+
   static ArffWriteOptions fromMap(Map<String, ?> options) {
     ArffWriteOptions result = new ArffWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
@@ -153,6 +169,9 @@ class ArffWriteOptions {
     }
     if (normalized.containsKey('instanceweightcolumn')) {
       result.instanceWeightColumn(OptionMaps.stringValueOrNull(normalized.instanceweightcolumn))
+    }
+    if (normalized.containsKey('datemode')) {
+      result.dateMode(ArffOptionValues.enumValue(normalized.datemode, ArffDateMode, DATE_MODE))
     }
 
     result
@@ -187,6 +206,9 @@ class ArffWriteOptions {
     if (instanceWeightColumn != null) {
       result.instanceWeightColumn = instanceWeightColumn
     }
+    if (dateMode != ArffDateMode.UTC) {
+      result.dateMode = dateMode
+    }
     result
   }
 
@@ -204,7 +226,8 @@ class ArffWriteOptions {
         new OptionDescriptor(ATTRIBUTE_TYPES_BY_COLUMN, Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
         new OptionDescriptor('dateFormat', String, null, 'Global DATE format override for DATE attributes'),
         new OptionDescriptor(DATE_FORMATS_BY_COLUMN, Map, null, 'Per-column DATE format overrides'),
-        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Numeric column written as the ARFF instance weight {w} after each row instead of as an attribute, at every relational depth')
+        new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Numeric column written as the ARFF instance weight {w} after each row instead of as an attribute, at every relational depth'),
+        new OptionDescriptor(DATE_MODE, ArffDateMode, ArffDateMode.UTC, 'UTC (machine-independent, whole value must match) or WEKA (JVM default time zone and locale, trailing text ignored, as weka.core.Attribute) for formatting DATE values')
     ]
   }
 
@@ -317,17 +340,7 @@ class ArffWriteOptions {
   }
 
   private static ArffTypeDecl attributeTypeValue(Object value, String name) {
-    if (ArffTypeDecl.isInstance(value)) {
-      return (ArffTypeDecl) value
-    }
-    if (CharSequence.isInstance(value)) {
-      try {
-        return ArffTypeDecl.valueOf(value.toString().trim().toUpperCase(java.util.Locale.ROOT))
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("$name must be one of ${ArffTypeDecl.values().toList()} but was $value", e)
-      }
-    }
-    throw new IllegalArgumentException("$name must be an ArffTypeDecl or String but was ${value?.class}")
+    ArffOptionValues.enumValue(value, ArffTypeDecl, name)
   }
 
 }

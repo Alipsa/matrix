@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
+import se.alipsa.matrix.arff.ArffDateMode
 import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
@@ -798,5 +799,72 @@ MUSK-1,?,1
       MatrixArffReader.readString("@RELATION q\n@ATTRIBUTE a STRING\n@ATTRIBUTE b STRING\n@DATA\nit's,x % note\n")
     }
     assertTrue(e.message.contains('quoted data row'), e.message)
+  }
+
+  @Test
+  @SuppressWarnings('LocaleSetDefault') // WEKA mode is defined by the JVM default locale, so the test must set it
+  void wekaDateModeUsesTheJvmZoneAndLocaleAndIgnoresTrailingText() {
+    TimeZone originalZone = TimeZone.default
+    Locale originalLocale = Locale.default
+    TimeZone.default = TimeZone.getTimeZone('America/New_York')
+    Locale.default = Locale.FRANCE
+    try {
+      String arff = "@RELATION d\n@ATTRIBUTE when DATE 'dd MMM yyyy HH:mm'\n@DATA\n'18 mars 2026 10:00 extra'\n"
+
+      Matrix weka = MatrixArffReader.readString(arff, new ArffReadOptions().dateMode(ArffDateMode.WEKA))
+      // 10:00 in New York on 2026-03-18 is EDT (UTC-4)
+      assertEquals(Date.from(Instant.parse('2026-03-18T14:00:00Z')), weka[0, 'when'])
+
+      IllegalArgumentException utc = assertThrows(IllegalArgumentException) {
+        MatrixArffReader.readString(arff)
+      }
+      assertTrue(utc.message.contains("Invalid DATE value '18 mars 2026 10:00 extra'"), utc.message)
+
+      String written = MatrixArffWriter.writeString(weka,
+          new ArffWriteOptions().dateMode(ArffDateMode.WEKA).dateFormat('dd MMM yyyy HH:mm'))
+      assertTrue(written.contains("'18 mars 2026 10:00'"), written)
+      String writtenUtc = MatrixArffWriter.writeString(weka, new ArffWriteOptions().dateFormat('dd MMM yyyy HH:mm'))
+      assertTrue(writtenUtc.contains("'18 Mar 2026 14:00'"), writtenUtc)
+    } finally {
+      TimeZone.default = originalZone
+      Locale.default = originalLocale
+    }
+  }
+
+  @Test
+  void wekaDateModeKeepsLocalDateTimeWallClockAndReadsItInTheJvmZone() {
+    TimeZone original = TimeZone.default
+    TimeZone.default = TimeZone.getTimeZone('America/New_York')
+    try {
+      Matrix m = Matrix.builder('d')
+          .columns(d: [LocalDate.of(2026, 3, 18)], dt: [LocalDateTime.of(2026, 3, 18, 10, 0)])
+          .types([LocalDate, LocalDateTime])
+          .build()
+
+      String written = MatrixArffWriter.writeString(m, new ArffWriteOptions().dateMode(ArffDateMode.WEKA))
+      assertTrue(written.contains("'2026-03-18T00:00:00','2026-03-18T10:00:00'"), written)
+
+      Matrix weka = MatrixArffReader.readString(written, new ArffReadOptions().dateMode(ArffDateMode.WEKA))
+      assertEquals(Date.from(Instant.parse('2026-03-18T14:00:00Z')), weka[0, 'dt'])
+      Matrix utc = MatrixArffReader.readString(written)
+      assertEquals(Date.from(Instant.parse('2026-03-18T10:00:00Z')), utc[0, 'dt'])
+    } finally {
+      TimeZone.default = original
+    }
+  }
+
+  @Test
+  void dateModeOptionRoundTripsThroughMaps() {
+    assertEquals(ArffDateMode.UTC, new ArffReadOptions().dateMode)
+    assertEquals(ArffDateMode.WEKA, ArffReadOptions.fromMap([dateMode: 'weka']).dateMode)
+    assertEquals(ArffDateMode.WEKA, ArffWriteOptions.fromMap([dateMode: ArffDateMode.WEKA]).dateMode)
+    assertEquals([dateMode: ArffDateMode.WEKA], new ArffReadOptions().dateMode(ArffDateMode.WEKA).toMap())
+    assertEquals([dateMode: ArffDateMode.WEKA], new ArffWriteOptions().dateMode(ArffDateMode.WEKA).toMap())
+    assertFalse(new ArffWriteOptions().toMap().containsKey('dateMode'))
+
+    IllegalArgumentException bad = assertThrows(IllegalArgumentException) {
+      ArffReadOptions.fromMap([dateMode: 'local'])
+    }
+    assertTrue(bad.message.contains('dateMode must be one of [UTC, WEKA]'), bad.message)
   }
 }

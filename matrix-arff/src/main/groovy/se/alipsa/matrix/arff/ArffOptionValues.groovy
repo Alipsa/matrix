@@ -24,4 +24,21 @@ final class ArffOptionValues {
     throw new IllegalArgumentException("$name must be a boolean but was ${value?.class}")
   }
 
+  /**
+   * Coerce an option value to an enum constant: the constant itself, or its name as a string (case-insensitive).
+   */
+  static <E extends Enum<E>> E enumValue(Object value, Class<E> type, String name) {
+    if (type.isInstance(value)) {
+      return type.cast(value)
+    }
+    if (CharSequence.isInstance(value)) {
+      try {
+        return Enum.valueOf(type, value.toString().trim().toUpperCase(Locale.ROOT))
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("$name must be one of ${type.enumConstants.toList()} but was $value", e)
+      }
+    }
+    throw new IllegalArgumentException("$name must be a ${type.simpleName} or String but was ${value?.class}")
+  }
+
 }
