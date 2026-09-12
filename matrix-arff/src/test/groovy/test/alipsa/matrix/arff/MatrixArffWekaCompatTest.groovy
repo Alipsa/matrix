@@ -716,4 +716,43 @@ MUSK-1,?,1
     }
     assertTrue(weightOnly.message.contains("at least one column besides instanceWeightColumn 'w'"), weightOnly.message)
   }
+
+  @Test
+  void undeclaredNominalValuesAreRejectedInStrictMode() {
+    String arff = '@RELATION n\n@ATTRIBUTE c {a,b}\n@DATA\na\nz\n'
+
+    Matrix lenient = MatrixArffReader.readString(arff)
+    assertEquals(['a', 'z'], lenient.column('c'))
+
+    IllegalArgumentException strict = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arff, new ArffReadOptions().strict(true))
+    }
+    assertTrue(strict.message.contains("Undeclared nominal value 'z' for attribute 'c'"), strict.message)
+    assertTrue(strict.message.contains('line 5'), strict.message)
+
+    Matrix overridden = MatrixArffReader.readString(arff, new ArffReadOptions().strict(true).failOnUndeclaredNominalValue(false))
+    assertEquals(2, overridden.rowCount())
+
+    IllegalArgumentException explicit = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arff, new ArffReadOptions().failOnUndeclaredNominalValue(true))
+    }
+    assertTrue(explicit.message.contains('Undeclared nominal value'), explicit.message)
+  }
+
+  @Test
+  void undeclaredNominalCheckAppliesToSparseAndNestedRows() {
+    String arff = '''
+@RELATION n
+@ATTRIBUTE bag relational
+  @ATTRIBUTE c {a,b}
+@END bag
+@DATA
+'{0 z}'
+'''.trim()
+
+    IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arff, new ArffReadOptions().strict(true))
+    }
+    assertTrue(e.message.contains("Undeclared nominal value 'z'"), e.message)
+  }
 }

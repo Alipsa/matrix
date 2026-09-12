@@ -30,6 +30,7 @@ class ArffFormatProviderTest {
     assertTrue(Matrix.listReadOptions('arff').contains('failOnRowLengthMismatch'))
     assertTrue(Matrix.listReadOptions('arff').contains('omittedStringFallback'))
     assertTrue(Matrix.listReadOptions('arff').contains('instanceWeightColumn'))
+    assertTrue(Matrix.listReadOptions('arff').contains('failOnUndeclaredNominalValue'))
     assertTrue(Matrix.listWriteOptions('arff').contains('instanceWeightColumn'))
     assertTrue(Matrix.listWriteOptions('arff').contains('nominalMappings'))
     assertTrue(Matrix.listWriteOptions('arff').contains('inferNominals'))

@@ -11,6 +11,7 @@ class ArffReadOptions {
   private static final String STRICT = 'strict'
   private static final String FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE = 'failOnUnknownAttributeType'
   private static final String FAIL_ON_ROW_LENGTH_MISMATCH = 'failOnRowLengthMismatch'
+  private static final String FAIL_ON_UNDECLARED_NOMINAL_VALUE = 'failOnUndeclaredNominalValue'
   private static final String OMITTED_STRING_FALLBACK = 'omittedStringFallback'
   private static final String INSTANCE_WEIGHT_COLUMN = 'instanceWeightColumn'
 
@@ -18,6 +19,7 @@ class ArffReadOptions {
   private boolean strict = false
   private Boolean failOnUnknownAttributeType = null
   private Boolean failOnRowLengthMismatch = null
+  private Boolean failOnUndeclaredNominalValue = null
   private String omittedStringFallback = null
   private String instanceWeightColumn = null
 
@@ -35,6 +37,10 @@ class ArffReadOptions {
 
   boolean isFailOnRowLengthMismatch() {
     failOnRowLengthMismatch == null ? strict : failOnRowLengthMismatch.booleanValue()
+  }
+
+  boolean isFailOnUndeclaredNominalValue() {
+    failOnUndeclaredNominalValue == null ? strict : failOnUndeclaredNominalValue.booleanValue()
   }
 
   /** Value of a STRING cell omitted from a sparse row when the column has no explicit value at all; null by default. */
@@ -64,6 +70,11 @@ class ArffReadOptions {
 
   ArffReadOptions failOnRowLengthMismatch(boolean value) {
     this.failOnRowLengthMismatch = value
+    this
+  }
+
+  ArffReadOptions failOnUndeclaredNominalValue(boolean value) {
+    this.failOnUndeclaredNominalValue = value
     this
   }
 
@@ -106,6 +117,9 @@ class ArffReadOptions {
     if (normalized.containsKey('failonrowlengthmismatch')) {
       result.failOnRowLengthMismatch(ArffOptionValues.booleanValue(normalized.failonrowlengthmismatch, FAIL_ON_ROW_LENGTH_MISMATCH))
     }
+    if (normalized.containsKey('failonundeclarednominalvalue')) {
+      result.failOnUndeclaredNominalValue(ArffOptionValues.booleanValue(normalized.failonundeclarednominalvalue, FAIL_ON_UNDECLARED_NOMINAL_VALUE))
+    }
     if (normalized.containsKey('omittedstringfallback')) {
       result.omittedStringFallback(OptionMaps.stringValueOrNull(normalized.omittedstringfallback))
     }
@@ -129,6 +143,9 @@ class ArffReadOptions {
     if (failOnRowLengthMismatch != null) {
       result.failOnRowLengthMismatch = failOnRowLengthMismatch
     }
+    if (failOnUndeclaredNominalValue != null) {
+      result.failOnUndeclaredNominalValue = failOnUndeclaredNominalValue
+    }
     if (omittedStringFallback != null) {
       result.omittedStringFallback = omittedStringFallback
     }
@@ -145,9 +162,10 @@ class ArffReadOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('fallbackMatrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
-        new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types and row length mismatches unless overridden by specific options'),
+        new OptionDescriptor(STRICT, Boolean, false, 'Enable fail-fast validation for unknown attribute types, row length mismatches and undeclared nominal values unless overridden by specific options'),
         new OptionDescriptor(FAIL_ON_UNKNOWN_ATTRIBUTE_TYPE, Boolean, STRICT, 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
         new OptionDescriptor(FAIL_ON_ROW_LENGTH_MISMATCH, Boolean, STRICT, 'Fail when a dense @DATA row has more or fewer values than the declared attributes'),
+        new OptionDescriptor(FAIL_ON_UNDECLARED_NOMINAL_VALUE, Boolean, STRICT, 'Fail when a nominal data value is not in the attribute declaration, as Weka does'),
         new OptionDescriptor(OMITTED_STRING_FALLBACK, String, null, 'Value for a STRING attribute omitted from sparse rows when the column has no explicit value to resolve to (Weka dictionary index 0); null when unset, \'0\' matches Weka\'s raw value and liac-arff'),
         new OptionDescriptor(INSTANCE_WEIGHT_COLUMN, String, null, 'Name of a NUMERIC column that receives ARFF instance weights ({w} after a row, 1 when absent) in every relation including relational sub-relations; weights are discarded when unset')
     ]

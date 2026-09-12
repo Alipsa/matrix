@@ -778,7 +778,14 @@ class MatrixArffReader {
       return switch (attr.type) {
         case ArffType.NUMERIC -> new BigDecimal(value)
         case ArffType.INTEGER -> new BigDecimal(value).intValueExact()
-        case ArffType.STRING, ArffType.NOMINAL -> value
+        case ArffType.STRING -> value
+        case ArffType.NOMINAL -> {
+          if (options.failOnUndeclaredNominalValue && !attr.containsNominalValue(value)) {
+            throw parseError("Undeclared nominal value '$value' for attribute '${attr.name}' (declared: ${attr.nominalValues})",
+                lineNumber, rawLine)
+          }
+          yield value
+        }
         case ArffType.DATE -> parseDate(value, attr)
         case ArffType.RELATIONAL -> parseRelationalValue(value, attr, options, lineNumber, rawLine)
         default -> value
@@ -942,6 +949,15 @@ class ArffAttribute {
   }
 
   private SimpleDateFormat dateFormatter
+  private Set<String> nominalValueSet
+
+  /** Whether this NOMINAL declaration contains {@code value}, using a lazily cached membership set. */
+  boolean containsNominalValue(String value) {
+    if (type == ArffType.NOMINAL && nominalValueSet == null) {
+      nominalValueSet = nominalValues as LinkedHashSet<String>
+    }
+    nominalValueSet?.contains(value) ?: false
+  }
 
   /**
    * The strict UTC formatter for this attribute's DATE pattern (or the default pattern), created on first use.

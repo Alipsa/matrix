@@ -46,6 +46,8 @@ Behaviour changes are marked **(changed)**.
 - Write `Matrix`-typed columns (or columns forced with `attributeTypesByColumn: [col: RELATIONAL]`) as `relational`
   attributes; the sub-relation schema is derived from all nested matrices in the column (identical columns and types
   required), nested relational columns are supported, and a nested `instanceWeightColumn` is written as `{w}`
+- `strict(true)` (or the new `failOnUndeclaredNominalValue(true)`) rejects nominal data values that are not in the
+  attribute declaration, as Weka does; the lenient default still accepts them
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips
