@@ -25,6 +25,9 @@ Behaviour changes are marked **(changed)**.
   previously `null`**)**
 - Add `ArffReadOptions.omittedStringFallback(value)`: the value of a sparse-omitted STRING cell whose column has no
   explicit value (`'0'` reproduces Weka's raw value and liac-arff's string)
+- Fix `LocalDate` and `LocalDateTime` values being shifted by the JVM's zone offset when written (regression from the
+  UTC formatter introduced in 0.2.1)
+- Write `NaN` and infinite `Double`/`Float` values as `?` (missing) instead of literals Weka and the reader reject
 
 ## v0.2.1 - 2026-04-30
 - Fix nominal sentinel values (`?`, empty string, `%`-prefixed) being written unquoted, causing lossy ARFF round-trips

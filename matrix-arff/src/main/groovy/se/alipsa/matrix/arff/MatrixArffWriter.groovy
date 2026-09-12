@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 /**
  * Writes Matrix objects to ARFF (Attribute-Relation File Format) files.
@@ -328,12 +329,23 @@ class MatrixArffWriter {
       return QUESTION_MARK
     }
     return switch (info.type) {
-      case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> value.toString()
+      case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> isNonFinite(value) ? QUESTION_MARK : value.toString()
       case ArffTypeDecl.DATE -> formatDate(value, info)
       case ArffTypeDecl.NOMINAL -> escapeNominalValue(value.toString())
       case ArffTypeDecl.STRING -> escapeStringValue(value.toString())
       default -> throw new IllegalArgumentException("Unsupported ArffTypeDecl: ${info.type}")
     }
+  }
+
+  /** Weka has no representation for NaN or infinity (NaN is its internal missing marker), so they are written as `?`. */
+  private static boolean isNonFinite(Object value) {
+    if (value instanceof Double) {
+      return value.isNaN() || value.isInfinite()
+    }
+    if (value instanceof Float) {
+      return value.isNaN() || value.isInfinite()
+    }
+    false
   }
 
   private static String formatDate(Object value, ArffAttributeInfo info) {
@@ -342,11 +354,11 @@ class MatrixArffWriter {
       return "'${sdf.format((Date) value)}'"
     }
     if (value instanceof LocalDate) {
-      Date date = java.sql.Date.valueOf((LocalDate) value)
+      Date date = Date.from(value.atStartOfDay(ZoneOffset.UTC).toInstant())
       return "'${sdf.format(date)}'"
     }
     if (value instanceof LocalDateTime) {
-      Date date = Timestamp.valueOf((LocalDateTime) value)
+      Date date = Date.from(value.toInstant(ZoneOffset.UTC))
       return "'${sdf.format(date)}'"
     }
     if (value instanceof Instant) {

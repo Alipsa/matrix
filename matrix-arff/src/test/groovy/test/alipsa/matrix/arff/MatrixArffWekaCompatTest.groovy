@@ -14,6 +14,8 @@ import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * Tests that the ARFF dialect written and read by matrix-arff matches Weka's (weka.core.Utils and
@@ -282,5 +284,39 @@ class MatrixArffWekaCompatTest {
     assertEquals([null, null, null], MatrixArffReader.readString(arff).column('never'), 'null without the option')
     assertEquals('0', ArffReadOptions.fromMap([omittedStringFallback: '0']).omittedStringFallback)
     assertEquals([omittedStringFallback: '0'], new ArffReadOptions().omittedStringFallback('0').toMap())
+  }
+
+  @Test
+  void localDateAndLocalDateTimeAreWrittenWithoutZoneShift() {
+    TimeZone original = TimeZone.default
+    TimeZone.default = TimeZone.getTimeZone('America/New_York')
+    try {
+      Matrix m = Matrix.builder('ld')
+          .columns(d: [LocalDate.of(2026, 3, 18)], dt: [LocalDateTime.of(2026, 3, 18, 0, 30)])
+          .types([LocalDate, LocalDateTime])
+          .build()
+
+      String arff = MatrixArffWriter.writeString(m, new ArffWriteOptions().dateFormat('yyyy-MM-dd HH:mm'))
+
+      assertTrue(arff.contains("'2026-03-18 00:00','2026-03-18 00:30'"), arff)
+    } finally {
+      TimeZone.default = original
+    }
+  }
+
+  @Test
+  void nanAndInfinityAreWrittenAsMissing() {
+    Matrix m = Matrix.builder('nan')
+        .columns(d: [Double.NaN, Double.POSITIVE_INFINITY, 1.5d], f: [Float.NaN, 2.5f, Float.NEGATIVE_INFINITY])
+        .types([Double, Float])
+        .build()
+
+    String arff = MatrixArffWriter.writeString(m)
+    List<String> data = lines(arff).dropWhile { it != '@DATA' }.drop(1)
+
+    assertEquals(['?,?', '?,2.5', '1.5,?'], data)
+    Matrix back = MatrixArffReader.readString(arff)
+    assertNull(back[0, 'd'])
+    assertEquals(1.5, back[2, 'd'])
   }
 }
