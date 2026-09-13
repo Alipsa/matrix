@@ -3,13 +3,22 @@ package se.alipsa.matrix.avro
 import groovy.transform.PackageScope
 
 import org.apache.avro.Schema
+import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
+
+import java.nio.ByteBuffer
+import java.sql.Time
+import java.time.*
 
 /**
  * Locates the nested value that prevents an otherwise selected Avro schema from being written.
  */
 @PackageScope
 final class AvroSchemaCompatibility {
+
+  static boolean isCompatible(Schema schema, Object value) {
+    findIncompatibleValue(schema, value, null) == null
+  }
 
   static CompatibilityFailure findIncompatibleValue(Schema schema, Object value, String path) {
     if (value == null) {
@@ -25,7 +34,7 @@ final class AvroSchemaCompatibility {
         if (failure == null) {
           return null
         }
-        if (firstFailure == null) {
+        if (firstFailure == null || (firstFailure.path == path && failure.path != path)) {
           firstFailure = failure
         }
       }
@@ -35,7 +44,7 @@ final class AvroSchemaCompatibility {
       new CompatibilityFailure(path, firstFailure == null ? value : firstFailure.value, schema)
     }
     if (schema.logicalType != null) {
-      return MatrixAvroWriter.isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
+      return isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
     }
     if (schema.type == Schema.Type.ARRAY) {
       return findIncompatibleArrayValue(schema, value, path)
@@ -46,7 +55,86 @@ final class AvroSchemaCompatibility {
     if (schema.type == Schema.Type.RECORD) {
       return findIncompatibleRecordValue(schema, value, path)
     }
-    MatrixAvroWriter.isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
+    isLeafCompatible(schema, value) ? null : new CompatibilityFailure(path, value, schema)
+  }
+
+  private static boolean isLeafCompatible(Schema schema, Object value) {
+    def logical = schema.logicalType
+    if (logical != null) {
+      return isLogicalTypeCompatible(logical.name, value)
+    }
+    isPlainTypeCompatible(schema, value)
+  }
+
+  private static boolean isLogicalTypeCompatible(String name, Object value) {
+    switch (name) {
+      case 'date' -> LocalDate.isInstance(value) || java.sql.Date.isInstance(value) || Number.isInstance(value)
+      case 'time-millis', 'time-micros' -> LocalTime.isInstance(value) || Time.isInstance(value) || Number.isInstance(value)
+      case 'timestamp-millis' ->
+        Instant.isInstance(value) || Date.isInstance(value) || LocalDateTime.isInstance(value) || Number.isInstance(value)
+      case 'timestamp-micros' ->
+        Instant.isInstance(value) || Date.isInstance(value) || Number.isInstance(value)
+      case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(value) || Number.isInstance(value)
+      case 'uuid' -> UUID.isInstance(value) || String.isInstance(value)
+      case 'decimal' -> Number.isInstance(value) || byte[].isInstance(value) || ByteBuffer.isInstance(value)
+      default -> false
+    }
+  }
+
+  private static boolean isPlainTypeCompatible(Schema schema, Object value) {
+    switch (schema.type) {
+      case Schema.Type.STRING -> true // converted with toString() during writing
+      case Schema.Type.BOOLEAN -> Boolean.isInstance(value)
+      case Schema.Type.INT -> isExactIntCompatible(value)
+      case Schema.Type.LONG -> isExactLongCompatible(value) || Date.isInstance(value) || Instant.isInstance(value)
+      case Schema.Type.FLOAT -> Number.isInstance(value)
+      case Schema.Type.DOUBLE -> Number.isInstance(value) || BigDecimal.isInstance(value)
+      case Schema.Type.BYTES -> byte[].isInstance(value) || ByteBuffer.isInstance(value) || BigDecimal.isInstance(value)
+      case Schema.Type.FIXED -> GenericFixed.isInstance(value)
+      default -> false
+    }
+  }
+
+  private static boolean isExactIntCompatible(Object value) {
+    if (!Number.isInstance(value)) {
+      return false
+    }
+    if (NumericKinds.isDirectInt(value)) {
+      return true
+    }
+    try {
+      decimalValue((Number) value).intValueExact()
+      true
+    } catch (ArithmeticException ignored) {
+      false
+    }
+  }
+
+  private static boolean isExactLongCompatible(Object value) {
+    if (!Number.isInstance(value)) {
+      return false
+    }
+    if (NumericKinds.isDirectLong(value)) {
+      return true
+    }
+    try {
+      decimalValue((Number) value).longValueExact()
+      true
+    } catch (ArithmeticException ignored) {
+      false
+    }
+  }
+
+  static boolean isNonFiniteFloating(Number value) {
+    (Double.isInstance(value) && !Double.isFinite((Double) value)) ||
+        (Float.isInstance(value) && !Float.isFinite((Float) value))
+  }
+
+  private static BigDecimal decimalValue(Number value) {
+    if (isNonFiniteFloating(value)) {
+      throw new ArithmeticException('Non-finite number')
+    }
+    BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
   }
 
   private static CompatibilityFailure findIncompatibleArrayValue(Schema schema, Object value, String path) {

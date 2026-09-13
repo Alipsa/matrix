@@ -1,7 +1,5 @@
 package se.alipsa.matrix.avro
 
-import groovy.transform.PackageScope
-
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalType
 import org.apache.avro.LogicalTypes
@@ -10,7 +8,6 @@ import org.apache.avro.UnresolvedUnionException
 import org.apache.avro.file.DataFileWriter
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
-import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
@@ -882,7 +879,7 @@ class MatrixAvroWriter {
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
-      if (isNonFiniteFloating((Number) v)) {
+      if (AvroSchemaCompatibility.isNonFiniteFloating((Number) v)) {
         state.numerics.includeNonFiniteFloating((Number) v)
         return false
       }
@@ -941,7 +938,7 @@ class MatrixAvroWriter {
   }
   private static void profileDecimalColumn(Matrix matrix, String col, ColumnProfile profile) {
     if (profile.effectiveType == BigDecimal || profile.effectiveType == BigInteger) {
-      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) && !isNonFiniteFloating((Number) it) } as List<Number>
+      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) && !AvroSchemaCompatibility.isNonFiniteFloating((Number) it) } as List<Number>
       List<Number> values = sourceValues.collect { Number value ->
         decimalValue(value, col)
       } as List<Number>
@@ -979,7 +976,7 @@ class MatrixAvroWriter {
           if (profile.listNumericProfile == null) {
             profile.listNumericProfile = new NestedNumericProfile()
           }
-          if (isNonFiniteFloating((Number) e)) {
+          if (AvroSchemaCompatibility.isNonFiniteFloating((Number) e)) {
             profile.listNumericProfile.includeNonFiniteFloating((Number) e)
           } else {
             profile.listNumericProfile.include(
@@ -1024,7 +1021,7 @@ class MatrixAvroWriter {
           numericProfile = new NestedNumericProfile()
           profile.recordNumericProfiles[fieldName] = numericProfile
         }
-        if (isNonFiniteFloating((Number) value)) {
+        if (AvroSchemaCompatibility.isNonFiniteFloating((Number) value)) {
           numericProfile.includeNonFiniteFloating((Number) value)
         } else {
           numericProfile.include(
@@ -1069,91 +1066,20 @@ class MatrixAvroWriter {
     }
   }
   /**
-   * Checks if a Java value is compatible with an Avro schema type.
+   * Checks whether a Java value can be written under an Avro schema.
    *
-   * <p>Used for union type resolution to find the appropriate branch.
-   * Compatibility rules are lenient for numeric types (any Number matches
-   * LONG, FLOAT, DOUBLE) but strict for other types.
-   *
-   * @param s the Avro schema to check against
-   * @param v the Java value to check (may be null)
-   * @return true if the value can be serialized under this schema
+   * @param schema the Avro schema to check against
+   * @param value the Java value to check (may be null)
+   * @return true if the value can be serialized under the schema
    */
-  private static boolean isCompatible(Schema s, Object v) {
-    AvroSchemaCompatibility.findIncompatibleValue(s, v, null) == null
-  }
-  @PackageScope
-  static boolean isLeafCompatible(Schema s, Object v) {
-    def logical = s.getLogicalType()
-    if (logical != null) {
-      return isLogicalTypeCompatible(logical.getName(), v)
-    }
-    isPlainTypeCompatible(s, v)
-  }
-  private static boolean isLogicalTypeCompatible(String name, Object v) {
-    switch (name) {
-      case 'date' -> LocalDate.isInstance(v) || java.sql.Date.isInstance(v) || Number.isInstance(v)
-      case 'time-millis', 'time-micros' -> LocalTime.isInstance(v) || Time.isInstance(v) || Number.isInstance(v)
-      case 'timestamp-millis' ->
-        Instant.isInstance(v) || Date.isInstance(v) || LocalDateTime.isInstance(v) || Number.isInstance(v)
-      case 'timestamp-micros' ->
-        Instant.isInstance(v) || Date.isInstance(v) || Number.isInstance(v)
-      case 'local-timestamp-millis', 'local-timestamp-micros' -> LocalDateTime.isInstance(v) || Number.isInstance(v)
-      case 'uuid' -> UUID.isInstance(v) || String.isInstance(v)
-      case 'decimal' -> Number.isInstance(v) || byte[].isInstance(v) || ByteBuffer.isInstance(v)
-      default -> false
-    }
-  }
-  private static boolean isPlainTypeCompatible(Schema s, Object v) {
-    switch (s.getType()) {
-      case Schema.Type.STRING -> true // we'll toString() later
-      case Schema.Type.BOOLEAN -> Boolean.isInstance(v)
-      case Schema.Type.INT -> isExactIntCompatible(v)
-      case Schema.Type.LONG -> isExactLongCompatible(v) || Date.isInstance(v) || Instant.isInstance(v)
-      case Schema.Type.FLOAT -> Number.isInstance(v)
-      case Schema.Type.DOUBLE -> Number.isInstance(v) || BigDecimal.isInstance(v)
-      case Schema.Type.BYTES -> (byte[].isInstance(v)) || (ByteBuffer.isInstance(v)) || (BigDecimal.isInstance(v))
-      case Schema.Type.FIXED -> GenericFixed.isInstance(v)
-      default -> false
-    }
-  }
-  private static boolean isExactIntCompatible(Object value) {
-    if (!Number.isInstance(value)) {
-      return false
-    }
-    if (NumericKinds.isDirectInt(value)) {
-      return true
-    }
-    try {
-      decimalValue((Number) value, null).intValueExact()
-      true
-    } catch (ArithmeticException | AvroSchemaException ignored) {
-      false
-    }
-  }
-  private static boolean isExactLongCompatible(Object value) {
-    if (!Number.isInstance(value)) {
-      return false
-    }
-    if (NumericKinds.isDirectLong(value)) {
-      return true
-    }
-    try {
-      decimalValue((Number) value, null).longValueExact()
-      true
-    } catch (ArithmeticException | AvroSchemaException ignored) {
-      false
-    }
-  }
-  private static boolean isNonFiniteFloating(Number value) {
-    (Double.isInstance(value) && !Double.isFinite((Double) value)) ||
-        (Float.isInstance(value) && !Float.isFinite((Float) value))
+  private static boolean isCompatible(Schema schema, Object value) {
+    AvroSchemaCompatibility.isCompatible(schema, value)
   }
   private static BigDecimal decimalValue(Number value, String columnName) {
     decimalValue(value, columnName, null, -1)
   }
   private static BigDecimal decimalValue(Number value, String columnName, String valuePath, int rowNumber) {
-    if (isNonFiniteFloating(value)) {
+    if (AvroSchemaCompatibility.isNonFiniteFloating(value)) {
       String message = valuePath == null ? 'Non-finite decimal value' : "Non-finite decimal value at $valuePath"
       throw rowNumber >= 0
           ? new AvroSchemaException(message, columnName, FINITE_NUMBER_TYPE, String.valueOf(value), rowNumber)
