@@ -56,19 +56,24 @@ final class ParquetValueWriter {
 
   /**
    * Runs the given write action with the supplied timezone pinned for the current thread,
-   * clearing it afterwards. The pinned timezone is used when converting
-   * {@link LocalDateTime} values to UTC timestamps.
+   * restoring the previously pinned timezone (if any) afterwards. The pinned timezone is
+   * used when converting {@link LocalDateTime} values to UTC timestamps.
    *
    * @param zoneId the timezone to pin, or null to use the system default
    * @param action the write action to execute
    * @return the action's result
    */
   static <T> T withZoneId(ZoneId zoneId, Closure<T> action) {
+    ZoneId previous = ZONE_ID_HOLDER.get()
     ZONE_ID_HOLDER.set(zoneId)
     try {
       action.call()
     } finally {
-      ZONE_ID_HOLDER.remove()
+      if (previous == null) {
+        ZONE_ID_HOLDER.remove()
+      } else {
+        ZONE_ID_HOLDER.set(previous)
+      }
     }
   }
 
