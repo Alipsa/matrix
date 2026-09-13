@@ -25,6 +25,10 @@ package se.alipsa.matrix.avro.exceptions
  *     }
  * }
  * }</pre>
+ *
+ * <p>The contextual constructor overload with a fifth {@code null} argument resolves to the
+ * {@link Throwable} cause overload. Do not add an {@link Integer} row-number overload because
+ * that would make dynamic calls with {@code null} ambiguous.
  */
 class AvroSchemaException extends RuntimeException {
 

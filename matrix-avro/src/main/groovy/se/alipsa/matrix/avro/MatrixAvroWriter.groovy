@@ -604,13 +604,16 @@ class MatrixAvroWriter {
         try {
           if (!isCompatible(fs, v)) {
             AvroSchemaCompatibility.CompatibilityFailure failure = AvroSchemaCompatibility.findIncompatibleValue(fs, v, col) {
-              Schema nestedSchema, Object nestedValue -> isCompatible(nestedSchema, nestedValue)
+              Schema nestedSchema, Object nestedValue -> isLeafCompatible(nestedSchema, nestedValue)
             }
+            String failurePath = failure?.path ?: col
+            Schema failureSchema = failure?.schema ?: fs
+            Object failureValue = failure?.value ?: v
             throw new AvroSchemaException(
-                "Value does not match schema type at ${failure.path}",
+                "Value does not match schema type at $failurePath",
                 col,
-                AvroSchemaUtil.schemaTypeLabel(fs),
-                failure.value?.getClass()?.simpleName ?: NULL_TYPE_NAME
+                AvroSchemaUtil.schemaTypeLabel(failureSchema),
+                failureValue?.getClass()?.simpleName ?: NULL_TYPE_NAME
             )
           }
           rec.put(col, toAvroValue(fs, v, decConv, col))
@@ -1077,25 +1080,19 @@ class MatrixAvroWriter {
    * @return true if the value can be serialized under this schema
    */
   private static boolean isCompatible(Schema s, Object v) {
+    AvroSchemaCompatibility.findIncompatibleValue(s, v, null) {
+      Schema nestedSchema, Object nestedValue -> isLeafCompatible(nestedSchema, nestedValue)
+    } == null
+  }
+  private static boolean isLeafCompatible(Schema s, Object v) {
     if (v == null) {
       return true
-    }
-    if (s.getType() == Schema.Type.UNION) {
-      return isUnionCompatible(s, v)
     }
     def logical = s.getLogicalType()
     if (logical != null) {
       return isLogicalTypeCompatible(logical.getName(), v)
     }
     isPlainTypeCompatible(s, v)
-  }
-  private static boolean isUnionCompatible(Schema s, Object v) {
-    for (Schema branch : s.getTypes()) {
-      if (isCompatible(branch, v)) {
-        return true
-      }
-    }
-    false
   }
   private static boolean isLogicalTypeCompatible(String name, Object v) {
     switch (name) {
@@ -1120,36 +1117,9 @@ class MatrixAvroWriter {
       case Schema.Type.FLOAT -> Number.isInstance(v)
       case Schema.Type.DOUBLE -> Number.isInstance(v) || BigDecimal.isInstance(v)
       case Schema.Type.BYTES -> (byte[].isInstance(v)) || (ByteBuffer.isInstance(v)) || (BigDecimal.isInstance(v))
-      case Schema.Type.ARRAY -> isArrayCompatible(s, v)
-      case Schema.Type.MAP -> isMapCompatible(s, v)
-      case Schema.Type.RECORD -> isRecordCompatible(s, v)
       case Schema.Type.FIXED -> GenericFixed.isInstance(v)
       default -> false
     }
-  }
-  private static boolean isArrayCompatible(Schema schema, Object value) {
-    if (!(List.isInstance(value))) {
-      return false
-    }
-    Schema elem = schema.getElementType()
-    ((List) value).every { Object item -> isCompatible(elem, item) }
-  }
-  private static boolean isMapCompatible(Schema schema, Object value) {
-    if (!(Map.isInstance(value))) {
-      return false
-    }
-    Schema valueSchema = schema.getValueType()
-    ((Map) value).entrySet().every { Map.Entry entry -> isCompatible(valueSchema, entry.value) }
-  }
-  private static boolean isRecordCompatible(Schema schema, Object value) {
-    if (GenericRecord.isInstance(value)) {
-      return true
-    }
-    if (!(Map.isInstance(value))) {
-      return false
-    }
-    Map input = (Map) value
-    schema.getFields().every { Schema.Field field -> isCompatible(field.schema(), input.get(field.name())) }
   }
   private static boolean isExactIntCompatible(Object value) {
     if (!Number.isInstance(value)) {

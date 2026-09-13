@@ -35,9 +35,23 @@ class AvroSchemaDeclTest {
 
   @Test
   void classOnlyBigIntegerDeclarationsUseTheDefaultPrecision() {
-    assertEquals([kind: 'bigInteger', precision: 10], AvroSchemaDecl.type(BigInteger).toMap())
-    assertEquals([kind: 'array', elementType: [kind: 'bigInteger', precision: 10]], AvroSchemaDecl.arrayOf(BigInteger).toMap())
-    assertEquals([kind: 'map', valueType: [kind: 'bigInteger', precision: 10]], AvroSchemaDecl.mapOf(BigInteger).toMap())
+    assertEquals([kind: 'bigInteger', precision: 19], AvroSchemaDecl.type(BigInteger).toMap())
+    assertEquals([kind: 'array', elementType: [kind: 'bigInteger', precision: 19]], AvroSchemaDecl.arrayOf(BigInteger).toMap())
+    assertEquals([kind: 'map', valueType: [kind: 'bigInteger', precision: 19]], AvroSchemaDecl.mapOf(BigInteger).toMap())
+  }
+
+  @Test
+  void classOnlyBigIntegerDeclarationSupportsTheFormerLongRange() {
+    BigInteger value = new BigInteger('1234567890123456789')
+    Matrix matrix = Matrix.builder('DeclaredBigInteger')
+        .columns(id: [value])
+        .types(BigInteger)
+        .build()
+
+    byte[] bytes = MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+        .columnSchema('id', AvroSchemaDecl.type(BigInteger)))
+
+    assertEquals(value, MatrixAvroReader.read(bytes)[0, 'id'])
   }
 
   @Test

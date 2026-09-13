@@ -179,7 +179,8 @@ Supported declaration kinds:
 - `decimalColumn(precision, scale)` as a column-oriented alias for fixed decimal metadata
 - `bigInteger(precision)` for a lossless scale-zero decimal; use `array(bigInteger(precision))` or
   `map(bigInteger(precision))` for an explicit nested precision. Class-only `type(BigInteger)`,
-  `arrayOf(BigInteger)`, and `mapOf(BigInteger)` remain supported and use precision `10`
+  `arrayOf(BigInteger)`, and `mapOf(BigInteger)` remain supported and use precision `19`, which
+  covers the range previously supported by Avro `long`
 - `array(...)` for explicit array element types
 - `arrayOf(Class<?>)` and `arrayOf(AvroScalarTypeDecl)` as scalar array shortcuts
 - `map(...)` for explicit map value types

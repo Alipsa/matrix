@@ -29,7 +29,7 @@ abstract class AvroSchemaDecl {
   private static final String KIND_MAP = 'map'
   private static final String KIND_RECORD = 'record'
   private static final String KEY_PRECISION = 'precision'
-  private static final int DEFAULT_BIG_INTEGER_PRECISION = 10
+  private static final int DEFAULT_BIG_INTEGER_PRECISION = 19
 
   private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
       (String)        : AvroScalarTypeDecl.STRING,
@@ -74,6 +74,8 @@ abstract class AvroSchemaDecl {
    * Creates a scalar schema declaration from a supported Java type.
    *
    * <p>Use {@link #decimal(int, int)} for {@link BigDecimal} instead of this method.
+   * {@link BigInteger} uses a lossless scale-zero decimal with precision 19, which
+   * covers the range previously supported by Avro {@code long}.
    * Use {@link #array(AvroSchemaDecl)}, {@link #map(AvroSchemaDecl)}, or
    * {@link #record(Map)} for nested collection types.
    *

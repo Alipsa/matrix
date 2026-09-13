@@ -17,14 +17,23 @@ final class AvroSchemaCompatibility {
       return null
     }
     if (schema.type == Schema.Type.UNION) {
-      if (schema.types.any { Schema branch -> compatible.call(branch, value) }) {
-        return null
+      for (Schema candidate : schema.types) {
+        if (findIncompatibleValue(candidate, value, path, compatible) == null) {
+          return null
+        }
       }
       Schema branch = schema.types.find { Schema candidate -> candidate.type != Schema.Type.NULL }
-      return branch == null ? new CompatibilityFailure(path, value) : findIncompatibleValue(branch, value, path, compatible)
+      if (branch == null) {
+        return new CompatibilityFailure(path, value, schema)
+      }
+      CompatibilityFailure failure = findIncompatibleValue(branch, value, path, compatible)
+      if (failure != null && failure.path?.toString() != path) {
+        return failure
+      }
+      new CompatibilityFailure(path, failure?.value ?: value, schema)
     }
     if (schema.logicalType != null) {
-      return compatible.call(schema, value) ? null : new CompatibilityFailure(path, value)
+      return compatible.call(schema, value) ? null : new CompatibilityFailure(path, value, schema)
     }
     if (schema.type == Schema.Type.ARRAY) {
       return findIncompatibleArrayValue(schema, value, path, compatible)
@@ -35,17 +44,18 @@ final class AvroSchemaCompatibility {
     if (schema.type == Schema.Type.RECORD) {
       return findIncompatibleRecordValue(schema, value, path, compatible)
     }
-    compatible.call(schema, value) ? null : new CompatibilityFailure(path, value)
+    compatible.call(schema, value) ? null : new CompatibilityFailure(path, value, schema)
   }
 
   private static CompatibilityFailure findIncompatibleArrayValue(Schema schema, Object value, String path,
                                                                   Closure<Boolean> compatible) {
     if (!List.isInstance(value)) {
-      return new CompatibilityFailure(path, value)
+      return new CompatibilityFailure(path, value, schema)
     }
     List values = (List) value
     for (int index = 0; index < values.size(); index++) {
-      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, values[index], "$path[$index]", compatible)
+      String elementPath = path == null ? null : "$path[$index]"
+      CompatibilityFailure failure = findIncompatibleValue(schema.elementType, values[index], elementPath, compatible)
       if (failure != null) {
         return failure
       }
@@ -56,11 +66,12 @@ final class AvroSchemaCompatibility {
   private static CompatibilityFailure findIncompatibleMapValue(Schema schema, Object value, String path,
                                                                 Closure<Boolean> compatible) {
     if (!Map.isInstance(value)) {
-      return new CompatibilityFailure(path, value)
+      return new CompatibilityFailure(path, value, schema)
     }
     Map values = (Map) value
     for (Map.Entry entry : values.entrySet()) {
-      CompatibilityFailure failure = findIncompatibleValue(schema.valueType, entry.value, "$path['${entry.key}']", compatible)
+      String valuePath = path == null ? null : "$path['${entry.key}']"
+      CompatibilityFailure failure = findIncompatibleValue(schema.valueType, entry.value, valuePath, compatible)
       if (failure != null) {
         return failure
       }
@@ -74,13 +85,12 @@ final class AvroSchemaCompatibility {
       return null
     }
     if (!Map.isInstance(value)) {
-      return new CompatibilityFailure(path, value)
+      return new CompatibilityFailure(path, value, schema)
     }
     Map values = (Map) value
     for (Schema.Field field : schema.fields) {
-      CompatibilityFailure failure = findIncompatibleValue(
-          field.schema(), values.get(field.name()), "$path.${field.name()}", compatible
-      )
+      String fieldPath = path == null ? null : "$path.${field.name()}"
+      CompatibilityFailure failure = findIncompatibleValue(field.schema(), values.get(field.name()), fieldPath, compatible)
       if (failure != null) {
         return failure
       }
@@ -92,10 +102,12 @@ final class AvroSchemaCompatibility {
 
     final String path
     final Object value
+    final Schema schema
 
-    private CompatibilityFailure(String path, Object value) {
+    private CompatibilityFailure(String path, Object value, Schema schema) {
       this.path = path
       this.value = value
+      this.schema = schema
     }
   }
 }

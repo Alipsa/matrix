@@ -672,6 +672,25 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void nestedSchemaMismatchReportsTheFailingPositionSchema() {
+    Matrix matrix = Matrix.builder('RecordMismatch')
+        .columns(rec: [[a: 'not an integer']])
+        .types(Map)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+          .columnSchema('rec', AvroSchemaDecl.record('RecordValue', [a: AvroSchemaDecl.type(Integer)])))
+    }
+
+    assertEquals('rec', exception.columnName)
+    assertEquals(0, exception.rowNumber)
+    assertEquals('UNION[NULL, INT]', exception.expectedType)
+    assertEquals('String', exception.actualType)
+    assertTrue(exception.message.contains('at rec.a'))
+  }
+
+  @Test
   void testColumnSchemaCanForceArrayElementType() {
     Matrix m = Matrix.builder('ForceArray')
         .columns(tags: [[1, 2], [3L, null]])
