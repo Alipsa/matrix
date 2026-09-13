@@ -16,7 +16,11 @@ import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.InsertAllRequest
 import com.google.cloud.bigquery.InsertAllResponse
+import com.google.cloud.bigquery.Job
+import com.google.cloud.bigquery.JobId
+import com.google.cloud.bigquery.JobInfo
 import com.google.cloud.bigquery.JobStatistics
+import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
 import com.google.cloud.bigquery.StandardTableDefinition
@@ -70,7 +74,10 @@ class InsertAppendSemanticsTest {
     Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
 
     withWriteApiDisabled {
-      bq.insert(sampleMatrix(), state.tableId, false)
+      BqInsertResult result = bq.insertRows(sampleMatrix(), state.tableId, false)
+      assertEquals(BqInsertResult.WriteMechanism.INSERT_ALL, result.writeMechanism)
+      assertEquals(2L, result.successfulRowCount)
+      assertEquals(null, result.loadStatistics)
     }
 
     assertEquals(1, state.insertAllCalls)
@@ -86,7 +93,7 @@ class InsertAppendSemanticsTest {
     Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
 
     withWriteApiDisabled {
-      bq.insert(sampleMatrix(), state.tableId, true)
+      assertEquals(null, bq.insert(sampleMatrix(), state.tableId, true))
     }
 
     assertEquals(1, state.insertAllCalls)
@@ -194,6 +201,47 @@ class InsertAppendSemanticsTest {
     ))
   }
 
+  @Test
+  void insertAllUsesStableVersionedIdsAndNormalizesFallbackValues() {
+    TableId target = tableId('events')
+
+    assertEquals('v1:matrix-project.analytics.events:7:test-salt', Bq.formatInsertId(target, 7, 'test-salt'))
+    assertEquals('ACTIVE', Bq.normalizeValue(Status.ACTIVE))
+    assertEquals('123e4567-e89b-12d3-a456-426614174000', Bq.normalizeValue(UUID.fromString('123e4567-e89b-12d3-a456-426614174000')))
+    assertEquals('["one",2]', Bq.normalizeValue(['one', 2]))
+    assertEquals('{"ok":true}', Bq.normalizeValue([ok: true]))
+  }
+
+  @Test
+  void insertAllSplitsRowsAtConfiguredLimit() {
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
+    bq.insertAllMaxRows = 1
+
+    withWriteApiDisabled {
+      bq.insertRows(sampleMatrix(), state.tableId, true)
+    }
+
+    assertEquals(2, state.insertAllCalls)
+    assertEquals([1, 1], state.insertRequests*.rows*.size())
+  }
+
+  @Test
+  void graceLookupReturnsAJobThatAppearsAfterTheFirstNull() {
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    BigQuery fakeBigQuery = fakeBigQueryFor(state)
+    Job expected = jobFrom(fakeBigQuery)
+    state.jobLookups.addAll([null, expected])
+    Bq bq = new Bq(fakeBigQuery, 'matrix-project')
+    bq.jobLookupGraceAttempts = 2
+    bq.jobLookupGraceIntervalMs = 0L
+
+    Job actual = bq.findCreatedLoadJob(JobId.of('matrix-project', 'grace-test'), state.tableId)
+
+    assertSame(expected, actual)
+    assertEquals(2, state.getJobCalls)
+  }
+
   private static Matrix sampleMatrix() {
     Matrix.builder()
         .columnNames(['id', 'name'])
@@ -239,16 +287,22 @@ class InsertAppendSemanticsTest {
     RecordingInsertClient(BigQuery bigQuery, String projectId, boolean throwConnectionError = false) {
       super(bigQuery, projectId)
       this.throwConnectionError = throwConnectionError
+      jobLookupGraceAttempts = 1
+      jobLookupGraceIntervalMs = 0L
     }
 
     @Override
-    JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
+    JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append, JobId jobId) throws BqException {
       lastAppendValue = append
       if (throwConnectionError) {
         throw new BqException('Simulated write-channel failure', new ConnectException('Connection refused'))
       }
       null
     }
+  }
+
+  private enum Status {
+    ACTIVE
   }
 
   @SuppressWarnings('ClassName')
@@ -261,6 +315,9 @@ class InsertAppendSemanticsTest {
     int insertAllCalls
     Exception insertAllFailure
     InsertAllRequest lastInsertRequest
+    final List<InsertAllRequest> insertRequests = []
+    final List<Job> jobLookups = []
+    int getJobCalls
     final List<String> events = []
 
     InsertAllTestState(TableId tableId) {
@@ -281,6 +338,10 @@ class InsertAppendSemanticsTest {
           state.events << 'getTable'
           state.currentTable
         },
+        getJob   : { JobId ignored, Object... ignoredOptions ->
+          state.getJobCalls++
+          state.jobLookups.isEmpty() ? null : state.jobLookups.remove(0)
+        },
         delete   : { TableId requestedTableId ->
           state.events << 'delete'
           state.deleteCalls++
@@ -298,6 +359,7 @@ class InsertAppendSemanticsTest {
           state.events << 'insertAll'
           state.insertAllCalls++
           state.lastInsertRequest = request
+          state.insertRequests << request
           if (state.insertAllFailure != null) {
             throw state.insertAllFailure
           }
@@ -328,5 +390,14 @@ class InsertAppendSemanticsTest {
     Constructor<InsertAllResponse> ctor = (Constructor<InsertAllResponse>) InsertAllResponse.declaredConstructors[0]
     ctor.setAccessible(true)
     ctor.newInstance([:])
+  }
+
+  @CompileDynamic
+  private static Job jobFrom(BigQuery bigQuery) {
+    JobInfo.Builder builder = JobInfo.newBuilder(QueryJobConfiguration.newBuilder('select 1').build())
+        .setJobId(JobId.of('matrix-project', 'grace-test'))
+    Constructor<Job> ctor = (Constructor<Job>) Job.declaredConstructors.find { it.parameterCount == 2 }
+    ctor.setAccessible(true)
+    ctor.newInstance(bigQuery, builder)
   }
 }

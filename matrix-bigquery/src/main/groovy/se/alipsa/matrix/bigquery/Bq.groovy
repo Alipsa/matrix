@@ -2,6 +2,7 @@ package se.alipsa.matrix.bigquery
 
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 
+import groovy.json.JsonOutput
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
@@ -26,6 +27,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
 
 import java.nio.channels.Channels
+import java.nio.charset.StandardCharsets
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.*
@@ -108,6 +110,31 @@ class Bq {
   private static final String FALSE_VALUE = 'false'
   private static final String NEWLINE = '\n'
   private static final int DEFAULT_PAGE_SIZE = 100
+  private static final int TEN = 10
+  private static final int BINARY_KILO = 1024
+
+  /** Number of load-job lookups after an ambiguous write-channel connection failure. */
+  @PackageScope
+  static final int JOB_LOOKUP_GRACE_ATTEMPTS = TEN
+
+  /** Delay between ambiguous-write load-job lookups. */
+  @PackageScope
+  static final long JOB_LOOKUP_GRACE_INTERVAL_MS = 1_000L
+
+  /** Target encoded InsertAll request size, leaving room below BigQuery's 10 MB limit. */
+  @PackageScope
+  static final int INSERT_ALL_TARGET_REQUEST_BYTES = 5 * BINARY_KILO * BINARY_KILO
+
+  /** BigQuery's recommended maximum InsertAll rows per request. */
+  @PackageScope
+  static final int INSERT_ALL_DEFAULT_MAX_ROWS = 500
+
+  /** BigQuery's hard InsertAll row limit. */
+  @PackageScope
+  static final int INSERT_ALL_HARD_MAX_ROWS = 50_000
+
+  private static final int INSERT_ALL_HARD_MAX_REQUEST_BYTES = TEN * BINARY_KILO * BINARY_KILO
+  private static final int INSERT_ALL_ROW_ENVELOPE_BYTES = 128
 
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
   static final DateTimeFormatter BQ_DATE_FORMATTER = DateTimeFormatter.ofPattern('yyyy-MM-dd')
@@ -149,6 +176,10 @@ class Bq {
   private final boolean useAsyncQueries
   private final GoogleCredentials credentials
   private long waitForTableTimeoutMs = DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS
+  @PackageScope int jobLookupGraceAttempts = JOB_LOOKUP_GRACE_ATTEMPTS
+  @PackageScope long jobLookupGraceIntervalMs = JOB_LOOKUP_GRACE_INTERVAL_MS
+  @PackageScope int insertAllTargetRequestBytes = INSERT_ALL_TARGET_REQUEST_BYTES
+  @PackageScope int insertAllMaxRows = INSERT_ALL_DEFAULT_MAX_ROWS
 
   /**
    * Creates a Bq instance from pre-configured BigQueryOptions.
@@ -336,7 +367,10 @@ class Bq {
       // When running a query synchronously, TableResult.getTotalRows() returns
       // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
       return result.getTotalRows().intValue()
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException("${QUERY_EXECUTION_FAILED}${e.message}", e)
+    } catch (BigQueryException e) {
       throw new BqException("${QUERY_EXECUTION_FAILED}${e.message}", e)
     }
   }
@@ -409,7 +443,10 @@ class Bq {
 
       // Convert to a Matrix and return the results.
       return convertToMatrix(result)
-    } catch (BigQueryException | InterruptedException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new BqException("${QUERY_FAILED}${e.message}", e)
+    } catch (BigQueryException e) {
       throw new BqException("${QUERY_FAILED}${e.message}", e)
     }
   }
@@ -557,8 +594,9 @@ class Bq {
    * @throws BqException if the insert fails
    * @see #insert(Matrix, TableId)
    */
+  @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet) throws BqException {
-    insert(matrix, dataSet, projectId)
+    insertRows(matrix, dataSet).loadStatistics
   }
 
   /**
@@ -575,26 +613,76 @@ class Bq {
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
    * @param append if true, preserves existing rows; if false, overwrites existing table data
-   * @return load statistics from the insert operation
-   * @throws BqException if both insert methods fail
+   * @return load statistics for a write-channel operation, or null for InsertAll
+   * @throws BqException if the insert fails or its outcome cannot be determined
    */
+  @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId, boolean append) throws BqException {
+    insertRows(matrix, tableId, append).loadStatistics
+  }
+
+  /**
+   * Inserts a Matrix and returns a result for either supported write mechanism.
+   *
+   * <p>On a write-channel connection failure, this method waits up to ten seconds for the
+   * known load job to appear before it permits an InsertAll fallback. If a job appears, its
+   * outcome is returned or reported; it is never submitted again through InsertAll.</p>
+   *
+   * @param matrix rows to insert
+   * @param tableId target table
+   * @param append true to append; false to overwrite
+   * @return insert outcome; InsertAll results have no load statistics
+   * @throws BqException if insertion fails or the write outcome is unknown
+   */
+  BqInsertResult insertRows(Matrix matrix, TableId tableId, boolean append) throws BqException {
     // Check if write API is disabled (e.g., for emulator compatibility)
     String enableWriteApi = System.getProperty(ENABLE_WRITE_API_PROPERTY, TRUE_VALUE)
+    String operationSalt = createOperationSalt()
     if (FALSE_VALUE.equalsIgnoreCase(enableWriteApi)) {
       log.debug('Write channel API disabled via system property, using InsertAll')
-      return insertViaInsertAll(matrix, tableId, append, null)
+      return insertViaInsertAll(matrix, tableId, append, null, operationSalt)
     }
 
+    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
     try {
-      return insertViaWriteChannel(matrix, tableId, append)
+      JobStatistics.LoadStatistics stats = insertViaWriteChannel(matrix, tableId, append, jobId)
+      return new BqInsertResult(matrix.rowCount(), stats?.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
     } catch (Exception e) {
       if (isConnectionError(e)) {
-        log.warn('Streaming insert failed with connection error. Falling back to InsertAll...')
-        return insertViaInsertAll(matrix, tableId, append, e)
+        Job existingJob = findCreatedLoadJob(jobId, tableId)
+        if (existingJob != null) {
+          JobStatistics.LoadStatistics stats = waitForExistingLoadJobAndGetStats(existingJob, tableId)
+          return new BqInsertResult(matrix.rowCount(), stats?.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
+        }
+        log.warn('Streaming insert failed and no load job appeared during the grace period. Falling back to InsertAll...')
+        return insertViaInsertAll(matrix, tableId, append, e, operationSalt)
       }
       throw e
     }
+  }
+
+  /**
+   * Inserts into a table in the configured project and returns the write outcome.
+   *
+   * @param matrix rows to insert
+   * @param dataSet target dataset
+   * @return insert outcome
+   */
+  BqInsertResult insertRows(Matrix matrix, String dataSet) throws BqException {
+    insertRows(matrix, dataSet, projectId, false)
+  }
+
+  /**
+   * Inserts into an explicitly project-scoped table and returns the write outcome.
+   *
+   * @param matrix rows to insert
+   * @param dataSet target dataset
+   * @param targetProjectId target project
+   * @param append true to append; false to overwrite
+   * @return insert outcome
+   */
+  BqInsertResult insertRows(Matrix matrix, String dataSet, String targetProjectId, boolean append) throws BqException {
+    insertRows(matrix, TableId.of(targetProjectId, dataSet, matrix.matrixName), append)
   }
 
   /**
@@ -635,6 +723,12 @@ class Bq {
    */
   @PackageScope
   JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
+    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+    insertViaWriteChannel(matrix, tableId, append, jobId)
+  }
+
+  @PackageScope
+  JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append, JobId jobId) throws BqException {
     int rowIdx = 0
     Object lastValue = null
     final BigDecimal tickPercent = 0.05
@@ -646,7 +740,6 @@ class Bq {
         .setWriteDisposition(writeDisposition)
         .build()
 
-    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
     TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
 
     OutputStream out = null
@@ -689,6 +782,47 @@ class Bq {
     }
 
     return waitForLoadJobAndGetStats(writer, tableId)
+  }
+
+  @PackageScope
+  Job findCreatedLoadJob(JobId jobId, TableId tableId) throws BqException {
+    validateJobLookupGraceConfiguration()
+    for (int attempt = 0; attempt < jobLookupGraceAttempts; attempt++) {
+      try {
+        Job job = bigQuery.getJob(jobId)
+        if (job != null) {
+          return job
+        }
+      } catch (Exception e) {
+        throw new BqException("Write outcome is unknown for ${tableId}; load-job lookup failed and the operation must not be retried automatically", e)
+      }
+      if (attempt < jobLookupGraceAttempts - 1) {
+        try {
+          Thread.sleep(jobLookupGraceIntervalMs)
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt()
+          throw new BqException("Write outcome is unknown for ${tableId}; interrupted while looking up the load job and the operation must not be retried automatically", e)
+        }
+      }
+    }
+    null
+  }
+
+  private void validateJobLookupGraceConfiguration() throws BqException {
+    if (jobLookupGraceAttempts < 1 || jobLookupGraceIntervalMs < 0) {
+      throw new BqException('Job lookup grace attempts must be at least one and its interval must not be negative')
+    }
+  }
+
+  private JobStatistics.LoadStatistics waitForExistingLoadJobAndGetStats(Job job, TableId tableId) throws BqException {
+    try {
+      waitForLoadJobAndGetStats(job, tableId)
+    } catch (BqException e) {
+      if (e.message?.startsWith('Write-channel load (JSON) failed')) {
+        throw e
+      }
+      throw new BqException("Write outcome is unknown for ${tableId}; the load job could not establish an outcome and the operation must not be retried automatically", e)
+    }
   }
 
   @PackageScope
@@ -738,20 +872,17 @@ class Bq {
    * @param value the value to write
    */
   private static void writeJsonValue(JsonGenerator json, Object value) {
-    if (needsConversion(value)) {
-      json.writeString(sanitizeString(convertObjectValue(value)))
-    } else if (value instanceof Number) {
-      json.writeNumber(value.toString())
-    } else if (value instanceof Boolean) {
-      json.writeBoolean((Boolean) value)
-    } else if (value == null) {
+    Object normalized = normalizeValue(value)
+    if (normalized == null) {
       json.writeNull()
-    } else if (value instanceof byte[]) {
-      json.writeBinary(value as byte[])
-    } else if (value instanceof CharSequence) {
-      json.writeString(sanitizeString(value.toString()))
+    } else if (normalized instanceof Number) {
+      json.writeNumber(normalized.toString())
+    } else if (normalized instanceof Boolean) {
+      json.writeBoolean((Boolean) normalized)
+    } else if (normalized instanceof byte[]) {
+      json.writeBinary((byte[]) normalized)
     } else {
-      json.writeObject(value)
+      json.writeString((String) normalized)
     }
   }
 
@@ -805,15 +936,30 @@ class Bq {
    */
   @PackageScope
   JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
-    Job loadJob
+    Job loadJob = writer.getJob()
+    if (loadJob == null) {
+      throw new BqException("Load job was not created for ${tableId}")
+    }
+    waitForLoadJobAndGetStats(loadJob, tableId)
+  }
+
+  @PackageScope
+  JobStatistics.LoadStatistics waitForLoadJobAndGetStats(Job loadJob, TableId tableId) throws BqException {
+    Job completedJob
     try {
-      loadJob = writer.getJob().waitFor()
+      completedJob = loadJob.waitFor()
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt()
       throw new BqException("Interrupted while waiting for BigQuery load job for ${tableId}", e)
+    } catch (Exception e) {
+      throw new BqException("Unable to determine load-job outcome for ${tableId}", e)
     }
 
-    JobStatus status = loadJob.getStatus()
+    if (completedJob == null) {
+      throw new BqException("Load job no longer exists for ${tableId}")
+    }
+
+    JobStatus status = completedJob.getStatus()
     BigQueryError primary = status?.getError()
     List<BigQueryError> execErrs = status?.getExecutionErrors()
 
@@ -822,7 +968,10 @@ class Bq {
       throw new BqException("Write-channel load (JSON) failed for ${tableId}: ${details}")
     }
 
-    JobStatistics.LoadStatistics stats = loadJob.getStatistics()
+    JobStatistics.LoadStatistics stats = completedJob.getStatistics()
+    if (stats == null) {
+      throw new BqException("Load job completed without statistics for ${tableId}")
+    }
     long rowsInserted = stats.getOutputRows()
     log.info("Load job completed successfully. Inserted $rowsInserted rows")
     return stats
@@ -861,28 +1010,14 @@ class Bq {
    * @return load statistics (placeholder, as InsertAll doesn't provide detailed stats)
    * @throws BqException if the insert fails
    */
-  private JobStatistics.LoadStatistics insertViaInsertAll(Matrix matrix, TableId tableId, boolean append, Exception originalException) throws BqException {
+  private BqInsertResult insertViaInsertAll(Matrix matrix, TableId tableId, boolean append, Exception originalException,
+                                            String operationSalt) throws BqException {
     try {
       prepareInsertAllTargetTable(tableId, append)
-
-      List<String> columnNames = matrix.columnNames()
-      List<RowToInsert> rows = matrix.rows().collect { Row row ->
-        RowToInsert.of(convertRowForInsertAll(row, columnNames))
-      }
-
-      InsertAllRequest request = InsertAllRequest.newBuilder(tableId)
-          .setRows(rows)
-          .build()
-
-      InsertAllResponse response = bigQuery.insertAll(request)
-
-      if (response.hasErrors()) {
-        String errorDetails = buildInsertAllErrorDetails(response)
-        throw new BqException("InsertAll failed with errors:\n${errorDetails}")
-      }
-
+      validateInsertAllBatchConfiguration()
+      submitInsertAllBatches(matrix, tableId, operationSalt)
       log.info("InsertAll successful. Inserted ${matrix.rowCount()} rows")
-      return createPlaceholderLoadStatistics(tableId)
+      new BqInsertResult(matrix.rowCount(), (long) matrix.rowCount(), BqInsertResult.WriteMechanism.INSERT_ALL, null, null)
     } catch (Exception fallbackException) {
       if (isExpectedInsertAllPreconditionFailure(fallbackException)) {
         log.debug("InsertAll failed: ${fallbackException.message}")
@@ -963,25 +1098,83 @@ class Bq {
     builder.build()
   }
 
+  @PackageScope
+  void submitInsertAllBatches(Matrix matrix, TableId tableId, String operationSalt) throws BqException {
+    List<String> columnNames = matrix.columnNames()
+    List<RowToInsert> batch = []
+    int batchBytes = 0
+    int rowOffset = 0
+    int batchStartOffset = 0
+    for (Row row : matrix.rows()) {
+      Map<String, Object> content = convertRowForInsertAll(row, columnNames)
+      String insertId = formatInsertId(tableId, rowOffset, operationSalt)
+      int rowBytes = estimateInsertAllRowBytes(content, insertId)
+      if (rowBytes >= INSERT_ALL_HARD_MAX_REQUEST_BYTES) {
+        throw new BqException("InsertAll row ${rowOffset} for ${tableId} is estimated at ${rowBytes} bytes, exceeding BigQuery's 10 MB request limit")
+      }
+      if (!batch.isEmpty() && (batch.size() >= insertAllMaxRows || batchBytes + rowBytes >= insertAllTargetRequestBytes)) {
+        submitInsertAllBatch(tableId, batch, batchStartOffset)
+        batch = []
+        batchBytes = 0
+        batchStartOffset = rowOffset
+      }
+      batch << RowToInsert.of(insertId, content)
+      batchBytes += rowBytes
+      rowOffset++
+    }
+    if (!batch.isEmpty()) {
+      submitInsertAllBatch(tableId, batch, batchStartOffset)
+    }
+  }
+
+  private void submitInsertAllBatch(TableId tableId, List<RowToInsert> rows, int batchStartOffset) throws BqException {
+    InsertAllRequest request = InsertAllRequest.newBuilder(tableId)
+        .setRows(rows)
+        .build()
+    InsertAllResponse response = bigQuery.insertAll(request)
+    if (response.hasErrors()) {
+      String errorDetails = buildInsertAllErrorDetails(response, batchStartOffset)
+      throw new BqException("InsertAll failed with errors:\n${errorDetails}")
+    }
+  }
+
+  private void validateInsertAllBatchConfiguration() throws BqException {
+    if (insertAllMaxRows < 1 || insertAllMaxRows > INSERT_ALL_HARD_MAX_ROWS) {
+      throw new BqException("InsertAll row limit must be between 1 and ${INSERT_ALL_HARD_MAX_ROWS}")
+    }
+    if (insertAllTargetRequestBytes < 1 || insertAllTargetRequestBytes >= INSERT_ALL_HARD_MAX_REQUEST_BYTES) {
+      throw new BqException("InsertAll target request size must be between 1 and ${INSERT_ALL_HARD_MAX_REQUEST_BYTES - 1} bytes")
+    }
+  }
+
+  @PackageScope
+  static int estimateInsertAllRowBytes(Map<String, Object> content, String insertId) {
+    JsonOutput.toJson(content).getBytes(StandardCharsets.UTF_8).length + insertId.getBytes(StandardCharsets.UTF_8).length + INSERT_ALL_ROW_ENVELOPE_BYTES
+  }
+
+  @PackageScope
+  static String formatInsertId(TableId tableId, int rowOffset, String operationSalt) {
+    "v1:${tableId.project}.${tableId.dataset}.${tableId.table}:${rowOffset}:${operationSalt}"
+  }
+
+  @PackageScope
+  String createOperationSalt() {
+    UUID.randomUUID().toString()
+  }
+
   /**
    * Converts a matrix row to a map suitable for InsertAll API.
    *
    * @param row the row data
    * @param columnNames the column names
-   * @return a map with converted values
+   * @return a map with normalized values used by both insert APIs
    */
-  private static Map<String, Object> convertRowForInsertAll(Row row, List<String> columnNames) {
+  @PackageScope
+  static Map<String, Object> convertRowForInsertAll(Row row, List<String> columnNames) {
     Map<String, Object> content = [:]
 
     for (String name : columnNames) {
-      Object val = row[name]
-      if (needsConversion(val)) {
-        content.put(name, sanitizeString(convertObjectValue(val)))
-      } else if (val instanceof CharSequence) {
-        content.put(name, sanitizeString(val.toString()))
-      } else {
-        content.put(name, val)
-      }
+      content.put(name, normalizeValue(row[name]))
     }
 
     return content
@@ -993,30 +1186,31 @@ class Bq {
    * @param response the response containing errors
    * @return formatted error details string
    */
-  private static String buildInsertAllErrorDetails(InsertAllResponse response) {
+  private static String buildInsertAllErrorDetails(InsertAllResponse response, int batchStartOffset) {
     return response.getInsertErrors().collect { Map.Entry<Long, List<BigQueryError>> entry ->
       String rowErrors = entry.value*.message.join(', ')
-      "Row ${entry.getKey()}: ${rowErrors}"
+      "Row ${batchStartOffset + entry.getKey()}: ${rowErrors}"
     }.join(NEWLINE)
   }
 
-  /**
-   * Creates a placeholder LoadStatistics for InsertAll operations.
-   *
-   * <p>InsertAll doesn't provide detailed statistics like write channel does,
-   * so we create a minimal placeholder to maintain API compatibility.</p>
-   *
-   * @param tableId the table identifier
-   * @return placeholder load statistics (with null values)
-   */
-  private static JobStatistics.LoadStatistics createPlaceholderLoadStatistics(TableId tableId) {
-    List<String> emptySourceUris = []
-    LoadJobConfiguration placeholderConfig = LoadJobConfiguration
-        .newBuilder(tableId, emptySourceUris)
-        .setFormatOptions(FormatOptions.json())
-        .build()
-    JobInfo placeholderJobInfo = JobInfo.newBuilder(placeholderConfig).build()
-    return (JobStatistics.LoadStatistics) placeholderJobInfo.getStatistics()
+  @PackageScope
+  static Object normalizeValue(Object value) {
+    if (value == null || value instanceof Number || value instanceof Boolean || value instanceof byte[]) {
+      return needsConversion(value) ? sanitizeString(convertObjectValue(value)) : value
+    }
+    if (needsConversion(value)) {
+      return sanitizeString(convertObjectValue(value))
+    }
+    if (value instanceof CharSequence) {
+      return sanitizeString(value.toString())
+    }
+    if (value instanceof Enum) {
+      return ((Enum) value).name()
+    }
+    if (value instanceof List || value instanceof Map) {
+      return JsonOutput.toJson(value)
+    }
+    sanitizeString(String.valueOf(value))
   }
 
   /**
@@ -1143,10 +1337,9 @@ class Bq {
    * @throws BqException if the insert fails
    * @see #insert(Matrix, TableId)
    */
+  @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet, String projectId, boolean append = false) throws BqException {
-    String tableName = matrix.matrixName
-    TableId tableId = TableId.of(projectId, dataSet, tableName)
-    insert(matrix, tableId, append)
+    insertRows(matrix, dataSet, projectId, append).loadStatistics
   }
 
   /**
@@ -1322,7 +1515,7 @@ class Bq {
     if (!identifier) {
       throw new IllegalArgumentException('Dataset name cannot be null or blank')
     }
-    if (identifier.length() > 1024) {
+    if (identifier.length() > BINARY_KILO) {
       throw new IllegalArgumentException("Dataset name '$datasetName' exceeds BigQuery's 1024 character limit")
     }
     if (!(identifier ==~ /[A-Za-z0-9_]+/)) {
@@ -1369,7 +1562,11 @@ class Bq {
    * @see #updateDataset
    */
   Dataset.Builder getDatasetBuilder(String datasetName) throws BqException {
-    getDataset(datasetName).toBuilder()
+    Dataset dataset = getDataset(datasetName)
+    if (dataset == null) {
+      throw new BqException("Dataset ${projectId}:${datasetName} does not exist")
+    }
+    dataset.toBuilder()
   }
 
   /**

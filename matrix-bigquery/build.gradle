@@ -35,6 +35,7 @@ dependencies {
   implementation libs.google.auth.library.oauth2.http
   implementation libs.google.cloud.bigquery.storage
   implementation libs.progressbar
+  implementation libs.groovy.json
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud
   testImplementation libs.testcontainers.gcloud

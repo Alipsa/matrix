@@ -120,7 +120,13 @@ Common mappings:
 - `LocalDate` -> `DATE`
 - `LocalTime` -> `TIME`
 - `LocalDateTime` -> `DATETIME`
-- `Instant` / `Timestamp` / `ZonedDateTime` -> `TIMESTAMP`
+- `Instant` / `Timestamp` -> `TIMESTAMP`
+- `ZonedDateTime` -> `STRING` with its ISO-8601 zone representation preserved
+
+For example, `Instant.parse('2026-03-21T10:15:30Z')` is stored in a `TIMESTAMP` column, while
+`ZonedDateTime.parse('2026-03-21T10:15:30+01:00[Europe/Paris]')` is stored as the corresponding
+text in a `STRING` column. This preserves the original zone identifier, which BigQuery TIMESTAMP
+does not retain.
 
 ## Inspect datasets, tables, and table metadata
 

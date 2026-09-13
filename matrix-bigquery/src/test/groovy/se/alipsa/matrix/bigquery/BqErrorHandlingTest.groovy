@@ -1,5 +1,6 @@
 package se.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
@@ -76,6 +77,17 @@ class BqErrorHandlingTest {
   }
 
   @Test
+  void missingDatasetHasContextualError() {
+    Bq bq = new Bq(fakeBigQueryForMissingDataset(), 'matrix-project')
+
+    BqException ex = assertThrows(BqException) {
+      bq.getDatasetBuilder('missing')
+    }
+
+    assertEquals('Dataset matrix-project:missing does not exist', ex.message)
+  }
+
+  @Test
   void projectSettingsUseExplicitCredentialsWhenAvailable() {
     GoogleCredentials credentials = GoogleCredentials.create(new AccessToken('token-value', new Date(System.currentTimeMillis() + 60_000L)))
     Bq bq = new Bq(credentials, 'matrix-project')
@@ -132,6 +144,18 @@ class BqErrorHandlingTest {
     [
         getOptions: { -> options },
         writer    : { JobId jobId, WriteChannelConfiguration config -> null as TableDataWriteChannel }
+    ] as BigQuery
+  }
+
+  @CompileDynamic
+  private static BigQuery fakeBigQueryForMissingDataset() {
+    BigQueryOptions options = BigQueryOptions.newBuilder()
+        .setProjectId('matrix-project')
+        .setCredentials(NoCredentials.getInstance())
+        .build()
+    [
+        getOptions : { -> options },
+        getDataset: { Object... ignored -> null }
     ] as BigQuery
   }
 
