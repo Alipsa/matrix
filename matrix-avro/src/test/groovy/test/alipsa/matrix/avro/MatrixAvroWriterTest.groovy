@@ -698,6 +698,87 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void mixedNestedValuesPreserveTheFirstNonNullStringSchema() {
+    Matrix maps = Matrix.builder('MixedMaps')
+        .columns(props: [[b: 'x'], [a: 1]])
+        .types(Map)
+        .build()
+    Matrix lists = Matrix.builder('MixedLists')
+        .columns(values: [['x'], [1]])
+        .types(List)
+        .build()
+
+    Schema mapValueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(maps, false), 'props').valueType
+    Schema listValueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(lists, false), 'values').elementType
+    assertEquals(Schema.Type.STRING, nonNullSchema(mapValueSchema).type)
+    assertEquals(Schema.Type.STRING, nonNullSchema(listValueSchema).type)
+
+    Matrix mapResult = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(maps, false))
+    Matrix listResult = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(lists, false))
+    assertEquals([b: 'x'], mapResult[0, 'props'])
+    assertEquals([a: '1'], mapResult[1, 'props'])
+    assertEquals(['x'], listResult[0, 'values'])
+    assertEquals(['1'], listResult[1, 'values'])
+  }
+
+  @Test
+  void nonFiniteFloatingValuesUseInferredDoubleSchemas() {
+    Matrix scalars = Matrix.builder('NonFiniteScalars')
+        .columns(value: [1.5d, Double.NaN])
+        .types(Object)
+        .build()
+    Matrix lists = Matrix.builder('NonFiniteLists')
+        .columns(values: [[1.5d, Double.NaN]])
+        .types(List)
+        .build()
+    Matrix maps = Matrix.builder('NonFiniteMaps')
+        .columns(props: [[a: 1.5d], [b: Double.NaN]])
+        .types(Map)
+        .build()
+
+    assertEquals(Schema.Type.DOUBLE, nonNullFieldSchema(MatrixAvroWriter.buildSchema(scalars, true), 'value').type)
+    assertEquals(Schema.Type.DOUBLE, nonNullSchema(nonNullFieldSchema(MatrixAvroWriter.buildSchema(lists, true), 'values').elementType).type)
+    assertEquals(Schema.Type.DOUBLE, nonNullSchema(nonNullFieldSchema(MatrixAvroWriter.buildSchema(maps, true), 'props').valueType).type)
+
+    assertTrue(Double.isNaN((Double) MatrixAvroReader.read(MatrixAvroWriter.writeBytes(scalars, true))[1, 'value']))
+    assertTrue(Double.isNaN((Double) MatrixAvroReader.read(MatrixAvroWriter.writeBytes(lists, true))[0, 'values'][1]))
+    assertTrue(Double.isNaN((Double) (MatrixAvroReader.read(MatrixAvroWriter.writeBytes(maps, true))[1, 'props'] as Map).b))
+  }
+
+  @Test
+  void declaredDecimalRejectsBigDecimalScaleReductionWithoutRounding() {
+    Matrix matrix = Matrix.builder('ExactDecimal')
+        .columns(amount: [1.239g])
+        .types(BigDecimal)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+          .columnSchema('amount', AvroSchemaDecl.decimal(10, 2)))
+    }
+    assertEquals('amount', exception.columnName)
+    assertEquals(0, exception.rowNumber)
+    assertTrue(exception.message.contains('declared scale'))
+  }
+
+  @Test
+  void nestedCompatibilityFailureIdentifiesTheOffendingMapValue() {
+    Matrix matrix = Matrix.builder('InvalidMap')
+        .columns(props: [[expected: 1, invalid: 'x']])
+        .types(Map)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+          .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer))))
+    }
+    assertEquals('props', exception.columnName)
+    assertEquals(0, exception.rowNumber)
+    assertEquals('String', exception.actualType)
+    assertTrue(exception.message.contains("props['invalid']"))
+  }
+
+  @Test
   void testWriteOptionsRoundTripToMap() {
     AvroWriteOptions options = new AvroWriteOptions()
         .inferPrecisionAndScale(true)
@@ -1116,6 +1197,13 @@ class MatrixAvroWriterTest {
       fail("Union for field '$fieldName' had no non-null type")
     }
     return s
+  }
+
+  private static Schema nonNullSchema(Schema schema) {
+    if (schema.type != Schema.Type.UNION) {
+      return schema
+    }
+    schema.types.find { Schema candidate -> candidate.type != Schema.Type.NULL }
   }
 
   private static long rawLongFor(byte[] bytes, String fieldName) {

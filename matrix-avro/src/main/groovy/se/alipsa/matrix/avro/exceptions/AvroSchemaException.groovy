@@ -101,6 +101,23 @@ class AvroSchemaException extends RuntimeException {
     this.rowNumber = NO_ROW
   }
   /**
+   * Creates a new AvroSchemaException with contextual information and a row number.
+   *
+   * @param message the error message
+   * @param columnName the column name where the error occurred
+   * @param expectedType the expected type (may be null)
+   * @param actualType the actual type encountered (may be null)
+   * @param rowNumber the row number (0-based) where the error occurred
+   */
+  AvroSchemaException(String message, String columnName, String expectedType, String actualType, int rowNumber) {
+    super(buildMessage(message, columnName, expectedType, actualType, rowNumber))
+    this.rawMessage = message
+    this.columnName = columnName
+    this.expectedType = expectedType
+    this.actualType = actualType
+    this.rowNumber = rowNumber
+  }
+  /**
    * Creates a new AvroSchemaException with contextual information, a row number, and a cause.
    *
    * @param message the error message
@@ -155,7 +172,9 @@ class AvroSchemaException extends RuntimeException {
     if (this.rowNumber >= 0) {
       return this
     }
-    new AvroSchemaException(rawMessage, columnName, expectedType, actualType, rowNumber, cause)
+    cause == null
+        ? new AvroSchemaException(rawMessage, columnName, expectedType, actualType, rowNumber)
+        : new AvroSchemaException(rawMessage, columnName, expectedType, actualType, rowNumber, cause)
   }
   private static String buildMessage(String message, String columnName, String expectedType, String actualType,
                                      int rowNumber) {

@@ -177,6 +177,9 @@ Supported declaration kinds:
 
 - `decimal(precision, scale)` for fixed decimal metadata
 - `decimalColumn(precision, scale)` as a column-oriented alias for fixed decimal metadata
+- `bigInteger(precision)` for a lossless scale-zero decimal; use `array(bigInteger(precision))` or
+  `map(bigInteger(precision))` for an explicit nested precision. Class-only `type(BigInteger)`,
+  `arrayOf(BigInteger)`, and `mapOf(BigInteger)` remain supported and use precision `10`
 - `array(...)` for explicit array element types
 - `arrayOf(Class<?>)` and `arrayOf(AvroScalarTypeDecl)` as scalar array shortcuts
 - `map(...)` for explicit map value types
@@ -247,8 +250,12 @@ Matrix data = Matrix.builder('amounts')
 MatrixAvroWriter.write(data, new File('amounts.avro'), true)
 ```
 
-For a declared `decimal(precision, scale)`, values are converted through the same path and rounded to the
-declared scale using `HALF_UP`; writing still fails when the rounded result exceeds the declared precision.
+For a declared `decimal(precision, scale)`, `Double` and `Float` values are rounded to the declared scale using
+`HALF_UP`. `BigDecimal`, integral, and `BigInteger` values must already fit the declared scale, so writing one
+that would lose fractional precision fails instead of silently rounding it.
+
+`NaN` and positive or negative infinity round-trip in positions inferred as Avro `double`, including untyped
+scalar, list-element, and map-value positions. They cannot be encoded by decimal, `int`, or `long` schemas.
 
 ## Default Behavior
 

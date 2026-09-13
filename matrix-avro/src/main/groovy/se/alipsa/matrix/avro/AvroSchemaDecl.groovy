@@ -29,6 +29,7 @@ abstract class AvroSchemaDecl {
   private static final String KIND_MAP = 'map'
   private static final String KIND_RECORD = 'record'
   private static final String KEY_PRECISION = 'precision'
+  private static final int DEFAULT_BIG_INTEGER_PRECISION = 10
 
   private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
       (String)        : AvroScalarTypeDecl.STRING,
@@ -87,7 +88,7 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException('Use AvroSchemaDecl.decimal(precision, scale) for BigDecimal declarations')
     }
     if (javaType == BigInteger) {
-      throw new IllegalArgumentException('Use AvroSchemaDecl.bigInteger(precision), array(bigInteger(precision)), or map(bigInteger(precision))')
+      return bigInteger(DEFAULT_BIG_INTEGER_PRECISION)
     }
     if (javaType == List || javaType == Map || javaType == Object || javaType == Number) {
       throw new IllegalArgumentException(
@@ -124,7 +125,7 @@ abstract class AvroSchemaDecl {
    * @return a BigInteger declaration
    */
   static AvroSchemaDecl bigInteger(int precision) {
-    validateDecimal(precision, 0, KIND_BIG_INTEGER)
+    validateDecimal(precision, 0, displayName(KIND_BIG_INTEGER))
     new BigIntegerAvroSchemaDecl(precision)
   }
   /**
@@ -367,6 +368,9 @@ abstract class AvroSchemaDecl {
     if (scale > precision) {
       throw new IllegalArgumentException("$optionName scale must be <= precision but was $scale > $precision")
     }
+  }
+  private static String displayName(String kind) {
+    kind == KIND_BIG_INTEGER ? 'bigInteger' : kind
   }
   private static void ensureOnlyKeys(Map<String, Object> value, String optionName, Set<String> allowedKeys) {
     List<String> unexpected = value.keySet().findAll { String key -> !allowedKeys.contains(key) }.sort()

@@ -36,10 +36,20 @@ final class NestedNumericProfile {
   }
 
   /**
+   * Records a non-finite floating-point value. Such values are valid in an Avro
+   * floating schema but cannot contribute decimal precision or scale metadata.
+   *
+   * @param value the non-finite floating-point value
+   */
+  void includeNonFiniteFloating(Number value) {
+    hasFloating |= Double.isInstance(value) || Float.isInstance(value)
+  }
+
+  /**
    * @return true once at least one value has been included
    */
   boolean hasValues() {
-    decimalProfile?.hasValues == true
+    decimalProfile?.hasValues == true || hasFloating
   }
 
   /**

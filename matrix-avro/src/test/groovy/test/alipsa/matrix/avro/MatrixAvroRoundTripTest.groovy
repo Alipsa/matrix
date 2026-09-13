@@ -13,7 +13,6 @@ import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
-import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
@@ -47,17 +46,14 @@ class MatrixAvroRoundTripTest {
   }
 
   @Test
-  void nonFiniteNumbersFailDuringAnalysisWithColumnContext() {
+  void nonFiniteNumbersUseDoubleSchemasDuringAnalysis() {
     [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY].each { Double value ->
       Matrix source = Matrix.builder('NonFinite')
           .columns(amount: [value])
           .types(Object)
           .build()
-      AvroSchemaException exception = assertThrows(AvroSchemaException) {
-        MatrixAvroWriter.buildSchema(source, true)
-      }
-      assertEquals('amount', exception.columnName)
-      assertTrue(exception.message.contains('Non-finite decimal value'))
+      Schema schema = MatrixAvroWriter.buildSchema(source, true)
+      assertEquals(Schema.Type.DOUBLE, schema.getField('amount').schema().types[1].type)
     }
   }
 

@@ -34,14 +34,17 @@ class AvroSchemaDeclTest {
   }
 
   @Test
-  void classOnlyBigIntegerDeclarationsExplainHowToSupplyPrecision() {
-    [
-        { AvroSchemaDecl.type(BigInteger) },
-        { AvroSchemaDecl.arrayOf(BigInteger) },
-        { AvroSchemaDecl.mapOf(BigInteger) }
-    ].each { Closure<?> action ->
-      IllegalArgumentException exception = assertThrows(IllegalArgumentException, action)
-      assertTrue(exception.message.contains('bigInteger(precision)'))
+  void classOnlyBigIntegerDeclarationsUseTheDefaultPrecision() {
+    assertEquals([kind: 'bigInteger', precision: 10], AvroSchemaDecl.type(BigInteger).toMap())
+    assertEquals([kind: 'array', elementType: [kind: 'bigInteger', precision: 10]], AvroSchemaDecl.arrayOf(BigInteger).toMap())
+    assertEquals([kind: 'map', valueType: [kind: 'bigInteger', precision: 10]], AvroSchemaDecl.mapOf(BigInteger).toMap())
+  }
+
+  @Test
+  void bigIntegerPrecisionValidationUsesThePublicFactoryName() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      AvroSchemaDecl.bigInteger(0)
     }
+    assertEquals('bigInteger precision must be > 0 but was 0', exception.message)
   }
 }

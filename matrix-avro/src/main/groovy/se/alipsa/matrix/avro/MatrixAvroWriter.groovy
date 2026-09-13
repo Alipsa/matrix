@@ -54,6 +54,7 @@ class MatrixAvroWriter {
   private static final String OUTPUT_STREAM_NULL_MESSAGE = 'OutputStream cannot be null'
   private static final String OPTIONS_NULL_MESSAGE = 'Options cannot be null'
   private static final String NULL_TYPE_NAME = 'null'
+  private static final String FINITE_NUMBER_TYPE = 'finite Number'
   private static final Object NO_AVRO_VALUE = new Object()
   private static final long MICROS_PER_SECOND = 1_000_000L
   private static final long MILLIS_PER_SECOND = 1_000L
@@ -602,11 +603,14 @@ class MatrixAvroWriter {
         Schema fs = fieldSchemas.get(col)
         try {
           if (!isCompatible(fs, v)) {
+            AvroSchemaCompatibility.CompatibilityFailure failure = AvroSchemaCompatibility.findIncompatibleValue(fs, v, col) {
+              Schema nestedSchema, Object nestedValue -> isCompatible(nestedSchema, nestedValue)
+            }
             throw new AvroSchemaException(
-                'Value does not match schema type',
+                "Value does not match schema type at ${failure.path}",
                 col,
-              AvroSchemaUtil.schemaTypeLabel(fs),
-                v?.getClass()?.simpleName ?: NULL_TYPE_NAME
+                AvroSchemaUtil.schemaTypeLabel(fs),
+                failure.value?.getClass()?.simpleName ?: NULL_TYPE_NAME
             )
           }
           rec.put(col, toAvroValue(fs, v, decConv, col))
@@ -732,7 +736,20 @@ class MatrixAvroWriter {
   private static Object toDecimalAvroValue(Schema fieldSchema, Object v, LogicalTypes.Decimal dec,
                                            Conversions.DecimalConversion decConv, String columnName) {
     if (Number.isInstance(v)) {
-      BigDecimal value = decimalValue((Number) v, columnName).setScale(dec.getScale(), RoundingMode.HALF_UP)
+      RoundingMode roundingMode = Float.isInstance(v) || Double.isInstance(v)
+          ? RoundingMode.HALF_UP : RoundingMode.UNNECESSARY
+      BigDecimal value
+      try {
+        value = decimalValue((Number) v, columnName).setScale(dec.getScale(), roundingMode)
+      } catch (ArithmeticException e) {
+        throw new AvroSchemaException(
+            'Decimal value cannot be represented at the declared scale',
+            columnName,
+            "decimal scale ${dec.getScale()}",
+            String.valueOf(v),
+            e
+        )
+      }
       return decConv.toBytes(value, fieldSchema, dec)
     }
     NO_AVRO_VALUE
@@ -846,8 +863,8 @@ class MatrixAvroWriter {
         continue
       }
       boolean stop = state.fixedType
-          ? continueFixedTypeScan(v, profile)
-          : scanUntypedValue(v, profile, state)
+          ? continueFixedTypeScan(v, profile, r)
+          : scanUntypedValue(v, profile, state, r)
       if (stop) {
         break
       }
@@ -856,18 +873,22 @@ class MatrixAvroWriter {
       profile.effectiveType = state.numerics.hasValues() ? state.numerics.schemaClass() : String
     }
   }
-  private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state) {
+  private static boolean scanUntypedValue(Object v, ColumnProfile profile, TypeScanState state, int rowNumber) {
     if (BigDecimal.isInstance(v)) {
       state.numerics.include((Number) v, (BigDecimal) v)
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
-      BigDecimal decimal = decimalValue((Number) v, profile.name)
+      if (isNonFiniteFloating((Number) v)) {
+        state.numerics.includeNonFiniteFloating((Number) v)
+        return false
+      }
+      BigDecimal decimal = decimalValue((Number) v, profile.name, null, rowNumber)
       state.numerics.include((Number) v, decimal)
       return false
     }
     if (NumericKinds.isIntegral(v)) {
-      state.numerics.include((Number) v, decimalValue((Number) v, profile.name))
+      state.numerics.include((Number) v, decimalValue((Number) v, profile.name, null, rowNumber))
       return false
     }
     if (isFixedScalarValue(v)) {
@@ -878,28 +899,28 @@ class MatrixAvroWriter {
     if (List.isInstance(v)) {
       profile.effectiveType = List
       state.fixedType = true
-      scanListElementValue((List) v, profile)
+      scanListElementValue((List) v, profile, rowNumber)
       return false
     }
     if (Map.isInstance(v)) {
       profile.effectiveType = Map
       state.fixedType = true
-      scanMapValue((Map) v, profile)
+      scanMapValue((Map) v, profile, rowNumber)
       return false
     }
     profile.effectiveType = String
     state.fixedType = true
     true
   }
-  private static boolean continueFixedTypeScan(Object v, ColumnProfile profile) {
+  private static boolean continueFixedTypeScan(Object v, ColumnProfile profile, int rowNumber) {
     if (profile.effectiveType == Map) {
       if (Map.isInstance(v)) {
-        scanMapValue((Map) v, profile)
+        scanMapValue((Map) v, profile, rowNumber)
       }
       return false
     }
     if (profile.effectiveType == List && List.isInstance(v)) {
-      scanListElementValue((List) v, profile)
+      scanListElementValue((List) v, profile, rowNumber)
       return false
     }
     false
@@ -917,7 +938,7 @@ class MatrixAvroWriter {
   }
   private static void profileDecimalColumn(Matrix matrix, String col, ColumnProfile profile) {
     if (profile.effectiveType == BigDecimal || profile.effectiveType == BigInteger) {
-      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) } as List<Number>
+      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) && !isNonFiniteFloating((Number) it) } as List<Number>
       List<Number> values = sourceValues.collect { Number value ->
         decimalValue(value, col)
       } as List<Number>
@@ -931,7 +952,7 @@ class MatrixAvroWriter {
     for (int r = 0; r < rows; r++) {
       def v = matrix.get(r, colIndex)
       if (List.isInstance(v)) {
-        scanListElementValue((List) v, profile)
+        scanListElementValue((List) v, profile, r)
       }
     }
   }
@@ -941,29 +962,35 @@ class MatrixAvroWriter {
     for (int r = 0; r < rows; r++) {
       def v = matrix.get(r, colIndex)
       if (Map.isInstance(v)) {
-        scanMapValue((Map) v, profile)
+        scanMapValue((Map) v, profile, r)
       }
     }
   }
-  private static void scanListElementValue(List list, ColumnProfile profile) {
+  private static void scanListElementValue(List list, ColumnProfile profile, int rowNumber) {
     for (def e : list) {
       if (e != null) {
         if (profile.listElemClass == null) {
           profile.listElemClass = e.getClass()
         }
         if (Number.isInstance(e)) {
-          BigDecimal decimal = decimalValue((Number) e, "${profile.name} list element")
           if (profile.listNumericProfile == null) {
             profile.listNumericProfile = new NestedNumericProfile()
           }
-          profile.listNumericProfile.include((Number) e, decimal)
+          if (isNonFiniteFloating((Number) e)) {
+            profile.listNumericProfile.includeNonFiniteFloating((Number) e)
+          } else {
+            profile.listNumericProfile.include(
+                (Number) e,
+                decimalValue((Number) e, profile.name, 'list element', rowNumber)
+            )
+          }
         } else {
           profile.listHasNonNumeric = true
         }
       }
     }
   }
-  private static void scanMapValue(Map map, ColumnProfile profile) {
+  private static void scanMapValue(Map map, ColumnProfile profile, int rowNumber) {
     if (!profile.recordSeen) {
       profile.recordSeen = true
       profile.recordLike = true
@@ -989,15 +1016,22 @@ class MatrixAvroWriter {
         profile.recordFieldClasses[fieldName] = value.getClass()
       }
       if (Number.isInstance(value)) {
-        BigDecimal decimal = decimalValue((Number) value, "${profile.name}.$fieldName")
         NestedNumericProfile numericProfile = profile.recordNumericProfiles[fieldName]
         if (numericProfile == null) {
           numericProfile = new NestedNumericProfile()
           profile.recordNumericProfiles[fieldName] = numericProfile
         }
-        numericProfile.include((Number) value, decimal)
+        if (isNonFiniteFloating((Number) value)) {
+          numericProfile.includeNonFiniteFloating((Number) value)
+        } else {
+          numericProfile.include(
+              (Number) value,
+              decimalValue((Number) value, profile.name, "map value for key '$fieldName'", rowNumber)
+          )
+        }
       } else if (value != null) {
         profile.recordHasNonNumeric[fieldName] = true
+        profile.mapValuesHaveNonNumeric = true
       }
     }
   }
@@ -1145,10 +1179,19 @@ class MatrixAvroWriter {
       false
     }
   }
-  private static BigDecimal decimalValue(Number value, String location) {
-    if ((Double.isInstance(value) && !Double.isFinite((Double) value)) ||
-        (Float.isInstance(value) && !Float.isFinite((Float) value))) {
-      throw new AvroSchemaException('Non-finite decimal value', location, 'finite Number', String.valueOf(value))
+  private static boolean isNonFiniteFloating(Number value) {
+    (Double.isInstance(value) && !Double.isFinite((Double) value)) ||
+        (Float.isInstance(value) && !Float.isFinite((Float) value))
+  }
+  private static BigDecimal decimalValue(Number value, String columnName) {
+    decimalValue(value, columnName, null, -1)
+  }
+  private static BigDecimal decimalValue(Number value, String columnName, String valuePath, int rowNumber) {
+    if (isNonFiniteFloating(value)) {
+      String message = valuePath == null ? 'Non-finite decimal value' : "Non-finite decimal value at $valuePath"
+      throw rowNumber >= 0
+          ? new AvroSchemaException(message, columnName, FINITE_NUMBER_TYPE, String.valueOf(value), rowNumber)
+          : new AvroSchemaException(message, columnName, FINITE_NUMBER_TYPE, String.valueOf(value))
     }
     BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
   }
