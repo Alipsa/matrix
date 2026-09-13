@@ -16,6 +16,7 @@ import se.alipsa.matrix.parquet.ParquetFormatProvider
 import se.alipsa.matrix.parquet.ParquetReadOptions
 import se.alipsa.matrix.parquet.ParquetWriteOptions
 
+import java.math.RoundingMode
 import java.nio.file.Path
 import java.time.LocalDateTime
 
@@ -28,8 +29,12 @@ class ParquetFormatProviderTest {
   void testOptionDescriptions() {
     assertTrue(Matrix.listReadOptions('parquet').contains('zoneId'))
     assertTrue(Matrix.listWriteOptions('parquet').contains('precision'))
+    assertTrue(Matrix.listWriteOptions('parquet').contains('roundingMode'))
     assertTrue(ParquetReadOptions.describe().contains('matrixName'))
     assertTrue(ParquetWriteOptions.describe().contains('decimalMeta'))
+    def roundingMode = ParquetWriteOptions.descriptors().find { it.name == 'roundingMode' }
+    assertEquals(RoundingMode, roundingMode.type)
+    assertEquals('UNNECESSARY', roundingMode.defaultValue)
   }
 
   @Test
@@ -128,6 +133,7 @@ class ParquetFormatProviderTest {
     assertEquals(null, writeOptions.scale)
     assertEquals([:], writeOptions.decimalMeta)
     assertEquals(null, writeOptions.zoneId)
+    assertEquals(RoundingMode.UNNECESSARY, writeOptions.roundingMode)
   }
 
   @Test
@@ -139,6 +145,33 @@ class ParquetFormatProviderTest {
         ParquetWriteOptions.fromMap([inferPrecisionAndScale: value])
       }
     }
+  }
+
+  @Test
+  void testWriteOptionsRoundTripAndValidateRoundingModes() {
+    ParquetWriteOptions options = ParquetWriteOptions.fromMap([roundingMode: ' half_up '])
+    assertEquals(RoundingMode.HALF_UP, options.roundingMode)
+    assertEquals('HALF_UP', options.toMap().roundingMode)
+
+    assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([roundingMode: 'not_a_mode'])
+    }
+    assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([roundingMode: null])
+    }
+    assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().roundingMode((RoundingMode) null).validate()
+    }
+  }
+
+  @Test
+  void testSpiWriteUsesExplicitRoundingMode() {
+    Matrix source = Matrix.builder('spiRounded').data(amount: [1.235G]).types([BigDecimal]).build()
+    File file = tempDir.resolve('spi_rounded.parquet').toFile()
+
+    source.write([precision: 5, scale: 2, roundingMode: 'HALF_UP'], file)
+
+    assertEquals(1.24G, Matrix.read(file).amount[0])
   }
 
   @Test

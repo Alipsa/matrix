@@ -5,6 +5,7 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
+import java.math.RoundingMode
 import java.time.ZoneId
 
 /**
@@ -15,6 +16,8 @@ class ParquetWriteOptions {
   private static final String KEY_PRECISION = 'precision'
   private static final String KEY_SCALE = 'scale'
   private static final String KEY_INFER_PRECISION_AND_SCALE = 'inferPrecisionAndScale'
+  private static final String KEY_ROUNDING_MODE = 'roundingMode'
+  private static final String ERR_ROUNDING_MODE_NULL = 'roundingMode cannot be null'
 
   boolean inferPrecisionAndScale = true
   Integer precision = null
@@ -22,6 +25,7 @@ class ParquetWriteOptions {
   Map<String, int[]> decimalMeta = [:]
   ZoneId zoneId = null
   CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY
+  RoundingMode roundingMode = RoundingMode.UNNECESSARY
 
   ParquetWriteOptions inferPrecisionAndScale(boolean value) {
     this.inferPrecisionAndScale = value
@@ -76,6 +80,37 @@ class ParquetWriteOptions {
     this
   }
 
+  /**
+   * Sets the rounding mode used when a BigDecimal is rescaled for a DECIMAL field
+   * (default: {@link RoundingMode#UNNECESSARY}).
+   *
+   * @param value the rounding mode
+   * @return this options instance
+   */
+  ParquetWriteOptions roundingMode(RoundingMode value) {
+    this.roundingMode = value
+    this
+  }
+
+  /**
+   * Sets the rounding mode by its trimmed, case-insensitive enum name.
+   *
+   * @param value the rounding mode name, for example {@code "HALF_UP"}
+   * @return this options instance
+   * @throws IllegalArgumentException if value is null or not a recognized rounding mode
+   */
+  ParquetWriteOptions roundingMode(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException(ERR_ROUNDING_MODE_NULL)
+    }
+    try {
+      this.roundingMode = RoundingMode.valueOf(value.trim().toUpperCase(Locale.ROOT))
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalArgumentException("Unknown roundingMode '$value'", exception)
+    }
+    this
+  }
+
   boolean hasUniformPrecisionAndScale() {
     precision != null && scale != null
   }
@@ -103,10 +138,15 @@ class ParquetWriteOptions {
     if (compressionCodec == null) {
       throw new IllegalArgumentException('compressionCodec cannot be null')
     }
+    if (roundingMode == null) {
+      throw new IllegalArgumentException(ERR_ROUNDING_MODE_NULL)
+    }
   }
 
   Map<String, ?> toMap() {
-    Map<String, Object> result = [(KEY_INFER_PRECISION_AND_SCALE): inferPrecisionAndScale, compressionCodec: compressionCodec.name()]
+    Map<String, Object> result = [(KEY_INFER_PRECISION_AND_SCALE): inferPrecisionAndScale,
+                                  compressionCodec              : compressionCodec.name(),
+                                  (KEY_ROUNDING_MODE)            : roundingMode.name()]
     if (precision != null) {
       result.precision = precision
       result.scale = scale
@@ -165,6 +205,14 @@ class ParquetWriteOptions {
         result.compressionCodec(value as CompressionCodecName)
       } else if (value != null) {
         result.compressionCodec(String.valueOf(value))
+      }
+    }
+    if (normalized.containsKey('roundingmode')) {
+      Object value = normalized.roundingmode
+      if (value instanceof RoundingMode) {
+        result.roundingMode(value as RoundingMode)
+      } else {
+        result.roundingMode(value == null ? null : String.valueOf(value))
       }
     }
     result.validate()
@@ -238,7 +286,8 @@ class ParquetWriteOptions {
         new OptionDescriptor(KEY_SCALE, Integer, null, 'Uniform scale for all BigDecimal columns'),
         new OptionDescriptor('decimalMeta', Map, null, 'Map of column names to [precision, scale] arrays'),
         new OptionDescriptor('zoneId', ZoneId, null, 'Time zone to use when writing timestamp values'),
-        new OptionDescriptor('compressionCodec', CompressionCodecName, CompressionCodecName.SNAPPY.name(), 'Compression codec for the Parquet file (e.g. SNAPPY, GZIP, ZSTD, UNCOMPRESSED)')
+        new OptionDescriptor('compressionCodec', CompressionCodecName, CompressionCodecName.SNAPPY.name(), 'Compression codec for the Parquet file (e.g. SNAPPY, GZIP, ZSTD, UNCOMPRESSED)'),
+        new OptionDescriptor(KEY_ROUNDING_MODE, RoundingMode, RoundingMode.UNNECESSARY.name(), 'Rounding mode for explicit DECIMAL scale conversion')
     ]
   }
 }

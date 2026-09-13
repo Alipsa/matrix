@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -57,7 +58,7 @@ class MatrixParquetTest {
     File dir = tempDir.resolve('mtcars').toFile()
     dir.mkdirs()
     //println data.content()
-    File file = MatrixParquetWriter.write(data, dir, 5, 3)
+    File file = MatrixParquetWriter.write(data, dir, 6, 3)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
 
@@ -155,7 +156,7 @@ class MatrixParquetTest {
 
     // Assert that the exception message indicates a precision overflow error
     String message = exception.getMessage() ?: ''
-    assertTrue(message.contains('exceeds the configured precision'),
+    assertTrue(message.contains('exceeds DECIMAL'),
         "Expected an exception indicating a precision overflow, but got: ${message}")
   }
 
@@ -306,7 +307,8 @@ class MatrixParquetTest {
     def dateTime3 = LocalDateTime.of(2024, 1, 1, 0, 0, 0, 0) // midnight
 
     // Test java.sql.Time with millisecond precision (schema uses MILLIS)
-    def time1 = Time.valueOf(LocalTime.of(10, 30, 45)) // 10:30:45.000
+    def time1 = Time.valueOf(LocalTime.of(10, 30, 45))
+    time1.setTime(time1.time + 123) // 10:30:45.123
     def time2 = Time.valueOf(LocalTime.of(23, 59, 59)) // 23:59:59.000
     def time3 = Time.valueOf(LocalTime.of(0, 0, 0)) // 00:00:00.000
 
@@ -324,10 +326,10 @@ class MatrixParquetTest {
 
     File file = tempDir.resolve('timeData.parquet').toFile()
 
-    MatrixParquetWriter.write(timeData, file)
+    MatrixParquetWriter.builder(timeData).zoneId('UTC').write(file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
 
-    def matrix = MatrixParquetReader.read(file)
+    def matrix = MatrixParquetReader.builder().zoneId('UTC').read(file)
 
     // Verify types are preserved
     assertEquals([Integer, LocalDateTime, Time, Timestamp], matrix.types(),
@@ -342,7 +344,7 @@ class MatrixParquetTest {
     assertEquals(dateTime3, matrix.local_datetime[2], 'LocalDateTime midnight should round-trip exactly')
 
     // Verify Time values (millisecond precision)
-    assertEquals(time1.toString(), matrix.sql_time[0].toString(), 'Time 10:30:45 should round-trip')
+    assertEquals(time1.time, matrix.sql_time[0].time, 'Time 10:30:45.123 should round-trip')
     assertEquals(time2.toString(), matrix.sql_time[1].toString(), 'Time 23:59:59 should round-trip')
     assertEquals(time3.toString(), matrix.sql_time[2].toString(), 'Time 00:00:00 should round-trip')
 
@@ -354,6 +356,32 @@ class MatrixParquetTest {
     assertEquals(timestamp1.time, matrix.sql_timestamp[0].time, 'Timestamp1 should round-trip')
     assertEquals(timestamp2.time, matrix.sql_timestamp[1].time, 'Timestamp2 should round-trip')
     assertEquals(timestamp3.time, matrix.sql_timestamp[2].time, 'Timestamp3 should round-trip')
+  }
+
+  @Test
+  void testDirectoryTargetNormalizesMatrixNameAndPreservesExplicitFileTargets() {
+    File directory = tempDir.resolve('target').toFile()
+    assertTrue(directory.mkdirs())
+    ['nested/name', 'nested\\name', '..', '   ', '\u0001', 'foo.parquet', 'trailing. ', 'räksmörgås'].each { String name ->
+      Matrix data = Matrix.builder(name).data(id: [1]).types([Integer]).build()
+      File written = MatrixParquetWriter.write(data, directory)
+
+      assertEquals(directory.toPath().toAbsolutePath().normalize(), written.toPath().toAbsolutePath().normalize().parent)
+      assertTrue(written.name.toLowerCase().endsWith('.parquet'))
+      assertFalse(written.name.substring(0, written.name.length() - '.parquet'.length()).endsWith(' '))
+      assertFalse(written.name.substring(0, written.name.length() - '.parquet'.length()).endsWith('.'))
+      if (name == 'foo.parquet') {
+        assertEquals('foo.parquet', written.name)
+      }
+      assertEquals([1], MatrixParquetReader.read(written).id)
+    }
+    Matrix fallback = Matrix.builder('..').data(id: [1]).types([Integer]).build()
+    assertEquals('matrix.parquet', MatrixParquetWriter.write(fallback, directory).name)
+
+    File explicitFile = tempDir.resolve('explicit-target').toFile()
+    File written = MatrixParquetWriter.write(Matrix.builder('ignored.parquet').data(id: [1]).types([Integer]).build(), explicitFile)
+    assertEquals(explicitFile, written)
+    assertTrue(explicitFile.exists())
   }
 
   @Test

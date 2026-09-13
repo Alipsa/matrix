@@ -17,11 +17,11 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 
 **Direct API (recommended)**
 - `MatrixParquetReader.builder()` — fluent reader with `.matrixName()`, `.zoneId()`, `.read(File/Path/URL/InputStream/byte[])` 
-- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.compressionCodec()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
+- `MatrixParquetWriter.builder(matrix)` — fluent writer with `.precision()`, `.scale()`, `.decimalMeta()`, `.roundingMode()`, `.compressionCodec()`, `.zoneId()`, `.inferPrecisionAndScale()`, `.write(File/Path/OutputStream)`, `.writeBytes()`
 
 **SPI (generic Matrix API)**
 - `Matrix.read(options, file)` — options map with keys `matrixName`, `zoneId`
-- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `compressionCodec`, `zoneId`
+- `matrix.write(options, file)` — options map with keys `inferPrecisionAndScale`, `precision`, `scale`, `decimalMeta`, `roundingMode`, `compressionCodec`, `zoneId`
 
 **Typed options classes**
 - `ParquetReadOptions` — typed options for reading; use `ParquetReadOptions.describe()` for runtime discovery
@@ -37,8 +37,10 @@ This module enables import and export of [Apache Parquet](https://parquet.apache
 **Writing**
 - Parquet message type name: `matrix.matrixName` when present, otherwise `MatrixSchema`
 - BigDecimal: precision and scale are inferred from the data by default (`inferPrecisionAndScale = true`)
+- Explicit DECIMAL scale conversion: `roundingMode = UNNECESSARY` by default, so a discarded non-zero fraction fails instead of being silently rounded
 - Compression: `SNAPPY` by default; override with the `compressionCodec` option (e.g. `GZIP`, `ZSTD`, `UNCOMPRESSED`)
 - Timezone: system default; override with `zoneId` option
+- When the target is an existing directory, the Matrix name is converted to one safe filename inside it. Path separators and unsafe characters are replaced, trailing dots/spaces are removed, blank or dots-only names become `matrix.parquet`, and an existing `.parquet` suffix is preserved. Pass an explicit file (including a non-existent file path) to retain the exact filename.
 - Nested Map columns: stored as MAP when value types are homogeneous, as STRUCT when heterogeneous
 - Index columns: written to `matrix.indexColumns` metadata as a JSON string array so column names containing commas round-trip; readers also accept the legacy comma-delimited metadata form
 
@@ -163,7 +165,7 @@ Matrix data = MatrixParquetReader.builder()
 | Boolean            | BOOLEAN                        |                                                   |
 | LocalDate          | INT32 (DATE)                   |                                                   |
 | java.sql.Date      | INT32 (DATE)                   |                                                   |
-| java.sql.Time      | INT32 (TIME_MILLIS)            | Millisecond precision                             |
+| java.sql.Time      | INT32 (TIME_MILLIS)            | Millisecond precision; external TIME(MICROS/NANOS) is downgraded to milliseconds |
 | LocalDateTime      | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
 | java.sql.Timestamp | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
 | java.util.Date     | INT64                          | Epoch milliseconds                                |
@@ -188,6 +190,26 @@ MatrixParquetWriter.write(data, file, true)
 // Use precision=38, scale=18 for all BigDecimal columns
 MatrixParquetWriter.write(data, file, 38, 18)
 ```
+
+Explicit precision/scale writes reject a value that would lose a non-zero fraction by default. To opt in to a deliberate rounding policy, use the builder or the typed options map:
+
+```groovy
+import java.math.RoundingMode
+
+// Direct API
+MatrixParquetWriter.write(data, file, 8, 2, RoundingMode.HALF_UP)
+
+// Builder API
+MatrixParquetWriter.builder(data)
+    .precision(8)
+    .scale(2)
+    .roundingMode(RoundingMode.HALF_UP)
+    .write(file)
+
+data.write([precision: 8, scale: 2, roundingMode: 'HALF_UP'], file)
+```
+
+`roundingMode` accepts any `RoundingMode` enum name, case-insensitively. Use `UNNECESSARY` (the default) for lossless conversion; a rounded result must still fit the declared precision.
 
 ### 3. Per-Column Precision Specification
 ```groovy
@@ -240,6 +262,8 @@ Matrix matrix = MatrixParquetReader.read(file, "myData", ZoneId.of("Europe/Londo
 ```
 
 **Important:** For consistent round-trip behavior, use the same timezone for writing and reading. If files are shared across systems with different default timezones, explicitly specify the timezone.
+
+`java.sql.Time` is different: it is always treated as a local time of day in the JVM default timezone, independently of `zoneId`, and preserves milliseconds. External `TIME(MICROS)` and `TIME(NANOS)` values are read as `Time` with their sub-millisecond fraction truncated; the Parquet `isAdjustedToUTC` flag does not cause a zone shift.
 
 ## Compression
 

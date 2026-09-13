@@ -53,6 +53,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @see MatrixParquetReader
  * @see Matrix
  */
+@SuppressWarnings('ClassSize')
 class MatrixParquetWriter {
 
   private static final Logger log = Logger.getLogger(MatrixParquetWriter)
@@ -92,6 +93,7 @@ class MatrixParquetWriter {
   private static final String ERR_OPTIONS_NULL = 'Options cannot be null'
   private static final String COMMA = ','
   private static final String ZERO = '0'
+  private static final String DEFAULT_MATRIX_NAME = 'matrix'
   private static final int DECIMAL_META_LENGTH = 2
   private static final int ERROR_VALUE_MAX_LENGTH = 100
   private static final long MICROS_PER_SECOND = 1_000_000L
@@ -254,6 +256,29 @@ class MatrixParquetWriter {
     }
 
     /**
+     * Sets the rounding mode used when BigDecimal values require scale conversion.
+     * The default {@link RoundingMode#UNNECESSARY} rejects lossy conversion.
+     *
+     * @param value the rounding mode
+     * @return this builder
+     */
+    WriterBuilder roundingMode(RoundingMode value) {
+      options.roundingMode(value)
+      this
+    }
+
+    /**
+     * Sets the rounding mode by its trimmed, case-insensitive enum name.
+     *
+     * @param value the rounding mode name, for example {@code "HALF_UP"}
+     * @return this builder
+     */
+    WriterBuilder roundingMode(String value) {
+      options.roundingMode(value)
+      this
+    }
+
+    /**
      * Writes the matrix to the specified file or directory.
      *
      * @param fileOrDir the target file or directory; if a directory, the filename is derived from the matrix name
@@ -380,14 +405,25 @@ class MatrixParquetWriter {
    * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
    */
   static File write(Matrix matrix, File fileOrDir, int precision, int scale) {
-    validateInput(matrix, fileOrDir)
-    Map<String, int[]> decimalMeta = [:]
-    matrix.columnNames().each { col ->
-      if (matrix.type(col) == BigDecimal) {
-        decimalMeta[col] = [precision, scale] as int[]
-      }
-    }
-    return write(matrix, fileOrDir, decimalMeta)
+    write(matrix, fileOrDir, precision, scale, RoundingMode.UNNECESSARY)
+  }
+
+  /**
+   * Writes a Matrix using uniform BigDecimal precision, scale, and rounding mode.
+   *
+   * @param matrix the matrix to write
+   * @param fileOrDir the target file or directory
+   * @param precision the decimal precision to use for all BigDecimal columns
+   * @param scale the decimal scale to use for all BigDecimal columns
+   * @param roundingMode the scale-conversion rounding mode
+   * @return the target file
+   */
+  static File write(Matrix matrix, File fileOrDir, int precision, int scale, RoundingMode roundingMode) {
+    ParquetWriteOptions options = new ParquetWriteOptions()
+        .precision(precision)
+        .scale(scale)
+        .roundingMode(roundingMode)
+    write(matrix, fileOrDir, options)
   }
 
   /**
@@ -437,12 +473,12 @@ class MatrixParquetWriter {
     if (options.zoneId != null) {
       try {
         ZONE_ID_HOLDER.set(options.zoneId)
-        return writeInternal(matrix, file, schema, options.compressionCodec)
+        return writeInternal(matrix, file, schema, options.compressionCodec, options.roundingMode)
       } finally {
         ZONE_ID_HOLDER.remove()
       }
     }
-    return writeInternal(matrix, file, schema, options.compressionCodec)
+    return writeInternal(matrix, file, schema, options.compressionCodec, options.roundingMode)
   }
 
   /**
@@ -511,24 +547,37 @@ class MatrixParquetWriter {
     if (options.zoneId != null) {
       try {
         ZONE_ID_HOLDER.set(options.zoneId)
-        return writeBytesInternal(matrix, schema, options.compressionCodec)
+        return writeBytesInternal(matrix, schema, options.compressionCodec, options.roundingMode)
       } finally {
         ZONE_ID_HOLDER.remove()
       }
     }
-    return writeBytesInternal(matrix, schema, options.compressionCodec)
+    return writeBytesInternal(matrix, schema, options.compressionCodec, options.roundingMode)
   }
 
   private static File determineTargetFile(Matrix matrix, File fileOrDir) {
-    String name = matrix.matrixName ?: 'matrix'
-    File file
     if (fileOrDir.isDirectory()) {
-      file = new File(fileOrDir, "${name}.parquet")
+      java.nio.file.Path directory = fileOrDir.toPath().toAbsolutePath().normalize()
+      String filename = normalizedDirectoryFilename(matrix.matrixName)
+      java.nio.file.Path target = directory.resolve(filename).normalize()
+      if (target.parent != directory) {
+        throw new IllegalArgumentException("Normalized Matrix filename '$filename' is not a direct child of '$directory'")
+      }
+      File file = target.toFile()
       log.debug("Writing to ${file.absolutePath}")
-    } else {
-      file = fileOrDir
+      return file
     }
-    file
+    fileOrDir
+  }
+
+  private static String normalizedDirectoryFilename(String matrixName) {
+    String normalized = (matrixName ?: DEFAULT_MATRIX_NAME)
+        .replaceAll(/[\\\\\/:<>"|?*\p{Cntrl}]/, '_')
+        .replaceAll(/[. ]+$/, '')
+    if (normalized.trim().isEmpty() || normalized.replace('.', '').trim().isEmpty()) {
+      normalized = DEFAULT_MATRIX_NAME
+    }
+    normalized.toLowerCase(Locale.ROOT).endsWith('.parquet') ? normalized : "${normalized}.parquet"
   }
 
   private static MessageType createSchema(Matrix matrix, ParquetWriteOptions options) {
@@ -555,7 +604,8 @@ class MatrixParquetWriter {
    * @param schema the Parquet MessageType schema
    * @return the target file
    */
-  private static File writeInternal(Matrix matrix, File file, MessageType schema, CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY) {
+  private static File writeInternal(Matrix matrix, File file, MessageType schema,
+      CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY) {
     def conf = new Configuration()
     def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
         .withConf(conf)
@@ -564,7 +614,7 @@ class MatrixParquetWriter {
         .withCompressionCodec(compressionCodec)
         .withExtraMetaData(buildExtraMeta(matrix))
         .build()
-    writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema) }
+    writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema, roundingMode) }
     return file
   }
 
@@ -577,7 +627,7 @@ class MatrixParquetWriter {
     extraMeta
   }
 
-  private static void writeRows(ParquetWriter<Group> parquetWriter, Matrix matrix, MessageType schema) {
+  private static void writeRows(ParquetWriter<Group> parquetWriter, Matrix matrix, MessageType schema, RoundingMode roundingMode) {
     def factory = new SimpleGroupFactory(schema)
     def rowCount = matrix.rowCount()
     def colNames = matrix.columnNames()
@@ -588,7 +638,7 @@ class MatrixParquetWriter {
         def value = matrix[i, col]
         if (value != null) {
           def fieldType = schema.getType(col)
-          writeValue(group, col, fieldType, value)
+          writeValue(group, col, fieldType, value, roundingMode)
         }
       }
       parquetWriter.write(group)
@@ -613,7 +663,8 @@ class MatrixParquetWriter {
    * @param schema the Parquet MessageType schema
    * @return byte array containing Parquet data
    */
-  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema, CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY) {
+  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema,
+      CompressionCodecName compressionCodec = CompressionCodecName.SNAPPY, RoundingMode roundingMode = RoundingMode.UNNECESSARY) {
     def conf = new Configuration()
     InMemoryOutputFile outputFile = new InMemoryOutputFile()
     def writer = ExampleParquetWriter.builder(outputFile)
@@ -622,7 +673,7 @@ class MatrixParquetWriter {
         .withCompressionCodec(compressionCodec)
         .withExtraMetaData(buildExtraMeta(matrix))
         .build()
-    writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema) }
+    writer.withCloseable { parquetWriter -> writeRows(parquetWriter, matrix, schema, roundingMode) }
     return outputFile.getBytes()
   }
 
@@ -1026,34 +1077,35 @@ class MatrixParquetWriter {
     return clazz in [LocalDate, LocalDateTime, Timestamp, Time]
   }
 
-  private static void writeValue(Group group, String fieldName, Type fieldType, Object value) {
+  private static void writeValue(Group group, String fieldName, Type fieldType, Object value, RoundingMode roundingMode) {
     if (value == null) {
       return
     }
     if (fieldType.isPrimitive()) {
-      writePrimitiveValue(group, fieldName, fieldType.asPrimitiveType(), value)
+      writePrimitiveValue(group, fieldName, fieldType.asPrimitiveType(), value, roundingMode)
       return
     }
 
     GroupType groupType = fieldType.asGroupType()
     def logical = groupType.logicalTypeAnnotation
     if (logical instanceof LogicalTypeAnnotation.ListLogicalTypeAnnotation) {
-      writeList(group, fieldName, groupType, value)
+      writeList(group, fieldName, groupType, value, roundingMode)
     } else if (logical instanceof LogicalTypeAnnotation.MapLogicalTypeAnnotation) {
-      writeMap(group, fieldName, groupType, value)
+      writeMap(group, fieldName, groupType, value, roundingMode)
     } else {
-      writeStruct(group, fieldName, groupType, value)
+      writeStruct(group, fieldName, groupType, value, roundingMode)
     }
   }
 
-  private static void writePrimitiveValue(Group group, String fieldName, PrimitiveType field, Object value) {
+  private static void writePrimitiveValue(Group group, String fieldName, PrimitiveType field, Object value,
+      RoundingMode roundingMode) {
     switch (value.class) {
       case Integer, int -> group.append(fieldName, (int) value)
       case Long, long -> group.append(fieldName, ((Number) value).longValue())
       case BigInteger -> group.add(fieldName, Binary.fromConstantByteArray(((BigInteger) value).toByteArray()))
       case Float, float -> group.append(fieldName, ((Number) value).floatValue())
       case Double, double -> group.append(fieldName, ((Number) value).doubleValue())
-      case BigDecimal -> writeBigDecimalValue(group, fieldName, field, (BigDecimal) value)
+      case BigDecimal -> writeBigDecimalValue(group, fieldName, field, (BigDecimal) value, roundingMode)
       case Boolean, boolean -> group.append(fieldName, (boolean) value)
       case LocalDate -> group.append(fieldName, ((LocalDate) value).toEpochDay().intValue())
       case java.sql.Date -> group.append(fieldName, ((java.sql.Date) value).toLocalDate().toEpochDay().intValue())
@@ -1066,7 +1118,7 @@ class MatrixParquetWriter {
   }
 
   private static int timeToMillis(Time time) {
-    def localTime = time.toLocalTime()
+    def localTime = Instant.ofEpochMilli(time.time).atZone(ZoneId.systemDefault()).toLocalTime()
     (int) (localTime.toNanoOfDay() / NANOS_PER_MILLI)
   }
 
@@ -1074,29 +1126,43 @@ class MatrixParquetWriter {
     instant.epochSecond * MICROS_PER_SECOND + (long) (instant.nano / NANOS_PER_MICRO)
   }
 
-  private static void writeBigDecimalValue(Group group, String fieldName, PrimitiveType field, BigDecimal value) {
+  private static void writeBigDecimalValue(Group group, String fieldName, PrimitiveType field, BigDecimal value,
+      RoundingMode roundingMode) {
     def logical = field.getLogicalTypeAnnotation()
     if (field.primitiveTypeName == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY &&
         logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-      writeFixedLenBigDecimal(group, fieldName, field, value, (LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logical)
+      writeFixedLenBigDecimal(group, fieldName, field, value,
+          (LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) logical, roundingMode)
     } else {
       group.append(fieldName, value.doubleValue())
     }
   }
 
   private static void writeFixedLenBigDecimal(Group group, String fieldName, PrimitiveType field, BigDecimal value,
-      LogicalTypeAnnotation.DecimalLogicalTypeAnnotation logical) {
+      LogicalTypeAnnotation.DecimalLogicalTypeAnnotation logical, RoundingMode roundingMode) {
     int scale = logical.scale
     int precision = logical.precision
-    def unscaled = value.setScale(scale, RoundingMode.HALF_UP).unscaledValue()
+    BigDecimal rescaled
+    try {
+      rescaled = value.setScale(scale, roundingMode)
+    } catch (ArithmeticException exception) {
+      throw new IllegalArgumentException(
+          "BigDecimal value '$value' for field '$fieldName' cannot be represented at scale $scale with roundingMode $roundingMode. " +
+          'Use an exact value or explicitly select a rounding mode such as HALF_UP.', exception)
+    }
+    if (rescaled.precision() > precision) {
+      throw new IllegalArgumentException(
+          "BigDecimal value '$value' for field '$fieldName' exceeds DECIMAL($precision, $scale) after applying roundingMode $roundingMode. " +
+          "Rescaled value '$rescaled' has precision ${rescaled.precision()}. Increase the precision or choose an appropriate rounding mode.")
+    }
+    def unscaled = rescaled.unscaledValue()
     def bytes = unscaled.toByteArray()
     int size = field.typeLength
     if (bytes.length > size) {
       throw new IllegalArgumentException(
-          "BigDecimal value '$value' for field '$fieldName' exceeds the configured precision. " +
+          "BigDecimal value '$value' for field '$fieldName' cannot be encoded in DECIMAL($precision, $scale). " +
           "The value requires ${bytes.length} bytes but schema allows only $size bytes " +
-          "(precision=$precision, scale=$scale). " +
-          'Either increase the precision or use inferPrecisionAndScale=true.')
+          "after applying roundingMode $roundingMode. Increase the precision or use inferPrecisionAndScale=true.")
     }
     def padded = new byte[size]
     if (unscaled.signum() < 0) {
@@ -1106,7 +1172,7 @@ class MatrixParquetWriter {
     group.add(fieldName, Binary.fromConstantByteArray(padded))
   }
 
-  private static void writeList(Group group, String fieldName, GroupType groupType, Object value) {
+  private static void writeList(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
     if (!(value instanceof Collection)) {
       throw new IllegalArgumentException(
           "Cannot write field '$fieldName' as Parquet LIST: expected a Collection (List, Set, etc.) " +
@@ -1118,11 +1184,11 @@ class MatrixParquetWriter {
     Type elementType = repeatedType.getType(0)
     collection.each { Object element ->
       Group entry = listGroup.addGroup(FIELD_LIST)
-      writeValue(entry, elementType.name, elementType, element)
+      writeValue(entry, elementType.name, elementType, element, roundingMode)
     }
   }
 
-  private static void writeMap(Group group, String fieldName, GroupType groupType, Object value) {
+  private static void writeMap(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
     if (!(value instanceof Map)) {
       throw new IllegalArgumentException(
           "Cannot write field '$fieldName' as Parquet MAP: expected a Map " +
@@ -1135,20 +1201,20 @@ class MatrixParquetWriter {
     Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
     mapValue.each { Object k, Object v ->
       Group kvGroup = mapGroup.addGroup(FIELD_KEY_VALUE)
-      writePrimitiveValue(kvGroup, keyPrimitive.name, keyPrimitive, k)
+      writePrimitiveValue(kvGroup, keyPrimitive.name, keyPrimitive, k, roundingMode)
       if (valueType != null && v != null) {
-        writeValue(kvGroup, valueType.name, valueType, v)
+        writeValue(kvGroup, valueType.name, valueType, v, roundingMode)
       }
     }
   }
 
-  private static void writeStruct(Group group, String fieldName, GroupType groupType, Object value) {
+  private static void writeStruct(Group group, String fieldName, GroupType groupType, Object value, RoundingMode roundingMode) {
     Map<String, Object> structValues = toStructMap(value)
     Group structGroup = group.addGroup(fieldName)
     groupType.fields.each { Type field ->
       def childValue = structValues.get(field.name)
       if (childValue != null) {
-        writeValue(structGroup, field.name, field, childValue)
+        writeValue(structGroup, field.name, field, childValue, roundingMode)
       }
     }
   }
