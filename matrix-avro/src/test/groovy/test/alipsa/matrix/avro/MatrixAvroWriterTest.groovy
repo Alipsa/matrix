@@ -691,6 +691,25 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void nestedSchemaMismatchReportsFalsyValuesAtTheFailingPosition() {
+    Matrix matrix = Matrix.builder('ListMismatch')
+        .columns(vals: [[1, false]])
+        .types(List)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+          .columnSchema('vals', AvroSchemaDecl.arrayOf(Integer)))
+    }
+
+    assertEquals('vals', exception.columnName)
+    assertEquals(0, exception.rowNumber)
+    assertEquals('UNION[NULL, INT]', exception.expectedType)
+    assertEquals('Boolean', exception.actualType)
+    assertTrue(exception.message.contains('at vals[1]'))
+  }
+
+  @Test
   void testColumnSchemaCanForceArrayElementType() {
     Matrix m = Matrix.builder('ForceArray')
         .columns(tags: [[1, 2], [3L, null]])

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.avro
 
+import groovy.transform.PackageScope
+
 import org.apache.avro.Conversions
 import org.apache.avro.LogicalType
 import org.apache.avro.LogicalTypes
@@ -603,12 +605,10 @@ class MatrixAvroWriter {
         Schema fs = fieldSchemas.get(col)
         try {
           if (!isCompatible(fs, v)) {
-            AvroSchemaCompatibility.CompatibilityFailure failure = AvroSchemaCompatibility.findIncompatibleValue(fs, v, col) {
-              Schema nestedSchema, Object nestedValue -> isLeafCompatible(nestedSchema, nestedValue)
-            }
+            AvroSchemaCompatibility.CompatibilityFailure failure = AvroSchemaCompatibility.findIncompatibleValue(fs, v, col)
             String failurePath = failure?.path ?: col
             Schema failureSchema = failure?.schema ?: fs
-            Object failureValue = failure?.value ?: v
+            Object failureValue = failure == null ? v : failure.value
             throw new AvroSchemaException(
                 "Value does not match schema type at $failurePath",
                 col,
@@ -1080,14 +1080,10 @@ class MatrixAvroWriter {
    * @return true if the value can be serialized under this schema
    */
   private static boolean isCompatible(Schema s, Object v) {
-    AvroSchemaCompatibility.findIncompatibleValue(s, v, null) {
-      Schema nestedSchema, Object nestedValue -> isLeafCompatible(nestedSchema, nestedValue)
-    } == null
+    AvroSchemaCompatibility.findIncompatibleValue(s, v, null) == null
   }
-  private static boolean isLeafCompatible(Schema s, Object v) {
-    if (v == null) {
-      return true
-    }
+  @PackageScope
+  static boolean isLeafCompatible(Schema s, Object v) {
     def logical = s.getLogicalType()
     if (logical != null) {
       return isLogicalTypeCompatible(logical.getName(), v)
