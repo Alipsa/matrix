@@ -1129,6 +1129,9 @@ class MatrixParquetReader {
       time.setTime(time.time + millisecondRemainder)
       time
     } catch (DateTimeException exception) {
+      // Unreachable in practice: the one-day range guard above rejects out-of-range values
+      // before LocalTime.ofNanoOfDay can throw, so the contextual error already comes from
+      // the guard. Kept defensively in case a future unit change bypasses it.
       throw new IllegalArgumentException("Invalid TIME value $value for field '$fieldName'", exception)
     }
   }

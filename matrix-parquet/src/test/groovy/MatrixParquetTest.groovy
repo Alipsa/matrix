@@ -326,10 +326,12 @@ class MatrixParquetTest {
 
     File file = tempDir.resolve('timeData.parquet').toFile()
 
-    MatrixParquetWriter.builder(timeData).zoneId('UTC').write(file)
+    // Asia/Kolkata is never a plausible system default zone and has no DST, so a UTC CI host
+    // cannot make this round-trip pass by accident
+    MatrixParquetWriter.builder(timeData).zoneId('Asia/Kolkata').write(file)
     assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
 
-    def matrix = MatrixParquetReader.builder().zoneId('UTC').read(file)
+    def matrix = MatrixParquetReader.builder().zoneId('Asia/Kolkata').read(file)
 
     // Verify types are preserved
     assertEquals([Integer, LocalDateTime, Time, Timestamp], matrix.types(),

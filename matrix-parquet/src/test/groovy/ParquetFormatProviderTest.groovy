@@ -156,9 +156,8 @@ class ParquetFormatProviderTest {
     assertThrows(IllegalArgumentException) {
       ParquetWriteOptions.fromMap([roundingMode: 'not_a_mode'])
     }
-    assertThrows(IllegalArgumentException) {
-      ParquetWriteOptions.fromMap([roundingMode: null])
-    }
+    // A null map value is treated as absent, consistent with the other option keys
+    assertEquals(RoundingMode.UNNECESSARY, ParquetWriteOptions.fromMap([roundingMode: null]).roundingMode)
     assertThrows(IllegalArgumentException) {
       new ParquetWriteOptions().roundingMode((RoundingMode) null).validate()
     }

@@ -209,10 +209,11 @@ class ParquetWriteOptions {
     }
     if (normalized.containsKey('roundingmode')) {
       Object value = normalized.roundingmode
+      // Treat null as absent to preserve the default, consistent with the other option keys
       if (value instanceof RoundingMode) {
         result.roundingMode(value as RoundingMode)
-      } else {
-        result.roundingMode(value == null ? null : String.valueOf(value))
+      } else if (value != null) {
+        result.roundingMode(String.valueOf(value))
       }
     }
     result.validate()
