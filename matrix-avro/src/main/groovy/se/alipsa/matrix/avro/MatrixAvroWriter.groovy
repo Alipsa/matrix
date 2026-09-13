@@ -879,7 +879,7 @@ class MatrixAvroWriter {
       return false
     }
     if (Float.isInstance(v) || Double.isInstance(v)) {
-      if (AvroSchemaCompatibility.isNonFiniteFloating((Number) v)) {
+      if (NumericKinds.isNonFiniteFloating((Number) v)) {
         state.numerics.includeNonFiniteFloating((Number) v)
         return false
       }
@@ -938,7 +938,7 @@ class MatrixAvroWriter {
   }
   private static void profileDecimalColumn(Matrix matrix, String col, ColumnProfile profile) {
     if (profile.effectiveType == BigDecimal || profile.effectiveType == BigInteger) {
-      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) && !AvroSchemaCompatibility.isNonFiniteFloating((Number) it) } as List<Number>
+      List<Number> sourceValues = matrix.column(col).findAll { Number.isInstance(it) && !NumericKinds.isNonFiniteFloating((Number) it) } as List<Number>
       List<Number> values = sourceValues.collect { Number value ->
         decimalValue(value, col)
       } as List<Number>
@@ -976,7 +976,7 @@ class MatrixAvroWriter {
           if (profile.listNumericProfile == null) {
             profile.listNumericProfile = new NestedNumericProfile()
           }
-          if (AvroSchemaCompatibility.isNonFiniteFloating((Number) e)) {
+          if (NumericKinds.isNonFiniteFloating((Number) e)) {
             profile.listNumericProfile.includeNonFiniteFloating((Number) e)
           } else {
             profile.listNumericProfile.include(
@@ -1021,7 +1021,7 @@ class MatrixAvroWriter {
           numericProfile = new NestedNumericProfile()
           profile.recordNumericProfiles[fieldName] = numericProfile
         }
-        if (AvroSchemaCompatibility.isNonFiniteFloating((Number) value)) {
+        if (NumericKinds.isNonFiniteFloating((Number) value)) {
           numericProfile.includeNonFiniteFloating((Number) value)
         } else {
           numericProfile.include(
@@ -1079,13 +1079,13 @@ class MatrixAvroWriter {
     decimalValue(value, columnName, null, -1)
   }
   private static BigDecimal decimalValue(Number value, String columnName, String valuePath, int rowNumber) {
-    if (AvroSchemaCompatibility.isNonFiniteFloating(value)) {
+    if (NumericKinds.isNonFiniteFloating(value)) {
       String message = valuePath == null ? 'Non-finite decimal value' : "Non-finite decimal value at $valuePath"
       throw rowNumber >= 0
           ? new AvroSchemaException(message, columnName, FINITE_NUMBER_TYPE, String.valueOf(value), rowNumber)
           : new AvroSchemaException(message, columnName, FINITE_NUMBER_TYPE, String.valueOf(value))
     }
-    BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
+    NumericKinds.toBigDecimal(value)
   }
   private static final class NonClosingOutputStream extends FilterOutputStream {
 

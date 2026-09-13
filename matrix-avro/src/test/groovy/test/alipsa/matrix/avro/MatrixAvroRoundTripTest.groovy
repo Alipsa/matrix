@@ -22,9 +22,9 @@ class MatrixAvroRoundTripTest {
 
   @Test
   void roundTrip_mixedFiniteNumbersUseOneProfiledDecimalSchema() {
-    BigInteger largeInteger = new BigInteger('92233720368547758081234567890')
+    BigInteger largeInteger = 92233720368547758081234567890G
     Matrix source = Matrix.builder('MixedNumbers')
-        .columns(value: [1, largeInteger, -2.25g, 3.5d, 4.75f, new BigDecimal('1.0E10'), null])
+        .columns(value: [1, largeInteger, -2.25g, 3.5d, 4.75f, 1.0E10G, null])
         .types(Object)
         .build()
 
@@ -36,8 +36,8 @@ class MatrixAvroRoundTripTest {
     assertNull(valueSchema.getProp('se.alipsa.matrix.javaType'))
 
     Matrix result = MatrixAvroReader.read(bytes)
-    [1.00g, new BigDecimal('92233720368547758081234567890.00'), -2.25g, 3.50g, 4.75g,
-     new BigDecimal('10000000000.00')].eachWithIndex { BigDecimal expected, int index ->
+    [1.00g, 92233720368547758081234567890.00G, -2.25g, 3.50g, 4.75g,
+     10000000000.00G].eachWithIndex { BigDecimal expected, int index ->
       assertEquals(expected, result[index, 'value'])
       assertTrue(result[index, 'value'] instanceof BigDecimal)
       assertEquals(2, ((BigDecimal) result[index, 'value']).scale())
@@ -59,8 +59,8 @@ class MatrixAvroRoundTripTest {
 
   @Test
   void roundTrip_preservesArbitraryBigIntegerValues() {
-    BigInteger beyondLong = new BigInteger('92233720368547758081234567890')
-    BigInteger belowLong = new BigInteger('-92233720368547758081234567890')
+    BigInteger beyondLong = 92233720368547758081234567890G
+    BigInteger belowLong = -92233720368547758081234567890G
     Matrix source = Matrix.builder('BigIntegers')
         .columns(value: [BigInteger.ZERO, beyondLong, belowLong, null])
         .types(BigInteger)
@@ -89,7 +89,7 @@ class MatrixAvroRoundTripTest {
   @Test
   void unmarkedReaderSchemaReadsMarkedBigIntegerAsBigDecimal() {
     Matrix source = Matrix.builder('BigIntegerEvolution')
-        .columns(value: [new BigInteger('42')])
+        .columns(value: [42G])
         .types(BigInteger)
         .build()
     File file = Files.createTempFile('matrix-avro-big-integer-evolution-', '.avro').toFile()

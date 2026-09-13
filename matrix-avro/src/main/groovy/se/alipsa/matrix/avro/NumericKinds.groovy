@@ -45,4 +45,25 @@ final class NumericKinds {
     Long.isInstance(value) || BigInteger.isInstance(value)
         || (isIntegral(value) && (value.longValue() < Integer.MIN_VALUE || value.longValue() > Integer.MAX_VALUE))
   }
+
+  /**
+   * @param value the floating value to classify
+   * @return true for {@link Double} or {@link Float} values that are NaN or infinite
+   */
+  static boolean isNonFiniteFloating(Number value) {
+    (Double.isInstance(value) && !Double.isFinite((Double) value)) ||
+        (Float.isInstance(value) && !Float.isFinite((Float) value))
+  }
+
+  /**
+   * Converts a finite number to {@link BigDecimal}.
+   *
+   * <p>Callers must reject non-finite floating values before calling this method.
+   *
+   * @param value the finite value to convert
+   * @return the corresponding BigDecimal
+   */
+  static BigDecimal toBigDecimal(Number value) {
+    BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
+  }
 }

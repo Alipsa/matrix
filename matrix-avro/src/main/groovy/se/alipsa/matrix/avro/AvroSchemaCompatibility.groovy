@@ -8,7 +8,10 @@ import org.apache.avro.generic.GenericRecord
 
 import java.nio.ByteBuffer
 import java.sql.Time
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * Locates the nested value that prevents an otherwise selected Avro schema from being written.
@@ -125,16 +128,11 @@ final class AvroSchemaCompatibility {
     }
   }
 
-  static boolean isNonFiniteFloating(Number value) {
-    (Double.isInstance(value) && !Double.isFinite((Double) value)) ||
-        (Float.isInstance(value) && !Float.isFinite((Float) value))
-  }
-
   private static BigDecimal decimalValue(Number value) {
-    if (isNonFiniteFloating(value)) {
+    if (NumericKinds.isNonFiniteFloating(value)) {
       throw new ArithmeticException('Non-finite number')
     }
-    BigDecimal.isInstance(value) ? (BigDecimal) value : new BigDecimal(value.toString())
+    NumericKinds.toBigDecimal(value)
   }
 
   private static CompatibilityFailure findIncompatibleArrayValue(Schema schema, Object value, String path) {

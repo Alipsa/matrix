@@ -15,6 +15,7 @@ class MatrixAvroSchemaBenchmark {
   private static final int DEFAULT_RUNS = 5
   private static final int BENCHMARK_YEAR = 2024
   private static final int TAG_MODULO = 3
+  private static final int DECIMAL_DIVISOR = 10
   static void main(String[] args) {
     int rows = args.size() > 0 ? (args[0] as int) : 100_000
     int warmups = args.size() > 1 ? (args[1] as int) : 2
@@ -42,12 +43,12 @@ class MatrixAvroSchemaBenchmark {
   private static Matrix buildMatrix(int rows) {
     Map<String, List<?>> cols = [:]
     cols['id'] = (1..rows).toList()
-    cols['amount'] = (1..rows).collect { it / 10 }
+    cols['amount'] = (1..rows).collect { it / DECIMAL_DIVISOR }
     cols['created'] = (1..rows).collect { LocalDate.of(BENCHMARK_YEAR, 1, 1).plusDays(it % 365) }
     cols['event'] = (1..rows).collect { LocalDateTime.of(BENCHMARK_YEAR, 1, 1, 12, 0).plusMinutes(it % 60) }
     cols['tags'] = (1..rows).collect { ["tag${it % TAG_MODULO}", "tag${(it + 1) % TAG_MODULO}"] }
-    cols['nestedAmounts'] = (1..rows).collect { [it / 10, new BigInteger("${it}00000000000000000000")] }
-    cols['attrs'] = (1..rows).collect { [a: it / 10, b: it * 1_000_000_000L] }
+    cols['nestedAmounts'] = (1..rows).collect { [it / DECIMAL_DIVISOR, new BigInteger("${it}00000000000000000000")] }
+    cols['attrs'] = (1..rows).collect { [a: it / DECIMAL_DIVISOR, b: it * 1_000_000_000L] }
     return Matrix.builder('SchemaBenchmark')
         .columns(cols)
         .types(Integer, BigDecimal, LocalDate, LocalDateTime, List, List, Map)

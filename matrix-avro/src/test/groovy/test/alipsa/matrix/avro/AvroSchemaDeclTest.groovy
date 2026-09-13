@@ -19,7 +19,7 @@ class AvroSchemaDeclTest {
     assertEquals([kind: 'array', elementType: [kind: 'bigInteger', precision: 30]], declaration.toMap())
     assertEquals(declaration, AvroSchemaDecl.fromMap(declaration.toMap()))
 
-    BigInteger value = new BigInteger('-92233720368547758081234567890')
+    BigInteger value = -92233720368547758081234567890G
     Matrix matrix = Matrix.builder('DeclaredBigInteger')
         .columns(values: [[BigInteger.ZERO, value]])
         .types(List)
@@ -42,7 +42,7 @@ class AvroSchemaDeclTest {
 
   @Test
   void classOnlyBigIntegerDeclarationSupportsTheFormerLongRange() {
-    BigInteger value = new BigInteger('1234567890123456789')
+    BigInteger value = 1234567890123456789G
     Matrix matrix = Matrix.builder('DeclaredBigInteger')
         .columns(id: [value])
         .types(BigInteger)
