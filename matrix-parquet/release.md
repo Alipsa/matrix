@@ -1,7 +1,12 @@
 # Matrix-parquet Release History
 
-## v0.6.1, unreleased
+## v0.7.0, unreleased
 - SPI `inferPrecisionAndScale` parsing is now strict: Boolean values and trimmed, case-insensitive `true`/`false` strings are accepted; former truthy inputs are rejected.
+- Breaking change: explicit DECIMAL scale conversion now defaults to `RoundingMode.UNNECESSARY`, rejecting lossy conversion with a contextual `IllegalArgumentException`. Set `roundingMode: 'HALF_UP'` (or another named `RoundingMode`) when rounding is intentional.
+- Add typed `roundingMode(RoundingMode)` and `roundingMode(String)` options to `ParquetWriteOptions` and `MatrixParquetWriter.WriterBuilder`, plus the `write(matrix, file, precision, scale, roundingMode)` overload.
+- Fix explicit DECIMAL validation to reject values whose rescaled decimal precision exceeds the schema precision, even if their two's-complement representation fits the fixed-length field.
+- Fix directory-target writes to normalize Matrix names to a single Windows-safe `.parquet` filename and confine it to the supplied existing directory. Explicit file targets remain unchanged. Note: a Matrix already named `foo.parquet` previously produced `foo.parquet.parquet` and now produces `foo.parquet`, so an existing output filename can change on upgrade.
+- Fix `java.sql.Time` round trips to retain milliseconds and infer external `TIME(MILLIS)`, `TIME(MICROS)`, and `TIME(NANOS)` fields as `Time`; microsecond and nanosecond inputs are downgraded to milliseconds.
 - Upgrade dependencies
   - org.apache.parquet:parquet-column 1.17.1 -> 1.18.1
   - org.apache.parquet:parquet-hadoop 1.17.1 -> 1.18.1

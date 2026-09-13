@@ -18,6 +18,7 @@ import se.alipsa.matrix.core.util.Logger
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.Time
+import java.time.DateTimeException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -119,6 +120,9 @@ class MatrixParquetReader {
   private static final long NANOS_PER_SECOND = 1_000_000_000L
   private static final long NANOS_PER_MILLI = 1_000_000L
   private static final long NANOS_PER_MICRO = 1_000L
+  private static final long MILLIS_PER_DAY = 86_400_000L
+  private static final long MICROS_PER_DAY = MILLIS_PER_DAY * NANOS_PER_MICRO
+  private static final long NANOS_PER_DAY = MICROS_PER_DAY * NANOS_PER_MICRO
   private static final int UNICODE_HEX_DIGITS = 4
 
   /**
@@ -1004,6 +1008,8 @@ class MatrixParquetReader {
             LocalDateTime
           } else if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
             BigDecimal
+          } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+            Time
           } else {
             getJavaType(primitive)
           }
@@ -1041,8 +1047,7 @@ class MatrixParquetReader {
         if (logical == LogicalTypeAnnotation.dateType()) {
           LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
         } else if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-          int millis = group.getInteger(fieldName, 0)
-          Time.valueOf(LocalTime.ofNanoOfDay(millis * MICROS_PER_SECOND))
+          readTime(fieldName, group.getInteger(fieldName, 0), logical as LogicalTypeAnnotation.TimeLogicalTypeAnnotation)
         } else if (expectedType == java.sql.Date) {
           java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
         } else {
@@ -1050,7 +1055,9 @@ class MatrixParquetReader {
         }
       }
       case PrimitiveTypeName.INT64 -> {
-        if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+        if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
+          readTime(fieldName, group.getLong(fieldName, 0), logical as LogicalTypeAnnotation.TimeLogicalTypeAnnotation)
+        } else if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
           Instant instant = timestampInstant(group.getLong(fieldName, 0), logical.unit)
           if (expectedType == java.sql.Timestamp) {
             java.sql.Timestamp.from(instant)
@@ -1090,6 +1097,42 @@ class MatrixParquetReader {
         }
       }
       default -> group.getString(fieldName, 0)
+    }
+  }
+
+  private static Time readTime(String fieldName, long value,
+      LogicalTypeAnnotation.TimeLogicalTypeAnnotation logical) {
+    long unitsPerDay
+    long nanosPerUnit
+    switch (logical.unit) {
+      case LogicalTypeAnnotation.TimeUnit.MILLIS -> {
+        unitsPerDay = MILLIS_PER_DAY
+        nanosPerUnit = NANOS_PER_MILLI
+      }
+      case LogicalTypeAnnotation.TimeUnit.MICROS -> {
+        unitsPerDay = MICROS_PER_DAY
+        nanosPerUnit = NANOS_PER_MICRO
+      }
+      case LogicalTypeAnnotation.TimeUnit.NANOS -> {
+        unitsPerDay = NANOS_PER_DAY
+        nanosPerUnit = 1L
+      }
+      default -> throw new IllegalArgumentException("Unsupported TIME unit '${logical.unit}' for field '$fieldName'")
+    }
+    if (value < 0 || value >= unitsPerDay) {
+      throw new IllegalArgumentException("TIME value $value for field '$fieldName' is outside one day")
+    }
+    try {
+      LocalTime localTime = LocalTime.ofNanoOfDay(value * nanosPerUnit)
+      Time time = Time.valueOf(localTime)
+      long millisecondRemainder = (long) localTime.nano.intdiv(NANOS_PER_MILLI)
+      time.setTime(time.time + millisecondRemainder)
+      time
+    } catch (DateTimeException exception) {
+      // Unreachable in practice: the one-day range guard above rejects out-of-range values
+      // before LocalTime.ofNanoOfDay can throw, so the contextual error already comes from
+      // the guard. Kept defensively in case a future unit change bypasses it.
+      throw new IllegalArgumentException("Invalid TIME value $value for field '$fieldName'", exception)
     }
   }
 
