@@ -1,6 +1,7 @@
 package spreadsheet
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -171,6 +172,17 @@ class SpreadsheetFormatProviderTest {
     assertEquals(1, options.startRow)
     assertEquals(null, options.endRow)
     assertTrue(options.firstRowAsColNames)
+  }
+
+  @Test
+  void testFromMapParsesBooleanValuesStrictly() {
+    assertTrue(SpreadsheetReadOptions.fromMap([firstRowAsColNames: ' TRUE ']).firstRowAsColNames)
+    assertFalse(SpreadsheetReadOptions.fromMap([firstRowAsColNames: 'False']).firstRowAsColNames)
+    [1, 0, 'yes'].each { Object value ->
+      assertThrows(IllegalArgumentException) {
+        SpreadsheetReadOptions.fromMap([firstRowAsColNames: value])
+      }
+    }
   }
 
   @Test

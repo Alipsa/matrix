@@ -24,9 +24,12 @@ abstract class AvroSchemaDecl {
   private static final String KEY_KIND = 'kind'
   private static final String KIND_SCALAR = 'scalar'
   private static final String KIND_DECIMAL = 'decimal'
+  private static final String KIND_BIG_INTEGER = 'biginteger'
   private static final String KIND_ARRAY = 'array'
   private static final String KIND_MAP = 'map'
   private static final String KIND_RECORD = 'record'
+  private static final String KEY_PRECISION = 'precision'
+  private static final int DEFAULT_BIG_INTEGER_PRECISION = 19
 
   private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
       (String)        : AvroScalarTypeDecl.STRING,
@@ -41,7 +44,6 @@ abstract class AvroSchemaDecl {
       (byte.class)    : AvroScalarTypeDecl.INT,
       (Long)          : AvroScalarTypeDecl.LONG,
       (long.class)    : AvroScalarTypeDecl.LONG,
-      (BigInteger)    : AvroScalarTypeDecl.LONG,
       (Float)         : AvroScalarTypeDecl.FLOAT,
       (float.class)   : AvroScalarTypeDecl.FLOAT,
       (Double)        : AvroScalarTypeDecl.DOUBLE,
@@ -72,6 +74,8 @@ abstract class AvroSchemaDecl {
    * Creates a scalar schema declaration from a supported Java type.
    *
    * <p>Use {@link #decimal(int, int)} for {@link BigDecimal} instead of this method.
+   * {@link BigInteger} uses a lossless scale-zero decimal with precision 19, which
+   * covers the range previously supported by Avro {@code long}.
    * Use {@link #array(AvroSchemaDecl)}, {@link #map(AvroSchemaDecl)}, or
    * {@link #record(Map)} for nested collection types.
    *
@@ -84,6 +88,9 @@ abstract class AvroSchemaDecl {
     }
     if (javaType == BigDecimal) {
       throw new IllegalArgumentException('Use AvroSchemaDecl.decimal(precision, scale) for BigDecimal declarations')
+    }
+    if (javaType == BigInteger) {
+      return bigInteger(DEFAULT_BIG_INTEGER_PRECISION)
     }
     if (javaType == List || javaType == Map || javaType == Object || javaType == Number) {
       throw new IllegalArgumentException(
@@ -112,6 +119,16 @@ abstract class AvroSchemaDecl {
    */
   static AvroSchemaDecl decimalColumn(int precision, int scale) {
     decimal(precision, scale)
+  }
+  /**
+   * Creates a scale-zero decimal declaration that preserves {@link BigInteger} values.
+   *
+   * @param precision the required decimal precision
+   * @return a BigInteger declaration
+   */
+  static AvroSchemaDecl bigInteger(int precision) {
+    validateDecimal(precision, 0, displayName(KIND_BIG_INTEGER))
+    new BigIntegerAvroSchemaDecl(precision)
   }
   /**
    * Creates an array schema declaration.
@@ -210,6 +227,7 @@ abstract class AvroSchemaDecl {
     switch (kind.toLowerCase(Locale.ROOT)) {
       case KIND_SCALAR -> parseScalarDecl(normalized)
       case KIND_DECIMAL -> parseDecimalDecl(normalized)
+      case KIND_BIG_INTEGER -> parseBigIntegerDecl(normalized)
       case KIND_ARRAY -> parseArrayDecl(normalized)
       case KIND_MAP -> parseMapDecl(normalized)
       case KIND_RECORD -> parseRecordDecl(normalized)
@@ -353,6 +371,9 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("$optionName scale must be <= precision but was $scale > $precision")
     }
   }
+  private static String displayName(String kind) {
+    kind == KIND_BIG_INTEGER ? 'bigInteger' : kind
+  }
   private static void ensureOnlyKeys(Map<String, Object> value, String optionName, Set<String> allowedKeys) {
     List<String> unexpected = value.keySet().findAll { String key -> !allowedKeys.contains(key) }.sort()
     if (!unexpected.isEmpty()) {
@@ -366,9 +387,13 @@ abstract class AvroSchemaDecl {
     scalar(scalarTypeValue(normalized.scalartype, 'scalar.scalarType'))
   }
   private static AvroSchemaDecl parseDecimalDecl(Map<String, Object> normalized) {
-    ensureOnlyKeys(normalized, KIND_DECIMAL, [KEY_KIND, 'precision', 'scale'] as Set<String>)
+    ensureOnlyKeys(normalized, KIND_DECIMAL, [KEY_KIND, KEY_PRECISION, 'scale'] as Set<String>)
     decimal(intValue(normalized.precision, 'decimal.precision'),
         intValue(normalized.scale, 'decimal.scale'))
+  }
+  private static AvroSchemaDecl parseBigIntegerDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, KIND_BIG_INTEGER, [KEY_KIND, KEY_PRECISION] as Set<String>)
+    bigInteger(intValue(normalized.precision, 'bigInteger.precision'))
   }
   private static AvroSchemaDecl parseArrayDecl(Map<String, Object> normalized) {
     ensureOnlyKeys(normalized, KIND_ARRAY, [KEY_KIND, 'elementtype'] as Set<String>)

@@ -14,6 +14,7 @@ class ParquetWriteOptions {
 
   private static final String KEY_PRECISION = 'precision'
   private static final String KEY_SCALE = 'scale'
+  private static final String KEY_INFER_PRECISION_AND_SCALE = 'inferPrecisionAndScale'
 
   boolean inferPrecisionAndScale = true
   Integer precision = null
@@ -105,7 +106,7 @@ class ParquetWriteOptions {
   }
 
   Map<String, ?> toMap() {
-    Map<String, Object> result = [inferPrecisionAndScale: inferPrecisionAndScale, compressionCodec: compressionCodec.name()]
+    Map<String, Object> result = [(KEY_INFER_PRECISION_AND_SCALE): inferPrecisionAndScale, compressionCodec: compressionCodec.name()]
     if (precision != null) {
       result.precision = precision
       result.scale = scale
@@ -125,7 +126,7 @@ class ParquetWriteOptions {
     if (normalized.containsKey('inferprecisionandscale')) {
       Object inferPrecisionAndScale = normalized.inferprecisionandscale
       if (inferPrecisionAndScale != null) {
-        result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
+        result.inferPrecisionAndScale(OptionMaps.booleanValueOrNull(inferPrecisionAndScale, KEY_INFER_PRECISION_AND_SCALE))
       }
     }
     if (normalized.containsKey(KEY_PRECISION)) {
@@ -232,7 +233,7 @@ class ParquetWriteOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('inferPrecisionAndScale', Boolean, Boolean.TRUE.toString(), 'Infer precision and scale for BigDecimal columns'),
+        new OptionDescriptor(KEY_INFER_PRECISION_AND_SCALE, Boolean, Boolean.TRUE.toString(), 'Infer precision and scale for BigDecimal columns'),
         new OptionDescriptor(KEY_PRECISION, Integer, null, 'Uniform precision for all BigDecimal columns'),
         new OptionDescriptor(KEY_SCALE, Integer, null, 'Uniform scale for all BigDecimal columns'),
         new OptionDescriptor('decimalMeta', Map, null, 'Map of column names to [precision, scale] arrays'),

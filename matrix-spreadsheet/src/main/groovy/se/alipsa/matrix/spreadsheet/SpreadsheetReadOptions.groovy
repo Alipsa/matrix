@@ -15,6 +15,7 @@ class SpreadsheetReadOptions {
   private static final String OPT_SHEET_NUMBER = 'sheetNumber'
   private static final String OPT_START_ROW = 'startRow'
   private static final String OPT_END_ROW = 'endRow'
+  private static final String OPT_FIRST_ROW_AS_COL_NAMES = 'firstRowAsColNames'
   private static final String DEFAULT_ONE = '1'
   private static final String DEFAULT_AUTO = 'auto-detect'
   private static final String DEFAULT_TRUE = 'true'
@@ -188,7 +189,7 @@ class SpreadsheetReadOptions {
     if (normalized.containsKey('firstrowascolnames')) {
       Object firstRowAsColNames = normalized.firstrowascolnames
       if (firstRowAsColNames != null) {
-        result.firstRowAsColNames(firstRowAsColNames as boolean)
+        result.firstRowAsColNames(OptionMaps.booleanValueOrNull(firstRowAsColNames, OPT_FIRST_ROW_AS_COL_NAMES))
       }
     }
     result
@@ -207,7 +208,7 @@ class SpreadsheetReadOptions {
         new OptionDescriptor(OPT_END_ROW, Integer, DEFAULT_AUTO, '1-based last row to read'),
         new OptionDescriptor(OPT_START_COLUMN, Object, DEFAULT_ONE, 'Column to start from, as a name like A or a 1-based column number'),
         new OptionDescriptor(OPT_END_COLUMN, Object, DEFAULT_AUTO, 'Column to stop at, as a name like D or a 1-based column number'),
-        new OptionDescriptor('firstRowAsColNames', Boolean, DEFAULT_TRUE, 'Whether the first selected row contains column names')
+        new OptionDescriptor(OPT_FIRST_ROW_AS_COL_NAMES, Boolean, DEFAULT_TRUE, 'Whether the first selected row contains column names')
     ]
   }
 

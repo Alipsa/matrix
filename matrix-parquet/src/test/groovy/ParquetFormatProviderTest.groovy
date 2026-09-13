@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -127,6 +128,17 @@ class ParquetFormatProviderTest {
     assertEquals(null, writeOptions.scale)
     assertEquals([:], writeOptions.decimalMeta)
     assertEquals(null, writeOptions.zoneId)
+  }
+
+  @Test
+  void testWriteOptionsParseBooleanSpiValuesStrictly() {
+    assertTrue(ParquetWriteOptions.fromMap([inferPrecisionAndScale: ' TRUE ']).inferPrecisionAndScale)
+    assertFalse(ParquetWriteOptions.fromMap([inferPrecisionAndScale: 'False']).inferPrecisionAndScale)
+    [1, 0, 'yes'].each { Object value ->
+      assertThrows(IllegalArgumentException) {
+        ParquetWriteOptions.fromMap([inferPrecisionAndScale: value])
+      }
+    }
   }
 
   @Test

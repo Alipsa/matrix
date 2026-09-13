@@ -2,6 +2,7 @@ package se.alipsa.matrix.avro
 
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
+import org.apache.avro.generic.GenericData
 
 import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 
@@ -10,16 +11,41 @@ import se.alipsa.matrix.avro.exceptions.AvroSchemaException
  */
 final class AvroSchemaUtil {
 
+  static final String JAVA_TYPE_PROPERTY = 'se.alipsa.matrix.javaType'
+  static final String BIG_INTEGER_JAVA_TYPE = 'java.math.BigInteger'
+
   private AvroSchemaUtil() {
   }
   static Schema nullableSchema(Schema schema) {
     Schema.createUnion([Schema.create(Schema.Type.NULL), schema])
   }
-  static Schema nonNullSchema(Schema schema) {
-    if (schema.getType() != Schema.Type.UNION) {
-      return schema
+  /**
+   * Resolves a non-null union datum using Avro's own branch-selection rules.
+   *
+   * @param unionSchema an Avro union schema
+   * @param datum the non-null datum to resolve
+   * @return the selected union branch
+   */
+  static Schema resolveUnionBranch(Schema unionSchema, Object datum) {
+    if (unionSchema.getType() != Schema.Type.UNION) {
+      return unionSchema
     }
-    schema.getTypes().find { Schema candidate -> candidate.getType() != Schema.Type.NULL } ?: schema
+    unionSchema.getTypes().get(GenericData.get().resolveUnion(unionSchema, datum))
+  }
+
+  /**
+   * Produces a human-readable label for a schema type, preferring logical types.
+   *
+   * @param schema schema to label
+   * @return uppercase physical type or logical type label
+   */
+  static String schemaTypeLabel(Schema schema) {
+    if (schema.getType() == Schema.Type.UNION) {
+      List<String> parts = schema.getTypes().collect { Schema branch -> schemaTypeLabel(branch) }
+      return 'UNION[' + String.join(', ', parts) + ']'
+    }
+    def logical = schema.getLogicalType()
+    logical != null ? logical.getName() : schema.getType().name()
   }
   static Schema scalarSchema(AvroScalarTypeDecl scalarType) {
     switch (scalarType) {

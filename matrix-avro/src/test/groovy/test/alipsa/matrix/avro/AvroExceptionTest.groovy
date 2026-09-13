@@ -1,6 +1,8 @@
 package test.alipsa.matrix.avro
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
@@ -32,6 +34,16 @@ class AvroExceptionTest {
     assertEquals('String', ex.actualType)
     assertTrue(ex.message.contains('expected: INT'))
     assertTrue(ex.message.contains('actual: String'))
+  }
+
+  @Test
+  void withRowNumberWithoutCauseKeepsTheCopyCauseUninitialized() {
+    AvroSchemaException copy = new AvroSchemaException('Schema mismatch', 'colA', 'INT', 'String').withRowNumber(2)
+
+    assertNull(copy.cause)
+    IllegalStateException cause = new IllegalStateException('later cause')
+    assertSame(copy, copy.initCause(cause))
+    assertEquals(cause, copy.cause)
   }
 
 }

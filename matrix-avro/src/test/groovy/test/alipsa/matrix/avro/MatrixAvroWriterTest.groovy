@@ -1,6 +1,7 @@
 package test.alipsa.matrix.avro
 
 import static org.junit.jupiter.api.Assertions.*
+import static test.alipsa.matrix.avro.AvroSchemaTestSupport.*
 
 import org.apache.avro.LogicalTypes
 import org.apache.avro.Schema
@@ -672,6 +673,25 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void nestedSchemaMismatchReportsTheFailingPositionSchema() {
+    Matrix matrix = Matrix.builder('RecordMismatch')
+        .columns(rec: [[a: 'not an integer']])
+        .types(Map)
+        .build()
+
+    AvroSchemaException exception = assertThrows(AvroSchemaException) {
+      MatrixAvroWriter.writeBytes(matrix, AvroWriteOptions.defaults()
+          .columnSchema('rec', AvroSchemaDecl.record('RecordValue', [a: AvroSchemaDecl.type(Integer)])))
+    }
+
+    assertEquals('rec', exception.columnName)
+    assertEquals(0, exception.rowNumber)
+    assertEquals('UNION[NULL, INT]', exception.expectedType)
+    assertEquals('String', exception.actualType)
+    assertTrue(exception.message.contains('at rec.a'))
+  }
+
+  @Test
   void testColumnSchemaCanForceArrayElementType() {
     Matrix m = Matrix.builder('ForceArray')
         .columns(tags: [[1, 2], [3L, null]])
@@ -695,6 +715,30 @@ class MatrixAvroWriterTest {
     } finally {
       tmp.delete()
     }
+  }
+
+  @Test
+  void mixedNestedValuesPreserveTheFirstNonNullStringSchema() {
+    Matrix maps = Matrix.builder('MixedMaps')
+        .columns(props: [[b: 'x'], [a: 1]])
+        .types(Map)
+        .build()
+    Matrix lists = Matrix.builder('MixedLists')
+        .columns(values: [['x'], [1]])
+        .types(List)
+        .build()
+
+    Schema mapValueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(maps, false), 'props').valueType
+    Schema listValueSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(lists, false), 'values').elementType
+    assertEquals(Schema.Type.STRING, nonNullSchema(mapValueSchema).type)
+    assertEquals(Schema.Type.STRING, nonNullSchema(listValueSchema).type)
+
+    Matrix mapResult = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(maps, false))
+    Matrix listResult = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(lists, false))
+    assertEquals([b: 'x'], mapResult[0, 'props'])
+    assertEquals([a: '1'], mapResult[1, 'props'])
+    assertEquals(['x'], listResult[0, 'values'])
+    assertEquals(['1'], listResult[1, 'values'])
   }
 
   @Test
@@ -864,12 +908,39 @@ class MatrixAvroWriterTest {
         MatrixAvroWriter.write(m, tmp)
       }
       assertEquals('props', ex.columnName)
-      assertEquals('RECORD', ex.expectedType)
+      assertEquals(1, ex.rowNumber)
+      assertEquals('UNION[NULL, RECORD]', ex.expectedType)
       assertEquals('ArrayList', ex.actualType)
       assertTrue(ex.message.contains('expected'))
     } finally {
       tmp.delete()
     }
+  }
+
+  @Test
+  void mapValueProfileIsMergedFromRecordFieldProfiles() {
+    Matrix matrix = Matrix.builder('MergedMapProfile')
+        .columns(props: [[x: 5g], [y: 9g, z: 1.5g]])
+        .types(Object)
+        .build()
+
+    [false, true].each { boolean infer ->
+      Schema propsSchema = nonNullFieldSchema(MatrixAvroWriter.buildSchema(matrix, infer), 'props')
+      assertEquals(Schema.Type.MAP, propsSchema.type, "infer=$infer")
+      Schema valueSchema = propsSchema.getValueType()
+      if (valueSchema.getType() == Schema.Type.UNION) {
+        valueSchema = valueSchema.types.find { it.type != Schema.Type.NULL }
+      }
+      assertEquals(Schema.Type.BYTES, valueSchema.type, "infer=$infer")
+      assertEquals('decimal', valueSchema.logicalType.name, "infer=$infer")
+      assertEquals(1, valueSchema.logicalType.scale, "infer=$infer")
+      assertNull(valueSchema.getProp('se.alipsa.matrix.javaType'), "infer=$infer")
+    }
+
+    Matrix result = MatrixAvroReader.read(MatrixAvroWriter.writeBytes(matrix, false))
+    assertEquals(5.0g, (result[0, 'props'] as Map).x)
+    assertEquals(9.0g, (result[1, 'props'] as Map).y)
+    assertEquals(1.5g, (result[1, 'props'] as Map).z)
   }
 
   // Helper: unwrap ['null', T] to T
@@ -884,6 +955,13 @@ class MatrixAvroWriterTest {
       fail("Union for field '$fieldName' had no non-null type")
     }
     return s
+  }
+
+  private static Schema nonNullSchema(Schema schema) {
+    if (schema.type != Schema.Type.UNION) {
+      return schema
+    }
+    schema.types.find { Schema candidate -> candidate.type != Schema.Type.NULL }
   }
 
   private static long rawLongFor(byte[] bytes, String fieldName) {

@@ -135,7 +135,7 @@ MatrixAvroWriter.write(orders, new File('orders.avro'), writeOptions)
 
 Useful write options:
 
-- `inferPrecisionAndScale(...)` stores `BigDecimal` columns as Avro decimal logical types instead of falling back to `double`
+- `inferPrecisionAndScale(...)` stores `BigDecimal` columns as Avro decimal logical types instead of falling back to `double`; SPI values accept Boolean values or trimmed, case-insensitive `true`/`false` strings
 - `namespace(...)` controls the generated Avro namespace
 - `schemaName(...)` overrides the generated record name
 - `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` tune the container file
@@ -177,6 +177,10 @@ Supported declaration kinds:
 
 - `decimal(precision, scale)` for fixed decimal metadata
 - `decimalColumn(precision, scale)` as a column-oriented alias for fixed decimal metadata
+- `bigInteger(precision)` for a lossless scale-zero decimal; use `array(bigInteger(precision))` or
+  `map(bigInteger(precision))` for an explicit nested precision. Class-only `type(BigInteger)`,
+  `arrayOf(BigInteger)`, and `mapOf(BigInteger)` remain supported and use precision `19`, which
+  covers the range previously supported by Avro `long`
 - `array(...)` for explicit array element types
 - `arrayOf(Class<?>)` and `arrayOf(AvroScalarTypeDecl)` as scalar array shortcuts
 - `map(...)` for explicit map value types
@@ -214,7 +218,45 @@ data.write([
 ], new File('users-explicit.avro'))
 ```
 
+`BigInteger` values are always lossless Avro `bytes` decimals with scale `0`, including when
+`inferPrecisionAndScale` is false. For an explicit schema, provide the required precision:
+
+```groovy
+data.write([
+    columnSchemas: [identifier: [kind: 'bigInteger', precision: 30]]
+], new File('users.avro'))
+```
+
+The inner `bytes` schema carries `se.alipsa.matrix.javaType: "java.math.BigInteger"`.
+Matrix restores `BigInteger` only for that marked bytes/decimal scale-zero schema; an unmarked
+schema remains interoperable and reads as `BigDecimal`.
+
 SPI round-tripping is available for both read and write options through `toMap()` / `fromMap(...)`.
+Configuration-backed Boolean options accept a Boolean or a trimmed, case-insensitive `true` or `false` string;
+other values, including `1` and `yes`, are rejected.
+
+### Decimal-safe mixed numbers
+
+With `inferPrecisionAndScale(true)`, each all-numeric scalar, list-element, map-value, or record-field
+position is profiled across every non-null value. `Byte`, `Short`, `Integer`, `Long`, `BigInteger`,
+`BigDecimal`, and finite `Double`/`Float` values share one decimal schema. `BigInteger` always keeps a
+lossless decimal schema, even when inference is disabled; ordinary decimal/floating positions retain the
+`double` fallback when it is disabled.
+
+```groovy
+Matrix data = Matrix.builder('amounts')
+    .columns(amount: [1, new BigInteger('9223372036854775808'), 2.25d])
+    .types(Object)
+    .build()
+MatrixAvroWriter.write(data, new File('amounts.avro'), true)
+```
+
+For a declared `decimal(precision, scale)`, `Double` and `Float` values are rounded to the declared scale using
+`HALF_UP`. `BigDecimal`, integral, and `BigInteger` values must already fit the declared scale, so writing one
+that would lose fractional precision fails instead of silently rounding it.
+
+`NaN` and positive or negative infinity round-trip in positions inferred as Avro `double`, including untyped
+scalar, list-element, and map-value positions. They cannot be encoded by decimal, `int`, or `long` schemas.
 
 ## Default Behavior
 
@@ -229,17 +271,17 @@ Read defaults:
 Write defaults:
 
 - schema naming precedence is `AvroWriteOptions.schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
-- `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
+- `inferPrecisionAndScale` defaults to `false`, so ordinary `BigDecimal`, `Double`, and `Float` positions fall back to Avro `double`; a position containing `BigInteger` remains a lossless decimal
 - `namespace` defaults to `se.alipsa.matrix.avro`
 - `compression` defaults to `NULL`, `compressionLevel` to `-1`, and `syncInterval` to `0`
 - `OutputStream` write overloads leave the caller-owned stream open
 
 Nested-type heuristics:
 
-- list element types are inferred from the first non-null element seen in the column
-- map value types are inferred from the first non-null value seen in the column
+- list element and map value types retain the first non-null type for mixed positions; all-numeric positions
+  are profiled across every non-null value to select a safe numeric schema and decimal metadata
 - maps are encoded as records only when all non-null rows share the same key set
-- mixed numeric `Object` columns promote to `int`, `long`, or `double` based on observed values
+- mixed numeric `Object` columns promote to `int`, `long`, or `double` based on observed values; positions containing `BigInteger` use decimal, and mixed fractional values read back as `BigDecimal` at the schema scale
 - `columnSchemas` takes precedence over all of the above when present
 
 ## Common Patterns
@@ -305,7 +347,7 @@ AvroWriteOptions options = new AvroWriteOptions()
 - Unexpected `String` for a UUID column on read: this is expected; Avro `uuid` is imported as `String`
 - `BigDecimal` round-trips as `Double`: enable `inferPrecisionAndScale(true)` or use `columnSchema('col', AvroSchemaDecl.decimal(...))`
 - A map column becomes an Avro record: that happens when the non-null rows all share the same key set; force map encoding with `AvroSchemaDecl.map(...)`
-- A list or map uses the wrong nested type: the default heuristic samples the first non-null element or value; use `columnSchemas` when the sample is not representative
+- A list or map uses the wrong nested type: mixed positions retain their first non-null type; use `columnSchemas` when values intentionally have different types
 - Invalid `compressionLevel` or `syncInterval`: option validation is fail-fast and happens both in fluent configuration and `fromMap(...)`
 
 ## Type Mapping
@@ -314,8 +356,9 @@ AvroWriteOptions options = new AvroWriteOptions()
 |------------------------------|-------------------:|-----------------------------|----------------------------------------------------|
 | `String`                     |           `string` | —                           |                                                    |
 | `Boolean`                    |          `boolean` | —                           |                                                    |
-| `Integer`                    |              `int` | —                           |                                                    |
-| `Long`, `BigInteger`         |             `long` | —                           |                                                    |
+| `Integer`                    |              `int` | —                           | exact integral values only                          |
+| `Long`                       |             `long` | —                           | exact integral values only                          |
+| `BigInteger`                 |            `bytes` | `decimal(precision, 0)`     | marked with `se.alipsa.matrix.javaType`             |
 | `Float`                      |            `float` | —                           |                                                    |
 | `Double`                     |           `double` | —                           |                                                    |
 | `BigDecimal` (infer=false)   |           `double` | —                           | fallback                                           |
