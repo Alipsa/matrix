@@ -180,16 +180,17 @@ class GsAuthenticator {
   }
 
   private static boolean runProgrammaticLogin(List<String> scopes, String quotaProjectId = null) {
+    programmaticLoginAndGetCredentials(scopes, quotaProjectId) != null
+  }
+
+  private static GoogleCredentials programmaticLoginAndGetCredentials(List<String> scopes, String quotaProjectId) {
     try {
       // Uses matrix-gsheets' own bundled OAuth client, or CLIENT_SECRET_FILE if the
       // caller has registered their own client and wants to override it.
-      def credentials = GsAuthUtils.loginAndWriteAdc(scopes, quotaProjectId)
-
-      // If credentials are null, it means the process failed.
-      return credentials != null
+      GsAuthUtils.loginAndWriteAdc(scopes, quotaProjectId)
     } catch (IllegalStateException | IOException | GeneralSecurityException e) {
       log.error("Failed to execute programmatic login: ${e.message}", e)
-      return false
+      null
     }
   }
 
@@ -298,7 +299,11 @@ class GsAuthenticator {
         return creds
       }
 
-      if (!performLogin(scopes, quotaProjectId)) {
+      GoogleCredentials programmaticCredentials = programmaticLoginAndGetCredentials(scopes, quotaProjectId)
+      if (programmaticCredentials != null) {
+        return programmaticCredentials
+      }
+      if (!isCommandAvailable(GCLOUD_CMD) || !runGcloudLogin(scopes)) {
         return null
       }
       if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
@@ -309,25 +314,6 @@ class GsAuthenticator {
       // ADC file being fully written to disk. Retry a few times to handle this.
       waitForCredentials(scopes)
     }
-  }
-
-  /**
-   * Performs one interactive login, preferring matrix-gsheets' own bundled OAuth client
-   * (or a caller override at {@link #CLIENT_SECRET_FILE}) over gcloud's shared default
-   * client. Google blocks sensitive scopes (e.g. spreadsheets, drive) for the shared
-   * client, so relying on it for those scopes will hang waiting for a browser callback
-   * that never arrives, or be rejected outright.
-   *
-   * @return true if a login succeeded and ADC was written, false otherwise
-   */
-  private static boolean performLogin(List<String> scopes, String quotaProjectId) {
-    if (runProgrammaticLogin(scopes, quotaProjectId)) {
-      return true
-    }
-    if (isCommandAvailable(GCLOUD_CMD)) {
-      return runGcloudLogin(scopes)
-    }
-    return false
   }
 
   private static GoogleCredentials waitForCredentials(List<String> scopes) {
