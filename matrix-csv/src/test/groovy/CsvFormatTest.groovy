@@ -244,14 +244,14 @@ Bob,25'''
   }
 
   @Test
-  void readWithRfc4180PresetDoesNotSilentlyIgnoreBlankRecords() {
+  void readWithRfc4180PresetReportsBlankRecordsAsRagged() {
     String csvContent = 'name,value\r\nAlice,1\r\n\r\nBob,2\r\n'
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       CsvReader.read().rfc4180().fromString(csvContent)
     }
 
-    assertTrue(exception.message.contains('expected 2'))
+    assertEquals('CSV record 3 has 1 columns; expected 2', exception.message)
   }
 
   @Test

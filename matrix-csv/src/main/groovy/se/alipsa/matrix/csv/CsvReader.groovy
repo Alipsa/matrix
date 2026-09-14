@@ -955,7 +955,10 @@ class CsvReader {
     /** Configures tab-delimited format (TSV). */
     ReadBuilder tsv() { applyFormat(CsvFormat.TDF) }
 
-    /** Configures RFC 4180 compliant format with CRLF record separators. */
+    /**
+     * Configures RFC 4180 compliant format with CRLF record separators, no trimming,
+     * no skipped empty lines, and no ignored surrounding spaces.
+     */
     ReadBuilder rfc4180() { applyFormat(CsvFormat.RFC4180) }
 
     // ── Terminal operations ───────────────────────────────────

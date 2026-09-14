@@ -45,7 +45,11 @@ class CsvFormat {
   /** Tab-delimited format (TSV). */
   static final CsvFormat TDF = builder().delimiter('\t' as char).build()
 
-  /** RFC 4180 compliant CSV format with CRLF record separators. */
+  /**
+   * RFC 4180 compliant CSV format aligned with Apache Commons {@link CSVFormat#RFC4180},
+   * including CRLF line endings, no trimming, no skipped empty lines, and no ignored
+   * surrounding spaces.
+   */
   static final CsvFormat RFC4180 = builder()
       .recordSeparator(CRLF)
       .trim(false)

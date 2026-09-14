@@ -86,8 +86,10 @@ Write defaults:
 Preset behavior:
 
 - `excel()` applies Apache Excel semantics: CRLF and `QuoteMode.ALL_NON_NULL` on writes, `allowMissingColumnNames(true)`, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)`
-- `rfc4180()` preserves field whitespace and does not ignore blank records when reading, and applies CRLF on writes
+- `rfc4180()` preserves field whitespace, reports blank records as ragged records when reading, and applies CRLF on writes
 - `tsv()` applies `delimiter('\t')`
+
+Presets replace the entire format configuration, so call a preset before overriding individual options.
 
 ## Fluent Read API
 
@@ -389,7 +391,7 @@ printer.flush()
 |--------|--------|
 | `excel()` | Apache Excel semantics, CRLF output, `QuoteMode.ALL_NON_NULL`, missing-header tolerance, and read-side `trim(false)`, `ignoreEmptyLines(false)`, `ignoreSurroundingSpaces(false)` |
 | `tsv()` | `delimiter('\t')` |
-| `rfc4180()` | RFC 4180 read semantics (preserved whitespace; blank records are not ignored) and `recordSeparator('\r\n')` on writes |
+| `rfc4180()` | RFC 4180 read semantics (preserved whitespace; blank records reported as ragged) and `recordSeparator('\r\n')` on writes |
 
 ## Release Version Compatibility Matrix
 
