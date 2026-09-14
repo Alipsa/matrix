@@ -31,6 +31,9 @@ class GsAuthenticator {
   // login instead of failing immediately, and so a failed/cancelled attempt doesn't
   // permanently prevent future retries (unlike a one-shot "already tried" flag would).
   private static final Object LOGIN_LOCK = new Object()
+  // GoogleCredentials.getApplicationDefault() caches the first ADC instance it reads. Retain a
+  // newer instance returned by an interactive login so later calls do not revert to stale scopes.
+  private static volatile GoogleCredentials authenticatedCredentials
 
   private GsAuthenticator() { }
 
@@ -104,7 +107,8 @@ class GsAuthenticator {
   static GoogleCredentials getCredentials(List<String> scopes = SCOPES, boolean verbose = false) {
     try {
       // Tries to find credentials in the environment (ADC)
-      def credentials = GoogleCredentials.getApplicationDefault().createScoped(scopes)
+      GoogleCredentials sourceCredentials = authenticatedCredentials ?: GoogleCredentials.getApplicationDefault()
+      def credentials = sourceCredentials.createScoped(scopes)
 
       // Determine quota project: env var -> GOOGLE_CLOUD_PROJECT -> ADC file's quota_project_id
       String qp = System.getenv('GOOGLE_CLOUD_QUOTA_PROJECT') ?: System.getenv(ENV_GOOGLE_CLOUD_PROJECT)
@@ -187,7 +191,9 @@ class GsAuthenticator {
     try {
       // Uses matrix-gsheets' own bundled OAuth client, or CLIENT_SECRET_FILE if the
       // caller has registered their own client and wants to override it.
-      GsAuthUtils.loginAndWriteAdc(scopes, quotaProjectId)
+      GoogleCredentials credentials = GsAuthUtils.loginAndWriteAdc(scopes, quotaProjectId)
+      authenticatedCredentials = credentials
+      credentials
     } catch (IllegalStateException | IOException | GeneralSecurityException e) {
       log.error("Failed to execute programmatic login: ${e.message}", e)
       null
@@ -321,8 +327,9 @@ class GsAuthenticator {
     int retryDelayMs = 1000 // 1 second
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       // Call with verbose=false to avoid noisy output during retries
-      def creds = getCredentials(scopes, false)
+      GoogleCredentials creds = freshAdcCredentials(scopes) ?: getCredentials(scopes, false)
       if (creds) {
+        authenticatedCredentials = creds
         return creds
       }
       if (attempt < maxRetries) {
@@ -331,6 +338,22 @@ class GsAuthenticator {
       }
     }
     null
+  }
+
+  private static GoogleCredentials freshAdcCredentials(List<String> scopes) {
+    if (!ADC_FILE_PATH.exists()) {
+      return null
+    }
+    try {
+      GoogleCredentials credentials = ADC_FILE_PATH.withInputStream { InputStream input ->
+        GoogleCredentials.fromStream(input).createScoped(scopes)
+      } as GoogleCredentials
+      credentials.refreshIfExpired()
+      credentials
+    } catch (IOException e) {
+      log.debug("Could not reload fresh ADC credentials: ${e.message}", e)
+      null
+    }
   }
 
   private static boolean isCommandAvailable(String command) {
