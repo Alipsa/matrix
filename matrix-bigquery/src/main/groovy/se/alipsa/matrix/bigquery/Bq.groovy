@@ -1188,7 +1188,7 @@ class Bq {
   static int estimateInsertAllRowBytes(Map<String, Object> content, String insertId) {
     int contentBytes = content.collect { String name, Object value ->
       name.getBytes(StandardCharsets.UTF_8).length + estimateInsertAllValueBytes(value)
-    }.sum() as int
+    }.sum(0) as int
     contentBytes + insertId.getBytes(StandardCharsets.UTF_8).length + INSERT_ALL_ROW_ENVELOPE_BYTES
   }
 

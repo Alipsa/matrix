@@ -372,6 +372,13 @@ class InsertAppendSemanticsTest {
   }
 
   @Test
+  void insertAllSizeEstimateSupportsEmptyContent() {
+    String insertId = 'row-id'
+
+    assertTrue(Bq.estimateInsertAllRowBytes([:], insertId) > insertId.length())
+  }
+
+  @Test
   void writeChannelSerializerUsesTheSameFallbackValuesAsInsertAll() {
     ByteArrayOutputStream output = new ByteArrayOutputStream()
     def json = new JsonFactory().createGenerator(output)

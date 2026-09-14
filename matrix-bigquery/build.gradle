@@ -57,7 +57,7 @@ dependencies {
 }
 
 test {
-  jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
+  jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", '-Xshare:off'
   // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
   def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
 
