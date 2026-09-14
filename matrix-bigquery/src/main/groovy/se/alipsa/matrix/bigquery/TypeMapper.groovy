@@ -45,6 +45,13 @@ import java.time.ZonedDateTime
  *   <tr><td>ZonedDateTime</td><td>STRING</td><td>Stored as ISO-8601 string (BQ has no timezone-aware type)</td></tr>
  * </table>
  *
+ * <h2>STRING fallback values</h2>
+ * <p>Unknown scalar values are stored with {@code String.valueOf(value)}, enums with their
+ * {@code name()}, and {@code List}/{@code Map} values as {@code JsonOutput} JSON text. This is a
+ * STRING fallback, not ARRAY, STRUCT, or BigQuery JSON support. Nested values use JsonOutput's own
+ * serialization: nested java.time values may be bean-property JSON, Date uses JsonOutput's ISO form,
+ * and BigDecimal is a JSON number rather than the BigQuery-safe top-level formats.</p>
+ *
  * <h2>Unsupported BigQuery Types</h2>
  * <p>The following BigQuery types are not yet supported:</p>
  * <ul>

@@ -176,7 +176,8 @@ Common cases:
 - `LocalDate` and `Date` -> `DATE`
 - `LocalTime` and `Time` -> `TIME`
 - `LocalDateTime` -> `DATETIME`
-- `Instant`, `Timestamp`, `ZonedDateTime` -> `TIMESTAMP`
+- `Instant`, `Timestamp` -> `TIMESTAMP`
+- `ZonedDateTime` -> `STRING` (ISO-8601 text retains the original zone identifier)
 
 Example:
 
@@ -193,6 +194,18 @@ Matrix events = Matrix.builder()
     ])
     .build()
 ```
+
+`Instant.parse('2026-03-21T10:15:30Z')` creates a `TIMESTAMP` column and preserves the instant.
+For a value whose original zone matters, use a `ZonedDateTime` column instead:
+
+```groovy
+ZonedDateTime scheduled = ZonedDateTime.parse('2026-03-21T10:15:30+01:00[Europe/Paris]')
+// BigQuery schema: scheduled STRING
+// Stored text: 2026-03-21T10:15:30+01:00[Europe/Paris]
+```
+
+BigQuery `TIMESTAMP` represents an instant and does not retain a region zone identifier, so the
+module deliberately stores `ZonedDateTime` as `STRING`.
 
 ## Metadata and administration helpers
 

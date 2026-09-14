@@ -1,9 +1,12 @@
 package se.alipsa.matrix.bigquery
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.mockito.Mockito.mock
+import static org.mockito.Mockito.when
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
@@ -13,9 +16,12 @@ import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQuery
+import com.google.cloud.bigquery.BigQueryError
 import com.google.cloud.bigquery.BigQueryOptions
+import com.google.cloud.bigquery.Job
 import com.google.cloud.bigquery.JobId
 import com.google.cloud.bigquery.JobStatistics
+import com.google.cloud.bigquery.JobStatus
 import com.google.cloud.bigquery.Table
 import com.google.cloud.bigquery.TableDataWriteChannel
 import com.google.cloud.bigquery.TableId
@@ -76,6 +82,90 @@ class BqErrorHandlingTest {
   }
 
   @Test
+  void missingDatasetHasContextualError() {
+    Bq bq = new Bq(fakeBigQueryForMissingDataset(), 'matrix-project')
+
+    BqException ex = assertThrows(BqException) {
+      bq.getDatasetBuilder('missing')
+    }
+
+    assertEquals('Dataset matrix-project:missing does not exist', ex.message)
+  }
+
+  @Test
+  void loadJobLifecycleFailuresAreReportedWithContext() {
+    TableId tableId = Bq.tableId('matrix-project', 'analytics', 'events')
+    Bq bq = new Bq(fakeBigQueryForWriter(), 'matrix-project')
+    TableDataWriteChannel writer = mock(TableDataWriteChannel)
+    when(writer.getJob()).thenReturn(null)
+
+    BqException missing = assertThrows(BqException) {
+      bq.waitForLoadJobAndGetStats(writer, tableId)
+    }
+
+    assertEquals("Load job was not created for ${tableId}", missing.message)
+
+    Job deletedJob = mock(Job)
+    when(deletedJob.waitFor()).thenReturn(null)
+    BqException deleted = assertThrows(BqException) {
+      bq.waitForLoadJobAndGetStats(deletedJob, tableId)
+    }
+
+    assertEquals("Load job no longer exists for ${tableId}", deleted.message)
+
+    Job completedJob = mock(Job)
+    when(completedJob.status).thenReturn(null)
+    when(completedJob.statistics).thenReturn(null)
+    Job waitingJob = mock(Job)
+    when(waitingJob.waitFor()).thenReturn(completedJob)
+    BqException missingStatistics = assertThrows(BqException) {
+      bq.waitForLoadJobAndGetStats(waitingJob, tableId)
+    }
+
+    assertEquals("Load job completed without statistics for ${tableId}", missingStatistics.message)
+  }
+
+  @Test
+  void completedLoadJobFailureUsesThePublicDefiniteOutcomeType() {
+    TableId tableId = Bq.tableId('matrix-project', 'analytics', 'events')
+    JobStatus status = mock(JobStatus)
+    when(status.error).thenReturn(new BigQueryError('invalid', 'name', 'schema mismatch'))
+    Job completedJob = mock(Job)
+    when(completedJob.status).thenReturn(status)
+    Job waitingJob = mock(Job)
+    when(waitingJob.waitFor()).thenReturn(completedJob)
+    Bq bq = new Bq(fakeBigQueryForWriter(), 'matrix-project')
+
+    LoadJobFailedException exception = assertThrows(LoadJobFailedException) {
+      bq.waitForLoadJobAndGetStats(waitingJob, tableId)
+    }
+
+    assertTrue(exception.message.contains('schema mismatch'))
+  }
+
+  @Test
+  void synchronousQueryAndExecuteRestoreTheInterruptFlag() {
+    Bq bq = new Bq(fakeBigQueryThatInterrupts(), 'matrix-project')
+
+    try {
+      BqException executeFailure = assertThrows(BqException) {
+        bq.execute('delete from analytics.events')
+      }
+      assertTrue(executeFailure.cause instanceof InterruptedException)
+      assertTrue(Thread.currentThread().isInterrupted())
+      Thread.interrupted()
+
+      BqException queryFailure = assertThrows(BqException) {
+        bq.query('select * from analytics.events')
+      }
+      assertTrue(queryFailure.cause instanceof InterruptedException)
+      assertTrue(Thread.currentThread().isInterrupted())
+    } finally {
+      Thread.interrupted()
+    }
+  }
+
+  @Test
   void projectSettingsUseExplicitCredentialsWhenAvailable() {
     GoogleCredentials credentials = GoogleCredentials.create(new AccessToken('token-value', new Date(System.currentTimeMillis() + 60_000L)))
     Bq bq = new Bq(credentials, 'matrix-project')
@@ -131,7 +221,32 @@ class BqErrorHandlingTest {
         .build()
     [
         getOptions: { -> options },
+        getDataset: { Object... ignored -> null },
         writer    : { JobId jobId, WriteChannelConfiguration config -> null as TableDataWriteChannel }
+    ] as BigQuery
+  }
+
+  @CompileDynamic
+  private static BigQuery fakeBigQueryForMissingDataset() {
+    BigQueryOptions options = BigQueryOptions.newBuilder()
+        .setProjectId('matrix-project')
+        .setCredentials(NoCredentials.getInstance())
+        .build()
+    [
+        getOptions : { -> options },
+        getDataset: { Object... ignored -> null }
+    ] as BigQuery
+  }
+
+  @CompileDynamic
+  private static BigQuery fakeBigQueryThatInterrupts() {
+    BigQueryOptions options = BigQueryOptions.newBuilder()
+        .setProjectId('matrix-project')
+        .setCredentials(NoCredentials.getInstance())
+        .build()
+    [
+        getOptions: { -> options },
+        query     : { Object ignored, Object... ignoredOptions -> throw new InterruptedException('test interruption') }
     ] as BigQuery
   }
 

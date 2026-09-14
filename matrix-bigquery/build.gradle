@@ -9,6 +9,10 @@ plugins {
   alias(libs.plugins.alipsaNexusRelease)
 }
 
+configurations {
+  mockitoAgent
+}
+
 group = 'se.alipsa.matrix'
 version = '0.7.1-SNAPSHOT'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
@@ -35,6 +39,7 @@ dependencies {
   implementation libs.google.auth.library.oauth2.http
   implementation libs.google.cloud.bigquery.storage
   implementation libs.progressbar
+  implementation libs.groovy.json
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud
   testImplementation libs.testcontainers.gcloud
@@ -42,11 +47,17 @@ dependencies {
   testImplementation libs.groovy
   testImplementation libs.junit.jupiter.api
   testImplementation libs.groovier.junit
+  testImplementation libs.mockito.core
+  mockitoAgent platform(libs.mockito.bom)
+  mockitoAgent(libs.mockito.core) {
+    transitive = false
+  }
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {
+  jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", '-Xshare:off'
   // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
   def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
 

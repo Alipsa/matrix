@@ -80,8 +80,14 @@ class TypeMapperTest {
   void testToStandardSqlTypeUnknown() {
     // Unknown types default to STRING
     assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(Object))
+    assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(UUID))
+    assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(TestStatus))
     assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(List))
     assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(Map))
+  }
+
+  private enum TestStatus {
+    ACTIVE
   }
 
   // Tests for convertType(StandardSQLTypeName)

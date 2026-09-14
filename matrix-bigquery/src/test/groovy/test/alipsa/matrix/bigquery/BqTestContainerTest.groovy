@@ -2,6 +2,7 @@ package test.alipsa.matrix.bigquery
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 import com.google.cloud.NoCredentials
@@ -121,27 +122,33 @@ class BqTestContainerTest {
   }
 
   /**
-   * Verifies that append=false is still honored when write channel falls back to InsertAll.
+   * A write-channel failure with a visible but incomplete load job must not be retried via InsertAll.
    */
   @Test
   void testFallbackOverwriteToInsertAll() {
-    assertSaveBehavior(false, false, [
-        [3L, 'Charlie'],
-        [4L, 'Delta']
-    ])
+    BqException ex = assertThrows(BqException) {
+      assertSaveBehavior(false, false, [
+          [3L, 'Charlie'],
+          [4L, 'Delta']
+      ])
+    }
+    assertTrue(ex.message.contains('Write outcome is unknown'))
   }
 
   /**
-   * Verifies that append=true is preserved when write channel falls back to InsertAll.
+   * A write-channel failure with a visible but incomplete load job must not be retried via InsertAll.
    */
   @Test
   void testFallbackAppendToInsertAll() {
-    assertSaveBehavior(false, true, [
-        [1L, 'Alice'],
-        [2L, 'Bob'],
-        [3L, 'Charlie'],
-        [4L, 'Delta']
-    ])
+    BqException ex = assertThrows(BqException) {
+      assertSaveBehavior(false, true, [
+          [1L, 'Alice'],
+          [2L, 'Bob'],
+          [3L, 'Charlie'],
+          [4L, 'Delta']
+      ])
+    }
+    assertTrue(ex.message.contains('Write outcome is unknown'))
   }
 
   @Test

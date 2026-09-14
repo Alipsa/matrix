@@ -52,6 +52,20 @@ System.setProperty('bigquery.enable_progress_bar', 'false') // Always disable
 System.setProperty('bigquery.enable_progress_bar', 'true')  // Force enable
 ```
 
+For detailed write metadata, use `insertRows(...)`. Its result records the write mechanism and,
+for write-channel loads, the load statistics and job ID. Deprecated `insert(...)` remains compatible
+but returns `null` after a successful InsertAll write because InsertAll has no load-job statistics.
+
+```groovy
+def outcome = bq.insertRows(data, 'mydataset')
+assert outcome.requestedRowCount == data.rowCount()
+assert outcome.loadStatistics == null || outcome.writeJobId != null
+```
+
+Unknown scalar values are stored as STRING text; enums use their names and `List`/`Map` values use
+`groovy.json.JsonOutput` JSON text. Nested values use JsonOutput's native formatting rather than the
+module's top-level BigQuery temporal and decimal formatting.
+
 ## Working with explicit configuration
 
 ```groovy

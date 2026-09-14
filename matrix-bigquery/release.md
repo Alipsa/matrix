@@ -1,6 +1,17 @@
 # Matrix-bigquery Release History
 
 ## v0.7.1, in progress
+- Add `insertRows(...)`, which reports the selected write mechanism and optional load-job metadata.
+  Existing deprecated `insert(...)` methods remain source and binary compatible and return `null`
+  after a successful InsertAll write.
+- Prevent duplicate fallback writes after ambiguous write-channel failures by looking up the known
+  load job for up to 10 seconds before using InsertAll. A bounded residual race remains after that
+  grace period; an unknown job lookup or job outcome now fails without automatic resubmission.
+- Batch InsertAll writes to 500 rows or roughly 5 MiB, with deterministic insert IDs. `append=false`
+  fallback still recreates the table, so BigQuery's streaming buffer can temporarily reject rows.
+- Store unknown scalar values as STRING text, enums by name, and `List`/`Map` values as JsonOutput
+  JSON text. Nested fallback values use JsonOutput formatting rather than BigQuery-safe top-level
+  temporal and decimal formatting.
 - Dependency updates
   - com.google.auth:google-auth-library-bom 1.48.0 -> 1.52.0 
   - com.google.auth:google-auth-library-oauth2-http 1.48.0 -> 1.52.0 
