@@ -15,6 +15,9 @@ import se.alipsa.matrix.gsheets.GsUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.LongAccumulator
+import java.util.concurrent.atomic.LongAdder
 
 class GsUtilTest {
 
@@ -44,6 +47,11 @@ class GsUtilTest {
 
     assertEquals(1, columnCountForRange('A1'))
     assertEquals(1, columnCountForRange('Sheet1!A1'))
+    assertEquals(4, columnCountForRange('a1:d10'))
+    assertEquals(2, columnCountForRange('Sheet1!b2:c2'))
+    assertEquals(4, columnCountForRange('A:D'))
+    assertEquals(4, columnCountForRange('A1:D'))
+    assertEquals(2, columnCountForRange("'Q!A'!A1:B2"))
   }
 
   @Test
@@ -135,6 +143,51 @@ class GsUtilTest {
 
     // Invalid format - too many colons
     assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:B2:C3'))
+    // Trailing/leading colons leave an empty endpoint
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:'))
+    assertThrows(IllegalArgumentException, () -> columnCountForRange(':A1'))
+    ['Sheet1!1:5', 'A:1', 'A1:Bgarbage', 'A1:D10 junk', 'A1B:C2'].each { String range ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException, () -> columnCountForRange(range))
+      assertTrue(exception.message.contains('Invalid range format'))
+    }
+  }
+
+  @Test
+  void testValidateRangeUsesFullA1Validation() {
+    validateRange('a1:d10')
+    validateRange("'My Sheet'!A1")
+    assertThrows(IllegalArgumentException, () -> validateRange('hello B2 world'))
+    assertThrows(IllegalArgumentException, () -> validateRange('Sheet1'))
+    assertThrows(IllegalArgumentException, () -> validateRange('Sheet1!1:5'))
+    assertThrows(IllegalArgumentException, () -> validateRange('A1:'))
+  }
+
+  @Test
+  void testValidateWriteRangePermitsRowOnlyRanges() {
+    // everything validateRange accepts
+    validateWriteRange('a1:d10')
+    validateWriteRange("'My Sheet'!A1")
+    validateWriteRange('A:D')
+    // row-only ranges are valid write targets
+    validateWriteRange('Sheet1!1:5')
+    validateWriteRange('1:5')
+    validateWriteRange('Sheet1!3:3')
+    // but malformed input and bare sheet names are still rejected
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('hello B2 world'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('Sheet1'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('Sheet1!3'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A:1'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:B2:C3'))
+  }
+
+  @Test
+  void testSplitSheetAndCellsHonorsQuotedBangCharacters() {
+    assertArrayEquals([null, 'A1:B2'] as String[], splitSheetAndCells('A1:B2'))
+    assertArrayEquals(['Sheet1', 'A1'] as String[], splitSheetAndCells('Sheet1!A1'))
+    assertArrayEquals(["'Q!A'", 'A1:B2'] as String[], splitSheetAndCells("'Q!A'!A1:B2"))
+    assertArrayEquals(["'It''s!here'", 'A1'] as String[], splitSheetAndCells("'It''s!here'!A1"))
+    assertThrows(IllegalArgumentException, () -> splitSheetAndCells("'unterminated!A1"))
   }
 
   @Test
@@ -199,6 +252,7 @@ class GsUtilTest {
   void testSanitizeSheetNameHandlesEmptyString() {
     assertEquals('Sheet1', GsUtil.sanitizeSheetName(''))
     assertEquals('Sheet1', GsUtil.sanitizeSheetName('   '))
+    assertEquals('Sheet1', GsUtil.sanitizeSheetName(null))
   }
 
   @Test
@@ -278,6 +332,35 @@ class GsUtilTest {
   void testToCellWithFirstUnsafeDoubleIntegerBigDecimalThrows() {
     BigDecimal firstUnsafeInteger = new BigDecimal('9007199254740993')
     assertThrows(IllegalArgumentException, () -> GsUtil.toCell(firstUnsafeInteger, true, false))
+  }
+
+  @Test
+  void testToCellRejectsUnsafeIntegralNumbersAndUnwrapsAtomics() {
+    assertEquals(2L ** 53, GsUtil.toCell(2L ** 53, true, false))
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell((2L ** 53) + 1L, true, false))
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(BigInteger.ONE.shiftLeft(60), true, false))
+    assertThrows(IllegalArgumentException, () -> GsUtil.toCell(Long.MIN_VALUE, true, false))
+
+    [new AtomicLong(1L << 60), longAdder(1L << 60), longAccumulator(1L << 60)].each { value ->
+      assertThrows(IllegalArgumentException, () -> GsUtil.toCell(value, true, false))
+    }
+    [new AtomicLong(42L), longAdder(42L), longAccumulator(42L)].each { value ->
+      Object result = GsUtil.toCell(value, true, false)
+      assertEquals(42L, result)
+      assertTrue(result instanceof Long)
+    }
+  }
+
+  private static LongAdder longAdder(long value) {
+    LongAdder adder = new LongAdder()
+    adder.add(value)
+    adder
+  }
+
+  private static LongAccumulator longAccumulator(long value) {
+    LongAccumulator accumulator = new LongAccumulator(Long::sum, 0L)
+    accumulator.accumulate(value)
+    accumulator
   }
 
   @Test

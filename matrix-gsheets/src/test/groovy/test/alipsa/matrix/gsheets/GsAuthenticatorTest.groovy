@@ -3,9 +3,14 @@ package test.alipsa.matrix.gsheets
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gsheets.GsAuthenticator.*
 
+import com.google.auth.oauth2.AccessToken
+import com.google.auth.oauth2.GoogleCredentials
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.gsheets.GsAuthenticator
+import se.alipsa.matrix.gsheets.SheetOperationException
+
+import java.time.Instant
 
 /**
  * Unit tests for GsAuthenticator focusing on scope normalization and utility methods.
@@ -114,6 +119,57 @@ class GsAuthenticatorTest {
     assertNotNull(ADC_FILE_PATH)
     assertTrue(ADC_FILE_PATH.absolutePath.contains('.config/gcloud'))
     assertTrue(ADC_FILE_PATH.absolutePath.contains('application_default_credentials.json'))
+  }
+
+  @Test
+  void testAuthenticateThrowsUsefulExceptionWhenLoginCannotProduceCredentials() {
+    def backend = [
+        existing    : { List<String> scopes -> null },
+        login       : { List<String> scopes, String quotaProject -> null },
+        hasAllScopes: { GoogleCredentials creds, List<String> scopes -> false },
+        userEmail   : { GoogleCredentials creds -> 'stub@example.test' }
+    ] as GsAuthenticator.AuthBackend
+
+    SheetOperationException exception = assertThrows(SheetOperationException,
+        () -> GsAuthenticator.authenticate([SCOPE_SHEETS], null, backend))
+    assertEquals('authenticate', exception.operation)
+    assertTrue(exception.message.contains('Authentication failed'))
+  }
+
+  @Test
+  void testAuthenticateUsesExistingScopedCredentialsWithoutLogin() {
+    GoogleCredentials credentials = credentials()
+    int logins = 0
+    def backend = [
+        existing    : { List<String> scopes -> credentials },
+        login       : { List<String> scopes, String quotaProject -> logins++; credentials },
+        hasAllScopes: { GoogleCredentials creds, List<String> scopes -> true },
+        userEmail   : { GoogleCredentials creds -> 'stub@example.test' }
+    ] as GsAuthenticator.AuthBackend
+
+    assertSame(credentials, GsAuthenticator.authenticate([SCOPE_SHEETS], null, backend))
+    assertEquals(0, logins)
+  }
+
+  @Test
+  void testAuthenticateUsesLoginPathAndRejectsMissingScopes() {
+    GoogleCredentials credentials = credentials()
+    int logins = 0
+    def backend = [
+        existing    : { List<String> scopes -> credentials },
+        login       : { List<String> scopes, String quotaProject -> logins++; credentials },
+        hasAllScopes: { GoogleCredentials creds, List<String> scopes -> false },
+        userEmail   : { GoogleCredentials creds -> 'stub@example.test' }
+    ] as GsAuthenticator.AuthBackend
+
+    SheetOperationException exception = assertThrows(SheetOperationException,
+        () -> GsAuthenticator.authenticate([SCOPE_SHEETS], null, backend))
+    assertTrue(exception.message.contains('missing required scopes'))
+    assertEquals(1, logins)
+  }
+
+  private static GoogleCredentials credentials() {
+    GoogleCredentials.create(new AccessToken('tok', Date.from(Instant.now().plusSeconds(3600))))
   }
 
   // Note: Testing actual authentication flows (runGcloudLogin, getCredentials, authenticate)

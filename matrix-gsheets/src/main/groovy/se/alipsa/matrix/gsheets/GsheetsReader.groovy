@@ -39,7 +39,7 @@ import se.alipsa.matrix.core.Matrix
  * <ul>
  * <li>Empty cells are represented as missing values in the API response</li>
  * <li>Dates are stored as serial numbers (days since 1899-12-30)</li>
- * <li>Google Sheets has a 1900 leap year bug (treats 1900 as leap year)</li>
+ * <li>Serial day 0 is 1899-12-30; Sheets does not replicate Excel's 1900 leap-day bug</li>
  * <li>Trailing empty columns/rows may be omitted from the API response</li>
  * </ul>
  *
@@ -49,9 +49,7 @@ import se.alipsa.matrix.core.Matrix
 class GsheetsReader {
 
   private static final String APP_NAME = 'Groovy Sheets Reader'
-  private static final String SHEET_NAME_SEPARATOR = '!'
   private static final String SHEETS_SERVICE_ERROR = 'sheetsService must not be null'
-  private static final int RANGE_SPLIT_LIMIT = 2
 
   /**
    * Reads data from a Google Sheets spreadsheet as formatted strings.
@@ -179,8 +177,7 @@ class GsheetsReader {
       GsUtil.fillListToSize(row, ncol)
     }
 
-    def rangeParts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
-    def sheetName = rangeParts.size() > 1 ? rangeParts[0] : ''
+    String sheetName = GsUtil.splitSheetAndCells(range)[0] ?: ''
     Matrix.builder(sheetName)
         .rows(values)
         .columnNames(headers)
@@ -247,8 +244,7 @@ class GsheetsReader {
       headers = Matrix.anonymousHeader(ncol)
     }
 
-    def rangeParts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
-    def sheetName = rangeParts.size() > 1 ? rangeParts[0] : ''
+    String sheetName = GsUtil.splitSheetAndCells(range)[0] ?: ''
     List<List<String>> rows = []
     values.each { valueRow ->
       List<String> row = []
