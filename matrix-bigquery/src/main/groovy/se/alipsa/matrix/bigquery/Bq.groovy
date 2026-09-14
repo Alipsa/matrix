@@ -110,12 +110,13 @@ class Bq {
   private static final String FALSE_VALUE = 'false'
   private static final String NEWLINE = '\n'
   private static final int DEFAULT_PAGE_SIZE = 100
-  private static final int TEN = 10
-  private static final int BINARY_KILO = 1024
+  private static final int KIBIBYTE = 1024
+  private static final int MEBIBYTE = KIBIBYTE * KIBIBYTE
+  private static final int MAX_DATASET_NAME_LENGTH = KIBIBYTE
 
   /** Number of load-job lookups after an ambiguous write-channel connection failure. */
   @PackageScope
-  static final int JOB_LOOKUP_GRACE_ATTEMPTS = TEN
+  static final int JOB_LOOKUP_GRACE_ATTEMPTS = 10
 
   /** Delay between ambiguous-write load-job lookups. */
   @PackageScope
@@ -123,7 +124,7 @@ class Bq {
 
   /** Target encoded InsertAll request size, leaving room below BigQuery's 10 MB limit. */
   @PackageScope
-  static final int INSERT_ALL_TARGET_REQUEST_BYTES = 5 * BINARY_KILO * BINARY_KILO
+  static final int INSERT_ALL_TARGET_REQUEST_BYTES = 5 * MEBIBYTE
 
   /** BigQuery's recommended maximum InsertAll rows per request. */
   @PackageScope
@@ -133,7 +134,7 @@ class Bq {
   @PackageScope
   static final int INSERT_ALL_HARD_MAX_ROWS = 50_000
 
-  private static final int INSERT_ALL_HARD_MAX_REQUEST_BYTES = TEN * BINARY_KILO * BINARY_KILO
+  private static final int INSERT_ALL_HARD_MAX_REQUEST_BYTES = 2 * INSERT_ALL_TARGET_REQUEST_BYTES
   private static final int INSERT_ALL_ROW_ENVELOPE_BYTES = 128
 
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
@@ -459,7 +460,7 @@ class Bq {
    *   <li>Checks if the table exists (using {@link #tableExist})</li>
    *   <li>Creates the table with auto-generated schema if needed (using {@link #createTable})</li>
    *   <li>Waits for the table to be ready (newly created tables may have propagation delay)</li>
-   *   <li>Inserts the data (using {@link #insert})</li>
+   *   <li>Inserts the data (using {@link #insertRows})</li>
    * </ol>
    *
    * <p>The table name is derived from {@link Matrix#getMatrixName()}. The schema is
@@ -470,7 +471,7 @@ class Bq {
    * @return true on success
    * @throws BqException if any step fails
    * @see #createTable
-   * @see #insert
+   * @see #insertRows
    * @see #setWaitForTableTimeoutMs
    */
   boolean saveToBigQuery(Matrix matrix, String datasetName, boolean append = false) throws BqException {
@@ -481,7 +482,7 @@ class Bq {
       waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
     TableId tableId = tableId(safeDatasetName, tableName)
-    insert(matrix, tableId, append)
+    insertRows(matrix, tableId, append)
     return true
   }
 
@@ -592,7 +593,9 @@ class Bq {
    * @param dataSet the BigQuery dataset name
    * @return load statistics from the insert operation
    * @throws BqException if the insert fails
-   * @see #insert(Matrix, TableId)
+   * @deprecated use {@link #insertRows(Matrix, String)}. This method returns null after a
+   * successful InsertAll write because that API has no load statistics.
+   * @see #insertRows(Matrix, String)
    */
   @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet) throws BqException {
@@ -615,6 +618,8 @@ class Bq {
    * @param append if true, preserves existing rows; if false, overwrites existing table data
    * @return load statistics for a write-channel operation, or null for InsertAll
    * @throws BqException if the insert fails or its outcome cannot be determined
+   * @deprecated use {@link #insertRows(Matrix, TableId, boolean)}. This method returns null after
+   * a successful InsertAll write because that API has no load statistics.
    */
   @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId, boolean append) throws BqException {
@@ -643,16 +648,21 @@ class Bq {
       return insertViaInsertAll(matrix, tableId, append, null, operationSalt)
     }
 
-    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+    JobId jobId = createLoadJobId(tableId)
     try {
       JobStatistics.LoadStatistics stats = insertViaWriteChannel(matrix, tableId, append, jobId)
-      return new BqInsertResult(matrix.rowCount(), stats?.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
+      return new BqInsertResult(matrix.rowCount(), stats.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
     } catch (Exception e) {
       if (isConnectionError(e)) {
-        Job existingJob = findCreatedLoadJob(jobId, tableId)
-        if (existingJob != null) {
-          JobStatistics.LoadStatistics stats = waitForExistingLoadJobAndGetStats(existingJob, tableId)
-          return new BqInsertResult(matrix.rowCount(), stats?.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
+        try {
+          Job existingJob = findCreatedLoadJob(jobId, tableId)
+          if (existingJob != null) {
+            JobStatistics.LoadStatistics stats = waitForExistingLoadJobAndGetStats(existingJob, tableId)
+            return new BqInsertResult(matrix.rowCount(), stats.outputRows, BqInsertResult.WriteMechanism.WRITE_CHANNEL, jobId, stats)
+          }
+        } catch (BqException outcomeException) {
+          outcomeException.addSuppressed(e)
+          throw outcomeException
         }
         log.warn('Streaming insert failed and no load job appeared during the grace period. Falling back to InsertAll...')
         return insertViaInsertAll(matrix, tableId, append, e, operationSalt)
@@ -683,6 +693,29 @@ class Bq {
    */
   BqInsertResult insertRows(Matrix matrix, String dataSet, String targetProjectId, boolean append) throws BqException {
     insertRows(matrix, TableId.of(targetProjectId, dataSet, matrix.matrixName), append)
+  }
+
+  /**
+   * Creates a load-job ID in the target dataset's location so subsequent job lookups work for
+   * regional datasets as well as the US and EU multi-regions.
+   *
+   * @param tableId target table
+   * @return a random, location-aware load-job ID
+   */
+  @PackageScope
+  JobId createLoadJobId(TableId tableId) {
+    String location = resolveDatasetLocation(tableId)
+    JobId.Builder builder = JobId.newBuilder().setProject(projectId).setRandomJob()
+    if (location) {
+      builder.setLocation(location)
+    }
+    builder.build()
+  }
+
+  private String resolveDatasetLocation(TableId tableId) {
+    String datasetProject = tableId.project ?: projectId
+    Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetProject, tableId.dataset))
+    dataset?.location ?: bigQuery.options.location
   }
 
   /**
@@ -818,7 +851,7 @@ class Bq {
     try {
       waitForLoadJobAndGetStats(job, tableId)
     } catch (BqException e) {
-      if (e.message?.startsWith('Write-channel load (JSON) failed')) {
+      if (e instanceof LoadJobFailedException) {
         throw e
       }
       throw new BqException("Write outcome is unknown for ${tableId}; the load job could not establish an outcome and the operation must not be retried automatically", e)
@@ -871,7 +904,8 @@ class Bq {
    * @param json the JSON generator
    * @param value the value to write
    */
-  private static void writeJsonValue(JsonGenerator json, Object value) {
+  @PackageScope
+  static void writeJsonValue(JsonGenerator json, Object value) {
     Object normalized = normalizeValue(value)
     if (normalized == null) {
       json.writeNull()
@@ -965,7 +999,7 @@ class Bq {
 
     if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
       String details = buildErrorDetails(primary, execErrs)
-      throw new BqException("Write-channel load (JSON) failed for ${tableId}: ${details}")
+      throw new LoadJobFailedException("Write-channel load (JSON) failed for ${tableId}: ${details}")
     }
 
     JobStatistics.LoadStatistics stats = completedJob.getStatistics()
@@ -1195,11 +1229,11 @@ class Bq {
 
   @PackageScope
   static Object normalizeValue(Object value) {
-    if (value == null || value instanceof Number || value instanceof Boolean || value instanceof byte[]) {
-      return needsConversion(value) ? sanitizeString(convertObjectValue(value)) : value
-    }
     if (needsConversion(value)) {
       return sanitizeString(convertObjectValue(value))
+    }
+    if (value == null || value instanceof Number || value instanceof Boolean || value instanceof byte[]) {
+      return value
     }
     if (value instanceof CharSequence) {
       return sanitizeString(value.toString())
@@ -1335,7 +1369,9 @@ class Bq {
    * @param projectId the Google Cloud project ID
    * @return load statistics from the insert operation
    * @throws BqException if the insert fails
-   * @see #insert(Matrix, TableId)
+   * @deprecated use {@link #insertRows(Matrix, String, String, boolean)}. This method returns null
+   * after a successful InsertAll write because that API has no load statistics.
+   * @see #insertRows(Matrix, String, String, boolean)
    */
   @Deprecated
   JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet, String projectId, boolean append = false) throws BqException {
@@ -1515,7 +1551,7 @@ class Bq {
     if (!identifier) {
       throw new IllegalArgumentException('Dataset name cannot be null or blank')
     }
-    if (identifier.length() > BINARY_KILO) {
+    if (identifier.length() > MAX_DATASET_NAME_LENGTH) {
       throw new IllegalArgumentException("Dataset name '$datasetName' exceeds BigQuery's 1024 character limit")
     }
     if (!(identifier ==~ /[A-Za-z0-9_]+/)) {
@@ -1749,4 +1785,17 @@ class Bq {
     input?.toString()
   }
 
+}
+
+/**
+ * Indicates that BigQuery completed a load job with a definite failure, rather than an unknown
+ * outcome caused by an interrupted or unavailable job lookup.
+ */
+@CompileStatic
+@PackageScope
+class LoadJobFailedException extends BqException {
+
+  LoadJobFailedException(String message) {
+    super(message)
+  }
 }
