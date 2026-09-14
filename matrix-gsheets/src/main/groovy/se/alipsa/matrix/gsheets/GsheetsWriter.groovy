@@ -103,9 +103,7 @@ class GsheetsWriter {
   private static final String RAW_INPUT = 'RAW'
   private static final String ZERO_DIGIT = '0'
   private static final String SINGLE_QUOTE = "'"
-  private static final String SHEET_NAME_SEPARATOR = '!'
   private static final String APPLY_FORMATS_ERROR = 'apply number formats'
-  private static final int RANGE_SPLIT_LIMIT = 2
 
   /**
    * Creates a new Google Spreadsheet and writes the Matrix data to it.
@@ -180,7 +178,7 @@ class GsheetsWriter {
           .setFields('spreadsheetId,sheets.properties.sheetId') // we only need the ids here
           .execute()
     } catch (IOException e) {
-      throw new SheetOperationException('create spreadsheet', "Failed to create spreadsheet '${spreadsheetTitle}': ${e.message}")
+      throw new SheetOperationException('create spreadsheet', null, e)
     }
 
     String spreadsheetId = created.getSpreadsheetId()
@@ -317,13 +315,77 @@ class GsheetsWriter {
    * @param convertNullsToEmptyString If true, null values become empty strings
    * @param convertDatesToSerial If true, date/time types are converted to serial numbers
    * @return The spreadsheetId
-   * @throws IllegalArgumentException if any required parameter is null/empty
+   * @throws IllegalArgumentException if required input is invalid, before any write occurs
    * @throws SheetOperationException if the update fails
    */
   static String update(String spreadsheetId, String range, Matrix matrix,
                        GoogleCredentials credentials = null,
                        boolean convertNullsToEmptyString = true,
                        boolean convertDatesToSerial = false) {
+    preflightUpdate(spreadsheetId, range, matrix)
+    Sheets sheets = buildSheetsService(credentials)
+    updateWithService(spreadsheetId, range, matrix, sheets, convertNullsToEmptyString, convertDatesToSerial)
+  }
+
+  /**
+   * Updates a spreadsheet using a caller-provided Sheets service. Inputs are validated before
+   * any write occurs, including ensuring a formatted decimal write has a complete start cell.
+   *
+   * @param spreadsheetId the existing spreadsheet ID
+   * @param range target range in A1 notation
+   * @param matrix the matrix to write
+   * @param sheetsService caller-managed Sheets service
+   * @param convertNullsToEmptyString true to write null values as empty strings
+   * @param convertDatesToSerial true to write date/time values as Sheets serial numbers
+   * @return the spreadsheet ID
+   * @throws IllegalArgumentException if input is invalid, before any write occurs
+   * @throws SheetOperationException if an API operation fails
+   */
+  static String updateWithService(String spreadsheetId, String range, Matrix matrix, Sheets sheetsService,
+                                  boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
+    int[] startCell = preflightUpdate(spreadsheetId, range, matrix)
+    if (sheetsService == null) {
+      throw new IllegalArgumentException('sheetsService must not be null')
+    }
+
+    // Build data: header row + data rows
+    List<List<Object>> values = buildValues(matrix, convertNullsToEmptyString, convertDatesToSerial)
+
+    ValueRange vr = new ValueRange()
+        .setRange(range)
+        .setMajorDimension(ROWS_DIMENSION)
+        .setValues(values)
+
+    try {
+      sheetsService.spreadsheets().values()
+          .update(spreadsheetId, range, vr)
+          .setValueInputOption(RAW_INPUT)
+          .execute()
+    } catch (IOException e) {
+      throw new SheetOperationException('update data', spreadsheetId, e)
+    }
+
+    // Same fix as write(): force explicit decimal places on BigDecimal cells so Sheets
+    // doesn't drop trailing zeros. Only resolves the target sheetId (an extra API call)
+    // when the matrix actually has a cell that would need it.
+    if (startCell != null) {
+      int sheetId = resolveSheetId(sheetsService, spreadsheetId, range)
+      List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId, startCell[0] + 1, startCell[1])
+      if (formatRequests) {
+        try {
+          sheetsService.spreadsheets()
+              .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(formatRequests))
+              .execute()
+        } catch (IOException e) {
+          throw new SheetOperationException(APPLY_FORMATS_ERROR, spreadsheetId, e)
+        }
+      }
+    }
+
+    spreadsheetId
+  }
+
+  private static int[] preflightUpdate(String spreadsheetId, String range, Matrix matrix) {
     GsUtil.validateSheetId(spreadsheetId)
     GsUtil.validateRange(range)
     if (matrix == null) {
@@ -335,45 +397,7 @@ class GsheetsWriter {
     if (matrix.rowCount() == 0) {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
-
-    // Build data: header row + data rows
-    List<List<Object>> values = buildValues(matrix, convertNullsToEmptyString, convertDatesToSerial)
-
-    Sheets sheets = buildSheetsService(credentials)
-
-    ValueRange vr = new ValueRange()
-        .setRange(range)
-        .setMajorDimension(ROWS_DIMENSION)
-        .setValues(values)
-
-    try {
-      sheets.spreadsheets().values()
-          .update(spreadsheetId, range, vr)
-          .setValueInputOption(RAW_INPUT)
-          .execute()
-    } catch (IOException e) {
-      throw new SheetOperationException('update data', spreadsheetId, e)
-    }
-
-    // Same fix as write(): force explicit decimal places on BigDecimal cells so Sheets
-    // doesn't drop trailing zeros. Only resolves the target sheetId (an extra API call)
-    // when the matrix actually has a cell that would need it.
-    if (hasScaledDecimalCell(matrix)) {
-      int sheetId = resolveSheetId(sheets, spreadsheetId, range)
-      int[] startCell = parseStartCell(range)
-      List<Request> formatRequests = buildNumberFormatRequests(matrix, sheetId, startCell[0] + 1, startCell[1])
-      if (formatRequests) {
-        try {
-          sheets.spreadsheets()
-              .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(formatRequests))
-              .execute()
-        } catch (IOException e) {
-          throw new SheetOperationException(APPLY_FORMATS_ERROR, spreadsheetId, e)
-        }
-      }
-    }
-
-    spreadsheetId
+    hasScaledDecimalCell(matrix) ? parseStartCell(range) : null
   }
 
   /**
@@ -405,12 +429,11 @@ class GsheetsWriter {
    * Extracts and unquotes the sheet-name prefix from an A1 range, or null if the range
    * has no {@code !} prefix.
    */
-  private static String extractSheetName(String range) {
-    String[] parts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
-    if (parts.size() <= 1) {
+  static String extractSheetName(String range) {
+    String name = GsUtil.splitSheetAndCells(range)[0]
+    if (name == null) {
       return null
     }
-    String name = parts[0]
     if (name != SINGLE_QUOTE && name.startsWith(SINGLE_QUOTE) && name.endsWith(SINGLE_QUOTE)) {
       name = name.substring(1, name.length() - 1).replace(SINGLE_QUOTE + SINGLE_QUOTE, SINGLE_QUOTE)
     }
@@ -422,12 +445,11 @@ class GsheetsWriter {
    * 'My Sheet'!C5:E10} -&gt; [4, 2].
    */
   private static int[] parseStartCell(String range) {
-    String[] parts = range.split(SHEET_NAME_SEPARATOR, RANGE_SPLIT_LIMIT)
-    String cellPart = parts.size() > 1 ? parts[1] : parts[0]
+    String cellPart = GsUtil.splitSheetAndCells(range)[1]
     String startCell = cellPart.split(':')[0]
-    def m = startCell =~ /^([A-Z]+)\d+$/
+    def m = startCell.toUpperCase(Locale.ROOT) =~ /^([A-Z]+)\d+$/
     if (!m.matches()) {
-      throw new IllegalArgumentException("Cannot parse starting cell from range '${range}'")
+      throw new IllegalArgumentException("Cannot parse starting cell from range '${range}': a range with a starting row (e.g. Sheet1!A1) is required when the matrix contains decimal values that need number formatting")
     }
     String colLetters = m.group(1)
     String rowDigits = startCell.substring(colLetters.length())

@@ -1,6 +1,22 @@
 # Release history
 
 ## 0.2.2, in progress
+### Bug Fixes
+- `GsAuthenticator.authenticate()` now throws `SheetOperationException` when authentication
+  cannot be completed, instead of returning `null` (behaviour change).
+- Normalize and fully validate A1 ranges consistently, including lowercase columns, quoted sheet
+  names containing `!`, and clear errors for row-only ranges whose column count is undefined.
+- Fix serial date/time boundaries for negative dates and midnight rollover; Sheets serials do not
+  include Excel's fictitious 1900 leap day.
+- Validate `GsheetsWriter.update()` completely before writing and preserve the cause when
+  spreadsheet creation fails.
+- Avoid unnecessary OAuth refreshes and repeated tokeninfo requests by caching granted scopes.
+- Write application-default credentials with owner-only file permissions, refusing to persist
+  secrets when the filesystem cannot guarantee them.
+- Reject unsafe `Long`, `BigInteger`, and long-backed atomic integral values as well as
+  `BigDecimal` values (behaviour change), avoiding silent IEEE-754 rounding.
+- Treat null sheet names as `Sheet1` and correctly parse quoted sheet names containing `!`.
+
 - Upgrade dependencies:
   - com.google.api-client:google-api-client 2.9.0 -> 2.9.1
   - com.google.apis:google-api-services-drive v3-rev20260624-2.0.0 -> v3-rev20260901-2.0.0

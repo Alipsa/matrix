@@ -3,9 +3,23 @@ package test.alipsa.matrix.gsheets
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gsheets.GsAuthenticator.*
 
+import com.google.auth.oauth2.AccessToken
+import com.google.auth.oauth2.GoogleCredentials
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 import se.alipsa.matrix.gsheets.GsAuthUtils
+
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.attribute.PosixFilePermissions
+import java.time.Instant
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Unit tests for GsAuthUtils focusing on utility methods that don't require
@@ -13,6 +27,14 @@ import se.alipsa.matrix.gsheets.GsAuthUtils
  * require network access).
  */
 class GsAuthUtilsTest {
+
+  @TempDir
+  Path tempDir
+
+  @AfterEach
+  void clearScopeCache() {
+    GsAuthUtils.clearScopeCache()
+  }
 
   @Test
   void testCanonScopeWithNull() {
@@ -38,6 +60,78 @@ class GsAuthUtilsTest {
   @Test
   void testHasAllScopesWithNullCredentials() {
     assertFalse(GsAuthUtils.hasAllScopes(null, [SCOPE_SHEETS]))
+  }
+
+  @Test
+  void testHasAllScopesCachesResolverResultsAndHandlesFailures() {
+    GoogleCredentials creds = credentials('tok-1')
+    int calls = 0
+    GsAuthUtils.ScopeResolver resolver = { String token ->
+      calls++
+      [SCOPE_SHEETS] as Set<String>
+    } as GsAuthUtils.ScopeResolver
+
+    assertTrue(GsAuthUtils.hasAllScopes(creds, [SCOPE_SHEETS_READONLY], resolver))
+    assertFalse(GsAuthUtils.hasAllScopes(creds, [SCOPE_DRIVE_FILE], resolver))
+    assertEquals(1, calls)
+    GsAuthUtils.clearScopeCache()
+    assertTrue(GsAuthUtils.hasAllScopes(creds, [SCOPE_SHEETS], resolver))
+    assertEquals(2, calls)
+
+    GsAuthUtils.ScopeResolver failing = { String token -> throw new IOException('offline') } as GsAuthUtils.ScopeResolver
+    assertFalse(GsAuthUtils.hasAllScopes(credentials('tok-2'), [SCOPE_SHEETS], failing))
+  }
+
+  @Test
+  void testHasAllScopesResolvesOneTokenOnlyOnceAcrossConcurrentCallers() {
+    GoogleCredentials creds = credentials('concurrent-token')
+    AtomicInteger calls = new AtomicInteger()
+    CountDownLatch start = new CountDownLatch(1)
+    GsAuthUtils.ScopeResolver resolver = { String token ->
+      calls.incrementAndGet()
+      Thread.sleep(50)
+      [SCOPE_SHEETS] as Set<String>
+    } as GsAuthUtils.ScopeResolver
+    def executor = Executors.newFixedThreadPool(8)
+    try {
+      def futures = (1..8).collect {
+        executor.submit {
+          start.await()
+          GsAuthUtils.hasAllScopes(creds, [SCOPE_SHEETS], resolver)
+        }
+      }
+      start.countDown()
+      futures.each { assertTrue(it.get(5, TimeUnit.SECONDS)) }
+      assertEquals(1, calls.get())
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  @Test
+  void testWriteAdcFileUsesOwnerOnlyPermissionsAndOverwrites() {
+    File adc = tempDir.resolve('application_default_credentials.json').toFile()
+    GsAuthUtils.writeAdcFile(adc, '{}')
+    assertEquals('{}', adc.text)
+    if (FileSystems.default.supportedFileAttributeViews().contains('posix')) {
+      assertEquals(PosixFilePermissions.fromString('rw-------'), Files.getPosixFilePermissions(adc.toPath()))
+    }
+    GsAuthUtils.writeAdcFile(adc, '{"a":1}')
+    assertEquals('{"a":1}', adc.text)
+    assertEquals(['application_default_credentials.json'], tempDir.toFile().list().toList().sort())
+  }
+
+  @Test
+  void testRestrictToOwnerRefusesUnsupportedFileSystemsBeforeWriting() {
+    Path target = tempDir.resolve('empty.json')
+    Files.createFile(target)
+    IOException exception = assertThrows(IOException, () -> GsAuthUtils.restrictToOwner(target, [] as Set<String>))
+    assertTrue(exception.message.contains('Cannot restrict ADC file permissions'))
+    assertEquals(0L, Files.size(target))
+  }
+
+  private static GoogleCredentials credentials(String token) {
+    GoogleCredentials.create(new AccessToken(token, Date.from(Instant.now().plusSeconds(3600))))
   }
 
   // Note: Testing hasAllScopes with real credentials requires network access

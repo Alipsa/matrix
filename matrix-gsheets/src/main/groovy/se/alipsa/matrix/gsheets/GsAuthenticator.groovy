@@ -15,10 +15,6 @@ import java.security.GeneralSecurityException
 /**
  * Checks for Google Cloud authentication by checking for Application Default Credentials (ADC)
  * and delegates to the 'gcloud' SDK for an interactive login if needed.
- *
- * <p><strong>Note on naming:</strong> The "Bq" prefix (short for BigQuery) is historical.
- * These classes handle authentication for Google Sheets, not BigQuery.
- * The name is retained for backward compatibility.
  */
 class GsAuthenticator {
 
@@ -52,6 +48,9 @@ class GsAuthenticator {
   private static final String GCLOUD_AUTH = 'auth'
   private static final String GCLOUD_APP_DEFAULT = 'application-default'
   private static final String ENV_GOOGLE_CLOUD_PROJECT = 'GOOGLE_CLOUD_PROJECT'
+  private static final String AUTHENTICATE_OPERATION = 'authenticate'
+  private static final String AUTHENTICATION_FAILED = 'Authentication failed. Could not validate credentials after login, even after retrying.'
+  private static final String MISSING_REQUIRED_SCOPES = 'Authentication succeeded but the granted token is missing required scopes.'
 
   static final List<String> SCOPES = [
       SCOPE_CLOUD_PLATFORM,
@@ -60,6 +59,28 @@ class GsAuthenticator {
       SCOPE_OPENID,
       SCOPE_USERINFO_EMAIL
   ]
+
+  /** Pluggable authentication primitives, primarily for offline testing. */
+  interface AuthBackend {
+    GoogleCredentials existing(List<String> scopes)
+    GoogleCredentials login(List<String> scopes, String quotaProjectId)
+    boolean hasAllScopes(GoogleCredentials creds, List<String> scopes)
+    String userEmail(GoogleCredentials creds)
+  }
+
+  private static final AuthBackend DEFAULT_BACKEND = new AuthBackend() {
+    @Override
+    GoogleCredentials existing(List<String> scopes) { getCredentials(scopes) }
+
+    @Override
+    GoogleCredentials login(List<String> scopes, String quotaProjectId) { loginAndGetCredentials(scopes, quotaProjectId) }
+
+    @Override
+    boolean hasAllScopes(GoogleCredentials creds, List<String> scopes) { GsAuthUtils.hasAllScopes(creds, scopes) }
+
+    @Override
+    String userEmail(GoogleCredentials creds) { getUserEmail(creds) }
+  }
 
   static List<String> normalizeScopesForGcloud(List<String> scopes) {
     // Always add cloud-platform (gcloud insists on this when --scopes is used)
@@ -198,19 +219,34 @@ class GsAuthenticator {
    * Ensures that the user is authenticated with gcp.
    *
    * @param scope the scope to grant access to.
-   * @return true if successful, false otherwise
+   * @return credentials, or throws {@link SheetOperationException} when authentication fails
    */
   static GoogleCredentials authenticate(String scope) {
-    return authenticate([scope])
+    authenticate([scope])
   }
 
   /**
    * Ensures that the user is authenticated with gcp.
    *
-   * @param scopes a list of scopes to grant access to, defaults to SCOPES i.e. cloud platform, email, drive, openId
-   * @return true if successful, false otherwise
+   * Requested scopes are merged into {@link #SCOPES} (cloud-platform, spreadsheets, drive.file,
+   * openid, and userinfo.email). A read-only spreadsheets scope is upgraded to read/write, so it
+   * may prompt for read/write consent.
+   *
+   * @param requestedScopes scopes to grant access to, defaulting to {@link #SCOPES}
+   * @param quotaProjectId optional quota project ID
+   * @return credentials, or throws {@link SheetOperationException} when authentication fails
    */
   static GoogleCredentials authenticate(List<String> requestedScopes = SCOPES, String quotaProjectId = null) {
+    authenticate(requestedScopes, quotaProjectId, DEFAULT_BACKEND)
+  }
+
+  /**
+   * Authenticates with the supplied backend. Requested scopes are merged into {@link #SCOPES},
+   * and read-only Sheets access is upgraded to read/write access.
+   *
+   * @return credentials, or throws {@link SheetOperationException} when authentication fails
+   */
+  static GoogleCredentials authenticate(List<String> requestedScopes, String quotaProjectId, AuthBackend backend) {
     List<String> scopes = SCOPES
     if (requestedScopes) {
       Set<String> effective = new LinkedHashSet<>(SCOPES)
@@ -222,24 +258,25 @@ class GsAuthenticator {
       scopes = new ArrayList<>(effective)
     }
 
-    GoogleCredentials creds = getCredentials(new ArrayList<>(scopes))
-    if (creds == null || !GsAuthUtils.hasAllScopes(creds, scopes)) {
-      creds = loginAndGetCredentials(scopes, quotaProjectId)
+    GoogleCredentials creds = backend.existing(new ArrayList<>(scopes))
+    boolean hasScopes = creds != null && backend.hasAllScopes(creds, scopes)
+    if (!hasScopes) {
+      creds = backend.login(scopes, quotaProjectId)
     }
 
     if (creds == null) {
-      log.error 'Authentication failed. Could not validate credentials after login, even after retrying.'
-      return null
+      log.error AUTHENTICATION_FAILED
+      throw new SheetOperationException(AUTHENTICATE_OPERATION, AUTHENTICATION_FAILED)
     }
-    if (!GsAuthUtils.hasAllScopes(creds, scopes)) {
-      log.error 'Authentication succeeded but the granted token is missing required scopes.'
-      return null
+    if (!hasScopes && !backend.hasAllScopes(creds, scopes)) {
+      log.error MISSING_REQUIRED_SCOPES
+      throw new SheetOperationException(AUTHENTICATE_OPERATION, MISSING_REQUIRED_SCOPES)
     }
 
     // Only try userinfo if we actually asked for it
     boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
     if (wantEmail) {
-      def email = getUserEmail(creds)
+      def email = backend.userEmail(creds)
       log.info "Google Cloud is authenticated with email: ${email}"
     } else {
       log.info 'Google Cloud is authenticated.'

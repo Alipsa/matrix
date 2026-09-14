@@ -41,6 +41,18 @@ class GsConverterTest {
   }
 
   @Test
+  void testSerialBoundariesUseGoogleSheetsCalendarAndTimeOfDay() {
+    assertEquals(LocalTime.MIDNIGHT, asLocalTime(1.0))
+    assertEquals(LocalTime.NOON, asLocalTime(1.5))
+    assertEquals(LocalTime.NOON, asLocalTime(-0.5))
+    assertEquals(LocalDate.of(1899, 12, 29), asLocalDate(-0.5))
+    assertEquals(asLocalDate(-0.5), asLocalDateTime(-0.5).toLocalDate())
+    assertEquals(LocalDate.of(1900, 3, 1), asLocalDate(61))
+    LocalDateTime value = LocalDateTime.of(2024, 1, 1, 23, 59, 59)
+    assertEquals(value, asLocalDateTime(asSerial(value)))
+  }
+
+  @Test
   void testLocalTimeAsSerial() {
     assertEquals(0.7678703704, asSerial(LocalTime.parse('18:25:44')))
   }

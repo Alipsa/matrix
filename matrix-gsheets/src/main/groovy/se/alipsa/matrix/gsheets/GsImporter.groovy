@@ -44,7 +44,7 @@ import se.alipsa.matrix.core.*
  * <ul>
  * <li>Empty cells are represented as missing values in the API response</li>
  * <li>Dates are stored as serial numbers (days since 1899-12-30)</li>
- * <li>Google Sheets has a 1900 leap year bug (treats 1900 as leap year)</li>
+ * <li>Serial day 0 is 1899-12-30; Sheets does not replicate Excel's 1900 leap-day bug</li>
  * <li>Trailing empty columns/rows may be omitted from the API response</li>
  * </ul>
  *

@@ -54,8 +54,8 @@ class GsConverter {
   }
 
   static LocalDate asLocalDate(Number val) {
-    def daysSinceEpoch = val.longValue()
-    EPOCH_DATE.plusDays(daysSinceEpoch)
+    long days = Math.floor(val.doubleValue()) as long
+    EPOCH_DATE.plusDays(days)
   }
 
   static List<LocalDate> toLocalDates(List<Object> list) {
@@ -92,12 +92,7 @@ class GsConverter {
     }
   }
 
-  // Google Sheets' serial number system has a bug where 1900 is
-  // incorrectly counted as a leap year, so we must subtract one day
-  // for dates after February 28, 1900. The simplest fix is to adjust the epoch.
-  // For dates after 1900-02-28, we need to add a day to the epoch to account
-  // for the incorrect leap day. A simpler way is to just add 2 days to the epoch
-  // and handle the day part.
+  // Google Sheets serials: day 0 = 1899-12-30, no Excel-style 1900 leap-day bug.
   static LocalDateTime asLocalDateTime(Number val) {
     // The integer part of the serial number is the number of days
     long days = val.longValue()
@@ -146,7 +141,7 @@ class GsConverter {
 
   static LocalTime asLocalTime(Number val) {
     // The serial number is the fraction of a day
-    long totalSeconds = ((val as BigDecimal) * SECONDS_PER_DAY).round() as long
+    long totalSeconds = Math.floorMod(((val as BigDecimal) * SECONDS_PER_DAY).round() as long, SECONDS_PER_DAY)
 
     // Create a LocalTime object from the total seconds
     LocalTime.ofSecondOfDay(totalSeconds)

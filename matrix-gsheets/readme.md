@@ -23,6 +23,14 @@ import se.alipsa.matrix.gsheets.GsheetsWriter
 String spreadsheetId = GsheetsWriter.write(empData)
 println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
 ```
+
+When you manage the authenticated `Sheets` service yourself (for example in an application or
+test), update an existing range without constructing credentials again:
+
+```groovy
+GsheetsWriter.updateWithService(spreadsheetId, 'Sheet1!A1', empData, sheetsService)
+```
+
 and import it like this:
 ```groovy
 import se.alipsa.matrix.core.Matrix
