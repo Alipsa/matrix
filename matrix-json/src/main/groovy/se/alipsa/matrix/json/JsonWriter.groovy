@@ -1,8 +1,7 @@
 package se.alipsa.matrix.json
 
-import groovy.transform.CompileStatic
-
 import tools.jackson.core.JsonGenerator
+import tools.jackson.core.StreamWriteFeature
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.ObjectWriter
 import tools.jackson.databind.json.JsonMapper
@@ -11,6 +10,8 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
 import java.nio.file.Path
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
@@ -18,7 +19,14 @@ import java.time.temporal.TemporalAccessor
  * Writes Matrix data to JSON format with optional column formatters.
  *
  * <p>Supports custom formatting for individual columns via closures and
- * automatic temporal data formatting with configurable date patterns.</p>
+ * automatic temporal data formatting with configurable date patterns. {@link LocalDate} and
+ * {@link LocalDateTime} use their configured patterns; {@code LocalTime}, {@code Instant},
+ * {@code ZonedDateTime}, {@code OffsetDateTime}, {@code OffsetTime}, {@code YearMonth},
+ * {@code Year}, and {@code MonthDay} use ISO-8601 {@code toString()} values. Any other
+ * {@link TemporalAccessor}, including {@code Month}, {@code DayOfWeek}, and chronology dates,
+ * uses its {@code toString()} value. {@link Date} and {@link java.sql.Timestamp} are ISO-8601 instants;
+ * {@link java.sql.Date} and {@link java.sql.Time} use {@code toString()}. Non-finite floating
+ * point values are written as JSON {@code null}.</p>
  *
  * <h3>Fluent API (recommended)</h3>
  * <pre>
@@ -31,10 +39,11 @@ import java.time.temporal.TemporalAccessor
  *
  * @see JsonReader
  */
-@CompileStatic
 class JsonWriter {
 
-  private static final JsonFactory FACTORY = JsonFactory.builder().build()
+  private static final JsonFactory FACTORY = JsonFactory.builder()
+      .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+      .build()
   private static final JsonMapper MAPPER = JsonMapper.builder(FACTORY).build()
 
   private JsonWriter() {
@@ -76,7 +85,7 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param columnFormatters map of column names to formatting closures
    * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @param dateFormat date format pattern for LocalDate columns (default: yyyy-MM-dd)
    * @return JSON string representation
    * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).asString()} instead
    */
@@ -93,7 +102,7 @@ class JsonWriter {
    * Write a Matrix to a JSON string with custom date formatting.
    *
    * @param matrix the Matrix to write
-   * @param dateFormat date format pattern for all temporal columns
+   * @param dateFormat date format pattern for LocalDate columns
    * @param indent whether to pretty print the JSON
    * @return JSON string representation
    * @deprecated Use {@code JsonWriter.write(matrix).dateFormat(pattern).asString()} instead
@@ -109,7 +118,8 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param outputFile file to write JSON to
    * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
+   * @throws IOException if writing fails. The writer is flushed before this method returns but
+   * remains open; the caller is responsible for closing it.
    * @deprecated Use {@code JsonWriter.write(matrix).to(file)} instead
    */
   @Deprecated
@@ -123,7 +133,8 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param outputPath path to write JSON to
    * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
+   * @throws IOException if writing fails. The writer is flushed before this method returns but
+   * remains open; the caller is responsible for closing it.
    * @deprecated Use {@code JsonWriter.write(matrix).to(path)} instead
    */
   @Deprecated
@@ -166,8 +177,9 @@ class JsonWriter {
    * @param writer the Writer to write JSON to
    * @param columnFormatters map of column names to formatting closures
    * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
-   * @throws IOException if writing fails
+   * @param dateFormat date format pattern for LocalDate columns (default: yyyy-MM-dd)
+   * @throws IOException if writing fails. The writer is flushed before this method returns but
+   * remains open; the caller is responsible for closing it.
    * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(writer)} instead
    */
   @Deprecated
@@ -186,7 +198,7 @@ class JsonWriter {
    * @param outputFile file to write JSON to
    * @param columnFormatters map of column names to formatting closures
    * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @param dateFormat date format pattern for LocalDate columns (default: yyyy-MM-dd)
    * @throws IOException if writing fails
    * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(file)} instead
    */
@@ -206,7 +218,7 @@ class JsonWriter {
    * @param outputPath path to write JSON to
    * @param columnFormatters map of column names to formatting closures
    * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @param dateFormat date format pattern for LocalDate columns (default: yyyy-MM-dd)
    * @throws IOException if writing fails
    * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(path)} instead
    */
@@ -226,7 +238,7 @@ class JsonWriter {
    * @param outputPath file path to write JSON to
    * @param columnFormatters map of column names to formatting closures
    * @param indent whether to pretty print the JSON
-   * @param dateFormat date format pattern for temporal columns (default: yyyy-MM-dd)
+   * @param dateFormat date format pattern for LocalDate columns (default: yyyy-MM-dd)
    * @throws IOException if writing fails
    * @deprecated Use the fluent API: {@code JsonWriter.write(matrix).columnFormatters(formatters).to(filePath)} instead
    */
@@ -241,12 +253,25 @@ class JsonWriter {
 
   /**
    * Write a single value to the Jackson JsonGenerator with appropriate type handling.
+   *
+   * <p>LocalDate and LocalDateTime use their configured patterns. LocalTime, Instant,
+   * ZonedDateTime, OffsetDateTime, OffsetTime, YearMonth, Year, and MonthDay use ISO-8601
+   * {@code toString()} values; every other TemporalAccessor uses {@code toString()}.</p>
    */
-  private static void writeValue(JsonGenerator gen, Object value, DateTimeFormatter dtf) {
+  private static void writeValue(JsonGenerator gen, Object value, DateTimeFormatter dateFormatter,
+      DateTimeFormatter dateTimeFormatter) {
     if (value == null) {
       gen.writeNull()
+    } else if (value instanceof LocalDate) {
+      gen.writeString(dateFormatter.format((LocalDate) value))
+    } else if (value instanceof LocalDateTime) {
+      gen.writeString(dateTimeFormatter == null ? value.toString() : dateTimeFormatter.format((LocalDateTime) value))
     } else if (value instanceof TemporalAccessor) {
-      gen.writeString(dtf.format((TemporalAccessor) value))
+      gen.writeString(value.toString())
+    } else if (value instanceof java.sql.Date || value instanceof java.sql.Time) {
+      gen.writeString(value.toString())
+    } else if (value instanceof Date) {
+      gen.writeString(((Date) value).toInstant().toString())
     } else if (value instanceof Boolean) {
       gen.writeBoolean((boolean) value)
     } else if (value instanceof Integer) {
@@ -258,9 +283,17 @@ class JsonWriter {
     } else if (value instanceof BigInteger) {
       gen.writeNumber((BigInteger) value)
     } else if (value instanceof Double) {
-      gen.writeNumber((double) value)
+      if (Double.isFinite((double) value)) {
+        gen.writeNumber((double) value)
+      } else {
+        gen.writeNull()
+      }
     } else if (value instanceof Float) {
-      gen.writeNumber((float) value)
+      if (Float.isFinite((float) value)) {
+        gen.writeNumber((float) value)
+      } else {
+        gen.writeNull()
+      }
     } else if (value instanceof Number) {
       gen.writeNumber(value.toString())
     } else {
@@ -294,6 +327,7 @@ class JsonWriter {
     private final Matrix matrix
     private boolean indentValue = false
     private String dateFormatValue = 'yyyy-MM-dd'
+    private String dateTimeFormatValue = null
     private Map<String, Closure> columnFormattersValue = [:]
 
     private WriteBuilder(Matrix matrix) {
@@ -325,13 +359,28 @@ class JsonWriter {
     }
 
     /**
-     * Set the date format pattern for temporal columns.
+     * Set the date format pattern for LocalDate values.
      *
      * @param pattern date format pattern (e.g. 'MM/dd/yyyy')
      * @return this builder for chaining
      */
     WriteBuilder dateFormat(String pattern) {
+      JsonWriteOptions.validatePattern('dateFormat', pattern)
       this.dateFormatValue = pattern
+      this
+    }
+
+    /**
+     * Set the date-time format pattern for LocalDateTime values.
+     *
+     * <p>A null pattern writes LocalDateTime values using their ISO-8601 {@code toString()} value.</p>
+     *
+     * @param pattern date-time format pattern, or null for ISO-8601 output
+     * @return this builder for chaining
+     */
+    WriteBuilder dateTimeFormat(String pattern) {
+      JsonWriteOptions.validatePattern('dateTimeFormat', pattern)
+      this.dateTimeFormatValue = pattern
       this
     }
 
@@ -343,6 +392,7 @@ class JsonWriter {
      * @return this builder for chaining
      */
     WriteBuilder formatter(String columnName, Closure formatter) {
+      JsonWriteOptions.validateColumnFormatters([(columnName): formatter])
       this.columnFormattersValue[columnName] = formatter
       this
     }
@@ -354,6 +404,7 @@ class JsonWriter {
      * @return this builder for chaining
      */
     WriteBuilder columnFormatters(Map<String, Closure> formatters) {
+      JsonWriteOptions.validateColumnFormatters(formatters)
       this.columnFormattersValue = formatters ?: [:]
       this
     }
@@ -362,7 +413,8 @@ class JsonWriter {
      * Write JSON to a File.
      *
      * @param file the output file
-     * @throws IOException if writing fails
+     * @throws IOException if writing fails. The writer is flushed before this method returns but
+     * remains open; the caller is responsible for closing it.
      */
     void to(File file) throws IOException {
       if (file == null) {
@@ -446,7 +498,8 @@ class JsonWriter {
           t.apply(k, v)
         }
       }
-      DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormatValue)
+      DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(dateFormatValue)
+      DateTimeFormatter dateTimeFormatter = dateTimeFormatValue == null ? null : DateTimeFormatter.ofPattern(dateTimeFormatValue)
 
       ObjectWriter objectWriter = indentValue
           ? MAPPER.writer().withDefaultPrettyPrinter()
@@ -470,7 +523,7 @@ class JsonWriter {
             gen.writeStartObject()
             for (int i = 0; i < colCount; i++) {
               gen.writeName(colNames[i])
-              writeValue(gen, row[i], dtf)
+              writeValue(gen, row[i], dateFormatter, dateTimeFormatter)
             }
             gen.writeEndObject()
           }

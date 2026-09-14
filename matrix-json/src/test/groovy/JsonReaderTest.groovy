@@ -304,6 +304,17 @@ class JsonReaderTest {
   }
 
   @Test
+  void testMatrixNameFromPercentEncodedUrl() {
+    File spaced = tempDir.resolve('my data.json').toFile()
+    spaced.text = '[{"id":1}]'
+    assertEquals('my data', JsonReader.read(spaced.toURI().toURL()).matrixName)
+
+    File encoded = tempDir.resolve('my%20data.json').toFile()
+    encoded.text = '[{"id":1}]'
+    assertEquals('my%20data', JsonReader.read(encoded.toURI().toURL()).matrixName)
+  }
+
+  @Test
   void testReadStringAlias() {
     String json = '[{"id":1,"name":"Test"}]'
     Matrix fromRead = JsonReader.read(json)
@@ -407,6 +418,42 @@ class JsonReaderTest {
       JsonReader.read('{"not": "an array"}')
     }
     assertTrue(ex.message.contains('Expected JSON array'), 'Error should mention array expectation')
+  }
+
+  @Test
+  void testNullAndNonObjectArrayElementsAreRejected() {
+    IllegalArgumentException nullElement = assertThrows(IllegalArgumentException) {
+      JsonReader.read('[{"a":1},null]')
+    }
+    assertEquals('JSON array element 1 is null; expected an object', nullElement.message)
+
+    ['[1,2]', '[[1,2]]', '["x"]'].each { String json ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) { JsonReader.read(json) }
+      assertTrue(exception.message.contains('JSON array element 0 is'))
+      assertTrue(exception.message.contains('expected an object'))
+    }
+  }
+
+  @Test
+  void testNullObjectPropertyRemainsNull() {
+    Matrix matrix = JsonReader.read('[{"a":1},{"a":null}]')
+
+    assertEquals(['a'], matrix.columnNames())
+    assertEquals([1, null], matrix.column('a'))
+  }
+
+  @Test
+  void testTrailingContentIsRejected() {
+    ['[{"a":1}] {"b":2}', '[{"a":1}]]'].each { String json ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) { JsonReader.read(json) }
+      assertTrue(exception.message.startsWith('Unexpected content after JSON array:'))
+    }
+    IllegalArgumentException invalidText = assertThrows(IllegalArgumentException) {
+      JsonReader.read('[{"a":1}] xyz')
+    }
+    assertTrue(invalidText.message.startsWith('Unexpected content after JSON array:'))
+    assertNotNull(invalidText.cause)
+    assertEquals(1, JsonReader.read('[{"a":1}] \n').rowCount())
   }
 
   @Test

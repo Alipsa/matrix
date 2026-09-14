@@ -13,6 +13,7 @@ import org.apache.commons.io.input.CloseShieldInputStream
 import org.apache.commons.io.input.CloseShieldReader
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.SourceNameUtil
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -62,8 +63,6 @@ import java.text.NumberFormat
 @CompileStatic
 class CsvReader {
 
-  private static final String PATH_SEPARATOR = '/'
-  private static final String EXTENSION_SEPARATOR = '.'
   private static final String DEFAULT_MATRIX_NAME = 'matrix'
   private static final Charset UTF_32LE = Charset.forName('UTF-32LE')
   private static final Charset UTF_32BE = Charset.forName('UTF-32BE')
@@ -344,7 +343,7 @@ class CsvReader {
   static Matrix read(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (InputStream source = url.openStream()) {
       InputStream input = byteInput(source, charset, false)
-      parse(tableName(url), new InputStreamReader(input, charset), firstRowAsHeader, format)
+      parse(SourceNameUtil.matrixName(url), new InputStreamReader(input, charset), firstRowAsHeader, format)
     }
   }
 
@@ -402,7 +401,7 @@ class CsvReader {
   static Matrix read(File file, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (InputStream source = new FileInputStream(file)) {
       InputStream input = byteInput(source, charset, false)
-      parse(tableName(file), new InputStreamReader(input, charset), firstRowAsHeader, format)
+      parse(SourceNameUtil.matrixName(file), new InputStreamReader(input, charset), firstRowAsHeader, format)
     }
   }
 
@@ -559,54 +558,6 @@ class CsvReader {
 
   private static List<String> emptyHeader(int width) {
     Collections.nCopies(width, '').toList()
-  }
-
-  /**
-   * Extracts a table name from a URL by removing the path and file extension.
-   *
-   * @param url URL to extract the name from
-   * @return file name without extension, or the path if no file name is present
-   */
-  @groovy.transform.PackageScope
-  static String tableName(URL url) {
-    String name
-    try {
-      name = url.toURI().path
-    } catch (URISyntaxException ignored) {
-      // Fall through to URL accessors, which also work for non-RFC URL strings.
-    }
-    if (!name) {
-      name = url.file ?: url.path ?: ''
-      int cutIndex = name.indexOf('?')
-      if (cutIndex < 0) {
-        cutIndex = name.indexOf('#')
-      }
-      if (cutIndex >= 0) {
-        name = name.substring(0, cutIndex)
-      }
-    }
-    if (name.contains(PATH_SEPARATOR)) {
-      name = name.substring(name.lastIndexOf(PATH_SEPARATOR) + 1, name.length())
-    }
-    if (name.contains(EXTENSION_SEPARATOR)) {
-      name = name.substring(0, name.lastIndexOf(EXTENSION_SEPARATOR))
-    }
-    name
-  }
-
-  /**
-   * Extracts a table name from a File by removing the file extension.
-   *
-   * @param file File to extract the name from
-   * @return file name without extension
-   */
-  @groovy.transform.PackageScope
-  static String tableName(File file) {
-    def name = file.getName()
-    if (name.contains(EXTENSION_SEPARATOR)) {
-      name = name.substring(0, name.lastIndexOf(EXTENSION_SEPARATOR))
-    }
-    name
   }
 
   private static ReadBuilder buildReadBuilder(CsvReadOptions options, String sourceName, boolean useFallbackMatrixName) {
@@ -972,7 +923,7 @@ class CsvReader {
      */
     Matrix from(File file) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      String name = matrixName ? matrixName : tableName(file)
+      String name = matrixName ? matrixName : SourceNameUtil.matrixName(file)
       try (InputStream source = new FileInputStream(file)) {
         InputStream input = byteInput(source, charset, false)
         convertIfNeeded(parse(name, new InputStreamReader(input, charset), firstRowAsHeader, apacheFormat))
@@ -999,7 +950,7 @@ class CsvReader {
      */
     Matrix from(URL url) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      String name = matrixName ? matrixName : tableName(url)
+      String name = matrixName ? matrixName : SourceNameUtil.matrixName(url)
       try (InputStream source = url.openStream()) {
         InputStream input = byteInput(source, charset, false)
         convertIfNeeded(parse(name, new InputStreamReader(input, charset), firstRowAsHeader, apacheFormat))

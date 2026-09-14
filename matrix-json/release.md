@@ -7,6 +7,15 @@
   - com.fasterxml.jackson.core:jackson-databind 2.22.1 -> tools.jackson.core:jackson-databind 3.2.2
 - Migrate matrix-json internals from Jackson 2 (`com.fasterxml.jackson.*`) to Jackson 3 (`tools.jackson.*`).
   Production API (`JsonReader`/`JsonWriter`) is unchanged.
+- `JsonWriter.to(Writer)` now flushes but leaves caller-owned writers open. `LocalDateTime` and
+  other temporal values are serialized losslessly, with a new `dateTimeFormat` option for
+  `LocalDateTime`; Java SQL date/time types and legacy `Date` values have explicit stable output.
+- Reject invalid date patterns and invalid column formatter/type options at configuration time.
+- Reject null, scalar, and nested-array JSON array elements, as well as content after a JSON array,
+  with `IllegalArgumentException`.
+- Write non-finite floating-point values as JSON `null`.
+- Derive file and URL matrix names through matrix-core's `SourceNameUtil`, including decoded URL
+  paths. Requires matrix-core 3.9.0 or later.
 
 ## v2.3.1, 2026-07-09
 - Dependency update: com.fasterxml.jackson:jackson-bom 2.21.2 -> 2.22.0

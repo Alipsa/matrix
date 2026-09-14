@@ -2,6 +2,9 @@
 
 ## 3.9.0, in progress
 
+### Utilities
+- Added `SourceNameUtil` for consistent Matrix-name derivation from files and decoded URL paths.
+
 ### New Matrix methods
 - `toHtml(attr: [caption: '…'])` writes an escaped `<caption>` as the first child of the table. The `caption` key is consumed rather than emitted as a table attribute.
 - `content(int rows, boolean fromHead)` renders a titled, header-bearing text table using the requested number of rows from the head or tail.

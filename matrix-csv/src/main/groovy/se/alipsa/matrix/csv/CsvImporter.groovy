@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.SourceNameUtil
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -309,11 +310,11 @@ class CsvImporter {
    *
    * @param url URL to extract the name from
    * @return file name without extension, or the path if no file name is present
-   * @deprecated Delegates to {@link CsvReader#tableName(URL)}
+   * @deprecated Delegates to {@link SourceNameUtil#matrixName(URL)}
    */
   @Deprecated
   static String tableName(URL url) {
-    return CsvReader.tableName(url)
+    SourceNameUtil.matrixName(url)
   }
 
   /**
@@ -323,11 +324,11 @@ class CsvImporter {
    *
    * @param file File to extract the name from
    * @return file name without extension
-   * @deprecated Delegates to {@link CsvReader#tableName(File)}
+   * @deprecated Delegates to {@link SourceNameUtil#matrixName(File)}
    */
   @Deprecated
   static String tableName(File file) {
-    return CsvReader.tableName(file)
+    SourceNameUtil.matrixName(file)
   }
 
 }

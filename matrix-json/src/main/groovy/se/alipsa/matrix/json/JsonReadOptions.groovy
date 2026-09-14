@@ -1,7 +1,5 @@
 package se.alipsa.matrix.json
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
@@ -11,7 +9,6 @@ import java.nio.charset.StandardCharsets
 /**
  * Typed options for JSON read operations via the SPI.
  */
-@CompileStatic
 class JsonReadOptions {
 
   private static final String OPT_CHARSET = 'charset'
@@ -51,6 +48,7 @@ class JsonReadOptions {
    * @return this options instance for chaining
    */
   JsonReadOptions types(List<Class> value) {
+    validateTypes(value)
     this.types = value
     this
   }
@@ -90,8 +88,13 @@ class JsonReadOptions {
       Object value = normalized.get(OPT_TYPES)
       if (value instanceof List) {
         result.types(value as List<Class>)
-      } else if (value != null && value.getClass().isArray()) {
+      } else if (value != null && value.class.isArray()) {
+        if (value.class != Class[]) {
+          throw new IllegalArgumentException("types must be a List<Class> or Class[] but was ${value.class}")
+        }
         result.types((value as Class[]).toList())
+      } else if (value != null) {
+        throw new IllegalArgumentException("types must be a List<Class> or Class[] but was ${value.class}")
       }
     }
     if (normalized.containsKey('datetimeformat')) {
@@ -101,6 +104,17 @@ class JsonReadOptions {
       }
     }
     result
+  }
+
+  private static void validateTypes(List value) {
+    if (value == null) {
+      return
+    }
+    value.eachWithIndex { Object element, int index ->
+      if (!(element instanceof Class)) {
+        throw new IllegalArgumentException("types[${index}] must be a Class but was ${element?.class}")
+      }
+    }
   }
 
   Map<String, ?> toMap() {

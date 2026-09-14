@@ -10,7 +10,15 @@ import se.alipsa.matrix.json.JsonReader
 import se.alipsa.matrix.json.JsonWriter
 
 import java.nio.file.Path
+import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.Month
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
@@ -18,6 +26,28 @@ class JsonWriterTest {
 
   @TempDir
   Path tempDir
+
+  private static class RecordingWriter extends Writer {
+    final StringWriter delegate = new StringWriter()
+    boolean closed = false
+    int flushCount = 0
+
+    @Override
+    void write(char[] chars, int offset, int length) {
+      delegate.write(chars, offset, length)
+    }
+
+    @Override
+    void flush() {
+      flushCount++
+      delegate.flush()
+    }
+
+    @Override
+    void close() {
+      closed = true
+    }
+  }
 
   @Test
   void testWriteString() {
@@ -375,6 +405,29 @@ class JsonWriterTest {
   }
 
   @Test
+  void testWriterIsFlushedAndLeftOpen() {
+    Matrix matrix = Matrix.builder().data(a: [1]).build()
+    File file = tempDir.resolve('writer.json').toFile()
+    BufferedWriter writer = new BufferedWriter(new FileWriter(file))
+
+    JsonWriter.write(matrix).to(writer)
+    writer.write('')
+    writer.close()
+
+    assertEquals('[{"a":1}]', file.text)
+  }
+
+  @Test
+  void testWriterIsNotClosedByJsonWriter() {
+    RecordingWriter writer = new RecordingWriter()
+
+    JsonWriter.write(Matrix.builder().data(a: [1]).build()).to(writer)
+
+    assertFalse(writer.closed)
+    assertTrue(writer.flushCount > 0)
+  }
+
+  @Test
   void testFluentAsString() {
     Matrix matrix = Matrix.builder().data(id: [1]).build()
 
@@ -414,6 +467,77 @@ class JsonWriterTest {
     String json = JsonWriter.write(matrix).dateFormat('dd/MM/yyyy').asString()
 
     assertTrue(json.contains('15/06/2024'), 'Should format date with custom pattern')
+  }
+
+  @Test
+  void testTemporalValuesAreWrittenLosslessly() {
+    Matrix matrix = Matrix.builder().data(
+        localDate: [LocalDate.of(2024, 1, 2)],
+        localDateTime: [LocalDateTime.of(2024, 1, 2, 3, 4, 5)],
+        localTime: [LocalTime.of(3, 4, 5)],
+        instant: [Instant.parse('2024-01-02T03:04:05Z')],
+        zoned: [ZonedDateTime.of(2024, 1, 2, 3, 4, 5, 0, ZoneId.of('UTC'))],
+        yearMonth: [YearMonth.of(2024, 1)],
+        month: [Month.JANUARY],
+        day: [DayOfWeek.MONDAY],
+        utilDate: [new Date(0)],
+        timestamp: [new java.sql.Timestamp(0)],
+        sqlDate: [java.sql.Date.valueOf('2024-01-02')],
+        sqlTime: [java.sql.Time.valueOf('03:04:05')]
+    ).build()
+
+    String json = JsonWriter.write(matrix).asString()
+
+    assertTrue(json.contains('"localDate":"2024-01-02"'))
+    assertTrue(json.contains('"localDateTime":"2024-01-02T03:04:05"'))
+    assertTrue(json.contains('"localTime":"03:04:05"'))
+    assertTrue(json.contains('"instant":"2024-01-02T03:04:05Z"'))
+    assertTrue(json.contains('"zoned":"2024-01-02T03:04:05Z[UTC]"'))
+    assertTrue(json.contains('"yearMonth":"2024-01"'))
+    assertTrue(json.contains('"month":"JANUARY"'))
+    assertTrue(json.contains('"day":"MONDAY"'))
+    assertTrue(json.contains('"utilDate":"1970-01-01T00:00:00Z"'))
+    assertTrue(json.contains('"timestamp":"1970-01-01T00:00:00Z"'))
+    assertTrue(json.contains('"sqlDate":"2024-01-02"'))
+    assertTrue(json.contains('"sqlTime":"03:04:05"'))
+  }
+
+  @Test
+  void testDateTimeFormatOnlyAppliesToLocalDateTime() {
+    Matrix matrix = Matrix.builder().data(
+        date: [LocalDate.of(2024, 1, 2)],
+        dateTime: [LocalDateTime.of(2024, 1, 2, 3, 4, 5)]
+    ).build()
+
+    String json = JsonWriter.write(matrix)
+        .dateFormat('dd/MM/yyyy')
+        .dateTimeFormat('yyyy/MM/dd HH:mm')
+        .asString()
+
+    assertTrue(json.contains('"date":"02/01/2024"'))
+    assertTrue(json.contains('"dateTime":"2024/01/02 03:04"'))
+  }
+
+  @Test
+  void testDatePatternValidationFailsAtConfigurationTime() {
+    assertThrows(IllegalArgumentException) { JsonWriter.write(Matrix.builder().build()).dateFormat(null) }
+    assertThrows(IllegalArgumentException) { JsonWriter.write(Matrix.builder().build()).dateFormat('') }
+    assertThrows(IllegalArgumentException) { JsonWriter.write(Matrix.builder().build()).dateFormat('not a pattern') }
+  }
+
+  @Test
+  void testNonFiniteFloatingPointValuesAreWrittenAsNull() {
+    Matrix matrix = Matrix.builder().data(
+        nan: [Double.NaN],
+        infinity: [Double.POSITIVE_INFINITY],
+        floatNan: [Float.NaN]
+    ).build()
+
+    String json = JsonWriter.write(matrix).asString()
+    Matrix reread = JsonReader.read(json)
+
+    assertEquals('[{"nan":null,"infinity":null,"floatNan":null}]', json)
+    assertEquals([null, null, null], reread.row(0).toList())
   }
 
   @Test

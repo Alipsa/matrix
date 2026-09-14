@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -13,6 +14,7 @@ import se.alipsa.matrix.json.JsonWriteOptions
 
 import java.nio.file.Path
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class JsonFormatProviderTest {
 
@@ -59,10 +61,13 @@ class JsonFormatProviderTest {
   }
 
   @Test
-  void testWriteOptionsIgnoreNullDateFormatAndColumnFormatters() {
-    JsonWriteOptions options = JsonWriteOptions.fromMap([dateFormat: null, columnFormatters: null])
+  void testWriteOptionsRejectNullDateFormatAndAcceptNullDateTimeFormat() {
+    assertThrows(IllegalArgumentException) {
+      JsonWriteOptions.fromMap([dateFormat: null])
+    }
+    JsonWriteOptions options = JsonWriteOptions.fromMap([dateTimeFormat: null, columnFormatters: null])
 
-    assertEquals('yyyy-MM-dd', options.dateFormat)
+    assertNull(options.dateTimeFormat)
     assertTrue(options.columnFormatters.isEmpty())
   }
 
@@ -115,6 +120,16 @@ class JsonFormatProviderTest {
     JsonReadOptions options = JsonReadOptions.fromMap([charset: null])
 
     assertEquals('UTF-8', options.charset.name())
+  }
+
+  @Test
+  void testDateTimeFormatWriteOption() {
+    File file = tempDir.resolve('date-time.json').toFile()
+    Matrix matrix = Matrix.builder().data(dateTime: [LocalDateTime.of(2024, 1, 2, 3, 4)]).build()
+
+    matrix.write([dateTimeFormat: 'HH:mm'], file)
+
+    assertTrue(file.text.contains('"03:04"'))
   }
 
   @Test
