@@ -225,7 +225,9 @@ class FExcelImporter implements Importer {
       Map<Object, Matrix> result = [:]
       sheetParams.each {
         String sheetName = it.sheetName
-        Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
+        Sheet sheet = workbook.findSheet(sheetName).orElseThrow {
+          new NoSuchElementException("Sheet '${sheetName}' does not exist in the workbook")
+        }
         int startRow = it.startRow as int
         int startCol
         if (ValueConverter.isNumeric(it.startCol, format)) {
@@ -240,7 +242,8 @@ class FExcelImporter implements Importer {
           endCol = SpreadsheetUtil.asColumnNumber(it.endCol as String)
         }
         boolean isDate1904 = workbook.isDate1904()
-        Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, it.firstRowAsColNames as Boolean, isDate1904)
+        boolean firstRowAsColNames = it.containsKey('firstRowAsColNames') ? it.firstRowAsColNames as boolean : true
+        Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, firstRowAsColNames, isDate1904)
         String key = it['key'] ?: sheetName
         matrix.setMatrixName(key)
         result.put(key, matrix)
@@ -271,53 +274,65 @@ class FExcelImporter implements Importer {
     FExcelValueExtractor ext = new FExcelValueExtractor(sheet, isDate1904)
     int startColNumZI = startColNum - 1
     int endColNumZI = endColNum - 1
+    int ncol = endColNum - startColNum + 1
     List<String> colNames = []
     List<List> matrix = []
-    List rowList
-    int ncol = endColNum - startColNum + 1 // both start and end are included
+    int nextExpectedRow = startRowNum
+    boolean headerConsumed = !firstRowAsColNames
+    if (!firstRowAsColNames) {
+      colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
+    }
     try (Stream<Row> rows = sheet.openStream()) {
       rows.each { Row row ->
-        if (row.rowNum >= startRowNum && row.rowNum <= endRowNum) {
-          rowList = []
-          List list = row.asList()
-          if (colNames.size() == 0) {
-            if (firstRowAsColNames) {
-              list.eachWithIndex { Cell cell, int i ->
-                if (i >= startColNumZI && i <= endColNumZI) {
-                  colNames.add(cell.rawValue)
-                }
-              }
-              return
-            }
-            colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
-          }
-          list.eachWithIndex { cell, cIdx ->
-            if (cIdx >= startColNumZI && cIdx <= endColNumZI) {
-              if (cell == null) {
-                rowList.add(null)
-              } else {
-                rowList.add(ext.getObject(cell))
-              }
-            }
-          }
-          if (rowList.size() < ncol) {
-            def padSize = ncol - rowList.size()
-            (1..padSize).each {
-              rowList << null
-            }
-          }
-          matrix.add(rowList)
+        if (row.rowNum < startRowNum || row.rowNum > endRowNum) {
+          return
         }
+        while (nextExpectedRow < row.rowNum) {
+          if (headerConsumed) {
+            matrix.add(nullRow(ncol))
+          } else {
+            colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
+            headerConsumed = true
+          }
+          nextExpectedRow++
+        }
+        nextExpectedRow = row.rowNum + 1
+        if (!headerConsumed) {
+          for (int c = startColNumZI; c <= endColNumZI; c++) {
+            Cell cell = row.getOptionalCell(c).orElse(null)
+            String raw = cell?.rawValue
+            colNames.add(raw == null || raw.isBlank() ? "c${c + 1}".toString() : raw)
+          }
+          headerConsumed = true
+          return
+        }
+        List rowList = new ArrayList(ncol)
+        for (int c = startColNumZI; c <= endColNumZI; c++) {
+          Cell cell = row.getOptionalCell(c).orElse(null)
+          rowList.add(cell == null ? null : ext.getObject(cell))
+        }
+        matrix.add(rowList)
       }
+    }
+    if (!headerConsumed) {
+      colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
     }
     Matrix m = Matrix.builder()
         .matrixName(sheet.name)
         .columnNames(colNames)
         .rows(matrix)
-        .types([Object] * colNames.size())
+        .types([Object] * ncol)
         .build()
     m.metaData.isDate1904 = isDate1904
     m
+  }
+
+  private static List nullRow(int ncol) {
+    List row = new ArrayList(ncol)
+    for (int i = 0; i < ncol; i++) {
+      row.add(null)
+    }
+    row
   }
 
 }

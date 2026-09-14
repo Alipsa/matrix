@@ -13,7 +13,6 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -196,9 +195,9 @@ class OdsXmlWriter {
       }
       case LocalDate -> writeDateCell(writer, ((LocalDate) value).format(DateTimeFormatter.ISO_LOCAL_DATE))
       case LocalDateTime -> writeDateCell(writer, ((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-      case ZonedDateTime -> writeDateCell(writer, ((ZonedDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-      case OffsetDateTime -> writeDateCell(writer, ((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-      case Date -> writeDateCell(writer, ((Date) value).toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+      case ZonedDateTime -> writeDateCell(writer, ((ZonedDateTime) value).toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+      case OffsetDateTime -> writeDateCell(writer, ((OffsetDateTime) value).toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+      case Date -> writeDateCell(writer, SpreadsheetUtil.toLocalDateTime((Date) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
       case Duration -> {
         String v = value as String
         writer.writeStartElement(NS_TABLE, EL_TABLE_CELL, TABLE_URN)

@@ -23,7 +23,7 @@ class SpreadsheetExporter {
    *
    * @param file the target file
    * @param data the Matrix to export
-   * @return the absolute path of the created file
+   * @return the actual name of the sheet created (illegal characters replaced by space)
    * @deprecated Use {@link SpreadsheetWriter#write(Matrix, File)} instead
    */
   @Deprecated
@@ -37,7 +37,7 @@ class SpreadsheetExporter {
    * @param file the target file
    * @param data the Matrix to export
    * @param sheetName the name for the sheet
-   * @return the absolute path of the created file
+   * @return the actual name of the sheet created (illegal characters replaced by space)
    * @deprecated Use {@link SpreadsheetWriter#write(Matrix, File, String)} instead
    */
   @Deprecated
@@ -51,7 +51,7 @@ class SpreadsheetExporter {
    * @param file the target file
    * @param data list of Matrix objects to export
    * @param sheetNames list of sheet names
-   * @return list of absolute paths
+   * @return the actual names of the sheets created (illegal characters replaced by space)
    * @deprecated Use {@link SpreadsheetWriter#writeSheets(List, File, List)} instead
    */
   @Deprecated
@@ -63,7 +63,7 @@ class SpreadsheetExporter {
    * Export multiple Matrix objects using a parameter map.
    *
    * @param params map with keys: 'file', 'data', 'sheetNames'
-   * @return list of absolute paths
+   * @return the actual names of the sheets created (illegal characters replaced by space)
    * @deprecated Use {@link SpreadsheetWriter#writeSheets(Map)} instead
    */
   @Deprecated

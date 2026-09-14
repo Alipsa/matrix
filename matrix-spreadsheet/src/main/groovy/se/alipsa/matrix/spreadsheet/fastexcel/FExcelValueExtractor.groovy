@@ -11,14 +11,17 @@ import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.regex.Pattern
 
 /**
  * A value extractor specialized in extracting info from an Excel file
  */
 class FExcelValueExtractor extends ValueExtractor {
 
-   private static final String HOUR_MARKER = 'hh'
+   private static final Pattern FORMAT_LITERALS = ~/"[^"]*"|\\./
+   private static final Pattern TIME_MARKER = ~/(?i)(\[h+\]|h+|s+|am\/pm|a\/p)/
    private final Sheet sheet
    private final boolean isDate1904
 
@@ -35,7 +38,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    BigDecimal getBigDecimal(Row row, int column) {
-      row == null ? null : getBigDecimal(getObject(row.getCell(column)))
+      row == null ? null : getBigDecimal(getObject(FExcelUtil.cellAt(row, column)))
    }
 
    Float getFloat(int row, int column) {
@@ -56,7 +59,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Integer getInteger(Row row, int column) {
-      return row == null ? null : getInt(getObject(row.getCell(column)))
+      return row == null ? null : getInt(getObject(FExcelUtil.cellAt(row, column)))
    }
 
    String getString(int row, int column) {
@@ -67,7 +70,7 @@ class FExcelValueExtractor extends ValueExtractor {
       if (row == null) {
         return null
       }
-      Object val = getObject(row.getCell(column))
+      Object val = getObject(FExcelUtil.cellAt(row, column))
       return val == null ? null : String.valueOf(val)
    }
 
@@ -80,7 +83,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Long getLong(Row row, int column) {
-      return row == null ? null : getLong(getObject(row.getCell(column)))
+      return row == null ? null : getLong(getObject(FExcelUtil.cellAt(row, column)))
    }
 
    Boolean getBoolean(int row, int column) {
@@ -89,11 +92,11 @@ class FExcelValueExtractor extends ValueExtractor {
 
    @SuppressWarnings('BooleanMethodReturnsNull')
    Boolean getBoolean(Row row, int column) {
-      return row == null ? null : getBoolean(getObject(row.getCell(column)))
+      return row == null ? null : getBoolean(getObject(FExcelUtil.cellAt(row, column)))
    }
 
    LocalDateTime getLocalDateTime(Row row, int column) {
-      return row == null ? null : getLocalDateTime(row.getCell(column))
+      return row == null ? null : getLocalDateTime(FExcelUtil.cellAt(row, column))
    }
 
    LocalDateTime getLocalDateTime(Cell cell) {
@@ -101,7 +104,13 @@ class FExcelValueExtractor extends ValueExtractor {
       if (value == null) {
         return null
       }
-      return LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.DATE_TIME_FORMATTER)
+      if (value instanceof LocalDateTime) {
+         return value
+      }
+      if (value instanceof LocalDate) {
+         return value.atStartOfDay()
+      }
+      LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.DATE_TIME_FORMATTER)
    }
 
    /**
@@ -120,7 +129,7 @@ class FExcelValueExtractor extends ValueExtractor {
          case CellType.NUMBER -> {
             if (FDateUtil.isADateFormat(formatId, formatString)) {
                def date = cell.asDate()
-               if (!formatString.toLowerCase().contains(HOUR_MARKER) && date.hour == 0 && date.minute == 0) {
+               if (!hasTimeComponent(formatString) && date.hour == 0 && date.minute == 0 && date.second == 0) {
                   yield date.toLocalDate()
                }
                yield date
@@ -140,7 +149,7 @@ class FExcelValueExtractor extends ValueExtractor {
       String dateFormatString = cell.dataFormatString
       if (FDateUtil.isADateFormat(dataFormatId, dateFormatString)) {
          def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
-         if (!dateFormatString.toLowerCase().contains(HOUR_MARKER) && date.hour == 0 && date.minute == 0) {
+         if (!hasTimeComponent(dateFormatString) && date.hour == 0 && date.minute == 0 && date.second == 0) {
             return date.toLocalDate()
          }
          return date
@@ -158,6 +167,18 @@ class FExcelValueExtractor extends ValueExtractor {
       } catch (NumberFormatException ignored) {
          rawValue
       }
+   }
+
+   /**
+    * True when an Excel number format displays a time component, ignoring quoted and escaped literals.
+    */
+   @PackageScope
+   static boolean hasTimeComponent(String formatString) {
+      if (formatString == null) {
+         return false
+      }
+      String codes = FORMAT_LITERALS.matcher(formatString).replaceAll('')
+      TIME_MARKER.matcher(codes).find()
    }
 
 }

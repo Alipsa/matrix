@@ -1,5 +1,8 @@
 package se.alipsa.matrix.spreadsheet
 
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
@@ -65,7 +68,8 @@ class SpreadsheetUtil {
    /**
     * Create unique sheet names from a list, handling collision after sanitization.
     * If two names become identical after sanitization (e.g., "A/B" and "A?B" both become "A B"),
-    * numeric suffixes are appended to ensure uniqueness.
+    * numeric suffixes are appended to ensure uniqueness. Names are compared case-insensitively,
+    * as Excel and LibreOffice do.
     *
     * @param names the proposed sheet names
     * @return list of unique sanitized sheet names in the same order
@@ -77,7 +81,7 @@ class SpreadsheetUtil {
          String safeName = createValidSheetName(name)
          String uniqueName = safeName
          int suffix = 1
-         while (usedNames.contains(uniqueName)) {
+         while (usedNames.contains(uniqueName.toLowerCase(Locale.ROOT))) {
             String candidate = "${safeName}${suffix}"
             // Ensure the suffixed name also respects the sheet-name length limit
             if (candidate.length() > MAX_SHEET_NAME_LENGTH) {
@@ -87,7 +91,7 @@ class SpreadsheetUtil {
             uniqueName = candidate
             suffix++
          }
-         usedNames.add(uniqueName)
+         usedNames.add(uniqueName.toLowerCase(Locale.ROOT))
          result.add(uniqueName)
       }
       result
@@ -103,6 +107,19 @@ class SpreadsheetUtil {
          header.add("c$i".toString())
       }
       header
+   }
+
+   /**
+    * Convert a date, including SQL date/time subclasses, to a local date-time in the system default zone.
+    *
+    * @param date the date to convert, may be null
+    * @return the local date-time or null
+    */
+   static LocalDateTime toLocalDateTime(Date date) {
+      if (date == null) {
+         return null
+      }
+      Instant.ofEpochMilli(date.time).atZone(ZoneId.systemDefault()).toLocalDateTime()
    }
 
    /**

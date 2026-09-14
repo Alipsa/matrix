@@ -14,6 +14,8 @@ import se.alipsa.matrix.spreadsheet.fastods.Sheet
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 import javax.xml.stream.XMLStreamReader
 
@@ -64,6 +66,7 @@ final class OdsStreamDataReader extends OdsDataReader {
   private static final String EL_TABLE_ROW = 'table-row'
   private static final String EL_TABLE_CELL = 'table-cell'
   private static final String EL_COVERED_TABLE_CELL = 'covered-table-cell'
+  private static final String EL_ANNOTATION = 'annotation'
   private static final String ATTR_NUMBER_COLUMNS_REPEATED = 'number-columns-repeated'
   private static final String NEWLINE = '\n'
 
@@ -309,15 +312,22 @@ final class OdsStreamDataReader extends OdsDataReader {
   /**
    * Extract date/datetime value from office:date-value attribute.
    * Returns LocalDate for date-only values (10 chars: YYYY-MM-DD),
-   * LocalDateTime for datetime values (19+ chars: YYYY-MM-DDTHH:MM:SS).
+   * LocalDateTime for datetime values (19+ chars: YYYY-MM-DDTHH:MM:SS). Offset values are
+   * accepted and converted to their local wall-clock time.
    */
   private static Object extractDateValue(final XMLStreamReader reader, final String officeUrn) {
     String v = reader.getAttributeValue(officeUrn, 'date-value')
     if (v == null) {
       return null
     }
-    // Date format: YYYY-MM-DD (10 chars) vs DateTime: YYYY-MM-DDTHH:MM:SS
-    return v.length() == 10 ? LocalDate.parse(v) : LocalDateTime.parse(v)
+    if (v.length() == 10) {
+      return LocalDate.parse(v)
+    }
+    try {
+      return LocalDateTime.parse(v)
+    } catch (DateTimeParseException ignored) {
+      return OffsetDateTime.parse(v).toLocalDateTime()
+    }
   }
 
   /**
@@ -343,14 +353,15 @@ final class OdsStreamDataReader extends OdsDataReader {
   private static String extractTextContent(final XMLStreamReader reader, final String textUrn) {
     // Pre-allocate typical cell text size to reduce StringBuilder resizing
     StringBuilder text = new StringBuilder(64)
+    boolean inParagraph = false
 
     while (reader.hasNext()) {
       int eventType = reader.next()
 
       // Fast path: character data (most common in text cells)
-      if (eventType == XMLStreamReader.CHARACTERS ||
+      if (inParagraph && (eventType == XMLStreamReader.CHARACTERS ||
           eventType == XMLStreamReader.CDATA ||
-          eventType == XMLStreamReader.SPACE) {
+          eventType == XMLStreamReader.SPACE)) {
         text.append(reader.getText())
         continue
       }
@@ -358,9 +369,16 @@ final class OdsStreamDataReader extends OdsDataReader {
       // Element handling
       if (eventType == XMLStreamReader.START_ELEMENT) {
         String localName = reader.localName  // Cache to avoid repeated calls
+        if (localName == EL_ANNOTATION && OFFICE_URN == reader.namespaceURI) {
+          skipElement(reader, OFFICE_URN, EL_ANNOTATION)
+          continue
+        }
         switch (localName) {
           // Separate multiple <text:p> blocks with newline
-          case 'p' -> appendParagraphBreak(text)
+          case 'p' -> {
+            appendParagraphBreak(text)
+            inParagraph = true
+          }
           case 's' -> {
             // <text:s c="N"/> ⇒ N spaces (default 1)
             int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
@@ -369,14 +387,31 @@ final class OdsStreamDataReader extends OdsDataReader {
           case 'line-break' -> text.append(NEWLINE)
           case 'tab' -> text.append('\t')
         }
-      } else if (eventType == XMLStreamReader.END_ELEMENT && reader.localName == EL_TABLE_CELL) {
-        // Stop at end of cell (covers empty/self-closing cells)
-        break
+      } else if (eventType == XMLStreamReader.END_ELEMENT) {
+        if (reader.localName == 'p' && TEXT_URN == reader.namespaceURI) {
+          inParagraph = false
+        } else if (reader.localName == EL_TABLE_CELL) {
+          // Stop at end of cell (covers empty/self-closing cells)
+          break
+        }
       }
     }
 
     String s = text.toString()
     return s.isEmpty() ? null : s
+  }
+
+  /** Advance the reader past the matching end element of the current start element. */
+  private static void skipElement(final XMLStreamReader reader, final String namespaceUri, final String localName) {
+    int depth = 1
+    while (reader.hasNext() && depth > 0) {
+      int event = reader.next()
+      if (event == XMLStreamReader.START_ELEMENT && reader.localName == localName && namespaceUri == reader.namespaceURI) {
+        depth++
+      } else if (event == XMLStreamReader.END_ELEMENT && reader.localName == localName && namespaceUri == reader.namespaceURI) {
+        depth--
+      }
+    }
   }
 
   /**

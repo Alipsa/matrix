@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
+import java.time.Instant
+import java.time.ZoneId
+
 class SpreadSheetUtilTest {
 
     @Test
@@ -75,6 +78,22 @@ class SpreadSheetUtilTest {
         def mixed = SpreadsheetUtil.createUniqueSheetNames(['Sheet1', 'Sheet/1', 'Sheet2'])
         assertEquals(3, mixed.size())
         assertTrue(mixed[0] != mixed[1], 'Sanitized names should be unique')
+    }
+
+    @Test
+    void testCreateUniqueSheetNamesIsCaseInsensitive() {
+        assertEquals(['Foo', 'foo1', 'FOO2'], SpreadsheetUtil.createUniqueSheetNames(['Foo', 'foo', 'FOO']))
+        assertEquals(['Sheet1', 'sheet11'], SpreadsheetUtil.createUniqueSheetNames(['Sheet1', 'sheet1']))
+    }
+
+    @Test
+    void testToLocalDateTimeHandlesSqlDates() {
+        long millis = 1_700_000_000_000L
+        def expected = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        assertEquals(expected, SpreadsheetUtil.toLocalDateTime(new java.sql.Date(millis)))
+        assertEquals(expected, SpreadsheetUtil.toLocalDateTime(new java.sql.Timestamp(millis)))
+        assertEquals(expected, SpreadsheetUtil.toLocalDateTime(new java.sql.Time(millis)))
+        assertNull(SpreadsheetUtil.toLocalDateTime(null))
     }
 
     @Test

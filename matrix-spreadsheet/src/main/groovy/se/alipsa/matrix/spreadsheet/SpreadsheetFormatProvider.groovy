@@ -84,11 +84,16 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
       return readOptions
     }
     SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
+      int lastRow = resolveLastRow(reader, readOptions)
+      int lastCol = resolveLastColumn(reader, readOptions)
+      if (lastRow < 1 || lastCol < 1) {
+        throw new IllegalArgumentException("Sheet ${readOptions.sheetName ?: readOptions.sheetNumber} in ${file.name} is empty; specify endRow/endColumn explicitly or pick another sheet")
+      }
       if (readOptions.endRow == null) {
-        readOptions.endRow(resolveLastRow(reader, readOptions))
+        readOptions.endRow(lastRow)
       }
       if (!readOptions.hasEndColumn()) {
-        readOptions.endColumn(resolveLastColumn(reader, readOptions))
+        readOptions.endColumn(lastCol)
       }
     }
     readOptions
