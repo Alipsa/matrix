@@ -327,9 +327,11 @@ class GsUtil {
     }
     String cellRange = splitSheetAndCells(range)[1].toUpperCase(Locale.ROOT)
     String[] cellParts = cellRange.split(COLON, NOT_FOUND)
-    boolean rowOnly = cellParts.size() == 1
-        ? cellParts[0].matches(ROW_ONLY_PATTERN)
-        : cellParts.size() == RANGE_ENDPOINT_COUNT && cellParts[0].matches(ROW_ONLY_PATTERN) && cellParts[1].matches(ROW_ONLY_PATTERN)
+    // Row-only spans require the colon ('3:3'); a lone row number ('3') is not valid A1
+    // notation and the Sheets API rejects it. Single cells were already accepted by
+    // columnCountForRange above, so only a two-part row span reaches this check.
+    boolean rowOnly = cellParts.size() == RANGE_ENDPOINT_COUNT &&
+        cellParts[0].matches(ROW_ONLY_PATTERN) && cellParts[1].matches(ROW_ONLY_PATTERN)
     if (!rowOnly) {
       throw invalidRange(range)
     }

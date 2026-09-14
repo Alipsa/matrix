@@ -171,10 +171,11 @@ class GsUtilTest {
     // row-only ranges are valid write targets
     validateWriteRange('Sheet1!1:5')
     validateWriteRange('1:5')
-    validateWriteRange('Sheet1!3')
+    validateWriteRange('Sheet1!3:3')
     // but malformed input and bare sheet names are still rejected
     assertThrows(IllegalArgumentException, () -> validateWriteRange('hello B2 world'))
     assertThrows(IllegalArgumentException, () -> validateWriteRange('Sheet1'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('Sheet1!3'))
     assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:'))
     assertThrows(IllegalArgumentException, () -> validateWriteRange('A:1'))
     assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:B2:C3'))

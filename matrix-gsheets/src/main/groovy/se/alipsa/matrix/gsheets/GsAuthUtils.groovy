@@ -55,6 +55,7 @@ class GsAuthUtils {
   private static final int SCOPE_CACHE_SIZE = 8
   private static final Object SCOPE_CACHE_LOCK = new Object()
   private static final String TOKENINFO_REJECTED = 'tokeninfo request was rejected'
+  private static final int TOKENINFO_TIMEOUT_MS = 10_000
   // Values are FutureTasks so the tokeninfo lookup itself runs outside SCOPE_CACHE_LOCK:
   // the lock only guards cache get/put, and FutureTask.run() guarantees the resolver is
   // invoked at most once per cached token no matter how many threads arrive concurrently.
@@ -249,7 +250,13 @@ class GsAuthUtils {
         log.debug('OAuth scope verification failure details', cause)
         return false
       }
-      throw e
+      // Unwrap unexpected resolver failures (e.g. RuntimeException) so they propagate
+      // unchanged, as they did before the resolution was delegated to a FutureTask;
+      // only genuinely checked, non-IO causes get wrapped.
+      if (cause instanceof RuntimeException || cause instanceof Error) {
+        throw cause
+      }
+      throw new IOException('Scope resolver failed unexpectedly', cause)
     }
     for (String req : (required ?: Collections.<String>emptyList())) {
       if (!isSatisfied(granted, req)) {
@@ -259,11 +266,17 @@ class GsAuthUtils {
     return true
   }
 
-  /** Fetches the scopes Google granted to an access token. */
+  /**
+   * Fetches the scopes Google granted to an access token. Connect and read timeouts are set so
+   * a hung request fails into the "verification unavailable" path instead of blocking
+   * {@link #hasAllScopes(GoogleCredentials, List)} (and thus authenticate()) indefinitely.
+   */
   @CompileDynamic
   static Set<String> fetchGrantedScopes(String token) throws IOException {
     def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token, UTF8)}").toURL()
     HttpURLConnection connection = (HttpURLConnection) url.openConnection()
+    connection.connectTimeout = TOKENINFO_TIMEOUT_MS
+    connection.readTimeout = TOKENINFO_TIMEOUT_MS
     try {
       if (connection.responseCode != HttpURLConnection.HTTP_OK) {
         String detail = ''

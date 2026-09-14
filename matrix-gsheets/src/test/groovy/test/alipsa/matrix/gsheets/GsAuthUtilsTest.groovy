@@ -105,6 +105,15 @@ class GsAuthUtilsTest {
   }
 
   @Test
+  void testHasAllScopesPropagatesUnexpectedResolverFailuresUnwrapped() {
+    GsAuthUtils.ScopeResolver boom = { String token -> throw new IllegalStateException('boom') } as GsAuthUtils.ScopeResolver
+
+    IllegalStateException exception = assertThrows(IllegalStateException,
+        () -> GsAuthUtils.hasAllScopes(credentials('boom-token'), [SCOPE_SHEETS], boom))
+    assertEquals('boom', exception.message)
+  }
+
+  @Test
   void testHasAllScopesResolvesOneTokenOnlyOnceAcrossConcurrentCallers() {
     GoogleCredentials creds = credentials('concurrent-token')
     AtomicInteger calls = new AtomicInteger()
