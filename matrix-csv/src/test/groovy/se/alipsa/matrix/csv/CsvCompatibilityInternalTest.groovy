@@ -48,16 +48,11 @@ class CsvCompatibilityInternalTest {
   }
 
   @Test
-  void urlNamesUseDecodedPathWithoutFormDecoding() {
-    assertEquals('sales report', CsvReader.tableName(new URI('https://example.test/a/sales%20report.csv?version=1.2#part').toURL()))
-    assertEquals('a+b c', CsvReader.tableName(new URI('https://example.test/a+b%20c.csv').toURL()))
-    assertEquals('archive.data', CsvReader.tableName(new URI('https://example.test/archive.data.csv').toURL()))
-    assertEquals('', CsvReader.tableName(new URI('https://example.test/').toURL()))
-    assertEquals('', CsvReader.tableName(new URI('https://example.test/path/').toURL()))
-    assertEquals('a b', CsvReader.tableName(new URL('https://example.test/a b.csv?version=1.2#part')))
-    assertEquals('a b%20c', CsvReader.tableName(new URL('https://example.test/a b%20c.csv')))
-    assertEquals('re?port', CsvReader.tableName(new URI('https://example.test/re%3Fport.csv').toURL()))
-    assertEquals('re#port', CsvReader.tableName(new URI('https://example.test/re%23port.csv').toURL()))
-    assertEquals('data', CsvReader.tableName(new URI('jar:file:/tmp/archive.jar!/nested/data.csv').toURL()))
+  void readerNamesAreDerivedFromSharedSourceNameUtility(@TempDir Path tempDir) {
+    File file = tempDir.resolve('sales report.csv').toFile()
+    Files.writeString(file.toPath(), 'a\n1\n')
+
+    assertEquals('sales report', CsvReader.read(file).matrixName)
+    assertEquals('sales report', CsvReader.read(file.toURI().toURL()).matrixName)
   }
 }

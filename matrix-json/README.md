@@ -5,14 +5,14 @@ JSON import and export functionality to and from a Matrix.
 
 ## Setup
 Matrix-json should work with any 5.x version of Groovy.
-It requires version 2.0.0 or later of the Matrix-core package (recommend se.alipsa.groovy:matrix-core:3.6.0).
+It requires version 3.9.0 or later of the Matrix-core package (recommend se.alipsa.matrix:matrix-core:3.9.0).
 Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.5'
-implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-json:2.2.0'
+implementation 'se.alipsa.matrix:matrix-core:3.9.0'
+implementation 'se.alipsa.matrix:matrix-json:2.3.2'
 ```
 ...and the following for Maven
 ```xml
@@ -25,12 +25,12 @@ implementation 'se.alipsa.matrix:matrix-json:2.2.0'
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.6.0</version>
+      <version>3.9.0</version>
   </dependency>  
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-json</artifactId>
-      <version>2.2.0</version>
+      <version>2.3.2</version>
   </dependency>
 </dependencies>
 ```
@@ -59,6 +59,7 @@ Matrix typed = Matrix.read([types: [Integer, String, LocalDate], dateTimeFormat:
 // Write JSON to a file
 data.write([indent: true], new File('pretty.json'))
 data.write([dateFormat: 'yyyy/MM/dd'], new File('custom.json'))
+data.write([dateTimeFormat: 'yyyy/MM/dd HH:mm'], new File('custom-date-time.json'))
 
 // Discover available options
 println Matrix.listReadOptions('json')
@@ -140,6 +141,16 @@ String formattedJson = JsonWriter.write(empData)
     .asString()
 ```
 
+`dateFormat` applies only to `LocalDate` values. `dateTimeFormat` applies only to
+`LocalDateTime` values and defaults to `null`, which writes ISO-8601 output. `LocalTime`,
+`Instant`, `ZonedDateTime`, `OffsetDateTime`, `OffsetTime`, `YearMonth`, `Year`, and `MonthDay`
+use ISO-8601 through `toString()`; other `TemporalAccessor` implementations, including `Month`,
+`DayOfWeek`, and `JapaneseDate`, use their `toString()` value. `java.util.Date` and
+`java.sql.Timestamp` are written as ISO-8601 instants, while
+`java.sql.Date` and `java.sql.Time` use `toString()`.
+
+Non-finite `Double` and `Float` values (`NaN` and infinities) are written as JSON `null`.
+
 ### Write targets
 
 The builder supports multiple output targets:
@@ -148,9 +159,20 @@ The builder supports multiple output targets:
 JsonWriter.write(matrix).to(new File('out.json'))         // File
 JsonWriter.write(matrix).to(Path.of('out.json'))          // Path
 JsonWriter.write(matrix).to('/path/to/out.json')          // String path
-JsonWriter.write(matrix).to(writer)                       // Writer (streams directly)
+JsonWriter.write(matrix).to(writer)                       // Writer (flushed, left open)
 String json = JsonWriter.write(matrix).asString()         // String
 ```
+
+`to(Writer)` flushes the writer but leaves it open; the caller is responsible for closing it.
+
+### Write options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `indent` | Boolean | `false` | Pretty-print output. |
+| `dateFormat` | String | `yyyy-MM-dd` | Pattern for `LocalDate` values. |
+| `dateTimeFormat` | String | `null` | Pattern for `LocalDateTime` values; `null` uses ISO-8601. |
+| `columnFormatters` | Map<String, Closure> | empty | Per-column value formatters. |
 
 ## Reading JSON with JsonReader
 
@@ -171,6 +193,9 @@ Matrix table = JsonReader.read('''[
 // Convert columns to specific types
 Matrix typed = table.convert([int, String, Number, LocalDate])
 ```
+
+Every JSON array element must be an object. `null`, scalar, and nested-array elements are
+rejected with `IllegalArgumentException`, as is any non-whitespace content after the closing array.
 
 ### Reading from various sources
 
@@ -219,3 +244,9 @@ For reference, the following table shows the version compatibility of matrix-jso
 |       1.1.0 | 2.2.0 -> 2.2.1 |
 |       2.0.0 |          3.0.0 |
 |       2.1.0 | 3.1.0 -> 3.3.0 |
+|       2.1.1 |          3.5.0 |
+|       2.1.2 |          3.6.0 |
+|       2.2.0 |          3.7.1 |
+|       2.3.0 |          3.8.0 |
+|       2.3.1 |          3.8.0 |
+|       2.3.2 |          3.9.0 |

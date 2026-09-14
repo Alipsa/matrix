@@ -1,14 +1,14 @@
 package se.alipsa.matrix.json
 
-import groovy.transform.CompileStatic
-
 import tools.jackson.core.JsonParser
 import tools.jackson.core.JsonToken
+import tools.jackson.core.exc.StreamReadException
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.SourceNameUtil
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -18,7 +18,9 @@ import java.nio.file.Path
  * Reads JSON arrays into Matrix format using Jackson streaming API.
  *
  * <p>This class uses constant memory regardless of JSON size by processing
- * one row at a time instead of loading the entire document into memory.</p>
+ * one row at a time instead of loading the entire document into memory. Each array element must
+ * be a JSON object; null and non-object elements are rejected. Content after the closing array is
+ * also rejected.</p>
  *
  * <h3>Basic Usage</h3>
  * <pre>
@@ -51,12 +53,12 @@ import java.nio.file.Path
  *
  * @see JsonWriter
  */
-@CompileStatic
 class JsonReader {
 
   private static final JsonFactory FACTORY = JsonFactory.builder().build()
   private static final JsonMapper MAPPER = JsonMapper.builder(FACTORY)
       .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+      // readValue parses one array element at a time; trailing content is checked explicitly below.
       .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
       .build()
   private static final String DOT = '.'
@@ -103,7 +105,7 @@ class JsonReader {
         parseStream(parser)
       }
     } as Matrix
-    result.matrixName = tableName(file)
+    result.matrixName = SourceNameUtil.matrixName(file)
     result
   }
 
@@ -131,7 +133,7 @@ class JsonReader {
     Matrix result = url.openStream().withCloseable { InputStream is ->
       read(is, charset)
     } as Matrix
-    result.matrixName = tableName(url)
+    result.matrixName = SourceNameUtil.matrixName(url)
     result
   }
 
@@ -188,26 +190,6 @@ class JsonReader {
   }
 
   /**
-   * Derive a table name from a File by stripping the extension.
-   */
-  private static String tableName(File file) {
-    String name = file.getName()
-    int dot = name.lastIndexOf(DOT)
-    dot > 0 ? name.substring(0, dot) : name
-  }
-
-  /**
-   * Derive a table name from a URL by extracting the filename and stripping the extension.
-   */
-  private static String tableName(URL url) {
-    String path = url.getFile() ?: url.getPath()
-    int slash = path.lastIndexOf('/')
-    String name = slash >= 0 ? path.substring(slash + 1) : path
-    int dot = name.lastIndexOf(DOT)
-    dot > 0 ? name.substring(0, dot) : name
-  }
-
-  /**
    * Stream-parse a JSON array into a Matrix.
    * Uses single-pass algorithm with dynamic column creation.
    * Memory usage is O(columns * rows) for the final Matrix only,
@@ -227,7 +209,17 @@ class JsonReader {
     }
 
     // Process each object in the array
-    while (parser.nextToken() != JsonToken.END_ARRAY) {
+    while (true) {
+      token = parser.nextToken()
+      if (token == JsonToken.END_ARRAY) {
+        break
+      }
+      if (token == JsonToken.VALUE_NULL) {
+        throw new IllegalArgumentException("JSON array element ${rowCount} is null; expected an object")
+      }
+      if (token != JsonToken.START_OBJECT) {
+        throw new IllegalArgumentException("JSON array element ${rowCount} is ${token}; expected an object")
+      }
       // Read single object as Map (this is the only object in memory at a time)
       Map<String, Object> rowObj = MAPPER.readValue(parser, Map)
 
@@ -269,6 +261,16 @@ class JsonReader {
       }
 
       rowCount++
+    }
+
+    JsonToken trailing
+    try {
+      trailing = parser.nextToken()
+    } catch (StreamReadException e) {
+      throw new IllegalArgumentException("Unexpected content after JSON array: ${e.originalMessage}", e)
+    }
+    if (trailing != null) {
+      throw new IllegalArgumentException("Unexpected content after JSON array: ${trailing}")
     }
 
     if (rowCount == 0) {

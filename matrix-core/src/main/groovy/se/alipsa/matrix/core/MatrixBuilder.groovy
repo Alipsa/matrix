@@ -6,6 +6,7 @@ import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.ClassUtils
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.core.util.SourceNameUtil
 
 import java.lang.reflect.Array as ReflectArray
 import java.lang.reflect.Modifier
@@ -45,7 +46,6 @@ class MatrixBuilder {
   private static final Logger log = Logger.getLogger(MatrixBuilder)
 
   private static final List<String> DEFAULT_NULL_STRINGS = ['NULL', 'null', 'NA']
-  private static final String PATH_SEPARATOR = '/'
   private static final String DOT = '.'
   private static final String COMMA = ','
   private static final int PRESERVE_EMPTY_FIELDS = -1
@@ -492,7 +492,7 @@ class MatrixBuilder {
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      matrixName(stripExtension(file.name))
+      matrixName(SourceNameUtil.matrixName(file))
     }
     this
   }
@@ -510,7 +510,7 @@ class MatrixBuilder {
   MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
-      matrixName(stripExtension(file.getFileName().toString()))
+      matrixName(SourceNameUtil.stripExtension(file.getFileName().toString()))
     }
     this
   }
@@ -528,13 +528,7 @@ class MatrixBuilder {
    */
   MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=DEFAULT_NULL_STRINGS) {
     try (InputStream inputStream = url.openStream()) {
-      String n = url.getFile() == null ? url.getPath() : url.getFile()
-      if (n.contains(PATH_SEPARATOR)) {
-        n = n.substring(n.lastIndexOf(PATH_SEPARATOR) + 1, n.length())
-      }
-      if (n.contains(DOT)) {
-        n = n.substring(0, n.lastIndexOf(DOT))
-      }
+      String n = SourceNameUtil.matrixName(url)
       data(inputStream, delimiter, stringQuote, firstRowAsHeader, nullStrings)
       if (noName()) {
         matrixName(n)
@@ -1068,8 +1062,4 @@ class MatrixBuilder {
     }
   }
 
-  private static String stripExtension(String fileName) {
-    int dot = fileName.lastIndexOf(DOT)
-    dot > 0 ? fileName.substring(0, dot) : fileName
-  }
 }
