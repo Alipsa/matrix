@@ -15,6 +15,7 @@ class JsonWriteOptions {
   private static final String OPT_DATE_TIME_FORMAT = 'dateTimeFormat'
   private static final String DEFAULT_DATE_FORMAT = 'yyyy-MM-dd'
   private static final String DEFAULT_INDENT = 'false'
+  private static final String TRUE = 'true'
 
   boolean indent = false
   String dateFormat = DEFAULT_DATE_FORMAT
@@ -27,9 +28,18 @@ class JsonWriteOptions {
   }
 
   JsonWriteOptions dateFormat(String value) {
-    validatePattern(OPT_DATE_FORMAT, value)
-    this.dateFormat = value
+    validateDateFormat(value)
+    this.@dateFormat = value
     this
+  }
+
+  /**
+   * Set the LocalDate format pattern.
+   *
+   * @param value a non-blank date pattern
+   */
+  void setDateFormat(String value) {
+    dateFormat(value)
   }
 
   /**
@@ -39,27 +49,58 @@ class JsonWriteOptions {
    * @return this options instance for chaining
    */
   JsonWriteOptions dateTimeFormat(String value) {
-    validatePattern(OPT_DATE_TIME_FORMAT, value)
-    this.dateTimeFormat = value
-    this
-  }
-
-  JsonWriteOptions columnFormatters(Map<String, Closure> value) {
-    validateColumnFormatters(value)
-    this.columnFormatters = value ?: [:]
+    validateDateTimeFormat(value)
+    this.@dateTimeFormat = value
     this
   }
 
   /**
-   * Validates a date or date-time pattern shared by the fluent writer and SPI options.
+   * Set the LocalDateTime format pattern.
    *
-   * @param name the option name used in validation messages
-   * @param pattern the pattern to validate
-   * @throws IllegalArgumentException if the pattern is blank, invalid, or null for dateFormat
+   * @param value a date-time pattern, or null for ISO-8601 output
    */
-  static void validatePattern(String name, String pattern) {
+  void setDateTimeFormat(String value) {
+    dateTimeFormat(value)
+  }
+
+  JsonWriteOptions columnFormatters(Map<String, Closure> value) {
+    validateColumnFormatters(value)
+    this.@columnFormatters = value ?: [:]
+    this
+  }
+
+  /**
+   * Set the map of column names to formatting closures.
+   *
+   * @param value column formatters, or null to clear them
+   */
+  void setColumnFormatters(Map<String, Closure> value) {
+    columnFormatters(value)
+  }
+
+  /**
+   * Validates a LocalDate pattern shared by the fluent writer and SPI options.
+   *
+   * @param pattern the pattern to validate
+   * @throws IllegalArgumentException if the pattern is null, blank, or invalid
+   */
+  static void validateDateFormat(String pattern) {
+    validatePattern(OPT_DATE_FORMAT, pattern, false)
+  }
+
+  /**
+   * Validates a LocalDateTime pattern shared by the fluent writer and SPI options.
+   *
+   * @param pattern the pattern to validate, or null for ISO-8601 output
+   * @throws IllegalArgumentException if the pattern is blank or invalid
+   */
+  static void validateDateTimeFormat(String pattern) {
+    validatePattern(OPT_DATE_TIME_FORMAT, pattern, true)
+  }
+
+  private static void validatePattern(String name, String pattern, boolean allowNull) {
     if (pattern == null) {
-      if (name == OPT_DATE_FORMAT) {
+      if (!allowNull) {
         throw new IllegalArgumentException("${name} pattern cannot be null or blank")
       }
       return
@@ -102,7 +143,7 @@ class JsonWriteOptions {
         result.indent((boolean) value)
       } else if (value instanceof CharSequence) {
         String normalizedValue = value.toString().trim().toLowerCase(Locale.ROOT)
-        if (normalizedValue == 'true') {
+        if (normalizedValue == TRUE) {
           result.indent(true)
         } else if (normalizedValue == DEFAULT_INDENT) {
           result.indent(false)
@@ -135,9 +176,11 @@ class JsonWriteOptions {
   Map<String, ?> toMap() {
     Map<String, Object> options = [
         indent    : indent,
-        dateFormat: dateFormat,
-        dateTimeFormat: dateTimeFormat
+        dateFormat: dateFormat
     ]
+    if (dateTimeFormat != null) {
+      options.dateTimeFormat = dateTimeFormat
+    }
     if (!columnFormatters.isEmpty()) {
       options.columnFormatters = columnFormatters
     }

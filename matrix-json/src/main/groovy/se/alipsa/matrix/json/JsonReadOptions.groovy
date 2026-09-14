@@ -49,8 +49,17 @@ class JsonReadOptions {
    */
   JsonReadOptions types(List<Class> value) {
     validateTypes(value)
-    this.types = value
+    this.@types = value
     this
+  }
+
+  /**
+   * Set column types for automatic conversion after parsing.
+   *
+   * @param value list of column type classes
+   */
+  void setTypes(List<Class> value) {
+    types(value)
   }
 
   /**

@@ -315,15 +315,7 @@ class JsonReader {
    * @throws IllegalArgumentException if duplicate keys are detected after flattening
    */
   private static void flatten(String prefix, Object node, Map<String, Object> result) {
-    if (node == null) {
-      // A null at the root is rejected by parseStream. A null under a real key is a valid cell.
-      if (!prefix.isEmpty()) {
-        if (result.containsKey(prefix)) {
-          throw new IllegalArgumentException("Duplicate key detected after flattening: '${prefix}'")
-        }
-        result.put(prefix, null)
-      }
-    } else if (node instanceof Map) {
+    if (node instanceof Map) {
       Map<String, Object> mapNode = (Map<String, Object>) node
       String pathPrefix = prefix.isEmpty() ? '' : prefix + DOT
       for (Map.Entry<String, Object> entry : mapNode.entrySet()) {

@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
 
@@ -46,6 +47,18 @@ class JsonOptionsTest {
 
     JsonWriteOptions options = JsonWriteOptions.fromMap([dateTimeFormat: 'HH:mm'])
     assertEquals('HH:mm', options.toMap().dateTimeFormat)
+    assertFalse(new JsonWriteOptions().toMap().containsKey('dateTimeFormat'))
+  }
+
+  @Test
+  void validatesValuesAssignedThroughProperties() {
+    JsonWriteOptions writeOptions = new JsonWriteOptions()
+    assertThrows(IllegalArgumentException) { writeOptions.dateFormat = '' }
+    assertThrows(IllegalArgumentException) { writeOptions.dateTimeFormat = 'not a pattern' }
+    assertThrows(IllegalArgumentException) { writeOptions.columnFormatters = [(null): { it }] }
+
+    JsonReadOptions readOptions = new JsonReadOptions()
+    assertThrows(IllegalArgumentException) { readOptions.types = ['not a class'] }
   }
 
   @Test

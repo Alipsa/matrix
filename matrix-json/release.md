@@ -11,6 +11,8 @@
   other temporal values are serialized losslessly, with a new `dateTimeFormat` option for
   `LocalDateTime`; Java SQL date/time types and legacy `Date` values have explicit stable output.
 - Reject invalid date patterns and invalid column formatter/type options at configuration time.
+  Supplying `dateFormat: null` now raises `IllegalArgumentException` instead of retaining the
+  default date format.
 - Reject null, scalar, and nested-array JSON array elements, as well as content after a JSON array,
   with `IllegalArgumentException`.
 - Write non-finite floating-point values as JSON `null`.

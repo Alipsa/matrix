@@ -4,6 +4,8 @@
 
 ### Utilities
 - Added `SourceNameUtil` for consistent Matrix-name derivation from files and decoded URL paths.
+  `MatrixBuilder.data(URL)` now percent-decodes the final URL path segment, excludes query and
+  fragment components, and preserves leading-dot filenames (for example, `.hidden`).
 
 ### New Matrix methods
 - `toHtml(attr: [caption: '…'])` writes an escaped `<caption>` as the first child of the table. The `caption` key is consumed rather than emitted as a table attribute.

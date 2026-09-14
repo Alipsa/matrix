@@ -118,8 +118,7 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param outputFile file to write JSON to
    * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails. The writer is flushed before this method returns but
-   * remains open; the caller is responsible for closing it.
+   * @throws IOException if writing fails
    * @deprecated Use {@code JsonWriter.write(matrix).to(file)} instead
    */
   @Deprecated
@@ -133,8 +132,7 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param outputPath path to write JSON to
    * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails. The writer is flushed before this method returns but
-   * remains open; the caller is responsible for closing it.
+   * @throws IOException if writing fails
    * @deprecated Use {@code JsonWriter.write(matrix).to(path)} instead
    */
   @Deprecated
@@ -162,7 +160,8 @@ class JsonWriter {
    * @param matrix the Matrix to write
    * @param writer the Writer to write JSON to
    * @param indent whether to pretty print the JSON
-   * @throws IOException if writing fails
+   * @throws IOException if writing fails. The writer is flushed before this method returns but
+   * remains open; the caller is responsible for closing it.
    * @deprecated Use {@code JsonWriter.write(matrix).to(writer)} instead
    */
   @Deprecated
@@ -365,7 +364,7 @@ class JsonWriter {
      * @return this builder for chaining
      */
     WriteBuilder dateFormat(String pattern) {
-      JsonWriteOptions.validatePattern('dateFormat', pattern)
+      JsonWriteOptions.validateDateFormat(pattern)
       this.dateFormatValue = pattern
       this
     }
@@ -379,7 +378,7 @@ class JsonWriter {
      * @return this builder for chaining
      */
     WriteBuilder dateTimeFormat(String pattern) {
-      JsonWriteOptions.validatePattern('dateTimeFormat', pattern)
+      JsonWriteOptions.validateDateTimeFormat(pattern)
       this.dateTimeFormatValue = pattern
       this
     }
@@ -413,8 +412,7 @@ class JsonWriter {
      * Write JSON to a File.
      *
      * @param file the output file
-     * @throws IOException if writing fails. The writer is flushed before this method returns but
-     * remains open; the caller is responsible for closing it.
+     * @throws IOException if writing fails
      */
     void to(File file) throws IOException {
       if (file == null) {
@@ -459,7 +457,8 @@ class JsonWriter {
      * Write JSON to a Writer.
      *
      * @param writer the output writer
-     * @throws IOException if writing fails
+     * @throws IOException if writing fails. The writer is flushed before this method returns but
+     * remains open; the caller is responsible for closing it.
      */
     void to(Writer writer) throws IOException {
       if (writer == null) {
