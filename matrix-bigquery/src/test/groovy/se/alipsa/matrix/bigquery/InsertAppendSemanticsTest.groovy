@@ -11,8 +11,14 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 import com.fasterxml.jackson.core.JsonFactory
+import com.google.api.services.bigquery.model.Dataset as DatasetPb
+import com.google.api.services.bigquery.model.DatasetReference
+import com.google.api.services.bigquery.model.JobStatistics as JobStatisticsPb
+import com.google.api.services.bigquery.model.JobStatistics3
 import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQuery
+import com.google.cloud.bigquery.BigQueryError
+import com.google.cloud.bigquery.BigQueryException
 import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.Dataset
 import com.google.cloud.bigquery.DatasetId
@@ -191,10 +197,10 @@ class InsertAppendSemanticsTest {
   @Test
   void classifyExpectedInsertAllPreconditionFailures() {
     assertTrue(Bq.isExpectedInsertAllPreconditionFailure(
-        new BqException('Cannot overwrite table via InsertAll because the table does not exist')
+        new InsertAllPreconditionException('Cannot overwrite table via InsertAll because the table does not exist')
     ))
     assertTrue(Bq.isExpectedInsertAllPreconditionFailure(
-        new BqException('Failed to recreate table for InsertAll overwrite because the existing table could not be deleted')
+        new InsertAllPreconditionException('Failed to recreate table for InsertAll overwrite because the existing table could not be deleted')
     ))
     assertFalse(Bq.isExpectedInsertAllPreconditionFailure(
         new BqException('InsertAll failed with errors:\nrow 1: invalid value')
@@ -259,6 +265,18 @@ class InsertAppendSemanticsTest {
   }
 
   @Test
+  void failedDatasetLocationLookupUsesTheConfiguredLocation() {
+    InsertAllTestState state = new InsertAllTestState(tableId('events'))
+    state.datasetLookupFailure = new BigQueryException(403, 'dataset access denied')
+    state.optionsLocation = 'US'
+    Bq bq = new Bq(fakeBigQueryFor(state), 'matrix-project')
+
+    JobId jobId = bq.createLoadJobId(state.tableId)
+
+    assertEquals('US', jobId.location)
+  }
+
+  @Test
   void existingLoadJobReturnsItsOutcomeWithoutInsertAllSubmission() {
     InsertAllTestState state = new InsertAllTestState(tableId('events'))
     ExistingJobClient bq = new ExistingJobClient(fakeBigQueryFor(state), 'matrix-project', jobFrom(fakeBigQueryFor(state)), loadStatistics(2L))
@@ -318,7 +336,7 @@ class InsertAppendSemanticsTest {
     InsertAllTestState errorState = new InsertAllTestState(tableId('events'))
     errorState.insertAllResponses.addAll([
         emptyInsertAllResponse(),
-        insertAllResponse([(0L): [new com.google.cloud.bigquery.BigQueryError('invalid', 'name', 'invalid value')]])
+        insertAllResponse([(0L): [new BigQueryError('invalid', 'name', 'invalid value')]])
     ])
     Bq errorClient = new Bq(fakeBigQueryFor(errorState), 'matrix-project')
     errorClient.insertAllMaxRows = 1
@@ -486,7 +504,9 @@ class InsertAppendSemanticsTest {
     int insertAllCalls
     Exception insertAllFailure
     Exception lookupFailure
+    BigQueryException datasetLookupFailure
     Dataset dataset
+    String optionsLocation
     JobId lookupJobId
     InsertAllRequest lastInsertRequest
     final List<InsertAllRequest> insertRequests = []
@@ -502,10 +522,13 @@ class InsertAppendSemanticsTest {
 
   @CompileDynamic
   private static BigQuery fakeBigQueryFor(InsertAllTestState state) {
-    BigQueryOptions options = BigQueryOptions.newBuilder()
+    BigQueryOptions.Builder optionsBuilder = BigQueryOptions.newBuilder()
         .setProjectId('matrix-project')
         .setCredentials(NoCredentials.getInstance())
-        .build()
+    if (state.optionsLocation != null) {
+      optionsBuilder.setLocation(state.optionsLocation)
+    }
+    BigQueryOptions options = optionsBuilder.build()
     BigQuery fakeBigQuery
     fakeBigQuery = [
         getOptions: { -> options },
@@ -521,7 +544,12 @@ class InsertAppendSemanticsTest {
           }
           state.jobLookups.isEmpty() ? null : state.jobLookups.remove(0)
         },
-        getDataset: { DatasetId ignored, Object... ignoredOptions -> state.dataset },
+        getDataset: { DatasetId ignored, Object... ignoredOptions ->
+          if (state.datasetLookupFailure != null) {
+            throw state.datasetLookupFailure
+          }
+          state.dataset
+        },
         delete   : { TableId requestedTableId ->
           state.events << 'delete'
           state.deleteCalls++
@@ -571,7 +599,7 @@ class InsertAppendSemanticsTest {
   }
 
   @CompileDynamic
-  private static InsertAllResponse insertAllResponse(Map<Long, List<com.google.cloud.bigquery.BigQueryError>> errors) {
+  private static InsertAllResponse insertAllResponse(Map<Long, List<BigQueryError>> errors) {
     Constructor<InsertAllResponse> ctor = (Constructor<InsertAllResponse>) InsertAllResponse.declaredConstructors[0]
     ctor.setAccessible(true)
     ctor.newInstance(errors)
@@ -579,8 +607,8 @@ class InsertAppendSemanticsTest {
 
   @CompileDynamic
   private static Dataset datasetFrom(BigQuery bigQuery, DatasetId datasetId, String location) {
-    com.google.api.services.bigquery.model.Dataset datasetPb = new com.google.api.services.bigquery.model.Dataset()
-        .setDatasetReference(new com.google.api.services.bigquery.model.DatasetReference()
+    DatasetPb datasetPb = new DatasetPb()
+        .setDatasetReference(new DatasetReference()
             .setProjectId(datasetId.project)
             .setDatasetId(datasetId.dataset))
         .setLocation(location)
@@ -591,8 +619,8 @@ class InsertAppendSemanticsTest {
 
   @CompileDynamic
   private static JobStatistics.LoadStatistics loadStatistics(long outputRows) {
-    com.google.api.services.bigquery.model.JobStatistics statisticsPb = new com.google.api.services.bigquery.model.JobStatistics()
-        .setLoad(new com.google.api.services.bigquery.model.JobStatistics3().setOutputRows(outputRows))
+    JobStatisticsPb statisticsPb = new JobStatisticsPb()
+        .setLoad(new JobStatistics3().setOutputRows(outputRows))
     Method fromPb = JobStatistics.LoadStatistics.getDeclaredMethod('fromPb', statisticsPb.getClass())
     fromPb.setAccessible(true)
     (JobStatistics.LoadStatistics) fromPb.invoke(null, statisticsPb)

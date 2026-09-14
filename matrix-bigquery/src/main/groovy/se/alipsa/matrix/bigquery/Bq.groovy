@@ -134,7 +134,8 @@ class Bq {
   @PackageScope
   static final int INSERT_ALL_HARD_MAX_ROWS = 50_000
 
-  private static final int INSERT_ALL_HARD_MAX_REQUEST_BYTES = 2 * INSERT_ALL_TARGET_REQUEST_BYTES
+  @SuppressWarnings('DuplicateNumberLiteral')
+  private static final int INSERT_ALL_HARD_MAX_REQUEST_BYTES = 10 * MEBIBYTE
   private static final int INSERT_ALL_ROW_ENVELOPE_BYTES = 128
 
   /** Date formatter for BigQuery DATE type using java.time API. Thread-safe. */
@@ -637,6 +638,7 @@ class Bq {
    * @param tableId target table
    * @param append true to append; false to overwrite
    * @return insert outcome; InsertAll results have no load statistics
+   * @throws LoadJobFailedException if BigQuery reports that the created load job definitely failed
    * @throws BqException if insertion fails or the write outcome is unknown
    */
   BqInsertResult insertRows(Matrix matrix, TableId tableId, boolean append) throws BqException {
@@ -714,8 +716,13 @@ class Bq {
 
   private String resolveDatasetLocation(TableId tableId) {
     String datasetProject = tableId.project ?: projectId
-    Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetProject, tableId.dataset))
-    dataset?.location ?: bigQuery.options.location
+    try {
+      Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetProject, tableId.dataset))
+      dataset?.location ?: bigQuery.options.location
+    } catch (BigQueryException e) {
+      log.debug("Unable to determine the location of ${datasetProject}:${tableId.dataset}; using the configured BigQuery location: ${e.message}")
+      bigQuery.options.location
+    }
   }
 
   /**
@@ -756,7 +763,7 @@ class Bq {
    */
   @PackageScope
   JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId, boolean append) throws BqException {
-    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+    JobId jobId = createLoadJobId(tableId)
     insertViaWriteChannel(matrix, tableId, append, jobId)
   }
 
@@ -1069,11 +1076,7 @@ class Bq {
 
   @PackageScope
   static boolean isExpectedInsertAllPreconditionFailure(Exception exception) {
-    if (!(exception instanceof BqException)) {
-      return false
-    }
-    String message = exception.message
-    message?.startsWith('Cannot overwrite ') || message?.startsWith('Failed to recreate ')
+    exception instanceof InsertAllPreconditionException
   }
 
   @PackageScope
@@ -1084,14 +1087,14 @@ class Bq {
 
     Table existingTable = bigQuery.getTable(tableId)
     if (existingTable == null || !existingTable.exists()) {
-      throw new BqException("Cannot overwrite ${tableId} via InsertAll because the table does not exist")
+      throw new InsertAllPreconditionException("Cannot overwrite ${tableId} via InsertAll because the table does not exist")
     }
 
     log.info("Recreating ${tableId.dataset}.${tableId.table} before InsertAll overwrite to preserve append=false semantics")
     TableInfo replacementTable = createInsertAllReplacementTableInfo(existingTable)
     boolean deleted = bigQuery.delete(tableId)
     if (!deleted) {
-      throw new BqException("Failed to recreate ${tableId} for InsertAll overwrite because the existing table could not be deleted")
+      throw new InsertAllPreconditionException("Failed to recreate ${tableId} for InsertAll overwrite because the existing table could not be deleted")
     }
     bigQuery.create(replacementTable)
     waitForTable(tableId, waitForTableTimeoutMs)
@@ -1183,7 +1186,17 @@ class Bq {
 
   @PackageScope
   static int estimateInsertAllRowBytes(Map<String, Object> content, String insertId) {
-    JsonOutput.toJson(content).getBytes(StandardCharsets.UTF_8).length + insertId.getBytes(StandardCharsets.UTF_8).length + INSERT_ALL_ROW_ENVELOPE_BYTES
+    int contentBytes = content.collect { String name, Object value ->
+      name.getBytes(StandardCharsets.UTF_8).length + estimateInsertAllValueBytes(value)
+    }.sum() as int
+    contentBytes + insertId.getBytes(StandardCharsets.UTF_8).length + INSERT_ALL_ROW_ENVELOPE_BYTES
+  }
+
+  private static int estimateInsertAllValueBytes(Object value) {
+    if (value instanceof byte[]) {
+      return value.length * 2
+    }
+    String.valueOf(value).getBytes(StandardCharsets.UTF_8).length
   }
 
   @PackageScope
@@ -1785,17 +1798,4 @@ class Bq {
     input?.toString()
   }
 
-}
-
-/**
- * Indicates that BigQuery completed a load job with a definite failure, rather than an unknown
- * outcome caused by an interrupted or unavailable job lookup.
- */
-@CompileStatic
-@PackageScope
-class LoadJobFailedException extends BqException {
-
-  LoadJobFailedException(String message) {
-    super(message)
-  }
 }

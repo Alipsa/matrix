@@ -16,10 +16,12 @@ import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQuery
+import com.google.cloud.bigquery.BigQueryError
 import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.Job
 import com.google.cloud.bigquery.JobId
 import com.google.cloud.bigquery.JobStatistics
+import com.google.cloud.bigquery.JobStatus
 import com.google.cloud.bigquery.Table
 import com.google.cloud.bigquery.TableDataWriteChannel
 import com.google.cloud.bigquery.TableId
@@ -124,6 +126,24 @@ class BqErrorHandlingTest {
   }
 
   @Test
+  void completedLoadJobFailureUsesThePublicDefiniteOutcomeType() {
+    TableId tableId = Bq.tableId('matrix-project', 'analytics', 'events')
+    JobStatus status = mock(JobStatus)
+    when(status.error).thenReturn(new BigQueryError('invalid', 'name', 'schema mismatch'))
+    Job completedJob = mock(Job)
+    when(completedJob.status).thenReturn(status)
+    Job waitingJob = mock(Job)
+    when(waitingJob.waitFor()).thenReturn(completedJob)
+    Bq bq = new Bq(fakeBigQueryForWriter(), 'matrix-project')
+
+    LoadJobFailedException exception = assertThrows(LoadJobFailedException) {
+      bq.waitForLoadJobAndGetStats(waitingJob, tableId)
+    }
+
+    assertTrue(exception.message.contains('schema mismatch'))
+  }
+
+  @Test
   void synchronousQueryAndExecuteRestoreTheInterruptFlag() {
     Bq bq = new Bq(fakeBigQueryThatInterrupts(), 'matrix-project')
 
@@ -201,6 +221,7 @@ class BqErrorHandlingTest {
         .build()
     [
         getOptions: { -> options },
+        getDataset: { Object... ignored -> null },
         writer    : { JobId jobId, WriteChannelConfiguration config -> null as TableDataWriteChannel }
     ] as BigQuery
   }
