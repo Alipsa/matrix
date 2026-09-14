@@ -32,9 +32,8 @@ class GsUtil {
   private static final String SINGLE_CELL_PATTERN = '^[A-Z]{1,3}\\d+$'
   private static final String ENDPOINT_PATTERN = '^([A-Z]{1,3})(\\d*)$'
   private static final String ROW_ONLY_PATTERN = '^\\d+$'
-  // -1 sentinel: used as the split() limit that keeps trailing empty parts (so e.g. 'A1:' is
-  // rejected instead of collapsing to its single valid endpoint) and as a "not found" marker
   private static final int NOT_FOUND = -1
+  private static final int KEEP_EMPTY_PARTS = -1
   private static final int RANGE_ENDPOINT_COUNT = 2
   private static final String INVALID_RANGE_ERROR = "Invalid range format: '%s'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
   private static final String SINGLE_QUOTE = "'"
@@ -106,12 +105,10 @@ class GsUtil {
 
     String cellRange = splitSheetAndCells(range)[1].toUpperCase(Locale.ROOT)
 
-    // -1 keeps trailing empty parts so that e.g. 'A1:' is rejected instead of collapsing
-    // to the single valid endpoint 'A1'
-    String[] cellParts = cellRange.split(COLON, NOT_FOUND)
+    String[] cellParts = cellRange.split(COLON, KEEP_EMPTY_PARTS)
     if (cellParts.size() == 1) {
       if (!cellParts[0].matches(SINGLE_CELL_PATTERN)) {
-      throw invalidRange(range)
+        throw invalidRange(range)
       }
       return 1
     }
@@ -326,7 +323,7 @@ class GsUtil {
       // not a cell-based range; row-only ranges are still valid for writes
     }
     String cellRange = splitSheetAndCells(range)[1].toUpperCase(Locale.ROOT)
-    String[] cellParts = cellRange.split(COLON, NOT_FOUND)
+    String[] cellParts = cellRange.split(COLON, KEEP_EMPTY_PARTS)
     // Row-only spans require the colon ('3:3'); a lone row number ('3') is not valid A1
     // notation and the Sheets API rejects it. Single cells were already accepted by
     // columnCountForRange above, so only a two-part row span reaches this check.

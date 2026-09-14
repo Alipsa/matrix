@@ -309,8 +309,9 @@ class GsheetsWriter {
    * Updates an existing Google Spreadsheet with Matrix data.
    *
    * <p>Row-only ranges such as {@code Sheet1!1:5} are accepted (the Sheets API writes
-   * starting at the first column); a bare sheet name such as {@code Sheet1} is not a
-   * valid range. When the matrix contains decimal values that need number formatting,
+   * starting at the first column); a bare sheet name such as {@code Sheet1} is accepted by the
+   * Sheets API but unsupported by this writer. When the matrix contains decimal values that need
+   * number formatting,
    * the range must have a complete starting cell (e.g. {@code Sheet1!A1}).
    *
    * @param spreadsheetId The ID of the existing spreadsheet

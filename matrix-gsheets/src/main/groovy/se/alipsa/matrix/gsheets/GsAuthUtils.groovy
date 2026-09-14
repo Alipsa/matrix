@@ -231,6 +231,9 @@ class GsAuthUtils {
     Set<String> granted
     try {
       granted = resolution.get()
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw e
     } catch (ExecutionException e) {
       // Do not cache failures; a later call for the same token should be able to retry.
       synchronized (SCOPE_CACHE_LOCK) {

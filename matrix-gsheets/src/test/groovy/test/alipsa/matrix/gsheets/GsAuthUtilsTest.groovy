@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Unit tests for GsAuthUtils focusing on utility methods that don't require
@@ -111,6 +112,45 @@ class GsAuthUtilsTest {
     IllegalStateException exception = assertThrows(IllegalStateException,
         () -> GsAuthUtils.hasAllScopes(credentials('boom-token'), [SCOPE_SHEETS], boom))
     assertEquals('boom', exception.message)
+  }
+
+  @Test
+  void testHasAllScopesRestoresInterruptStatus() {
+    CountDownLatch resolverStarted = new CountDownLatch(1)
+    CountDownLatch allowResolution = new CountDownLatch(1)
+    CountDownLatch waiterStarted = new CountDownLatch(1)
+    AtomicReference<Thread> waiterThread = new AtomicReference<>()
+    GsAuthUtils.ScopeResolver blocking = { String token ->
+      resolverStarted.countDown()
+      allowResolution.await()
+      [SCOPE_SHEETS] as Set<String>
+    } as GsAuthUtils.ScopeResolver
+
+    def executor = Executors.newFixedThreadPool(2)
+    try {
+      def resolver = executor.submit {
+        GsAuthUtils.hasAllScopes(credentials('interrupted-token'), [SCOPE_SHEETS], blocking)
+      }
+      assertTrue(resolverStarted.await(5, TimeUnit.SECONDS))
+      def waiter = executor.submit {
+        waiterThread.set(Thread.currentThread())
+        waiterStarted.countDown()
+        try {
+          GsAuthUtils.hasAllScopes(credentials('interrupted-token'), [SCOPE_SHEETS], blocking)
+          false
+        } catch (InterruptedException ignored) {
+          Thread.currentThread().isInterrupted()
+        }
+      }
+      assertTrue(waiterStarted.await(5, TimeUnit.SECONDS))
+      waiterThread.get().interrupt()
+      assertTrue(waiter.get(5, TimeUnit.SECONDS))
+      allowResolution.countDown()
+      assertTrue(resolver.get(5, TimeUnit.SECONDS))
+    } finally {
+      allowResolution.countDown()
+      executor.shutdownNow()
+    }
   }
 
   @Test
