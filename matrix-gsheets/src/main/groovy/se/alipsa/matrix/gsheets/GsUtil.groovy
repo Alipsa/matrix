@@ -31,6 +31,11 @@ class GsUtil {
   private static final String SHEET_SEPARATOR = '!'
   private static final String SINGLE_CELL_PATTERN = '^[A-Z]{1,3}\\d+$'
   private static final String ENDPOINT_PATTERN = '^([A-Z]{1,3})(\\d*)$'
+  private static final String ROW_ONLY_PATTERN = '^\\d+$'
+  // -1 sentinel: used as the split() limit that keeps trailing empty parts (so e.g. 'A1:' is
+  // rejected instead of collapsing to its single valid endpoint) and as a "not found" marker
+  private static final int NOT_FOUND = -1
+  private static final int RANGE_ENDPOINT_COUNT = 2
   private static final String INVALID_RANGE_ERROR = "Invalid range format: '%s'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
   private static final String SINGLE_QUOTE = "'"
   private static final int MAX_SHEET_NAME_LENGTH = 100
@@ -84,6 +89,13 @@ class GsUtil {
 
   /**
    * Calculates the number of columns in a given A1-style range string.
+   *
+   * <p>Only cell-based ranges are supported: a single cell ({@code A1}), a cell span
+   * ({@code A1:D10}), or open-ended column spans ({@code A:D}, {@code A1:D}). Row-only
+   * ranges ({@code 1:5}) and bare sheet names ({@code Sheet1}) are rejected because the
+   * column count is undefined. Use {@link #validateWriteRange(String)} for write-side
+   * validation that also accepts row-only ranges.
+   *
    * @param range The range string, e.g., 'Arkiv!B2:H100' or 'A1:C10'.
    * @return The number of columns in the range.
    */
@@ -94,14 +106,16 @@ class GsUtil {
 
     String cellRange = splitSheetAndCells(range)[1].toUpperCase(Locale.ROOT)
 
-    String[] cellParts = cellRange.split(COLON)
+    // -1 keeps trailing empty parts so that e.g. 'A1:' is rejected instead of collapsing
+    // to the single valid endpoint 'A1'
+    String[] cellParts = cellRange.split(COLON, NOT_FOUND)
     if (cellParts.size() == 1) {
       if (!cellParts[0].matches(SINGLE_CELL_PATTERN)) {
       throw invalidRange(range)
       }
       return 1
     }
-    if (cellParts.size() != 2) {
+    if (cellParts.size() != RANGE_ENDPOINT_COUNT) {
       throw invalidRange(range)
     }
 
@@ -277,11 +291,48 @@ class GsUtil {
     String.valueOf(v)
   }
 
+  /**
+   * Validates a range for read operations: the range must be a cell-based A1 range from
+   * which a column count can be derived. Row-only ranges ({@code Sheet1!1:5}) and bare
+   * sheet names ({@code Sheet1}) are rejected, even though the Sheets API accepts them,
+   * because the reader needs a defined column count.
+   *
+   * @param range The A1 range to validate
+   * @throws IllegalArgumentException if the range is null, empty, or not a cell-based A1 range
+   */
   static void validateRange(String range) {
     if (range == null || range.trim().isEmpty()) {
       throw new IllegalArgumentException(RANGE_ERROR)
     }
     columnCountForRange(range)
+  }
+
+  /**
+   * Validates a range for write operations. Accepts everything {@link #validateRange(String)}
+   * accepts, plus row-only ranges such as {@code Sheet1!1:5} whose column count is undefined
+   * but which the Sheets API accepts for writes.
+   *
+   * @param range The A1 range to validate
+   * @throws IllegalArgumentException if the range is null, empty, or not valid A1 notation
+   */
+  static void validateWriteRange(String range) {
+    if (range == null || range.trim().isEmpty()) {
+      throw new IllegalArgumentException(RANGE_ERROR)
+    }
+    try {
+      columnCountForRange(range)
+      return
+    } catch (IllegalArgumentException ignored) {
+      // not a cell-based range; row-only ranges are still valid for writes
+    }
+    String cellRange = splitSheetAndCells(range)[1].toUpperCase(Locale.ROOT)
+    String[] cellParts = cellRange.split(COLON, NOT_FOUND)
+    boolean rowOnly = cellParts.size() == 1
+        ? cellParts[0].matches(ROW_ONLY_PATTERN)
+        : cellParts.size() == RANGE_ENDPOINT_COUNT && cellParts[0].matches(ROW_ONLY_PATTERN) && cellParts[1].matches(ROW_ONLY_PATTERN)
+    if (!rowOnly) {
+      throw invalidRange(range)
+    }
   }
 
   static void validateSheetId(String sheetId) {
@@ -327,7 +378,7 @@ class GsUtil {
    */
   static String[] splitSheetAndCells(String range) {
     if (range?.startsWith(SINGLE_QUOTE)) {
-      int closingQuote = -1
+      int closingQuote = NOT_FOUND
       for (int i = 1; i < range.length(); i++) {
         if (range.charAt(i) == SINGLE_QUOTE.charAt(0)) {
           if (i + 1 < range.length() && range.charAt(i + 1) == SINGLE_QUOTE.charAt(0)) {

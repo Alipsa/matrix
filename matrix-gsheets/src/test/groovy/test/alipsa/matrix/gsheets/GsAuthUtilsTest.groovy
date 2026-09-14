@@ -83,6 +83,28 @@ class GsAuthUtilsTest {
   }
 
   @Test
+  void testHasAllScopesRetriesFailedResolutionsInsteadOfCachingThem() {
+    AtomicInteger calls = new AtomicInteger()
+    GsAuthUtils.ScopeResolver failing = { String token ->
+      calls.incrementAndGet()
+      throw new IOException('offline')
+    } as GsAuthUtils.ScopeResolver
+
+    assertFalse(GsAuthUtils.hasAllScopes(credentials('flaky-token'), [SCOPE_SHEETS], failing))
+    assertFalse(GsAuthUtils.hasAllScopes(credentials('flaky-token'), [SCOPE_SHEETS], failing))
+    assertEquals(2, calls.get())
+  }
+
+  @Test
+  void testHasAllScopesTreatsNullResolverResultAsNoScopesGranted() {
+    GsAuthUtils.ScopeResolver nullResolver = { String token -> null } as GsAuthUtils.ScopeResolver
+
+    assertFalse(GsAuthUtils.hasAllScopes(credentials('null-token'), [SCOPE_SHEETS], nullResolver))
+    // an empty granted set satisfies an empty requirement
+    assertTrue(GsAuthUtils.hasAllScopes(credentials('null-token'), [], nullResolver))
+  }
+
+  @Test
   void testHasAllScopesResolvesOneTokenOnlyOnceAcrossConcurrentCallers() {
     GoogleCredentials creds = credentials('concurrent-token')
     AtomicInteger calls = new AtomicInteger()

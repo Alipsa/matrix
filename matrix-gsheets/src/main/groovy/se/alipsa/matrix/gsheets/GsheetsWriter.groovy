@@ -178,7 +178,7 @@ class GsheetsWriter {
           .setFields('spreadsheetId,sheets.properties.sheetId') // we only need the ids here
           .execute()
     } catch (IOException e) {
-      throw new SheetOperationException('create spreadsheet', null, e)
+      throw new SheetOperationException("create spreadsheet '${spreadsheetTitle}'", null, e)
     }
 
     String spreadsheetId = created.getSpreadsheetId()
@@ -308,6 +308,11 @@ class GsheetsWriter {
   /**
    * Updates an existing Google Spreadsheet with Matrix data.
    *
+   * <p>Row-only ranges such as {@code Sheet1!1:5} are accepted (the Sheets API writes
+   * starting at the first column); a bare sheet name such as {@code Sheet1} is not a
+   * valid range. When the matrix contains decimal values that need number formatting,
+   * the range must have a complete starting cell (e.g. {@code Sheet1!A1}).
+   *
    * @param spreadsheetId The ID of the existing spreadsheet
    * @param range The target range in A1 notation (e.g., 'Sheet1!A1')
    * @param matrix The Matrix to write
@@ -322,7 +327,10 @@ class GsheetsWriter {
                        GoogleCredentials credentials = null,
                        boolean convertNullsToEmptyString = true,
                        boolean convertDatesToSerial = false) {
-    preflightUpdate(spreadsheetId, range, matrix)
+    // Local input validation only (no start-cell/formatting checks): fail fast on bad
+    // input before authenticate() can trigger an interactive login. updateWithService
+    // performs the full preflight, so this must not call preflightUpdate() here.
+    validateUpdateInputs(spreadsheetId, range, matrix)
     Sheets sheets = buildSheetsService(credentials)
     updateWithService(spreadsheetId, range, matrix, sheets, convertNullsToEmptyString, convertDatesToSerial)
   }
@@ -386,8 +394,13 @@ class GsheetsWriter {
   }
 
   private static int[] preflightUpdate(String spreadsheetId, String range, Matrix matrix) {
+    validateUpdateInputs(spreadsheetId, range, matrix)
+    hasScaledDecimalCell(matrix) ? parseStartCell(range) : null
+  }
+
+  private static void validateUpdateInputs(String spreadsheetId, String range, Matrix matrix) {
     GsUtil.validateSheetId(spreadsheetId)
-    GsUtil.validateRange(range)
+    GsUtil.validateWriteRange(range)
     if (matrix == null) {
       throw new IllegalArgumentException(MATRIX_NULL_ERROR)
     }
@@ -397,7 +410,6 @@ class GsheetsWriter {
     if (matrix.rowCount() == 0) {
       throw new IllegalArgumentException(MATRIX_NO_ROWS_ERROR)
     }
-    hasScaledDecimalCell(matrix) ? parseStartCell(range) : null
   }
 
   /**

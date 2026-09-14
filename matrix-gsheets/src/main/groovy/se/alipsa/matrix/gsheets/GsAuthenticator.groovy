@@ -108,23 +108,7 @@ class GsAuthenticator {
     try {
       // Tries to find credentials in the environment (ADC)
       GoogleCredentials sourceCredentials = authenticatedCredentials ?: GoogleCredentials.getApplicationDefault()
-      def credentials = sourceCredentials.createScoped(scopes)
-
-      // Determine quota project: env var -> GOOGLE_CLOUD_PROJECT -> ADC file's quota_project_id
-      String qp = System.getenv('GOOGLE_CLOUD_QUOTA_PROJECT') ?: System.getenv(ENV_GOOGLE_CLOUD_PROJECT)
-      if (!qp && ADC_FILE_PATH.exists()) {
-        try {
-          Map json = new JsonSlurper().parseText(ADC_FILE_PATH.getText('UTF-8')) as Map
-          qp = json?.quota_project_id as String
-        } catch (ignored) {
-        }
-      }
-      if (qp) {
-        credentials = credentials.createWithQuotaProject(qp)
-        if (verbose) {
-          log.info("Using quota project: $qp")
-        }
-      }
+      def credentials = applyQuotaProject(sourceCredentials.createScoped(scopes), verbose)
 
       // The refreshIfExpired() method will handle checking if a refresh is needed.
       // If the refresh token is invalid, it will throw an IOException.
@@ -142,15 +126,42 @@ class GsAuthenticator {
   }
 
   /**
+   * Applies the configured quota project to the credentials, if any: the
+   * {@code GOOGLE_CLOUD_QUOTA_PROJECT} env var, then {@code GOOGLE_CLOUD_PROJECT}, then the
+   * {@code quota_project_id} recorded in the ADC file.
+   */
+  private static GoogleCredentials applyQuotaProject(GoogleCredentials credentials, boolean verbose = false) {
+    String qp = System.getenv('GOOGLE_CLOUD_QUOTA_PROJECT') ?: System.getenv(ENV_GOOGLE_CLOUD_PROJECT)
+    if (!qp && ADC_FILE_PATH.exists()) {
+      try {
+        Map json = new JsonSlurper().parseText(ADC_FILE_PATH.getText('UTF-8')) as Map
+        qp = json?.quota_project_id as String
+      } catch (ignored) {
+      }
+    }
+    if (qp) {
+      credentials = credentials.createWithQuotaProject(qp)
+      if (verbose) {
+        log.info("Using quota project: $qp")
+      }
+    }
+    credentials
+  }
+
+  /**
    * Initiates authentication by calling 'gcloud auth login'.
    * This delegates the entire interactive login flow to the gcloud SDK.
    *
    * @return True if the gcloud command succeeds, False otherwise.
    */
-  @SuppressWarnings('UnnecessaryGString')
   static boolean runGcloudLogin(List<String> requestedScopes) {
+    runGcloudLogin(requestedScopes, isCommandAvailable(GCLOUD_CMD))
+  }
+
+  @SuppressWarnings('UnnecessaryGString')
+  private static boolean runGcloudLogin(List<String> requestedScopes, boolean gcloudAvailable) {
     List<String> scopes = normalizeScopesForGcloud(requestedScopes)
-    if (isCommandAvailable(GCLOUD_CMD)) {
+    if (gcloudAvailable) {
       try {
         // The command will run interactively in the user's terminal.
         //def command = ['gcloud', 'auth', 'login', '--update-adc', '--enable-gdrive-access']
@@ -309,10 +320,11 @@ class GsAuthenticator {
       if (programmaticCredentials != null) {
         return programmaticCredentials
       }
-      if (!isCommandAvailable(GCLOUD_CMD) || !runGcloudLogin(scopes)) {
+      boolean gcloudAvailable = isCommandAvailable(GCLOUD_CMD)
+      if (!gcloudAvailable || !runGcloudLogin(scopes, gcloudAvailable)) {
         return null
       }
-      if (quotaProjectId && isCommandAvailable(GCLOUD_CMD)) {
+      if (quotaProjectId) {
         new ProcessBuilder([GCLOUD_CMD, GCLOUD_AUTH, GCLOUD_APP_DEFAULT, 'set-quota-project', quotaProjectId])
             .inheritIO().start().waitFor()
       }
@@ -348,6 +360,7 @@ class GsAuthenticator {
       GoogleCredentials credentials = ADC_FILE_PATH.withInputStream { InputStream input ->
         GoogleCredentials.fromStream(input).createScoped(scopes)
       } as GoogleCredentials
+      credentials = applyQuotaProject(credentials)
       credentials.refreshIfExpired()
       credentials
     } catch (IOException e) {

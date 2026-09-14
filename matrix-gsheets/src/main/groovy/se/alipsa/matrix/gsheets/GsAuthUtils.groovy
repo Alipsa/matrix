@@ -30,6 +30,9 @@ import java.nio.file.attribute.AclEntryPermission
 import java.nio.file.attribute.AclEntryType
 import java.nio.file.attribute.AclFileAttributeView
 import java.nio.file.attribute.PosixFilePermissions
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.FutureTask
 
 /**
  * OAuth2 / ADC token utilities for Google Sheets authentication.
@@ -51,12 +54,17 @@ class GsAuthUtils {
   private static final String OWNER_ONLY_PERMISSIONS = 'rw-------'
   private static final int SCOPE_CACHE_SIZE = 8
   private static final Object SCOPE_CACHE_LOCK = new Object()
-  private static final Map<String, Set<String>> SCOPE_CACHE = new LinkedHashMap<String, Set<String>>(SCOPE_CACHE_SIZE, 0.75f, true) {
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<String, Set<String>> eldest) {
-      this.size() > GsAuthUtils.SCOPE_CACHE_SIZE
-    }
-  }
+  private static final String TOKENINFO_REJECTED = 'tokeninfo request was rejected'
+  // Values are FutureTasks so the tokeninfo lookup itself runs outside SCOPE_CACHE_LOCK:
+  // the lock only guards cache get/put, and FutureTask.run() guarantees the resolver is
+  // invoked at most once per cached token no matter how many threads arrive concurrently.
+  private static final Map<String, FutureTask<Set<String>>> SCOPE_CACHE =
+      new LinkedHashMap<String, FutureTask<Set<String>>>(SCOPE_CACHE_SIZE, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, FutureTask<Set<String>>> eldest) {
+          this.size() > GsAuthUtils.SCOPE_CACHE_SIZE
+        }
+      }
 
   @FunctionalInterface
   interface ScopeResolver {
@@ -187,7 +195,8 @@ class GsAuthUtils {
 
   /**
    * Checks whether a token grants every requested scope, resolving and caching its tokeninfo
-   * scopes only once per access-token value.
+   * scopes only once per access-token value. The tokeninfo network call runs outside the
+   * cache lock so a slow or hung request cannot block scope checks for unrelated tokens.
    */
   @CompileDynamic
   static boolean hasAllScopes(GoogleCredentials creds, List<String> required, ScopeResolver resolver) {
@@ -204,19 +213,43 @@ class GsAuthUtils {
     if (!token) {
       return false
     }
-    Set<String> granted
+    FutureTask<Set<String>> resolution
     synchronized (SCOPE_CACHE_LOCK) {
-      granted = SCOPE_CACHE.get(token)
-      if (granted == null) {
-        try {
-          granted = resolver.grantedScopes(token)
-          SCOPE_CACHE.put(token, granted)
-        } catch (IOException e) {
-          log.warn("OAuth scope verification was unavailable (${e.message}); treating credentials as unverified and attempting login.")
-          log.debug('OAuth scope verification failure details', e)
-          return false
+      resolution = SCOPE_CACHE.get(token)
+      if (resolution == null) {
+        resolution = new FutureTask<Set<String>>({
+          // a custom resolver returning null means "no scopes granted", not "crash on NPE"
+          resolver.grantedScopes(token) ?: ([] as Set<String>)
+        } as Callable<Set<String>>)
+        SCOPE_CACHE.put(token, resolution)
+      }
+    }
+    // FutureTask.run() executes the callable at most once, so concurrent callers share the
+    // single in-flight tokeninfo request; runners that lose the race return immediately.
+    resolution.run()
+    Set<String> granted
+    try {
+      granted = resolution.get()
+    } catch (ExecutionException e) {
+      // Do not cache failures; a later call for the same token should be able to retry.
+      synchronized (SCOPE_CACHE_LOCK) {
+        if (SCOPE_CACHE.get(token)?.is(resolution)) {
+          SCOPE_CACHE.remove(token)
         }
       }
+      Throwable cause = e.cause
+      if (cause instanceof IOException) {
+        if (cause.message?.startsWith(TOKENINFO_REJECTED)) {
+          log.warn("OAuth scope verification rejected the access token (${cause.message}); " +
+              'it is invalid or revoked. Treating credentials as unverified and attempting login.')
+        } else {
+          log.warn("OAuth scope verification was unavailable (${cause.message}); " +
+              'treating credentials as unverified and attempting login.')
+        }
+        log.debug('OAuth scope verification failure details', cause)
+        return false
+      }
+      throw e
     }
     for (String req : (required ?: Collections.<String>emptyList())) {
       if (!isSatisfied(granted, req)) {
@@ -230,11 +263,25 @@ class GsAuthUtils {
   @CompileDynamic
   static Set<String> fetchGrantedScopes(String token) throws IOException {
     def url = new URI("https://oauth2.googleapis.com/tokeninfo?access_token=${URLEncoder.encode(token, UTF8)}").toURL()
-    def json = new JsonSlurper().parse(url)
-    (json?.scope ?: '')
-        .split('\\s+')
-        .collect { canonScope(it) }
-        .findAll { it } as Set<String>
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection()
+    try {
+      if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+        String detail = ''
+        try {
+          detail = connection.errorStream?.getText(UTF8) ?: ''
+        } catch (IOException ignored) {
+        }
+        throw new IOException("${TOKENINFO_REJECTED} with HTTP ${connection.responseCode}" +
+            (detail ? ": ${detail}" : ''))
+      }
+      def json = new JsonSlurper().parse(connection.inputStream)
+      (json?.scope ?: '')
+          .split('\\s+')
+          .collect { canonScope(it) }
+          .findAll { it } as Set<String>
+    } finally {
+      connection.disconnect()
+    }
   }
 
   /** Clears the token-scope cache; intended for diagnostics and test isolation. */
@@ -308,7 +355,11 @@ class GsAuthUtils {
             .build()
         view.setAcl([entry])
         List<AclEntry> acl = view.acl
-        if (acl.size() != 1 || acl[0] != entry) {
+        // Compare principal and type rather than full AclEntry equality: some providers
+        // normalize entry flags on read-back, which would make a correct owner-only ACL
+        // compare unequal and block login entirely (observed risk on Windows/NTFS).
+        boolean ownerOnly = acl.size() == 1 && acl[0].principal() == entry.principal() && acl[0].type() == AclEntryType.ALLOW
+        if (!ownerOnly) {
           throw new IOException(unsupportedMessage)
         }
         return

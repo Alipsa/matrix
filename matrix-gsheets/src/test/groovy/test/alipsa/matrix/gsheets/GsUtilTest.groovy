@@ -143,6 +143,9 @@ class GsUtilTest {
 
     // Invalid format - too many colons
     assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:B2:C3'))
+    // Trailing/leading colons leave an empty endpoint
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:'))
+    assertThrows(IllegalArgumentException, () -> columnCountForRange(':A1'))
     ['Sheet1!1:5', 'A:1', 'A1:Bgarbage', 'A1:D10 junk', 'A1B:C2'].each { String range ->
       IllegalArgumentException exception = assertThrows(IllegalArgumentException, () -> columnCountForRange(range))
       assertTrue(exception.message.contains('Invalid range format'))
@@ -155,6 +158,26 @@ class GsUtilTest {
     validateRange("'My Sheet'!A1")
     assertThrows(IllegalArgumentException, () -> validateRange('hello B2 world'))
     assertThrows(IllegalArgumentException, () -> validateRange('Sheet1'))
+    assertThrows(IllegalArgumentException, () -> validateRange('Sheet1!1:5'))
+    assertThrows(IllegalArgumentException, () -> validateRange('A1:'))
+  }
+
+  @Test
+  void testValidateWriteRangePermitsRowOnlyRanges() {
+    // everything validateRange accepts
+    validateWriteRange('a1:d10')
+    validateWriteRange("'My Sheet'!A1")
+    validateWriteRange('A:D')
+    // row-only ranges are valid write targets
+    validateWriteRange('Sheet1!1:5')
+    validateWriteRange('1:5')
+    validateWriteRange('Sheet1!3')
+    // but malformed input and bare sheet names are still rejected
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('hello B2 world'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('Sheet1'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A:1'))
+    assertThrows(IllegalArgumentException, () -> validateWriteRange('A1:B2:C3'))
   }
 
   @Test

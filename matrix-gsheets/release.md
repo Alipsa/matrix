@@ -1,20 +1,31 @@
 # Release history
 
-## 0.2.2, in progress
-### Bug Fixes
+## 0.3.0, in progress
+### Behavior Changes
 - `GsAuthenticator.authenticate()` now throws `SheetOperationException` when authentication
   cannot be completed, instead of returning `null` (behaviour change).
+- Reject unsafe `Long`, `BigInteger`, and long-backed atomic integral values as well as
+  `BigDecimal` values (behaviour change), avoiding silent IEEE-754 rounding.
+
+### Bug Fixes
 - Normalize and fully validate A1 ranges consistently, including lowercase columns, quoted sheet
   names containing `!`, and clear errors for row-only ranges whose column count is undefined.
+- `GsheetsWriter.update()` again accepts row-only ranges such as `Sheet1!1:5` (regression fix);
+  the stricter validation that requires column letters is reader-only.
 - Fix serial date/time boundaries for negative dates and midnight rollover; Sheets serials do not
   include Excel's fictitious 1900 leap day.
 - Validate `GsheetsWriter.update()` completely before writing and preserve the cause when
-  spreadsheet creation fails.
-- Avoid unnecessary OAuth refreshes and repeated tokeninfo requests by caching granted scopes.
+  spreadsheet creation fails (the error now includes the spreadsheet title).
+- Avoid unnecessary OAuth refreshes and repeated tokeninfo requests by caching granted scopes,
+  without holding a JVM-wide lock during the tokeninfo network call.
+- Apply the configured quota project (`GOOGLE_CLOUD_QUOTA_PROJECT`, `GOOGLE_CLOUD_PROJECT`, or the
+  ADC file's `quota_project_id`) to credentials reloaded right after a gcloud login.
+- Report a clearer warning when OAuth scope verification rejects an invalid/revoked token, instead
+  of describing it as an offline/connectivity failure.
+- Reject malformed ranges with a trailing colon (e.g. `A1:`) in range validation.
 - Write application-default credentials with owner-only file permissions, refusing to persist
-  secrets when the filesystem cannot guarantee them.
-- Reject unsafe `Long`, `BigInteger`, and long-backed atomic integral values as well as
-  `BigDecimal` values (behaviour change), avoiding silent IEEE-754 rounding.
+  secrets when the filesystem cannot guarantee them; the ACL read-back check now tolerates
+  providers that normalize entry flags (e.g. Windows/NTFS).
 - Treat null sheet names as `Sheet1` and correctly parse quoted sheet names containing `!`.
 
 - Upgrade dependencies:

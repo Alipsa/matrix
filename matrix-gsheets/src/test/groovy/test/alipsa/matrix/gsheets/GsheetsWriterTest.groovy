@@ -131,6 +131,33 @@ class GsheetsWriterTest {
   }
 
   @Test
+  void testUpdateWithServiceAcceptsRowOnlyRange() {
+    Sheets sheetsService = mock(Sheets)
+    Sheets.Spreadsheets spreadsheets = mock(Sheets.Spreadsheets)
+    Sheets.Spreadsheets.Values values = mock(Sheets.Spreadsheets.Values)
+    Sheets.Spreadsheets.Values.Update update = mock(Sheets.Spreadsheets.Values.Update)
+    when(sheetsService.spreadsheets()).thenReturn(spreadsheets)
+    when(spreadsheets.values()).thenReturn(values)
+    when(values.update(eq('some-id'), eq('Sheet1!2:3'), any())).thenReturn(update)
+    when(update.setValueInputOption('RAW')).thenReturn(update)
+    when(update.execute()).thenReturn(new UpdateValuesResponse())
+    Matrix matrix = Matrix.builder().data(id: [1]).build()
+
+    assertEquals('some-id', GsheetsWriter.updateWithService('some-id', 'Sheet1!2:3', matrix, sheetsService))
+    verify(values).update(eq('some-id'), eq('Sheet1!2:3'), any())
+  }
+
+  @Test
+  void testUpdateWithServiceRejectsRowOnlyRangeForFormattedDecimalWrite() {
+    Sheets sheetsService = mock(Sheets)
+    Matrix matrix = Matrix.builder().data(amount: [1.50]).build()
+
+    assertThrows(IllegalArgumentException,
+        () -> GsheetsWriter.updateWithService('some-id', 'Sheet1!2:3', matrix, sheetsService))
+    verifyNoInteractions(sheetsService)
+  }
+
+  @Test
   void testUpdateWithServiceFormatsLowercaseStartingCell() {
     Sheets sheetsService = mock(Sheets)
     Sheets.Spreadsheets spreadsheets = mock(Sheets.Spreadsheets)
