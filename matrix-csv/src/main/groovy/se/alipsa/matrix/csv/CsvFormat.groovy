@@ -46,7 +46,12 @@ class CsvFormat {
   static final CsvFormat TDF = builder().delimiter('\t' as char).build()
 
   /** RFC 4180 compliant CSV format with CRLF record separators. */
-  static final CsvFormat RFC4180 = builder().recordSeparator(CRLF).build()
+  static final CsvFormat RFC4180 = builder()
+      .recordSeparator(CRLF)
+      .trim(false)
+      .ignoreEmptyLines(false)
+      .ignoreSurroundingSpaces(false)
+      .build()
 
   /** The field delimiter character. Default: {@code ','} */
   final char delimiter

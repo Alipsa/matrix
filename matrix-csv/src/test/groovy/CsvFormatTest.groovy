@@ -235,6 +235,26 @@ Bob,25'''
   }
 
   @Test
+  void readWithRfc4180PresetPreservesFieldWhitespace() {
+    String csvContent = 'name,value\r\nAlice,  preserve me  \r\n'
+
+    Matrix matrix = CsvReader.read().rfc4180().fromString(csvContent)
+
+    assertEquals('  preserve me  ', matrix[0, 'value'])
+  }
+
+  @Test
+  void readWithRfc4180PresetDoesNotSilentlyIgnoreBlankRecords() {
+    String csvContent = 'name,value\r\nAlice,1\r\n\r\nBob,2\r\n'
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvReader.read().rfc4180().fromString(csvContent)
+    }
+
+    assertTrue(exception.message.contains('expected 2'))
+  }
+
+  @Test
   void readWithRfc4180PresetRejectsMissingHeaderNames() {
     String csvContent = 'id,,amount\r\n1,2,3\r\n'
 
