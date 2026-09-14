@@ -212,7 +212,8 @@ class GsAuthUtils {
           granted = resolver.grantedScopes(token)
           SCOPE_CACHE.put(token, granted)
         } catch (IOException e) {
-          log.warn("Could not resolve granted OAuth scopes: ${e.message}", e)
+          log.warn("OAuth scope verification was unavailable (${e.message}); treating credentials as unverified and attempting login.")
+          log.debug('OAuth scope verification failure details', e)
           return false
         }
       }
