@@ -14,11 +14,10 @@ if [ ! "$javaVersion" = 21 ]; then
   exit 1
 fi
 
-if (command -v gclogin >/dev/null 2>&1); then
-  gclogin
-  export RUN_EXTERNAL_TESTS=true
+if (command -v gcloud >/dev/null 2>&1); then
+  ./testAll.sh
 else
-  echo "gclogin not found, skipping external tests"
+  echo "gcloud not found, skipping external tests"
 fi
 
 ./gradlew :matrix-bigquery:clean :matrix-bigquery:build :matrix-bigquery:release || exit 1

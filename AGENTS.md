@@ -27,7 +27,8 @@ Authoritative project metadata:
 - `./gradlew :matrix-ggplot:test --tests "gg.GgPlotTest"`: run a single test class.
 - `./gradlew :matrix-ggplot:test --tests "gg.GgPlotTest.testPointChartRender"`: run a single test method.
 - `./gradlew test -PrunSlowTests=true`: include slow integration tests.
-- `RUN_EXTERNAL_TESTS=true ./gradlew test`: enable external tests (BigQuery, GSheets).
+- `./gradlew :matrix-bigquery:externalTest`: run BigQuery external and emulator tests separately (requires ADC and `GOOGLE_CLOUD_PROJECT`).
+- `RUN_EXTERNAL_TESTS=true ./gradlew test`: enable external tests for modules that support this setting, such as GSheets.
 - `./gradlew :matrix-charts:test -Pheadless=true` / `./gradlew :matrix-ggplot:test -Pheadless=true`: GUI/chart tests in headless mode (CI).
 - `./gradlew :matrix-charts:testFast` / `./gradlew :matrix-ggplot:testFast`: fast unit tests only (no chart rendering) for quick dev-cycle feedback.
 - `./gradlew publishToMavenLocal`: publish artifacts locally.
@@ -90,7 +91,7 @@ Core style rules — follow the [Groovy style guide](docs/agents/groovy-style-gu
 **Example**: If you're implementing HCL color conversion and find similar code already exists in `ScaleColorManual`, don't copy it—extract it to a `ColorSpaceUtil` class that both can use.
 
 ## Testing Guidelines
-JUnit Jupiter is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module's `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
+JUnit Jupiter is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module's `src/test` tree. Use `-PrunSlowTests=true`, module-specific external-test tasks (for example `:matrix-bigquery:externalTest`), and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
 
 Key patterns — see [Testing guidelines](docs/agents/testing-guidelines.md) for examples:
 - Groovy test modules must include the `se.alipsa.groovy:groovier-junit` test dependency; never coerce GStrings to String for JUnit assertions.

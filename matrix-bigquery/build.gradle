@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -56,27 +57,10 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
 }
 
-test {
-  jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", '-Xshare:off'
-  // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
-  def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
-
-  if (runExternal) {
-    logger.lifecycle("Running external tests (including @Tag('external') tests)")
-  } else {
-    logger.lifecycle("Excluding external and flaky tests (set -PrunExternalTests=true or RUN_EXTERNAL_TESTS=true to include them)")
-  }
-
-  // Enable parallel test execution for faster external test runs
-  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-
-  useJUnitPlatform() {
-    if (!runExternal) {
-      excludeTags 'external', 'flaky'
-    }
-  }
-
-  testLogging {
+def configureBigQueryTestTask = { Test testTask ->
+  testTask.jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", '-Xshare:off'
+  testTask.maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+  testTask.testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
         TestLogEvent.SKIPPED,
@@ -99,6 +83,25 @@ test {
     }
     info.events = debug.events
     info.exceptionFormat = debug.exceptionFormat
+  }
+}
+
+test {
+  configureBigQueryTestTask(delegate as Test)
+  useJUnitPlatform {
+    excludeTags 'external', 'flaky'
+  }
+}
+
+tasks.register('externalTest', Test) {
+  description = 'Runs external BigQuery and flaky emulator integration tests.'
+  group = 'verification'
+  dependsOn testClasses
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  configureBigQueryTestTask(delegate as Test)
+  useJUnitPlatform {
+    includeTags 'external', 'flaky'
   }
 }
 
