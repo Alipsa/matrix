@@ -479,7 +479,7 @@ class CsvWriter {
     /** Configures tab-delimited format (TSV). */
     WriteBuilder tsv() { applyFormat(CsvFormat.TDF) }
 
-    /** Configures RFC 4180 compliant format with CRLF record separators. */
+    /** Configures RFC 4180 compliant format; see {@link CsvFormat#RFC4180} for its definition. */
     WriteBuilder rfc4180() { applyFormat(CsvFormat.RFC4180) }
 
     // ── Terminal operations ───────────────────────────────────

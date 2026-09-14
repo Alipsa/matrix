@@ -1,6 +1,7 @@
 # Release history
 
 ## v2.5.0
+- make `rfc4180()` preserve field whitespace and no longer ignore blank records on read, matching Commons CSV RFC4180
 - reject ragged CSV records instead of silently padding or truncating header metadata, with normalized record positions and expected/actual column counts
 - strip matching UTF-8, UTF-16LE, UTF-16BE, UTF-32LE, and UTF-32BE byte-order marks from byte-based reads
 - preserve and flush caller-owned writers while preventing duplicate configured headers

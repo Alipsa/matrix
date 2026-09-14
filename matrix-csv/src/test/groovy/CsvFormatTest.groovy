@@ -235,6 +235,26 @@ Bob,25'''
   }
 
   @Test
+  void readWithRfc4180PresetPreservesFieldWhitespace() {
+    String csvContent = 'name,value\r\nAlice,  preserve me  \r\n'
+
+    Matrix matrix = CsvReader.read().rfc4180().fromString(csvContent)
+
+    assertEquals('  preserve me  ', matrix[0, 'value'])
+  }
+
+  @Test
+  void readWithRfc4180PresetReportsBlankRecordsAsRagged() {
+    String csvContent = 'name,value\r\nAlice,1\r\n\r\nBob,2\r\n'
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      CsvReader.read().rfc4180().fromString(csvContent)
+    }
+
+    assertEquals('CSV record 3 has 1 columns; expected 2', exception.message)
+  }
+
+  @Test
   void readWithRfc4180PresetRejectsMissingHeaderNames() {
     String csvContent = 'id,,amount\r\n1,2,3\r\n'
 
