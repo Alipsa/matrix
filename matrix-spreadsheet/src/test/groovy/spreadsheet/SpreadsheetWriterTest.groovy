@@ -134,6 +134,18 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testWriteSheetsUsesMatrixNamesWhenPositionMapIsNull() {
+    Matrix named = Matrix.builder('Named').data(id: [1]).build()
+    File file = File.createTempFile('matrix-writer-null-map', '.xlsx')
+    file.delete()
+    file.deleteOnExit()
+
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([named], file, (Map<String, String>) null)
+
+    assertEquals(['Named'], sheetNames)
+  }
+
+  @Test
   void testWriteMultipleSheetsWithPositionsMap() {
     def file = File.createTempFile('matrix-writer-map-pos', '.xlsx')
     if (file.exists()) {

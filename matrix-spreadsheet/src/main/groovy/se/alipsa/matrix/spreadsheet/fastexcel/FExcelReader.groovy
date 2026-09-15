@@ -103,17 +103,12 @@ class FExcelReader implements SpreadsheetReader {
       return NOT_FOUND
     }
     int poiColNum = colNumber - 1
-    int rowNum = NOT_FOUND
     try (Stream<Row> rows = sheet.openStream()) {
-      rows.each { Row row ->
+      rows.filter { Row row ->
         Cell cell = FExcelUtil.cellAt(row, poiColNum)
-        if (cell != null && content == cell.getRawValue()) {
-          rowNum = row.getRowNum()
-          return
-        }
-      }
+        cell != null && content == cell.rawValue
+      }.findFirst().map { Row row -> row.rowNum }.orElse(NOT_FOUND)
     }
-    rowNum
   }
 
   /**

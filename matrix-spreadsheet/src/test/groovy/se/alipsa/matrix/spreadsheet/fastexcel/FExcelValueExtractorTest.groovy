@@ -29,6 +29,11 @@ class FExcelValueExtractorTest {
     assertFalse(FExcelValueExtractor.hasTimeComponent('yyyy-mm-dd'))
     assertFalse(FExcelValueExtractor.hasTimeComponent('yyyy-mm-dd "status"'))
     assertFalse(FExcelValueExtractor.hasTimeComponent('yyyy-mm-dd\\h'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('yyyy-mm-dd "h:mm"'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('[$-x-sysdate]dddd, mmmm dd, yyyy'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('[$-en-US]d-mmm-yy'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('[$-sv-SE]yyyy-mm-dd'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('[White]yyyy-mm-dd'))
     assertFalse(FExcelValueExtractor.hasTimeComponent(null))
   }
 }

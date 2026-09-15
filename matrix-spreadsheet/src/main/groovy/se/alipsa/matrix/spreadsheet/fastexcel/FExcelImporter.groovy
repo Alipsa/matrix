@@ -317,6 +317,7 @@ class FExcelImporter implements Importer {
     if (!headerConsumed) {
       colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
     }
+    colNames = SpreadsheetUtil.createUniqueColumnNames(colNames)
     Matrix m = Matrix.builder()
         .matrixName(sheet.name)
         .columnNames(colNames)

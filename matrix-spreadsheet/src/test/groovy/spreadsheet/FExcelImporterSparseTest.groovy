@@ -32,6 +32,16 @@ class FExcelImporterSparseTest {
   }
 
   @Test
+  void generatedColumnNamesDoNotCollideWithHeaders() {
+    File file = XlsxTestUtil.createXlsx { ws ->
+      ws.value(0, 0, 'a'); ws.value(0, 2, 'c2')
+      ws.value(1, 0, 1); ws.value(1, 1, 2); ws.value(1, 2, 3)
+    }
+    Matrix matrix = SpreadsheetImporter.importSpreadsheet(file.absolutePath, 1, 1, 2, 1, 3, true)
+    assertEquals(['a', 'c2', 'c21'], matrix.columnNames())
+  }
+
+  @Test
   void sparseRowsUseTheirSheetNumbersAndPreserveInteriorGaps() {
     File file = XlsxTestUtil.createXlsx { ws ->
       ws.value(0, 0, 'a'); ws.value(1, 0, 1); ws.value(3, 0, 4); ws.value(4, 0, 5)

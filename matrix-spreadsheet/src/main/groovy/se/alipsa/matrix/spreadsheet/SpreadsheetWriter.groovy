@@ -154,6 +154,9 @@ class SpreadsheetWriter {
     if (matrices == null) {
       throw new IllegalArgumentException(ERR_MATRICES_NULL)
     }
+    if (sheetNamesAndPositions == null) {
+      return writeSheets(matrices, file)
+    }
     if (sheetNamesAndPositions.size() != matrices.size()) {
       throw new IllegalArgumentException(ERR_SIZE_MISMATCH)
     }

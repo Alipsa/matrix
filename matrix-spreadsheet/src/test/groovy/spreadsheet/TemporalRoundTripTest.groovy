@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -38,7 +39,7 @@ class TemporalRoundTripTest {
   }
 
   @Test
-  void writesAndAppendsTemporalTypesConsistently() {
+  void testWritesAndAppendsTemporalTypesConsistently() {
     ['.ods', '.xlsx'].each { String extension ->
       File file = tmp(extension)
       SpreadsheetWriter.write(dates(), file, 'first')
@@ -53,18 +54,20 @@ class TemporalRoundTripTest {
   }
 
   @Test
-  void odsReaderAcceptsOffsetDateValues() {
+  void testOdsReaderAcceptsOffsetDateValues() {
     String xml = OdsTestUtil.contentXml('''
       <table:table table:name="Sheet1">
         <table:table-row><table:table-cell office:value-type="string"><text:p>when</text:p></table:table-cell></table:table-row>
         <table:table-row><table:table-cell office:value-type="date" office:date-value="2024-03-05T06:07:08+02:00"/></table:table-row>
         <table:table-row><table:table-cell office:value-type="date" office:date-value="2024-03-05T06:07:08Z"/></table:table-row>
         <table:table-row><table:table-cell office:value-type="date" office:date-value="2024-03-05T06:07:08.5"/></table:table-row>
+        <table:table-row><table:table-cell office:value-type="date" office:date-value="2024-03-05+02:00"/></table:table-row>
       </table:table>''')
     Matrix matrix = SpreadsheetImporter.importSpreadsheet(OdsTestUtil.createOds(xml))
     assertEquals(LDT, matrix[0, 'when'])
     assertEquals(LDT, matrix[1, 'when'])
     assertEquals(LocalDateTime.of(2024, 3, 5, 6, 7, 8, 500_000_000), matrix[2, 'when'])
+    assertEquals(LocalDate.of(2024, 3, 5), matrix[3, 'when'])
   }
 
 }

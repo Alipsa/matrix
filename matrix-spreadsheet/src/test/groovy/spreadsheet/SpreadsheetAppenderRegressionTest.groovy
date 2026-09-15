@@ -17,7 +17,7 @@ class SpreadsheetAppenderRegressionTest {
   private static final Matrix DATA = Matrix.builder().data(a: [1, 2], b: ['x', 'y']).build()
 
   @Test
-  void appendMatchesSheetNamesIgnoringCase() {
+  void testAppendMatchesSheetNamesIgnoringCase() {
     ['.xlsx', '.ods'].each { String extension ->
       File file = File.createTempFile('matrix-case', extension)
       file.delete()
@@ -31,7 +31,7 @@ class SpreadsheetAppenderRegressionTest {
   }
 
   @Test
-  void xlsxReplacementRemovesCalcChain() {
+  void testXlsxReplacementRemovesCalcChain() {
     File source = XlsxTestUtil.createXlsx { ws -> ws.value(0, 0, 'h'); ws.value(1, 0, 42) }
     String types = OdsTestUtil.readEntry(source, '[Content_Types].xml').replace('</Types>',
         '<Override PartName="/xl/calcChain.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"/></Types>')
@@ -49,7 +49,7 @@ class SpreadsheetAppenderRegressionTest {
   }
 
   @Test
-  void appendTwoNamesDifferingOnlyByCaseAreSuffixedNotCollapsed() {
+  void testAppendTwoNamesDifferingOnlyByCaseAreSuffixedNotCollapsed() {
     Matrix replacement = Matrix.builder().data(a: [3, 4], b: ['p', 'q']).build()
     Matrix extra = Matrix.builder().data(c: [5, 6]).build()
     ['.xlsx', '.ods'].each { String extension ->
@@ -68,7 +68,7 @@ class SpreadsheetAppenderRegressionTest {
   }
 
   @Test
-  void odsAppendDoesNotNestNewTableInsideSheetWithTableLocalNamedExpressions() {
+  void testOdsAppendDoesNotNestNewTableInsideSheetWithTableLocalNamedExpressions() {
     String xml = OdsTestUtil.contentXml('''
       <table:table table:name="Sheet1">
         <table:table-row><table:table-cell office:value-type="string"><text:p>h</text:p></table:table-cell></table:table-row>
@@ -87,7 +87,7 @@ class SpreadsheetAppenderRegressionTest {
   }
 
   @Test
-  void odsAddsTablesBeforeNamedExpressions() {
+  void testOdsAddsTablesBeforeNamedExpressions() {
     String xml = OdsTestUtil.contentXml('''
       <table:table table:name="Sheet1"><table:table-row><table:table-cell office:value-type="string"><text:p>h</text:p></table:table-cell></table:table-row></table:table>
       <table:named-expressions><table:named-range table:name="MyRange" table:base-cell-address="$Sheet1.$A$1" table:cell-range-address="$Sheet1.$A$1:.$A$1"/></table:named-expressions>''')

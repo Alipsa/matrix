@@ -110,6 +110,28 @@ class SpreadsheetUtil {
    }
 
    /**
+    * Make column names unique by appending a numeric suffix to later duplicates.
+    *
+    * @param names proposed column names
+    * @return unique column names in their original order
+    */
+   static List<String> createUniqueColumnNames(List<String> names) {
+      List<String> result = []
+      Set<String> usedNames = [] as Set
+      names.each { String name ->
+         String uniqueName = name
+         int suffix = 1
+         while (usedNames.contains(uniqueName)) {
+            uniqueName = "$name$suffix".toString()
+            suffix++
+         }
+         usedNames.add(uniqueName)
+         result.add(uniqueName)
+      }
+      result
+   }
+
+   /**
     * Convert a date, including SQL date/time subclasses, to a local date-time in the system default zone.
     *
     * @param date the date to convert, may be null

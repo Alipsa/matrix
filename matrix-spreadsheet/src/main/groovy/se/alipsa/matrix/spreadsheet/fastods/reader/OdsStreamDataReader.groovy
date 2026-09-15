@@ -15,6 +15,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 import javax.xml.stream.XMLStreamReader
@@ -67,6 +68,8 @@ final class OdsStreamDataReader extends OdsDataReader {
   private static final String EL_TABLE_CELL = 'table-cell'
   private static final String EL_COVERED_TABLE_CELL = 'covered-table-cell'
   private static final String EL_ANNOTATION = 'annotation'
+  private static final String EL_PARAGRAPH = 'p'
+  private static final String EL_HEADING = 'h'
   private static final String ATTR_NUMBER_COLUMNS_REPEATED = 'number-columns-repeated'
   private static final String NEWLINE = '\n'
 
@@ -323,6 +326,13 @@ final class OdsStreamDataReader extends OdsDataReader {
     if (v.length() == 10) {
       return LocalDate.parse(v)
     }
+    if (!v.contains('T')) {
+      try {
+        return LocalDate.parse(v, DateTimeFormatter.ISO_OFFSET_DATE)
+      } catch (DateTimeParseException e) {
+        throw new IllegalArgumentException("Invalid office:date-value '$v'", e)
+      }
+    }
     try {
       return LocalDateTime.parse(v)
     } catch (DateTimeParseException ignored) {
@@ -373,22 +383,9 @@ final class OdsStreamDataReader extends OdsDataReader {
           skipElement(reader, OFFICE_URN, EL_ANNOTATION)
           continue
         }
-        switch (localName) {
-          // Separate multiple <text:p> blocks with newline
-          case 'p' -> {
-            appendParagraphBreak(text)
-            inParagraph = true
-          }
-          case 's' -> {
-            // <text:s c="N"/> ⇒ N spaces (default 1)
-            int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
-            text.append(' '.repeat(numSpaces))
-          }
-          case 'line-break' -> text.append(NEWLINE)
-          case 'tab' -> text.append('\t')
-        }
+        inParagraph = handleTextStartElement(reader, text, textUrn, inParagraph)
       } else if (eventType == XMLStreamReader.END_ELEMENT) {
-        if (reader.localName == 'p' && TEXT_URN == reader.namespaceURI) {
+        if ((reader.localName == EL_PARAGRAPH || reader.localName == EL_HEADING) && TEXT_URN == reader.namespaceURI) {
           inParagraph = false
         } else if (reader.localName == EL_TABLE_CELL) {
           // Stop at end of cell (covers empty/self-closing cells)
@@ -399,6 +396,27 @@ final class OdsStreamDataReader extends OdsDataReader {
 
     String s = text.toString()
     return s.isEmpty() ? null : s
+  }
+
+  private static boolean handleTextStartElement(XMLStreamReader reader, StringBuilder text, String textUrn, boolean inParagraph) {
+    if (TEXT_URN != reader.namespaceURI) {
+      return inParagraph
+    }
+    String localName = reader.localName
+    if (localName == EL_PARAGRAPH || localName == EL_HEADING) {
+      appendParagraphBreak(text)
+      return true
+    }
+    if (localName == 's') {
+      // <text:s c="N"/> ⇒ N spaces (default 1)
+      int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
+      text.append(' '.repeat(numSpaces))
+    } else if (localName == 'line-break') {
+      text.append(NEWLINE)
+    } else if (localName == 'tab') {
+      text.append('\t')
+    }
+    inParagraph
   }
 
   /** Advance the reader past the matching end element of the current start element. */

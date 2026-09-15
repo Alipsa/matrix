@@ -46,6 +46,7 @@ public class FDateUtil {
   private static final Pattern DATE_PATTERN_3 = Pattern.compile("^[\\[\\]yYmMdDhHsS\\-/,. :\"\\\\]+0*[ampAMP/]*$");
   //  elapsed time patterns: [h],[m] and [s]
   private static final Pattern DATE_PATTERN_4 = Pattern.compile("^\\[([hH]+|[mM]+|[sS]+)\\]");
+  private static final Pattern DATE_PATTERN_5 = Pattern.compile("\"[^\"]*\"");
 
   /**
    * Given a format ID and its format String, will check to see if the
@@ -112,6 +113,8 @@ public class FDateUtil {
     // If it starts with something like [Black] or [Yellow],
     //  then it could be a date
     fs = DATE_PATTERN_2.matcher(fs).replaceAll("");
+    // Quoted text is displayed literally and does not change whether the format is a date.
+    fs = DATE_PATTERN_5.matcher(fs).replaceAll("");
     // You're allowed something like dd/mm/yy;[red]dd/mm/yy
     //  which would place dates before 1900/1904 in red
     // For now, only consider the first one

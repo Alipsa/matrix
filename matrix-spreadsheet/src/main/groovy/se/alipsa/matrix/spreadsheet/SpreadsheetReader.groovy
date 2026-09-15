@@ -48,11 +48,11 @@ interface SpreadsheetReader extends Closeable {
   int findLastRow(int sheetNum)
   int findLastRow(String sheetName)
   /**
-   * Scans the first 10 rows only; pass an explicit end column when a wider row occurs later.
+   * Scans the first {@link Factory#AUTO_DETECT_ROWS_TO_SCAN} rows only; pass an explicit end column when a wider row occurs later.
    */
   int findLastCol(int sheetNum)
   /**
-   * Scans the first 10 rows only; pass an explicit end column when a wider row occurs later.
+   * Scans the first {@link Factory#AUTO_DETECT_ROWS_TO_SCAN} rows only; pass an explicit end column when a wider row occurs later.
    */
   int findLastCol(String sheetName)
   List<String> getSheetNames() throws IOException
