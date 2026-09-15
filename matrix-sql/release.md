@@ -18,12 +18,18 @@ Requires matrix-core 3.9.0 or later.
 
 ### DDL generation
 - Generated decimal columns now reserve at least one integer digit. Columns containing only values below one are therefore sized one precision digit wider; for example, `NUMERIC(3, 3)` becomes `NUMERIC(4, 3)`.
+- `create()`'s no-`scanNumRows` convenience overloads (`create(Matrix, String...)`, `create(String, Matrix, String...)`, `MatrixDbUtil.create(Connection, Matrix, boolean, String...)`) now always scan the full table for column sizing before inserting; this is a clarification of existing intent, not a behavior change (the previous `Math.max(DEFAULT_SCAN_ROWS, table.rowCount())` calculation always resolved to the full row count too, just less directly).
+- `MatrixSql.createDdl(Matrix, boolean, int...)`'s default (no explicit `scanNumrows`) scan is now actually capped at `MatrixDbUtil.DEFAULT_SCAN_ROWS` (100 rows) as documented; previously the cap never engaged due to the same `Math.max` calculation. `createDdl` never inserts data, so this only affects the sizing of columns whose widest value occurs beyond the sampled rows - pass an explicit `scanNumrows` (e.g. `table.rowCount()`) to scan the full table.
+- The duplicated `DEFAULT_SCAN_ROWS` default (previously a private constant in `MatrixSql` and a separate hard-coded `100` in `MatrixDbUtil`) is consolidated into one public `MatrixDbUtil.DEFAULT_SCAN_ROWS`.
 
 ### ResultSet and JDBC behavior
 - `MatrixResultSet` cursor movement and state reporting now follow JDBC before-first and after-last semantics, including repeated `next()` calls after the final row.
 - Decimal precision and scale metadata is derived as a compatible pair that accommodates both the largest integer part and the greatest scale in a column.
 - Strengthened closed-state, column-index, update, metadata, calendar, URL, wrapper, numeric rounding, and null-handling behavior.
 - JDBC batch sentinel values now produce non-negative affected-row counts.
+- `deleteRow()` no longer desyncs the cursor from the underlying data: the row that slides into the deleted index is no longer silently skipped by the next `next()` call, deleting the last row correctly leaves the cursor after-last, and calling it when the cursor is not on a valid row now throws `SQLException` instead of an unchecked `IndexOutOfBoundsException`.
+- `getDate`/`getTime`/`getTimestamp(int|String, Calendar)` now honor the supplied `Calendar` for every temporal cell type, not only raw `Number` (epoch millis) cells: `java.util.Date`/`java.sql.Date`/`Time`/`Timestamp`, `java.time.LocalDate`/`LocalTime`/`LocalDateTime`, `ZonedDateTime` (for `getTimestamp` only, discarding its own embedded zone and reinterpreting its local fields), and `String` cells are all reinterpreted in the given calendar's zone. This is a behavior change: these cell types previously ignored the `Calendar` argument entirely. For `String`-typed cells specifically, the `Calendar` overload intentionally requires stricter, zero-padded ISO-8601 syntax than the no-`Calendar` overload's lenient JDBC escape parsing (`Date.valueOf`/`Time.valueOf`/`Timestamp.valueOf`) - see the getter javadoc for the documented divergence and accepted cell types (`getDate`/`getTimestamp` accept only `String`; `getTime` accepts any `CharSequence`, matching each getter's own no-`Calendar` sibling).
+- `previous()` now calls `relative(PREVIOUS_ROW_DELTA)` (a dedicated `-1` move-delta constant) instead of reusing the `BEFORE_FIRST` cursor-position sentinel as a relative-move delta; behavior is unchanged.
 
 ### Validation and connection handling
 - Prepared updates report the specific row or match column missing from a stored-column mapping.

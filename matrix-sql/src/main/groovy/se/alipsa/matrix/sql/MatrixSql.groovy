@@ -24,7 +24,6 @@ import java.sql.Statement
 class MatrixSql implements Closeable {
 
   private static final Logger log = Logger.getLogger(MatrixSql)
-  private static final int DEFAULT_SCAN_ROWS = 100
   private static final String SEMICOLON = ';'
   private static final String PROP_USER = 'user'
 
@@ -384,7 +383,9 @@ class MatrixSql implements Closeable {
    </ul>
    */
   Map create(Matrix table, String... primaryKey) throws SQLException {
-    create(table, Math.max(DEFAULT_SCAN_ROWS, table.rowCount()), primaryKey)
+    // Always scan the full table: every row is inserted immediately after, so sizing from
+    // anything less than the full row count risks under-sizing a column for a later row.
+    create(table, table.rowCount(), primaryKey)
   }
 
   /**
@@ -401,7 +402,9 @@ class MatrixSql implements Closeable {
    </ul>
    */
   Map create(String tableName, Matrix table, String... primaryKey) throws SQLException {
-    create(tableName, table, Math.max(DEFAULT_SCAN_ROWS, table.rowCount()), primaryKey)
+    // Always scan the full table: every row is inserted immediately after, so sizing from
+    // anything less than the full row count risks under-sizing a column for a later row.
+    create(tableName, table, table.rowCount(), primaryKey)
   }
 
   /**
@@ -424,14 +427,22 @@ class MatrixSql implements Closeable {
 
   /**
    * Generate the CREATE TABLE DDL for the given Matrix without executing it.
+   * <p>
+   * Unlike the {@code create(...)} methods, this does not insert any data, so it is safe to cap
+   * the sizing scan for performance: when {@code scanNumrows} is not given, the default scan
+   * samples at most {@link MatrixDbUtil#DEFAULT_SCAN_ROWS} rows and may under-size a column
+   * (e.g. {@code VARCHAR} width) for values that only occur outside that sample. Callers who will
+   * insert data beyond the sampled rows should pass an explicit {@code scanNumrows} (e.g.
+   * {@code table.rowCount()}) to scan the full table.
    *
    * @param table the Matrix to generate DDL for
    * @param addQuotes whether to quote identifiers in the DDL
-   * @param scanNumrows optional number of rows to scan for type inference; defaults to max(100, rowCount)
+   * @param scanNumrows optional number of rows to scan for type inference; defaults to
+   * min({@link MatrixDbUtil#DEFAULT_SCAN_ROWS}, rowCount)
    * @return the DDL string
    */
   String createDdl(Matrix table, boolean addQuotes = true, int... scanNumrows) {
-    Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(DEFAULT_SCAN_ROWS, table.rowCount()))
+    Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.min(MatrixDbUtil.DEFAULT_SCAN_ROWS, table.rowCount()))
     matrixDbUtil.createTableDdl(tableName(table), table, mappings, addQuotes)
   }
 
