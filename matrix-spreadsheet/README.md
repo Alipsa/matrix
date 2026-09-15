@@ -54,6 +54,9 @@ The SpreadsheetImporter.importSpreadsheet method takes the following parameters:
 Note: there are several overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
 using column index instead of column name etc.
 
+Whole-sheet imports auto-detect the last column from the first 10 rows. Pass an explicit `endCol` when a wider
+row occurs later; blank rows within the imported range are preserved as rows of null values.
+
 ## Using Matrix.read() / matrix.write()
 
 If `matrix-spreadsheet` is on the classpath, `.xlsx` and `.ods` files can be handled through the generic Matrix SPI:

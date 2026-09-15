@@ -129,6 +129,20 @@ class SpreadsheetWriter {
   }
 
   /**
+   * Write multiple matrices using their matrix names as sheet names.
+   *
+   * @param matrices matrices to write
+   * @param file target spreadsheet file
+   * @return the actual names of the sheets created
+   */
+  static List<String> writeSheets(List<Matrix> matrices, File file) {
+    if (matrices == null) {
+      throw new IllegalArgumentException(ERR_MATRICES_NULL)
+    }
+    writeSheetsInternal(matrices, file, matrices*.matrixName, null)
+  }
+
+  /**
    * Write multiple Matrix objects to a single spreadsheet file with per-sheet start positions.
    *
    * @param matrices list of Matrix objects to write
@@ -136,16 +150,12 @@ class SpreadsheetWriter {
    * @param sheetNamesAndPositions map of sheet name -> start position (LinkedHashMap order is preserved)
    * @return list of actual sheet names created (illegal characters replaced by space)
    */
-  static List<String> writeSheets(List<Matrix> matrices, File file, Map<String, String> sheetNamesAndPositions = null) {
-    if (sheetNamesAndPositions == null) {
-      if (matrices == null) {
-        throw new IllegalArgumentException(ERR_MATRICES_NULL)
-      }
-      List<String> sheetNames = matrices*.matrixName
-      return writeSheetsInternal(matrices, file, sheetNames, null)
-    }
+  static List<String> writeSheets(List<Matrix> matrices, File file, Map<String, String> sheetNamesAndPositions) {
     if (matrices == null) {
       throw new IllegalArgumentException(ERR_MATRICES_NULL)
+    }
+    if (sheetNamesAndPositions == null) {
+      return writeSheets(matrices, file)
     }
     if (sheetNamesAndPositions.size() != matrices.size()) {
       throw new IllegalArgumentException(ERR_SIZE_MISMATCH)

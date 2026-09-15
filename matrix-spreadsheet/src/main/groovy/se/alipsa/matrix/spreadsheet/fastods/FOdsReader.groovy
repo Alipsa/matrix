@@ -17,7 +17,7 @@ import javax.xml.stream.XMLStreamReader
 class FOdsReader implements SpreadsheetReader {
 
   private static final int NOT_FOUND = -1
-  private static final int ROWS_TO_SCAN = 10
+  private static final int ROWS_TO_SCAN = SpreadsheetReader.Factory.AUTO_DETECT_ROWS_TO_SCAN
   private final File odsFile
   private final OdsDataReader reader
   private List<String> sheetNamesCache

@@ -13,6 +13,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 
 // When compiled statically, Groovy generates direct bytecode for sheet.style(row, col).format(...).set()
@@ -172,23 +173,36 @@ class FExcelExporter {
           sheet.value(row, col, ValueConverter.asByte(entry))
         } else if (boolean == type || Boolean == type) {
           sheet.value(row, col, ValueConverter.asBoolean(entry))
-        } else if (LocalDate == type) {
+        } else if (LocalDate.isAssignableFrom(type)) {
           sheet.value(row, col, ValueConverter.asLocalDate(entry))
-          sheet.style(row, col).format('yyyy-MM-dd').set()
-        } else if (LocalDateTime == type) {
+        } else if (LocalDateTime.isAssignableFrom(type)) {
           sheet.value(row, col, ValueConverter.asLocalDateTime(entry))
-          sheet.style(row, col).format(DATETIME_FORMAT).set()
-        } else if (ZonedDateTime == type) {
-          sheet.value(row, col, entry as ZonedDateTime)
-          sheet.style(row, col).format('yyyy-MM-dd HH:mm:ss.SSS Z').set()
-        } else if (Date == type) {
-          sheet.value(row, col, ValueConverter.asDate(entry))
-          sheet.style(row, col).format(DATETIME_FORMAT).set()
+        } else if (ZonedDateTime.isAssignableFrom(type)) {
+          sheet.value(row, col, (entry as ZonedDateTime).toLocalDateTime())
+        } else if (OffsetDateTime.isAssignableFrom(type)) {
+          sheet.value(row, col, (entry as OffsetDateTime).toLocalDateTime())
+        } else if (Date.isAssignableFrom(type)) {
+          sheet.value(row, col, SpreadsheetUtil.toLocalDateTime(entry as Date))
         } else {
           sheet.value(row, col, String.valueOf(entry))
         }
       }
+      String format = columnFormat(type)
+      if (format != null && data.rowCount() > 0) {
+        sheet.range(rowOffset + 1, col, rowOffset + data.rowCount(), col).style().format(format).set()
+      }
     }
+  }
+
+  private static String columnFormat(Class type) {
+    if (LocalDate.isAssignableFrom(type)) {
+      return 'yyyy-MM-dd'
+    }
+    if (LocalDateTime.isAssignableFrom(type) || OffsetDateTime.isAssignableFrom(type)
+        || ZonedDateTime.isAssignableFrom(type) || Date.isAssignableFrom(type)) {
+      return DATETIME_FORMAT
+    }
+    null
   }
 
 }

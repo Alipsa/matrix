@@ -38,6 +38,7 @@ class FOdsAppender {
   private static final String EL_TABLE = 'table'
   private static final String EL_TABLE_COLUMN = 'table-column'
   private static final String EL_TABLE_ROW = 'table-row'
+  private static final Set<String> AFTER_TABLES = ['named-expressions', 'database-ranges', 'data-pilot-tables', 'consolidation', 'dde-links'] as Set
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
     return appendOrReplaceSheets(file, data, sheetNames, null)
@@ -54,14 +55,15 @@ class FOdsAppender {
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile('matrix-ods', '.ods', file.parentFile)
     boolean moved = false
+    Map<String, String> renamed
     try {
       try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
         writeMimetype(zip, zos)
-        copyEntriesReplacingContentXml(zip, zos, requested, positions)
+        renamed = copyEntriesReplacingContentXml(zip, zos, requested, positions)
       }
       Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
       moved = true
-      return requested.keySet().toList()
+      return requested.keySet().collect { String name -> renamed.get(name) ?: name }
     } finally {
       if (!moved && tmp.exists()) {
         tmp.delete()
@@ -69,9 +71,10 @@ class FOdsAppender {
     }
   }
 
-  private static void copyEntriesReplacingContentXml(ZipFile zip, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
+  private static Map<String, String> copyEntriesReplacingContentXml(ZipFile zip, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     Enumeration<? extends ZipEntry> entries = zip.entries()
     boolean contentWritten = false
+    Map<String, String> renamed = [:]
     while (entries.hasMoreElements()) {
       ZipEntry entry = entries.nextElement()
       String name = entry.name
@@ -79,15 +82,16 @@ class FOdsAppender {
         continue
       }
       if (name == ENTRY_CONTENT_XML) {
-        writeContentXml(zip.getInputStream(entry), zos, requested, positions)
+        renamed = writeContentXml(zip.getInputStream(entry), zos, requested, positions)
         contentWritten = true
         continue
       }
       ZipUtil.copyEntry(zip, entry, zos)
     }
     if (!contentWritten) {
-      writeContentXml(null, zos, requested, positions)
+      renamed = writeContentXml(null, zos, requested, positions)
     }
+    renamed
   }
 
   private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
@@ -131,34 +135,35 @@ class FOdsAppender {
     return bytes
   }
 
-  private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
+  private static Map<String, String> writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     ZipEntry out = new ZipEntry(ENTRY_CONTENT_XML)
     zos.putNextEntry(out)
     if (input == null) {
-      writeGeneratedContentXml(zos, requested, positions)
-      return
+      return writeGeneratedContentXml(zos, requested, positions)
     }
     rewriteContentXml(input, zos, requested, positions)
   }
 
-  private static void writeGeneratedContentXml(ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
+  private static Map<String, String> writeGeneratedContentXml(ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     List<String> names = requested.keySet().toList()
     List<String> startPositions = names.collect { positions.get(it) ?: DEFAULT_START_POSITION }
     String content = OdsXmlWriter.buildContentXml(requested.values().toList(), names, startPositions)
     zos.write(content.getBytes(StandardCharsets.UTF_8))
     zos.closeEntry()
+    [:]
   }
 
-  private static void rewriteContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
+  private static Map<String, String> rewriteContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     XMLInputFactory inFactory = XmlSecurityUtil.newSecureInputFactory()
     XMLOutputFactory outFactory = XMLOutputFactory.newInstance()
     XMLStreamReader reader = null
     XMLStreamWriter writer = null
+    Map<String, String> renamed = [:]
     try {
       reader = inFactory.createXMLStreamReader(input)
       writer = outFactory.createXMLStreamWriter(zos, ENCODING_UTF8)
       writer.writeStartDocument(ENCODING_UTF8, '1.0')
-      copyAndReplaceTables(reader, writer, requested, positions)
+      renamed = copyAndReplaceTables(reader, writer, requested, positions)
     } finally {
       if (writer != null) {
         writer.flush()
@@ -169,41 +174,60 @@ class FOdsAppender {
       }
       zos.closeEntry()
     }
+    renamed
   }
 
-  private static void copyAndReplaceTables(XMLStreamReader reader, XMLStreamWriter writer, Map<String, Matrix> requested, Map<String, String> positions) {
+  private static Map<String, String> copyAndReplaceTables(XMLStreamReader reader, XMLStreamWriter writer, Map<String, Matrix> requested, Map<String, String> positions) {
     Set<String> replaced = [] as Set
+    Map<String, String> renamed = [:]
     BaseTemplateCapture capture = new BaseTemplateCapture()
+    boolean remainingWritten = false
+    int tableDepth = 0
     while (reader.hasNext()) {
       int event = reader.next()
       if (event == XMLStreamConstants.START_ELEMENT && reader.localName == EL_TABLE
-          && handleTableStart(reader, writer, requested, positions, replaced, capture)) {
+          && handleTableStart(reader, writer, requested, positions, replaced, renamed, capture)) {
         continue
       }
       capture.trackEvent(reader, event)
-      if (event == XMLStreamConstants.END_ELEMENT && reader.localName == 'spreadsheet' && OFFICE_URN == reader.namespaceURI) {
+      if (event == XMLStreamConstants.START_ELEMENT && reader.localName == EL_TABLE) {
+        tableDepth++
+      } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == EL_TABLE) {
+        tableDepth--
+      }
+      // table-local named expressions (children of table:table) must not trigger the flush
+      if (!remainingWritten && tableDepth == 0 && event == XMLStreamConstants.START_ELEMENT && TABLE_URN == reader.namespaceURI
+          && AFTER_TABLES.contains(reader.localName)) {
         writeRemainingTables(writer, requested, positions, replaced, capture.template)
+        remainingWritten = true
+      }
+      if (!remainingWritten && event == XMLStreamConstants.END_ELEMENT && reader.localName == 'spreadsheet' && OFFICE_URN == reader.namespaceURI) {
+        writeRemainingTables(writer, requested, positions, replaced, capture.template)
+        remainingWritten = true
         writer.writeEndElement()
         continue
       }
       copyEvent(reader, writer, event)
     }
+    renamed
   }
 
   private static boolean handleTableStart(XMLStreamReader reader, XMLStreamWriter writer, Map<String, Matrix> requested,
-                                           Map<String, String> positions, Set<String> replaced, BaseTemplateCapture capture) {
-    String name = reader.getAttributeValue(TABLE_URN, 'name')
+                                           Map<String, String> positions, Set<String> replaced, Map<String, String> renamed, BaseTemplateCapture capture) {
+    String name = reader.getAttributeValue(TABLE_URN, 'name')?.trim()
     List<OdsXmlWriter.TableAttribute> tableAttributes = readAttributes(reader)
     capture.maybeStartCapturing(tableAttributes)
-    if (name == null || !requested.containsKey(name)) {
+    String requestedName = name == null ? null : requested.keySet().find { String requestedKey -> requestedKey.equalsIgnoreCase(name) }
+    if (requestedName == null) {
       return false
     }
     OdsXmlWriter.TableTemplate template = readTableTemplateAndSkip(reader, tableAttributes)
     capture.useAsTemplateIfAbsent(template)
     capture.reset()
-    String startPosition = positions.get(name) ?: DEFAULT_START_POSITION
-    OdsXmlWriter.writeTable(writer, requested.get(name), name, template, startPosition)
-    replaced.add(name)
+    String startPosition = positions.get(requestedName) ?: DEFAULT_START_POSITION
+    OdsXmlWriter.writeTable(writer, requested.get(requestedName), name, template, startPosition)
+    replaced.add(requestedName)
+    renamed.put(requestedName, name)
     true
   }
 

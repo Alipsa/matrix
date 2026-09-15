@@ -5,6 +5,8 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMET
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 
+import java.nio.charset.StandardCharsets
+
 /**
  * Base class for reading sheet data from ODS files.
  */
@@ -35,10 +37,9 @@ abstract class OdsDataReader {
   }
 
   private static void checkMimeType(Uncompressor uncompressor) throws IOException {
-    byte[] buff = new byte[OPENDOCUMENT_MIMETYPE.getBytes().length]
-    uncompressor.getInputStream().read(buff)
-
-    String mimetype = new String(buff)
+    byte[] expected = OPENDOCUMENT_MIMETYPE.getBytes(StandardCharsets.US_ASCII)
+    byte[] buff = uncompressor.getInputStream().readNBytes(expected.length)
+    String mimetype = new String(buff, StandardCharsets.US_ASCII)
     if (mimetype != OPENDOCUMENT_MIMETYPE) {
       throw new NotAnOdsException("This file doesn't look like an ODS file. Mimetype: $mimetype")
     }

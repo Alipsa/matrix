@@ -280,7 +280,8 @@ class SpreadsheetImporter {
   // --- Whole-sheet convenience imports (auto-detect dimensions) ---
 
   /**
-   * Import the first sheet of a spreadsheet file using auto-detected dimensions.
+   * Import the first sheet of a spreadsheet file using auto-detected dimensions. Column detection scans
+   * only the first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * @param file the spreadsheet file to import
    * @return A Matrix corresponding to the spreadsheet data.
@@ -290,7 +291,8 @@ class SpreadsheetImporter {
   }
 
   /**
-   * Import an entire spreadsheet sheet using auto-detected dimensions.
+   * Import an entire spreadsheet sheet using auto-detected dimensions. Column detection scans only the
+   * first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * @param file the spreadsheet file to import
    * @param sheetNumber the sheet index (1-based)
@@ -306,7 +308,8 @@ class SpreadsheetImporter {
   }
 
   /**
-   * Import the first sheet of a spreadsheet using auto-detected dimensions.
+   * Import the first sheet of a spreadsheet using auto-detected dimensions. Column detection scans only
+   * the first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * @param file the spreadsheet file path to import
    * @return A Matrix corresponding to the spreadsheet data.
@@ -316,7 +319,8 @@ class SpreadsheetImporter {
   }
 
   /**
-   * Import an entire spreadsheet sheet using auto-detected dimensions.
+   * Import an entire spreadsheet sheet using auto-detected dimensions. Column detection scans only the
+   * first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * @param file the spreadsheet file path to import
    * @param sheetNumber the sheet index (1-based)
@@ -333,7 +337,8 @@ class SpreadsheetImporter {
   }
 
   /**
-   * Import an entire spreadsheet sheet by name using auto-detected dimensions.
+   * Import an entire spreadsheet sheet by name using auto-detected dimensions. Column detection scans
+   * only the first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * <p>For XLSX files, a missing sheet throws {@link NoSuchElementException}.
    * For ODS files, a missing sheet throws {@link se.alipsa.matrix.spreadsheet.fastods.FastOdsException}.</p>
@@ -353,7 +358,8 @@ class SpreadsheetImporter {
   }
 
   /**
-   * Import an entire spreadsheet sheet by name using auto-detected dimensions.
+   * Import an entire spreadsheet sheet by name using auto-detected dimensions. Column detection scans
+   * only the first 10 rows; blank rows inside the detected range are retained as null rows.
    *
    * @param file the spreadsheet file to import
    * @param sheetName the sheet name

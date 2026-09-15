@@ -13,6 +13,7 @@ interface SpreadsheetReader extends Closeable {
   class Factory {
 
     private static final String ODS_EXT = '.ods'
+    static final int AUTO_DETECT_ROWS_TO_SCAN = 10
 
     static SpreadsheetReader create(File file) {
       if (file == null) {
@@ -46,7 +47,13 @@ interface SpreadsheetReader extends Closeable {
   int findColNum(String sheetName, int rowNumber, String content) throws IOException
   int findLastRow(int sheetNum)
   int findLastRow(String sheetName)
+  /**
+   * Scans the first {@link Factory#AUTO_DETECT_ROWS_TO_SCAN} rows only; pass an explicit end column when a wider row occurs later.
+   */
   int findLastCol(int sheetNum)
+  /**
+   * Scans the first {@link Factory#AUTO_DETECT_ROWS_TO_SCAN} rows only; pass an explicit end column when a wider row occurs later.
+   */
   int findLastCol(String sheetName)
   List<String> getSheetNames() throws IOException
 

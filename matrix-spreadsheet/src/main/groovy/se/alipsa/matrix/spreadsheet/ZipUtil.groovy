@@ -24,7 +24,7 @@ final class ZipUtil {
     ZipEntry out = new ZipEntry(entry.name)
     zos.putNextEntry(out)
     zip.getInputStream(entry).withCloseable { InputStream is ->
-      zos.write(is.bytes)
+      is.transferTo(zos)
     }
     zos.closeEntry()
   }

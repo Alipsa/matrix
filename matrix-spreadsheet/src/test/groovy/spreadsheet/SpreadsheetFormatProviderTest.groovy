@@ -65,6 +65,21 @@ class SpreadsheetFormatProviderTest {
   }
 
   @Test
+  void testSpiReadReportsEmptySheetWithClearMessage() {
+    File xlsx = XlsxTestUtil.createXlsx { }
+    IllegalArgumentException xlsxException = assertThrows(IllegalArgumentException) {
+      Matrix.read(xlsx)
+    }
+    assertTrue(xlsxException.message.contains('is empty'), xlsxException.message)
+
+    File ods = OdsTestUtil.createOds(OdsTestUtil.contentXml('<table:table table:name="Sheet1"/>'))
+    IllegalArgumentException odsException = assertThrows(IllegalArgumentException) {
+      Matrix.read(ods)
+    }
+    assertTrue(odsException.message.contains('is empty'), odsException.message)
+  }
+
+  @Test
   void testProviderMetadata() {
     def provider = new SpreadsheetFormatProvider()
     assertEquals(['xlsx', 'ods'] as Set, provider.supportedExtensions())

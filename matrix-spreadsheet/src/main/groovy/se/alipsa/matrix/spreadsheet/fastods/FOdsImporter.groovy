@@ -171,7 +171,7 @@ class FOdsImporter implements Importer {
       endCol = SpreadsheetUtil.asColumnNumber(params.endCol as String)
     }
 
-    Boolean firstRowAsColNames = params.firstRowAsColNames
+    Boolean firstRowAsColNames = params.containsKey('firstRowAsColNames') ? params.firstRowAsColNames as Boolean : true
     Sheet ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
 
     Matrix matrix = buildMatrix(ss, firstRowAsColNames)

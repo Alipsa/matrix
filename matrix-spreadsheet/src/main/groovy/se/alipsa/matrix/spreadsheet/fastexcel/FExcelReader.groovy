@@ -103,17 +103,12 @@ class FExcelReader implements SpreadsheetReader {
       return NOT_FOUND
     }
     int poiColNum = colNumber - 1
-    int rowNum = NOT_FOUND
     try (Stream<Row> rows = sheet.openStream()) {
-      rows.each { Row row ->
-        Cell cell = row.getCell(poiColNum)
-        if (cell != null && content == cell.getRawValue()) {
-          rowNum = row.getRowNum()
-          return
-        }
-      }
+      rows.filter { Row row ->
+        Cell cell = FExcelUtil.cellAt(row, poiColNum)
+        cell != null && content == cell.rawValue
+      }.findFirst().map { Row row -> row.rowNum }.orElse(NOT_FOUND)
     }
-    rowNum
   }
 
   /**
@@ -159,7 +154,7 @@ class FExcelReader implements SpreadsheetReader {
       return NOT_FOUND
     }
     for (int colNum = 0; colNum < row.cellCount; colNum++) {
-      Cell cell = row.getCell(colNum)
+      Cell cell = FExcelUtil.cellAt(row, colNum)
       if (content == ext.getString(cell)) {
         return colNum + 1
       }
@@ -182,7 +177,7 @@ class FExcelReader implements SpreadsheetReader {
 
   static int findLastRow(Sheet sheet) {
     try (Stream<Row> rows = sheet.openStream()) {
-      rows.count() as int
+      rows.mapToInt { Row row -> row.rowNum }.max().orElse(0)
     }
   }
 
@@ -196,8 +191,8 @@ class FExcelReader implements SpreadsheetReader {
     findLastCol(workbook.findSheet(sheetName).orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName")))
   }
 
-  static int findLastCol(Sheet sheet, int numRowsToScan = 10) {
-    int maxColumn = NOT_FOUND
+  static int findLastCol(Sheet sheet, int numRowsToScan = SpreadsheetReader.Factory.AUTO_DETECT_ROWS_TO_SCAN) {
+    int maxColumn = 0
     try (Stream<Row> rows = sheet.openStream()) {
       rows.limit(numRowsToScan + 1L).each { Row row ->
         int nCol = row.size()

@@ -22,7 +22,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.regex.Pattern
@@ -43,6 +42,7 @@ import javax.xml.transform.stream.StreamResult
 class FExcelAppender {
 
   private static final String WORKBOOK_PATH = 'xl/workbook.xml'
+  private static final String WORKSHEET_DIR = 'xl/worksheets/'
   private static final String RELS_PATH = 'xl/_rels/workbook.xml.rels'
   private static final String STYLES_PATH = 'xl/styles.xml'
   private static final String CONTENT_TYPES = '[Content_Types].xml'
@@ -67,6 +67,7 @@ class FExcelAppender {
   private static final String TAG_CELL_XFS = 'cellXfs'
   private static final String TAG_XF = 'xf'
   private static final String ATTR_R_ID = 'r:id'
+  private static final String REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
   private static final String ATTR_TARGET = 'Target'
   private static final String ATTR_TYPE = 'Type'
   private static final String ATTR_PART_NAME = 'PartName'
@@ -83,6 +84,7 @@ class FExcelAppender {
   private static final String VALUE_CELL_END = '</v></c>'
   private static final String INLINE_STR_END = '</t></is></c>'
   private static final String COLON = ':'
+  private static final String SLASH = '/'
   private static final String SPACE = ' '
   private static final String DOUBLE_QUOTE = '"'
   private static final String DATE_FORMAT = 'yyyy-MM-dd'
@@ -134,10 +136,12 @@ class FExcelAppender {
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile('matrix-xlsx', '.xlsx', file.parentFile)
     boolean moved = false
+    List<String> writtenNames
     try {
       try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
         WorkbookState state = readWorkbookState(zip)
         WorkbookPlan plan = buildPlan(state, requested, positions)
+        writtenNames = plan.sheetNames
 
         Set<String> written = writeModifiedEntries(zip, zos, plan)
         plan.additions.each { String path, String xml ->
@@ -148,7 +152,7 @@ class FExcelAppender {
       }
       Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
       moved = true
-      return requested.keySet().toList()
+      return writtenNames
     } finally {
       if (!moved && tmp.exists()) {
         tmp.delete()
@@ -181,6 +185,9 @@ class FExcelAppender {
     while (entries.hasMoreElements()) {
       ZipEntry entry = entries.nextElement()
       String name = entry.name
+      if (plan.removals.contains(name)) {
+        continue
+      }
       String override = entryOverrides[name] ?: plan.replacements[name]
       if (override != null) {
         writeEntry(zos, name, override)
@@ -207,16 +214,24 @@ class FExcelAppender {
     Document types = parseXml(state.contentTypesXml)
     Document app = state.appXml ? parseXml(state.appXml) : null
     boolean date1904 = workbookUsesDate1904(workbook)
-    StylePlan stylePlan = resolveStylePlan(state, requested, rels, types)
-
     Map<String, SheetInfo> existing = readSheets(workbook, rels)
+    Map<String, Matrix> canonical = canonicaliseNames(requested, existing)
+    Map<String, String> canonicalPositions = [:]
+    requested.keySet().eachWithIndex { String name, int i ->
+      canonicalPositions.put(canonical.keySet()[i], positions.get(name) ?: DEFAULT_START)
+    }
+    StylePlan stylePlan = resolveStylePlan(state, canonical, rels, types)
     IdAllocator ids = new IdAllocator(existing, rels)
     SheetTemplate baseTemplate = mergeTemplate(state.zip, existing, readBaseTemplate(state.zip, existing))
     PlanContext ctx = new PlanContext(state.zip, new DocumentSet(workbook, rels, types), existing, ids, baseTemplate, stylePlan, date1904)
 
     Map<String, String> replacements = [:]
     Map<String, String> additions = [:]
-    applyRequestedSheets(ctx, requested, positions, replacements, additions)
+    applyRequestedSheets(ctx, canonical, canonicalPositions, replacements, additions)
+    Set<String> removals = [] as Set
+    if (replacements.keySet().any { String path -> path.startsWith(WORKSHEET_DIR) }) {
+      dropCalcChain(rels, types, removals)
+    }
 
     String workbookXml = serialize(workbook)
     String relsXml = serialize(rels)
@@ -224,7 +239,20 @@ class FExcelAppender {
     String appXml = app ? updateAppXml(app, existing.keySet().toList()) : null
     addStylesPlanOutput(stylePlan, state, replacements, additions)
 
-    return new WorkbookPlan(workbookXml, relsXml, contentTypesXml, appXml, replacements, additions)
+    return new WorkbookPlan(workbookXml, relsXml, contentTypesXml, appXml, replacements, additions, removals, canonical.keySet().toList())
+  }
+
+  /** Map requested names to existing sheet spellings because Excel sheet names are case-insensitive. */
+  private static Map<String, Matrix> canonicaliseNames(Map<String, Matrix> requested, Map<String, SheetInfo> existing) {
+    Map<String, Matrix> result = [:]
+    requested.each { String name, Matrix matrix ->
+      String match = existing.keySet().find { String existingName -> existingName.equalsIgnoreCase(name) } ?: name
+      if (result.containsKey(match)) {
+        throw new IllegalArgumentException("Sheet names '${name}' and an earlier request both resolve to existing sheet '${match}'")
+      }
+      result.put(match, matrix)
+    }
+    result
   }
 
   private static StylePlan resolveStylePlan(WorkbookState state, Map<String, Matrix> requested, Document rels, Document types) {
@@ -264,7 +292,7 @@ class FExcelAppender {
   }
 
   private static void addNewSheet(PlanContext ctx, String name, Matrix matrix, String startPosition, Map<String, String> additions) {
-    String sheetPath = "xl/worksheets/sheet${ctx.ids.nextSheetIndex++}.xml"
+    String sheetPath = "${WORKSHEET_DIR}sheet${ctx.ids.nextSheetIndex++}.xml"
     String relId = "rId${ctx.ids.nextRelId++}"
     int sheetId = ctx.ids.nextSheetId++
     addSheet(ctx.documents.workbook, name, sheetId, relId)
@@ -276,7 +304,7 @@ class FExcelAppender {
 
   private static Map<String, SheetInfo> readSheets(Document workbook, Document rels) {
     Map<String, String> relTargets = [:]
-    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
+    NodeList relNodes = rels.getElementsByTagNameNS(ALL_TAGS, RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
       relTargets[rel.getAttribute(ATTR_ID)] = rel.getAttribute(ATTR_TARGET)
@@ -285,14 +313,14 @@ class FExcelAppender {
     Map<String, SheetInfo> sheets = [:]
     Element sheetsNode = firstElementByTag(workbook, TAG_SHEETS)
     if (sheetsNode != null) {
-      NodeList sheetNodes = sheetsNode.getElementsByTagName(TAG_SHEET)
+      NodeList sheetNodes = sheetsNode.getElementsByTagNameNS(ALL_TAGS, TAG_SHEET)
       for (int i = 0; i < sheetNodes.length; i++) {
         Element sheet = (Element) sheetNodes.item(i)
         String name = sheet.getAttribute(ATTR_NAME)
         int sheetId = Integer.parseInt(sheet.getAttribute(ATTR_SHEET_ID))
-        String relId = sheet.getAttribute(ATTR_R_ID)
+        String relId = sheet.getAttributeNS(REL_NS, 'id') ?: sheet.getAttribute(ATTR_R_ID)
         String target = relTargets[relId]
-        String path = target ? "xl/${target}" : null
+        String path = target ? resolvePartPath(target) : null
         int sheetIndex = sheetNumberFromPath(path)
         sheets[name] = new SheetInfo(name, sheetId, relId, path, sheetId, relIdNumber(relId), sheetIndex)
       }
@@ -302,7 +330,7 @@ class FExcelAppender {
 
   private static int maxRelId(Document rels) {
     int maxId = 0
-    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
+    NodeList relNodes = rels.getElementsByTagNameNS(ALL_TAGS, RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
       String id = rel.getAttribute(ATTR_ID)
@@ -320,15 +348,15 @@ class FExcelAppender {
 
   private static void addSheet(Document workbook, String name, int sheetId, String relId) {
     Element sheetsNode = firstElementByTag(workbook, TAG_SHEETS)
-    Element sheet = workbook.createElement(TAG_SHEET)
+    Element sheet = createChild(workbook, sheetsNode, TAG_SHEET)
     sheet.setAttribute(ATTR_NAME, name)
     sheet.setAttribute(ATTR_SHEET_ID, String.valueOf(sheetId))
-    sheet.setAttribute(ATTR_R_ID, relId)
+    sheet.setAttributeNS(REL_NS, ATTR_R_ID, relId)
     sheetsNode.appendChild(sheet)
   }
 
   private static void addRelationship(Document rels, String relId, String sheetPath) {
-    Element rel = rels.createElement(RELATIONSHIP_TAG)
+    Element rel = createChild(rels, rels.documentElement, RELATIONSHIP_TAG)
     rel.setAttribute(ATTR_ID, relId)
     rel.setAttribute(ATTR_TYPE, WORKSHEET_REL_TYPE)
     rel.setAttribute(ATTR_TARGET, sheetPath.replaceFirst('^xl/', ''))
@@ -336,21 +364,21 @@ class FExcelAppender {
   }
 
   private static void addContentType(Document types, String sheetPath) {
-    Element override = types.createElement(TAG_OVERRIDE)
-    override.setAttribute(ATTR_PART_NAME, '/' + sheetPath)
+    Element override = createChild(types, types.documentElement, TAG_OVERRIDE)
+    override.setAttribute(ATTR_PART_NAME, SLASH + sheetPath)
     override.setAttribute(ATTR_CONTENT_TYPE, WORKSHEET_CONTENT_TYPE)
     types.documentElement.appendChild(override)
   }
 
   private static void ensureStyleRelationship(Document rels) {
-    NodeList relNodes = rels.getElementsByTagName(RELATIONSHIP_TAG)
+    NodeList relNodes = rels.getElementsByTagNameNS(ALL_TAGS, RELATIONSHIP_TAG)
     for (int i = 0; i < relNodes.length; i++) {
       Element rel = (Element) relNodes.item(i)
       if (STYLES_REL_TYPE == rel.getAttribute(ATTR_TYPE)) {
         return
       }
     }
-    Element rel = rels.createElement(RELATIONSHIP_TAG)
+    Element rel = createChild(rels, rels.documentElement, RELATIONSHIP_TAG)
     rel.setAttribute(ATTR_ID, "rId${maxRelId(rels) + 1}")
     rel.setAttribute(ATTR_TYPE, STYLES_REL_TYPE)
     rel.setAttribute(ATTR_TARGET, STYLES_TARGET)
@@ -358,14 +386,14 @@ class FExcelAppender {
   }
 
   private static void ensureStyleContentType(Document types) {
-    NodeList overrides = types.getElementsByTagName(TAG_OVERRIDE)
+    NodeList overrides = types.getElementsByTagNameNS(ALL_TAGS, TAG_OVERRIDE)
     for (int i = 0; i < overrides.length; i++) {
       Element override = (Element) overrides.item(i)
       if (STYLES_PART_NAME == override.getAttribute(ATTR_PART_NAME)) {
         return
       }
     }
-    Element override = types.createElement(TAG_OVERRIDE)
+    Element override = createChild(types, types.documentElement, TAG_OVERRIDE)
     override.setAttribute(ATTR_PART_NAME, STYLES_PART_NAME)
     override.setAttribute(ATTR_CONTENT_TYPE, STYLES_CONTENT_TYPE)
     types.documentElement.appendChild(override)
@@ -396,7 +424,7 @@ class FExcelAppender {
   }
 
   private static Element firstElementByTag(Document doc, String tagName) {
-    NodeList nodes = doc.getElementsByTagName(tagName)
+    NodeList nodes = doc.getElementsByTagNameNS(ALL_TAGS, tagName)
     return nodes.length > 0 ? (Element) nodes.item(0) : null
   }
 
@@ -429,10 +457,46 @@ class FExcelAppender {
   }
 
   private static int relIdNumber(String relId) {
-    if (relId == null) {
+    if (relId == null || !relId.startsWith(RID_PREFIX)) {
       return 0
     }
-    return relId.replace(RID_PREFIX, '').toInteger()
+    try {
+      Integer.parseInt(relId.substring(RID_PREFIX.length()))
+    } catch (NumberFormatException ignored) {
+      0
+    }
+  }
+
+  /** Relationship targets are relative to xl/ unless they start with '/', which is package-root absolute. */
+  private static String resolvePartPath(String target) {
+    target.startsWith(SLASH) ? target.substring(1) : "xl${SLASH}${target}".toString()
+  }
+
+  private static Element createChild(Document doc, Element parent, String localName) {
+    String namespace = parent.namespaceURI
+    if (namespace == null) {
+      return doc.createElement(localName)
+    }
+    String prefix = parent.prefix
+    doc.createElementNS(namespace, prefix ? "${prefix}:${localName}".toString() : localName)
+  }
+
+  private static void dropCalcChain(Document rels, Document types, Set<String> removals) {
+    NodeList relationships = rels.getElementsByTagNameNS(ALL_TAGS, RELATIONSHIP_TAG)
+    for (int i = relationships.length - 1; i >= 0; i--) {
+      Element relationship = (Element) relationships.item(i)
+      if (relationship.getAttribute(ATTR_TYPE).endsWith('/calcChain')) {
+        relationship.parentNode.removeChild(relationship)
+      }
+    }
+    NodeList overrides = types.getElementsByTagNameNS(ALL_TAGS, TAG_OVERRIDE)
+    for (int i = overrides.length - 1; i >= 0; i--) {
+      Element override = (Element) overrides.item(i)
+      if ('/xl/calcChain.xml' == override.getAttribute(ATTR_PART_NAME)) {
+        override.parentNode.removeChild(override)
+      }
+    }
+    removals.add('xl/calcChain.xml')
   }
 
   private static int sheetNumberFromPath(String path) {
@@ -578,17 +642,22 @@ class FExcelAppender {
       sb.append(EMPTY_CELL)
       return
     }
+    // hoist constants into locals: the switch arms are compiled to closure classes that cannot
+    // access the class's private static fields directly
+    String valueCellEnd = VALUE_CELL_END
+    String zero = ZERO
+    String one = ONE
     switch (value) {
-      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? ONE : ZERO).append(VALUE_CELL_END)
+      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? one : zero).append(valueCellEnd)
       case Number -> {
         String v = ValueConverter.asBigDecimal(value).toPlainString()
-        sb.append('<c t="n"><v>').append(v).append(VALUE_CELL_END)
+        sb.append('<c t="n"><v>').append(v).append(valueCellEnd)
       }
       case LocalDate -> appendDateCell(sb, excelSerial((LocalDate) value, date1904), stylePlan?.dateStyleIndex)
       case LocalDateTime -> appendDateCell(sb, excelSerial((LocalDateTime) value, date1904), stylePlan?.dateTimeStyleIndex)
       case ZonedDateTime -> appendDateCell(sb, excelSerial(((ZonedDateTime) value).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
       case OffsetDateTime -> appendDateCell(sb, excelSerial(((OffsetDateTime) value).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
-      case Date -> appendDateCell(sb, excelSerial(((Date) value).toInstant().atOffset(ZoneOffset.UTC).toLocalDateTime(), date1904), stylePlan?.dateTimeStyleIndex)
+      case Date -> appendDateCell(sb, excelSerial(SpreadsheetUtil.toLocalDateTime((Date) value), date1904), stylePlan?.dateTimeStyleIndex)
       default -> appendInlineString(sb, String.valueOf(value))
     }
   }
@@ -797,7 +866,7 @@ class FExcelAppender {
     Enumeration<? extends ZipEntry> entries = zip.entries()
     while (entries.hasMoreElements()) {
       ZipEntry entry = entries.nextElement()
-      if (entry.name.startsWith('xl/worksheets/') && entry.name.endsWith('.xml')) {
+      if (entry.name.startsWith(WORKSHEET_DIR) && entry.name.endsWith('.xml')) {
         candidates.add(entry.name)
       }
     }
@@ -970,15 +1039,20 @@ class FExcelAppender {
     final String appXml
     final Map<String, String> replacements
     final Map<String, String> additions
+    final Set<String> removals
+    final List<String> sheetNames
 
+    @SuppressWarnings('ParameterCount')
     WorkbookPlan(String workbookXml, String relsXml, String contentTypesXml, String appXml,
-                 Map<String, String> replacements, Map<String, String> additions) {
+                 Map<String, String> replacements, Map<String, String> additions, Set<String> removals, List<String> sheetNames) {
       this.workbookXml = workbookXml
       this.relsXml = relsXml
       this.contentTypesXml = contentTypesXml
       this.appXml = appXml
       this.replacements = replacements
       this.additions = additions
+      this.removals = removals
+      this.sheetNames = sheetNames
     }
 
   }

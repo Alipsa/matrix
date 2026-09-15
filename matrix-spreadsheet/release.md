@@ -3,8 +3,25 @@
 ## Next release
 
 ### Bug Fixes
+- fix XLSX import of blank or missing header cells; generated column names are used and blank rows inside the imported range are preserved
+- fix XLSX last-row detection and sparse cell access, including row lookup on sheets with blank rows
+- normalize Date, SQL Date/Time, ZonedDateTime, and OffsetDateTime writes across XLSX and ODS; ODS now accepts offset date-values
+- append/replace now matches existing XLSX and ODS sheet names case-insensitively and returns the existing spelling
+- fix XLSX append for namespace-prefixed workbook XML, absolute relationship targets, non-numeric relationship ids, and stale calcChain entries
+- fix ODS import merging cell annotations into cell values and robustly read short mimetype streams
+- report empty sheets clearly through the spreadsheet SPI instead of producing invalid auto-detected bounds
+- fix ODS append nesting new sheets inside an existing sheet that carries table-local named expressions (LibreOffice-written files); new tables are only inserted before document-level named expressions
+- document the 10-row auto-detection limit and make omitted firstRowAsColNames default to true for multi-sheet imports
+- XLSX date styles are applied per column and time-format detection recognizes single-letter hour and seconds markers
+- preserve XLSX midnight dates for locale-prefixed and color-prefixed date formats
+- fix XLSX date-format detection for quoted literals: a numeric cell formatted with quoted text (e.g. `yyyy-mm-dd "status"`) is now imported as a date instead of a raw serial number
+- generated header names are uniquified and null sheet-position maps use matrix names
+- preserve ODS heading text (`text:h`) and accept offset-only ODS date values
 - parse cached XLSX formula numbers exactly using their locale-invariant OOXML representation; locale- or grouping-formatted values such as `1234,5` and `1,234.5` are retained as text
 - SPI `firstRowAsColNames` parsing is now strict: `false` is false and non-Boolean/non-`true`/`false` values are rejected.
+
+### Test Coverage
+- 170 tests passing (173 with `-PrunSlowTests=true`)
 
 ## v2.4.1, 2026-07-07
 
