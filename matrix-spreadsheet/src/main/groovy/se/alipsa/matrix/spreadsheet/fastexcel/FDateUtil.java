@@ -47,6 +47,8 @@ public class FDateUtil {
   //  elapsed time patterns: [h],[m] and [s]
   private static final Pattern DATE_PATTERN_4 = Pattern.compile("^\\[([hH]+|[mM]+|[sS]+)\\]");
   private static final Pattern DATE_PATTERN_5 = Pattern.compile("\"[^\"]*\"");
+  // a format string with quoted/escaped literals stripped must still contain at least one date/time letter
+  private static final Pattern DATE_PATTERN_6 = Pattern.compile("[yYmMdDhHsS]");
 
   /**
    * Given a format ID and its format String, will check to see if the
@@ -124,8 +126,9 @@ public class FDateUtil {
 
     // Otherwise, check it's only made up, in any case, of:
     //  y m d h s - \ / , . :
-    // optionally followed by AM/PM
-    return DATE_PATTERN_3.matcher(fs).matches();
+    // optionally followed by AM/PM. Require at least one date/time letter so that a format whose
+    // only meaningful content was quoted text (now stripped) is not mistaken for a date.
+    return DATE_PATTERN_6.matcher(fs).find() && DATE_PATTERN_3.matcher(fs).matches();
   }
 
   /**

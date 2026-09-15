@@ -336,7 +336,11 @@ final class OdsStreamDataReader extends OdsDataReader {
     try {
       return LocalDateTime.parse(v)
     } catch (DateTimeParseException ignored) {
-      return OffsetDateTime.parse(v).toLocalDateTime()
+      try {
+        return OffsetDateTime.parse(v).toLocalDateTime()
+      } catch (DateTimeParseException e) {
+        throw new IllegalArgumentException("Invalid office:date-value '$v'", e)
+      }
     }
   }
 

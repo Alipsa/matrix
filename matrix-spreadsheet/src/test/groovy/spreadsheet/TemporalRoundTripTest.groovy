@@ -1,6 +1,8 @@
 package spreadsheet
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
@@ -68,6 +70,21 @@ class TemporalRoundTripTest {
     assertEquals(LDT, matrix[1, 'when'])
     assertEquals(LocalDateTime.of(2024, 3, 5, 6, 7, 8, 500_000_000), matrix[2, 'when'])
     assertEquals(LocalDate.of(2024, 3, 5), matrix[3, 'when'])
+  }
+
+  @Test
+  void testOdsReaderRejectsInvalidDateValuesConsistently() {
+    ['2024-03-05T25:99:00', '2024-13-05+02:00'].each { String bad ->
+      String xml = OdsTestUtil.contentXml("""
+        <table:table table:name="Sheet1">
+          <table:table-row><table:table-cell office:value-type="date" office:date-value="$bad"/></table:table-row>
+        </table:table>""")
+      File file = OdsTestUtil.createOds(xml)
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+        SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'Sheet1', false)
+      }
+      assertTrue(exception.message.contains(bad), exception.message)
+    }
   }
 
 }
