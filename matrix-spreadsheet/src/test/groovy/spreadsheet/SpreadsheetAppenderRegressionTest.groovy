@@ -49,6 +49,44 @@ class SpreadsheetAppenderRegressionTest {
   }
 
   @Test
+  void appendTwoNamesDifferingOnlyByCaseAreSuffixedNotCollapsed() {
+    Matrix replacement = Matrix.builder().data(a: [3, 4], b: ['p', 'q']).build()
+    Matrix extra = Matrix.builder().data(c: [5, 6]).build()
+    ['.xlsx', '.ods'].each { String extension ->
+      File file = File.createTempFile('matrix-case2', extension)
+      file.delete()
+      file.deleteOnExit()
+      SpreadsheetWriter.write(DATA, file, 'Foo')
+      List<String> names = SpreadsheetWriter.writeSheets([replacement, extra], file, ['foo', 'FOO'])
+      assertEquals(['Foo', 'FOO1'], names, extension)
+      SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
+        assertEquals(['Foo', 'FOO1'], reader.sheetNames, extension)
+      }
+      assertEquals(['a', 'b'], SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'Foo', true).columnNames(), extension)
+      assertEquals(['c'], SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'FOO1', true).columnNames(), extension)
+    }
+  }
+
+  @Test
+  void odsAppendDoesNotNestNewTableInsideSheetWithTableLocalNamedExpressions() {
+    String xml = OdsTestUtil.contentXml('''
+      <table:table table:name="Sheet1">
+        <table:table-row><table:table-cell office:value-type="string"><text:p>h</text:p></table:table-cell></table:table-row>
+        <table:named-expressions><table:named-range table:name="local" table:base-cell-address="$Sheet1.$A$1" table:cell-range-address="$Sheet1.$A$1:.$A$1"/></table:named-expressions>
+      </table:table>''')
+    File file = OdsTestUtil.createOds(xml)
+    SpreadsheetWriter.write(DATA, file, 'Added')
+    String content = OdsTestUtil.readEntry(file, 'content.xml')
+    int added = content.indexOf('table:name="Added"')
+    int firstTableEnd = content.indexOf('</table:table>')
+    assertTrue(added > 0 && firstTableEnd > 0, 'both elements present')
+    assertTrue(added > firstTableEnd, 'new table must not be nested inside the existing sheet')
+    SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
+      assertEquals(['Sheet1', 'Added'], reader.sheetNames)
+    }
+  }
+
+  @Test
   void odsAddsTablesBeforeNamedExpressions() {
     String xml = OdsTestUtil.contentXml('''
       <table:table table:name="Sheet1"><table:table-row><table:table-cell office:value-type="string"><text:p>h</text:p></table:table-cell></table:table-row></table:table>

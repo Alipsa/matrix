@@ -28,29 +28,34 @@ class OdsTestUtil {
     File file = File.createTempFile('matrix-test', '.ods')
     file.delete()
     file.deleteOnExit()
+    byte[] mime = MIMETYPE.getBytes(StandardCharsets.UTF_8)
+    CRC32 crc = new CRC32()
+    crc.update(mime)
     try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(file))) {
-      byte[] mime = MIMETYPE.getBytes(StandardCharsets.UTF_8)
-      CRC32 crc = new CRC32()
-      crc.update(mime)
-      ZipEntry entry = new ZipEntry('mimetype')
-      entry.method = ZipEntry.STORED
-      entry.size = mime.length
-      entry.compressedSize = mime.length
-      entry.crc = crc.value
-      zos.putNextEntry(entry)
-      zos.write(mime)
-      zos.closeEntry()
-      zos.putNextEntry(new ZipEntry('content.xml'))
-      zos.write(contentXml.getBytes(StandardCharsets.UTF_8))
-      zos.closeEntry()
+      zos.with {
+        ZipEntry entry = new ZipEntry('mimetype')
+        entry.method = ZipEntry.STORED
+        entry.size = mime.length
+        entry.compressedSize = mime.length
+        entry.crc = crc.value
+        putNextEntry(entry)
+        write(mime)
+        closeEntry()
+        putNextEntry(new ZipEntry('content.xml'))
+        write(contentXml.getBytes(StandardCharsets.UTF_8))
+        closeEntry()
+      }
     }
     file
   }
 
   /** Read a ZIP entry as UTF-8 text. */
   static String readEntry(File zip, String name) {
-    new ZipFile(zip).withCloseable { ZipFile z ->
-      new String(z.getInputStream(z.getEntry(name)).bytes, StandardCharsets.UTF_8)
+    ZipFile z = new ZipFile(zip)
+    try {
+      return new String(z.getInputStream(z.getEntry(name)).bytes, StandardCharsets.UTF_8)
+    } finally {
+      z.close()
     }
   }
 

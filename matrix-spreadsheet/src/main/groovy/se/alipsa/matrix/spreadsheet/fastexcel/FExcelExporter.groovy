@@ -198,10 +198,8 @@ class FExcelExporter {
     if (LocalDate.isAssignableFrom(type)) {
       return 'yyyy-MM-dd'
     }
-    if (LocalDateTime.isAssignableFrom(type) || OffsetDateTime.isAssignableFrom(type) || Date.isAssignableFrom(type)) {
-      return DATETIME_FORMAT
-    }
-    if (ZonedDateTime.isAssignableFrom(type)) {
+    if (LocalDateTime.isAssignableFrom(type) || OffsetDateTime.isAssignableFrom(type)
+        || ZonedDateTime.isAssignableFrom(type) || Date.isAssignableFrom(type)) {
       return DATETIME_FORMAT
     }
     null

@@ -41,6 +41,35 @@ class OdsDataReaderTest {
     }
   }
 
+  /** InputStream that returns at most {@code chunk} bytes per read(byte[],int,int) call. */
+  private static class TricklingInputStream extends FilterInputStream {
+
+    private final int chunk
+
+    TricklingInputStream(InputStream input, int chunk) {
+      super(input)
+      this.chunk = chunk
+    }
+
+    @Override
+    int read(byte[] b, int off, int len) throws IOException {
+      super.read(b, off, Math.min(len, chunk))
+    }
+  }
+
+  @Test
+  void testMimetypeCheckSurvivesShortReads() {
+    String xml = OdsTestUtil.contentXml('''
+      <table:table table:name="Sheet1">
+        <table:table-row><table:table-cell office:value-type="float" office:value="7"/></table:table-row>
+      </table:table>''')
+    File file = OdsTestUtil.createOds(xml)
+    try (InputStream is = new TricklingInputStream(new FileInputStream(file), 5)) {
+      Sheet sheet = OdsDataReader.create().readOds(is, 'Sheet1', 1, 1, 1, 1)
+      Assertions.assertEquals(7G, sheet[0][0])
+    }
+  }
+
   @Test
   @Tag('slow')
   void testHugeFile() throws IOException {

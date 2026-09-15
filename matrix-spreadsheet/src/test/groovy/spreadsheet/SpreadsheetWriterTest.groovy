@@ -117,6 +117,23 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testWriteMultipleSheetsUsingMatrixNames() {
+    Matrix named = Matrix.builder('Named').data(id: [1, 2], name: ['A', 'B']).build()
+    def file = File.createTempFile('matrix-writer-names', '.xlsx')
+    if (file.exists()) {
+      file.delete()
+    }
+
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([named], file)
+
+    assertEquals(['Named'], sheetNames)
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertEquals(['Named'], reader.sheetNames)
+    }
+    assertEquals(named.columnNames(), SpreadsheetImporter.importSpreadsheet(file.absolutePath, 'Named', true).columnNames())
+  }
+
+  @Test
   void testWriteMultipleSheetsWithPositionsMap() {
     def file = File.createTempFile('matrix-writer-map-pos', '.xlsx')
     if (file.exists()) {

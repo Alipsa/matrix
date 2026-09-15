@@ -10,13 +10,14 @@
 - fix XLSX append for namespace-prefixed workbook XML, absolute relationship targets, non-numeric relationship ids, and stale calcChain entries
 - fix ODS import merging cell annotations into cell values and robustly read short mimetype streams
 - report empty sheets clearly through the spreadsheet SPI instead of producing invalid auto-detected bounds
+- fix ODS append nesting new sheets inside an existing sheet that carries table-local named expressions (LibreOffice-written files); new tables are only inserted before document-level named expressions
 - document the 10-row auto-detection limit and make omitted firstRowAsColNames default to true for multi-sheet imports
 - XLSX date styles are applied per column and time-format detection recognizes single-letter hour and seconds markers
 - parse cached XLSX formula numbers exactly using their locale-invariant OOXML representation; locale- or grouping-formatted values such as `1234,5` and `1,234.5` are retained as text
 - SPI `firstRowAsColNames` parsing is now strict: `false` is false and non-Boolean/non-`true`/`false` values are rejected.
 
 ### Test Coverage
-- 154 tests passing
+- 163 tests passing
 
 ## v2.4.1, 2026-07-07
 

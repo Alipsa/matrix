@@ -182,6 +182,7 @@ class FOdsAppender {
     Map<String, String> renamed = [:]
     BaseTemplateCapture capture = new BaseTemplateCapture()
     boolean remainingWritten = false
+    int tableDepth = 0
     while (reader.hasNext()) {
       int event = reader.next()
       if (event == XMLStreamConstants.START_ELEMENT && reader.localName == EL_TABLE
@@ -189,7 +190,13 @@ class FOdsAppender {
         continue
       }
       capture.trackEvent(reader, event)
-      if (!remainingWritten && event == XMLStreamConstants.START_ELEMENT && TABLE_URN == reader.namespaceURI
+      if (event == XMLStreamConstants.START_ELEMENT && reader.localName == EL_TABLE) {
+        tableDepth++
+      } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == EL_TABLE) {
+        tableDepth--
+      }
+      // table-local named expressions (children of table:table) must not trigger the flush
+      if (!remainingWritten && tableDepth == 0 && event == XMLStreamConstants.START_ELEMENT && TABLE_URN == reader.namespaceURI
           && AFTER_TABLES.contains(reader.localName)) {
         writeRemainingTables(writer, requested, positions, replaced, capture.template)
         remainingWritten = true

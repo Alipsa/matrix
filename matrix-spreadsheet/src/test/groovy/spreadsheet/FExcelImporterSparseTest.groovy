@@ -1,6 +1,7 @@
 package spreadsheet
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 import org.junit.jupiter.api.Test
 
@@ -18,7 +19,9 @@ class FExcelImporterSparseTest {
     }
     Matrix gappedMatrix = SpreadsheetImporter.importSpreadsheet(gapped.absolutePath, 1, 1, 2, 1, 3, true)
     assertEquals(['a', 'c2', 'c'], gappedMatrix.columnNames())
-    assertEquals(['1', '2', '3'], gappedMatrix.row(0).collect { it.toString() })
+    def actualRow = gappedMatrix.row(0) as List
+    assertTrue(actualRow.every { it == null || it instanceof BigDecimal })
+    assertEquals([1, 2, 3]*.toBigDecimal(), actualRow*.toBigDecimal())
 
     File shortHeader = XlsxTestUtil.createXlsx { ws ->
       ws.value(0, 0, 'a')
@@ -38,7 +41,10 @@ class FExcelImporterSparseTest {
       assertEquals(5, reader.findLastRow('Sheet1'))
     }
     Matrix matrix = SpreadsheetImporter.importSpreadsheet(file)
-    assertEquals(['1', null, '4', '5'], matrix.column('a').collect { it?.toString() })
+    def columnA = matrix.column('a')
+    assertTrue(columnA.every { it == null || it instanceof BigDecimal })
+    assertEquals([1, null, 4, 5].collect { it == null ? null : it.toBigDecimal() },
+        columnA.collect { it == null ? null : it.toBigDecimal() })
   }
 
   @Test

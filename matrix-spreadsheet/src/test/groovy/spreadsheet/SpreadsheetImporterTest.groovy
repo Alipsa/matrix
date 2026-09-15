@@ -276,4 +276,26 @@ class SpreadsheetImporterTest {
     assertNotNull(sheets.Sheet2)
   }
 
+  @Test
+  @CompileDynamic
+  void testImportSpreadsheetsDefaultsFirstRowAsColNamesToTrue() {
+    Map<Object, Matrix> xlsxSheets = SpreadsheetImporter.importSpreadsheets('Book1.xlsx',
+        [[sheetName: 'Sheet1', startRow: 1, endRow: 12, startCol: 1, endCol: 4]])
+    assertEquals(['id', 'foo', 'bar', 'baz'], xlsxSheets.Sheet1.columnNames())
+
+    Map<Object, Matrix> odsSheets = SpreadsheetImporter.importSpreadsheets('Book1.ods',
+        [[sheetName: 'Sheet1', startRow: 1, endRow: 12, startCol: 1, endCol: 4]])
+    assertEquals(['id', 'foo', 'bar', 'baz'], odsSheets.Sheet1.columnNames())
+  }
+
+  @Test
+  @CompileDynamic
+  void testImportSpreadsheetsNamesMissingSheet() {
+    NoSuchElementException exception = assertThrows(NoSuchElementException) {
+      SpreadsheetImporter.importSpreadsheets('Book1.xlsx',
+          [[sheetName: 'NonExistentSheet', startRow: 1, endRow: 12, startCol: 1, endCol: 4]])
+    }
+    assertTrue(exception.message.contains('NonExistentSheet'), exception.message)
+  }
+
 }

@@ -81,7 +81,7 @@ class FExcelAppender {
   private static final String EMPTY_CELL = '<c/>'
   private static final String ROW_START = '<row r="'
   private static final String ROW_END = '"/>'
-  static final String VALUE_CELL_END = '</v></c>'
+  private static final String VALUE_CELL_END = '</v></c>'
   private static final String INLINE_STR_END = '</t></is></c>'
   private static final String COLON = ':'
   private static final String SLASH = '/'
@@ -112,8 +112,8 @@ class FExcelAppender {
   private static final String ATTR_BORDER_ID = 'borderId'
   private static final String ATTR_XF_ID = 'xfId'
   private static final String ATTR_APPLY_NUMBER_FORMAT = 'applyNumberFormat'
-  static final String ZERO = '0'
-  static final String ONE = '1'
+  private static final String ZERO = '0'
+  private static final String ONE = '1'
   private static final String TRUE_STR = 'true'
   // Capture groups for ATTR_VALUE_PATTERN only; fallback element patterns have distinct captures.
   private static final int ATTR_NAME_GROUP = 1
@@ -642,11 +642,16 @@ class FExcelAppender {
       sb.append(EMPTY_CELL)
       return
     }
+    // hoist constants into locals: the switch arms are compiled to closure classes that cannot
+    // access the class's private static fields directly
+    String valueCellEnd = VALUE_CELL_END
+    String zero = ZERO
+    String one = ONE
     switch (value) {
-      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? ONE : ZERO).append(VALUE_CELL_END)
+      case Boolean -> sb.append('<c t="b"><v>').append(((Boolean) value) ? one : zero).append(valueCellEnd)
       case Number -> {
         String v = ValueConverter.asBigDecimal(value).toPlainString()
-        sb.append('<c t="n"><v>').append(v).append(VALUE_CELL_END)
+        sb.append('<c t="n"><v>').append(v).append(valueCellEnd)
       }
       case LocalDate -> appendDateCell(sb, excelSerial((LocalDate) value, date1904), stylePlan?.dateStyleIndex)
       case LocalDateTime -> appendDateCell(sb, excelSerial((LocalDateTime) value, date1904), stylePlan?.dateTimeStyleIndex)

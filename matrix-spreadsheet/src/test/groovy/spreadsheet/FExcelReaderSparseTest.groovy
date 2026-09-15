@@ -31,6 +31,7 @@ class FExcelReaderSparseTest {
     SpreadsheetReader.Factory.create(file).withCloseable { SpreadsheetReader reader ->
       assertEquals(4, reader.findRowNum(1, 3, 'needle'))
       assertEquals(3, reader.findColNum(1, 4, 'needle'))
+      assertEquals(3, reader.findColNum('Sheet1', 4, 'needle'))
       assertEquals(-1, reader.findColNum(1, 3, 'needle'))
       assertEquals(-1, reader.findRowNum(1, 5, 'needle'))
     }
@@ -38,6 +39,7 @@ class FExcelReaderSparseTest {
       Sheet sheet = workbook.getSheet(0).get()
       assertEquals('x', FExcelUtil.getRow(sheet, 3).getCell(0).rawValue)
       assertNull(FExcelUtil.getRow(sheet, 2))
+      assertNull(FExcelUtil.getRow(sheet, 99))
       FExcelValueExtractor extractor = new FExcelValueExtractor(sheet, workbook.isDate1904())
       assertNull(extractor.getString(1, 7))
       assertNull(extractor.getBigDecimal(1, 7))
