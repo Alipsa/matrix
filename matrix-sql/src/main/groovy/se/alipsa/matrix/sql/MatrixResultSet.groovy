@@ -26,6 +26,16 @@ import java.sql.SQLXML
 import java.sql.Statement
 import java.sql.Time
 import java.sql.Timestamp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.ResolverStyle
+import java.time.temporal.ChronoField
+import java.util.Date as UtilDate
 
 /**
  * This is Result set representation of a Matrix.
@@ -52,6 +62,13 @@ class MatrixResultSet implements ResultSet {
   private static final String UNSUPPORTED_SQLXML = 'Support for SQLXML not implemented'
   private static final String UNSUPPORTED_NCLOB = 'Support for NClob not implemented'
   private static final int BEFORE_FIRST = -1
+  /**
+   * The {@link #relative(int)} delta for moving back one row, used by {@link #previous()}. This
+   * is a distinct constant from {@link #BEFORE_FIRST} even though both happen to equal {@code -1}
+   * today - one is a cursor-position sentinel, the other a move delta, and they should not be
+   * conflated even if their values happen to coincide.
+   */
+  private static final int PREVIOUS_ROW_DELTA = -1
 
   private enum CalendarValueType {
     DATE,
@@ -154,6 +171,43 @@ class MatrixResultSet implements ResultSet {
     )
     target.set(Calendar.MILLISECOND, valueType == CalendarValueType.TIMESTAMP ? source.get(Calendar.MILLISECOND) : 0)
     target.timeInMillis
+  }
+
+  /**
+   * Epoch date used, by convention, to give a {@code LocalTime} an arbitrary date so it can be
+   * combined into a {@code LocalDateTime} for zone reinterpretation. Matches the epoch-date
+   * convention already used by {@link #calendarMillis} for its {@code TIME} case.
+   */
+  private static final LocalDate TIME_EPOCH_DATE = LocalDate.of(1970, 1, 1)
+
+  /**
+   * The JDBC escape format accepted for {@code String}-typed timestamp cells by the
+   * {@code Calendar} overload of {@link #getTimestamp(int, Calendar)}: {@code uuuu-MM-dd HH:mm:ss}
+   * with an optional {@code .fffffffff} fraction. Uses {@code uuuu} (proleptic year) rather than
+   * {@code yyyy} (year-of-era) with {@link ResolverStyle#STRICT} so that invalid calendar dates
+   * (e.g. April 31st) and out-of-range fields (e.g. hour 24) are rejected outright instead of
+   * being silently renormalized to a different value. This is intentionally stricter than the
+   * no-{@code Calendar} {@code getTimestamp(int)} path, which parses via the lenient
+   * {@code Timestamp.valueOf(String)} - see the getter javadoc for the documented divergence.
+   */
+  private static final DateTimeFormatter JDBC_TIMESTAMP_FORMAT = new DateTimeFormatterBuilder()
+      .appendPattern('uuuu-MM-dd HH:mm:ss')
+      .optionalStart()
+      .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+      .optionalEnd()
+      .toFormatter()
+      .withResolverStyle(ResolverStyle.STRICT)
+
+  /**
+   * Reinterprets the given zoneless wall-clock fields as local time in the given calendar's zone,
+   * returning the resulting absolute instant. This is the {@code java.time}-based counterpart to
+   * {@link #calendarMillis}: instead of decoding an epoch-millis value as a UTC-sourced wall clock
+   * before reinterpreting it, it takes wall-clock fields that are already parsed/logical (from a
+   * {@code LocalDate}/{@code LocalTime}/{@code LocalDateTime} cell, or from parsed {@code String}
+   * text) and reinterprets them directly - never consulting {@code TimeZone.getDefault()}.
+   */
+  private static Instant reinterpretedInstant(LocalDateTime localDateTime, Calendar calendar) {
+    localDateTime.atZone(calendar.timeZone.toZoneId()).toInstant()
   }
 
   /**
@@ -1400,7 +1454,7 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   boolean previous() throws SQLException {
-    return relative(BEFORE_FIRST)
+    return relative(PREVIOUS_ROW_DELTA)
   }
 
   /**
@@ -2514,7 +2568,8 @@ class MatrixResultSet implements ResultSet {
    *
    * @throws SQLException if a database access error occurs;
    * the result set concurrency is {@code CONCUR_READ_ONLY};
-   * this method is called on a closed result set
+   * this method is called on a closed result set;
+   * the cursor is not positioned on a valid row;
    * or if this method is called when the cursor is on the insert row
    * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
    * this method
@@ -2522,7 +2577,14 @@ class MatrixResultSet implements ResultSet {
    */
   @Override
   void deleteRow() throws SQLException {
+    ensureCurrentRow()
     matrix.removeRows(rowIdx)
+    if (rowIdx >= matrix.rowCount()) {
+      // Deleting the last remaining row must land the cursor on the same
+      // after-last sentinel value used elsewhere in this class (matrix.rowCount()),
+      // not one row past it.
+      rowIdx = matrix.rowCount()
+    }
   }
 
   /**
@@ -2877,6 +2939,20 @@ class MatrixResultSet implements ResultSet {
    * This method uses the given calendar to construct an appropriate millisecond
    * value for the date if the underlying database does not store
    * timezone information.
+   * <p>
+   * The supplied {@code Calendar} is honored for every temporal cell type: a raw {@code Number}
+   * (epoch millis) or a {@code java.util.Date}/{@code java.sql.Date}/{@code Time}/{@code Timestamp}
+   * cell is reinterpreted via its epoch-millis value; a {@code LocalDate} or {@code LocalDateTime}
+   * cell (the latter with its time-of-day dropped, matching {@code ValueConverter.asSqlDate}) has
+   * its wall-clock fields reinterpreted directly in the calendar's zone; a {@code String} cell is
+   * parsed and reinterpreted the same way.
+   * <p>
+   * For a {@code String}-typed cell, only {@code String} itself is accepted (a {@code StringBuilder}
+   * or {@code GString} cell throws, matching {@code ValueConverter.asSqlDate}'s own {@code String}
+   * guard), and the accepted syntax is <strong>stricter</strong> than the no-{@code Calendar}
+   * {@code getDate(int)} path: it must be zero-padded ISO-8601 ({@code LocalDate.parse}), so e.g.
+   * {@code '2024-2-3'} (accepted by {@code getDate(int)} via the lenient {@code Date.valueOf}) is
+   * rejected here. This divergence is deliberate - see {@code matrix-sql/req/v2.5.0-fixes.md} §2.2.
    *
    * @param columnIndex the first column is 1, the second is 2, ...
    * @param cal the {@code java.util.Calendar} object
@@ -2896,6 +2972,17 @@ class MatrixResultSet implements ResultSet {
     if (val instanceof Number) {
       long millis = val.longValue()
       lastReadValue = new Date(calendarDateMillis(millis, cal))
+    } else if (val instanceof UtilDate) {
+      long millis = ((UtilDate) val).getTime()
+      lastReadValue = new Date(calendarDateMillis(millis, cal))
+    } else if (val instanceof LocalDateTime) {
+      LocalDateTime startOfDay = ((LocalDateTime) val).toLocalDate().atStartOfDay()
+      lastReadValue = new Date(reinterpretedInstant(startOfDay, cal).toEpochMilli())
+    } else if (val instanceof LocalDate) {
+      lastReadValue = new Date(reinterpretedInstant(((LocalDate) val).atStartOfDay(), cal).toEpochMilli())
+    } else if (val instanceof String) {
+      LocalDate localDate = LocalDate.parse((String) val)
+      lastReadValue = new Date(reinterpretedInstant(localDate.atStartOfDay(), cal).toEpochMilli())
     } else {
       lastReadValue = matrix[rowIdx, idx, Date]
     }
@@ -2933,6 +3020,23 @@ class MatrixResultSet implements ResultSet {
    * This method uses the given calendar to construct an appropriate millisecond
    * value for the time if the underlying database does not store
    * timezone information.
+   * <p>
+   * The supplied {@code Calendar} is honored for every temporal cell type: a raw {@code Number}
+   * (epoch millis) or a {@code java.util.Date}/{@code java.sql.Date}/{@code Time}/{@code Timestamp}
+   * cell is reinterpreted via its epoch-millis value; a {@code LocalTime} cell has its wall-clock
+   * fields reinterpreted directly in the calendar's zone (using 1970-01-01 as the arbitrary
+   * calendar date, matching {@code java.sql.Time}'s own convention); a text cell is parsed and
+   * reinterpreted the same way.
+   * <p>
+   * Unlike {@link #getDate(int, Calendar)} and {@link #getTimestamp(int, Calendar)}, a text cell
+   * here may be <strong>any</strong> {@code CharSequence} (not only {@code String}), matching
+   * {@code ValueConverter.asSqlTime}'s own unguarded {@code String.valueOf(o)} fallback - a
+   * {@code StringBuilder}/{@code GString} cell is accepted by both the {@code Calendar} and
+   * no-{@code Calendar} overloads. The accepted syntax is <strong>stricter</strong> than the
+   * no-{@code Calendar} {@code getTime(int)} path: it must be zero-padded ISO-8601
+   * ({@code LocalTime.parse}) and rejects hour {@code 24} (which {@code Time.valueOf} wraps to
+   * {@code 00:00:00} same-day). This divergence is deliberate - see
+   * {@code matrix-sql/req/v2.5.0-fixes.md} §2.2.
    *
    * @param columnIndex the first column is 1, the second is 2, ...
    * @param cal the {@code java.util.Calendar} object
@@ -2952,6 +3056,16 @@ class MatrixResultSet implements ResultSet {
     if (val instanceof Number) {
       long millis = val.longValue()
       lastReadValue = new Time(calendarTimeMillis(millis, cal))
+    } else if (val instanceof UtilDate) {
+      long millis = ((UtilDate) val).getTime()
+      lastReadValue = new Time(calendarTimeMillis(millis, cal))
+    } else if (val instanceof LocalTime) {
+      LocalDateTime ldt = LocalDateTime.of(TIME_EPOCH_DATE, (LocalTime) val)
+      lastReadValue = new Time(reinterpretedInstant(ldt, cal).toEpochMilli())
+    } else if (val instanceof CharSequence) {
+      LocalTime localTime = LocalTime.parse(val.toString())
+      LocalDateTime ldt = LocalDateTime.of(TIME_EPOCH_DATE, localTime)
+      lastReadValue = new Time(reinterpretedInstant(ldt, cal).toEpochMilli())
     } else {
       lastReadValue = matrix[rowIdx, idx, Time]
     }
@@ -2989,6 +3103,28 @@ class MatrixResultSet implements ResultSet {
    * This method uses the given calendar to construct an appropriate millisecond
    * value for the timestamp if the underlying database does not store
    * timezone information.
+   * <p>
+   * The supplied {@code Calendar} is honored for every temporal cell type: a raw {@code Number}
+   * (epoch millis) or a {@code java.util.Date}/{@code java.sql.Date}/{@code Time} cell is
+   * reinterpreted via its epoch-millis value; a {@code Timestamp} cell is reinterpreted the same
+   * way with its sub-millisecond nanosecond precision preserved; a {@code LocalDateTime} or
+   * {@code LocalDate} cell (the latter via {@code atStartOfDay()}, matching
+   * {@code ValueConverter.asTimestamp}) has its wall-clock fields reinterpreted directly in the
+   * calendar's zone; a {@code String} cell is parsed and reinterpreted the same way.
+   * <p>
+   * A {@code ZonedDateTime} cell is also accepted (the only one of the three getters that does,
+   * matching {@code ValueConverter.asTimestamp}) - its <strong>own embedded zone is discarded</strong>
+   * and its local wall-clock fields are reinterpreted in {@code cal}'s zone instead, exactly like a
+   * {@code LocalDateTime} cell with the same local fields; the cell's original instant is neither
+   * preserved nor converted into {@code cal}'s zone.
+   * <p>
+   * For a {@code String}-typed cell, only {@code String} itself is accepted (a {@code StringBuilder}
+   * or {@code GString} cell throws, matching {@code ValueConverter.asTimestamp}'s own {@code String}
+   * guard), and the accepted syntax is <strong>stricter</strong> than the no-{@code Calendar}
+   * {@code getTimestamp(int)} path: it must be {@code uuuu-MM-dd HH:mm:ss[.fffffffff]} with
+   * zero-padded, calendrically valid components, and rejects hour {@code 24} (which
+   * {@code Timestamp.valueOf} rolls forward to the next day). This divergence is deliberate - see
+   * {@code matrix-sql/req/v2.5.0-fixes.md} §2.2.
    *
    * @param columnIndex the first column is 1, the second is 2, ...
    * @param cal the {@code java.util.Calendar} object
@@ -3008,6 +3144,23 @@ class MatrixResultSet implements ResultSet {
     if (val instanceof Number) {
       long millis = val.longValue()
       lastReadValue = new Timestamp(calendarTimestampMillis(millis, cal))
+    } else if (val instanceof Timestamp) {
+      long millis = calendarTimestampMillis(((Timestamp) val).getTime(), cal)
+      Timestamp ts = new Timestamp(millis)
+      ts.setNanos(((Timestamp) val).getNanos())
+      lastReadValue = ts
+    } else if (val instanceof UtilDate) {
+      long millis = ((UtilDate) val).getTime()
+      lastReadValue = new Timestamp(calendarTimestampMillis(millis, cal))
+    } else if (val instanceof LocalDateTime) {
+      lastReadValue = Timestamp.from(reinterpretedInstant((LocalDateTime) val, cal))
+    } else if (val instanceof LocalDate) {
+      lastReadValue = Timestamp.from(reinterpretedInstant(((LocalDate) val).atStartOfDay(), cal))
+    } else if (val instanceof ZonedDateTime) {
+      lastReadValue = Timestamp.from(reinterpretedInstant(((ZonedDateTime) val).toLocalDateTime(), cal))
+    } else if (val instanceof String) {
+      LocalDateTime parsed = LocalDateTime.parse((String) val, JDBC_TIMESTAMP_FORMAT)
+      lastReadValue = Timestamp.from(reinterpretedInstant(parsed, cal))
     } else {
       lastReadValue = matrix[rowIdx, idx, Timestamp]
     }

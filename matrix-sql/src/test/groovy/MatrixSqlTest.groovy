@@ -885,6 +885,62 @@ class MatrixSqlTest {
     }
   }
 
+  /**
+   * Builds a Matrix whose first {@code shortRowCount} rows have a short (5 character) String value
+   * in the {@code name} column, and one further row (beyond that count) holding a String longer
+   * than {@link MatrixDbUtil#DEFAULT_VARCHAR_SIZE} (255) - long enough that a capped scan and a
+   * full scan produce genuinely different VARCHAR sizing, unlike a short outlier which would be
+   * floored to 255 either way.
+   */
+  private static Matrix buildLateOutlierMatrix(int shortRowCount) {
+    List<Integer> ids = (1..(shortRowCount + 1)).toList()
+    List<String> names = (1..shortRowCount).collect { 'abcde' }
+    names.add('x' * 512)
+    Matrix.builder('late_outlier').data([id: ids, name: names]).types(int, String).build()
+  }
+
+  @Test
+  void testCreateWithoutExplicitScanRowsAlwaysScansTheFullTableForSizing() {
+    // create()'s no-scanNumRows convenience overloads must always scan the full table (they
+    // immediately insert every row after creating the DDL), so a late outlier value beyond
+    // MatrixDbUtil.DEFAULT_SCAN_ROWS must still size the column correctly and round-trip without
+    // truncation - see matrix-sql/req/v2.5.0-fixes.md §3.
+    Matrix data = buildLateOutlierMatrix(MatrixDbUtil.DEFAULT_SCAN_ROWS)
+    String outlier = data[data.rowCount() - 1, 'name'] as String
+    assertEquals(512, outlier.length())
+
+    String url = h2MemUrl('late_outlier_testdb', 'DATABASE_TO_UPPER=FALSE')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      matrixSql.create(data, 'id')
+      String tbl = SqlIdentifier.renderTable(matrixSql.tableName(data))
+      Matrix stored = matrixSql.select("SELECT * FROM $tbl ORDER BY id")
+      assertEquals(data.rowCount(), stored.rowCount())
+      assertEquals(outlier, stored[stored.rowCount() - 1, 'name'],
+          'the outlier value beyond the old default scan cap must round-trip without truncation')
+    }
+  }
+
+  @Test
+  void testCreateDdlDefaultScanIsCappedButExplicitScanNumrowsIsNot() {
+    // createDdl() never inserts data, so its default (no explicit scanNumrows) scan is capped at
+    // MatrixDbUtil.DEFAULT_SCAN_ROWS - the generated DDL is sized from the sampled rows only, and
+    // must NOT reflect a value that only occurs beyond the sample. Passing an explicit
+    // scanNumrows covering the full table must size it correctly.
+    Matrix data = buildLateOutlierMatrix(MatrixDbUtil.DEFAULT_SCAN_ROWS)
+    String url = h2MemUrl('ddl_scan_cap_testdb', 'DATABASE_TO_UPPER=FALSE')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
+      String defaultDdl = matrixSql.createDdl(data)
+      assertTrue(defaultDdl.contains('VARCHAR(255)'),
+          "default (capped) createDdl scan must floor to DEFAULT_VARCHAR_SIZE, not the 512-char outlier: $defaultDdl")
+      assertFalse(defaultDdl.contains('VARCHAR(512)'),
+          "default (capped) createDdl scan must not see the outlier beyond DEFAULT_SCAN_ROWS: $defaultDdl")
+
+      String fullScanDdl = matrixSql.createDdl(data, true, data.rowCount())
+      assertTrue(fullScanDdl.contains('VARCHAR(512)'),
+          "an explicit full scanNumrows must size the column to the outlier's actual length: $fullScanDdl")
+    }
+  }
+
   @Test
   void testCreateWithProps() {
     Matrix data = Matrix.builder('props_tbl').data([

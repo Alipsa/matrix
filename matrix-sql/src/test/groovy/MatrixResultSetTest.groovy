@@ -15,8 +15,10 @@ import java.sql.Types
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeParseException
 
 class MatrixResultSetTest {
 
@@ -138,7 +140,9 @@ class MatrixResultSetTest {
     Date date = Date.valueOf('2026-04-29')
     Time time = Time.valueOf('12:34:56')
     Timestamp timestamp = Timestamp.valueOf('2026-04-29 12:34:56')
-    Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    timestamp.setNanos(123456789)
+    Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
     Matrix matrix = Matrix.builder('temporal').data([
         d: [date],
         t: [time],
@@ -156,15 +160,40 @@ class MatrixResultSetTest {
     assertEquals(time, rs.getTime('t'))
     assertEquals(timestamp, rs.getTimestamp('ts'))
 
-    assertEquals(date, rs.getDate('d', calendar))
-    assertEquals(time, rs.getTime('t', calendar))
-    assertEquals(timestamp, rs.getTimestamp('ts', calendar))
+    // The Calendar overload reinterprets a Date/Time/Timestamp cell the same way it reinterprets a
+    // Number cell: decode its raw epoch-millis value as a UTC-sourced wall clock, then re-encode in
+    // the given calendar's zone. Prove this is a genuine reinterpretation (not identity) with two
+    // different calendars, each verified independently of the production code via pure java.time
+    // arithmetic starting from the cell's actual (ambient-timezone-independent) .getTime() value.
+    ZoneId utc = ZoneId.of('UTC')
+    ZoneId stockholm = ZoneId.of('Europe/Stockholm')
 
-    assertNull(rs.getDate('missingDate', calendar))
+    LocalDate dateWallClock = Instant.ofEpochMilli(date.getTime()).atZone(utc).toLocalDate()
+    assertEquals(new Date(dateWallClock.atStartOfDay(utc).toInstant().toEpochMilli()), rs.getDate('d', utcCal))
+    assertEquals(new Date(dateWallClock.atStartOfDay(stockholm).toInstant().toEpochMilli()), rs.getDate('d', cetCal))
+
+    LocalTime timeWallClock = Instant.ofEpochMilli(time.getTime()).atZone(utc).toLocalTime()
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, timeWallClock.hour, timeWallClock.minute, timeWallClock.second)
+        .atZone(utc).toInstant().toEpochMilli()), rs.getTime('t', utcCal))
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, timeWallClock.hour, timeWallClock.minute, timeWallClock.second)
+        .atZone(stockholm).toInstant().toEpochMilli()), rs.getTime('t', cetCal))
+
+    LocalDateTime tsWallClock = Instant.ofEpochMilli(timestamp.getTime()).atZone(utc).toLocalDateTime()
+    Timestamp expectedTsUtc = Timestamp.from(tsWallClock.atZone(utc).toInstant())
+    expectedTsUtc.setNanos(123456789)
+    Timestamp actualTsUtc = rs.getTimestamp('ts', utcCal)
+    assertEquals(expectedTsUtc, actualTsUtc)
+    assertEquals(123456789, actualTsUtc.getNanos(), 'sub-millisecond Timestamp precision must survive the zone shift')
+
+    Timestamp expectedTsCet = Timestamp.from(tsWallClock.atZone(stockholm).toInstant())
+    expectedTsCet.setNanos(123456789)
+    assertEquals(expectedTsCet, rs.getTimestamp('ts', cetCal))
+
+    assertNull(rs.getDate('missingDate', utcCal))
     assertTrue(rs.wasNull())
-    assertNull(rs.getTime('missingDate', calendar))
+    assertNull(rs.getTime('missingDate', utcCal))
     assertTrue(rs.wasNull())
-    assertNull(rs.getTimestamp('missingDate', calendar))
+    assertNull(rs.getTimestamp('missingDate', utcCal))
     assertTrue(rs.wasNull())
   }
 
@@ -173,18 +202,142 @@ class MatrixResultSetTest {
     Matrix matrix = Matrix.builder('stringTemporal').data([
         d: ['2026-04-29'],
         t: ['12:34:56'],
-        ts: ['2026-04-29 12:34:56']
+        ts: ['2026-04-29 12:34:56.123456789']
     ])
     .types(String, String, String)
     .build()
 
     ResultSet rs = new MatrixResultSet(matrix)
     assertTrue(rs.next())
+    Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
+    ZoneId utc = ZoneId.of('UTC')
+    ZoneId stockholm = ZoneId.of('Europe/Stockholm')
+
+    // The Calendar overload parses String cells independently of the no-Calendar path
+    // (LocalDate/LocalTime/LocalDateTime.parse, not the lenient Date/Time/Timestamp.valueOf) and
+    // reinterprets the parsed wall-clock fields in the given calendar's zone - a genuine, zone-safe
+    // shift, not identity with the no-Calendar getter's result.
+    LocalDate expectedDate = LocalDate.of(2026, 4, 29)
+    assertEquals(new Date(expectedDate.atStartOfDay(utc).toInstant().toEpochMilli()), rs.getDate(1, utcCal))
+    Date dateCet = rs.getDate(1, cetCal)
+    assertEquals(new Date(expectedDate.atStartOfDay(stockholm).toInstant().toEpochMilli()), dateCet)
+    assertNotEquals(rs.getDate(1, utcCal), dateCet)
+
+    LocalTime expectedTime = LocalTime.of(12, 34, 56)
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, 0, 0).with(expectedTime).atZone(utc).toInstant().toEpochMilli()),
+        rs.getTime(2, utcCal))
+    Time timeCet = rs.getTime(2, cetCal)
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, 0, 0).with(expectedTime).atZone(stockholm).toInstant().toEpochMilli()),
+        timeCet)
+    assertNotEquals(rs.getTime(2, utcCal), timeCet)
+
+    LocalDateTime expectedTs = LocalDateTime.of(2026, 4, 29, 12, 34, 56, 123456789)
+    Timestamp expectedTsUtc = Timestamp.from(expectedTs.atZone(utc).toInstant())
+    Timestamp tsUtc = rs.getTimestamp(3, utcCal)
+    assertEquals(expectedTsUtc, tsUtc)
+    assertEquals(123456789, tsUtc.getNanos(), 'fractional-second precision from the String cell must be preserved')
+
+    Timestamp expectedTsCet = Timestamp.from(expectedTs.atZone(stockholm).toInstant())
+    Timestamp tsCet = rs.getTimestamp(3, cetCal)
+    assertEquals(expectedTsCet, tsCet)
+    assertNotEquals(tsUtc, tsCet)
+  }
+
+  @Test
+  void testCalendarGettersRejectTheLenientSyntaxTheNoCalendarGettersAccept() {
+    // The Calendar overload intentionally accepts a stricter, zero-padded syntax than the
+    // no-Calendar overload for String cells (matrix-sql/req/v2.5.0-fixes.md §2.2) - it does not
+    // attempt to reproduce Date.valueOf/Time.valueOf/Timestamp.valueOf's lenient, mutually
+    // inconsistent wraparound rules. Each case below must succeed on the no-Calendar getter (as
+    // legacy JDBC escape parsing already does) and throw on the Calendar overload.
+    Matrix matrix = Matrix.builder('lenientDivergence').data([
+        singleDigitDate: ['2024-2-3'],
+        singleDigitTime: ['1:2:3'],
+        wrapTime: ['24:00:00'],
+        singleDigitTs: ['2026-4-9 1:2:3'],
+        wrapTs: ['2026-04-29 24:00:00'],
+        invalidDate: ['2026-04-31 12:00:00'],
+        trailingDot: ['2026-04-29 12:34:56.']
+    ])
+    .types(String, String, String, String, String, String, String)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
 
-    assertEquals(Date.valueOf('2026-04-29'), rs.getDate(1, cal))
-    assertEquals(Time.valueOf('12:34:56'), rs.getTime(2, cal))
-    assertEquals(Timestamp.valueOf('2026-04-29 12:34:56'), rs.getTimestamp(3, cal))
+    // Neither overload wraps a conversion failure in SQLException today (the no-Calendar path
+    // already lets ValueConverter's IllegalArgumentException/DateTimeParseException propagate
+    // unchecked; the Calendar overload matches that existing, pre-established behavior rather
+    // than introducing new exception-wrapping as an unrelated change).
+    assertEquals(Date.valueOf('2024-02-03'), rs.getDate('singleDigitDate'))
+    assertThrows(DateTimeParseException) { rs.getDate('singleDigitDate', cal) }
+
+    assertEquals(Time.valueOf('01:02:03'), rs.getTime('singleDigitTime'))
+    assertThrows(DateTimeParseException) { rs.getTime('singleDigitTime', cal) }
+
+    // Time.valueOf('24:00:00') succeeds and prints as '00:00:00', but is NOT the same value as
+    // Time.valueOf('00:00:00') - verified empirically it is 24h ahead in getTime() millis (the
+    // deprecated Time(h,m,s) constructor rolls hour 24 into the next calendar day internally,
+    // even though java.sql.Time's toString() never displays a date part).
+    assertEquals(Time.valueOf('24:00:00'), rs.getTime('wrapTime'))
+    assertThrows(DateTimeParseException) { rs.getTime('wrapTime', cal) }
+
+    assertEquals(Timestamp.valueOf('2026-04-09 01:02:03'), rs.getTimestamp('singleDigitTs'))
+    assertThrows(DateTimeParseException) { rs.getTimestamp('singleDigitTs', cal) }
+
+    assertEquals(Timestamp.valueOf('2026-04-29 24:00:00'), rs.getTimestamp('wrapTs'),
+        'legacy Timestamp.valueOf rolls 24:00:00 forward to the next day')
+    assertThrows(DateTimeParseException) { rs.getTimestamp('wrapTs', cal) }
+
+    assertEquals(Timestamp.valueOf('2026-04-31 12:00:00'), rs.getTimestamp('invalidDate'),
+        'legacy Timestamp.valueOf rolls an invalid date (April 31st) forward into May')
+    assertThrows(DateTimeParseException) { rs.getTimestamp('invalidDate', cal) }
+
+    // A trailing '.' with no fraction digits is rejected by Timestamp.valueOf itself, so both
+    // overloads must throw here - this is not a divergence case.
+    assertThrows(IllegalArgumentException) { rs.getTimestamp('trailingDot') }
+    assertThrows(DateTimeParseException) { rs.getTimestamp('trailingDot', cal) }
+  }
+
+  @Test
+  void testCalendarGettersCharSequenceAcceptanceDiffersPerGetter() {
+    // ValueConverter.asSqlDate/asTimestamp guard with `instanceof String` and throw on any other
+    // CharSequence; ValueConverter.asSqlTime has no such guard and accepts any CharSequence via
+    // String.valueOf(o). The Calendar overloads must match their own no-Calendar sibling exactly:
+    // getDate/getTimestamp reject a StringBuilder cell on BOTH overloads, getTime accepts it on
+    // BOTH overloads.
+    Matrix matrix = Matrix.builder('charSequenceCells').data([
+        d: [new StringBuilder('2024-04-29')],
+        ts: [new StringBuilder('2024-04-29 12:34:56')],
+        t: [new StringBuilder('12:34:56')]
+    ])
+    .types(CharSequence, CharSequence, CharSequence)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+    Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    ZoneId utc = ZoneId.of('UTC')
+
+    // getDate/getTimestamp reject a non-String CharSequence on BOTH overloads (matching
+    // ValueConverter.asSqlDate/asTimestamp's `instanceof String` guard, which throws otherwise).
+    assertThrows(IllegalArgumentException) { rs.getDate('d') }
+    assertThrows(IllegalArgumentException) { rs.getDate('d', utcCal) }
+
+    assertThrows(IllegalArgumentException) { rs.getTimestamp('ts') }
+    assertThrows(IllegalArgumentException) { rs.getTimestamp('ts', utcCal) }
+
+    // getTime accepts any CharSequence on BOTH overloads (matching ValueConverter.asSqlTime's
+    // unguarded String.valueOf(o) fallback) - the Calendar overload must not become stricter than
+    // its own no-Calendar sibling here.
+    assertEquals(Time.valueOf('12:34:56'), rs.getTime('t'))
+    Time expectedTimeUtc = new Time(
+        LocalDateTime.of(1970, 1, 1, 0, 0).with(LocalTime.of(12, 34, 56)).atZone(utc).toInstant().toEpochMilli()
+    )
+    assertEquals(expectedTimeUtc, rs.getTime('t', utcCal),
+        "getTime(_, Calendar) must accept any CharSequence cell, matching ValueConverter.asSqlTime's unguarded fallback")
   }
 
   @Test
@@ -240,6 +393,142 @@ class MatrixResultSetTest {
         LocalDateTime.of(2024, 10, 27, 1, 30), stockholm
     ).toInstant().toEpochMilli()
     assertEquals(new Timestamp(expectedTransition), transition.getTimestamp(1, cetCal))
+  }
+
+  @Test
+  void testCalendarGettersReinterpretLocalDateLocalTimeLocalDateTimeCells() {
+    LocalDate localDate = LocalDate.of(2024, 4, 29)
+    LocalTime localTime = LocalTime.of(12, 34, 56)
+    LocalDateTime localDateTime = LocalDateTime.of(2024, 4, 29, 12, 34, 56)
+    Calendar utcCal = Calendar.getInstance(TimeZone.getTimeZone('UTC'))
+    Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
+    ZoneId utc = ZoneId.of('UTC')
+    ZoneId stockholm = ZoneId.of('Europe/Stockholm')
+
+    Matrix matrix = Matrix.builder('javaTimeCells').data([
+        d: [localDate],
+        dt: [localDateTime],
+        t: [localTime],
+        ts: [localDateTime]
+    ])
+    .types(LocalDate, LocalDateTime, LocalTime, LocalDateTime)
+    .build()
+
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+
+    // LocalDate/LocalTime/LocalDateTime cells are already zoneless wall-clock values - no
+    // ambient-default-zone decoding is involved, they are reinterpreted directly.
+    assertEquals(new Date(localDate.atStartOfDay(utc).toInstant().toEpochMilli()), rs.getDate('d', utcCal))
+    assertEquals(new Date(localDate.atStartOfDay(stockholm).toInstant().toEpochMilli()), rs.getDate('d', cetCal))
+
+    // getDate on a LocalDateTime cell must drop the time-of-day, matching ValueConverter.asSqlDate.
+    assertEquals(new Date(localDate.atStartOfDay(utc).toInstant().toEpochMilli()), rs.getDate('dt', utcCal))
+
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, 0, 0).with(localTime).atZone(utc).toInstant().toEpochMilli()),
+        rs.getTime('t', utcCal))
+    assertEquals(new Time(LocalDateTime.of(1970, 1, 1, 0, 0).with(localTime).atZone(stockholm).toInstant().toEpochMilli()),
+        rs.getTime('t', cetCal))
+
+    assertEquals(Timestamp.from(localDateTime.atZone(utc).toInstant()), rs.getTimestamp('ts', utcCal))
+    Timestamp tsCet = rs.getTimestamp('ts', cetCal)
+    assertEquals(Timestamp.from(localDateTime.atZone(stockholm).toInstant()), tsCet)
+
+    // getTimestamp on a LocalDate cell must apply atStartOfDay(), matching ValueConverter.asTimestamp.
+    assertEquals(Timestamp.from(localDate.atStartOfDay().atZone(utc).toInstant()), rs.getTimestamp('d', utcCal))
+  }
+
+  @Test
+  void testCalendarGetTimestampReinterpretsZonedDateTimeCellByDiscardingItsOwnZone() {
+    // A ZonedDateTime cell already carries its own zone (New York), unlike every other cell type
+    // reinterpreted by this method. Per the documented decision (matrix-sql/req/v2.5.0-fixes.md
+    // §2.1), getTimestamp(_, Calendar) discards that embedded zone and reinterprets the cell's
+    // local wall-clock fields in cal's zone - it must NOT convert the New York instant into cal's
+    // zone.
+    ZonedDateTime zonedCell = ZonedDateTime.of(2024, 6, 15, 10, 30, 0, 0, ZoneId.of('America/New_York'))
+    Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
+    ZoneId stockholm = ZoneId.of('Europe/Stockholm')
+
+    Matrix matrix = Matrix.builder('zonedCell').data([ts: [zonedCell]]).types(ZonedDateTime).build()
+    ResultSet rs = new MatrixResultSet(matrix)
+    assertTrue(rs.next())
+
+    Timestamp actual = rs.getTimestamp(1, cetCal)
+
+    // Expected: the LOCAL fields (2024-06-15T10:30:00), reinterpreted in Stockholm's zone - same
+    // as an equivalent LocalDateTime cell would produce.
+    Timestamp expectedLocalFieldsReinterpreted = Timestamp.from(
+        zonedCell.toLocalDateTime().atZone(stockholm).toInstant()
+    )
+    assertEquals(expectedLocalFieldsReinterpreted, actual)
+
+    // Must NOT be the New York instant converted into Stockholm's zone (the rejected alternative
+    // policy) - assert the two differ, pinning the chosen policy against the other one.
+    Timestamp instantConvertedToStockholm = Timestamp.from(zonedCell.withZoneSameInstant(stockholm).toInstant())
+    assertNotEquals(instantConvertedToStockholm, actual)
+  }
+
+  @Test
+  void testCalendarGettersAreIndependentOfJvmDefaultTimezoneAtDstGap() {
+    TimeZone original = TimeZone.getDefault()
+    try {
+      // Stockholm's spring-forward gap on 2024-03-31 runs 02:00 -> 03:00; 02:30 does not exist as
+      // a local Stockholm time that day. Parsing/reinterpreting it must give the identical result
+      // regardless of the JVM's ambient default timezone at the moment of the call.
+      LocalDate localDate = LocalDate.of(2024, 3, 31)
+      LocalTime localTime = LocalTime.of(2, 30, 0)
+      LocalDateTime localDateTime = LocalDateTime.of(2024, 3, 31, 2, 30, 0)
+
+      Matrix matrix = Matrix.builder('dstGap').data([
+          strTs: ['2024-03-31 02:30:00'],
+          strD: ['2024-03-31'],
+          strT: ['02:30:00'],
+          ld: [localDate],
+          lt: [localTime],
+          ldt: [localDateTime]
+      ])
+      .types(String, String, String, LocalDate, LocalTime, LocalDateTime)
+      .build()
+
+      Calendar cetCal = Calendar.getInstance(TimeZone.getTimeZone('Europe/Stockholm'))
+
+      TimeZone.setDefault(TimeZone.getTimeZone('Europe/Stockholm'))
+      ResultSet rsStockholmDefault = new MatrixResultSet(matrix)
+      assertTrue(rsStockholmDefault.next())
+      Map underStockholmDefault = [
+          strTs: rsStockholmDefault.getTimestamp('strTs', cetCal),
+          strD: rsStockholmDefault.getDate('strD', cetCal),
+          strT: rsStockholmDefault.getTime('strT', cetCal),
+          ld: rsStockholmDefault.getDate('ld', cetCal),
+          lt: rsStockholmDefault.getTime('lt', cetCal),
+          ldt: rsStockholmDefault.getTimestamp('ldt', cetCal)
+      ]
+
+      TimeZone.setDefault(TimeZone.getTimeZone('UTC'))
+      ResultSet rsUtcDefault = new MatrixResultSet(matrix)
+      assertTrue(rsUtcDefault.next())
+      Map underUtcDefault = [
+          strTs: rsUtcDefault.getTimestamp('strTs', cetCal),
+          strD: rsUtcDefault.getDate('strD', cetCal),
+          strT: rsUtcDefault.getTime('strT', cetCal),
+          ld: rsUtcDefault.getDate('ld', cetCal),
+          lt: rsUtcDefault.getTime('lt', cetCal),
+          ldt: rsUtcDefault.getTimestamp('ldt', cetCal)
+      ]
+
+      underStockholmDefault.each { key, value ->
+        assertEquals(value, underUtcDefault[key],
+            "getter for '$key' must be independent of the JVM default timezone")
+      }
+
+      // The DST-gap value must parse to exactly the requested local fields, reinterpreted in the
+      // target calendar's zone - not silently shifted by an ambient-zone-dependent construction
+      // path (the Timestamp.valueOf(str).toLocalDateTime() approach this fix replaced).
+      Timestamp expectedTs = Timestamp.from(localDateTime.atZone(ZoneId.of('Europe/Stockholm')).toInstant())
+      assertEquals(expectedTs, underUtcDefault.strTs)
+    } finally {
+      TimeZone.setDefault(original)
+    }
   }
 
   @Test
@@ -345,6 +634,39 @@ class MatrixResultSetTest {
     assertEquals(2, reverseCount)
     assertTrue(rs.isBeforeFirst())
     assertFalse(rs.previous())
+  }
+
+  @Test
+  void testDeleteRowDoesNotSkipTheFollowingRow() {
+    Matrix source = Matrix.builder('deletable').data([id: [1, 2, 3, 4]]).types(int).build()
+    ResultSet rs = new MatrixResultSet(source)
+    // MatrixResultSet clones its constructor argument, so assertions must go against the
+    // result set's own live data, not the original source Matrix.
+    Matrix rsData = rs.unwrap(Matrix)
+
+    assertTrue(rs.absolute(2))
+    assertEquals(2, rs.getInt(1))
+    rs.deleteRow()
+
+    assertEquals(3, rsData.rowCount())
+    // The row that slid into the deleted slot (previously id=3) must now be the current row,
+    // not skipped.
+    assertEquals(3, rs.getInt(1))
+    assertEquals(4, source.rowCount(), 'the original Matrix passed to the constructor must be untouched')
+
+    assertTrue(rs.next())
+    assertEquals(4, rs.getInt(1), 'next() must not skip the row that slid down')
+
+    // Deleting the last remaining row must leave the cursor correctly positioned after-last.
+    assertTrue(rs.absolute(-1))
+    assertEquals(4, rs.getInt(1))
+    rs.deleteRow()
+    assertEquals(2, rsData.rowCount())
+    assertFalse(rs.next())
+    assertTrue(rs.isAfterLast())
+
+    rs.beforeFirst()
+    assertThrows(SQLException) { rs.deleteRow() }
   }
 
   @Test

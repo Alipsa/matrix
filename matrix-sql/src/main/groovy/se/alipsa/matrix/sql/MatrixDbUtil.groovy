@@ -28,6 +28,13 @@ class MatrixDbUtil {
   static final int DEFAULT_VARCHAR_SIZE = 255
   static final int DEFAULT_DECIMAL_PRECISION = 38
   static final int DEFAULT_DECIMAL_SCALE = 10
+  /**
+   * Default number of rows to scan when sizing columns for DDL generation without executing/inserting
+   * anything (e.g. {@link MatrixSql#createDdl(Matrix, boolean, int...)}). Do not use this to cap a
+   * scan that is immediately followed by an insert of the full table - a column sized from fewer
+   * rows than are actually inserted can be too narrow for a later row.
+   */
+  static final int DEFAULT_SCAN_ROWS = 100
 
   private static final String COL_TABLE_NAME = 'TABLE_NAME'
   private static final String COL_TABLE_SCHEMA = 'TABLE_SCHEM'
@@ -209,7 +216,9 @@ class MatrixDbUtil {
    * @param primaryKey name(s) of the primary key columns
    */
   Map create(Connection con, Matrix table, boolean addQuotes = true, String... primaryKey) throws SQLException {
-    return create(con, table, Math.max(100, table.rowCount()), addQuotes, primaryKey)
+    // Always scan the full table: every row is inserted immediately after, so sizing from
+    // anything less than the full row count risks under-sizing a column for a later row.
+    return create(con, table, table.rowCount(), addQuotes, primaryKey)
   }
 
   /**
