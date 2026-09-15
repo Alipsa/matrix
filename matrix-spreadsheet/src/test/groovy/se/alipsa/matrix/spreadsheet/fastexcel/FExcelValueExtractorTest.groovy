@@ -34,6 +34,7 @@ class FExcelValueExtractorTest {
     assertFalse(FExcelValueExtractor.hasTimeComponent('[$-en-US]d-mmm-yy'))
     assertFalse(FExcelValueExtractor.hasTimeComponent('[$-sv-SE]yyyy-mm-dd'))
     assertFalse(FExcelValueExtractor.hasTimeComponent('[White]yyyy-mm-dd'))
+    assertFalse(FExcelValueExtractor.hasTimeComponent('[Holiday]yyyy-mm-dd'))
     assertFalse(FExcelValueExtractor.hasTimeComponent(null))
   }
 }

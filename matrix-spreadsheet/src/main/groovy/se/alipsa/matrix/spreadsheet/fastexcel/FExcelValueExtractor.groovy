@@ -20,7 +20,7 @@ import java.util.regex.Pattern
  */
 class FExcelValueExtractor extends ValueExtractor {
 
-   private static final Pattern FORMAT_LITERALS = ~/"[^"]*"|\\.|\[\$[^\]]*\]|\[(?i:red|blue|green|white|black|yellow|cyan|magenta|color ?\d+)\]/
+   private static final Pattern FORMAT_LITERALS = ~/"[^"]*"|\\.|\[\$[^\]]*\]|\[(?i:(?![hms]+\])[a-z]+)\]|\[(?i:color ?\d+)\]/
    private static final Pattern TIME_MARKER = ~/(?i)(\[h+\]|h+|s+|am\/pm|a\/p)/
    private final Sheet sheet
    private final boolean isDate1904
