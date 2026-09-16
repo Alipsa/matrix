@@ -48,7 +48,8 @@
     <matrixLoggingVersion>0.1.2-SNAPSHOT</matrixLoggingVersion>
     <matrixParquetVersion>0.6.1-SNAPSHOT</matrixParquetVersion>
     <matrixPictVersion>0.6.0-SNAPSHOT</matrixPictVersion>
-    <matrixSmileVersion>0.2.1-SNAPSHOT</matrixSmileVersion>
+    <!-- smile is GPL so matrix-smile cannot be part of the BOM -->
+    <!--matrixSmileVersion>0.2.1-SNAPSHOT</matrixSmileVersion-->
     <matrixSpreadsheetVersion>2.5.0-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.5.0-SNAPSHOT</matrixSqlVersion>
     <matrixStatsVersion>2.5.3-SNAPSHOT</matrixStatsVersion>

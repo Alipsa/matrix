@@ -132,10 +132,6 @@
     </dependency>
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-smile</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-groovy-ext</artifactId>
     </dependency>
     <dependency>

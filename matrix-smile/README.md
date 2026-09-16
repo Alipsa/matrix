@@ -320,4 +320,9 @@ The converter supports the following data types:
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. Note that Smile (`com.github.haifengl:smile-core`),
+which matrix-smile depends on via an `api` dependency, is licensed under the GNU General Public
+License v3.0 (GPL-3.0), not MIT. Distributing matrix-smile together with smile-core (e.g. as part
+of an application) means distributing a combined work that includes GPL-3.0-licensed code, which
+is subject to the GPL-3.0's terms. Consult a lawyer if you need advice on how this affects your
+specific use case.

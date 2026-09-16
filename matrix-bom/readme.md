@@ -72,6 +72,15 @@ Maven:
 </dependency>
 ```
 
+## Excluded modules
+
+`matrix-smile` is deliberately **not** included in the BOM's dependency management or in
+`matrix-all`. It depends on `com.github.haifengl:smile-core`, which is licensed under
+GPL-3.0 (see [`matrix-smile/README.md`](../matrix-smile/README.md#license) for details),
+and pulling it in automatically would risk applying GPL-3.0 obligations to consumers who
+never opted into a GPL dependency. If you need `matrix-smile`, add it as an explicit
+dependency with its own version rather than via the BOM or `matrix-all`.
+
 ## Verifying a release
 
 The BOM consumer suite verifies the resolved, published artifacts from an isolated Maven repository.

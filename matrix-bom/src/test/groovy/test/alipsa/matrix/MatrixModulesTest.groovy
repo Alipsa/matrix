@@ -30,10 +30,7 @@ import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.gsheets.GsUtil
 import se.alipsa.matrix.xchart.PieChart
-import se.alipsa.matrix.smile.SmileUtil
-import se.alipsa.matrix.smile.stats.SmileStats
 import se.alipsa.matrix.tablesaw.TableUtil
-import smile.data.DataFrame
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 
@@ -197,28 +194,6 @@ class MatrixModulesTest {
     assertEquals(data.rowCount(), restored.rowCount(), "Row count should match after tablesaw round trip")
     assertEquals(data.columnCount(), restored.columnCount(), "Column count should match after tablesaw round trip")
     assertEquals(data.columnNames(), restored.columnNames(), "Column names should match after tablesaw round trip")
-  }
-
-  @Test
-  void testSmile() {
-    // Test Matrix to Smile DataFrame conversion
-    Matrix mtcars = Dataset.mtcars()
-    DataFrame df = SmileUtil.toDataFrame(mtcars)
-    assertEquals(mtcars.rowCount(), df.nrow(), "Row count should match")
-    assertEquals(mtcars.columnCount(), df.ncol(), "Column count should match")
-
-    // Test DataFrame back to Matrix
-    Matrix m2 = SmileUtil.toMatrix(df)
-    assertEquals(mtcars.rowCount(), m2.rowCount(), "Roundtrip row count should match")
-
-    // Test SmileStats - fit a normal distribution to mpg column
-    def dist = SmileStats.normalFit(mtcars, 'mpg')
-    assertTrue(dist.mean() > 15 && dist.mean() < 25, "Mean mpg should be between 15 and 25")
-
-    // Test correlation with significance
-    def corTest = SmileStats.correlationTest(mtcars, 'mpg', 'wt')
-    assertTrue(corTest.cor() < 0, "mpg and wt should be negatively correlated")
-    assertTrue(corTest.pvalue() < 0.05, "Correlation should be significant")
   }
 
   @Test
