@@ -1,6 +1,12 @@
 # Maven-BOM release history
 
-## v2.5.2, in progress
+## v2.6.0, in progress
+
+### Remove matrix-smile
+matrix-smile is now excluded from the bom and the matrix-all packages since the GPL nature of smile-core would otherwise force users to adhere to the GPL license of any derived product. 
+If you have a GPL project and want to use matrix-smile, you can just add the dependency directly instead.
+
+### Add new matrix-jupyter module
 
 Dependency changes:
 - Upgrade matrix-tablesaw 0.3.2 -> 0.4.0
