@@ -1,7 +1,10 @@
 #!/usr/bin/env groovy
-@Grab('se.alipsa.groovy:gmd:2.2.1-SNAPSHOT')
+@Grab('se.alipsa.gmd:gmd-core:3.2.0-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
+@GrabExclude(group='xml-apis', module='xml-apis')
+@GrabExclude(group='xml-apis', module='xml-apis-ext')
 @groovy.lang.GrabConfig(systemClassLoader=true)
-import se.alipsa.groovy.gmd.*
+import se.alipsa.gmd.core.*
 
 Gmd gmd = new Gmd()
 def outputDir = new File("build")

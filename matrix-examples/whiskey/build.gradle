@@ -29,8 +29,6 @@ dependencies {
     implementation 'se.alipsa.matrix:matrix-stats'
     implementation 'se.alipsa.matrix:matrix-xchart'
   }
-  implementation libs.smile.core
-  implementation libs.smile.plot
   testImplementation libs.junit.jupiter
 }
 
