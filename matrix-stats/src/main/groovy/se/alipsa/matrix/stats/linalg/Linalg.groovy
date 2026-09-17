@@ -140,9 +140,9 @@ final class Linalg {
    * @return the singular value decomposition result
    * @throws IllegalArgumentException if the matrix is null, empty, or ragged
   */
-  private static SvdResult svdValues(double[][] matrix) {
+  private static SvdResult svdValues(double[][] matrix, boolean compact = false) {
     LinalgAdapters.validateRectangular(matrix, MATRIX_LABEL)
-    SimpleSVD<SimpleMatrix> decomposition = dense(matrix).svd()
+    SimpleSVD<SimpleMatrix> decomposition = dense(matrix).svd(compact)
     SimpleMatrix u = decomposition.getU()
     SimpleMatrix w = decomposition.getW()
     SimpleMatrix vt = decomposition.getV().transpose()
@@ -170,6 +170,21 @@ final class Linalg {
   }
 
   /**
+   * Compute the compact singular value decomposition of a Matrix.
+   *
+   * <p>The compact decomposition retains only {@code min(rows, columns)} singular
+   * vectors. It is preferable for tall or wide matrices when the complete orthogonal
+   * bases returned by {@link #svd(Matrix)} are not needed.</p>
+   *
+   * @param matrix the matrix to decompose
+   * @return the compact singular value decomposition result
+   * @throws IllegalArgumentException if the matrix is null, empty, or contains non-numeric values
+   */
+  static SvdResult compactSvd(Matrix matrix) {
+    svdValues(NumericConversion.toDoubleArray(matrix), true)
+  }
+
+  /**
    * Compute the singular value decomposition of a Grid.
    *
    * @param grid the grid to decompose
@@ -178,6 +193,21 @@ final class Linalg {
    */
   static SvdResult svd(Grid<?> grid) {
     svdValues(NumericConversion.toDoubleArray(grid))
+  }
+
+  /**
+   * Compute the compact singular value decomposition of a Grid.
+   *
+   * <p>The compact decomposition retains only {@code min(rows, columns)} singular
+   * vectors. It is preferable for tall or wide grids when the complete orthogonal
+   * bases returned by {@link #svd(Grid)} are not needed.</p>
+   *
+   * @param grid the grid to decompose
+   * @return the compact singular value decomposition result
+   * @throws IllegalArgumentException if the grid is null, empty, ragged, or contains non-numeric values
+   */
+  static SvdResult compactSvd(Grid<?> grid) {
+    svdValues(NumericConversion.toDoubleArray(grid), true)
   }
 
   private static double[][] inverseValues(double[][] matrix) {

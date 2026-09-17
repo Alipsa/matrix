@@ -96,6 +96,19 @@ class PcaTest {
   }
 
   @Test
+  void testUncenteredScoresAgreeWithProjection() {
+    Pca pca = Pca.fit(correlatedData(), false, false)
+    Matrix projected = pca.project(2)
+
+    [0, 1].each { int component ->
+      pca.scores(component).eachWithIndex { BigDecimal score, int row ->
+        assertEquals(score.doubleValue(), (projected.get(row, component) as BigDecimal).doubleValue(), TOLERANCE)
+      }
+    }
+    assertTrue(pca.scores(0).sum().abs() > 0.1)
+  }
+
+  @Test
   void testScalingGivesUnitColumnVariance() {
     Random random = new Random(7)
     Matrix data = Matrix.builder()
@@ -156,6 +169,41 @@ class PcaTest {
   }
 
   @Test
+  void testDegenerateDataHasZeroExplainedVariance() {
+    Matrix constant = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1.0, 2.0], [1.0, 2.0]])
+        .types([Double, Double])
+        .build()
+
+    Pca pca = Pca.fit(constant)
+
+    assertEquals([BigDecimal.ZERO, BigDecimal.ZERO], pca.explainedVariance())
+    assertEquals(BigDecimal.ZERO, pca.explainedVariance(0))
+    assertEquals([BigDecimal.ZERO, BigDecimal.ZERO], pca.cumulativeExplainedVariance())
+  }
+
+  @Test
+  void testRejectsNullAndNonNumericValuesWithCoordinates() {
+    Matrix nullValue = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1.0, 2.0], [null, 3.0]])
+        .types([Double, Double])
+        .build()
+    Matrix textValue = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1.0, 2.0], [3.0, 'not a number']])
+        .types([Double, String])
+        .build()
+
+    IllegalArgumentException nullException = assertThrows(IllegalArgumentException) { Pca.fit(nullValue) }
+    IllegalArgumentException textException = assertThrows(IllegalArgumentException) { Pca.fit(textValue) }
+
+    assertEquals("Column 'x' contains a non-numeric value at row 1", nullException.message)
+    assertEquals("Column 'y' contains a non-numeric value at row 1", textException.message)
+  }
+
+  @Test
   void testValidation() {
     Matrix data = correlatedData()
     assertThrows(IllegalArgumentException) { Pca.fit(null) }
@@ -164,8 +212,12 @@ class PcaTest {
     Pca pca = Pca.fit(data)
     assertThrows(IndexOutOfBoundsException) { pca.scores(-1) }
     assertThrows(IndexOutOfBoundsException) { pca.scores(4) }
+    assertThrows(IndexOutOfBoundsException) { pca.project(0) }
     assertThrows(IndexOutOfBoundsException) { pca.project(5) }
-    assertThrows(IllegalArgumentException) { pca.project(1, data.drop('a')) }
+    assertThrows(IllegalArgumentException) { pca.project(1, data.clone().drop('a')) }
+
+    Matrix dataWithExtraColumn = data.clone().addColumn('extra', Double, [1.0d] * data.rowCount())
+    assertEquals(data.rowCount(), pca.project(1, dataWithExtraColumn).rowCount())
 
     Matrix constant = Matrix.builder()
         .columnNames(['x', 'y'])

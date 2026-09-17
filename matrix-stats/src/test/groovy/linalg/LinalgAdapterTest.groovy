@@ -63,4 +63,21 @@ class LinalgAdapterTest {
     assertEquals(['c0', 'c1'], svd.uMatrix().columnNames())
     assertEquals(['c0', 'c1'], svd.vtMatrix().columnNames())
   }
+
+  @Test
+  void testCompactSvdOnlyRetainsRequiredSingularVectors() {
+    Matrix matrix = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows((1..5).collect { [it as double, (it * 2) as double] })
+      .types([Double, Double])
+      .build()
+
+    def svd = Linalg.compactSvd(matrix)
+
+    assertEquals(5, svd.uMatrix().rowCount())
+    assertEquals(2, svd.uMatrix().columnCount())
+    assertEquals(2, svd.vtMatrix().rowCount())
+    assertEquals(2, svd.vtMatrix().columnCount())
+    assertEquals(2, svd.singularValues.size())
+  }
 }

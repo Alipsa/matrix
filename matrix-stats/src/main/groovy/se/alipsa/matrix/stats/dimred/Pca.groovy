@@ -43,6 +43,7 @@ class Pca {
 
   private static final String PROJECTION_NAME = 'PCA projection'
   private static final String JOIN_SEPARATOR = ', '
+  private static final double ZERO = 0.0d
 
   private final List<String> columnNames
   private final List<BigDecimal> means
@@ -65,7 +66,7 @@ class Pca {
    * @param scale whether to divide by the column standard deviation after centering (default false)
    * @return a fitted Pca instance
    * @throws IllegalArgumentException if the matrix is null or empty, a column is missing,
-   *         or scaling is requested for a constant column
+   *         a selected cell is non-numeric or non-finite, or scaling is requested for a constant column
    */
   static Pca fit(Matrix matrix, List<String> columns = null, boolean center = true, boolean scale = false) {
     if (matrix == null || matrix.rowCount() == 0 || matrix.columnCount() == 0) {
@@ -76,8 +77,9 @@ class Pca {
     if (missing) {
       throw new IllegalArgumentException(missingColumns(missing, 'matrix'))
     }
+    validateNumericValues(matrix, selected)
 
-    List<BigDecimal> means = center ? Stat.means(matrix, selected) : [0.0G] * selected.size()
+    List<BigDecimal> means = center ? Stat.means(matrix, selected) : [BigDecimal.ZERO] * selected.size()
     List<BigDecimal> scales = [1.0G] * selected.size()
     if (scale) {
       List<BigDecimal> sds = Stat.sd(matrix, selected)
@@ -91,7 +93,7 @@ class Pca {
     }
 
     Matrix prepared = prepare(matrix, selected, means, scales)
-    new Pca(selected, means, scales, Linalg.svd(prepared))
+    new Pca(selected, means, scales, Linalg.compactSvd(prepared))
   }
 
   /**
@@ -107,7 +109,9 @@ class Pca {
   }
 
   /**
-   * The number of principal components, equal to the number of fitted columns.
+   * The number of principal components, equal to {@code min(rows, fitted columns)}.
+   * When centering is enabled, at most {@code min(rows - 1, fitted columns)} components
+   * can have non-zero variance.
    *
    * @return the number of principal components
    */
@@ -128,13 +132,17 @@ class Pca {
 
   /**
    * The fraction of total variance explained by each principal component, in [0, 1].
-   * The values are ordered by component and sum to 1.
+   * The values are ordered by component and sum to 1 when the prepared data has variance.
+   * Degenerate data with no variance returns zero for every component.
    *
    * @return the variance ratio per component
    */
   List<BigDecimal> explainedVariance() {
     List<Double> squared = singularValues.collect { BigDecimal value -> Math.pow(value.doubleValue(), 2) }
     double total = squared.sum() as double
+    if (total == ZERO) {
+      return [BigDecimal.ZERO] * squared.size()
+    }
     squared.collect { Double value -> BigDecimal.valueOf(value / total) }
   }
 
@@ -152,7 +160,7 @@ class Pca {
 
   /**
    * The cumulative fraction of variance explained by the first {@code n} components.
-   * The last value is always 1.
+   * The last value is 1 when the prepared data has variance, and 0 for degenerate data.
    *
    * @return the cumulative variance ratios, one per component
    */
@@ -240,7 +248,8 @@ class Pca {
   /**
    * The loadings matrix: one row per fitted column (feature) and one column per principal
    * component ({@code PC1..PCn}), with the feature name in the leading {@code Feature}
-   * column. Each component column is a unit eigenvector of the covariance matrix; the
+   * column. {@code n} is {@link #componentCount()}, which is at most the number of fitted
+   * columns. Each component column is a unit eigenvector of the covariance matrix; the
    * value in a cell is the correlation weight between the feature and the component.
    *
    * @return the loadings matrix with a Feature column and one column per component
@@ -290,5 +299,19 @@ class Pca {
       }
     }
     prepared
+  }
+
+  private static void validateNumericValues(Matrix source, List<String> columns) {
+    columns.each { String name ->
+      List<?> values = source.column(name)
+      values.eachWithIndex { value, int row ->
+        if (!(value instanceof Number)) {
+          throw new IllegalArgumentException("Column '${name}' contains a non-numeric value at row ${row}")
+        }
+        if (!Double.isFinite((value as Number).doubleValue())) {
+          throw new IllegalArgumentException("Column '${name}' contains a non-finite value at row ${row}")
+        }
+      }
+    }
   }
 }

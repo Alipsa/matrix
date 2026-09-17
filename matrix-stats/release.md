@@ -1,6 +1,7 @@
 # Matrix stats release history
 
 ## v2.5.3, in progress
+- Add PCA dimensionality reduction through `Pca.fit(...)`, including compact SVD storage for scalable tall-matrix analysis, projections, loadings, and explained-variance accessors.
 - Fix basic `KMeansPlusPlus` initialization so it no longer mutates observations; seeded `pp(false)` centroids, assignments, and WCSS can change because clustering now uses the original data.
 - Return defensive snapshots from `KMeansPlusPlus` assignment and centroid accessors so callers cannot mutate input or fitted-model arrays through results.
 - Fix Kendall tau-b denominator overflow for large samples.

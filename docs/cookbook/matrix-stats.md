@@ -323,5 +323,41 @@ Matrix clustered = new KMeans(normalized).fit(['x', 'y'], 2, 20, 'cluster', fals
 println(clustered.content())
 ```
 
+## Principal component analysis
+
+Use PCA to project numeric columns onto a smaller number of uncorrelated components. The
+defaults are `columns = null` (all columns), `center = true`, and `scale = false`.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.dimred.Pca
+
+Matrix measurements = Matrix.builder()
+    .columnNames(['height', 'weight', 'age'])
+    .rows([
+        [170.0, 65.0, 30.0],
+        [180.0, 80.0, 45.0],
+        [160.0, 55.0, 25.0],
+        [175.0, 72.0, 35.0]
+    ])
+    .types([Double, Double, Double])
+    .build()
+
+Pca pca = Pca.fit(measurements, ['height', 'weight', 'age'], true, true)
+Matrix projected = pca.project(2)
+println(projected.content())
+println(pca.explainedVariance())
+println(pca.loadings().content())
+
+// Apply the fitted centering, scaling, and component vectors to future rows.
+Matrix futureRows = measurements.subset(0..1)
+Matrix projectedFuture = pca.project(2, futureRows)
+```
+
+All selected cells must be numeric and finite. Scaling rejects constant columns, since their
+standard deviation is zero. PCA exposes `min(rowCount, selectedColumnCount)` components; if
+centering is enabled, at most `min(rowCount - 1, selectedColumnCount)` have non-zero variance.
+For a degenerate unscaled input, every explained-variance ratio is zero.
+
 ---
 [Back to index](cookbook.md)  |  [Next (Matrix CSV)](matrix-csv.md)

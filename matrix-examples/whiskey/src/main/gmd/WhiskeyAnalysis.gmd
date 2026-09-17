@@ -6,6 +6,7 @@
 @Grab('se.alipsa.matrix:matrix-csv:2.4.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-groovy-ext:0.3.0')
+@Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.xchart.*
@@ -105,7 +106,6 @@ out.println sc
 ```
 ## Correlation Heatmap
 ```{groovy}
-@Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.xchart.*
