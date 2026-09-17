@@ -353,26 +353,65 @@ class ValueConverter {
     asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern).withLocale(locale), valueIfNull)
   }
 
+  /**
+   * Narrows a number to an integral value in {@code [min, max]} by truncating any fraction toward
+   * zero (the same result {@code intValue()} gives for in-range input) and then checking the range.
+   *
+   * @param value the value to narrow
+   * @param min the smallest representable value of the target type
+   * @param max the largest representable value of the target type
+   * @param targetName the target type name used in the error message
+   * @return the integral part, or {@code null} when the value is NaN or infinite
+   * @throws IllegalArgumentException if the integral part lies outside {@code [min, max]}
+   */
+  private static BigInteger integralInRange(Number value, long min, long max, String targetName) {
+    BigDecimal decimal = asBigDecimal(value)
+    if (decimal == null) {
+      return null
+    }
+    BigInteger integral = decimal.toBigInteger()
+    if (integral < BigInteger.valueOf(min) || integral > BigInteger.valueOf(max)) {
+      throw new IllegalArgumentException("Value $value is out of range for $targetName ($min..$max)")
+    }
+    integral
+  }
+
+  /**
+   * Converts a value to {@link Byte}. Numbers and numeric strings are truncated toward zero;
+   * {@code true}/{@code false} become {@code 1}/{@code 0}; {@code null}, an empty string, an
+   * unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted byte, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Byte} range
+   */
   static Byte asByte(Object o, Byte valueIfNull = null) {
     if (o == null || '' == o) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.byteValue()
-    }
-    Integer value = asInteger(o)
-    value == null ? valueIfNull : value.byteValue()
+    Number number = o instanceof Number ? o : asInteger(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Byte.MIN_VALUE, Byte.MAX_VALUE, 'Byte')
+    integral == null ? valueIfNull : integral.byteValue()
   }
 
+  /**
+   * Converts a value to {@link Short}. Numbers and numeric strings are truncated toward zero;
+   * {@code true}/{@code false} become {@code 1}/{@code 0}; {@code null}, an empty string, an
+   * unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted short, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Short} range
+   */
   static Short asShort(Object o, Short valueIfNull = null) {
     if (o == null || '' == o) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.shortValue()
-    }
-    Integer value = asInteger(o)
-    value == null ? valueIfNull : value.shortValue()
+    Number number = o instanceof Number ? o : asInteger(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Short.MIN_VALUE, Short.MAX_VALUE, 'Short')
+    integral == null ? valueIfNull : integral.shortValue()
   }
 
   /**
@@ -399,23 +438,37 @@ class ValueConverter {
     value.size() == 1 ? value.charAt(0) : valueIfNull
   }
 
+  /**
+   * Converts a value to {@link Integer}. Numbers are truncated toward zero; {@code true}/{@code false}
+   * (and the strings {@code 'true'}/{@code 'false'}) become {@code 1}/{@code 0}; numeric strings are
+   * parsed leniently through {@link #asBigDecimal(String, NumberFormat)}; {@code null}, an empty string,
+   * an unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted integer, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Integer} range
+   */
   static Integer asInteger(Object o, Integer valueIfNull = null) {
     if (o == null || '' == o) {
       return valueIfNull
     }
+    Number number
     if (o instanceof Number) {
-      return o.intValue()
+      number = o
     } else if (o instanceof Boolean) {
       return o ? 1 : 0
+    } else {
+      String strVal = String.valueOf(o).toLowerCase()
+      if (strVal == TRUE_TEXT) {
+        return 1
+      } else if (strVal == FALSE_TEXT) {
+        return 0
+      }
+      number = asBigDecimal(strVal)
     }
-    String strVal = String.valueOf(o).toLowerCase()
-    if (strVal == TRUE_TEXT) {
-      return 1
-    } else if (strVal == FALSE_TEXT) {
-      return 0
-    }
-    BigDecimal value = asBigDecimal(strVal)
-    value?.intValue()
+    BigInteger integral = number == null ? null : integralInRange(number, Integer.MIN_VALUE, Integer.MAX_VALUE, 'Integer')
+    integral == null ? valueIfNull : integral.intValue()
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
@@ -554,14 +607,23 @@ class ValueConverter {
     return Float.valueOf(String.valueOf(o))
   }
 
+  /**
+   * Converts a value to {@link Long}. Numbers are truncated toward zero; strings are parsed with
+   * {@code new BigDecimal(text)} (a {@code NumberFormatException} for non-numeric text, as before);
+   * {@code null}, an empty string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted long, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Long} range
+   */
   static Long asLong(Object o, Long valueIfNull = null) {
     if (o == null || '' == o) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.longValue()
-    }
-    new BigDecimal(String.valueOf(o)).longValue()
+    Number number = o instanceof Number ? o : new BigDecimal(String.valueOf(o))
+    BigInteger integral = integralInRange(number, Long.MIN_VALUE, Long.MAX_VALUE, 'Long')
+    integral == null ? valueIfNull : integral.longValue()
   }
 
   static UtilDate asDate(UtilDate o, UtilDate valueIfNull = null) {
