@@ -4,7 +4,7 @@
 //       only resolves after a local publishToMavenLocal (needed here for Pca)
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
-@groovy.lang.GrabConfig(systemClassLoader=true)
+@GrabConfig(systemClassLoader=true)
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
