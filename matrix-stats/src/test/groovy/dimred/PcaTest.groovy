@@ -204,6 +204,31 @@ class PcaTest {
   }
 
   @Test
+  void testRejectsDuplicateAndEmptyColumnSelections() {
+    Matrix data = correlatedData()
+
+    IllegalArgumentException duplicates = assertThrows(IllegalArgumentException) { Pca.fit(data, ['a', 'a']) }
+    assertEquals('Column selection contains duplicate columns: a', duplicates.message)
+    assertThrows(IllegalArgumentException) { Pca.fit(data, []) }
+  }
+
+  @Test
+  void testProjectNewDataValidatesCellValues() {
+    Pca pca = Pca.fit(correlatedData())
+    Matrix nullValue = correlatedData()
+    nullValue.putAt(1, 'a', null)
+    Matrix textValue = correlatedData()
+    textValue.putAt(1, 'b', 'abc')
+
+    IllegalArgumentException nullException = assertThrows(IllegalArgumentException) { pca.project(1, nullValue) }
+    IllegalArgumentException textException = assertThrows(IllegalArgumentException) { pca.project(1, textValue) }
+
+    assertEquals("Column 'a' contains a non-numeric value at row 1", nullException.message)
+    assertEquals("Column 'b' contains a non-numeric value at row 1", textException.message)
+    assertThrows(IllegalArgumentException) { pca.project(1, null) }
+  }
+
+  @Test
   void testValidation() {
     Matrix data = correlatedData()
     assertThrows(IllegalArgumentException) { Pca.fit(null) }

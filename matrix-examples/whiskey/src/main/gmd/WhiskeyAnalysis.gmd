@@ -106,7 +106,6 @@ out.println sc
 ```
 ## Correlation Heatmap
 ```{groovy}
-@Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.xchart.*
 

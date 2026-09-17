@@ -65,14 +65,22 @@ class Pca {
    * @param center whether to subtract the column mean before decomposition (default true)
    * @param scale whether to divide by the column standard deviation after centering (default false)
    * @return a fitted Pca instance
-   * @throws IllegalArgumentException if the matrix is null or empty, a column is missing,
-   *         a selected cell is non-numeric or non-finite, or scaling is requested for a constant column
+   * @throws IllegalArgumentException if the matrix is null or empty, the column selection is
+   *         empty or contains duplicates, a column is missing, a selected cell is non-numeric
+   *         or non-finite, or scaling is requested for a constant column
    */
   static Pca fit(Matrix matrix, List<String> columns = null, boolean center = true, boolean scale = false) {
     if (matrix == null || matrix.rowCount() == 0 || matrix.columnCount() == 0) {
       throw new IllegalArgumentException('Matrix must contain data')
     }
+    if (columns?.isEmpty()) {
+      throw new IllegalArgumentException('Column selection cannot be empty')
+    }
     List<String> selected = columns ?: matrix.columnNames()
+    List<String> duplicates = selected.findAll { selected.count(it) > 1 }.toUnique()
+    if (duplicates) {
+      throw new IllegalArgumentException("Column selection contains duplicate columns: ${duplicates.join(JOIN_SEPARATOR)}")
+    }
     List<String> missing = selected - matrix.columnNames()
     if (missing) {
       throw new IllegalArgumentException(missingColumns(missing, 'matrix'))
@@ -138,12 +146,12 @@ class Pca {
    * @return the variance ratio per component
    */
   List<BigDecimal> explainedVariance() {
-    List<Double> squared = singularValues.collect { BigDecimal value -> Math.pow(value.doubleValue(), 2) }
+    List<BigDecimal> squared = singularValues.collect { BigDecimal value -> value * value }
     double total = squared.sum() as double
     if (total == ZERO) {
       return [BigDecimal.ZERO] * squared.size()
     }
-    squared.collect { Double value -> BigDecimal.valueOf(value / total) }
+    squared.collect { BigDecimal value -> BigDecimal.valueOf(value.doubleValue() / total) }
   }
 
   /**
@@ -218,15 +226,20 @@ class Pca {
    * @param k the number of components to project onto, between 1 and the component count
    * @param data the data to project; must contain the fitted columns
    * @return a matrix with one row per data row and columns {@code PC1..PCk}
-   * @throws IllegalArgumentException if a fitted column is missing in the data
+   * @throws IllegalArgumentException if the data is null, a fitted column is missing in the
+   *         data, or a data cell is non-numeric or non-finite
    * @throws IndexOutOfBoundsException if k is out of range
    */
   Matrix project(int k, Matrix data) {
     validateComponent(k - 1)
+    if (data == null) {
+      throw new IllegalArgumentException('Data cannot be null')
+    }
     List<String> missing = columnNames - data.columnNames()
     if (missing) {
       throw new IllegalArgumentException(missingColumns(missing, 'data'))
     }
+    validateNumericValues(data, columnNames)
     Matrix prepared = prepare(data, columnNames, means, scales)
     List<List<BigDecimal>> rows = (0..<prepared.rowCount()).collect { int row ->
       (0..<k).collect { int component ->
@@ -249,8 +262,9 @@ class Pca {
    * The loadings matrix: one row per fitted column (feature) and one column per principal
    * component ({@code PC1..PCn}), with the feature name in the leading {@code Feature}
    * column. {@code n} is {@link #componentCount()}, which is at most the number of fitted
-   * columns. Each component column is a unit eigenvector of the covariance matrix; the
-   * value in a cell is the correlation weight between the feature and the component.
+   * columns. Each component column is a unit eigenvector of the covariance matrix, so the
+   * cell values are unscaled eigenvector coefficients (equivalent to R's {@code prcomp$rotation}),
+   * not correlation loadings.
    *
    * @return the loadings matrix with a Feature column and one column per component
    */

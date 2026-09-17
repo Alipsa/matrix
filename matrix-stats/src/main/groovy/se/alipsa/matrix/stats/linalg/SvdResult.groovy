@@ -37,8 +37,10 @@ class SvdResult {
    * @return the Sigma matrix with singular values on the diagonal
    */
   Matrix sigma() {
-    int rows = u.rowCount()
-    int columns = vt.columnCount()
+    // Sigma is u.columnCount() x vt.rowCount(): m x n for the full SVD (m x m U, n x n Vt)
+    // and k x k for the compact SVD (m x k U, k x n Vt)
+    int rows = u.columnCount()
+    int columns = vt.rowCount()
     List<List<BigDecimal>> matrixRows = []
     for (int row = 0; row < rows; row++) {
       List<BigDecimal> currentRow = []
