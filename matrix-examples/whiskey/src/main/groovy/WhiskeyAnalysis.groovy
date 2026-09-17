@@ -1,21 +1,14 @@
-@Grab('com.github.haifengl:smile-core:4.4.2')
-@Grab('com.github.haifengl:smile-plot:4.4.2')
-@Grab(group='org.bytedeco', module='openblas', version='0.3.28-1.5.11')
-@Grab(group='org.bytedeco', module='javacpp', version='1.5.11')
-//@Grab('org.apache.ivy:ivy:2.5.3')
-//@Grab('org.apache.groovy:groovy-ginq:5.0.4')
 @Grab('se.alipsa.matrix:matrix-core:3.8.0')
-@Grab('se.alipsa.matrix:matrix-csv:2.3.0')
-@Grab('se.alipsa.matrix:matrix-stats:2.4.0')
-@Grab('se.alipsa.matrix:matrix-xchart:0.2.3')
-@groovy.lang.GrabConfig(systemClassLoader=true)
-
-import smile.clustering.KMeans
-import smile.feature.extraction.PCA
+@Grab('se.alipsa.matrix:matrix-csv:2.4.0')
+// TODO: pin to the released matrix-stats once 2.5.3 is published; the -SNAPSHOT coordinate
+//       only resolves after a local publishToMavenLocal (needed here for Pca)
+@Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
+@GrabConfig(systemClassLoader=true)
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
-import se.alipsa.matrix.stats.Correlation
+import se.alipsa.matrix.stats.dimred.Pca
 import se.alipsa.matrix.xchart.*
 
 m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
@@ -23,7 +16,6 @@ m = CsvImporter.importCsv('https://www.niss.org/sites/default/files/ScotchWhisky
 println m.dimensions()
 
 features = m.columnNames() - 'Distillery'
-size = features.size()
 features.each(feature -> m.apply(feature) { it.toDouble() / 4 })
 
 selected= m.subset{ it.Fruity > 0.5 && it.Sweetness > 0.5 }
@@ -53,9 +45,6 @@ mCluster = km.fit(features, 3, iterations, 'Cluster', true).withMatrixName('mClu
 println mCluster.content()
 println Stat.countBy(mCluster, 'Cluster')
 
-//model = KMeans.fit(data,3, iterations)
-//m['Cluster'] = model.group().toList()
-
 result = GQ {
   from w in mCluster
   groupby w.Cluster
@@ -67,11 +56,12 @@ println result
 println Matrix.builder('Cluster allocation').ginqResult(result).build().content()
 
 //assert m.rows().countBy{ it.Cluster } == [0:51, 1:23, 2:12]
-data = m.select(features) as double[][]
-pca = PCA.fit(data)
-projected = pca.getProjection(2).apply(data)
-m['X'] = projected*.getAt(0)
-m['Y'] = projected*.getAt(1)
+
+// PCA projection onto the two first principal components
+pca = Pca.fit(m, features)
+m['X'] = pca.scores(0)
+m['Y'] = pca.scores(1)
+println "Variance explained by PC1 + PC2: ${(pca.cumulativeExplainedVariance()[1] * 100).round(1)}%"
 
 clusters = m['Cluster'].toSet()
 sc = ScatterChart.create(m, 700, 500)
@@ -85,25 +75,9 @@ sc.display()
 //io.display(sc.exportSwing())
 
 // Create a correlation heatmap
-// TODO use a CorrelationHeatmapChart instead of a homegrown HeatmapChart
-CorrelationHeatmapChart.create(m)
+CorrelationHeatmapChart.create(m, 820, 500)
   .addSeries('Heat Series', features)
   .display()
 
-corr = [(size - 1)..0, 0..<size].combinations().collect { int i, int j ->
-  def correlation = Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>)
-  correlation == null ? 0 : correlation * 100 as int
-}
-
-corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
-    .types([Number] * 2)
-    .matrixName('Heatmap')
-    .build()
-
-hc = HeatmapChart.create(corrMatrix, 820, 500)
-    .addSeries('Heat Series', features.reverse(), features,
-        corrMatrix.column('Heat').collate(size))
-
 //hc.exportPng(new File('heatmap.png'))
 //io.display(hc.exportSwing())
-hc.display()

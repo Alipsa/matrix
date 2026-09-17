@@ -165,6 +165,50 @@ assert svd.singularValues.size() == 2
 assert svd.reconstruct()[0, 0] == 3.0
 ```
 
+For matrices with many more rows than columns, `Linalg.compactSvd(...)` retains only the
+singular vectors needed for reconstruction and avoids allocating complete orthogonal bases.
+
+## Principal Component Analysis
+
+`Pca` reduces numeric Matrix columns to ordered, uncorrelated principal components. Fit once,
+then use `project(...)` for fitted or new data, `scores(...)` for one fitted component,
+`loadings()` for feature weights, and `explainedVariance()` to select a component count.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.dimred.Pca
+
+Matrix measurements = Matrix.builder('measurements')
+    .columnNames(['height', 'weight', 'age'])
+    .rows([
+        [170.0, 65.0, 30.0],
+        [180.0, 80.0, 45.0],
+        [160.0, 55.0, 25.0],
+        [175.0, 72.0, 35.0]
+    ])
+    .types([Double, Double, Double])
+    .build()
+
+// columns defaults to all columns; center defaults to true; scale defaults to false.
+Pca pca = Pca.fit(measurements)
+Matrix firstTwoComponents = pca.project(2)
+assert ['PC1', 'PC2'] == firstTwoComponents.columnNames()
+
+// Scale is useful when source columns use different units.
+Pca scaled = Pca.fit(measurements, ['height', 'weight', 'age'], true, true)
+List<BigDecimal> variance = scaled.explainedVariance()
+Matrix loadings = scaled.loadings()
+
+Matrix futureMeasurements = measurements.subset(0..1)
+Matrix projectedFuture = scaled.project(2, futureMeasurements)
+```
+
+`fit(matrix, columns = null, center = true, scale = false)` requires non-empty numeric,
+finite selected columns. `scale = true` rejects constant columns because their standard
+deviation is zero. The model has `min(rowCount, selectedColumnCount)` components; with
+centering, at most `min(rowCount - 1, selectedColumnCount)` have non-zero variance. A
+degenerate unscaled input returns zero explained variance for every component.
+
 ## Interpolation
 
 `matrix-stats` exposes public linear interpolation utilities in

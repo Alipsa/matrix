@@ -28,11 +28,18 @@ class SvdResultTest {
 
     Matrix sigma = result.sigma()
 
-    assertEquals(3, sigma.rowCount())
+    assertEquals(2, sigma.rowCount())
     assertEquals(2, sigma.columnCount())
     assertEquals(5.0d, sigma[0, 0] as double, 1e-12)
     assertEquals(2.0d, sigma[1, 1] as double, 1e-12)
-    assertEquals(0.0d, sigma[2, 0] as double, 1e-12)
+
+    Matrix reconstructed = result.reconstruct()
+    assertEquals(3, reconstructed.rowCount())
+    assertEquals(2, reconstructed.columnCount())
+    assertEquals(5.0d, reconstructed[0, 0] as double, 1e-12)
+    assertEquals(2.0d, reconstructed[1, 1] as double, 1e-12)
+    assertEquals(0.0d, reconstructed[2, 0] as double, 1e-12)
+    assertEquals(0.0d, reconstructed[2, 1] as double, 1e-12)
   }
 
   @Test

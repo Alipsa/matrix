@@ -63,4 +63,52 @@ class LinalgAdapterTest {
     assertEquals(['c0', 'c1'], svd.uMatrix().columnNames())
     assertEquals(['c0', 'c1'], svd.vtMatrix().columnNames())
   }
+
+  @Test
+  void testCompactSvdOnlyRetainsRequiredSingularVectors() {
+    Matrix matrix = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows((1..5).collect { [it as double, (it * 2) as double] })
+      .types([Double, Double])
+      .build()
+
+    def svd = Linalg.compactSvd(matrix)
+
+    assertEquals(5, svd.uMatrix().rowCount())
+    assertEquals(2, svd.uMatrix().columnCount())
+    assertEquals(2, svd.vtMatrix().rowCount())
+    assertEquals(2, svd.vtMatrix().columnCount())
+    assertEquals(2, svd.singularValues.size())
+
+    assertEquals(2, svd.sigmaMatrix().rowCount())
+    assertEquals(2, svd.sigmaMatrix().columnCount())
+
+    Matrix reconstructed = svd.reconstruct()
+    assertEquals(5, reconstructed.rowCount())
+    assertEquals(2, reconstructed.columnCount())
+    (0..<5).each { int row ->
+      (0..<2).each { int col ->
+        assertEquals(matrix[row, col] as double, reconstructed[row, col] as double, 1e-8, "Cell $row,$col")
+      }
+    }
+  }
+
+  @Test
+  void testFullSvdReconstructsRectangularMatrix() {
+    Matrix matrix = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows((1..4).collect { [it as double, (it * 3) as double] })
+      .types([Double, Double])
+      .build()
+
+    Matrix reconstructed = Linalg.svd(matrix).reconstruct()
+
+    assertEquals(4, reconstructed.rowCount())
+    assertEquals(2, reconstructed.columnCount())
+    (0..<4).each { int row ->
+      (0..<2).each { int col ->
+        assertEquals(matrix[row, col] as double, reconstructed[row, col] as double, 1e-8, "Cell $row,$col")
+      }
+    }
+  }
 }
