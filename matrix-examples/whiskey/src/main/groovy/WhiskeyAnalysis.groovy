@@ -1,5 +1,7 @@
 @Grab('se.alipsa.matrix:matrix-core:3.8.0')
 @Grab('se.alipsa.matrix:matrix-csv:2.4.0')
+// TODO: pin to the released matrix-stats once 2.5.3 is published; the -SNAPSHOT coordinate
+//       only resolves after a local publishToMavenLocal (needed here for Pca)
 @Grab('se.alipsa.matrix:matrix-stats:2.5.3-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-xchart:0.3.2')
 @groovy.lang.GrabConfig(systemClassLoader=true)
