@@ -139,4 +139,90 @@ class NormalizeTest {
     Assertions.assertArrayEquals(exp, norm.asBigDecimalArray())
   }
 
+  @Test
+  void testMissingValuesArePreservedWithDecimals() {
+    def dc = DoubleColumn.create('d', [1.0d, null, 3.0d] as Double[])
+    [Normalizer.minMaxNorm(dc, 2), Normalizer.meanNorm(dc, 2), Normalizer.stdScaleNorm(dc, 2)].each { col ->
+      Assertions.assertEquals(3, col.size(), col.name())
+      Assertions.assertTrue(col.isMissing(1), "${col.name()} row 1 should be missing")
+      Assertions.assertFalse(col.isMissing(0), "${col.name()} row 0 should be present")
+      Assertions.assertFalse(col.isMissing(2), "${col.name()} row 2 should be present")
+    }
+    Assertions.assertEquals(0.0d, Normalizer.minMaxNorm(dc, 2).getDouble(0), 1e-9)
+    Assertions.assertEquals(1.0d, Normalizer.minMaxNorm(dc, 2).getDouble(2), 1e-9)
+
+    def fc = FloatColumn.create('f', [1.0f, null, 3.0f] as Float[])
+    [Normalizer.minMaxNorm(fc, 2), Normalizer.meanNorm(fc, 2), Normalizer.stdScaleNorm(fc, 2)].each { col ->
+      Assertions.assertEquals(3, col.size(), col.name())
+      Assertions.assertTrue(col.isMissing(1), "${col.name()} row 1 should be missing")
+      Assertions.assertFalse(col.isMissing(2), "${col.name()} row 2 should be present")
+    }
+  }
+
+  @Test
+  void testBigDecimalNormalizationUsesBigDecimalStatistics() {
+    // 0.1 + 0.2 style values: min-max in exact arithmetic is 0, 0.5, 1
+    def bc = BigDecimalColumn.create('b', [0.1, null, 0.2, 0.3] as BigDecimal[])
+    def norm = Normalizer.minMaxNorm(bc, 10)
+    Assertions.assertEquals(4, norm.size())
+    Assertions.assertTrue(norm.isMissing(1))
+    Assertions.assertEquals(0.0000000000, norm.get(0))
+    Assertions.assertEquals(0.5000000000, norm.get(2))
+    Assertions.assertEquals(1.0000000000, norm.get(3))
+    // assertEquals(BigDecimal, BigDecimal) is scale-insensitive in Groovy (groovier-junit extension /
+    // assertEquals(double, double) dispatch), so assert the decimals contract explicitly
+    Assertions.assertEquals(10, norm.get(0).scale(), 'decimals must set the scale')
+    Assertions.assertEquals(10, norm.get(2).scale(), 'decimals must set the scale')
+
+    def mean = Normalizer.meanNorm(bc, 10)
+    Assertions.assertEquals(-0.5000000000, mean.get(0))
+    Assertions.assertEquals(0.5000000000, mean.get(3))
+
+    def std = Normalizer.stdScaleNorm(bc, 6)
+    Assertions.assertTrue(std.isMissing(1))
+    Assertions.assertEquals(-1.000000, std.get(0))
+    Assertions.assertEquals(1.000000, std.get(3))
+    Assertions.assertEquals(6, std.get(0).scale(), 'decimals must set the scale')
+  }
+
+  @Test
+  void testBigDecimalNormalizationDoesNotCollapseBeyondDoublePrecision() {
+    // These three values are identical once converted to double (2^66 region, delta 1),
+    // so any double-based path yields range == 0 and all-missing output.
+    def bc = BigDecimalColumn.create('big', [
+        new BigDecimal('100000000000000000000'),
+        new BigDecimal('100000000000000000001'),
+        new BigDecimal('100000000000000000002')] as BigDecimal[])
+
+    def minMax = Normalizer.minMaxNorm(bc, 4)
+    Assertions.assertEquals(0.0000, minMax.get(0))
+    Assertions.assertEquals(0.5000, minMax.get(1))
+    Assertions.assertEquals(1.0000, minMax.get(2))
+
+    def mean = Normalizer.meanNorm(bc, 4)
+    Assertions.assertEquals(-0.5000, mean.get(0))
+    Assertions.assertEquals(0.0000, mean.get(1))
+    Assertions.assertEquals(0.5000, mean.get(2))
+
+    def std = Normalizer.stdScaleNorm(bc, 4)   // sample sd == 1
+    Assertions.assertEquals(-1.0000, std.get(0))
+    Assertions.assertEquals(0.0000, std.get(1))
+    Assertions.assertEquals(1.0000, std.get(2))
+
+    // without decimals the value is still exact, only the scale is free
+    Assertions.assertEquals(0, new BigDecimal('0.5').compareTo(Normalizer.minMaxNorm(bc).get(1)))
+  }
+
+  @Test
+  void testBigDecimalNormalizationOfAllMissingColumn() {
+    def bc = BigDecimalColumn.create('b', [null, null] as BigDecimal[])
+    [Normalizer.minMaxNorm(bc), Normalizer.meanNorm(bc), Normalizer.stdScaleNorm(bc), Normalizer.logNorm(bc)].each { col ->
+      Assertions.assertEquals(2, col.size(), col.name())
+      Assertions.assertTrue(col.isMissing(0), "${col.name()} row 0")
+      Assertions.assertTrue(col.isMissing(1), "${col.name()} row 1")
+    }
+    def single = BigDecimalColumn.create('one', [5.0] as BigDecimal[])
+    Assertions.assertTrue(Normalizer.stdScaleNorm(single).isMissing(0), 'std-scale of a single value is undefined')
+  }
+
 }

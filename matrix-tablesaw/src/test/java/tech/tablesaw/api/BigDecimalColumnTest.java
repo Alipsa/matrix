@@ -849,6 +849,19 @@ public class BigDecimalColumnTest {
     assertThrows(IllegalArgumentException.class, () -> BigDecimalAggregateFunctions.cv.summarize(col));
   }
 
+  @Test
+  public void testStdDevAggregate() {
+    BigDecimalColumn col = BigDecimalColumn.create("v",
+        new BigDecimal("2"), null, new BigDecimal("4"), new BigDecimal("4"),
+        new BigDecimal("4"), new BigDecimal("5"), new BigDecimal("5"), new BigDecimal("7"),
+        new BigDecimal("9"));
+    // sample standard deviation of 2,4,4,4,5,5,7,9 is sqrt(32/7) = 2.138089935...
+    BigDecimal sd = BigDecimalAggregateFunctions.stdDev.summarize(col);
+    assertEquals(0, new BigDecimal("2.138089935").compareTo(sd.setScale(9, RoundingMode.HALF_EVEN)));
+    assertNull(BigDecimalAggregateFunctions.stdDev.summarize(BigDecimalColumn.create("empty")));
+    assertNull(BigDecimalAggregateFunctions.stdDev.summarize(BigDecimalColumn.create("one", new BigDecimal("1"))));
+  }
+
   private BigDecimal[] bdArr(int numDecimals, String... numbers) {
     BigDecimal[] arr = new BigDecimal[numbers.length];
     for (int i = 0; i < numbers.length; i++) {
