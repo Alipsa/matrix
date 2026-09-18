@@ -143,7 +143,7 @@ class ValueConverter {
   }
 
   static BigDecimal asBigDecimal(Object num, NumberFormat format = null) {
-    if (num == null || '' == num) {
+    if (isNullOrEmpty(num)) {
       return null
     }
     if (num instanceof BigDecimal) {
@@ -196,7 +196,7 @@ class ValueConverter {
    */
   @SuppressWarnings('BooleanMethodReturnsNull')
   static Boolean asBoolean(Object obj) {
-    if (obj == null || '' == obj) {
+    if (isNullOrEmpty(obj)) {
       return null
     }
     if (obj instanceof Boolean) {
@@ -239,7 +239,7 @@ class ValueConverter {
   }
 
   static Double asDouble(Object obj, NumberFormat format = null, Double valueIfNull = null) {
-    if (obj == null || '' == obj) {
+    if (isNullOrEmpty(obj)) {
       return valueIfNull
     }
     if (obj instanceof Number) {
@@ -294,7 +294,7 @@ class ValueConverter {
   }
 
   static LocalDate asLocalDate(Object date, DateTimeFormatter formatter = null, LocalDate valueIfNull = null) {
-    if (date == null || '' == date) {
+    if (isNullOrEmpty(date)) {
       return valueIfNull
     }
     if (date instanceof LocalDate) {
@@ -320,7 +320,7 @@ class ValueConverter {
   }
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter = null, LocalDateTime valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof LocalDate) {
@@ -362,17 +362,18 @@ class ValueConverter {
    * @param min the smallest representable value of the target type
    * @param max the largest representable value of the target type
    * @param targetName the target type name used in the error message
+   * @param reported the value named in the error message; defaults to {@code value}
    * @return the integral part, or {@code null} when the value is NaN or infinite
    * @throws IllegalArgumentException if the integral part lies outside {@code [min, max]}
    */
-  private static BigInteger integralInRange(Number value, long min, long max, String targetName) {
+  private static BigInteger integralInRange(Number value, long min, long max, String targetName, Object reported = null) {
     BigDecimal decimal = asBigDecimal(value)
     if (decimal == null) {
       return null
     }
     BigInteger integral = decimal.toBigInteger()
     if (integral < BigInteger.valueOf(min) || integral > BigInteger.valueOf(max)) {
-      throw new IllegalArgumentException("Value $value is out of range for $targetName ($min..$max)")
+      throw new IllegalArgumentException("Value ${reported == null ? value : reported} is out of range for $targetName ($min..$max)")
     }
     integral
   }
@@ -458,7 +459,7 @@ class ValueConverter {
    * @return the converted character, or {@code valueIfNull} when conversion is not possible
    */
   static Character asCharacter(Object o, Character valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Character) {
@@ -516,17 +517,21 @@ class ValueConverter {
     } else {
       String val = asDecimalNumber(String.valueOf(o))
       if (val.isBlank()) {
-        return null
+        return valueIfNull
       }
-      decimal = new BigDecimal(val)
+      try {
+        decimal = new BigDecimal(val)
+      } catch (NumberFormatException ignored) {
+        return valueIfNull
+      }
     }
     BigInteger integral = integralInRange(decimal.setScale(0, java.math.RoundingMode.HALF_UP),
-        Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET)
+        Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET, o)
     integral.intValue()
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -588,7 +593,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, YearMonth valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof TemporalAccessor) {
@@ -615,7 +620,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, DateTimeFormatter formatter, YearMonth valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof CharSequence) {
@@ -637,7 +642,7 @@ class ValueConverter {
   }
 
   static Float asFloat(Object o, Float valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -666,14 +671,14 @@ class ValueConverter {
   }
 
   static UtilDate asDate(UtilDate o, UtilDate valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     return o as UtilDate
   }
 
   static UtilDate asDate(Number o, UtilDate valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o < MAX_COMPACT_DATE_INT) {
@@ -699,7 +704,7 @@ class ValueConverter {
 
 
   static UtilDate asDate(Object o, UtilDate valueIfNull = null, Locale locale = Locale.default) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof TemporalAccessor) {
@@ -744,7 +749,7 @@ class ValueConverter {
   }
 
   static Timestamp asTimestamp(Object o, Timestamp valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Timestamp) {
@@ -772,7 +777,7 @@ class ValueConverter {
   }
 
   static Date asSqlDate(Object o, Date valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Date) {
@@ -831,7 +836,7 @@ class ValueConverter {
   }
 
   static Time asSqlTime(Object o, Time valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Time) {
@@ -844,7 +849,7 @@ class ValueConverter {
   }
 
   static LocalTime asLocalTime(Object o, LocalTime valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof LocalTime) {
@@ -857,7 +862,7 @@ class ValueConverter {
   }
 
   static Number asNumber(Object o, Number valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -878,7 +883,7 @@ class ValueConverter {
   }
 
   static ZonedDateTime asZonedDateTime(Object o, DateTimeFormatter dateTimeFormatter, ZoneId zoneId = ZoneId.systemDefault()) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return null
     }
     if (o instanceof ZonedDateTime) {

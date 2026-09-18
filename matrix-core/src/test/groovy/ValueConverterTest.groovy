@@ -259,9 +259,15 @@ class ValueConverterTest {
     assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(2_147_483_647.6d) }
     def e = assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(3_000_000_000L) }
     assertTrue(e.message.contains('Integer'), e.message)
-    // non-finite numbers return the fallback, matching the other narrowing methods
+    // the message names the original input, not the rounded value
+    def eRound = assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound('2147483647.6') }
+    assertTrue(eRound.message.contains('2147483647.6'), eRound.message)
+    // non-finite and unparseable input returns the fallback, matching the other narrowing methods
     assertNull(ValueConverter.asIntegerRound(Double.NaN))
     assertEquals(7, ValueConverter.asIntegerRound(Double.POSITIVE_INFINITY, 7))
+    assertEquals(7, ValueConverter.asIntegerRound('abc', 7))
+    assertEquals(7, ValueConverter.asIntegerRound('  ', 7))
+    assertEquals(7, ValueConverter.asIntegerRound('1e', 7))
     // in-range behavior is unchanged
     assertEquals(485161, ValueConverter.asIntegerRound('485160.7'))
     assertEquals(485162, ValueConverter.asIntegerRound(485161.5G))

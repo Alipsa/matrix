@@ -55,7 +55,9 @@
 - `ValueConverter.asIntegerRound` now applies the same policy: it throws
   `IllegalArgumentException` for a value that rounds outside the `Integer` range (it used to wrap
   silently, so `asIntegerRound(3_000_000_000L)` returned `-1294967296`) and returns `valueIfNull`
-  for `NaN`/infinities instead of throwing `NumberFormatException`.
+  for `NaN`/infinities instead of throwing `NumberFormatException`. Unparseable or blank text now
+  also returns `valueIfNull` (previously `null` or a `NumberFormatException`), and the
+  out-of-range message names the original input rather than the rounded value.
 - `Columns` and `CollectionUtils.m(...)` intentionally use the pre-3.8.0 raw `List` shapes again, in order to preserve compatibility with the established raw-map API used before 3.8.0. Java code written against the 3.8.0 `List<?>` return or inheritance types must change `Map<String, List<?>>` and `LinkedHashMap<String, List<?>>` declarations back to the raw `List` form:
 
   ```java
