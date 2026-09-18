@@ -240,6 +240,34 @@ class ValueConverterTest {
   }
 
   @Test
+  void testIntegralNarrowingMessageNamesStringTarget() {
+    // a numeric string outside the target range names the target type, not Integer
+    def eShort = assertThrows(IllegalArgumentException) { ValueConverter.asShort('70000') }
+    assertTrue(eShort.message.contains('70000'), eShort.message)
+    assertTrue(eShort.message.contains('Short'), eShort.message)
+    assertFalse(eShort.message.contains('Integer'), eShort.message)
+    def eByte = assertThrows(IllegalArgumentException) { ValueConverter.asByte('200') }
+    assertTrue(eByte.message.contains('Byte'), eByte.message)
+    assertFalse(eByte.message.contains('Integer'), eByte.message)
+  }
+
+  @Test
+  void testAsIntegerRoundRejectsOutOfRange() {
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(-3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound('3000000000') }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(2_147_483_647.6d) }
+    def e = assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(3_000_000_000L) }
+    assertTrue(e.message.contains('Integer'), e.message)
+    // non-finite numbers return the fallback, matching the other narrowing methods
+    assertNull(ValueConverter.asIntegerRound(Double.NaN))
+    assertEquals(7, ValueConverter.asIntegerRound(Double.POSITIVE_INFINITY, 7))
+    // in-range behavior is unchanged
+    assertEquals(485161, ValueConverter.asIntegerRound('485160.7'))
+    assertEquals(485162, ValueConverter.asIntegerRound(485161.5G))
+  }
+
+  @Test
   void testIntegralNarrowingBoundariesAndTruncation() {
     // exact boundaries are accepted
     assertEquals(Integer.MAX_VALUE, ValueConverter.asInteger(2147483647L))

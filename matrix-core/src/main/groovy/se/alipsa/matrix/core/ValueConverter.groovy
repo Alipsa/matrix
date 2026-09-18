@@ -41,6 +41,7 @@ class ValueConverter {
   private static final String ONE_TEXT = '1'
   private static final String TRUE_TEXT = 'true'
   private static final String FALSE_TEXT = 'false'
+  private static final String INTEGER_TARGET = 'Integer'
   private static final String COMPACT_DATE_PATTERN = 'yyyyMMdd'
   private static final int ISO_DATE_LENGTH = 10
   private static final int COMPACT_DATE_LENGTH = 8
@@ -377,6 +378,41 @@ class ValueConverter {
   }
 
   /**
+   * Coerces a value to a {@link Number} for integral narrowing: numbers pass through,
+   * {@code true}/{@code false} (and the strings {@code 'true'}/{@code 'false'}) become
+   * {@code 1}/{@code 0}, and everything else is parsed leniently through
+   * {@link #asBigDecimal(String)} ({@code null} for unparseable text).
+   *
+   * @param o the value to coerce
+   * @return the coerced number, or {@code null} when there is nothing to narrow
+   */
+  private static Number integralNumber(Object o) {
+    if (o instanceof Number) {
+      return o as Number
+    }
+    if (o instanceof Boolean) {
+      return o ? 1 : 0
+    }
+    String strVal = String.valueOf(o).toLowerCase()
+    if (strVal == TRUE_TEXT) {
+      return 1
+    }
+    if (strVal == FALSE_TEXT) {
+      return 0
+    }
+    asBigDecimal(strVal)
+  }
+
+  /**
+   * True when the value is null or an empty character sequence. An {@code instanceof} check is
+   * used instead of {@code '' == o} because the latter costs microseconds per call against a
+   * non-string value under static compilation.
+   */
+  private static boolean isNullOrEmpty(Object o) {
+    o == null || (o instanceof CharSequence && o.length() == 0)
+  }
+
+  /**
    * Converts a value to {@link Byte}. Numbers and numeric strings are truncated toward zero;
    * {@code true}/{@code false} become {@code 1}/{@code 0}; {@code null}, an empty string, an
    * unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
@@ -387,10 +423,10 @@ class ValueConverter {
    * @throws IllegalArgumentException if the value lies outside the {@code Byte} range
    */
   static Byte asByte(Object o, Byte valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    Number number = o instanceof Number ? o : asInteger(o)
+    Number number = integralNumber(o)
     BigInteger integral = number == null ? null : integralInRange(number, Byte.MIN_VALUE, Byte.MAX_VALUE, 'Byte')
     integral == null ? valueIfNull : integral.byteValue()
   }
@@ -406,10 +442,10 @@ class ValueConverter {
    * @throws IllegalArgumentException if the value lies outside the {@code Short} range
    */
   static Short asShort(Object o, Short valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    Number number = o instanceof Number ? o : asInteger(o)
+    Number number = integralNumber(o)
     BigInteger integral = number == null ? null : integralInRange(number, Short.MIN_VALUE, Short.MAX_VALUE, 'Short')
     integral == null ? valueIfNull : integral.shortValue()
   }
@@ -450,40 +486,43 @@ class ValueConverter {
    * @throws IllegalArgumentException if the value lies outside the {@code Integer} range
    */
   static Integer asInteger(Object o, Integer valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    Number number
-    if (o instanceof Number) {
-      number = o
-    } else if (o instanceof Boolean) {
-      return o ? 1 : 0
-    } else {
-      String strVal = String.valueOf(o).toLowerCase()
-      if (strVal == TRUE_TEXT) {
-        return 1
-      } else if (strVal == FALSE_TEXT) {
-        return 0
-      }
-      number = asBigDecimal(strVal)
-    }
-    BigInteger integral = number == null ? null : integralInRange(number, Integer.MIN_VALUE, Integer.MAX_VALUE, 'Integer')
+    Number number = integralNumber(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET)
     integral == null ? valueIfNull : integral.intValue()
   }
 
+  /**
+   * Converts a value to {@link Integer} by rounding half-up to the nearest integer. {@code null},
+   * an empty string, {@code NaN}, infinities and unparseable text return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the rounded integer, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the rounded value lies outside the {@code Integer} range
+   */
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
+    BigDecimal decimal
     if (o instanceof Number) {
-      return o.toBigDecimal().setScale(0, java.math.RoundingMode.HALF_UP).intValue()
+      decimal = asBigDecimal(o as Number)
+      if (decimal == null) {
+        return valueIfNull
+      }
+    } else {
+      String val = asDecimalNumber(String.valueOf(o))
+      if (val.isBlank()) {
+        return null
+      }
+      decimal = new BigDecimal(val)
     }
-
-    String val = asDecimalNumber(String.valueOf(o))
-    if (val.isBlank()) {
-      return null
-    }
-    return new BigDecimal(val).setScale(0, java.math.RoundingMode.HALF_UP).intValue()
+    BigInteger integral = integralInRange(decimal.setScale(0, java.math.RoundingMode.HALF_UP),
+        Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET)
+    integral.intValue()
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
@@ -618,7 +657,7 @@ class ValueConverter {
    * @throws IllegalArgumentException if the value lies outside the {@code Long} range
    */
   static Long asLong(Object o, Long valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     Number number = o instanceof Number ? o : new BigDecimal(String.valueOf(o))
