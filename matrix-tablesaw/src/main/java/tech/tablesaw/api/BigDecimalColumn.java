@@ -812,19 +812,27 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>NaN produces a missing value; infinities are rejected with {@link IllegalArgumentException}.
+   */
   @Override
   public BigDecimalColumn fillWith(final DoubleIterator iterator) {
     for (int r = 0; r < size(); r++) {
       if (!iterator.hasNext()) {
         break;
       }
-      set(r, BigDecimal.valueOf(iterator.nextDouble()));
+      set(r, toBigDecimal(iterator.nextDouble()));
     }
     return this;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>NaN produces a missing value; infinities are rejected with {@link IllegalArgumentException}.
+   */
   @Override
   public BigDecimalColumn fillWith(final DoubleRangeIterable iterable) {
     DoubleIterator iterator = iterable.iterator();
@@ -835,29 +843,40 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
           break;
         }
       }
-      set(r, BigDecimal.valueOf(iterator.nextDouble()));
+      set(r, toBigDecimal(iterator.nextDouble()));
     }
     return this;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>NaN produces a missing value; infinities are rejected with {@link IllegalArgumentException}.
+   * An exception thrown by the supplier ends the fill; an infinite value is rejected.
+   */
   @Override
   public BigDecimalColumn fillWith(final DoubleSupplier supplier) {
     for (int r = 0; r < size(); r++) {
+      double d;
       try {
-        set(r, BigDecimal.valueOf(supplier.getAsDouble()));
+        d = supplier.getAsDouble();
       } catch (final Exception e) {
         break;
       }
+      set(r, toBigDecimal(d));
     }
     return this;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>NaN produces a missing value; infinities are rejected with {@link IllegalArgumentException}.
+   */
   @Override
   public BigDecimalColumn fillWith(double d) {
     for (int r = 0; r < size(); r++) {
-      set(r, BigDecimal.valueOf(d));
+      set(r, toBigDecimal(d));
     }
     return this;
   }
