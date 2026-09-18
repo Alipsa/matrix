@@ -236,6 +236,14 @@ class TableUtilTest {
   }
 
   @Test
+  void testRoundFloatUsesDecimalRepresentation() {
+    assertEquals(2.68f, TableUtil.round(2.675f, 2), 0.0f)
+    assertEquals(TableUtil.round(2.675d, 2) as float, TableUtil.round(2.675f, 2), 0.0f)
+    assertEquals(0.1f, TableUtil.round(0.1f, 1), 0.0f)
+    assertEquals(-1.4f, TableUtil.round(-1.45f, 1), 0.0f)
+  }
+
+  @Test
   void testRoundDoubleColumnPreservesMissingValues() {
     DoubleColumn col = DoubleColumn.create('values', [1.234d, Double.NaN, 5.678d] as double[])
 
