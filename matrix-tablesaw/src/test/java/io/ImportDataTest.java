@@ -89,6 +89,15 @@ public class ImportDataTest {
   }
 
   @Test
+  public void testOdsFileNameBuilderSetsTableName() throws IOException {
+    File odsFile = new File(getClass().getResource("/glaciers.ods").getFile());
+    Table byString = Table.read().usingOptions(OdsReadOptions.builder(odsFile.getPath()).build());
+    Table byFile = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(byFile.name(), byString.name());
+    assertEquals("glaciers.ods", byString.name());
+  }
+
+  @Test
   public void testOdsBlankHeaderCellsGetPlaceholderNames() throws Exception {
     File odsFile = File.createTempFile("blankheader", ".ods");
     odsFile.deleteOnExit();

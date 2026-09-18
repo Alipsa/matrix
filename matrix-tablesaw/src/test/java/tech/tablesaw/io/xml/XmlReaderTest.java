@@ -1,6 +1,7 @@
 package tech.tablesaw.io.xml;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -13,6 +14,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tech.tablesaw.io.RuntimeIOException;
+import tech.tablesaw.api.Table;
 
 class XmlReaderTest {
 
@@ -93,6 +95,37 @@ class XmlReaderTest {
     RuntimeIOException longRow =
         assertMalformedRows("<td name=\"a\">2</td><td name=\"b\">3</td><td name=\"c\">4</td>");
     assertTrue(longRow.getCause().getMessage().contains("row 1 contains 3 cells; expected 2"));
+  }
+
+  @Test
+  void keepsConfiguredTableNameWhenRootHasNoNameAttribute() {
+    String xml = "<table><tr><td name=\"a\">1</td></tr></table>";
+    Table table = new XmlReader().read(XmlReadOptions.builderFromString(xml).tableName("given").build());
+    assertEquals("given", table.name());
+  }
+
+  @Test
+  void blankRootNameAttributeKeepsConfiguredTableName() {
+    String xml = "<table name=\"  \"><tr><td name=\"a\">1</td></tr></table>";
+    Table table = new XmlReader().read(XmlReadOptions.builderFromString(xml).tableName("given").build());
+    assertEquals("given", table.name());
+  }
+
+  @Test
+  void rootNameAttributeOverridesConfiguredTableName() {
+    String xml = "<table name=\"fromXml\"><tr><td name=\"a\">1</td></tr></table>";
+    Table table = new XmlReader().read(XmlReadOptions.builderFromString(xml).tableName("given").build());
+    assertEquals("fromXml", table.name());
+  }
+
+  @Test
+  void fileNameBuilderSetsTableNameLikeFileBuilder() throws IOException {
+    Path file = tempDir.resolve("named.xml");
+    Files.writeString(file, "<table><tr><td name=\"a\">1</td></tr></table>");
+    Table byString = new XmlReader().read(XmlReadOptions.builder(file.toString()).build());
+    Table byFile = new XmlReader().read(XmlReadOptions.builder(file.toFile()).build());
+    assertEquals(byFile.name(), byString.name());
+    assertEquals("named.xml", byString.name());
   }
 
   private static RuntimeIOException assertInvalid(String cells) {

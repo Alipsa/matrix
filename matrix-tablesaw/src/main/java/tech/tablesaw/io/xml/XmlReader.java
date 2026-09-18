@@ -123,7 +123,10 @@ public class XmlReader implements DataReader<XmlReadOptions> {
       dataRows.add(rowValues);
     }
     Table table = TableBuildingUtils.build(columnNames, dataRows, options);
-    table.setName(root.attributeValue("name"));
+    String rootName = root.attributeValue("name");
+    if (rootName != null && !rootName.isBlank()) {
+      table.setName(rootName);
+    }
     return table;
   }
 
