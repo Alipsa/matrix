@@ -18,6 +18,7 @@ import tech.tablesaw.api.LongColumn;
 import tech.tablesaw.api.ShortColumn;
 import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
+import tech.tablesaw.api.TimeColumn;
 import tech.tablesaw.column.numbers.BigDecimalColumnType;
 import tech.tablesaw.io.RuntimeIOException;
 import tech.tablesaw.io.ods.OdsReadOptions;
@@ -34,9 +35,12 @@ import java.io.StringWriter;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.TimeZone;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -132,6 +136,51 @@ public class ExportDataTest {
     }
 
     destFile.deleteOnExit();
+  }
+
+  @Test
+  public void testXlsxExportLocalTimeWithFractionalSeconds() throws IOException {
+    Table table = Table.create("times")
+        .addColumns(TimeColumn.create("t",
+            LocalTime.of(10, 15, 30, 123_000_000),
+            LocalTime.of(10, 15),
+            LocalTime.of(23, 59, 59, 999_999_999)));
+    File output = new File(tempDir, "times.xlsx");
+    table.write().usingOptions(XlsxWriteOptions.builder(output).build());
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(output))) {
+      XSSFSheet sheet = workbook.getSheetAt(0);
+      Cell first = sheet.getRow(1).getCell(0);
+      assertEquals(CellType.NUMERIC, first.getCellType());
+      assertEquals(LocalTime.of(10, 15, 30, 123_000_000).toNanoOfDay() / 86_400_000_000_000d,
+          first.getNumericCellValue(), 1e-12);
+      Cell second = sheet.getRow(2).getCell(0);
+      assertEquals(DateUtil.convertTime("10:15:00"), second.getNumericCellValue(), 1e-12);
+      Cell third = sheet.getRow(3).getCell(0);
+      assertTrue(third.getNumericCellValue() < 1.0);
+    }
+  }
+
+  @Test
+  public void testXlsxExportLocalDateTimeInsideDstGapKeepsWallClockFields() throws IOException {
+    // 2024-03-31 02:30 does not exist in Europe/Stockholm (clocks jump 02:00 -> 03:00).
+    // ZoneId.systemDefault() reads TimeZone.getDefault(), so forcing it makes the old
+    // atZone(systemDefault()) path shift the value to 03:30 regardless of the CI box's zone.
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("Europe/Stockholm"));
+    try {
+      LocalDateTime ldt = LocalDateTime.of(2024, 3, 31, 2, 30, 15);
+      Table table = Table.create("dt").addColumns(DateTimeColumn.create("dt", ldt));
+      File output = new File(tempDir, "dt-gap.xlsx");
+      table.write().usingOptions(XlsxWriteOptions.builder(output).build());
+
+      try (XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(output))) {
+        Cell cell = workbook.getSheetAt(0).getRow(1).getCell(0);
+        assertEquals(ldt, cell.getLocalDateTimeCellValue());
+      }
+    } finally {
+      TimeZone.setDefault(original);
+    }
   }
 
   @Test
