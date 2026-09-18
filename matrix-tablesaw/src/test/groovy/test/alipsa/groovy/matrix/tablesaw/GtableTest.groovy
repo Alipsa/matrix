@@ -1,6 +1,7 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
@@ -406,6 +407,33 @@ class GtableTest {
     // other columns are still shared with the source
     table[1, 'age'] = 31
     assertEquals(31, source.column('age').get(1), 'shared column still writes through')
+  }
+
+  @Test
+  void testAddIntegerColumnsTreatNullAsMissing() {
+    Gtable table = Gtable.create('nulls')
+    table.addIntColumn('i', [1, null, '3'])
+    table.addLongColumn('l', [10L, null, '30'])
+    table.addShortColumn('s', [1 as short, null, '3'])
+
+    ['i', 'l', 's'].each { String name ->
+      assertEquals(3, table.column(name).size(), "$name size")
+      assertTrue(table.column(name).isMissing(1), "$name row 1 should be missing")
+      assertFalse(table.column(name).isMissing(0), "$name row 0 should be present")
+    }
+    // numeric strings keep working, as they did with the old primitive-array coercion
+    assertEquals(3, table.column('i').get(2))
+    assertEquals(30L, table.column('l').get(2))
+    assertEquals(3 as short, table.column('s').get(2))
+    // overflow is rejected through ValueConverter's exact narrowing (matrix-core 3.9.0), never wrapped
+    assertThrows(IllegalArgumentException) { Gtable.create('o').addShortColumn('s', [70000]) }
+    assertThrows(IllegalArgumentException) { Gtable.create('o').addIntColumn('i', [3_000_000_000L]) }
+    // garbage strings are rejected by the same strict pre-parse putAt uses (0.3.x also threw)
+    assertThrows(NumberFormatException) { Gtable.create('g').addIntColumn('i', ['12abc']) }
+    // an empty string element becomes missing, exactly like putAt('') (0.3.x threw NumberFormatException)
+    Gtable blanks = Gtable.create('e')
+    blanks.addIntColumn('i', [''])
+    assertTrue(blanks.column('i').isMissing(0))
   }
 
 }

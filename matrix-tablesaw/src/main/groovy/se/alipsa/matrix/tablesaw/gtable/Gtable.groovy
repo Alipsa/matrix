@@ -7,6 +7,7 @@ import tech.tablesaw.table.Relation
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
 
@@ -253,33 +254,42 @@ class Gtable extends Table {
   }
 
   /**
-   * Adds a new {@link IntColumn} with the given name and data.
+   * Adds a new {@link IntColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addIntColumn(String name, List data) {
-    addColumns(IntColumn.create(name, data as int[])) as Gtable
+    IntColumn column = IntColumn.create(name)
+    data.each { Object value -> column.append((Integer) coerce(value, Integer)) }
+    addColumns(column) as Gtable
   }
 
   /**
-   * Adds a new {@link LongColumn} with the given name and data.
+   * Adds a new {@link LongColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addLongColumn(String name, List data) {
-    addColumns(LongColumn.create(name, data as long[])) as Gtable
+    LongColumn column = LongColumn.create(name)
+    data.each { Object value -> column.append((Long) coerce(value, Long)) }
+    addColumns(column) as Gtable
   }
 
   /**
-   * Adds a new {@link ShortColumn} with the given name and data.
+   * Adds a new {@link ShortColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addShortColumn(String name, List data) {
-    addColumns(ShortColumn.create(name, data as short[])) as Gtable
+    ShortColumn column = ShortColumn.create(name)
+    data.each { Object value -> column.append((Short) coerce(value, Short)) }
+    addColumns(column) as Gtable
   }
 
   /**
@@ -396,6 +406,34 @@ class Gtable extends Table {
       def v = value.asType(asJavaClass(columnIndex))
       col.set(rowIndex, v)
     }
+  }
+
+  /**
+   * Coerces {@code value} to {@code targetType} with {@link ValueConverter#convert(Object, Class)},
+   * applying the module's uniform input rules first: {@code null} and the empty string map to
+   * {@code null} (missing), and a {@code CharSequence} targeting a {@code Number} type is strictly
+   * pre-parsed with {@code new BigDecimal(text.trim())} so garbage such as {@code 'abc'},
+   * {@code '12abc'} or {@code '1,234'} throws {@code NumberFormatException} instead of being
+   * partially parsed by {@code ValueConverter}'s lenient scrapers. Used by {@code putAt} and the
+   * {@code addXColumn} methods so every value-entry path shares one coercion policy.
+   */
+  private static Object coerce(Object value, Class targetType) {
+    if (value == null) {
+      return null
+    }
+    if (value instanceof CharSequence && !CharSequence.isAssignableFrom(targetType)
+        && value.toString().isEmpty()) {
+      return null
+    }
+    if (value instanceof CharSequence && Number.isAssignableFrom(targetType)) {
+      // strictness guard: ValueConverter.asInteger/asShort/asBigDecimal scrape digits out of garbage
+      // ('12abc' -> 12) while asLong/asFloat/asDouble parse strictly; pre-parsing with BigDecimal
+      // restores the fail-fast behavior Groovy's asType had in 0.3.x, uniform across numeric types.
+      // Narrowing (truncation of fractions, IllegalArgumentException when out of range) is then
+      // ValueConverter's, so strings and numbers behave identically (needs matrix-core >= 3.9.0).
+      return ValueConverter.convert(new BigDecimal(value.toString().trim()), targetType)
+    }
+    ValueConverter.convert(value, targetType)
   }
 
   /**
