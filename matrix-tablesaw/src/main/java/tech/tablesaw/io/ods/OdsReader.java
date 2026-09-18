@@ -2,7 +2,6 @@ package tech.tablesaw.io.ods;
 
 import com.github.miachm.sods.Sheet;
 import com.github.miachm.sods.SpreadSheet;
-import org.apache.commons.io.input.ReaderInputStream;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.*;
 
@@ -10,7 +9,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +16,8 @@ import java.util.List;
  * Reader for ODS (OpenDocument Spreadsheet) files, which are used by applications like LibreOffice Calc and Apache OpenOffice Calc.
  * <p>
  * This reader utilizes the 'sods' library to parse ODS files and convert them into a Tablesaw Table.
+ * ODS is a binary (ZIP) format, so Reader-backed sources are rejected with
+ * {@link IllegalArgumentException}.
  * <p>
  * Supported options include:
  * <ul>
@@ -138,7 +138,7 @@ public class OdsReader implements DataReader<OdsReadOptions> {
 
   /**
    * Get an InputStream from the source specified in the read options.
-   * Handles different source types: file, reader, or input stream.
+   * Handles binary file and input-stream source types.
    *
    * @param options the read options containing the source
    * @return an InputStream for reading the ODS data
@@ -150,11 +150,7 @@ public class OdsReader implements DataReader<OdsReadOptions> {
       return new FileInputStream(options.source().file());
     }
     if (options.source().reader() != null) {
-      return ReaderInputStream.builder()
-          .setReader(options.source().reader())
-          .setCharset(StandardCharsets.UTF_8)
-          .get();
-      //return new ReaderInputStream(options.source().reader(), StandardCharsets.UTF_8);
+      throw new IllegalArgumentException("ODS requires a binary InputStream or File source");
     }
     return options.source().inputStream();
   }

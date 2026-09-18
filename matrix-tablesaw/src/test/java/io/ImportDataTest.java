@@ -2,6 +2,7 @@ package io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.tablesaw.api.ColumnType.*;
 
@@ -10,13 +11,26 @@ import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.json.JsonReadOptions;
 import tech.tablesaw.io.ods.OdsReadOptions;
+import tech.tablesaw.io.Source;
 import tech.tablesaw.io.xml.XmlReadOptions;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 
 public class ImportDataTest {
+
+  @Test
+  public void testOdsRejectsReaderSource() {
+    Source source = new Source(new StringReader("not a zip"));
+    assertEquals(
+        "ODS requires a binary InputStream or File source",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Table.read().usingOptions(OdsReadOptions.builder(source).build()))
+            .getMessage());
+  }
 
   @Test
   public void testJsonImport() throws IOException {

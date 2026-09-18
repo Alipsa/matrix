@@ -106,6 +106,17 @@ public class ExportDataTest {
   }
 
   @Test
+  public void testOdsRejectsWriterDestination() {
+    Table table = Table.create("t").addColumns(IntColumn.create("value", new int[] {1}));
+    assertEquals(
+        "ODS requires a binary OutputStream destination",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> table.write().usingOptions(OdsWriteOptions.builder(new StringWriter()).build()))
+            .getMessage());
+  }
+
+  @Test
   public void testXlsxExportLocalDateTime() throws IOException {
     var table = Table.create("datetime-test")
         .addColumns(DateTimeColumn.create("dt",
