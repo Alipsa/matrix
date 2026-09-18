@@ -38,6 +38,25 @@
 - ODS (and XML) reads now preserve interior all-missing rows instead of dropping them, so tables
   containing such rows report a higher row count than 0.3.2. Trailing all-missing rows are still
   dropped by default; see the I/O fixes below for the opt-out.
+- `OdsWriter` rejects `Writer`-backed destinations with
+  `IllegalArgumentException("ODS requires a binary OutputStream destination")` and `OdsReader` rejects
+  `Reader`-backed sources with `IllegalArgumentException("ODS requires a binary InputStream or File source")`.
+  ODS is a ZIP container; transcoding it through a character stream corrupted the bytes.
+  `OdsWriteOptions.builder(Writer)` is deprecated.
+- `Gtable.putAt` (`table[row, col] = value`) converts values with `ValueConverter.convert` instead of
+  Groovy's `asType`. In BOOLEAN columns, non-empty strings such as `'false'`, `'no'`, `'0'`, and
+  `'maybe'` now store `false` unless they are `'true'`/`'yes'`/`'on'`/`'1'` (case-insensitive), and a
+  number stores `true` only when it equals `1`. ISO date/time strings are now parsed for
+  LOCAL_DATE/LOCAL_DATE_TIME/LOCAL_TIME columns; INSTANT columns still do not parse strings. Strings
+  in numeric columns must be plain numbers; fractions truncate like equivalent numbers, out-of-range
+  values throw `IllegalArgumentException` instead of wrapping, and empty strings mark numeric,
+  Boolean, `java.time`, and custom-typed cells missing. `'NaN'` and `'Infinity'` strings now throw
+  `NumberFormatException` in DOUBLE/FLOAT columns, and `Double.NaN` in an integral column is missing.
+  `putAt` intentionally truncates integral fractions while `Gtable.create` remains lossless-only.
+- `Gtable.putAt` and `Gtable.addIntColumn`/`addLongColumn`/`addShortColumn` require **matrix-core 3.9.0
+  or later at runtime** (matrix-core is a `compileOnly` dependency). Use matrix-bom 2.6.0 or later.
+- `Gtable.putAt(row, col, null)` on a `StringColumn` replaces that column with a copy instead of
+  resizing the column shared with the source `Table`; that column is no longer shared afterward.
 
 ### Numeric behavior
 - `Double.NaN` and `Float.NaN` appended to a `BigDecimalColumn` become missing values; positive
@@ -57,6 +76,13 @@
 - Empty or all-missing columns return `null` from mean, median, range, min, and max; coefficient
   of variation returns `null` when fewer than two non-missing values remain. Sum retains its
   existing empty-input convention.
+- `Normalizer` BigDecimal min-max, mean, and std-scale use BigDecimal arithmetic and no longer
+  collapse values that differ beyond double precision; empty input returns an all-missing column.
+- `BigDecimalColumnType.DEFAULT_PARSER.columnType()` no longer returns `null`.
+- `BigDecimalColumn.fillWith(double)`, `fillWith(DoubleIterator)`, `fillWith(DoubleRangeIterable)`,
+  and `fillWith(DoubleSupplier)` map `NaN` to missing and reject infinities, matching `append(double)`.
+- `TableUtil.round(float, int)` rounds the float's decimal representation (`round(2.675f, 2)` is
+  now `2.68`), consistent with the `double` overload.
 
 ### I/O fixes
 - XML, ODS, and XLSX writers now emit missing cells as blank/empty cells instead of serializing
@@ -88,6 +114,15 @@
 - Shared `FormatWriteOptionsBuilder` base class added for the XLSX/ODS/XML write-option builders,
   owning common destination construction (including the lazy file destination). All existing
   builder entry points and signatures are preserved.
+- `XlsxWriter` writes `LocalTime` values with fractional seconds and writes `LocalDateTime` cells
+  without a system time-zone round trip.
+- `OdsReader` names empty or blank header cells `C<zero-based index>` instead of `"null"`; if a
+  real header already has that name, a `-2`, `-3`, ... suffix is appended through the shared public
+  `tech.tablesaw.io.ColumnNames` utility.
+- `XmlReader` keeps the table name configured through `XmlReadOptions.tableName(...)` when the root
+  element has no usable `name` attribute; `XmlReadOptions.builder(String)` and
+  `OdsReadOptions.builder(String)` now default the table name to the file name like their `File`
+  overloads.
 
 ### Validation
 - `Gtable.create(data, columnTypes)` validates up front that the type list is non-null, matches
@@ -97,6 +132,13 @@
   unsupported override values through the same named error instead of silently ignoring them.
 - `Normalizer.logNorm` for `DoubleColumn` and `FloatColumn` skips missing rows instead of
   normalizing the missing sentinel.
+- `Gtable.putAt(row, col, null)` on a `StringColumn` no longer appends a row to a source-shared
+  column; see Breaking changes for the sharing consequence.
+- `Gtable.addIntColumn`, `addLongColumn`, and `addShortColumn` map `null` elements to missing values
+  instead of throwing `NullPointerException`; empty strings become missing, garbage strings still
+  throw `NumberFormatException`, and out-of-range values now throw `IllegalArgumentException`.
+- `Normalizer.minMaxNorm`, `meanNorm`, and `stdScaleNorm` for `DoubleColumn`/`FloatColumn` preserve
+  missing values when `decimals` is given instead of throwing `NumberFormatException`.
 
 ### Build/test changes
 - New `testNonUtf8DefaultEncoding` Gradle task verifies XML stream output is UTF-8 under a

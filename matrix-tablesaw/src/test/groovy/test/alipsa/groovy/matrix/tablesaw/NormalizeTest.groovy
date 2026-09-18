@@ -171,8 +171,10 @@ class NormalizeTest {
     Assertions.assertEquals(1.0000000000, norm.get(3))
     // assertEquals(BigDecimal, BigDecimal) is scale-insensitive in Groovy (groovier-junit extension /
     // assertEquals(double, double) dispatch), so assert the decimals contract explicitly
-    Assertions.assertEquals(10, norm.get(0).scale(), 'decimals must set the scale')
-    Assertions.assertEquals(10, norm.get(2).scale(), 'decimals must set the scale')
+    norm.with {
+      Assertions.assertEquals(10, get(0).scale(), 'decimals must set the scale')
+      Assertions.assertEquals(10, get(2).scale(), 'decimals must set the scale')
+    }
 
     def mean = Normalizer.meanNorm(bc, 10)
     Assertions.assertEquals(-0.5000000000, mean.get(0))
@@ -210,7 +212,7 @@ class NormalizeTest {
     Assertions.assertEquals(1.0000, std.get(2))
 
     // without decimals the value is still exact, only the scale is free
-    Assertions.assertEquals(0, new BigDecimal('0.5').compareTo(Normalizer.minMaxNorm(bc).get(1)))
+    Assertions.assertTrue(Normalizer.minMaxNorm(bc).get(1) == 0.5G)
   }
 
   @Test
