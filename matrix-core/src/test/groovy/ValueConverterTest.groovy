@@ -214,6 +214,99 @@ class ValueConverterTest {
   }
 
   @Test
+  void testIntegralNarrowingRejectsOutOfRange() {
+    // Number input
+    assertThrows(IllegalArgumentException) { ValueConverter.asInteger(3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asInteger(-3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asInteger(new BigDecimal('2147483648')) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asShort(70000) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asShort(-32769) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asByte(200) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asByte(-129) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asLong(new BigDecimal('1e30')) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asLong(9.3e18d) }
+    // String input follows the same rule
+    assertThrows(IllegalArgumentException) { ValueConverter.asInteger('3000000000') }
+    assertThrows(IllegalArgumentException) { ValueConverter.asShort('70000') }
+    assertThrows(IllegalArgumentException) { ValueConverter.asByte('200') }
+    assertThrows(IllegalArgumentException) { ValueConverter.asLong('9300000000000000000') }
+    // convert(...) routes through the same methods
+    assertThrows(IllegalArgumentException) { ValueConverter.convert(3_000_000_000L, Integer) }
+    assertThrows(IllegalArgumentException) { ValueConverter.convert('70000', Short) }
+    // the message names the value and the target
+    def e = assertThrows(IllegalArgumentException) { ValueConverter.asInteger(3_000_000_000L) }
+    assertTrue(e.message.contains('3000000000'), e.message)
+    assertTrue(e.message.contains('Integer'), e.message)
+  }
+
+  @Test
+  void testIntegralNarrowingMessageNamesStringTarget() {
+    // a numeric string outside the target range names the target type, not Integer
+    def eShort = assertThrows(IllegalArgumentException) { ValueConverter.asShort('70000') }
+    assertTrue(eShort.message.contains('70000'), eShort.message)
+    assertTrue(eShort.message.contains('Short'), eShort.message)
+    assertFalse(eShort.message.contains('Integer'), eShort.message)
+    def eByte = assertThrows(IllegalArgumentException) { ValueConverter.asByte('200') }
+    assertTrue(eByte.message.contains('Byte'), eByte.message)
+    assertFalse(eByte.message.contains('Integer'), eByte.message)
+  }
+
+  @Test
+  void testAsIntegerRoundRejectsOutOfRange() {
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(-3_000_000_000L) }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound('3000000000') }
+    assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(2_147_483_647.6d) }
+    def e = assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound(3_000_000_000L) }
+    assertTrue(e.message.contains('Integer'), e.message)
+    // the message names the original input, not the rounded value
+    def eRound = assertThrows(IllegalArgumentException) { ValueConverter.asIntegerRound('2147483647.6') }
+    assertTrue(eRound.message.contains('2147483647.6'), eRound.message)
+    // non-finite and unparseable input returns the fallback, matching the other narrowing methods
+    assertNull(ValueConverter.asIntegerRound(Double.NaN))
+    assertEquals(7, ValueConverter.asIntegerRound(Double.POSITIVE_INFINITY, 7))
+    assertEquals(7, ValueConverter.asIntegerRound('abc', 7))
+    assertEquals(7, ValueConverter.asIntegerRound('  ', 7))
+    assertEquals(7, ValueConverter.asIntegerRound('1e', 7))
+    // in-range behavior is unchanged
+    assertEquals(485161, ValueConverter.asIntegerRound('485160.7'))
+    assertEquals(485162, ValueConverter.asIntegerRound(485161.5G))
+  }
+
+  @Test
+  void testIntegralNarrowingBoundariesAndTruncation() {
+    // exact boundaries are accepted
+    assertEquals(Integer.MAX_VALUE, ValueConverter.asInteger(2147483647L))
+    assertEquals(Integer.MIN_VALUE, ValueConverter.asInteger(-2147483648L))
+    assertEquals(Long.MAX_VALUE, ValueConverter.asLong(new BigDecimal('9223372036854775807')))
+    assertEquals(Long.MIN_VALUE, ValueConverter.asLong(new BigDecimal('-9223372036854775808')))
+    assertEquals((short) 32767, ValueConverter.asShort(32767))
+    assertEquals((byte) -128, ValueConverter.asByte(-128))
+    // a fraction is truncated toward zero, so 2147483647.9 is still in range
+    assertEquals(Integer.MAX_VALUE, ValueConverter.asInteger(2147483647.9d))
+    assertEquals(-5, ValueConverter.asInteger(-5.9d))
+    assertEquals(-5L, ValueConverter.asLong(-5.9d))
+    assertEquals((short) -5, ValueConverter.asShort(-5.9d))
+    assertEquals((byte) -5, ValueConverter.asByte('-5.9'))
+    // but 2147483648.1 is not
+    assertThrows(IllegalArgumentException) { ValueConverter.asInteger(2147483648.1d) }
+  }
+
+  @Test
+  void testIntegralNarrowingOfNonFiniteValues() {
+    [Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Float.NaN, Float.POSITIVE_INFINITY].each {
+      assertNull(ValueConverter.asInteger(it), "asInteger($it)")
+      assertNull(ValueConverter.asLong(it), "asLong($it)")
+      assertNull(ValueConverter.asShort(it), "asShort($it)")
+      assertNull(ValueConverter.asByte(it), "asByte($it)")
+    }
+    assertEquals(7, ValueConverter.asInteger(Double.NaN, 7))
+    assertEquals(7L, ValueConverter.asLong(Double.POSITIVE_INFINITY, 7L))
+    assertEquals((short) 7, ValueConverter.asShort(Float.NaN, (short) 7))
+    assertEquals((byte) 7, ValueConverter.asByte(Float.NEGATIVE_INFINITY, (byte) 7))
+  }
+
+  @Test
   void testAsBigInteger() {
     assertEquals(12345678901234567890G, ValueConverter.asBigInteger('12345678901234567890'))
     assertEquals(-12345678901234567890G, ValueConverter.asBigInteger('-12345678901234567890'))

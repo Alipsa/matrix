@@ -45,6 +45,19 @@
 - Added Java compilation regression coverage for the builder APIs and Java-convenience helpers.
 
 ### Breaking Changes
+- `ValueConverter.asInteger`, `asLong`, `asShort` and `asByte` (and therefore `convert(o, Integer|Long|Short|Byte)`,
+  `ListConverter.toIntegers/toShorts/toBytes` and `Matrix.convert`) now throw
+  `IllegalArgumentException("Value <v> is out of range for <Type> (<min>..<max>)")` for a number or numeric
+  string whose integral part does not fit the target type, instead of silently wrapping
+  (`asInteger(3_000_000_000L)` used to return `-1294967296`, `asShort(70000)` returned `4464`).
+  `NaN` and infinite doubles/floats now return `valueIfNull` (previously `0` and `MAX_VALUE`), matching
+  `asBigDecimal(Number)`. Fractions are still truncated toward zero.
+- `ValueConverter.asIntegerRound` now applies the same policy: it throws
+  `IllegalArgumentException` for a value that rounds outside the `Integer` range (it used to wrap
+  silently, so `asIntegerRound(3_000_000_000L)` returned `-1294967296`) and returns `valueIfNull`
+  for `NaN`/infinities instead of throwing `NumberFormatException`. Unparseable or blank text now
+  also returns `valueIfNull` (previously `null` or a `NumberFormatException`), and the
+  out-of-range message names the original input rather than the rounded value.
 - `Columns` and `CollectionUtils.m(...)` intentionally use the pre-3.8.0 raw `List` shapes again, in order to preserve compatibility with the established raw-map API used before 3.8.0. Java code written against the 3.8.0 `List<?>` return or inheritance types must change `Map<String, List<?>>` and `LinkedHashMap<String, List<?>>` declarations back to the raw `List` form:
 
   ```java

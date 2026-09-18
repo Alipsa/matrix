@@ -41,6 +41,7 @@ class ValueConverter {
   private static final String ONE_TEXT = '1'
   private static final String TRUE_TEXT = 'true'
   private static final String FALSE_TEXT = 'false'
+  private static final String INTEGER_TARGET = 'Integer'
   private static final String COMPACT_DATE_PATTERN = 'yyyyMMdd'
   private static final int ISO_DATE_LENGTH = 10
   private static final int COMPACT_DATE_LENGTH = 8
@@ -142,7 +143,7 @@ class ValueConverter {
   }
 
   static BigDecimal asBigDecimal(Object num, NumberFormat format = null) {
-    if (num == null || '' == num) {
+    if (isNullOrEmpty(num)) {
       return null
     }
     if (num instanceof BigDecimal) {
@@ -195,7 +196,7 @@ class ValueConverter {
    */
   @SuppressWarnings('BooleanMethodReturnsNull')
   static Boolean asBoolean(Object obj) {
-    if (obj == null || '' == obj) {
+    if (isNullOrEmpty(obj)) {
       return null
     }
     if (obj instanceof Boolean) {
@@ -238,7 +239,7 @@ class ValueConverter {
   }
 
   static Double asDouble(Object obj, NumberFormat format = null, Double valueIfNull = null) {
-    if (obj == null || '' == obj) {
+    if (isNullOrEmpty(obj)) {
       return valueIfNull
     }
     if (obj instanceof Number) {
@@ -293,7 +294,7 @@ class ValueConverter {
   }
 
   static LocalDate asLocalDate(Object date, DateTimeFormatter formatter = null, LocalDate valueIfNull = null) {
-    if (date == null || '' == date) {
+    if (isNullOrEmpty(date)) {
       return valueIfNull
     }
     if (date instanceof LocalDate) {
@@ -319,7 +320,7 @@ class ValueConverter {
   }
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter = null, LocalDateTime valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof LocalDate) {
@@ -353,26 +354,101 @@ class ValueConverter {
     asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern).withLocale(locale), valueIfNull)
   }
 
-  static Byte asByte(Object o, Byte valueIfNull = null) {
-    if (o == null || '' == o) {
-      return valueIfNull
+  /**
+   * Narrows a number to an integral value in {@code [min, max]} by truncating any fraction toward
+   * zero (the same result {@code intValue()} gives for in-range input) and then checking the range.
+   *
+   * @param value the value to narrow
+   * @param min the smallest representable value of the target type
+   * @param max the largest representable value of the target type
+   * @param targetName the target type name used in the error message
+   * @param reported the value named in the error message; defaults to {@code value}
+   * @return the integral part, or {@code null} when the value is NaN or infinite
+   * @throws IllegalArgumentException if the integral part lies outside {@code [min, max]}
+   */
+  private static BigInteger integralInRange(Number value, long min, long max, String targetName, Object reported = null) {
+    BigDecimal decimal = asBigDecimal(value)
+    if (decimal == null) {
+      return null
     }
-    if (o instanceof Number) {
-      return o.byteValue()
+    BigInteger integral = decimal.toBigInteger()
+    if (integral < BigInteger.valueOf(min) || integral > BigInteger.valueOf(max)) {
+      throw new IllegalArgumentException("Value ${reported == null ? value : reported} is out of range for $targetName ($min..$max)")
     }
-    Integer value = asInteger(o)
-    value == null ? valueIfNull : value.byteValue()
+    integral
   }
 
-  static Short asShort(Object o, Short valueIfNull = null) {
-    if (o == null || '' == o) {
+  /**
+   * Coerces a value to a {@link Number} for integral narrowing: numbers pass through,
+   * {@code true}/{@code false} (and the strings {@code 'true'}/{@code 'false'}) become
+   * {@code 1}/{@code 0}, and everything else is parsed leniently through
+   * {@link #asBigDecimal(String)} ({@code null} for unparseable text).
+   *
+   * @param o the value to coerce
+   * @return the coerced number, or {@code null} when there is nothing to narrow
+   */
+  private static Number integralNumber(Object o) {
+    if (o instanceof Number) {
+      return o as Number
+    }
+    if (o instanceof Boolean) {
+      return o ? 1 : 0
+    }
+    String strVal = String.valueOf(o).toLowerCase()
+    if (strVal == TRUE_TEXT) {
+      return 1
+    }
+    if (strVal == FALSE_TEXT) {
+      return 0
+    }
+    asBigDecimal(strVal)
+  }
+
+  /**
+   * True when the value is null or an empty character sequence. An {@code instanceof} check is
+   * used instead of {@code '' == o} because the latter costs microseconds per call against a
+   * non-string value under static compilation.
+   */
+  private static boolean isNullOrEmpty(Object o) {
+    o == null || (o instanceof CharSequence && o.length() == 0)
+  }
+
+  /**
+   * Converts a value to {@link Byte}. Numbers and numeric strings are truncated toward zero;
+   * {@code true}/{@code false} become {@code 1}/{@code 0}; {@code null}, an empty string, an
+   * unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted byte, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Byte} range
+   */
+  static Byte asByte(Object o, Byte valueIfNull = null) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.shortValue()
+    Number number = integralNumber(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Byte.MIN_VALUE, Byte.MAX_VALUE, 'Byte')
+    integral == null ? valueIfNull : integral.byteValue()
+  }
+
+  /**
+   * Converts a value to {@link Short}. Numbers and numeric strings are truncated toward zero;
+   * {@code true}/{@code false} become {@code 1}/{@code 0}; {@code null}, an empty string, an
+   * unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted short, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Short} range
+   */
+  static Short asShort(Object o, Short valueIfNull = null) {
+    if (isNullOrEmpty(o)) {
+      return valueIfNull
     }
-    Integer value = asInteger(o)
-    value == null ? valueIfNull : value.shortValue()
+    Number number = integralNumber(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Short.MIN_VALUE, Short.MAX_VALUE, 'Short')
+    integral == null ? valueIfNull : integral.shortValue()
   }
 
   /**
@@ -383,7 +459,7 @@ class ValueConverter {
    * @return the converted character, or {@code valueIfNull} when conversion is not possible
    */
   static Character asCharacter(Object o, Character valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Character) {
@@ -399,42 +475,63 @@ class ValueConverter {
     value.size() == 1 ? value.charAt(0) : valueIfNull
   }
 
+  /**
+   * Converts a value to {@link Integer}. Numbers are truncated toward zero; {@code true}/{@code false}
+   * (and the strings {@code 'true'}/{@code 'false'}) become {@code 1}/{@code 0}; numeric strings are
+   * parsed leniently through {@link #asBigDecimal(String, NumberFormat)}; {@code null}, an empty string,
+   * an unparseable string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted integer, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Integer} range
+   */
   static Integer asInteger(Object o, Integer valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.intValue()
-    } else if (o instanceof Boolean) {
-      return o ? 1 : 0
-    }
-    String strVal = String.valueOf(o).toLowerCase()
-    if (strVal == TRUE_TEXT) {
-      return 1
-    } else if (strVal == FALSE_TEXT) {
-      return 0
-    }
-    BigDecimal value = asBigDecimal(strVal)
-    value?.intValue()
+    Number number = integralNumber(o)
+    BigInteger integral = number == null ? null : integralInRange(number, Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET)
+    integral == null ? valueIfNull : integral.intValue()
   }
 
+  /**
+   * Converts a value to {@link Integer} by rounding half-up to the nearest integer. {@code null},
+   * an empty string, {@code NaN}, infinities and unparseable text return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the rounded integer, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the rounded value lies outside the {@code Integer} range
+   */
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
+    BigDecimal decimal
     if (o instanceof Number) {
-      return o.toBigDecimal().setScale(0, java.math.RoundingMode.HALF_UP).intValue()
+      decimal = asBigDecimal(o as Number)
+      if (decimal == null) {
+        return valueIfNull
+      }
+    } else {
+      String val = asDecimalNumber(String.valueOf(o))
+      if (val.isBlank()) {
+        return valueIfNull
+      }
+      try {
+        decimal = new BigDecimal(val)
+      } catch (NumberFormatException ignored) {
+        return valueIfNull
+      }
     }
-
-    String val = asDecimalNumber(String.valueOf(o))
-    if (val.isBlank()) {
-      return null
-    }
-    return new BigDecimal(val).setScale(0, java.math.RoundingMode.HALF_UP).intValue()
+    BigInteger integral = integralInRange(decimal.setScale(0, java.math.RoundingMode.HALF_UP),
+        Integer.MIN_VALUE, Integer.MAX_VALUE, INTEGER_TARGET, o)
+    integral.intValue()
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -496,7 +593,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, YearMonth valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof TemporalAccessor) {
@@ -523,7 +620,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, DateTimeFormatter formatter, YearMonth valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof CharSequence) {
@@ -545,7 +642,7 @@ class ValueConverter {
   }
 
   static Float asFloat(Object o, Float valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -554,25 +651,34 @@ class ValueConverter {
     return Float.valueOf(String.valueOf(o))
   }
 
+  /**
+   * Converts a value to {@link Long}. Numbers are truncated toward zero; strings are parsed with
+   * {@code new BigDecimal(text)} (a {@code NumberFormatException} for non-numeric text, as before);
+   * {@code null}, an empty string, {@code NaN} and infinities return {@code valueIfNull}.
+   *
+   * @param o the value to convert
+   * @param valueIfNull the value returned when there is nothing to convert
+   * @return the converted long, or {@code valueIfNull}
+   * @throws IllegalArgumentException if the value lies outside the {@code Long} range
+   */
   static Long asLong(Object o, Long valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
-    if (o instanceof Number) {
-      return o.longValue()
-    }
-    new BigDecimal(String.valueOf(o)).longValue()
+    Number number = o instanceof Number ? o : new BigDecimal(String.valueOf(o))
+    BigInteger integral = integralInRange(number, Long.MIN_VALUE, Long.MAX_VALUE, 'Long')
+    integral == null ? valueIfNull : integral.longValue()
   }
 
   static UtilDate asDate(UtilDate o, UtilDate valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     return o as UtilDate
   }
 
   static UtilDate asDate(Number o, UtilDate valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o < MAX_COMPACT_DATE_INT) {
@@ -598,7 +704,7 @@ class ValueConverter {
 
 
   static UtilDate asDate(Object o, UtilDate valueIfNull = null, Locale locale = Locale.default) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof TemporalAccessor) {
@@ -643,7 +749,7 @@ class ValueConverter {
   }
 
   static Timestamp asTimestamp(Object o, Timestamp valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Timestamp) {
@@ -671,7 +777,7 @@ class ValueConverter {
   }
 
   static Date asSqlDate(Object o, Date valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Date) {
@@ -730,7 +836,7 @@ class ValueConverter {
   }
 
   static Time asSqlTime(Object o, Time valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Time) {
@@ -743,7 +849,7 @@ class ValueConverter {
   }
 
   static LocalTime asLocalTime(Object o, LocalTime valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof LocalTime) {
@@ -756,7 +862,7 @@ class ValueConverter {
   }
 
   static Number asNumber(Object o, Number valueIfNull = null) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -777,7 +883,7 @@ class ValueConverter {
   }
 
   static ZonedDateTime asZonedDateTime(Object o, DateTimeFormatter dateTimeFormatter, ZoneId zoneId = ZoneId.systemDefault()) {
-    if (o == null || '' == o) {
+    if (isNullOrEmpty(o)) {
       return null
     }
     if (o instanceof ZonedDateTime) {
