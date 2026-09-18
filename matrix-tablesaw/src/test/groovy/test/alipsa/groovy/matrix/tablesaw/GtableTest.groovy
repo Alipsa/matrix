@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test
 import tech.tablesaw.api.BigDecimalAggregateFunctions
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
+import tech.tablesaw.api.IntColumn
+import tech.tablesaw.api.StringColumn
+import tech.tablesaw.api.Table
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
 import tech.tablesaw.joining.JoinType
@@ -380,6 +383,29 @@ class GtableTest {
         .addDoubleColumn('d', [1.1, 2.2])
     assertEquals(2, table.rowCount())
     assertEquals(['s', 'i', 'd'], table.columnNames())
+  }
+
+  @Test
+  void testPutAtNullOnSharedStringColumnDoesNotResizeSource() {
+    def source = Table.create('src',
+        StringColumn.create('name', ['Alice', 'Bob']),
+        IntColumn.create('age', [25, 30] as int[]))
+    Gtable table = Gtable.create(source)
+
+    table[0, 'name'] = null
+
+    assertTrue(table.column('name').isMissing(0), 'gtable name should be missing at row 0')
+    assertEquals(2, table.rowCount(), 'gtable row count')
+    assertEquals(2, source.column('name').size(), 'source name column must keep its size')
+    assertEquals(2, source.rowCount(), 'source row count must be unchanged')
+    assertEquals('Alice', source.column('name').get(0), 'source value must be untouched')
+    // the null put detached the name column from the source; later puts on it are local to the Gtable
+    table[1, 'name'] = 'Bobby'
+    assertEquals('Bobby', table[1, 'name'])
+    assertEquals('Bob', source.column('name').get(1), 'detached column must not write through')
+    // other columns are still shared with the source
+    table[1, 'age'] = 31
+    assertEquals(31, source.column('age').get(1), 'shared column still writes through')
   }
 
 }

@@ -380,12 +380,15 @@ class Gtable extends Table {
       if (col instanceof StringColumn) {
         // ByteDictionaryMap.set("") does not route through MISSING_VALUE unless that key is
         // already registered in the dictionary (which append does, but set does not).
-        // Calling appendMissing() primes the dictionary so the subsequent setMissing() call
-        // stores the correct MISSING_VALUE key. We then drop the spurious appended row.
+        // Calling appendMissing() on a copy primes the dictionary so the subsequent setMissing()
+        // stores the correct MISSING_VALUE key; the copy keeps the live column (which may be
+        // shared with the Table this Gtable was created from) untouched. We then drop the
+        // spurious appended row.
         int origSize = col.size()
-        col.appendMissing()
-        col.setMissing(rowIndex)
-        replaceColumn(columnIndex, col.inRange(0, origSize))
+        StringColumn fixed = (col as StringColumn).copy()
+        fixed.appendMissing()
+        fixed.setMissing(rowIndex)
+        replaceColumn(columnIndex, fixed.inRange(0, origSize))
       } else {
         col.setMissing(rowIndex)
       }
