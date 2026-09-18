@@ -89,6 +89,45 @@ public class ImportDataTest {
   }
 
   @Test
+  public void testOdsBlankHeaderCellsGetPlaceholderNames() throws Exception {
+    File odsFile = File.createTempFile("blankheader", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "C1", "C2"), table.columnNames());
+    assertEquals(1, table.rowCount());
+  }
+
+  @Test
+  public void testOdsPlaceholderHeaderDoesNotCollideWithRealHeader() throws Exception {
+    File odsFile = File.createTempFile("collidingheader", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(0, 2).setValue("C1");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "C1-2", "C1"), table.columnNames());
+    assertEquals(1, table.rowCount());
+  }
+
+  @Test
   public void testOdsImportWithEmptyCells() throws Exception {
     File odsFile = File.createTempFile("partial", ".ods");
     try (FileOutputStream fos = new FileOutputStream(odsFile)) {

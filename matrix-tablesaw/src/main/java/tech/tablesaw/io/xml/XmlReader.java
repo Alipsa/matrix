@@ -151,7 +151,6 @@ public class XmlReader implements DataReader<XmlReadOptions> {
       reservedNames.add(name.toLowerCase(Locale.ROOT));
     }
     Set<String> originalNamesSeen = new HashSet<>();
-    Set<String> assignedNames = new HashSet<>();
     for (Element cell : cells) {
       String name = cell.attributeValue("name");
       String candidate = name;
@@ -160,14 +159,10 @@ public class XmlReader implements DataReader<XmlReadOptions> {
         if (!allowDuplicates) {
           throw invalidXml("Duplicate XML column name: " + name);
         }
-        int suffix = 2;
-        do {
-          candidate = name + "-" + suffix++;
-          normalizedName = candidate.toLowerCase(Locale.ROOT);
-        } while (reservedNames.contains(normalizedName) || assignedNames.contains(normalizedName));
+        candidate = ColumnNames.unique(name, reservedNames);
+        normalizedName = candidate.toLowerCase(Locale.ROOT);
       }
       originalNamesSeen.add(name.toLowerCase(Locale.ROOT));
-      assignedNames.add(normalizedName);
       names.add(candidate);
     }
     return names;

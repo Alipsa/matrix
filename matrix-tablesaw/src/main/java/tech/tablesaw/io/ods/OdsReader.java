@@ -10,7 +10,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Reader for ODS (OpenDocument Spreadsheet) files, which are used by applications like LibreOffice Calc and Apache OpenOffice Calc.
@@ -73,8 +76,9 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * interior all-missing rows are preserved so missing data keeps its position; disable the trim
    * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
    * row, for example when round-tripping a file written by {@link OdsWriter}.
-   * All cell values are read as strings and then converted to appropriate types based on
-   * the read options.
+   * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
+   * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. All cell
+   * values are read as strings and then converted to appropriate types based on the read options.
    *
    * @param options the read options specifying the source, sheet index, and parsing configuration
    * @return the table read from the ODS file
@@ -94,9 +98,22 @@ public class OdsReader implements DataReader<OdsReadOptions> {
 
       List<String> columnNames = new ArrayList<>(lastColumn);
 
+      List<String> rawHeaders = new ArrayList<>();
       for (int colNum = 0; colNum < lastColumn; colNum++) {
         Object val = sheet.getRange(0, colNum).getValue();
-        columnNames.add(String.valueOf(val));
+        rawHeaders.add(val == null ? null : String.valueOf(val));
+      }
+      Set<String> taken = new HashSet<>();
+      for (String header : rawHeaders) {
+        if (header != null && !header.isBlank()) {
+          taken.add(header.toLowerCase(Locale.ROOT));
+        }
+      }
+      for (int colNum = 0; colNum < lastColumn; colNum++) {
+        String header = rawHeaders.get(colNum);
+        columnNames.add(header == null || header.isBlank()
+            ? ColumnNames.unique("C" + colNum, taken)
+            : header);
       }
 
       List<String[]> dataRows = new ArrayList<>();
