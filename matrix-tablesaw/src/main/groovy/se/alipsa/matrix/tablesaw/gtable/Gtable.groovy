@@ -1,7 +1,6 @@
 package se.alipsa.matrix.tablesaw.gtable
 
 import tech.tablesaw.api.*
-import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
 import tech.tablesaw.table.Relation
 
@@ -11,10 +10,6 @@ import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
@@ -379,9 +374,31 @@ class Gtable extends Table {
 
   /**
    * Sets the value at the specified row and column.
+   *
+   * <p>{@code null} marks the cell as missing. Any other value is converted to the column's Java type
+   * with {@link ValueConverter#convert(Object, Class)}, so the same coercion rules apply as elsewhere
+   * in matrix: for example {@code 'false'}, {@code 'no'} and {@code '0'} store {@code false} in a
+   * BOOLEAN column (any other non-truthy string also stores {@code false}), {@code '7'} stores
+   * {@code 7} in an INTEGER column and {@code '2024-01-05'} stores a {@link java.time.LocalDate} in a
+   * LOCAL_DATE column. Strings put into a numeric column must be plain numbers: {@code 'abc'},
+   * {@code '12abc'}, {@code '1,234'}, {@code 'NaN'} and {@code 'Infinity'} throw
+   * {@code NumberFormatException} rather than being partially parsed ({@code 'NaN'}/
+   * {@code 'Infinity'} previously stored NaN, i.e. missing). Numeric strings then narrow exactly
+   * like numbers do: a fraction is truncated
+   * toward zero ({@code '5.7'} and {@code 5.7} both store {@code 5} in an INTEGER column) and a value
+   * outside the column type's range throws {@code IllegalArgumentException} (requires matrix-core
+   * 3.9.0 or later at runtime). An empty string ({@code ''}) into a numeric, Boolean, {@code java.time}
+   * or custom-typed column marks the cell as missing. Strings into an INSTANT column are not parsed
+   * and throw {@code GroovyCastException}.
+   *
+   * <p>Marking a cell missing in a {@link StringColumn} replaces that column with a copy (Tablesaw
+   * cannot register the missing marker in place), so if this Gtable was created with
+   * {@link #create(Table)} that one column is no longer shared with the source table afterwards;
+   * all other columns keep writing through.
+   *
    * @param rowIndex the rowIndex
    * @param columnIndex the columnIndex
-   * @param value the value
+   * @param value the value, or {@code null} for missing
    */
   @SuppressWarnings('unchecked')
   void putAt(int rowIndex, int columnIndex, Object value) {
@@ -403,7 +420,15 @@ class Gtable extends Table {
         col.setMissing(rowIndex)
       }
     } else {
-      def v = value.asType(asJavaClass(columnIndex))
+      Class targetType = asJavaClass(columnIndex)
+      Object v = coerce(value, targetType)
+      if (v == null) {
+        // coerce mapped the input to "no value" (null or the empty string, or a NaN/infinity that
+        // ValueConverter maps to no-value): treat exactly like putAt(null) so the StringColumn
+        // dictionary work-around above applies
+        putAt(rowIndex, columnIndex, null)
+        return
+      }
       col.set(rowIndex, v)
     }
   }
@@ -850,49 +875,14 @@ class Gtable extends Table {
   }
 
   /**
-   * Returns the Java class for the column at the specified index.
-   * @param columnIndex the columnIndex
-   * @return the Java class
+   * Returns the Java class used to store values in the column at the given index.
+   * Delegates to {@link TableUtil#classForColumnType(ColumnType)}.
+   *
+   * @param columnIndex the column index
+   * @return the Java class for the column type, or {@code Object} for custom column types
    */
   Class asJavaClass(int columnIndex) {
-    def columnType = column(columnIndex).type()
-    if (columnType == ColumnType.BOOLEAN) {
-      return Boolean
-    }
-    if (columnType == ColumnType.DOUBLE) {
-      return Double
-    }
-    if (columnType == ColumnType.FLOAT) {
-      return Float
-    }
-    if (columnType == ColumnType.INSTANT) {
-      return Instant
-    }
-    if (columnType == ColumnType.INTEGER) {
-      return Integer
-    }
-    if (columnType == ColumnType.LOCAL_DATE) {
-      return LocalDate
-    }
-    if (columnType == ColumnType.LOCAL_DATE_TIME) {
-      return LocalDateTime
-    }
-    if (columnType == ColumnType.LOCAL_TIME) {
-      return LocalTime
-    }
-    if (columnType == ColumnType.LONG) {
-      return Long
-    }
-    if (columnType == ColumnType.SHORT) {
-      return Short
-    }
-    if (columnType == ColumnType.STRING) {
-      return String
-    }
-    if (columnType == BigDecimalColumnType.instance()) {
-      return BigDecimal
-    }
-    Object
+    TableUtil.classForColumnType(column(columnIndex).type())
   }
 
 }
