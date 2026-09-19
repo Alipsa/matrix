@@ -520,6 +520,39 @@ public class BigDecimalColumnTest {
   }
 
   @Test
+  public void testFillWithNaNProducesMissing() {
+    BigDecimalColumn col = BigDecimalColumn.create("f", 3);
+    col.fillWith(Double.NaN);
+    assertEquals(3, col.countMissing());
+
+    col.fillWith(new DoubleArrayList(new double[] {1.5, Double.NaN, 2.5}).iterator());
+    assertEquals(0, new BigDecimal("1.5").compareTo(col.get(0)));
+    assertTrue(col.isMissing(1));
+    assertEquals(0, new BigDecimal("2.5").compareTo(col.get(2)));
+
+    double[] supplied = {Double.NaN, 4.0, Double.NaN};
+    int[] idx = {0};
+    col.fillWith(() -> supplied[idx[0]++]);
+    assertTrue(col.isMissing(0));
+    assertEquals(0, new BigDecimal("4.0").compareTo(col.get(1)));
+    assertTrue(col.isMissing(2));
+
+    assertThrows(IllegalArgumentException.class, () -> col.fillWith(Double.POSITIVE_INFINITY));
+    assertThrows(IllegalArgumentException.class,
+        () -> col.fillWith(new DoubleArrayList(new double[] {Double.NEGATIVE_INFINITY}).iterator()));
+    assertThrows(IllegalArgumentException.class, () -> col.fillWith(() -> Double.POSITIVE_INFINITY));
+
+    BigDecimalColumn partial = BigDecimalColumn.create("p", 2);
+    int[] calls = {0};
+    partial.fillWith(() -> {
+      if (calls[0]++ == 0) return 1.0;
+      throw new NoSuchElementException("exhausted");
+    });
+    assertEquals(0, new BigDecimal("1.0").compareTo(partial.get(0)));
+    assertTrue(partial.isMissing(1));
+  }
+
+  @Test
   public void testAsLongColumn() {
     assertArrayEquals(
         new Long[]{1200L, null, 3456L, 12L, 3456L, 985L, 1211L, null, 12L},
@@ -847,6 +880,19 @@ public class BigDecimalColumnTest {
     var col = BigDecimalColumn.create("zero",
         new BigDecimal[]{new BigDecimal("-1"), new BigDecimal("1")});
     assertThrows(IllegalArgumentException.class, () -> BigDecimalAggregateFunctions.cv.summarize(col));
+  }
+
+  @Test
+  public void testStdDevAggregate() {
+    BigDecimalColumn col = BigDecimalColumn.create("v",
+        new BigDecimal("2"), null, new BigDecimal("4"), new BigDecimal("4"),
+        new BigDecimal("4"), new BigDecimal("5"), new BigDecimal("5"), new BigDecimal("7"),
+        new BigDecimal("9"));
+    // sample standard deviation of 2,4,4,4,5,5,7,9 is sqrt(32/7) = 2.138089935...
+    BigDecimal sd = BigDecimalAggregateFunctions.stdDev.summarize(col);
+    assertEquals(0, new BigDecimal("2.138089935").compareTo(sd.setScale(9, RoundingMode.HALF_EVEN)));
+    assertNull(BigDecimalAggregateFunctions.stdDev.summarize(BigDecimalColumn.create("empty")));
+    assertNull(BigDecimalAggregateFunctions.stdDev.summarize(BigDecimalColumn.create("one", new BigDecimal("1"))));
   }
 
   private BigDecimal[] bdArr(int numDecimals, String... numbers) {

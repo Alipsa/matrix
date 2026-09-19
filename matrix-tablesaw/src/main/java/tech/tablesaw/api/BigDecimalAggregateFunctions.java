@@ -52,6 +52,19 @@ public class BigDecimalAggregateFunctions {
       };
 
   /**
+   * Sample standard deviation (n-1 denominator) of the non-missing values: the square root, in
+   * {@link MathContext#DECIMAL64}, of {@code Stat.variance} (which uses a mean rounded to 16 places
+   * and Groovy's default BigDecimal division); {@code null} when fewer than two non-missing values remain.
+   */
+  public static final NumberAggregateFunction stdDev =
+      new NumberAggregateFunction("Std. Deviation") {
+        @Override
+        public BigDecimal summarize(BigDecimalColumn column) {
+          return sampleStdDev(nonMissingValues(column));
+        }
+      };
+
+  /**
    * A function that takes a {@link NumericColumn} argument and returns the coefficient of variation
    * (normalized root-mean-square deviation) of the values in the column
    */
@@ -66,7 +79,7 @@ public class BigDecimalAggregateFunctions {
           if (mean.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("Cannot compute CV: mean is zero");
           }
-          return Stat.variance(nums).sqrt(MathContext.DECIMAL64).divide(mean, MathContext.DECIMAL64);
+          return sampleStdDev(nums).divide(mean, MathContext.DECIMAL64);
         }
       };
 
@@ -141,5 +154,10 @@ public class BigDecimalAggregateFunctions {
       }
     }
     return list;
+  }
+
+  private static BigDecimal sampleStdDev(List<BigDecimal> nums) {
+    if (nums.size() < 2) return null;
+    return Stat.variance(nums).sqrt(MathContext.DECIMAL64);
   }
 }

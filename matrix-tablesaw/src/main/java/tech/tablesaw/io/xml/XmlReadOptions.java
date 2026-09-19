@@ -70,13 +70,13 @@ public class XmlReadOptions extends ReadOptions {
   }
 
   /**
-   * Creates a builder with a file name source.
+   * Creates a builder with a file name source. The table name defaults to the file name.
    *
    * @param fileName the name of the file to read from
    * @return a new builder
    */
   public static Builder	builder(String fileName) {
-    return new Builder(new File(fileName));
+    return builder(new File(fileName));
   }
 
   /**

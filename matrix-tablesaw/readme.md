@@ -14,7 +14,7 @@ bring those in explicitly. The easiest way to get aligned versions is via the
 Matrix BOM:
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.5.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.6.0') // matrix-tablesaw 0.4.0 needs matrix-core 3.9.0+
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
@@ -23,7 +23,7 @@ implementation 'se.alipsa.matrix:matrix-tablesaw'
 Or use `matrix-all` if you want every Matrix module:
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-all:2.5.1'
+implementation 'se.alipsa.matrix:matrix-all:2.6.0' // matrix-tablesaw 0.4.0 needs matrix-core 3.9.0+
 ```
 
 ## Quick examples
@@ -190,6 +190,38 @@ table.write().usingOptions(XlsxWriteOptions.builder('report.xlsx').build())
 
 `XlsxWriteOptions.builder(Writer)` still compiles but is deprecated: `build()` succeeds and
 `XlsxWriter.write` rejects the destination.
+
+### ODS is binary-only
+
+ODS is a ZIP container, so character streams would corrupt it. `OdsWriter` rejects a `Writer`
+destination with `IllegalArgumentException("ODS requires a binary OutputStream destination")`, and
+`OdsReader` rejects a `Reader` source with
+`IllegalArgumentException("ODS requires a binary InputStream or File source")`.
+`OdsReadOptions.builder(URL)` and `builderFromUrl(String)` open their source as a binary stream.
+
+### Gtable put coercion
+
+`Gtable.putAt` uses `ValueConverter.convert`; strings in numeric columns must be plain numbers,
+out-of-range values throw `IllegalArgumentException`, INSTANT columns do not parse strings, and a
+null put on a `StringColumn` replaces it so it is no longer shared with the `Table` used by
+`Gtable.create(Table)`:
+
+```groovy
+def table = Gtable.create(
+    [flag: [true, false], count: [1, 2], day: [LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)]],
+    [BOOLEAN, INTEGER, LOCAL_DATE])
+table[0, 'flag'] = false         // stores false
+table[0, 'flag'] = 'false'       // stores false (Groovy truth previously stored true)
+table[0, 'flag'] = 'yes'         // stores true
+table[0, 'flag'] = 'maybe'       // stores false (Groovy truth previously stored true)
+table[0, 'count'] = '7'          // stores 7
+table[0, 'count'] = 5.0          // stores 5
+table[0, 'count'] = '5.7'        // stores 5
+table[0, 'day'] = '2024-01-05'   // stores LocalDate 2024-01-05
+table[0, 'count'] = ''           // marks the cell missing in any column type, including STRING
+// table[0, 'count'] = '12abc'      // NumberFormatException
+// table[0, 'count'] = '3000000000' // IllegalArgumentException
+```
 
 ### File destinations open lazily
 

@@ -112,7 +112,10 @@ class TableUtil {
   /**
    * Round a float value to the specified number of decimal places.
    *
-   * <p>Uses {@link RoundingMode#HALF_EVEN} for rounding.
+   * <p>The float is converted through {@code Float.toString(value)} so the decimal form the
+   * float represents is rounded (matching {@link BigDecimalColumn#toBigDecimal(Number)}), rather
+   * than the binary expansion exposed by widening to {@code double}. Uses
+   * {@link RoundingMode#HALF_EVEN}.
    *
    * @param value the value to round
    * @param numDecimals the number of decimal places (must be non-negative)
@@ -124,7 +127,7 @@ class TableUtil {
       throw new IllegalArgumentException(NUM_DECIMALS_ERROR + numDecimals)
     }
 
-    BigDecimal bd = BigDecimal.valueOf(value)
+    BigDecimal bd = new BigDecimal(Float.toString(value))
     bd = bd.setScale(numDecimals, RoundingMode.HALF_EVEN)
     bd.floatValue()
   }

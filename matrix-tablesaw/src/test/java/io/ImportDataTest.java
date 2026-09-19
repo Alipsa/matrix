@@ -2,6 +2,7 @@ package io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.tablesaw.api.ColumnType.*;
 
@@ -10,13 +11,27 @@ import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.json.JsonReadOptions;
 import tech.tablesaw.io.ods.OdsReadOptions;
+import tech.tablesaw.io.Source;
 import tech.tablesaw.io.xml.XmlReadOptions;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
+import java.net.URISyntaxException;
 
 public class ImportDataTest {
+
+  @Test
+  public void testOdsRejectsReaderSource() {
+    Source source = new Source(new StringReader("not a zip"));
+    assertEquals(
+        "ODS requires a binary InputStream or File source",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Table.read().usingOptions(OdsReadOptions.builder(source).build()))
+            .getMessage());
+  }
 
   @Test
   public void testJsonImport() throws IOException {
@@ -72,6 +87,82 @@ public class ImportDataTest {
     assertEquals(ColumnType.INTEGER, glaciers.column("Year").type(), "Year column type");
     assertEquals(ColumnType.DOUBLE, glaciers.column("Mean cumulative mass balance").type(), "Mean cumulative mass balance column type");
     assertEquals(ColumnType.INTEGER, glaciers.column("Number of observations").type(), "Number of observations column type");
+  }
+
+  @Test
+  public void testOdsImportFromUrlString() throws IOException, URISyntaxException {
+    var url = getClass().getResource("/glaciers.ods");
+    Table glaciers = Table.read().usingOptions(OdsReadOptions.builderFromUrl(url.toString()).build());
+    assertEquals(70, glaciers.rowCount());
+    assertEquals(url.toString(), glaciers.name());
+  }
+
+  @Test
+  public void testOdsFileNameBuilderSetsTableName() throws IOException {
+    File odsFile = new File(getClass().getResource("/glaciers.ods").getFile());
+    Table byString = Table.read().usingOptions(OdsReadOptions.builder(odsFile.getPath()).build());
+    Table byFile = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(byFile.name(), byString.name());
+    assertEquals("glaciers.ods", byString.name());
+  }
+
+  @Test
+  public void testOdsBlankHeaderCellsGetPlaceholderNames() throws Exception {
+    File odsFile = File.createTempFile("blankheader", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "C1", "C2"), table.columnNames());
+    assertEquals(1, table.rowCount());
+  }
+
+  @Test
+  public void testOdsPlaceholderHeaderDoesNotCollideWithRealHeader() throws Exception {
+    File odsFile = File.createTempFile("collidingheader", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(0, 2).setValue("C1");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "C1-2", "C1"), table.columnNames());
+    assertEquals(1, table.rowCount());
+  }
+
+  @Test
+  public void testOdsDuplicateHeadersGetUniqueNames() throws Exception {
+    File odsFile = File.createTempFile("duplicateheaders", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(0, 1).setValue("A");
+      sheet.getRange(0, 2).setValue("a-2");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "A-3", "a-2"), table.columnNames());
   }
 
   @Test

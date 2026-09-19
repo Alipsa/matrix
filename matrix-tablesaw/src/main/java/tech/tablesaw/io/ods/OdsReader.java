@@ -2,7 +2,6 @@ package tech.tablesaw.io.ods;
 
 import com.github.miachm.sods.Sheet;
 import com.github.miachm.sods.SpreadSheet;
-import org.apache.commons.io.input.ReaderInputStream;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.*;
 
@@ -10,14 +9,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Reader for ODS (OpenDocument Spreadsheet) files, which are used by applications like LibreOffice Calc and Apache OpenOffice Calc.
  * <p>
  * This reader utilizes the 'sods' library to parse ODS files and convert them into a Tablesaw Table.
+ * ODS is a binary (ZIP) format, so Reader-backed sources are rejected with
+ * {@link IllegalArgumentException}.
  * <p>
  * Supported options include:
  * <ul>
@@ -73,8 +76,10 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * interior all-missing rows are preserved so missing data keeps its position; disable the trim
    * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
    * row, for example when round-tripping a file written by {@link OdsWriter}.
-   * All cell values are read as strings and then converted to appropriate types based on
-   * the read options.
+   * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
+   * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. Duplicate
+   * non-blank headers are handled the same way, case-insensitively. All cell values are read as
+   * strings and then converted to appropriate types based on the read options.
    *
    * @param options the read options specifying the source, sheet index, and parsing configuration
    * @return the table read from the ODS file
@@ -94,9 +99,27 @@ public class OdsReader implements DataReader<OdsReadOptions> {
 
       List<String> columnNames = new ArrayList<>(lastColumn);
 
+      List<String> rawHeaders = new ArrayList<>();
       for (int colNum = 0; colNum < lastColumn; colNum++) {
         Object val = sheet.getRange(0, colNum).getValue();
-        columnNames.add(String.valueOf(val));
+        rawHeaders.add(val == null ? null : String.valueOf(val));
+      }
+      Set<String> taken = new HashSet<>();
+      for (String header : rawHeaders) {
+        if (header != null && !header.isBlank()) {
+          taken.add(header.toLowerCase(Locale.ROOT));
+        }
+      }
+      Set<String> originalHeadersSeen = new HashSet<>();
+      for (int colNum = 0; colNum < lastColumn; colNum++) {
+        String header = rawHeaders.get(colNum);
+        if (header == null || header.isBlank()) {
+          columnNames.add(ColumnNames.unique("C" + colNum, taken));
+        } else if (originalHeadersSeen.add(header.toLowerCase(Locale.ROOT))) {
+          columnNames.add(header);
+        } else {
+          columnNames.add(ColumnNames.unique(header, taken));
+        }
       }
 
       List<String[]> dataRows = new ArrayList<>();
@@ -138,7 +161,7 @@ public class OdsReader implements DataReader<OdsReadOptions> {
 
   /**
    * Get an InputStream from the source specified in the read options.
-   * Handles different source types: file, reader, or input stream.
+   * Handles binary file and input-stream source types.
    *
    * @param options the read options containing the source
    * @return an InputStream for reading the ODS data
@@ -150,11 +173,7 @@ public class OdsReader implements DataReader<OdsReadOptions> {
       return new FileInputStream(options.source().file());
     }
     if (options.source().reader() != null) {
-      return ReaderInputStream.builder()
-          .setReader(options.source().reader())
-          .setCharset(StandardCharsets.UTF_8)
-          .get();
-      //return new ReaderInputStream(options.source().reader(), StandardCharsets.UTF_8);
+      throw new IllegalArgumentException("ODS requires a binary InputStream or File source");
     }
     return options.source().inputStream();
   }

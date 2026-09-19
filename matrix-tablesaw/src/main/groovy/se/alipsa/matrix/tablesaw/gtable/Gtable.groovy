@@ -1,19 +1,15 @@
 package se.alipsa.matrix.tablesaw.gtable
 
 import tech.tablesaw.api.*
-import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
 import tech.tablesaw.table.Relation
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
@@ -253,33 +249,42 @@ class Gtable extends Table {
   }
 
   /**
-   * Adds a new {@link IntColumn} with the given name and data.
+   * Adds a new {@link IntColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addIntColumn(String name, List data) {
-    addColumns(IntColumn.create(name, data as int[])) as Gtable
+    IntColumn column = IntColumn.create(name)
+    data.each { Object value -> column.append((Integer) coerce(value, Integer)) }
+    addColumns(column) as Gtable
   }
 
   /**
-   * Adds a new {@link LongColumn} with the given name and data.
+   * Adds a new {@link LongColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addLongColumn(String name, List data) {
-    addColumns(LongColumn.create(name, data as long[])) as Gtable
+    LongColumn column = LongColumn.create(name)
+    data.each { Object value -> column.append((Long) coerce(value, Long)) }
+    addColumns(column) as Gtable
   }
 
   /**
-   * Adds a new {@link ShortColumn} with the given name and data.
+   * Adds a new {@link ShortColumn} with the given name and data. {@code null} and empty-string entries
+   * become missing values; other entries are coerced with {@code coerce(Object, Class)}.
    * @param name the name
    * @param data the data
-   * @return a new Gtable
+   * @return this Gtable
    */
   Gtable addShortColumn(String name, List data) {
-    addColumns(ShortColumn.create(name, data as short[])) as Gtable
+    ShortColumn column = ShortColumn.create(name)
+    data.each { Object value -> column.append((Short) coerce(value, Short)) }
+    addColumns(column) as Gtable
   }
 
   /**
@@ -369,9 +374,32 @@ class Gtable extends Table {
 
   /**
    * Sets the value at the specified row and column.
+   *
+   * <p>{@code null} marks the cell as missing. Any other value is converted to the column's Java type
+   * with {@link ValueConverter#convert(Object, Class)}, so the same coercion rules apply as elsewhere
+   * in matrix: for example {@code 'false'}, {@code 'no'} and {@code '0'} store {@code false} in a
+   * BOOLEAN column (any other non-truthy string also stores {@code false}), {@code '7'} stores
+   * {@code 7} in an INTEGER column and {@code '2024-01-05'} stores a {@link java.time.LocalDate} in a
+   * LOCAL_DATE column. Strings put into a numeric column must be plain numbers: {@code 'abc'},
+   * {@code '12abc'}, {@code '1,234'}, {@code 'NaN'} and {@code 'Infinity'} throw
+   * {@code NumberFormatException} rather than being partially parsed ({@code 'NaN'}/
+   * {@code 'Infinity'} previously stored NaN, i.e. missing). Numeric strings then narrow exactly
+   * like numbers do: a fraction is truncated
+   * toward zero ({@code '5.7'} and {@code 5.7} both store {@code 5} in an INTEGER column) and a value
+   * outside the column type's range throws {@code IllegalArgumentException} (requires matrix-core
+   * 3.9.0 or later at runtime). An empty string ({@code ''}) into any column marks the cell as
+   * missing. Strings into an INSTANT column are not parsed and throw {@code GroovyCastException}.
+   *
+   * <p>Marking a cell missing in a {@link StringColumn} replaces that column with a copy (Tablesaw
+   * cannot register the missing marker in place), so if this Gtable was created with
+   * {@link #create(Table)} that one column is no longer shared with the source table afterwards;
+   * all other columns keep writing through.
+   * Each missing-value update to a StringColumn makes a replacement-column copy; callers updating
+   * many StringColumn cells should construct and replace the column once instead.
+   *
    * @param rowIndex the rowIndex
    * @param columnIndex the columnIndex
-   * @param value the value
+   * @param value the value, or {@code null} for missing
    */
   @SuppressWarnings('unchecked')
   void putAt(int rowIndex, int columnIndex, Object value) {
@@ -380,19 +408,57 @@ class Gtable extends Table {
       if (col instanceof StringColumn) {
         // ByteDictionaryMap.set("") does not route through MISSING_VALUE unless that key is
         // already registered in the dictionary (which append does, but set does not).
-        // Calling appendMissing() primes the dictionary so the subsequent setMissing() call
-        // stores the correct MISSING_VALUE key. We then drop the spurious appended row.
+        // Calling appendMissing() on a copy primes the dictionary so the subsequent setMissing()
+        // stores the correct MISSING_VALUE key; the copy keeps the live column (which may be
+        // shared with the Table this Gtable was created from) untouched. We then drop the
+        // spurious appended row.
         int origSize = col.size()
-        col.appendMissing()
-        col.setMissing(rowIndex)
-        replaceColumn(columnIndex, col.inRange(0, origSize))
+        StringColumn fixed = (col as StringColumn).copy()
+        fixed.appendMissing()
+        fixed.setMissing(rowIndex)
+        replaceColumn(columnIndex, fixed.inRange(0, origSize))
       } else {
         col.setMissing(rowIndex)
       }
     } else {
-      def v = value.asType(asJavaClass(columnIndex))
+      Class targetType = asJavaClass(columnIndex)
+      Object v = coerce(value, targetType)
+      if (v == null) {
+        // coerce mapped the input to "no value" (null or the empty string, or a NaN/infinity that
+        // ValueConverter maps to no-value): treat exactly like putAt(null) so the StringColumn
+        // dictionary work-around above applies
+        putAt(rowIndex, columnIndex, null)
+        return
+      }
       col.set(rowIndex, v)
     }
+  }
+
+  /**
+   * Coerces {@code value} to {@code targetType} with {@link ValueConverter#convert(Object, Class)},
+   * applying the module's uniform input rules first: {@code null} and the empty string map to
+   * {@code null} (missing), and a {@code CharSequence} targeting a {@code Number} type is strictly
+   * pre-parsed with {@code new BigDecimal(text.trim())} so garbage such as {@code 'abc'},
+   * {@code '12abc'} or {@code '1,234'} throws {@code NumberFormatException} instead of being
+   * partially parsed by {@code ValueConverter}'s lenient scrapers. Used by {@code putAt} and the
+   * {@code addXColumn} methods so every value-entry path shares one coercion policy.
+   */
+  private static Object coerce(Object value, Class targetType) {
+    if (value == null) {
+      return null
+    }
+    if (value instanceof CharSequence && value.toString().isEmpty()) {
+      return null
+    }
+    if (value instanceof CharSequence && Number.isAssignableFrom(targetType)) {
+      // strictness guard: ValueConverter.asInteger/asShort/asBigDecimal scrape digits out of garbage
+      // ('12abc' -> 12) while asLong/asFloat/asDouble parse strictly; pre-parsing with BigDecimal
+      // restores the fail-fast behavior Groovy's asType had in 0.3.x, uniform across numeric types.
+      // Narrowing (truncation of fractions, IllegalArgumentException when out of range) is then
+      // ValueConverter's, so strings and numbers behave identically (needs matrix-core >= 3.9.0).
+      return ValueConverter.convert(new BigDecimal(value.toString().trim()), targetType)
+    }
+    ValueConverter.convert(value, targetType)
   }
 
   /**
@@ -809,49 +875,14 @@ class Gtable extends Table {
   }
 
   /**
-   * Returns the Java class for the column at the specified index.
-   * @param columnIndex the columnIndex
-   * @return the Java class
+   * Returns the Java class used to store values in the column at the given index.
+   * Delegates to {@link TableUtil#classForColumnType(ColumnType)}.
+   *
+   * @param columnIndex the column index
+   * @return the Java class for the column type, or {@code Object} for custom column types
    */
   Class asJavaClass(int columnIndex) {
-    def columnType = column(columnIndex).type()
-    if (columnType == ColumnType.BOOLEAN) {
-      return Boolean
-    }
-    if (columnType == ColumnType.DOUBLE) {
-      return Double
-    }
-    if (columnType == ColumnType.FLOAT) {
-      return Float
-    }
-    if (columnType == ColumnType.INSTANT) {
-      return Instant
-    }
-    if (columnType == ColumnType.INTEGER) {
-      return Integer
-    }
-    if (columnType == ColumnType.LOCAL_DATE) {
-      return LocalDate
-    }
-    if (columnType == ColumnType.LOCAL_DATE_TIME) {
-      return LocalDateTime
-    }
-    if (columnType == ColumnType.LOCAL_TIME) {
-      return LocalTime
-    }
-    if (columnType == ColumnType.LONG) {
-      return Long
-    }
-    if (columnType == ColumnType.SHORT) {
-      return Short
-    }
-    if (columnType == ColumnType.STRING) {
-      return String
-    }
-    if (columnType == BigDecimalColumnType.instance()) {
-      return BigDecimal
-    }
-    Object
+    TableUtil.classForColumnType(column(columnIndex).type())
   }
 
 }

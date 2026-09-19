@@ -1,7 +1,9 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static tech.tablesaw.api.ColumnType.*
@@ -9,7 +11,14 @@ import static tech.tablesaw.api.ColumnType.*
 import org.junit.jupiter.api.Test
 import tech.tablesaw.api.BigDecimalAggregateFunctions
 import tech.tablesaw.api.BigDecimalColumn
+import tech.tablesaw.api.BooleanColumn
 import tech.tablesaw.api.ColumnType
+import tech.tablesaw.api.DateColumn
+import tech.tablesaw.api.DoubleColumn
+import tech.tablesaw.api.IntColumn
+import tech.tablesaw.api.ShortColumn
+import tech.tablesaw.api.StringColumn
+import tech.tablesaw.api.Table
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
 import tech.tablesaw.joining.JoinType
@@ -19,6 +28,8 @@ import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.TableUtil
 import se.alipsa.matrix.tablesaw.gtable.GdataFrameJoiner
 import se.alipsa.matrix.tablesaw.gtable.Gtable
+
+import java.time.LocalDate
 
 class GtableTest {
 
@@ -380,6 +391,173 @@ class GtableTest {
         .addDoubleColumn('d', [1.1, 2.2])
     assertEquals(2, table.rowCount())
     assertEquals(['s', 'i', 'd'], table.columnNames())
+  }
+
+  @Test
+  void testPutAtNullOnSharedStringColumnDoesNotResizeSource() {
+    def source = Table.create('src',
+        StringColumn.create('name', ['Alice', 'Bob']),
+        IntColumn.create('age', [25, 30] as int[]))
+    Gtable table = Gtable.create(source)
+
+    table[0, 'name'] = null
+
+    assertTrue(table.column('name').isMissing(0), 'gtable name should be missing at row 0')
+    assertEquals(2, table.rowCount(), 'gtable row count')
+    assertEquals(2, source.column('name').size(), 'source name column must keep its size')
+    assertEquals(2, source.rowCount(), 'source row count must be unchanged')
+    assertEquals('Alice', source.column('name').get(0), 'source value must be untouched')
+    // the null put detached the name column from the source; later puts on it are local to the Gtable
+    table[1, 'name'] = 'Bobby'
+    assertEquals('Bobby', table[1, 'name'])
+    assertEquals('Bob', source.column('name').get(1), 'detached column must not write through')
+    // other columns are still shared with the source
+    table[1, 'age'] = 31
+    assertEquals(31, source.column('age').get(1), 'shared column still writes through')
+  }
+
+  @Test
+  void testAddIntegerColumnsTreatNullAsMissing() {
+    Gtable table = Gtable.create('nulls')
+    table.addIntColumn('i', [1, null, '3'])
+    table.addLongColumn('l', [10L, null, '30'])
+    table.addShortColumn('s', [1 as short, null, '3'])
+
+    ['i', 'l', 's'].each { String name ->
+      assertEquals(3, table.column(name).size(), "$name size")
+      assertTrue(table.column(name).isMissing(1), "$name row 1 should be missing")
+      assertFalse(table.column(name).isMissing(0), "$name row 0 should be present")
+    }
+    // numeric strings keep working, as they did with the old primitive-array coercion
+    assertEquals(3, table.column('i').get(2))
+    assertEquals(30L, table.column('l').get(2))
+    assertEquals(3 as short, table.column('s').get(2))
+    // overflow is rejected through ValueConverter's exact narrowing (matrix-core 3.9.0), never wrapped
+    assertThrows(IllegalArgumentException) { Gtable.create('o').addShortColumn('s', [70000]) }
+    assertThrows(IllegalArgumentException) { Gtable.create('o').addIntColumn('i', [3_000_000_000L]) }
+    // garbage strings are rejected by the same strict pre-parse putAt uses (0.3.x also threw)
+    assertThrows(NumberFormatException) { Gtable.create('g').addIntColumn('i', ['12abc']) }
+    // an empty string element becomes missing, exactly like putAt('') (0.3.x threw NumberFormatException)
+    Gtable blanks = Gtable.create('e')
+    blanks.addIntColumn('i', [''])
+    assertTrue(blanks.column('i').isMissing(0))
+  }
+
+  @Test
+  void testPutAtBooleanStringsFollowValueConverter() {
+    Gtable table = Gtable.create('flags', BooleanColumn.create('flag', [true, true, true, true] as Boolean[]))
+    table[0, 'flag'] = 'false'
+    table[1, 'flag'] = 'no'
+    table[2, 'flag'] = 'yes'
+    table[3, 'flag'] = false
+    assertFalse(table[0, 'flag'] as boolean, "'false' must store false")
+    assertFalse(table[1, 'flag'] as boolean, "'no' must store false")
+    assertTrue(table[2, 'flag'] as boolean, "'yes' must store true")
+    assertFalse(table[3, 'flag'] as boolean)
+  }
+
+  @Test
+  void testPutAtParsesStringsForTypedColumns() {
+    Gtable table = Gtable.create('typed',
+        IntColumn.create('i', [1, 2] as int[]),
+        DoubleColumn.create('d', [1.0d, 2.0d] as double[]),
+        DateColumn.create('date', [LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 2)] as LocalDate[]))
+    table[0, 'i'] = '7'
+    table[0, 'd'] = '2.5'
+    table[0, 'date'] = '2024-01-05'
+    assertEquals(7, table[0, 'i'])
+    assertEquals(2.5d, table[0, 'd'] as double, 1e-12)
+    assertEquals(LocalDate.of(2024, 1, 5), table[0, 'date'])
+  }
+
+  @Test
+  void testPutAtKeepsExistingNumericCoercions() {
+    Gtable table = Gtable.create('nums',
+        IntColumn.create('i', [1, 2] as int[]),
+        DoubleColumn.create('d', [1.0d, 2.0d] as double[]),
+        StringColumn.create('s', ['a', 'b']))
+    table[0, 'd'] = 123.10          // BigDecimal literal into DOUBLE
+    table[1, 'd'] = 5               // Integer into DOUBLE
+    table[0, 'i'] = 5.0             // integral BigDecimal into INTEGER
+    table[0, 's'] = 42              // Integer into STRING
+    assertEquals(123.1d, table[0, 'd'] as double, 1e-12)
+    assertEquals(5.0d, table[1, 'd'] as double, 1e-12)
+    assertEquals(5, table[0, 'i'])
+    assertEquals('42', table[0, 's'])
+  }
+
+  @Test
+  void testPutAtEmptyStringBecomesMissing() {
+    // Empty strings consistently mark cells missing, including StringColumn where set("") would
+    // otherwise bypass ByteDictionaryMap's missing marker.
+    Gtable table = Gtable.create('blanks',
+        IntColumn.create('i', [1, 2] as int[]),
+        BooleanColumn.create('flag', [true, true] as Boolean[]),
+        DateColumn.create('date', [LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 2)] as LocalDate[]),
+        StringColumn.create('string', ['present', 'also present']))
+    table[0, 'i'] = ''
+    table[0, 'flag'] = ''
+    table[0, 'date'] = ''
+    table[0, 'string'] = ''
+    assertTrue(table.column('i').isMissing(0), "'' into INTEGER is missing")
+    assertTrue(table.column('flag').isMissing(0), "'' into BOOLEAN is missing")
+    assertTrue(table.column('date').isMissing(0), "'' into LOCAL_DATE is missing")
+    assertTrue(table.column('string').isMissing(0), "'' into STRING is missing")
+  }
+
+  @Test
+  void testPutAtRejectsGarbageNumericStrings() {
+    // strictness guard: ValueConverter.asInteger/asShort/asBigDecimal scrape digits out of garbage
+    // ('12abc' -> 12), so putAt pre-parses CharSequence into Number columns strictly (as Groovy's
+    // asType did in 0.3.x) and uniform with asLong/asFloat/asDouble
+    Gtable table = Gtable.create('strict',
+        IntColumn.create('i', [1, 2] as int[]),
+        ShortColumn.create('s', [1 as short, 2 as short] as short[]))
+    assertThrows(NumberFormatException) { table[0, 'i'] = 'abc' }
+    assertThrows(NumberFormatException) { table[0, 'i'] = '12abc' }
+    assertThrows(NumberFormatException) { table[1, 'i'] = '1,234' }
+    // a fractional numeric string truncates like the equivalent number does (documented)
+    table[0, 'i'] = '5.7'
+    assertEquals(5, table[0, 'i'])
+    table[1, 'i'] = 5.7
+    assertEquals(5, table[1, 'i'])
+    // out-of-range values are rejected by matrix-core's exact narrowing (3.9.0), never wrapped;
+    // assertThrowsExactly is required (not assertThrows): NumberFormatException also extends
+    // IllegalArgumentException, so a garbage-parse failure would otherwise satisfy the assertion
+    assertThrowsExactly(IllegalArgumentException) { table[0, 'i'] = '3000000000' }
+    assertThrowsExactly(IllegalArgumentException) { table[0, 'i'] = 3_000_000_000L }
+    assertThrowsExactly(IllegalArgumentException) { table[0, 's'] = '70000' }
+    assertThrowsExactly(IllegalArgumentException) { table[0, 's'] = 70000 }
+    assertEquals(5, table[0, 'i'], 'a rejected put must leave the cell unchanged')
+  }
+
+  @Test
+  void testPutAtNanAndInfinitySemantics() {
+    // two deliberate 0.4.0 behaviour changes (documented breaking changes):
+    // - 'NaN'/'Infinity' into DOUBLE/FLOAT: 0.3.x parsed via Double.valueOf and stored NaN (= missing);
+    //   the strictness guard now rejects them with NumberFormatException from new BigDecimal(...)
+    // - NaN into an integral column: 0.3.x 'NaN' as Integer stored 0; matrix-core 3.9.0 maps NaN to
+    //   no-value, so the cell becomes missing
+    Gtable table = Gtable.create('nan',
+        DoubleColumn.create('d', [1.0d, 2.0d] as double[]),
+        IntColumn.create('i', [1, 2] as int[]))
+    assertThrows(NumberFormatException) { table[0, 'd'] = 'NaN' }
+    assertThrows(NumberFormatException) { table[0, 'd'] = 'Infinity' }
+    table[1, 'i'] = Double.NaN
+    assertTrue(table.column('i').isMissing(1), 'NaN into INTEGER must be missing (0.3.x stored 0)')
+    assertFalse(table.column('i').isMissing(0), 'other rows untouched')
+  }
+
+  @Test
+  void testAsJavaClassMatchesTableUtil() {
+    Gtable table = Gtable.create('types',
+        StringColumn.create('s', ['a']),
+        DoubleColumn.create('d', [1.0d] as double[]),
+        BigDecimalColumn.create('b', [1.0] as BigDecimal[]),
+        BooleanColumn.create('bool', [true] as Boolean[]))
+    (0..<table.columnCount()).each { int i ->
+      assertEquals(TableUtil.classForColumnType(table.column(i).type()), table.asJavaClass(i))
+    }
   }
 
 }

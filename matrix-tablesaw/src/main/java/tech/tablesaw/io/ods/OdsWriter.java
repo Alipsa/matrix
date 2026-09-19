@@ -2,7 +2,6 @@ package tech.tablesaw.io.ods;
 
 import com.github.miachm.sods.Sheet;
 import com.github.miachm.sods.SpreadSheet;
-import org.apache.commons.io.output.WriterOutputStream;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.DataWriter;
 import tech.tablesaw.io.Destination;
@@ -11,8 +10,6 @@ import tech.tablesaw.io.WriterRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -21,6 +18,8 @@ import java.util.List;
  * <p>This writer exports Tablesaw tables to ODS format files using the SODS library.
  * Each table is written as a single sheet in the ODS file, with column names as the first row
  * followed by the table data.
+ * ODS is a binary (ZIP) format; a Writer-backed destination is rejected with
+ * {@link IllegalArgumentException}.
  *
  * <p>The writer is automatically registered for the ".ods" extension in the default writer registry.
  *
@@ -74,6 +73,9 @@ public class OdsWriter implements DataWriter<OdsWriteOptions> {
    */
   @Override
   public void write(Table table, OdsWriteOptions options) {
+    if (options.destination().writer() != null) {
+      throw new IllegalArgumentException("ODS requires a binary OutputStream destination");
+    }
     try {
       SpreadSheet spreadSheet = new SpreadSheet();
       Sheet sheet = new Sheet(table.name(), table.rowCount() + 1, table.columnCount());
@@ -103,14 +105,7 @@ public class OdsWriter implements DataWriter<OdsWriteOptions> {
       }
 
       try (OutputStream os = options.destination().stream()) {
-        if (os != null) {
-          spreadSheet.save(os);
-        } else {
-          try(Writer writer = options.destination().writer();
-              OutputStream wos = WriterOutputStream.builder().setWriter(writer).setCharset(StandardCharsets.UTF_8).get()) {
-            spreadSheet.save(wos);
-          }
-        }
+        spreadSheet.save(os);
       }
 
     } catch (IOException e) {

@@ -14,10 +14,10 @@ public class BigDecimalColumnType extends AbstractColumnType {
   /** Logical byte size used by Tablesaw metadata for this type. */
   public static final int BYTE_SIZE = 8;
 
-  /** Default parser used for BigDecimal values. */
-  public static final BigDecimalParser DEFAULT_PARSER = new BigDecimalParser(BigDecimalColumnType.instance());
-
   private static final BigDecimalColumnType INSTANCE = new BigDecimalColumnType(BYTE_SIZE, "BIGDECIMAL", "BigDecimal");
+
+  /** Default parser used for BigDecimal values. Declared after {@link #INSTANCE} because it depends on it. */
+  public static final BigDecimalParser DEFAULT_PARSER = new BigDecimalParser(BigDecimalColumnType.instance());
 
   /**
    * Returns the singleton instance for this type.

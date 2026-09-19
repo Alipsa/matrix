@@ -1,7 +1,6 @@
 package tech.tablesaw.io.xlsx;
 
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -44,6 +43,9 @@ import java.util.List;
 public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
 
   private static final XlsxWriter INSTANCE = new XlsxWriter();
+
+  /** Nanoseconds in one day, as a double so a LocalTime maps to Excel's fraction-of-day. */
+  private static final double NANOS_PER_DAY = 86_400_000_000_000d;
 
   static {
     register(Table.defaultWriterRegistry);
@@ -142,14 +144,13 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
           } else if (ColumnType.LOCAL_DATE_TIME.equals(type)) {
             LocalDateTime ldt = row.getDateTime(colName);
             if (ldt != null) {
-              cell.setCellValue(GregorianCalendar.from(ldt.atZone(ZoneId.systemDefault())));
+              cell.setCellValue(ldt);
               cell.setCellStyle(localDateTimeStyle);
             }
           } else if (ColumnType.LOCAL_TIME.equals(type)) {
             LocalTime lt = row.getTime(colName);
             if (lt != null) {
-              double time = DateUtil.convertTime(lt.toString());
-              cell.setCellValue(time);
+              cell.setCellValue(lt.toNanoOfDay() / NANOS_PER_DAY);
               cell.setCellStyle(localTimeStyle);
             }
           } else if (ColumnType.INSTANT.equals(type)) {
