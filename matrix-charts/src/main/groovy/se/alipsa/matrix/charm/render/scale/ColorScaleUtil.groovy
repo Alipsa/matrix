@@ -9,6 +9,37 @@ package se.alipsa.matrix.charm.render.scale
 class ColorScaleUtil {
 
   /**
+   * The default discrete colours Charm assigns to scale levels when no palette is
+   * configured. Level {@code i} uses {@code DEFAULT_COLORS[i % size]}.
+   */
+  static final List<String> DEFAULT_COLORS = [
+      '#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd',
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+  ].asImmutable()
+
+  /**
+   * Returns Charm's default discrete palette for the requested number of levels.
+   *
+   * @param n number of levels; zero or less returns an empty list
+   * @return colours in level order, wrapping around the default palette
+   */
+  static List<String> defaultPalette(int n) {
+    n <= 0 ? [] : (0..<n).collect { int i -> DEFAULT_COLORS[i % DEFAULT_COLORS.size()] }
+  }
+
+  /**
+   * Returns black or white text that contrasts with a colour's perceived luminance.
+   *
+   * @param color background colour
+   * @return {@code #000000} for light backgrounds, otherwise {@code #ffffff}
+   */
+  static String contrastTextColor(String color) {
+    int[] rgb = parseColor(color)
+    int luminance = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114).intdiv(1000)
+    luminance >= 128 ? '#000000' : '#ffffff'
+  }
+
+  /**
    * Interpolate between two colors.
    *
    * @param color1 start color (hex string or named)

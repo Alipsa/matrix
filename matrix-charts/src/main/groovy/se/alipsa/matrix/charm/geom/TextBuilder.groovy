@@ -20,6 +20,19 @@ import se.alipsa.matrix.charm.CharmStatType
 class TextBuilder extends TextLayerBuilder<TextBuilder> {
 
   /**
+   * Uses black or white text according to the luminance of each datum's resolved fill colour.
+   *
+   * <p>The layer must map or set {@code fill}. This setting takes precedence over a text
+   * {@code color} parameter.</p>
+   *
+   * @return this builder
+   */
+  TextBuilder autoContrastFill() {
+    params['autoContrastFill'] = true
+    this
+  }
+
+  /**
    * Sets the label text content.
    *
    * @param value label text

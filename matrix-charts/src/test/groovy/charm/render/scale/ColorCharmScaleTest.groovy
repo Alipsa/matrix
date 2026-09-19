@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
+import se.alipsa.matrix.charm.render.scale.ColorScaleUtil
+import se.alipsa.matrix.charm.render.scale.ScaleEngine
+
+import java.time.LocalDate
 
 class ColorCharmScaleTest {
 
@@ -272,6 +276,51 @@ class ColorCharmScaleTest {
 
     assertEquals(2, scale.levels.size())
     assertEquals(['A', 'B'], scale.levels)
+  }
+
+  @Test
+  void gradientHonoursExplicitLimits() {
+    Scale spec = Scale.gradient('#000000', '#ffffff')
+    spec.params['limits'] = [0, 100]
+    ColorCharmScale scale = ScaleEngine.trainColorScale([25, 75], spec)
+    assertEquals(0, scale.domainMin)
+    assertEquals(100, scale.domainMax)
+    assertEquals('#000000', scale.colorFor(0).toLowerCase())
+    assertEquals('#ffffff', scale.colorFor(100).toLowerCase())
+  }
+
+  @Test
+  void reversedAndPartialLimitsAreNormalised() {
+    Scale reversed = Scale.gradient('#000000', '#ffffff')
+    reversed.params['limits'] = [100, 0]
+    ColorCharmScale ordered = ScaleEngine.trainColorScale([25, 75], reversed)
+    assertEquals(0, ordered.domainMin)
+    assertEquals(100, ordered.domainMax)
+
+    Scale partial = Scale.gradient('#000000', '#ffffff')
+    partial.params['limits'] = [null, 100]
+    ColorCharmScale partialScale = ScaleEngine.trainColorScale([25, 75], partial)
+    assertEquals(25, partialScale.domainMin)
+    assertEquals(100, partialScale.domainMax)
+  }
+
+  @Test
+  void temporalGradientLimitsUseCanonicalTemporalValues() {
+    LocalDate start = LocalDate.of(2025, 1, 1)
+    LocalDate end = LocalDate.of(2025, 1, 3)
+    Scale spec = Scale.gradient('#000000', '#ffffff')
+    spec.transform = 'date'
+    spec.params['limits'] = [start, end]
+
+    ColorCharmScale scale = ScaleEngine.trainColorScale([start.plusDays(1)], spec)
+    assertEquals('#000000', scale.colorFor(start).toLowerCase())
+    assertEquals('#ffffff', scale.colorFor(end).toLowerCase())
+  }
+
+  @Test
+  void defaultPaletteWrapsLikeDefaultDiscreteScale() {
+    assertEquals(ColorScaleUtil.DEFAULT_COLORS[0], ColorScaleUtil.defaultPalette(11)[10])
+    assertEquals([], ColorScaleUtil.defaultPalette(0))
   }
 
 }

@@ -37,6 +37,9 @@ class RenderContext {
   List<PanelSpec> panels = []
   final Map<se.alipsa.matrix.charm.LayerSpec, Map<List<Integer>, List<LayerData>>> pipelineCache = [:]
 
+  /** Whether each layer's effective mapping contains a fill aesthetic. */
+  Map<Integer, Boolean> layerHasFillMapping = [:]
+
   /** Per-layer trained scales, keyed by layer index. */
   Map<Integer, TrainedScales> layerScales = [:]
 

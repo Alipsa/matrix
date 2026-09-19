@@ -1,5 +1,6 @@
 package se.alipsa.matrix.pict
 
+import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
@@ -72,6 +73,38 @@ abstract class Chart<T extends Chart> {
                 "in the second column but this series has $col1Type")
       }
     }
+  }
+
+  /** Ensures that the named column exists in a matrix. */
+  static void requireColumn(Matrix data, String columnName) {
+    if (columnName == null || data.columnIndex(columnName) < 0) {
+      throw new IllegalArgumentException("Column '${columnName}' does not exist in ${data.matrixName ?: 'the matrix'}")
+    }
+  }
+
+  /** Ensures that the named matrix column is numeric. */
+  static void requireNumericColumn(Matrix data, String columnName) {
+    requireColumn(data, columnName)
+    Class type = data.type(columnName)
+    if (type == null || !Number.isAssignableFrom(type)) {
+      throw new IllegalArgumentException("Column '${columnName}' must be numeric, got ${type?.simpleName ?: 'null'}")
+    }
+  }
+
+  /**
+   * Converts a complete numeric column to BigDecimals.
+   *
+   * @return converted values with no null, NaN, or infinite entries
+   */
+  static List<BigDecimal> completeNumericColumn(Matrix data, String columnName) {
+    requireNumericColumn(data, columnName)
+    List<?> raw = data.column(columnName)
+    List<BigDecimal> converted = ListConverter.toBigDecimals(raw)
+    int bad = converted.findIndexOf { BigDecimal value -> value == null }
+    if (bad >= 0) {
+      throw new IllegalArgumentException("Column '${columnName}' contains a null, NaN or infinite value at row ${bad} (${raw[bad]}); complete numeric data is required")
+    }
+    converted
   }
 
   String getxAxisTitle() {
@@ -343,6 +376,15 @@ abstract class Chart<T extends Chart> {
      * @return this builder
      */
     B yLabels(Map<String, String> labels) { ensureStyle(); style.yLabels = labels; this as B }
+
+    /** Sets series colours by position. */
+    B seriesColors(Color... colors) { ensureStyle(); style.seriesColors = colors.toList(); this as B }
+
+    /** Sets series colours by position. */
+    B seriesColors(List<Color> colors) { ensureStyle(); style.seriesColors = new ArrayList<Color>(colors); this as B }
+
+    /** Sets series colours by series name. */
+    B seriesColors(Map<String, Color> colors) { ensureStyle(); style.seriesColorMap = new LinkedHashMap<String, Color>(colors); this as B }
 
     private void ensureStyle() {
       if (style == null) {

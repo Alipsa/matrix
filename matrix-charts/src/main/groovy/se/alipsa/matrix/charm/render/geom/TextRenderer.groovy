@@ -4,6 +4,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
+import se.alipsa.matrix.charm.render.scale.ColorScaleUtil
 import se.alipsa.matrix.core.ValueConverter
 
 /**
@@ -42,7 +43,9 @@ class TextRenderer {
 
       BigDecimal drawX = x + nudgeX * 10
       BigDecimal drawY = y - nudgeY * 10
-      String color = GeomUtils.resolveStroke(context, layer, datum)
+      String color = Boolean.TRUE == layer.params['autoContrastFill']
+          ? ColorScaleUtil.contrastTextColor(GeomUtils.resolveFill(context, layer, datum))
+          : GeomUtils.resolveStroke(context, layer, datum)
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
 
       def text = dataLayer.addText(label)
