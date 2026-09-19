@@ -70,17 +70,20 @@ class CorrelationHeatmapChart extends HeatmapChart {
     int n = series.size()
     List<List<BigDecimal>> corr = []
     (0..<n).each { int ignored -> corr << new ArrayList<BigDecimal>(Collections.nCopies(n, (BigDecimal) null)) }
-    BigDecimal one = BigDecimal.ONE.setScale(SCALE, RoundingMode.HALF_UP)
     for (int c = 0; c < n; c++) {
-      corr[c][c] = one
+      corr[c][c] = roundCorrelation(Correlation.cor(series[c], series[c], method))
       for (int r = c + 1; r < n; r++) {
         BigDecimal value = Correlation.cor(series[c], series[r], method)
-        BigDecimal rounded = (value ?: BigDecimal.ZERO).setScale(SCALE, RoundingMode.HALF_UP)
+        BigDecimal rounded = roundCorrelation(value)
         corr[c][r] = rounded
         corr[r][c] = rounded
       }
     }
     corr
+  }
+
+  private static BigDecimal roundCorrelation(BigDecimal value) {
+    value?.setScale(SCALE, RoundingMode.HALF_UP)
   }
 
   /**
@@ -123,11 +126,12 @@ class CorrelationHeatmapChart extends HeatmapChart {
       CorrelationHeatmapChart.populateCorrelation(chart, this.@title, data, selectedColumns, this.@method)
       applyTo(chart)
       chart.showValues = this.@showValues
+      chart.valueDecimals = this.@valueDecimals
       if (this.@lowColor != null || this.@midColor != null || this.@highColor != null) {
         chart.lowColor = this.@lowColor ?: DEFAULT_LOW
-        chart.midColor = this.@midColor ?: DEFAULT_MID
+        chart.midColor = this.@midColor
         chart.highColor = this.@highColor ?: DEFAULT_HIGH
-        chart.midpoint = this.@midpoint ?: 0
+        chart.midpoint = this.@midpoint
       }
       chart
     }

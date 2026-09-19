@@ -462,13 +462,8 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void trainContinuousDomain(List<Object> dataValues) {
-    boolean temporal = TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)
     List<BigDecimal> numeric = dataValues
-        .collect { Object value ->
-          temporal
-              ? TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
-              : ValueConverter.asBigDecimal(value)
-        }
+        .collect { Object value -> coerceContinuousValue(value) }
         .findAll { it != null } as List<BigDecimal>
     if (numeric.isEmpty()) {
       domainMin = 0.0
@@ -493,8 +488,8 @@ class ColorCharmScale extends CharmScale {
     if (limits == null || limits.size() < 2) {
       return
     }
-    BigDecimal lower = ValueConverter.asBigDecimal(limits[0])
-    BigDecimal upper = ValueConverter.asBigDecimal(limits[1])
+    BigDecimal lower = coerceContinuousValue(limits[0])
+    BigDecimal upper = coerceContinuousValue(limits[1])
     if (lower == null && upper == null) {
       return
     }
@@ -502,6 +497,12 @@ class ColorCharmScale extends CharmScale {
     BigDecimal candidateMax = upper != null ? upper : domainMax
     domainMin = candidateMin.min(candidateMax)
     domainMax = candidateMin.max(candidateMax)
+  }
+
+  private BigDecimal coerceContinuousValue(Object value) {
+    TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)
+        ? TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+        : ValueConverter.asBigDecimal(value)
   }
 
   private void collectLevels(List<Object> dataValues) {
@@ -515,8 +516,8 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String gradientColor(Object value) {
-    if (!(value instanceof Number)) return naValue
-    BigDecimal v = value as BigDecimal
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return mid ?: ColorScaleUtil.interpolateColor(low, high, 0.5)
     }
@@ -536,8 +537,9 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String gradientNColor(Object value) {
-    if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
-    BigDecimal v = value as BigDecimal
+    if (gradientColors == null || gradientColors.isEmpty()) return naValue
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return gradientColors.size() == 1 ? gradientColors[0] : gradientColors[(gradientColors.size() / 2.0).floor() as int]
     }
@@ -560,8 +562,9 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String binnedGradientColor(Object value) {
-    if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
-    BigDecimal v = value as BigDecimal
+    if (gradientColors == null || gradientColors.isEmpty()) return naValue
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return gradientColors.last()
     }

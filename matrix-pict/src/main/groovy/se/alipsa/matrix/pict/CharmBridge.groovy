@@ -64,6 +64,7 @@ class CharmBridge {
   private static final String COL_ROW = 'row'
   private static final String PARAM_COLOR = 'color'
   private static final String PARAM_FILL = 'fill'
+  private static final String HEATMAP_LABEL_COLOR = '#000000'
   private static final BigDecimal HALF = 0.5
   private static final BigDecimal RADAR_LABEL_RADIUS = 1.12
   private static final BigDecimal RADAR_LIMIT = 1.25
@@ -286,7 +287,10 @@ class CharmBridge {
         BigDecimal value = chart.values[c][r]
         BigDecimal x = c
         BigDecimal y = rowCount - 1 - r
-        rows << [x, x - HALF, x + HALF, y, y - HALF, y + HALF, value, value == null ? null : value.toPlainString()]
+        rows << [
+            x, x - HALF, x + HALF, y, y - HALF, y + HALF, value,
+            formatHeatmapValue(value, chart.valueDecimals)
+        ]
       }
     }
     Matrix data = Matrix.builder()
@@ -301,7 +305,7 @@ class CharmBridge {
     ])
     spec.addLayer(new TileBuilder())
     if (chart.showValues) {
-      spec.addLayer(new TextBuilder().mapping([(AES_LABEL): COL_TEXT]))
+      spec.addLayer(new TextBuilder().mapping([(AES_LABEL): COL_TEXT]).param(PARAM_COLOR, HEATMAP_LABEL_COLOR))
     }
     spec.scale.x(indexScale(chart.columnLabels))
     spec.scale.y(indexScale(chart.rowLabels.reverse()*.toString()))
@@ -339,6 +343,10 @@ class CharmBridge {
       scale.params['limits'] = chart.fillLimits
     }
     scale
+  }
+
+  private static String formatHeatmapValue(BigDecimal value, int decimals) {
+    value == null ? null : value.setScale(decimals, java.math.RoundingMode.HALF_UP).toPlainString()
   }
 
   private static PlotSpec buildRadarSpec(RadarChart chart) {
@@ -570,16 +578,24 @@ class CharmBridge {
   }
 
   private static List<String> seriesNames(Chart chart) {
-    switch (chart) {
-      case RadarChart -> (chart as RadarChart).seriesLabels.unique()
-      case PieChart -> chart.categorySeries.collect { Object category -> category.toString() }
-      case BubbleChart -> {
-        BubbleChart bubble = chart as BubbleChart
-        bubble.groupSeries ? bubble.groupSeries.collect { Object group -> group.toString() }.unique()
-            : (chart.valueSeriesNames ?: [])
-      }
-      default -> chart.valueSeriesNames ?: []
+    if (chart instanceof RadarChart) {
+      List<String> labels = new ArrayList<String>(chart.seriesLabels)
+      return labels.unique(false) as List<String>
     }
+    if (chart instanceof PieChart) {
+      return chart.categorySeries.collect { Object category -> category.toString() } as List<String>
+    }
+    if (chart instanceof BubbleChart) {
+      BubbleChart bubble = chart
+      return bubble.groupSeries
+          ? bubble.groupSeries.collect { Object group -> group.toString() }.unique() as List<String>
+          : (chart.valueSeriesNames ?: [])
+    }
+    List<String> configured = chart.valueSeriesNames ?: []
+    int seriesCount = chart.valueSeries?.size() ?: configured.size()
+    (0..<seriesCount).collect { int index ->
+      index < configured.size() ? configured[index] : "series${index}"
+    } as List<String>
   }
 
   private static void applySeriesColors(PlotSpec spec, Chart chart) {

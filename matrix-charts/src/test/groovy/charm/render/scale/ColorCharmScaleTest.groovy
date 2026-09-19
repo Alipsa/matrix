@@ -9,6 +9,8 @@ import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ColorScaleUtil
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 
+import java.time.LocalDate
+
 class ColorCharmScaleTest {
 
   @Test
@@ -300,6 +302,19 @@ class ColorCharmScaleTest {
     ColorCharmScale partialScale = ScaleEngine.trainColorScale([25, 75], partial)
     assertEquals(25, partialScale.domainMin)
     assertEquals(100, partialScale.domainMax)
+  }
+
+  @Test
+  void temporalGradientLimitsUseCanonicalTemporalValues() {
+    LocalDate start = LocalDate.of(2025, 1, 1)
+    LocalDate end = LocalDate.of(2025, 1, 3)
+    Scale spec = Scale.gradient('#000000', '#ffffff')
+    spec.transform = 'date'
+    spec.params['limits'] = [start, end]
+
+    ColorCharmScale scale = ScaleEngine.trainColorScale([start.plusDays(1)], spec)
+    assertEquals('#000000', scale.colorFor(start).toLowerCase())
+    assertEquals('#ffffff', scale.colorFor(end).toLowerCase())
   }
 
   @Test

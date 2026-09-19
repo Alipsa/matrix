@@ -20,6 +20,8 @@ class HeatmapChart extends Chart<HeatmapChart> {
   List<List<BigDecimal>> values = []
   /** Whether cell values are rendered as labels. */
   boolean showValues = true
+  /** Number of decimal places used for rendered cell-value labels. */
+  int valueDecimals = 2
   /** Gradient low colour, or null for Charm's default. */
   Color lowColor
   /** Optional gradient midpoint colour. */
@@ -115,6 +117,7 @@ class HeatmapChart extends Chart<HeatmapChart> {
     protected String rowLabelColumn
     protected List<String> selectedColumns
     protected boolean showValues = true
+    protected int valueDecimals = 2
     protected Color lowColor
     protected Color midColor
     protected Color highColor
@@ -146,6 +149,20 @@ class HeatmapChart extends Chart<HeatmapChart> {
     /** Toggles value labels. */
     B showValues(boolean show) { showValues = show; this as B }
 
+    /**
+     * Sets the number of decimal places used for cell-value labels.
+     *
+     * @param decimals non-negative number of decimal places; defaults to 2
+     * @return this builder
+     */
+    B valueDecimals(int decimals) {
+      if (decimals < 0) {
+        throw new IllegalArgumentException("valueDecimals must be non-negative, got ${decimals}")
+      }
+      valueDecimals = decimals
+      this as B
+    }
+
     /** Sets a two-colour gradient. */
     B colors(Color low, Color high) {
       lowColor = low
@@ -167,6 +184,7 @@ class HeatmapChart extends Chart<HeatmapChart> {
     /** Applies heatmap-specific builder settings. */
     protected void applyHeatmapOptions(C chart) {
       chart.showValues = showValues
+      chart.valueDecimals = valueDecimals
       chart.lowColor = lowColor
       chart.midColor = midColor
       chart.highColor = highColor
@@ -183,6 +201,9 @@ class HeatmapChart extends Chart<HeatmapChart> {
     @Override B xAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) { throw unsupported('xAxisScale') }
     @Override B yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) { throw unsupported('yAxisScale') }
     @Override B yLabels(Map<String, String> labels) { throw unsupported('yLabels') }
+    @Override B seriesColors(Color... colors) { throw unsupported('seriesColors') }
+    @Override B seriesColors(List<Color> colors) { throw unsupported('seriesColors') }
+    @Override B seriesColors(Map<String, Color> colors) { throw unsupported('seriesColors') }
 
     private IllegalArgumentException unsupported(String method) {
       new IllegalArgumentException("${this.class.enclosingClass.simpleName} does not support ${method}(...)")

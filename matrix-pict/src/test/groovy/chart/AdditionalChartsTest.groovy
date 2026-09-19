@@ -43,11 +43,57 @@ class AdditionalChartsTest {
   }
 
   @Test
+  void heatmapFormatsValuesAndUsesAnExplicitLabelColour() {
+    Matrix data = Matrix.builder().columns([v: [0.30000000000000004d, 1.123456789d]]).types([Double]).build()
+    HeatmapChart chart = HeatmapChart.builder(data).columns('v').build()
+
+    List labels = elementsWithClass(Plot.svg(chart), 'charm-text')
+    assertEquals(['0.30', '1.12'], labels*.content)
+    assertTrue(labels.every { it.getAttribute('fill') == '#000000' })
+  }
+
+  @Test
+  void heatmapRejectsUnsupportedSeriesColours() {
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.builder(measures()).seriesColors(Color.RED)
+    }
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.builder(measures()).seriesColors([Color.RED])
+    }
+    assertThrows(IllegalArgumentException) {
+      HeatmapChart.builder(measures()).seriesColors([a: Color.RED])
+    }
+  }
+
+  @Test
   void correlationUsesFixedDivergingDomain() {
     CorrelationHeatmapChart chart = CorrelationHeatmapChart.builder(measures()).columns('a', 'b').method(Correlation.PEARSON).build()
     assertTrue(chart.values[0] == [1.00, -1.00])
     assertEquals([-1.00, 1.00], chart.fillLimits)
     assertEquals(4, elementsWithClass(Plot.svg(chart), 'charm-tile').size())
+  }
+
+  @Test
+  void correlationTwoColourGradientDoesNotRestoreTheDefaultMidpoint() {
+    CorrelationHeatmapChart chart = CorrelationHeatmapChart.builder(measures())
+        .columns('a', 'b').colors(Color.RED, Color.BLUE).build()
+
+    assertEquals(Color.RED, chart.lowColor)
+    assertNull(chart.midColor)
+    assertEquals(Color.BLUE, chart.highColor)
+    assertNull(chart.midpoint)
+  }
+
+  @Test
+  void correlationLeavesUndefinedValuesAsNa() {
+    Matrix data = Matrix.builder().columns([constant: [1, 1, 1], changing: [1, 2, 3]])
+        .types([Integer, Integer]).build()
+    CorrelationHeatmapChart chart = CorrelationHeatmapChart.builder(data).columns('constant', 'changing').build()
+
+    assertNull(chart.values[0][0])
+    assertNull(chart.values[0][1])
+    assertNull(chart.values[1][0])
+    assertEquals(1.00, chart.values[1][1])
   }
 
   @Test
@@ -59,6 +105,21 @@ class AdditionalChartsTest {
     assertEquals(3, elementsWithClass(svg, 'charm-polygon').size())
     assertEquals(3, elementsWithClass(svg, 'charm-segment').size())
     assertEquals(RadarChart.DEFAULT_RINGS, elementsWithClass(svg, 'charm-path').size())
+  }
+
+  @Test
+  void radarRendersDuplicateSeriesLabelsWithoutMutatingTheChart() {
+    Matrix data = Matrix.builder().columns([
+        name: ['a', 'a', 'c'], x: [1, 2, 3], y: [2, 3, 1], z: [3, 1, 2]
+    ]).types([String, Integer, Integer, Integer]).build()
+    RadarChart chart = RadarChart.builder(data).label('name').values('x', 'y', 'z')
+        .seriesColors([a: Color.RED]).build()
+
+    List firstFills = elementsWithClass(Plot.svg(chart), 'charm-polygon')*.getAttribute('fill')*.toString()
+    List secondFills = elementsWithClass(Plot.svg(chart), 'charm-polygon')*.getAttribute('fill')*.toString()
+    assertEquals(['a', 'a', 'c'], chart.seriesLabels)
+    assertEquals(firstFills, secondFills)
+    assertFalse(secondFills.contains('#999999'))
   }
 
   @Test
