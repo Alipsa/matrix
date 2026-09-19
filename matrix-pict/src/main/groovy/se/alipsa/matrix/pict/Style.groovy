@@ -72,6 +72,12 @@ class Style {
   /** Maps numeric y-axis break values to custom display labels. */
   Map<String, String> yLabels = [:]
 
+  /** Ordered series colours, resolved by the pict bridge by series position. */
+  List<Color> seriesColors = []
+
+  /** Series colours keyed by series name, taking precedence over positional colours. */
+  Map<String, Color> seriesColorMap = [:]
+
   /**
    * Sets raw CSS text.
    *

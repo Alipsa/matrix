@@ -128,6 +128,7 @@ class CharmRenderer {
       Matrix sourceData = resolveLayerData(context.chart.data, layer)
       List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
       Mapping mapping = effectiveMapping(context.chart.mapping, layer)
+      context.layerHasFillMapping[idx] = mapping.fill != null
       List<LayerData> pipelineData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
       layerScaleData << new LayerScaleTrainingData(
           layerIndex: idx,

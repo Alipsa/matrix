@@ -20,6 +20,23 @@ import se.alipsa.matrix.charm.CharmStatType
 class TextBuilder extends TextLayerBuilder<TextBuilder> {
 
   /**
+   * Uses black or white text according to the luminance of each datum's resolved fill colour.
+   *
+   * <p>The layer must map or set {@code fill}. This setting takes precedence over a text
+   * {@code color} parameter. It supports {@code #RGB}, {@code #RGBA}, {@code #RRGGBB},
+   * {@code #RRGGBBAA}, {@code rgb(...)}, {@code rgba(...)}, and the named colours supported by
+   * {@link se.alipsa.matrix.charm.render.scale.ColorScaleUtil#parseColor(String)}. Transparent
+   * fills are composited over the panel background; unsupported syntax, such as
+   * {@code hsl(...)}, is treated as neutral gray.</p>
+   *
+   * @return this builder
+   */
+  TextBuilder autoContrastFill() {
+    params['autoContrastFill'] = true
+    this
+  }
+
+  /**
    * Sets the label text content.
    *
    * @param value label text

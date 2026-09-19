@@ -15,10 +15,13 @@ import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.ChartType
+import se.alipsa.matrix.pict.CorrelationHeatmapChart
+import se.alipsa.matrix.pict.HeatmapChart
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.Plot
+import se.alipsa.matrix.pict.RadarChart
 import se.alipsa.matrix.pict.ScatterChart
 
 import javafx.scene.Group
@@ -457,6 +460,27 @@ class PlotCompatibilityTest {
     assertNotNull(panel, 'Plot.swing() should return a non-null SvgPanel')
     assertTrue(panel.preferredSize.width > 0)
     assertTrue(panel.preferredSize.height > 0)
+  }
+
+  @Test
+  void testPngToFileWithAdditionalChartTypes() {
+    Matrix data = Matrix.builder().columns([
+        name: ['a', 'b', 'c'], x: [1, 2, 3], y: [3, 2, 1], z: [2, 3, 1]
+    ]).types([String, Integer, Integer, Integer]).build()
+    [
+        HeatmapChart.builder(data).rowLabels('name').columns('x', 'y').build(),
+        CorrelationHeatmapChart.builder(data).columns('x', 'y', 'z').build(),
+        RadarChart.builder(data).label('name').values('x', 'y', 'z').build()
+    ].each { se.alipsa.matrix.pict.Chart chart ->
+      File file = File.createTempFile(chart.class.simpleName, '.png')
+      try {
+        Plot.png(chart, file)
+        assertTrue(file.length() > 100)
+        assertPngHeader(file)
+      } finally {
+        file.delete()
+      }
+    }
   }
 
   private static void assertPngHeader(File file) {

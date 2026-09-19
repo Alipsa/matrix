@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
+import static se.alipsa.matrix.charm.render.scale.ColorScaleUtil.DEFAULT_COLORS
+
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.ValueConverter
@@ -25,11 +27,6 @@ import se.alipsa.matrix.core.ValueConverter
     'IfStatementBraces'
 ])
 class ColorCharmScale extends CharmScale {
-
-  private static final List<String> DEFAULT_COLORS = [
-      '#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd',
-      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
-  ]
 
   /** Color type strategy. */
   String colorType = 'default'
@@ -465,24 +462,47 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void trainContinuousDomain(List<Object> dataValues) {
-    boolean temporal = TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)
     List<BigDecimal> numeric = dataValues
-        .collect { Object value ->
-          temporal
-              ? TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
-              : ValueConverter.asBigDecimal(value)
-        }
+        .collect { Object value -> coerceContinuousValue(value) }
         .findAll { it != null } as List<BigDecimal>
     if (numeric.isEmpty()) {
       domainMin = 0.0
       domainMax = 1.0
+      applyLimits()
       return
     }
     domainMin = numeric.min()
     domainMax = numeric.max()
+    applyLimits()
     if (domainMin == domainMax) {
       domainMax = domainMin + 1
     }
+  }
+
+  /**
+   * Applies optional lower and upper limits to a continuous colour domain.
+   * Null ends retain the data-derived end, and reversed limits are ordered.
+   */
+  private void applyLimits() {
+    List limits = scaleSpec?.params?.get('limits') as List
+    if (limits == null || limits.size() < 2) {
+      return
+    }
+    BigDecimal lower = coerceContinuousValue(limits[0])
+    BigDecimal upper = coerceContinuousValue(limits[1])
+    if (lower == null && upper == null) {
+      return
+    }
+    BigDecimal candidateMin = lower != null ? lower : domainMin
+    BigDecimal candidateMax = upper != null ? upper : domainMax
+    domainMin = candidateMin.min(candidateMax)
+    domainMax = candidateMin.max(candidateMax)
+  }
+
+  private BigDecimal coerceContinuousValue(Object value) {
+    TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)
+        ? TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+        : ValueConverter.asBigDecimal(value)
   }
 
   private void collectLevels(List<Object> dataValues) {
@@ -496,8 +516,8 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String gradientColor(Object value) {
-    if (!(value instanceof Number)) return naValue
-    BigDecimal v = value as BigDecimal
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return mid ?: ColorScaleUtil.interpolateColor(low, high, 0.5)
     }
@@ -517,8 +537,9 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String gradientNColor(Object value) {
-    if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
-    BigDecimal v = value as BigDecimal
+    if (gradientColors == null || gradientColors.isEmpty()) return naValue
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return gradientColors.size() == 1 ? gradientColors[0] : gradientColors[(gradientColors.size() / 2.0).floor() as int]
     }
@@ -541,8 +562,9 @@ class ColorCharmScale extends CharmScale {
   }
 
   private String binnedGradientColor(Object value) {
-    if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
-    BigDecimal v = value as BigDecimal
+    if (gradientColors == null || gradientColors.isEmpty()) return naValue
+    BigDecimal v = coerceContinuousValue(value)
+    if (v == null) return naValue
     if (domainMax == domainMin) {
       return gradientColors.last()
     }

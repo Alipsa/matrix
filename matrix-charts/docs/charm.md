@@ -413,6 +413,23 @@ plot(data) {
 }
 ```
 
+### Fill-Aware Text Contrast
+
+`geomText().autoContrastFill()` chooses black or white text from each datum's resolved
+fill colour. Map `fill` on the text layer or the inherited plot mapping; it takes
+precedence over `color(...)` and defaults to off.
+
+```groovy
+plot(data) {
+  mapping { x = 'x'; y = 'y'; label = 'value'; fill = 'value' }
+  layers {
+    geomTile()
+    geomText().autoContrastFill()
+  }
+  scale { fill = colorGradient('#132B43', '#56B1F7') }
+}
+```
+
 ## Scales
 
 ### Built-in Transforms

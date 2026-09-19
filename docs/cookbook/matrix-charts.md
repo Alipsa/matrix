@@ -13,6 +13,26 @@ In addition to the static `create()` factory methods, each chart type provides a
 that starts from `builder(data)`, chains configuration methods, and terminates with `build()`.
 All existing `create()` factories remain unchanged — the builder is a purely additive alternative.
 
+## Correlation heatmap of numeric columns
+
+```groovy
+def chart = CorrelationHeatmapChart.builder(data)
+    .columns('speed', 'power', 'range')
+    .build()
+Plot.png(chart, new File('correlation.png'))
+```
+
+## Radar chart comparing rows
+
+```groovy
+def chart = RadarChart.builder(data)
+    .label('model')
+    .values('speed', 'power', 'range')
+    .normalize(true)
+    .build()
+Plot.png(chart, new File('radar.png'))
+```
+
 ### AreaChart
 
 ```groovy
