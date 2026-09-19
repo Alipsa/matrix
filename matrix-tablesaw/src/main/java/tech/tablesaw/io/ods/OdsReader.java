@@ -75,11 +75,11 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * dropped by default (ODF producers commonly declare empty rows past the data range), while
    * interior all-missing rows are preserved so missing data keeps its position; disable the trim
    * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
- * row, for example when round-tripping a file written by {@link OdsWriter}.
- * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
- * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. Duplicate
- * non-blank headers are handled the same way, case-insensitively. All cell values are read as
- * strings and then converted to appropriate types based on the read options.
+   * row, for example when round-tripping a file written by {@link OdsWriter}.
+   * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
+   * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. Duplicate
+   * non-blank headers are handled the same way, case-insensitively. All cell values are read as
+   * strings and then converted to appropriate types based on the read options.
    *
    * @param options the read options specifying the source, sheet index, and parsing configuration
    * @return the table read from the ODS file

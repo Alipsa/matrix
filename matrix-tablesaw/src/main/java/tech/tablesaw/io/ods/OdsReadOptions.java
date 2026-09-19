@@ -175,6 +175,7 @@ public class OdsReadOptions extends ReadOptions {
      */
     protected Builder(URL url) throws IOException {
       super(url.openStream());
+      tableName(url.toString());
     }
 
     /**

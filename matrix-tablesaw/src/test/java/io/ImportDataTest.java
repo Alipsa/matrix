@@ -94,6 +94,7 @@ public class ImportDataTest {
     var url = getClass().getResource("/glaciers.ods");
     Table glaciers = Table.read().usingOptions(OdsReadOptions.builderFromUrl(url.toString()).build());
     assertEquals(70, glaciers.rowCount());
+    assertEquals(url.toString(), glaciers.name());
   }
 
   @Test
