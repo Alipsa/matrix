@@ -123,9 +123,9 @@ class ColorScaleUtil {
     }
     try {
       [
-          Integer.parseInt(value.substring(1, 3), 16),
-          Integer.parseInt(value.substring(3, 5), 16),
-          Integer.parseInt(value.substring(5, 7), 16)
+          hexByte(value, 1),
+          hexByte(value, 3),
+          hexByte(value, 5)
       ] as int[]
     } catch (NumberFormatException ignored) {
       NO_COLOR
@@ -206,11 +206,20 @@ class ColorScaleUtil {
   }
 
   private static int expandHexDigit(String hex, int index) {
-    Integer.parseInt("${hex[index]}${hex[index]}", 16)
+    int digit = Character.digit(hex.charAt(index), 16)
+    if (digit < 0) {
+      throw new NumberFormatException("Invalid hexadecimal digit: ${hex.charAt(index)}")
+    }
+    digit * 17
   }
 
   private static int hexByte(String hex, int start) {
-    Integer.parseInt(hex.substring(start, start + 2), 16)
+    int high = Character.digit(hex.charAt(start), 16)
+    int low = Character.digit(hex.charAt(start + 1), 16)
+    if (high < 0 || low < 0) {
+      throw new NumberFormatException("Invalid hexadecimal byte: ${hex.substring(start, start + 2)}")
+    }
+    high * 16 + low
   }
 
   private static BigDecimal alphaFromByte(int alpha) {

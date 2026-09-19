@@ -327,6 +327,8 @@ class ColorCharmScaleTest {
   void contrastTextColorSupportsCssRgbAndAlphaHexFormats() {
     assertArrayEquals([31, 119, 180] as int[], ColorScaleUtil.parseColor('#1f77b4'))
     assertArrayEquals([128, 128, 128] as int[], ColorScaleUtil.parseColor('#invalid'))
+    assertArrayEquals([128, 128, 128] as int[], ColorScaleUtil.parseColor('#-1-2-3'))
+    assertArrayEquals([128, 128, 128] as int[], ColorScaleUtil.parseColor('#+1+2+3'))
     assertArrayEquals([255, 0, 0] as int[], ColorScaleUtil.parseColor('rgba(255, 0, 0, 0.5)'))
     assertArrayEquals([0, 128, 255] as int[], ColorScaleUtil.parseColor('rgb(0%, 50%, 100%)'))
     assertArrayEquals([0, 0, 0] as int[], ColorScaleUtil.parseColor('#000000cc'))
