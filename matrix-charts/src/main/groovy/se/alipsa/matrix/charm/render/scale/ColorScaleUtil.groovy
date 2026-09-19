@@ -28,6 +28,18 @@ class ColorScaleUtil {
   }
 
   /**
+   * Returns black or white text that contrasts with a colour's perceived luminance.
+   *
+   * @param color background colour
+   * @return {@code #000000} for light backgrounds, otherwise {@code #ffffff}
+   */
+  static String contrastTextColor(String color) {
+    int[] rgb = parseColor(color)
+    int luminance = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114).intdiv(1000)
+    luminance >= 128 ? '#000000' : '#ffffff'
+  }
+
+  /**
    * Interpolate between two colors.
    *
    * @param color1 start color (hex string or named)

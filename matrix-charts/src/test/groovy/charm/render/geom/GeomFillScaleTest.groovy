@@ -12,6 +12,7 @@ import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.geom.Bin2dBuilder
 import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.TextBuilder
 import se.alipsa.matrix.charm.geom.TileBuilder
 import se.alipsa.matrix.core.Matrix
 
@@ -45,6 +46,20 @@ class GeomFillScaleTest {
     assertFalse(fills.isEmpty())
     assertFalse(fills.contains('#1f77b4'))
     assertTrue(fills.toSet().size() > 1)
+  }
+
+  @Test
+  void textCanAutoContrastAgainstItsResolvedFill() {
+    Matrix data = Matrix.builder().columns([
+        x: [1, 2], y: [1, 2], label: ['low', 'high'], value: [0, 1]
+    ]).types([Integer, Integer, String, Integer]).build()
+    PlotSpec spec = Charts.plot(data)
+    spec.mapping([x: 'x', y: 'y', label: 'label', fill: 'value'])
+    spec.addLayer(new TextBuilder().autoContrastFill())
+    spec.scale.fill(Scale.gradient('#000000', '#ffffff'))
+
+    List<String> fills = elementsWithClass(spec.build().render(), 'charm-text')*.getAttribute('fill')*.toString()
+    assertEquals(['#ffffff', '#000000'], fills)
   }
 
   private static List elementsWithClass(Svg svg, String cssClass) {

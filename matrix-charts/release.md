@@ -7,6 +7,8 @@
   and reversed limits (including temporal limits), consistently with positional scales.
 - A missing value on a layer that maps `fill` now uses that fill scale's `naValue`; layers
   without a fill mapping retain their normal fill fallback when another layer uses a fill scale.
+- `TextBuilder.autoContrastFill()` selects black or white text from each datum's resolved
+  fill colour, so text layers share the renderer's trained fill scale.
 - `AnimationSpec.toCss()` now scopes animation selectors to the rendered SVG's `#charm-root`; Charm adds that root ID whenever animations or stylesheets are present. Consumers embedding the CSS in another SVG must provide the same root ID or remove the scope.
 - Dependency upgrades
   - org.apache.pdfbox:pdfbox 3.0.7 -> 3.0.8
