@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.CorrelationHeatmapChart
 import se.alipsa.matrix.pict.HeatmapChart
 import se.alipsa.matrix.pict.Plot
@@ -61,6 +62,15 @@ class AdditionalChartsTest {
     assertEquals(['3', '4'], labels*.content)
     assertTrue(labels.every { it.getAttribute('fill') in ['#000000', '#ffffff'] })
     assertTrue(labels*.getAttribute('fill').contains('#ffffff'))
+  }
+
+  @Test
+  void heatmapUsesAUsefulDefaultLegendTitle() {
+    HeatmapChart singleColumn = HeatmapChart.builder(measures()).columns('a').build()
+    HeatmapChart multipleColumns = HeatmapChart.builder(measures()).columns('a', 'b').build()
+
+    assertEquals('a', CharmBridge.convert(singleColumn).labels.guides['fill'])
+    assertEquals('value', CharmBridge.convert(multipleColumns).labels.guides['fill'])
   }
 
   @Test

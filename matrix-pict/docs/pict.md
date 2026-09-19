@@ -618,12 +618,20 @@ Plot.png(chart, new File('bubbles.png'))
 y-axis categories. `rowLabels(String)` chooses a row-label column (otherwise labels are
 `1..n`), `columns(String...)` is required, and `showValues(boolean)` defaults to `true`.
 Use `colors(low, high)` for a two-colour gradient or `colors(low, mid, high, midpoint)`
-for a diverging gradient. Null, NaN, and infinite cells use the NA colour without a label.
+for a diverging gradient. `valueDecimals(int)` rounds value labels to the requested
+non-negative number of decimal places; without it, labels retain their natural scale.
+`labelColor(Color)` fixes every value label to that colour; without it, each label uses
+black or white for contrast with its tile. The legend is titled with the sole selected
+column, or `value` when multiple columns are selected. Null, NaN, and infinite cells use
+the NA colour without a label.
 
 ```groovy
 def chart = HeatmapChart.builder(sales)
     .rowLabels('region').columns('q1', 'q2', 'q3')
-    .colors(Color.WHITE, Color.RED).build()
+    .colors(Color.WHITE, Color.RED)
+    .valueDecimals(1)
+    .labelColor(Color.BLACK)
+    .build()
 Plot.png(chart, new File('heatmap.png'))
 ```
 
@@ -631,7 +639,8 @@ Plot.png(chart, new File('heatmap.png'))
 
 `CorrelationHeatmapChart` correlates complete numeric columns and uses a red/white/blue
 scale fixed to `[-1, 1]`. `method(Correlation.PEARSON)` is the default; Spearman and
-Kendall are also available. The legend defaults to the selected method name.
+Kendall are also available. Its value labels default to two decimal places; use
+`valueDecimals(int)` to override this. The legend defaults to the selected method name.
 
 ```groovy
 def chart = CorrelationHeatmapChart.builder(data)

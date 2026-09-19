@@ -320,11 +320,18 @@ class CharmBridge {
     spec.scale.y(indexScale(chart.rowLabels.reverse()*.toString()))
     spec.scale.color(Scale.identity().guide(GuideType.NONE))
     spec.scale.fill(heatmapFillScale(chart))
-    if (chart instanceof CorrelationHeatmapChart && !chart.legend?.title) {
-      (spec.labels as se.alipsa.matrix.charm.LabelsSpec).guides[AES_FILL] = (chart as CorrelationHeatmapChart).method
+    if (!chart.legend?.title) {
+      se.alipsa.matrix.charm.LabelsSpec labels = spec.labels as se.alipsa.matrix.charm.LabelsSpec
+      labels.guides[AES_FILL] = chart instanceof CorrelationHeatmapChart
+          ? (chart as CorrelationHeatmapChart).method
+          : heatmapLegendTitle(chart)
     }
     applyLabelsAndTheme(spec, chart)
     spec
+  }
+
+  private static String heatmapLegendTitle(HeatmapChart chart) {
+    chart.columnLabels.size() == 1 ? chart.columnLabels[0] : AES_VALUE
   }
 
   private static List<String> heatmapLabelColors(HeatmapChart chart, List<BigDecimal> values) {
