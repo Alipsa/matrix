@@ -4,6 +4,7 @@ import static se.alipsa.matrix.ext.NumberExtension.PI
 
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
@@ -25,7 +26,9 @@ import se.alipsa.matrix.charm.geom.TextBuilder
 import se.alipsa.matrix.charm.geom.TileBuilder
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
+import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ColorScaleUtil
+import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
@@ -64,7 +67,8 @@ class CharmBridge {
   private static final String COL_ROW = 'row'
   private static final String PARAM_COLOR = 'color'
   private static final String PARAM_FILL = 'fill'
-  private static final String HEATMAP_LABEL_COLOR = '#000000'
+  private static final String BLACK = '#000000'
+  private static final String WHITE = '#ffffff'
   private static final BigDecimal HALF = 0.5
   private static final BigDecimal RADAR_LABEL_RADIUS = 1.12
   private static final BigDecimal RADAR_LIMIT = 1.25
@@ -281,7 +285,10 @@ class CharmBridge {
 
   private static PlotSpec buildHeatmapSpec(HeatmapChart chart) {
     int rowCount = chart.rowLabels.size()
+    List<BigDecimal> values = chart.values.collectMany { List<BigDecimal> column -> column }
+    List<String> labelColors = heatmapLabelColors(chart, values)
     List<List<?>> rows = []
+    int cellIndex = 0
     chart.columnLabels.eachWithIndex { String column, int c ->
       chart.rowLabels.eachWithIndex { Object rowLabel, int r ->
         BigDecimal value = chart.values[c][r]
@@ -289,14 +296,14 @@ class CharmBridge {
         BigDecimal y = rowCount - 1 - r
         rows << [
             x, x - HALF, x + HALF, y, y - HALF, y + HALF, value,
-            formatHeatmapValue(value, chart.valueDecimals)
+            formatHeatmapValue(value, chart.valueDecimals), labelColors[cellIndex++]
         ]
       }
     }
     Matrix data = Matrix.builder()
-        .columnNames(AES_X, AES_XMIN, AES_XMAX, AES_Y, AES_YMIN, AES_YMAX, AES_VALUE, COL_TEXT)
+        .columnNames(AES_X, AES_XMIN, AES_XMAX, AES_Y, AES_YMIN, AES_YMAX, AES_VALUE, COL_TEXT, AES_COLOR)
         .rows(rows)
-        .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, String])
+        .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, String, String])
         .build()
     PlotSpec spec = Charts.plot(data)
     spec.mapping([
@@ -305,16 +312,35 @@ class CharmBridge {
     ])
     spec.addLayer(new TileBuilder())
     if (chart.showValues) {
-      spec.addLayer(new TextBuilder().mapping([(AES_LABEL): COL_TEXT]).param(PARAM_COLOR, HEATMAP_LABEL_COLOR))
+      spec.addLayer(new TextBuilder().inheritMapping(false).mapping([
+          (AES_X): AES_X, (AES_Y): AES_Y, (AES_LABEL): COL_TEXT, (AES_COLOR): AES_COLOR
+      ]))
     }
     spec.scale.x(indexScale(chart.columnLabels))
     spec.scale.y(indexScale(chart.rowLabels.reverse()*.toString()))
+    spec.scale.color(Scale.identity().guide(GuideType.NONE))
     spec.scale.fill(heatmapFillScale(chart))
     if (chart instanceof CorrelationHeatmapChart && !chart.legend?.title) {
       (spec.labels as se.alipsa.matrix.charm.LabelsSpec).guides[AES_FILL] = (chart as CorrelationHeatmapChart).method
     }
     applyLabelsAndTheme(spec, chart)
     spec
+  }
+
+  private static List<String> heatmapLabelColors(HeatmapChart chart, List<BigDecimal> values) {
+    String configured = colorToHex(chart.labelColor)
+    if (configured != null) {
+      return Collections.nCopies(values.size(), configured)
+    }
+    ColorCharmScale fillScale = ScaleEngine.trainColorScale(values as List<Object>, heatmapFillScale(chart))
+    values.collect { BigDecimal value -> contrastColor(fillScale.colorFor(value)) }
+  }
+
+  private static String contrastColor(String color) {
+    int[] rgb = ColorScaleUtil.parseColor(color)
+    int weightedSum = rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114
+    int luminance = weightedSum.intdiv(1000)
+    luminance >= 128 ? BLACK : WHITE
   }
 
   private static Scale indexScale(List<String> labels) {
@@ -345,8 +371,12 @@ class CharmBridge {
     scale
   }
 
-  private static String formatHeatmapValue(BigDecimal value, int decimals) {
-    value == null ? null : value.setScale(decimals, java.math.RoundingMode.HALF_UP).toPlainString()
+  private static String formatHeatmapValue(BigDecimal value, Integer decimals) {
+    if (value == null) {
+      return null
+    }
+    decimals == null ? value.stripTrailingZeros().toPlainString() :
+        value.setScale(decimals, java.math.RoundingMode.HALF_UP).toPlainString()
   }
 
   private static PlotSpec buildRadarSpec(RadarChart chart) {

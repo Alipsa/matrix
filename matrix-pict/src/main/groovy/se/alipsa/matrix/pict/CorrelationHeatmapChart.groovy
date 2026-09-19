@@ -26,6 +26,7 @@ class CorrelationHeatmapChart extends HeatmapChart {
   String method = Correlation.PEARSON
 
   CorrelationHeatmapChart() {
+    valueDecimals = SCALE
     lowColor = DEFAULT_LOW
     midColor = DEFAULT_MID
     highColor = DEFAULT_HIGH
@@ -126,7 +127,10 @@ class CorrelationHeatmapChart extends HeatmapChart {
       CorrelationHeatmapChart.populateCorrelation(chart, this.@title, data, selectedColumns, this.@method)
       applyTo(chart)
       chart.showValues = this.@showValues
-      chart.valueDecimals = this.@valueDecimals
+      if (this.@valueDecimals != null) {
+        chart.valueDecimals = this.@valueDecimals
+      }
+      chart.labelColor = this.@labelColor
       if (this.@lowColor != null || this.@midColor != null || this.@highColor != null) {
         chart.lowColor = this.@lowColor ?: DEFAULT_LOW
         chart.midColor = this.@midColor

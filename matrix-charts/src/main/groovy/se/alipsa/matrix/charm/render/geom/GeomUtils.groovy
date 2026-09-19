@@ -81,7 +81,7 @@ class GeomUtils {
     }
     int layerIdx = context.layerIndex
     def fillScale = context.fillScaleForLayer(layerIdx)
-    if (hasFillMapping(context, layer) && fillScale != null) {
+    if (fillScale != null && (datum.fill != null || context.layerHasFillMapping[layerIdx])) {
       return fillScale.colorFor(datum.fill)
     }
     def colorScale = context.colorScaleForLayer(layerIdx)
@@ -89,11 +89,6 @@ class GeomUtils {
       return colorScale.colorFor(datum.color)
     }
     '#1f77b4'
-  }
-
-  /** Returns whether the layer obtains a fill aesthetic from itself or its plot. */
-  private static boolean hasFillMapping(RenderContext context, LayerSpec layer) {
-    layer.mapping?.fill != null || (layer.inheritMapping && context.chart.mapping.fill != null)
   }
 
   /**

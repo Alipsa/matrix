@@ -45,11 +45,22 @@ class AdditionalChartsTest {
   @Test
   void heatmapFormatsValuesAndUsesAnExplicitLabelColour() {
     Matrix data = Matrix.builder().columns([v: [0.30000000000000004d, 1.123456789d]]).types([Double]).build()
-    HeatmapChart chart = HeatmapChart.builder(data).columns('v').build()
+    HeatmapChart chart = HeatmapChart.builder(data).columns('v').valueDecimals(2).labelColor(Color.BLACK).build()
 
     List labels = elementsWithClass(Plot.svg(chart), 'charm-text')
     assertEquals(['0.30', '1.12'], labels*.content)
     assertTrue(labels.every { it.getAttribute('fill') == '#000000' })
+  }
+
+  @Test
+  void heatmapDefaultsToNaturalValueScaleAndContrastLabels() {
+    Matrix data = Matrix.builder().columns([v: [3, 4]]).types([Integer]).build()
+    HeatmapChart chart = HeatmapChart.builder(data).columns('v').build()
+
+    List labels = elementsWithClass(Plot.svg(chart), 'charm-text')
+    assertEquals(['3', '4'], labels*.content)
+    assertTrue(labels.every { it.getAttribute('fill') in ['#000000', '#ffffff'] })
+    assertTrue(labels*.getAttribute('fill').contains('#ffffff'))
   }
 
   @Test
@@ -70,6 +81,7 @@ class AdditionalChartsTest {
     CorrelationHeatmapChart chart = CorrelationHeatmapChart.builder(measures()).columns('a', 'b').method(Correlation.PEARSON).build()
     assertTrue(chart.values[0] == [1.00, -1.00])
     assertEquals([-1.00, 1.00], chart.fillLimits)
+    assertEquals(2, chart.valueDecimals)
     assertEquals(4, elementsWithClass(Plot.svg(chart), 'charm-tile').size())
   }
 

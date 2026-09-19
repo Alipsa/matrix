@@ -20,8 +20,10 @@ class HeatmapChart extends Chart<HeatmapChart> {
   List<List<BigDecimal>> values = []
   /** Whether cell values are rendered as labels. */
   boolean showValues = true
-  /** Number of decimal places used for rendered cell-value labels. */
-  int valueDecimals = 2
+  /** Optional number of decimal places used for rendered cell-value labels. */
+  Integer valueDecimals
+  /** Optional colour for all rendered cell-value labels. */
+  Color labelColor
   /** Gradient low colour, or null for Charm's default. */
   Color lowColor
   /** Optional gradient midpoint colour. */
@@ -117,7 +119,8 @@ class HeatmapChart extends Chart<HeatmapChart> {
     protected String rowLabelColumn
     protected List<String> selectedColumns
     protected boolean showValues = true
-    protected int valueDecimals = 2
+    protected Integer valueDecimals
+    protected Color labelColor
     protected Color lowColor
     protected Color midColor
     protected Color highColor
@@ -152,7 +155,7 @@ class HeatmapChart extends Chart<HeatmapChart> {
     /**
      * Sets the number of decimal places used for cell-value labels.
      *
-     * @param decimals non-negative number of decimal places; defaults to 2
+     * @param decimals non-negative number of decimal places; when omitted, values retain their natural scale
      * @return this builder
      */
     B valueDecimals(int decimals) {
@@ -160,6 +163,19 @@ class HeatmapChart extends Chart<HeatmapChart> {
         throw new IllegalArgumentException("valueDecimals must be non-negative, got ${decimals}")
       }
       valueDecimals = decimals
+      this as B
+    }
+
+    /**
+     * Sets the colour used for every cell-value label.
+     *
+     * <p>When omitted, label colour is selected for contrast with each tile.</p>
+     *
+     * @param color label colour
+     * @return this builder
+     */
+    B labelColor(Color color) {
+      labelColor = color
       this as B
     }
 
@@ -185,6 +201,7 @@ class HeatmapChart extends Chart<HeatmapChart> {
     protected void applyHeatmapOptions(C chart) {
       chart.showValues = showValues
       chart.valueDecimals = valueDecimals
+      chart.labelColor = labelColor
       chart.lowColor = lowColor
       chart.midColor = midColor
       chart.highColor = highColor
