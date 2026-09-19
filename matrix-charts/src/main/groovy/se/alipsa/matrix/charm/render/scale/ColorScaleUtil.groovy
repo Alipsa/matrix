@@ -15,7 +15,9 @@ class ColorScaleUtil {
   private static final int NEUTRAL_COMPONENT = 128
   private static final BigDecimal OPAQUE = 1.0
   private static final BigDecimal BYTE_MAX = 255
+  private static final String HASH = '#'
   private static final String PERCENT = '%'
+  private static final int[] NO_COLOR = [] as int[]
   private static final Pattern RGB_FUNCTION = Pattern.compile(
       '(?i)^\\s*(rgb|rgba)\\(\\s*([^,]+)\\s*,\\s*([^,]+)\\s*,\\s*([^,]+)(?:\\s*,\\s*([^,]+))?\\s*\\)\\s*$'
   )
@@ -106,8 +108,28 @@ class ColorScaleUtil {
    * @return RGB array
    */
   static int[] parseColor(String color) {
+    int[] opaqueHex = parseOpaqueHexColor(color)
+    if (opaqueHex.length != 0) {
+      return opaqueHex
+    }
     ParsedColor parsed = parseColorValue(color)
     [parsed.red, parsed.green, parsed.blue] as int[]
+  }
+
+  private static int[] parseOpaqueHexColor(String color) {
+    String value = color?.trim()
+    if (value == null || value.length() != 7 || !value.startsWith(HASH)) {
+      return NO_COLOR
+    }
+    try {
+      [
+          Integer.parseInt(value.substring(1, 3), 16),
+          Integer.parseInt(value.substring(3, 5), 16),
+          Integer.parseInt(value.substring(5, 7), 16)
+      ] as int[]
+    } catch (NumberFormatException ignored) {
+      NO_COLOR
+    }
   }
 
   private static ParsedColor parseColorValue(String color) {
@@ -115,7 +137,7 @@ class ColorScaleUtil {
     if (value == null || value.isEmpty()) {
       return neutral()
     }
-    if (value.startsWith('#')) {
+    if (value.startsWith(HASH)) {
       ParsedColor parsed = parseHexColor(value.substring(1))
       if (parsed != null) {
         return parsed
@@ -130,15 +152,16 @@ class ColorScaleUtil {
   }
 
   private static ParsedColor parseHexColor(String hex) {
-    if (!(hex ==~ /(?i)[0-9a-f]+/)) {
-      return null
-    }
-    switch (hex.length()) {
-      case 3 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), OPAQUE)
-      case 4 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), alphaFromByte(expandHexDigit(hex, 3)))
-      case 6 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), OPAQUE)
-      case 8 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), alphaFromByte(hexByte(hex, 6)))
-      default -> null
+    try {
+      switch (hex.length()) {
+        case 3 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), OPAQUE)
+        case 4 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), alphaFromByte(expandHexDigit(hex, 3)))
+        case 6 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), OPAQUE)
+        case 8 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), alphaFromByte(hexByte(hex, 6)))
+        default -> null
+      }
+    } catch (NumberFormatException ignored) {
+      null
     }
   }
 
