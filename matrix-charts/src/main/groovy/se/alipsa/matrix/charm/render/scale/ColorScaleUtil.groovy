@@ -1,5 +1,9 @@
 package se.alipsa.matrix.charm.render.scale
 
+import java.math.RoundingMode
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 /**
  * Utilities for color scale interpolation.
  */
@@ -7,6 +11,14 @@ package se.alipsa.matrix.charm.render.scale
 @SuppressWarnings('DuplicateNumberLiteral')
 @SuppressWarnings('IfStatementBraces')
 class ColorScaleUtil {
+
+  private static final int NEUTRAL_COMPONENT = 128
+  private static final BigDecimal OPAQUE = 1.0
+  private static final BigDecimal BYTE_MAX = 255
+  private static final String PERCENT = '%'
+  private static final Pattern RGB_FUNCTION = Pattern.compile(
+      '(?i)^\\s*(rgb|rgba)\\(\\s*([^,]+)\\s*,\\s*([^,]+)\\s*,\\s*([^,]+)(?:\\s*,\\s*([^,]+))?\\s*\\)\\s*$'
+  )
 
   /**
    * The default discrete colours Charm assigns to scale levels when no palette is
@@ -30,12 +42,34 @@ class ColorScaleUtil {
   /**
    * Returns black or white text that contrasts with a colour's perceived luminance.
    *
+   * <p>Transparent colours are composited over white. Use
+   * {@link #contrastTextColor(String, String)} to select a different background.</p>
+   *
    * @param color background colour
    * @return {@code #000000} for light backgrounds, otherwise {@code #ffffff}
    */
   static String contrastTextColor(String color) {
-    int[] rgb = parseColor(color)
-    int luminance = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114).intdiv(1000)
+    contrastTextColor(color, '#ffffff')
+  }
+
+  /**
+   * Returns black or white text that contrasts with a colour composited over a background.
+   *
+   * <p>Supports {@code #RGB}, {@code #RGBA}, {@code #RRGGBB}, {@code #RRGGBBAA},
+   * {@code rgb(...)}, {@code rgba(...)}, and the named colours supported by
+   * {@link #parseColor(String)}. Unsupported values are treated as neutral gray.</p>
+   *
+   * @param color foreground/background fill colour
+   * @param background opaque colour behind transparent {@code color}
+   * @return {@code #000000} for light backgrounds, otherwise {@code #ffffff}
+   */
+  static String contrastTextColor(String color, String background) {
+    ParsedColor foreground = parseColorValue(color)
+    ParsedColor backdrop = parseColorValue(background)
+    int red = composite(foreground.red, backdrop.red, foreground.alpha)
+    int green = composite(foreground.green, backdrop.green, foreground.alpha)
+    int blue = composite(foreground.blue, backdrop.blue, foreground.alpha)
+    int luminance = (red * 299 + green * 587 + blue * 114).intdiv(1000)
     luminance >= 128 ? '#000000' : '#ffffff'
   }
 
@@ -64,28 +98,109 @@ class ColorScaleUtil {
 
   /**
    * Parse a color string to RGB values.
-   * Supports hex format (#RGB, #RRGGBB) and some named colors.
+   * Supports {@code #RGB}, {@code #RGBA}, {@code #RRGGBB}, {@code #RRGGBBAA},
+   * {@code rgb(...)}, {@code rgba(...)}, and named colors. Alpha is not included in the returned
+   * RGB values. Unsupported values return neutral gray.
    *
    * @param color color string
    * @return RGB array
    */
   static int[] parseColor(String color) {
-    if (color == null) return [128, 128, 128] as int[]
+    ParsedColor parsed = parseColorValue(color)
+    [parsed.red, parsed.green, parsed.blue] as int[]
+  }
 
-    if (color.startsWith('#')) {
-      String hex = color.substring(1)
-      if (hex.length() == 3) {
-        hex = "${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}"
-      }
-      if (hex.length() == 6) {
-        int r = Integer.parseInt(hex.substring(0, 2), 16)
-        int g = Integer.parseInt(hex.substring(2, 4), 16)
-        int b = Integer.parseInt(hex.substring(4, 6), 16)
-        return [r, g, b] as int[]
+  private static ParsedColor parseColorValue(String color) {
+    String value = color?.trim()
+    if (value == null || value.isEmpty()) {
+      return neutral()
+    }
+    if (value.startsWith('#')) {
+      ParsedColor parsed = parseHexColor(value.substring(1))
+      if (parsed != null) {
+        return parsed
       }
     }
+    ParsedColor functional = parseRgbFunction(value)
+    if (functional != null) {
+      return functional
+    }
+    int[] named = NAMED_COLORS[value.toLowerCase()]
+    named == null ? neutral() : new ParsedColor(named[0], named[1], named[2], OPAQUE)
+  }
 
-    NAMED_COLORS[color.toLowerCase()] ?: ([128, 128, 128] as int[])
+  private static ParsedColor parseHexColor(String hex) {
+    if (!(hex ==~ /(?i)[0-9a-f]+/)) {
+      return null
+    }
+    switch (hex.length()) {
+      case 3 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), OPAQUE)
+      case 4 -> new ParsedColor(expandHexDigit(hex, 0), expandHexDigit(hex, 1), expandHexDigit(hex, 2), alphaFromByte(expandHexDigit(hex, 3)))
+      case 6 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), OPAQUE)
+      case 8 -> new ParsedColor(hexByte(hex, 0), hexByte(hex, 2), hexByte(hex, 4), alphaFromByte(hexByte(hex, 6)))
+      default -> null
+    }
+  }
+
+  private static ParsedColor parseRgbFunction(String value) {
+    Matcher matcher = RGB_FUNCTION.matcher(value)
+    if (!matcher.matches()) {
+      return null
+    }
+    Integer red = parseRgbComponent(matcher.group(2))
+    Integer green = parseRgbComponent(matcher.group(3))
+    Integer blue = parseRgbComponent(matcher.group(4))
+    BigDecimal alpha = matcher.group(5) == null ? OPAQUE : parseAlpha(matcher.group(5))
+    if (red == null || green == null || blue == null || alpha == null) {
+      return null
+    }
+    new ParsedColor(red, green, blue, alpha)
+  }
+
+  private static Integer parseRgbComponent(String value) {
+    try {
+      String component = value.trim()
+      BigDecimal decimal = component.endsWith(PERCENT)
+          ? new BigDecimal(component.substring(0, component.length() - 1)) * BYTE_MAX / 100
+          : new BigDecimal(component)
+      int rounded = decimal.setScale(0, RoundingMode.HALF_UP).intValue()
+      0.max(rounded.min(BYTE_MAX.intValue())) as int
+    } catch (NumberFormatException ignored) {
+      null
+    }
+  }
+
+  private static BigDecimal parseAlpha(String value) {
+    try {
+      String component = value.trim()
+      BigDecimal alpha = component.endsWith(PERCENT)
+          ? new BigDecimal(component.substring(0, component.length() - 1)) / 100
+          : new BigDecimal(component)
+      alpha.min(OPAQUE).max(BigDecimal.ZERO)
+    } catch (NumberFormatException ignored) {
+      null
+    }
+  }
+
+  private static int expandHexDigit(String hex, int index) {
+    Integer.parseInt("${hex[index]}${hex[index]}", 16)
+  }
+
+  private static int hexByte(String hex, int start) {
+    Integer.parseInt(hex.substring(start, start + 2), 16)
+  }
+
+  private static BigDecimal alphaFromByte(int alpha) {
+    new BigDecimal(alpha).divide(BYTE_MAX, 8, RoundingMode.HALF_UP)
+  }
+
+  private static int composite(int foreground, int background, BigDecimal alpha) {
+    BigDecimal composited = foreground * alpha + background * (OPAQUE - alpha)
+    composited.setScale(0, RoundingMode.HALF_UP).intValue()
+  }
+
+  private static ParsedColor neutral() {
+    new ParsedColor(NEUTRAL_COMPONENT, NEUTRAL_COMPONENT, NEUTRAL_COMPONENT, OPAQUE)
   }
 
   private static final Map<String, int[]> NAMED_COLORS = [
@@ -115,5 +230,19 @@ class ColorScaleUtil {
       'olive': [128, 128, 0] as int[],
       'teal': [0, 128, 128] as int[]
   ]
+
+  private static class ParsedColor {
+    final int red
+    final int green
+    final int blue
+    final BigDecimal alpha
+
+    ParsedColor(int red, int green, int blue, BigDecimal alpha) {
+      this.red = red
+      this.green = green
+      this.blue = blue
+      this.alpha = alpha
+    }
+  }
 
 }

@@ -62,6 +62,20 @@ class GeomFillScaleTest {
     assertEquals(['#ffffff', '#000000'], fills)
   }
 
+  @Test
+  void textAutoContrastCompositesTransparentFillOverThePanel() {
+    Matrix data = Matrix.builder().columns([x: [1], y: [1], label: ['transparent']])
+        .types([Integer, Integer, String]).build()
+    PlotSpec spec = Charts.plot(data)
+    spec.mapping([x: 'x', y: 'y', label: 'label'])
+    TextBuilder labels = new TextBuilder().autoContrastFill()
+    labels.param('fill', 'rgba(0, 0, 0, 0.8)')
+    spec.addLayer(labels)
+
+    List<String> fills = elementsWithClass(spec.build().render(), 'charm-text')*.getAttribute('fill')*.toString()
+    assertEquals(['#ffffff'], fills)
+  }
+
   private static List elementsWithClass(Svg svg, String cssClass) {
     svg.descendants().findAll { it.getAttribute('class')?.toString()?.split(' ')?.contains(cssClass) }
   }

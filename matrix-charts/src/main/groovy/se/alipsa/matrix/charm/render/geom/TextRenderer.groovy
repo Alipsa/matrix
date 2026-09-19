@@ -44,7 +44,7 @@ class TextRenderer {
       BigDecimal drawX = x + nudgeX * 10
       BigDecimal drawY = y - nudgeY * 10
       String color = Boolean.TRUE == layer.params['autoContrastFill']
-          ? ColorScaleUtil.contrastTextColor(GeomUtils.resolveFill(context, layer, datum))
+          ? ColorScaleUtil.contrastTextColor(GeomUtils.resolveFill(context, layer, datum), panelBackground(context))
           : GeomUtils.resolveStroke(context, layer, datum)
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
 
@@ -83,6 +83,15 @@ class TextRenderer {
       return 'end'
     }
     'middle'
+  }
+
+  private static String panelBackground(RenderContext context) {
+    String panelFill = context.chart.theme.panelBackground?.fill
+    if (panelFill && panelFill != 'none') {
+      return panelFill
+    }
+    String plotFill = context.chart.theme.plotBackground?.fill
+    plotFill && plotFill != 'none' ? plotFill : '#ffffff'
   }
 
   private static String dominantBaseline(BigDecimal vjust) {
