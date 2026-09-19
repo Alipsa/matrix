@@ -75,10 +75,11 @@ public class OdsReader implements DataReader<OdsReadOptions> {
    * dropped by default (ODF producers commonly declare empty rows past the data range), while
    * interior all-missing rows are preserved so missing data keeps its position; disable the trim
    * with {@code trimTrailingMissingRows(false)} to keep a legitimate trailing all-missing data
-   * row, for example when round-tripping a file written by {@link OdsWriter}.
-   * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
-   * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. All cell
-   * values are read as strings and then converted to appropriate types based on the read options.
+ * row, for example when round-tripping a file written by {@link OdsWriter}.
+ * Empty or blank header cells are named {@code C<zero-based column index>}; if that name is
+ * already taken by a real header, a {@code -2}, {@code -3}, ... suffix is appended. Duplicate
+ * non-blank headers are handled the same way, case-insensitively. All cell values are read as
+ * strings and then converted to appropriate types based on the read options.
    *
    * @param options the read options specifying the source, sheet index, and parsing configuration
    * @return the table read from the ODS file
@@ -109,11 +110,16 @@ public class OdsReader implements DataReader<OdsReadOptions> {
           taken.add(header.toLowerCase(Locale.ROOT));
         }
       }
+      Set<String> originalHeadersSeen = new HashSet<>();
       for (int colNum = 0; colNum < lastColumn; colNum++) {
         String header = rawHeaders.get(colNum);
-        columnNames.add(header == null || header.isBlank()
-            ? ColumnNames.unique("C" + colNum, taken)
-            : header);
+        if (header == null || header.isBlank()) {
+          columnNames.add(ColumnNames.unique("C" + colNum, taken));
+        } else if (originalHeadersSeen.add(header.toLowerCase(Locale.ROOT))) {
+          columnNames.add(header);
+        } else {
+          columnNames.add(ColumnNames.unique(header, taken));
+        }
       }
 
       List<String[]> dataRows = new ArrayList<>();

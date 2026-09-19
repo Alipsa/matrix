@@ -42,15 +42,16 @@
   `IllegalArgumentException("ODS requires a binary OutputStream destination")` and `OdsReader` rejects
   `Reader`-backed sources with `IllegalArgumentException("ODS requires a binary InputStream or File source")`.
   ODS is a ZIP container; transcoding it through a character stream corrupted the bytes.
-  `OdsWriteOptions.builder(Writer)` is deprecated.
+  `OdsWriteOptions.builder(Writer)` is deprecated. `OdsReadOptions.builder(URL)` and
+  `builderFromUrl(String)` open a binary stream and remain supported.
 - `Gtable.putAt` (`table[row, col] = value`) converts values with `ValueConverter.convert` instead of
   Groovy's `asType`. In BOOLEAN columns, non-empty strings such as `'false'`, `'no'`, `'0'`, and
   `'maybe'` now store `false` unless they are `'true'`/`'yes'`/`'on'`/`'1'` (case-insensitive), and a
   number stores `true` only when it equals `1`. ISO date/time strings are now parsed for
   LOCAL_DATE/LOCAL_DATE_TIME/LOCAL_TIME columns; INSTANT columns still do not parse strings. Strings
   in numeric columns must be plain numbers; fractions truncate like equivalent numbers, out-of-range
-  values throw `IllegalArgumentException` instead of wrapping, and empty strings mark numeric,
-  Boolean, `java.time`, and custom-typed cells missing. `'NaN'` and `'Infinity'` strings now throw
+  values throw `IllegalArgumentException` instead of wrapping, and empty strings mark cells missing
+  in every column type, including STRING. `'NaN'` and `'Infinity'` strings now throw
   `NumberFormatException` in DOUBLE/FLOAT columns, and `Double.NaN` in an integral column is missing.
   `putAt` intentionally truncates integral fractions while `Gtable.create` remains lossless-only.
 - `Gtable.putAt` and `Gtable.addIntColumn`/`addLongColumn`/`addShortColumn` require **matrix-core 3.9.0

@@ -163,7 +163,6 @@ public class XmlReader implements DataReader<XmlReadOptions> {
           throw invalidXml("Duplicate XML column name: " + name);
         }
         candidate = ColumnNames.unique(name, reservedNames);
-        normalizedName = candidate.toLowerCase(Locale.ROOT);
       }
       originalNamesSeen.add(name.toLowerCase(Locale.ROOT));
       names.add(candidate);

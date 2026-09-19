@@ -216,6 +216,20 @@ class NormalizeTest {
   }
 
   @Test
+  void testBigDecimalNormalizationRoundsTheExactQuotient() {
+    // DECIMAL64 first rounds the middle value to the exact 0.125 tie, incorrectly producing 0.12
+    // at two decimal places. Applying HALF_EVEN directly to the exact quotient produces 0.13.
+    def bc = BigDecimalColumn.create('b', [
+        new BigDecimal('0'),
+        new BigDecimal('0.12500000000000005'),
+        new BigDecimal('1')] as BigDecimal[])
+
+    def norm = Normalizer.minMaxNorm(bc, 2)
+
+    Assertions.assertEquals(0.13, norm.get(1))
+  }
+
+  @Test
   void testBigDecimalNormalizationOfAllMissingColumn() {
     def bc = BigDecimalColumn.create('b', [null, null] as BigDecimal[])
     [Normalizer.minMaxNorm(bc), Normalizer.meanNorm(bc), Normalizer.stdScaleNorm(bc), Normalizer.logNorm(bc)].each { col ->

@@ -232,14 +232,16 @@ class Normalizer {
   }
 
   /**
-   * {@code numerator / denominator} in {@link #DIVISION_CONTEXT}, {@code null} (missing) when the
-   * denominator is zero, rounded to {@code decimals[0]} places (HALF_EVEN) when decimals are given.
+   * {@code numerator / denominator}, {@code null} (missing) when the denominator is zero. When
+   * decimals are given, the exact quotient is rounded directly to {@code decimals[0]} places with
+   * HALF_EVEN; otherwise the quotient uses {@link #DIVISION_CONTEXT}.
    */
   private static BigDecimal divideRounded(BigDecimal numerator, BigDecimal denominator, int... decimals) {
     if (denominator.signum() == 0) {
       return null
     }
-    BigDecimal result = numerator.divide(denominator, DIVISION_CONTEXT)
-    decimals.length > 0 ? result.setScale(decimals[0], RoundingMode.HALF_EVEN) : result
+    decimals.length > 0
+        ? numerator.divide(denominator, decimals[0], RoundingMode.HALF_EVEN)
+        : numerator.divide(denominator, DIVISION_CONTEXT)
   }
 }

@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URISyntaxException;
 
 public class ImportDataTest {
 
@@ -89,6 +90,13 @@ public class ImportDataTest {
   }
 
   @Test
+  public void testOdsImportFromUrlString() throws IOException, URISyntaxException {
+    var url = getClass().getResource("/glaciers.ods");
+    Table glaciers = Table.read().usingOptions(OdsReadOptions.builderFromUrl(url.toString()).build());
+    assertEquals(70, glaciers.rowCount());
+  }
+
+  @Test
   public void testOdsFileNameBuilderSetsTableName() throws IOException {
     File odsFile = new File(getClass().getResource("/glaciers.ods").getFile());
     Table byString = Table.read().usingOptions(OdsReadOptions.builder(odsFile.getPath()).build());
@@ -134,6 +142,26 @@ public class ImportDataTest {
     Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
     assertEquals(java.util.List.of("a", "C1-2", "C1"), table.columnNames());
     assertEquals(1, table.rowCount());
+  }
+
+  @Test
+  public void testOdsDuplicateHeadersGetUniqueNames() throws Exception {
+    File odsFile = File.createTempFile("duplicateheaders", ".ods");
+    odsFile.deleteOnExit();
+    try (FileOutputStream fos = new FileOutputStream(odsFile)) {
+      com.github.miachm.sods.SpreadSheet spread = new com.github.miachm.sods.SpreadSheet();
+      com.github.miachm.sods.Sheet sheet = new com.github.miachm.sods.Sheet("Sheet1", 2, 3);
+      sheet.getRange(0, 0).setValue("a");
+      sheet.getRange(0, 1).setValue("A");
+      sheet.getRange(0, 2).setValue("a-2");
+      sheet.getRange(1, 0).setValue(1);
+      sheet.getRange(1, 1).setValue(2);
+      sheet.getRange(1, 2).setValue(3);
+      spread.appendSheet(sheet);
+      spread.save(fos);
+    }
+    Table table = Table.read().usingOptions(OdsReadOptions.builder(odsFile).build());
+    assertEquals(java.util.List.of("a", "A-3", "a-2"), table.columnNames());
   }
 
   @Test

@@ -78,7 +78,7 @@ public class OdsReadOptions extends ReadOptions {
   }
 
   /**
-   * Creates a builder with a URL source.
+   * Creates a builder with a URL source opened as a binary stream.
    *
    * @param url the URL to read from
    * @return a new builder
@@ -99,8 +99,8 @@ public class OdsReadOptions extends ReadOptions {
   }
 
   /**
-   * Creates a builder with a URL string source. This is a convenience method for
-   * <code>builder(new URI(url).toURL())</code>
+   * Creates a builder with a URL string source opened as a binary stream. This is a convenience
+   * method for <code>builder(new URI(url).toURL())</code>
    *
    * @param url the URL string to read from
    * @return a new builder
@@ -174,7 +174,7 @@ public class OdsReadOptions extends ReadOptions {
      * @throws IOException if the URL cannot be accessed
      */
     protected Builder(URL url) throws IOException {
-      super(url);
+      super(url.openStream());
     }
 
     /**

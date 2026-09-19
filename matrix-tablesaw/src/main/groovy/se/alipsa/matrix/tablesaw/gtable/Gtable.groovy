@@ -387,14 +387,15 @@ class Gtable extends Table {
    * like numbers do: a fraction is truncated
    * toward zero ({@code '5.7'} and {@code 5.7} both store {@code 5} in an INTEGER column) and a value
    * outside the column type's range throws {@code IllegalArgumentException} (requires matrix-core
-   * 3.9.0 or later at runtime). An empty string ({@code ''}) into a numeric, Boolean, {@code java.time}
-   * or custom-typed column marks the cell as missing. Strings into an INSTANT column are not parsed
-   * and throw {@code GroovyCastException}.
+   * 3.9.0 or later at runtime). An empty string ({@code ''}) into any column marks the cell as
+   * missing. Strings into an INSTANT column are not parsed and throw {@code GroovyCastException}.
    *
    * <p>Marking a cell missing in a {@link StringColumn} replaces that column with a copy (Tablesaw
    * cannot register the missing marker in place), so if this Gtable was created with
    * {@link #create(Table)} that one column is no longer shared with the source table afterwards;
    * all other columns keep writing through.
+   * Each missing-value update to a StringColumn makes a replacement-column copy; callers updating
+   * many StringColumn cells should construct and replace the column once instead.
    *
    * @param rowIndex the rowIndex
    * @param columnIndex the columnIndex
@@ -446,8 +447,7 @@ class Gtable extends Table {
     if (value == null) {
       return null
     }
-    if (value instanceof CharSequence && !CharSequence.isAssignableFrom(targetType)
-        && value.toString().isEmpty()) {
+    if (value instanceof CharSequence && value.toString().isEmpty()) {
       return null
     }
     if (value instanceof CharSequence && Number.isAssignableFrom(targetType)) {

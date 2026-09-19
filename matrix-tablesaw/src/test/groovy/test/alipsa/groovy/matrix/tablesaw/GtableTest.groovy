@@ -488,19 +488,21 @@ class GtableTest {
 
   @Test
   void testPutAtEmptyStringBecomesMissing() {
-    // only the empty string is uniform across column types: '' marks the cell missing for numeric,
-    // Boolean and java.time columns. (No STRING column here: "" is Tablesaw's own missing indicator
-    // for StringColumn, so a StringColumn assertion would pass vacuously.)
+    // Empty strings consistently mark cells missing, including StringColumn where set("") would
+    // otherwise bypass ByteDictionaryMap's missing marker.
     Gtable table = Gtable.create('blanks',
         IntColumn.create('i', [1, 2] as int[]),
         BooleanColumn.create('flag', [true, true] as Boolean[]),
-        DateColumn.create('date', [LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 2)] as LocalDate[]))
+        DateColumn.create('date', [LocalDate.of(2020, 1, 1), LocalDate.of(2020, 1, 2)] as LocalDate[]),
+        StringColumn.create('string', ['present', 'also present']))
     table[0, 'i'] = ''
     table[0, 'flag'] = ''
     table[0, 'date'] = ''
+    table[0, 'string'] = ''
     assertTrue(table.column('i').isMissing(0), "'' into INTEGER is missing")
     assertTrue(table.column('flag').isMissing(0), "'' into BOOLEAN is missing")
     assertTrue(table.column('date').isMissing(0), "'' into LOCAL_DATE is missing")
+    assertTrue(table.column('string').isMissing(0), "'' into STRING is missing")
   }
 
   @Test
