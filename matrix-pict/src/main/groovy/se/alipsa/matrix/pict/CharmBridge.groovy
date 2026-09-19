@@ -1,5 +1,7 @@
 package se.alipsa.matrix.pict
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.LegendDirection
@@ -12,11 +14,18 @@ import se.alipsa.matrix.charm.geom.BarBuilder
 import se.alipsa.matrix.charm.geom.BoxplotBuilder
 import se.alipsa.matrix.charm.geom.ColBuilder
 import se.alipsa.matrix.charm.geom.HistogramBuilder
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.charm.geom.LineBuilder
+import se.alipsa.matrix.charm.geom.PathBuilder
 import se.alipsa.matrix.charm.geom.PieBuilder
 import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.PolygonBuilder
+import se.alipsa.matrix.charm.geom.SegmentBuilder
+import se.alipsa.matrix.charm.geom.TextBuilder
+import se.alipsa.matrix.charm.geom.TileBuilder
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
+import se.alipsa.matrix.charm.render.scale.ColorScaleUtil
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
@@ -30,6 +39,10 @@ import java.awt.Font
  * {@link Chart} with categorySeries, valueSeries, style, title, etc.
  * This bridge converts that into a Charm PlotSpec → immutable Chart → SVG.</p>
  */
+@SuppressWarnings([
+    'DuplicateListLiteral', 'DuplicateNumberLiteral', 'DuplicateStringLiteral',
+    'ReturnsNullInsteadOfEmptyCollection', 'UnnecessaryCollectCall'
+])
 class CharmBridge {
 
   private static final String AES_X = 'x'
@@ -39,6 +52,24 @@ class CharmBridge {
   private static final String AES_GROUP = 'group'
   private static final String AES_COLOR = 'color'
   private static final String AES_FILL = 'fill'
+  private static final String AES_VALUE = 'value'
+  private static final String AES_LABEL = 'label'
+  private static final String AES_XMIN = 'xmin'
+  private static final String AES_XMAX = 'xmax'
+  private static final String AES_YMIN = 'ymin'
+  private static final String AES_YMAX = 'ymax'
+  private static final String AES_XEND = 'xend'
+  private static final String AES_YEND = 'yend'
+  private static final String COL_TEXT = 'text'
+  private static final String COL_ROW = 'row'
+  private static final String PARAM_COLOR = 'color'
+  private static final String PARAM_FILL = 'fill'
+  private static final BigDecimal HALF = 0.5
+  private static final BigDecimal RADAR_LABEL_RADIUS = 1.12
+  private static final BigDecimal RADAR_LIMIT = 1.25
+  private static final String RADAR_GRID_COLOR = '#cccccc'
+  private static final String DEFAULT_GRADIENT_LOW = '#132B43'
+  private static final String DEFAULT_GRADIENT_HIGH = '#56B1F7'
 
   /**
    * Converts a pict chart {@link Chart} to a Charm {@link se.alipsa.matrix.charm.Chart}
@@ -75,6 +106,8 @@ class CharmBridge {
       case PieChart -> buildPieSpec(chart as PieChart)
       case ScatterChart -> buildScatterSpec(chart as ScatterChart)
       case BubbleChart -> buildBubbleSpec(chart as BubbleChart)
+      case HeatmapChart -> buildHeatmapSpec(chart as HeatmapChart)
+      case RadarChart -> buildRadarSpec(chart as RadarChart)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -84,7 +117,9 @@ class CharmBridge {
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
     spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
-    spec.addLayer(new AreaBuilder())
+    AreaBuilder layer = new AreaBuilder()
+    applySingleSeriesColor(layer, chart, multiSeries)
+    spec.addLayer(layer)
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -102,10 +137,16 @@ class CharmBridge {
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {
       spec.mapping(multiSeries ? [(AES_X): AES_Y, (AES_Y): AES_X, (AES_FILL): AES_SERIES] : [(AES_X): AES_Y, (AES_Y): AES_X])
-      spec.addLayer(new BarBuilder().position(position))
+      BarBuilder layer = new BarBuilder()
+      layer.position(position)
+      applySingleSeriesColor(layer, chart, multiSeries)
+      spec.addLayer(layer)
     } else {
       spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
-      spec.addLayer(new ColBuilder().position(position))
+      ColBuilder layer = new ColBuilder()
+      layer.position(position)
+      applySingleSeriesColor(layer, chart, multiSeries)
+      spec.addLayer(layer)
     }
     applyLabelsAndTheme(spec, chart)
     spec
@@ -129,7 +170,8 @@ class CharmBridge {
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y])
+    boolean perBoxColors = resolveSeriesColors(chart) != null
+    spec.mapping(perBoxColors ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_FILL): AES_X] : [(AES_X): AES_X, (AES_Y): AES_Y])
     spec.addLayer(new BoxplotBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
@@ -147,7 +189,9 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.mapping([(AES_X): AES_X])
-    spec.addLayer(new HistogramBuilder().bins(chart.numberOfBins))
+    HistogramBuilder layer = new HistogramBuilder().bins(chart.numberOfBins)
+    applySingleSeriesColor(layer, chart, false)
+    spec.addLayer(layer)
     applyLabelsAndTheme(spec, chart as Chart)
     spec
   }
@@ -157,7 +201,9 @@ class CharmBridge {
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
     spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_COLOR): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
-    spec.addLayer(new LineBuilder())
+    LineBuilder layer = new LineBuilder()
+    applySingleSeriesColor(layer, chart, multiSeries)
+    spec.addLayer(layer)
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -187,7 +233,9 @@ class CharmBridge {
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
     spec.mapping(multiSeries ? [(AES_X): AES_X, (AES_Y): AES_Y, (AES_COLOR): AES_SERIES] : [(AES_X): AES_X, (AES_Y): AES_Y])
-    spec.addLayer(new PointBuilder())
+    PointBuilder layer = new PointBuilder()
+    applySingleSeriesColor(layer, chart, multiSeries)
+    spec.addLayer(layer)
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -223,9 +271,160 @@ class CharmBridge {
         .build()
     PlotSpec spec = Charts.plot(data)
     spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_SIZE): AES_SIZE])
-    spec.addLayer(new PointBuilder())
+    PointBuilder layer = new PointBuilder()
+    applySingleSeriesColor(layer, chart, false)
+    spec.addLayer(layer)
     applyLabelsAndTheme(spec, chart)
     spec
+  }
+
+  private static PlotSpec buildHeatmapSpec(HeatmapChart chart) {
+    int rowCount = chart.rowLabels.size()
+    List<List<?>> rows = []
+    chart.columnLabels.eachWithIndex { String column, int c ->
+      chart.rowLabels.eachWithIndex { Object rowLabel, int r ->
+        BigDecimal value = chart.values[c][r]
+        BigDecimal x = c
+        BigDecimal y = rowCount - 1 - r
+        rows << [x, x - HALF, x + HALF, y, y - HALF, y + HALF, value, value == null ? null : value.toPlainString()]
+      }
+    }
+    Matrix data = Matrix.builder()
+        .columnNames(AES_X, AES_XMIN, AES_XMAX, AES_Y, AES_YMIN, AES_YMAX, AES_VALUE, COL_TEXT)
+        .rows(rows)
+        .types([BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, String])
+        .build()
+    PlotSpec spec = Charts.plot(data)
+    spec.mapping([
+        (AES_X): AES_X, (AES_XMIN): AES_XMIN, (AES_XMAX): AES_XMAX,
+        (AES_Y): AES_Y, (AES_YMIN): AES_YMIN, (AES_YMAX): AES_YMAX, (AES_FILL): AES_VALUE
+    ])
+    spec.addLayer(new TileBuilder())
+    if (chart.showValues) {
+      spec.addLayer(new TextBuilder().mapping([(AES_LABEL): COL_TEXT]))
+    }
+    spec.scale.x(indexScale(chart.columnLabels))
+    spec.scale.y(indexScale(chart.rowLabels.reverse()*.toString()))
+    spec.scale.fill(heatmapFillScale(chart))
+    if (chart instanceof CorrelationHeatmapChart && !chart.legend?.title) {
+      (spec.labels as se.alipsa.matrix.charm.LabelsSpec).guides[AES_FILL] = (chart as CorrelationHeatmapChart).method
+    }
+    applyLabelsAndTheme(spec, chart)
+    spec
+  }
+
+  private static Scale indexScale(List<String> labels) {
+    Scale scale = Scale.continuous()
+    scale.params['limits'] = [-HALF, labels.size() - HALF]
+    scale.params['expand'] = [0, 0]
+    scale.breaks = (0..<labels.size()).collect { int i -> i as BigDecimal }
+    scale.labels = labels
+    scale
+  }
+
+  private static Scale heatmapFillScale(HeatmapChart chart) {
+    String low = colorToHex(chart.lowColor) ?: DEFAULT_GRADIENT_LOW
+    String high = colorToHex(chart.highColor) ?: DEFAULT_GRADIENT_HIGH
+    Scale scale
+    if (chart.midColor != null && chart.midpoint != null) {
+      scale = Scale.gradient(low, high, colorToHex(chart.midColor), chart.midpoint)
+    } else if (chart.midColor != null) {
+      scale = Scale.gradientN([low, colorToHex(chart.midColor), high])
+    } else if (chart.lowColor != null || chart.highColor != null) {
+      scale = Scale.gradient(low, high)
+    } else {
+      scale = Scale.gradient()
+    }
+    if (chart.fillLimits) {
+      scale.params['limits'] = chart.fillLimits
+    }
+    scale
+  }
+
+  private static PlotSpec buildRadarSpec(RadarChart chart) {
+    int axisCount = chart.axisLabels.size()
+    BigDecimal outer = chart.outerRadius()
+    List<BigDecimal> angles = (0..<axisCount).collect { int i -> PI / 2 - (i / axisCount) * 2 * PI }
+    Matrix polygonData = radarPolygonData(chart, angles, outer)
+    Matrix ringData = radarRingData(chart.ringValues(), angles, outer)
+    Matrix spokeData = radarSpokeData(angles)
+    Matrix labelData = radarLabelData(chart.axisLabels, angles)
+    PlotSpec spec = Charts.plot(polygonData)
+    spec.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_GROUP): COL_ROW, (AES_COLOR): AES_SERIES, (AES_FILL): AES_SERIES])
+    PathBuilder rings = new PathBuilder()
+    rings.data(ringData)
+    rings.inheritMapping(false)
+    rings.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_GROUP): AES_GROUP])
+    rings.color(RADAR_GRID_COLOR)
+    spec.addLayer(rings)
+    SegmentBuilder spokes = new SegmentBuilder()
+    spokes.data(spokeData)
+    spokes.inheritMapping(false)
+    spokes.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_XEND): AES_XEND, (AES_YEND): AES_YEND])
+    spokes.color(RADAR_GRID_COLOR)
+    spec.addLayer(spokes)
+    spec.addLayer(new PolygonBuilder().alpha(chart.fillAlpha))
+    TextBuilder labels = new TextBuilder()
+    labels.data(labelData)
+    labels.inheritMapping(false)
+    labels.mapping([(AES_X): AES_X, (AES_Y): AES_Y, (AES_LABEL): COL_TEXT])
+    spec.addLayer(labels)
+    spec.scale.x(unitScale())
+    spec.scale.y(unitScale())
+    applyLabelsAndTheme(spec, chart, false)
+    se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
+    hideAxes(theme, true, true)
+    theme.panelGridMajor = null
+    theme.panelGridMinor = null
+    theme.explicitNulls.addAll(['panelGridMajor', 'panelGridMinor'])
+    spec
+  }
+
+  private static Matrix radarPolygonData(RadarChart chart, List<BigDecimal> angles, BigDecimal outer) {
+    List<List<?>> rows = []
+    chart.seriesValues.eachWithIndex { List<BigDecimal> values, int s ->
+      String series = chart.seriesLabels[s]
+      angles.eachWithIndex { BigDecimal angle, int i ->
+        BigDecimal radius = values[i] / outer
+        rows << [radius * angle.cos(), radius * angle.sin(), series, "row${s}".toString()]
+      }
+    }
+    Matrix.builder().columnNames(AES_X, AES_Y, AES_SERIES, COL_ROW)
+        .rows(rows).types([BigDecimal, BigDecimal, String, String]).build()
+  }
+
+  private static Matrix radarRingData(List<BigDecimal> ringValues, List<BigDecimal> angles, BigDecimal outer) {
+    List<List<?>> rows = []
+    ringValues.eachWithIndex { BigDecimal ringValue, int ring ->
+      BigDecimal radius = ringValue / outer
+      String group = "ring${ring}"
+      (angles + [angles[0]]).each { BigDecimal angle -> rows << [radius * angle.cos(), radius * angle.sin(), group] }
+    }
+    Matrix.builder().columnNames(AES_X, AES_Y, AES_GROUP)
+        .rows(rows).types([BigDecimal, BigDecimal, String]).build()
+  }
+
+  private static Matrix radarSpokeData(List<BigDecimal> angles) {
+    List<List<?>> rows = []
+    angles.each { BigDecimal angle -> rows << [0.0, 0.0, angle.cos(), angle.sin()] }
+    Matrix.builder().columnNames(AES_X, AES_Y, AES_XEND, AES_YEND)
+        .rows(rows).types([BigDecimal, BigDecimal, BigDecimal, BigDecimal]).build()
+  }
+
+  private static Matrix radarLabelData(List<String> axisLabels, List<BigDecimal> angles) {
+    List<List<?>> rows = []
+    angles.eachWithIndex { BigDecimal angle, int i ->
+      rows << [RADAR_LABEL_RADIUS * angle.cos(), RADAR_LABEL_RADIUS * angle.sin(), axisLabels[i]]
+    }
+    Matrix.builder().columnNames(AES_X, AES_Y, COL_TEXT)
+        .rows(rows).types([BigDecimal, BigDecimal, String]).build()
+  }
+
+  private static Scale unitScale() {
+    Scale scale = Scale.continuous()
+    scale.params['limits'] = [-RADAR_LIMIT, RADAR_LIMIT]
+    scale.params['expand'] = [0, 0]
+    scale
   }
 
   /**
@@ -264,18 +463,21 @@ class CharmBridge {
         .build()
   }
 
-  /**
-   * Applies labels and theme from the legacy chart to the Charm PlotSpec.
-   */
-  private static void applyLabelsAndTheme(PlotSpec spec, Chart chart) {
+  /** Applies labels, scales, theme, legend and configured series colours. */
+  private static void applyLabelsAndTheme(PlotSpec spec, Chart chart, boolean applyScales = true) {
     se.alipsa.matrix.charm.LabelsSpec labels = spec.labels as se.alipsa.matrix.charm.LabelsSpec
     applyLabels(spec, labels, chart)
-    applyAxisScales(spec, chart)
+    if (applyScales) {
+      applyAxisScales(spec, chart)
+    }
 
     se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
     applyThemeBackgrounds(theme, chart)
-    applyAxisVisibility(theme, chart)
+    hideAxes(theme, chart.style?.xAxisVisible == false, chart.style?.yAxisVisible == false)
     applyLegend(theme, labels, chart.legend)
+    if (!(chart instanceof HeatmapChart)) {
+      applySeriesColors(spec, chart)
+    }
   }
 
   private static void applyLabels(PlotSpec spec, se.alipsa.matrix.charm.LabelsSpec labels, Chart chart) {
@@ -306,15 +508,15 @@ class CharmBridge {
     }
   }
 
-  private static void applyAxisVisibility(se.alipsa.matrix.charm.ThemeSpec theme, Chart chart) {
-    if (chart.style?.xAxisVisible == false) {
+  private static void hideAxes(se.alipsa.matrix.charm.ThemeSpec theme, boolean x, boolean y) {
+    if (x) {
       theme.axisLineX = null
       theme.axisTextX = null
       theme.axisTicksX = null
       theme.axisTitleX = null
       theme.explicitNulls.addAll(['axisLineX', 'axisTextX', 'axisTicksX', 'axisTitleX'])
     }
-    if (chart.style?.yAxisVisible == false) {
+    if (y) {
       theme.axisLineY = null
       theme.axisTextY = null
       theme.axisTicksY = null
@@ -349,6 +551,59 @@ class CharmBridge {
       labels.guides[AES_COLOR] = legend.title
       labels.guides[AES_FILL] = legend.title
     }
+  }
+
+  private static Map<String, String> resolveSeriesColors(Chart chart) {
+    Style style = chart.style
+    if (style == null || (!style.seriesColorMap && !style.seriesColors)) {
+      return null
+    }
+    List<String> names = seriesNames(chart)
+    List<String> defaults = ColorScaleUtil.defaultPalette(names.size())
+    Map<String, String> resolved = [:]
+    names.eachWithIndex { String name, int index ->
+      Color configured = style.seriesColorMap?.get(name)
+          ?: (index < (style.seriesColors?.size() ?: 0) ? style.seriesColors[index] : null)
+      resolved[name] = configured != null ? colorToHex(configured) : defaults[index]
+    }
+    resolved
+  }
+
+  private static List<String> seriesNames(Chart chart) {
+    switch (chart) {
+      case RadarChart -> (chart as RadarChart).seriesLabels.unique()
+      case PieChart -> chart.categorySeries.collect { Object category -> category.toString() }
+      case BubbleChart -> {
+        BubbleChart bubble = chart as BubbleChart
+        bubble.groupSeries ? bubble.groupSeries.collect { Object group -> group.toString() }.unique()
+            : (chart.valueSeriesNames ?: [])
+      }
+      default -> chart.valueSeriesNames ?: []
+    }
+  }
+
+  private static void applySeriesColors(PlotSpec spec, Chart chart) {
+    Map<String, String> resolved = resolveSeriesColors(chart)
+    if (resolved) {
+      spec.scale.color(Scale.manual(resolved))
+      spec.scale.fill(Scale.manual(resolved))
+    }
+  }
+
+  private static void applySingleSeriesColor(LayerBuilder builder, Chart chart, boolean multiSeries) {
+    if (multiSeries) {
+      return
+    }
+    String hex = singleSeriesHex(chart)
+    if (hex != null) {
+      builder.param(PARAM_COLOR, hex)
+      builder.param(PARAM_FILL, hex)
+    }
+  }
+
+  private static String singleSeriesHex(Chart chart) {
+    Map<String, String> resolved = resolveSeriesColors(chart)
+    resolved ? resolved.values().first() : null
   }
 
   private static void applyAxisScales(PlotSpec spec, Chart chart) {

@@ -1,6 +1,10 @@
 # Matrix-charts Release History
 
 ## v0.5.1, in progress
+- `ColorScaleUtil.DEFAULT_COLORS` and `ColorScaleUtil.defaultPalette(n)` expose Charm's
+  default discrete palette for integrations that partially override series colours.
+- Continuous colour and fill scales honour `Scale.params['limits']`, including partial
+  and reversed limits, consistently with positional scales.
 - `AnimationSpec.toCss()` now scopes animation selectors to the rendered SVG's `#charm-root`; Charm adds that root ID whenever animations or stylesheets are present. Consumers embedding the CSS in another SVG must provide the same root ID or remove the scope.
 - Dependency upgrades
   - org.apache.pdfbox:pdfbox 3.0.7 -> 3.0.8

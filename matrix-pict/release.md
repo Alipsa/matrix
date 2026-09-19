@@ -1,5 +1,22 @@
 # Matrix-pict Release History
 
+## v0.6.0, unreleased
+
+**New chart types**
+
+- `HeatmapChart` renders wide numeric matrix data as tiles, with optional value labels
+  and two- or three-colour gradients.
+- `CorrelationHeatmapChart` computes Pearson, Spearman, or Kendall correlations with a
+  fixed `[-1, 1]` diverging scale.
+- `RadarChart` renders one polygon per matrix row across three or more numeric spokes,
+  with optional per-column normalization and radial scales.
+
+**API improvements**
+
+- All builders support positional and named `seriesColors(...)` overrides. Resolution is
+  named colour, positional colour, then Charm's default palette.
+- Histograms expose stable value-series names for named colour overrides.
+
 ## v0.5.0, 2026-06-27
 
 First standalone release of `matrix-pict`. The `se.alipsa.matrix.pict` package

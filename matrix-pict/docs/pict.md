@@ -612,9 +612,57 @@ Plot.png(chart, new File('bubbles.png'))
 | `size(String)`                | Column mapped to point radius                |
 | `group(String)`               | Column mapped to colour aesthetic (optional) |
 
+### HeatmapChart
+
+`HeatmapChart` draws selected numeric columns as x-axis categories and matrix rows as
+y-axis categories. `rowLabels(String)` chooses a row-label column (otherwise labels are
+`1..n`), `columns(String...)` is required, and `showValues(boolean)` defaults to `true`.
+Use `colors(low, high)` for a two-colour gradient or `colors(low, mid, high, midpoint)`
+for a diverging gradient. Null, NaN, and infinite cells use the NA colour without a label.
+
+```groovy
+def chart = HeatmapChart.builder(sales)
+    .rowLabels('region').columns('q1', 'q2', 'q3')
+    .colors(Color.WHITE, Color.RED).build()
+Plot.png(chart, new File('heatmap.png'))
+```
+
+### CorrelationHeatmapChart
+
+`CorrelationHeatmapChart` correlates complete numeric columns and uses a red/white/blue
+scale fixed to `[-1, 1]`. `method(Correlation.PEARSON)` is the default; Spearman and
+Kendall are also available. The legend defaults to the selected method name.
+
+```groovy
+def chart = CorrelationHeatmapChart.builder(data)
+    .columns('speed', 'power', 'range').method(Correlation.SPEARMAN).build()
+Plot.png(chart, new File('correlation.png'))
+```
+
+### RadarChart
+
+`RadarChart` draws one polygon per matrix row. `label(String)` and at least three
+`values(String...)` columns are required. `normalize(true)` independently maps every
+column to `[0, 1]`; `fillAlpha(0.4)` is the default. `yAxisScale(0, end, step)` sets the
+radial extent and ring spacing.
+
+```groovy
+def chart = RadarChart.builder(cars)
+    .label('model').values('speed', 'power', 'range')
+    .seriesColors([Alpha: Color.RED, Beta: Color.BLUE]).build()
+Plot.png(chart, new File('radar.png'))
+```
+
 ## Styling
 
 All chart types share the same `Style` object accessible via `chart.style`.
+
+### Series Colours
+
+Use `seriesColors(Color...)`, `seriesColors(List<Color>)`, or
+`seriesColors(Map<String, Color>)` on any builder. A named entry wins over a positional
+entry, and unmatched names retain Charm's default palette. The feature applies to
+discrete series, including radar polygons and box categories; heatmaps use `colors(...)`.
 
 ### Background Colors
 

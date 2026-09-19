@@ -89,10 +89,13 @@ Plot.png(chart, new File('revenue.png'))
 - **BarChart** — vertical, horizontal, stacked, and grouped bars
 - **BoxChart** — box-and-whisker plots for distributions
 - **BubbleChart** — scatter with point size encoding a third variable
+- **CorrelationHeatmapChart** — pairwise correlation matrix as a diverging heatmap
+- **HeatmapChart** — colour-encoded grid of values
 - **Histogram** — frequency distribution across bins
 - **LineChart** — trends over continuous or categorical axes
 - **PieChart** — proportional distribution as slices
 - **ScatterChart** — relationships between two numeric variables
+- **RadarChart** — multivariate profiles as polygons over spokes
 
 ## Exporting Charts
 

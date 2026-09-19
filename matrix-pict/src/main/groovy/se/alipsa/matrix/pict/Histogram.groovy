@@ -10,6 +10,9 @@ import java.math.RoundingMode
 @SuppressWarnings('ExplicitCallToCompareToMethod')
 class Histogram extends Chart<Histogram> {
 
+  /** Series name used by histograms created from a bare value list. */
+  static final String DEFAULT_SERIES_NAME = 'values'
+
   List<? extends Number> originalData = []
   Map<MinMax, Integer> ranges
   Integer numberOfBins = 9
@@ -18,6 +21,7 @@ class Histogram extends Chart<Histogram> {
     Histogram chart = new Histogram()
     chart.title = title
     chart.numberOfBins = bins
+    chart.valueSeriesNames = [columnName]
     if (Number.isAssignableFrom(data.type(columnName))) {
       chart.originalData = data.column(columnName) as List<? extends Number>
       chart.ranges = createRanges(chart.originalData, bins, binDecimals)
@@ -74,6 +78,7 @@ class Histogram extends Chart<Histogram> {
     Histogram chart = new Histogram()
     chart.originalData = column
     chart.numberOfBins = bins
+    chart.valueSeriesNames = [DEFAULT_SERIES_NAME]
     chart.ranges = createRanges(column, bins)
     return chart
   }

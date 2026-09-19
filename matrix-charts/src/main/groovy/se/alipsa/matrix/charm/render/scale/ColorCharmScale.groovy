@@ -1,5 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
+import static se.alipsa.matrix.charm.render.scale.ColorScaleUtil.DEFAULT_COLORS
+
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.ValueConverter
@@ -25,11 +27,6 @@ import se.alipsa.matrix.core.ValueConverter
     'IfStatementBraces'
 ])
 class ColorCharmScale extends CharmScale {
-
-  private static final List<String> DEFAULT_COLORS = [
-      '#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd',
-      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
-  ]
 
   /** Color type strategy. */
   String colorType = 'default'
@@ -476,13 +473,35 @@ class ColorCharmScale extends CharmScale {
     if (numeric.isEmpty()) {
       domainMin = 0.0
       domainMax = 1.0
+      applyLimits()
       return
     }
     domainMin = numeric.min()
     domainMax = numeric.max()
+    applyLimits()
     if (domainMin == domainMax) {
       domainMax = domainMin + 1
     }
+  }
+
+  /**
+   * Applies optional lower and upper limits to a continuous colour domain.
+   * Null ends retain the data-derived end, and reversed limits are ordered.
+   */
+  private void applyLimits() {
+    List limits = scaleSpec?.params?.get('limits') as List
+    if (limits == null || limits.size() < 2) {
+      return
+    }
+    BigDecimal lower = ValueConverter.asBigDecimal(limits[0])
+    BigDecimal upper = ValueConverter.asBigDecimal(limits[1])
+    if (lower == null && upper == null) {
+      return
+    }
+    BigDecimal candidateMin = lower != null ? lower : domainMin
+    BigDecimal candidateMax = upper != null ? upper : domainMax
+    domainMin = candidateMin.min(candidateMax)
+    domainMax = candidateMin.max(candidateMax)
   }
 
   private void collectLevels(List<Object> dataValues) {

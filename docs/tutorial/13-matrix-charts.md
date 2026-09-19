@@ -70,6 +70,20 @@ The `matrix-pict` module supports several types of charts:
 3. **Pie Chart**: Displays data as slices of a circle
 4. **Line Chart**: Displays data as points connected by lines
 5. **Scatter Chart**: Displays data as individual points
+6. **HeatmapChart**: Displays wide numeric data as coloured tiles
+7. **CorrelationHeatmapChart**: Displays a pairwise correlation matrix
+8. **RadarChart**: Compares rows as polygons over numeric spokes
+
+### Heatmaps, correlations, and radar charts
+
+```groovy
+def heatmap = HeatmapChart.builder(data).rowLabels('name').columns('a', 'b', 'c').build()
+def correlation = CorrelationHeatmapChart.builder(data).columns('a', 'b', 'c').build()
+def radar = RadarChart.builder(data).label('name').values('a', 'b', 'c').build()
+```
+
+Use `seriesColors(Color.RED, Color.BLUE)` or a named map such as
+`seriesColors([north: Color.RED])` to override discrete series colours.
 
 ## Creating Charts
 

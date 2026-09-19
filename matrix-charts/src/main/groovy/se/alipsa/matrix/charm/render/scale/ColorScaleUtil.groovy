@@ -9,6 +9,25 @@ package se.alipsa.matrix.charm.render.scale
 class ColorScaleUtil {
 
   /**
+   * The default discrete colours Charm assigns to scale levels when no palette is
+   * configured. Level {@code i} uses {@code DEFAULT_COLORS[i % size]}.
+   */
+  static final List<String> DEFAULT_COLORS = [
+      '#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd',
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+  ].asImmutable()
+
+  /**
+   * Returns Charm's default discrete palette for the requested number of levels.
+   *
+   * @param n number of levels; zero or less returns an empty list
+   * @return colours in level order, wrapping around the default palette
+   */
+  static List<String> defaultPalette(int n) {
+    n <= 0 ? [] : (0..<n).collect { int i -> DEFAULT_COLORS[i % DEFAULT_COLORS.size()] }
+  }
+
+  /**
    * Interpolate between two colors.
    *
    * @param color1 start color (hex string or named)

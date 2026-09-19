@@ -81,7 +81,7 @@ class GeomUtils {
     }
     int layerIdx = context.layerIndex
     def fillScale = context.fillScaleForLayer(layerIdx)
-    if (datum.fill != null && fillScale != null) {
+    if (fillScale != null) {
       return fillScale.colorFor(datum.fill)
     }
     def colorScale = context.colorScaleForLayer(layerIdx)
