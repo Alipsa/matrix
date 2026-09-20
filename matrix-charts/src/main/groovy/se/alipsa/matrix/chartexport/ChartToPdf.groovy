@@ -227,10 +227,7 @@ class ChartToPdf {
       } catch (IOException closeEx) {
         e.addSuppressed(closeEx)
       }
-      if (e instanceof IOException) {
-        throw e
-      }
-      throw e as RuntimeException
+      throw e
     }
     document
   }

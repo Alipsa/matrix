@@ -109,12 +109,12 @@ class ScaleEngine {
 
     if (layerScaleSpecs.containsKey('x')) {
       boolean flipped = chart?.coord?.type == CharmCoordType.FLIP
-      List<Object> xValues = LayerDataUtil.xTrainingValues(layer, layerData, flipped)
+      List<Object> xValues = LayerDataUtil.xTrainingValues(layer, layerData, flipped, flipped)
       trained.x = trainPositionalScale(xValues, layerScaleSpecs['x'], 0, config.plotWidth())
     }
     if (layerScaleSpecs.containsKey('y')) {
       boolean flipped = chart?.coord?.type == CharmCoordType.FLIP
-      List<Object> yValues = LayerDataUtil.yTrainingValues(layer, layerData, !flipped)
+      List<Object> yValues = LayerDataUtil.yTrainingValues(layer, layerData, !flipped, flipped)
       trained.y = trainPositionalScale(yValues, layerScaleSpecs['y'], config.plotHeight(), 0)
     }
     if (layerScaleSpecs.containsKey('color')) {

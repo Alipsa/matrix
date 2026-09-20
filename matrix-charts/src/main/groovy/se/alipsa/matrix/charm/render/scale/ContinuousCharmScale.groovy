@@ -286,9 +286,19 @@ class ContinuousCharmScale extends CharmScale {
     if (ticks.size() < 2) {
       return null
     }
-    BigDecimal first = ValueConverter.asBigDecimal(ticks[0])
-    BigDecimal second = ValueConverter.asBigDecimal(ticks[1])
-    first == null || second == null ? null : (second - first).abs()
+    BigDecimal smallest = null
+    for (int idx = 1; idx < ticks.size(); idx++) {
+      BigDecimal previous = ValueConverter.asBigDecimal(ticks[idx - 1])
+      BigDecimal current = ValueConverter.asBigDecimal(ticks[idx])
+      if (previous == null || current == null) {
+        continue
+      }
+      BigDecimal spacing = (current - previous).abs()
+      if (spacing != 0 && (smallest == null || spacing < smallest)) {
+        smallest = spacing
+      }
+    }
+    smallest
   }
 
   private static String defaultTickLabel(Object tick, BigDecimal spacing = null) {

@@ -136,8 +136,8 @@ class CharmRenderer {
           pipelineData: pipelineData
       )
       boolean flipped = context.chart.coord?.type == CharmCoordType.FLIP
-      xValues.addAll(LayerDataUtil.xTrainingValues(layer, pipelineData, flipped))
-      yValues.addAll(LayerDataUtil.yTrainingValues(layer, pipelineData, !flipped))
+      xValues.addAll(LayerDataUtil.xTrainingValues(layer, pipelineData, flipped, flipped))
+      yValues.addAll(LayerDataUtil.yTrainingValues(layer, pipelineData, !flipped, flipped))
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
       fillValues.addAll(pipelineData.collect { LayerData d -> d.fill })
       sizeValues.addAll(pipelineData.collect { LayerData d -> d.size })

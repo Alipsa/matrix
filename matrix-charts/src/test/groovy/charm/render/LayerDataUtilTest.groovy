@@ -43,4 +43,27 @@ class LayerDataUtilTest {
     assertTrue(LayerDataUtil.xTrainingValues(layerOf(CharmGeomType.COL), flippedData, true).contains(BigDecimal.ZERO))
     assertFalse(LayerDataUtil.yTrainingValues(layerOf(CharmGeomType.COL), flippedData, false).contains(BigDecimal.ZERO))
   }
+
+  @Test
+  void flippedBoxplotTrainsWhiskersAndOutliersOnTheHorizontalAxis() {
+    LayerData datum = new LayerData(x: 25, y: 'A', rowIndex: 0)
+    datum.meta.whiskerLow = 10
+    datum.meta.whiskerHigh = 40
+    datum.meta.outliers = [5, 50]
+
+    List<Object> values = LayerDataUtil.xTrainingValues(layerOf(CharmGeomType.BOXPLOT), [datum], false, true)
+
+    assertTrue(values.containsAll([25, 10, 40, 5, 50]))
+  }
+
+  @Test
+  void flippedHistogramTrainsBinEdgesOnTheVerticalAxis() {
+    LayerData datum = new LayerData(x: 3, y: 5, rowIndex: 0)
+    datum.meta.binStart = 1
+    datum.meta.binEnd = 9
+
+    List<Object> values = LayerDataUtil.yTrainingValues(layerOf(CharmGeomType.HISTOGRAM), [datum], false, true)
+
+    assertTrue(values.containsAll([5, 1, 9]))
+  }
 }

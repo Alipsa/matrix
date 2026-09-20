@@ -167,6 +167,24 @@ class P1StatTest {
   }
 
   @Test
+  void testSummaryBinStatSharesBinGridAcrossSeries() {
+    LayerSpec layer = makeLayer(CharmStatType.SUMMARY_BIN, [binwidth: 5])
+    List<LayerData> data = [
+        new LayerData(x: 0, y: 1, group: 'left', rowIndex: 0),
+        new LayerData(x: 1, y: 2, group: 'left', rowIndex: 1),
+        new LayerData(x: 10, y: 3, group: 'right', rowIndex: 2),
+        new LayerData(x: 11, y: 4, group: 'right', rowIndex: 3)
+    ]
+
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(0G, result.find { it.group == 'left' }.meta.xmin)
+    assertEquals(10G, result.find { it.group == 'right' }.meta.xmin)
+    assertEquals(5G, result.find { it.group == 'left' }.meta.xmax)
+    assertEquals(15G, result.find { it.group == 'right' }.meta.xmax)
+  }
+
+  @Test
   void testUniqueStat() {
     LayerSpec layer = makeLayer(CharmStatType.UNIQUE)
     List<LayerData> data = [

@@ -190,6 +190,7 @@ class CharmExportTest {
     StringWriter writer = new StringWriter()
     ChartToSvg.export(svg, writer)
     assertTrue(writer.toString().contains('<svg'))
+    assertEquals(writer.toString(), outputStream.toString('UTF-8'))
   }
 
   @Test

@@ -56,9 +56,15 @@ class LayerDataUtil {
    * @param layer the layer (used for geom-specific rules)
    * @param data position-adjusted layer data
    * @param includeZeroBaseline true when this is the bar-value axis
+   * @param coordinateFlipped true when the data was transformed by {@code coordFlip}
    * @return non-null training values
    */
-  static List<Object> xTrainingValues(LayerSpec layer, List<LayerData> data, boolean includeZeroBaseline = false) {
+  static List<Object> xTrainingValues(
+      LayerSpec layer,
+      List<LayerData> data,
+      boolean includeZeroBaseline = false,
+      boolean coordinateFlipped = false
+  ) {
     List<Object> values = []
     data.each { LayerData datum ->
       [datum.x, datum.xmin, datum.xmax, datum.xend].each { Object value ->
@@ -66,7 +72,7 @@ class LayerDataUtil {
           values << value
         }
       }
-      addMetaBounds(values, datum.meta, X_META_BOUNDS)
+      addMetaBounds(values, datum.meta, coordinateFlipped ? Y_META_BOUNDS : X_META_BOUNDS)
     }
     addZeroBaseline(values, layer, data, includeZeroBaseline)
   }
@@ -77,9 +83,15 @@ class LayerDataUtil {
    * @param layer the layer (used for geom-specific rules)
    * @param data position-adjusted layer data
    * @param includeZeroBaseline true when this is the bar-value axis
+   * @param coordinateFlipped true when the data was transformed by {@code coordFlip}
    * @return non-null training values
    */
-  static List<Object> yTrainingValues(LayerSpec layer, List<LayerData> data, boolean includeZeroBaseline = true) {
+  static List<Object> yTrainingValues(
+      LayerSpec layer,
+      List<LayerData> data,
+      boolean includeZeroBaseline = true,
+      boolean coordinateFlipped = false
+  ) {
     List<Object> values = []
     data.each { LayerData datum ->
       [datum.y, datum.ymin, datum.ymax, datum.yend].each { Object value ->
@@ -87,7 +99,7 @@ class LayerDataUtil {
           values << value
         }
       }
-      addMetaBounds(values, datum.meta, Y_META_BOUNDS)
+      addMetaBounds(values, datum.meta, coordinateFlipped ? X_META_BOUNDS : Y_META_BOUNDS)
     }
     addZeroBaseline(values, layer, data, includeZeroBaseline)
   }
