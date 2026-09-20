@@ -109,6 +109,22 @@ class SmoothStatTest {
     assertEquals(80, result.size())
   }
 
+  @Test
+  void smoothFitsOneLinePerColorGroupAndSupportsOnePoint() {
+    List<LayerData> data = []
+    (1..10).each { int i ->
+      data << new LayerData(x: i, y: i * 2, color: 'up', rowIndex: data.size())
+      data << new LayerData(x: i, y: 40 - i * 2, color: 'down', rowIndex: data.size())
+    }
+    List<LayerData> result = SmoothStat.compute(makeLayer([se: false, n: 5]), data)
+    assertEquals(10, result.size())
+    assertEquals(5, result.count { it.color == 'up' })
+    assertEquals(5, result.count { it.color == 'down' })
+    assertTrue((result.findAll { it.color == 'up' }.last().y as BigDecimal) >
+        (result.findAll { it.color == 'up' }.first().y as BigDecimal))
+    assertEquals(1, SmoothStat.compute(makeLayer([se: false, n: 1]), data.findAll { it.color == 'up' }).size())
+  }
+
   private static LayerSpec makeLayer(Map<String, Object> statParams) {
     new LayerSpec(
         GeomSpec.of(CharmGeomType.SMOOTH),

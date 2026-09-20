@@ -12,10 +12,20 @@ import se.alipsa.matrix.stats.regression.QuantileRegression
 @SuppressWarnings('UnnecessaryCast')
 class QuantileStat {
 
+  private static final String ALL_SERIES = '__all__'
+
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
       return []
     }
+    List<LayerData> result = []
+    StatUtils.groupBySeries(data).each { Object seriesKey, List<LayerData> bucket ->
+      result.addAll(computeGroup(layer, bucket, seriesKey))
+    }
+    result
+  }
+
+  private static List<LayerData> computeGroup(LayerSpec layer, List<LayerData> data, Object seriesKey) {
 
     List<LayerData> numeric = data.findAll { LayerData datum ->
       ValueConverter.asBigDecimal(datum.x) != null &&
@@ -39,7 +49,7 @@ class QuantileStat {
       quantiles = [0.25, 0.5, 0.75] as List<Number>
     }
     int n = ValueConverter.asBigDecimal(params.n)?.intValue() ?: 80
-    if (n < 2) {
+    if (n < 1) {
       n = 80
     }
 
@@ -51,6 +61,7 @@ class QuantileStat {
       xMax = xMax + 1
     }
 
+    LayerData template = numeric.first()
     List<LayerData> result = []
     quantiles.eachWithIndex { Number tauValue, int groupIndex ->
       BigDecimal tau = ValueConverter.asBigDecimal(tauValue)
@@ -59,15 +70,19 @@ class QuantileStat {
       }
       QuantileRegression regression = new QuantileRegression(x, y, tau)
       for (int i = 0; i < n; i++) {
-        BigDecimal xv = xMin + (xMax - xMin) * i / (n - 1)
+        BigDecimal xv = n == 1 ? (xMin + xMax) / 2 : xMin + (xMax - xMin) * i / (n - 1)
         BigDecimal yv = regression.predict(xv)
+        Object groupKey = seriesKey == ALL_SERIES ? groupIndex : "${seriesKey}::${groupIndex}".toString()
         LayerData datum = new LayerData(
             x: xv,
             y: yv,
-            group: groupIndex,
+            color: template.color,
+            fill: template.fill,
+            group: groupKey,
             rowIndex: -1
         )
         datum.meta.quantile = tau
+        datum.meta.series = seriesKey == ALL_SERIES ? null : seriesKey
         result << datum
       }
     }

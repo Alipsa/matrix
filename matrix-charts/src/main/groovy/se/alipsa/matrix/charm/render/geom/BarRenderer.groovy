@@ -10,7 +10,7 @@ import se.alipsa.matrix.core.ValueConverter
 /**
  * Renders bar/col geometry.
  */
-@SuppressWarnings('AbcMetric')
+@SuppressWarnings(['AbcMetric', 'CyclomaticComplexity'])
 class BarRenderer {
 
   /**
@@ -55,8 +55,17 @@ class BarRenderer {
         if (xCenter == null) {
           return
         }
-        xLeft = xCenter - barWidth / 2
-        width = barWidth
+        BigDecimal effectiveWidth = barWidth
+        Integer dodgeCount = datum.meta.dodgeCount as Integer
+        if (discreteX && dodgeCount != null && dodgeCount > 1) {
+          int dodgeIndex = datum.meta.dodgeIndex as int
+          BigDecimal dodgeWidth = datum.meta.dodgeWidth as BigDecimal
+          BigDecimal slot = (barWidth / widthFactor) * dodgeWidth / dodgeCount
+          xCenter = xCenter + (dodgeIndex - (dodgeCount - 1) / 2.0) * slot
+          effectiveWidth = slot * widthFactor
+        }
+        xLeft = xCenter - effectiveWidth / 2
+        width = effectiveWidth
       }
 
       BigDecimal yTop

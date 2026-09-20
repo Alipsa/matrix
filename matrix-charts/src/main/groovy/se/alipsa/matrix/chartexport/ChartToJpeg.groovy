@@ -30,6 +30,7 @@ class ChartToJpeg {
    * @throws IllegalArgumentException if svgChart or targetFile is null
    */
   static void export(Svg svgChart, File targetFile, BigDecimal quality = 1.0) {
+    validateQuality(quality)
     if (svgChart == null) {
       throw new IllegalArgumentException('svgChart cannot be null')
     }
@@ -48,6 +49,7 @@ class ChartToJpeg {
    * @throws IllegalArgumentException if chart or targetFile is null
    */
   static void export(CharmChart chart, File targetFile, BigDecimal quality = 1.0) {
+    validateQuality(quality)
     if (chart == null) {
       throw new IllegalArgumentException('chart cannot be null')
     }
@@ -66,6 +68,7 @@ class ChartToJpeg {
    * @throws IllegalArgumentException if svgChart or os is null
    */
   static void export(Svg svgChart, OutputStream os, BigDecimal quality = 1.0) {
+    validateQuality(quality)
     if (svgChart == null) {
       throw new IllegalArgumentException('svgChart cannot be null')
     }
@@ -84,6 +87,7 @@ class ChartToJpeg {
    * @throws IllegalArgumentException if chart or os is null
    */
   static void export(CharmChart chart, OutputStream os, BigDecimal quality = 1.0) {
+    validateQuality(quality)
     if (chart == null) {
       throw new IllegalArgumentException('chart cannot be null')
     }
@@ -173,6 +177,12 @@ class ChartToJpeg {
 
   private static Svg stripAnimationCss(Svg svgChart) {
     AnimationCssStripper.stripFromSvg(svgChart)
+  }
+
+  private static void validateQuality(BigDecimal quality) {
+    if (quality == null || quality < 0 || quality > 1) {
+      throw new IllegalArgumentException("quality must be between 0.0 and 1.0, but was $quality")
+    }
   }
 
 }

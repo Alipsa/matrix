@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
+import se.alipsa.matrix.charm.render.stat.StatUtils
 import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
@@ -344,20 +345,10 @@ class GeomUtils {
   ].asImmutable()
 
   /**
-   * Stable grouping for line/area-like geoms.
+   * Stable grouping for line/area-like geoms; delegates to {@link StatUtils#groupBySeries(List)}.
    */
   static Map<Object, List<LayerData>> groupSeries(List<LayerData> data) {
-    Map<Object, List<LayerData>> groups = [:]
-    data.each { LayerData datum ->
-      Object key = datum.group ?: datum.color ?: datum.fill ?: '__all__'
-      List<LayerData> bucket = groups[key]
-      if (bucket == null) {
-        bucket = []
-        groups[key] = bucket
-      }
-      bucket << datum
-    }
-    groups
+    StatUtils.groupBySeries(data)
   }
 
   /**

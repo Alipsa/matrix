@@ -19,6 +19,7 @@ class EcdfStat {
     List<LayerData> result = []
 
     StatUtils.groupBySeries(data).each { Object key, List<LayerData> bucket ->
+      LayerData template = bucket.first()
       List<BigDecimal> values = StatUtils.sortedNumericValues(bucket) { LayerData d -> d.x }
       if (values.isEmpty()) {
         return
@@ -29,6 +30,8 @@ class EcdfStat {
             x: values.first(),
             y: 0.0,
             group: key == '__all__' ? null : key,
+            color: template.color,
+            fill: template.fill,
             rowIndex: -1
         )
       }
@@ -39,6 +42,8 @@ class EcdfStat {
             x: values[i],
             y: (i + 1) / (n as BigDecimal),
             group: key == '__all__' ? null : key,
+            color: template.color,
+            fill: template.fill,
             rowIndex: -1
         )
       }

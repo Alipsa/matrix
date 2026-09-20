@@ -15,15 +15,6 @@ class SummaryBinStat {
     if (data == null || data.isEmpty()) {
       return []
     }
-
-    Map<String, Object> params = StatEngine.effectiveParams(layer)
-    String fun = (params.fun ?: 'mean').toString().toLowerCase(Locale.ROOT)
-    int bins = ValueConverter.asBigDecimal(params.bins)?.intValue() ?: 30
-    if (bins < 1) {
-      bins = 30
-    }
-    BigDecimal binWidth = ValueConverter.asBigDecimal(params.binwidth)
-
     List<LayerData> points = data.findAll { LayerData datum ->
       ValueConverter.asBigDecimal(datum.x) != null &&
           ValueConverter.asBigDecimal(datum.y) != null
@@ -32,6 +23,13 @@ class SummaryBinStat {
       return []
     }
 
+    Map<String, Object> params = StatEngine.effectiveParams(layer)
+    String fun = (params.fun ?: 'mean').toString().toLowerCase(Locale.ROOT)
+    int bins = ValueConverter.asBigDecimal(params.bins)?.intValue() ?: 30
+    if (bins < 1) {
+      bins = 30
+    }
+    BigDecimal binWidth = ValueConverter.asBigDecimal(params.binwidth)
     List<BigDecimal> xs = points.collect { ValueConverter.asBigDecimal(it.x) }
     BigDecimal xMin = xs.min()
     BigDecimal xMax = xs.max()
@@ -46,6 +44,20 @@ class SummaryBinStat {
       bins = bins < 1 ? 1 : bins
     }
 
+    List<LayerData> result = []
+    StatUtils.groupBySeries(points).each { Object key, List<LayerData> series ->
+      result.addAll(computeGroup(series, xMin, binWidth, bins, fun))
+    }
+    result
+  }
+
+  private static List<LayerData> computeGroup(
+      List<LayerData> points,
+      BigDecimal xMin,
+      BigDecimal binWidth,
+      int bins,
+      String fun
+  ) {
     Map<Integer, List<BigDecimal>> yByBin = [:]
     points.each { LayerData datum ->
       BigDecimal x = ValueConverter.asBigDecimal(datum.x)
@@ -64,6 +76,7 @@ class SummaryBinStat {
       bucket << y
     }
 
+    LayerData template = points.first()
     List<LayerData> result = []
     yByBin.keySet().sort().each { int idx ->
       List<BigDecimal> values = yByBin[idx]
@@ -82,6 +95,9 @@ class SummaryBinStat {
       LayerData datum = new LayerData(
           x: xmin + binWidth / 2,
           y: ySummary,
+          group: template.group,
+          color: template.color,
+          fill: template.fill,
           rowIndex: -1
       )
       datum.meta.n = values.size()

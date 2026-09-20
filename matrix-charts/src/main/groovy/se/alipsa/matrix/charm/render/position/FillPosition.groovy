@@ -4,7 +4,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 
 /**
- * Fill position adjustment - stacks and normalizes to [0, 1] range.
+ * Fill position adjustment - stacks and normalizes to [-1, 1] when negatives are present.
  * Like stack but scales each x group to fill the entire height.
  *
  * Supports params:
@@ -28,28 +28,34 @@ class FillPosition {
     // First apply stacking
     List<LayerData> stacked = StackPosition.compute(layer, data)
 
-    // Find max ymax per x group
-    Map<Object, BigDecimal> maxByX = [:]
+    Map<Object, BigDecimal> positiveTotal = [:]
+    Map<Object, BigDecimal> negativeTotal = [:]
     stacked.each { LayerData datum ->
-      Object xVal = datum.x
       BigDecimal ymax = datum.ymax as BigDecimal
-      if (ymax != null) {
-        BigDecimal current = maxByX.get(xVal)
+      BigDecimal ymin = datum.ymin as BigDecimal
+      if (ymax != null && ymax > 0) {
+        BigDecimal current = positiveTotal[datum.x]
         if (current == null || ymax > current) {
-          maxByX.put(xVal, ymax)
+          positiveTotal[datum.x] = ymax
+        }
+      }
+      if (ymin != null && ymin < 0) {
+        BigDecimal current = negativeTotal[datum.x]
+        if (current == null || ymin.abs() > current) {
+          negativeTotal[datum.x] = ymin.abs()
         }
       }
     }
 
-    // Normalize to [0, 1]
     List<LayerData> result = []
     stacked.each { LayerData datum ->
-      Object xVal = datum.x
-      BigDecimal total = maxByX.get(xVal) ?: BigDecimal.ONE
-
-      if (total > BigDecimal.ZERO) {
-        BigDecimal yMin = (datum.ymin as BigDecimal) / total
-        BigDecimal yMax = (datum.ymax as BigDecimal) / total
+      BigDecimal ymin = datum.ymin as BigDecimal
+      BigDecimal ymax = datum.ymax as BigDecimal
+      boolean negative = ymin != null && ymin < 0
+      BigDecimal total = negative ? negativeTotal[datum.x] : positiveTotal[datum.x]
+      if (total != null && total > 0) {
+        BigDecimal yMin = ymin / total
+        BigDecimal yMax = ymax / total
         datum.ymin = yMin
         datum.ymax = yMax
         datum.y = (yMin + yMax) / 2

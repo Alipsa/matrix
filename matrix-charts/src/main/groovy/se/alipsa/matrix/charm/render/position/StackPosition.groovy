@@ -45,17 +45,26 @@ class StackPosition {
     List<LayerData> result = []
     byX.each { Object xVal, List<LayerData> bucket ->
       List<LayerData> ordered = reverse ? new ArrayList<>(bucket).reverse() as List<LayerData> : bucket
-      BigDecimal cumSum = BigDecimal.ZERO
+      BigDecimal positiveSum = BigDecimal.ZERO
+      BigDecimal negativeSum = BigDecimal.ZERO
 
       ordered.each { LayerData datum ->
         LayerData updated = LayerDataUtil.copyDatum(datum)
         BigDecimal yVal = ValueConverter.asBigDecimal(datum.y) ?: BigDecimal.ZERO
-        updated.ymin = cumSum
-        cumSum = cumSum + yVal
-        updated.ymax = cumSum
-        BigDecimal yMin = updated.ymin as BigDecimal
-        BigDecimal yMax = updated.ymax as BigDecimal
-        updated.y = (yMin + yMax) / 2
+        BigDecimal lower
+        BigDecimal upper
+        if (yVal < 0) {
+          upper = negativeSum
+          negativeSum = negativeSum + yVal
+          lower = negativeSum
+        } else {
+          lower = positiveSum
+          positiveSum = positiveSum + yVal
+          upper = positiveSum
+        }
+        updated.ymin = lower
+        updated.ymax = upper
+        updated.y = (lower + upper) / 2
         result.add(updated)
       }
     }

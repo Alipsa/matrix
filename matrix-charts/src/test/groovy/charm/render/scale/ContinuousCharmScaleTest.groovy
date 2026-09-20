@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.Log10ScaleTransform
-import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
+import se.alipsa.matrix.charm.render.scale.ScaleEngine
 
 class ContinuousCharmScaleTest {
 
@@ -186,25 +186,34 @@ class ContinuousCharmScaleTest {
   }
 
   @Test
-  void testReverseTransformReversesTickOrder() {
-    ContinuousCharmScale scale = new ContinuousCharmScale(
-        scaleSpec: Scale.transform('reverse'),
-        rangeStart: 0.0,
-        rangeEnd: 400.0,
-        domainMin: -100.0,
-        domainMax: 0.0,
-        transformStrategy: new ReverseScaleTransform()
-    )
-
-    List<Object> ticks = scale.ticks(5)
-    assertFalse(ticks.isEmpty())
-
-    // Reversed scale should produce ticks in descending order
-    for (int i = 0; i < ticks.size() - 1; i++) {
-      BigDecimal current = ticks[i] as BigDecimal
-      BigDecimal next = ticks[i + 1] as BigDecimal
-      assertTrue(current >= next, "Reversed ticks should be in descending order: $ticks")
+  void testReverseTransformFlipsPixelDirection() {
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        (1..10).collect { it as Object }, Scale.transform('reverse'), 0, 400) as ContinuousCharmScale
+    assertApproxEquals(400.0, scale.transform(1))
+    assertApproxEquals(0.0, scale.transform(10))
+    scale.ticks(5).each { Object tick ->
+      BigDecimal value = tick as BigDecimal
+      assertTrue(value >= 1 && value <= 10)
+      assertTrue(scale.transform(tick) >= 0 && scale.transform(tick) <= 400)
     }
+  }
+
+  @Test
+  void testSqrtTicksCoverDataDomain() {
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        (0..100).collect { it as Object }, Scale.transform('sqrt'), 0, 400) as ContinuousCharmScale
+    List<BigDecimal> ticks = scale.ticks(5).collect { it as BigDecimal }
+    assertTrue(ticks.max() >= 50, "sqrt ticks must reach into the upper data range: $ticks")
+    assertApproxEquals(400.0, scale.transform(100))
+  }
+
+  @Test
+  void testTinyDomainLabelsAreDistinct() {
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        [0.0001, 0.0002, 0.00035], Scale.continuous(), 0, 400) as ContinuousCharmScale
+    List<String> labels = scale.tickLabels(5)
+    assertEquals(labels.size(), labels.toSet().size(), "labels must be distinct: $labels")
+    assertFalse(labels.every { it == '0' })
   }
 
   @Test

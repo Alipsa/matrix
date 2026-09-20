@@ -49,6 +49,16 @@ class TemporalScaleUtil {
     isTemporalTransformId(strategy?.id())
   }
 
+  /**
+   * Determines whether a raw value has a temporal runtime type that can be converted to a scale value.
+   *
+   * @param value raw data value
+   * @return true when the value is a Java temporal type or legacy date
+   */
+  static boolean isTemporalValue(Object value) {
+    value instanceof TemporalAccessor || value instanceof Date
+  }
+
   static boolean isTemporalTransformId(String transformId) {
     String normalized = normalizeTransformId(transformId)
     normalized == DATE_TRANSFORM || normalized == TIME_TRANSFORM || normalized == DATETIME_TRANSFORM

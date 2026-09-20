@@ -2,9 +2,11 @@ package se.alipsa.matrix.charm.render.scale
 
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
 import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.ValueConverter
 
@@ -89,13 +91,14 @@ class ScaleEngine {
    * others are left null so that {@link se.alipsa.matrix.charm.render.RenderContext}
    * falls back to the global scale.</p>
    *
+   * @param layer layer whose data is being trained
    * @param layerScaleSpecs per-layer scale specs keyed by aesthetic name
    * @param config render configuration
    * @param layerData pipeline data for this layer only
    * @param chart compiled chart (for coord info)
    * @return trained scales with only overridden aesthetics populated
    */
-  static TrainedScales trainLayerScales(Map<String, Scale> layerScaleSpecs,
+  static TrainedScales trainLayerScales(LayerSpec layer, Map<String, Scale> layerScaleSpecs,
                                          RenderConfig config,
                                          List<LayerData> layerData,
                                          Chart chart) {
@@ -105,11 +108,13 @@ class ScaleEngine {
     }
 
     if (layerScaleSpecs.containsKey('x')) {
-      List<Object> xValues = layerData.collect { LayerData d -> d.x }
+      boolean flipped = chart?.coord?.type == CharmCoordType.FLIP
+      List<Object> xValues = LayerDataUtil.xTrainingValues(layer, layerData, flipped, flipped)
       trained.x = trainPositionalScale(xValues, layerScaleSpecs['x'], 0, config.plotWidth())
     }
     if (layerScaleSpecs.containsKey('y')) {
-      List<Object> yValues = layerData.collect { LayerData d -> d.y }
+      boolean flipped = chart?.coord?.type == CharmCoordType.FLIP
+      List<Object> yValues = LayerDataUtil.yTrainingValues(layer, layerData, !flipped, flipped)
       trained.y = trainPositionalScale(yValues, layerScaleSpecs['y'], config.plotHeight(), 0)
     }
     if (layerScaleSpecs.containsKey('color')) {
@@ -160,6 +165,19 @@ class ScaleEngine {
     trained
   }
 
+  /**
+   * Trains per-layer scales without geom-specific positional extent rules.
+   *
+   * @deprecated use {@link #trainLayerScales(LayerSpec, Map, RenderConfig, List, Chart)}
+   */
+  @Deprecated
+  static TrainedScales trainLayerScales(Map<String, Scale> layerScaleSpecs,
+                                         RenderConfig config,
+                                         List<LayerData> layerData,
+                                         Chart chart) {
+    trainLayerScales(null, layerScaleSpecs, config, layerData, chart)
+  }
+
   private static void applyFixedCoordScaling(Chart chart, RenderConfig config, TrainedScales trained) {
     if (chart?.coord?.type != CharmCoordType.FIXED) {
       return
@@ -208,9 +226,15 @@ class ScaleEngine {
       BigDecimal offset = (plotWidth - targetWidth) / 2
       xScale.rangeStart = offset
       xScale.rangeEnd = offset + targetWidth
+      yScale.rangeStart = plotHeight
+      yScale.rangeEnd = 0
     } else {
+      BigDecimal targetHeight = (plotWidth * ratio * yDomain) / xDomain
+      BigDecimal offset = (plotHeight - targetHeight) / 2
       xScale.rangeStart = 0
       xScale.rangeEnd = plotWidth
+      yScale.rangeStart = offset + targetHeight
+      yScale.rangeEnd = offset
     }
   }
 
@@ -250,7 +274,7 @@ class ScaleEngine {
     Scale effectiveSpec = spec
     if (effectiveSpec == null) {
       boolean numericValues = values.findAll { it != null }
-          .every { ValueConverter.asBigDecimal(it) != null }
+          .every { ScaleUtils.isStrictNumeric(it) }
       effectiveSpec = numericValues ? Scale.gradient() : Scale.discrete()
     }
     ColorCharmScale colorScale = new ColorCharmScale(
@@ -541,9 +565,9 @@ class ScaleEngine {
     if (spec?.type == ScaleType.CONTINUOUS || spec?.type == ScaleType.TRANSFORM || spec?.type == ScaleType.DATE) {
       return false
     }
-    // Auto-detect: discrete if any non-null value is non-numeric
+    // Auto-detect: discrete if any non-null value is not strictly numeric.
     !values.every { Object value ->
-      value == null || ValueConverter.asBigDecimal(value) != null
+      value == null || ScaleUtils.isStrictNumeric(value)
     }
   }
 

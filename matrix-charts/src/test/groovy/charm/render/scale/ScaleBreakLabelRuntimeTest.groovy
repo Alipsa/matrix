@@ -38,6 +38,16 @@ class ScaleBreakLabelRuntimeTest {
   }
 
   @Test
+  void testContinuousScaleFormatsUnevenConfiguredBreaksPrecisely() {
+    Scale spec = Scale.continuous()
+    spec.breaks = [0, 1, 1.25, 2.5, 5]
+
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale([0, 1, 1.25, 2.5, 5], spec, 0, 200) as ContinuousCharmScale
+
+    assertEquals(['0', '1', '1.25', '2.5', '5'], scale.tickLabels(5))
+  }
+
+  @Test
   void testBinnedScaleHonorsConfiguredBreaksAndLabels() {
     Scale spec = Scale.binned()
     spec.breaks = [0, 10, 20]

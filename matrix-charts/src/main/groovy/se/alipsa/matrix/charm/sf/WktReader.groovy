@@ -357,18 +357,15 @@ class WktReader {
         return null
       }
       char ch = input.charAt(index)
-      switch (ch) {
-        case '(':
-          index++
-          return new Token(TokenType.LPAREN, '(')
-        case ')':
-          index++
-          return new Token(TokenType.RPAREN, ')')
-        case ',':
-          index++
-          return new Token(TokenType.COMMA, ',')
-        default:
-          break
+      Token punctuation = switch (ch) {
+        case '(' as char -> new Token(TokenType.LPAREN, '(')
+        case ')' as char -> new Token(TokenType.RPAREN, ')')
+        case ',' as char -> new Token(TokenType.COMMA, ',')
+        default -> null
+      }
+      if (punctuation != null) {
+        index++
+        return punctuation
       }
 
       if (Character.isLetter(ch)) {
