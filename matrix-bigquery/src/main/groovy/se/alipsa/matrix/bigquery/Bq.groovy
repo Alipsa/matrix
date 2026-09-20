@@ -3,7 +3,6 @@ package se.alipsa.matrix.bigquery
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 
 import groovy.json.JsonOutput
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import com.fasterxml.jackson.core.JsonEncoding
@@ -98,7 +97,6 @@ import java.time.temporal.ChronoUnit
  * @see TypeMapper
  */
 @SuppressWarnings('ClassSize')
-@CompileStatic
 class Bq {
 
   private static final Logger log = Logger.getLogger(Bq)

@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.ml
 
-import groovy.transform.CompileStatic
-
 import smile.clustering.*
 
 import se.alipsa.matrix.core.Matrix
@@ -11,7 +9,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * Wrapper for Smile clustering algorithms providing a Matrix-friendly API.
  * Supports KMeans and DBSCAN clustering.
  */
-@CompileStatic
 class SmileCluster {
 
   private static final int MIN_CLUSTERS = 2

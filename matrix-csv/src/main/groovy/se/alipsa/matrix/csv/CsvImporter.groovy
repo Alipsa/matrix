@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import org.apache.commons.csv.CSVFormat
 
 import se.alipsa.matrix.core.Matrix
@@ -31,7 +29,6 @@ import java.nio.file.Path
  * @see Format
  */
 @Deprecated
-@CompileStatic
 class CsvImporter {
 
   /**

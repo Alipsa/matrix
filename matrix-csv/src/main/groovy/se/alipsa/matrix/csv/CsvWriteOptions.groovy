@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
@@ -24,7 +22,6 @@ import java.nio.charset.StandardCharsets
  * @see CsvFormatProvider
  * @see CsvWriter
  */
-@CompileStatic
 @SuppressWarnings('DuplicateStringLiteral')
 class CsvWriteOptions {
 

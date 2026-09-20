@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.ml
 
-import groovy.transform.CompileStatic
-
 import smile.feature.extraction.PCA
 
 import se.alipsa.matrix.core.Matrix
@@ -11,7 +9,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * Wrapper for Smile dimensionality reduction algorithms providing a Matrix-friendly API.
  * Supports PCA (Principal Component Analysis).
  */
-@CompileStatic
 class SmileDimensionality {
 
   private final PCA fullPca

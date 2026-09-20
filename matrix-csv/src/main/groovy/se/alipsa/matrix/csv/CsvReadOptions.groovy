@@ -1,6 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import org.apache.commons.csv.DuplicateHeaderMode
@@ -32,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @see CsvFormatProvider
  * @see CsvOption
  */
-@CompileStatic
 @SuppressWarnings(['DuplicateStringLiteral', 'ReturnsNullInsteadOfEmptyCollection'])
 class CsvReadOptions {
 

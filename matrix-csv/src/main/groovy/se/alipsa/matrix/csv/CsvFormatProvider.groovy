@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.AbstractFormatProvider
 import se.alipsa.matrix.core.spi.OptionDescriptor
@@ -21,7 +19,6 @@ import se.alipsa.matrix.core.util.Logger
  * @see CsvReadOptions
  * @see CsvWriteOptions
  */
-@CompileStatic
 class CsvFormatProvider extends AbstractFormatProvider {
 
   private static final Logger log = Logger.getLogger(CsvFormatProvider)

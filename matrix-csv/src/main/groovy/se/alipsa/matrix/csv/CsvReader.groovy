@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord
@@ -60,7 +58,6 @@ import java.text.NumberFormat
  * @see CsvWriter
  * @see CsvOption
  */
-@CompileStatic
 class CsvReader {
 
   private static final String DEFAULT_MATRIX_NAME = 'matrix'
@@ -693,7 +690,6 @@ class CsvReader {
    *     .from(file)
    * </pre>
    */
-  @CompileStatic
   static class ReadBuilder {
     private char delimiter = ',' as char
     private Character quoteCharacter = '"' as Character

@@ -1,7 +1,6 @@
 package se.alipsa.matrix.datasets
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
@@ -12,7 +11,6 @@ import se.alipsa.matrix.datasets.util.FileUtil
  * Provides access to common datasets in Matrix format.
  * Includes statistical datasets (mtcars, iris, diamonds, etc.) and geographical map data.
  */
-@CompileStatic
 class Dataset {
 
   private static final Logger log = Logger.getLogger(Dataset)

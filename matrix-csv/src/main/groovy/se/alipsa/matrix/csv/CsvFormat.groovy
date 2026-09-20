@@ -1,6 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
 import org.apache.commons.csv.CSVFormat
@@ -17,7 +16,6 @@ import org.apache.commons.csv.QuoteMode
  *   <li>{@code CsvWriter.write(matrix).to(file)}</li>
  * </ul>
  */
-@CompileStatic
 @PackageScope
 class CsvFormat {
 
@@ -160,7 +158,6 @@ class CsvFormat {
    * <p>All fields have sensible defaults matching the behavior of the library's
    * existing default format.</p>
    */
-  @CompileStatic
   static class Builder {
     private char delimiter = ',' as char
     private Character quoteCharacter = '"' as Character

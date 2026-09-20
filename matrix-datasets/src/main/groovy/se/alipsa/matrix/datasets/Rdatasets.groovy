@@ -1,7 +1,6 @@
 package se.alipsa.matrix.datasets
 
 import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
 
 import org.jsoup.Jsoup
 
@@ -32,7 +31,6 @@ import java.util.concurrent.TimeoutException
  *   <li>fetching the selected csv or documentation page ({@link #fetchData} / {@link #fetchInfo}) — {@link IOException}.</li>
  * </ul>
  */
-@CompileStatic
 class Rdatasets {
 
   private static final Logger log = Logger.getLogger(Rdatasets)

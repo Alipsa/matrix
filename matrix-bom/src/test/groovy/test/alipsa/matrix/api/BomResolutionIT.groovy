@@ -16,7 +16,6 @@ import se.alipsa.matrix.json.JsonReader
 import se.alipsa.matrix.logging.MatrixLogging
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.pict.Plot
-import se.alipsa.matrix.smile.SmileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
@@ -45,7 +44,6 @@ class BomResolutionIT implements ApiItSupport {
       'matrixLoggingVersion'    : MatrixLogging,
       'matrixParquetVersion'    : MatrixParquetReader,
       'matrixPictVersion'       : Plot,
-      'matrixSmileVersion'      : SmileUtil,
       'matrixSpreadsheetVersion': SpreadsheetWriter,
       'matrixSqlVersion'        : MatrixSql,
       'matrixStatsVersion'      : Sampler,
@@ -76,6 +74,6 @@ class BomResolutionIT implements ApiItSupport {
         assertFalse(artifact.contains('-SNAPSHOT'), "$property resolved a SNAPSHOT artifact: $location")
       }
     }
-    assertEquals('5.0.8', GroovySystem.version, 'the integration runtime must match the groovy-all pin')
+    assertEquals('5.1.2', GroovySystem.version, 'the integration runtime must match the groovy-all pin')
   }
 }

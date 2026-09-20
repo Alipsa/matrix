@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.ml
 
-import groovy.transform.CompileStatic
-
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.ElasticNet
@@ -18,7 +16,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * Wrapper for Smile regression algorithms providing a Matrix-friendly API.
  * Supports OLS, Ridge, Lasso, and ElasticNet regression.
  */
-@CompileStatic
 class SmileRegression {
 
   private static final double ZERO = 0.0d

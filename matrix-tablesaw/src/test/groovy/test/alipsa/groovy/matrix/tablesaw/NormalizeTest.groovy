@@ -221,7 +221,7 @@ class NormalizeTest {
     // at two decimal places. Applying HALF_EVEN directly to the exact quotient produces 0.13.
     def bc = BigDecimalColumn.create('b', [
         new BigDecimal('0'),
-        new BigDecimal('0.12500000000000005'),
+        0.12500000000000005G,
         new BigDecimal('1')] as BigDecimal[])
 
     def norm = Normalizer.minMaxNorm(bc, 2)

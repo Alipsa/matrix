@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import org.apache.commons.csv.DuplicateHeaderMode
 
 import se.alipsa.matrix.core.spi.OptionMaps
@@ -11,7 +9,6 @@ import java.nio.charset.Charset
 /**
  * Shared conversion helpers for CSV option handling.
  */
-@CompileStatic
 class CsvOptionUtil {
 
   /**

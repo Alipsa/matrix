@@ -31,6 +31,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <groovy.version>5.1.2</groovy.version>
     <junit-jupiter.version>6.1.2</junit-jupiter.version>
     <junitPlatformVersion.version>6.1.2</junitPlatformVersion.version>
     <skipUnitTests>false</skipUnitTests>
@@ -53,9 +54,20 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>5.0.8</version>
-      <type>pom</type>
+      <artifactId>groovy</artifactId>
+      <version>${groovy.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-sql</artifactId>
+      <version>${groovy.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-xml</artifactId>
+      <version>${groovy.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

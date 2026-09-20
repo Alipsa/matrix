@@ -44,7 +44,7 @@ classpath.
 
 ```groovy
 dependencies {
-  implementation(platform('se.alipsa.matrix:matrix-bom:2.5.2'))
+  implementation(platform('se.alipsa.matrix:matrix-bom:2.6.0'))
   implementation('se.alipsa.matrix:matrix-core')
   runtimeOnly('se.alipsa.matrix:matrix-logging')
 }

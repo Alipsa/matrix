@@ -52,6 +52,14 @@ String documentedMatrixLoggingVersion = version.toString() - '-SNAPSHOT'
 File matrixBomFile = rootProject.file('matrix-bom/bom.xml')
 File documentedVersionMarker = layout.buildDirectory.file('verification/documented-version.txt').get().asFile
 
+def documentedVersionMismatch = { File documentation, String dependency, String expectedCoordinate, List<String> foundCoordinates ->
+  String found = foundCoordinates ? foundCoordinates.join(', ') : "no ${dependency} coordinate"
+  new GradleException("""Documentation version mismatch in ${documentation}:
+  expected: ${expectedCoordinate}
+  found:    ${found}
+Fix: replace the ${dependency} coordinate with ${expectedCoordinate}.""")
+}
+
 tasks.register('checkDocumentedVersion') {
   description = 'Checks that matrix-logging documentation uses the current module and BOM release versions.'
   group = 'verification'
@@ -65,7 +73,7 @@ tasks.register('checkDocumentedVersion') {
     documentedVersionFiles.each { File documentation ->
       def documentedCoordinates = documentation.text.findAll(/se\.alipsa\.matrix:matrix-logging:[^'\"\s)]+/)
       if (!documentedCoordinates || documentedCoordinates.any { it != expectedCoordinate }) {
-        throw new GradleException("${documentation} must use ${expectedCoordinate}")
+        throw documentedVersionMismatch(documentation, 'matrix-logging', expectedCoordinate, documentedCoordinates)
       }
     }
 
@@ -74,7 +82,7 @@ tasks.register('checkDocumentedVersion') {
     String expectedBomCoordinate = "se.alipsa.matrix:matrix-bom:${documentedMatrixBomVersion}"
     def documentedBomCoordinates = readmeFile.text.findAll(/se\.alipsa\.matrix:matrix-bom:[^'\"\s)]+/)
     if (!documentedBomCoordinates || documentedBomCoordinates.any { it != expectedBomCoordinate }) {
-      throw new GradleException("${readmeFile} must use ${expectedBomCoordinate}")
+      throw documentedVersionMismatch(readmeFile, 'matrix-bom', expectedBomCoordinate, documentedBomCoordinates)
     }
     documentedVersionMarker.parentFile.mkdirs()
     documentedVersionMarker.text = "${expectedCoordinate}\n${expectedBomCoordinate}\n"
