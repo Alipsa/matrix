@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.data
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
@@ -9,7 +7,6 @@ import se.alipsa.matrix.core.util.Logger
  * Utility class for data splitting operations commonly used in machine learning workflows.
  * Provides train/test splitting and k-fold cross-validation.
  */
-@CompileStatic
 class SmileData {
 
   private static final Logger log = Logger.getLogger(SmileData)
@@ -361,7 +358,6 @@ class SmileData {
   /**
    * Represents a single fold in k-fold cross-validation.
    */
-  @CompileStatic
   static class Fold {
 
     final int index

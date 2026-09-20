@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile
 
-import groovy.transform.CompileStatic
-
 import smile.data.DataFrame
 import smile.data.vector.ValueVector
 
@@ -26,7 +24,6 @@ import se.alipsa.matrix.core.Stat
  *
  * Registered in resources/META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule
  */
-@CompileStatic
 class Gsmile {
 
   // ==================== Matrix Extensions ====================

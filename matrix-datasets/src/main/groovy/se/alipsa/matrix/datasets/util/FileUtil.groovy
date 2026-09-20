@@ -1,14 +1,11 @@
 package se.alipsa.matrix.datasets.util
 
-import groovy.transform.CompileStatic
-
 import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Paths
 
 /**
  * Common file utilities
  */
-@CompileStatic
 class FileUtil {
 
   private FileUtil() {

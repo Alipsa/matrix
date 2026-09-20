@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.ml
 
-import groovy.transform.CompileStatic
-
 import smile.classification.*
 import smile.data.DataFrame
 import smile.data.formula.Formula
@@ -16,7 +14,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * Wrapper for Smile classification algorithms providing a Matrix-friendly API.
  * Supports RandomForest and DecisionTree classifiers.
  */
-@CompileStatic
 class SmileClassifier {
 
   private static final String NULL_LABEL = '<null>'

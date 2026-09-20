@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.stats
 
-import groovy.transform.CompileStatic
-
 import smile.stat.distribution.BernoulliDistribution
 import smile.stat.distribution.BetaDistribution
 import smile.stat.distribution.BinomialDistribution
@@ -31,7 +29,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * - Hypothesis tests
  * - Correlation matrices with significance testing
  */
-@CompileStatic
 class SmileStats {
 
   private static final int MINIMUM_SAMPLES = 2

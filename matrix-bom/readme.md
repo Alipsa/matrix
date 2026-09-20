@@ -54,7 +54,7 @@ version (4.x or 5.x). Add the Groovy dependency explicitly in your build.
 
 Gradle:
 ```groovy
-implementation('org.apache.groovy:groovy-all:5.0.8')
+implementation('org.apache.groovy:groovy-all:5.1.2')
 implementation('se.alipsa.matrix:matrix-all:2.5.1')
 ```
 
@@ -63,7 +63,7 @@ Maven:
 <dependency>
   <groupId>org.apache.groovy</groupId>
   <artifactId>groovy-all</artifactId>
-  <version>5.0.8</version>
+  <version>5.1.2</version>
 </dependency>
 <dependency>
   <groupId>se.alipsa.matrix</groupId>

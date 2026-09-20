@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile
 
-import groovy.transform.CompileStatic
-
 import smile.data.DataFrame
 
 import se.alipsa.matrix.core.Matrix
@@ -13,7 +11,6 @@ import java.math.RoundingMode
  * Utility class for working with Smile DataFrames and Matrix objects.
  * Provides convenience methods for conversion, statistical summaries, and sampling.
  */
-@CompileStatic
 class SmileUtil {
 
   private static final String STATISTIC = 'statistic'

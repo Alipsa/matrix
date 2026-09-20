@@ -1,7 +1,5 @@
 package se.alipsa.matrix.csv
 
-import groovy.transform.CompileStatic
-
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.csv.QuoteMode
@@ -37,7 +35,6 @@ import java.nio.file.Path
  *
  * @see CsvReader
  */
-@CompileStatic
 class CsvWriter {
 
   private static final String SAFE_NAME_REPLACEMENT = '_'
@@ -399,7 +396,6 @@ class CsvWriter {
    *     .to(file)
    * </pre>
    */
-  @CompileStatic
   static class WriteBuilder {
     private final Matrix matrix
     private char delimiter = ',' as char

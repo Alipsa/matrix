@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.data
 
-import groovy.transform.CompileStatic
-
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.smile.SmileUtil
 
@@ -9,7 +7,6 @@ import se.alipsa.matrix.smile.SmileUtil
  * Feature engineering utilities for machine learning preprocessing.
  * Provides standardization, normalization, and encoding transformations.
  */
-@CompileStatic
 @SuppressWarnings('ClassSize')
 class SmileFeatures {
 
@@ -599,7 +596,6 @@ class SmileFeatures {
   /**
    * StandardScaler that can be fitted on training data and applied to new data.
    */
-  @CompileStatic
   static class StandardScaler {
 
     private final Map<String, Double> means = [:]
@@ -709,7 +705,6 @@ class SmileFeatures {
   /**
    * MinMaxScaler that can be fitted on training data and applied to new data.
    */
-  @CompileStatic
   static class MinMaxScaler {
 
     private final Map<String, Double> mins = [:]
@@ -830,7 +825,6 @@ class SmileFeatures {
    * and {@code "1"} (String) are the same class in {@code SmileClassifier} but distinct labels
    * in this encoder. Ensure your column types are consistent if using both APIs on the same data.
    */
-  @CompileStatic
   static class LabelEncoder {
 
     private List<Object> labels
@@ -938,7 +932,6 @@ class SmileFeatures {
    * categories in this encoder. Ensure your column types are consistent if using both APIs
    * on the same data.
    */
-  @CompileStatic
   static class OneHotEncoder {
 
     private List<Object> categories

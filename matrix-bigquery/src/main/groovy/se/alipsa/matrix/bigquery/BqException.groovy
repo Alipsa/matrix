@@ -1,11 +1,8 @@
 package se.alipsa.matrix.bigquery
 
-import groovy.transform.CompileStatic
-
 /**
  * Exception thrown when a BigQuery operation fails.
  */
-@CompileStatic
 class BqException extends Exception {
 
   /**

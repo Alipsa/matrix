@@ -1,7 +1,5 @@
 package se.alipsa.matrix.smile.stats
 
-import groovy.transform.CompileStatic
-
 import smile.stat.hypothesis.CorTest
 
 /**
@@ -9,7 +7,6 @@ import smile.stat.hypothesis.CorTest
  * Each constant delegates to the corresponding Smile {@link CorTest} factory method
  * via {@link #correlate(double[], double[])}.
  */
-@CompileStatic
 enum CorrelationMethod {
   PEARSON,
   SPEARMAN,
