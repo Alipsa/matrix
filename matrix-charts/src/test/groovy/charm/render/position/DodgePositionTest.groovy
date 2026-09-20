@@ -105,6 +105,21 @@ class DodgePositionTest {
   }
 
   @Test
+  void discreteScaleKeepsNumericCategoriesAtTheirOriginalValues() {
+    List<LayerData> data = [
+        new LayerData(x: 2020, y: 10, fill: 'g1', rowIndex: 0),
+        new LayerData(x: 2020, y: 20, fill: 'g2', rowIndex: 1)
+    ]
+
+    List<LayerData> result = DodgePosition.compute(makeLayer(), data, Scale.discrete())
+
+    assertEquals(2020, result[0].x)
+    assertEquals(2020, result[1].x)
+    assertEquals(0, result[0].meta.dodgeIndex)
+    assertEquals(1, result[1].meta.dodgeIndex)
+  }
+
+  @Test
   void zeroGroupValueIsARealGroup() {
     List<LayerData> data = [
         new LayerData(x: 1, y: 10, group: 0, fill: 'same', rowIndex: 0),

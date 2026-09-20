@@ -46,6 +46,17 @@ class ScaleEngineTest {
   }
 
   @Test
+  void testAutoDetectContinuousForTemporalData() {
+    List<LocalDate> values = [LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 2)]
+
+    CharmScale positional = ScaleEngine.trainPositionalScale(values as List<Object>, null, 0, 300)
+    ColorCharmScale color = ScaleEngine.trainColorScale(values as List<Object>, null)
+
+    assertTrue(positional instanceof ContinuousCharmScale)
+    assertFalse(color.isDiscrete())
+  }
+
+  @Test
   void testForceContinuousWithSpec() {
     CharmScale scale = ScaleEngine.trainPositionalScale(
         ['A', 'B', 'C'], Scale.continuous(), 0, 300

@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.position
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.core.util.Logger
 
@@ -38,10 +39,22 @@ class PositionEngine {
    * @return position-adjusted layer data
    */
   static List<LayerData> apply(LayerSpec layer, List<LayerData> data) {
+    apply(layer, data, null)
+  }
+
+  /**
+   * Applies the position adjustment specified by the layer's position type.
+   *
+   * @param layer layer specification containing position type and params
+   * @param data layer data from stat transformation
+   * @param xScaleSpec effective x scale specification, when explicitly configured
+   * @return position-adjusted layer data
+   */
+  static List<LayerData> apply(LayerSpec layer, List<LayerData> data, Scale xScaleSpec) {
     CharmPositionType positionType = layer.positionType
     switch (positionType) {
       case CharmPositionType.IDENTITY -> IdentityPosition.compute(layer, data)
-      case CharmPositionType.DODGE -> DodgePosition.compute(layer, data)
+      case CharmPositionType.DODGE -> DodgePosition.compute(layer, data, xScaleSpec)
       case CharmPositionType.DODGE2 -> Dodge2Position.compute(layer, data)
       case CharmPositionType.STACK -> StackPosition.compute(layer, data)
       case CharmPositionType.FILL -> FillPosition.compute(layer, data)

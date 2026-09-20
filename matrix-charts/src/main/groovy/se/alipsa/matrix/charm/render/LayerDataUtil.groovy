@@ -55,10 +55,10 @@ class LayerDataUtil {
    *
    * @param layer the layer (used for geom-specific rules)
    * @param data position-adjusted layer data
+   * @param includeZeroBaseline true when this is the bar-value axis
    * @return non-null training values
    */
-  @SuppressWarnings('UnusedMethodParameter')
-  static List<Object> xTrainingValues(LayerSpec layer, List<LayerData> data) {
+  static List<Object> xTrainingValues(LayerSpec layer, List<LayerData> data, boolean includeZeroBaseline = false) {
     List<Object> values = []
     data.each { LayerData datum ->
       [datum.x, datum.xmin, datum.xmax, datum.xend].each { Object value ->
@@ -68,7 +68,7 @@ class LayerDataUtil {
       }
       addMetaBounds(values, datum.meta, X_META_BOUNDS)
     }
-    values
+    addZeroBaseline(values, layer, data, includeZeroBaseline)
   }
 
   /**
@@ -76,9 +76,10 @@ class LayerDataUtil {
    *
    * @param layer the layer (used for geom-specific rules)
    * @param data position-adjusted layer data
+   * @param includeZeroBaseline true when this is the bar-value axis
    * @return non-null training values
    */
-  static List<Object> yTrainingValues(LayerSpec layer, List<LayerData> data) {
+  static List<Object> yTrainingValues(LayerSpec layer, List<LayerData> data, boolean includeZeroBaseline = true) {
     List<Object> values = []
     data.each { LayerData datum ->
       [datum.y, datum.ymin, datum.ymax, datum.yend].each { Object value ->
@@ -88,7 +89,16 @@ class LayerDataUtil {
       }
       addMetaBounds(values, datum.meta, Y_META_BOUNDS)
     }
-    if (!data.isEmpty() && layer?.geomType in ZERO_BASELINE_GEOMS) {
+    addZeroBaseline(values, layer, data, includeZeroBaseline)
+  }
+
+  private static List<Object> addZeroBaseline(
+      List<Object> values,
+      LayerSpec layer,
+      List<LayerData> data,
+      boolean includeZeroBaseline
+  ) {
+    if (includeZeroBaseline && !data.isEmpty() && layer?.geomType in ZERO_BASELINE_GEOMS) {
       values << BigDecimal.ZERO
     }
     values

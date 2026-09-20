@@ -135,8 +135,9 @@ class CharmRenderer {
           layer: layer,
           pipelineData: pipelineData
       )
-      xValues.addAll(LayerDataUtil.xTrainingValues(layer, pipelineData))
-      yValues.addAll(LayerDataUtil.yTrainingValues(layer, pipelineData))
+      boolean flipped = context.chart.coord?.type == CharmCoordType.FLIP
+      xValues.addAll(LayerDataUtil.xTrainingValues(layer, pipelineData, flipped))
+      yValues.addAll(LayerDataUtil.yTrainingValues(layer, pipelineData, !flipped))
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
       fillValues.addAll(pipelineData.collect { LayerData d -> d.fill })
       sizeValues.addAll(pipelineData.collect { LayerData d -> d.size })
@@ -477,7 +478,8 @@ class CharmRenderer {
 
     List<LayerData> mapped = mapData(dataMatrix, mapping, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
-    List<LayerData> posData = applyPosition(layer, statData)
+    Scale xScaleSpec = layer.scales['x'] ?: context.chart.scale?.x
+    List<LayerData> posData = applyPosition(layer, statData, xScaleSpec)
     List<LayerData> result = layer.geomType == CharmGeomType.PIE
         ? posData
         : applyCoord(context.chart.coord, posData)
@@ -524,8 +526,8 @@ class CharmRenderer {
     StatEngine.apply(layer, mapped)
   }
 
-  private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
-    PositionEngine.apply(layer, data)
+  private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data, Scale xScaleSpec) {
+    PositionEngine.apply(layer, data, xScaleSpec)
   }
 
   private static List<LayerData> applyCoord(CoordSpec coord, List<LayerData> data) {

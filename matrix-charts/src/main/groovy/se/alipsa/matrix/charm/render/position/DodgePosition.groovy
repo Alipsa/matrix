@@ -1,6 +1,8 @@
 package se.alipsa.matrix.charm.render.position
 
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.Scale
+import se.alipsa.matrix.charm.ScaleType
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.charm.render.scale.ScaleUtils
@@ -26,6 +28,18 @@ class DodgePosition {
    * @return position-adjusted layer data with modified x values
    */
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
+    compute(layer, data, null)
+  }
+
+  /**
+   * Applies dodge position adjustment with knowledge of an explicit x-scale.
+   *
+   * @param layer layer specification with position params
+   * @param data layer data to adjust
+   * @param xScaleSpec effective x scale specification, when explicitly configured
+   * @return position-adjusted layer data with modified x values
+   */
+  static List<LayerData> compute(LayerSpec layer, List<LayerData> data, Scale xScaleSpec) {
     if (data == null || data.isEmpty()) {
       return data
     }
@@ -65,7 +79,7 @@ class DodgePosition {
         updated.meta.dodgeCount = nGroups
         updated.meta.dodgeWidth = width
         BigDecimal xNum = ScaleUtils.coerceStrictNumber(datum.x)
-        if (xNum != null) {
+        if (xNum != null && xScaleSpec?.type != ScaleType.DISCRETE) {
           BigDecimal offset = (-width / 2) + (groupWidth / 2) + (index * groupWidth)
           updated.x = xNum + offset
         }

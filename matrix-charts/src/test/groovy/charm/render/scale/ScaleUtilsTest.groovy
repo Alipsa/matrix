@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test
 
 import se.alipsa.matrix.charm.render.scale.ScaleUtils
 
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+
 @SuppressWarnings('ExplicitCallToCompareToMethod')
 class ScaleUtilsTest {
 
@@ -18,6 +22,14 @@ class ScaleUtilsTest {
     assertFalse(ScaleUtils.isStrictNumeric('1,234'))
     assertFalse(ScaleUtils.isStrictNumeric(Double.NaN))
     assertNull(ScaleUtils.coerceStrictNumber('Q1'))
+  }
+
+  @Test
+  void strictNumericInferenceIncludesTemporalValues() {
+    assertTrue(ScaleUtils.isStrictNumeric(LocalDate.of(2026, 9, 20)))
+    assertTrue(ScaleUtils.isStrictNumeric(LocalDateTime.of(2026, 9, 20, 12, 0)))
+    assertTrue(ScaleUtils.isStrictNumeric(Instant.parse('2026-09-20T12:00:00Z')))
+    assertTrue(ScaleUtils.isStrictNumeric(new Date(0)))
   }
 
   @Test

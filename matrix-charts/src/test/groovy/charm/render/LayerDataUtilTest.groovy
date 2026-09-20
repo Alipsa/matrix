@@ -35,4 +35,12 @@ class LayerDataUtilTest {
     assertFalse(LayerDataUtil.yTrainingValues(layerOf(CharmGeomType.ERRORBAR), data).contains(BigDecimal.ZERO))
     assertEquals([], LayerDataUtil.yTrainingValues(layerOf(CharmGeomType.COL), []))
   }
+
+  @Test
+  void flippedBarGeomsContributeZeroToTheFlippedValueAxis() {
+    List<LayerData> flippedData = [new LayerData(x: 3, y: 'A', rowIndex: 0)]
+
+    assertTrue(LayerDataUtil.xTrainingValues(layerOf(CharmGeomType.COL), flippedData, true).contains(BigDecimal.ZERO))
+    assertFalse(LayerDataUtil.yTrainingValues(layerOf(CharmGeomType.COL), flippedData, false).contains(BigDecimal.ZERO))
+  }
 }

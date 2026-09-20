@@ -30,7 +30,7 @@ class ScaleUtils {
    * @return true if the value should be treated as numeric
    */
   static boolean isStrictNumeric(Object value) {
-    coerceStrictNumber(value) != null
+    coerceStrictNumber(value) != null || TemporalScaleUtil.isTemporalValue(value)
   }
 
   /**
