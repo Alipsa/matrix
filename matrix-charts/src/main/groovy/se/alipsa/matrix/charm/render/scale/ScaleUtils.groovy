@@ -21,6 +21,54 @@ class ScaleUtils {
   }
 
   /**
+   * Decide whether a raw data value is numeric for scale-type inference.
+   *
+   * <p>Unlike {@link ValueConverter#asBigDecimal(Object)}, this only accepts strings whose
+   * entire trimmed text is a decimal literal. This keeps labels such as {@code Q1} discrete.</p>
+   *
+   * @param value raw data value
+   * @return true if the value should be treated as numeric
+   */
+  static boolean isStrictNumeric(Object value) {
+    coerceStrictNumber(value) != null
+  }
+
+  /**
+   * Coerce a raw data value to BigDecimal using strict parsing.
+   *
+   * @param value raw data value
+   * @return the numeric value, or null when the value is not strictly numeric
+   */
+  static BigDecimal coerceStrictNumber(Object value) {
+    if (value == null) {
+      return null
+    }
+    if (value instanceof Double && (value.isNaN() || value.isInfinite())) {
+      return null
+    }
+    if (value instanceof Float && (value.isNaN() || value.isInfinite())) {
+      return null
+    }
+    if (value instanceof Number) {
+      return ValueConverter.asBigDecimal(value)
+    }
+    if (value instanceof CharSequence) {
+      String text = value.toString().trim()
+      if (text.isEmpty()) {
+        return null
+      }
+      BigDecimal parsed = null
+      try {
+        parsed = new BigDecimal(text)
+      } catch (NumberFormatException ignored) {
+        // A non-decimal string is not numeric for scale inference.
+      }
+      return parsed
+    }
+    null
+  }
+
+  /**
    * Build a list of evenly spaced values across a range.
    *
    * @param n the number of values to generate
@@ -205,8 +253,9 @@ class ScaleUtils {
     if (x == 0) return BigDecimal.ZERO
 
     BigDecimal absX = x.abs()
-    BigDecimal exp = absX.log10().floor()
-    BigDecimal f = absX / (10 ** exp)
+    int exp = absX.log10().floor().intValue()
+    BigDecimal magnitude = BigDecimal.ONE.scaleByPowerOfTen(exp)
+    BigDecimal f = absX / magnitude
 
     BigDecimal nf
     if (round) {
@@ -221,7 +270,7 @@ class ScaleUtils {
       else nf = 10
     }
 
-    BigDecimal result = nf * (10 ** exp)
+    BigDecimal result = nf * magnitude
     x < 0 ? -result : result
   }
 

@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.position
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
+import se.alipsa.matrix.charm.render.scale.ScaleUtils
 import se.alipsa.matrix.core.ValueConverter
 
 /**
@@ -10,7 +11,8 @@ import se.alipsa.matrix.core.ValueConverter
  * Used for grouped bar charts and similar visualizations.
  *
  * Supports params:
- * - width: dodge width (default 0.9)
+ * - width: dodge width (default 0.9). Multi-group buckets record {@code meta.dodgeIndex},
+ *   {@code meta.dodgeCount}, and {@code meta.dodgeWidth} for renderers on discrete axes.
  */
 @SuppressWarnings('DuplicateNumberLiteral')
 class DodgePosition {
@@ -45,33 +47,27 @@ class DodgePosition {
 
     List<LayerData> result = []
     byX.each { Object xVal, List<LayerData> bucket ->
-      // Determine unique groups within this x bucket
       List<Object> groups = new ArrayList<>(new LinkedHashSet<>(
           bucket.collect { LayerData d -> resolveGroup(d) }
       ))
       int nGroups = groups.size()
 
       if (nGroups <= 1) {
-        // Single group: copy data unchanged
-        bucket.each { LayerData datum ->
-          result.add(LayerDataUtil.copyDatum(datum))
-        }
+        bucket.each { LayerData datum -> result.add(LayerDataUtil.copyDatum(datum)) }
         return
       }
 
       BigDecimal groupWidth = width / nGroups
-      Map<Object, BigDecimal> groupOffsets = [:]
-      groups.eachWithIndex { Object group, int i ->
-        BigDecimal offset = (-width / 2) + (groupWidth / 2) + (i * groupWidth)
-        groupOffsets.put(group, offset)
-      }
-
       bucket.each { LayerData datum ->
         LayerData updated = LayerDataUtil.copyDatum(datum)
-        Object group = resolveGroup(datum)
-        BigDecimal xNum = ValueConverter.asBigDecimal(datum.x)
-        if (xNum != null && groupOffsets.containsKey(group)) {
-          updated.x = xNum + groupOffsets.get(group)
+        int index = groups.indexOf(resolveGroup(datum))
+        updated.meta.dodgeIndex = index
+        updated.meta.dodgeCount = nGroups
+        updated.meta.dodgeWidth = width
+        BigDecimal xNum = ScaleUtils.coerceStrictNumber(datum.x)
+        if (xNum != null) {
+          BigDecimal offset = (-width / 2) + (groupWidth / 2) + (index * groupWidth)
+          updated.x = xNum + offset
         }
         result.add(updated)
       }
@@ -82,9 +78,16 @@ class DodgePosition {
 
   /**
    * Resolves the grouping key for a datum, using group, fill, or color (in that order).
+   * Explicit null checks retain {@code 0}, {@code false}, and {@code ''} as valid keys.
    */
   private static Object resolveGroup(LayerData datum) {
-    datum.group ?: datum.fill ?: datum.color
+    if (datum.group != null) {
+      return datum.group
+    }
+    if (datum.fill != null) {
+      return datum.fill
+    }
+    datum.color
   }
 
 }

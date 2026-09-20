@@ -316,7 +316,9 @@ class ChartsCharmIntegrationTest {
 
     Svg svg = charmChart.render()
     assertNotNull(svg)
-    def circles = svg.descendants().findAll { it instanceof Circle }
+    def circles = svg.descendants().findAll {
+      it instanceof Circle && it.getAttribute('class') == 'charm-point'
+    }
     assertEquals(8, circles.size(), 'Multi-series scatter should render 8 circles (4 per series)')
   }
 

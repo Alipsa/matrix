@@ -221,13 +221,16 @@ class ChartToPdf {
       } finally {
         contentStream.close()
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       try {
         document.close()
       } catch (IOException closeEx) {
         e.addSuppressed(closeEx)
       }
-      throw e
+      if (e instanceof IOException) {
+        throw e
+      }
+      throw e as RuntimeException
     }
     document
   }

@@ -59,7 +59,8 @@ class ColorScaleUtil {
    *
    * <p>Supports {@code #RGB}, {@code #RGBA}, {@code #RRGGBB}, {@code #RRGGBBAA},
    * {@code rgb(...)}, {@code rgba(...)}, and the named colours supported by
-   * {@link #parseColor(String)}. Unsupported values are treated as neutral gray.</p>
+   * {@link #parseColor(String)}. Unsupported values are treated as neutral gray. {@code none}
+   * and {@code transparent} are fully transparent and resolve to the background colour.</p>
    *
    * @param color foreground/background fill colour
    * @param background opaque colour behind transparent {@code color}
@@ -137,6 +138,10 @@ class ColorScaleUtil {
     if (value == null || value.isEmpty()) {
       return neutral()
     }
+    String lower = value.toLowerCase(Locale.ROOT)
+    if (lower == 'none' || lower == 'transparent') {
+      return new ParsedColor(NEUTRAL_COMPONENT, NEUTRAL_COMPONENT, NEUTRAL_COMPONENT, BigDecimal.ZERO)
+    }
     if (value.startsWith(HASH)) {
       ParsedColor parsed = parseHexColor(value.substring(1))
       if (parsed != null) {
@@ -147,7 +152,7 @@ class ColorScaleUtil {
     if (functional != null) {
       return functional
     }
-    int[] named = NAMED_COLORS[value.toLowerCase()]
+    int[] named = NAMED_COLORS[lower]
     named == null ? neutral() : new ParsedColor(named[0], named[1], named[2], OPAQUE)
   }
 

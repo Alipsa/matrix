@@ -46,7 +46,9 @@ class ChartToPng {
       throw new IllegalArgumentException('targetFile cannot be null')
     }
     targetFile.parentFile?.mkdirs()
-    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', targetFile)
+    if (!ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', targetFile)) {
+      throw new IOException('No PNG ImageWriter available')
+    }
   }
 
   /**
@@ -64,7 +66,9 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException('outputStream cannot be null')
     }
-    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', os)
+    if (!ImageIO.write(renderToImage(stripAnimationCss(svgChart)), 'png', os)) {
+      throw new IOException('No PNG ImageWriter available')
+    }
   }
 
   /**
@@ -273,6 +277,21 @@ class ChartToPng {
    * @throws IllegalArgumentException if the SVG document is invalid or has non-positive dimensions
    */
   private static BufferedImage renderToImage(String svgContent) {
+    SVGDocument svgDocument = loadDocument(svgContent)
+    int width = (svgDocument.size().width as BigDecimal).ceil() as int
+    int height = (svgDocument.size().height as BigDecimal).ceil() as int
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    Graphics2D g = image.createGraphics()
+    try {
+      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+      svgDocument.render(null, g)
+    } finally {
+      g.dispose()
+    }
+    image
+  }
+
+  private static SVGDocument loadDocument(String svgContent) {
     SVGLoader loader = new SVGLoader()
     ByteArrayInputStream svgStream = new ByteArrayInputStream(svgContent.getBytes(StandardCharsets.UTF_8))
     SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
@@ -287,29 +306,13 @@ class ChartToPng {
           'ensure the SVG specifies width/height attributes or a valid viewBox'
       )
     }
-    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-    Graphics2D g = image.createGraphics()
-    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    svgDocument.render(null, g)
-    g.dispose()
-    image
+    svgDocument
   }
 
   private static Map<String, Integer> naturalDimensions(Svg svgChart) {
-    SVGLoader loader = new SVGLoader()
-    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.toXml().getBytes(StandardCharsets.UTF_8))
-    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
-    if (svgDocument == null) {
-      throw new IllegalArgumentException('Invalid SVG document')
-    }
+    SVGDocument svgDocument = loadDocument(svgChart.toXml())
     int width = (svgDocument.size().width as BigDecimal).ceil() as int
     int height = (svgDocument.size().height as BigDecimal).ceil() as int
-    if (width <= 0 || height <= 0) {
-      throw new IllegalArgumentException(
-          "SVG document has non-positive dimensions (${width}x${height}); " +
-          'ensure the SVG specifies width/height attributes or a valid viewBox'
-      )
-    }
     [width: width, height: height]
   }
 

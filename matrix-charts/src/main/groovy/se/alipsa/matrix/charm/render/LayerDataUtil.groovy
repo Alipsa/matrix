@@ -1,9 +1,18 @@
 package se.alipsa.matrix.charm.render
 
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.LayerSpec
+
 /**
  * Utilities for working with {@link LayerData} instances in the render pipeline.
  */
 class LayerDataUtil {
+
+  private static final Set<CharmGeomType> ZERO_BASELINE_GEOMS =
+      EnumSet.of(CharmGeomType.BAR, CharmGeomType.COL, CharmGeomType.HISTOGRAM)
+  private static final List<String> X_META_BOUNDS = ['xmin', 'xmax', 'binStart', 'binEnd'].asImmutable()
+  private static final List<String> Y_META_BOUNDS =
+      ['ymin', 'ymax', 'whiskerLow', 'whiskerHigh', 'outliers'].asImmutable()
 
   private LayerDataUtil() {
     // Utility class
@@ -39,6 +48,68 @@ class LayerDataUtil {
         rowIndex: datum.rowIndex,
         meta: datum.meta != null ? new LinkedHashMap<>(datum.meta) : [:]
     )
+  }
+
+  /**
+   * Collect every x-axis value a layer contributes to scale training.
+   *
+   * @param layer the layer (used for geom-specific rules)
+   * @param data position-adjusted layer data
+   * @return non-null training values
+   */
+  @SuppressWarnings('UnusedMethodParameter')
+  static List<Object> xTrainingValues(LayerSpec layer, List<LayerData> data) {
+    List<Object> values = []
+    data.each { LayerData datum ->
+      [datum.x, datum.xmin, datum.xmax, datum.xend].each { Object value ->
+        if (value != null) {
+          values << value
+        }
+      }
+      addMetaBounds(values, datum.meta, X_META_BOUNDS)
+    }
+    values
+  }
+
+  /**
+   * Collect every y-axis value a layer contributes to scale training.
+   *
+   * @param layer the layer (used for geom-specific rules)
+   * @param data position-adjusted layer data
+   * @return non-null training values
+   */
+  static List<Object> yTrainingValues(LayerSpec layer, List<LayerData> data) {
+    List<Object> values = []
+    data.each { LayerData datum ->
+      [datum.y, datum.ymin, datum.ymax, datum.yend].each { Object value ->
+        if (value != null) {
+          values << value
+        }
+      }
+      addMetaBounds(values, datum.meta, Y_META_BOUNDS)
+    }
+    if (!data.isEmpty() && layer?.geomType in ZERO_BASELINE_GEOMS) {
+      values << BigDecimal.ZERO
+    }
+    values
+  }
+
+  private static void addMetaBounds(List<Object> values, Map<String, Object> meta, List<String> keys) {
+    if (meta == null) {
+      return
+    }
+    keys.each { String key ->
+      Object value = meta[key]
+      if (value instanceof Collection) {
+        value.each { Object item ->
+          if (item != null) {
+            values << item
+          }
+        }
+      } else if (value != null) {
+        values << value
+      }
+    }
   }
 
 }

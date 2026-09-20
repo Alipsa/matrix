@@ -52,6 +52,21 @@ class StackPositionTest {
   }
 
   @Test
+  void negativeValuesStackBelowZero() {
+    List<LayerData> result = StackPosition.compute(makeLayer(), [
+        new LayerData(x: 'A', y: 5, rowIndex: 0),
+        new LayerData(x: 'A', y: -3, rowIndex: 1),
+        new LayerData(x: 'A', y: 2, rowIndex: 2)
+    ])
+    assertEquals(0.0, result[0].ymin as BigDecimal)
+    assertEquals(5.0, result[0].ymax as BigDecimal)
+    assertEquals(-3.0, result[1].ymin as BigDecimal)
+    assertEquals(0.0, result[1].ymax as BigDecimal)
+    assertEquals(5.0, result[2].ymin as BigDecimal)
+    assertEquals(7.0, result[2].ymax as BigDecimal)
+  }
+
+  @Test
   void testStackGroupsByXValue() {
     LayerSpec layer = makeLayer()
     List<LayerData> data = [

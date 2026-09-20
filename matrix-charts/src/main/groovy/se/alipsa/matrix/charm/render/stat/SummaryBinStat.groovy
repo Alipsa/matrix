@@ -15,6 +15,14 @@ class SummaryBinStat {
     if (data == null || data.isEmpty()) {
       return []
     }
+    List<LayerData> result = []
+    StatUtils.groupBySeries(data).each { Object key, List<LayerData> bucket ->
+      result.addAll(computeGroup(layer, bucket))
+    }
+    result
+  }
+
+  private static List<LayerData> computeGroup(LayerSpec layer, List<LayerData> data) {
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
     String fun = (params.fun ?: 'mean').toString().toLowerCase(Locale.ROOT)
@@ -64,6 +72,7 @@ class SummaryBinStat {
       bucket << y
     }
 
+    LayerData template = points.first()
     List<LayerData> result = []
     yByBin.keySet().sort().each { int idx ->
       List<BigDecimal> values = yByBin[idx]
@@ -82,6 +91,9 @@ class SummaryBinStat {
       LayerData datum = new LayerData(
           x: xmin + binWidth / 2,
           y: ySummary,
+          group: template.group,
+          color: template.color,
+          fill: template.fill,
           rowIndex: -1
       )
       datum.meta.n = values.size()

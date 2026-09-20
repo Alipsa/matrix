@@ -16,6 +16,7 @@ class QqStat {
 
     List<LayerData> result = []
     StatUtils.groupBySeries(data).each { Object key, List<LayerData> bucket ->
+      LayerData template = bucket.first()
       List<BigDecimal> values = StatUtils.sortedNumericValues(bucket) { LayerData d -> d.x != null ? d.x : d.y }
       if (values.isEmpty()) {
         return
@@ -28,6 +29,8 @@ class QqStat {
             x: theoretical,
             y: values[i],
             group: key == '__all__' ? null : key,
+            color: template.color,
+            fill: template.fill,
             rowIndex: -1
         )
         datum.meta.level = key

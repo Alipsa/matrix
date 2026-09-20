@@ -35,7 +35,7 @@
     <matrixArffVersion>0.3.0-SNAPSHOT</matrixArffVersion>
     <matrixAvroVersion>0.3.1-SNAPSHOT</matrixAvroVersion>
     <matrixBigQueryVersion>0.7.1-SNAPSHOT</matrixBigQueryVersion>
-    <matrixChartsVersion>0.5.1-SNAPSHOT</matrixChartsVersion>
+    <matrixChartsVersion>0.6.0-SNAPSHOT</matrixChartsVersion>
     <matrixCoreBaselineVersion>3.8.0</matrixCoreBaselineVersion>
     <matrixCoreVersion>3.9.0-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.5.0-SNAPSHOT</matrixCsvVersion>

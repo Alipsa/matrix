@@ -91,6 +91,29 @@ class DodgePositionTest {
   }
 
   @Test
+  void categoricalXRecordsDodgeMetadataAndKeepsCategory() {
+    List<LayerData> data = [
+        new LayerData(x: 'A', y: 10, fill: 'g1', rowIndex: 0),
+        new LayerData(x: 'A', y: 20, fill: 'g2', rowIndex: 1)
+    ]
+    List<LayerData> result = DodgePosition.compute(makeLayer(), data)
+    assertEquals('A', result[0].x)
+    assertEquals(0, result[0].meta.dodgeIndex)
+    assertEquals(1, result[1].meta.dodgeIndex)
+    assertEquals(2, result[0].meta.dodgeCount)
+    assertEquals(0.9, result[0].meta.dodgeWidth)
+  }
+
+  @Test
+  void zeroGroupValueIsARealGroup() {
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 10, group: 0, fill: 'same', rowIndex: 0),
+        new LayerData(x: 1, y: 20, group: 1, fill: 'same', rowIndex: 1)
+    ]
+    assertEquals(2, DodgePosition.compute(makeLayer(), data)[0].meta.dodgeCount)
+  }
+
+  @Test
   void testDodgeEmptyData() {
     LayerSpec layer = makeLayer()
     List<LayerData> data = []

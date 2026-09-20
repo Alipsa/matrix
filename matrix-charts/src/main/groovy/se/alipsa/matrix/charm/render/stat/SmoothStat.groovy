@@ -43,8 +43,20 @@ class SmoothStat {
    * @param data layer data
    * @return fitted points with x, y and meta.ymin/meta.ymax when se=true
    */
-  @CompileDynamic
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
+    Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(data)
+    if (groups.size() <= 1) {
+      return computeGroup(layer, data)
+    }
+    List<LayerData> result = []
+    groups.each { Object key, List<LayerData> bucket ->
+      result.addAll(computeGroup(layer, bucket))
+    }
+    result
+  }
+
+  @CompileDynamic
+  private static List<LayerData> computeGroup(LayerSpec layer, List<LayerData> data) {
     List<LayerData> numeric = data.findAll { LayerData d ->
       ValueConverter.asBigDecimal(d.x) != null &&
           ValueConverter.asBigDecimal(d.y) != null
@@ -57,6 +69,9 @@ class SmoothStat {
     boolean se = params.se != false
     BigDecimal level = params.level != null ? (params.level as BigDecimal) : 0.95
     int nPoints = params.n != null ? (params.n as int) : 80
+    if (nPoints < 1) {
+      nPoints = 1
+    }
     int polyDegree = resolvePolyDegree(params)
 
     int minDataPoints = polyDegree + 1
@@ -120,11 +135,12 @@ class SmoothStat {
 
     List<LayerData> result = []
     for (int i = 0; i < nPoints; i++) {
-      BigDecimal x = xMin + (xMax - xMin) * i / (nPoints - 1)
+      BigDecimal x = nPoints == 1 ? (xMin + xMax) / 2 : xMin + (xMax - xMin) * i / (nPoints - 1)
       BigDecimal yFit = regression.predict(x)
       LayerData datum = new LayerData(
           x: x,
           y: yFit,
+          group: numeric.first().group,
           color: numeric.first().color,
           fill: numeric.first().fill,
           rowIndex: -1

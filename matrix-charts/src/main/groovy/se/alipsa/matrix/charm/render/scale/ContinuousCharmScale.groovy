@@ -64,11 +64,7 @@ class ContinuousCharmScale extends CharmScale {
       return (rangeStart + rangeEnd) / 2
     }
 
-    if (transformStrategy instanceof ReverseScaleTransform) {
-      ScaleUtils.linearTransformReversed(numeric, domainMin, domainMax, rangeStart, rangeEnd)
-    } else {
-      ScaleUtils.linearTransform(numeric, domainMin, domainMax, rangeStart, rangeEnd)
-    }
+    ScaleUtils.linearTransform(numeric, domainMin, domainMax, rangeStart, rangeEnd)
   }
 
   @Override
@@ -100,11 +96,16 @@ class ContinuousCharmScale extends CharmScale {
       return generateLog10Ticks() as List<Object>
     }
 
-    List<Object> breaks = generateNiceBreaks(domainMin, domainMax, n) as List<Object>
-    if (transformStrategy instanceof ReverseScaleTransform) {
-      return breaks.reverse()
+    List<Number> breaks = generateNiceBreaks(domainMin, domainMax, n)
+    if (transformStrategy == null) {
+      return breaks as List<Object>
     }
-    breaks
+    List<Object> dataBreaks = breaks.collect { Number value -> transformStrategy.invert(value as BigDecimal) }
+        .findAll { it != null } as List<Object>
+    if (transformStrategy instanceof ReverseScaleTransform) {
+      return dataBreaks.reverse()
+    }
+    dataBreaks
   }
 
   @Override
@@ -143,7 +144,8 @@ class ContinuousCharmScale extends CharmScale {
       }
     }
 
-    tickValues.collect { Object tick -> defaultTickLabel(tick) }
+    BigDecimal spacing = tickSpacing(tickValues)
+    tickValues.collect { Object tick -> defaultTickLabel(tick, spacing) }
   }
 
   @Override
@@ -217,14 +219,17 @@ class ContinuousCharmScale extends CharmScale {
    * @param n number to format
    * @return formatted string
    */
-  private static String formatNumber(Number n) {
+  private static String formatNumber(Number n, BigDecimal spacing) {
     if (n == null) return ''
     BigDecimal bd = n as BigDecimal
     if (bd.stripTrailingZeros().scale() <= 0) {
       return bd.toBigInteger().toString()
     }
-    BigDecimal rounded = bd.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros()
-    rounded.toPlainString()
+    int decimals = 2
+    if (spacing != null && spacing != 0) {
+      decimals = spacing.stripTrailingZeros().scale().intValue().max(0) as int
+    }
+    bd.setScale(decimals, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
   }
 
   /**
@@ -240,9 +245,9 @@ class ContinuousCharmScale extends CharmScale {
       return bd.toBigInteger().toString()
     }
     if (bd < BigDecimal.ONE) {
-      return String.format('%.2g', bd)
+      return String.format(Locale.ROOT, '%.2g', bd)
     }
-    String.format('%.0f', bd)
+    String.format(Locale.ROOT, '%.0f', bd)
   }
 
   private List<Object> resolveConfiguredBreaks() {
@@ -277,9 +282,18 @@ class ContinuousCharmScale extends CharmScale {
     dateBreaks
   }
 
-  private static String defaultTickLabel(Object tick) {
+  private static BigDecimal tickSpacing(List<Object> ticks) {
+    if (ticks.size() < 2) {
+      return null
+    }
+    BigDecimal first = ValueConverter.asBigDecimal(ticks[0])
+    BigDecimal second = ValueConverter.asBigDecimal(ticks[1])
+    first == null || second == null ? null : (second - first).abs()
+  }
+
+  private static String defaultTickLabel(Object tick, BigDecimal spacing = null) {
     if (tick instanceof Number) {
-      return formatNumber(tick as Number)
+      return formatNumber(tick as Number, spacing)
     }
     tick?.toString() ?: ''
   }

@@ -135,8 +135,8 @@ class CharmRenderer {
           layer: layer,
           pipelineData: pipelineData
       )
-      xValues.addAll(pipelineData.collect { LayerData d -> d.x })
-      yValues.addAll(pipelineData.collect { LayerData d -> d.y })
+      xValues.addAll(LayerDataUtil.xTrainingValues(layer, pipelineData))
+      yValues.addAll(LayerDataUtil.yTrainingValues(layer, pipelineData))
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
       fillValues.addAll(pipelineData.collect { LayerData d -> d.fill })
       sizeValues.addAll(pipelineData.collect { LayerData d -> d.size })
@@ -161,7 +161,7 @@ class CharmRenderer {
       Map<String, Scale> layerScales = layerData.layer.scales
       if (!layerScales.isEmpty()) {
         TrainedScales layerTrained = ScaleEngine.trainLayerScales(
-            layerScales, context.config, layerData.pipelineData, context.chart)
+            layerData.layer, layerScales, context.config, layerData.pipelineData, context.chart)
         context.layerScales[layerData.layerIndex] = layerTrained
         checkScaleDivergence(layerData.layerIndex, layerTrained, context)
       }

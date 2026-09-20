@@ -1,6 +1,22 @@
 # Matrix-charts Release History
 
-## v0.5.1, in progress
+## v0.6.0, in progress
+
+This release corrects several rendering defects that change default output: bar/col charts now
+always include zero on the y axis, stacked and interval geoms train the axis on their full extent,
+`position: DODGE` works on discrete axes, and category labels that contain digits (`Q1`, `g1`)
+stay discrete. Charts that previously relied on the old output may look different; see the
+individual entries below.
+
+**Behaviour changes**
+
+- Scale-type inference uses strict numeric parsing, so category labels containing digits remain discrete.
+- Positional scales include full geom/stat extents and a zero baseline for bar, col and histogram layers.
+- Discrete-axis dodge separates bars; reverse and sqrt transforms produce correctly positioned data-space ticks.
+- Negative stacks accumulate below zero, and fixed coordinates preserve their ratio in either direction.
+- Continuous labels use tick-aware decimal precision and log labels use `Locale.ROOT`.
+- Smooth, quantile, QQ, ECDF and summary-bin stats retain their series aesthetics and compute per series.
+- JPEG quality is validated; transparent colour keywords respect the actual background; exporters safely release resources.
 - `ColorScaleUtil.DEFAULT_COLORS` and `ColorScaleUtil.defaultPalette(n)` expose Charm's
   default discrete palette for integrations that partially override series colours.
 - Continuous colour and fill scales honour `Scale.params['limits']`, including partial
