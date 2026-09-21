@@ -27,6 +27,7 @@ import se.alipsa.matrix.jupyter.FailingValue
 import se.alipsa.matrix.jupyter.LazyRenderer
 import se.alipsa.matrix.jupyter.LazyValue
 import se.alipsa.matrix.jupyter.NullMimeValue
+import se.alipsa.matrix.jupyter.PlainOnlyValue
 import se.alipsa.matrix.jupyter.RendererRegistry
 
 import java.lang.reflect.Field
@@ -203,6 +204,36 @@ class MatrixJupyterExtensionTest {
     assertNull(rich.getData(MIMEType.TEXT_HTML))
     assertTrue(plain.getData(MIMEType.TEXT_PLAIN).contains('failing value'))
     assertFalse(plain.getData(MIMEType.TEXT_PLAIN).contains('Rendering failed'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void reportsRendererFailuresWhenRichAndPlainAreRequestedTogether() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.render(new FailingValue())
+
+    assertNull(rendered.getData(MIMEType.TEXT_HTML))
+    String plain = rendered.getData(MIMEType.TEXT_PLAIN)
+    assertTrue(plain.contains('failing value'))
+    assertTrue(plain.contains('Rendering failed in FailingRenderer: intentional failure'))
+    assertFalse(plain.contains('no longer produces its registered'))
+    assertFalse(plain.contains('restart the kernel'))
+    extension.uninstall(kernel)
+  }
+
+  @Test
+  void passesPlainOnlyBundlesThroughWithoutAStaleMimeDiagnostic() {
+    TestKernel kernel = new TestKernel()
+    MatrixJupyterExtension extension = new MatrixJupyterExtension()
+
+    extension.install(kernel)
+    DisplayData rendered = kernel.renderer.render(new PlainOnlyValue())
+
+    assertNull(rendered.getData(MIMEType.TEXT_HTML))
+    assertEquals('plain only payload', rendered.getData(MIMEType.TEXT_PLAIN))
     extension.uninstall(kernel)
   }
 

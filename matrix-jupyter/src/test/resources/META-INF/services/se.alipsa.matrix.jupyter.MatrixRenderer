@@ -3,6 +3,7 @@ se.alipsa.matrix.jupyter.render.CharmRenderer
 se.alipsa.matrix.jupyter.render.GgRenderer
 se.alipsa.matrix.jupyter.render.PictRenderer
 se.alipsa.matrix.jupyter.FailingRenderer
+se.alipsa.matrix.jupyter.PlainOnlyRenderer
 se.alipsa.matrix.jupyter.UnavailableRenderer
 se.alipsa.matrix.jupyter.DuplicateMatrixRenderer
 se.alipsa.matrix.jupyter.InvalidMimeRenderer

@@ -111,15 +111,17 @@ class MatrixJupyterExtension implements Extension {
         MimeBundle rendered = once()
         if (rendered == null) {
           missingRendererNote()
-        } else {
-          Object data = rendered.get(preferredMime)
-          if (data != null) {
-            out.putData(mime, data)
-          } else {
-            staleMime = "${value}\nMatrix renderer for ${value.class.name} no longer produces its registered ${preferredMime} payload; restart the kernel to register its current MIME type"
-            log.warn("Renderer registration for ${source.renderer.rendererName()} uses ${preferredMime}, but the current renderer no longer produces that MIME for ${value.class.name}")
-          }
+          return
         }
+        Object data = rendered.get(preferredMime)
+        if (data != null) {
+          out.putData(mime, data)
+        } else if (rendered.keySet().any { String key -> key != TEXT_PLAIN }) {
+          // The renderer now emits a different rich MIME than the one this registration was created with.
+          staleMime = "${value}\nMatrix renderer for ${value.class.name} no longer produces its registered ${preferredMime} payload; restart the kernel to register its current MIME type"
+          log.warn("Renderer registration for ${source.renderer.rendererName()} uses ${preferredMime}, but the current renderer no longer produces that MIME for ${value.class.name}")
+        }
+        // A plain-only bundle (renderer failure text or an intentional plain result) is served by the text/plain block below.
       } as BiConsumer<MIMEType, DisplayData>)
       context.renderIfRequested(MIMEType.TEXT_PLAIN, { ->
         Object plain = attempted ? (staleMime ?: bundle?.get(TEXT_PLAIN)) : RendererRegistry.instance.plainText(value)

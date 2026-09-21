@@ -15,6 +15,19 @@ class FailingValue {
   @Override String toString() { 'failing value' }
 }
 
+/** Test-only renderer that intentionally returns a plain-only bundle despite declaring text/html. */
+class PlainOnlyRenderer implements MatrixRenderer {
+  @Override String rendererName() { 'PlainOnlyRenderer' }
+  @Override boolean available() { true }
+  @Override Set<Class<?>> supportedTypes() { [PlainOnlyValue] as Set<Class<?>> }
+  @Override MimeBundle render(Object value, RenderOptions options) { MimeBundle.plain('plain only payload') }
+}
+
+/** Value handled by {@link PlainOnlyRenderer}. */
+class PlainOnlyValue {
+  @Override String toString() { 'plain only value' }
+}
+
 /** Test-only unavailable renderer that verifies discovery gating. */
 class UnavailableRenderer implements MatrixRenderer {
   @Override String rendererName() { 'UnavailableRenderer' }
