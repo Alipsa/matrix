@@ -20,34 +20,33 @@ class CoreRenderer extends AbstractRenderer {
   @Override
   MimeBundle render(Object value, RenderOptions options) {
     Matrix matrix = toMatrix(value)
-    int totalRows = matrix.rowCount()
-    int totalColumns = matrix.columnCount()
-    Matrix rendered = matrix
-    boolean columnsTruncated = options.maxColumns != null && totalColumns > options.maxColumns
-    if (columnsTruncated) rendered = matrix.selectColumns(matrix.columnNames().take(options.maxColumns))
-    boolean rowsTruncated = options.maxRows != null && totalRows > options.maxRows
+    Matrix rendered = truncateColumns(matrix, options)
     Map<String, String> attributes = new LinkedHashMap<>(options.attr)
     List<String> notices = notices(matrix, options)
-    if (rowsTruncated || columnsTruncated) {
+    if (notices) {
       attributes.caption = [attributes.caption, notices.join(', ')].findAll { it }.join(' — ')
     }
     String html = rendered.toHtml(attributes, options.maxRows, options.fromHead)
-    MimeBundle.html(html, plainText(matrix, options, notices))
+    MimeBundle.html(html, plainText(rendered, options, notices))
   }
 
   @Override
   String plainText(Object value, RenderOptions options) {
     if (!tabular(value)) return value.toString()
     Matrix matrix = toMatrix(value)
-    plainText(matrix, options, notices(matrix, options))
+    plainText(truncateColumns(matrix, options), options, notices(matrix, options))
   }
 
-  private static String plainText(Matrix matrix, RenderOptions options, List<String> notices) {
-    Matrix rendered = options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
-        matrix.selectColumns(matrix.columnNames().take(options.maxColumns)) : matrix
+  private static String plainText(Matrix rendered, RenderOptions options, List<String> notices) {
     String suffix = notices ? "\n${notices.join(', ')}" : ''
     String body = options.maxRows == null ? rendered.content() : rendered.content(options.maxRows, options.fromHead)
     body + suffix
+  }
+
+  /** @return the matrix limited to the first {@code options.maxColumns} columns, or the matrix itself when no limit applies */
+  private static Matrix truncateColumns(Matrix matrix, RenderOptions options) {
+    options.maxColumns != null && matrix.columnCount() > options.maxColumns ?
+        matrix.select(matrix.columnNames().take(options.maxColumns)) : matrix
   }
 
   private static boolean tabular(Object value) {
