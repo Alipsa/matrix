@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 import se.alipsa.matrix.xchart.abstractions.ChartBuilder
+import se.alipsa.matrix.xchart.abstractions.HeatmapSupport
 
 /**
  * A correlation heatmap chart is a graphical representation of the correlation matrix, where the values are
@@ -96,7 +97,7 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     (0..<size).each { int c ->
       corr[c][c] = BigDecimal.ONE
       ((c + 1)..<size).each { int r ->
-        BigDecimal value = roundCorrelation(Correlation.cor(values[c], values[r]), false)
+        BigDecimal value = roundCorrelation(Correlation.cor(values[c], values[r]))
         corr[c][r] = value
         corr[r][c] = value
       }
@@ -119,22 +120,19 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     validateData(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
-    validateHeatLabels(columnLabels, rowLabels, nCols, nRows)
+    HeatmapSupport.validateLabels(columnLabels, rowLabels, nCols, nRows)
     List<Number[]> heatData = []
 
     (0..<nRows).each { int r ->
       (0..<nCols).each { int c ->
-        heatData << [c, r, columns[c][r]].toArray(HEAT_ARRAY_TYPE)
+        heatData << [c, r, columns[c][r]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
       }
     }
     xchart.addSeries(seriesName, columnLabels, rowLabels, heatData)
     this
   }
 
-  private static BigDecimal roundCorrelation(BigDecimal correlation, boolean selfCorrelation) {
-    if (selfCorrelation) {
-      return BigDecimal.ONE
-    }
+  private static BigDecimal roundCorrelation(BigDecimal correlation) {
     correlation == null ? BigDecimal.ZERO : correlation.round(CORRELATION_SCALE)
   }
 

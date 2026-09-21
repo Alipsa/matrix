@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 import se.alipsa.matrix.xchart.abstractions.ChartBuilder
+import se.alipsa.matrix.xchart.abstractions.HeatmapSupport
 
 /**
  * A heat map (or heatmap) is a 2-dimensional data visualization technique that represents the magnitude of
@@ -108,7 +109,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     (0..<nRows).each { int r ->
       def tmpRow = []
       (0..<nCols).each { int c ->
-        heatData << [c, r, col[idx]].toArray(HEAT_ARRAY_TYPE)
+        heatData << [c, r, col[idx]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << col[idx]
         idx++
       }
@@ -141,19 +142,20 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
    * @param rowLabels labels for the Y-axis (rows)
    * @param columns the list of Columns, each representing a column in the heatmap grid
    * @return this chart for method chaining
+   * @throws IllegalArgumentException if columns is empty or ragged, or the label counts do not match the grid
    */
   HeatmapChart addSeries(String seriesName, List<?> columnLabels, List<?> rowLabels, List<Column> columns) {
     validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
-    validateHeatLabels(columnLabels, rowLabels, nCols, nRows)
+    HeatmapSupport.validateLabels(columnLabels, rowLabels, nCols, nRows)
     List<Number[]> heatData = []
 
     List<List> tmpRows = []
     (0..<nRows).each { int r ->
       List tmpRow = []
       (0..<nCols).each { int c ->
-        heatData << [c, r, columns[c][r]].toArray(HEAT_ARRAY_TYPE)
+        heatData << [c, r, columns[c][r]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << columns[c][r]
       }
       tmpRows << tmpRow
@@ -185,7 +187,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       List tmpRow = []
       List valueRow = (row as Row).minusColumn(byIdx)
       valueRow.eachWithIndex { Object entry, int c ->
-        heatData << [c, r, entry as Number].toArray(HEAT_ARRAY_TYPE)
+        heatData << [c, r, entry as Number].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << entry
       }
       tmpRows << tmpRow
