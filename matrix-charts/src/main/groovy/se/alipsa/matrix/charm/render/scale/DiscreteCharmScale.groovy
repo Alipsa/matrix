@@ -24,12 +24,12 @@ class DiscreteCharmScale extends CharmScale {
 
     if (interpolateEndpoints) {
       if (levels.size() == 1) {
-        return (rangeStart + rangeEnd) / 2
+        return ScaleUtils.midpoint(rangeStart, rangeEnd)
       }
       return rangeStart + (rangeEnd - rangeStart) * idx / (levels.size() - 1)
     }
     BigDecimal step = (rangeEnd - rangeStart) / levels.size()
-    rangeStart + step * idx + step / 2
+    ScaleUtils.midpoint(rangeStart + step * idx, rangeStart + step * (idx + 1))
   }
 
   @Override
