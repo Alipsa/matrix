@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 
+import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
@@ -47,5 +48,10 @@ class ScaleColorIdentity extends Scale {
     }
     String colorValue = value
     return ColorUtil.normalizeColor(colorValue) ?: colorValue
+  }
+
+  /** Converts this pass-through colour scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale.identity(ColorUtil.normalizeColor(naValue) ?: naValue)
   }
 }

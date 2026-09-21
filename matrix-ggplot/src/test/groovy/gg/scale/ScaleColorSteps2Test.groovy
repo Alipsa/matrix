@@ -70,12 +70,14 @@ class ScaleColorSteps2Test {
 
   @Test
   void testValueAtMidpoint() {
-    def scale = new ScaleColorSteps2(bins: 5, midpoint: 50)
+    def scale = new ScaleColorSteps2(bins: 5, low: 'blue', mid: 'white', high: 'red', midpoint: 50)
     scale.train([0, 100])
 
     def midColor = scale.transform(50)
-    assertNotNull(midColor)
-    // Should return a color close to the middle of the palette
+    def quarterColor = scale.transform(25)
+    assertEquals('#FFFFFF', midColor)
+    assertNotEquals('#808080', quarterColor)
+    assertEquals('#9999FF', quarterColor)
   }
 
   @Test

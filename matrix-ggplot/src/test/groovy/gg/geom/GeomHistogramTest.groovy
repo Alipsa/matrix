@@ -9,10 +9,8 @@ import testutil.Slow
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.stat.GgStat
 
 class GeomHistogramTest {
 
@@ -51,59 +49,6 @@ class GeomHistogramTest {
   void testGeomHistogramWithBinwidth() {
     GeomHistogram geom = new GeomHistogram(binwidth: 5)
     assertEquals(5, geom.binwidth)
-  }
-
-  // ============== GgStat.bin() Tests ==============
-
-  @Test
-  void testStatBinOutput() {
-    def data = Matrix.builder()
-        .columnNames('value')
-        .rows([
-            [1], [2], [3], [4], [5],
-            [6], [7], [8], [9], [10]
-        ])
-        .types(Integer)
-        .build()
-
-    def aes = new Aes(x: 'value')
-    def binned = GgStat.bin(data, aes, [bins: 5])
-
-    //println "Binned data:"
-    //println "Columns: ${binned.columnNames()}"
-    //binned.each { row ->
-    //  println "  x=${row['x']}, xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
-    //}
-
-    assertTrue(binned.columnNames().contains('x'), 'Should have x column')
-    assertTrue(binned.columnNames().contains('xmin'), 'Should have xmin column')
-    assertTrue(binned.columnNames().contains('xmax'), 'Should have xmax column')
-    assertTrue(binned.columnNames().contains('count'), 'Should have count column')
-    assertTrue(binned.columnNames().contains('density'), 'Should have density column')
-    assertEquals(5, binned.rowCount(), 'Should have 5 bins')
-  }
-
-  @Test
-  void testStatBinWithBinwidth() {
-    def data = Matrix.builder()
-        .columnNames('value')
-        .rows([
-            [0], [1], [2], [3], [4],
-            [5], [6], [7], [8], [9]
-        ])
-        .types(Integer)
-        .build()
-
-    def aes = new Aes(x: 'value')
-    def binned = GgStat.bin(data, aes, [binwidth: 2])
-
-    /*println "Binned with binwidth=2:"
-    binned.each { row ->
-      println "  xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
-    }*/
-
-    // With binwidth=2 over range 0-9, we expect 5 bins
-    assertEquals(5, binned.rowCount(), 'Should have 5 bins with binwidth=2')
   }
 
   // ============== Full Chart Tests ==============

@@ -741,7 +741,32 @@ facet_wrap('var', scales: 'free')  // Use string 'free'
 // TRUE, FALSE, T, F are available as constants
 ```
 
+Facet options may precede or follow the facet variable:
+
+```groovy
+facet_wrap('var', ncol: 2)
+facet_wrap(facets: 'var', ncol: 2)
+```
+
+`scales: 'free'`, `'free_x'`, and `'free_y'` are accepted but currently share fixed panel
+scales; a warning is logged.
+
 ## Output Formats
+
+## Inspecting computed data
+
+`layer_data(chart, i)` returns the i-th layer's data after stat and position adjustment, and
+`ggplot_build(chart)` returns one `Matrix` per layer. Both use the same Charm pipeline as
+rendering and calculate facet panels independently. The columns follow ggplot2 naming, including
+`PANEL`, `colour`, and stat outputs such as `density`, `binStart`, and `count`.
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def chart = ggplot(mtcars, aes(x: 'mpg')) + geom_histogram(bins: 10)
+Matrix bins = layer_data(chart)
+List<Matrix> all = ggplot_build(chart)
+```
 
 ### SVG (Default)
 

@@ -10,6 +10,13 @@ individual entries below.
 
 **Behaviour changes**
 
+- Binned colour scales use equal-width bins sampled at gradient centres; steps2 honours
+  midpoints, stepsN honours stops/bin counts, and fermenter preserves supplied palette entries.
+- Discrete size and alpha scales interpolate their full endpoints, and size/alpha honour
+  configured transforms and limits.
+- `CharmRenderer.computeLayerData(chart)` exposes post-stat/position data per layer and facet
+  panel without rendering.
+
 - Scale-type inference uses strict numeric parsing, so category labels containing digits remain discrete.
 - Positional scales include full geom/stat extents and a zero baseline for bar, col and histogram layers.
 - Discrete-axis dodge separates bars; reverse and sqrt transforms produce correctly positioned data-space ticks.

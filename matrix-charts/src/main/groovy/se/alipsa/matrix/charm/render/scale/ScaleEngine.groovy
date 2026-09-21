@@ -430,42 +430,39 @@ class ScaleEngine {
   }
 
   /**
-   * Trains a size scale mapping data values to pixel sizes (range 2-10).
+   * Trains a size scale, respecting discrete endpoints and configured transforms.
    *
-   * @param values data values for size aesthetic
-   * @return trained continuous scale for size, or null if no numeric values
+   * @param values data values for the size aesthetic
+   * @param spec scale specification
+   * @return trained scale, or null if continuous values are not numeric
    */
-  private static CharmScale trainSizeScale(List<Object> values, Scale spec) {
+  static CharmScale trainSizeScale(List<Object> values, Scale spec) {
     Scale scaleSpec = spec ?: Scale.continuous()
     List<Number> range = scaleSpec.params?.range as List<Number>
     BigDecimal rangeStart = ValueConverter.asBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 2.0
     BigDecimal rangeEnd = ValueConverter.asBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 10.0
     if (scaleSpec.type == ScaleType.DISCRETE) {
-      return trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd)
+      DiscreteCharmScale discrete = trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd) as DiscreteCharmScale
+      discrete.interpolateEndpoints = true
+      return discrete
     }
     if (scaleSpec.type == ScaleType.BINNED) {
       return trainBinnedScale(values, scaleSpec, rangeStart, rangeEnd)
     }
 
-    List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
-    if (numeric.isEmpty()) {
+    if (scaleSpec.params?.identity == true) {
+      List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
+      if (numeric.isEmpty()) {
+        return null
+      }
+      BigDecimal min = numeric.min()
+      BigDecimal max = ensureDomainRange(numeric.max(), min)
+      return new ContinuousCharmScale(scaleSpec: scaleSpec, rangeStart: min, rangeEnd: max, domainMin: min, domainMax: max)
+    }
+    if (coerceToNumeric(values, scaleSpec).isEmpty()) {
       return null
     }
-
-    BigDecimal min = numeric.min()
-    BigDecimal max = ensureDomainRange(numeric.max(), min)
-    if (scaleSpec.params?.identity == true) {
-      rangeStart = min
-      rangeEnd = max
-    }
-
-    new ContinuousCharmScale(
-        scaleSpec: scaleSpec,
-        rangeStart: rangeStart,
-        rangeEnd: rangeEnd,
-        domainMin: min,
-        domainMax: max
-    )
+    trainPositionalScale(values, scaleSpec, rangeStart, rangeEnd)
   }
 
   /**
@@ -495,42 +492,39 @@ class ScaleEngine {
   }
 
   /**
-   * Trains an alpha scale mapping data values to opacity (range 0-1).
+   * Trains an alpha scale, respecting discrete endpoints and configured transforms.
    *
-   * @param values data values for alpha aesthetic
-   * @return trained continuous scale for alpha, or null if no numeric values
+   * @param values data values for the alpha aesthetic
+   * @param spec scale specification
+   * @return trained scale, or null if continuous values are not numeric
    */
-  private static CharmScale trainAlphaScale(List<Object> values, Scale spec) {
+  static CharmScale trainAlphaScale(List<Object> values, Scale spec) {
     Scale scaleSpec = spec ?: Scale.continuous()
     List<Number> range = scaleSpec.params?.range as List<Number>
     BigDecimal rangeStart = ValueConverter.asBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 0.1
     BigDecimal rangeEnd = ValueConverter.asBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 1.0
     if (scaleSpec.type == ScaleType.DISCRETE) {
-      return trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd)
+      DiscreteCharmScale discrete = trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd) as DiscreteCharmScale
+      discrete.interpolateEndpoints = true
+      return discrete
     }
     if (scaleSpec.type == ScaleType.BINNED) {
       return trainBinnedScale(values, scaleSpec, rangeStart, rangeEnd)
     }
 
-    List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
-    if (numeric.isEmpty()) {
+    if (scaleSpec.params?.identity == true) {
+      List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
+      if (numeric.isEmpty()) {
+        return null
+      }
+      BigDecimal min = numeric.min()
+      BigDecimal max = ensureDomainRange(numeric.max(), min)
+      return new ContinuousCharmScale(scaleSpec: scaleSpec, rangeStart: min, rangeEnd: max, domainMin: min, domainMax: max)
+    }
+    if (coerceToNumeric(values, scaleSpec).isEmpty()) {
       return null
     }
-
-    BigDecimal min = numeric.min()
-    BigDecimal max = ensureDomainRange(numeric.max(), min)
-    if (scaleSpec.params?.identity == true) {
-      rangeStart = min
-      rangeEnd = max
-    }
-
-    new ContinuousCharmScale(
-        scaleSpec: scaleSpec,
-        rangeStart: rangeStart,
-        rangeEnd: rangeEnd,
-        domainMin: min,
-        domainMax: max
-    )
+    trainPositionalScale(values, scaleSpec, rangeStart, rangeEnd)
   }
 
   private static CharmScale trainLinetypeScale(List<Object> values, Scale spec) {

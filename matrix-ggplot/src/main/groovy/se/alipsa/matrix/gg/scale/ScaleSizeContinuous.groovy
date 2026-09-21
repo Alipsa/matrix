@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Continuous size scale.
@@ -63,5 +65,10 @@ class ScaleSizeContinuous extends ScaleContinuous {
 
     BigDecimal result = ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
     return result != null ? result : naValue
+  }
+
+  /** Converts this continuous size scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale.radius(range[0], range[1])
   }
 }

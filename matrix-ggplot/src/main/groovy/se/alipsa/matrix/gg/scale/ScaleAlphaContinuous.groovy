@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Continuous alpha scale.
@@ -70,5 +72,12 @@ class ScaleAlphaContinuous extends ScaleContinuous {
     BigDecimal low = range[0].min(range[1])
     BigDecimal high = range[0].max(range[1])
     return mapped.max(low).min(high)
+  }
+
+  /** Converts this continuous alpha scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.continuous()
+    scale.params['range'] = [range[0], range[1]]
+    scale
   }
 }

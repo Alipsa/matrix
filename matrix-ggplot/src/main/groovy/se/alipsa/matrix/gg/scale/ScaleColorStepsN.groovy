@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Binned n-color scale - bins continuous values and maps to a custom color palette.
@@ -83,35 +85,8 @@ class ScaleColorStepsN extends ScaleContinuous {
       return colors[0]
     }
 
-    BigDecimal scaled = normalized * binsCount
-    int binIndex = scaled.floor().intValue()
-    binIndex = 0.max(binIndex.min(binsCount - 1)).intValue()
-
-    // Map bin to color palette position
-    BigDecimal binPosition = binsCount > 1 ? (binIndex / (binsCount - 1)) : 0.5
-
-    // Find surrounding colors in palette
-    return findColorAtPosition(binPosition)
-  }
-
-  private String findColorAtPosition(BigDecimal position) {
-    // Find the two colors surrounding this position
-    int i = 0
-    while (i < values.size() - 1 && values[i + 1] <= position) {
-      i++
-    }
-
-    // If exactly at a color stop, return it
-    if (values[i] == position || i == values.size() - 1) {
-      return colors[i]
-    }
-
-    // Interpolate between colors[i] and colors[i+1]
-    BigDecimal v1 = values[i]
-    BigDecimal v2 = values[i + 1]
-    BigDecimal t = (position - v1) / (v2 - v1)
-
-    return ColorScaleUtil.interpolateColor(colors[i], colors[i + 1], t)
+    int binIndex = ColorScaleUtil.binIndex(normalized, binsCount)
+    ColorScaleUtil.gradientNColorAt(colors, values, ColorScaleUtil.binCentre(binIndex, binsCount))
   }
 
   private void applyParams(Map params) {
@@ -179,5 +154,15 @@ class ScaleColorStepsN extends ScaleContinuous {
   ScaleColorStepsN values(List<BigDecimal> values) {
     this.values = values
     return this
+  }
+
+  /** Converts this binned multi-stop scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.stepsN(new ArrayList<String>(colors))
+    if (values != null && !values.isEmpty()) {
+      scale.params['gradientValues'] = values.collect { it as BigDecimal }
+    }
+    scale.params['nBreaks'] = bins
+    ColorScaleUtil.withNaValue(scale, naValue)
   }
 }

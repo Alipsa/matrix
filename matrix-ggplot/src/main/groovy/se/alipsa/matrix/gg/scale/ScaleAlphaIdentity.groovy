@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Identity scale for alpha aesthetic - uses data values directly without mapping.
@@ -43,5 +45,12 @@ class ScaleAlphaIdentity extends Scale {
     BigDecimal zero = 0.0
     BigDecimal one = 1.0
     return zero.max(alpha.min(one))
+  }
+
+  /** Converts this identity alpha scale to Charm. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.continuous()
+    scale.params['identity'] = true
+    scale
   }
 }

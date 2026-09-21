@@ -12,6 +12,9 @@ class DiscreteCharmScale extends CharmScale {
   /** Ordered list of discrete levels. */
   List<String> levels = []
 
+  /** Whether levels interpolate from the first to the final range endpoint. */
+  boolean interpolateEndpoints = false
+
   @Override
   BigDecimal transform(Object value) {
     if (value == null || levels.isEmpty()) return null
@@ -19,6 +22,12 @@ class DiscreteCharmScale extends CharmScale {
     int idx = levels.indexOf(value.toString())
     if (idx < 0) return null
 
+    if (interpolateEndpoints) {
+      if (levels.size() == 1) {
+        return (rangeStart + rangeEnd) / 2
+      }
+      return rangeStart + (rangeEnd - rangeStart) * idx / (levels.size() - 1)
+    }
     BigDecimal step = (rangeEnd - rangeStart) / levels.size()
     rangeStart + step * idx + step / 2
   }

@@ -1,11 +1,16 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+
 
 /**
  * Size scale where area is proportional to the data.
  * Missing or invalid values map to naValue (BigDecimal, nullable) inherited from ScaleSizeContinuous.
  */
 class ScaleSizeArea extends ScaleSizeContinuous {
+
+  private static final BigDecimal ZERO = 0.0G
+  private static final BigDecimal HALF = 0.5G
 
   /**
    * Create a size-by-area scale with defaults.
@@ -21,6 +26,22 @@ class ScaleSizeArea extends ScaleSizeContinuous {
    */
   ScaleSizeArea(Map params) {
     super(params)
+    if (params.max_size != null) {
+      range = [ZERO, params.max_size as BigDecimal]
+    }
+  }
+
+  /**
+   * Trains an area scale from zero so radius is proportional to the represented area.
+   *
+   * @param data input values
+   */
+  @Override
+  void train(List data) {
+    super.train(data)
+    if (computedDomain.size() >= 2 && computedDomain[0] > 0) {
+      computedDomain[0] = ZERO
+    }
   }
 
   @Override
@@ -36,7 +57,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal rMax = range[1]
 
     if (dMax == dMin) {
-      BigDecimal midArea = (rMin * rMin + rMax * rMax) / 2
+      BigDecimal midArea = (rMin * rMin + rMax * rMax) * HALF
       return midArea.sqrt()
     }
 
@@ -45,5 +66,13 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal areaMax = rMax * rMax
     BigDecimal area = areaMin + normalized * (areaMax - areaMin)
     return area.sqrt()
+  }
+
+  /** Converts this area-proportional size scale to Charm's sqrt transform. */
+  CharmScale toCharmScale() {
+    CharmScale scale = CharmScale.transform('sqrt')
+    scale.params['range'] = [range[0], range[1]]
+    scale.params['limits'] = [0, null]
+    scale
   }
 }

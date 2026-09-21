@@ -1,5 +1,40 @@
 # matrix-ggplot Release Notes
 
+## 0.6.0, in progress
+
+This release fixes defects found in the 2026-09-20 review. Several fixes change rendered
+output: `I()` constants and constant point colours are now honoured, closure aesthetics may
+return strings/booleans, and the colour/shape/size scales listed below are now delegated to
+Charm instead of being silently ignored. `GgStat` and `GgPosition` are removed.
+
+### New features
+
+- `layer_data(chart, i)` and `ggplot_build(chart)` return computed post-stat/position layer data
+  as `Matrix` objects through the Charm pipeline.
+
+### Bug fixes
+
+- Rendering no longer appends derived aesthetic columns to caller-owned matrices; layers with
+  their own data re-evaluate inherited derived aesthetics against that data.
+- Closure aesthetics preserve string and boolean results instead of turning them into nulls.
+- `I()` aesthetics are applied as layer constants, and a constant point `color` fills solid points.
+- Continuous colour scales retain gradients, while the remaining colour, shape, linetype, size,
+  radius, and alpha scales are delegated to Charm.
+- `stat_*(mapping: aes(...))` preserves the layer mapping.
+- `geom_*(stat: '<name>')` accepts every `StatType` name and documented aliases.
+- Tick labels use `Locale.ROOT`, so they retain a dot decimal separator.
+
+### Improvements
+
+- `aes(linewidth: ...)` maps to Charm's raw line-width value.
+- `facet_wrap('var', ncol: 2)` accepts named options before the facet variable; unsupported
+  free scales now log a warning.
+
+### Removed
+
+- Obsolete `GgStat` and `GgPosition` engines were removed; rendering uses Charm's stat and
+  position engines.
+
 ## 0.5.0
 
 ### New features

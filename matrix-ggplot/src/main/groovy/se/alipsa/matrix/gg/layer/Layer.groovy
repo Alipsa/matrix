@@ -41,7 +41,7 @@ class Layer {
 
 /**
  * Statistical transformation types.
- * Used by the renderer to dispatch to GgStat methods.
+ * Mapped to Charm by GgCharmCompiler.
  */
 enum StatType {
     /** Pass-through, returns data unchanged */
@@ -102,7 +102,7 @@ enum StatType {
 
 /**
  * Position adjustment types.
- * Used by the renderer to dispatch to GgPosition methods.
+ * Mapped to Charm by GgCharmCompiler.
  */
 enum PositionType {
     /** No adjustment (default) */

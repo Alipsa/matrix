@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * aes(x: 'displ', y: expr { 1.0 / it.hwy })
  * </pre>
  *
- * The closure receives a Row object and should return a numeric value.
+ * The closure receives a Row object and may return a number, string or boolean.
  */
 @SuppressWarnings(['ReturnNullFromCatchBlock', 'ThrowRuntimeException'])
 class Expression implements CharmExpression {
@@ -29,16 +29,16 @@ class Expression implements CharmExpression {
   private static final AtomicInteger NAME_COUNTER = new AtomicInteger(0)
 
   /** The closure that computes the value from row data */
-  final Closure<Number> closure
+  final Closure closure
 
   /** Optional name for the generated column */
   final String name
 
-  Expression(Closure<Number> closure) {
+  Expression(Closure closure) {
     this(closure, null)
   }
 
-  Expression(Closure<Number> closure, String name) {
+  Expression(Closure closure, String name) {
     if (closure == null) {
       throw new IllegalArgumentException('Expression closure cannot be null')
     }
@@ -48,32 +48,40 @@ class Expression implements CharmExpression {
 
   /**
    * Evaluate the expression for a single row.
-   * Returns null if the closure returns null or a non-numeric value.
+   * Numbers, booleans and other objects are preserved. Numeric text is converted to a number
+   * so that numeric string expressions train continuous scales correctly.
+   *
+   * @param row the row to evaluate
+   * @return the closure result, or null when the closure returns null
    * @throws RuntimeException if the closure throws an exception
    */
   @CompileDynamic
   @SuppressWarnings('UnnecessaryToString')
-  Number evaluate(Row row) {
+  Object evaluate(Row row) {
     try {
       def result = closure.call(row)
-      if (result == null) {
-        return null
+      if (result == null || result instanceof Number || result instanceof Boolean) {
+        return result
       }
-      if (result instanceof Number) {
-        return (Number) result
+      if (result instanceof CharSequence) {
+        return coerceNumericText(result.toString())
       }
-      // Keep explicit toString() so GString closure results are safely coerced.
-      String str = result.toString()
-      try {
-        if (str.contains('.')) {
-          return new BigDecimal(str)
-        }
-        return new BigInteger(str)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
+      result
     } catch (Exception e) {
       throw new RuntimeException("Expression evaluation failed for row: ${e.message}", e)
+    }
+  }
+
+  private static Object coerceNumericText(String text) {
+    String trimmed = text.trim()
+    if (trimmed.isEmpty()) {
+      return text
+    }
+    try {
+      trimmed.contains('.') || trimmed.contains('e') || trimmed.contains('E')
+          ? new BigDecimal(trimmed) : new BigInteger(trimmed)
+    } catch (NumberFormatException ignored) {
+      text
     }
   }
 
@@ -81,12 +89,12 @@ class Expression implements CharmExpression {
    * Evaluate the expression for all rows in a matrix.
    * Returns a list of computed values.
    */
-  List<Number> evaluateAll(Matrix data) {
-    List<Number> results = new ArrayList<>(data.rowCount())
+  List<Object> evaluateAll(Matrix data) {
+    List<Object> results = new ArrayList<>(data.rowCount())
     for (Row row : data) {
       results.add(evaluate(row))
     }
-    return results
+    results
   }
 
   /**
@@ -95,7 +103,7 @@ class Expression implements CharmExpression {
    * Returns the column name used.
    */
   String addToMatrix(Matrix data) {
-    List<Number> values = evaluateAll(data)
+    List<Object> values = evaluateAll(data)
     String colName = name
     // Check if column already exists and generate unique name if needed
     if (data.columnNames().contains(colName)) {
@@ -106,14 +114,14 @@ class Expression implements CharmExpression {
       colName = "${colName}_${suffix}"
     }
     data.addColumn(colName, values)
-    return colName
+    colName
   }
 
   /**
    * Get the generated column name.
    */
   String getName() {
-    return name
+    name
   }
 
   @Override
@@ -124,12 +132,12 @@ class Expression implements CharmExpression {
   /**
    * Static factory method.
    */
-  static Expression of(Closure<Number> closure) {
-    return new Expression(closure)
+  static Expression of(Closure closure) {
+    new Expression(closure)
   }
 
-  static Expression of(Closure<Number> closure, String name) {
-    return new Expression(closure, name)
+  static Expression of(Closure closure, String name) {
+    new Expression(closure, name)
   }
 
   @Override

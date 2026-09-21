@@ -211,8 +211,7 @@ class ScaleColorManual extends ScaleDiscrete {
     if (!namedValues.isEmpty()) {
       s.params['namedValues'] = namedValues
     }
-    s.params['naValue'] = naValue
-    s
+    ColorScaleUtil.withNaValue(s, naValue)
   }
 
   /**

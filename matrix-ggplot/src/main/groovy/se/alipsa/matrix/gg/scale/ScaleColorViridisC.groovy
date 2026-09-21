@@ -1,5 +1,8 @@
 package se.alipsa.matrix.gg.scale
 
+import se.alipsa.matrix.charm.Scale as CharmScale
+import se.alipsa.matrix.charm.render.scale.ViridisProvider
+
 
 /**
  * Continuous viridis color scale for numeric data.
@@ -172,6 +175,12 @@ class ScaleColorViridisC extends ScaleContinuous {
     BigDecimal pos = actualBegin + normalized * (actualEnd - actualBegin)
 
     return interpolatePalette(pos)
+  }
+
+  /** Converts this continuous viridis scale to Charm's multi-stop gradient. */
+  CharmScale toCharmScale() {
+    ColorScaleUtil.withNaValue(CharmScale.gradientN(
+        ViridisProvider.getColors(9, option, begin, end, direction, alpha)), naValue)
   }
 
   /**

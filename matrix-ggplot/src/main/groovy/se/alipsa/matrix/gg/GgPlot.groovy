@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import se.alipsa.matrix.gg.bridge.GgCharmMappingRegistry
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
@@ -222,6 +223,36 @@ class GgPlot {
       throw new IllegalArgumentException('ggplot requires data (Matrix) and mapping (Aes)')
     }
     return new GgChart(data, mapping)
+  }
+
+  /**
+   * Returns one layer's post-stat, post-position data using the rendering pipeline.
+   *
+   * @param chart source chart
+   * @param i one-based layer index
+   * @return computed layer data
+   */
+  static Matrix layer_data(GgChart chart, int i = 1) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
+    if (i < 1 || i > chart.layers.size()) {
+      throw new IllegalArgumentException("layer index ${i} is out of range 1..${chart.layers.size()}")
+    }
+    ggplot_build(chart)[i - 1]
+  }
+
+  /**
+   * Returns post-stat, post-position data for every chart layer.
+   *
+   * @param chart source chart
+   * @return one matrix per layer
+   */
+  static List<Matrix> ggplot_build(GgChart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException('chart cannot be null')
+    }
+    new GgCharmCompiler().layerData(chart)
   }
 
   // ============ Quick plot ============
@@ -726,8 +757,8 @@ class GgPlot {
    *
    * @param closure The closure that computes the value from row data
    */
-  static Expression expr(Closure<Number> closure) {
-    return new Expression(closure)
+  static Expression expr(Closure closure) {
+    new Expression(closure)
   }
 
   /**
@@ -736,8 +767,8 @@ class GgPlot {
    * @param name The name for the computed column
    * @param closure The closure that computes the value from row data
    */
-  static Expression expr(String name, Closure<Number> closure) {
-    return new Expression(closure, name)
+  static Expression expr(String name, Closure closure) {
+    new Expression(closure, name)
   }
 
   /**
@@ -3347,6 +3378,32 @@ class GgPlot {
   }
 
   /**
+   * Wrap facets with named options before the facet variable.
+   *
+   * @param params options: ncol, nrow, scales, dir, drop, labeller, strip, panelSpacing
+   * @param facet column to facet by
+   * @return facet specification
+   */
+  static FacetWrap facet_wrap(Map params, String facet) {
+    Map merged = new LinkedHashMap(params ?: [:])
+    merged.facets = facet
+    new FacetWrap(merged)
+  }
+
+  /**
+   * Wrap facets with named options before the facet variables.
+   *
+   * @param params options: ncol, nrow, scales, dir, drop, labeller, strip, panelSpacing
+   * @param facets columns to facet by
+   * @return facet specification
+   */
+  static FacetWrap facet_wrap(Map params, List<String> facets) {
+    Map merged = new LinkedHashMap(params ?: [:])
+    merged.facets = facets
+    new FacetWrap(merged)
+  }
+
+  /**
    * Create a matrix of panels defined by row and column faceting variables.
    * @param params Map with 'rows' and/or 'cols' (String or List), 'scales', 'space', 'labeller'
    */
@@ -4924,7 +4981,7 @@ class GgPlot {
     if (rawCharts == null) {
       throw new IllegalArgumentException('plot_grid requires a non-null list of charts')
     }
-    se.alipsa.matrix.gg.bridge.GgCharmCompiler compiler = new se.alipsa.matrix.gg.bridge.GgCharmCompiler()
+    GgCharmCompiler compiler = new GgCharmCompiler()
     rawCharts.collect { Object item ->
       if (item instanceof se.alipsa.matrix.charm.Chart) {
         return item as se.alipsa.matrix.charm.Chart

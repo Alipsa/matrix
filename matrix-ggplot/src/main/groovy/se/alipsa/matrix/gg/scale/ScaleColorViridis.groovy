@@ -331,6 +331,6 @@ class ScaleColorViridis extends ScaleDiscrete {
    * @return charm Scale with viridis color configuration
    */
   CharmScale toCharmScale() {
-    CharmScale.viridis(option, begin, end, direction, alpha)
+    ColorScaleUtil.withNaValue(CharmScale.viridis(option, begin, end, direction, alpha), naValue)
   }
 }
