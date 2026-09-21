@@ -59,7 +59,7 @@ class AreaChart extends AbstractXYChart<AreaChart> {
     Builder(Matrix data) { super(data) }
     AreaChart build() {
       requireXAndY()
-      requireColumn(xColumn)
+      requireNumericOrTemporal(xColumn)
       yColumns.each { String column -> requireNumeric(column) }
       AreaChart chart = AreaChart.create(data, chartWidth, chartHeight)
       applyTo(chart)

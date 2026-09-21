@@ -73,13 +73,13 @@ CorrelationHeatmapChart.builder(data).seriesName('Correlation').columns('x', 'y'
 OhlcChart.builder(prices).date('date').open('open').high('high').low('low').close('close').build()
 ```
 
-For OHLC data, convert `LocalDate` values before building: `Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant())`.
+OHLC `date(...)` columns may contain numbers, `java.util.Date`, `Instant`, `ZonedDateTime`, `OffsetDateTime`, `LocalDateTime`, `LocalDate` or `LocalTime` (the types XChart can convert; `Year`/`YearMonth` are rejected).
 The legacy `create(...).addSeries(...)` APIs remain available for incremental or advanced configuration.
 See the [tests](https://github.com/Alipsa/matrix/tree/main/matrix-xchart/src/test/groovy/test/alipsa/matrix/xchart) for more examples.
 
-You can easily export to png, svg or swing using one of the exportXXX methods but if you need something else you can always get the underlying XChart and use one of the encoders. E.g:
+You can easily export to png, svg, pdf or swing using one of the exportXXX methods (or the `Plot` facade) but if you need something else you can always get the underlying XChart and use one of the encoders. E.g:
 ```groovy
-VectorGraphicsEncoder.saveVectorGraphic(chart.xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.PDF)
+VectorGraphicsEncoder.saveVectorGraphic(chart.getXChart(), file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.EPS)
 ```
 
 The Chart types supported are:

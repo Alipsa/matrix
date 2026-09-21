@@ -123,7 +123,8 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
    * @param xCol the column containing slice labels
    * @param yCol the column containing slice values
    * @return this chart for method chaining
-   * @throws IllegalArgumentException if xCol or yCol is null, or if they have different sizes
+   * @throws IllegalArgumentException if xCol or yCol is null, they have different sizes, a slice label is null or
+   *         blank, or a slice value is null
    */
   PieChart addSeries(Column xCol, Column yCol) {
     if (xCol == null) {
@@ -136,7 +137,15 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
       throw new IllegalArgumentException("xCol and yCol must be of equal length but xCol has ${xCol.size()} elements whereas yCol has ${yCol.size()} elements.")
     }
     xCol.eachWithIndex { Object name, int i ->
-      xchart.addSeries(ValueConverter.asString(name), yCol[i] as Number)
+      String label = ValueConverter.asString(name)
+      if (label == null || label.isBlank()) {
+        throw new IllegalArgumentException("Pie slice label in column '${xCol.name}' is ${label == null ? 'null' : 'blank'} at row $i")
+      }
+      Object value = yCol[i]
+      if (value == null) {
+        throw new IllegalArgumentException("Pie slice '$label' (row $i) has a null value")
+      }
+      xchart.addSeries(label, value as Number)
     }
     this
   }

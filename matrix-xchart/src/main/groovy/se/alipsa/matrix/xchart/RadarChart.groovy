@@ -77,13 +77,24 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
    * @param seriesNameColumn the name of the column containing series labels (one series per row)
    * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 150
    * @return this chart for method chaining
+   * @throws IllegalArgumentException if a radius column is missing/non-numeric, the label column is missing,
+   *         any label is null or blank, or any radius value is null
    */
   RadarChart addSeries(String seriesNameColumn, Integer transparency = 150) {
     def labels = matrix.columnNames() - seriesNameColumn
     addSeries(seriesNameColumn, labels, transparency)
   }
 
-  /** Add all rows using explicitly selected numeric radius columns. */
+  /**
+   * Add all rows using explicitly selected numeric radius columns.
+   *
+   * @param seriesNameColumn the name of the column containing series labels (one series per row)
+   * @param radiusColumns names of the numeric columns containing radii
+   * @param transparency the fill alpha value (0 = fully transparent, 255 = fully opaque); defaults to 150
+   * @return this chart for method chaining
+   * @throws IllegalArgumentException if a radius column is missing/non-numeric, the label column is missing,
+   *         any label is null or blank, or any radius value is null
+   */
   RadarChart addSeries(String seriesNameColumn, List<String> radiusColumns, Integer transparency = 150) {
     if (radiusColumns == null || radiusColumns.isEmpty()) {
       throw new IllegalArgumentException('Radar chart requires at least one radius column')
@@ -97,9 +108,22 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
       throw new IllegalArgumentException("Radar label column '$seriesNameColumn' does not exist")
     }
     xchart.radiiLabels = radiusColumns as String[]
-    matrix.rows().each { Row row ->
-      def label = row[seriesNameColumn].toString()
-      double[] radii = radiusColumns.collect { String column -> (row[column] as Number).doubleValue() } as double[]
+    matrix.rows().eachWithIndex { Row row, int rowIndex ->
+      Object labelValue = row[seriesNameColumn]
+      if (labelValue == null) {
+        throw new IllegalArgumentException("Radar label column '$seriesNameColumn' is null at row $rowIndex")
+      }
+      String label = labelValue as String
+      if (label.isBlank()) {
+        throw new IllegalArgumentException("Radar label column '$seriesNameColumn' is blank at row $rowIndex")
+      }
+      double[] radii = radiusColumns.collect { String column ->
+        Object value = row[column]
+        if (value == null) {
+          throw new IllegalArgumentException("Radar radius column '$column' is null at row $rowIndex")
+        }
+        (value as Number).doubleValue()
+      } as double[]
       def s = xchart.addSeries(label, radii)
       makeFillTransparent(s, numSeries, transparency)
       numSeries++

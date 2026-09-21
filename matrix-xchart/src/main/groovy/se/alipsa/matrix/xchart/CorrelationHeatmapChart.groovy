@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 import se.alipsa.matrix.xchart.abstractions.ChartBuilder
+import se.alipsa.matrix.xchart.abstractions.HeatmapSupport
 
 /**
  * A correlation heatmap chart is a graphical representation of the correlation matrix, where the values are
@@ -26,7 +27,6 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   private static final int CORRELATION_SCALE = 2
-  final Number[] numberArray = new Number[]{}
 
   private CorrelationHeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
     def builder = new HeatMapChartBuilder()
@@ -85,11 +85,21 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
     validateColumns(columnNames)
     Matrix data = matrix.select(columnNames)
     int size = columnNames.size()
+    List<List<BigDecimal>> values = (0..<size).collect { int i -> ListConverter.toBigDecimals(data[i]) }
+    values.eachWithIndex { List<BigDecimal> column, int i ->
+      if (column.any { it == null }) {
+        throw new IllegalArgumentException("Correlation heatmap column '${columnNames[i]}' contains null values")
+      }
+    }
     List<List<Number>> corr = (0..<size).collect { int c ->
-      (0..<size).collect { int r ->
-        List<BigDecimal> xValues = ListConverter.toBigDecimals(data[c])
-        List<BigDecimal> yValues = ListConverter.toBigDecimals(data[r])
-        roundCorrelation(Correlation.cor(xValues, yValues), c == r) as Number
+      new ArrayList<Number>(Collections.nCopies(size, (Number) null)) as List<Number>
+    } as List<List<Number>>
+    (0..<size).each { int c ->
+      corr[c][c] = BigDecimal.ONE
+      ((c + 1)..<size).each { int r ->
+        BigDecimal value = roundCorrelation(Correlation.cor(values[c], values[r]))
+        corr[c][r] = value
+        corr[r][c] = value
       }
     }
     addSeries(title, columnNames, columnNames, corr)
@@ -103,30 +113,46 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
    * @param rowLabels labels for the Y-axis
    * @param columns the correlation data organized as a list of column lists
    * @return this chart for method chaining
+   * @throws IllegalArgumentException if columns is empty, any column is null or has a different length than column 0,
+   *         or the label counts do not match the grid
    */
   CorrelationHeatmapChart addSeries(String seriesName, List<String> columnLabels, List<String> rowLabels, List<List<Number>> columns) {
+    validateData(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
+    HeatmapSupport.validateLabels(columnLabels, rowLabels, nCols, nRows)
     List<Number[]> heatData = []
 
-    def tmpRows = []
     (0..<nRows).each { int r ->
-      def tmpRow = []
       (0..<nCols).each { int c ->
-        heatData << [c, r, columns[c][r]].toArray(numberArray)
-        tmpRow << columns[c][r]
+        heatData << [c, r, columns[c][r]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
       }
-      tmpRows << tmpRow
     }
     xchart.addSeries(seriesName, columnLabels, rowLabels, heatData)
     this
   }
 
-  private static BigDecimal roundCorrelation(BigDecimal correlation, boolean selfCorrelation) {
-    if (selfCorrelation) {
-      return BigDecimal.ONE
-    }
+  private static BigDecimal roundCorrelation(BigDecimal correlation) {
     correlation == null ? BigDecimal.ZERO : correlation.round(CORRELATION_SCALE)
+  }
+
+  private static void validateData(List<List<Number>> columns) {
+    if (columns == null || columns.isEmpty()) {
+      throw new IllegalArgumentException('Correlation heatmap data must contain at least one column')
+    }
+    List<Number> first = columns[0]
+    if (first == null || first.isEmpty()) {
+      throw new IllegalArgumentException('Correlation heatmap data column 0 must contain at least one value')
+    }
+    int nRows = first.size()
+    columns.eachWithIndex { List<Number> column, int c ->
+      if (column == null) {
+        throw new IllegalArgumentException("Correlation heatmap data column $c is null")
+      }
+      if (column.size() != nRows) {
+        throw new IllegalArgumentException("Correlation heatmap data columns must have equal lengths; expected $nRows values but column $c has ${column.size()} values")
+      }
+    }
   }
 
   private void validateColumns(List<String> columnNames) {
@@ -159,7 +185,6 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       if (names == null || names.length == 0) {
         throw new IllegalArgumentException('columns requires at least one column')
       }
-      names.each { String name -> requireNumeric(name) }
       selectedColumns = names.toList()
       this
     }

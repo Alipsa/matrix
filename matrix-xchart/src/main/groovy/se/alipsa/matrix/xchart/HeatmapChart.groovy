@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 import se.alipsa.matrix.xchart.abstractions.ChartBuilder
+import se.alipsa.matrix.xchart.abstractions.HeatmapSupport
 
 /**
  * A heat map (or heatmap) is a 2-dimensional data visualization technique that represents the magnitude of
@@ -28,8 +29,16 @@ import se.alipsa.matrix.xchart.abstractions.ChartBuilder
  */
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
-  final Number[] numberArray = new Number[]{}
-  Matrix heatMapMatrix
+  private Matrix heatMapMatrix
+
+  /**
+   * The values of the most recently added series reshaped as a Matrix (rows = Y-axis, columns = X-axis).
+   *
+   * @return the heat values as a Matrix, or null before any series has been added
+   */
+  Matrix getHeatMapMatrix() {
+    heatMapMatrix
+  }
 
   private HeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
     def builder = new HeatMapChartBuilder()
@@ -100,7 +109,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     (0..<nRows).each { int r ->
       def tmpRow = []
       (0..<nCols).each { int c ->
-        heatData << [c, r, col[idx]].toArray(numberArray)
+        heatData << [c, r, col[idx]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << col[idx]
         idx++
       }
@@ -133,18 +142,20 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
    * @param rowLabels labels for the Y-axis (rows)
    * @param columns the list of Columns, each representing a column in the heatmap grid
    * @return this chart for method chaining
+   * @throws IllegalArgumentException if columns is empty or ragged, or the label counts do not match the grid
    */
   HeatmapChart addSeries(String seriesName, List<?> columnLabels, List<?> rowLabels, List<Column> columns) {
     validateColumns(columns)
     int nCols = columns.size()
     int nRows = columns[0].size()
+    HeatmapSupport.validateLabels(columnLabels, rowLabels, nCols, nRows)
     List<Number[]> heatData = []
 
     List<List> tmpRows = []
     (0..<nRows).each { int r ->
       List tmpRow = []
       (0..<nCols).each { int c ->
-        heatData << [c, r, columns[c][r]].toArray(numberArray)
+        heatData << [c, r, columns[c][r]].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << columns[c][r]
       }
       tmpRows << tmpRow
@@ -160,20 +171,23 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
    *
    * @param columnName the name of the column to use as row labels (excluded from heatmap values)
    * @return this chart for method chaining
-   * @throws IllegalArgumentException if the Matrix has no name
+   * @throws IllegalArgumentException if the Matrix has no name or columnName does not exist
    */
   HeatmapChart addAllToSeriesBy(String columnName) {
     if (matrix.matrixName == null || matrix.matrixName.isBlank()) {
       throw new IllegalArgumentException('Matrix must have a name before charting all columns as a heatmap series')
     }
     int byIdx = matrix.columnIndex(columnName)
+    if (byIdx < 0) {
+      throw new IllegalArgumentException("Heatmap label column '$columnName' does not exist")
+    }
     List<Number[]> heatData = []
     List<List> tmpRows = []
     matrix.rows().eachWithIndex { row, r ->
       List tmpRow = []
       List valueRow = (row as Row).minusColumn(byIdx)
       valueRow.eachWithIndex { Object entry, int c ->
-        heatData << [c, r, entry as Number].toArray(numberArray)
+        heatData << [c, r, entry as Number].toArray(HeatmapSupport.HEAT_ARRAY_TYPE)
         tmpRow << entry
       }
       tmpRows << tmpRow

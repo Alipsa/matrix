@@ -7,8 +7,17 @@
 - Add the `Plot` facade for PNG, SVG, PDF, Swing, and display operations.
 - Preserve existing `create(...)`, `addSeries(...)`, per-chart export methods, and native XChart styling/customization through `getXChart()`.
 - Add early validation for missing mappings, unknown/non-numeric columns, incompatible chart options, incomplete heatmap labels, and invalid OHLC date columns.
+- Validate that heatmap and correlation-heatmap axis labels match the grid size; previously mismatched labels silently dropped cells or drew empty rows/columns. `CorrelationHeatmapChart.addSeries(String, List, List, List<List<Number>>)` now also rejects null or ragged data columns with a clear message instead of `NullPointerException`/`IndexOutOfBoundsException`.
+- Accept numbers and the date/time types XChart can convert (`Date`, `Instant`, `ZonedDateTime`, `OffsetDateTime`, `LocalDateTime`, `LocalDate`, `LocalTime`) as OHLC x-values in `OhlcChart.addSeries` and the builder's `date(...)`; the manual `LocalDate` to `Date` conversion is no longer needed. Every x value is validated up front (no nulls, no unsupported types such as `Year`, no mixing of numeric and date/time values).
+- `HeatmapChart.addAllToSeriesBy` throws `IllegalArgumentException` for an unknown column instead of `IndexOutOfBoundsException`.
+- `ScatterChart.create(title, matrix, x, y, seriesCol)` now creates series in order of first appearance instead of hash order.
+- `BoxChart.builder(...)` supports `xAxisTitle`/`yAxisTitle` (XChart box charts have axes).
+- Line, Area and Scatter builders validate the x column consistently: numeric or the XChart-convertible date/time types listed above are accepted, anything else (including `Year`) fails at `build()` with a clear message.
+- `CorrelationHeatmapChart` converts each column once and only computes the upper triangle; null values fail with a clear `IllegalArgumentException` instead of `NullPointerException`.
+- Radar, Pie and Bubble charts report null/blank labels, null values and null columns with an `IllegalArgumentException` that names the column and row, instead of failing with `NullPointerException`, XChart's generic `Series name cannot be null or zero-length` message, or at render time.
+- breaking: `HeatmapChart.heatMapMatrix` is now a documented read-only property; the generated `setHeatMapMatrix(Matrix)` is removed (it was overwritten by every `addSeries` call and never read), and the internal `numberArray` field is no longer exposed.
 - Apply semi-transparent fills to builder-created area series so overlapping regions remain visible.
-- Upgrade org.knowm.xchart:xchart from 4.0.2 to 4.0.3.
+- Upgrade org.knowm.xchart:xchart from 4.0.2 to 4.0.4.
 
 ## v0.3.2, 2026-07-10
 - Upgrade to xchart 4.0.2 (from 3.8.8)
