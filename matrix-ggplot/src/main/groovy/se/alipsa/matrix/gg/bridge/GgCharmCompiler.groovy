@@ -674,7 +674,7 @@ class GgCharmCompiler {
       if (simple.contains('date')) {
         return CharmScale.date()
       }
-      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.gradient()
+      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
     }
     if (aesthetic == AES_COLOR || aesthetic == AES_FILL) {
       return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()

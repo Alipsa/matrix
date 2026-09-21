@@ -78,18 +78,18 @@ class ScaleColorSteps2 extends ScaleContinuous {
     }
 
     // Determine midpoint (auto-calculate if not set)
-    BigDecimal mid = midpoint != null ? midpoint : (dMin + dMax) / 2
+    BigDecimal midValue = midpoint != null ? midpoint : (dMin + dMax) / 2
 
     // Normalize based on which side of midpoint
     BigDecimal normalized
-    if (v <= mid) {
-      // Map [dMin, mid] → [0, 0.5]
-      BigDecimal range = mid - dMin
+    if (v <= midValue) {
+      // Map [dMin, midValue] → [0, 0.5]
+      BigDecimal range = midValue - dMin
       normalized = range != 0 ? ((v - dMin) / range) * 0.5 : 0.25
     } else {
-      // Map (mid, dMax] → (0.5, 1]
-      BigDecimal range = dMax - mid
-      normalized = range != 0 ? 0.5 + ((v - mid) / range) * 0.5 : 0.75
+      // Map (midValue, dMax] → (0.5, 1]
+      BigDecimal range = dMax - midValue
+      normalized = range != 0 ? 0.5 + ((v - midValue) / range) * 0.5 : 0.75
     }
 
     normalized = 0.max(normalized.min(1))
@@ -101,7 +101,7 @@ class ScaleColorSteps2 extends ScaleContinuous {
     }
 
     int binIndex = ColorScaleUtil.binIndex(normalized, binsCount)
-    ColorScaleUtil.gradientNColorAt([low, mid, high] as List<String>, [0.0G, 0.5G, 1.0G] as List<BigDecimal>,
+    ColorScaleUtil.gradientNColorAt([low, this.mid, high], [0.0G, 0.5G, 1.0G],
         ColorScaleUtil.binCentre(binIndex, binsCount))
   }
 
