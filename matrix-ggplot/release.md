@@ -2,10 +2,9 @@
 
 ## 0.6.0, in progress
 
-This release fixes defects found in the 2026-09-20 review. Several fixes change rendered
-output: `I()` constants and constant point colours are now honoured, closure aesthetics may
-return strings/booleans, and the colour/shape/size scales listed below are now delegated to
-Charm instead of being silently ignored. `GgStat` and `GgPosition` are removed.
+- Several fixes change rendered output: `I()` constants and constant point colours are now honoured, closure aesthetics may
+return strings/booleans, and the colour/shape/size scales listed below are now delegated to Charm instead of being silently ignored. `GgStat` and `GgPosition` are removed as a consequence (DRY).
+- Diverging stepped colour scales now use the configured mid colour throughout the gradient, rather than falling back to gray for non-midpoint bins.
 
 ### New features
 
